@@ -5,7 +5,23 @@ import UserNotifications
 import os
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate {
+
+  // The single, app-owned Flutter engine. Created and run during
+  // didFinishLaunchingWithOptions so that plugin registration - and the
+  // BGTaskScheduler launch handlers registered by flutter_foreground_task and
+  // the fetch plugin during that registration - complete before the app
+  // finishes launching, as BGTaskScheduler requires. SceneDelegate drives its
+  // window from this same engine instead of the storyboard's implicit engine.
+  //
+  // Under the UIScene lifecycle the implicit engine is only created when the
+  // scene connects, which is after didFinishLaunchingWithOptions returns. Any
+  // BGTaskScheduler.register call at that point raises a process-fatal
+  // NSInternalInconsistencyException ("All launch handlers must be registered
+  // before application finishes launching"). Owning the engine here restores
+  // the required registration window.
+  let flutterEngine = FlutterEngine(name: "socialmesh")
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -15,6 +31,11 @@ import os
     // This prevents NSInternalInconsistencyException crashes from corrupted cache
     // See: https://github.com/firebase/flutterfire/issues/9661
     clearFirestoreCacheIfCorrupted()
+
+    // Start the shared engine and register plugins here, while the app is still
+    // launching, so BGTaskScheduler launch handlers are registered in time.
+    flutterEngine.run()
+    GeneratedPluginRegistrant.register(with: flutterEngine)
 
     // Required for flutter_local_notifications to show notifications in foreground
     if #available(iOS 10.0, *) {
@@ -26,41 +47,6 @@ import os
     INPreferences.requestSiriAuthorization { _ in }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-
-  // Guards plugin registration to exactly once per process. See
-  // didInitializeImplicitFlutterEngine for the rationale.
-  private static var didRegisterPlugins = false
-
-  // Plugin registration under the UIScene lifecycle. The FlutterViewController
-  // is created by SceneDelegate (FlutterSceneDelegate) from the Main storyboard,
-  // which spins up the implicit FlutterEngine and calls this back. Registering
-  // here replaces the old `GeneratedPluginRegistrant.register(with: self)` in
-  // didFinishLaunching, which no longer has a window/controller to attach to.
-  // The native method channels themselves are registered in SceneDelegate, once
-  // the controller exists.
-  //
-  // Flutter 3.41 may create more than one implicit Flutter engine when
-  // additional UIWindowScene sessions connect. Some plugins register
-  // process-global iOS services during plugin registration. In particular,
-  // flutter_foreground_task 9.2.2 registers BGTaskScheduler identifiers
-  // without its own idempotency guard, and BGTaskScheduler registration is
-  // not repeatable within the same process.
-  //
-  // SocialMesh currently supports one Flutter application scene. Registering
-  // plugins once preserves the supported path and prevents a process-fatal
-  // duplicate BGTaskScheduler registration.
-  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
-    if AppDelegate.didRegisterPlugins {
-      NSLog(
-        "SocialMesh: skipping GeneratedPluginRegistrant.register for a later "
-          + "implicit Flutter engine; plugins are already registered for this "
-          + "process. This prevents a duplicate BGTaskScheduler registration "
-          + "from flutter_foreground_task (a process-fatal NSException).")
-      return
-    }
-    AppDelegate.didRegisterPlugins = true
-    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 
   // In-process SiriKit intent routing for CarPlay communication. Returns the

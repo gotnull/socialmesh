@@ -32026,6 +32026,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mqttProxyReconnects => 'Переподключения';
 
   @override
+  String get mqttProxyLastDisconnectedAt => 'Последнее отключение';
+
+  @override
+  String get mqttProxyFramesReceived => 'Получено от рации';
+
+  @override
+  String get mqttProxyDeferred => 'Отложено';
+
+  @override
+  String get mqttProxyDropped => 'Отброшено';
+
+  @override
+  String get mqttProxyFlushed => 'Отправлено из очереди';
+
+  @override
   String get mqttProxyEnabled => 'Включено';
 
   @override

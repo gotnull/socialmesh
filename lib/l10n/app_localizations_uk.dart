@@ -32031,6 +32031,21 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mqttProxyReconnects => 'Повторні підключення';
 
   @override
+  String get mqttProxyLastDisconnectedAt => 'Останнє відключення';
+
+  @override
+  String get mqttProxyFramesReceived => 'Отримано від рації';
+
+  @override
+  String get mqttProxyDeferred => 'Відкладено';
+
+  @override
+  String get mqttProxyDropped => 'Відхилено';
+
+  @override
+  String get mqttProxyFlushed => 'Повторно надіслано';
+
+  @override
   String get mqttProxyEnabled => 'Увімкнено';
 
   @override

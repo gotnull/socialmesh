@@ -318,6 +318,23 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the MQTT client-proxy liveness watchdog is active. When on, the
+  /// proxy tracks an independent proof-of-life (PINGRESP, inbound traffic, or
+  /// a fresh connect) and force-reconnects a socket that goes silent past the
+  /// stale threshold — recovering the half-open case the package's keep-alive
+  /// stays blind to. Default: true. Set `MQTT_PROXY_LIVENESS_WATCHDOG_ENABLED=false`
+  /// in `.env` (or flip remotely) to restore package-keep-alive-only behaviour.
+  static bool get isMqttProxyLivenessWatchdogEnabled {
+    try {
+      final raw = dotenv.env['MQTT_PROXY_LIVENESS_WATCHDOG_ENABLED']
+          ?.toLowerCase()
+          .trim();
+      return raw != 'false' && raw != '0';
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Whether the message timeline / week view is enabled.
   /// Set `MESSAGE_TIMELINE_ENABLED=true` in `.env` to enable.
   /// Default: false — the experimental message timeline is hidden.

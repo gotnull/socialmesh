@@ -418,6 +418,16 @@ class ProtocolService {
   final StreamController<pb.MqttClientProxyMessage>
   _mqttClientProxyMessageController;
 
+  /// Cumulative count of MQTT client-proxy frames forwarded from the radio to
+  /// the app. This is the upstream end of the proxy publish path; comparing it
+  /// against the MQTT service's `framesReceivedFromRadio` isolates whether a
+  /// non-delivery is the device going quiet, a stream/provider loss, or an
+  /// app-side MQTT problem. Observability only — no wire semantics.
+  int _proxyFramesForwardedFromRadio = 0;
+
+  /// Cumulative count of MQTT client-proxy frames forwarded from the radio.
+  int get proxyFramesForwardedFromRadio => _proxyFramesForwardedFromRadio;
+
   /// Emitted when a config or admin message is sent to the **local** node
   /// (not a remote target) that is expected to trigger a firmware reboot.
   /// Consumers (e.g. the reconnect flow) use this to enter reboot
@@ -2329,9 +2339,11 @@ class ProtocolService {
       } else if (fromRadio.hasMetadata()) {
         _handleFromRadioMetadata(fromRadio.metadata);
       } else if (fromRadio.hasMqttClientProxyMessage()) {
+        _proxyFramesForwardedFromRadio++;
         AppLogging.mqttProxy(
           'Received proxy message from device '
-          '(topic: ${fromRadio.mqttClientProxyMessage.topic})',
+          '(topic: ${fromRadio.mqttClientProxyMessage.topic}, '
+          'forwarded total: $_proxyFramesForwardedFromRadio)',
         );
         _mqttClientProxyMessageController.add(fromRadio.mqttClientProxyMessage);
       } else if (fromRadio.hasClientNotification()) {

@@ -3,6 +3,7 @@
 
 import 'dart:io';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/mqtt/mqtt_client_proxy_service.dart';
 
@@ -29,6 +30,10 @@ void main() {
       expect(diag.messagesPublished, 0);
       expect(diag.messagesRelayed, 0);
       expect(diag.reconnectAttempts, 0);
+      expect(diag.framesReceivedFromRadio, 0);
+      expect(diag.publishesDeferred, 0);
+      expect(diag.publishesDropped, 0);
+      expect(diag.publishesFlushed, 0);
     });
 
     test('canPublish is true only when phase is connected', () {
@@ -118,6 +123,10 @@ void main() {
         messagesPublished: 1,
         messagesRelayed: 2,
         reconnectAttempts: 3,
+        framesReceivedFromRadio: 9,
+        publishesDeferred: 4,
+        publishesDropped: 5,
+        publishesFlushed: 6,
       );
 
       expect(updated.isConnected, true);
@@ -133,6 +142,10 @@ void main() {
       expect(updated.messagesPublished, 1);
       expect(updated.messagesRelayed, 2);
       expect(updated.reconnectAttempts, 3);
+      expect(updated.framesReceivedFromRadio, 9);
+      expect(updated.publishesDeferred, 4);
+      expect(updated.publishesDropped, 5);
+      expect(updated.publishesFlushed, 6);
     });
   });
 
@@ -862,6 +875,165 @@ void main() {
 
       expect(service.diagnostics.lastError, isNotNull);
       expect(service.diagnostics.lastError, isNot(contains(sentinelPassword)));
+    });
+  });
+
+  group('MqttClientProxyService publish-path counters', () {
+    const validTopic = 'msh/US/OVMesh/2/e/LongFast/!aaaa';
+
+    test('a queued (deferred) publish increments received + deferred', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      // Idle → the frame is buffered for replay, not dropped.
+      service.handleDevicePublish(topic: validTopic, data: [1, 2, 3]);
+
+      final diag = service.diagnostics;
+      expect(diag.framesReceivedFromRadio, 1);
+      expect(diag.publishesDeferred, 1);
+      expect(diag.publishesDropped, 0);
+    });
+
+    test('a dropped publish (proxy off) increments received + dropped', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.markDisabled();
+      service.handleDevicePublish(topic: validTopic, data: [1]);
+
+      final diag = service.diagnostics;
+      expect(diag.framesReceivedFromRadio, 1);
+      expect(diag.publishesDeferred, 0);
+      expect(diag.publishesDropped, 1);
+    });
+
+    test('an invalid-topic frame still counts as received from radio', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      // Counted at entry, before topic validation — so the received tally
+      // reflects everything the radio forwarder handed us.
+      service.handleDevicePublish(topic: 'a/b/#', data: [1]);
+
+      final diag = service.diagnostics;
+      expect(diag.framesReceivedFromRadio, 1);
+      expect(diag.publishesDeferred, 0);
+      expect(diag.publishesDropped, 0);
+    });
+
+    test('buffer overflow counts evicted frames as dropped', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      // Capacity is 32; 50 idle publishes → 32 buffered, 18 evicted.
+      for (var i = 0; i < 50; i++) {
+        service.handleDevicePublish(topic: validTopic, data: [i]);
+      }
+
+      final diag = service.diagnostics;
+      expect(diag.framesReceivedFromRadio, 50);
+      expect(diag.publishesDeferred, 50);
+      expect(diag.publishesDropped, 18);
+      expect(service.debugPendingPublishCount, 32);
+    });
+  });
+
+  group('MqttClientProxyService liveness watchdog', () {
+    test('force-reconnects when proof-of-life is stale', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      var reconnectRequests = 0;
+      service.setOnReconnectNeeded(() => reconnectRequests++);
+
+      // Phase reads connected, socket reports connected, but no PINGRESP /
+      // inbound / connect has landed within the stale threshold.
+      service.debugSimulateHalfOpenSocket();
+      expect(service.phase, MqttProxyConnectionPhase.connected);
+
+      service.debugTickLivenessWatchdog();
+
+      expect(reconnectRequests, 1);
+      expect(service.phase, MqttProxyConnectionPhase.connecting);
+    });
+
+    test('no-op when proof-of-life is fresh', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      var reconnectRequests = 0;
+      service.setOnReconnectNeeded(() => reconnectRequests++);
+
+      service.debugSimulateHalfOpenSocket();
+      // A confirmed publish is proof-of-life; it refreshes the timestamp.
+      service.debugConfirmPublish();
+
+      service.debugTickLivenessWatchdog();
+
+      expect(reconnectRequests, 0);
+      expect(service.phase, MqttProxyConnectionPhase.connected);
+    });
+
+    test('no-op when phase is not connected', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      var reconnectRequests = 0;
+      service.setOnReconnectNeeded(() => reconnectRequests++);
+
+      // Idle service: the watchdog must not fire.
+      expect(service.phase, MqttProxyConnectionPhase.idle);
+      service.debugTickLivenessWatchdog();
+
+      expect(reconnectRequests, 0);
+    });
+
+    test('kill switch off leaves the watchdog timer inactive', () {
+      addTearDown(() {
+        if (dotenv.isInitialized) dotenv.clean();
+      });
+      dotenv.loadFromString(
+        envString: 'MQTT_PROXY_LIVENESS_WATCHDOG_ENABLED=false',
+      );
+
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.debugStartLivenessWatchdog();
+      expect(service.debugLivenessWatchdogActive, false);
+    });
+
+    test('kill switch on starts the watchdog timer', () {
+      addTearDown(() {
+        if (dotenv.isInitialized) dotenv.clean();
+      });
+      dotenv.loadFromString(
+        envString: 'MQTT_PROXY_LIVENESS_WATCHDOG_ENABLED=true',
+      );
+
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.debugStartLivenessWatchdog();
+      expect(service.debugLivenessWatchdogActive, true);
+    });
+  });
+
+  group('MqttClientProxyService confirmed publish counter', () {
+    test('published count advances only on broker confirmation', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      // Send-time never counts (frames buffered while idle stay uncounted).
+      service.handleDevicePublish(
+        topic: 'msh/US/OVMesh/2/e/LongFast/!aaaa',
+        data: [1],
+      );
+      expect(service.diagnostics.messagesPublished, 0);
+
+      // A broker PUBACK is the only thing that advances the count.
+      service.debugConfirmPublish();
+      expect(service.diagnostics.messagesPublished, 1);
     });
   });
 }

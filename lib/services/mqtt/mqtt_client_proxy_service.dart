@@ -18,6 +18,7 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:typed_data/typed_data.dart' show Uint8Buffer;
 
+import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/mqtt/mqtt_topic_builder.dart';
 
@@ -132,6 +133,23 @@ class MqttProxyDiagnostics {
   /// Number of reconnect attempts.
   final int reconnectAttempts;
 
+  /// Number of device→broker frames handed to the service by the radio
+  /// forwarder. Climbs whenever the device offers a publish, regardless of
+  /// whether it is published, buffered, or dropped. Compared against the
+  /// protocol-layer forward counter to isolate where publishes are lost.
+  final int framesReceivedFromRadio;
+
+  /// Number of frames buffered for later replay because the socket was not
+  /// publishable when they arrived (reconnect in flight or stale socket).
+  final int publishesDeferred;
+
+  /// Number of frames dropped without publishing because the phase was one
+  /// we never recover from (disabled / missing-config / intentional-off).
+  final int publishesDropped;
+
+  /// Number of buffered frames successfully replayed on a healthy reconnect.
+  final int publishesFlushed;
+
   const MqttProxyDiagnostics({
     this.phase = MqttProxyConnectionPhase.idle,
     this.failureReason = MqttProxyFailureReason.none,
@@ -150,6 +168,10 @@ class MqttProxyDiagnostics {
     this.messagesPublished = 0,
     this.messagesRelayed = 0,
     this.reconnectAttempts = 0,
+    this.framesReceivedFromRadio = 0,
+    this.publishesDeferred = 0,
+    this.publishesDropped = 0,
+    this.publishesFlushed = 0,
   });
 
   /// Whether a publish attempt should be allowed right now.
@@ -174,6 +196,10 @@ class MqttProxyDiagnostics {
     int? messagesPublished,
     int? messagesRelayed,
     int? reconnectAttempts,
+    int? framesReceivedFromRadio,
+    int? publishesDeferred,
+    int? publishesDropped,
+    int? publishesFlushed,
   }) {
     return MqttProxyDiagnostics(
       phase: phase ?? this.phase,
@@ -193,6 +219,11 @@ class MqttProxyDiagnostics {
       messagesPublished: messagesPublished ?? this.messagesPublished,
       messagesRelayed: messagesRelayed ?? this.messagesRelayed,
       reconnectAttempts: reconnectAttempts ?? this.reconnectAttempts,
+      framesReceivedFromRadio:
+          framesReceivedFromRadio ?? this.framesReceivedFromRadio,
+      publishesDeferred: publishesDeferred ?? this.publishesDeferred,
+      publishesDropped: publishesDropped ?? this.publishesDropped,
+      publishesFlushed: publishesFlushed ?? this.publishesFlushed,
     );
   }
 }
@@ -382,6 +413,10 @@ class MqttClientProxyService {
   int _messagesPublished = 0;
   int _messagesRelayed = 0;
   int _reconnectAttempts = 0;
+  int _framesReceivedFromRadio = 0;
+  int _publishesDeferred = 0;
+  int _publishesDropped = 0;
+  int _publishesFlushed = 0;
 
   // Outbound publish queue. Holds device→broker frames that arrive while the
   // socket is not publishable (reconnect in flight, or a stale `connected`
@@ -400,6 +435,21 @@ class MqttClientProxyService {
   void Function()? _onReconnectNeeded;
   DateTime? _lastReconnectRequestAt;
   static const Duration _reconnectRequestDebounce = Duration(seconds: 3);
+
+  // Liveness watchdog. The package keeps `connectionStatus.state == connected`
+  // on a half-open socket (no FIN/RST, so its keep-alive/auto-reconnect stay
+  // blind), which lets device publishes vanish while the UI still reads
+  // "Connected". We track an independent proof-of-life (PINGRESP, any inbound
+  // traffic, or a fresh connect) and force a real reconnect when it goes
+  // silent past the threshold. Foreground-only by nature — iOS suspends the
+  // timer in the background, where the provider's app-resume trigger covers us.
+  StreamSubscription<MqttPublishMessage>? _publishedSub;
+  DateTime? _lastProofOfLifeAt;
+  Timer? _livenessWatchdog;
+  static const Duration _livenessCheckInterval = Duration(seconds: 30);
+  // keepAlivePeriod (60s) * 2 + slack: tolerate one missed PINGRESP before
+  // declaring the socket dead.
+  static const Duration _livenessStaleThreshold = Duration(seconds: 135);
 
   // Publish suppression dedupe — collapse repeated identical warnings on
   // the same (phase, reason, topic-family) tuple to avoid log spam when
@@ -435,6 +485,10 @@ class MqttClientProxyService {
     messagesPublished: _messagesPublished,
     messagesRelayed: _messagesRelayed,
     reconnectAttempts: _reconnectAttempts,
+    framesReceivedFromRadio: _framesReceivedFromRadio,
+    publishesDeferred: _publishesDeferred,
+    publishesDropped: _publishesDropped,
+    publishesFlushed: _publishesFlushed,
   );
 
   /// Whether the proxy is currently connected.
@@ -455,6 +509,38 @@ class MqttClientProxyService {
   /// healthy socket.
   @visibleForTesting
   int get debugPendingPublishCount => _pendingPublishes.length;
+
+  /// Test-only: whether the liveness watchdog timer is currently running.
+  @visibleForTesting
+  bool get debugLivenessWatchdogActive => _livenessWatchdog != null;
+
+  /// Test-only: drives the true half-open failure mode — phase `connected`
+  /// and the socket reporting `connected` (via [_debugSimulateLiveSocket]),
+  /// but proof-of-life stale past the threshold. A following
+  /// [debugTickLivenessWatchdog] then exercises the force-reconnect path the
+  /// package's keep-alive is blind to. Wire [setOnReconnectNeeded] first.
+  @visibleForTesting
+  void debugSimulateHalfOpenSocket() {
+    _phase = MqttProxyConnectionPhase.connected;
+    _failureReason = MqttProxyFailureReason.none;
+    _debugSimulateLiveSocket = true;
+    _lastProofOfLifeAt = DateTime.now().subtract(_livenessStaleThreshold * 2);
+  }
+
+  /// Test-only: runs one liveness evaluation synchronously, standing in for a
+  /// watchdog timer tick.
+  @visibleForTesting
+  void debugTickLivenessWatchdog() => _checkLiveness();
+
+  /// Test-only: starts the watchdog timer, so the kill-switch gate can be
+  /// exercised without a live broker connection.
+  @visibleForTesting
+  void debugStartLivenessWatchdog() => _startLivenessWatchdog();
+
+  /// Test-only: simulates a broker PUBACK so tests can assert the published
+  /// count advances on confirmation rather than on send.
+  @visibleForTesting
+  void debugConfirmPublish() => _recordConfirmedPublish();
 
   /// Test-only: drives the service into the field-reported failure mode where
   /// the phase reads `connected` but the underlying socket is dead. Creates a
@@ -658,6 +744,9 @@ class MqttClientProxyService {
     client.onAutoReconnected = _onAutoReconnected;
     client.onDisconnected = _onDisconnected;
     client.onConnected = _onConnected;
+    // PINGRESP from the broker is the only proof-of-life on a publish-only
+    // (no-downlink) connection, so the liveness watchdog leans on it.
+    client.pongCallback = _onPong;
 
     // TLS configuration
     // The iOS app accepts self-signed certificates
@@ -749,6 +838,19 @@ class MqttClientProxyService {
 
               // Listen for inbound messages
               _subscription = client.updates?.listen(_handleInboundMessage);
+
+              // Count broker-confirmed publishes only. `published` emits on
+              // completion of the publish protocol for the QoS level (PUBACK
+              // for our QoS1), so a frame fired into a dead socket never
+              // counts. Attach only after connect, per the package contract.
+              _publishedSub?.cancel();
+              _publishedSub = client.published?.listen(_onPublishConfirmed);
+
+              // A fresh connect is proof of life; start the watchdog so a
+              // later silent socket death is detected without waiting on the
+              // package's keep-alive.
+              _lastProofOfLifeAt = DateTime.now();
+              _startLivenessWatchdog();
 
               _emitDiagnostics();
 
@@ -874,6 +976,11 @@ class MqttClientProxyService {
       return;
     }
 
+    // Count every frame the radio forwarder hands us (including malformed
+    // ones) so this can be compared against the protocol-layer forward
+    // counter to isolate where publishes are lost.
+    _framesReceivedFromRadio++;
+
     // Publish topics must never contain wildcards. Reject `+`/`#` (and
     // other invalid topics) before any connection gating so a malformed
     // topic never reaches the broker, regardless of client state.
@@ -909,6 +1016,8 @@ class MqttClientProxyService {
           text: text,
           retained: retained,
         );
+      } else {
+        _publishesDropped++;
       }
       _logSuppressedPublish(
         topic: topic,
@@ -949,9 +1058,11 @@ class MqttClientProxyService {
     _publishToClient(topic: topic, data: data, text: text, retained: retained);
   }
 
-  /// Publishes a single frame to the live broker socket and counts it. The
-  /// caller must have verified the phase is `connected` and the client socket
-  /// is healthy. Shared by the live publish path and the queue flush.
+  /// Publishes a single frame to the live broker socket. The caller must have
+  /// verified the phase is `connected` and the client socket is healthy.
+  /// Shared by the live publish path and the queue flush. Does NOT count the
+  /// publish — `_messagesPublished` advances only on broker confirmation
+  /// (`_onPublishConfirmed`), so a frame fired into a dead socket never counts.
   void _publishToClient({
     required String topic,
     List<int>? data,
@@ -979,9 +1090,6 @@ class MqttClientProxyService {
       builder.payload!,
       retain: retained,
     );
-
-    _messagesPublished++;
-    _emitDiagnostics();
   }
 
   /// Whether a publish arriving in [phase] should be buffered for replay
@@ -1013,6 +1121,9 @@ class MqttClientProxyService {
   }) {
     if (_pendingPublishes.length >= _maxPendingPublishes) {
       _pendingPublishes.removeAt(0);
+      // The evicted frame was deferred earlier and is now lost — count it as
+      // dropped so the deferred/dropped tallies stay honest.
+      _publishesDropped++;
       AppLogging.mqttProxyWarning(
         'Publish queue full ($_maxPendingPublishes); dropped oldest frame',
       );
@@ -1028,6 +1139,7 @@ class MqttClientProxyService {
         enqueuedAt: DateTime.now(),
       ),
     );
+    _publishesDeferred++;
   }
 
   /// Asks the wired reconnect handler (the provider's config-driven evaluator)
@@ -1044,6 +1156,72 @@ class MqttClientProxyService {
     AppLogging.mqttProxy('Requesting reconnect (stale socket detected)');
     _onReconnectNeeded!.call();
   }
+
+  // ---------------------------------------------------------------------------
+  // Private — liveness watchdog
+  // ---------------------------------------------------------------------------
+
+  /// Starts (or restarts) the periodic liveness check. No-op when the
+  /// kill switch is off, so a bad watchdog can be disabled remotely without a
+  /// ship. Foreground-only in practice: iOS suspends the timer in the
+  /// background, where the provider's app-resume trigger re-evaluates.
+  void _startLivenessWatchdog() {
+    if (!AppFeatureFlags.isMqttProxyLivenessWatchdogEnabled) return;
+    _livenessWatchdog?.cancel();
+    _livenessWatchdog = Timer.periodic(
+      _livenessCheckInterval,
+      (_) => _checkLiveness(),
+    );
+  }
+
+  void _stopLivenessWatchdog() {
+    _livenessWatchdog?.cancel();
+    _livenessWatchdog = null;
+  }
+
+  /// Runs one liveness evaluation. If the phase reads `connected` but no
+  /// proof-of-life (PINGRESP / inbound / fresh connect) has landed within
+  /// [_livenessStaleThreshold], the socket is presumed half-open dead and a
+  /// real reconnect is forced. Exposed via [checkLivenessNow] and the test
+  /// hook so callers can drive it without waiting on the timer.
+  void _checkLiveness() {
+    if (_disposed || _phase != MqttProxyConnectionPhase.connected) return;
+    final reference = _lastProofOfLifeAt ?? _lastConnectedAt;
+    if (reference == null) return;
+    if (DateTime.now().difference(reference) <= _livenessStaleThreshold) return;
+    AppLogging.mqttProxyWarning(
+      'Liveness watchdog: no proof-of-life for '
+      '${DateTime.now().difference(reference).inSeconds}s while phase reads '
+      'connected — forcing reconnect',
+    );
+    _forceReconnectStaleSocket();
+  }
+
+  /// Forces a genuine reconnect of a socket the package still believes is
+  /// connected. Tears the client down first so `connectionStatus.state` stops
+  /// reporting `connected` — otherwise the provider's `connect()` would
+  /// short-circuit as an idempotent no-op. Reuses the reconnect-request
+  /// debounce so overlapping ticks cannot storm the path.
+  void _forceReconnectStaleSocket() {
+    if (_disposed || _isConnecting || _onReconnectNeeded == null) return;
+    final now = DateTime.now();
+    if (_lastReconnectRequestAt != null &&
+        now.difference(_lastReconnectRequestAt!) < _reconnectRequestDebounce) {
+      return;
+    }
+    _lastReconnectRequestAt = now;
+    _stopLivenessWatchdog();
+    _phase = MqttProxyConnectionPhase.connecting;
+    _failureReason = MqttProxyFailureReason.none;
+    unawaited(_disconnectClient());
+    _emitDiagnostics();
+    _onReconnectNeeded!.call();
+  }
+
+  /// Runs an immediate liveness evaluation. Called by the provider on app
+  /// resume so a session that resumed onto a half-open socket recovers at once
+  /// instead of waiting for the next watchdog tick.
+  void checkLivenessNow() => _checkLiveness();
 
   /// Replays buffered device publishes in FIFO order once the socket is
   /// healthy. Frames older than [_pendingPublishTtl] are dropped instead of
@@ -1075,6 +1253,9 @@ class MqttClientProxyService {
       );
       flushed++;
     }
+    _publishesFlushed += flushed;
+    // TTL-expired frames were deferred but never delivered — count as dropped.
+    _publishesDropped += expired;
     if (flushed > 0 || expired > 0) {
       AppLogging.mqttProxy(
         'Flushed publish queue: $flushed sent, $expired expired',
@@ -1105,6 +1286,7 @@ class MqttClientProxyService {
   void markDisabled() {
     _intentionalDisconnect = true;
     _reconnectTimer?.cancel();
+    _stopLivenessWatchdog();
     _phase = MqttProxyConnectionPhase.disabled;
     _failureReason = MqttProxyFailureReason.none;
     _lastError = null;
@@ -1132,6 +1314,8 @@ class MqttClientProxyService {
     _disposed = true;
     _intentionalDisconnect = true;
     _reconnectTimer?.cancel();
+    _stopLivenessWatchdog();
+    _publishedSub?.cancel();
     _subscription?.cancel();
     _pendingPublishes.clear();
     _client?.disconnect();
@@ -1176,6 +1360,8 @@ class MqttClientProxyService {
       _messagesRelayed++;
     }
 
+    // Any inbound broker traffic is proof the socket is alive.
+    _lastProofOfLifeAt = DateTime.now();
     _emitDiagnostics();
   }
 
@@ -1189,6 +1375,8 @@ class MqttClientProxyService {
     _failureReason = MqttProxyFailureReason.none;
     _lastConnectedAt = DateTime.now();
     _lastError = null;
+    _lastProofOfLifeAt = DateTime.now();
+    _startLivenessWatchdog();
     _emitDiagnostics();
     _flushPendingPublishes();
   }
@@ -1229,8 +1417,31 @@ class MqttClientProxyService {
     _failureReason = MqttProxyFailureReason.none;
     _lastConnectedAt = DateTime.now();
     _lastError = null;
+    // Re-establishing the socket is proof of life; keep the watchdog running.
+    _lastProofOfLifeAt = DateTime.now();
+    _startLivenessWatchdog();
     _emitDiagnostics();
     _flushPendingPublishes();
+  }
+
+  /// PINGRESP received — the broker answered our keep-alive, so the socket is
+  /// alive. On a publish-only (no-downlink) connection this is the only
+  /// inbound traffic, so it is the watchdog's primary proof-of-life signal.
+  void _onPong() {
+    _lastProofOfLifeAt = DateTime.now();
+  }
+
+  /// A publish completed the QoS protocol at the broker (PUBACK for QoS1).
+  /// This is the only path that advances `_messagesPublished`, so the count
+  /// reflects broker-confirmed deliveries, never fire-and-forget attempts.
+  void _onPublishConfirmed(MqttPublishMessage _) => _recordConfirmedPublish();
+
+  /// Records a broker-confirmed publish. A confirmation is also inbound
+  /// proof-of-life. Shared by the `published` stream listener and the test hook.
+  void _recordConfirmedPublish() {
+    _messagesPublished++;
+    _lastProofOfLifeAt = DateTime.now();
+    _emitDiagnostics();
   }
 
   // ---------------------------------------------------------------------------
@@ -1238,6 +1449,9 @@ class MqttClientProxyService {
   // ---------------------------------------------------------------------------
 
   Future<void> _disconnectClient() async {
+    _stopLivenessWatchdog();
+    _publishedSub?.cancel();
+    _publishedSub = null;
     _subscription?.cancel();
     _subscription = null;
     _client?.disconnect();

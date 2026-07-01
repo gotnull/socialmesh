@@ -31991,6 +31991,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mqttProxyReconnects => 'Reconexões';
 
   @override
+  String get mqttProxyLastDisconnectedAt => 'Última desconexão';
+
+  @override
+  String get mqttProxyFramesReceived => 'Recebidos do rádio';
+
+  @override
+  String get mqttProxyDeferred => 'Adiados';
+
+  @override
+  String get mqttProxyDropped => 'Descartados';
+
+  @override
+  String get mqttProxyFlushed => 'Reenviados';
+
+  @override
   String get mqttProxyEnabled => 'Ativado';
 
   @override

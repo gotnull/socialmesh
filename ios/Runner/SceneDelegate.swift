@@ -4,12 +4,18 @@ import os
 
 // Window UISceneDelegate for the phone app.
 //
-// Flutter 3.41 adopts the UIScene lifecycle: the FlutterViewController is no
-// longer available in AppDelegate.didFinishLaunching (self.window is nil there).
-// FlutterSceneDelegate creates the window + FlutterViewController from the Main
-// storyboard during scene(_:willConnectTo:). We override that hook to register
-// the app's native method channels once the controller exists — the same
-// channels that previously lived in AppDelegate.
+// Under the UIScene lifecycle the storyboard-backed FlutterViewController is
+// created lazily on scene connect, spinning up an implicit FlutterEngine after
+// the app has already finished launching. Plugins that register BGTaskScheduler
+// launch handlers during registration then crash the process. To avoid that we
+// drive the window from the single, pre-warmed engine owned by AppDelegate
+// (created and registered during didFinishLaunching) instead of the storyboard.
+//
+// Because UIApplicationSupportsMultipleScenes is enabled (the CarPlay scene
+// coexists), the engine must be manually registered with the scene for plugins
+// to receive scene lifecycle events - registerSceneLifeCycleWithFlutterEngine.
+// The inherited FlutterSceneDelegate methods then forward foreground/background,
+// openURL, and userActivity callbacks to the registered engine's plugins.
 //
 // A second scene role (CPTemplateApplicationSceneSessionRoleApplication ->
 // CarPlaySceneDelegate) coexists with this one; both are declared in
@@ -20,11 +26,29 @@ class SceneDelegate: FlutterSceneDelegate {
         willConnectTo session: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
-        super.scene(scene, willConnectTo: session, options: connectionOptions)
-
-        guard let controller = window?.rootViewController as? FlutterViewController else {
+        guard let windowScene = scene as? UIWindowScene,
+              let engine = (UIApplication.shared.delegate as? AppDelegate)?.flutterEngine
+        else {
             return
         }
+
+        let controller = FlutterViewController(
+            engine: engine,
+            nibName: nil,
+            bundle: nil
+        )
+
+        let window = UIWindow(windowScene: windowScene)
+        window.rootViewController = controller
+        self.window = window
+        window.makeKeyAndVisible()
+
+        // Wire scene lifecycle events (foreground/background, openURL,
+        // userActivity) to the pre-warmed engine's plugins, and deliver the
+        // launch connection options to them. Needed because the engine was
+        // created outside the automatic scene-connect path.
+        _ = registerSceneLifeCycle(with: engine)
+
         registerChannels(on: controller)
     }
 

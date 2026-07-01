@@ -55435,6 +55435,36 @@ abstract class AppLocalizations {
   /// **'Reconnects'**
   String get mqttProxyReconnects;
 
+  /// Label for the last disconnection timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Last Disconnected'**
+  String get mqttProxyLastDisconnectedAt;
+
+  /// Label for count of proxy frames forwarded from the radio to the app
+  ///
+  /// In en, this message translates to:
+  /// **'Received from radio'**
+  String get mqttProxyFramesReceived;
+
+  /// Label for count of publishes buffered for later replay
+  ///
+  /// In en, this message translates to:
+  /// **'Deferred'**
+  String get mqttProxyDeferred;
+
+  /// Label for count of publishes dropped without delivery
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped'**
+  String get mqttProxyDropped;
+
+  /// Label for count of buffered publishes replayed on reconnect
+  ///
+  /// In en, this message translates to:
+  /// **'Flushed'**
+  String get mqttProxyFlushed;
+
   /// Generic enabled status label
   ///
   /// In en, this message translates to:

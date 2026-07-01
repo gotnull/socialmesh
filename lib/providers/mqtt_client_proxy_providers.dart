@@ -245,9 +245,12 @@ final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
   });
 
   // App resumes to foreground → re-evaluate (covers iOS background
-  // socket teardown).
+  // socket teardown). Also run an immediate liveness check so a session
+  // resumed onto a half-open socket recovers at once instead of waiting for
+  // the next watchdog tick.
   ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
     if (isForeground && previous != true) {
+      ref.read(mqttClientProxyServiceProvider).checkLivenessNow();
       unawaited(_evaluateProxyState(ref, 'app-resumed'));
     }
   });

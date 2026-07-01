@@ -42697,6 +42697,26 @@
     "@mqttProxyReconnects": {
         "description": "Label for number of auto-reconnect attempts"
     },
+    "mqttProxyLastDisconnectedAt": "Last Disconnected",
+    "@mqttProxyLastDisconnectedAt": {
+        "description": "Label for the last disconnection timestamp"
+    },
+    "mqttProxyFramesReceived": "Received from radio",
+    "@mqttProxyFramesReceived": {
+        "description": "Label for count of proxy frames forwarded from the radio to the app"
+    },
+    "mqttProxyDeferred": "Deferred",
+    "@mqttProxyDeferred": {
+        "description": "Label for count of publishes buffered for later replay"
+    },
+    "mqttProxyDropped": "Dropped",
+    "@mqttProxyDropped": {
+        "description": "Label for count of publishes dropped without delivery"
+    },
+    "mqttProxyFlushed": "Flushed",
+    "@mqttProxyFlushed": {
+        "description": "Label for count of buffered publishes replayed on reconnect"
+    },
     "mqttProxyEnabled": "Enabled",
     "@mqttProxyEnabled": {
         "description": "Generic enabled status label"

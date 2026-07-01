@@ -32265,6 +32265,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mqttProxyReconnects => 'Reconnexions';
 
   @override
+  String get mqttProxyLastDisconnectedAt => 'Dernière déconnexion';
+
+  @override
+  String get mqttProxyFramesReceived => 'Reçus de la radio';
+
+  @override
+  String get mqttProxyDeferred => 'Différés';
+
+  @override
+  String get mqttProxyDropped => 'Abandonnés';
+
+  @override
+  String get mqttProxyFlushed => 'Renvoyés';
+
+  @override
   String get mqttProxyEnabled => 'Activé';
 
   @override

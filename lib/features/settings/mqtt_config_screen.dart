@@ -980,13 +980,13 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                     : none,
                 icon: Icons.check_circle_outline,
               ),
-              if (diag.lastFailureAt != null)
-                InfoTableRow(
-                  label: l10n.mqttProxyLastFailureAt,
-                  value: dateFmt.format(diag.lastFailureAt!),
-                  icon: Icons.report_outlined,
-                  iconColor: SemanticColors.error,
-                ),
+              InfoTableRow(
+                label: l10n.mqttProxyLastDisconnectedAt,
+                value: diag.lastDisconnectedAt != null
+                    ? dateFmt.format(diag.lastDisconnectedAt!)
+                    : none,
+                icon: Icons.link_off,
+              ),
               InfoTableRow(
                 label: l10n.mqttProxyPublished,
                 value: diag.messagesPublished.toString(),
@@ -997,19 +997,51 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                 value: diag.messagesRelayed.toString(),
                 icon: Icons.download,
               ),
-              if (diag.reconnectAttempts > 0)
-                InfoTableRow(
-                  label: l10n.mqttProxyReconnects,
-                  value: diag.reconnectAttempts.toString(),
-                  icon: Icons.refresh,
-                ),
-              if (diag.lastError != null)
-                InfoTableRow(
-                  label: l10n.mqttProxyLastError,
-                  value: diag.lastError!,
-                  icon: Icons.error_outline,
-                  iconColor: SemanticColors.error,
-                ),
+              // Publish-path counters — isolate where device→broker frames go.
+              InfoTableRow(
+                label: l10n.mqttProxyFramesReceived,
+                value: diag.framesReceivedFromRadio.toString(),
+                icon: Icons.cell_tower,
+              ),
+              InfoTableRow(
+                label: l10n.mqttProxyDeferred,
+                value: diag.publishesDeferred.toString(),
+                icon: Icons.pending_outlined,
+              ),
+              InfoTableRow(
+                label: l10n.mqttProxyDropped,
+                value: diag.publishesDropped.toString(),
+                icon: Icons.block,
+                iconColor: diag.publishesDropped > 0
+                    ? SemanticColors.error
+                    : null,
+              ),
+              InfoTableRow(
+                label: l10n.mqttProxyFlushed,
+                value: diag.publishesFlushed.toString(),
+                icon: Icons.replay,
+              ),
+              InfoTableRow(
+                label: l10n.mqttProxyReconnects,
+                value: diag.reconnectAttempts.toString(),
+                icon: Icons.refresh,
+              ),
+              InfoTableRow(
+                label: l10n.mqttProxyLastFailureAt,
+                value: diag.lastFailureAt != null
+                    ? dateFmt.format(diag.lastFailureAt!)
+                    : none,
+                icon: Icons.report_outlined,
+                iconColor: diag.lastFailureAt != null
+                    ? SemanticColors.error
+                    : null,
+              ),
+              InfoTableRow(
+                label: l10n.mqttProxyLastError,
+                value: diag.lastError ?? none,
+                icon: Icons.error_outline,
+                iconColor: diag.lastError != null ? SemanticColors.error : null,
+              ),
             ],
           ),
         ),
@@ -1123,6 +1155,12 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     final lastConnected = diag.lastConnectedAt != null
         ? dateFmt.format(diag.lastConnectedAt!)
         : context.l10n.mqttProxyNoneLabel;
+    final lastDisconnected = diag.lastDisconnectedAt != null
+        ? dateFmt.format(diag.lastDisconnectedAt!)
+        : context.l10n.mqttProxyNoneLabel;
+    final lastFailure = diag.lastFailureAt != null
+        ? dateFmt.format(diag.lastFailureAt!)
+        : context.l10n.mqttProxyNoneLabel;
 
     final buffer = StringBuffer()
       ..writeln(
@@ -1142,6 +1180,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         '${context.l10n.mqttProxyReason}: $reason',
       ); // lint-allow: hardcoded-string
     }
+    // Every field is emitted unconditionally (with a "None" fallback) so a
+    // support dump is always complete — an absent line used to be ambiguous
+    // between "healthy" and "old app version".
     buffer
       ..writeln(
         '${context.l10n.mqttProxyLastConnectAttempt}: $lastAttempt',
@@ -1150,28 +1191,37 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         '${context.l10n.mqttProxyLastConnectedAt}: $lastConnected',
       ) // lint-allow: hardcoded-string
       ..writeln(
+        '${context.l10n.mqttProxyLastDisconnectedAt}: $lastDisconnected',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
         '${context.l10n.mqttProxyPublished}: ${diag.messagesPublished}',
       ) // lint-allow: hardcoded-string
       ..writeln(
         '${context.l10n.mqttProxyRelayed}: ${diag.messagesRelayed}',
-      ); // lint-allow: hardcoded-string
-
-    if (diag.lastFailureAt != null) {
-      buffer.writeln(
-        '${context.l10n.mqttProxyLastFailureAt}: '
-        '${dateFmt.format(diag.lastFailureAt!)}',
-      ); // lint-allow: hardcoded-string
-    }
-    if (diag.reconnectAttempts > 0) {
-      buffer.writeln(
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyFramesReceived}: '
+        '${diag.framesReceivedFromRadio}',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyDeferred}: ${diag.publishesDeferred}',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyDropped}: ${diag.publishesDropped}',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyFlushed}: ${diag.publishesFlushed}',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
         '${context.l10n.mqttProxyReconnects}: ${diag.reconnectAttempts}',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyLastFailureAt}: $lastFailure',
+      ) // lint-allow: hardcoded-string
+      ..writeln(
+        '${context.l10n.mqttProxyLastError}: '
+        '${diag.lastError ?? context.l10n.mqttProxyNoneLabel}',
       ); // lint-allow: hardcoded-string
-    }
-    if (diag.lastError != null) {
-      buffer.writeln(
-        '${context.l10n.mqttProxyLastError}: ${diag.lastError}',
-      ); // lint-allow: hardcoded-string
-    }
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
     showSuccessSnackBar(context, context.l10n.mqttProxyDiagnosticsCopied);
