@@ -537,6 +537,15 @@ class MqttClientProxyService {
   @visibleForTesting
   void debugStartLivenessWatchdog() => _startLivenessWatchdog();
 
+  /// Test-only: ages proof-of-life past the stale threshold without touching
+  /// any other state. Lets an integration test drive the watchdog against a
+  /// genuinely-connected (then frozen) socket without waiting out the real
+  /// threshold.
+  @visibleForTesting
+  void debugSetProofOfLifeStale() {
+    _lastProofOfLifeAt = DateTime.now().subtract(_livenessStaleThreshold * 2);
+  }
+
   /// Test-only: simulates a broker PUBACK so tests can assert the published
   /// count advances on confirmation rather than on send.
   @visibleForTesting
