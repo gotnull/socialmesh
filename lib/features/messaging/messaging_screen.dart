@@ -3906,8 +3906,13 @@ class _MessageBubble extends ConsumerWidget {
               explainTitle: l10n.messagingTechInfoExplainTransportTitle,
               explainBody: l10n.messagingTechInfoExplainTransportBody,
             ),
-          // No radio metadata — show explicit indicator
-          if (!hasRadioInfo)
+          // No radio metadata - show an explicit indicator, but only on
+          // inbound bubbles. Outbound messages reach the radio over
+          // BLE/USB, never over LoRa, so they can never carry receive
+          // metadata; showing the indicator there reads as a fault. The
+          // reference client likewise shows radio metadata only for
+          // messages from other nodes.
+          if (!sentByMe && !hasRadioInfo)
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
