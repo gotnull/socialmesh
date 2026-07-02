@@ -12165,6 +12165,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingHelp => 'Aiuto';
 
   @override
+  String messagingKeyMismatchSheetSubtitle(String name) {
+    return 'Chiave di crittografia cambiata per $name';
+  }
+
+  @override
+  String get messagingKeyMismatchBannerTitle =>
+      'Chiave di crittografia cambiata';
+
+  @override
+  String get messagingKeyMismatchBannerBody =>
+      'La chiave di crittografia di questo contatto è cambiata. I messaggi inviati mentre le chiavi non coincidevano potrebbero non essere stati consegnati. Tocca per aggiornare e verificare la chiave.';
+
+  @override
   String get messagingMessageDeleted => 'Messaggio eliminato';
 
   @override

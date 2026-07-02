@@ -2043,8 +2043,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   void _showPkiFixSheet(Message message) {
+    _showKeyRefreshSheet(
+      targetNodeNum: message.to,
+      warningText: message.routingError?.fixSuggestion,
+      retryMessage: message,
+    );
+  }
+
+  /// Encryption-key recovery sheet: Request User Info, optional message
+  /// retry, and the node-database reset escape hatch. Reached from a
+  /// failed PKI message ([_showPkiFixSheet]) and from the DM thread's
+  /// key-mismatch banner (no message to retry there).
+  void _showKeyRefreshSheet({
+    required int targetNodeNum,
+    String? warningText,
+    Message? retryMessage,
+  }) {
     final nodes = ref.read(nodesProvider);
-    final targetNode = nodes[message.to];
+    final targetNode = nodes[targetNodeNum];
     final targetName =
         targetNode?.displayName ?? context.l10n.messagingUnknownNode;
 
@@ -2061,15 +2077,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           BottomSheetHeader(
             icon: Icons.key_off,
             title: context.l10n.messagingEncryptionKeyIssueTitle,
-            subtitle: context.l10n.messagingEncryptionKeyIssueSubtitle(
-              targetName,
-            ),
+            // The "failed" phrasing is only true when arriving from a
+            // failed message; the banner path states the key change
+            // without asserting a delivery failure.
+            subtitle: retryMessage != null
+                ? context.l10n.messagingEncryptionKeyIssueSubtitle(targetName)
+                : context.l10n.messagingKeyMismatchSheetSubtitle(targetName),
           ),
           SizedBox(height: AppTheme.spacing16),
           StatusBanner.warning(
-            title:
-                message.routingError?.fixSuggestion ??
-                context.l10n.messagingEncryptionKeyWarning,
+            title: warningText ?? context.l10n.messagingEncryptionKeyWarning,
           ),
           const SizedBox(height: AppTheme.spacing20),
           // Request User Info button
@@ -2079,7 +2096,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               onPressed: () async {
                 Navigator.pop(parentContext);
                 try {
-                  await protocol.requestNodeInfo(message.to);
+                  await protocol.requestNodeInfo(targetNodeNum);
                   if (mounted) {
                     showGlobalInfoSnackBar(
                       context.l10n.messagingRequestUserInfoSuccess(targetName),
@@ -2110,34 +2127,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.spacing12),
-          // Retry message button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pop(parentContext);
-                if (mounted) {
-                  _retryMessage(message);
-                }
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.textSecondary,
-                side: BorderSide(color: context.border),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+          if (retryMessage != null) ...[
+            const SizedBox(height: AppTheme.spacing12),
+            // Retry message button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(parentContext);
+                  if (mounted) {
+                    _retryMessage(retryMessage);
+                  }
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.textSecondary,
+                  side: BorderSide(color: context.border),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                ),
+                icon: const Icon(Icons.send, size: 20),
+                label: Text(
+                  context.l10n.messagingRetryMessage,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
-              icon: const Icon(Icons.send, size: 20),
-              label: Text(
-                context.l10n.messagingRetryMessage,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-              ),
             ),
-          ),
+          ],
           const SizedBox(height: AppTheme.spacing8),
           // Advanced options link
           TextButton(
@@ -2598,6 +2617,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       ),
                     ],
                   ),
+                ),
+              // Key-mismatch warning for DM threads. Wrapped in a Consumer
+              // so only this banner rebuilds on node updates - the outer
+              // build is hot-path on every messagesProvider tick.
+              if (widget.type == ConversationType.directMessage &&
+                  widget.nodeNum != null)
+                Consumer(
+                  builder: (context, ref, _) {
+                    final peer = ref.watch(
+                      nodesProvider.select((nodes) => nodes[widget.nodeNum]),
+                    );
+                    if (peer == null || !peer.keyMismatch) {
+                      return const SizedBox.shrink();
+                    }
+                    return StatusBanner.warning(
+                      title: context.l10n.messagingKeyMismatchBannerTitle,
+                      subtitle: context.l10n.messagingKeyMismatchBannerBody,
+                      icon: Icons.key_off,
+                      margin: const EdgeInsets.fromLTRB(
+                        AppTheme.spacing16,
+                        AppTheme.spacing8,
+                        AppTheme.spacing16,
+                        AppTheme.spacing8,
+                      ),
+                      onTap: () =>
+                          _showKeyRefreshSheet(targetNodeNum: widget.nodeNum!),
+                    );
+                  },
                 ),
               // Messages
               Expanded(

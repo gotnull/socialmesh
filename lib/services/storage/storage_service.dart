@@ -1428,6 +1428,12 @@ class NodeStorageService {
       'isMuted': node.isMuted,
       'distance': node.distance,
       'hasPublicKey': node.hasPublicKey,
+      // Key bytes persist so PKI key-mismatch detection has a trusted
+      // baseline across restarts, not just within one session's NodeDB.
+      'publicKey': node.publicKey != null && node.publicKey!.isNotEmpty
+          ? base64Encode(node.publicKey!)
+          : null,
+      'keyMismatch': node.keyMismatch,
       'hopCount': node.hopCount,
       'viaMqtt': node.viaMqtt,
       // Device Metrics
@@ -1550,6 +1556,10 @@ class NodeStorageService {
       isMuted: json['isMuted'] as bool? ?? false,
       distance: (json['distance'] as num?)?.toDouble(),
       hasPublicKey: json['hasPublicKey'] as bool? ?? false,
+      publicKey: json['publicKey'] != null
+          ? List<int>.unmodifiable(base64Decode(json['publicKey'] as String))
+          : null,
+      keyMismatch: json['keyMismatch'] as bool? ?? false,
       hopCount: json['hopCount'] as int?,
       viaMqtt: json['viaMqtt'] as bool? ?? false,
       // Device Metrics

@@ -3933,6 +3933,12 @@ class ProtocolService {
             publicKey: user.publicKey.isNotEmpty
                 ? List<int>.unmodifiable(user.publicKey)
                 : existingNode.publicKey,
+            // A fresh owner-response key replaces the trusted baseline,
+            // so any recorded mismatch is resolved.
+            keyMismatch: user.publicKey.isNotEmpty
+                ? false
+                : existingNode.keyMismatch,
+            clearPendingPublicKey: user.publicKey.isNotEmpty,
             lastHeard: _resolvePacketLastHeard(
               packet,
               existing: existingNode.lastHeard,
@@ -5509,6 +5515,10 @@ class ProtocolService {
         avatarColor: null,
         hasPublicKey: hasPublicKey,
         publicKey: publicKeyBytes ?? existingNode.publicKey,
+        // A fresh NodeInfo key replaces the trusted baseline, so any
+        // recorded mismatch is resolved; without a key, preserve it.
+        keyMismatch: publicKeyBytes != null ? false : existingNode.keyMismatch,
+        clearPendingPublicKey: publicKeyBytes != null,
         isMuted: nodeInfo.hasIsMuted()
             ? nodeInfo.isMuted
             : existingNode.isMuted,
@@ -8065,33 +8075,52 @@ class ProtocolService {
     }
   }
 
-  /// Request node info/PKI key exchange by broadcasting our own User info
+  /// Build our own User payload for NODEINFO_APP sends. Prefers the full
+  /// User config cached from the device - it carries our public key,
+  /// hardware model, role, and licence state, the same fields the
+  /// reference client sends on a user-info exchange. Falls back to a
+  /// minimal identity payload (plus the cached public key, when known)
+  /// if the device config has not arrived yet.
+  pb.User _buildOwnUserPayload() {
+    final cached = _currentUserConfig;
+    if (cached != null) return cached.deepCopy();
+
+    final myNode = _nodes[_myNodeNum];
+    final user = pb.User()
+      ..id =
+          myNode?.userId ??
+          '!${(_myNodeNum ?? 0).toRadixString(16).padLeft(8, '0')}'
+      ..longName = myNode?.longName ?? 'Unknown'
+      ..shortName = myNode?.shortName ?? '????';
+    final key = myNode?.publicKey;
+    if (key != null && key.isNotEmpty) {
+      user.publicKey = key;
+    }
+    return user;
+  }
+
+  /// Request node info/PKI key exchange by sending our own User info
   ///
   /// This triggers the Meshtastic key exchange mechanism:
-  /// 1. We broadcast our User info (including our public key)
-  /// 2. Other nodes receive it and update their NodeDB with our info
-  /// 3. This prompts them to broadcast their User info in response
+  /// 1. We send our User info (including our public key)
+  /// 2. The node receives it and updates its NodeDB with our info
+  /// 3. `wantResponse` prompts it to send its User info back
   /// 4. We receive their info and update our NodeDB
   ///
   /// Note: Admin messages (getOwnerRequest) require authorization and won't
-  /// work for arbitrary remote nodes. Broadcasting NODEINFO is the standard
+  /// work for arbitrary remote nodes. Sending NODEINFO is the standard
   /// way to trigger key exchange.
   Future<void> requestNodeInfo(int nodeNum) async {
     try {
       AppLogging.protocol(
-        '🔑 Broadcasting our User info to trigger key exchange with ${nodeNum.toRadixString(16)}',
+        '🔑 Sending our User info to trigger key exchange with ${nodeNum.toRadixString(16)}',
       );
-      AppLogging.protocol('Broadcasting User info to trigger key exchange');
 
-      // Build our User info to broadcast
-      final myNode = _nodes[_myNodeNum];
-      final user = pb.User()
-        ..id = myNode?.userId ?? '!${(_myNodeNum ?? 0).toRadixString(16)}'
-        ..longName = myNode?.longName ?? 'Unknown'
-        ..shortName = myNode?.shortName ?? '????';
+      final user = _buildOwnUserPayload();
 
       AppLogging.protocol(
-        '🔑 Broadcasting: ${user.longName} (${user.shortName})',
+        '🔑 Sending: ${user.longName} (${user.shortName}) '
+        'pubkey=${user.publicKey.length}B',
       );
 
       final data = pb.Data()
@@ -8099,12 +8128,18 @@ class ProtocolService {
         ..payload = user.writeToBuffer()
         ..wantResponse = true; // Request a response with their info
 
-      // Send directly to the target node (not broadcast) with wantResponse
+      // Send directly to the target node (not broadcast) with wantResponse,
+      // on the channel the peer was last heard on - a request sent on the
+      // primary channel never decrypts for a peer parked on a secondary
+      // slot. Priority is left unset: the firmware promotes wantAck
+      // packets to RELIABLE on its own.
+      final peerNode = _nodes[nodeNum];
       final packet = MeshPacketBuilder.userPayload(
         myNodeNum: _myNodeNum ?? 0,
         to: nodeNum,
         data: data,
         packetId: _generatePacketId(),
+        channel: peerNode?.lastHeardChannel ?? 0,
         wantAck: true,
       );
 
@@ -8128,11 +8163,7 @@ class ProtocolService {
     try {
       AppLogging.protocol('🔑 Broadcasting our User info to mesh');
 
-      final myNode = _nodes[_myNodeNum];
-      final user = pb.User()
-        ..id = myNode?.userId ?? '!${(_myNodeNum ?? 0).toRadixString(16)}'
-        ..longName = myNode?.longName ?? 'Unknown'
-        ..shortName = myNode?.shortName ?? '????';
+      final user = _buildOwnUserPayload();
 
       final data = pb.Data()
         ..portnum = pn.PortNum.NODEINFO_APP
@@ -8742,9 +8773,24 @@ class ProtocolService {
     }
 
     final isUpdate = existingKey != null && existingKey.isNotEmpty;
+    // A changed key on a PKI DM addressed to us is the key-mismatch
+    // event: DMs were failing in both directions while the peer held a
+    // key we didn't know about. The new key is still adopted (below) so
+    // outbound delivery self-heals and contact sync pushes the current
+    // key to the radio, but the node is flagged - keeping the superseded
+    // key for diagnostics - so the DM thread can tell the user what
+    // happened and offer an explicit refresh. Cleared when a fresh
+    // NodeInfo or owner response confirms the key.
+    final isDmKeyChange =
+        isUpdate &&
+        packet.pkiEncrypted &&
+        _myNodeNum != null &&
+        packet.to == _myNodeNum;
     final updatedNode = existingNode.copyWith(
       publicKey: newKey,
       hasPublicKey: true,
+      keyMismatch: isDmKeyChange ? true : null,
+      pendingPublicKey: isDmKeyChange ? existingKey : null,
     );
     _nodes[senderNodeNum] = updatedNode;
     _nodeController.add(updatedNode);

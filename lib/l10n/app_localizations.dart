@@ -21028,6 +21028,24 @@ abstract class AppLocalizations {
   /// **'Help'**
   String get messagingHelp;
 
+  /// Subtitle of the key refresh sheet when opened from the DM key-mismatch banner (no failed message context).
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption key changed for {name}'**
+  String messagingKeyMismatchSheetSubtitle(String name);
+
+  /// Title of the persistent DM-thread warning banner shown when the peer's message key no longer matches the stored key.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption key changed'**
+  String get messagingKeyMismatchBannerTitle;
+
+  /// Body of the DM-thread key-mismatch warning banner. Tapping opens the key refresh sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'This contact\'s encryption key has changed. Messages sent while the keys disagreed may not have been delivered. Tap to refresh and verify their key.'**
+  String get messagingKeyMismatchBannerBody;
+
   /// Success snackbar after deleting a message.
   ///
   /// In en, this message translates to:

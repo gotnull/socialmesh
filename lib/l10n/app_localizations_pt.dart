@@ -12157,6 +12157,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingHelp => 'Ajuda';
 
   @override
+  String messagingKeyMismatchSheetSubtitle(String name) {
+    return 'Chave de criptografia alterada para $name';
+  }
+
+  @override
+  String get messagingKeyMismatchBannerTitle =>
+      'Chave de criptografia alterada';
+
+  @override
+  String get messagingKeyMismatchBannerBody =>
+      'A chave de criptografia deste contato mudou. Mensagens enviadas enquanto as chaves divergiam podem não ter sido entregues. Toque para atualizar e verificar a chave.';
+
+  @override
   String get messagingMessageDeleted => 'Mensagem excluída';
 
   @override

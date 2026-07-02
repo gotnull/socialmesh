@@ -12256,6 +12256,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messagingHelp => 'Aide';
 
   @override
+  String messagingKeyMismatchSheetSubtitle(String name) {
+    return 'Clé de chiffrement de $name modifiée';
+  }
+
+  @override
+  String get messagingKeyMismatchBannerTitle => 'Clé de chiffrement modifiée';
+
+  @override
+  String get messagingKeyMismatchBannerBody =>
+      'La clé de chiffrement de ce contact a changé. Les messages envoyés pendant que les clés différaient n\'ont peut-être pas été remis. Touchez pour actualiser et vérifier la clé.';
+
+  @override
   String get messagingMessageDeleted => 'Message supprimé';
 
   @override

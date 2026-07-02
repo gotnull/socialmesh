@@ -12191,6 +12191,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messagingHelp => 'Hilfe';
 
   @override
+  String messagingKeyMismatchSheetSubtitle(String name) {
+    return 'Verschlüsselungsschlüssel für $name geändert';
+  }
+
+  @override
+  String get messagingKeyMismatchBannerTitle =>
+      'Verschlüsselungsschlüssel geändert';
+
+  @override
+  String get messagingKeyMismatchBannerBody =>
+      'Der Verschlüsselungsschlüssel dieses Kontakts hat sich geändert. Nachrichten, die während der Schlüsselabweichung gesendet wurden, kamen möglicherweise nicht an. Tippen, um den Schlüssel zu aktualisieren und zu überprüfen.';
+
+  @override
   String get messagingMessageDeleted => 'Nachricht gelöscht';
 
   @override

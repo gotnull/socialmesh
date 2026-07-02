@@ -16137,6 +16137,24 @@
         "description": "Hint text in the message search field."
     },
     "messagingHelp": "Help",
+    "messagingKeyMismatchSheetSubtitle": "Encryption key changed for {name}",
+    "@messagingKeyMismatchSheetSubtitle": {
+        "description": "Subtitle of the key refresh sheet when opened from the DM key-mismatch banner (no failed message context).",
+        "placeholders": {
+            "name": {
+                "type": "String",
+                "description": "The display name of the peer node."
+            }
+        }
+    },
+    "messagingKeyMismatchBannerTitle": "Encryption key changed",
+    "@messagingKeyMismatchBannerTitle": {
+        "description": "Title of the persistent DM-thread warning banner shown when the peer's message key no longer matches the stored key."
+    },
+    "messagingKeyMismatchBannerBody": "This contact's encryption key has changed. Messages sent while the keys disagreed may not have been delivered. Tap to refresh and verify their key.",
+    "@messagingKeyMismatchBannerBody": {
+        "description": "Body of the DM-thread key-mismatch warning banner. Tapping opens the key refresh sheet."
+    },
     "@messagingHelp": {
         "description": "Popup menu item to start the messaging help tour."
     },

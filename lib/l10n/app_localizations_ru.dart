@@ -12161,6 +12161,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messagingHelp => 'Справка';
 
   @override
+  String messagingKeyMismatchSheetSubtitle(String name) {
+    return 'Ключ шифрования $name изменился';
+  }
+
+  @override
+  String get messagingKeyMismatchBannerTitle => 'Ключ шифрования изменился';
+
+  @override
+  String get messagingKeyMismatchBannerBody =>
+      'Ключ шифрования этого контакта изменился. Сообщения, отправленные при несовпадении ключей, могли не дойти. Нажмите, чтобы обновить и проверить ключ.';
+
+  @override
   String get messagingMessageDeleted => 'Сообщение удалено';
 
   @override

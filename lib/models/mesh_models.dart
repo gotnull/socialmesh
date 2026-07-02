@@ -75,7 +75,7 @@ enum RoutingError {
         return 'Node may be out of range or offline'; // lint-allow: hardcoded-string
       case RoutingError.timeout:
       case RoutingError.maxRetransmit:
-        return 'Network congestion, try again later'; // lint-allow: hardcoded-string
+        return 'No reply from the destination. The node may be out of range or offline, or its encryption key may have changed - try "Request User Info"'; // lint-allow: hardcoded-string
       case RoutingError.dutyCycleLimit:
         return 'Radio duty cycle limit reached, wait a moment'; // lint-allow: hardcoded-string
       default:
@@ -436,6 +436,22 @@ class MeshNode {
   /// `null` or empty when the node has not advertised a public key.
   final List<int>? publicKey;
 
+  /// True when an inbound PKI-encrypted DM from this node carried a
+  /// public key that differed from the one held at the time. While the
+  /// keys disagreed, DMs failed silently in both directions (each side
+  /// encrypts with a key the other does not hold), so surfaces should
+  /// warn and offer a key refresh. The changed key is adopted into
+  /// [publicKey] at detection time; the flag records that the change
+  /// happened and clears when a fresh NodeInfo or owner response
+  /// confirms the key.
+  final bool keyMismatch;
+
+  /// The superseded key that [publicKey] replaced when [keyMismatch]
+  /// was set. Kept for diagnostics and for surfaces that show the
+  /// old/new key fingerprints side by side. `null` while [keyMismatch]
+  /// is false.
+  final List<int>? pendingPublicKey;
+
   /// The local channel index on which this node was last heard.
   ///
   /// Field 6 in the firmware's `meshtastic.NodeInfo` proto — quote from
@@ -567,6 +583,8 @@ class MeshNode {
     this.avatarColor,
     this.hasPublicKey = false,
     this.publicKey,
+    this.keyMismatch = false,
+    this.pendingPublicKey,
     this.lastHeardChannel,
     // Device Metrics
     this.voltage,
@@ -678,6 +696,9 @@ class MeshNode {
     int? avatarColor,
     bool? hasPublicKey,
     List<int>? publicKey,
+    bool? keyMismatch,
+    List<int>? pendingPublicKey,
+    bool clearPendingPublicKey = false,
     int? lastHeardChannel,
     // Device Metrics
     double? voltage,
@@ -784,6 +805,10 @@ class MeshNode {
       avatarColor: avatarColor ?? this.avatarColor,
       hasPublicKey: hasPublicKey ?? this.hasPublicKey,
       publicKey: publicKey ?? this.publicKey,
+      keyMismatch: keyMismatch ?? this.keyMismatch,
+      pendingPublicKey: clearPendingPublicKey
+          ? null
+          : (pendingPublicKey ?? this.pendingPublicKey),
       lastHeardChannel: lastHeardChannel ?? this.lastHeardChannel,
       // Device Metrics
       voltage: voltage ?? this.voltage,

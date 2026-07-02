@@ -12014,6 +12014,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingHelp => 'Help';
 
   @override
+  String messagingKeyMismatchSheetSubtitle(String name) {
+    return 'Encryption key changed for $name';
+  }
+
+  @override
+  String get messagingKeyMismatchBannerTitle => 'Encryption key changed';
+
+  @override
+  String get messagingKeyMismatchBannerBody =>
+      'This contact\'s encryption key has changed. Messages sent while the keys disagreed may not have been delivered. Tap to refresh and verify their key.';
+
+  @override
   String get messagingMessageDeleted => 'Message deleted';
 
   @override

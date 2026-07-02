@@ -12220,6 +12220,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get messagingHelp => 'Ayuda';
 
   @override
+  String messagingKeyMismatchSheetSubtitle(String name) {
+    return 'La clave de cifrado de $name ha cambiado';
+  }
+
+  @override
+  String get messagingKeyMismatchBannerTitle =>
+      'La clave de cifrado ha cambiado';
+
+  @override
+  String get messagingKeyMismatchBannerBody =>
+      'La clave de cifrado de este contacto ha cambiado. Los mensajes enviados mientras las claves no coincidían pueden no haberse entregado. Toca para actualizar y verificar la clave.';
+
+  @override
   String get messagingMessageDeleted => 'Mensaje eliminado';
 
   @override
