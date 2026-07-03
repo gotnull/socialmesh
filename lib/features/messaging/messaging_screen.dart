@@ -2474,12 +2474,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     ),
                   )
                 else
-                  NodeAvatar(
-                    text: safeTruncate(widget.title, 2),
-                    color: widget.avatarColor != null
-                        ? Color(widget.avatarColor!)
-                        : AppTheme.graphPurple,
-                    size: 36,
+                  // Scoped Consumer for the same reason as the title below:
+                  // the outer build is hot-path on every messagesProvider
+                  // tick, so only this avatar rebuilds when the peer node
+                  // changes. The full 4-char shortName comes from the live
+                  // node; widget.title is the long name and is only a
+                  // fallback for peers not (yet) in the node DB.
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final peer = ref.watch(
+                        nodesProvider.select((nodes) => nodes[widget.nodeNum]),
+                      );
+                      return NodeAvatar(
+                        text:
+                            peer?.avatarName ??
+                            safeTruncate(sanitizeExternalText(widget.title), 4),
+                        color: widget.avatarColor != null
+                            ? Color(widget.avatarColor!)
+                            : AppTheme.graphPurple,
+                        size: 36,
+                      );
+                    },
                   ),
                 SizedBox(width: AppTheme.spacing12),
                 Flexible(

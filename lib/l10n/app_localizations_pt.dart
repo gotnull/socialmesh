@@ -40671,6 +40671,43 @@ class AppLocalizationsPt extends AppLocalizations {
   String get offlineDownloadFailed => 'Falha no download';
 
   @override
+  String get offlineStorageLocationLabel => 'Local de armazenamento';
+
+  @override
+  String get offlineStorageInternal => 'Interno';
+
+  @override
+  String get offlineStorageSdCard => 'Cartão SD';
+
+  @override
+  String get offlineStorageSwitched => 'Local de armazenamento atualizado';
+
+  @override
+  String get offlineStorageSwitchFailed =>
+      'Cartão SD indisponível. Verifique se ele está inserido e permite gravação.';
+
+  @override
+  String get offlineStorageOldCacheTitle => 'Excluir blocos antigos?';
+
+  @override
+  String offlineStorageOldCacheMessage(String size) {
+    return '$size de blocos permanecem no local anterior. As áreas baixadas precisarão ser baixadas novamente no novo local, a menos que você volte a trocar.';
+  }
+
+  @override
+  String get offlineStorageOldCacheDelete => 'Excluir';
+
+  @override
+  String get offlineStorageOldCacheKeep => 'Manter';
+
+  @override
+  String get offlineStorageFallbackTitle => 'Cartão SD indisponível';
+
+  @override
+  String get offlineStorageFallbackSubtitle =>
+      'O armazenamento interno será usado até o cartão ficar disponível novamente.';
+
+  @override
   String get takBridgeSectionTitle => 'Mesh Bridge';
 
   @override

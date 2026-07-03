@@ -40706,6 +40706,43 @@ class AppLocalizationsUk extends AppLocalizations {
   String get offlineDownloadFailed => 'Не вдалося завантажити';
 
   @override
+  String get offlineStorageLocationLabel => 'Місце зберігання';
+
+  @override
+  String get offlineStorageInternal => 'Внутрішня пам\'ять';
+
+  @override
+  String get offlineStorageSdCard => 'SD-картка';
+
+  @override
+  String get offlineStorageSwitched => 'Місце зберігання оновлено';
+
+  @override
+  String get offlineStorageSwitchFailed =>
+      'SD-картка недоступна. Переконайтеся, що вона вставлена і доступна для запису.';
+
+  @override
+  String get offlineStorageOldCacheTitle => 'Видалити старі тайли?';
+
+  @override
+  String offlineStorageOldCacheMessage(String size) {
+    return 'У попередньому місці зберігання залишилося $size тайлів. Завантажені області доведеться завантажити знову в новому місці, якщо ви не переключитеся назад.';
+  }
+
+  @override
+  String get offlineStorageOldCacheDelete => 'Видалити';
+
+  @override
+  String get offlineStorageOldCacheKeep => 'Залишити';
+
+  @override
+  String get offlineStorageFallbackTitle => 'SD-картка недоступна';
+
+  @override
+  String get offlineStorageFallbackSubtitle =>
+      'Використовується внутрішня пам\'ять, доки картка знову не стане доступною.';
+
+  @override
   String get takBridgeSectionTitle => 'Mesh Bridge';
 
   @override

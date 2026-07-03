@@ -1750,13 +1750,24 @@ class _SearchResultTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Center(
-                    child: Text(
-                      _getAvatarText(),
-                      style: TextStyle(
-                        color: isActive ? accentColor : context.textSecondary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        fontFamily: AppTheme.fontFamily,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing4,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _worldMeshAvatarText(node),
+                          style: TextStyle(
+                            color: isActive
+                                ? accentColor
+                                : context.textSecondary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            fontFamily: AppTheme.fontFamily,
+                          ),
+                          maxLines: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -1828,21 +1839,21 @@ class _SearchResultTile extends StatelessWidget {
         .replaceAll('TLORA', 'T-LoRa')
         .replaceAll('RAK', 'RAK');
   }
+}
 
-  /// Get avatar text for a node - prefers shortName, falls back to hex ID
-  String _getAvatarText() {
-    final shortName = node.shortName.trim();
-    if (shortName.isNotEmpty &&
-        shortName != '????' &&
-        !shortName.startsWith('!')) {
-      return safeInitials(shortName, 2);
-    }
-    return node.nodeNum
-        .toRadixString(16)
-        .padLeft(8, '0')
-        .substring(0, 2)
-        .toUpperCase();
+/// Avatar text for a world-mesh node: the full shortName (max 4 graphemes,
+/// sanitized) when the node reports a real one, otherwise the last 4 hex
+/// digits of the node number (the app-wide short-form id).
+String _worldMeshAvatarText(WorldMeshNode node) {
+  final shortName = node.shortName.trim();
+  if (shortName.isNotEmpty &&
+      shortName != '????' &&
+      !shortName.startsWith('!')) {
+    final initials = safeInitials(shortName, 4);
+    if (initials.isNotEmpty) return initials;
   }
+  final hex = node.nodeNum.toRadixString(16).padLeft(8, '0');
+  return hex.substring(hex.length - 4).toUpperCase();
 }
 
 /// Rich info card for WorldMeshNode - shows all available data from mesh-observer
@@ -1945,13 +1956,22 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                   borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Center(
-                  child: Text(
-                    _getAvatarText(node),
-                    style: TextStyle(
-                      color: accentColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      fontFamily: AppTheme.fontFamily,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing4,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _worldMeshAvatarText(node),
+                        style: TextStyle(
+                          color: accentColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          fontFamily: AppTheme.fontFamily,
+                        ),
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ),
@@ -2466,24 +2486,6 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
     if (level > 60) return AppTheme.successGreen;
     if (level > 30) return AccentColors.orange;
     return AppTheme.errorRed;
-  }
-
-  /// Get avatar text for a node - prefers shortName, falls back to hex ID
-  String _getAvatarText(WorldMeshNode node) {
-    // Check if shortName is valid (not empty and not default placeholder)
-    final shortName = node.shortName.trim();
-    if (shortName.isNotEmpty &&
-        shortName != '????' &&
-        !shortName.startsWith('!')) {
-      // Use first 2 characters of shortName
-      return safeInitials(shortName, 2);
-    }
-    // Fall back to hex node ID (first 2 hex chars)
-    return node.nodeNum
-        .toRadixString(16)
-        .padLeft(8, '0')
-        .substring(0, 2)
-        .toUpperCase();
   }
 }
 

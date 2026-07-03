@@ -53795,6 +53795,56 @@
     "@offlineDownloadFailed": {
         "description": "Error message shown when a region download fails"
     },
+    "offlineStorageLocationLabel": "Storage location",
+    "@offlineStorageLocationLabel": {
+        "description": "Label above the internal/SD card storage picker in the offline download sheet (Android only)"
+    },
+    "offlineStorageInternal": "Internal",
+    "@offlineStorageInternal": {
+        "description": "Storage picker option: the phone's internal storage"
+    },
+    "offlineStorageSdCard": "SD card",
+    "@offlineStorageSdCard": {
+        "description": "Storage picker option: the removable SD card"
+    },
+    "offlineStorageSwitched": "Storage location updated",
+    "@offlineStorageSwitched": {
+        "description": "Success message after switching where offline map tiles are stored"
+    },
+    "offlineStorageSwitchFailed": "SD card unavailable. Check that it is inserted and writable.",
+    "@offlineStorageSwitchFailed": {
+        "description": "Error message when switching offline map storage to the SD card fails"
+    },
+    "offlineStorageOldCacheTitle": "Delete old tiles?",
+    "@offlineStorageOldCacheTitle": {
+        "description": "Title of the confirmation sheet offering to delete the tile cache left at the previous storage location"
+    },
+    "offlineStorageOldCacheMessage": "{size} of tiles remain at the previous location. Downloaded areas need downloading again at the new location unless you switch back.",
+    "@offlineStorageOldCacheMessage": {
+        "description": "Body of the confirmation sheet offering to delete the tile cache left at the previous storage location",
+        "placeholders": {
+            "size": {
+                "type": "String",
+                "description": "Human-readable size of the leftover cache, e.g. 120.4 MB"
+            }
+        }
+    },
+    "offlineStorageOldCacheDelete": "Delete",
+    "@offlineStorageOldCacheDelete": {
+        "description": "Button that deletes the tile cache left at the previous storage location"
+    },
+    "offlineStorageOldCacheKeep": "Keep",
+    "@offlineStorageOldCacheKeep": {
+        "description": "Button that keeps the tile cache left at the previous storage location"
+    },
+    "offlineStorageFallbackTitle": "SD card unavailable",
+    "@offlineStorageFallbackTitle": {
+        "description": "Warning banner title when SD card storage is preferred but the card is missing or unwritable"
+    },
+    "offlineStorageFallbackSubtitle": "Using internal storage until the card is available again.",
+    "@offlineStorageFallbackSubtitle": {
+        "description": "Warning banner body when SD card storage is preferred but the card is missing or unwritable"
+    },
     "takBridgeSectionTitle": "Mesh Bridge",
     "@takBridgeSectionTitle": {
         "description": "Section header for the TAK mesh bridge controls in settings"

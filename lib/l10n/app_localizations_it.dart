@@ -40701,6 +40701,43 @@ class AppLocalizationsIt extends AppLocalizations {
   String get offlineDownloadFailed => 'Download non riuscito';
 
   @override
+  String get offlineStorageLocationLabel => 'Posizione di archiviazione';
+
+  @override
+  String get offlineStorageInternal => 'Interna';
+
+  @override
+  String get offlineStorageSdCard => 'Scheda SD';
+
+  @override
+  String get offlineStorageSwitched => 'Posizione di archiviazione aggiornata';
+
+  @override
+  String get offlineStorageSwitchFailed =>
+      'Scheda SD non disponibile. Controlla che sia inserita e scrivibile.';
+
+  @override
+  String get offlineStorageOldCacheTitle => 'Eliminare le vecchie tessere?';
+
+  @override
+  String offlineStorageOldCacheMessage(String size) {
+    return '$size di tessere rimangono nella posizione precedente. Le aree scaricate dovranno essere scaricate di nuovo nella nuova posizione, a meno che tu non torni indietro.';
+  }
+
+  @override
+  String get offlineStorageOldCacheDelete => 'Elimina';
+
+  @override
+  String get offlineStorageOldCacheKeep => 'Mantieni';
+
+  @override
+  String get offlineStorageFallbackTitle => 'Scheda SD non disponibile';
+
+  @override
+  String get offlineStorageFallbackSubtitle =>
+      'Viene usata la memoria interna finché la scheda non torna disponibile.';
+
+  @override
   String get takBridgeSectionTitle => 'Mesh Bridge';
 
   @override

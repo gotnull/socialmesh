@@ -70199,6 +70199,72 @@ abstract class AppLocalizations {
   /// **'Download failed'**
   String get offlineDownloadFailed;
 
+  /// Label above the internal/SD card storage picker in the offline download sheet (Android only)
+  ///
+  /// In en, this message translates to:
+  /// **'Storage location'**
+  String get offlineStorageLocationLabel;
+
+  /// Storage picker option: the phone's internal storage
+  ///
+  /// In en, this message translates to:
+  /// **'Internal'**
+  String get offlineStorageInternal;
+
+  /// Storage picker option: the removable SD card
+  ///
+  /// In en, this message translates to:
+  /// **'SD card'**
+  String get offlineStorageSdCard;
+
+  /// Success message after switching where offline map tiles are stored
+  ///
+  /// In en, this message translates to:
+  /// **'Storage location updated'**
+  String get offlineStorageSwitched;
+
+  /// Error message when switching offline map storage to the SD card fails
+  ///
+  /// In en, this message translates to:
+  /// **'SD card unavailable. Check that it is inserted and writable.'**
+  String get offlineStorageSwitchFailed;
+
+  /// Title of the confirmation sheet offering to delete the tile cache left at the previous storage location
+  ///
+  /// In en, this message translates to:
+  /// **'Delete old tiles?'**
+  String get offlineStorageOldCacheTitle;
+
+  /// Body of the confirmation sheet offering to delete the tile cache left at the previous storage location
+  ///
+  /// In en, this message translates to:
+  /// **'{size} of tiles remain at the previous location. Downloaded areas need downloading again at the new location unless you switch back.'**
+  String offlineStorageOldCacheMessage(String size);
+
+  /// Button that deletes the tile cache left at the previous storage location
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get offlineStorageOldCacheDelete;
+
+  /// Button that keeps the tile cache left at the previous storage location
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get offlineStorageOldCacheKeep;
+
+  /// Warning banner title when SD card storage is preferred but the card is missing or unwritable
+  ///
+  /// In en, this message translates to:
+  /// **'SD card unavailable'**
+  String get offlineStorageFallbackTitle;
+
+  /// Warning banner body when SD card storage is preferred but the card is missing or unwritable
+  ///
+  /// In en, this message translates to:
+  /// **'Using internal storage until the card is available again.'**
+  String get offlineStorageFallbackSubtitle;
+
   /// Section header for the TAK mesh bridge controls in settings
   ///
   /// In en, this message translates to:

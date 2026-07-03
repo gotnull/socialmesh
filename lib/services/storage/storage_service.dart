@@ -88,6 +88,11 @@ class SecureStorageService {
   }
 }
 
+/// Preference key for storing offline map tiles on the removable SD card.
+/// Public because OfflineTileCache resolves it at boot, before providers
+/// (and therefore SettingsService) are available.
+const String offlineMapStorageOnSdCardKey = 'offline_map_storage_on_sd_card';
+
 /// Settings storage service
 class SettingsService {
   SharedPreferences? _prefs;
@@ -636,6 +641,16 @@ class SettingsService {
 
   int? get offlineMapTileStyleIndex =>
       _preferences.getInt('offline_map_tile_style_index');
+
+  // Offline map tile storage on the removable SD card (Android only).
+  // OfflineTileCache reads the key directly at boot — before providers
+  // exist — so the key is a shared public constant.
+  Future<void> setOfflineMapStorageOnSdCard(bool enabled) async {
+    await _preferences.setBool(offlineMapStorageOnSdCardKey, enabled);
+  }
+
+  bool get offlineMapStorageOnSdCard =>
+      _preferences.getBool(offlineMapStorageOnSdCardKey) ?? false;
 
   // Map layer toggles
   Future<void> setMapShowRangeCircles(bool enabled) async {

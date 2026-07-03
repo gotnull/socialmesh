@@ -3,6 +3,7 @@ package com.gotnull.socialmesh
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.Settings
 import androidx.activity.enableEdgeToEdge
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -51,6 +52,23 @@ class MainActivity : FlutterFragmentActivity() {
                         } catch (e2: Exception) {
                             result.error("UNAVAILABLE", "Could not open battery settings", e2.message)
                         }
+                    }
+                }
+                "getRemovableStorageDirs" -> {
+                    try {
+                        // App-specific dirs on mounted, genuinely removable volumes
+                        // (portable SD cards). Adoptable storage is merged into the
+                        // emulated volume and is intentionally excluded.
+                        val dirs = getExternalFilesDirs(null)
+                            .filterNotNull()
+                            .filter {
+                                Environment.getExternalStorageState(it) == Environment.MEDIA_MOUNTED &&
+                                    Environment.isExternalStorageRemovable(it)
+                            }
+                            .map { it.absolutePath }
+                        result.success(dirs)
+                    } catch (e: Exception) {
+                        result.error("UNAVAILABLE", "Could not enumerate removable storage", e.message)
                     }
                 }
                 else -> result.notImplemented()

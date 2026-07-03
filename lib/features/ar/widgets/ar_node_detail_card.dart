@@ -237,15 +237,24 @@ class ARNodeDetailCard extends StatelessWidget {
               ),
             ),
             child: Center(
-              child: Text(
-                (meshNode.shortName?.isNotEmpty == true)
-                    ? safeInitials(meshNode.shortName, 2)
-                    : '??',
-                style: TextStyle(
-                  color: _getThreatColor(node.threatLevel),
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: AppTheme.fontFamily,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing4,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    (meshNode.shortName?.isNotEmpty == true)
+                        ? safeInitials(meshNode.shortName, 4)
+                        : '??',
+                    style: TextStyle(
+                      color: _getThreatColor(node.threatLevel),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                    maxLines: 1,
+                  ),
                 ),
               ),
             ),

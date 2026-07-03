@@ -4,10 +4,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/nodes/node_display_name_resolver.dart';
 import '../../models/mesh_models.dart';
-import '../../utils/text_sanitizer.dart';
+import '../node_color.dart';
 import 'app_bottom_sheet.dart';
+import 'node_avatar.dart';
 import '../transport_path.dart';
 import '../widgets/gradient_border_container.dart';
 import '../../models/presence_confidence.dart';
@@ -109,135 +109,80 @@ class NodeInfoCard extends ConsumerWidget {
 
   void _showLegend(BuildContext context) {
     final l10n = context.l10n;
-    final items =
-        <({IconData icon, Color? iconColor, String label, String description})>[
-          if (!isMyNode && onMessage != null) ...[
-            (
-              icon: Icons.swap_horiz,
-              iconColor: null,
-              label: l10n.nodeInfoPosition,
-              description: l10n.nodeInfoLegendPosition,
-            ),
-            (
-              icon: Icons.message,
-              iconColor: null,
-              label: l10n.nodeInfoMessage,
-              description: l10n.nodeInfoLegendMessage,
-            ),
-          ],
-          if (onShareLocation != null)
-            (
-              icon: Icons.share,
-              iconColor: null,
-              label: l10n.nodeInfoShareLocation,
-              description: l10n.nodeInfoLegendShare,
-            ),
-          if (onCopyCoordinates != null)
-            (
-              icon: Icons.copy,
-              iconColor: null,
-              label: l10n.nodeInfoCopyCoordinates,
-              description: l10n.nodeInfoLegendCopy,
-            ),
-          if (onTraceroute != null)
-            (
-              icon: Icons.route,
-              iconColor: null,
-              label: l10n.nodeInfoTraceroute,
-              description: l10n.nodeInfoLegendTraceroute,
-            ),
-          if (onViewDetails != null)
-            (
-              icon: Icons.open_in_new,
-              iconColor: null,
-              label: l10n.nodeInfoViewDetails,
-              description: l10n.nodeInfoLegendViewDetails,
-            ),
-          if (onViewHistory != null)
-            (
-              icon: Icons.history,
-              iconColor: null,
-              label: l10n.nodeInfoViewHistory,
-              description: l10n.nodeInfoLegendHistory,
-            ),
-          if (onShowTrack != null)
-            (
-              icon: Icons.polyline,
-              iconColor: null,
-              label: l10n.nodeInfoShowTrack,
-              description: l10n.nodeInfoLegendTrack,
-            ),
-          if (onViewPositionLog != null)
-            (
-              icon: Icons.timeline,
-              iconColor: null,
-              label: l10n.nodeInfoViewPositionLog,
-              description: l10n.nodeInfoLegendPositionLog,
-            ),
-        ];
+    final items = <_LegendItem>[
+      if (!isMyNode && onMessage != null) ...[
+        (
+          icon: Icons.swap_horiz,
+          iconColor: null,
+          label: l10n.nodeInfoPosition,
+          description: l10n.nodeInfoLegendPosition,
+        ),
+        (
+          icon: Icons.message,
+          iconColor: null,
+          label: l10n.nodeInfoMessage,
+          description: l10n.nodeInfoLegendMessage,
+        ),
+      ],
+      if (onShareLocation != null)
+        (
+          icon: Icons.share,
+          iconColor: null,
+          label: l10n.nodeInfoShareLocation,
+          description: l10n.nodeInfoLegendShare,
+        ),
+      if (onCopyCoordinates != null)
+        (
+          icon: Icons.copy,
+          iconColor: null,
+          label: l10n.nodeInfoCopyCoordinates,
+          description: l10n.nodeInfoLegendCopy,
+        ),
+      if (onTraceroute != null)
+        (
+          icon: Icons.route,
+          iconColor: null,
+          label: l10n.nodeInfoTraceroute,
+          description: l10n.nodeInfoLegendTraceroute,
+        ),
+      if (onViewDetails != null)
+        (
+          icon: Icons.open_in_new,
+          iconColor: null,
+          label: l10n.nodeInfoViewDetails,
+          description: l10n.nodeInfoLegendViewDetails,
+        ),
+      if (onViewHistory != null)
+        (
+          icon: Icons.history,
+          iconColor: null,
+          label: l10n.nodeInfoViewHistory,
+          description: l10n.nodeInfoLegendHistory,
+        ),
+      if (onShowTrack != null)
+        (
+          icon: Icons.polyline,
+          iconColor: null,
+          label: l10n.nodeInfoShowTrack,
+          description: l10n.nodeInfoLegendTrack,
+        ),
+      if (onViewPositionLog != null)
+        (
+          icon: Icons.timeline,
+          iconColor: null,
+          label: l10n.nodeInfoViewPositionLog,
+          description: l10n.nodeInfoLegendPositionLog,
+        ),
+    ];
 
-    AppBottomSheet.show(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.nodeInfoLegendTitle,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: context.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          for (final item in items)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: context.background,
-                      borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        item.icon,
-                        size: 18,
-                        color: item.iconColor ?? context.textSecondary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.label,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: context.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        const SizedBox(height: AppTheme.spacing4),
-                        Text(
-                          item.description,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: context.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+      title: l10n.nodeInfoLegendTitle,
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      builder: (controller) =>
+          _NodeActionLegendSheet(items: items, scrollController: controller),
     );
   }
 
@@ -450,30 +395,13 @@ class NodeInfoCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Node avatar
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.brandGradient,
-                  shape: BoxShape.circle,
+              NodeAvatar(
+                text: node.avatarName,
+                color: resolveNodeColor(
+                  nodeNum: node.nodeNum,
+                  avatarColor: node.avatarColor,
                 ),
-                child: Center(
-                  child: Text(
-                    (node.shortName != null && node.shortName!.isNotEmpty)
-                        ? safeInitials(node.shortName, 2)
-                        : safeInitials(
-                            NodeDisplayNameResolver.defaultShortName(
-                              node.nodeNum,
-                            ),
-                            2,
-                          ),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: SemanticColors.onBrand,
-                    ),
-                  ),
-                ),
+                size: 48,
               ),
               const SizedBox(width: AppTheme.spacing12),
               // Node info
@@ -901,6 +829,88 @@ class NodeInfoCard extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+typedef _LegendItem = ({
+  IconData icon,
+  Color? iconColor,
+  String label,
+  String description,
+});
+
+// Scrollable body for the action legend sheet. The scroll controller must
+// be the one supplied by AppBottomSheet.showScrollable, or drag-to-dismiss
+// on the sheet breaks.
+class _NodeActionLegendSheet extends StatelessWidget {
+  final List<_LegendItem> items;
+  final ScrollController scrollController;
+
+  const _NodeActionLegendSheet({
+    required this.items,
+    required this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing24,
+        0,
+        AppTheme.spacing24,
+        AppTheme.spacing24,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Center(
+                  child: Icon(
+                    item.icon,
+                    size: 18,
+                    color: item.iconColor ?? context.textSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      item.description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

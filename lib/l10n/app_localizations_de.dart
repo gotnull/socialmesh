@@ -40795,6 +40795,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get offlineDownloadFailed => 'Download fehlgeschlagen';
 
   @override
+  String get offlineStorageLocationLabel => 'Speicherort';
+
+  @override
+  String get offlineStorageInternal => 'Intern';
+
+  @override
+  String get offlineStorageSdCard => 'SD-Karte';
+
+  @override
+  String get offlineStorageSwitched => 'Speicherort aktualisiert';
+
+  @override
+  String get offlineStorageSwitchFailed =>
+      'SD-Karte nicht verfügbar. Prüfe, ob sie eingelegt und beschreibbar ist.';
+
+  @override
+  String get offlineStorageOldCacheTitle => 'Alte Kacheln löschen?';
+
+  @override
+  String offlineStorageOldCacheMessage(String size) {
+    return '$size an Kacheln verbleiben am vorherigen Speicherort. Heruntergeladene Bereiche müssen am neuen Speicherort erneut heruntergeladen werden, sofern du nicht zurückwechselst.';
+  }
+
+  @override
+  String get offlineStorageOldCacheDelete => 'Löschen';
+
+  @override
+  String get offlineStorageOldCacheKeep => 'Behalten';
+
+  @override
+  String get offlineStorageFallbackTitle => 'SD-Karte nicht verfügbar';
+
+  @override
+  String get offlineStorageFallbackSubtitle =>
+      'Interner Speicher wird verwendet, bis die Karte wieder verfügbar ist.';
+
+  @override
   String get takBridgeSectionTitle => 'Mesh-Bridge';
 
   @override

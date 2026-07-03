@@ -15,12 +15,13 @@
 
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/map_config.dart';
 import '../../../core/safe_lat_lng.dart';
+import '../../../services/storage/storage_service.dart';
+import 'offline_tile_storage.dart';
 import 'tile_math.dart';
 
 /// Durable freshness window for cached tiles. Basemaps change slowly, and the
@@ -56,7 +57,21 @@ class OfflineTileCache {
   /// so this just centralises configuration and URL generation.
   static final OfflineTileCache instance = OfflineTileCache._();
 
-  MapCachingProvider? _provider;
+  BuiltInMapCachingProvider? _provider;
+
+  /// Storage resolver, exposed so the download UI can query removable
+  /// volumes and size/delete an abandoned cache without re-instantiating.
+  final OfflineTileStorage storage = OfflineTileStorage();
+
+  String? _activeCacheRoot;
+  bool _fellBackToInternal = false;
+
+  /// Directory the cache is currently rooted at (null before [configure]).
+  String? get activeCacheRoot => _activeCacheRoot;
+
+  /// True when the user prefers SD card storage but boot resolved to
+  /// internal because the card was missing or unwritable.
+  bool get fellBackToInternal => _fellBackToInternal;
 
   // Reference provider used ONLY to generate tile URLs via flutter_map's own
   // template resolver (guaranteeing subdomain / {r} parity with the live map).
@@ -67,16 +82,73 @@ class OfflineTileCache {
   /// Configure the built-in caching singleton to use a durable directory with a
   /// long freshness window. Must run once at startup BEFORE any map tile loads,
   /// because the singleton's configuration is fixed on first use.
+  ///
+  /// The root honours the SD-card preference when set, degrading silently to
+  /// internal storage (with [fellBackToInternal] raised for the UI) when the
+  /// card is missing or unwritable — an unwritable root must never reach the
+  /// provider, whose constructor would raise an unhandled async error and
+  /// leave every cache call awaiting a completer that never completes.
   Future<void> configure() async {
     if (_provider != null) return;
-    final docs = await getApplicationDocumentsDirectory();
-    final dir = p.join(docs.path, 'offline_map_cache');
+    final prefs = await SharedPreferences.getInstance();
+    final preferSd = prefs.getBool(offlineMapStorageOnSdCardKey) ?? false;
+    final resolved = await storage.resolveRoot(
+      preferSd
+          ? OfflineTileStorageLocation.sdCard
+          : OfflineTileStorageLocation.internal,
+    );
+    _fellBackToInternal = resolved.fellBack;
+    _activeCacheRoot = resolved.path;
     _provider = BuiltInMapCachingProvider.getOrCreateInstance(
-      cacheDirectory: dir,
+      cacheDirectory: resolved.path,
       overrideFreshAge: kOfflineTileFreshAge,
       maxCacheSize: kOfflineCacheMaxBytes,
     );
-    AppLogging.map('Offline tile cache configured at $dir');
+    AppLogging.map(
+      'Offline tile cache configured at ${resolved.path}'
+      '${resolved.fellBack ? ' (SD card unavailable, fell back)' : ''}',
+    );
+  }
+
+  /// Re-root the cache at [target], destroying and re-creating the built-in
+  /// provider. Throws [OfflineStorageUnavailableException] when the SD card
+  /// is requested but missing/unwritable — the preference is persisted only
+  /// after the new provider exists. Never call while a region download is
+  /// running.
+  Future<void> switchStorageLocation(OfflineTileStorageLocation target) async {
+    final String newRoot;
+    if (target == OfflineTileStorageLocation.sdCard) {
+      final sd = await storage.removableRoot();
+      if (sd == null || !await storage.probeWritable(sd)) {
+        throw const OfflineStorageUnavailableException();
+      }
+      newRoot = sd;
+    } else {
+      newRoot = await storage.internalRoot();
+    }
+    if (newRoot != _activeCacheRoot) {
+      // destroy() resets the provider singleton synchronously before its
+      // async teardown, so re-creating immediately (without awaiting) leaves
+      // no window in which a stray tile load could resurrect a
+      // default-configured instance in the wrong directory.
+      final destroyed = _provider?.destroy();
+      _provider = BuiltInMapCachingProvider.getOrCreateInstance(
+        cacheDirectory: newRoot,
+        overrideFreshAge: kOfflineTileFreshAge,
+        maxCacheSize: kOfflineCacheMaxBytes,
+      );
+      _activeCacheRoot = newRoot;
+      await destroyed;
+      AppLogging.map('Offline tile cache moved to $newRoot');
+    }
+    // A successful switch always lands on the requested location, including
+    // accepting internal after a boot-time SD fallback (root unchanged).
+    _fellBackToInternal = false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(
+      offlineMapStorageOnSdCardKey,
+      target == OfflineTileStorageLocation.sdCard,
+    );
   }
 
   MapCachingProvider get _caching =>

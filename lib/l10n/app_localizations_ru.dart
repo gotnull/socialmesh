@@ -40697,6 +40697,43 @@ class AppLocalizationsRu extends AppLocalizations {
   String get offlineDownloadFailed => 'Не удалось скачать';
 
   @override
+  String get offlineStorageLocationLabel => 'Место хранения';
+
+  @override
+  String get offlineStorageInternal => 'Внутренняя память';
+
+  @override
+  String get offlineStorageSdCard => 'SD-карта';
+
+  @override
+  String get offlineStorageSwitched => 'Место хранения обновлено';
+
+  @override
+  String get offlineStorageSwitchFailed =>
+      'SD-карта недоступна. Убедитесь, что она вставлена и доступна для записи.';
+
+  @override
+  String get offlineStorageOldCacheTitle => 'Удалить старые тайлы?';
+
+  @override
+  String offlineStorageOldCacheMessage(String size) {
+    return 'В прежнем месте хранения осталось $size тайлов. Скачанные области потребуется скачать заново в новом месте, если вы не переключитесь обратно.';
+  }
+
+  @override
+  String get offlineStorageOldCacheDelete => 'Удалить';
+
+  @override
+  String get offlineStorageOldCacheKeep => 'Оставить';
+
+  @override
+  String get offlineStorageFallbackTitle => 'SD-карта недоступна';
+
+  @override
+  String get offlineStorageFallbackSubtitle =>
+      'Используется внутренняя память, пока карта снова не станет доступна.';
+
+  @override
   String get takBridgeSectionTitle => 'Mesh-мост';
 
   @override

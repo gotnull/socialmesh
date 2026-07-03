@@ -40982,6 +40982,43 @@ class AppLocalizationsFr extends AppLocalizations {
   String get offlineDownloadFailed => 'Échec du téléchargement';
 
   @override
+  String get offlineStorageLocationLabel => 'Emplacement de stockage';
+
+  @override
+  String get offlineStorageInternal => 'Interne';
+
+  @override
+  String get offlineStorageSdCard => 'Carte SD';
+
+  @override
+  String get offlineStorageSwitched => 'Emplacement de stockage mis à jour';
+
+  @override
+  String get offlineStorageSwitchFailed =>
+      'Carte SD indisponible. Vérifiez qu\'elle est insérée et accessible en écriture.';
+
+  @override
+  String get offlineStorageOldCacheTitle => 'Supprimer les anciennes tuiles ?';
+
+  @override
+  String offlineStorageOldCacheMessage(String size) {
+    return '$size de tuiles restent à l\'emplacement précédent. Les zones téléchargées devront être téléchargées à nouveau au nouvel emplacement, sauf si vous revenez en arrière.';
+  }
+
+  @override
+  String get offlineStorageOldCacheDelete => 'Supprimer';
+
+  @override
+  String get offlineStorageOldCacheKeep => 'Conserver';
+
+  @override
+  String get offlineStorageFallbackTitle => 'Carte SD indisponible';
+
+  @override
+  String get offlineStorageFallbackSubtitle =>
+      'Le stockage interne est utilisé jusqu\'à ce que la carte soit à nouveau disponible.';
+
+  @override
   String get takBridgeSectionTitle => 'Pont Mesh';
 
   @override

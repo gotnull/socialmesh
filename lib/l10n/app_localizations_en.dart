@@ -40236,6 +40236,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineDownloadFailed => 'Download failed';
 
   @override
+  String get offlineStorageLocationLabel => 'Storage location';
+
+  @override
+  String get offlineStorageInternal => 'Internal';
+
+  @override
+  String get offlineStorageSdCard => 'SD card';
+
+  @override
+  String get offlineStorageSwitched => 'Storage location updated';
+
+  @override
+  String get offlineStorageSwitchFailed =>
+      'SD card unavailable. Check that it is inserted and writable.';
+
+  @override
+  String get offlineStorageOldCacheTitle => 'Delete old tiles?';
+
+  @override
+  String offlineStorageOldCacheMessage(String size) {
+    return '$size of tiles remain at the previous location. Downloaded areas need downloading again at the new location unless you switch back.';
+  }
+
+  @override
+  String get offlineStorageOldCacheDelete => 'Delete';
+
+  @override
+  String get offlineStorageOldCacheKeep => 'Keep';
+
+  @override
+  String get offlineStorageFallbackTitle => 'SD card unavailable';
+
+  @override
+  String get offlineStorageFallbackSubtitle =>
+      'Using internal storage until the card is available again.';
+
+  @override
   String get takBridgeSectionTitle => 'Mesh Bridge';
 
   @override

@@ -130,17 +130,27 @@ class NodeAvatar extends StatelessWidget {
         border: effectiveBorder,
       ),
       child: Center(
-        child: Text(
-          displayText,
-          style: TextStyle(
-            color: contrast,
-            fontSize: fontSize,
-            fontWeight: FontWeight.w700,
-            letterSpacing: displayText.length > 4 ? -0.5 : 0,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: size * 0.08),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              displayText,
+              style: TextStyle(
+                color: contrast,
+                fontSize: fontSize,
+                fontWeight: FontWeight.w700,
+                letterSpacing: displayText.length > 4 ? -0.5 : 0,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              // The glyph is an identifier sized to its container, not body
+              // copy: it opts out of accessibility text scaling and scales
+              // down via FittedBox instead, so wide glyphs and wide fonts
+              // never clip at the circle's edge.
+              textScaler: TextScaler.noScaling,
+            ),
           ),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.clip,
         ),
       ),
     );
