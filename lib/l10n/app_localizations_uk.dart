@@ -36037,16 +36037,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Одним поглядом дізнайтеся, хто активний у вашій mesh-мережі. Присутність показує активність вузлів у реальному часі з індикаторами наміру - хтось стежить, рухається чи знаходиться на стаціонарній базі.\n\nФільтруйте за рівнем активності, шукайте за іменем і торкайтеся будь-якого вузла, щоб переглянути повний профіль. Знайдіть у меню під розділом «Соціальне».';
 
   @override
-  String get whatsNewVersion1110Subtitle => 'Версія 1.11.0';
-
-  @override
-  String get whatsNewSignalsTitle => 'Сигнали';
-
-  @override
-  String get whatsNewSignalsDescription =>
-      'Транслюйте короткострокові моменти у вашу mesh-мережу. Сигнали - це короткочасні публікації: діліться текстом, фото або місцезнаходженням з TTL від 15 хвилин до 24 годин.\n\nБлизькі сигнали з\'являються першими зі значками наближення, що показують кількість стрибків. Коли вони зникають - вони зникають назавжди. Справжній офлайн-контент з обмеженим строком.';
-
-  @override
   String get whatsNewVersion1130Subtitle => 'Версія 1.13.0';
 
   @override
@@ -36520,9 +36510,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get whatsNewCtaOpenReachability => 'Відкрити доступність';
-
-  @override
-  String get whatsNewCtaOpenSignals => 'Відкрити сигнали';
 
   @override
   String get whatsNewCtaOpenTakGateway => 'Відкрити TAK Gateway';

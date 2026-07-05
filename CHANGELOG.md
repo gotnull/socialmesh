@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (security hardening)
 
-- Sensitive local databases (direct messages, social signals, saved routes, waypoints, peer-safety state, and the NodeDex journal) are now encrypted at rest with SQLCipher. The key is generated on-device and held in the iOS Keychain / Android Keystore, so message text, locations, and travel history are no longer readable from the raw database files (for example from a device backup, or on a lost or rooted/jailbroken phone). Existing data is migrated in place on first launch with no loss of history; if the one-time migration is ever interrupted it safely retries on the next launch
+- Sensitive local databases (direct messages, saved routes, waypoints, peer-safety state, and the NodeDex journal) are now encrypted at rest with SQLCipher. The key is generated on-device and held in the iOS Keychain / Android Keystore, so message text, locations, and travel history are no longer readable from the raw database files (for example from a device backup, or on a lost or rooted/jailbroken phone). Existing data is migrated in place on first launch with no loss of history; if the one-time migration is ever interrupted it safely retries on the next launch
 - Tightened the Android network security configuration so first-party services and the fixed third-party APIs (socialmesh.app, Firebase/Google) are pinned to HTTPS and can no longer be silently downgraded to plain HTTP, while user-configured private/LAN webhooks continue to work over HTTP as before
 
 ### Added (offline maps)
@@ -28,12 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The map now remembers where you left it when you switch tabs. Previously the Map tab was rebuilt from scratch on every visit, so the camera reset to a default view, the zoom level was lost, and the map could show a blank blue background until you pinched to refresh. The camera (center and zoom) is now retained for the session and restored on return
 - User-dropped local waypoints (the yellow pins) now survive leaving and returning to the Map tab, matching how shared mesh waypoints already persisted
 - Switching the map style (Dark / Satellite / Terrain / Light) now redraws the tiles immediately instead of leaving a blank background until the map is panned or zoomed
-
-### Fixed (signals and activity)
-
-- A signal whose image never finished uploading no longer animates "Syncing media" forever: after a short grace period the card shows a static "Media unavailable" placeholder. The multi-image upload path also now correctly clears the pending-image flag and writes a valid image state on success
-- Freshly received mesh signals no longer flash into the feed and vanish: a feed refresh that runs while a signal is arriving over the mesh no longer clobbers that signal, and a refresh now preserves non-expired in-memory signals the database snapshot missed
-- The Activity feed no longer flickers empty and then repopulates on auth or app-state changes: it now reacts only to the signed-in user's id rather than to every Firebase user-object re-emission, so it stops resetting and re-subscribing unnecessarily
 
 ### Fixed (map interaction)
 

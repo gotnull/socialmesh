@@ -47672,18 +47672,6 @@
     "@whatsNewPresenceDescription": {
         "description": "What's new description for Presence feature"
     },
-    "whatsNewVersion1110Subtitle": "Version 1.11.0",
-    "@whatsNewVersion1110Subtitle": {
-        "description": "What's new subtitle for version 1.11.0"
-    },
-    "whatsNewSignalsTitle": "Signals",
-    "@whatsNewSignalsTitle": {
-        "description": "What's new feature title: Signals"
-    },
-    "whatsNewSignalsDescription": "Broadcast ephemeral moments to your mesh. Signals are short-lived posts - share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.",
-    "@whatsNewSignalsDescription": {
-        "description": "What's new description for Signals feature"
-    },
     "whatsNewVersion1130Subtitle": "Version 1.13.0",
     "@whatsNewVersion1130Subtitle": {
         "description": "What's new subtitle for version 1.13.0"
@@ -48316,10 +48304,6 @@
     "whatsNewCtaOpenReachability": "Open Reachability",
     "@whatsNewCtaOpenReachability": {
         "description": "What's new CTA button: Open Reachability"
-    },
-    "whatsNewCtaOpenSignals": "Open Signals",
-    "@whatsNewCtaOpenSignals": {
-        "description": "What's new CTA button: Open Signals"
     },
     "whatsNewCtaOpenTakGateway": "Open TAK Gateway",
     "@whatsNewCtaOpenTakGateway": {

@@ -36115,16 +36115,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sehen Sie auf einen Blick, wer in Ihrem Mesh aktiv ist. Präsenz zeigt Echtzeit-Node-Aktivität mit Absichtsindikatoren - ob jemand überwacht, mobil oder an einer festen Basisstation ist.\n\nFiltern Sie nach Aktivitätslevel, suchen Sie nach Name und tippen Sie auf einen Node, um sein vollständiges Profil zu sehen. Sie finden es im Menü unter Sozial.';
 
   @override
-  String get whatsNewVersion1110Subtitle => 'Version 1.11.0';
-
-  @override
-  String get whatsNewSignalsTitle => 'Signale';
-
-  @override
-  String get whatsNewSignalsDescription =>
-      'Senden Sie kurzlebige Momente an Ihr Mesh. Signale sind kurzlebige Beiträge - teilen Sie Text, ein Foto oder Ihren Standort mit einer Lebensdauer von 15 Minuten bis 24 Stunden.\n\nNahe Signale erscheinen zuerst mit Näherungsabzeichen, die die Hop-Anzahl anzeigen. Wenn sie verblassen, sind sie weg. Echter Offline-Inhalt ohne Spuren.';
-
-  @override
   String get whatsNewVersion1130Subtitle => 'Version 1.13.0';
 
   @override
@@ -36596,9 +36586,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get whatsNewCtaOpenReachability => 'Erreichbarkeit öffnen';
-
-  @override
-  String get whatsNewCtaOpenSignals => 'Signale öffnen';
 
   @override
   String get whatsNewCtaOpenTakGateway => 'TAK Gateway öffnen';

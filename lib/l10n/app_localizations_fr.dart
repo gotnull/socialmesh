@@ -36284,16 +36284,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Voyez en un coup d\'oeil qui est actif sur votre mesh. Présence affiche l\'activité des noeuds en temps réel avec des indicateurs d\'intention : surveillance, mobilité ou station de base fixe.\n\nFiltrez par niveau d\'activité, recherchez par nom et appuyez sur n\'importe quel noeud pour voir son profil complet. Disponible dans le menu latéral sous Social.';
 
   @override
-  String get whatsNewVersion1110Subtitle => 'Version 1.11.0';
-
-  @override
-  String get whatsNewSignalsTitle => 'Signaux';
-
-  @override
-  String get whatsNewSignalsDescription =>
-      'Diffusez des moments éphémères sur votre mesh. Les Signals sont des publications de courte durée : partagez du texte, une photo ou votre position avec une durée de vie de 15 minutes à 24 heures.\n\nLes signaux à proximité apparaissent en premier avec des badges de proximité indiquant le nombre de sauts. Lorsqu\'ils expirent, ils disparaissent. Du contenu véritablement hors ligne et éphémère.';
-
-  @override
   String get whatsNewVersion1130Subtitle => 'Version 1.13.0';
 
   @override
@@ -36766,9 +36756,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get whatsNewCtaOpenReachability => 'Ouvrir Accessibilité';
-
-  @override
-  String get whatsNewCtaOpenSignals => 'Ouvrir Signals';
 
   @override
   String get whatsNewCtaOpenTakGateway => 'Ouvrir la passerelle TAK';

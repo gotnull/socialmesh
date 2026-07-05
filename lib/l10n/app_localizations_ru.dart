@@ -36026,16 +36026,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Смотрите, кто активен в вашей сети с первого взгляда. Присутствие показывает активность узлов в реальном времени с индикаторами намерений: мониторинг, мобильность или стационарная база.\n\nФильтруйте по уровню активности, ищите по имени и нажмите на любой узел, чтобы увидеть полный профиль. Найдите в боковой панели в разделе «Социальное».';
 
   @override
-  String get whatsNewVersion1110Subtitle => 'Версия 1.11.0';
-
-  @override
-  String get whatsNewSignalsTitle => 'Сигналы';
-
-  @override
-  String get whatsNewSignalsDescription =>
-      'Транслируйте мимолётные моменты в свою сеть. Signals - это короткоживущие публикации: делитесь текстом, фото или местоположением с временем жизни от 15 минут до 24 часов.\n\nБлижайшие сигналы отображаются первыми с индикаторами близости, показывающими количество хопов. Когда они исчезают, они пропадают навсегда. Настоящий автономный эфемерный контент.';
-
-  @override
   String get whatsNewVersion1130Subtitle => 'Версия 1.13.0';
 
   @override
@@ -36508,9 +36498,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get whatsNewCtaOpenReachability => 'Открыть Доступность';
-
-  @override
-  String get whatsNewCtaOpenSignals => 'Открыть Signals';
 
   @override
   String get whatsNewCtaOpenTakGateway => 'Открыть TAK Gateway';

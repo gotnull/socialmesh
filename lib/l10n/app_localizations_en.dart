@@ -35602,16 +35602,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators - whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.';
 
   @override
-  String get whatsNewVersion1110Subtitle => 'Version 1.11.0';
-
-  @override
-  String get whatsNewSignalsTitle => 'Signals';
-
-  @override
-  String get whatsNewSignalsDescription =>
-      'Broadcast ephemeral moments to your mesh. Signals are short-lived posts - share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.';
-
-  @override
   String get whatsNewVersion1130Subtitle => 'Version 1.13.0';
 
   @override
@@ -36080,9 +36070,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewCtaOpenReachability => 'Open Reachability';
-
-  @override
-  String get whatsNewCtaOpenSignals => 'Open Signals';
 
   @override
   String get whatsNewCtaOpenTakGateway => 'Open TAK Gateway';

@@ -35989,16 +35989,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Veja quem está ativo na mesh de relance. Presença mostra atividade de nós em tempo real com indicadores de intenção - se alguém está monitorando, em movimento ou em uma estação base fixa.\n\nFiltre por nível de atividade, pesquise por nome e toque em qualquer nó para ver o perfil completo. Encontre no menu sob Social.';
 
   @override
-  String get whatsNewVersion1110Subtitle => 'Versão 1.11.0';
-
-  @override
-  String get whatsNewSignalsTitle => 'Sinais';
-
-  @override
-  String get whatsNewSignalsDescription =>
-      'Transmita momentos efêmeros para sua rede mesh. Sinais são posts de curta duração - compartilhe texto, uma foto ou sua localização com um TTL de 15 minutos até 24 horas.\n\nSinais próximos aparecem primeiro com badges de proximidade mostrando a contagem de hops. Quando desaparecem, se foram. Conteúdo efêmero, verdadeiramente off-grid.';
-
-  @override
   String get whatsNewVersion1130Subtitle => 'Versão 1.13.0';
 
   @override
@@ -36471,9 +36461,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewCtaOpenReachability => 'Abrir Alcançabilidade';
-
-  @override
-  String get whatsNewCtaOpenSignals => 'Abrir Sinais';
 
   @override
   String get whatsNewCtaOpenTakGateway => 'Abrir TAK Gateway';

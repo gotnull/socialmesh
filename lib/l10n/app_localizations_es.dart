@@ -36182,16 +36182,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Vea de un vistazo quién está activo en su malla. Presencia muestra la actividad de nodos en tiempo real con indicadores de intención, ya sea que alguien esté monitoreando, en movimiento o en una base fija.\n\nFiltre por nivel de actividad, busque por nombre y toque cualquier nodo para ver su perfil completo. Encuéntrelo en el menú lateral bajo Social.';
 
   @override
-  String get whatsNewVersion1110Subtitle => 'Versión 1.11.0';
-
-  @override
-  String get whatsNewSignalsTitle => 'Signals';
-
-  @override
-  String get whatsNewSignalsDescription =>
-      'Difunda momentos efímeros en su malla. Los Signals son publicaciones de corta duración: comparta texto, una foto o su ubicación con un TTL de 15 minutos hasta 24 horas.\n\nLos signals cercanos aparecen primero con insignias de proximidad que muestran el conteo de saltos. Cuando desaparecen, se van para siempre. Contenido verdaderamente efímero y sin conexión.';
-
-  @override
   String get whatsNewVersion1130Subtitle => 'Versión 1.13.0';
 
   @override
@@ -36666,9 +36656,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get whatsNewCtaOpenReachability => 'Abrir Alcanzabilidad';
-
-  @override
-  String get whatsNewCtaOpenSignals => 'Abrir Signals';
 
   @override
   String get whatsNewCtaOpenTakGateway => 'Abrir Gateway TAK';

@@ -30780,9 +30780,6 @@
   "@whatsNewCtaOpenReachability": {
     "description": "What's new CTA button: Open Reachability"
   },
-  "@whatsNewCtaOpenSignals": {
-    "description": "What's new CTA button: Open Signals"
-  },
   "@whatsNewCtaOpenTakGateway": {
     "description": "What's new CTA button: Open TAK Gateway"
   },
@@ -30810,12 +30807,6 @@
   "@whatsNewReachabilityTitle": {
     "description": "What's new feature title: Reachability"
   },
-  "@whatsNewSignalsDescription": {
-    "description": "What's new description for Signals feature"
-  },
-  "@whatsNewSignalsTitle": {
-    "description": "What's new feature title: Signals"
-  },
   "@whatsNewTakGatewayDescription": {
     "description": "What's new description for TAK Gateway feature"
   },
@@ -30827,9 +30818,6 @@
   },
   "@whatsNewVersion1101Subtitle": {
     "description": "What's new subtitle for version 1.10.1"
-  },
-  "@whatsNewVersion1110Subtitle": {
-    "description": "What's new subtitle for version 1.11.0"
   },
   "@whatsNewVersion1130Subtitle": {
     "description": "What's new subtitle for version 1.13.0"
@@ -44855,7 +44843,6 @@
   "whatsNewCtaOpenNodedex": "Abrir NodeDex",
   "whatsNewCtaOpenPresence": "Abrir Presença",
   "whatsNewCtaOpenReachability": "Abrir Alcançabilidade",
-  "whatsNewCtaOpenSignals": "Abrir Sinais",
   "whatsNewCtaOpenTakGateway": "Abrir TAK Gateway",
   "whatsNewCtaOpenWatchSettings": "Abrir definições do Watch",
   "whatsNewVersion1450Subtitle": "Versão 1.45.0",
@@ -44903,15 +44890,12 @@
   "whatsNewReachabilityTitle": "Alcançabilidade",
   "whatsNewReactionGroupingDescription": "As reações às mensagens estão agora agrupadas por emoji: se cinco pessoas enviarem um polegar para cima, vê um chip compacto em vez de cinco. Prima longamente qualquer reação para ver todos os remetentes.\n\nAs reações também passam para a linha seguinte em vez de saírem do ecrã, mantendo a conversa organizada.",
   "whatsNewReactionGroupingTitle": "Reações Agrupadas",
-  "whatsNewSignalsDescription": "Transmita momentos efêmeros para sua rede mesh. Sinais são posts de curta duração - compartilhe texto, uma foto ou sua localização com um TTL de 15 minutos até 24 horas.\n\nSinais próximos aparecem primeiro com badges de proximidade mostrando a contagem de hops. Quando desaparecem, se foram. Conteúdo efêmero, verdadeiramente off-grid.",
-  "whatsNewSignalsTitle": "Sinais",
   "whatsNewTakGatewayDescription": "Conecte sua rede mesh ao ecossistema Team Awareness Kit (TAK). O SocialMesh agora se conecta a um TAK Gateway via WebSocket e transmite entidades Cursor-on-Target ao vivo no seu mapa.\n\nCada entidade é colorida por afiliação padrão e recebe um ícone específico por dimensão. Filtre por afiliação, pesquise indicativos, rastreie entidades com toque longo e toque em qualquer marcador para detalhes CoT completos. Encontre no menu lateral em Mesh.",
   "whatsNewTakGatewayTitle": "Gateway TAK",
   "whatsNewTranslationPackDescription": "Traduza qualquer mensagem da rede mesh a pedido com cache inteligente e controlos de privacidade. Inclui um crédito de tradução gerido, ou traga a sua própria chave de API OpenAI para uso alargado.\n\nPrima longamente qualquer mensagem e toque em Traduzir para ver o resultado em linha, com cache inteligente para que traduções repetidas sejam instantâneas. Agora incluído no Pacote Completo.",
   "whatsNewTranslationPackTitle": "Pacote de Tradução",
   "whatsNewVersion1100Subtitle": "Versão 1.10.0",
   "whatsNewVersion1101Subtitle": "Versão 1.10.1",
-  "whatsNewVersion1110Subtitle": "Versão 1.11.0",
   "whatsNewVersion1130Subtitle": "Versão 1.13.0",
   "whatsNewVersion1150Subtitle": "Versão 1.15.0",
   "whatsNewVersion1160Subtitle": "Versão 1.16.0",

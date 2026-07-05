@@ -62227,24 +62227,6 @@ abstract class AppLocalizations {
   /// **'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators - whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.'**
   String get whatsNewPresenceDescription;
 
-  /// What's new subtitle for version 1.11.0
-  ///
-  /// In en, this message translates to:
-  /// **'Version 1.11.0'**
-  String get whatsNewVersion1110Subtitle;
-
-  /// What's new feature title: Signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get whatsNewSignalsTitle;
-
-  /// What's new description for Signals feature
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcast ephemeral moments to your mesh. Signals are short-lived posts - share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.'**
-  String get whatsNewSignalsDescription;
-
   /// What's new subtitle for version 1.13.0
   ///
   /// In en, this message translates to:
@@ -63046,12 +63028,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Reachability'**
   String get whatsNewCtaOpenReachability;
-
-  /// What's new CTA button: Open Signals
-  ///
-  /// In en, this message translates to:
-  /// **'Open Signals'**
-  String get whatsNewCtaOpenSignals;
 
   /// What's new CTA button: Open TAK Gateway
   ///

@@ -36016,16 +36016,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Vedi chi è attivo sulla mesh a colpo d\'occhio. Presenza mostra l\'attività dei nodi in tempo reale con indicatori di intento - se qualcuno sta monitorando, è in movimento o in una stazione base fissa.\n\nFiltra per livello di attività, cerca per nome e tocca qualsiasi nodo per vedere il profilo completo. La trovi nel menu sotto Social.';
 
   @override
-  String get whatsNewVersion1110Subtitle => 'Versione 1.11.0';
-
-  @override
-  String get whatsNewSignalsTitle => 'Segnali';
-
-  @override
-  String get whatsNewSignalsDescription =>
-      'Trasmetti momenti effimeri sulla tua rete mesh. I Segnali sono post a breve durata - condividi testo, una foto o la tua posizione con un TTL da 15 minuti fino a 24 ore.\n\nI segnali vicini appaiono per primi con badge di prossimità che mostrano il conteggio degli hop. Quando svaniscono, sono spariti. Contenuto effimero, veramente off-grid.';
-
-  @override
   String get whatsNewVersion1130Subtitle => 'Versione 1.13.0';
 
   @override
@@ -36498,9 +36488,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get whatsNewCtaOpenReachability => 'Apri Raggiungibilità';
-
-  @override
-  String get whatsNewCtaOpenSignals => 'Apri Segnali';
 
   @override
   String get whatsNewCtaOpenTakGateway => 'Apri TAK Gateway';

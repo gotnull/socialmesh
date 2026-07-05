@@ -175,30 +175,9 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.11.0 — Signals introduction
-    WhatsNewPayload(
-      version: '1.11.0',
-      headline: "What's New in SocialMesh",
-      subtitle: 'Version 1.11.0',
-      items: [
-        WhatsNewItem(
-          id: 'signals_intro',
-          title: 'Signals',
-          description:
-              'Broadcast ephemeral moments to your mesh. Signals are '
-              'short-lived posts — share text, a photo, or your location '
-              'with a TTL from 15 minutes up to 24 hours.\n\n'
-              'Nearby signals appear first with proximity badges showing '
-              'hop count. When they fade, they are gone. True off-grid, '
-              'ephemeral content.',
-          icon: Icons.sensors,
-          iconColor: Color(0xFFBA68C8), // Colors.purple.shade300
-          deepLinkRoute: '/signals',
-          helpTopicId: 'signals_overview',
-          ctaLabel: 'Open Signals',
-        ),
-      ],
-    ),
+    // v1.11.0 (Signals introduction) was removed together with the Signals
+    // feature: its history entry deep-linked to a route that no longer
+    // exists.
 
     // v1.13.0 — NodeDex introduction
     WhatsNewPayload(
@@ -552,8 +531,6 @@ class WhatsNewRegistry {
         return l10n.whatsNewVersion1100Subtitle;
       case '1.10.1':
         return l10n.whatsNewVersion1101Subtitle;
-      case '1.11.0':
-        return l10n.whatsNewVersion1110Subtitle;
       case '1.13.0':
         return l10n.whatsNewVersion1130Subtitle;
       case '1.15.0':
@@ -595,10 +572,6 @@ class WhatsNewRegistry {
         title = l10n.whatsNewPresenceTitle;
         description = l10n.whatsNewPresenceDescription;
         ctaLabel = l10n.whatsNewCtaOpenPresence;
-      case 'signals_intro':
-        title = l10n.whatsNewSignalsTitle;
-        description = l10n.whatsNewSignalsDescription;
-        ctaLabel = l10n.whatsNewCtaOpenSignals;
       case 'nodedex_intro':
         title = l10n.whatsNewNodeDexTitle;
         description = l10n.whatsNewNodeDexDescription;
