@@ -16,6 +16,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
+import '../../core/widgets/time_series_axis.dart';
 import '../../core/units/temperature_format.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -691,9 +692,10 @@ class _EnvironmentMetricsChart extends StatelessWidget {
     double tMin = double.infinity;
     double tMax = double.negativeInfinity;
 
-    for (int i = 0; i < sorted.length; i++) {
-      final log = sorted[i];
-      final x = i.toDouble();
+    // x = actual sample time (epoch ms), so gaps between readings render
+    // proportionally instead of every reading getting an equal slot.
+    for (final log in sorted) {
+      final x = TimeSeriesAxis.xOf(log.timestamp);
       if (log.temperature != null) {
         tempSpots.add(FlSpot(x, log.temperature!));
         tMin = math.min(tMin, log.temperature!);
@@ -708,6 +710,13 @@ class _EnvironmentMetricsChart extends StatelessWidget {
     final hasHumidity = humiditySpots.length >= 2;
 
     if (!hasTemp && !hasHumidity) return const SizedBox.shrink();
+
+    // Explicit x-domain (previously implicit from the spots): duplicate
+    // timestamps would otherwise hand fl_chart a zero-width span.
+    final xDomain = TimeSeriesAxis.domainOf(
+      sorted.first.timestamp,
+      sorted.last.timestamp,
+    );
 
     // Compute shared Y range. Humidity is 0-100%. Temperature is variable.
     // Normalise temperature into 0–100 range so both share the same Y space.
@@ -738,6 +747,8 @@ class _EnvironmentMetricsChart extends StatelessWidget {
             height: 200,
             child: LineChart(
               LineChartData(
+                minX: xDomain.minX,
+                maxX: xDomain.maxX,
                 minY: 0,
                 maxY: 100,
                 lineBarsData: lineBars,
@@ -802,28 +813,14 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                         : const SideTitles(showTitles: false),
                   ),
                   bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 28,
-                      interval: math.max(1, sorted.length / 5),
-                      getTitlesWidget: (value, _) {
-                        final idx = value.toInt();
-                        if (idx < 0 || idx >= sorted.length) {
-                          return const SizedBox.shrink();
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            AppTimeFormat.timeOnly(
-                              context,
-                            ).format(sorted[idx].timestamp),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        );
-                      },
+                    sideTitles: TimeSeriesAxis.bottomTitles(
+                      context,
+                      minX: xDomain.minX,
+                      maxX: xDomain.maxX,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: context.textTertiary,
+                      ),
                     ),
                   ),
                 ),
@@ -839,9 +836,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                             )
                           : '${spot.y.toStringAsFixed(1)}%';
                     },
-                    timestampOf: (spot) =>
-                        sorted[spot.x.toInt().clamp(0, sorted.length - 1)]
-                            .timestamp,
+                    timestampOf: TimeSeriesAxis.timestampOfSpot,
                   ),
                 ),
               ),
@@ -863,15 +858,21 @@ class _EnvironmentMetricsChart extends StatelessWidget {
     final spots = <FlSpot>[];
     double yMin = double.infinity;
     double yMax = double.negativeInfinity;
-    for (int i = 0; i < sorted.length; i++) {
-      final v = _valueOf(filter, sorted[i]);
+    // x = actual sample time (epoch ms), so gaps between readings render
+    // proportionally instead of every reading getting an equal slot.
+    for (final log in sorted) {
+      final v = _valueOf(filter, log);
       if (v == null) continue;
-      spots.add(FlSpot(i.toDouble(), v));
+      spots.add(FlSpot(TimeSeriesAxis.xOf(log.timestamp), v));
       yMin = math.min(yMin, v);
       yMax = math.max(yMax, v);
     }
 
     if (spots.length < 2) return const SizedBox.shrink();
+
+    // Domain from the spot edges, not the sorted-list edges: logs at the
+    // ends of the window may lack this metric and would add dead space.
+    final xDomain = TimeSeriesAxis.domain(spots.first.x, spots.last.x);
 
     final color = _chartColorForFilter(filter);
     // Pad the Y axis a little so the peaks/valleys don't hug the edges.
@@ -891,6 +892,8 @@ class _EnvironmentMetricsChart extends StatelessWidget {
             height: 200,
             child: LineChart(
               LineChartData(
+                minX: xDomain.minX,
+                maxX: xDomain.maxX,
                 minY: axisMin,
                 maxY: axisMax,
                 lineBarsData: [_line(spots, color, true)],
@@ -926,28 +929,14 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                     ),
                   ),
                   bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 28,
-                      interval: math.max(1, sorted.length / 5),
-                      getTitlesWidget: (value, _) {
-                        final idx = value.toInt();
-                        if (idx < 0 || idx >= sorted.length) {
-                          return const SizedBox.shrink();
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            AppTimeFormat.timeOnly(
-                              context,
-                            ).format(sorted[idx].timestamp),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        );
-                      },
+                    sideTitles: TimeSeriesAxis.bottomTitles(
+                      context,
+                      minX: xDomain.minX,
+                      maxX: xDomain.maxX,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: context.textTertiary,
+                      ),
                     ),
                   ),
                 ),
@@ -956,9 +945,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                     context,
                     formatValue: (spot) =>
                         _formatTooltipValue(filter, spot.y, units),
-                    timestampOf: (spot) =>
-                        sorted[spot.x.toInt().clamp(0, sorted.length - 1)]
-                            .timestamp,
+                    timestampOf: TimeSeriesAxis.timestampOfSpot,
                   ),
                 ),
               ),

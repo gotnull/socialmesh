@@ -13,6 +13,7 @@ import '../../providers/meshcore_ringtone_preferences.dart';
 import '../protocol/sip/play/sip_play_constants.dart';
 import '../../utils/text_sanitizer.dart';
 import '../audio/notification_sound_service.dart';
+import 'app_badge_counter.dart';
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
@@ -170,6 +171,16 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+
+  /// One-shot guard for [takeNotificationLaunchPayload]: the launching tap
+  /// must be routed at most once per process.
+  bool _launchPayloadConsumed = false;
+
+  /// In-memory mirror of the app-icon badge. Reset by [clearBadge] (resume /
+  /// launch), overwritten with the provider unread total when the app
+  /// backgrounds, bumped per unread message while notifications post in the
+  /// background (provider totals are stale there).
+  final AppBadgeCounter _badgeCounter = AppBadgeCounter();
 
   /// Per-peer last-fire timestamp (ms since epoch) for notifications that
   /// can be triggered multiple times by retransmits or rebroadcast paths
@@ -364,6 +375,35 @@ class NotificationService {
       // Push notification payloads use 'type' or 'type|deepLink' format
       // Emit on the stream so the app can navigate
       _pushTapController.add(payload);
+    }
+  }
+
+  /// Consumes the notification tap that launched the app, if any.
+  ///
+  /// When the app is started from a terminated state by tapping a local
+  /// notification, the tap is NOT delivered through
+  /// [_onNotificationResponse] — the plugin surfaces it exactly once via the
+  /// launch details instead. Returns the tap payload the first time it is
+  /// called after such a launch and null on every later call ("take"
+  /// semantics), so a resume can never re-route an already-handled tap.
+  Future<String?> takeNotificationLaunchPayload() async {
+    if (_launchPayloadConsumed) return null;
+    _launchPayloadConsumed = true;
+    try {
+      final details = await _notifications.getNotificationAppLaunchDetails();
+      if (details?.didNotificationLaunchApp != true) return null;
+      final response = details?.notificationResponse;
+      final actionId = response?.actionId;
+      // A reaction action pressed from the shade must react, never navigate;
+      // the action itself is handled by the response callback path.
+      if (actionId == NotificationActions.thumbsUp ||
+          actionId == NotificationActions.thumbsDown) {
+        return null;
+      }
+      return response?.payload;
+    } catch (e) {
+      AppLogging.notifications('🔔 Launch details unavailable: $e');
+      return null;
     }
   }
 
@@ -1013,6 +1053,10 @@ class NotificationService {
           )
         : null;
 
+    // Unread badge: one more unread message. Computed before the details so
+    // the Android launcher badge (`number`) matches the iOS icon badge.
+    final newBadge = _badgeCounter.value + 1;
+
     final androidDetails = AndroidNotificationDetails(
       'direct_messages',
       'Direct Messages', // lint-allow: hardcoded-string
@@ -1023,6 +1067,7 @@ class NotificationService {
       groupKey: 'mesh_direct_messages',
       playSound: playSound,
       enableVibration: vibrate,
+      number: newBadge,
       actions: reactionTarget == null
           ? const <AndroidNotificationAction>[]
           : <AndroidNotificationAction>[
@@ -1080,6 +1125,7 @@ class NotificationService {
         notificationDetails: notificationDetails,
         payload: reactionTarget?.toPayload() ?? 'dm:$fromNodeNum',
       );
+      await setAppBadgeCount(newBadge);
       AppLogging.notifications(
         '🔔 Successfully showed DM notification from: $senderName',
       );
@@ -1111,6 +1157,9 @@ class NotificationService {
           )
         : null;
 
+    // Unread badge: one more unread message.
+    final newBadge = _badgeCounter.value + 1;
+
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
       'Channel Messages', // lint-allow: hardcoded-string
@@ -1121,6 +1170,7 @@ class NotificationService {
       groupKey: 'mesh_channel_messages',
       playSound: playSound,
       enableVibration: vibrate,
+      number: newBadge,
       actions: reactionTarget == null
           ? const <AndroidNotificationAction>[]
           : <AndroidNotificationAction>[
@@ -1175,6 +1225,7 @@ class NotificationService {
       payload:
           reactionTarget?.toPayload() ?? 'channel:$channelIndex:$fromNodeNum',
     );
+    await setAppBadgeCount(newBadge);
 
     AppLogging.notifications(
       '🔔 Showed channel notification: $senderName in $channelName',
@@ -1209,6 +1260,8 @@ class NotificationService {
       );
       return;
     }
+    // Unread badge: one more unread message.
+    final newBadge = _badgeCounter.value + 1;
     final androidDetails = AndroidNotificationDetails(
       'direct_messages',
       'Direct Messages', // lint-allow: hardcoded-string
@@ -1219,6 +1272,7 @@ class NotificationService {
       groupKey: 'mesh_direct_messages',
       playSound: playSound,
       enableVibration: vibrate,
+      number: newBadge,
     );
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -1252,6 +1306,7 @@ class NotificationService {
         notificationDetails: notificationDetails,
         payload: 'meshcore-dm:$pubKeyHex',
       );
+      await setAppBadgeCount(newBadge);
       AppLogging.notifications(
         '🔔 Showed MeshCore DM notification from $senderName '
         '(len=${truncatedMessage.length})',
@@ -1277,6 +1332,8 @@ class NotificationService {
     bool vibrate = true,
   }) async {
     if (!_initialized) return;
+    // Unread badge: one more unread message.
+    final newBadge = _badgeCounter.value + 1;
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
       'Channel Messages', // lint-allow: hardcoded-string
@@ -1287,6 +1344,7 @@ class NotificationService {
       groupKey: 'mesh_channel_messages',
       playSound: playSound,
       enableVibration: vibrate,
+      number: newBadge,
     );
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -1314,6 +1372,7 @@ class NotificationService {
       notificationDetails: notificationDetails,
       payload: 'meshcore-channel:$channelIndex:$senderPrefixHex',
     );
+    await setAppBadgeCount(newBadge);
     AppLogging.notifications(
       '🔔 Showed MeshCore channel notification: $senderName in $channelName '
       '(len=${truncatedMessage.length})',
@@ -1527,6 +1586,7 @@ class NotificationService {
   /// centre — [cancelAll] alone does not reset it.
   Future<void> clearBadge() async {
     if (!_initialized) return;
+    _badgeCounter.reset();
     await _notifications.cancelAll();
     if (Platform.isIOS || Platform.isMacOS) {
       try {
@@ -1536,6 +1596,26 @@ class NotificationService {
       }
     }
     AppLogging.notifications('🔔 Badge cleared');
+  }
+
+  /// Set the app icon badge to [count] (unread-message total).
+  ///
+  /// Idempotent last-write-wins: called with the authoritative provider
+  /// total when the app backgrounds, and with the bumped counter value as
+  /// message notifications post while backgrounded. iOS/macOS go through
+  /// the native [_badgeChannel]; Android launchers read the per-channel
+  /// notification `number` instead, so no channel call is needed there.
+  Future<void> setAppBadgeCount(int count) async {
+    if (!_initialized) return;
+    final clamped = _badgeCounter.set(count);
+    if (Platform.isIOS || Platform.isMacOS) {
+      try {
+        await _badgeChannel.invokeMethod<void>('setBadge', {'count': clamped});
+      } catch (e) {
+        AppLogging.notifications('🔔 setBadge channel error: $e');
+      }
+    }
+    AppLogging.notifications('🔔 Badge set to $clamped');
   }
 
   /// Cancel notification by ID
@@ -1602,6 +1682,9 @@ class NotificationService {
       if (senderCount > 3) body += '…';
     }
 
+    // Unread badge: the batch carries one unread message per entry.
+    final newBadge = _badgeCounter.value + messageCount;
+
     final androidDetails = AndroidNotificationDetails(
       'direct_messages',
       'Direct Messages', // lint-allow: hardcoded-string
@@ -1612,6 +1695,7 @@ class NotificationService {
       groupKey: 'mesh_direct_messages',
       playSound: playSound,
       enableVibration: vibrate,
+      number: newBadge,
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -1631,6 +1715,7 @@ class NotificationService {
       ),
       payload: 'batched_dm',
     );
+    await setAppBadgeCount(newBadge);
 
     AppLogging.notifications(
       '🔔 Showed batched DM notification: $messageCount messages from $senderCount senders',
@@ -1679,6 +1764,9 @@ class NotificationService {
       if (channelCount > 3) body += '…';
     }
 
+    // Unread badge: the batch carries one unread message per entry.
+    final newBadge = _badgeCounter.value + messageCount;
+
     final androidDetails = AndroidNotificationDetails(
       'channel_messages',
       'Channel Messages', // lint-allow: hardcoded-string
@@ -1689,6 +1777,7 @@ class NotificationService {
       groupKey: 'mesh_channel_messages',
       playSound: playSound,
       enableVibration: vibrate,
+      number: newBadge,
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -1708,6 +1797,7 @@ class NotificationService {
       ),
       payload: 'batched_channel',
     );
+    await setAppBadgeCount(newBadge);
 
     AppLogging.notifications(
       '🔔 Showed batched channel notification: $messageCount messages in $channelCount channels',

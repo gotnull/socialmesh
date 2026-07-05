@@ -58,6 +58,7 @@ import 'providers/locale_provider.dart';
 import 'models/canned_response.dart';
 import 'models/tapback.dart';
 import 'models/user_profile.dart';
+import 'providers/app_badge_providers.dart';
 import 'providers/app_providers.dart';
 import 'providers/meshcore_lifecycle_provider.dart';
 import 'providers/meshcore_providers.dart';
@@ -86,6 +87,7 @@ import 'utils/snackbar.dart';
 import 'utils/text_sanitizer.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'services/privacy_consent_service.dart';
+import 'services/notifications/notification_payload_parser.dart';
 import 'services/notifications/notification_service.dart';
 import 'services/notifications/push_notification_service.dart';
 import 'services/content_moderation/profanity_checker.dart';
@@ -656,7 +658,14 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       _initializePurchases();
       // Initialize deep link handling (lifecycle-safe via DeepLinkManager)
       _initializeDeepLinks();
-      // Initialize push notification navigation
+      // Local notification tap routing is registered unconditionally: mesh
+      // DM/channel notifications are local and must open their conversation
+      // fully offline, independent of Firebase availability.
+      _initializeLocalNotificationTapRouting();
+      // A tap that launched the app from a terminated state arrives via the
+      // plugin's launch details, not the tap stream — route it once ready.
+      _dispatchColdStartNotificationTap();
+      // Initialize push notification navigation (FCM, Firebase-gated)
       _initializePushNotificationNavigation();
       // Start the Apple Watch companion bridge (iOS only). The bridge
       // is internally gated on WCSession.isSupported() and on the
@@ -714,6 +723,12 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       // foreground ProtocolService is still the primary data handler; both
       // listening to the same broadcast BLE stream would create duplicates.
       ref.read(lifecycleCommandManagerProvider).setAppActive(false);
+      // Push the authoritative unread total to the app icon badge before the
+      // background processor takes over: while backgrounded, provider totals
+      // go stale and NotificationService bumps from this baseline instead.
+      unawaited(
+        NotificationService().setAppBadgeCount(ref.read(appBadgeCountProvider)),
+      );
       // Foreground/background handoff (W2.3): enable background notification
       // dispatch so messages received in the background produce notifications.
       _handleForegroundToBackgroundHandoff();
@@ -731,6 +746,13 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       // Mark lifecycle as inactive but do NOT enable the background message
       // processor — the foreground ProtocolService is still handling data.
       ref.read(lifecycleCommandManagerProvider).setAppActive(false);
+      // Also set the badge on `inactive`: iOS sends `inactive` before
+      // `paused` and sometimes never reaches `paused` at all (app switcher,
+      // notification shade), and `detached` can be the only signal on
+      // termination. Idempotent last-write-wins, so double-setting is fine.
+      unawaited(
+        NotificationService().setAppBadgeCount(ref.read(appBadgeCountProvider)),
+      );
       // Pause RSSI polling and GPS location updates even on `inactive`.
       // iOS sends `inactive` before `paused`, and sometimes never reaches
       // `paused` at all (app switcher, notification shade). Without this,
@@ -1327,9 +1349,66 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
 
   /// Initialize push notification navigation handling
   /// Must wait for Firebase to be ready before accessing PushNotificationService
+  /// Subscribes to local notification taps (mesh DM / channel / MeshCore /
+  /// SIP / pet / TAK / firmware). Registered unconditionally from initState:
+  /// these notifications are produced on-device and their taps must route
+  /// with Firebase unavailable — coupling this to [firebaseReady] previously
+  /// meant offline sessions never routed taps at all. Payload normalisation
+  /// lives in [parseLocalNotificationPayload].
+  void _initializeLocalNotificationTapRouting() {
+    _localNotificationTapSubscription = NotificationService()
+        .onPushNotificationTap
+        .listen(
+          (payload) => _handlePushNotificationNavigation(
+            parseLocalNotificationPayload(payload),
+          ),
+        );
+    AppLogging.notifications('🔔 Local notification tap routing initialized');
+  }
+
+  /// Routes the notification tap that launched the app from a terminated
+  /// state. That tap is delivered once via the plugin's launch details, not
+  /// the response callback, so without this the payload is dropped and the
+  /// app just opens on its home screen. Dispatch waits for [appInitProvider]
+  /// to reach [AppInitState.ready] (storage hydrated, navigator mounted);
+  /// first-run and error states have nothing to route to and skip.
+  void _dispatchColdStartNotificationTap() {
+    bool handle(AppInitState state) {
+      switch (state) {
+        case AppInitState.uninitialized:
+        case AppInitState.initializing:
+          return false; // Still booting — keep waiting.
+        case AppInitState.ready:
+          unawaited(_routeColdStartNotificationTap());
+          return true;
+        case AppInitState.needsAgeEligibility:
+        case AppInitState.needsOnboarding:
+        case AppInitState.needsTermsAcceptance:
+        case AppInitState.needsScanner:
+        case AppInitState.error:
+          return true; // Nothing meaningful to route to.
+      }
+    }
+
+    if (handle(ref.read(appInitProvider))) return;
+    ProviderSubscription<AppInitState>? initSub;
+    initSub = ref.listenManual<AppInitState>(appInitProvider, (previous, next) {
+      if (handle(next)) initSub?.close();
+    });
+  }
+
+  Future<void> _routeColdStartNotificationTap() async {
+    final payload = await NotificationService().takeNotificationLaunchPayload();
+    if (!mounted || payload == null || payload.isEmpty) return;
+    AppLogging.notifications('🔔 Cold-start notification tap: $payload');
+    _handlePushNotificationNavigation(parseLocalNotificationPayload(payload));
+  }
+
   Future<void> _initializePushNotificationNavigation() async {
     try {
-      // Wait for Firebase to be ready - if it fails, skip push notifications
+      // Wait for Firebase to be ready - if it fails, skip push notifications.
+      // Only the FCM stream is gated here; local notification taps are wired
+      // unconditionally in _initializeLocalNotificationTapRouting.
       final isReady = await firebaseReady;
       if (!isReady) {
         AppLogging.notifications(
@@ -1341,44 +1420,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       _pushNotificationSubscription = PushNotificationService()
           .onNotificationNavigation
           .listen(_handlePushNotificationNavigation);
-
-      // Also listen for foreground local notification taps. Two
-      // payload conventions exist:
-      //   1. `type|deepLink` — used by FCM payloads converted into
-      //      local notifications (announcements, etc.). The deep link
-      //      itself can contain `:` (e.g. `https://...`), so the `|`
-      //      separator is what splits type from link.
-      //   2. `type:targetId[:more]` — the historical NotificationService
-      //      convention for SIP handshake / peer-found / pet / aether /
-      //      TAK / firmware notifications. First segment is the type,
-      //      rest is the target identifier.
-      // Both feed the same `_handlePushNotificationNavigation`
-      // dispatcher, so we normalise here.
-      _localNotificationTapSubscription = NotificationService()
-          .onPushNotificationTap
-          .listen((payload) {
-            String type;
-            String? targetId;
-            String? deepLink;
-            if (payload.contains('|')) {
-              final parts = payload.split('|');
-              type = parts.first;
-              deepLink = parts.length > 1 ? parts.sublist(1).join('|') : null;
-            } else if (payload.contains(':')) {
-              final parts = payload.split(':');
-              type = parts.first;
-              targetId = parts.length > 1 ? parts.sublist(1).join(':') : null;
-            } else {
-              type = payload;
-            }
-            _handlePushNotificationNavigation(
-              NotificationNavigation(
-                type: type,
-                targetId: targetId,
-                deepLink: deepLink,
-              ),
-            );
-          });
 
       AppLogging.notifications('🔔 Push notification navigation initialized');
     } catch (e) {

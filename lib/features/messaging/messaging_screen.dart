@@ -697,9 +697,13 @@ class _ContactTile extends StatelessWidget {
             children: [
               NodeAvatar(
                 text: contact.shortName ?? safeTruncate(contact.displayName, 2),
-                color: contact.avatarColor != null
-                    ? Color(contact.avatarColor!)
-                    : AppTheme.graphPurple,
+                // Deterministic per-node colour (user-set avatarColor wins),
+                // matching the Nodes list so the same node reads the same
+                // colour in both lists.
+                color: resolveNodeColor(
+                  nodeNum: contact.nodeNum,
+                  avatarColor: contact.avatarColor,
+                ),
                 size: 48,
               ),
               if (contact.presence.isActive)
@@ -2485,11 +2489,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       final peer = ref.watch(
                         nodesProvider.select((nodes) => nodes[widget.nodeNum]),
                       );
+                      final nodeNum = widget.nodeNum;
                       return NodeAvatar(
                         text:
                             peer?.avatarName ??
                             safeTruncate(sanitizeExternalText(widget.title), 4),
-                        color: widget.avatarColor != null
+                        // Same deterministic per-node colour as the contact
+                        // and node lists; nodeNum is always set for DMs, the
+                        // constant fallback only covers malformed routes.
+                        color: nodeNum != null
+                            ? resolveNodeColor(
+                                nodeNum: nodeNum,
+                                avatarColor: widget.avatarColor,
+                              )
+                            : widget.avatarColor != null
                             ? Color(widget.avatarColor!)
                             : AppTheme.graphPurple,
                         size: 36,

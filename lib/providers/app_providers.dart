@@ -169,6 +169,12 @@ class AppInitNotifier extends Notifier<AppInitState> {
       final caps = ref.read(platformCapabilitiesProvider);
       if (caps.supportsNotifications) {
         await NotificationService().initialize();
+        // Launch-time clear-on-open: a cold start never fires a `resumed`
+        // lifecycle transition, so without this a badge set during the
+        // previous background session would survive the relaunch. cancelAll
+        // inside clearBadge does not erase the plugin's launch details, so
+        // cold-start notification tap routing is unaffected.
+        await NotificationService().clearBadge();
       } else {
         AppLogging.platform(
           'AppInit: notifications unsupported on ${caps.platformFamily.name} - skipping NotificationService init',

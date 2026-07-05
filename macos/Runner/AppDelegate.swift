@@ -16,10 +16,23 @@ class AppDelegate: FlutterAppDelegate {
         binaryMessenger: controller.engine.binaryMessenger
       )
       badgeChannel.setMethodCallHandler { call, result in
-        if call.method == "clearBadge" {
+        switch call.method {
+        case "clearBadge":
           NSApplication.shared.dockTile.badgeLabel = nil
           result(nil)
-        } else {
+        case "setBadge":
+          guard let args = call.arguments as? [String: Any],
+                let count = args["count"] as? Int else {
+            result(FlutterError(
+              code: "bad_args",
+              message: "setBadge requires an integer 'count'",
+              details: nil
+            ))
+            return
+          }
+          NSApplication.shared.dockTile.badgeLabel = count > 0 ? String(count) : nil
+          result(nil)
+        default:
           result(FlutterMethodNotImplemented)
         }
       }

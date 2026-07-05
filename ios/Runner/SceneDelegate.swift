@@ -59,15 +59,17 @@ class SceneDelegate: FlutterSceneDelegate {
     private func registerChannels(on controller: FlutterViewController) {
         let messenger = controller.binaryMessenger
 
-        // Native badge-reset channel. flutter_local_notifications' cancelAll()
+        // Native badge channel. flutter_local_notifications' cancelAll()
         // does not reset UIApplication.applicationIconBadgeNumber; Dart calls
-        // clearBadge here when the app foregrounds.
+        // clearBadge here when the app foregrounds, and setBadge with the
+        // unread-message total when messages arrive or the app backgrounds.
         let badgeChannel = FlutterMethodChannel(
             name: "socialmesh/badge",
             binaryMessenger: messenger
         )
         badgeChannel.setMethodCallHandler { call, result in
-            if call.method == "clearBadge" {
+            switch call.method {
+            case "clearBadge":
                 if #available(iOS 16.0, *) {
                     UNUserNotificationCenter.current().setBadgeCount(0) { _ in
                         result(nil)
@@ -76,7 +78,25 @@ class SceneDelegate: FlutterSceneDelegate {
                     UIApplication.shared.applicationIconBadgeNumber = 0
                     result(nil)
                 }
-            } else {
+            case "setBadge":
+                guard let args = call.arguments as? [String: Any],
+                      let count = args["count"] as? Int else {
+                    result(FlutterError(
+                        code: "bad_args",
+                        message: "setBadge requires an integer 'count'",
+                        details: nil
+                    ))
+                    return
+                }
+                if #available(iOS 16.0, *) {
+                    UNUserNotificationCenter.current().setBadgeCount(count) { _ in
+                        result(nil)
+                    }
+                } else {
+                    UIApplication.shared.applicationIconBadgeNumber = count
+                    result(nil)
+                }
+            default:
                 result(FlutterMethodNotImplemented)
             }
         }

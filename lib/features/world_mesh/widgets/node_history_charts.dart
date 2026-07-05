@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../utils/time_format.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/time_series_axis.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/node_history_service.dart';
 
@@ -161,8 +162,9 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
 
     double? minY, maxY;
 
-    for (var i = 0; i < sortedHistory.length; i++) {
-      final entry = sortedHistory[i];
+    // x = actual sample time (epoch ms), so gaps between snapshots render
+    // proportionally instead of every snapshot getting an equal slot.
+    for (final entry in sortedHistory) {
       double? value;
 
       switch (_selectedMetric) {
@@ -177,7 +179,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
       }
 
       if (value != null) {
-        spots.add(FlSpot(i.toDouble(), value));
+        spots.add(FlSpot(TimeSeriesAxis.xOf(entry.timestamp), value));
         minY = minY == null ? value : math.min(minY, value);
         maxY = maxY == null ? value : math.max(maxY, value);
       }
@@ -202,6 +204,10 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
         ),
       );
     }
+
+    // Domain from the spot edges; a single valid spot (or duplicate
+    // timestamps) gets a padded span instead of a collapsed minX == maxX.
+    final xDomain = TimeSeriesAxis.domain(spots.first.x, spots.last.x);
 
     // Calculate Y range
     double finalMinY, finalMaxY;
@@ -256,26 +262,13 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
             sideTitles: SideTitles(showTitles: false),
           ),
           bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 28,
-              interval: math.max(1, spots.length / 5),
-              getTitlesWidget: (value, meta) {
-                final index = value.toInt();
-                if (index < 0 || index >= sortedHistory.length) {
-                  return const SizedBox.shrink();
-                }
-                final entry = sortedHistory[index];
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    AppTimeFormat.timeOnly(context).format(entry.timestamp),
-                    style: context.captionStyle?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                );
-              },
+            sideTitles: TimeSeriesAxis.bottomTitles(
+              context,
+              minX: xDomain.minX,
+              maxX: xDomain.maxX,
+              style: context.captionStyle?.copyWith(
+                color: context.textTertiary,
+              ),
             ),
           ),
           leftTitles: AxisTitles(
@@ -295,8 +288,8 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
           ),
         ),
         borderData: FlBorderData(show: false),
-        minX: 0,
-        maxX: (spots.length - 1).toDouble(),
+        minX: xDomain.minX,
+        maxX: xDomain.maxX,
         minY: finalMinY,
         maxY: finalMaxY,
         lineTouchData: LineTouchData(
@@ -307,19 +300,15 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
             tooltipBorder: BorderSide(color: lineColor.withValues(alpha: 0.5)),
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
-                final index = spot.x.toInt();
-                if (index >= 0 && index < sortedHistory.length) {
-                  final entry = sortedHistory[index];
-                  return LineTooltipItem(
-                    '${spot.y.toStringAsFixed(_selectedMetric == NodeChartMetric.connectivity ? 0 : 1)}${_selectedMetric.unit}\n${AppTimeFormat.dateAndTime(context).format(entry.timestamp)}',
-                    TextStyle(
-                      color: lineColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  );
-                }
-                return null;
+                final timestamp = TimeSeriesAxis.timestampOfSpot(spot);
+                return LineTooltipItem(
+                  '${spot.y.toStringAsFixed(_selectedMetric == NodeChartMetric.connectivity ? 0 : 1)}${_selectedMetric.unit}\n${AppTimeFormat.dateAndTime(context).format(timestamp)}',
+                  TextStyle(
+                    color: lineColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                );
               }).toList();
             },
           ),

@@ -16,6 +16,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
+import '../../core/widgets/time_series_axis.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
@@ -551,9 +552,10 @@ class _DeviceMetricsChart extends StatelessWidget {
     double vMin = double.infinity;
     double vMax = double.negativeInfinity;
 
-    for (int i = 0; i < sorted.length; i++) {
-      final log = sorted[i];
-      final x = i.toDouble();
+    // x = actual sample time (epoch ms), so gaps between readings render
+    // proportionally instead of every reading getting an equal slot.
+    for (final log in sorted) {
+      final x = TimeSeriesAxis.xOf(log.timestamp);
       if (log.batteryLevel != null) {
         batterySpots.add(FlSpot(x, log.batteryLevel!.toDouble().clamp(0, 100)));
       }
@@ -610,9 +612,13 @@ class _DeviceMetricsChart extends StatelessWidget {
 
     if (lineBars.isEmpty) return const SizedBox.shrink();
 
-    // Explicit x-domain: with a single sample minX would equal maxX,
-    // which collapses the chart's horizontal span.
-    final chartMaxX = math.max(sorted.length - 1, 1).toDouble();
+    // Explicit x-domain: with a single sample (or duplicate timestamps)
+    // minX would equal maxX, which collapses the chart's horizontal span;
+    // TimeSeriesAxis.domain pads that case.
+    final xDomain = TimeSeriesAxis.domainOf(
+      sorted.first.timestamp,
+      sorted.last.timestamp,
+    );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 0),
@@ -624,8 +630,8 @@ class _DeviceMetricsChart extends StatelessWidget {
             height: 200,
             child: LineChart(
               LineChartData(
-                minX: 0,
-                maxX: chartMaxX,
+                minX: xDomain.minX,
+                maxX: xDomain.maxX,
                 minY: 0,
                 maxY: 100,
                 lineBarsData: lineBars,
@@ -682,28 +688,14 @@ class _DeviceMetricsChart extends StatelessWidget {
                     ),
                   ),
                   bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 28,
-                      interval: math.max(1, sorted.length / 5),
-                      getTitlesWidget: (value, _) {
-                        final idx = value.toInt();
-                        if (idx < 0 || idx >= sorted.length) {
-                          return const SizedBox.shrink();
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            AppTimeFormat.timeOnly(
-                              context,
-                            ).format(sorted[idx].timestamp),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        );
-                      },
+                    sideTitles: TimeSeriesAxis.bottomTitles(
+                      context,
+                      minX: xDomain.minX,
+                      maxX: xDomain.maxX,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: context.textTertiary,
+                      ),
                     ),
                   ),
                 ),
@@ -718,9 +710,7 @@ class _DeviceMetricsChart extends StatelessWidget {
                           ? '${((spot.y / 100) * vRange + vAxisMin).toStringAsFixed(2)}V'
                           : '${spot.y.toStringAsFixed(1)}%';
                     },
-                    timestampOf: (spot) =>
-                        sorted[spot.x.toInt().clamp(0, sorted.length - 1)]
-                            .timestamp,
+                    timestampOf: TimeSeriesAxis.timestampOfSpot,
                   ),
                 ),
               ),
