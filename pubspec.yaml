@@ -90,7 +90,7 @@ dependencies:
   device_info_plus: ^13.1.0
 
   # In-App Purchases (RevenueCat)
-  purchases_flutter: ^10.2.2
+  purchases_flutter: ^10.3.0
 
   # Animations
   animations: ^2.1.2
