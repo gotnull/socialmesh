@@ -57,7 +57,7 @@ dependencies:
   cupertino_icons: ^1.0.9
   flutter_compass: ^0.8.1
   flutter_map: ^8.3.0
-  infinite_calendar_view: ^2.11.4
+  infinite_calendar_view: ^2.11.5
   latlong2: ^0.9.1
   intl: ^0.20.2
   collection: ^1.18.0
