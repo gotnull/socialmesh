@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
+import '../../../services/haptic_service.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
@@ -2473,6 +2474,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
       }
     }
 
+    ref.haptics.itemSelect();
     setState(() {
       _schema = _schema.copyWith(size: newSize);
     });
@@ -2490,6 +2492,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
       return;
     }
 
+    ref.haptics.itemSelect();
     final newElement = _createDefaultElement(type);
 
     // If a layout element is selected, add as child of that element
@@ -2827,6 +2830,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   }
 
   void _editWidgetName() async {
+    ref.haptics.buttonTap();
     final controller = TextEditingController(text: _schema.name);
 
     final result = await AppBottomSheet.show<String>(
