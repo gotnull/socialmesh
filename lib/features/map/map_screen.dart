@@ -3882,9 +3882,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       return cached;
     }
     final circles = rangeCircleMarkers(
-      context,
       nodes: nodes.map(_toMarkerData).toList(growable: false),
-      myNodeNum: myNodeNum,
     );
     _rangeCirclesSigNodes = geomSig;
     _rangeCirclesSigMyNodeNum = myNodeNum;
@@ -3948,7 +3946,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
     final trails = developer.Timeline.timeSync(
       'map.nodeTrails',
-      () => _buildNodeTrails(nodes, myNodeNum, positionLogs),
+      () => _buildNodeTrails(nodes, positionLogs),
     );
     _trailsSigNodes = geomSig;
     _trailsSigLogs = positionLogs;
@@ -4026,16 +4024,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   List<Polyline> _buildNodeTrails(
     List<_NodeWithPosition> nodes,
-    int? myNodeNum,
     List<PositionLog> positionLogs,
   ) {
     // Persisted position history is the shared, screen-agnostic path.
     if ((_showPositionHistory || _trackNodeNum != null) &&
         positionLogs.isNotEmpty) {
       return positionHistoryTrailPolylines(
-        context,
         nodes: nodes.map(_toMarkerData).toList(growable: false),
-        myNodeNum: myNodeNum,
         positionLogs: positionLogs,
       );
     }
@@ -4047,20 +4042,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final trail = _nodeTrails[node.node.nodeNum];
       if (trail == null || trail.length < 2) continue;
 
-      final isMyNode = node.node.nodeNum == myNodeNum;
       final points = trail.map((t) => LatLng(t.latitude, t.longitude)).toList();
 
       trails.add(
         Polyline(
           points: points,
-          color:
-              (isMyNode
-                      ? context.accentColor
-                      : resolveNodeColor(
-                          nodeNum: node.node.nodeNum,
-                          avatarColor: node.node.avatarColor,
-                        ))
-                  .withValues(alpha: 0.4),
+          color: resolveNodeColor(
+            nodeNum: node.node.nodeNum,
+            avatarColor: node.node.avatarColor,
+          ).withValues(alpha: 0.4),
           strokeWidth: 2,
           pattern: const StrokePattern.dotted(spacingFactor: 1.5),
         ),

@@ -144,7 +144,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     if (_compactView) {
       return _CompactNodeTile(
         node: node,
-        isMyNode: isMyNode,
         presenceConfidence: presence,
         lastHeardAge: lastHeardAge,
         onTap: () => _showNodeDetails(context, node, isMyNode),
@@ -1506,7 +1505,7 @@ class _NodeCard extends ConsumerWidget {
           child: Center(
             child: NodeAvatar(
               text: node.avatarName,
-              color: isMyNode ? context.accentColor : _getAvatarColor(),
+              color: _getAvatarColor(),
               size: 56,
               showOnlineIndicator: presenceConfidence.isActive,
               onlineStatus: presenceConfidence.isActive
@@ -1906,7 +1905,6 @@ class _NodeCard extends ConsumerWidget {
 
 class _CompactNodeTile extends StatelessWidget {
   final MeshNode node;
-  final bool isMyNode;
   final PresenceConfidence presenceConfidence;
   final Duration? lastHeardAge;
   final VoidCallback onTap;
@@ -1914,7 +1912,6 @@ class _CompactNodeTile extends StatelessWidget {
 
   const _CompactNodeTile({
     required this.node,
-    required this.isMyNode,
     required this.presenceConfidence,
     required this.lastHeardAge,
     required this.onTap,
@@ -1939,17 +1936,16 @@ class _CompactNodeTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Colored short-name circle (matches the Contacts list + expanded
-            // node card). My node uses the accent colour; everyone else gets
-            // their deterministic per-node colour. The online dot marks active
-            // presence; finer presence states are carried by the status text.
+            // node card). Every node - including our own - uses its
+            // deterministic per-node colour, so it reads the same colour peers
+            // see. The online dot marks active presence; finer presence states
+            // are carried by the status text.
             NodeAvatar(
               text: node.avatarName,
-              color: isMyNode
-                  ? context.accentColor
-                  : resolveNodeColor(
-                      nodeNum: node.nodeNum,
-                      avatarColor: node.avatarColor,
-                    ),
+              color: resolveNodeColor(
+                nodeNum: node.nodeNum,
+                avatarColor: node.avatarColor,
+              ),
               size: 36,
               showOnlineIndicator: presenceConfidence.isActive,
               onlineStatus: presenceConfidence.isActive

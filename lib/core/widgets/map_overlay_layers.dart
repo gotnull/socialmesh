@@ -91,20 +91,16 @@ List<LatLng> _downsamplePoints(List<LatLng> points, {int maxPoints = 200}) {
   return result;
 }
 
-/// Theoretical 5km coverage circles, one per node. Own node uses the app
-/// accent; peers use the nodeNum-derived identity colour (no avatar override,
-/// so the result is a pure function of geometry + accent).
-List<CircleMarker> rangeCircleMarkers(
-  BuildContext context, {
+/// Theoretical 5km coverage circles, one per node. Every node uses its
+/// nodeNum-derived identity colour (no avatar override), so the result is a
+/// pure function of geometry.
+List<CircleMarker> rangeCircleMarkers({
   required List<MeshNodeMarkerData> nodes,
-  int? myNodeNum,
 }) {
-  final accent = context.accentColor;
   return nodes
       .where((n) => n.latitude.isFinite && n.longitude.isFinite)
       .map((n) {
-        final isMyNode = n.node.nodeNum == myNodeNum;
-        final circleColor = isMyNode ? accent : nodeColorFromId(n.node.nodeNum);
+        final circleColor = nodeColorFromId(n.node.nodeNum);
         return CircleMarker(
           point: LatLng(n.latitude, n.longitude),
           radius: 5000,
@@ -248,18 +244,15 @@ List<Marker> distanceLabelMarkers(
 }
 
 /// Movement trails built from persisted [positionLogs], one dotted polyline per
-/// node with at least two logged positions. Own node uses the accent; peers use
-/// their identity colour (avatar override wins). Long histories are downsampled
-/// to keep the dotted pattern from stuttering the GPU.
-List<Polyline> positionHistoryTrailPolylines(
-  BuildContext context, {
+/// node with at least two logged positions. Every node uses its identity colour
+/// (avatar override wins). Long histories are downsampled to keep the dotted
+/// pattern from stuttering the GPU.
+List<Polyline> positionHistoryTrailPolylines({
   required List<MeshNodeMarkerData> nodes,
-  int? myNodeNum,
   required List<PositionLog> positionLogs,
 }) {
   if (positionLogs.isEmpty) return const [];
 
-  final accent = context.accentColor;
   final trails = <Polyline>[];
 
   final logsByNode = <int, List<PositionLog>>{};
@@ -283,13 +276,10 @@ List<Polyline> positionHistoryTrailPolylines(
     final matchingNode = nodes
         .where((n) => n.node.nodeNum == nodeNum)
         .firstOrNull;
-    final isMyNode = nodeNum == myNodeNum;
-    final color = isMyNode
-        ? accent
-        : resolveNodeColor(
-            nodeNum: nodeNum,
-            avatarColor: matchingNode?.node.avatarColor,
-          );
+    final color = resolveNodeColor(
+      nodeNum: nodeNum,
+      avatarColor: matchingNode?.node.avatarColor,
+    );
 
     trails.add(
       Polyline(

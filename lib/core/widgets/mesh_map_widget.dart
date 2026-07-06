@@ -643,13 +643,12 @@ class _MeshNodeMarkerState extends State<MeshNodeMarker>
   Widget build(BuildContext context) {
     // Per-node colour (low three bytes of nodeNum as RGB, user override wins)
     // so every node keeps its identity colour on the map and never ghosts with
-    // age. Own node stays on the app accent.
-    final color = widget.isMyNode
-        ? context.accentColor
-        : resolveNodeColor(
-            nodeNum: widget.node.nodeNum,
-            avatarColor: widget.node.avatarColor,
-          );
+    // age. The own node uses its identity colour too - the pulse ring and the
+    // larger marker mark it as ours, so it reads the same colour peers see.
+    final color = resolveNodeColor(
+      nodeNum: widget.node.nodeNum,
+      avatarColor: widget.node.avatarColor,
+    );
     final labelColor = nodeContrastColor(color);
 
     final marker = AnimatedContainer(
