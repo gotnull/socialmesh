@@ -1,5 +1,9 @@
 {
   "@@locale": "es",
+  "messageContextMenuRelayNode": "Repetidor: {name}",
+  "messagingTechInfoRelay": "Repetidor {name}",
+  "messagingTechInfoExplainRelayTitle": "Nodo repetidor",
+  "messagingTechInfoExplainRelayBody": "El último nodo que retransmitió este mensaje hasta ti. Por radio solo se envía el último byte de su ID, por lo que el nombre es una coincidencia aproximada y se muestra un byte hexadecimal cuando no se puede resolver en un único nodo conocido.",
   "accessRestrictedTitle": "Acceso restringido",
   "accountSubAccountExistsLinking": "Ya existe una cuenta con {email} usando {provider}.\n\n¿Iniciar sesión con {provider} para vincular su cuenta de GitHub?",
   "accountSubAllUnlocked": "¡Todas las funciones desbloqueadas!",

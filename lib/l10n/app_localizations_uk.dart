@@ -12041,6 +12041,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messageContextMenuMessageDetails => 'Деталі повідомлення';
 
   @override
+  String messageContextMenuRelayNode(String name) {
+    return 'Ретранслятор: $name';
+  }
+
+  @override
   String get messageContextMenuNoRecents => 'Немає нещодавніх';
 
   @override
@@ -12443,6 +12448,18 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get messagingTechInfoExplainPacketIdBody =>
       'Унікальний ідентифікатор цього радіопакета, присвоєний вузлом-відправником. Корисний для діагностики проблем із доставкою.';
+
+  @override
+  String messagingTechInfoRelay(String name) {
+    return 'Ретранслятор $name';
+  }
+
+  @override
+  String get messagingTechInfoExplainRelayTitle => 'Вузол-ретранслятор';
+
+  @override
+  String get messagingTechInfoExplainRelayBody =>
+      'Останній вузол, який ретранслював це повідомлення вам. Через радіо передається лише останній байт його ідентифікатора, тому ім\'я є приблизним збігом, і відображається шістнадцятковий байт, коли його неможливо однозначно зіставити з одним відомим вузлом.';
 
   @override
   String get messagingTechInfoTimestampToday => 'Сьогодні';

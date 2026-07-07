@@ -27,7 +27,7 @@ class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
   static const _readPositionsTableName = 'conversation_read_positions';
-  static const _dbVersion = 10;
+  static const _dbVersion = 11;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -247,6 +247,15 @@ class MessageDatabase {
           );
           AppLogging.storage('v10 migration: ensured real_ack column');
         }
+        if (oldVersion < 11) {
+          // Nullable column — legacy rows load as relayNode=null (unknown),
+          // which the UI simply omits (the relay row is gated on non-null).
+          await addColumnIfMissing(
+            'relay_node',
+            'ALTER TABLE $_tableName ADD COLUMN relay_node INTEGER', // lint-allow: hardcoded-string
+          );
+          AppLogging.storage('v11 migration: ensured relay_node column');
+        }
       },
       onDowngrade: (db, oldVersion, newVersion) async {
         // Retain the on-disk schema: every shipped schema is a strict
@@ -303,6 +312,7 @@ class MessageDatabase {
         hop_count INTEGER,
         rx_snr REAL,
         rx_rssi INTEGER,
+        relay_node INTEGER,
         sent_at INTEGER,
         last_attempt_at INTEGER,
         retry_count INTEGER NOT NULL DEFAULT 0,
@@ -719,6 +729,7 @@ class MessageDatabase {
       'hop_count': message.hopCount,
       'rx_snr': message.rxSnr,
       'rx_rssi': message.rxRssi,
+      'relay_node': message.relayNode,
       'sent_at': message.sentAt?.millisecondsSinceEpoch,
       'last_attempt_at': message.lastAttemptAt?.millisecondsSinceEpoch,
       'retry_count': message.retryCount,
@@ -763,6 +774,7 @@ class MessageDatabase {
       hopCount: row['hop_count'] as int?,
       rxSnr: (row['rx_snr'] as num?)?.toDouble(),
       rxRssi: row['rx_rssi'] as int?,
+      relayNode: row['relay_node'] as int?,
       sentAt: row['sent_at'] != null
           ? DateTime.fromMillisecondsSinceEpoch(row['sent_at'] as int)
           : null,

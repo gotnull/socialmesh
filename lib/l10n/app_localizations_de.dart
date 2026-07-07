@@ -12055,6 +12055,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messageContextMenuMessageDetails => 'Nachrichtendetails';
 
   @override
+  String messageContextMenuRelayNode(String name) {
+    return 'Relais: $name';
+  }
+
+  @override
   String get messageContextMenuNoRecents => 'Keine Zuletzt verwendeten';
 
   @override
@@ -12462,6 +12467,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get messagingTechInfoExplainPacketIdBody =>
       'Die eindeutige Kennung für dieses Funkpaket, vergeben vom sendenden Knoten. Nützlich zur Diagnose von Zustellproblemen.';
+
+  @override
+  String messagingTechInfoRelay(String name) {
+    return 'Relais $name';
+  }
+
+  @override
+  String get messagingTechInfoExplainRelayTitle => 'Relais-Knoten';
+
+  @override
+  String get messagingTechInfoExplainRelayBody =>
+      'Der letzte Knoten, der diese Nachricht an dich weitergeleitet hat. Über Funk wird nur das letzte Byte seiner ID übertragen, daher ist der Name nur eine bestmögliche Zuordnung und es wird ein Hex-Byte angezeigt, wenn er keinem einzelnen bekannten Knoten eindeutig zugeordnet werden kann.';
 
   @override
   String get messagingTechInfoTimestampToday => 'Heute';

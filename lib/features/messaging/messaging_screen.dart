@@ -58,6 +58,7 @@ import '../nodes/nodes_screen.dart';
 import '../nodes/role_filter.dart';
 import '../navigation/main_shell.dart';
 import 'conversation_timeline.dart';
+import 'relay_node_label.dart';
 import 'widgets/message_context_menu.dart';
 import 'widgets/tapback_widget.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -3499,7 +3500,7 @@ class _MessageBubble extends ConsumerWidget {
                             ],
                           ),
                           if (showTechInfo && isFromMe)
-                            _buildInlineTechInfo(context, sentByMe: true),
+                            _buildInlineTechInfo(context, ref, sentByMe: true),
                         ],
                       ),
                     ),
@@ -3767,7 +3768,7 @@ class _MessageBubble extends ConsumerWidget {
                           ],
                         ),
                         if (showTechInfo)
-                          _buildInlineTechInfo(context, sentByMe: false),
+                          _buildInlineTechInfo(context, ref, sentByMe: false),
                       ],
                     ),
                   ),
@@ -3848,13 +3849,25 @@ class _MessageBubble extends ConsumerWidget {
     );
   }
 
-  Widget _buildInlineTechInfo(BuildContext context, {required bool sentByMe}) {
+  Widget _buildInlineTechInfo(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool sentByMe,
+  }) {
     final l10n = context.l10n;
+    // Relay node is inbound-only metadata (sent messages never carry it).
+    final relay = sentByMe
+        ? null
+        : resolveRelayNodeLabel(
+            message.relayNode,
+            ref.watch(nodesProvider).values,
+          );
     final hasRadioInfo =
         message.hopCount != null ||
         message.rxSnr != null ||
         message.rxRssi != null ||
-        message.viaMqtt != null;
+        message.viaMqtt != null ||
+        relay != null;
 
     final color = sentByMe
         ? Colors.white.withValues(alpha: 0.6)
@@ -3980,6 +3993,16 @@ class _MessageBubble extends ConsumerWidget {
               textStyle: textStyle,
               explainTitle: l10n.messagingTechInfoExplainTransportTitle,
               explainBody: l10n.messagingTechInfoExplainTransportBody,
+            ),
+          if (relay != null)
+            _TechInfoChip(
+              icon: Icons.settings_input_antenna,
+              label: l10n.messagingTechInfoRelay(relay.text),
+              iconSize: iconSize,
+              color: color,
+              textStyle: textStyle,
+              explainTitle: l10n.messagingTechInfoExplainRelayTitle,
+              explainBody: l10n.messagingTechInfoExplainRelayBody,
             ),
           // No radio metadata - show an explicit indicator, but only on
           // inbound bubbles. Outbound messages reach the radio over
@@ -4725,7 +4748,9 @@ class _TechInfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: iconSize, color: color),
           const SizedBox(width: AppTheme.spacing2),
-          Text(label, style: textStyle),
+          // Flexible so a long label (e.g. a relay node's full name) wraps
+          // within the bubble-bounded Wrap instead of overflowing the row.
+          Flexible(child: Text(label, style: textStyle)),
         ],
       ),
     );

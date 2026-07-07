@@ -12121,6 +12121,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messageContextMenuMessageDetails => 'Détails du message';
 
   @override
+  String messageContextMenuRelayNode(String name) {
+    return 'Relais : $name';
+  }
+
+  @override
   String get messageContextMenuNoRecents => 'Aucun récent';
 
   @override
@@ -12526,6 +12531,18 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get messagingTechInfoExplainPacketIdBody =>
       'L\'identifiant unique de ce paquet radio, attribué par le nœud émetteur. Utile pour diagnostiquer les problèmes de livraison.';
+
+  @override
+  String messagingTechInfoRelay(String name) {
+    return 'Relais $name';
+  }
+
+  @override
+  String get messagingTechInfoExplainRelayTitle => 'Nœud relais';
+
+  @override
+  String get messagingTechInfoExplainRelayBody =>
+      'Le dernier nœud qui a relayé ce message jusqu\'à vous. Seul le dernier octet de son identifiant est transmis par radio, le nom n\'est donc qu\'une correspondance approximative et un octet hexadécimal s\'affiche lorsqu\'il ne peut pas être associé à un seul nœud connu.';
 
   @override
   String get messagingTechInfoTimestampToday => 'Aujourd\'hui';

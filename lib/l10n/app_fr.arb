@@ -1,5 +1,9 @@
 {
   "@@locale": "fr",
+  "messageContextMenuRelayNode": "Relais : {name}",
+  "messagingTechInfoRelay": "Relais {name}",
+  "messagingTechInfoExplainRelayTitle": "Nœud relais",
+  "messagingTechInfoExplainRelayBody": "Le dernier nœud qui a relayé ce message jusqu'à vous. Seul le dernier octet de son identifiant est transmis par radio, le nom n'est donc qu'une correspondance approximative et un octet hexadécimal s'affiche lorsqu'il ne peut pas être associé à un seul nœud connu.",
   "accessRestrictedTitle": "Accès restreint",
   "accountSubAccountExistsLinking": "Un compte avec {email} existe déjà en utilisant {provider}.\n\nSe connecter avec {provider} pour lier votre compte GitHub ?",
   "accountSubAllUnlocked": "Toutes les fonctionnalités sont déverrouillées !",

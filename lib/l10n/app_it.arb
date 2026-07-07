@@ -1,5 +1,9 @@
 {
   "@@locale": "it",
+  "messageContextMenuRelayNode": "Ripetitore: {name}",
+  "messagingTechInfoRelay": "Ripetitore {name}",
+  "messagingTechInfoExplainRelayTitle": "Nodo ripetitore",
+  "messagingTechInfoExplainRelayBody": "L'ultimo nodo che ha ritrasmesso questo messaggio fino a te. Via radio viene inviato solo l'ultimo byte del suo ID, quindi il nome è una corrispondenza approssimativa e viene mostrato un byte esadecimale quando non è possibile risolverlo in un singolo nodo conosciuto.",
   "@accessRestrictedTitle": {
     "description": "Title for blocked route screen"
   },

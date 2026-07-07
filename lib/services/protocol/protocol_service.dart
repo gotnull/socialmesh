@@ -4263,6 +4263,7 @@ class ProtocolService {
         rxSnr: packet.hasRxSnr() ? packet.rxSnr.toDouble() : null,
         rxRssi: packet.hasRxRssi() ? packet.rxRssi : null,
         viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : null,
+        relayNode: packet.hasRelayNode() ? packet.relayNode : null,
         senderLongName: senderLongName,
         senderShortName: senderShortName,
         senderAvatarColor: senderAvatarColor,

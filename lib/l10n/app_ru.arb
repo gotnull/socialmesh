@@ -1,5 +1,9 @@
 {
   "@@locale": "ru",
+  "messageContextMenuRelayNode": "Ретранслятор: {name}",
+  "messagingTechInfoRelay": "Ретранслятор {name}",
+  "messagingTechInfoExplainRelayTitle": "Узел-ретранслятор",
+  "messagingTechInfoExplainRelayBody": "Последний узел, ретранслировавший это сообщение вам. По радио передаётся только последний байт его идентификатора, поэтому имя является приблизительным совпадением, и отображается шестнадцатеричный байт, когда его невозможно однозначно сопоставить с одним известным узлом.",
   "accessRestrictedTitle": "Доступ ограничен",
   "accountSubAccountExistsLinking": "Аккаунт с {email} уже существует с использованием {provider}.\n\nВойти через {provider}, чтобы привязать аккаунт GitHub?",
   "accountSubAllUnlocked": "Все функции разблокированы!",

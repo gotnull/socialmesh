@@ -20788,6 +20788,12 @@ abstract class AppLocalizations {
   /// **'Message Details'**
   String get messageContextMenuMessageDetails;
 
+  /// Shows the node that relayed a received message in the message details section. {name} is the node's name, or a hex byte like 0xC4 when it cannot be resolved uniquely.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay: {name}'**
+  String messageContextMenuRelayNode(String name);
+
   /// Placeholder text in the emoji picker when there are no recent emoji.
   ///
   /// In en, this message translates to:
@@ -21459,6 +21465,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.'**
   String get messagingTechInfoExplainPacketIdBody;
+
+  /// Relay node label shown in inline technical info. {name} is the relaying node's name, or a hex byte like 0xC4 when it cannot be resolved uniquely.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay {name}'**
+  String messagingTechInfoRelay(String name);
+
+  /// Title for the bottom sheet explaining the relay node.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay node'**
+  String get messagingTechInfoExplainRelayTitle;
+
+  /// Explanation of the relay node shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The last node that relayed this message to you. Only the last byte of its ID is sent over the air, so the name is a best-effort match and a hex byte is shown when it cannot be resolved to a single known node.'**
+  String get messagingTechInfoExplainRelayBody;
 
   /// Relative day label for a message sent or received today, shown before the time in the inline technical info (e.g. 'Today, 22:27').
   ///

@@ -11880,6 +11880,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageContextMenuMessageDetails => 'Message Details';
 
   @override
+  String messageContextMenuRelayNode(String name) {
+    return 'Relay: $name';
+  }
+
+  @override
   String get messageContextMenuNoRecents => 'No Recents';
 
   @override
@@ -12280,6 +12285,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get messagingTechInfoExplainPacketIdBody =>
       'The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.';
+
+  @override
+  String messagingTechInfoRelay(String name) {
+    return 'Relay $name';
+  }
+
+  @override
+  String get messagingTechInfoExplainRelayTitle => 'Relay node';
+
+  @override
+  String get messagingTechInfoExplainRelayBody =>
+      'The last node that relayed this message to you. Only the last byte of its ID is sent over the air, so the name is a best-effort match and a hex byte is shown when it cannot be resolved to a single known node.';
 
   @override
   String get messagingTechInfoTimestampToday => 'Today';

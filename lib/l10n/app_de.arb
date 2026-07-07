@@ -1,5 +1,9 @@
 {
   "@@locale": "de",
+  "messageContextMenuRelayNode": "Relais: {name}",
+  "messagingTechInfoRelay": "Relais {name}",
+  "messagingTechInfoExplainRelayTitle": "Relais-Knoten",
+  "messagingTechInfoExplainRelayBody": "Der letzte Knoten, der diese Nachricht an dich weitergeleitet hat. Über Funk wird nur das letzte Byte seiner ID übertragen, daher ist der Name nur eine bestmögliche Zuordnung und es wird ein Hex-Byte angezeigt, wenn er keinem einzelnen bekannten Knoten eindeutig zugeordnet werden kann.",
   "accessRestrictedTitle": "Zugriff eingeschränkt",
   "accountSubAccountExistsLinking": "Ein Konto mit {email} existiert bereits und verwendet {provider}.\n\nMit {provider} anmelden, um Ihr GitHub-Konto zu verknüpfen?",
   "accountSubAllUnlocked": "Alle Funktionen freigeschaltet!",

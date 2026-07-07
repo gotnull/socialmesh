@@ -15962,6 +15962,15 @@
     "@messageContextMenuMessageDetails": {
         "description": "Header label in the message details section of the context menu."
     },
+    "messageContextMenuRelayNode": "Relay: {name}",
+    "@messageContextMenuRelayNode": {
+        "description": "Shows the node that relayed a received message in the message details section. {name} is the node's name, or a hex byte like 0xC4 when it cannot be resolved uniquely.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
     "messageContextMenuNoRecents": "No Recents",
     "@messageContextMenuNoRecents": {
         "description": "Placeholder text in the emoji picker when there are no recent emoji."
@@ -16522,6 +16531,23 @@
     "messagingTechInfoExplainPacketIdBody": "The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.",
     "@messagingTechInfoExplainPacketIdBody": {
         "description": "Explanation of packet ID shown in a bottom sheet."
+    },
+    "messagingTechInfoRelay": "Relay {name}",
+    "@messagingTechInfoRelay": {
+        "description": "Relay node label shown in inline technical info. {name} is the relaying node's name, or a hex byte like 0xC4 when it cannot be resolved uniquely.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "messagingTechInfoExplainRelayTitle": "Relay node",
+    "@messagingTechInfoExplainRelayTitle": {
+        "description": "Title for the bottom sheet explaining the relay node."
+    },
+    "messagingTechInfoExplainRelayBody": "The last node that relayed this message to you. Only the last byte of its ID is sent over the air, so the name is a best-effort match and a hex byte is shown when it cannot be resolved to a single known node.",
+    "@messagingTechInfoExplainRelayBody": {
+        "description": "Explanation of the relay node shown in a bottom sheet."
     },
     "messagingTechInfoTimestampToday": "Today",
     "@messagingTechInfoTimestampToday": {

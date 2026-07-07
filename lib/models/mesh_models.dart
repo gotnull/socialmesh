@@ -197,6 +197,12 @@ class Message {
   /// false = RF-only, null = unknown (legacy data or sent messages).
   final bool? viaMqtt;
 
+  /// Last byte of the NodeNum of the node that relayed this packet
+  /// (Meshtastic `relay_node`). Only the low byte travels over the air, so a
+  /// name lookup can be ambiguous. `null` = sent message / legacy row / packet
+  /// carried no relay info.
+  final int? relayNode;
+
   // Cached sender info - populated when message is received/created
   // This ensures sender info is always available even if node hasn't loaded yet
   final String? senderLongName;
@@ -226,6 +232,7 @@ class Message {
     this.rxSnr,
     this.rxRssi,
     this.viaMqtt,
+    this.relayNode,
     this.senderLongName,
     this.senderShortName,
     this.senderAvatarColor,
@@ -260,6 +267,7 @@ class Message {
     double? rxSnr,
     int? rxRssi,
     bool? viaMqtt,
+    int? relayNode,
     String? senderLongName,
     String? senderShortName,
     int? senderAvatarColor,
@@ -293,6 +301,7 @@ class Message {
       rxSnr: rxSnr ?? this.rxSnr,
       rxRssi: rxRssi ?? this.rxRssi,
       viaMqtt: viaMqtt ?? this.viaMqtt,
+      relayNode: relayNode ?? this.relayNode,
       senderLongName: senderLongName ?? this.senderLongName,
       senderShortName: senderShortName ?? this.senderShortName,
       senderAvatarColor: senderAvatarColor ?? this.senderAvatarColor,

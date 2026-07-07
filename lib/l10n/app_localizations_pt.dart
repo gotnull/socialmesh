@@ -12022,6 +12022,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messageContextMenuMessageDetails => 'Detalhes da mensagem';
 
   @override
+  String messageContextMenuRelayNode(String name) {
+    return 'Repetidor: $name';
+  }
+
+  @override
   String get messageContextMenuNoRecents => 'Nenhum recente';
 
   @override
@@ -12425,6 +12430,18 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get messagingTechInfoExplainPacketIdBody =>
       'O identificador único deste pacote de rádio, atribuído pelo nó emissor. Útil para depurar problemas de entrega.';
+
+  @override
+  String messagingTechInfoRelay(String name) {
+    return 'Repetidor $name';
+  }
+
+  @override
+  String get messagingTechInfoExplainRelayTitle => 'Nó repetidor';
+
+  @override
+  String get messagingTechInfoExplainRelayBody =>
+      'O último nó que retransmitiu esta mensagem até você. Pela rádio é enviado apenas o último byte do seu ID, por isso o nome é uma correspondência aproximada e é mostrado um byte hexadecimal quando não é possível resolvê-lo para um único nó conhecido.';
 
   @override
   String get messagingTechInfoTimestampToday => 'Hoje';

@@ -427,6 +427,7 @@ class BackgroundMessageProcessor {
       received: true,
       source: data.emoji != 0 ? MessageSource.tapback : MessageSource.unknown,
       packetId: packet.id,
+      relayNode: packet.hasRelayNode() ? packet.relayNode : null,
       senderLongName: senderLongName,
       senderShortName: senderShortName,
       replyId: data.replyId != 0 ? data.replyId : null,

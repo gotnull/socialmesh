@@ -16,6 +16,7 @@ import '../../../services/haptic_service.dart';
 import '../../../core/logging.dart';
 import '../../../utils/snackbar.dart';
 import '../../../utils/time_format.dart';
+import '../relay_node_label.dart';
 import 'hop_count_chip.dart';
 
 /// Shows a context menu for a message with tapback, reply, copy, details, and delete options
@@ -438,6 +439,38 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
                   ),
                 ],
               ),
+            ),
+            Builder(
+              builder: (context) {
+                final relay = resolveRelayNodeLabel(
+                  widget.message.relayNode,
+                  ref.watch(nodesProvider).values,
+                );
+                if (relay == null) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    4,
+                    16,
+                    4,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          context.l10n.messageContextMenuRelayNode(relay.text),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: relay.resolved
+                                ? context.textSecondary
+                                : context.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 12),

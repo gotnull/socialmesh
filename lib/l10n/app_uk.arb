@@ -1,5 +1,9 @@
 {
   "@@locale": "uk",
+  "messageContextMenuRelayNode": "Ретранслятор: {name}",
+  "messagingTechInfoRelay": "Ретранслятор {name}",
+  "messagingTechInfoExplainRelayTitle": "Вузол-ретранслятор",
+  "messagingTechInfoExplainRelayBody": "Останній вузол, який ретранслював це повідомлення вам. Через радіо передається лише останній байт його ідентифікатора, тому ім'я є приблизним збігом, і відображається шістнадцятковий байт, коли його неможливо однозначно зіставити з одним відомим вузлом.",
   "accessRestrictedTitle": "Доступ обмежено",
   "accountSubAccountExistsLinking": "Обліковий запис з {email} вже існує з використанням {provider}.\n\nУвійти через {provider}, щоб пов'язати свій обліковий запис GitHub?",
   "accountSubAllUnlocked": "Усі функції розблоковано!",
