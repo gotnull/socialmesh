@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (messaging)
+
+- Message details (long-press a message) and the expanded technical info now show the node that relayed a received message, matching the official Meshtastic iOS app. The radio only sends the last byte of the relayer's ID, so the name is a best-effort match against known nodes and falls back to a hex byte (for example `0xC4`) when it cannot be resolved to a single node (#223)
+
+### Changed (messaging)
+
+- The hop count is no longer a separate pill under each received message. The bubble's timestamp line now reads time, hop count, and SNR in one line (for example `2:05 PM - Direct - SNR 6.5 dB`), so reception quality is visible at a glance without expanding the message (#224)
+
+### Changed (nodes)
+
+- Finished removing the accent-colour special treatment for your own node: the node detail hero and the node card tint now follow the same identity-colour and presence rules as every other node, so your node appears in the same colour other users see (#222)
+
 ### Added (security hardening)
 
 - Sensitive local databases (direct messages, saved routes, waypoints, peer-safety state, and the NodeDex journal) are now encrypted at rest with SQLCipher. The key is generated on-device and held in the iOS Keychain / Android Keystore, so message text, locations, and travel history are no longer readable from the raw database files (for example from a device backup, or on a lost or rooted/jailbroken phone). Existing data is migrated in place on first launch with no loss of history; if the one-time migration is ever interrupted it safely retries on the next launch

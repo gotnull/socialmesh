@@ -1392,7 +1392,8 @@ class _NodeCard extends ConsumerWidget {
   }
 
   Color _blendColor(BuildContext context) {
-    if (isMyNode) return context.accentColor;
+    // No own-node special case: the card tint follows the same
+    // favourite/presence rules as every other node.
     if (node.isFavorite) return AppTheme.warningYellow;
     switch (presenceConfidence) {
       case PresenceConfidence.active:

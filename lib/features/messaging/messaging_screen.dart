@@ -3747,40 +3747,13 @@ class _MessageBubble extends ConsumerWidget {
                             ref: ref,
                           ),
                         const SizedBox(height: AppTheme.spacing2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (isEncrypted) ...[
-                              Icon(
-                                Icons.lock,
-                                size: 10,
-                                color: context.textTertiary,
-                              ),
-                              SizedBox(width: AppTheme.spacing3),
-                            ],
-                            Text(
-                              timeFormat.format(message.timestamp),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: context.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
+                        _buildInboundMetadataLine(context),
                         if (showTechInfo)
                           _buildInlineTechInfo(context, ref, sentByMe: false),
                       ],
                     ),
                   ),
                 ),
-                if (message.hopCount != null)
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: AppTheme.spacing2,
-                      left: AppTheme.spacing4,
-                    ),
-                    child: HopCountChip(hopCount: message.hopCount!),
-                  ),
                 Padding(
                   padding: const EdgeInsets.only(top: 2, left: 4),
                   child: TapbackDisplay(tapbacks: tapbacks),
@@ -3846,6 +3819,35 @@ class _MessageBubble extends ConsumerWidget {
     return Tooltip(
       message: status.label,
       child: Icon(status.icon, size: status.size, color: status.color),
+    );
+  }
+
+  // Always-visible metadata line inside the received bubble: timestamp plus,
+  // when the packet carried them, hop count and SNR. Inbound-only - outbound
+  // messages reach the radio over BLE/USB and never carry receive metadata.
+  // A single wrapping Text keeps a long line from overflowing a bubble whose
+  // width was set by short message text.
+  Widget _buildInboundMetadataLine(BuildContext context) {
+    final l10n = context.l10n;
+    final timeFormat = AppTimeFormat.timeOnly(context);
+    final parts = <String>[
+      timeFormat.format(message.timestamp),
+      if (message.hopCount != null) hopCountLabel(l10n, message.hopCount!),
+      if (message.rxSnr != null)
+        l10n.messagingTechInfoSnr(message.rxSnr!.toStringAsFixed(1)),
+    ];
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (isEncrypted) ...[
+          Icon(Icons.lock, size: 10, color: context.textTertiary),
+          SizedBox(width: AppTheme.spacing3),
+        ],
+        Text(
+          parts.join(' · '),
+          style: TextStyle(fontSize: 11, color: context.textTertiary),
+        ),
+      ],
     );
   }
 

@@ -677,7 +677,9 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   /// Build the hero header with avatar, name, status and stat chips.
   Widget _buildHeroSection(BuildContext context, MeshNode node) {
     final isOnline = _isNodeOnline(node);
-    final avatarColor = isMyNode ? context.accentColor : _getAvatarColor(node);
+    // Every node - including our own - uses its deterministic identity
+    // colour, so the hero reads the same colour peers see.
+    final avatarColor = _getAvatarColor(node);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 4),

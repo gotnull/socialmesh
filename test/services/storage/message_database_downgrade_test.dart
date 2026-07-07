@@ -67,8 +67,8 @@ void main() {
       );
       await storage.close();
 
-      // Simulate the post-downgrade state: full v10 schema on disk with the
-      // version stamp at 1, so blocks v2 through v10 all re-execute.
+      // Simulate the post-downgrade state: full v11 schema on disk with the
+      // version stamp at 1, so blocks v2 through v11 all re-execute.
       final raw = await databaseFactory.openDatabase(dbPath);
       await raw.execute('PRAGMA user_version = 1');
       await raw.close();
