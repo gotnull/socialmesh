@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Finished removing the accent-colour special treatment for your own node: the node detail hero and the node card tint now follow the same identity-colour and presence rules as every other node, so your node appears in the same colour other users see (#222)
 
+### Fixed (nodes)
+
+- Unfavoriting a node now sticks across reconnects. Previously the un-favourite admin message was fire-and-forget: if the radio missed it (or never saved its node database to flash before powering off), the radio kept reporting the node as a favourite and the app re-favourited it on every reconnect with no way to turn it off. The app now remembers an explicit un-favourite, refuses to let a stale device flag resurrect it, and automatically re-sends the un-favourite (and any lost favourites) to the radio after each reconnect until the radio confirms
+- Reset Node Database no longer races the radio: the app waited only half a second before re-requesting the radio's configuration, so a slow reset commit could replay the old node list straight back into the app. The wait now outlasts the firmware's commit window. Note that nodes still legitimately return over time as the radio re-hears them from the mesh, and immediately over MQTT while downlink is enabled
+
 ### Added (security hardening)
 
 - Sensitive local databases (direct messages, saved routes, waypoints, peer-safety state, and the NodeDex journal) are now encrypted at rest with SQLCipher. The key is generated on-device and held in the iOS Keychain / Android Keystore, so message text, locations, and travel history are no longer readable from the raw database files (for example from a device backup, or on a lost or rooted/jailbroken phone). Existing data is migrated in place on first launch with no loss of history; if the one-time migration is ever interrupted it safely retries on the next launch

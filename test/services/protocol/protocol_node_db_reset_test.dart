@@ -192,10 +192,13 @@ void main() {
         // Sanity: only the seeded MyNodeInfo went through, no sends yet.
         expect(transport.sent, isEmpty);
 
+        // Shrink the settle delay so the test stays fast (production
+        // default is 2s to outlast the firmware's reset commit).
+        protocol.nodeDbResetSettleDelay = const Duration(milliseconds: 100);
         await protocol.nodeDbReset();
-        // Allow the 500ms post-send delay + the awaited
-        // `_requestConfiguration` to complete.
-        await Future<void>.delayed(const Duration(milliseconds: 700));
+        // Allow the settle delay + the awaited `_requestConfiguration`
+        // to complete.
+        await Future<void>.delayed(const Duration(milliseconds: 300));
 
         // 1. The transport must still be connected — the fix is
         //    explicitly transport-agnostic and must NOT manufacture
@@ -258,8 +261,9 @@ void main() {
           await protocol.handleIncomingPacket(myInfoFrame.writeToBuffer());
 
           // Send to a different node id (remote admin).
+          protocol.nodeDbResetSettleDelay = const Duration(milliseconds: 100);
           await protocol.nodeDbReset(target: const AdminTarget.remote(0xDEAD));
-          await Future<void>.delayed(const Duration(milliseconds: 700));
+          await Future<void>.delayed(const Duration(milliseconds: 300));
 
           final nonces = _sentWantConfigNonces(transport).toList();
           expect(
@@ -296,7 +300,8 @@ void main() {
         await protocol.handleIncomingPacket(myInfoFrame.writeToBuffer());
 
         // Synthesize a disconnect mid-reset by flipping the flag
-        // before the post-send delay completes.
+        // before the settle delay completes.
+        protocol.nodeDbResetSettleDelay = const Duration(milliseconds: 300);
         unawaited(() async {
           await Future<void>.delayed(const Duration(milliseconds: 100));
           transport.connected = false;
@@ -305,7 +310,7 @@ void main() {
         // Should complete without throwing even though the transport
         // drops mid-flight.
         await protocol.nodeDbReset();
-        await Future<void>.delayed(const Duration(milliseconds: 700));
+        await Future<void>.delayed(const Duration(milliseconds: 500));
 
         final nonces = _sentWantConfigNonces(transport).toList();
         expect(
@@ -315,6 +320,53 @@ void main() {
               'When the transport drops during the reset window, '
               'the wantConfigId is correctly skipped — the BLE '
               'reconnect path will re-handshake.',
+        );
+      } finally {
+        protocol.stop();
+        await transport.dispose();
+      }
+    });
+  });
+
+  test('wantConfigId is held back until the settle delay elapses, so the '
+      'radio has time to commit the reset before the config replay is '
+      'requested (regression: 500ms lost the race and replayed the '
+      'pre-reset NodeDB)', () async {
+    await _withTempDirectory((dir) async {
+      final transport = _RecordingFakeTransport();
+      final protocol = await _freshProtocol(dir, transport);
+      try {
+        final myInfoFrame = pb.FromRadio(
+          myInfo: pb.MyNodeInfo(myNodeNum: 0xA6960864),
+        );
+        await protocol.handleIncomingPacket(myInfoFrame.writeToBuffer());
+
+        protocol.nodeDbResetSettleDelay = const Duration(milliseconds: 250);
+        final resetDone = protocol.nodeDbReset();
+
+        // Mid-settle: the admin packet must already be on the wire, the
+        // config re-request must not.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        expect(
+          _countAdminSends(transport),
+          greaterThanOrEqualTo(1),
+          reason: 'nodedb_reset admin packet goes out immediately.',
+        );
+        expect(
+          _sentWantConfigNonces(transport),
+          isEmpty,
+          reason:
+              'wantConfigId must not be sent before the settle delay '
+              'elapses — an early replay races the firmware commit and '
+              'restores the pre-reset NodeDB.',
+        );
+
+        await resetDone;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        expect(
+          _sentWantConfigNonces(transport),
+          contains(_nonceInitialConfig),
+          reason: 'wantConfigId must follow once the settle delay has elapsed.',
         );
       } finally {
         protocol.stop();

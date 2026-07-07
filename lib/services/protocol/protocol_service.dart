@@ -629,6 +629,14 @@ class ProtocolService {
   })?
   onIdentityUpdate;
 
+  // Fires only for device-NodeDB-sourced NodeInfo records (the FromRadio
+  // nodeInfo replay path), never placeholders or mesh NODEINFO_APP packets,
+  // so isFavorite here is the device's effective state. Used to clear
+  // unfavorite tombstones once the device confirms is_favorite=false.
+  // Deliberately reads nodeInfo.isFavorite without hasIsFavorite(): proto3
+  // implicit presence encodes false as field-absent.
+  void Function(int nodeNum, bool isFavorite)? onNodeDbFavoriteReported;
+
   static const Duration _messagePacketTtl = Duration(minutes: 120);
 
   /// Minimum plausible Unix timestamp for message timestamps.
@@ -5591,6 +5599,7 @@ class ProtocolService {
 
     _nodes[nodeInfo.num] = updatedNode;
     _nodeController.add(updatedNode);
+    onNodeDbFavoriteReported?.call(nodeInfo.num, nodeInfo.isFavorite);
     if (nodeInfo.hasUser()) {
       final user = nodeInfo.user;
       // Sanitize names for the callback as well
@@ -9177,6 +9186,13 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
+  /// How long to wait after sending `nodedb_reset` before re-requesting
+  /// configuration. Must exceed the firmware's commit time for the reset:
+  /// if the follow-up `wantConfigId` wins the race, the radio replays its
+  /// pre-reset NodeDB and the cleared nodes reappear immediately.
+  @visibleForTesting
+  Duration nodeDbResetSettleDelay = const Duration(seconds: 2);
+
   /// Reset the node database (removes all learned nodes).
   /// This sends the reset command to the device and clears the local node cache.
   ///
@@ -9220,7 +9236,7 @@ class ProtocolService {
 
     // Only clear local cache when targeting the local device.
     if (!isRemote) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(nodeDbResetSettleDelay);
       clearNodes();
 
       // Transport-agnostic post-reset rehydration: the radio's NodeDB

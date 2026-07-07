@@ -31,18 +31,15 @@ Future<void> toggleNodeFavorite(
 ) async {
   final protocol = ref.read(protocolServiceProvider);
   final nodesNotifier = ref.read(nodesProvider.notifier);
-  final deviceFavorites = ref.read(deviceFavoritesProvider).value;
   final next = !node.isFavorite;
 
   try {
     if (node.isFavorite) {
       await protocol.removeFavoriteNode(node.nodeNum);
-      await deviceFavorites?.removeFavorite(node.nodeNum);
     } else {
       await protocol.setFavoriteNode(node.nodeNum);
-      await deviceFavorites?.addFavorite(node.nodeNum);
     }
-    nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: next));
+    await nodesNotifier.setNodeFavorite(node.nodeNum, next);
     AppLogging.nodes(
       '[NodeActions] favorite toggled nodeNum=${node.nodeNum} next=$next',
     );

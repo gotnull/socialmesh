@@ -3878,6 +3878,20 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
             );
       };
 
+  // Clear a pending unfavorite tombstone once the device's NodeDB replay
+  // confirms is_favorite=false. `ref.read` is deliberate: the callback
+  // fires long after provider build.
+  service.onNodeDbFavoriteReported = (int nodeNum, bool isFavorite) {
+    if (isFavorite) return;
+    final favorites = ref.read(deviceFavoritesProvider).value;
+    if (favorites != null && favorites.isTombstoned(nodeNum)) {
+      unawaited(favorites.clearUnfavoriteTombstone(nodeNum));
+      AppLogging.nodes(
+        'Unfavorite tombstone confirmed by device for node $nodeNum',
+      );
+    }
+  };
+
   AppLogging.debug(
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',
   );
@@ -5866,6 +5880,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   StreamSubscription<MeshNode>? _nodeSubscription;
   final Set<int> _fallbackLoggedNodes = {};
   final Set<int> _bleStripLoggedNodes = {};
+  bool _enforcingFavoriteIntents = false;
 
   /// Monotonic counter bumped by [clearNodes]. `_init`'s storage load is
   /// async; if a destructive clear fires while `await loadNodes()` is
@@ -5993,6 +6008,23 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       _applyIdentityUpdates(next);
     });
 
+    // Once the device NodeDB replay completes, re-assert favourite intents
+    // the device missed: the favourite admin messages are fire-and-forget,
+    // so a dropped packet (or a NodeDB not persisted to flash before a
+    // reboot) leaves the device out of sync with the user's last action.
+    ref.listen<AsyncValue<OperationalReadiness>>(meshtasticReadinessProvider, (
+      previous,
+      next,
+    ) {
+      if (!ref.mounted) return;
+      final becameReady =
+          next.value == OperationalReadiness.ready &&
+          previous?.value != OperationalReadiness.ready;
+      if (becameReady) {
+        unawaited(_enforceFavoriteIntents());
+      }
+    });
+
     // Set up disposal
     ref.onDispose(() {
       _nodeSubscription?.cancel();
@@ -6103,6 +6135,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // it lives directly on the persisted MeshNode record and is updated from
     // NodeInfo packets — no separate cache layer.
     final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
+    // Explicit user unfavorites the device has not confirmed yet. While a
+    // node is tombstoned, neither a stored record nor a device-reported
+    // favourite may resurrect isFavorite.
+    final tombstones = _deviceFavorites?.unfavoriteTombstones ?? <int>{};
     final identities = ref.read(nodeIdentityProvider);
 
     // When _storage is null the entire method body runs synchronously
@@ -6139,9 +6175,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
             _scheduleSave(node);
           }
           // isFavorite: trust the value persisted on the MeshNode itself (iOS
-          // CoreData pattern). isIgnored still comes from DeviceFavoritesService
-          // because the protocol service doesn't read it from NodeInfo yet.
-          node = node.copyWith(isIgnored: ignoredSet.contains(node.nodeNum));
+          // CoreData pattern), except for tombstoned nodes: an explicit user
+          // unfavorite overrides a stored record that a stale device flag may
+          // have resurrected before the tombstone existed. isIgnored still
+          // comes from DeviceFavoritesService because the protocol service
+          // doesn't read it from NodeInfo yet.
+          node = node.copyWith(
+            isFavorite: node.isFavorite && !tombstones.contains(node.nodeNum),
+            isIgnored: ignoredSet.contains(node.nodeNum),
+          );
           node = _mergeIdentity(node, identities[node.nodeNum]);
           nodeMap[node.nodeNum] = node;
           if (node.hasPosition) {
@@ -6189,8 +6231,12 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           // (position, telemetry), and sets it from nodeInfo.isFavorite for
           // NodeInfo packets. OR-ing ensures a stored favourite is not lost
           // when the protocol snapshot was built from a placeholder node
-          // (hardcoded false) whose NodeInfo hasn't arrived yet.
-          isFavorite: node.isFavorite || existing.isFavorite,
+          // (hardcoded false) whose NodeInfo hasn't arrived yet. Tombstoned
+          // nodes are the exception: the user explicitly unfavorited them, so
+          // a stale device flag must not resurrect the favourite.
+          isFavorite:
+              (node.isFavorite || existing.isFavorite) &&
+              !tombstones.contains(node.nodeNum),
           // isIgnored still comes from DeviceFavoritesService (protocol
           // service does not read isIgnored from NodeInfo yet).
           isIgnored: ignoredSet.contains(node.nodeNum),
@@ -6271,10 +6317,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           precisionBits: node.precisionBits ?? existing.precisionBits,
         );
       } else {
-        // New node — isFavorite comes from the protocol node directly
-        // (set by NodeInfo or hardcoded false for placeholders).
-        // isIgnored comes from DeviceFavoritesService.
-        node = node.copyWith(isIgnored: ignoredSet.contains(node.nodeNum));
+        // New node: isFavorite comes from the protocol node directly
+        // (set by NodeInfo or hardcoded false for placeholders), unless the
+        // user tombstoned it (e.g. the device replays a favourite for a node
+        // no longer in local storage). isIgnored comes from
+        // DeviceFavoritesService.
+        node = node.copyWith(
+          isFavorite: node.isFavorite && !tombstones.contains(node.nodeNum),
+          isIgnored: ignoredSet.contains(node.nodeNum),
+        );
       }
       node = _stripBleNamesIfNeeded(node);
       node = _mergeIdentity(node, identities[node.nodeNum]);
@@ -6305,6 +6356,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       // isIgnored is still managed by DeviceFavoritesService (protocol
       // service does not read it from NodeInfo yet).
       final currentIgnored = _deviceFavorites?.ignored ?? <int>{};
+      // Read fresh per event: tombstones change as the user toggles
+      // favourites and as devices confirm unfavorites.
+      final currentTombstones =
+          _deviceFavorites?.unfavoriteTombstones ?? <int>{};
 
       if (existing != null) {
         // Preserve stored properties that don't come from protocol.
@@ -6330,8 +6385,12 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           // OR with existing prevents a placeholder node (hardcoded false)
           // from clobbering a stored favourite whose NodeInfo hasn't
           // arrived yet. Explicit user unfavourite goes through
-          // addOrUpdateNode(isFavorite: false), bypassing this listener.
-          isFavorite: node.isFavorite || existing.isFavorite,
+          // setNodeFavorite, which tombstones the node; the tombstone
+          // suppresses a stale device favourite here until the device
+          // confirms the unfavorite.
+          isFavorite:
+              (node.isFavorite || existing.isFavorite) &&
+              !currentTombstones.contains(node.nodeNum),
           isIgnored: currentIgnored.contains(node.nodeNum),
           // Preserve firstHeard — always keep the earliest value
           firstHeard: existing.firstHeard ?? node.firstHeard,
@@ -6349,8 +6408,13 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           humidity: node.humidity ?? existing.humidity,
         );
       } else {
-        // New node — isFavorite comes from protocol directly.
-        node = node.copyWith(isIgnored: currentIgnored.contains(node.nodeNum));
+        // New node: isFavorite comes from protocol directly, unless the
+        // user tombstoned it.
+        node = node.copyWith(
+          isFavorite:
+              node.isFavorite && !currentTombstones.contains(node.nodeNum),
+          isIgnored: currentIgnored.contains(node.nodeNum),
+        );
       }
 
       node = _stripBleNamesIfNeeded(node);
@@ -6440,6 +6504,92 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     state = {...state, node.nodeNum: merged};
     _logFallbackIfNeeded(merged);
     _scheduleSave(merged);
+  }
+
+  /// Re-sends favourite admin messages the device missed.
+  ///
+  /// Runs on each transition into [OperationalReadiness.ready], when
+  /// `protocol.nodes` reflects the device's replayed NodeDB. Tombstoned
+  /// nodes the device still reports as favourite get remove_favorite_node
+  /// re-sent; sidecar favourites the device lost get set_favorite_node
+  /// re-sent. These are localAdmin packets addressed to the local node
+  /// only (never mesh traffic), so airtime cost is negligible.
+  Future<void> _enforceFavoriteIntents() async {
+    if (_enforcingFavoriteIntents) return;
+    final favService = _deviceFavorites;
+    if (favService == null) return;
+    final protocol = ref.read(protocolServiceProvider);
+    if (!protocol.isOperational) return;
+    _enforcingFavoriteIntents = true;
+    try {
+      // Snapshot targets before any await so no state reads happen
+      // across async gaps.
+      final deviceNodes = protocol.nodes;
+      final pendingRemovals = favService.unfavoriteTombstones
+          .where((n) => deviceNodes[n]?.isFavorite == true)
+          .toList();
+      final appNodes = state;
+      final pendingAdds = favService.favorites
+          .where(
+            (n) =>
+                deviceNodes[n] != null &&
+                !deviceNodes[n]!.isFavorite &&
+                appNodes[n]?.isFavorite == true,
+          )
+          .toList();
+      for (final nodeNum in pendingRemovals) {
+        try {
+          await protocol.removeFavoriteNode(nodeNum);
+          AppLogging.nodes(
+            '[NodesNotifier] re-sent remove_favorite_node for tombstoned '
+            'node $nodeNum',
+          );
+        } catch (e) {
+          AppLogging.nodes(
+            '[NodesNotifier] re-send remove_favorite_node failed '
+            'node=$nodeNum error=$e',
+          );
+        }
+      }
+      for (final nodeNum in pendingAdds) {
+        try {
+          await protocol.setFavoriteNode(nodeNum);
+          AppLogging.nodes(
+            '[NodesNotifier] re-sent set_favorite_node for node $nodeNum',
+          );
+        } catch (e) {
+          AppLogging.nodes(
+            '[NodesNotifier] re-send set_favorite_node failed '
+            'node=$nodeNum error=$e',
+          );
+        }
+      }
+    } finally {
+      _enforcingFavoriteIntents = false;
+    }
+  }
+
+  /// Records an explicit user favorite/unfavorite intent and updates state.
+  ///
+  /// Unfavorites are tombstoned so a stale device NodeDB flag cannot
+  /// resurrect them on reconnect; the tombstone clears when a device
+  /// confirms is_favorite=false (see onNodeDbFavoriteReported wiring) or
+  /// when the user re-favorites. Callers still own the protocol admin
+  /// send; this method owns the sidecar and provider state.
+  Future<void> setNodeFavorite(int nodeNum, bool favorite) async {
+    final favService = _deviceFavorites;
+    if (favorite) {
+      await favService?.addFavorite(nodeNum);
+      await favService?.clearUnfavoriteTombstone(nodeNum);
+    } else {
+      await favService?.removeFavorite(nodeNum);
+      await favService?.addUnfavoriteTombstone(nodeNum);
+    }
+    if (!ref.mounted) return;
+    final node = _pendingNodeWrites[nodeNum] ?? state[nodeNum];
+    if (node != null) {
+      addOrUpdateNode(node.copyWith(isFavorite: favorite));
+    }
   }
 
   void removeNode(int nodeNum) {

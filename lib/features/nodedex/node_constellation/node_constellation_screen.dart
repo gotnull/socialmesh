@@ -188,8 +188,8 @@ class _NodeConstellationScreenState
       if (node.isFavorite) {
         await protocol.removeFavoriteNode(nodeNum);
         if (!mounted) return;
-        nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: false));
-        if (context.mounted) {
+        await nodesNotifier.setNodeFavorite(nodeNum, false);
+        if (mounted) {
           showSuccessSnackBar(
             context,
             context.l10n.nodeDetailRemovedFromFavorites(node.displayName),
@@ -198,8 +198,8 @@ class _NodeConstellationScreenState
       } else {
         await protocol.setFavoriteNode(nodeNum);
         if (!mounted) return;
-        nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: true));
-        if (context.mounted) {
+        await nodesNotifier.setNodeFavorite(nodeNum, true);
+        if (mounted) {
           showSuccessSnackBar(
             context,
             context.l10n.nodeDetailAddedToFavorites(node.displayName),
@@ -207,7 +207,7 @@ class _NodeConstellationScreenState
         }
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         showErrorSnackBar(
           context,
           context.l10n.nodeDetailFavoriteError(e.toString()),

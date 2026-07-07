@@ -1178,6 +1178,7 @@ class DeviceFavoritesService {
   SharedPreferences? _prefs;
   static const String _favoritesKey = 'device_favorites';
   static const String _ignoredKey = 'device_ignored';
+  static const String _unfavoriteTombstonesKey = 'device_unfavorite_tombstones';
 
   DeviceFavoritesService();
 
@@ -1231,6 +1232,40 @@ class DeviceFavoritesService {
     );
   }
 
+  /// Node numbers the user explicitly unfavorited that no connected device
+  /// has confirmed (via a NodeDB replay reporting is_favorite=false) yet.
+  /// While a node is tombstoned, a device-reported favourite must not
+  /// resurrect the local favourite state.
+  Set<int> get unfavoriteTombstones {
+    final list = _preferences.getStringList(_unfavoriteTombstonesKey) ?? [];
+    return list.map((s) => int.parse(s)).toSet();
+  }
+
+  /// Check if a node has a pending unfavorite tombstone
+  bool isTombstoned(int nodeNum) => unfavoriteTombstones.contains(nodeNum);
+
+  /// Record an explicit user unfavorite awaiting device confirmation
+  Future<void> addUnfavoriteTombstone(int nodeNum) async {
+    final set = unfavoriteTombstones;
+    set.add(nodeNum);
+    await _preferences.setStringList(
+      _unfavoriteTombstonesKey,
+      set.map((n) => n.toString()).toList(),
+    );
+    AppLogging.debug('Added unfavorite tombstone for node $nodeNum');
+  }
+
+  /// Clear a tombstone (device confirmed the unfavorite, or user re-favorited)
+  Future<void> clearUnfavoriteTombstone(int nodeNum) async {
+    final set = unfavoriteTombstones;
+    if (!set.remove(nodeNum)) return;
+    await _preferences.setStringList(
+      _unfavoriteTombstonesKey,
+      set.map((n) => n.toString()).toList(),
+    );
+    AppLogging.debug('Cleared unfavorite tombstone for node $nodeNum');
+  }
+
   /// Get all ignored node numbers
   Set<int> get ignored {
     final list = _preferences.getStringList(_ignoredKey) ?? [];
@@ -1266,6 +1301,7 @@ class DeviceFavoritesService {
   Future<void> clearAll() async {
     await _preferences.remove(_favoritesKey);
     await _preferences.remove(_ignoredKey);
+    await _preferences.remove(_unfavoriteTombstonesKey);
     AppLogging.storage('Cleared all device favorites and ignored');
   }
 }

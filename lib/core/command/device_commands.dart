@@ -333,7 +333,9 @@ class SetFavoriteNodeCommand extends DeviceCommand<void> {
   @override
   Future<void> execute(Ref ref) async {
     final protocol = ref.read(protocolServiceProvider);
+    final nodesNotifier = ref.read(nodesProvider.notifier);
     await protocol.setFavoriteNode(nodeNum);
+    await nodesNotifier.setNodeFavorite(nodeNum, true);
   }
 }
 
@@ -351,6 +353,8 @@ class RemoveFavoriteNodeCommand extends DeviceCommand<void> {
   @override
   Future<void> execute(Ref ref) async {
     final protocol = ref.read(protocolServiceProvider);
+    final nodesNotifier = ref.read(nodesProvider.notifier);
     await protocol.removeFavoriteNode(nodeNum);
+    await nodesNotifier.setNodeFavorite(nodeNum, false);
   }
 }
