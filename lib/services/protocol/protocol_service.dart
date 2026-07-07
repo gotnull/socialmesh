@@ -1932,6 +1932,9 @@ class ProtocolService {
           '(${staleness.inSeconds}s) — forcing disconnect',
         );
         _notificationRefreshRequested = false;
+        _diagnosticsSupport?.noteDisconnectCause(
+          'data_health_force_disconnect',
+        );
         unawaited(
           _transport.disconnect().catchError((Object e) {
             AppLogging.protocol('⚠️ DATA_HEALTH: disconnect failed: $e');
@@ -2009,6 +2012,7 @@ class ProtocolService {
         '🔌 BLE_RX_STALL_HARD_RECONNECT: ${staleness.inSeconds}s '
         'exceeds hard threshold — forcing disconnect for auto-reconnect',
       );
+      _diagnosticsSupport?.noteDisconnectCause('rx_stall_hard_reconnect');
       unawaited(
         _transport.disconnect().catchError((Object e) {
           AppLogging.protocol(

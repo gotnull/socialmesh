@@ -17,12 +17,10 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/status_banner.dart';
-import '../../../services/haptic_service.dart';
 import '../../../utils/byte_format.dart';
 import '../../../utils/snackbar.dart';
 import 'offline_download_notifier.dart';
-import 'offline_storage_location_notifier.dart';
-import 'offline_tile_storage.dart';
+import 'offline_storage_picker.dart';
 import 'tile_math.dart';
 
 /// Tile count above which the sheet warns the user about storage/data use.
@@ -78,90 +76,6 @@ class _OfflineDownloadSheetState extends ConsumerState<_OfflineDownloadSheet>
           minZoom: _minZoom,
           maxZoom: _maxZoom,
         );
-  }
-
-  Future<void> _switchStorage(OfflineTileStorageLocation target) async {
-    final current = ref.read(offlineStorageLocationProvider).value;
-    if (current == null || (current.location == target && !current.fellBack)) {
-      return;
-    }
-    ref.read(hapticServiceProvider).itemSelect();
-    final l10n = context.l10n;
-    final notifier = ref.read(offlineStorageLocationProvider.notifier);
-    try {
-      final abandoned = await notifier.switchTo(target);
-      if (!mounted) return;
-      showSuccessSnackBar(context, l10n.offlineStorageSwitched);
-      if (abandoned != null) {
-        await _offerAbandonedCacheCleanup(abandoned);
-      }
-    } on OfflineStorageUnavailableException {
-      if (!mounted) return;
-      showErrorSnackBar(context, l10n.offlineStorageSwitchFailed);
-    }
-  }
-
-  Future<void> _offerAbandonedCacheCleanup(AbandonedCache abandoned) async {
-    if (!mounted) return;
-    final notifier = ref.read(offlineStorageLocationProvider.notifier);
-    final confirmed = await AppBottomSheet.showConfirm(
-      context: context,
-      title: context.l10n.offlineStorageOldCacheTitle,
-      message: context.l10n.offlineStorageOldCacheMessage(
-        formatByteSize(abandoned.bytes),
-      ),
-      confirmLabel: context.l10n.offlineStorageOldCacheDelete,
-      cancelLabel: context.l10n.offlineStorageOldCacheKeep,
-      isDestructive: true,
-    );
-    if (confirmed == true) {
-      await notifier.deleteAbandonedCache(abandoned.path);
-    }
-  }
-
-  // Storage location picker — Android with a mounted removable SD card only;
-  // every other platform/device renders nothing here.
-  List<Widget> _storageSection(BuildContext context) {
-    final storage = ref.watch(offlineStorageLocationProvider).value;
-    if (storage == null || !storage.sdAvailable) return const [];
-    return [
-      SizedBox(height: AppTheme.spacing16),
-      Text(
-        context.l10n.offlineStorageLocationLabel,
-        style: TextStyle(
-          fontFamily: AppTheme.fontFamily,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: context.textSecondary,
-        ),
-      ),
-      SizedBox(height: AppTheme.spacing12),
-      ChipSelector<OfflineTileStorageLocation>(
-        value: storage.location,
-        options: [
-          ChipOption<OfflineTileStorageLocation>(
-            value: OfflineTileStorageLocation.internal,
-            label: context.l10n.offlineStorageInternal,
-            icon: Icons.smartphone,
-            color: context.accentColor,
-          ),
-          ChipOption<OfflineTileStorageLocation>(
-            value: OfflineTileStorageLocation.sdCard,
-            label: context.l10n.offlineStorageSdCard,
-            icon: Icons.sd_card,
-            color: context.accentColor,
-          ),
-        ],
-        onChanged: _switchStorage,
-      ),
-      if (storage.fellBack) ...[
-        SizedBox(height: AppTheme.spacing12),
-        StatusBanner.warning(
-          title: context.l10n.offlineStorageFallbackTitle,
-          subtitle: context.l10n.offlineStorageFallbackSubtitle,
-        ),
-      ],
-    ];
   }
 
   @override
@@ -258,7 +172,9 @@ class _OfflineDownloadSheetState extends ConsumerState<_OfflineDownloadSheet>
               subtitle: context.l10n.offlineDownloadLargeSubtitle,
             ),
           ],
-          ..._storageSection(context),
+          // Storage location picker — Android with a mounted removable SD
+          // card only; every other platform/device renders nothing here.
+          const OfflineStorageSection(),
           SizedBox(height: AppTheme.spacing20),
           PrimaryGradientButton(
             label: context.l10n.offlineDownloadStart(

@@ -6191,6 +6191,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Start Update';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Connect to your device via Bluetooth to install this update.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'No device connected. Connect via Bluetooth and try again.';
+
+  @override
   String get firmwareDfuRetry => 'Retry';
 
   @override
@@ -23017,7 +23025,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.';
+      'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2, gas resistance) and broadcasts it.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Gas resistance (VOC sensor)';
+
+  @override
+  String get telemetryShowOnMap => 'Show node on map';
 
   @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
@@ -40241,6 +40256,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Storage location';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle => 'Offline Map Storage';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Choose where downloaded map tiles are stored';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Downloaded map tiles are kept on this device for offline use. When a removable SD card is available you can store them there instead of internal memory.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Current cache size';
 
   @override
   String get offlineStorageInternal => 'Internal';

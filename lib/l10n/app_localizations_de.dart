@@ -6289,6 +6289,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Update starten';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Verbinden Sie Ihr Gerät über Bluetooth, um dieses Update zu installieren.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Kein Gerät verbunden. Verbinden Sie sich über Bluetooth und versuchen Sie es erneut.';
+
+  @override
   String get firmwareDfuRetry => 'Erneut versuchen';
 
   @override
@@ -23330,7 +23338,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Luftqualitätswerte erscheinen, wenn ein Knoten in deinem Mesh einen Luftqualitätssensor (PM2.5, PM10, CO2) besitzt und diese sendet.';
+      'Luftqualitätswerte erscheinen, wenn ein Knoten in deinem Mesh einen Luftqualitätssensor (PM2.5, PM10, CO2, Gaswiderstand) besitzt und diese sendet.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Gaswiderstand (VOC-Sensor)';
+
+  @override
+  String get telemetryShowOnMap => 'Knoten auf der Karte anzeigen';
 
   @override
   String get telemetryAirQualityParticle03um => '>0,3 µm';
@@ -40800,6 +40815,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Speicherort';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle => 'Offline-Kartenspeicher';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Wählen Sie, wo heruntergeladene Kartenkacheln gespeichert werden';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Heruntergeladene Kartenkacheln werden für die Offline-Nutzung auf diesem Gerät gespeichert. Wenn eine entnehmbare SD-Karte verfügbar ist, können Sie sie dort statt im internen Speicher ablegen.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Aktuelle Cache-Größe';
 
   @override
   String get offlineStorageInternal => 'Intern';

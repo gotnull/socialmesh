@@ -366,6 +366,7 @@ class BugReportService with WidgetsBindingObserver {
           'reconnectAttempts': deviceConnection.reconnectAttempts,
           'lastConnectedAt': deviceConnection.lastConnectedAt
               ?.toIso8601String(),
+          'lastDisconnectDetail': _lastDisconnectDetailString(),
         };
 
         context['connectedMeshDevice'] = _buildConnectedMeshDeviceContext(
@@ -433,7 +434,24 @@ class BugReportService with WidgetsBindingObserver {
       'lastHeard': myNode?.lastHeard?.toIso8601String(),
       'lastConnectedAt': deviceConnection.lastConnectedAt?.toIso8601String(),
       'reconnectAttempts': deviceConnection.reconnectAttempts,
+      'lastDisconnectDetail': _lastDisconnectDetailString(),
     };
+  }
+
+  /// Most recent BLE teardown snapshot, straight from the transport.
+  /// Survives reconnects, so a report filed after recovery still says
+  /// what ended the previous session. Null for non-BLE transports or
+  /// when no teardown has been observed.
+  String? _lastDisconnectDetailString() {
+    try {
+      final transport = ref.read(transportProvider);
+      return transport is ReceiveDiagnosticsSupport
+          ? (transport as ReceiveDiagnosticsSupport).lastDisconnectDetail
+                ?.toCompactString()
+          : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------

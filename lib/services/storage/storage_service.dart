@@ -388,6 +388,26 @@ class SettingsService {
   int get messagesDefaultSubtab =>
       _preferences.getInt('messages_default_subtab') ?? 0;
 
+  // Channels list: remembered filter chip.
+  // Stores the enum value by name (not index) so reordering or adding
+  // filters never silently remaps a persisted choice; unknown names fall
+  // back to the all-channels view at the read site. Null = never chosen.
+  Future<void> setChannelsListFilter(String name) async {
+    await _preferences.setString('channels_list_filter', name);
+  }
+
+  String? get channelsListFilter =>
+      _preferences.getString('channels_list_filter');
+
+  // Contacts list: remembered filter chip. Same shape and rationale as
+  // the channels filter above.
+  Future<void> setContactsListFilter(String name) async {
+    await _preferences.setString('contacts_list_filter', name);
+  }
+
+  String? get contactsListFilter =>
+      _preferences.getString('contacts_list_filter');
+
   // Bottom-nav: cold-start landing tab.
   // Index into MainShell's hardcoded nav order
   // (0=Messages, 1=Map, 2=Nodes, 3=Dashboard). Default 2 (Nodes)

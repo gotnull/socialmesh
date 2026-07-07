@@ -22,6 +22,7 @@ import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
+import '../map/map_screen.dart';
 import 'metric_chart_tooltip.dart';
 
 // =============================================================================
@@ -494,13 +495,23 @@ class _EnvironmentMetricsLogScreenState
                         const SizedBox(height: AppTheme.spacing8),
                     itemBuilder: (context, index) {
                       final log = filtered[index];
+                      final logNode = nodes[log.nodeNum];
                       final nodeName =
-                          nodes[log.nodeNum]?.displayName ??
+                          logNode?.displayName ??
                           '!${log.nodeNum.toRadixString(16).toUpperCase()}';
                       return _EnvironmentMetricsCard(
                         log: log,
                         nodeName: nodeName,
                         units: units,
+                        onTap: logNode?.hasPosition == true
+                            ? () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      MapScreen(initialNodeNum: log.nodeNum),
+                                ),
+                              )
+                            : null,
                       );
                     },
                   ),
@@ -529,10 +540,16 @@ class _EnvironmentMetricsCard extends StatelessWidget {
   final String nodeName;
   final MeasurementUnits units;
 
+  /// Non-null only when the sharing node has a usable position - the
+  /// map centring silently no-ops without one, which reads as a broken
+  /// tap.
+  final VoidCallback? onTap;
+
   const _EnvironmentMetricsCard({
     required this.log,
     required this.nodeName,
     required this.units,
+    this.onTap,
   });
 
   @override
@@ -542,100 +559,115 @@ class _EnvironmentMetricsCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header — node name + timestamp
-            Row(
-              children: [
-                Icon(Icons.thermostat, size: 16, color: context.accentColor),
-                const SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Text(
-                    nodeName,
-                    style: Theme.of(context).textTheme.titleSmall,
-                    overflow: TextOverflow.ellipsis,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header — node name + timestamp + map affordance
+              Row(
+                children: [
+                  Icon(Icons.thermostat, size: 16, color: context.accentColor),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: Text(
+                      nodeName,
+                      style: Theme.of(context).textTheme.titleSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                Text(
-                  '${dateFormat.format(log.timestamp)} ${timeFormat.format(log.timestamp)}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
-                ),
-              ],
-            ),
+                  Text(
+                    '${dateFormat.format(log.timestamp)} ${timeFormat.format(log.timestamp)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.textTertiary,
+                    ),
+                  ),
+                  if (onTap != null) ...[
+                    const SizedBox(width: AppTheme.spacing8),
+                    Tooltip(
+                      message: context.l10n.telemetryShowOnMap,
+                      child: Icon(
+                        Icons.map_outlined,
+                        size: 16,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
 
-            const SizedBox(height: AppTheme.spacing12),
+              const SizedBox(height: AppTheme.spacing12),
 
-            // Metric chips — single-line pill layout matching SectionFilterChip
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (log.temperature != null)
-                  _MetricChip(
-                    icon: Icons.thermostat,
-                    label: formatTemperatureCelsius(
-                      log.temperature!,
-                      units,
-                      context.l10n,
+              // Metric chips — single-line pill layout matching SectionFilterChip
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (log.temperature != null)
+                    _MetricChip(
+                      icon: Icons.thermostat,
+                      label: formatTemperatureCelsius(
+                        log.temperature!,
+                        units,
+                        context.l10n,
+                      ),
+                      color: _getTemperatureColor(log.temperature!),
                     ),
-                    color: _getTemperatureColor(log.temperature!),
-                  ),
-                if (log.humidity != null)
-                  _MetricChip(
-                    icon: Icons.water_drop,
-                    label: context.l10n.telemetryEnvHumidityValue(
-                      log.humidity!.toStringAsFixed(1),
+                  if (log.humidity != null)
+                    _MetricChip(
+                      icon: Icons.water_drop,
+                      label: context.l10n.telemetryEnvHumidityValue(
+                        log.humidity!.toStringAsFixed(1),
+                      ),
+                      color: AccentColors.cyan,
                     ),
-                    color: AccentColors.cyan,
-                  ),
-                if (log.barometricPressure != null)
-                  _MetricChip(
-                    icon: Icons.compress,
-                    label: context.l10n.telemetryEnvPressureValue(
-                      log.barometricPressure!.toStringAsFixed(1),
+                  if (log.barometricPressure != null)
+                    _MetricChip(
+                      icon: Icons.compress,
+                      label: context.l10n.telemetryEnvPressureValue(
+                        log.barometricPressure!.toStringAsFixed(1),
+                      ),
+                      color: AppTheme.primaryPurple,
                     ),
-                    color: AppTheme.primaryPurple,
-                  ),
-                if (log.gasResistance != null)
-                  _MetricChip(
-                    icon: Icons.air,
-                    label: context.l10n.telemetryEnvGasResistanceValue(
-                      log.gasResistance!.toStringAsFixed(0),
+                  if (log.gasResistance != null)
+                    _MetricChip(
+                      icon: Icons.air,
+                      label: context.l10n.telemetryEnvGasResistanceValue(
+                        log.gasResistance!.toStringAsFixed(0),
+                      ),
+                      color: AccentColors.green,
                     ),
-                    color: AccentColors.green,
-                  ),
-                if (log.iaq != null)
-                  _MetricChip(
-                    icon: Icons.eco,
-                    label: context.l10n.telemetryEnvIaqValue(
-                      log.iaq!.toString(),
+                  if (log.iaq != null)
+                    _MetricChip(
+                      icon: Icons.eco,
+                      label: context.l10n.telemetryEnvIaqValue(
+                        log.iaq!.toString(),
+                      ),
+                      color: _getIaqColor(log.iaq!),
                     ),
-                    color: _getIaqColor(log.iaq!),
-                  ),
-                if (log.lux != null)
-                  _MetricChip(
-                    icon: Icons.light_mode,
-                    label: context.l10n.telemetryEnvLuxValue(
-                      log.lux!.toStringAsFixed(0),
+                  if (log.lux != null)
+                    _MetricChip(
+                      icon: Icons.light_mode,
+                      label: context.l10n.telemetryEnvLuxValue(
+                        log.lux!.toStringAsFixed(0),
+                      ),
+                      color: AppTheme.warningYellow,
                     ),
-                    color: AppTheme.warningYellow,
-                  ),
-                if (log.windSpeed != null)
-                  _MetricChip(
-                    icon: Icons.wind_power,
-                    label: context.l10n.telemetryEnvWindSpeedValue(
-                      log.windSpeed!.toStringAsFixed(1),
+                  if (log.windSpeed != null)
+                    _MetricChip(
+                      icon: Icons.wind_power,
+                      label: context.l10n.telemetryEnvWindSpeedValue(
+                        log.windSpeed!.toStringAsFixed(1),
+                      ),
+                      color: AppTheme.primaryBlue,
                     ),
-                    color: AppTheme.primaryBlue,
-                  ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

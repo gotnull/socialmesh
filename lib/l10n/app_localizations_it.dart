@@ -6271,6 +6271,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Avvia aggiornamento';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Collega il dispositivo via Bluetooth per installare questo aggiornamento.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Nessun dispositivo collegato. Collegalo via Bluetooth e riprova.';
+
+  @override
   String get firmwareDfuRetry => 'Riprova';
 
   @override
@@ -23280,7 +23288,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Le letture della qualità dell\'aria compaiono quando un nodo della tua mesh ha un sensore di qualità dell\'aria (PM2.5, PM10, CO2) e le trasmette.';
+      'Le letture della qualità dell\'aria compaiono quando un nodo della tua mesh ha un sensore di qualità dell\'aria (PM2.5, PM10, CO2, resistenza al gas) e le trasmette.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Resistenza al gas (sensore VOC)';
+
+  @override
+  String get telemetryShowOnMap => 'Mostra il nodo sulla mappa';
 
   @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
@@ -40706,6 +40721,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Posizione di archiviazione';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle =>
+      'Archiviazione mappe offline';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Scegli dove salvare i riquadri della mappa scaricati';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'I riquadri della mappa scaricati vengono conservati su questo dispositivo per l\'uso offline. Quando è disponibile una scheda SD rimovibile, puoi salvarli lì invece che nella memoria interna.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Dimensione attuale della cache';
 
   @override
   String get offlineStorageInternal => 'Interna';

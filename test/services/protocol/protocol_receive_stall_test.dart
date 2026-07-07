@@ -37,6 +37,11 @@ class _StallFakeTransport extends DeviceTransport
   int _refreshNotificationsFailureCount = 0;
   int disconnectCallCount = 0;
 
+  /// Causes tagged via [noteDisconnectCause], in call order. Lets tests
+  /// assert the watchdogs identify themselves BEFORE forcing the
+  /// disconnect.
+  final List<String> notedDisconnectCauses = [];
+
   _RefreshFailureMode refreshFailureMode;
 
   void setLastNotificationAt(DateTime? t) => _lastNotificationAt = t;
@@ -128,6 +133,14 @@ class _StallFakeTransport extends DeviceTransport
 
   @override
   int get refreshNotificationsFailureCount => _refreshNotificationsFailureCount;
+
+  @override
+  BleDisconnectDetail? get lastDisconnectDetail => null;
+
+  @override
+  void noteDisconnectCause(String cause) {
+    notedDisconnectCauses.add(cause);
+  }
 
   @override
   Future<void> dispose() async {
@@ -459,6 +472,14 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 20));
 
           expect(transport.disconnectCallCount, 1);
+          expect(
+            transport.notedDisconnectCauses,
+            ['rx_stall_hard_reconnect'],
+            reason:
+                'The watchdog must tag the teardown initiator before '
+                'forcing the disconnect so BLE_DISCONNECT logs and bug '
+                'reports name it instead of "unexpected disconnect".',
+          );
         } finally {
           protocol.stop();
           await transport.dispose();

@@ -8294,6 +8294,14 @@
     "@firmwareDfuStartUpdate": {
         "description": "Button label to start the in-app DFU process"
     },
+    "firmwareDfuConnectRequired": "Connect to your device via Bluetooth to install this update.",
+    "@firmwareDfuConnectRequired": {
+        "description": "Caption under the disabled DFU button when no device is connected"
+    },
+    "firmwareDfuNotConnectedError": "No device connected. Connect via Bluetooth and try again.",
+    "@firmwareDfuNotConnectedError": {
+        "description": "Error snackbar when DFU is attempted without a connected device"
+    },
     "firmwareDfuRetry": "Retry",
     "@firmwareDfuRetry": {
         "description": "Button label to retry a failed DFU"
@@ -31425,7 +31433,15 @@
     "@telemetryAirQualityNoData": {
         "description": "Empty-state message when no air quality data exists."
     },
-    "telemetryAirQualityNoDataDescription": "Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.",
+    "telemetryAirQualityNoDataDescription": "Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2, gas resistance) and broadcasts it.",
+    "telemetryAirQualityGasResistanceLabel": "Gas resistance (VOC sensor)",
+    "@telemetryAirQualityGasResistanceLabel": {
+        "description": "Caption under the gas resistance value on Air Quality Log cards"
+    },
+    "telemetryShowOnMap": "Show node on map",
+    "@telemetryShowOnMap": {
+        "description": "Tooltip on telemetry log cards whose tap opens the map centred on the sharing node"
+    },
     "@telemetryAirQualityNoDataDescription": {
         "description": "Empty-state description explaining why the air quality log may be empty."
     },
@@ -53806,6 +53822,22 @@
         "description": "Error message shown when a region download fails"
     },
     "offlineStorageLocationLabel": "Storage location",
+    "settingsTileOfflineMapStorageTitle": "Offline Map Storage",
+    "@settingsTileOfflineMapStorageTitle": {
+        "description": "Settings tile title for the offline map storage location surface"
+    },
+    "settingsTileOfflineMapStorageSubtitle": "Choose where downloaded map tiles are stored",
+    "@settingsTileOfflineMapStorageSubtitle": {
+        "description": "Settings tile subtitle for the offline map storage location surface"
+    },
+    "offlineStorageSheetDescription": "Downloaded map tiles are kept on this device for offline use. When a removable SD card is available you can store them there instead of internal memory.",
+    "@offlineStorageSheetDescription": {
+        "description": "Body copy of the offline map storage sheet opened from Settings"
+    },
+    "offlineStorageCacheSizeLabel": "Current cache size",
+    "@offlineStorageCacheSizeLabel": {
+        "description": "InfoTable label for the offline tile cache size"
+    },
     "@offlineStorageLocationLabel": {
         "description": "Label above the internal/SD card storage picker in the offline download sheet (Android only)"
     },

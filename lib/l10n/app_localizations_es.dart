@@ -6309,6 +6309,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Iniciar actualización';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Conecte su dispositivo por Bluetooth para instalar esta actualización.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Ningún dispositivo conectado. Conéctese por Bluetooth e inténtelo de nuevo.';
+
+  @override
   String get firmwareDfuRetry => 'Reintentar';
 
   @override
@@ -23367,7 +23375,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Las lecturas de calidad del aire aparecen cuando un nodo de tu malla tiene un sensor de calidad del aire (PM2.5, PM10, CO2) y lo transmite.';
+      'Las lecturas de calidad del aire aparecen cuando un nodo de tu malla tiene un sensor de calidad del aire (PM2.5, PM10, CO2, resistencia al gas) y lo transmite.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Resistencia al gas (sensor VOC)';
+
+  @override
+  String get telemetryShowOnMap => 'Mostrar nodo en el mapa';
 
   @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
@@ -40888,6 +40903,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Ubicación de almacenamiento';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle =>
+      'Almacenamiento de mapas sin conexión';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Elija dónde se guardan las teselas de mapa descargadas';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Las teselas de mapa descargadas se guardan en este dispositivo para su uso sin conexión. Cuando hay una tarjeta SD extraíble disponible, puede guardarlas allí en lugar de en la memoria interna.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Tamaño actual de la caché';
 
   @override
   String get offlineStorageInternal => 'Interno';

@@ -78,6 +78,12 @@ enum ConversationType { channel, directMessage }
 /// Contact filter enum
 enum ContactFilter { all, favorites, messaged, unread, active }
 
+// Resolves a persisted filter name back to the enum. Unknown or null
+// names (fresh installs, values written by a newer app version) fall
+// back to the all-contacts view instead of throwing.
+ContactFilter contactFilterFromName(String? raw) => ContactFilter.values
+    .firstWhere((f) => f.name == raw, orElse: () => ContactFilter.all);
+
 typedef ConversationFallbackRowBuilder =
     List<ConversationTimelineRow> Function(List<Message> messages);
 
@@ -137,6 +143,25 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
   ContactFilter _currentFilter = ContactFilter.all;
   String _activeRoleFilter = roleFilterAll;
   bool _showSectionHeaders = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore the last chosen filter chip. Read synchronously off the
+    // already-loaded settings service when present; before it loads the
+    // default all-contacts view applies, matching first launches.
+    _currentFilter = contactFilterFromName(
+      ref.read(settingsServiceProvider).value?.contactsListFilter,
+    );
+  }
+
+  void _selectFilter(ContactFilter filter) {
+    HapticFeedback.lightImpact();
+    setState(() => _currentFilter = filter);
+    final settings = ref.read(settingsServiceProvider).value;
+    if (settings == null || settings.contactsListFilter == filter.name) return;
+    unawaited(settings.setContactsListFilter(filter.name));
+  }
 
   @override
   void dispose() {
@@ -338,15 +363,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 label: context.l10n.messagingFilterAll,
                 count: contacts.length,
                 isSelected: _currentFilter == ContactFilter.all,
-                onTap: () => setState(() => _currentFilter = ContactFilter.all),
+                onTap: () => _selectFilter(ContactFilter.all),
               ),
               StatusFilterChip(
                 label: context.l10n.messagingFilterOnline,
                 count: activeCount,
                 isSelected: _currentFilter == ContactFilter.active,
                 color: AccentColors.green,
-                onTap: () =>
-                    setState(() => _currentFilter = ContactFilter.active),
+                onTap: () => _selectFilter(ContactFilter.active),
               ),
               StatusFilterChip(
                 label: context.l10n.messagingFilterUnread,
@@ -354,8 +378,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 isSelected: _currentFilter == ContactFilter.unread,
                 icon: Icons.mark_email_unread_outlined,
                 color: AccentColors.red,
-                onTap: () =>
-                    setState(() => _currentFilter = ContactFilter.unread),
+                onTap: () => _selectFilter(ContactFilter.unread),
               ),
               StatusFilterChip(
                 label: context.l10n.messagingFilterMessaged,
@@ -363,8 +386,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 isSelected: _currentFilter == ContactFilter.messaged,
                 icon: Icons.chat_bubble_outline,
                 color: AppTheme.primaryBlue,
-                onTap: () =>
-                    setState(() => _currentFilter = ContactFilter.messaged),
+                onTap: () => _selectFilter(ContactFilter.messaged),
               ),
               StatusFilterChip(
                 label: context.l10n.messagingFilterFavorites,
@@ -372,8 +394,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 isSelected: _currentFilter == ContactFilter.favorites,
                 icon: Icons.star,
                 color: AppTheme.warningYellow,
-                onTap: () =>
-                    setState(() => _currentFilter = ContactFilter.favorites),
+                onTap: () => _selectFilter(ContactFilter.favorites),
               ),
             ],
           ),

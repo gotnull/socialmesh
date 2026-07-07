@@ -6327,6 +6327,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Démarrer la mise à jour';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Connectez votre appareil via Bluetooth pour installer cette mise à jour.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Aucun appareil connecté. Connectez-vous via Bluetooth et réessayez.';
+
+  @override
   String get firmwareDfuRetry => 'Réessayer';
 
   @override
@@ -23429,7 +23437,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Les relevés de qualité de l\'air apparaissent lorsqu\'un nœud de votre maillage possède un capteur de qualité de l\'air (PM2.5, PM10, CO2) et le diffuse.';
+      'Les relevés de qualité de l\'air apparaissent lorsqu\'un nœud de votre maillage possède un capteur de qualité de l\'air (PM2.5, PM10, CO2, résistance au gaz) et le diffuse.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Résistance au gaz (capteur COV)';
+
+  @override
+  String get telemetryShowOnMap => 'Afficher le nœud sur la carte';
 
   @override
   String get telemetryAirQualityParticle03um => '>0,3µm';
@@ -40987,6 +41002,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Emplacement de stockage';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle =>
+      'Stockage des cartes hors ligne';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Choisissez où stocker les tuiles de carte téléchargées';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Les tuiles de carte téléchargées sont conservées sur cet appareil pour une utilisation hors ligne. Lorsqu\'une carte SD amovible est disponible, vous pouvez les y stocker au lieu de la mémoire interne.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Taille actuelle du cache';
 
   @override
   String get offlineStorageInternal => 'Interne';

@@ -752,8 +752,12 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
           }
         }
 
-        // Log environment metrics only when values actually change
-        if (node.temperature != null || node.humidity != null) {
+        // Log environment metrics only when values actually change.
+        // Gas resistance is part of the trigger: a gas-only sensor
+        // (BME680/688 without temp/humidity) would otherwise never log.
+        if (node.temperature != null ||
+            node.humidity != null ||
+            node.gasResistance != null) {
           final cached = _lastEnv[id];
           if (cached == null || !cached.matches(node)) {
             _lastEnv[id] = _EnvMetricsFingerprint(

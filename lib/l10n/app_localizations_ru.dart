@@ -6269,6 +6269,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Начать обновление';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Подключите устройство по Bluetooth, чтобы установить это обновление.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Устройство не подключено. Подключитесь по Bluetooth и попробуйте снова.';
+
+  @override
   String get firmwareDfuRetry => 'Повторить';
 
   @override
@@ -23273,7 +23281,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Показания качества воздуха появляются, когда узел в вашей сети имеет датчик качества воздуха (PM2.5, PM10, CO2) и передаёт их.';
+      'Показания качества воздуха появляются, когда узел в вашей сети имеет датчик качества воздуха (PM2.5, PM10, CO2, газовое сопротивление) и передаёт их.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Газовое сопротивление (датчик ЛОС)';
+
+  @override
+  String get telemetryShowOnMap => 'Показать узел на карте';
 
   @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
@@ -40702,6 +40717,20 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Место хранения';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle => 'Хранилище офлайн-карт';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Выберите, где хранить загруженные фрагменты карты';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Загруженные фрагменты карты хранятся на этом устройстве для работы офлайн. Если доступна съёмная SD-карта, их можно хранить на ней вместо внутренней памяти.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Текущий размер кэша';
 
   @override
   String get offlineStorageInternal => 'Внутренняя память';

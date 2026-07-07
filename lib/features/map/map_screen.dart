@@ -472,9 +472,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await settings.setMapNodeOverlayOpacity(_nodeOverlayOpacity);
   }
 
-  /// Drops the cached markers so they rebuild with the current overlay opacity.
-  /// `_CachedNodeMarker.matches` does not track opacity, so a slider change
-  /// would otherwise leave stale markers on screen until the next pan/zoom.
+  /// Drops the cached markers immediately. `_CachedNodeMarker.matches` tracks
+  /// overlay opacity, so cached entries self-invalidate on the next build; this
+  /// forces the rebuild without waiting for one.
   void _invalidateMarkerCache() {
     _markerCache.clear();
     _markerListCache = null;
@@ -3737,6 +3737,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             isStale: n.isStale,
             isMyNode: isMyNode,
             isSelected: isSelected,
+            overlayOpacity: _nodeOverlayOpacity,
           )) {
         marker = cached.marker;
         reused++;
@@ -3756,6 +3757,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           isStale: n.isStale,
           isMyNode: isMyNode,
           isSelected: isSelected,
+          overlayOpacity: _nodeOverlayOpacity,
         );
         rebuilt++;
       }
@@ -4684,6 +4686,7 @@ class _CachedNodeMarker {
   final bool isStale;
   final bool isMyNode;
   final bool isSelected;
+  final double overlayOpacity;
 
   const _CachedNodeMarker({
     required this.marker,
@@ -4694,6 +4697,7 @@ class _CachedNodeMarker {
     required this.isStale,
     required this.isMyNode,
     required this.isSelected,
+    required this.overlayOpacity,
   });
 
   bool matches({
@@ -4704,6 +4708,7 @@ class _CachedNodeMarker {
     required bool isStale,
     required bool isMyNode,
     required bool isSelected,
+    required double overlayOpacity,
   }) {
     return identical(this.node, node) &&
         identical(this.pin, pin) &&
@@ -4711,7 +4716,8 @@ class _CachedNodeMarker {
         this.longitude == longitude &&
         this.isStale == isStale &&
         this.isMyNode == isMyNode &&
-        this.isSelected == isSelected;
+        this.isSelected == isSelected &&
+        this.overlayOpacity == overlayOpacity;
   }
 }
 

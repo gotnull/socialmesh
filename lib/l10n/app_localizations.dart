@@ -10936,6 +10936,18 @@ abstract class AppLocalizations {
   /// **'Start Update'**
   String get firmwareDfuStartUpdate;
 
+  /// Caption under the disabled DFU button when no device is connected
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to your device via Bluetooth to install this update.'**
+  String get firmwareDfuConnectRequired;
+
+  /// Error snackbar when DFU is attempted without a connected device
+  ///
+  /// In en, this message translates to:
+  /// **'No device connected. Connect via Bluetooth and try again.'**
+  String get firmwareDfuNotConnectedError;
+
   /// Button label to retry a failed DFU
   ///
   /// In en, this message translates to:
@@ -40055,8 +40067,20 @@ abstract class AppLocalizations {
   /// Empty-state description explaining why the air quality log may be empty.
   ///
   /// In en, this message translates to:
-  /// **'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.'**
+  /// **'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2, gas resistance) and broadcasts it.'**
   String get telemetryAirQualityNoDataDescription;
+
+  /// Caption under the gas resistance value on Air Quality Log cards
+  ///
+  /// In en, this message translates to:
+  /// **'Gas resistance (VOC sensor)'**
+  String get telemetryAirQualityGasResistanceLabel;
+
+  /// Tooltip on telemetry log cards whose tap opens the map centred on the sharing node
+  ///
+  /// In en, this message translates to:
+  /// **'Show node on map'**
+  String get telemetryShowOnMap;
 
   /// Particle size chip label for particles larger than 0.3 micrometres
   ///
@@ -70204,6 +70228,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Storage location'**
   String get offlineStorageLocationLabel;
+
+  /// Settings tile title for the offline map storage location surface
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Map Storage'**
+  String get settingsTileOfflineMapStorageTitle;
+
+  /// Settings tile subtitle for the offline map storage location surface
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where downloaded map tiles are stored'**
+  String get settingsTileOfflineMapStorageSubtitle;
+
+  /// Body copy of the offline map storage sheet opened from Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded map tiles are kept on this device for offline use. When a removable SD card is available you can store them there instead of internal memory.'**
+  String get offlineStorageSheetDescription;
+
+  /// InfoTable label for the offline tile cache size
+  ///
+  /// In en, this message translates to:
+  /// **'Current cache size'**
+  String get offlineStorageCacheSizeLabel;
 
   /// Storage picker option: the phone's internal storage
   ///

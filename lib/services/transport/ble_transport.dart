@@ -96,6 +96,55 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   /// on the fromNum characteristic.
   bool _refreshInFlight = false;
 
+  /// When the current session reached `connected`, for teardown uptime.
+  DateTime? _connectedAt;
+
+  /// Pending app-side initiator tag for the next `disconnect()` call.
+  String? _pendingDisconnectCause;
+
+  BleDisconnectDetail? _lastDisconnectDetail;
+  @override
+  BleDisconnectDetail? get lastDisconnectDetail => _lastDisconnectDetail;
+
+  /// True once the current teardown has been recorded. Reset on the
+  /// next connected transition so exactly one origin site (the first
+  /// observer) records each teardown - an app `disconnect()` running
+  /// as cleanup after an OS-initiated drop must not relabel it.
+  /// [_lastDisconnectDetail] itself deliberately survives reconnects:
+  /// a bug report filed after recovery should still say what ended the
+  /// previous session.
+  bool _teardownRecorded = false;
+
+  @override
+  void noteDisconnectCause(String cause) {
+    _pendingDisconnectCause = cause;
+  }
+
+  /// Records one teardown snapshot and emits its `BLE_DISCONNECT` line.
+  void _recordDisconnect(
+    String origin, {
+    int? platformCode,
+    String? platformDescription,
+    String? appCause,
+  }) {
+    if (_teardownRecorded) return;
+    _teardownRecorded = true;
+    final now = DateTime.now();
+    final connectedAt = _connectedAt;
+    final lastNotif = _lastNotificationAt;
+    final detail = BleDisconnectDetail(
+      origin: origin,
+      at: now,
+      platformCode: platformCode,
+      platformDescription: platformDescription,
+      uptime: connectedAt != null ? now.difference(connectedAt) : null,
+      lastNotificationAge: lastNotif != null ? now.difference(lastNotif) : null,
+      appCause: appCause,
+    );
+    _lastDisconnectDetail = detail;
+    AppLogging.ble('BLE_DISCONNECT ${detail.toLogPayload()}');
+  }
+
   /// Name of the currently-connected device, used for the foreground
   /// service notification and logging.
   String _connectedDeviceName = '';
@@ -622,6 +671,12 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         AppLogging.ble('Connection state changed: $state');
         if (state == BluetoothConnectionState.disconnected) {
           AppLogging.ble('⚠️ Device disconnected');
+          final reason = _device?.disconnectReason;
+          _recordDisconnect(
+            'os_state_change',
+            platformCode: reason?.code,
+            platformDescription: reason?.description,
+          );
           _updateState(DeviceConnectionState.disconnected);
         }
       });
@@ -707,6 +762,12 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       }
 
       if (_txCharacteristic != null && _rxCharacteristic != null) {
+        // Fresh session: re-arm teardown recording so the first
+        // observer of the NEXT teardown records it. The previous
+        // detail is kept for post-recovery bug reports.
+        _connectedAt = DateTime.now();
+        _teardownRecorded = false;
+        _pendingDisconnectCause = null;
         _updateState(DeviceConnectionState.connected);
         AppLogging.ble('Connected successfully');
 
@@ -883,6 +944,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
           // Treat a closed notification stream as a disconnect so the
           // auto-reconnect path fires. The BLE GATT connection may still
           // be alive, but without notifications we cannot receive data.
+          _recordDisconnect('notify_stream_closed');
           _updateState(DeviceConnectionState.disconnected);
         },
       );
@@ -998,6 +1060,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
               '⚠️ fromNum notification stream completed — '
               'BLE subscription lost while connection may still be alive',
             );
+            _recordDisconnect('notify_stream_closed_refresh');
             _updateState(DeviceConnectionState.disconnected);
           },
         );
@@ -1008,6 +1071,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
           '⚠️ refreshNotifications: failed to install new listener — '
           'declaring disconnect for auto-reconnect: $e',
         );
+        _recordDisconnect('refresh_install_failed');
         _updateState(DeviceConnectionState.disconnected);
         return;
       }
@@ -1152,7 +1216,14 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     // This fixes issues where PIN cancellation leaves stale BLE state
     final wasDisconnected = _state == DeviceConnectionState.disconnected;
 
+    // Consume the pending initiator tag either way; a cleanup call on an
+    // already-torn-down link must not leave a stale cause for the next
+    // session.
+    final cause = _pendingDisconnectCause;
+    _pendingDisconnectCause = null;
+
     if (!wasDisconnected) {
+      _recordDisconnect('app_requested', appCause: cause ?? 'unspecified');
       _updateState(DeviceConnectionState.disconnecting);
     }
 
@@ -1195,6 +1266,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       _logRadioCharacteristic = null;
       _consecutiveAuthErrors = 0;
       _lastNotificationAt = null;
+      _connectedAt = null;
 
       // Stop the Android foreground service on disconnect.
       await BackgroundBleService.instance.stop();

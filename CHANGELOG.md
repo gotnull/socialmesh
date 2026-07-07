@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (map)
+
+- Node transparency is now applied consistently after reopening the app. Markers built before the saved "Node transparency" setting finished loading were cached fully opaque and stayed that way, so some nodes rendered faded and others solid with no settings changed. The marker cache now tracks the overlay opacity, so every peer marker follows the setting from the first frame
+
+### Fixed (firmware update)
+
+- The in-app "Start Update" button no longer does nothing while the app is disconnected from the radio. The button rendered from cached node data even with no live Bluetooth link, and tapping it gave haptic feedback then silently returned. It now disables with a "connect via Bluetooth" hint while disconnected, and shows an error snackbar if the link drops in the instant between render and tap
+- A failed firmware release check (no network, GitHub error) now shows the "update check failed" banner instead of quietly looking like "you're up to date"
+
+### Added (connection diagnostics)
+
+- Every BLE link teardown is now recorded with its origin (OS-reported disconnect with the platform reason code, notification stream closing, app watchdog, or user action), the session uptime, and the age of the last received packet. The detail is logged as `BLE_DISCONNECT` / `DISCONNECT_CONTEXT` lines and embedded in in-app bug reports, so "the app disconnects after about an hour" reports can be traced to the exact path that ended the link
+- While backgrounded the app now allows two reconnect attempts per background session (previously one) before waiting for foreground, improving recovery from mid-session drops during long background use
+
+### Added (messaging filters)
+
+- The Channels and Contacts list filter chips (All / Unread / ...) now remember the last selection across app launches, so unread-first users land on their filter instead of resetting to All every cold start
+
+### Added (telemetry)
+
+- The Air Quality Log now includes gas-resistance readings from BME680/688 VOC sensors, merged in from environment telemetry (historical readings included), with a gas-only card for nodes that share no other air-quality metrics
+- Air Quality and Environment Metrics log cards now show which node shared each reading, and tapping a card jumps to the map centred on that node (when it has a position); the back button returns straight to the log
+
 ### Added (messaging)
 
 - Message details (long-press a message) and the expanded technical info now show the node that relayed a received message, matching the official Meshtastic iOS app. The radio only sends the last byte of the relayer's ID, so the name is a best-effort match against known nodes and falls back to a hex byte (for example `0xC4`) when it cannot be resolved to a single node (#223)
@@ -31,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (offline maps)
 
+- On Android, offline map tiles can be stored on a removable SD card instead of internal memory. The storage picker lives in the "Download this area" sheet and in a new Settings > Data & Storage > Offline Map Storage tile (shown only when a card is present or a fallback needs explaining), which also shows the current cache size and offers to delete the old cache after a switch. Portable/removable cards only: cards formatted as internal (adopted) storage are part of internal memory by Android design. If the card goes missing the cache falls back to internal storage with a visible warning
 - The map is now reachable without pairing a device: a new "Explore the map without a device" action on the scanner opens a lightweight, mesh-free map so a user can browse and pre-download an area before they have a node (for example, prepping for an off-grid trip). It carries no protocol state and offers a clear "Pair a node to unlock mesh features" return path
 - The offline map has a place-search bar (type a town/area to jump there) and a center-on-my-location button, so finding the region to pre-download no longer means panning the whole way by hand
 - New "Download this area" feature pre-downloads the visible region's tiles for true offline use: pick a detail level, see a live tile-count and storage estimate, and run the download with progress and cancel. Bulk download is allowed for the Terrain, Dark, and Light styles only (Satellite and the optional Mapbox styles are excluded per provider terms); Terrain uses a lower request concurrency and backs off on rate-limit responses

@@ -103,6 +103,8 @@ import 'reticulum_bridge_screen.dart';
 import 'reticulum_diagnostics_screen.dart';
 import 'translation_settings_screen.dart';
 import 'watch_companion_settings_screen.dart';
+import '../map/offline_tiles/offline_storage_location_notifier.dart';
+import '../map/offline_tiles/offline_storage_picker.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   /// Optional search query to pre-fill on open, allowing callers to
@@ -141,6 +143,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   /// Get all searchable settings items
+  // Offline map storage tile — visible only when actionable: a removable
+  // SD card is mounted, or the cache fell back to internal and the user
+  // should see why. iOS and card-less devices render nothing.
+  List<Widget> _buildOfflineMapStorageTile(BuildContext context) {
+    final storage = ref.watch(offlineStorageLocationProvider).value;
+    if (storage == null || (!storage.sdAvailable && !storage.fellBack)) {
+      return const [];
+    }
+    return [
+      _SettingsTile(
+        icon: Icons.sd_card,
+        title: context.l10n.settingsTileOfflineMapStorageTitle,
+        subtitle: context.l10n.settingsTileOfflineMapStorageSubtitle,
+        onTap: () => showOfflineStorageSettingsSheet(context),
+      ),
+    ];
+  }
+
   List<_SearchableSettingItem> _getSearchableSettings(
     BuildContext context,
     WidgetRef ref,
@@ -1049,6 +1069,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             MaterialPageRoute(builder: (_) => const DataExportScreen()),
           ),
         ),
+        if (ref.watch(offlineStorageLocationProvider).value case final storage?
+            when storage.sdAvailable || storage.fellBack)
+          _SearchableSettingItem(
+            icon: Icons.sd_card,
+            title: context.l10n.settingsTileOfflineMapStorageTitle,
+            subtitle: context.l10n.settingsTileOfflineMapStorageSubtitle,
+            keywords: [
+              'map',
+              'offline',
+              'sd',
+              'card',
+              'storage',
+              'tiles',
+              'cache',
+            ],
+            section: context.l10n.settingsSectionDataStorage,
+            onTap: () => showOfflineStorageSettingsSheet(context),
+          ),
         _SearchableSettingItem(
           icon: Icons.delete_outline,
           title: context.l10n.settingsSearchClearAllMessagesTitle,
@@ -3130,6 +3168,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
+                          // Offline map storage location — only rendered
+                          // when actionable (removable SD card present, or
+                          // a fallback warning to surface).
+                          ..._buildOfflineMapStorageTile(context),
                           _SettingsTile(
                             icon: Icons.delete_sweep_outlined,
                             title: context

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,11 +35,36 @@ class ChannelsScreen extends ConsumerStatefulWidget {
 
 enum ChannelFilter { all, unread, primary, encrypted, position, mqtt }
 
+// Resolves a persisted filter name back to the enum. Unknown or null
+// names (fresh installs, values written by a newer app version) fall
+// back to the all-channels view instead of throwing.
+ChannelFilter channelFilterFromName(String? raw) => ChannelFilter.values
+    .firstWhere((f) => f.name == raw, orElse: () => ChannelFilter.all);
+
 class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
     with LifecycleSafeMixin {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   ChannelFilter _activeFilter = ChannelFilter.all;
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore the last chosen filter chip. Read synchronously off the
+    // already-loaded settings service when present; before it loads the
+    // default all-channels view applies, matching first launches.
+    _activeFilter = channelFilterFromName(
+      ref.read(settingsServiceProvider).value?.channelsListFilter,
+    );
+  }
+
+  void _selectFilter(ChannelFilter filter) {
+    HapticFeedback.lightImpact();
+    setState(() => _activeFilter = filter);
+    final settings = ref.read(settingsServiceProvider).value;
+    if (settings == null || settings.channelsListFilter == filter.name) return;
+    unawaited(settings.setChannelsListFilter(filter.name));
+  }
 
   @override
   void dispose() {
@@ -133,10 +160,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 label: context.l10n.channelsFilterAll,
                 count: channels.length,
                 isSelected: _activeFilter == ChannelFilter.all,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  setState(() => _activeFilter = ChannelFilter.all);
-                },
+                onTap: () => _selectFilter(ChannelFilter.all),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterUnread,
@@ -144,8 +168,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.unread,
                 icon: Icons.mark_email_unread_outlined,
                 color: AccentColors.red,
-                onTap: () =>
-                    setState(() => _activeFilter = ChannelFilter.unread),
+                onTap: () => _selectFilter(ChannelFilter.unread),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterPrimary,
@@ -153,8 +176,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.primary,
                 color: AccentColors.blue,
                 icon: Icons.star,
-                onTap: () =>
-                    setState(() => _activeFilter = ChannelFilter.primary),
+                onTap: () => _selectFilter(ChannelFilter.primary),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterEncrypted,
@@ -162,8 +184,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.encrypted,
                 color: AccentColors.green,
                 icon: Icons.lock,
-                onTap: () =>
-                    setState(() => _activeFilter = ChannelFilter.encrypted),
+                onTap: () => _selectFilter(ChannelFilter.encrypted),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterPosition,
@@ -171,8 +192,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.position,
                 color: AccentColors.orange,
                 icon: Icons.location_on,
-                onTap: () =>
-                    setState(() => _activeFilter = ChannelFilter.position),
+                onTap: () => _selectFilter(ChannelFilter.position),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterMqtt,
@@ -180,7 +200,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.mqtt,
                 color: AccentColors.purple,
                 icon: Icons.cloud,
-                onTap: () => setState(() => _activeFilter = ChannelFilter.mqtt),
+                onTap: () => _selectFilter(ChannelFilter.mqtt),
               ),
             ],
           ),

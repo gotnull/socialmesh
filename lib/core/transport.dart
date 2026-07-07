@@ -190,4 +190,89 @@ abstract class ReceiveDiagnosticsSupport {
   /// to disconnected — never silently leaves the transport in a
   /// "connected, no subscription" state.
   int get refreshNotificationsFailureCount;
+
+  /// Snapshot of the most recent link teardown, or `null` when the
+  /// transport has not observed one this session. Populated at every
+  /// disconnect origin (OS state change, notification stream closing,
+  /// app-requested teardown) so the reconnect layer and bug reports can
+  /// state WHO ended the link instead of collapsing everything into
+  /// "unexpected disconnect".
+  BleDisconnectDetail? get lastDisconnectDetail;
+
+  /// Tags the next app-requested disconnect with its initiating cause
+  /// (e.g. a protocol-layer watchdog). Consumed by the transport when
+  /// `disconnect()` runs; without a pending cause an app-requested
+  /// teardown is recorded as unspecified.
+  void noteDisconnectCause(String cause);
+}
+
+/// Diagnostic snapshot of one BLE link teardown.
+///
+/// [origin] states which code path observed the teardown:
+/// `os_state_change` (platform reported disconnected),
+/// `notify_stream_closed` / `notify_stream_closed_refresh` (the fromNum
+/// notification stream completed), `refresh_install_failed` (listener
+/// reinstall failed after a resubscribe), or `app_requested`
+/// (transport.disconnect() was called - [appCause] carries the watchdog
+/// tag when one initiated it).
+class BleDisconnectDetail {
+  final String origin;
+
+  /// Platform disconnect code when known (CBError on iOS, GATT status
+  /// on Android).
+  final int? platformCode;
+  final String? platformDescription;
+
+  /// When the teardown was observed.
+  final DateTime at;
+
+  /// How long the link had been up, when the connect time is known.
+  final Duration? uptime;
+
+  /// Age of the last received fromNum notification at teardown time -
+  /// distinguishes "link died silent" from "died mid-traffic".
+  final Duration? lastNotificationAge;
+
+  /// App-side initiator tag consumed from
+  /// [ReceiveDiagnosticsSupport.noteDisconnectCause], when the app
+  /// requested the teardown.
+  final String? appCause;
+
+  const BleDisconnectDetail({
+    required this.origin,
+    required this.at,
+    this.platformCode,
+    this.platformDescription,
+    this.uptime,
+    this.lastNotificationAge,
+    this.appCause,
+  });
+
+  /// Key=value payload for `BLE_DISCONNECT` log lines.
+  String toLogPayload() {
+    final desc = platformDescription;
+    return [
+      'origin=$origin',
+      if (platformCode != null) 'code=$platformCode',
+      if (desc != null && desc.isNotEmpty) 'desc="$desc"',
+      if (uptime != null) 'uptimeS=${uptime!.inSeconds}',
+      if (lastNotificationAge != null)
+        'lastNotifAgoS=${lastNotificationAge!.inSeconds}',
+      if (appCause != null) 'cause=$appCause',
+    ].join(' ');
+  }
+
+  /// Single-line summary for connection state and bug-report context.
+  String toCompactString() {
+    final desc = platformDescription;
+    return [
+      origin,
+      if (platformCode != null) 'code=$platformCode',
+      if (desc != null && desc.isNotEmpty) '($desc)',
+      if (uptime != null) 'up=${uptime!.inSeconds}s',
+      if (lastNotificationAge != null)
+        'notif=${lastNotificationAge!.inSeconds}s',
+      if (appCause != null) 'cause=$appCause',
+    ].join(' ');
+  }
 }
