@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' show Stripe;
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -152,6 +153,12 @@ Future<bool> get firebaseReady => firebaseReadyCompleter.future;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load date symbols for every locale so DateFormat can order dates for a
+  // region-qualified locale (e.g. en_GB -> dd/MM/y) even when the UI language
+  // resolves to a language-only locale. Without this, DateFormat throws for
+  // any locale flutter_localizations did not itself initialize.
+  await initializeDateFormatting();
 
   // Resolve the host platform capability bundle once at boot. Every
   // downstream init that today assumed mobile is gated on this; the
@@ -2152,11 +2159,26 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           // FlutterError. Resolve manually: prefer first device locale whose
           // language code matches a supported locale, otherwise fall back to
           // the first supported locale (English).
+          //
+          // Carry the device's country code onto the matched language so date
+          // and number formatting follow the device region. Our ARB set is
+          // language-only, so a UK/AU device would otherwise collapse to a
+          // bare `en`, which intl treats as US ordering (M/d/y). String
+          // lookup still matches on language code, so en_GB resolves to the
+          // `en` translations while dates order as dd/MM/y.
           if (locales != null) {
             for (final locale in locales) {
               for (final supported in supportedLocales) {
                 if (supported.languageCode == locale.languageCode) {
-                  return supported;
+                  final country = locale.countryCode;
+                  if (country == null || country.isEmpty) {
+                    return supported;
+                  }
+                  return Locale.fromSubtags(
+                    languageCode: supported.languageCode,
+                    scriptCode: locale.scriptCode,
+                    countryCode: country,
+                  );
                 }
               }
             }
