@@ -39,6 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The in-app "Start Update" button no longer does nothing while the app is disconnected from the radio. The button rendered from cached node data even with no live Bluetooth link, and tapping it gave haptic feedback then silently returned. It now disables with a "connect via Bluetooth" hint while disconnected, and shows an error snackbar if the link drops in the instant between render and tap
 - A failed firmware release check (no network, GitHub error) now shows the "update check failed" banner instead of quietly looking like "you're up to date"
 
+### Fixed (WiFi/TCP connection)
+
+- The app now notices a dead WiFi/TCP link in under a minute instead of after several minutes. The TCP socket gets tuned OS keepalive (20s idle, 10s probe interval, 3 probes): a powered-off or vanished radio cannot answer the kernel's probes, so the connection resets ~50s after the last exchange and the connection state flips immediately, foreground or background. A quiet-but-alive radio still answers the probes, so silent meshes never trigger a false disconnect
+
 ### Added (connection diagnostics)
 
 - Every BLE link teardown is now recorded with its origin (OS-reported disconnect with the platform reason code, notification stream closing, app watchdog, or user action), the session uptime, and the age of the last received packet. The detail is logged as `BLE_DISCONNECT` / `DISCONNECT_CONTEXT` lines and embedded in in-app bug reports, so "the app disconnects after about an hour" reports can be traced to the exact path that ended the link
