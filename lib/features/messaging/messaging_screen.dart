@@ -20,6 +20,7 @@ import '../../utils/text_sanitizer.dart';
 import '../../utils/time_format.dart';
 import 'dart:async';
 import '../../providers/app_providers.dart';
+import '../../providers/messages_view_mode_provider.dart';
 import '../../core/constants.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/review_providers.dart';
@@ -529,8 +530,39 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
 
   /// Returns slivers for the contacts list, suitable for embedding in the
   /// top-level [CustomScrollView].
+  // Picks the card or compact row for [contact] based on the shared
+  // Messages view mode; tap and long-press behave identically in both.
+  Widget _contactListTile(_Contact contact, {required bool compact}) {
+    void openChat() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            type: ConversationType.directMessage,
+            nodeNum: contact.nodeNum,
+            title: contact.displayName,
+            avatarColor: contact.avatarColor,
+          ),
+        ),
+      );
+    }
+
+    return compact
+        ? _CompactContactTile(
+            contact: contact,
+            onTap: openChat,
+            onLongPress: () => _openContactQuickActions(contact),
+          )
+        : _ContactTile(
+            contact: contact,
+            onTap: openChat,
+            onLongPress: () => _openContactQuickActions(contact),
+          );
+  }
+
   List<Widget> _buildContactSlivers(List<_Contact> contacts) {
     final animationsEnabled = ref.watch(animationsEnabledProvider);
+    final compactView = ref.watch(messagesCompactViewProvider);
 
     if (!_showSectionHeaders) {
       // Simple flat list
@@ -544,23 +576,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 index: index,
                 direction: SlideDirection.left,
                 enabled: animationsEnabled,
-                child: _ContactTile(
-                  contact: contact,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatScreen(
-                          type: ConversationType.directMessage,
-                          nodeNum: contact.nodeNum,
-                          title: contact.displayName,
-                          avatarColor: contact.avatarColor,
-                        ),
-                      ),
-                    );
-                  },
-                  onLongPress: () => _openContactQuickActions(contact),
-                ),
+                child: _contactListTile(contact, compact: compactView),
               );
             }, childCount: contacts.length),
           ),
@@ -596,23 +612,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
               index: index,
               direction: SlideDirection.left,
               enabled: animationsEnabled,
-              child: _ContactTile(
-                contact: contact,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        type: ConversationType.directMessage,
-                        nodeNum: contact.nodeNum,
-                        title: contact.displayName,
-                        avatarColor: contact.avatarColor,
-                      ),
-                    ),
-                  );
-                },
-                onLongPress: () => _openContactQuickActions(contact),
-              ),
+              child: _contactListTile(contact, compact: compactView),
             );
           }, childCount: nonEmptySections[sectionIndex].contacts.length),
         ),
@@ -694,6 +694,125 @@ class _Contact {
   });
 
   bool get hasMessages => lastMessage != null;
+}
+
+/// Dense contact row for the compact view mode: flat surface, smaller
+/// avatar, single metadata line. Mirrors the Nodes screen's compact tile
+/// so the two lists read consistently when densified.
+class _CompactContactTile extends StatelessWidget {
+  final _Contact contact;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  const _CompactContactTile({
+    required this.contact,
+    required this.onTap,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: AppTheme.spacing8,
+        ),
+        child: Row(
+          children: [
+            Stack(
+              children: [
+                NodeAvatar(
+                  text:
+                      contact.shortName ?? safeTruncate(contact.displayName, 2),
+                  color: resolveNodeColor(
+                    nodeNum: contact.nodeNum,
+                    avatarColor: contact.avatarColor,
+                  ),
+                  size: 36,
+                ),
+                if (contact.presence.isActive)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: AppTheme.successGreen,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: context.card, width: 1.5),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    contact.displayName,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: context.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    contact.lastMessage ??
+                        presenceStatusText(
+                          contact.presence,
+                          contact.lastHeardAge,
+                        ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: contact.lastMessage != null
+                          ? context.textSecondary
+                          : (contact.presence.isActive
+                                ? AppTheme.successGreen
+                                : context.textTertiary),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (contact.unreadCount > 0) ...[
+              const SizedBox(width: AppTheme.spacing8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: context.accentColor,
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                ),
+                child: Text(
+                  '${contact.unreadCount}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+            if (contact.isFavorite) ...[
+              const SizedBox(width: AppTheme.spacing8),
+              Icon(Icons.star, color: AccentColors.yellow, size: 16),
+            ],
+            const SizedBox(width: AppTheme.spacing8),
+            Icon(Icons.chevron_right, color: context.textTertiary, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ContactTile extends StatelessWidget {
@@ -4557,6 +4676,9 @@ class MessagingPopupMenu extends ConsumerWidget {
           case 'scan_channel':
             if (onScanChannel != null) onScanChannel!();
             break;
+          case 'view_mode':
+            ref.read(messagesCompactViewProvider.notifier).toggle();
+            break;
           case 'week_view':
             if (!AppFeatureFlags.isMessageTimelineEnabled) {
               break;
@@ -4575,7 +4697,28 @@ class MessagingPopupMenu extends ConsumerWidget {
         }
       },
       itemBuilder: (context) {
-        final items = <PopupMenuEntry<String>>[];
+        final compactView = ref.read(messagesCompactViewProvider);
+        final items = <PopupMenuEntry<String>>[
+          PopupMenuItem(
+            value: 'view_mode',
+            child: Row(
+              children: [
+                Icon(
+                  compactView ? Icons.view_agenda : Icons.view_list,
+                  color: context.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Text(
+                  compactView
+                      ? context.l10n.nodesScreenViewModeCards
+                      : context.l10n.nodesScreenViewModeCompact,
+                  style: TextStyle(color: context.textPrimary),
+                ),
+              ],
+            ),
+          ),
+        ];
         if (onAddChannel != null) {
           items.add(
             PopupMenuItem(

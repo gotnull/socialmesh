@@ -769,6 +769,15 @@ class SettingsService {
 
   int get nodeViewModeIndex => _preferences.getInt('node_view_mode_index') ?? 0;
 
+  // Messages surface view mode (0 = cards, 1 = compact). One value covers
+  // both the Contacts and Channels tabs, which share a single overflow menu.
+  Future<void> setMessagesViewModeIndex(int index) async {
+    await _preferences.setInt('messages_view_mode_index', index);
+  }
+
+  int get messagesViewModeIndex =>
+      _preferences.getInt('messages_view_mode_index') ?? 0;
+
   // Node list section headers visibility (grouped classification headings).
   Future<void> setNodeSectionHeadersEnabled(bool enabled) async {
     await _preferences.setBool('node_section_headers_enabled', enabled);

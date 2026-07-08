@@ -9,6 +9,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
+import '../../providers/messages_view_mode_provider.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -271,14 +272,17 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
               delegate: SliverChildBuilderDelegate((context, index) {
                 final channel = filteredChannels[index];
                 final animationsEnabled = ref.watch(animationsEnabledProvider);
+                final compactView = ref.watch(messagesCompactViewProvider);
                 return Perspective3DSlide(
                   index: index,
                   direction: SlideDirection.left,
                   enabled: animationsEnabled,
-                  child: _ChannelTile(
-                    channel: channel,
-                    animationsEnabled: animationsEnabled,
-                  ),
+                  child: compactView
+                      ? _CompactChannelTile(channel: channel)
+                      : _ChannelTile(
+                          channel: channel,
+                          animationsEnabled: animationsEnabled,
+                        ),
                 );
               }, childCount: filteredChannels.length),
             ),
@@ -543,18 +547,114 @@ class _ChannelTile extends ConsumerWidget {
     );
   }
 
-  void _openChannelChat(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(
-          type: ConversationType.channel,
-          channelIndex: channel.index,
-          title: channel.name.isEmpty
-              ? (channel.index == 0
-                    ? context.l10n.channelsPrimaryChannelName
-                    : context.l10n.channelsDefaultChannelName(channel.index))
-              : channel.name,
+  void _openChannelChat(BuildContext context) =>
+      _openChannelChatFor(context, channel);
+}
+
+// Resolves the display name and opens the channel chat. Shared by the
+// card and compact tiles.
+String _channelDisplayName(BuildContext context, ChannelConfig channel) =>
+    channel.name.isEmpty
+    ? (channel.index == 0
+          ? context.l10n.channelsPrimaryChannelName
+          : context.l10n.channelsDefaultChannelName(channel.index))
+    : channel.name;
+
+void _openChannelChatFor(BuildContext context, ChannelConfig channel) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ChatScreen(
+        type: ConversationType.channel,
+        channelIndex: channel.index,
+        title: _channelDisplayName(context, channel),
+      ),
+    ),
+  );
+}
+
+/// Dense channel row for the compact view mode: flat surface, smaller
+/// index badge, single row. Mirrors the compact tiles on the Nodes and
+/// Contacts lists so the densified surfaces read consistently.
+class _CompactChannelTile extends ConsumerWidget {
+  final ChannelConfig channel;
+
+  const _CompactChannelTile({required this.channel});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPrimary = channel.index == 0;
+    final hasKey = channel.hasSecureKey;
+    final unreadCount =
+        ref.watch(channelUnreadCountsProvider)[channel.index] ?? 0;
+
+    return InkWell(
+      onTap: () => _openChannelChatFor(context, channel),
+      onLongPress: () => showChannelOptionsSheet(context, channel, ref: ref),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isPrimary ? context.accentColor : context.background,
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+              ),
+              child: Center(
+                child: Text(
+                  '${channel.index}',
+                  style: TextStyle(
+                    color: isPrimary ? Colors.white : context.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Text(
+                _channelDisplayName(context, channel),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: context.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing8),
+            Icon(
+              hasKey ? Icons.lock : Icons.lock_open,
+              size: 14,
+              color: hasKey ? context.accentColor : context.textTertiary,
+            ),
+            if (unreadCount > 0) ...[
+              const SizedBox(width: AppTheme.spacing8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: context.accentColor,
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                ),
+                child: Text(
+                  unreadCount > 99
+                      ? context.l10n.channelsUnreadOverflow
+                      : '$unreadCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(width: AppTheme.spacing8),
+            Icon(Icons.chevron_right, color: context.textTertiary, size: 16),
+          ],
         ),
       ),
     );

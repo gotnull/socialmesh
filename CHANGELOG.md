@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (messaging)
 
+- The Messages screen gains a "Compact View" toggle in its overflow menu, mirroring the Nodes screen option: both the Contacts and Channels lists switch to dense flat rows (smaller avatars and badges, single metadata line), and the choice is remembered across app launches
 - The Quick Responses sheet gains a "Send alert bell" action: one tap sends a message whose radio payload is exactly the ASCII bell character, byte-identical to the official clients' quick-message bell, so recipients whose radios have the External Notification module configured get a buzzer ring and official apps show their native bell rendering. Locally the message appears as a bell emoji, since a raw control character can never be shown in chat text
 
 ### Added (map)
