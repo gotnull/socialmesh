@@ -318,6 +318,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
             spots: spots,
             isCurved: true,
             curveSmoothness: 0.3,
+            preventCurveOverShooting: true,
             color: lineColor,
             barWidth: 2,
             isStrokeCapRound: true,

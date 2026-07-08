@@ -43,6 +43,7 @@ import 'services/transport/background_message_processor.dart';
 import 'core/accessibility_theme_adapter.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/l10n_utils.dart';
+import 'l10n/locale_resolution.dart';
 import 'core/l10n/l10n_extension.dart';
 import 'core/logging.dart';
 import 'core/logging/os_log_bridge.dart';
@@ -2153,38 +2154,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         locale: ref.watch(localeProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        localeListResolutionCallback: (locales, supportedLocales) {
-          // Flutter's default resolution can pass unsupported locales (e.g.
-          // ro_RO) to the AppLocalizations delegate, which throws a
-          // FlutterError. Resolve manually: prefer first device locale whose
-          // language code matches a supported locale, otherwise fall back to
-          // the first supported locale (English).
-          //
-          // Carry the device's country code onto the matched language so date
-          // and number formatting follow the device region. Our ARB set is
-          // language-only, so a UK/AU device would otherwise collapse to a
-          // bare `en`, which intl treats as US ordering (M/d/y). String
-          // lookup still matches on language code, so en_GB resolves to the
-          // `en` translations while dates order as dd/MM/y.
-          if (locales != null) {
-            for (final locale in locales) {
-              for (final supported in supportedLocales) {
-                if (supported.languageCode == locale.languageCode) {
-                  final country = locale.countryCode;
-                  if (country == null || country.isEmpty) {
-                    return supported;
-                  }
-                  return Locale.fromSubtags(
-                    languageCode: supported.languageCode,
-                    scriptCode: locale.scriptCode,
-                    countryCode: country,
-                  );
-                }
-              }
-            }
-          }
-          return supportedLocales.first;
-        },
+        localeListResolutionCallback: resolveAppLocale,
         navigatorObservers: [
           _KeyboardDismissObserver(),
           _DelegatingAnalyticsObserver(ref),

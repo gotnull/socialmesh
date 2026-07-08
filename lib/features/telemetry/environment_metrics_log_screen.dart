@@ -1078,6 +1078,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
       spots: spots,
       isCurved: true,
       curveSmoothness: 0.25,
+      preventCurveOverShooting: true,
       color: color,
       barWidth: 2.5,
       isStrokeCapRound: true,
