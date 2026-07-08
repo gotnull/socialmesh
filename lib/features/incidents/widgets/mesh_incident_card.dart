@@ -2,13 +2,13 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../services/protocol/sip/spp_types.dart';
+import '../../../utils/time_format.dart';
 import '../models/incident.dart';
 import '../models/mesh_incident_report.dart';
 
@@ -30,7 +30,7 @@ class MeshIncidentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final report = caseState.latestReport;
-    final dateFormat = DateFormat.yMd().add_Hm();
+    final dateFormat = AppTimeFormat.numericDateAndTime(context);
     final statusColor = _statusColor(caseState.effectiveStatus);
     final isActive = caseState.effectiveStatus == IncidentMeshStatus.active;
 

@@ -12,6 +12,7 @@ import '../../core/widgets/animated_avatar_stack.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/time_format.dart';
 import '../nodedex/widgets/sigil_painter.dart';
 import 'domain/timeline_item.dart';
 
@@ -41,8 +42,10 @@ class MessageTimelineDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final timeFmt = DateFormat.Hm();
-    final dateFmt = DateFormat.MMMEd();
+    final timeFmt = AppTimeFormat.timeOnly(context);
+    final dateFmt = DateFormat.MMMEd(
+      Localizations.localeOf(context).toString(),
+    );
     final actualDuration = item.trackedDuration ?? item.duration;
     final actualEnd = item.start.add(actualDuration);
     final headerNodeNum = _isDm && item.participantIds.isNotEmpty
@@ -257,7 +260,7 @@ class _MessageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeFmt = DateFormat.Hm();
+    final timeFmt = AppTimeFormat.timeOnly(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),

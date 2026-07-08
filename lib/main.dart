@@ -14,6 +14,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' show Stripe;
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -2108,6 +2109,11 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         builder: (context, child) {
+          // Feed the resolved app locale into the intl package so any
+          // DateFormat built without an explicit locale orders dates for the
+          // active locale instead of the en_US default. The resolved locale's
+          // date symbols are guaranteed loaded by GlobalMaterialLocalizations.
+          Intl.defaultLocale = Localizations.localeOf(context).toString();
           final mediaQuery = MediaQuery.of(context);
           // Apply the user's text-size preference app-wide through
           // MediaQuery.textScaler so every Text scales uniformly, including

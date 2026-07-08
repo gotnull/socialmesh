@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:intl/intl.dart';
 import '../../utils/time_format.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -879,7 +878,7 @@ class _DateRangeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = DateFormat.MMMd();
+    final fmt = AppTimeFormat.monthDay(context);
     final label = startDate != null && endDate != null
         ? '${fmt.format(startDate!)} – ${fmt.format(endDate!)}'
         : startDate != null

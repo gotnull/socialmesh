@@ -68,7 +68,9 @@ class _DayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dayAbbr = DateFormat.E().format(date).toUpperCase();
+    final dayAbbr = DateFormat.E(
+      Localizations.localeOf(context).toString(),
+    ).format(date).toUpperCase();
     final dayNum = date.day.toString();
 
     return Container(
