@@ -7607,7 +7607,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mapShowHeatmap => 'Mostra aloni dei nodi';
 
   @override
-  String get mapShowClusterMarkers => 'Raggruppa marker';
+  String get mapShowClusterMarkers => 'Mostra raggruppamento marker';
 
   @override
   String get mapHideClusterMarkers => 'Disattiva raggruppamento';
@@ -36587,6 +36587,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get automationErrorNoTargetNode =>
       'Nessun nodo di destinazione specificato';
+
+  @override
+  String get automationVarUnknown => 'sconosciuto';
 
   @override
   String get automationErrorSendChannelNotConfigured =>

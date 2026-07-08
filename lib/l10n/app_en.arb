@@ -10145,7 +10145,7 @@
     "@mapShowHeatmap": {
         "description": "Map menu action that toggles on the translucent rings drawn around each node's position. The radius is fixed (it does not reflect signal strength or density), so the label is 'halos' rather than 'heatmap'."
     },
-    "mapShowClusterMarkers": "Cluster markers",
+    "mapShowClusterMarkers": "Show cluster markers",
     "@mapShowClusterMarkers": {
         "description": "Map menu toggle that groups dense node markers into a count badge. Opt-in; off by default."
     },
@@ -48430,6 +48430,10 @@
     "automationErrorNoTargetNode": "No target node specified",
     "@automationErrorNoTargetNode": {
         "description": "Error message in automations"
+    },
+    "automationVarUnknown": "unknown",
+    "@automationVarUnknown": {
+        "description": "Fallback substituted for automation template variables ({{battery}}, {{location}}, {{node.name}}, {{sensor.name}}) when the source value is missing, e.g. 'Battery: unknown'. Lowercase because it lands mid-sentence inside user-authored message templates."
     },
     "automationErrorSendChannelNotConfigured": "Send to channel callback not configured",
     "@automationErrorSendChannelNotConfigured": {

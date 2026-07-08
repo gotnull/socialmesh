@@ -13290,7 +13290,7 @@ abstract class AppLocalizations {
   /// Map menu toggle that groups dense node markers into a count badge. Opt-in; off by default.
   ///
   /// In en, this message translates to:
-  /// **'Cluster markers'**
+  /// **'Show cluster markers'**
   String get mapShowClusterMarkers;
 
   /// Map menu action to disable marker clustering (return to individual node markers).
@@ -63202,6 +63202,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No target node specified'**
   String get automationErrorNoTargetNode;
+
+  /// Fallback substituted for automation template variables ({{battery}}, {{location}}, {{node.name}}, {{sensor.name}}) when the source value is missing, e.g. 'Battery: unknown'. Lowercase because it lands mid-sentence inside user-authored message templates.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown'**
+  String get automationVarUnknown;
 
   /// Error message in automations
   ///

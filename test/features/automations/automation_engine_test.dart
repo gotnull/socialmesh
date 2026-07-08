@@ -3284,10 +3284,12 @@ void main() {
 
         expect(sentMessages, isNotEmpty);
         final msg = sentMessages.first.$2;
-        // Without device context, should get fallback values
-        expect(msg, contains('name=Unknown'));
-        expect(msg, contains('bat=?%'));
-        expect(msg, contains('loc=Unknown'));
+        // Without device context every variable falls back to the
+        // localized lowercase "unknown" (never the old "?%" placeholder).
+        expect(msg, contains('name=unknown'));
+        expect(msg, contains('bat=unknown'));
+        expect(msg, contains('loc=unknown'));
+        expect(msg, isNot(contains('?%')));
       },
     );
 
@@ -3337,6 +3339,60 @@ void main() {
         reason: 'location should resolve from cache',
       );
       expect(msg, contains('msg=say hello'));
+    });
+  });
+
+  group('AutomationEngine - missing variable fallbacks', () {
+    test('unknown battery and location render as localized "unknown", '
+        'never "?%"', () async {
+      final automation = Automation(
+        id: 'test-unknown-vars',
+        name: 'Welcome Message',
+        trigger: const AutomationTrigger(type: TriggerType.nodeOnline),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {
+              'targetNodeNum': 999,
+              'messageText':
+                  'Welcome {{node.name}}! Battery {{battery}}, '
+                  'location {{location}}.',
+            },
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // No batteryLevel and no coordinates on either update: the node has
+      // simply never reported them.
+      await engine.processNodeUpdate(
+        MeshNode(
+          nodeNum: 123,
+          shortName: 'TEST',
+          longName: 'Test Node',
+          lastHeard: DateTime.now().subtract(const Duration(hours: 3)),
+        ),
+      );
+      await engine.processNodeUpdate(
+        MeshNode(
+          nodeNum: 123,
+          shortName: 'TEST',
+          longName: 'Test Node',
+          lastHeard: DateTime.now(),
+        ),
+      );
+
+      expect(sentMessages, isNotEmpty);
+      final message = sentMessages.first.$2;
+      expect(
+        message,
+        isNot(contains('?%')),
+        reason:
+            'A missing battery level must not render the "?%" placeholder '
+            'inside user-authored templates.',
+      );
+      expect(message, contains('Battery unknown'));
+      expect(message, contains('location unknown'));
     });
   });
 }

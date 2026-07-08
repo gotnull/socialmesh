@@ -7595,7 +7595,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapShowHeatmap => 'Mostrar halos dos nós';
 
   @override
-  String get mapShowClusterMarkers => 'Agrupar marcadores';
+  String get mapShowClusterMarkers => 'Mostrar agrupamento de marcadores';
 
   @override
   String get mapHideClusterMarkers => 'Desativar agrupamento';
@@ -36559,6 +36559,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Nenhum nó de destino especificado';
+
+  @override
+  String get automationVarUnknown => 'desconhecido';
 
   @override
   String get automationErrorSendChannelNotConfigured =>

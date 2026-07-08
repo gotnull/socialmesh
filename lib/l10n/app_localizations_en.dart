@@ -7512,7 +7512,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapShowHeatmap => 'Show node halos';
 
   @override
-  String get mapShowClusterMarkers => 'Cluster markers';
+  String get mapShowClusterMarkers => 'Show cluster markers';
 
   @override
   String get mapHideClusterMarkers => 'Hide cluster markers';
@@ -36167,6 +36167,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'No target node specified';
+
+  @override
+  String get automationVarUnknown => 'unknown';
 
   @override
   String get automationErrorSendChannelNotConfigured =>

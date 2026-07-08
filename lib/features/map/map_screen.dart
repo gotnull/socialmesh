@@ -447,6 +447,31 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _nodeOverlayOpacity = settings.mapNodeOverlayOpacity;
       });
     }
+    _restoreCompassMode(settings.mapCompassModeName);
+  }
+
+  // The compass mode survives tab switches and relaunches (the Map tab's
+  // State is recreated on every visit, so without this it would snap back
+  // to north-locked). Follow-heading needs the magnetometer subscription,
+  // so it re-enters through _enableHeadingUp; missing hardware falls back
+  // to the north-locked resting state.
+  void _restoreCompassMode(String? savedName) {
+    final savedMode = mapCompassModeFromName(savedName);
+    if (savedMode == _compassMode) return;
+    if (savedMode == MapCompassMode.followHeading) {
+      if (FlutterCompass.events != null) {
+        _enableHeadingUp();
+      }
+    } else {
+      safeSetState(() => _compassMode = savedMode);
+    }
+  }
+
+  Future<void> _persistCompassMode() async {
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
+    if (!mounted) return;
+    await settings.setMapCompassModeName(_compassMode.name);
   }
 
   Future<void> _saveMapStyle(MapTileStyle style) async {
@@ -553,6 +578,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     });
     if (_compassSubscription != null) {
       setState(() => _compassMode = MapCompassMode.followHeading);
+      unawaited(_persistCompassMode());
     }
   }
 
@@ -562,6 +588,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _compassSubscription?.cancel();
     _compassSubscription = null;
     setState(() => _compassMode = MapCompassMode.northLocked);
+    unawaited(_persistCompassMode());
     _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
   }
 
@@ -571,6 +598,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     switch (_compassMode) {
       case MapCompassMode.northLocked:
         setState(() => _compassMode = MapCompassMode.freeRotate);
+        unawaited(_persistCompassMode());
       case MapCompassMode.freeRotate:
         if (FlutterCompass.events == null) {
           showWarningSnackBar(context, context.l10n.mapCompassUnavailable);
@@ -3510,6 +3538,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         maxClusterRadius: 80,
         size: const Size(44, 44),
         alignment: Alignment.center,
+        rotate: true,
         padding: EdgeInsets.zero,
         disableClusteringAtZoom: MapConfig.clusterDisableZoom(mapStyle),
         zoomToBoundsOnClick: false,

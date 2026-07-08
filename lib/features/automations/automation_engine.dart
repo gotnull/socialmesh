@@ -1682,6 +1682,21 @@ class AutomationEngine {
     return hops == 1 ? '1 hop' : '$hops hops';
   }
 
+  /// Fallback substituted when a template variable's source value is
+  /// missing. Localized and lowercase because it lands mid-sentence
+  /// inside user-authored templates ("Battery: unknown").
+  String get _unknownVar => safeL10n().automationVarUnknown;
+
+  String _batteryVar(AutomationEvent event) =>
+      event.batteryLevel != null ? '${event.batteryLevel}%' : _unknownVar;
+
+  // Location keeps 6 decimal places (~0.1 m of precision).
+  String _locationVar(AutomationEvent event) =>
+      event.latitude != null && event.longitude != null
+      ? '${event.latitude!.toStringAsFixed(6)}, '
+            '${event.longitude!.toStringAsFixed(6)}'
+      : _unknownVar;
+
   /// Build the runtime variable map from an [AutomationEvent].
   ///
   /// This is the single source of truth for variable resolution, shared
@@ -1691,16 +1706,11 @@ class AutomationEngine {
     AutomationEvent event, {
     AutomationTrigger? trigger,
   }) {
-    final locationStr = event.latitude != null && event.longitude != null
-        ? '${event.latitude!.toStringAsFixed(6)}, '
-              '${event.longitude!.toStringAsFixed(6)}'
-        : 'Unknown';
-
     final vars = <String, String>{
       'node.name': event.nodeName ?? '',
       'node.num': event.nodeNum?.toRadixString(16) ?? '',
-      'battery': '${event.batteryLevel ?? '?'}%',
-      'location': locationStr,
+      'battery': _batteryVar(event),
+      'location': _locationVar(event),
       'message': event.messageText?.isNotEmpty == true
           ? event.messageText!
           : '',
@@ -1727,23 +1737,17 @@ class AutomationEngine {
     AutomationEvent event, {
     AutomationTrigger? trigger,
   }) {
-    // Format location with reasonable precision (6 decimal places ≈ 0.1m)
-    final locationStr = event.latitude != null && event.longitude != null
-        ? '${event.latitude!.toStringAsFixed(6)}, '
-              '${event.longitude!.toStringAsFixed(6)}'
-        : 'Unknown';
-
     var result = text
-        .replaceAll('{{node.name}}', event.nodeName ?? 'Unknown')
+        .replaceAll('{{node.name}}', event.nodeName ?? _unknownVar)
         .replaceAll('{{node.num}}', event.nodeNum?.toRadixString(16) ?? '')
-        .replaceAll('{{battery}}', '${event.batteryLevel ?? '?'}%')
-        .replaceAll('{{location}}', locationStr)
+        .replaceAll('{{battery}}', _batteryVar(event))
+        .replaceAll('{{location}}', _locationVar(event))
         .replaceAll(
           '{{message}}',
           event.messageText?.isNotEmpty == true ? event.messageText! : '',
         )
         .replaceAll('{{time}}', _notificationTimeFormat.format(DateTime.now()))
-        .replaceAll('{{sensor.name}}', event.sensorName ?? 'Unknown')
+        .replaceAll('{{sensor.name}}', event.sensorName ?? _unknownVar)
         .replaceAll(
           '{{sensor.state}}',
           event.sensorDetected == true ? 'detected' : 'clear',

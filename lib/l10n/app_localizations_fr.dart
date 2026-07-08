@@ -7672,7 +7672,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mapShowHeatmap => 'Afficher les halos des nœuds';
 
   @override
-  String get mapShowClusterMarkers => 'Regrouper les marqueurs';
+  String get mapShowClusterMarkers => 'Afficher le regroupement des marqueurs';
 
   @override
   String get mapHideClusterMarkers => 'Désactiver le regroupement';
@@ -36854,6 +36854,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Aucun nœud cible spécifié';
+
+  @override
+  String get automationVarUnknown => 'inconnu';
 
   @override
   String get automationErrorSendChannelNotConfigured =>

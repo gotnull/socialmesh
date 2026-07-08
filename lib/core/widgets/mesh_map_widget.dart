@@ -279,6 +279,7 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
                   maxClusterRadius: widget.clusterRadius.toInt(),
                   size: const Size(44, 44),
                   alignment: Alignment.center,
+                  rotate: true,
                   padding: EdgeInsets.zero,
                   disableClusteringAtZoom: widget.disableClusteringAtZoom ?? 20,
                   zoomToBoundsOnClick: false,

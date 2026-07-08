@@ -7606,7 +7606,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapShowHeatmap => 'Показать ореолы узлов';
 
   @override
-  String get mapShowClusterMarkers => 'Сгруппировать метки';
+  String get mapShowClusterMarkers => 'Показать группировку меток';
 
   @override
   String get mapHideClusterMarkers => 'Отключить группировку';
@@ -36596,6 +36596,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Целевой узел не указан';
+
+  @override
+  String get automationVarUnknown => 'неизвестно';
 
   @override
   String get automationErrorSendChannelNotConfigured =>

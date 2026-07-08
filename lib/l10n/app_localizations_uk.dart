@@ -7620,7 +7620,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapShowHeatmap => 'Показати ореоли вузлів';
 
   @override
-  String get mapShowClusterMarkers => 'Згрупувати маркери';
+  String get mapShowClusterMarkers => 'Показати групування маркерів';
 
   @override
   String get mapHideClusterMarkers => 'Вимкнути групування';
@@ -36608,6 +36608,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Цільовий вузол не вказано';
+
+  @override
+  String get automationVarUnknown => 'невідомо';
 
   @override
   String get automationErrorSendChannelNotConfigured =>

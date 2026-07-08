@@ -7627,7 +7627,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mapShowHeatmap => 'Knoten-Halos anzeigen';
 
   @override
-  String get mapShowClusterMarkers => 'Marker clustern';
+  String get mapShowClusterMarkers => 'Cluster-Marker anzeigen';
 
   @override
   String get mapHideClusterMarkers => 'Clustering ausschalten';
@@ -36684,6 +36684,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Kein Ziel-Node angegeben';
+
+  @override
+  String get automationVarUnknown => 'unbekannt';
 
   @override
   String get automationErrorSendChannelNotConfigured =>

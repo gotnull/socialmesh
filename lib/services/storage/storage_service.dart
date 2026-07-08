@@ -721,6 +721,16 @@ class SettingsService {
   double get mapNodeOverlayOpacity =>
       _preferences.getDouble('map_node_overlay_opacity') ?? 1.0;
 
+  // Compass interaction mode on the main map ('northLocked' / 'freeRotate' /
+  // 'followHeading'). Stored by enum name so reordering enum values never
+  // remaps a saved choice; unknown names fall back to north-locked at read
+  // time.
+  Future<void> setMapCompassModeName(String name) async {
+    await _preferences.setString('map_compass_mode', name);
+  }
+
+  String? get mapCompassModeName => _preferences.getString('map_compass_mode');
+
   // Reference labels overlay above satellite imagery (boundaries + place
   // names from Esri). Defaults to true: directly answers user feedback that
   // village / town / city names should be visible in satellite mode.

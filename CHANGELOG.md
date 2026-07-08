@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed (map)
 
 - Node transparency is now applied consistently after reopening the app. Markers built before the saved "Node transparency" setting finished loading were cached fully opaque and stayed that way, so some nodes rendered faded and others solid with no settings changed. The marker cache now tracks the overlay opacity, so every peer marker follows the setting from the first frame
+- Node markers no longer tilt with the map when "Cluster markers" is enabled: the cluster layer now counter-rotates its markers the same way the plain marker layer always did, so icons and cluster count badges stay upright while the map rotates in free-rotate or follow-heading mode
+- The map compass mode (north-locked / free-rotate / follow-heading) is now remembered across tab switches and app relaunches instead of silently resetting to north-locked every time the Map tab is reopened. North-locked stays the first-run default
+- The map overflow menu toggle is now labelled "Show cluster markers", matching the "Show ..." wording of every sibling toggle (previously just "Cluster markers")
+
+### Fixed (automations)
+
+- Automation message templates no longer render a missing battery level as "?%": `{{battery}}`, `{{location}}`, `{{node.name}}`, and `{{sensor.name}}` now all fall back to a localized lowercase "unknown" when the source value has never been reported, so a welcome message reads "your battery level is unknown" instead of "?%"
 
 ### Fixed (firmware update)
 
