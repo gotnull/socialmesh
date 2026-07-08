@@ -16191,6 +16191,14 @@
     "@messagingSendTooltip": {
         "description": "Tooltip on the send button in the chat composer."
     },
+    "messagingAlertBellTooltip": "Send alert bell",
+    "@messagingAlertBellTooltip": {
+        "description": "Title of the alert-bell row in the Quick Responses sheet. Tapping sends a bell-emoji message whose radio payload carries the ASCII bell (0x07) so buzzer-equipped radios ring."
+    },
+    "messagingAlertBellSubtitle": "Rings radios that have a buzzer configured",
+    "@messagingAlertBellSubtitle": {
+        "description": "Subtitle under the alert-bell row in the Quick Responses sheet, explaining the effect on receiving radios (External Notification module)."
+    },
     "messagingComposerByteCounter": "{used}/{max} bytes",
     "@messagingComposerByteCounter": {
         "description": "Live UTF-8 byte counter in the chat composer.",

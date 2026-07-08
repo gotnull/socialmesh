@@ -12051,6 +12051,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingSendTooltip => 'Send (Ctrl/Cmd+Enter)';
 
   @override
+  String get messagingAlertBellTooltip => 'Send alert bell';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Rings radios that have a buzzer configured';
+
+  @override
   String messagingComposerByteCounter(int used, int max) {
     return '$used/$max bytes';
   }

@@ -12212,6 +12212,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messagingSendTooltip => 'Надіслати (Ctrl/Cmd+Enter)';
 
   @override
+  String get messagingAlertBellTooltip => 'Надіслати дзвінок';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Змушує дзвеніти радіо з налаштованим зумером';
+
+  @override
   String messagingComposerByteCounter(int used, int max) {
     return '$used/$max байт';
   }

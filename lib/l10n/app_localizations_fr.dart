@@ -12293,6 +12293,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messagingSendTooltip => 'Envoyer (Ctrl/Cmd+Entrée)';
 
   @override
+  String get messagingAlertBellTooltip => 'Envoyer la cloche d\'alerte';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Fait sonner les radios avec buzzer configuré';
+
+  @override
   String messagingComposerByteCounter(int used, int max) {
     return '$used/$max octets';
   }

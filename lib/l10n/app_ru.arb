@@ -6469,6 +6469,8 @@
   "messagingSectionInactive": "Офлайн",
   "messagingSectionUnread": "Непрочитанные",
   "messagingSendTooltip": "Отправить (Ctrl/Cmd+Enter)",
+  "messagingAlertBellTooltip": "Отправить звонок",
+  "messagingAlertBellSubtitle": "Заставляет звенеть радио с настроенным зуммером",
   "messagingSettings": "Настройки",
   "messagingSourceAutomation": "Автоматизация",
   "messagingSourceNotification": "Уведомление",

@@ -21088,6 +21088,18 @@ abstract class AppLocalizations {
   /// **'Send (Ctrl/Cmd+Enter)'**
   String get messagingSendTooltip;
 
+  /// Title of the alert-bell row in the Quick Responses sheet. Tapping sends a bell-emoji message whose radio payload carries the ASCII bell (0x07) so buzzer-equipped radios ring.
+  ///
+  /// In en, this message translates to:
+  /// **'Send alert bell'**
+  String get messagingAlertBellTooltip;
+
+  /// Subtitle under the alert-bell row in the Quick Responses sheet, explaining the effect on receiving radios (External Notification module).
+  ///
+  /// In en, this message translates to:
+  /// **'Rings radios that have a buzzer configured'**
+  String get messagingAlertBellSubtitle;
+
   /// Live UTF-8 byte counter in the chat composer.
   ///
   /// In en, this message translates to:

@@ -6092,6 +6092,8 @@
   "messagingSectionInactive": "Offline",
   "messagingSectionUnread": "Ungelesen",
   "messagingSendTooltip": "Senden (Ctrl/Cmd+Enter)",
+  "messagingAlertBellTooltip": "Klingel senden",
+  "messagingAlertBellSubtitle": "Lässt Geräte mit konfiguriertem Summer klingeln",
   "messagingSettings": "Einstellungen",
   "messagingSourceAutomation": "Automatisierung",
   "messagingSourceNotification": "Benachrichtigung",

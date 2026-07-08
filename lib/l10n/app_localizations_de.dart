@@ -12229,6 +12229,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messagingSendTooltip => 'Senden (Ctrl/Cmd+Enter)';
 
   @override
+  String get messagingAlertBellTooltip => 'Klingel senden';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Lässt Geräte mit konfiguriertem Summer klingeln';
+
+  @override
   String messagingComposerByteCounter(int used, int max) {
     return '$used/$max Bytes';
   }

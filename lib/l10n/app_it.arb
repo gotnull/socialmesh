@@ -39344,6 +39344,8 @@
   "messagingSectionInactive": "Offline",
   "messagingSectionUnread": "Non letti",
   "messagingSendTooltip": "Invia (Ctrl/Cmd+Invio)",
+  "messagingAlertBellTooltip": "Invia campanello di avviso",
+  "messagingAlertBellSubtitle": "Fa suonare le radio con buzzer configurato",
   "messagingSettings": "Impostazioni",
   "messagingSourceAutomation": "Automazione",
   "messagingSourceNotification": "Notifica",

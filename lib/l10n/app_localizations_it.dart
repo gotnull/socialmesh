@@ -12203,6 +12203,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingSendTooltip => 'Invia (Ctrl/Cmd+Invio)';
 
   @override
+  String get messagingAlertBellTooltip => 'Invia campanello di avviso';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Fa suonare le radio con buzzer configurato';
+
+  @override
   String messagingComposerByteCounter(int used, int max) {
     return '$used/$max byte';
   }

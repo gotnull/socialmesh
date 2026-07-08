@@ -6092,6 +6092,8 @@
   "messagingSectionInactive": "Sin conexión",
   "messagingSectionUnread": "No leídos",
   "messagingSendTooltip": "Enviar (Ctrl/Cmd+Enter)",
+  "messagingAlertBellTooltip": "Enviar timbre de alerta",
+  "messagingAlertBellSubtitle": "Hace sonar las radios con zumbador configurado",
   "messagingSettings": "Configuración",
   "messagingSourceAutomation": "Automatización",
   "messagingSourceNotification": "Notificación",

@@ -39344,6 +39344,8 @@
   "messagingSectionInactive": "Offline",
   "messagingSectionUnread": "Não lidas",
   "messagingSendTooltip": "Enviar (Ctrl/Cmd+Enter)",
+  "messagingAlertBellTooltip": "Enviar campainha de alerta",
+  "messagingAlertBellSubtitle": "Faz tocar os rádios com campainha configurada",
   "messagingSettings": "Configurações",
   "messagingSourceAutomation": "Automação",
   "messagingSourceNotification": "Notificação",

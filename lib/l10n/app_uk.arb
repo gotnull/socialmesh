@@ -6092,6 +6092,8 @@
   "messagingSectionInactive": "Офлайн",
   "messagingSectionUnread": "Непрочитані",
   "messagingSendTooltip": "Надіслати (Ctrl/Cmd+Enter)",
+  "messagingAlertBellTooltip": "Надіслати дзвінок",
+  "messagingAlertBellSubtitle": "Змушує дзвеніти радіо з налаштованим зумером",
   "messagingSettings": "Налаштування",
   "messagingSourceAutomation": "Автоматизація",
   "messagingSourceNotification": "Сповіщення",

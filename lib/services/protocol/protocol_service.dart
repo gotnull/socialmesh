@@ -7680,6 +7680,7 @@ class ProtocolService {
     int? replyId,
     bool isEmoji = false,
     List<int>? pkiPublicKey,
+    bool includeAlertBell = false,
   }) async {
     _assertOperational('sendMessageWithPreTracking');
     // Validate we're ready to send
@@ -7695,10 +7696,18 @@ class ProtocolService {
     try {
       AppLogging.protocol('Sending message to $to: $text');
 
+      // Alert bell: the wire payload is EXACTLY the ASCII BEL character,
+      // byte-identical to the official clients' quick-message bell, so
+      // receiving radios with the External Notification module ring and
+      // official apps render their native bell representation. [text] is
+      // used only for the local display/history Message emitted below -
+      // a raw control character must never reach a rendered Text() widget.
+      final wireText = includeAlertBell ? '\u0007' : text;
+
       final payloadBudget = TextMessagePayloadSizer.standard(
         replyId: replyId,
         isEmoji: isEmoji,
-      ).measure(text);
+      ).measure(wireText);
       if (!payloadBudget.fitsInPacket) {
         throw TextMessagePayloadTooLargeException(payloadBudget);
       }
@@ -7713,7 +7722,7 @@ class ProtocolService {
 
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
-        ..payload = utf8.encode(text);
+        ..payload = utf8.encode(wireText);
 
       if (replyId != null) {
         data.replyId = replyId;

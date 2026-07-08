@@ -73,6 +73,11 @@ import '../../services/protocol/text_message_payload_budget.dart';
 import '../timeline/message_timeline_screen.dart';
 
 /// Conversation type enum
+// ASCII BEL. Embedded in a text payload it makes buzzer-equipped radios
+// ring (External Notification module convention). Wire-only: it must
+// never be placed into rendered message text.
+const String _alertBellChar = '\u0007';
+
 enum ConversationType { channel, directMessage }
 
 /// Contact filter enum
@@ -1648,18 +1653,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             _sendMessage();
           }
         },
+        onSendAlertBell: () {
+          navigator.pop();
+          if (mounted) {
+            // Visible text is the bell emoji; the 0x07 control character
+            // itself rides only the radio payload.
+            _messageController.text = '🔔';
+            _sendMessage(includeAlertBell: true);
+          }
+        },
       ),
     );
   }
 
-  Future<void> _sendMessage() async {
+  // [includeAlertBell] replaces the wire payload with exactly the ASCII
+  // BEL character (0x07) so buzzer-equipped radios ring; the typed text is
+  // kept for local display/history only. The measured string mirrors the
+  // protocol layer's wire text and is only ever measured, never rendered.
+  Future<void> _sendMessage({bool includeAlertBell = false}) async {
     final text = _messageController.text;
     if (!TextMessagePayloadSizer.hasSendableContent(text)) return;
 
     final replyPacketId = _replyingTo?.packetId;
     final textPayloadBudget = TextMessagePayloadSizer.standard(
       replyId: replyPacketId,
-    ).measure(text);
+    ).measure(includeAlertBell ? _alertBellChar : text);
     if (!textPayloadBudget.fitsInPacket) {
       showErrorSnackBar(
         context,
@@ -1809,6 +1827,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           },
           source: MessageSource.manual,
           replyId: replyPacketId,
+          includeAlertBell: includeAlertBell,
         );
       } else {
         // Pre-generate packet ID and track BEFORE sending to avoid race condition
@@ -1833,6 +1852,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           source: MessageSource.manual,
           replyId: replyPacketId,
           pkiPublicKey: pkiPublicKey,
+          includeAlertBell: includeAlertBell,
         );
       }
 
@@ -4297,7 +4317,15 @@ class _QuickResponsesSheet extends StatelessWidget {
   final List<CannedResponse> responses;
   final void Function(String text) onSelect;
 
-  const _QuickResponsesSheet({required this.responses, required this.onSelect});
+  /// Sends the alert-bell quick message: a bell-emoji text whose wire
+  /// payload carries ASCII BEL (0x07) so buzzer-equipped radios ring.
+  final VoidCallback onSendAlertBell;
+
+  const _QuickResponsesSheet({
+    required this.responses,
+    required this.onSelect,
+    required this.onSendAlertBell,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -4332,6 +4360,59 @@ class _QuickResponsesSheet extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          Divider(color: context.border, height: 1),
+          // Alert bell: one tap sends a ring, like the official app's
+          // quick-message bell.
+          GestureDetector(
+            onTap: onSendAlertBell,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing20,
+                vertical: AppTheme.spacing12,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.messagingAlertBellTooltip,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          context.l10n.messagingAlertBellSubtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: AppTheme.spacing12),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    ),
+                    child: Icon(
+                      Icons.notifications_active,
+                      color: context.accentColor,
+                      size: 18,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Divider(color: context.border, height: 1),

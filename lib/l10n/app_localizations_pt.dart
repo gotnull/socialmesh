@@ -12195,6 +12195,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingSendTooltip => 'Enviar (Ctrl/Cmd+Enter)';
 
   @override
+  String get messagingAlertBellTooltip => 'Enviar campainha de alerta';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Faz tocar os rádios com campainha configurada';
+
+  @override
   String messagingComposerByteCounter(int used, int max) {
     return '$used/$max bytes';
   }

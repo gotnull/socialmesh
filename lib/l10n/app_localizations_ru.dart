@@ -12198,6 +12198,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messagingSendTooltip => 'Отправить (Ctrl/Cmd+Enter)';
 
   @override
+  String get messagingAlertBellTooltip => 'Отправить звонок';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Заставляет звенеть радио с настроенным зуммером';
+
+  @override
   String messagingComposerByteCounter(int used, int max) {
     return '$used/$max байт';
   }

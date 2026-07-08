@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The "Send Message" action can now reply to the sender: a new "Reply to sender" toggle (offered for message, keyword, channel-activity, and detection-sensor triggers) answers whichever node produced the triggering event instead of a fixed target node, so a "reply pong when anyone messages ping" bot no longer needs a pinned node. Available in both the standard action editor and the visual flow builder; a reply-to-sender action that fires from a senderless trigger (scheduled/manual) fails with a clear log message instead of sending anywhere
 
+### Added (messaging)
+
+- The Quick Responses sheet gains a "Send alert bell" action: one tap sends a message whose radio payload is exactly the ASCII bell character, byte-identical to the official clients' quick-message bell, so recipients whose radios have the External Notification module configured get a buzzer ring and official apps show their native bell rendering. Locally the message appears as a bell emoji, since a raw control character can never be shown in chat text
+
 ### Added (map)
 
 - Pasting coordinates ("51.911157, 14.492985") into the map's node search now shows a "Go to coordinates" row that jumps the camera there, with a companion action that opens the waypoint form pre-filled with the pair; the offline map's place search recognises pasted coordinates too and jumps directly without the geocoder (so it works fully offline)

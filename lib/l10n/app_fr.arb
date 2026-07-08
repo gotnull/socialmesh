@@ -6092,6 +6092,8 @@
   "messagingSectionInactive": "Hors ligne",
   "messagingSectionUnread": "Non lus",
   "messagingSendTooltip": "Envoyer (Ctrl/Cmd+Entrée)",
+  "messagingAlertBellTooltip": "Envoyer la cloche d'alerte",
+  "messagingAlertBellSubtitle": "Fait sonner les radios avec buzzer configuré",
   "messagingSettings": "Paramètres",
   "messagingSourceAutomation": "Automatisation",
   "messagingSourceNotification": "Notification",

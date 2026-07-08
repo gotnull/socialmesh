@@ -12258,6 +12258,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get messagingSendTooltip => 'Enviar (Ctrl/Cmd+Enter)';
 
   @override
+  String get messagingAlertBellTooltip => 'Enviar timbre de alerta';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Hace sonar las radios con zumbador configurado';
+
+  @override
   String messagingComposerByteCounter(int used, int max) {
     return '$used/$max bytes';
   }
