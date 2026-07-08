@@ -3656,6 +3656,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get channelsMenuAddChannel => 'Aggiungi canale';
 
   @override
+  String get channelsMenuReorder => 'Riordina canali';
+
+  @override
+  String get channelsReorderSheetTitle => 'Riordina canali';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Trascina per impostare l\'ordine di visualizzazione. Gli slot dei canali della radio restano invariati.';
+
+  @override
   String get channelsMenuHelp => 'Aiuto';
 
   @override

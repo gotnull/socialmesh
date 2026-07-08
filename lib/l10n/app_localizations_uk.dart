@@ -3655,6 +3655,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channelsMenuAddChannel => 'Додати канал';
 
   @override
+  String get channelsMenuReorder => 'Змінити порядок каналів';
+
+  @override
+  String get channelsReorderSheetTitle => 'Змінити порядок каналів';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Перетягніть, щоб задати порядок відображення. Слоти каналів на радіо не змінюються.';
+
+  @override
   String get channelsMenuHelp => 'Довідка';
 
   @override

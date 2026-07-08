@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/channels_display_order_provider.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/messages_view_mode_provider.dart';
 import '../../models/mesh_models.dart';
@@ -21,6 +22,7 @@ import '../../core/widgets/ico_help_system.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 import 'channel_options_sheet.dart';
+import 'channel_reorder_sheet.dart';
 import 'channel_wizard_screen.dart';
 
 class ChannelsScreen extends ConsumerStatefulWidget {
@@ -99,7 +101,13 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final channels = ref.watch(channelsProvider);
+    // The saved display order applies before filtering so the user's
+    // arrangement holds in every filtered subset. Slot assignment on the
+    // radio is untouched.
+    final channels = applyChannelDisplayOrder(
+      ref.watch(channelsProvider),
+      ref.watch(channelsDisplayOrderProvider),
+    );
     final channelUnreads = ref.watch(channelUnreadCountsProvider);
 
     // Count channels by filter for badges
@@ -333,6 +341,8 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                     );
                   case 'scan':
                     Navigator.of(context).pushNamed('/qr-scanner');
+                  case 'reorder':
+                    showChannelReorderSheet(context);
                   case 'settings':
                     Navigator.pushNamed(context, '/settings');
                   case 'help':
@@ -360,6 +370,16 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
+                if (channels.length > 1)
+                  PopupMenuItem(
+                    value: 'reorder',
+                    child: ListTile(
+                      leading: Icon(Icons.swap_vert),
+                      title: Text(context.l10n.channelsMenuReorder),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'settings',

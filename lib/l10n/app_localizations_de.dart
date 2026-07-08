@@ -3668,6 +3668,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channelsMenuAddChannel => 'Kanal hinzufügen';
 
   @override
+  String get channelsMenuReorder => 'Kanäle neu anordnen';
+
+  @override
+  String get channelsReorderSheetTitle => 'Kanäle neu anordnen';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Ziehen, um die Anzeigereihenfolge festzulegen. Die Kanalplätze auf dem Gerät bleiben unverändert.';
+
+  @override
   String get channelsMenuHelp => 'Hilfe';
 
   @override

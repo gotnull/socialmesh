@@ -3646,6 +3646,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelsMenuAddChannel => 'Добавить канал';
 
   @override
+  String get channelsMenuReorder => 'Изменить порядок каналов';
+
+  @override
+  String get channelsReorderSheetTitle => 'Изменить порядок каналов';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Перетащите, чтобы задать порядок отображения. Слоты каналов на радио не меняются.';
+
+  @override
   String get channelsMenuHelp => 'Справка';
 
   @override

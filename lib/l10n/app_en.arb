@@ -4829,6 +4829,18 @@
     "@channelsMenuAddChannel": {
         "description": "Text displayed in channel configuration"
     },
+    "channelsMenuReorder": "Reorder channels",
+    "@channelsMenuReorder": {
+        "description": "Action in the channel options sheet and Channels overflow menu that opens the drag-to-reorder sheet for the list's display order."
+    },
+    "channelsReorderSheetTitle": "Reorder Channels",
+    "@channelsReorderSheetTitle": {
+        "description": "Title of the drag-to-reorder sheet for the Channels list."
+    },
+    "channelsReorderSheetHint": "Drag to set the display order. The radio's channel slots are unchanged.",
+    "@channelsReorderSheetHint": {
+        "description": "Subtitle of the reorder sheet clarifying that reordering is presentational only and does not touch the radio's channel slot assignment."
+    },
     "channelsMenuHelp": "Help",
     "@channelsMenuHelp": {
         "description": "Text displayed in channel configuration"

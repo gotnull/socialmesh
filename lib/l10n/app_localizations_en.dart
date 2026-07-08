@@ -3607,6 +3607,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelsMenuAddChannel => 'Add Channel';
 
   @override
+  String get channelsMenuReorder => 'Reorder channels';
+
+  @override
+  String get channelsReorderSheetTitle => 'Reorder Channels';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Drag to set the display order. The radio\'s channel slots are unchanged.';
+
+  @override
   String get channelsMenuHelp => 'Help';
 
   @override

@@ -6444,6 +6444,24 @@ abstract class AppLocalizations {
   /// **'Add Channel'**
   String get channelsMenuAddChannel;
 
+  /// Action in the channel options sheet and Channels overflow menu that opens the drag-to-reorder sheet for the list's display order.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder channels'**
+  String get channelsMenuReorder;
+
+  /// Title of the drag-to-reorder sheet for the Channels list.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder Channels'**
+  String get channelsReorderSheetTitle;
+
+  /// Subtitle of the reorder sheet clarifying that reordering is presentational only and does not touch the radio's channel slot assignment.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to set the display order. The radio\'s channel slots are unchanged.'**
+  String get channelsReorderSheetHint;
+
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:

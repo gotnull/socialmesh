@@ -778,6 +778,23 @@ class SettingsService {
   int get messagesViewModeIndex =>
       _preferences.getInt('messages_view_mode_index') ?? 0;
 
+  // App-side display order for the Channels list, stored as radio slot
+  // indices. Slots missing from the list (newly added channels) follow
+  // the ordered ones in slot order. The radio's own slot assignment is
+  // never touched - this is purely how the app presents the list.
+  Future<void> setChannelsDisplayOrder(List<int> order) async {
+    await _preferences.setStringList(
+      'channels_display_order',
+      order.map((index) => index.toString()).toList(),
+    );
+  }
+
+  List<int> get channelsDisplayOrder =>
+      (_preferences.getStringList('channels_display_order') ?? const [])
+          .map(int.tryParse)
+          .whereType<int>()
+          .toList();
+
   // Node list section headers visibility (grouped classification headings).
   Future<void> setNodeSectionHeadersEnabled(bool enabled) async {
     await _preferences.setBool('node_section_headers_enabled', enabled);
