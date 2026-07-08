@@ -1231,11 +1231,18 @@ class AutomationEngine {
               errorMessage: l10n.automationErrorSendMsgNotConfigured,
             );
           }
-          if (action.targetNodeNum == null) {
+          // Reply-to-sender resolves the target from the triggering event,
+          // so a ping-responder works without pinning a node up front.
+          final targetNodeNum = action.replyToSender
+              ? event.nodeNum
+              : action.targetNodeNum;
+          if (targetNodeNum == null) {
             return ActionResult(
               actionName: actionName,
               success: false,
-              errorMessage: l10n.automationErrorNoTargetNode,
+              errorMessage: action.replyToSender
+                  ? l10n.automationErrorNoReplySender
+                  : l10n.automationErrorNoTargetNode,
             );
           }
           final message = _interpolateVariables(
@@ -1244,7 +1251,7 @@ class AutomationEngine {
             trigger: automation.trigger,
           );
           final sent = await onSendMessage!(
-            action.targetNodeNum!,
+            targetNodeNum,
             message,
             _routingProtocol(automation, event),
           );

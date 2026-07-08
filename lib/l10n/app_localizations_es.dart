@@ -36759,6 +36759,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get automationVarUnknown => 'desconocido';
 
   @override
+  String get automationActionReplyToSender => 'Responder al remitente';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Responde al nodo que activó esta automatización';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Este disparador no tiene remitente al que responder';
+
+  @override
   String get automationErrorSendChannelNotConfigured =>
       'La devolución de llamada para enviar al canal no está configurada';
 

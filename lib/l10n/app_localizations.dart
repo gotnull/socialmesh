@@ -63209,6 +63209,24 @@ abstract class AppLocalizations {
   /// **'unknown'**
   String get automationVarUnknown;
 
+  /// Toggle label in the send-message action editor: the reply goes to whichever node produced the triggering event instead of a fixed target node.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to sender'**
+  String get automationActionReplyToSender;
+
+  /// Subtitle under the reply-to-sender toggle explaining where the message will be sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers whichever node triggered this automation'**
+  String get automationActionReplyToSenderHint;
+
+  /// Automation log error when a reply-to-sender send-message action runs for an event that carries no remote sender (e.g. scheduled or manual triggers).
+  ///
+  /// In en, this message translates to:
+  /// **'This trigger has no sender to reply to'**
+  String get automationErrorNoReplySender;
+
   /// Error message in automations
   ///
   /// In en, this message translates to:

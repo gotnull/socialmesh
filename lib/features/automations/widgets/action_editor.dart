@@ -265,6 +265,31 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
     }
   }
 
+  // Triggers whose event carries a remote sender the action can answer.
+  // Scheduled/manual/node-state triggers have no sender, so the
+  // reply-to-sender toggle is not offered for them.
+  static const _senderTriggers = {
+    TriggerType.messageReceived,
+    TriggerType.messageContains,
+    TriggerType.channelActivity,
+    TriggerType.detectionSensor,
+  };
+
+  bool get _triggerHasSender => _senderTriggers.contains(widget.triggerType);
+
+  void _setReplyToSender(bool enabled) {
+    final config = {...widget.action.config};
+    if (enabled) {
+      config['replyToSender'] = true;
+      // A pinned target would silently win over the toggle in exports that
+      // strip neither key, so drop it while reply mode is on.
+      config.remove('targetNodeNum');
+    } else {
+      config.remove('replyToSender');
+    }
+    widget.onChanged(widget.action.copyWith(config: config));
+  }
+
   Widget _buildMessageConfig(BuildContext context, {required bool toChannel}) {
     final presenceMap = ref.watch(presenceMapProvider);
     // Get available nodes excluding self
@@ -362,13 +387,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
             ),
           ),
           SizedBox(height: AppTheme.spacing8),
-          GestureDetector(
-            onTap: () => toChannel
-                ? (isMeshCore
-                      ? _showMeshCoreChannelPicker(context, meshCoreChannels)
-                      : _showChannelPicker(context, channels))
-                : _showNodePicker(context, nodes),
-            child: Container(
+          if (!toChannel && _triggerHasSender) ...[
+            Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: context.background,
@@ -387,7 +407,7 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                       borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
-                      toChannel ? Icons.forum : Icons.person,
+                      Icons.reply,
                       color: Theme.of(context).colorScheme.primary,
                       size: 20,
                     ),
@@ -398,23 +418,15 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          targetDisplay,
+                          context.l10n.automationActionReplyToSender,
                           style: TextStyle(
-                            color:
-                                (toChannel
-                                        ? widget.action.targetChannelIndex
-                                        : widget.action.targetNodeNum) !=
-                                    null
-                                ? context.textPrimary
-                                : context.textSecondary,
+                            color: context.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         Text(
-                          toChannel
-                              ? context.l10n.automationActionChannelMessage
-                              : context.l10n.automationActionDirectMessage,
+                          context.l10n.automationActionReplyToSenderHint,
                           style: TextStyle(
                             color: context.textTertiary,
                             fontSize: 11,
@@ -423,11 +435,88 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                       ],
                     ),
                   ),
-                  Icon(Icons.keyboard_arrow_down, color: context.textSecondary),
+                  ThemedSwitch(
+                    value: widget.action.replyToSender,
+                    onChanged: _setReplyToSender,
+                  ),
                 ],
               ),
             ),
-          ),
+            SizedBox(height: AppTheme.spacing8),
+          ],
+          if (toChannel || !widget.action.replyToSender)
+            GestureDetector(
+              onTap: () => toChannel
+                  ? (isMeshCore
+                        ? _showMeshCoreChannelPicker(context, meshCoreChannels)
+                        : _showChannelPicker(context, channels))
+                  : _showNodePicker(context, nodes),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(AppTheme.radius10),
+                      ),
+                      child: Icon(
+                        toChannel ? Icons.forum : Icons.person,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
+                      ),
+                    ),
+                    SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            targetDisplay,
+                            style: TextStyle(
+                              color:
+                                  (toChannel
+                                          ? widget.action.targetChannelIndex
+                                          : widget.action.targetNodeNum) !=
+                                      null
+                                  ? context.textPrimary
+                                  : context.textSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            toChannel
+                                ? context.l10n.automationActionChannelMessage
+                                : context.l10n.automationActionDirectMessage,
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      color: context.textSecondary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           const SizedBox(height: AppTheme.spacing16),
 
           // Message text field - use default text from trigger type if empty

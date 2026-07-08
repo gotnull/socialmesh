@@ -36859,6 +36859,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get automationVarUnknown => 'inconnu';
 
   @override
+  String get automationActionReplyToSender => 'Répondre à l\'expéditeur';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Répond au nœud qui a déclenché cette automatisation';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Ce déclencheur n\'a pas d\'expéditeur à qui répondre';
+
+  @override
   String get automationErrorSendChannelNotConfigured =>
       'Rappel d\'envoi vers le canal non configuré';
 

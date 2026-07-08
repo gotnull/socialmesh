@@ -3342,6 +3342,68 @@ void main() {
     });
   });
 
+  group('AutomationEngine - reply to sender', () {
+    test(
+      'sendMessage with replyToSender answers the triggering node',
+      () async {
+        final automation = Automation(
+          id: 'ping-bot',
+          name: 'Ping Bot',
+          trigger: const AutomationTrigger(
+            type: TriggerType.messageContains,
+            config: {'keyword': 'ping'},
+          ),
+          actions: const [
+            AutomationAction(
+              type: ActionType.sendMessage,
+              config: {'replyToSender': true, 'messageText': 'pong ({{hops}})'},
+            ),
+          ],
+        );
+        mockRepository.addTestAutomation(automation);
+
+        await engine.processMessage(
+          AutomationMessage(from: 0xABCD, text: 'ping', hopCount: 2),
+          senderName: 'PingSender',
+        );
+
+        expect(sentMessages, isNotEmpty);
+        expect(
+          sentMessages.first.$1,
+          0xABCD,
+          reason:
+              'The reply must go to the node that sent the trigger message.',
+        );
+        expect(sentMessages.first.$2, contains('pong'));
+      },
+    );
+
+    test('replyToSender fails cleanly when the event has no sender', () async {
+      final automation = Automation(
+        id: 'manual-reply',
+        name: 'Manual Reply',
+        trigger: const AutomationTrigger(type: TriggerType.manual),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'replyToSender': true, 'messageText': 'hello'},
+          ),
+        ],
+      );
+
+      // Default engine has no onGetMyNodeNum, so the enriched manual event
+      // carries no nodeNum - the senderless case.
+      final event = AutomationEvent(type: TriggerType.manual);
+      await engine.executeAutomationManually(automation, event);
+
+      expect(
+        sentMessages,
+        isEmpty,
+        reason: 'A senderless trigger must not send to an arbitrary node.',
+      );
+    });
+  });
+
   group('AutomationEngine - missing variable fallbacks', () {
     test('unknown battery and location render as localized "unknown", '
         'never "?%"', () async {

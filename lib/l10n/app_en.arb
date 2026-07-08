@@ -48435,6 +48435,18 @@
     "@automationVarUnknown": {
         "description": "Fallback substituted for automation template variables ({{battery}}, {{location}}, {{node.name}}, {{sensor.name}}) when the source value is missing, e.g. 'Battery: unknown'. Lowercase because it lands mid-sentence inside user-authored message templates."
     },
+    "automationActionReplyToSender": "Reply to sender",
+    "@automationActionReplyToSender": {
+        "description": "Toggle label in the send-message action editor: the reply goes to whichever node produced the triggering event instead of a fixed target node."
+    },
+    "automationActionReplyToSenderHint": "Answers whichever node triggered this automation",
+    "@automationActionReplyToSenderHint": {
+        "description": "Subtitle under the reply-to-sender toggle explaining where the message will be sent."
+    },
+    "automationErrorNoReplySender": "This trigger has no sender to reply to",
+    "@automationErrorNoReplySender": {
+        "description": "Automation log error when a reply-to-sender send-message action runs for an event that carries no remote sender (e.g. scheduled or manual triggers)."
+    },
     "automationErrorSendChannelNotConfigured": "Send to channel callback not configured",
     "@automationErrorSendChannelNotConfigured": {
         "description": "Error message in automations"

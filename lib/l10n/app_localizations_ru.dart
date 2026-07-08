@@ -36601,6 +36601,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get automationVarUnknown => 'неизвестно';
 
   @override
+  String get automationActionReplyToSender => 'Ответить отправителю';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Отвечает узлу, который запустил эту автоматизацию';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'У этого триггера нет отправителя для ответа';
+
+  @override
   String get automationErrorSendChannelNotConfigured =>
       'Обратный вызов отправки в канал не настроен';
 

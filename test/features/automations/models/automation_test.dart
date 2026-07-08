@@ -518,6 +518,26 @@ void main() {
         expect(valid.validate(), isNull);
       });
 
+      test('sendMessage with replyToSender needs no fixed target', () {
+        const replyAction = AutomationAction(
+          type: ActionType.sendMessage,
+          config: {'messageText': 'pong', 'replyToSender': true},
+        );
+        expect(replyAction.replyToSender, isTrue);
+        expect(replyAction.validate(), isNull);
+
+        // The message text is still required in reply mode.
+        const replyNoText = AutomationAction(
+          type: ActionType.sendMessage,
+          config: {'replyToSender': true},
+        );
+        expect(replyNoText.validate(), isNotNull);
+
+        // Round-trips through JSON like any other config key.
+        final restored = AutomationAction.fromJson(replyAction.toJson());
+        expect(restored.replyToSender, isTrue);
+      });
+
       test('sendToChannel requires messageText', () {
         const noMessage = AutomationAction(
           type: ActionType.sendToChannel,

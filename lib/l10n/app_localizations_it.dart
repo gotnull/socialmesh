@@ -36592,6 +36592,17 @@ class AppLocalizationsIt extends AppLocalizations {
   String get automationVarUnknown => 'sconosciuto';
 
   @override
+  String get automationActionReplyToSender => 'Rispondi al mittente';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Risponde al nodo che ha attivato questa automazione';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Questo trigger non ha un mittente a cui rispondere';
+
+  @override
   String get automationErrorSendChannelNotConfigured =>
       'Callback invio al canale non configurato';
 

@@ -36689,6 +36689,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get automationVarUnknown => 'unbekannt';
 
   @override
+  String get automationActionReplyToSender => 'Dem Absender antworten';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Antwortet dem Node, der diese Automatisierung ausgelöst hat';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Dieser Auslöser hat keinen Absender, dem geantwortet werden kann';
+
+  @override
   String get automationErrorSendChannelNotConfigured =>
       'Kanal-Senden-Callback nicht konfiguriert';
 

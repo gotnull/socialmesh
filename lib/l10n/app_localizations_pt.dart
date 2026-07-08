@@ -36564,6 +36564,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get automationVarUnknown => 'desconhecido';
 
   @override
+  String get automationActionReplyToSender => 'Responder ao remetente';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Responde ao nó que acionou esta automação';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Este gatilho não tem remetente para responder';
+
+  @override
   String get automationErrorSendChannelNotConfigured =>
       'Callback de envio ao canal não configurado';
 

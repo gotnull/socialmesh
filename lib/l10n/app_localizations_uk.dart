@@ -36613,6 +36613,17 @@ class AppLocalizationsUk extends AppLocalizations {
   String get automationVarUnknown => 'невідомо';
 
   @override
+  String get automationActionReplyToSender => 'Відповісти відправнику';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Відповідає вузлу, який запустив цю автоматизацію';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Цей тригер не має відправника для відповіді';
+
+  @override
   String get automationErrorSendChannelNotConfigured =>
       'Зворотний виклик надсилання в канал не налаштовано';
 

@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The map compass mode (north-locked / free-rotate / follow-heading) is now remembered across tab switches and app relaunches instead of silently resetting to north-locked every time the Map tab is reopened. North-locked stays the first-run default
 - The map overflow menu toggle is now labelled "Show cluster markers", matching the "Show ..." wording of every sibling toggle (previously just "Cluster markers")
 
+### Added (automations)
+
+- The "Send Message" action can now reply to the sender: a new "Reply to sender" toggle (offered for message, keyword, channel-activity, and detection-sensor triggers) answers whichever node produced the triggering event instead of a fixed target node, so a "reply pong when anyone messages ping" bot no longer needs a pinned node. Available in both the standard action editor and the visual flow builder; a reply-to-sender action that fires from a senderless trigger (scheduled/manual) fails with a clear log message instead of sending anywhere
+
+### Added (nodes)
+
+- The node long-press quick-actions sheet gains "Message" (jumps straight into the direct-message chat) and "Show on Map" (centres the map on the node, shown only when it has a position), so neither needs the detail-screen detour. The Contacts list's long-press sheet hides the redundant "Message" entry since tapping the contact already opens the chat
+
 ### Fixed (automations)
 
 - Automation message templates no longer render a missing battery level as "?%": `{{battery}}`, `{{location}}`, `{{node.name}}`, and `{{sensor.name}}` now all fall back to a localized lowercase "unknown" when the source value has never been reported, so a welcome message reads "your battery level is unknown" instead of "?%"

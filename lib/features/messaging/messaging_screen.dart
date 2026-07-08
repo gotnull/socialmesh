@@ -182,7 +182,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       );
       return;
     }
-    await showNodeQuickActionsSheet(context, ref, node);
+    // Tapping a contact tile already opens the chat, so the sheet's
+    // "Message" entry would be redundant here.
+    await showNodeQuickActionsSheet(
+      context,
+      ref,
+      node,
+      showMessageAction: false,
+    );
   }
 
   @override

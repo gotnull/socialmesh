@@ -792,6 +792,13 @@ class AutomationAction {
   /// Target node for sendMessage
   int? get targetNodeNum => config['targetNodeNum'] as int?;
 
+  /// Whether sendMessage answers the node that produced the triggering
+  /// event instead of a fixed target. Only meaningful for triggers whose
+  /// event carries a remote sender (message, keyword, channel activity,
+  /// detection sensor); the engine fails the action at runtime when the
+  /// event has no sender.
+  bool get replyToSender => config['replyToSender'] == true;
+
   /// Target channel for sendToChannel
   int? get targetChannelIndex => config['targetChannelIndex'] as int?;
 
@@ -835,7 +842,7 @@ class AutomationAction {
         if (msg == null || msg.trim().isEmpty) {
           return 'Please enter a message to send'; // lint-allow: hardcoded-string
         }
-        if (targetNodeNum == null) {
+        if (!replyToSender && targetNodeNum == null) {
           return 'Please select a target node'; // lint-allow: hardcoded-string
         }
         break;
@@ -873,7 +880,7 @@ class AutomationAction {
         if (msg == null || msg.trim().isEmpty) {
           return l10n.automationValidateMessage;
         }
-        if (targetNodeNum == null) {
+        if (!replyToSender && targetNodeNum == null) {
           return l10n.automationValidateTargetNode;
         }
         break;
