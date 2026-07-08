@@ -7593,6 +7593,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapSearchNodesHint => 'Пошук вузлів...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Перейти до координат';
+
+  @override
   String get mapSettings => 'Налаштування';
 
   @override

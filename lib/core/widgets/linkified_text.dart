@@ -388,9 +388,26 @@ List<CoordinateMatch> detectCoordinates(String text) {
   return result;
 }
 
-// Public for tests. Formats a coordinate pair for display and clipboard at
-// ~1m precision (5 decimal places). Full-precision values are still passed to
-// the map and waypoint form, so this rounding only affects the readable string.
-@visibleForTesting
+/// Formats a coordinate pair for display and clipboard at ~1m precision
+/// (5 decimal places). Full-precision values are still passed to the map and
+/// waypoint form, so this rounding only affects the readable string.
 String formatCoordinatePair(double latitude, double longitude) =>
     '${latitude.toStringAsFixed(5)}, ${longitude.toStringAsFixed(5)}';
+
+/// Parses [input] as one whole-string "lat, lng" decimal-degrees pair - the
+/// strict form for map search fields, where a paste signals explicit intent.
+/// Unlike [detectCoordinates] no precision floor applies and the separator
+/// may be a comma or whitespace, but nothing besides the pair may be present.
+/// Returns null when the input is not a lone in-range pair.
+({double latitude, double longitude})? tryParseCoordinatePair(String input) {
+  final match = RegExp(
+    r'^\s*(-?\d{1,3}(?:\.\d+)?)\s*(?:,|\s)\s*(-?\d{1,3}(?:\.\d+)?)\s*$',
+  ).firstMatch(input);
+  if (match == null) return null;
+  final latitude = double.tryParse(match.group(1)!);
+  final longitude = double.tryParse(match.group(2)!);
+  if (latitude == null || longitude == null) return null;
+  if (latitude < -90 || latitude > 90) return null;
+  if (longitude < -180 || longitude > 180) return null;
+  return (latitude: latitude, longitude: longitude);
+}

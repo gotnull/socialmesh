@@ -7600,6 +7600,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mapSearchNodesHint => 'Knoten suchen...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Zu Koordinaten springen';
+
+  @override
   String get mapSettings => 'Einstellungen';
 
   @override

@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The "Send Message" action can now reply to the sender: a new "Reply to sender" toggle (offered for message, keyword, channel-activity, and detection-sensor triggers) answers whichever node produced the triggering event instead of a fixed target node, so a "reply pong when anyone messages ping" bot no longer needs a pinned node. Available in both the standard action editor and the visual flow builder; a reply-to-sender action that fires from a senderless trigger (scheduled/manual) fails with a clear log message instead of sending anywhere
 
+### Added (map)
+
+- Pasting coordinates ("51.911157, 14.492985") into the map's node search now shows a "Go to coordinates" row that jumps the camera there, with a companion action that opens the waypoint form pre-filled with the pair; the offline map's place search recognises pasted coordinates too and jumps directly without the geocoder (so it works fully offline)
+
 ### Added (nodes)
 
 - The node long-press quick-actions sheet gains "Message" (jumps straight into the direct-message chat) and "Show on Map" (centres the map on the node, shown only when it has a position), so neither needs the detail-screen detour. The Contacts list's long-press sheet hides the redundant "Message" entry since tapping the contact already opens the chat

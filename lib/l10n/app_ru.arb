@@ -4556,6 +4556,7 @@
   "mapSearchEntitiesHint": "Поиск объектов...",
   "mapSearchHint": "Попробуйте другой поисковый запрос",
   "mapSearchNodesHint": "Поиск узлов...",
+  "mapSearchGoToCoordinates": "Перейти к координатам",
   "mapSettings": "Настройки",
   "mapShare": "Поделиться",
   "mapShareDistanceLabel": "Расстояние: {distance}",

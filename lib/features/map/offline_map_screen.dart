@@ -24,6 +24,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/linkified_text.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/primary_gradient_button.dart';
@@ -101,6 +102,18 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
     final q = query.trim();
     if (q.isEmpty || _isSearching) return;
     FocusScope.of(context).unfocus();
+    // Pasted coordinates ("51.911157, 14.492985") jump straight there - no
+    // geocoder round-trip, so this path also works fully offline.
+    final pair = tryParseCoordinatePair(q);
+    if (pair != null) {
+      final target = safeLatLng(pair.latitude, pair.longitude);
+      if (target != null) {
+        const zoom = 16.0;
+        _mapController.safeMove(target, zoom);
+        _currentZoom = zoom;
+        return;
+      }
+    }
     safeSetState(() => _isSearching = true);
     try {
       final results = await geocoding.locationFromAddress(q);

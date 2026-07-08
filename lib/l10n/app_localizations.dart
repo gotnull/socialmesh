@@ -13239,6 +13239,12 @@ abstract class AppLocalizations {
   /// **'Search nodes...'**
   String get mapSearchNodesHint;
 
+  /// Subtitle on the row shown above the map's node search results when the query parses as a lat/lng pair; tapping the row jumps the camera to that location.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to coordinates'**
+  String get mapSearchGoToCoordinates;
+
   /// Text displayed in map view
   ///
   /// In en, this message translates to:

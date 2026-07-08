@@ -7580,6 +7580,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mapSearchNodesHint => 'Cerca nodi...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Vai alle coordinate';
+
+  @override
   String get mapSettings => 'Impostazioni';
 
   @override

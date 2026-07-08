@@ -4520,6 +4520,7 @@
   "mapSearchEntitiesHint": "Entitäten suchen...",
   "mapSearchHint": "Anderen Suchbegriff versuchen",
   "mapSearchNodesHint": "Knoten suchen...",
+  "mapSearchGoToCoordinates": "Zu Koordinaten springen",
   "mapSettings": "Einstellungen",
   "mapShare": "Teilen",
   "mapShareDistanceLabel": "Entfernung: {distance}",

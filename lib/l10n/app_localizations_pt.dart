@@ -7568,6 +7568,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapSearchNodesHint => 'Buscar nós...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Ir para as coordenadas';
+
+  @override
   String get mapSettings => 'Configurações';
 
   @override

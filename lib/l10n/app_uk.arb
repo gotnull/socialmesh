@@ -4520,6 +4520,7 @@
   "mapSearchEntitiesHint": "Пошук об'єктів...",
   "mapSearchHint": "Спробуйте інший пошуковий запит",
   "mapSearchNodesHint": "Пошук вузлів...",
+  "mapSearchGoToCoordinates": "Перейти до координат",
   "mapSettings": "Налаштування",
   "mapShare": "Поділитися",
   "mapShareDistanceLabel": "Відстань: {distance}",

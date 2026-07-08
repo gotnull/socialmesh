@@ -37431,6 +37431,7 @@
   "mapSearchEntitiesHint": "Buscar entidades...",
   "mapSearchHint": "Tente outro termo de busca",
   "mapSearchNodesHint": "Buscar nós...",
+  "mapSearchGoToCoordinates": "Ir para as coordenadas",
   "mapSettings": "Configurações",
   "mapShare": "Compartilhar",
   "mapShareDistanceLabel": "Distância: {distance}",

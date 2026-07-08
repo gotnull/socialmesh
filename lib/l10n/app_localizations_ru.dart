@@ -7579,6 +7579,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapSearchNodesHint => 'Поиск узлов...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Перейти к координатам';
+
+  @override
   String get mapSettings => 'Настройки';
 
   @override

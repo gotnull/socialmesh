@@ -10108,6 +10108,10 @@
     "@mapSearchNodesHint": {
         "description": "Hint text for an input field in map view"
     },
+    "mapSearchGoToCoordinates": "Go to coordinates",
+    "@mapSearchGoToCoordinates": {
+        "description": "Subtitle on the row shown above the map's node search results when the query parses as a lat/lng pair; tapping the row jumps the camera to that location."
+    },
     "mapSettings": "Settings",
     "@mapSettings": {
         "description": "Text displayed in map view"

@@ -7617,6 +7617,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mapSearchNodesHint => 'Buscar nodos...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Ir a las coordenadas';
+
+  @override
   String get mapSettings => 'Configuración';
 
   @override

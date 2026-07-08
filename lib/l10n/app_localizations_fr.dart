@@ -7645,6 +7645,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mapSearchNodesHint => 'Rechercher des noeuds...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Aller aux coordonnées';
+
+  @override
   String get mapSettings => 'Paramètres';
 
   @override
