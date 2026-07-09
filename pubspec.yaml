@@ -61,7 +61,7 @@ dependencies:
   latlong2: ^0.9.1
   intl: ^0.20.2
   collection: ^1.18.0
-  geolocator: ^14.0.2
+  geolocator: ^14.0.3
   geocoding: ^4.0.0
   share_plus: ^13.1.0
   social_media_buttons: ^1.0.0
