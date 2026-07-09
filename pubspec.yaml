@@ -86,7 +86,7 @@ dependencies:
   just_audio: ^0.10.5
   record: ^6.0.0
   live_activities: ^2.4.7
-  package_info_plus: ^10.1.0
+  package_info_plus: ^10.2.0
   device_info_plus: ^13.1.0
 
   # In-App Purchases (RevenueCat)
