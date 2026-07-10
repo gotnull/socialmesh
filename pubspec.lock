@@ -794,50 +794,50 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_blue_plus
-      sha256: "960b33a20396990c873c6c4d42f3d740fa5d6046a60649b2b881df7f33a6f6c1"
+      sha256: "8b2e2f5870539e2d2a8a6473557455b990b87bc0cd86e7224bb3e20ee2eb00df"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.8"
+    version: "2.3.10"
   flutter_blue_plus_android:
     dependency: transitive
     description:
       name: flutter_blue_plus_android
-      sha256: "54998facc5fde940b5cf54526c96397442ddda945026bd1efe7688744b7be34e"
+      sha256: "5f1db477d442974c516196718e2ab66e3601e9a2de271bddde9368c1a85e6e64"
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.2"
+    version: "9.0.3"
   flutter_blue_plus_darwin:
     dependency: transitive
     description:
       name: flutter_blue_plus_darwin
-      sha256: f1177cc6a71d6fd729b68c30b1f11af6f1be064c05a28e5a122f53e27d1ff9b6
+      sha256: bf41a4a07978b4c86a344c0c6e7388ff69f2b442a8d943b8da6d7f01a5c435bc
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.2"
+    version: "9.0.3"
   flutter_blue_plus_linux:
     dependency: transitive
     description:
       name: flutter_blue_plus_linux
-      sha256: "907aad98177dc1a67770c1552c4036c97e381551b854e2f71d9bab0441324195"
+      sha256: "79387947c27d04fce505916d168a1f8b7a89846d22d11a659970aba316459622"
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.2"
+    version: "9.0.3"
   flutter_blue_plus_platform_interface:
     dependency: transitive
     description:
       name: flutter_blue_plus_platform_interface
-      sha256: "0be54cc2666bb6771bc36db07d51645fb7afab78719bf476c1e69fdbe3bbb10c"
+      sha256: "9378ed463673ab51e7ab72cf4bad3633b134182ca184ddcc598d6f7474ada993"
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.2"
+    version: "9.0.3"
   flutter_blue_plus_web:
     dependency: transitive
     description:
       name: flutter_blue_plus_web
-      sha256: fe6314cca79acafd3dc540c70266f14ee6ef751db92ff12cec4f3e56a4c53e17
+      sha256: "62670fd0072e9424661170c3439eb2784679e0cb8420907ae2fe979aab8eed71"
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.2"
+    version: "9.0.3"
   flutter_blue_plus_winrt:
     dependency: transitive
     description:
