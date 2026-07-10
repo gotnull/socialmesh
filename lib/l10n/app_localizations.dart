@@ -62627,6 +62627,15 @@ abstract class AppLocalizations {
     String channelName,
   );
 
+  /// Notification title for a channel message whose sender has no short code (MeshCore channel messages carry only the sender name, embedded in the text)
+  ///
+  /// In en, this message translates to:
+  /// **'{senderName} in {channelName}'**
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  );
+
   /// Row 11.b notification title when a brand-new MeshCore peer is heard via advert
   ///
   /// In en, this message translates to:

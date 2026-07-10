@@ -7712,6 +7712,7 @@
   "notificationChannelDeviceAlerts": "Важливі сповіщення від вашого пристрою Meshtastic",
   "notificationChannelDirectMessages": "Сповіщення про особисті повідомлення мережі",
   "notificationChannelMessageTitle": "{senderName} ({shortCode}) у {channelName}",
+  "notificationChannelMessageTitleNoCode": "{senderName} у {channelName}",
   "notificationMeshCoreAdvertTitle": "Новий пер: {contactName} ({shortCode})",
   "notificationMeshCoreAdvertBody": "{advTypeLabel}",
   "meshcoreNotifications": "Сповіщення",

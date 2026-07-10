@@ -403,4 +403,59 @@ void main() {
       expect(ct, startsWith('mc_in_ct_'));
     });
   });
+
+  // Channel messages embed the sender on the wire as `<sender>: <msg>`
+  // (upstream BaseChatMesh::sendGroupMessage, sprintf("%s: ", sender_name)).
+  // These pins keep the notification-title parser aligned to that convention.
+  group('meshCoreChannelSenderFromText', () {
+    test('parses the upstream sender-name convention', () {
+      final r = meshCoreChannelSenderFromText('Alice: hello mesh');
+      expect(r, isNotNull);
+      expect(r!.sender, 'Alice');
+      expect(r.body, 'hello mesh');
+    });
+
+    test('splits on the FIRST separator only', () {
+      final r = meshCoreChannelSenderFromText('Bob: note: bring water');
+      expect(r!.sender, 'Bob');
+      expect(r.body, 'note: bring water');
+    });
+
+    test('keeps a name containing spaces and unicode', () {
+      final r = meshCoreChannelSenderFromText('Basisstation Nord 🌲: ping');
+      expect(r!.sender, 'Basisstation Nord 🌲');
+      expect(r.body, 'ping');
+    });
+
+    test('returns null when no separator exists', () {
+      expect(meshCoreChannelSenderFromText('just a plain message'), isNull);
+    });
+
+    test('returns null for a colon without a following space', () {
+      expect(meshCoreChannelSenderFromText('12:45 departure'), isNull);
+    });
+
+    test('returns null when the separator is at position zero', () {
+      expect(meshCoreChannelSenderFromText(': no name'), isNull);
+    });
+
+    test('returns null when the name exceeds the max length', () {
+      final longName = 'x' * (meshCoreChannelSenderMaxLength + 1);
+      expect(meshCoreChannelSenderFromText('$longName: hi'), isNull);
+    });
+
+    test('accepts a name at exactly the max length', () {
+      final name = 'x' * meshCoreChannelSenderMaxLength;
+      final r = meshCoreChannelSenderFromText('$name: hi');
+      expect(r!.sender, name);
+    });
+
+    test('returns null when the candidate name spans lines', () {
+      expect(meshCoreChannelSenderFromText('a\nb: hi'), isNull);
+    });
+
+    test('returns null when the body is blank', () {
+      expect(meshCoreChannelSenderFromText('Alice:  '), isNull);
+    });
+  });
 }

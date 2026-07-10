@@ -36534,6 +36534,14 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  ) {
+    return '$senderName dans $channelName';
+  }
+
+  @override
   String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
     return 'Nouveau pair : $contactName ($shortCode)';
   }

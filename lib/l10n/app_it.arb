@@ -40956,6 +40956,7 @@
   "notificationChannelDeviceAlerts": "Notifiche importanti dal tuo dispositivo Meshtastic",
   "notificationChannelDirectMessages": "Notifiche per messaggi mesh diretti",
   "notificationChannelMessageTitle": "{senderName} ({shortCode}) in {channelName}",
+  "notificationChannelMessageTitleNoCode": "{senderName} in {channelName}",
   "notificationMeshCoreAdvertTitle": "Nuovo peer: {contactName} ({shortCode})",
   "notificationMeshCoreAdvertBody": "{advTypeLabel}",
   "meshcoreNotifications": "Notifiche",

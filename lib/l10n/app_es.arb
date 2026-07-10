@@ -7712,6 +7712,7 @@
   "notificationChannelDeviceAlerts": "Notificaciones importantes de su dispositivo Meshtastic",
   "notificationChannelDirectMessages": "Notificaciones para mensajes directos de malla",
   "notificationChannelMessageTitle": "{senderName} ({shortCode}) en {channelName}",
+  "notificationChannelMessageTitleNoCode": "{senderName} en {channelName}",
   "notificationMeshCoreAdvertTitle": "Nuevo par: {contactName} ({shortCode})",
   "notificationMeshCoreAdvertBody": "{advTypeLabel}",
   "meshcoreNotifications": "Notificaciones",

@@ -142,6 +142,27 @@ abstract final class TimeSeriesAxis {
     };
   }
 
+  /// Ready-made top-axis placeholder that reserves headroom above the plot.
+  ///
+  /// The topmost left/right axis label is vertically centred on its
+  /// gridline, so half of it renders above the plot's top edge; with
+  /// topTitles fully disabled the plot starts at the widget edge and that
+  /// half is clipped. An empty axis-name slot pushes the plot down just far
+  /// enough for the label to render whole, scaling with the user's text
+  /// size. [labelFontSize] is the side-axis label font size the headroom
+  /// must clear.
+  static AxisTitles topHeadroom(
+    BuildContext context, {
+    double labelFontSize = 11,
+  }) {
+    final halfLabel = MediaQuery.textScalerOf(context).scale(labelFontSize) / 2;
+    return AxisTitles(
+      axisNameWidget: const SizedBox.shrink(),
+      axisNameSize: halfLabel + _labelTopPadding,
+      sideTitles: const SideTitles(showTitles: false),
+    );
+  }
+
   /// Ready-made bottom-axis titles for a time-proportional chart.
   ///
   /// Interior labels are epoch-aligned to [labelIntervalMs]; the domain

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +9,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
-import '../../core/widgets/edge_fade.dart';
+import '../../core/widgets/chart_legend_header.dart';
 import '../../core/widgets/datetime_picker_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
@@ -163,7 +162,7 @@ class _EnvironmentMetricsLogScreenState
     };
   }
 
-  List<Widget> _legendItemsFor(
+  List<ChartLegendEntry> _legendEntriesFor(
     BuildContext context,
     _MetricFilter filter,
     List<EnvironmentMetricsLog> filtered,
@@ -172,19 +171,19 @@ class _EnvironmentMetricsLogScreenState
     if (filter == _MetricFilter.all) {
       return [
         if (filtered.any((l) => l.temperature != null))
-          _LegendItem(
+          ChartLegendEntry(
             color: AppTheme.errorRed,
             label: l10n.telemetryEnvironmentLegendTemperature,
           ),
         if (filtered.any((l) => l.humidity != null))
-          _LegendItem(
+          ChartLegendEntry(
             color: AccentColors.cyan,
             label: l10n.telemetryEnvironmentLegendHumidity,
           ),
       ];
     }
     return [
-      _LegendItem(
+      ChartLegendEntry(
         color: _colorForFilter(filter) ?? context.accentColor,
         label: _legendLabelFor(context, filter),
       ),
@@ -390,9 +389,16 @@ class _EnvironmentMetricsLogScreenState
               if (filtered.length >= 2)
                 SliverPersistentHeader(
                   pinned: true,
-                  delegate: _ChartLegendHeaderDelegate(
-                    items: _legendItemsFor(context, _activeFilter, filtered),
-                    readingsCount: filtered.length,
+                  delegate: ChartLegendHeaderDelegate.measure(
+                    context: context,
+                    entries: _legendEntriesFor(
+                      context,
+                      _activeFilter,
+                      filtered,
+                    ),
+                    trailingText: context.l10n.telemetryReadingsCount(
+                      filtered.length,
+                    ),
                   ),
                 ),
 
@@ -795,8 +801,9 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  topTitles: TimeSeriesAxis.topHeadroom(
+                    context,
+                    labelFontSize: 10,
                   ),
                   leftTitles: AxisTitles(
                     sideTitles: hasTemp
@@ -940,8 +947,9 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  topTitles: TimeSeriesAxis.topHeadroom(
+                    context,
+                    labelFontSize: 10,
                   ),
                   rightTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -1076,9 +1084,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
   ) {
     return LineChartBarData(
       spots: spots,
-      isCurved: true,
-      curveSmoothness: 0.25,
-      preventCurveOverShooting: true,
+      isCurved: false,
       color: color,
       barWidth: 2.5,
       isStrokeCapRound: true,
@@ -1108,99 +1114,9 @@ class _EnvironmentMetricsChart extends StatelessWidget {
   }
 }
 
-/// Colour dot + label used in the chart legend row.
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendItem({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: AppTheme.spacing4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
-        ),
-      ],
-    );
-  }
-}
-
-// =============================================================================
-// Pinned chart legend header — frosted glass, matches SectionHeaderDelegate
-// =============================================================================
-
-/// Persistent header delegate that pins the chart legend (coloured dots +
-/// labels + readings count) above the chart and card list.
-///
-/// Uses the same frosted-glass + sticky-shadow treatment as
-/// [SectionHeaderDelegate] so it feels native to the scroll view.
-class _ChartLegendHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final List<Widget> items;
-  final int readingsCount;
-
-  _ChartLegendHeaderDelegate({
-    required this.items,
-    required this.readingsCount,
-  });
-
-  static const double _height = 40.0;
-
-  @override
-  double get minExtent => _height;
-
-  @override
-  double get maxExtent => _height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final showShadow = shrinkOffset > 0 || overlapsContent;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: StickyHeaderShadow(
-          blurRadius: showShadow ? 8 : 0,
-          offsetY: showShadow ? 2 : 0,
-          child: Container(
-            height: _height,
-            color: context.background.withValues(alpha: 0.8),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Wrap(spacing: 16, runSpacing: 4, children: items),
-                ),
-                Text(
-                  context.l10n.telemetryReadingsCount(readingsCount),
-                  style: TextStyle(fontSize: 11, color: context.textTertiary),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _ChartLegendHeaderDelegate oldDelegate) {
-    return items.length != oldDelegate.items.length ||
-        readingsCount != oldDelegate.readingsCount;
-  }
-}
+// Pinned chart legend now lives in
+// `lib/core/widgets/chart_legend_header.dart` (ChartLegendHeaderDelegate),
+// shared with the device metrics screen.
 
 // =============================================================================
 // Single-line metric chip — matches SectionFilterChip visual language

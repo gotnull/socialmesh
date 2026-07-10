@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (telemetry charts)
+
+- Chart legends no longer clip when they wrap to a second line: the pinned legend header now measures its labels at the current text size and grows to fit every row instead of using a fixed 40px height (device metrics, environment metrics). The two screens now share one legend widget (#228)
+- The topmost axis label on telemetry charts (e.g. "100%") is no longer cut in half: charts reserve headroom above the plot so the label renders whole, scaling with text size (#228)
+- Telemetry and node-history graphs now draw straight lines between readings instead of smoothed curves, so the plot follows the actual samples without invented dips or bumps (#225)
+
+### Fixed (nodes list accessibility)
+
+- The coloured node avatar circles in the Nodes list now grow with the text-size setting (up to 1.5x) instead of staying fixed while the text scales, and they are vertically centred on the card instead of sitting high (#227)
+
+### Fixed (MeshCore notifications)
+
+- MeshCore channel-message notifications now show who posted: the sender name that MeshCore radios embed at the start of every channel message is parsed into the notification title ("Alice in #general") and stripped from the body, instead of a generic "MeshCore (----) in channel" title (#226)
+
+### Added (distribution)
+
+- Official signed APKs now accompany GitHub releases so devices that Google Play filters out (e.g. GrapheneOS) can sideload, with a published SHA-256 checksum per build (#179). Note: Play installs and GitHub APK installs are signed differently and cannot update each other
+
 ### Fixed (notifications)
 
 - Incoming-message notifications work again: versions 1.52 and 1.53 shipped with an internal CarPlay flag mistakenly enabled, which silently suppressed every new-message banner on both iOS and Android while the messages themselves still arrived in-app. Suppression is now additionally gated so it can only engage when a CarPlay communication banner is guaranteed to replace the standard one (explicit opt-in, iOS only), so a stray flag flip can never silence messages again

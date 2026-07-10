@@ -8081,6 +8081,7 @@
   "notificationChannelDeviceAlerts": "Важные уведомления от вашего устройства Meshtastic",
   "notificationChannelDirectMessages": "Уведомления о прямых сообщениях в сети",
   "notificationChannelMessageTitle": "{senderName} ({shortCode}) в {channelName}",
+  "notificationChannelMessageTitleNoCode": "{senderName} в {channelName}",
   "notificationMeshCoreAdvertTitle": "Новый пир: {contactName} ({shortCode})",
   "notificationMeshCoreAdvertBody": "{advTypeLabel}",
   "meshcoreNotifications": "Уведомления",

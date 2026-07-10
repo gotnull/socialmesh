@@ -48021,6 +48021,18 @@
             }
         }
     },
+    "notificationChannelMessageTitleNoCode": "{senderName} in {channelName}",
+    "@notificationChannelMessageTitleNoCode": {
+        "description": "Notification title for a channel message whose sender has no short code (MeshCore channel messages carry only the sender name, embedded in the text)",
+        "placeholders": {
+            "senderName": {
+                "type": "String"
+            },
+            "channelName": {
+                "type": "String"
+            }
+        }
+    },
     "notificationMeshCoreAdvertTitle": "New peer: {contactName} ({shortCode})",
     "@notificationMeshCoreAdvertTitle": {
         "description": "Row 11.b notification title when a brand-new MeshCore peer is heard via advert",

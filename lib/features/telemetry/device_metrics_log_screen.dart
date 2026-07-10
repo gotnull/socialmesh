@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,8 +9,8 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/chart_legend_header.dart';
 import '../../core/widgets/datetime_picker_sheet.dart';
-import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
@@ -380,36 +379,39 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
               // silently hidden.
               if (filtered.isNotEmpty)
                 () {
-                  final legendItems = <Widget>[
+                  final legendEntries = <ChartLegendEntry>[
                     if (filtered.any((l) => l.batteryLevel != null))
-                      _LegendItem(
+                      ChartLegendEntry(
                         color: AccentColors.green,
                         label: context.l10n.telemetryDeviceLegendBattery,
                       ),
                     if (filtered.any((l) => l.voltage != null))
-                      _LegendItem(
+                      ChartLegendEntry(
                         color: AppTheme.warningYellow,
                         label: context.l10n.telemetryDeviceLegendVoltage,
                       ),
                     if (filtered.any((l) => l.channelUtilization != null))
-                      _LegendItem(
+                      ChartLegendEntry(
                         color: AppTheme.primaryBlue,
                         label: context.l10n.telemetryDeviceLegendChUtil,
                       ),
                     if (filtered.any((l) => l.airUtilTx != null))
-                      _LegendItem(
+                      ChartLegendEntry(
                         color: AppTheme.primaryMagenta,
                         label: context.l10n.telemetryDeviceLegendAirUtil,
                       ),
                   ];
-                  if (legendItems.isEmpty) {
+                  if (legendEntries.isEmpty) {
                     return const SliverToBoxAdapter(child: SizedBox.shrink());
                   }
                   return SliverPersistentHeader(
                     pinned: true,
-                    delegate: _ChartLegendHeaderDelegate(
-                      legendItems: legendItems,
-                      readingsCount: filtered.length,
+                    delegate: ChartLegendHeaderDelegate.measure(
+                      context: context,
+                      entries: legendEntries,
+                      trailingText: context.l10n.telemetryReadingsCount(
+                        filtered.length,
+                      ),
                     ),
                   );
                 }(),
@@ -646,8 +648,9 @@ class _DeviceMetricsChart extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  topTitles: TimeSeriesAxis.topHeadroom(
+                    context,
+                    labelFontSize: 10,
                   ),
                   rightTitles: AxisTitles(
                     sideTitles: hasRightAxis
@@ -732,9 +735,7 @@ class _DeviceMetricsChart extends StatelessWidget {
   ) {
     return LineChartBarData(
       spots: spots,
-      isCurved: true,
-      curveSmoothness: 0.25,
-      preventCurveOverShooting: true,
+      isCurved: false,
       color: color,
       barWidth: 2.5,
       isStrokeCapRound: true,
@@ -764,100 +765,9 @@ class _DeviceMetricsChart extends StatelessWidget {
   }
 }
 
-// =============================================================================
-// Pinned chart legend — frosted glass header matching SectionHeaderDelegate
-// =============================================================================
-
-/// Renders the chart legend (coloured dots + labels + readings count) as a
-/// pinned sliver header with backdrop blur, matching [SectionHeaderDelegate].
-class _ChartLegendHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final List<Widget> legendItems;
-  final int readingsCount;
-
-  _ChartLegendHeaderDelegate({
-    required this.legendItems,
-    required this.readingsCount,
-  });
-
-  static const double _height = 40.0;
-
-  @override
-  double get minExtent => _height;
-
-  @override
-  double get maxExtent => _height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final showShadow = shrinkOffset > 0 || overlapsContent;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: StickyHeaderShadow(
-          blurRadius: showShadow ? 8 : 0,
-          offsetY: showShadow ? 2 : 0,
-          child: Container(
-            height: _height,
-            color: context.background.withValues(alpha: 0.8),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Wrap(
-                    spacing: 16,
-                    runSpacing: 4,
-                    children: legendItems,
-                  ),
-                ),
-                Text(
-                  context.l10n.telemetryReadingsCount(readingsCount),
-                  style: TextStyle(fontSize: 11, color: context.textTertiary),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _ChartLegendHeaderDelegate oldDelegate) {
-    return readingsCount != oldDelegate.readingsCount ||
-        legendItems.length != oldDelegate.legendItems.length;
-  }
-}
-
-/// Colour dot + label used in the chart legend row.
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendItem({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: AppTheme.spacing4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: context.textSecondary),
-        ),
-      ],
-    );
-  }
-}
+// Pinned chart legend now lives in
+// `lib/core/widgets/chart_legend_header.dart` (ChartLegendHeaderDelegate),
+// shared with the environment metrics screen.
 
 // =============================================================================
 // Card
