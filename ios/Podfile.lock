@@ -1257,7 +1257,7 @@ PODS:
     - firebase_core
     - FirebaseAnalytics (= 12.15.0)
     - Flutter
-  - firebase_auth (6.5.2):
+  - firebase_auth (6.5.4):
     - Firebase/Auth (= 12.15.0)
     - firebase_core
     - Flutter
@@ -1268,7 +1268,7 @@ PODS:
     - Firebase/Crashlytics (= 12.15.0)
     - firebase_core
     - Flutter
-  - firebase_messaging (16.3.0):
+  - firebase_messaging (16.4.1):
     - Firebase/Messaging (= 12.15.0)
     - firebase_core
     - Flutter
@@ -1638,15 +1638,15 @@ PODS:
   - PromisesObjC (2.4.0)
   - PromisesSwift (2.4.0):
     - PromisesObjC (= 2.4.0)
-  - purchases_flutter (10.3.0):
+  - purchases_flutter (10.4.1):
     - Flutter
-    - PurchasesHybridCommon (= 18.15.1)
-  - PurchasesHybridCommon (18.15.1):
-    - RevenueCat (= 5.78.0)
+    - PurchasesHybridCommon (= 18.19.0)
+  - PurchasesHybridCommon (18.19.0):
+    - RevenueCat (= 5.80.2)
   - RecaptchaInterop (101.0.0)
   - record_ios (1.2.0):
     - Flutter
-  - RevenueCat (5.78.0)
+  - RevenueCat (5.80.2)
   - SDWebImage (5.21.7):
     - SDWebImage/Core (= 5.21.7)
   - SDWebImage/Core (5.21.7)
@@ -1986,10 +1986,10 @@ SPEC CHECKSUMS:
   file_picker: 70164d9778c42c47218d6cd79ce435de0856b11a
   Firebase: a8539b633d474fbeb654c7043f9c1649e274045b
   firebase_analytics: e0a17f792099472235f9ec7f31d1d3a0730d4891
-  firebase_auth: ac33bb8a2809e089fe49c7b1da9755914c327e48
+  firebase_auth: 78f0e9fa5dd3dce7e44164c53d2702eeffba360a
   firebase_core: fc23178af8ea070194d09031ae4198a9608a3d22
   firebase_crashlytics: 344bb168f55aee1086c6cdd0b105a9db018cd344
-  firebase_messaging: 1fb9402b2037a14b4725773fce04300cbaeb9e0c
+  firebase_messaging: 870b2939a7f7cc52bc38ca0250127c45b42f4bad
   firebase_storage: e125a3327af0c0dd133bfe4510279dd7c301473f
   FirebaseAnalytics: 9c9fa7915fc52ea03077000d5a7b6a8947b2d76e
   FirebaseAppCheckInterop: 5083c9acf65f206832fe659e1c676b7bc3d55e8a
@@ -2049,11 +2049,11 @@ SPEC CHECKSUMS:
   photo_manager: 25fd77df14f4f0ba5ef99e2c61814dde77e2bceb
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
-  purchases_flutter: 81d3b317261b26756edbe4d2cc2cfd4686359e68
-  PurchasesHybridCommon: eed735a411c1aee8c05d62933fa7c4a40ede4009
+  purchases_flutter: 1bfc08dbcd8f55c6e79dfc055a76fe2081a2b729
+  PurchasesHybridCommon: 1eb67a6c8997233b35ed9b4eee8205dd8dd92890
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   record_ios: 412daca2350b228e698fffcd08f1f94ceb1e3844
-  RevenueCat: f3641992451c1426da8d8d1466cec3bbdb765962
+  RevenueCat: b772273e51fa103a2ecc644439dd54a5dec199f3
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
   sensors_plus: 6a11ed0c2e1d0bd0b20b4029d3bad27d96e0c65b
