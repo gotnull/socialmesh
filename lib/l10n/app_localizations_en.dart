@@ -3607,6 +3607,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelsMenuAddChannel => 'Add Channel';
 
   @override
+  String get channelsMenuReorder => 'Reorder channels';
+
+  @override
+  String get channelsReorderSheetTitle => 'Reorder Channels';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Drag to set the display order. The radio\'s channel slots are unchanged.';
+
+  @override
   String get channelsMenuHelp => 'Help';
 
   @override
@@ -6191,6 +6201,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Start Update';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Connect to your device via Bluetooth to install this update.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'No device connected. Connect via Bluetooth and try again.';
+
+  @override
   String get firmwareDfuRetry => 'Retry';
 
   @override
@@ -7478,6 +7496,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapSearchNodesHint => 'Search nodes...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Go to coordinates';
+
+  @override
   String get mapSettings => 'Settings';
 
   @override
@@ -7504,7 +7525,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapShowHeatmap => 'Show node halos';
 
   @override
-  String get mapShowClusterMarkers => 'Cluster markers';
+  String get mapShowClusterMarkers => 'Show cluster markers';
 
   @override
   String get mapHideClusterMarkers => 'Hide cluster markers';
@@ -12038,6 +12059,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messagingSendTooltip => 'Send (Ctrl/Cmd+Enter)';
+
+  @override
+  String get messagingAlertBellTooltip => 'Send alert bell';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Rings radios that have a buzzer configured';
 
   @override
   String messagingComposerByteCounter(int used, int max) {
@@ -23017,7 +23045,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.';
+      'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2, gas resistance) and broadcasts it.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Gas resistance (VOC sensor)';
+
+  @override
+  String get telemetryShowOnMap => 'Show node on map';
 
   @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
@@ -35815,6 +35850,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  ) {
+    return '$senderName in $channelName';
+  }
+
+  @override
   String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
     return 'New peer: $contactName ($shortCode)';
   }
@@ -36152,6 +36195,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'No target node specified';
+
+  @override
+  String get automationVarUnknown => 'unknown';
+
+  @override
+  String get automationActionReplyToSender => 'Reply to sender';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Answers whichever node triggered this automation';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'This trigger has no sender to reply to';
 
   @override
   String get automationErrorSendChannelNotConfigured =>
@@ -40241,6 +40298,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Storage location';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle => 'Offline Map Storage';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Choose where downloaded map tiles are stored';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Downloaded map tiles are kept on this device for offline use. When a removable SD card is available you can store them there instead of internal memory.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Current cache size';
 
   @override
   String get offlineStorageInternal => 'Internal';

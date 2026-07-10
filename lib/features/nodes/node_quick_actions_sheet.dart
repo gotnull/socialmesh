@@ -19,6 +19,8 @@ import '../../utils/presence_utils.dart';
 import '../../utils/snackbar.dart';
 import '../incidents/providers/incident_help_trust_provider.dart';
 import '../incidents/screens/help_circle_screen.dart';
+import '../map/map_screen.dart';
+import '../messaging/messaging_screen.dart';
 import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/widgets/node_group_assign_sheet.dart';
 import 'node_actions.dart';
@@ -31,6 +33,8 @@ import 'node_detail_screen.dart';
 /// existing providers and services so there's no parallel local state.
 enum NodeQuickAction {
   viewDetails,
+  message,
+  showOnMap,
   viewInNodeDex,
   assignGroups,
   favorite,
@@ -64,12 +68,15 @@ bool _manageHelpCircleVisible({required bool isMyNode}) =>
 /// [onDisconnect] is invoked when the user picks Disconnect; the caller
 /// owns the actual transport teardown because that lives on the
 /// nodes-screen state.
+/// [showMessageAction] lets the Messages > Contacts caller suppress the
+/// "Message" entry, where tapping the tile already opens the chat.
 Future<void> showNodeQuickActionsSheet(
   BuildContext context,
   WidgetRef ref,
   MeshNode node, {
   bool isMyNode = false,
   VoidCallback? onDisconnect,
+  bool showMessageAction = true,
 }) async {
   HapticFeedback.mediumImpact();
 
@@ -98,6 +105,18 @@ Future<void> showNodeQuickActionsSheet(
       label: context.l10n.quickActionViewDetails,
       value: NodeQuickAction.viewDetails,
     ),
+    if (showMessageAction)
+      BottomSheetAction(
+        icon: Icons.chat_bubble_outline,
+        label: context.l10n.nodeDetailMessageButton,
+        value: NodeQuickAction.message,
+      ),
+    if (node.hasPosition)
+      BottomSheetAction(
+        icon: Icons.map_outlined,
+        label: context.l10n.nodeDetailMenuShowOnMap,
+        value: NodeQuickAction.showOnMap,
+      ),
     BottomSheetAction(
       icon: Icons.auto_awesome,
       label: context.l10n.quickActionViewInNodeDex,
@@ -183,6 +202,25 @@ Future<void> showNodeQuickActionsSheet(
   switch (result) {
     case NodeQuickAction.viewDetails:
       showNodeDetails(context, node, isMyNode);
+    case NodeQuickAction.message:
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => ChatScreen(
+            type: ConversationType.directMessage,
+            nodeNum: node.nodeNum,
+            title: node.displayName,
+            avatarColor: node.avatarColor,
+          ),
+        ),
+      );
+    case NodeQuickAction.showOnMap:
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => MapScreen(initialNodeNum: node.nodeNum),
+        ),
+      );
     case NodeQuickAction.viewInNodeDex:
       Navigator.push(
         context,

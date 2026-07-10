@@ -316,9 +316,11 @@ class RestoreSessionCoordinator {
   /// backgrounded before we suppress further attempts until foreground.
   /// Battery / thermal safety is the design constraint here — repeated
   /// failed restores while backgrounded create a hot-phone-overnight
-  /// regression. 1 covers the legitimate "iOS woke us with state
-  /// restoration" case once and refuses to spin.
-  static const int _kBackgroundAttemptBudget = 1;
+  /// regression. 2 covers the legitimate "iOS woke us with state
+  /// restoration" case plus one retry for a drop that lands mid-session
+  /// while backgrounded (testers report multi-hour background sessions
+  /// ending disconnected), and still refuses to spin.
+  static const int _kBackgroundAttemptBudget = 2;
 
   int _sessionGeneration = 0;
   Future<void>? _inFlight;
@@ -2562,9 +2564,18 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       }
     }
 
+    // Structured teardown context recorded by the transport at the
+    // origin that observed the drop (OS state change, notify stream
+    // closing, watchdog force-disconnect). Stamped into errorMessage so
+    // in-app bug reports carry it verbatim.
+    final disconnectDetail = transport is ReceiveDiagnosticsSupport
+        ? (transport as ReceiveDiagnosticsSupport).lastDisconnectDetail
+        : null;
+
     state = state.copyWith(
       state: DevicePairingState.disconnected,
       reason: reason,
+      errorMessage: disconnectDetail?.toCompactString(),
     );
 
     // Tell the protocol service the prior session's config is no
@@ -2660,6 +2671,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         AppLogging.connection(
           '🔌 _handleDisconnect: Unexpected disconnect — '
           'autoReconnectManagerProvider will handle reconnect',
+        );
+        final foreground = ref.read(appLifecycleProvider);
+        AppLogging.connection(
+          'DISCONNECT_CONTEXT '
+          '${disconnectDetail?.toLogPayload() ?? 'origin=unknown'} '
+          'foreground=$foreground '
+          'reconnectAttempts=${state.reconnectAttempts}',
         );
 
         // Defense: if the latch is still set but the Scanner is no

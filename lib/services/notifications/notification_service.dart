@@ -1357,17 +1357,19 @@ class NotificationService {
       macOS: iosDetails,
     );
     final truncatedMessage = safeSubstring(message, 100);
-    final shortCode = senderPrefixHex.length >= 4
-        ? senderPrefixHex.substring(0, 4).toUpperCase()
-        : '----';
+    // Channel frames carry no sender key, so there is usually no short code
+    // to show; the sender name (parsed from the message text) stands alone.
+    final title = senderPrefixHex.length >= 4
+        ? _l10n.notificationChannelMessageTitle(
+            senderName,
+            senderPrefixHex.substring(0, 4).toUpperCase(),
+            channelName,
+          )
+        : _l10n.notificationChannelMessageTitleNoCode(senderName, channelName);
     await _notifications.show(
       // 2_500_000 base separates from Meshtastic channel range (2_000_000+).
       id: 2500000 + (channelIndex & 0xFFFF),
-      title: _l10n.notificationChannelMessageTitle(
-        senderName,
-        shortCode,
-        channelName,
-      ),
+      title: title,
       body: truncatedMessage,
       notificationDetails: notificationDetails,
       payload: 'meshcore-channel:$channelIndex:$senderPrefixHex',

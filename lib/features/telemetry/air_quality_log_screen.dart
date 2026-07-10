@@ -6,10 +6,13 @@ import '../../utils/time_format.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../models/mesh_models.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
+import '../map/map_screen.dart';
+import 'air_quality_timeline.dart';
 
 /// Screen showing air quality metrics history
 class AirQualityLogScreen extends ConsumerWidget {
@@ -19,9 +22,14 @@ class AirQualityLogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final logsAsync = nodeNum != null
+    final airAsync = nodeNum != null
         ? ref.watch(nodeAirQualityMetricsLogsProvider(nodeNum!))
         : ref.watch(airQualityMetricsLogsProvider);
+    // Gas resistance rides in environment rows on the wire; merged into
+    // this timeline so gas sensors appear under Air Quality too.
+    final envAsync = nodeNum != null
+        ? ref.watch(nodeEnvironmentMetricsLogsProvider(nodeNum!))
+        : ref.watch(environmentMetricsLogsProvider);
     final nodes = ref.watch(nodesProvider);
     final node = nodeNum != null ? nodes[nodeNum] : null;
     final nodeName = node?.displayName ?? context.l10n.telemetryAllNodes;
@@ -42,34 +50,61 @@ class AirQualityLogScreen extends ConsumerWidget {
             ),
           ),
         ),
-        logsAsync.when(
-          data: (logs) {
-            if (logs.isEmpty) {
-              return SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildEmptyState(context),
-              );
-            }
-            final sortedLogs = logs.reversed.toList();
-            return SliverPadding(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _AirQualityCard(log: sortedLogs[index]),
-                  childCount: sortedLogs.length,
-                ),
-              ),
-            );
-          },
-          loading: () =>
-              const SliverFillRemaining(child: ScreenLoadingIndicator()),
-          error: (e, _) => SliverFillRemaining(
-            child: Center(
-              child: Text(context.l10n.telemetryError(e.toString())),
-            ),
-          ),
-        ),
+        _buildLogsSliver(context, airAsync, envAsync, nodes),
       ],
+    );
+  }
+
+  Widget _buildLogsSliver(
+    BuildContext context,
+    AsyncValue<List<AirQualityMetricsLog>> airAsync,
+    AsyncValue<List<EnvironmentMetricsLog>> envAsync,
+    Map<int, MeshNode> nodes,
+  ) {
+    if (airAsync.hasError || envAsync.hasError) {
+      final error = airAsync.hasError ? airAsync.error : envAsync.error;
+      return SliverFillRemaining(
+        child: Center(
+          child: Text(context.l10n.telemetryError(error.toString())),
+        ),
+      );
+    }
+    final airLogs = airAsync.value;
+    final envLogs = envAsync.value;
+    if (airLogs == null || envLogs == null) {
+      return const SliverFillRemaining(child: ScreenLoadingIndicator());
+    }
+
+    final entries = buildAirQualityTimeline(airLogs, envLogs);
+    if (entries.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildEmptyState(context),
+      );
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final entry = entries[index];
+          final entryNode = nodes[entry.nodeNum];
+          final entryNodeName =
+              entryNode?.displayName ??
+              '!${entry.nodeNum.toRadixString(16).toUpperCase()}';
+          return _AirQualityCard(
+            entry: entry,
+            nodeName: entryNodeName,
+            onShowOnMap: entryNode?.hasPosition == true
+                ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MapScreen(initialNodeNum: entry.nodeNum),
+                    ),
+                  )
+                : null,
+          );
+        }, childCount: entries.length),
+      ),
     );
   }
 
@@ -113,206 +148,320 @@ class AirQualityLogScreen extends ConsumerWidget {
 }
 
 class _AirQualityCard extends StatelessWidget {
-  final AirQualityMetricsLog log;
+  final AirQualityTimelineEntry entry;
+  final String nodeName;
 
-  const _AirQualityCard({required this.log});
+  /// Non-null only when the sharing node has a usable position - the
+  /// map centring silently no-ops without one, which reads as a broken
+  /// tap.
+  final VoidCallback? onShowOnMap;
+
+  const _AirQualityCard({
+    required this.entry,
+    required this.nodeName,
+    this.onShowOnMap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final timeFormat = AppTimeFormat.dateAndTime(context);
+    final log = entry.airQuality;
 
     final hasPmStandard =
-        log.pm10Standard != null ||
-        log.pm25Standard != null ||
-        log.pm100Standard != null;
+        log != null &&
+        (log.pm10Standard != null ||
+            log.pm25Standard != null ||
+            log.pm100Standard != null);
     final hasOtherAirQuality =
-        hasPmStandard ||
-        log.pm10Environmental != null ||
-        log.pm25Environmental != null ||
-        log.pm100Environmental != null ||
-        log.particles03um != null ||
-        log.particles05um != null ||
-        log.particles10um != null ||
-        log.particles25um != null ||
-        log.particles50um != null ||
-        log.particles100um != null ||
-        log.co2 != null;
+        log != null &&
+        (hasPmStandard ||
+            log.pm10Environmental != null ||
+            log.pm25Environmental != null ||
+            log.pm100Environmental != null ||
+            log.particles03um != null ||
+            log.particles05um != null ||
+            log.particles10um != null ||
+            log.particles25um != null ||
+            log.particles50um != null ||
+            log.particles100um != null ||
+            log.co2 != null);
+    final hasAnyAirSection = hasOtherAirQuality || log?.iaq != null;
+
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header - sharing node + map affordance
+        Row(
+          children: [
+            Icon(Icons.air, size: 16, color: context.accentColor),
+            const SizedBox(width: AppTheme.spacing8),
+            Expanded(
+              child: Text(
+                nodeName,
+                style: Theme.of(context).textTheme.titleSmall,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (onShowOnMap != null)
+              Tooltip(
+                message: context.l10n.telemetryShowOnMap,
+                child: Icon(
+                  Icons.map_outlined,
+                  size: 16,
+                  color: context.textTertiary,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              timeFormat.format(entry.timestamp),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textTertiary,
+              ),
+            ),
+            if (log?.pm25Standard != null)
+              _AqiIndicator(pm25: log!.pm25Standard!),
+          ],
+        ),
+        if (hasAnyAirSection || entry.gasResistance != null)
+          const SizedBox(height: AppTheme.spacing16),
+
+        if (log != null)
+          ..._buildAirSections(
+            context,
+            log,
+            hasPmStandard: hasPmStandard,
+            hasOtherAirQuality: hasOtherAirQuality,
+          ),
+
+        // Gas resistance (BME680/688), merged from environment rows
+        if (entry.gasResistance != null) ...[
+          if (hasAnyAirSection) ...[
+            const SizedBox(height: AppTheme.spacing12),
+            const Divider(color: Colors.white12, height: 1),
+            const SizedBox(height: AppTheme.spacing12),
+          ],
+          _GasResistanceIndicator(ohms: entry.gasResistance!),
+        ],
+      ],
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                timeFormat.format(log.timestamp),
-                style: context.bodySmallStyle?.copyWith(
-                  color: context.textTertiary,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onShowOnMap,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            child: body,
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildAirSections(
+    BuildContext context,
+    AirQualityMetricsLog log, {
+    required bool hasPmStandard,
+    required bool hasOtherAirQuality,
+  }) {
+    return [
+      // PM values
+      if (hasPmStandard) ...[
+        Text(
+          context.l10n.telemetryAirQualityPmStandard,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: context.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Row(
+          children: [
+            if (log.pm10Standard != null)
+              Expanded(
+                child: _PmTile(
+                  label: context.l10n.telemetryAirQualityPm10Label,
+                  value: log.pm10Standard!,
                 ),
               ),
-              if (log.pm25Standard != null)
-                _AqiIndicator(pm25: log.pm25Standard!),
-            ],
+            if (log.pm25Standard != null)
+              Expanded(
+                child: _PmTile(
+                  label: context.l10n.telemetryAirQualityPm25Label,
+                  value: log.pm25Standard!,
+                  highlight: true,
+                ),
+              ),
+            if (log.pm100Standard != null)
+              Expanded(
+                child: _PmTile(
+                  label: context.l10n.telemetryAirQualityPm100Label,
+                  value: log.pm100Standard!,
+                ),
+              ),
+          ],
+        ),
+      ],
+
+      // Environmental PM
+      if (log.pm10Environmental != null || log.pm25Environmental != null) ...[
+        const SizedBox(height: AppTheme.spacing12),
+        Text(
+          context.l10n.telemetryAirQualityPmEnvironmental,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: context.textSecondary,
           ),
-          const SizedBox(height: AppTheme.spacing16),
-
-          // PM values
-          if (hasPmStandard) ...[
-            Text(
-              context.l10n.telemetryAirQualityPmStandard,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: context.textSecondary,
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Row(
+          children: [
+            if (log.pm10Environmental != null)
+              Expanded(
+                child: _PmTile(
+                  label: context.l10n.telemetryAirQualityPm10Label,
+                  value: log.pm10Environmental!,
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Row(
-              children: [
-                if (log.pm10Standard != null)
-                  Expanded(
-                    child: _PmTile(
-                      label: context.l10n.telemetryAirQualityPm10Label,
-                      value: log.pm10Standard!,
-                    ),
-                  ),
-                if (log.pm25Standard != null)
-                  Expanded(
-                    child: _PmTile(
-                      label: context.l10n.telemetryAirQualityPm25Label,
-                      value: log.pm25Standard!,
-                      highlight: true,
-                    ),
-                  ),
-                if (log.pm100Standard != null)
-                  Expanded(
-                    child: _PmTile(
-                      label: context.l10n.telemetryAirQualityPm100Label,
-                      value: log.pm100Standard!,
-                    ),
-                  ),
-              ],
-            ),
-          ],
-
-          // Environmental PM
-          if (log.pm10Environmental != null ||
-              log.pm25Environmental != null) ...[
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              context.l10n.telemetryAirQualityPmEnvironmental,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: context.textSecondary,
+            if (log.pm25Environmental != null)
+              Expanded(
+                child: _PmTile(
+                  label: context.l10n.telemetryAirQualityPm25Label,
+                  value: log.pm25Environmental!,
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Row(
-              children: [
-                if (log.pm10Environmental != null)
-                  Expanded(
-                    child: _PmTile(
-                      label: context.l10n.telemetryAirQualityPm10Label,
-                      value: log.pm10Environmental!,
-                    ),
-                  ),
-                if (log.pm25Environmental != null)
-                  Expanded(
-                    child: _PmTile(
-                      label: context.l10n.telemetryAirQualityPm25Label,
-                      value: log.pm25Environmental!,
-                    ),
-                  ),
-                if (log.pm100Environmental != null)
-                  Expanded(
-                    child: _PmTile(
-                      label: context.l10n.telemetryAirQualityPm100Label,
-                      value: log.pm100Environmental!,
-                    ),
-                  ),
-              ],
-            ),
-          ],
-
-          // Particle counts
-          if (log.particles03um != null || log.particles05um != null) ...[
-            const SizedBox(height: AppTheme.spacing12),
-            const Divider(color: Colors.white12, height: 1),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              context.l10n.telemetryAirQualityParticleCounts,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.7),
+            if (log.pm100Environmental != null)
+              Expanded(
+                child: _PmTile(
+                  label: context.l10n.telemetryAirQualityPm100Label,
+                  value: log.pm100Environmental!,
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                if (log.particles03um != null)
-                  _ParticleChip(
-                    label: context.l10n.telemetryAirQualityParticle03um,
-                    count: log.particles03um!,
-                  ),
-                if (log.particles05um != null)
-                  _ParticleChip(
-                    label: context.l10n.telemetryAirQualityParticle05um,
-                    count: log.particles05um!,
-                  ),
-                if (log.particles10um != null)
-                  _ParticleChip(
-                    label: context.l10n.telemetryAirQualityParticle10um,
-                    count: log.particles10um!,
-                  ),
-                if (log.particles25um != null)
-                  _ParticleChip(
-                    label: context.l10n.telemetryAirQualityParticle25um,
-                    count: log.particles25um!,
-                  ),
-                if (log.particles50um != null)
-                  _ParticleChip(
-                    label: context.l10n.telemetryAirQualityParticle50um,
-                    count: log.particles50um!,
-                  ),
-                if (log.particles100um != null)
-                  _ParticleChip(
-                    label: context.l10n.telemetryAirQualityParticle100um,
-                    count: log.particles100um!,
-                  ),
-              ],
-            ),
           ],
+        ),
+      ],
 
-          // CO2
-          if (log.co2 != null) ...[
-            const SizedBox(height: AppTheme.spacing12),
-            const Divider(color: Colors.white12, height: 1),
-            const SizedBox(height: AppTheme.spacing12),
-            _Co2Indicator(ppm: log.co2!),
+      // Particle counts
+      if (log.particles03um != null || log.particles05um != null) ...[
+        const SizedBox(height: AppTheme.spacing12),
+        const Divider(color: Colors.white12, height: 1),
+        const SizedBox(height: AppTheme.spacing12),
+        Text(
+          context.l10n.telemetryAirQualityParticleCounts,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            if (log.particles03um != null)
+              _ParticleChip(
+                label: context.l10n.telemetryAirQualityParticle03um,
+                count: log.particles03um!,
+              ),
+            if (log.particles05um != null)
+              _ParticleChip(
+                label: context.l10n.telemetryAirQualityParticle05um,
+                count: log.particles05um!,
+              ),
+            if (log.particles10um != null)
+              _ParticleChip(
+                label: context.l10n.telemetryAirQualityParticle10um,
+                count: log.particles10um!,
+              ),
+            if (log.particles25um != null)
+              _ParticleChip(
+                label: context.l10n.telemetryAirQualityParticle25um,
+                count: log.particles25um!,
+              ),
+            if (log.particles50um != null)
+              _ParticleChip(
+                label: context.l10n.telemetryAirQualityParticle50um,
+                count: log.particles50um!,
+              ),
+            if (log.particles100um != null)
+              _ParticleChip(
+                label: context.l10n.telemetryAirQualityParticle100um,
+                count: log.particles100um!,
+              ),
           ],
+        ),
+      ],
 
-          // IAQ (Indoor Air Quality index, from the BME680/688 VOC sensor)
-          if (log.iaq != null) ...[
-            if (hasOtherAirQuality) ...[
-              const SizedBox(height: AppTheme.spacing12),
-              const Divider(color: Colors.white12, height: 1),
-            ],
-            const SizedBox(height: AppTheme.spacing12),
-            _IaqIndicator(iaq: log.iaq!),
-          ],
+      // CO2
+      if (log.co2 != null) ...[
+        const SizedBox(height: AppTheme.spacing12),
+        const Divider(color: Colors.white12, height: 1),
+        const SizedBox(height: AppTheme.spacing12),
+        _Co2Indicator(ppm: log.co2!),
+      ],
+
+      // IAQ (Indoor Air Quality index, from the BME680/688 VOC sensor)
+      if (log.iaq != null) ...[
+        if (hasOtherAirQuality) ...[
+          const SizedBox(height: AppTheme.spacing12),
+          const Divider(color: Colors.white12, height: 1),
         ],
-      ),
+        const SizedBox(height: AppTheme.spacing12),
+        _IaqIndicator(iaq: log.iaq!),
+      ],
+    ];
+  }
+}
+
+class _GasResistanceIndicator extends StatelessWidget {
+  final double ohms;
+
+  const _GasResistanceIndicator({required this.ohms});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.air, color: AccentColors.green, size: 24),
+        const SizedBox(width: AppTheme.spacing12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.telemetryEnvGasResistanceValue(
+                ohms.toStringAsFixed(0),
+              ),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AccentColors.green,
+              ),
+            ),
+            Text(
+              context.l10n.telemetryAirQualityGasResistanceLabel,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

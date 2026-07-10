@@ -252,6 +252,11 @@ class MapControlLayout {
 /// device compass heading.
 enum MapCompassMode { northLocked, freeRotate, followHeading }
 
+/// Parses a persisted [MapCompassMode] name. Unknown or null names fall
+/// back to [MapCompassMode.northLocked], the first-run resting state.
+MapCompassMode mapCompassModeFromName(String? name) =>
+    MapCompassMode.values.asNameMap()[name] ?? MapCompassMode.northLocked;
+
 /// Compass widget showing map rotation - shared across all map screens.
 ///
 /// Callers that drive the full three-state machine pass [mode]. Legacy callers

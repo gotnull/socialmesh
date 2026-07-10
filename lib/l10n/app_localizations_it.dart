@@ -3656,6 +3656,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get channelsMenuAddChannel => 'Aggiungi canale';
 
   @override
+  String get channelsMenuReorder => 'Riordina canali';
+
+  @override
+  String get channelsReorderSheetTitle => 'Riordina canali';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Trascina per impostare l\'ordine di visualizzazione. Gli slot dei canali della radio restano invariati.';
+
+  @override
   String get channelsMenuHelp => 'Aiuto';
 
   @override
@@ -6271,6 +6281,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Avvia aggiornamento';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Collega il dispositivo via Bluetooth per installare questo aggiornamento.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Nessun dispositivo collegato. Collegalo via Bluetooth e riprova.';
+
+  @override
   String get firmwareDfuRetry => 'Riprova';
 
   @override
@@ -7572,6 +7590,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mapSearchNodesHint => 'Cerca nodi...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Vai alle coordinate';
+
+  @override
   String get mapSettings => 'Impostazioni';
 
   @override
@@ -7599,7 +7620,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mapShowHeatmap => 'Mostra aloni dei nodi';
 
   @override
-  String get mapShowClusterMarkers => 'Raggruppa marker';
+  String get mapShowClusterMarkers => 'Mostra raggruppamento marker';
 
   @override
   String get mapHideClusterMarkers => 'Disattiva raggruppamento';
@@ -12190,6 +12211,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get messagingSendTooltip => 'Invia (Ctrl/Cmd+Invio)';
+
+  @override
+  String get messagingAlertBellTooltip => 'Invia campanello di avviso';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Fa suonare le radio con buzzer configurato';
 
   @override
   String messagingComposerByteCounter(int used, int max) {
@@ -23280,7 +23308,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Le letture della qualità dell\'aria compaiono quando un nodo della tua mesh ha un sensore di qualità dell\'aria (PM2.5, PM10, CO2) e le trasmette.';
+      'Le letture della qualità dell\'aria compaiono quando un nodo della tua mesh ha un sensore di qualità dell\'aria (PM2.5, PM10, CO2, resistenza al gas) e le trasmette.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Resistenza al gas (sensore VOC)';
+
+  @override
+  String get telemetryShowOnMap => 'Mostra il nodo sulla mappa';
 
   @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
@@ -36231,6 +36266,14 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  ) {
+    return '$senderName in $channelName';
+  }
+
+  @override
   String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
     return 'Nuovo peer: $contactName ($shortCode)';
   }
@@ -36572,6 +36615,20 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get automationErrorNoTargetNode =>
       'Nessun nodo di destinazione specificato';
+
+  @override
+  String get automationVarUnknown => 'sconosciuto';
+
+  @override
+  String get automationActionReplyToSender => 'Rispondi al mittente';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Risponde al nodo che ha attivato questa automazione';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Questo trigger non ha un mittente a cui rispondere';
 
   @override
   String get automationErrorSendChannelNotConfigured =>
@@ -40706,6 +40763,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Posizione di archiviazione';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle =>
+      'Archiviazione mappe offline';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Scegli dove salvare i riquadri della mappa scaricati';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'I riquadri della mappa scaricati vengono conservati su questo dispositivo per l\'uso offline. Quando è disponibile una scheda SD rimovibile, puoi salvarli lì invece che nella memoria interna.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Dimensione attuale della cache';
 
   @override
   String get offlineStorageInternal => 'Interna';

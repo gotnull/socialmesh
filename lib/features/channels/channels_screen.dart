@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/channels_display_order_provider.dart';
 import '../../providers/help_providers.dart';
+import '../../providers/messages_view_mode_provider.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -18,6 +22,7 @@ import '../../core/widgets/ico_help_system.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 import 'channel_options_sheet.dart';
+import 'channel_reorder_sheet.dart';
 import 'channel_wizard_screen.dart';
 
 class ChannelsScreen extends ConsumerStatefulWidget {
@@ -33,11 +38,36 @@ class ChannelsScreen extends ConsumerStatefulWidget {
 
 enum ChannelFilter { all, unread, primary, encrypted, position, mqtt }
 
+// Resolves a persisted filter name back to the enum. Unknown or null
+// names (fresh installs, values written by a newer app version) fall
+// back to the all-channels view instead of throwing.
+ChannelFilter channelFilterFromName(String? raw) => ChannelFilter.values
+    .firstWhere((f) => f.name == raw, orElse: () => ChannelFilter.all);
+
 class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
     with LifecycleSafeMixin {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   ChannelFilter _activeFilter = ChannelFilter.all;
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore the last chosen filter chip. Read synchronously off the
+    // already-loaded settings service when present; before it loads the
+    // default all-channels view applies, matching first launches.
+    _activeFilter = channelFilterFromName(
+      ref.read(settingsServiceProvider).value?.channelsListFilter,
+    );
+  }
+
+  void _selectFilter(ChannelFilter filter) {
+    HapticFeedback.lightImpact();
+    setState(() => _activeFilter = filter);
+    final settings = ref.read(settingsServiceProvider).value;
+    if (settings == null || settings.channelsListFilter == filter.name) return;
+    unawaited(settings.setChannelsListFilter(filter.name));
+  }
 
   @override
   void dispose() {
@@ -71,7 +101,13 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final channels = ref.watch(channelsProvider);
+    // The saved display order applies before filtering so the user's
+    // arrangement holds in every filtered subset. Slot assignment on the
+    // radio is untouched.
+    final channels = applyChannelDisplayOrder(
+      ref.watch(channelsProvider),
+      ref.watch(channelsDisplayOrderProvider),
+    );
     final channelUnreads = ref.watch(channelUnreadCountsProvider);
 
     // Count channels by filter for badges
@@ -133,10 +169,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 label: context.l10n.channelsFilterAll,
                 count: channels.length,
                 isSelected: _activeFilter == ChannelFilter.all,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  setState(() => _activeFilter = ChannelFilter.all);
-                },
+                onTap: () => _selectFilter(ChannelFilter.all),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterUnread,
@@ -144,8 +177,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.unread,
                 icon: Icons.mark_email_unread_outlined,
                 color: AccentColors.red,
-                onTap: () =>
-                    setState(() => _activeFilter = ChannelFilter.unread),
+                onTap: () => _selectFilter(ChannelFilter.unread),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterPrimary,
@@ -153,8 +185,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.primary,
                 color: AccentColors.blue,
                 icon: Icons.star,
-                onTap: () =>
-                    setState(() => _activeFilter = ChannelFilter.primary),
+                onTap: () => _selectFilter(ChannelFilter.primary),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterEncrypted,
@@ -162,8 +193,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.encrypted,
                 color: AccentColors.green,
                 icon: Icons.lock,
-                onTap: () =>
-                    setState(() => _activeFilter = ChannelFilter.encrypted),
+                onTap: () => _selectFilter(ChannelFilter.encrypted),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterPosition,
@@ -171,8 +201,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.position,
                 color: AccentColors.orange,
                 icon: Icons.location_on,
-                onTap: () =>
-                    setState(() => _activeFilter = ChannelFilter.position),
+                onTap: () => _selectFilter(ChannelFilter.position),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterMqtt,
@@ -180,7 +209,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                 isSelected: _activeFilter == ChannelFilter.mqtt,
                 color: AccentColors.purple,
                 icon: Icons.cloud,
-                onTap: () => setState(() => _activeFilter = ChannelFilter.mqtt),
+                onTap: () => _selectFilter(ChannelFilter.mqtt),
               ),
             ],
           ),
@@ -251,14 +280,17 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
               delegate: SliverChildBuilderDelegate((context, index) {
                 final channel = filteredChannels[index];
                 final animationsEnabled = ref.watch(animationsEnabledProvider);
+                final compactView = ref.watch(messagesCompactViewProvider);
                 return Perspective3DSlide(
                   index: index,
                   direction: SlideDirection.left,
                   enabled: animationsEnabled,
-                  child: _ChannelTile(
-                    channel: channel,
-                    animationsEnabled: animationsEnabled,
-                  ),
+                  child: compactView
+                      ? _CompactChannelTile(channel: channel)
+                      : _ChannelTile(
+                          channel: channel,
+                          animationsEnabled: animationsEnabled,
+                        ),
                 );
               }, childCount: filteredChannels.length),
             ),
@@ -309,6 +341,8 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                     );
                   case 'scan':
                     Navigator.of(context).pushNamed('/qr-scanner');
+                  case 'reorder':
+                    showChannelReorderSheet(context);
                   case 'settings':
                     Navigator.pushNamed(context, '/settings');
                   case 'help':
@@ -336,6 +370,16 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
+                if (channels.length > 1)
+                  PopupMenuItem(
+                    value: 'reorder',
+                    child: ListTile(
+                      leading: Icon(Icons.swap_vert),
+                      title: Text(context.l10n.channelsMenuReorder),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'settings',
@@ -523,18 +567,114 @@ class _ChannelTile extends ConsumerWidget {
     );
   }
 
-  void _openChannelChat(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(
-          type: ConversationType.channel,
-          channelIndex: channel.index,
-          title: channel.name.isEmpty
-              ? (channel.index == 0
-                    ? context.l10n.channelsPrimaryChannelName
-                    : context.l10n.channelsDefaultChannelName(channel.index))
-              : channel.name,
+  void _openChannelChat(BuildContext context) =>
+      _openChannelChatFor(context, channel);
+}
+
+// Resolves the display name and opens the channel chat. Shared by the
+// card and compact tiles.
+String _channelDisplayName(BuildContext context, ChannelConfig channel) =>
+    channel.name.isEmpty
+    ? (channel.index == 0
+          ? context.l10n.channelsPrimaryChannelName
+          : context.l10n.channelsDefaultChannelName(channel.index))
+    : channel.name;
+
+void _openChannelChatFor(BuildContext context, ChannelConfig channel) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ChatScreen(
+        type: ConversationType.channel,
+        channelIndex: channel.index,
+        title: _channelDisplayName(context, channel),
+      ),
+    ),
+  );
+}
+
+/// Dense channel row for the compact view mode: flat surface, smaller
+/// index badge, single row. Mirrors the compact tiles on the Nodes and
+/// Contacts lists so the densified surfaces read consistently.
+class _CompactChannelTile extends ConsumerWidget {
+  final ChannelConfig channel;
+
+  const _CompactChannelTile({required this.channel});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPrimary = channel.index == 0;
+    final hasKey = channel.hasSecureKey;
+    final unreadCount =
+        ref.watch(channelUnreadCountsProvider)[channel.index] ?? 0;
+
+    return InkWell(
+      onTap: () => _openChannelChatFor(context, channel),
+      onLongPress: () => showChannelOptionsSheet(context, channel, ref: ref),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isPrimary ? context.accentColor : context.background,
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+              ),
+              child: Center(
+                child: Text(
+                  '${channel.index}',
+                  style: TextStyle(
+                    color: isPrimary ? Colors.white : context.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Text(
+                _channelDisplayName(context, channel),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: context.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing8),
+            Icon(
+              hasKey ? Icons.lock : Icons.lock_open,
+              size: 14,
+              color: hasKey ? context.accentColor : context.textTertiary,
+            ),
+            if (unreadCount > 0) ...[
+              const SizedBox(width: AppTheme.spacing8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: context.accentColor,
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                ),
+                child: Text(
+                  unreadCount > 99
+                      ? context.l10n.channelsUnreadOverflow
+                      : '$unreadCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(width: AppTheme.spacing8),
+            Icon(Icons.chevron_right, color: context.textTertiary, size: 16),
+          ],
         ),
       ),
     );

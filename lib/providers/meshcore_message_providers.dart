@@ -116,6 +116,37 @@ String? meshCoreConversationIdForSenderPrefix(
   return null;
 }
 
+/// Maximum sender-name length accepted by [meshCoreChannelSenderFromText].
+/// Node names on the wire are much shorter; anything longer is treated as
+/// message text that merely contains a colon, not a sender prefix.
+const int meshCoreChannelSenderMaxLength = 48;
+
+/// Split a channel message's text into its embedded sender name and body.
+///
+/// Channel frames carry no sender identity in firmware; instead the sending
+/// radio composes the group text on the wire as `<sender>: <msg>`
+/// (upstream `BaseChatMesh::sendGroupMessage` prepends the radio's own node
+/// name via `sprintf("%s: ", sender_name)`). This parses that convention
+/// back out so notifications can show who posted.
+///
+/// Conservative on purpose - returns `null` (no sender) unless the text has
+/// a `": "` separator with a plausible single-line name of at most
+/// [meshCoreChannelSenderMaxLength] chars before it and a non-blank body
+/// after it. Nonconforming text passes through untouched.
+///
+/// Visible for testing so the wire convention stays regression-pinned.
+@visibleForTesting
+({String sender, String body})? meshCoreChannelSenderFromText(String text) {
+  final sep = text.indexOf(': ');
+  if (sep <= 0) return null;
+  final sender = text.substring(0, sep);
+  if (sender.length > meshCoreChannelSenderMaxLength) return null;
+  if (sender.contains('\n')) return null;
+  final body = text.substring(sep + 2);
+  if (body.trim().isEmpty) return null;
+  return (sender: sender, body: body);
+}
+
 /// 32-bit FNV-1a hash of a UTF-8 string, returned as 8 lowercase hex
 /// chars. Fast, stable, no crypto dependency. Used by D19's
 /// deterministic message-id scheme so the same inbound frame always
@@ -1346,10 +1377,13 @@ class MeshCoreConversationsNotifier
     );
 
     // D30 Part A: fire a local notification for inbound MeshCore channel
-    // messages. Channel frames carry no sender identity in firmware, so
-    // we surface the channel name only. Resolve the channel display
-    // name from the channels provider; fall back to a generic
-    // "Channel <index>" label if the channel isn't known yet.
+    // messages. Channel frames carry no sender identity in firmware, but
+    // the sending radio embeds its node name in the text as
+    // `<sender>: <msg>`; parse that back out so the notification title
+    // names who posted, with the name stripped from the body so it is not
+    // shown twice. Resolve the channel display name from the channels
+    // provider; fall back to a generic "Channel <index>" label if the
+    // channel isn't known yet.
     final channels = ref.read(meshCoreChannelsProvider).channels;
     final channelName = channels
         .where((c) => c.index == parsed.channelIndex)
@@ -1360,12 +1394,13 @@ class MeshCoreConversationsNotifier
     // banner doesn't surface raw `[mrrp]…[/mrrp]` text. See the
     // contact-mirror at `_maybeNotifyContactMessage` callsite for the
     // matching note.
+    final parsedSender = meshCoreChannelSenderFromText(displayText);
     _maybeNotifyChannelMessage(
-      senderName: '',
+      senderName: parsedSender?.sender ?? '',
       channelName: channelName,
       channelIndex: parsed.channelIndex,
       senderPrefixHex: '',
-      text: displayText,
+      text: parsedSender?.body ?? displayText,
     );
   }
 

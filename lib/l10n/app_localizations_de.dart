@@ -3668,6 +3668,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channelsMenuAddChannel => 'Kanal hinzufügen';
 
   @override
+  String get channelsMenuReorder => 'Kanäle neu anordnen';
+
+  @override
+  String get channelsReorderSheetTitle => 'Kanäle neu anordnen';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Ziehen, um die Anzeigereihenfolge festzulegen. Die Kanalplätze auf dem Gerät bleiben unverändert.';
+
+  @override
   String get channelsMenuHelp => 'Hilfe';
 
   @override
@@ -6289,6 +6299,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Update starten';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Verbinden Sie Ihr Gerät über Bluetooth, um dieses Update zu installieren.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Kein Gerät verbunden. Verbinden Sie sich über Bluetooth und versuchen Sie es erneut.';
+
+  @override
   String get firmwareDfuRetry => 'Erneut versuchen';
 
   @override
@@ -7592,6 +7610,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mapSearchNodesHint => 'Knoten suchen...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Zu Koordinaten springen';
+
+  @override
   String get mapSettings => 'Einstellungen';
 
   @override
@@ -7619,7 +7640,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mapShowHeatmap => 'Knoten-Halos anzeigen';
 
   @override
-  String get mapShowClusterMarkers => 'Marker clustern';
+  String get mapShowClusterMarkers => 'Cluster-Marker anzeigen';
 
   @override
   String get mapHideClusterMarkers => 'Clustering ausschalten';
@@ -12216,6 +12237,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get messagingSendTooltip => 'Senden (Ctrl/Cmd+Enter)';
+
+  @override
+  String get messagingAlertBellTooltip => 'Klingel senden';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Lässt Geräte mit konfiguriertem Summer klingeln';
 
   @override
   String messagingComposerByteCounter(int used, int max) {
@@ -23330,7 +23358,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Luftqualitätswerte erscheinen, wenn ein Knoten in deinem Mesh einen Luftqualitätssensor (PM2.5, PM10, CO2) besitzt und diese sendet.';
+      'Luftqualitätswerte erscheinen, wenn ein Knoten in deinem Mesh einen Luftqualitätssensor (PM2.5, PM10, CO2, Gaswiderstand) besitzt und diese sendet.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Gaswiderstand (VOC-Sensor)';
+
+  @override
+  String get telemetryShowOnMap => 'Knoten auf der Karte anzeigen';
 
   @override
   String get telemetryAirQualityParticle03um => '>0,3 µm';
@@ -36329,6 +36364,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  ) {
+    return '$senderName in $channelName';
+  }
+
+  @override
   String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
     return 'Neuer Peer: $contactName ($shortCode)';
   }
@@ -36669,6 +36712,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Kein Ziel-Node angegeben';
+
+  @override
+  String get automationVarUnknown => 'unbekannt';
+
+  @override
+  String get automationActionReplyToSender => 'Dem Absender antworten';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Antwortet dem Node, der diese Automatisierung ausgelöst hat';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Dieser Auslöser hat keinen Absender, dem geantwortet werden kann';
 
   @override
   String get automationErrorSendChannelNotConfigured =>
@@ -40800,6 +40857,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Speicherort';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle => 'Offline-Kartenspeicher';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Wählen Sie, wo heruntergeladene Kartenkacheln gespeichert werden';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Heruntergeladene Kartenkacheln werden für die Offline-Nutzung auf diesem Gerät gespeichert. Wenn eine entnehmbare SD-Karte verfügbar ist, können Sie sie dort statt im internen Speicher ablegen.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Aktuelle Cache-Größe';
 
   @override
   String get offlineStorageInternal => 'Intern';

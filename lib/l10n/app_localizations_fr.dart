@@ -3690,6 +3690,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get channelsMenuAddChannel => 'Ajouter un canal';
 
   @override
+  String get channelsMenuReorder => 'Réorganiser les canaux';
+
+  @override
+  String get channelsReorderSheetTitle => 'Réorganiser les canaux';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Faites glisser pour définir l\'ordre d\'affichage. Les emplacements de canaux de la radio restent inchangés.';
+
+  @override
   String get channelsMenuHelp => 'Aide';
 
   @override
@@ -6327,6 +6337,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Démarrer la mise à jour';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Connectez votre appareil via Bluetooth pour installer cette mise à jour.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Aucun appareil connecté. Connectez-vous via Bluetooth et réessayez.';
+
+  @override
   String get firmwareDfuRetry => 'Réessayer';
 
   @override
@@ -7637,6 +7655,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mapSearchNodesHint => 'Rechercher des noeuds...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Aller aux coordonnées';
+
+  @override
   String get mapSettings => 'Paramètres';
 
   @override
@@ -7664,7 +7685,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mapShowHeatmap => 'Afficher les halos des nœuds';
 
   @override
-  String get mapShowClusterMarkers => 'Regrouper les marqueurs';
+  String get mapShowClusterMarkers => 'Afficher le regroupement des marqueurs';
 
   @override
   String get mapHideClusterMarkers => 'Désactiver le regroupement';
@@ -12280,6 +12301,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get messagingSendTooltip => 'Envoyer (Ctrl/Cmd+Entrée)';
+
+  @override
+  String get messagingAlertBellTooltip => 'Envoyer la cloche d\'alerte';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Fait sonner les radios avec buzzer configuré';
 
   @override
   String messagingComposerByteCounter(int used, int max) {
@@ -23429,7 +23457,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Les relevés de qualité de l\'air apparaissent lorsqu\'un nœud de votre maillage possède un capteur de qualité de l\'air (PM2.5, PM10, CO2) et le diffuse.';
+      'Les relevés de qualité de l\'air apparaissent lorsqu\'un nœud de votre maillage possède un capteur de qualité de l\'air (PM2.5, PM10, CO2, résistance au gaz) et le diffuse.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Résistance au gaz (capteur COV)';
+
+  @override
+  String get telemetryShowOnMap => 'Afficher le nœud sur la carte';
 
   @override
   String get telemetryAirQualityParticle03um => '>0,3µm';
@@ -36499,6 +36534,14 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  ) {
+    return '$senderName dans $channelName';
+  }
+
+  @override
   String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
     return 'Nouveau pair : $contactName ($shortCode)';
   }
@@ -36839,6 +36882,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Aucun nœud cible spécifié';
+
+  @override
+  String get automationVarUnknown => 'inconnu';
+
+  @override
+  String get automationActionReplyToSender => 'Répondre à l\'expéditeur';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Répond au nœud qui a déclenché cette automatisation';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Ce déclencheur n\'a pas d\'expéditeur à qui répondre';
 
   @override
   String get automationErrorSendChannelNotConfigured =>
@@ -40987,6 +41044,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Emplacement de stockage';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle =>
+      'Stockage des cartes hors ligne';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Choisissez où stocker les tuiles de carte téléchargées';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Les tuiles de carte téléchargées sont conservées sur cet appareil pour une utilisation hors ligne. Lorsqu\'une carte SD amovible est disponible, vous pouvez les y stocker au lieu de la mémoire interne.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Taille actuelle du cache';
 
   @override
   String get offlineStorageInternal => 'Interne';

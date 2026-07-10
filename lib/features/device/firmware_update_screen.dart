@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
 import 'dart:io';
 
 import '../../core/l10n/l10n_extension.dart';
@@ -42,6 +43,11 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
     final firmwareAsync = ref.watch(firmwareReleaseProvider);
     final dfuState = ref.watch(dfuStateProvider);
+    // Node metadata above comes from the DB-backed nodesProvider and
+    // survives disconnects, so the DFU button must gate on the live
+    // connection separately - it is the handle _showDfuConfirmation
+    // consumes for the device address.
+    final isConnected = ref.watch(connectedDeviceProvider) != null;
 
     final currentVersion =
         myNode?.firmwareVersion ?? context.l10n.firmwareUpdateUnknown;
@@ -100,6 +106,7 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
                 architecture,
                 myNode?.hwModelId,
                 dfuState,
+                isConnected: isConnected,
               ),
 
               const SizedBox(height: AppTheme.spacing24),
@@ -255,8 +262,9 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
     String currentVersion,
     DeviceArchitecture architecture,
     int? hwModelId,
-    DfuState dfuState,
-  ) {
+    DfuState dfuState, {
+    required bool isConnected,
+  }) {
     return firmwareAsync.when(
       data: (release) {
         if (release == null) return _buildNoUpdateCard(context);
@@ -274,7 +282,12 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
               if (architecture.supportsNordicDfu &&
                   hwModelId != null &&
                   dfuState is DfuIdle) ...[
-                _buildDfuButton(context, release, hwModelId),
+                _buildDfuButton(
+                  context,
+                  release,
+                  hwModelId,
+                  isConnected: isConnected,
+                ),
                 const SizedBox(height: AppTheme.spacing12),
               ],
 
@@ -438,28 +451,43 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
   Widget _buildDfuButton(
     BuildContext context,
     FirmwareRelease release,
-    int hwModelId,
-  ) {
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        onPressed: () {
-          ref.haptics.toggle();
-          _showDfuConfirmation(context, release, hwModelId);
-        },
-        style: FilledButton.styleFrom(
-          backgroundColor: context.accentColor,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radius10),
+    int hwModelId, {
+    required bool isConnected,
+  }) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: isConnected
+                ? () {
+                    ref.haptics.toggle();
+                    _showDfuConfirmation(context, release, hwModelId);
+                  }
+                : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: context.accentColor,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius10),
+              ),
+            ),
+            icon: const Icon(Icons.system_update),
+            label: Text(
+              context.l10n.firmwareDfuStartUpdate,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ),
-        icon: const Icon(Icons.system_update),
-        label: Text(
-          context.l10n.firmwareDfuStartUpdate,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
+        if (!isConnected) ...[
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            context.l10n.firmwareDfuConnectRequired,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: context.textTertiary),
+          ),
+        ],
+      ],
     );
   }
 
@@ -795,7 +823,10 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
     final deviceAddress = connectedDevice?.id;
 
     if (deviceAddress == null) {
+      // The button disables while disconnected; this covers the race where
+      // the link drops between the frame that rendered it and the tap.
       AppLogging.firmware('Cannot start DFU: no connected device');
+      showErrorSnackBar(context, l10n.firmwareDfuNotConnectedError);
       return;
     }
 
@@ -829,7 +860,7 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
               onPressed: () {
                 HapticFeedback.mediumImpact();
                 Navigator.of(context).pop();
-                _startDfu(release, hwModelId, deviceAddress);
+                unawaited(_startDfu(release, hwModelId, deviceAddress));
               },
               style: FilledButton.styleFrom(
                 backgroundColor: context.accentColor,
@@ -850,8 +881,12 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
     );
   }
 
-  void _startDfu(FirmwareRelease release, int hwModelId, String deviceAddress) {
-    ref
+  Future<void> _startDfu(
+    FirmwareRelease release,
+    int hwModelId,
+    String deviceAddress,
+  ) {
+    return ref
         .read(dfuStateProvider.notifier)
         .startDfu(
           release: release,

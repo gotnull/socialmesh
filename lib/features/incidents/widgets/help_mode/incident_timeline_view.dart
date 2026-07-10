@@ -8,10 +8,10 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme.dart';
+import '../../../../utils/time_format.dart';
 import '../../models/incident_mode_models.dart';
 import 'help_mode_labels.dart';
 
@@ -35,7 +35,7 @@ class IncidentTimelineView extends StatelessWidget {
       );
     }
 
-    final timeFmt = DateFormat.Hm();
+    final timeFmt = AppTimeFormat.timeOnly(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -32,6 +32,36 @@ class NetworkTransport implements DeviceTransport {
   static const Duration _heartbeatInterval = Duration(seconds: 15);
   DateTime? _lastDataReceived;
 
+  // Tuned TCP keepalive. A powered-off or vanished radio cannot ACK the
+  // kernel's keepalive probes, so the OS resets the connection roughly
+  // idle + interval * count seconds (~50s) after the last exchange and
+  // the read stream surfaces the error immediately, foreground or
+  // background. A quiet-but-alive radio's kernel still answers the
+  // probes, so a silent mesh never trips a false disconnect - which is
+  // why detection lives here and not in an app-level silence timeout.
+  // Best-effort: a set failure only means detection falls back to the
+  // much slower OS defaults.
+  static const int _keepaliveIdleSeconds = 20;
+  static const int _keepaliveIntervalSeconds = 10;
+  static const int _keepaliveProbeCount = 3;
+
+  // Socket option ids are platform ABI constants; dart:io exposes the
+  // levels (levelSocket/levelTcp) but not these option numbers.
+  static const int _soKeepaliveDarwin = 0x0008; // SO_KEEPALIVE
+  static const int _tcpKeepIdleDarwin = 0x10; // TCP_KEEPALIVE (idle)
+  static const int _tcpKeepIntvlDarwin = 0x101; // TCP_KEEPINTVL
+  static const int _tcpKeepCntDarwin = 0x102; // TCP_KEEPCNT
+  static const int _soKeepaliveLinux = 9; // SO_KEEPALIVE
+  static const int _tcpKeepIdleLinux = 4; // TCP_KEEPIDLE
+  static const int _tcpKeepIntvlLinux = 5; // TCP_KEEPINTVL
+  static const int _tcpKeepCntLinux = 6; // TCP_KEEPCNT
+
+  bool _keepaliveEnabled = false;
+
+  /// Whether tuned TCP keepalive was applied to the current socket.
+  /// Diagnostic and test surface only.
+  bool get keepaliveEnabled => _keepaliveEnabled;
+
   /// Max chunk size to forward to the protocol layer. Anything larger
   /// is split into chunks of this size. A real Meshtastic device never
   /// sends more than ~520 bytes (512 payload + 4 header + padding) in
@@ -87,6 +117,7 @@ class NetworkTransport implements DeviceTransport {
         port,
         timeout: const Duration(seconds: 10),
       );
+      _enableKeepalive(_socket!);
 
       /// Total bytes received on this connection (security metric).
       var totalBytesReceived = 0;
@@ -265,11 +296,69 @@ class NetworkTransport implements DeviceTransport {
       return;
     }
     _stopHeartbeat();
+    _keepaliveEnabled = false;
     _socketSubscription?.cancel();
     _socketSubscription = null;
     _socket?.destroy();
     _socket = null;
     _setState(DeviceConnectionState.disconnected);
+  }
+
+  void _enableKeepalive(Socket socket) {
+    _keepaliveEnabled = false;
+    final (int, int, int, int) options;
+    if (Platform.isIOS || Platform.isMacOS) {
+      options = (
+        _soKeepaliveDarwin,
+        _tcpKeepIdleDarwin,
+        _tcpKeepIntvlDarwin,
+        _tcpKeepCntDarwin,
+      );
+    } else if (Platform.isAndroid || Platform.isLinux) {
+      options = (
+        _soKeepaliveLinux,
+        _tcpKeepIdleLinux,
+        _tcpKeepIntvlLinux,
+        _tcpKeepCntLinux,
+      );
+    } else {
+      return;
+    }
+    try {
+      socket.setRawOption(
+        RawSocketOption.fromBool(RawSocketOption.levelSocket, options.$1, true),
+      );
+      socket.setRawOption(
+        RawSocketOption.fromInt(
+          RawSocketOption.levelTcp,
+          options.$2,
+          _keepaliveIdleSeconds,
+        ),
+      );
+      socket.setRawOption(
+        RawSocketOption.fromInt(
+          RawSocketOption.levelTcp,
+          options.$3,
+          _keepaliveIntervalSeconds,
+        ),
+      );
+      socket.setRawOption(
+        RawSocketOption.fromInt(
+          RawSocketOption.levelTcp,
+          options.$4,
+          _keepaliveProbeCount,
+        ),
+      );
+      _keepaliveEnabled = true;
+      AppLogging.protocol(
+        'NetworkTransport: TCP keepalive enabled '
+        '(idle=${_keepaliveIdleSeconds}s, '
+        'interval=${_keepaliveIntervalSeconds}s, '
+        'count=$_keepaliveProbeCount)',
+      );
+    } catch (e) {
+      AppLogging.protocol('NetworkTransport: TCP keepalive unavailable: $e');
+    }
   }
 
   void _startHeartbeat() {

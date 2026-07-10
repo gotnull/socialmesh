@@ -3,7 +3,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
@@ -12,6 +11,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/protocol/sip/spp_types.dart';
+import '../../../utils/time_format.dart';
 import '../models/incident.dart';
 import '../models/mesh_incident_report.dart';
 import '../providers/mesh_incident_providers.dart';
@@ -288,7 +288,7 @@ class _ReportTimelineEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dimmed = report.isSuperseded;
-    final dateFormat = DateFormat.yMd().add_Hm();
+    final dateFormat = AppTimeFormat.numericDateAndTime(context);
     final typeColor = _updateTypeColor(report.updateType);
 
     return Opacity(

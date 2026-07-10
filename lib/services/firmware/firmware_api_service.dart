@@ -11,16 +11,35 @@ import '../../core/logging.dart';
 import 'firmware_models.dart';
 import 'hardware_architecture.dart';
 
+/// Thrown when the release check cannot reach GitHub or gets a non-200
+/// answer. Surfacing this (instead of returning null) lets the screen
+/// distinguish "check failed, try again" from "no release available".
+class FirmwareFetchException implements Exception {
+  final String message;
+
+  const FirmwareFetchException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 /// Service for fetching Meshtastic firmware releases and downloading
 /// device-specific firmware files.
 class FirmwareApiService {
   static const _githubReleasesUrl =
       'https://api.github.com/repos/meshtastic/firmware/releases/latest';
 
+  final http.Client _client;
+
+  FirmwareApiService({http.Client? client}) : _client = client ?? http.Client();
+
   /// Fetches the latest Meshtastic firmware release info from GitHub.
+  ///
+  /// Throws [FirmwareFetchException] when the request fails; returns
+  /// `null` only when there is genuinely no release to offer.
   Future<FirmwareRelease?> fetchLatestRelease() async {
     try {
-      final response = await http
+      final response = await _client
           .get(
             Uri.parse(_githubReleasesUrl),
             headers: {'Accept': 'application/vnd.github.v3+json'},
@@ -31,7 +50,7 @@ class FirmwareApiService {
         AppLogging.firmware(
           'GitHub releases API returned ${response.statusCode}',
         );
-        return null;
+        throw FirmwareFetchException('HTTP ${response.statusCode}');
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
@@ -66,9 +85,11 @@ class FirmwareApiService {
         pageUrl: htmlUrl,
         assets: assets,
       );
+    } on FirmwareFetchException {
+      rethrow;
     } catch (e) {
       AppLogging.firmware('Error fetching firmware release: $e');
-      return null;
+      throw FirmwareFetchException(e.runtimeType.toString());
     }
   }
 

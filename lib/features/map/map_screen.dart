@@ -20,6 +20,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
 import '../../core/safe_lat_lng.dart';
+import '../../core/widgets/linkified_text.dart';
 import 'map_session_providers.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -447,6 +448,31 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _nodeOverlayOpacity = settings.mapNodeOverlayOpacity;
       });
     }
+    _restoreCompassMode(settings.mapCompassModeName);
+  }
+
+  // The compass mode survives tab switches and relaunches (the Map tab's
+  // State is recreated on every visit, so without this it would snap back
+  // to north-locked). Follow-heading needs the magnetometer subscription,
+  // so it re-enters through _enableHeadingUp; missing hardware falls back
+  // to the north-locked resting state.
+  void _restoreCompassMode(String? savedName) {
+    final savedMode = mapCompassModeFromName(savedName);
+    if (savedMode == _compassMode) return;
+    if (savedMode == MapCompassMode.followHeading) {
+      if (FlutterCompass.events != null) {
+        _enableHeadingUp();
+      }
+    } else {
+      safeSetState(() => _compassMode = savedMode);
+    }
+  }
+
+  Future<void> _persistCompassMode() async {
+    final settingsFuture = ref.read(settingsServiceProvider.future);
+    final settings = await settingsFuture;
+    if (!mounted) return;
+    await settings.setMapCompassModeName(_compassMode.name);
   }
 
   Future<void> _saveMapStyle(MapTileStyle style) async {
@@ -472,9 +498,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await settings.setMapNodeOverlayOpacity(_nodeOverlayOpacity);
   }
 
-  /// Drops the cached markers so they rebuild with the current overlay opacity.
-  /// `_CachedNodeMarker.matches` does not track opacity, so a slider change
-  /// would otherwise leave stale markers on screen until the next pan/zoom.
+  /// Drops the cached markers immediately. `_CachedNodeMarker.matches` tracks
+  /// overlay opacity, so cached entries self-invalidate on the next build; this
+  /// forces the rebuild without waiting for one.
   void _invalidateMarkerCache() {
     _markerCache.clear();
     _markerListCache = null;
@@ -553,6 +579,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     });
     if (_compassSubscription != null) {
       setState(() => _compassMode = MapCompassMode.followHeading);
+      unawaited(_persistCompassMode());
     }
   }
 
@@ -562,6 +589,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _compassSubscription?.cancel();
     _compassSubscription = null;
     setState(() => _compassMode = MapCompassMode.northLocked);
+    unawaited(_persistCompassMode());
     _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
   }
 
@@ -571,6 +599,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     switch (_compassMode) {
       case MapCompassMode.northLocked:
         setState(() => _compassMode = MapCompassMode.freeRotate);
+        unawaited(_persistCompassMode());
       case MapCompassMode.freeRotate:
         if (FlutterCompass.events == null) {
           showWarningSnackBar(context, context.l10n.mapCompassUnavailable);
@@ -2811,6 +2840,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           _animatedMove(LatLng(event.lat, event.lon), 15.0);
                           HapticFeedback.selectionClick();
                         },
+                        onGoToCoordinates: (lat, lng) {
+                          final target = safeLatLng(lat, lng);
+                          if (target == null) return;
+                          setState(() => _showNodeList = false);
+                          _animatedMove(target, 15.0);
+                          HapticFeedback.selectionClick();
+                        },
                         units: _units,
                       ),
                     ),
@@ -3510,6 +3546,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         maxClusterRadius: 80,
         size: const Size(44, 44),
         alignment: Alignment.center,
+        rotate: true,
         padding: EdgeInsets.zero,
         disableClusteringAtZoom: MapConfig.clusterDisableZoom(mapStyle),
         zoomToBoundsOnClick: false,
@@ -3737,6 +3774,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             isStale: n.isStale,
             isMyNode: isMyNode,
             isSelected: isSelected,
+            overlayOpacity: _nodeOverlayOpacity,
           )) {
         marker = cached.marker;
         reused++;
@@ -3756,6 +3794,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           isStale: n.isStale,
           isMyNode: isMyNode,
           isSelected: isSelected,
+          overlayOpacity: _nodeOverlayOpacity,
         );
         rebuilt++;
       }
@@ -4684,6 +4723,7 @@ class _CachedNodeMarker {
   final bool isStale;
   final bool isMyNode;
   final bool isSelected;
+  final double overlayOpacity;
 
   const _CachedNodeMarker({
     required this.marker,
@@ -4694,6 +4734,7 @@ class _CachedNodeMarker {
     required this.isStale,
     required this.isMyNode,
     required this.isSelected,
+    required this.overlayOpacity,
   });
 
   bool matches({
@@ -4704,6 +4745,7 @@ class _CachedNodeMarker {
     required bool isStale,
     required bool isMyNode,
     required bool isSelected,
+    required double overlayOpacity,
   }) {
     return identical(this.node, node) &&
         identical(this.pin, pin) &&
@@ -4711,7 +4753,8 @@ class _CachedNodeMarker {
         this.longitude == longitude &&
         this.isStale == isStale &&
         this.isMyNode == isMyNode &&
-        this.isSelected == isSelected;
+        this.isSelected == isSelected &&
+        this.overlayOpacity == overlayOpacity;
   }
 }
 
@@ -4782,6 +4825,7 @@ class _NodeListPanel extends StatelessWidget {
   final void Function(int) onTabChanged;
   final List<TakEvent> takEvents;
   final void Function(TakEvent) onTakEntitySelected;
+  final void Function(double latitude, double longitude) onGoToCoordinates;
   final MeasurementUnits units;
 
   const _NodeListPanel({
@@ -4801,6 +4845,7 @@ class _NodeListPanel extends StatelessWidget {
     required this.onTabChanged,
     this.takEvents = const [],
     required this.onTakEntitySelected,
+    required this.onGoToCoordinates,
     required this.units,
   });
 
@@ -4868,44 +4913,65 @@ class _NodeListPanel extends StatelessWidget {
       content: isEntityTab
           ? Expanded(child: _buildTakEntityList(context, bottomPadding))
           : Expanded(
-              child: sortedNodes.isEmpty
-                  ? const DrawerEmptyState()
-                  : ListView.builder(
-                      padding: EdgeInsets.only(
-                        top: 4,
-                        bottom: bottomPadding + 8,
-                      ),
-                      itemCount: sortedNodes.length,
-                      itemBuilder: (context, index) {
-                        final nodeWithPos = sortedNodes[index];
-                        final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
-                        final isSelected =
-                            selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
-                        final distance = calculateDistanceFromMe(nodeWithPos);
-
-                        final presence = presenceConfidenceFor(
-                          presenceMap,
-                          nodeWithPos.node,
-                        );
-                        return StaggeredDrawerTile(
-                          index: index,
-                          child: _NodeListItem(
-                            nodeWithPos: nodeWithPos,
-                            isMyNode: isMyNode,
-                            isSelected: isSelected,
-                            distance: distance,
-                            presence: presence,
-                            lastHeardAge: lastHeardAgeFor(
-                              presenceMap,
-                              nodeWithPos.node,
-                            ),
-                            onTap: () => onNodeSelected(nodeWithPos),
-                            units: units,
-                          ),
-                        );
-                      },
-                    ),
+              child: _buildNodeListContent(context, sortedNodes, bottomPadding),
             ),
+    );
+  }
+
+  // Node-tab drawer body. A search query that parses as a lone coordinate
+  // pair gets a "go to coordinates" row above the (still-filtered) node
+  // list, so pasting "51.911157, 14.492985" jumps the camera there.
+  Widget _buildNodeListContent(
+    BuildContext context,
+    List<_NodeWithPosition> sortedNodes,
+    double bottomPadding,
+  ) {
+    final coordPair = tryParseCoordinatePair(searchController.text);
+    final list = sortedNodes.isEmpty
+        ? const DrawerEmptyState()
+        : _buildNodeListView(sortedNodes, bottomPadding);
+    if (coordPair == null) return list;
+    return Column(
+      children: [
+        _CoordinateSearchRow(
+          latitude: coordPair.latitude,
+          longitude: coordPair.longitude,
+          onGoTo: () =>
+              onGoToCoordinates(coordPair.latitude, coordPair.longitude),
+        ),
+        Expanded(child: list),
+      ],
+    );
+  }
+
+  Widget _buildNodeListView(
+    List<_NodeWithPosition> sortedNodes,
+    double bottomPadding,
+  ) {
+    return ListView.builder(
+      padding: EdgeInsets.only(top: 4, bottom: bottomPadding + 8),
+      itemCount: sortedNodes.length,
+      itemBuilder: (context, index) {
+        final nodeWithPos = sortedNodes[index];
+        final isMyNode = nodeWithPos.node.nodeNum == myNodeNum;
+        final isSelected = selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
+        final distance = calculateDistanceFromMe(nodeWithPos);
+
+        final presence = presenceConfidenceFor(presenceMap, nodeWithPos.node);
+        return StaggeredDrawerTile(
+          index: index,
+          child: _NodeListItem(
+            nodeWithPos: nodeWithPos,
+            isMyNode: isMyNode,
+            isSelected: isSelected,
+            distance: distance,
+            presence: presence,
+            lastHeardAge: lastHeardAgeFor(presenceMap, nodeWithPos.node),
+            onTap: () => onNodeSelected(nodeWithPos),
+            units: units,
+          ),
+        );
+      },
     );
   }
 
@@ -4943,6 +5009,94 @@ class _NodeListPanel extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// "Go to coordinates" row shown above the node list when the search query
+/// parses as a lone lat/lng pair. Tapping jumps the camera there; the
+/// trailing action opens the waypoint form pre-filled with the pair.
+class _CoordinateSearchRow extends StatelessWidget {
+  final double latitude;
+  final double longitude;
+  final VoidCallback onGoTo;
+
+  const _CoordinateSearchRow({
+    required this.latitude,
+    required this.longitude,
+    required this.onGoTo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onGoTo,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: context.border.withValues(alpha: 0.3)),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.6),
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(
+                  Icons.location_on_outlined,
+                  size: 18,
+                  color: context.accentColor,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      formatCoordinatePair(latitude, longitude),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      l10n.mapSearchGoToCoordinates,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_location_alt_outlined),
+                color: context.accentColor,
+                tooltip: l10n.coordinateActionCreateWaypoint,
+                onPressed: () => Navigator.of(context).pushNamed(
+                  '/waypoint-form',
+                  arguments: {'latitude': latitude, 'longitude': longitude},
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

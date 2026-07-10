@@ -20,6 +20,7 @@ import '../../utils/text_sanitizer.dart';
 import '../../utils/time_format.dart';
 import 'dart:async';
 import '../../providers/app_providers.dart';
+import '../../providers/messages_view_mode_provider.dart';
 import '../../core/constants.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/review_providers.dart';
@@ -73,10 +74,21 @@ import '../../services/protocol/text_message_payload_budget.dart';
 import '../timeline/message_timeline_screen.dart';
 
 /// Conversation type enum
+// ASCII BEL. Embedded in a text payload it makes buzzer-equipped radios
+// ring (External Notification module convention). Wire-only: it must
+// never be placed into rendered message text.
+const String _alertBellChar = '\u0007';
+
 enum ConversationType { channel, directMessage }
 
 /// Contact filter enum
 enum ContactFilter { all, favorites, messaged, unread, active }
+
+// Resolves a persisted filter name back to the enum. Unknown or null
+// names (fresh installs, values written by a newer app version) fall
+// back to the all-contacts view instead of throwing.
+ContactFilter contactFilterFromName(String? raw) => ContactFilter.values
+    .firstWhere((f) => f.name == raw, orElse: () => ContactFilter.all);
 
 typedef ConversationFallbackRowBuilder =
     List<ConversationTimelineRow> Function(List<Message> messages);
@@ -139,6 +151,25 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
   bool _showSectionHeaders = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Restore the last chosen filter chip. Read synchronously off the
+    // already-loaded settings service when present; before it loads the
+    // default all-contacts view applies, matching first launches.
+    _currentFilter = contactFilterFromName(
+      ref.read(settingsServiceProvider).value?.contactsListFilter,
+    );
+  }
+
+  void _selectFilter(ContactFilter filter) {
+    HapticFeedback.lightImpact();
+    setState(() => _currentFilter = filter);
+    final settings = ref.read(settingsServiceProvider).value;
+    if (settings == null || settings.contactsListFilter == filter.name) return;
+    unawaited(settings.setContactsListFilter(filter.name));
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -157,7 +188,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       );
       return;
     }
-    await showNodeQuickActionsSheet(context, ref, node);
+    // Tapping a contact tile already opens the chat, so the sheet's
+    // "Message" entry would be redundant here.
+    await showNodeQuickActionsSheet(
+      context,
+      ref,
+      node,
+      showMessageAction: false,
+    );
   }
 
   @override
@@ -338,15 +376,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 label: context.l10n.messagingFilterAll,
                 count: contacts.length,
                 isSelected: _currentFilter == ContactFilter.all,
-                onTap: () => setState(() => _currentFilter = ContactFilter.all),
+                onTap: () => _selectFilter(ContactFilter.all),
               ),
               StatusFilterChip(
                 label: context.l10n.messagingFilterOnline,
                 count: activeCount,
                 isSelected: _currentFilter == ContactFilter.active,
                 color: AccentColors.green,
-                onTap: () =>
-                    setState(() => _currentFilter = ContactFilter.active),
+                onTap: () => _selectFilter(ContactFilter.active),
               ),
               StatusFilterChip(
                 label: context.l10n.messagingFilterUnread,
@@ -354,8 +391,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 isSelected: _currentFilter == ContactFilter.unread,
                 icon: Icons.mark_email_unread_outlined,
                 color: AccentColors.red,
-                onTap: () =>
-                    setState(() => _currentFilter = ContactFilter.unread),
+                onTap: () => _selectFilter(ContactFilter.unread),
               ),
               StatusFilterChip(
                 label: context.l10n.messagingFilterMessaged,
@@ -363,8 +399,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 isSelected: _currentFilter == ContactFilter.messaged,
                 icon: Icons.chat_bubble_outline,
                 color: AppTheme.primaryBlue,
-                onTap: () =>
-                    setState(() => _currentFilter = ContactFilter.messaged),
+                onTap: () => _selectFilter(ContactFilter.messaged),
               ),
               StatusFilterChip(
                 label: context.l10n.messagingFilterFavorites,
@@ -372,8 +407,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 isSelected: _currentFilter == ContactFilter.favorites,
                 icon: Icons.star,
                 color: AppTheme.warningYellow,
-                onTap: () =>
-                    setState(() => _currentFilter = ContactFilter.favorites),
+                onTap: () => _selectFilter(ContactFilter.favorites),
               ),
             ],
           ),
@@ -496,8 +530,39 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
 
   /// Returns slivers for the contacts list, suitable for embedding in the
   /// top-level [CustomScrollView].
+  // Picks the card or compact row for [contact] based on the shared
+  // Messages view mode; tap and long-press behave identically in both.
+  Widget _contactListTile(_Contact contact, {required bool compact}) {
+    void openChat() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            type: ConversationType.directMessage,
+            nodeNum: contact.nodeNum,
+            title: contact.displayName,
+            avatarColor: contact.avatarColor,
+          ),
+        ),
+      );
+    }
+
+    return compact
+        ? _CompactContactTile(
+            contact: contact,
+            onTap: openChat,
+            onLongPress: () => _openContactQuickActions(contact),
+          )
+        : _ContactTile(
+            contact: contact,
+            onTap: openChat,
+            onLongPress: () => _openContactQuickActions(contact),
+          );
+  }
+
   List<Widget> _buildContactSlivers(List<_Contact> contacts) {
     final animationsEnabled = ref.watch(animationsEnabledProvider);
+    final compactView = ref.watch(messagesCompactViewProvider);
 
     if (!_showSectionHeaders) {
       // Simple flat list
@@ -511,23 +576,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                 index: index,
                 direction: SlideDirection.left,
                 enabled: animationsEnabled,
-                child: _ContactTile(
-                  contact: contact,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatScreen(
-                          type: ConversationType.directMessage,
-                          nodeNum: contact.nodeNum,
-                          title: contact.displayName,
-                          avatarColor: contact.avatarColor,
-                        ),
-                      ),
-                    );
-                  },
-                  onLongPress: () => _openContactQuickActions(contact),
-                ),
+                child: _contactListTile(contact, compact: compactView),
               );
             }, childCount: contacts.length),
           ),
@@ -563,23 +612,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
               index: index,
               direction: SlideDirection.left,
               enabled: animationsEnabled,
-              child: _ContactTile(
-                contact: contact,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        type: ConversationType.directMessage,
-                        nodeNum: contact.nodeNum,
-                        title: contact.displayName,
-                        avatarColor: contact.avatarColor,
-                      ),
-                    ),
-                  );
-                },
-                onLongPress: () => _openContactQuickActions(contact),
-              ),
+              child: _contactListTile(contact, compact: compactView),
             );
           }, childCount: nonEmptySections[sectionIndex].contacts.length),
         ),
@@ -661,6 +694,125 @@ class _Contact {
   });
 
   bool get hasMessages => lastMessage != null;
+}
+
+/// Dense contact row for the compact view mode: flat surface, smaller
+/// avatar, single metadata line. Mirrors the Nodes screen's compact tile
+/// so the two lists read consistently when densified.
+class _CompactContactTile extends StatelessWidget {
+  final _Contact contact;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  const _CompactContactTile({
+    required this.contact,
+    required this.onTap,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: AppTheme.spacing8,
+        ),
+        child: Row(
+          children: [
+            Stack(
+              children: [
+                NodeAvatar(
+                  text:
+                      contact.shortName ?? safeTruncate(contact.displayName, 2),
+                  color: resolveNodeColor(
+                    nodeNum: contact.nodeNum,
+                    avatarColor: contact.avatarColor,
+                  ),
+                  size: 36,
+                ),
+                if (contact.presence.isActive)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: AppTheme.successGreen,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: context.card, width: 1.5),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    contact.displayName,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: context.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    contact.lastMessage ??
+                        presenceStatusText(
+                          contact.presence,
+                          contact.lastHeardAge,
+                        ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: contact.lastMessage != null
+                          ? context.textSecondary
+                          : (contact.presence.isActive
+                                ? AppTheme.successGreen
+                                : context.textTertiary),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (contact.unreadCount > 0) ...[
+              const SizedBox(width: AppTheme.spacing8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: context.accentColor,
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                ),
+                child: Text(
+                  '${contact.unreadCount}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+            if (contact.isFavorite) ...[
+              const SizedBox(width: AppTheme.spacing8),
+              Icon(Icons.star, color: AccentColors.yellow, size: 16),
+            ],
+            const SizedBox(width: AppTheme.spacing8),
+            Icon(Icons.chevron_right, color: context.textTertiary, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ContactTile extends StatelessWidget {
@@ -1620,18 +1772,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             _sendMessage();
           }
         },
+        onSendAlertBell: () {
+          navigator.pop();
+          if (mounted) {
+            // Visible text is the bell emoji; the 0x07 control character
+            // itself rides only the radio payload.
+            _messageController.text = '🔔';
+            _sendMessage(includeAlertBell: true);
+          }
+        },
       ),
     );
   }
 
-  Future<void> _sendMessage() async {
+  // [includeAlertBell] replaces the wire payload with exactly the ASCII
+  // BEL character (0x07) so buzzer-equipped radios ring; the typed text is
+  // kept for local display/history only. The measured string mirrors the
+  // protocol layer's wire text and is only ever measured, never rendered.
+  Future<void> _sendMessage({bool includeAlertBell = false}) async {
     final text = _messageController.text;
     if (!TextMessagePayloadSizer.hasSendableContent(text)) return;
 
     final replyPacketId = _replyingTo?.packetId;
     final textPayloadBudget = TextMessagePayloadSizer.standard(
       replyId: replyPacketId,
-    ).measure(text);
+    ).measure(includeAlertBell ? _alertBellChar : text);
     if (!textPayloadBudget.fitsInPacket) {
       showErrorSnackBar(
         context,
@@ -1781,6 +1946,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           },
           source: MessageSource.manual,
           replyId: replyPacketId,
+          includeAlertBell: includeAlertBell,
         );
       } else {
         // Pre-generate packet ID and track BEFORE sending to avoid race condition
@@ -1805,6 +1971,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           source: MessageSource.manual,
           replyId: replyPacketId,
           pkiPublicKey: pkiPublicKey,
+          includeAlertBell: includeAlertBell,
         );
       }
 
@@ -4269,7 +4436,15 @@ class _QuickResponsesSheet extends StatelessWidget {
   final List<CannedResponse> responses;
   final void Function(String text) onSelect;
 
-  const _QuickResponsesSheet({required this.responses, required this.onSelect});
+  /// Sends the alert-bell quick message: a bell-emoji text whose wire
+  /// payload carries ASCII BEL (0x07) so buzzer-equipped radios ring.
+  final VoidCallback onSendAlertBell;
+
+  const _QuickResponsesSheet({
+    required this.responses,
+    required this.onSelect,
+    required this.onSendAlertBell,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -4304,6 +4479,59 @@ class _QuickResponsesSheet extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          Divider(color: context.border, height: 1),
+          // Alert bell: one tap sends a ring, like the official app's
+          // quick-message bell.
+          GestureDetector(
+            onTap: onSendAlertBell,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing20,
+                vertical: AppTheme.spacing12,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.messagingAlertBellTooltip,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          context.l10n.messagingAlertBellSubtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: AppTheme.spacing12),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    ),
+                    child: Icon(
+                      Icons.notifications_active,
+                      color: context.accentColor,
+                      size: 18,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Divider(color: context.border, height: 1),
@@ -4448,6 +4676,9 @@ class MessagingPopupMenu extends ConsumerWidget {
           case 'scan_channel':
             if (onScanChannel != null) onScanChannel!();
             break;
+          case 'view_mode':
+            ref.read(messagesCompactViewProvider.notifier).toggle();
+            break;
           case 'week_view':
             if (!AppFeatureFlags.isMessageTimelineEnabled) {
               break;
@@ -4466,7 +4697,28 @@ class MessagingPopupMenu extends ConsumerWidget {
         }
       },
       itemBuilder: (context) {
-        final items = <PopupMenuEntry<String>>[];
+        final compactView = ref.read(messagesCompactViewProvider);
+        final items = <PopupMenuEntry<String>>[
+          PopupMenuItem(
+            value: 'view_mode',
+            child: Row(
+              children: [
+                Icon(
+                  compactView ? Icons.view_agenda : Icons.view_list,
+                  color: context.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Text(
+                  compactView
+                      ? context.l10n.nodesScreenViewModeCards
+                      : context.l10n.nodesScreenViewModeCompact,
+                  style: TextStyle(color: context.textPrimary),
+                ),
+              ],
+            ),
+          ),
+        ];
         if (onAddChannel != null) {
           items.add(
             PopupMenuItem(

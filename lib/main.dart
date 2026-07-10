@@ -14,6 +14,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' show Stripe;
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -41,6 +43,7 @@ import 'services/transport/background_message_processor.dart';
 import 'core/accessibility_theme_adapter.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/l10n_utils.dart';
+import 'l10n/locale_resolution.dart';
 import 'core/l10n/l10n_extension.dart';
 import 'core/logging.dart';
 import 'core/logging/os_log_bridge.dart';
@@ -151,6 +154,12 @@ Future<bool> get firebaseReady => firebaseReadyCompleter.future;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load date symbols for every locale so DateFormat can order dates for a
+  // region-qualified locale (e.g. en_GB -> dd/MM/y) even when the UI language
+  // resolves to a language-only locale. Without this, DateFormat throws for
+  // any locale flutter_localizations did not itself initialize.
+  await initializeDateFormatting();
 
   // Resolve the host platform capability bundle once at boot. Every
   // downstream init that today assumed mobile is gated on this; the
@@ -2108,6 +2117,11 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         builder: (context, child) {
+          // Feed the resolved app locale into the intl package so any
+          // DateFormat built without an explicit locale orders dates for the
+          // active locale instead of the en_US default. The resolved locale's
+          // date symbols are guaranteed loaded by GlobalMaterialLocalizations.
+          Intl.defaultLocale = Localizations.localeOf(context).toString();
           final mediaQuery = MediaQuery.of(context);
           // Apply the user's text-size preference app-wide through
           // MediaQuery.textScaler so every Text scales uniformly, including
@@ -2140,23 +2154,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         locale: ref.watch(localeProvider),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        localeListResolutionCallback: (locales, supportedLocales) {
-          // Flutter's default resolution can pass unsupported locales (e.g.
-          // ro_RO) to the AppLocalizations delegate, which throws a
-          // FlutterError. Resolve manually: prefer first device locale whose
-          // language code matches a supported locale, otherwise fall back to
-          // the first supported locale (English).
-          if (locales != null) {
-            for (final locale in locales) {
-              for (final supported in supportedLocales) {
-                if (supported.languageCode == locale.languageCode) {
-                  return supported;
-                }
-              }
-            }
-          }
-          return supportedLocales.first;
-        },
+        localeListResolutionCallback: resolveAppLocale,
         navigatorObservers: [
           _KeyboardDismissObserver(),
           _DelegatingAnalyticsObserver(ref),

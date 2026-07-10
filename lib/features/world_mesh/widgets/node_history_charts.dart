@@ -255,9 +255,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
           ),
         ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
+          topTitles: TimeSeriesAxis.topHeadroom(context),
           rightTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
@@ -316,8 +314,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: true,
-            curveSmoothness: 0.3,
+            isCurved: false,
             color: lineColor,
             barWidth: 2,
             isStrokeCapRound: true,

@@ -5050,11 +5050,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // SharedPreferences instance MutedChannelsNotifier writes to) rather than
     // mutedChannelsProvider, whose state is an empty set until its async
     // hydration finishes. During a reconnect message flood the provider can
-    // still be empty, so reading it would let a muted channel notify. A
-    // broadcast with an unresolved channel index is treated as the primary
-    // channel (0), matching the background path's `channel ?? 0` convention.
-    final muteChannelIndex =
-        message.channel ?? (message.isBroadcast ? 0 : null);
+    // still be empty, so reading it would let a muted channel notify.
+    // Per-channel mute applies to broadcasts only; a DM is never silenced by a
+    // channel mute even though it carries a channel index.
+    final muteChannelIndex = muteIndexForMessage(
+      isBroadcast: message.isBroadcast,
+      channel: message.channel,
+    );
     if (muteChannelIndex != null &&
         isChannelMutedInPrefs(settings.prefs, muteChannelIndex)) {
       AppLogging.app(
@@ -5111,14 +5113,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
       AppLogging.app('Queueing DM notification from: $senderName');
     }
 
-    // When CarPlay communication is enabled, the native communication
-    // notification posted from the same message stream
-    // (CarPlayIntentService._donateMessage) is the single user-facing banner.
-    // Suppress the standard notification here to avoid a duplicate. Emoji-only
-    // and empty-text messages still take the standard path because the CarPlay
-    // donation skips them, so they would otherwise get no notification.
+    // When the CarPlay communication banner is guaranteed to post, it is the
+    // single user-facing banner, so suppress the standard notification here to
+    // avoid a duplicate. This gate is false unless a native banner will
+    // actually fire (see CarPlayFeatureFlags.suppressesStandardNotification):
+    // enabling the writer alone must never silence message notifications.
+    // Emoji-only and empty-text messages still take the standard path because
+    // the CarPlay donation skips them, so they would otherwise get no
+    // notification.
     final carPlayHandlesNotification =
-        CarPlayFeatureFlags.fromEnv().enabled &&
+        CarPlayFeatureFlags.fromEnv().suppressesStandardNotification &&
         !message.isEmoji &&
         message.text.trim().isNotEmpty;
     if (carPlayHandlesNotification) {

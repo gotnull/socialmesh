@@ -167,10 +167,15 @@ void main() {
             'helper.',
       );
       expect(
-        messagingSource.contains(
-          'await showNodeQuickActionsSheet(context, ref, node);',
-        ),
+        messagingSource.contains('await showNodeQuickActionsSheet('),
         true,
+      );
+      expect(
+        messagingSource.contains('showMessageAction: false,'),
+        true,
+        reason:
+            'The contacts caller must suppress the sheet\'s "Message" entry - '
+            'tapping the contact tile already opens the chat.',
       );
     });
 

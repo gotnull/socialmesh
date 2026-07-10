@@ -3642,6 +3642,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channelsMenuAddChannel => 'Adicionar canal';
 
   @override
+  String get channelsMenuReorder => 'Reordenar canais';
+
+  @override
+  String get channelsReorderSheetTitle => 'Reordenar canais';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Arraste para definir a ordem de exibição. Os slots de canal do rádio não mudam.';
+
+  @override
   String get channelsMenuHelp => 'Ajuda';
 
   @override
@@ -6260,6 +6270,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Iniciar Atualização';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Conecte o seu dispositivo por Bluetooth para instalar esta atualização.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Nenhum dispositivo conectado. Conecte por Bluetooth e tente novamente.';
+
+  @override
   String get firmwareDfuRetry => 'Tentar novamente';
 
   @override
@@ -7560,6 +7578,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapSearchNodesHint => 'Buscar nós...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Ir para as coordenadas';
+
+  @override
   String get mapSettings => 'Configurações';
 
   @override
@@ -7587,7 +7608,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapShowHeatmap => 'Mostrar halos dos nós';
 
   @override
-  String get mapShowClusterMarkers => 'Agrupar marcadores';
+  String get mapShowClusterMarkers => 'Mostrar agrupamento de marcadores';
 
   @override
   String get mapHideClusterMarkers => 'Desativar agrupamento';
@@ -12182,6 +12203,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get messagingSendTooltip => 'Enviar (Ctrl/Cmd+Enter)';
+
+  @override
+  String get messagingAlertBellTooltip => 'Enviar campainha de alerta';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Faz tocar os rádios com campainha configurada';
 
   @override
   String messagingComposerByteCounter(int used, int max) {
@@ -23259,7 +23287,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'As leituras da qualidade do ar aparecem quando um nó da sua malha tem um sensor de qualidade do ar (PM2.5, PM10, CO2) e o transmite.';
+      'As leituras da qualidade do ar aparecem quando um nó da sua malha tem um sensor de qualidade do ar (PM2.5, PM10, CO2, resistência ao gás) e o transmite.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Resistência ao gás (sensor VOC)';
+
+  @override
+  String get telemetryShowOnMap => 'Mostrar nó no mapa';
 
   @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
@@ -36204,6 +36239,14 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  ) {
+    return '$senderName em $channelName';
+  }
+
+  @override
   String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
     return 'Novo peer: $contactName ($shortCode)';
   }
@@ -36544,6 +36587,20 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Nenhum nó de destino especificado';
+
+  @override
+  String get automationVarUnknown => 'desconhecido';
+
+  @override
+  String get automationActionReplyToSender => 'Responder ao remetente';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Responde ao nó que acionou esta automação';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Este gatilho não tem remetente para responder';
 
   @override
   String get automationErrorSendChannelNotConfigured =>
@@ -40676,6 +40733,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Local de armazenamento';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle =>
+      'Armazenamento de mapas offline';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Escolha onde guardar os blocos de mapa transferidos';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Os blocos de mapa transferidos são guardados neste dispositivo para uso offline. Quando um cartão SD removível está disponível, pode guardá-los lá em vez de na memória interna.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Tamanho atual da cache';
 
   @override
   String get offlineStorageInternal => 'Interno';

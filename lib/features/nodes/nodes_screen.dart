@@ -1496,18 +1496,25 @@ class _NodeCard extends ConsumerWidget {
     TransportType? myDirectTransport,
     MeasurementUnits units,
   ) {
+    // The avatar circle follows the user's text size (clamped so the tile
+    // keeps its shape); the fixed-width leading column tracks it so the
+    // content column never shifts: avatar + 2x(3 ring + 3 pad + 3 pad).
+    final avatarScale = MediaQuery.textScalerOf(
+      context,
+    ).scale(1.0).clamp(1.0, 1.5);
+    final avatarSize = 56.0 * avatarScale;
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      // Centre the avatar against the full card content; the text column
+      // keeps its own top-down layout.
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Fixed-width leading column so the avatar + battery ring never
-        // shifts the content column. 74 px = 56 avatar + 2×(3 ring + 3 pad + 3 pad).
         SizedBox(
-          width: 74,
+          width: avatarSize + 18,
           child: Center(
             child: NodeAvatar(
               text: node.avatarName,
               color: _getAvatarColor(),
-              size: 56,
+              size: avatarSize,
               showOnlineIndicator: presenceConfidence.isActive,
               onlineStatus: presenceConfidence.isActive
                   ? OnlineStatus.online
@@ -1934,20 +1941,25 @@ class _CompactNodeTile extends StatelessWidget {
           vertical: AppTheme.spacing8,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // Centre the avatar against the tile content (matches the full
+          // node card); the text column keeps its own top-down layout.
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Colored short-name circle (matches the Contacts list + expanded
             // node card). Every node - including our own - uses its
             // deterministic per-node colour, so it reads the same colour peers
             // see. The online dot marks active presence; finer presence states
-            // are carried by the status text.
+            // are carried by the status text. Scales with the user's text
+            // size, clamped so dense rows keep their shape.
             NodeAvatar(
               text: node.avatarName,
               color: resolveNodeColor(
                 nodeNum: node.nodeNum,
                 avatarColor: node.avatarColor,
               ),
-              size: 36,
+              size:
+                  36.0 *
+                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.5),
               showOnlineIndicator: presenceConfidence.isActive,
               onlineStatus: presenceConfidence.isActive
                   ? OnlineStatus.online

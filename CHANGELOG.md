@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (telemetry charts)
+
+- Chart legends no longer clip when they wrap to a second line: the pinned legend header now measures its labels at the current text size and grows to fit every row instead of using a fixed 40px height (device metrics, environment metrics). The two screens now share one legend widget (#228)
+- The topmost axis label on telemetry charts (e.g. "100%") is no longer cut in half: charts reserve headroom above the plot so the label renders whole, scaling with text size (#228)
+- Telemetry and node-history graphs now draw straight lines between readings instead of smoothed curves, so the plot follows the actual samples without invented dips or bumps (#225)
+
+### Fixed (nodes list accessibility)
+
+- The coloured node avatar circles in the Nodes list now grow with the text-size setting (up to 1.5x) instead of staying fixed while the text scales, and they are vertically centred on the card instead of sitting high (#227)
+
+### Fixed (MeshCore notifications)
+
+- MeshCore channel-message notifications now show who posted: the sender name that MeshCore radios embed at the start of every channel message is parsed into the notification title ("Alice in #general") and stripped from the body, instead of a generic "MeshCore (----) in channel" title (#226)
+
+### Added (distribution)
+
+- Official signed APKs now accompany GitHub releases so devices that Google Play filters out (e.g. GrapheneOS) can sideload, with a published SHA-256 checksum per build (#179). Note: Play installs and GitHub APK installs are signed differently and cannot update each other
+
+### Fixed (notifications)
+
+- Incoming-message notifications work again: versions 1.52 and 1.53 shipped with an internal CarPlay flag mistakenly enabled, which silently suppressed every new-message banner on both iOS and Android while the messages themselves still arrived in-app. Suppression is now additionally gated so it can only engage when a CarPlay communication banner is guaranteed to replace the standard one (explicit opt-in, iOS only), so a stray flag flip can never silence messages again
+- Muting a channel no longer silences direct messages: a DM arriving on the Primary Channel slot (index 0) was suppressed when channel 0 was muted; per-channel mute now applies to channel broadcasts only
+
+### Fixed (map)
+
+- Node transparency is now applied consistently after reopening the app. Markers built before the saved "Node transparency" setting finished loading were cached fully opaque and stayed that way, so some nodes rendered faded and others solid with no settings changed. The marker cache now tracks the overlay opacity, so every peer marker follows the setting from the first frame
+- Node markers no longer tilt with the map when "Cluster markers" is enabled: the cluster layer now counter-rotates its markers the same way the plain marker layer always did, so icons and cluster count badges stay upright while the map rotates in free-rotate or follow-heading mode
+- The map compass mode (north-locked / free-rotate / follow-heading) is now remembered across tab switches and app relaunches instead of silently resetting to north-locked every time the Map tab is reopened. North-locked stays the first-run default
+- The map overflow menu toggle is now labelled "Show cluster markers", matching the "Show ..." wording of every sibling toggle (previously just "Cluster markers")
+
+### Added (automations)
+
+- The "Send Message" action can now reply to the sender: a new "Reply to sender" toggle (offered for message, keyword, channel-activity, and detection-sensor triggers) answers whichever node produced the triggering event instead of a fixed target node, so a "reply pong when anyone messages ping" bot no longer needs a pinned node. Available in both the standard action editor and the visual flow builder; a reply-to-sender action that fires from a senderless trigger (scheduled/manual) fails with a clear log message instead of sending anywhere
+
+### Added (messaging)
+
+- Channels can now be reordered: a "Reorder channels" action (long-press any channel, or the Channels screen menu) opens a drag-to-reorder sheet, and the chosen display order is remembered across app launches. Reordering is presentational only - the radio's channel slots and message routing are untouched, and channels added later simply follow the ordered ones
+- The Messages screen gains a "Compact View" toggle in its overflow menu, mirroring the Nodes screen option: both the Contacts and Channels lists switch to dense flat rows (smaller avatars and badges, single metadata line), and the choice is remembered across app launches
+- The Quick Responses sheet gains a "Send alert bell" action: one tap sends a message whose radio payload is exactly the ASCII bell character, byte-identical to the official clients' quick-message bell, so recipients whose radios have the External Notification module configured get a buzzer ring and official apps show their native bell rendering. Locally the message appears as a bell emoji, since a raw control character can never be shown in chat text
+
+### Added (map)
+
+- Pasting coordinates ("51.911157, 14.492985") into the map's node search now shows a "Go to coordinates" row that jumps the camera there, with a companion action that opens the waypoint form pre-filled with the pair; the offline map's place search recognises pasted coordinates too and jumps directly without the geocoder (so it works fully offline)
+
+### Added (nodes)
+
+- The node long-press quick-actions sheet gains "Message" (jumps straight into the direct-message chat) and "Show on Map" (centres the map on the node, shown only when it has a position), so neither needs the detail-screen detour. The Contacts list's long-press sheet hides the redundant "Message" entry since tapping the contact already opens the chat
+
+### Fixed (automations)
+
+- Automation message templates no longer render a missing battery level as "?%": `{{battery}}`, `{{location}}`, `{{node.name}}`, and `{{sensor.name}}` now all fall back to a localized lowercase "unknown" when the source value has never been reported, so a welcome message reads "your battery level is unknown" instead of "?%"
+
+### Fixed (firmware update)
+
+- The in-app "Start Update" button no longer does nothing while the app is disconnected from the radio. The button rendered from cached node data even with no live Bluetooth link, and tapping it gave haptic feedback then silently returned. It now disables with a "connect via Bluetooth" hint while disconnected, and shows an error snackbar if the link drops in the instant between render and tap
+- A failed firmware release check (no network, GitHub error) now shows the "update check failed" banner instead of quietly looking like "you're up to date"
+
+### Fixed (WiFi/TCP connection)
+
+- The app now notices a dead WiFi/TCP link in under a minute instead of after several minutes. The TCP socket gets tuned OS keepalive (20s idle, 10s probe interval, 3 probes): a powered-off or vanished radio cannot answer the kernel's probes, so the connection resets ~50s after the last exchange and the connection state flips immediately, foreground or background. A quiet-but-alive radio still answers the probes, so silent meshes never trigger a false disconnect
+
+### Added (connection diagnostics)
+
+- Every BLE link teardown is now recorded with its origin (OS-reported disconnect with the platform reason code, notification stream closing, app watchdog, or user action), the session uptime, and the age of the last received packet. The detail is logged as `BLE_DISCONNECT` / `DISCONNECT_CONTEXT` lines and embedded in in-app bug reports, so "the app disconnects after about an hour" reports can be traced to the exact path that ended the link
+- While backgrounded the app now allows two reconnect attempts per background session (previously one) before waiting for foreground, improving recovery from mid-session drops during long background use
+
+### Added (messaging filters)
+
+- The Channels and Contacts list filter chips (All / Unread / ...) now remember the last selection across app launches, so unread-first users land on their filter instead of resetting to All every cold start
+
+### Added (telemetry)
+
+- The Air Quality Log now includes gas-resistance readings from BME680/688 VOC sensors, merged in from environment telemetry (historical readings included), with a gas-only card for nodes that share no other air-quality metrics
+- Air Quality and Environment Metrics log cards now show which node shared each reading, and tapping a card jumps to the map centred on that node (when it has a position); the back button returns straight to the log
+
 ### Added (messaging)
 
 - Message details (long-press a message) and the expanded technical info now show the node that relayed a received message, matching the official Meshtastic iOS app. The radio only sends the last byte of the relayer's ID, so the name is a best-effort match against known nodes and falls back to a hex byte (for example `0xC4`) when it cannot be resolved to a single node (#223)
@@ -31,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (offline maps)
 
+- On Android, offline map tiles can be stored on a removable SD card instead of internal memory. The storage picker lives in the "Download this area" sheet and in a new Settings > Data & Storage > Offline Map Storage tile (shown only when a card is present or a fallback needs explaining), which also shows the current cache size and offers to delete the old cache after a switch. Portable/removable cards only: cards formatted as internal (adopted) storage are part of internal memory by Android design. If the card goes missing the cache falls back to internal storage with a visible warning
 - The map is now reachable without pairing a device: a new "Explore the map without a device" action on the scanner opens a lightweight, mesh-free map so a user can browse and pre-download an area before they have a node (for example, prepping for an off-grid trip). It carries no protocol state and offers a clear "Pair a node to unlock mesh features" return path
 - The offline map has a place-search bar (type a town/area to jump there) and a center-on-my-location button, so finding the region to pre-download no longer means panning the whole way by hand
 - New "Download this area" feature pre-downloads the visible region's tiles for true offline use: pick a detail level, see a live tile-count and storage estimate, and run the download with progress and cancel. Bulk download is allowed for the Terrain, Dark, and Light styles only (Satellite and the optional Mapbox styles are excluded per provider terms); Terrain uses a lower request concurrency and backs off on rate-limit responses

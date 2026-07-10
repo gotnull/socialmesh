@@ -479,16 +479,16 @@ class BackgroundMessageProcessor {
     // Skip if already notified (e.g. rapid duplicate delivery).
     if (notifiedMessageIds.contains(message.id)) return;
 
-    // When CarPlay communication is enabled, the native communication
-    // notification (posted from the live message stream via
-    // CarPlayIntentService._donateMessage) is the single user-facing banner.
-    // Suppress the standard background notification to avoid a duplicate; the
-    // stream stays alive in the background (both consume transport.dataStream),
-    // so the communication notification still fires.
-    if (CarPlayFeatureFlags.fromEnv().enabled &&
+    // When the CarPlay communication banner is guaranteed to post, it is the
+    // single user-facing banner, so suppress the standard background
+    // notification to avoid a duplicate. This gate is false unless a native
+    // banner will actually fire (see
+    // CarPlayFeatureFlags.suppressesStandardNotification); enabling the writer
+    // alone must never silence message notifications.
+    if (CarPlayFeatureFlags.fromEnv().suppressesStandardNotification &&
         message.text.trim().isNotEmpty) {
       AppLogging.ble(
-        'BackgroundMessageProcessor: CarPlay communication enabled, '
+        'BackgroundMessageProcessor: CarPlay banner will post, '
         'standard notification suppressed for ${message.id}',
       );
       notifiedMessageIds.add(message.id);
@@ -501,11 +501,13 @@ class BackgroundMessageProcessor {
       // Master toggle.
       if (!(prefs.getBool(_kMasterToggle) ?? true)) return;
 
-      // Respect per-channel mute. A broadcast with an unresolved channel
-      // index is treated as the primary channel (0), matching the foreground
-      // path.
-      final muteChannelIndex =
-          message.channel ?? (message.isBroadcast ? 0 : null);
+      // Respect per-channel mute. Broadcasts only - a DM carries a channel
+      // index but must never be silenced by a channel mute. A broadcast with an
+      // unresolved channel index is treated as the primary channel (0).
+      final muteChannelIndex = muteIndexForMessage(
+        isBroadcast: message.isBroadcast,
+        channel: message.channel,
+      );
       if (muteChannelIndex != null &&
           isChannelMutedInPrefs(prefs, muteChannelIndex)) {
         AppLogging.ble(

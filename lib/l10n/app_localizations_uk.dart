@@ -3655,6 +3655,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channelsMenuAddChannel => 'Додати канал';
 
   @override
+  String get channelsMenuReorder => 'Змінити порядок каналів';
+
+  @override
+  String get channelsReorderSheetTitle => 'Змінити порядок каналів';
+
+  @override
+  String get channelsReorderSheetHint =>
+      'Перетягніть, щоб задати порядок відображення. Слоти каналів на радіо не змінюються.';
+
+  @override
   String get channelsMenuHelp => 'Довідка';
 
   @override
@@ -6281,6 +6291,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get firmwareDfuStartUpdate => 'Почати оновлення';
 
   @override
+  String get firmwareDfuConnectRequired =>
+      'Підключіть пристрій через Bluetooth, щоб установити це оновлення.';
+
+  @override
+  String get firmwareDfuNotConnectedError =>
+      'Пристрій не підключено. Підключіться через Bluetooth і спробуйте ще раз.';
+
+  @override
   String get firmwareDfuRetry => 'Повторити';
 
   @override
@@ -7585,6 +7603,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapSearchNodesHint => 'Пошук вузлів...';
 
   @override
+  String get mapSearchGoToCoordinates => 'Перейти до координат';
+
+  @override
   String get mapSettings => 'Налаштування';
 
   @override
@@ -7612,7 +7633,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapShowHeatmap => 'Показати ореоли вузлів';
 
   @override
-  String get mapShowClusterMarkers => 'Згрупувати маркери';
+  String get mapShowClusterMarkers => 'Показати групування маркерів';
 
   @override
   String get mapHideClusterMarkers => 'Вимкнути групування';
@@ -12199,6 +12220,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get messagingSendTooltip => 'Надіслати (Ctrl/Cmd+Enter)';
+
+  @override
+  String get messagingAlertBellTooltip => 'Надіслати дзвінок';
+
+  @override
+  String get messagingAlertBellSubtitle =>
+      'Змушує дзвеніти радіо з налаштованим зумером';
 
   @override
   String messagingComposerByteCounter(int used, int max) {
@@ -23288,7 +23316,14 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get telemetryAirQualityNoDataDescription =>
-      'Показники якості повітря з\'являються, коли вузол у вашій мережі має датчик якості повітря (PM2.5, PM10, CO2) і передає їх.';
+      'Показники якості повітря з\'являються, коли вузол у вашій мережі має датчик якості повітря (PM2.5, PM10, CO2, газовий опір) і передає їх.';
+
+  @override
+  String get telemetryAirQualityGasResistanceLabel =>
+      'Газовий опір (датчик ЛОС)';
+
+  @override
+  String get telemetryShowOnMap => 'Показати вузол на мапі';
 
   @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
@@ -36250,6 +36285,14 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  ) {
+    return '$senderName у $channelName';
+  }
+
+  @override
   String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
     return 'Новий пер: $contactName ($shortCode)';
   }
@@ -36593,6 +36636,20 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get automationErrorNoTargetNode => 'Цільовий вузол не вказано';
+
+  @override
+  String get automationVarUnknown => 'невідомо';
+
+  @override
+  String get automationActionReplyToSender => 'Відповісти відправнику';
+
+  @override
+  String get automationActionReplyToSenderHint =>
+      'Відповідає вузлу, який запустив цю автоматизацію';
+
+  @override
+  String get automationErrorNoReplySender =>
+      'Цей тригер не має відправника для відповіді';
 
   @override
   String get automationErrorSendChannelNotConfigured =>
@@ -40711,6 +40768,20 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get offlineStorageLocationLabel => 'Місце зберігання';
+
+  @override
+  String get settingsTileOfflineMapStorageTitle => 'Сховище офлайн-мап';
+
+  @override
+  String get settingsTileOfflineMapStorageSubtitle =>
+      'Виберіть, де зберігати завантажені фрагменти мапи';
+
+  @override
+  String get offlineStorageSheetDescription =>
+      'Завантажені фрагменти мапи зберігаються на цьому пристрої для роботи офлайн. Якщо доступна знімна SD-картка, їх можна зберігати на ній замість внутрішньої пам\'яті.';
+
+  @override
+  String get offlineStorageCacheSizeLabel => 'Поточний розмір кешу';
 
   @override
   String get offlineStorageInternal => 'Внутрішня пам\'ять';

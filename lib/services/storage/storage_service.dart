@@ -388,6 +388,26 @@ class SettingsService {
   int get messagesDefaultSubtab =>
       _preferences.getInt('messages_default_subtab') ?? 0;
 
+  // Channels list: remembered filter chip.
+  // Stores the enum value by name (not index) so reordering or adding
+  // filters never silently remaps a persisted choice; unknown names fall
+  // back to the all-channels view at the read site. Null = never chosen.
+  Future<void> setChannelsListFilter(String name) async {
+    await _preferences.setString('channels_list_filter', name);
+  }
+
+  String? get channelsListFilter =>
+      _preferences.getString('channels_list_filter');
+
+  // Contacts list: remembered filter chip. Same shape and rationale as
+  // the channels filter above.
+  Future<void> setContactsListFilter(String name) async {
+    await _preferences.setString('contacts_list_filter', name);
+  }
+
+  String? get contactsListFilter =>
+      _preferences.getString('contacts_list_filter');
+
   // Bottom-nav: cold-start landing tab.
   // Index into MainShell's hardcoded nav order
   // (0=Messages, 1=Map, 2=Nodes, 3=Dashboard). Default 2 (Nodes)
@@ -701,6 +721,16 @@ class SettingsService {
   double get mapNodeOverlayOpacity =>
       _preferences.getDouble('map_node_overlay_opacity') ?? 1.0;
 
+  // Compass interaction mode on the main map ('northLocked' / 'freeRotate' /
+  // 'followHeading'). Stored by enum name so reordering enum values never
+  // remaps a saved choice; unknown names fall back to north-locked at read
+  // time.
+  Future<void> setMapCompassModeName(String name) async {
+    await _preferences.setString('map_compass_mode', name);
+  }
+
+  String? get mapCompassModeName => _preferences.getString('map_compass_mode');
+
   // Reference labels overlay above satellite imagery (boundaries + place
   // names from Esri). Defaults to true: directly answers user feedback that
   // village / town / city names should be visible in satellite mode.
@@ -738,6 +768,32 @@ class SettingsService {
   }
 
   int get nodeViewModeIndex => _preferences.getInt('node_view_mode_index') ?? 0;
+
+  // Messages surface view mode (0 = cards, 1 = compact). One value covers
+  // both the Contacts and Channels tabs, which share a single overflow menu.
+  Future<void> setMessagesViewModeIndex(int index) async {
+    await _preferences.setInt('messages_view_mode_index', index);
+  }
+
+  int get messagesViewModeIndex =>
+      _preferences.getInt('messages_view_mode_index') ?? 0;
+
+  // App-side display order for the Channels list, stored as radio slot
+  // indices. Slots missing from the list (newly added channels) follow
+  // the ordered ones in slot order. The radio's own slot assignment is
+  // never touched - this is purely how the app presents the list.
+  Future<void> setChannelsDisplayOrder(List<int> order) async {
+    await _preferences.setStringList(
+      'channels_display_order',
+      order.map((index) => index.toString()).toList(),
+    );
+  }
+
+  List<int> get channelsDisplayOrder =>
+      (_preferences.getStringList('channels_display_order') ?? const [])
+          .map(int.tryParse)
+          .whereType<int>()
+          .toList();
 
   // Node list section headers visibility (grouped classification headings).
   Future<void> setNodeSectionHeadersEnabled(bool enabled) async {

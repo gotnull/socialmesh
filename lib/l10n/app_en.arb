@@ -4829,6 +4829,18 @@
     "@channelsMenuAddChannel": {
         "description": "Text displayed in channel configuration"
     },
+    "channelsMenuReorder": "Reorder channels",
+    "@channelsMenuReorder": {
+        "description": "Action in the channel options sheet and Channels overflow menu that opens the drag-to-reorder sheet for the list's display order."
+    },
+    "channelsReorderSheetTitle": "Reorder Channels",
+    "@channelsReorderSheetTitle": {
+        "description": "Title of the drag-to-reorder sheet for the Channels list."
+    },
+    "channelsReorderSheetHint": "Drag to set the display order. The radio's channel slots are unchanged.",
+    "@channelsReorderSheetHint": {
+        "description": "Subtitle of the reorder sheet clarifying that reordering is presentational only and does not touch the radio's channel slot assignment."
+    },
     "channelsMenuHelp": "Help",
     "@channelsMenuHelp": {
         "description": "Text displayed in channel configuration"
@@ -8294,6 +8306,14 @@
     "@firmwareDfuStartUpdate": {
         "description": "Button label to start the in-app DFU process"
     },
+    "firmwareDfuConnectRequired": "Connect to your device via Bluetooth to install this update.",
+    "@firmwareDfuConnectRequired": {
+        "description": "Caption under the disabled DFU button when no device is connected"
+    },
+    "firmwareDfuNotConnectedError": "No device connected. Connect via Bluetooth and try again.",
+    "@firmwareDfuNotConnectedError": {
+        "description": "Error snackbar when DFU is attempted without a connected device"
+    },
     "firmwareDfuRetry": "Retry",
     "@firmwareDfuRetry": {
         "description": "Button label to retry a failed DFU"
@@ -10100,6 +10120,10 @@
     "@mapSearchNodesHint": {
         "description": "Hint text for an input field in map view"
     },
+    "mapSearchGoToCoordinates": "Go to coordinates",
+    "@mapSearchGoToCoordinates": {
+        "description": "Subtitle on the row shown above the map's node search results when the query parses as a lat/lng pair; tapping the row jumps the camera to that location."
+    },
     "mapSettings": "Settings",
     "@mapSettings": {
         "description": "Text displayed in map view"
@@ -10137,7 +10161,7 @@
     "@mapShowHeatmap": {
         "description": "Map menu action that toggles on the translucent rings drawn around each node's position. The radius is fixed (it does not reflect signal strength or density), so the label is 'halos' rather than 'heatmap'."
     },
-    "mapShowClusterMarkers": "Cluster markers",
+    "mapShowClusterMarkers": "Show cluster markers",
     "@mapShowClusterMarkers": {
         "description": "Map menu toggle that groups dense node markers into a count badge. Opt-in; off by default."
     },
@@ -16178,6 +16202,14 @@
     "messagingSendTooltip": "Send (Ctrl/Cmd+Enter)",
     "@messagingSendTooltip": {
         "description": "Tooltip on the send button in the chat composer."
+    },
+    "messagingAlertBellTooltip": "Send alert bell",
+    "@messagingAlertBellTooltip": {
+        "description": "Title of the alert-bell row in the Quick Responses sheet. Tapping sends a bell-emoji message whose radio payload carries the ASCII bell (0x07) so buzzer-equipped radios ring."
+    },
+    "messagingAlertBellSubtitle": "Rings radios that have a buzzer configured",
+    "@messagingAlertBellSubtitle": {
+        "description": "Subtitle under the alert-bell row in the Quick Responses sheet, explaining the effect on receiving radios (External Notification module)."
     },
     "messagingComposerByteCounter": "{used}/{max} bytes",
     "@messagingComposerByteCounter": {
@@ -31425,7 +31457,15 @@
     "@telemetryAirQualityNoData": {
         "description": "Empty-state message when no air quality data exists."
     },
-    "telemetryAirQualityNoDataDescription": "Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.",
+    "telemetryAirQualityNoDataDescription": "Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2, gas resistance) and broadcasts it.",
+    "telemetryAirQualityGasResistanceLabel": "Gas resistance (VOC sensor)",
+    "@telemetryAirQualityGasResistanceLabel": {
+        "description": "Caption under the gas resistance value on Air Quality Log cards"
+    },
+    "telemetryShowOnMap": "Show node on map",
+    "@telemetryShowOnMap": {
+        "description": "Tooltip on telemetry log cards whose tap opens the map centred on the sharing node"
+    },
     "@telemetryAirQualityNoDataDescription": {
         "description": "Empty-state description explaining why the air quality log may be empty."
     },
@@ -47981,6 +48021,18 @@
             }
         }
     },
+    "notificationChannelMessageTitleNoCode": "{senderName} in {channelName}",
+    "@notificationChannelMessageTitleNoCode": {
+        "description": "Notification title for a channel message whose sender has no short code (MeshCore channel messages carry only the sender name, embedded in the text)",
+        "placeholders": {
+            "senderName": {
+                "type": "String"
+            },
+            "channelName": {
+                "type": "String"
+            }
+        }
+    },
     "notificationMeshCoreAdvertTitle": "New peer: {contactName} ({shortCode})",
     "@notificationMeshCoreAdvertTitle": {
         "description": "Row 11.b notification title when a brand-new MeshCore peer is heard via advert",
@@ -48414,6 +48466,22 @@
     "automationErrorNoTargetNode": "No target node specified",
     "@automationErrorNoTargetNode": {
         "description": "Error message in automations"
+    },
+    "automationVarUnknown": "unknown",
+    "@automationVarUnknown": {
+        "description": "Fallback substituted for automation template variables ({{battery}}, {{location}}, {{node.name}}, {{sensor.name}}) when the source value is missing, e.g. 'Battery: unknown'. Lowercase because it lands mid-sentence inside user-authored message templates."
+    },
+    "automationActionReplyToSender": "Reply to sender",
+    "@automationActionReplyToSender": {
+        "description": "Toggle label in the send-message action editor: the reply goes to whichever node produced the triggering event instead of a fixed target node."
+    },
+    "automationActionReplyToSenderHint": "Answers whichever node triggered this automation",
+    "@automationActionReplyToSenderHint": {
+        "description": "Subtitle under the reply-to-sender toggle explaining where the message will be sent."
+    },
+    "automationErrorNoReplySender": "This trigger has no sender to reply to",
+    "@automationErrorNoReplySender": {
+        "description": "Automation log error when a reply-to-sender send-message action runs for an event that carries no remote sender (e.g. scheduled or manual triggers)."
     },
     "automationErrorSendChannelNotConfigured": "Send to channel callback not configured",
     "@automationErrorSendChannelNotConfigured": {
@@ -53806,6 +53874,22 @@
         "description": "Error message shown when a region download fails"
     },
     "offlineStorageLocationLabel": "Storage location",
+    "settingsTileOfflineMapStorageTitle": "Offline Map Storage",
+    "@settingsTileOfflineMapStorageTitle": {
+        "description": "Settings tile title for the offline map storage location surface"
+    },
+    "settingsTileOfflineMapStorageSubtitle": "Choose where downloaded map tiles are stored",
+    "@settingsTileOfflineMapStorageSubtitle": {
+        "description": "Settings tile subtitle for the offline map storage location surface"
+    },
+    "offlineStorageSheetDescription": "Downloaded map tiles are kept on this device for offline use. When a removable SD card is available you can store them there instead of internal memory.",
+    "@offlineStorageSheetDescription": {
+        "description": "Body copy of the offline map storage sheet opened from Settings"
+    },
+    "offlineStorageCacheSizeLabel": "Current cache size",
+    "@offlineStorageCacheSizeLabel": {
+        "description": "InfoTable label for the offline tile cache size"
+    },
     "@offlineStorageLocationLabel": {
         "description": "Label above the internal/SD card storage picker in the offline download sheet (Android only)"
     },

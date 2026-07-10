@@ -147,6 +147,42 @@ void main() {
     });
   });
 
+  group('tryParseCoordinatePair', () {
+    test('parses a comma-separated decimal pair', () {
+      final pair = tryParseCoordinatePair('51.911157, 14.492985');
+      expect(pair, isNotNull);
+      expect(pair!.latitude, 51.911157);
+      expect(pair.longitude, 14.492985);
+    });
+
+    test('parses whitespace-separated and negative values', () {
+      final pair = tryParseCoordinatePair('-33.870000 151.210000');
+      expect(pair, isNotNull);
+      expect(pair!.latitude, -33.87);
+      expect(pair.longitude, 151.21);
+    });
+
+    test('accepts low precision - a pasted search is explicit intent', () {
+      expect(tryParseCoordinatePair('51.9, 14.5'), isNotNull);
+      expect(tryParseCoordinatePair('51, 14'), isNotNull);
+    });
+
+    test('rejects out-of-range values', () {
+      expect(tryParseCoordinatePair('99.12345, 13.45923'), isNull);
+      expect(tryParseCoordinatePair('52.51208, 200.45923'), isNull);
+    });
+
+    test('rejects anything besides a lone pair', () {
+      expect(
+        tryParseCoordinatePair('meet at 51.911157, 14.492985 ok?'),
+        isNull,
+      );
+      expect(tryParseCoordinatePair('51.911157'), isNull);
+      expect(tryParseCoordinatePair('solar node'), isNull);
+      expect(tryParseCoordinatePair(''), isNull);
+    });
+  });
+
   group('LinkifiedText widget', () {
     Widget wrap(Widget child) => MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -377,7 +377,7 @@ void main() {
       },
     );
 
-    test('background safety: second restore attempt while still backgrounded '
+    test('background safety: third restore attempt while still backgrounded '
         'is suppressed (no protocol calls)', () async {
       final transport = _FakeTransport();
       final protocol = _RecordingProtocol();
@@ -398,17 +398,18 @@ void main() {
       );
 
       await coord.restoreSession(reason: 'first_bg');
+      await coord.restoreSession(reason: 'second_bg');
       // Reset call log so we can assert ZERO further protocol calls.
       protocol.calls.clear();
 
-      await coord.restoreSession(reason: 'second_bg_should_skip');
-      await coord.restoreSession(reason: 'third_bg_should_also_skip');
+      await coord.restoreSession(reason: 'third_bg_should_skip');
+      await coord.restoreSession(reason: 'fourth_bg_should_also_skip');
 
       expect(
         protocol.calls,
         isEmpty,
         reason:
-            'background budget allows exactly one attempt; further '
+            'background budget allows exactly two attempts; further '
             'attempts must be suppressed until foreground',
       );
     });
@@ -435,16 +436,17 @@ void main() {
           isAppBackgrounded: () => backgrounded,
         );
 
-        // Burn the background budget.
+        // Burn the background budget (two attempts).
         await coord.restoreSession(reason: 'bg1');
-        await coord.restoreSession(reason: 'bg2_should_skip');
+        await coord.restoreSession(reason: 'bg2');
+        await coord.restoreSession(reason: 'bg3_should_skip');
         final stopCountAfterBg = protocol.calls
             .where((c) => c == 'stop')
             .length;
         expect(
           stopCountAfterBg,
-          1,
-          reason: 'budget exhausted: only the first bg attempt ran',
+          2,
+          reason: 'budget exhausted: only the first two bg attempts ran',
         );
 
         // Simulate app foreground transition.
@@ -457,21 +459,23 @@ void main() {
           reason: 'foreground call must reset budget and run a fresh restore',
         );
 
-        // Background again — budget should be reset, allowing one more.
+        // Background again — budget should be reset, allowing the full
+        // two-attempt budget once more.
         backgrounded = true;
         await coord.restoreSession(reason: 'bg_after_fg');
+        await coord.restoreSession(reason: 'bg_after_fg_2');
         expect(
           protocol.calls.where((c) => c == 'stop').length,
-          stopCountAfterBg + 2,
-          reason: 'after foreground reset, a new bg attempt is allowed',
+          stopCountAfterBg + 3,
+          reason: 'after foreground reset, the full bg budget is available',
         );
 
-        // Second bg attempt blocked again.
-        await coord.restoreSession(reason: 'bg_after_fg_2_should_skip');
+        // Third bg attempt blocked again.
+        await coord.restoreSession(reason: 'bg_after_fg_3_should_skip');
         expect(
           protocol.calls.where((c) => c == 'stop').length,
-          stopCountAfterBg + 2,
-          reason: 'second bg attempt after the reset must still be blocked',
+          stopCountAfterBg + 3,
+          reason: 'third bg attempt after the reset must still be blocked',
         );
       },
     );

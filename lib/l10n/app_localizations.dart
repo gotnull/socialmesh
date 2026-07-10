@@ -6444,6 +6444,24 @@ abstract class AppLocalizations {
   /// **'Add Channel'**
   String get channelsMenuAddChannel;
 
+  /// Action in the channel options sheet and Channels overflow menu that opens the drag-to-reorder sheet for the list's display order.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder channels'**
+  String get channelsMenuReorder;
+
+  /// Title of the drag-to-reorder sheet for the Channels list.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder Channels'**
+  String get channelsReorderSheetTitle;
+
+  /// Subtitle of the reorder sheet clarifying that reordering is presentational only and does not touch the radio's channel slot assignment.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to set the display order. The radio\'s channel slots are unchanged.'**
+  String get channelsReorderSheetHint;
+
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:
@@ -10936,6 +10954,18 @@ abstract class AppLocalizations {
   /// **'Start Update'**
   String get firmwareDfuStartUpdate;
 
+  /// Caption under the disabled DFU button when no device is connected
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to your device via Bluetooth to install this update.'**
+  String get firmwareDfuConnectRequired;
+
+  /// Error snackbar when DFU is attempted without a connected device
+  ///
+  /// In en, this message translates to:
+  /// **'No device connected. Connect via Bluetooth and try again.'**
+  String get firmwareDfuNotConnectedError;
+
   /// Button label to retry a failed DFU
   ///
   /// In en, this message translates to:
@@ -13227,6 +13257,12 @@ abstract class AppLocalizations {
   /// **'Search nodes...'**
   String get mapSearchNodesHint;
 
+  /// Subtitle on the row shown above the map's node search results when the query parses as a lat/lng pair; tapping the row jumps the camera to that location.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to coordinates'**
+  String get mapSearchGoToCoordinates;
+
   /// Text displayed in map view
   ///
   /// In en, this message translates to:
@@ -13278,7 +13314,7 @@ abstract class AppLocalizations {
   /// Map menu toggle that groups dense node markers into a count badge. Opt-in; off by default.
   ///
   /// In en, this message translates to:
-  /// **'Cluster markers'**
+  /// **'Show cluster markers'**
   String get mapShowClusterMarkers;
 
   /// Map menu action to disable marker clustering (return to individual node markers).
@@ -21069,6 +21105,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send (Ctrl/Cmd+Enter)'**
   String get messagingSendTooltip;
+
+  /// Title of the alert-bell row in the Quick Responses sheet. Tapping sends a bell-emoji message whose radio payload carries the ASCII bell (0x07) so buzzer-equipped radios ring.
+  ///
+  /// In en, this message translates to:
+  /// **'Send alert bell'**
+  String get messagingAlertBellTooltip;
+
+  /// Subtitle under the alert-bell row in the Quick Responses sheet, explaining the effect on receiving radios (External Notification module).
+  ///
+  /// In en, this message translates to:
+  /// **'Rings radios that have a buzzer configured'**
+  String get messagingAlertBellSubtitle;
 
   /// Live UTF-8 byte counter in the chat composer.
   ///
@@ -40055,8 +40103,20 @@ abstract class AppLocalizations {
   /// Empty-state description explaining why the air quality log may be empty.
   ///
   /// In en, this message translates to:
-  /// **'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.'**
+  /// **'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2, gas resistance) and broadcasts it.'**
   String get telemetryAirQualityNoDataDescription;
+
+  /// Caption under the gas resistance value on Air Quality Log cards
+  ///
+  /// In en, this message translates to:
+  /// **'Gas resistance (VOC sensor)'**
+  String get telemetryAirQualityGasResistanceLabel;
+
+  /// Tooltip on telemetry log cards whose tap opens the map centred on the sharing node
+  ///
+  /// In en, this message translates to:
+  /// **'Show node on map'**
+  String get telemetryShowOnMap;
 
   /// Particle size chip label for particles larger than 0.3 micrometres
   ///
@@ -62567,6 +62627,15 @@ abstract class AppLocalizations {
     String channelName,
   );
 
+  /// Notification title for a channel message whose sender has no short code (MeshCore channel messages carry only the sender name, embedded in the text)
+  ///
+  /// In en, this message translates to:
+  /// **'{senderName} in {channelName}'**
+  String notificationChannelMessageTitleNoCode(
+    String senderName,
+    String channelName,
+  );
+
   /// Row 11.b notification title when a brand-new MeshCore peer is heard via advert
   ///
   /// In en, this message translates to:
@@ -63178,6 +63247,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No target node specified'**
   String get automationErrorNoTargetNode;
+
+  /// Fallback substituted for automation template variables ({{battery}}, {{location}}, {{node.name}}, {{sensor.name}}) when the source value is missing, e.g. 'Battery: unknown'. Lowercase because it lands mid-sentence inside user-authored message templates.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown'**
+  String get automationVarUnknown;
+
+  /// Toggle label in the send-message action editor: the reply goes to whichever node produced the triggering event instead of a fixed target node.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to sender'**
+  String get automationActionReplyToSender;
+
+  /// Subtitle under the reply-to-sender toggle explaining where the message will be sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers whichever node triggered this automation'**
+  String get automationActionReplyToSenderHint;
+
+  /// Automation log error when a reply-to-sender send-message action runs for an event that carries no remote sender (e.g. scheduled or manual triggers).
+  ///
+  /// In en, this message translates to:
+  /// **'This trigger has no sender to reply to'**
+  String get automationErrorNoReplySender;
 
   /// Error message in automations
   ///
@@ -70204,6 +70297,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Storage location'**
   String get offlineStorageLocationLabel;
+
+  /// Settings tile title for the offline map storage location surface
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Map Storage'**
+  String get settingsTileOfflineMapStorageTitle;
+
+  /// Settings tile subtitle for the offline map storage location surface
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where downloaded map tiles are stored'**
+  String get settingsTileOfflineMapStorageSubtitle;
+
+  /// Body copy of the offline map storage sheet opened from Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded map tiles are kept on this device for offline use. When a removable SD card is available you can store them there instead of internal memory.'**
+  String get offlineStorageSheetDescription;
+
+  /// InfoTable label for the offline tile cache size
+  ///
+  /// In en, this message translates to:
+  /// **'Current cache size'**
+  String get offlineStorageCacheSizeLabel;
 
   /// Storage picker option: the phone's internal storage
   ///

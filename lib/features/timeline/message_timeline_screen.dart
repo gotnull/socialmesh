@@ -335,7 +335,9 @@ class _MessageTimelineScreenState extends ConsumerState<MessageTimelineScreen> {
         daysHeaderHeight: 52,
         daysHeaderColor: surfaceColor.withValues(alpha: 0.6),
         dayHeaderBuilder: (day, isToday) {
-          final dayAbbr = DateFormat.E().format(day).toUpperCase();
+          final dayAbbr = DateFormat.E(
+            Localizations.localeOf(context).toString(),
+          ).format(day).toUpperCase();
           final dayNum = day.day.toString();
           return SizedBox(
             width: double.infinity,

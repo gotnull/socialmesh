@@ -19,6 +19,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/muted_channels_provider.dart';
 import '../../utils/snackbar.dart';
 import 'channel_form_screen.dart';
+import 'channel_reorder_sheet.dart';
 import 'channel_share_utils.dart';
 
 /// Shows the unified channel options bottom sheet.
@@ -77,6 +78,11 @@ Future<void> showChannelOptionsSheet(
       enabled: channel.psk.isNotEmpty,
     ),
     BottomSheetAction(
+      icon: Icons.swap_vert,
+      label: context.l10n.channelsMenuReorder,
+      value: 'reorder',
+    ),
+    BottomSheetAction(
       icon: Icons.delete_sweep,
       label: context.l10n.channelOptionsClearMessages,
       value: 'clear_messages',
@@ -108,6 +114,8 @@ Future<void> showChannelOptionsSheet(
   switch (result) {
     case 'mute':
       await ref.read(mutedChannelsProvider.notifier).toggleMute(channel.index);
+    case 'reorder':
+      await showChannelReorderSheet(context);
     case 'view_qr':
       _showChannelQrCode(context, channel, channelName);
     case 'edit':

@@ -27,6 +27,7 @@ import '../vs_node_view/data/vs_interface.dart';
 import '../vs_node_view/data/vs_node_data.dart';
 import '../vs_node_view/data/vs_subgroup.dart';
 import 'package:socialmesh/core/theme.dart';
+import 'package:socialmesh/core/widgets/animations.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -86,16 +87,21 @@ class ActionTypes {
 class _SendMessageConfig {
   String messageText = '';
   int? targetNodeNum;
+  bool replyToSender = false;
 
   dynamic toJson() => {
     'messageText': messageText,
     'targetNodeNum': targetNodeNum,
+    // Only emitted when set so pre-existing fixed-target configs
+    // round-trip byte-identically.
+    if (replyToSender) 'replyToSender': true,
   };
 
   void fromJson(dynamic json) {
     if (json is Map) {
       messageText = json['messageText'] as String? ?? '';
       targetNodeNum = json['targetNodeNum'] as int?;
+      replyToSender = json['replyToSender'] == true;
     }
   }
 }
@@ -269,14 +275,55 @@ Widget _buildSendMessageWidget(_SendMessageConfig config) {
   return _ActionConfigWidget(
     icon: ActionTypes.icons[ActionTypes.sendMessage]!,
     label: ActionTypes.displayNames[ActionTypes.sendMessage]!,
-    child: Column(
+    child: _SendMessageFields(config: config),
+  );
+}
+
+/// Send-message config fields. Stateful so the reply-to-sender toggle can
+/// hide the fixed-target field: with the flag on, the engine answers the
+/// node that produced the triggering event and ignores any pinned target.
+class _SendMessageFields extends StatefulWidget {
+  const _SendMessageFields({required this.config});
+
+  final _SendMessageConfig config;
+
+  @override
+  State<_SendMessageFields> createState() => _SendMessageFieldsState();
+}
+
+class _SendMessageFieldsState extends State<_SendMessageFields> {
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final config = widget.config;
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _NodeNumField(
-          label: 'To Node #', // lint-allow: hardcoded-string
-          value: config.targetNodeNum,
-          onChanged: (v) => config.targetNodeNum = v,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Reply to sender', // lint-allow: hardcoded-string
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+            ThemedSwitch(
+              value: config.replyToSender,
+              onChanged: (v) => setState(() => config.replyToSender = v),
+            ),
+          ],
         ),
+        if (!config.replyToSender) ...[
+          const SizedBox(height: AppTheme.spacing8),
+          _NodeNumField(
+            label: 'To Node #', // lint-allow: hardcoded-string
+            value: config.targetNodeNum,
+            onChanged: (v) => config.targetNodeNum = v,
+          ),
+        ],
         const SizedBox(height: AppTheme.spacing8),
         _TextInputField(
           hint: 'Message text...', // lint-allow: hardcoded-string
@@ -285,8 +332,8 @@ Widget _buildSendMessageWidget(_SendMessageConfig config) {
           maxLines: 2,
         ),
       ],
-    ),
-  );
+    );
+  }
 }
 
 /// Builds a config widget for play-sound actions.
