@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (notifications)
+
+- Incoming-message notifications work again: versions 1.52 and 1.53 shipped with an internal CarPlay flag mistakenly enabled, which silently suppressed every new-message banner on both iOS and Android while the messages themselves still arrived in-app. Suppression is now additionally gated so it can only engage when a CarPlay communication banner is guaranteed to replace the standard one (explicit opt-in, iOS only), so a stray flag flip can never silence messages again
+- Muting a channel no longer silences direct messages: a DM arriving on the Primary Channel slot (index 0) was suppressed when channel 0 was muted; per-channel mute now applies to channel broadcasts only
+
 ### Fixed (map)
 
 - Node transparency is now applied consistently after reopening the app. Markers built before the saved "Node transparency" setting finished loading were cached fully opaque and stayed that way, so some nodes rendered faded and others solid with no settings changed. The marker cache now tracks the overlay opacity, so every peer marker follows the setting from the first frame
