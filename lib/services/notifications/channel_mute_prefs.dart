@@ -25,3 +25,17 @@ bool isChannelMutedInPrefs(SharedPreferences prefs, int channelIndex) {
       .whereType<int>()
       .contains(channelIndex);
 }
+
+/// The channel index whose mute state gates a message's notification, or `null`
+/// when per-channel mute does not apply to this message.
+///
+/// Per-channel mute is a property of channel broadcasts only. A direct message
+/// carries a channel index too (often 0, the Primary Channel), but muting a
+/// channel must never silence DMs - so this returns `null` for any non-broadcast
+/// message. A broadcast with an unresolved channel index is treated as the
+/// Primary Channel (0). Every notification-dispatch path uses this so the
+/// broadcast-vs-DM distinction is identical across all of them.
+int? muteIndexForMessage({required bool isBroadcast, required int? channel}) {
+  if (!isBroadcast) return null;
+  return channel ?? 0;
+}
