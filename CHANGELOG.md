@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (automations)
+
+- Automations can now be duplicated: a copy button on each automation card creates a "(Copy)" of the automation with fresh run stats and opens it in the editor. The copy starts disabled so it cannot double-fire the original's trigger before you adjust it
+
+### Added (nodes)
+
+- Remove Node is now available directly in the node long-press quick-actions sheet (with the same confirmation step as the detail screen), instead of only via the detail screen's overflow menu
+
+### Changed (messages)
+
+- The Contacts and Channels tabs now remember their card/compact view style independently. The existing preference carries over to both tabs, and the view toggle in the overflow menu applies to whichever tab is on screen
+
+### Fixed (messaging)
+
+- Messages composed while disconnected from the radio are no longer silently lost if the app restarts before reconnecting: they now show as failed with a retry button instead of appearing queued forever. Queued messages also send more reliably after reconnect (the queue now waits for the radio's config exchange to finish instead of giving up after 10 seconds)
+- Messages composed on a disconnected cold start (before the app has spoken to the radio this session) are now attributed to your own node via the last known device identity, instead of rendering as incoming bubbles after a restart
+
 ### Fixed (telemetry charts)
 
 - Chart legends no longer clip when they wrap to a second line: the pinned legend header now measures its labels at the current text size and grows to fit every row instead of using a fixed 40px height (device metrics, environment metrics). The two screens now share one legend widget (#228)

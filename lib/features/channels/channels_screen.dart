@@ -280,7 +280,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
               delegate: SliverChildBuilderDelegate((context, index) {
                 final channel = filteredChannels[index];
                 final animationsEnabled = ref.watch(animationsEnabledProvider);
-                final compactView = ref.watch(messagesCompactViewProvider);
+                final compactView = ref.watch(channelsCompactViewProvider);
                 return Perspective3DSlide(
                   index: index,
                   direction: SlideDirection.left,

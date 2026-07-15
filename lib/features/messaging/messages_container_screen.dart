@@ -194,6 +194,7 @@ class _MessagesContainerScreenState
             isConnected: isConnected,
             onAddChannel: () => _showAddChannelScreen(isConnected),
             onScanChannel: () => _openChannelScanner(isConnected),
+            channelsTabActive: () => _tabController.index == 1,
           ),
         ],
         bottom: PreferredSize(

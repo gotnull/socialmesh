@@ -2460,6 +2460,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Automação criada a partir do modelo';
 
   @override
+  String automationScreenCopyName(String name) {
+    return '$name (cópia)';
+  }
+
+  @override
   String automationScreenDaysAgo(int count) {
     return '${count}d atrás';
   }
@@ -12224,6 +12229,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Mensagem na fila - será enviada ao conectar';
+
+  @override
+  String get messagingUnsentAppRestart =>
+      'Não enviada - o app foi fechado antes de esta mensagem ser enviada';
 
   @override
   String get messagingMessageUnableToDisplay => '(não foi possível exibir)';

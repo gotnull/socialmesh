@@ -760,6 +760,8 @@ class AutomationsScreen extends ConsumerWidget {
                   onTap: () => _editAutomation(context, ref, automation),
                   onDelete: () => _confirmDelete(context, ref, automation),
                   onShare: () => _shareAutomation(context, ref, automation),
+                  onDuplicate: () =>
+                      _duplicateAutomation(context, ref, automation),
                   onRun: automation.enabled
                       ? () => _runAutomation(context, ref, automation)
                       : null,
@@ -971,6 +973,39 @@ class AutomationsScreen extends ConsumerWidget {
     Automation automation,
   ) {
     showAutomationShareSheet(context, automation, ref: ref);
+  }
+
+  Future<void> _duplicateAutomation(
+    BuildContext context,
+    WidgetRef ref,
+    Automation automation,
+  ) async {
+    // Duplication creates a new automation, so it sits behind the same
+    // premium gate as creating one from scratch or from a template.
+    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
+    if (!hasPremium) {
+      showPremiumInfoSheet(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.automations,
+      );
+      return;
+    }
+
+    ref.haptics.trigger(HapticType.light);
+
+    final copy = automation.duplicated(
+      name: context.l10n.automationScreenCopyName(automation.name),
+    );
+    await ref.read(automationsProvider.notifier).addAutomation(copy);
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AutomationEditorScreen(automation: copy),
+        ),
+      );
+    }
   }
 
   Future<void> _runAutomation(

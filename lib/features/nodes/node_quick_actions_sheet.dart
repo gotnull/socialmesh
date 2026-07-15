@@ -42,6 +42,7 @@ enum NodeQuickAction {
   helpCircle,
   manageHelpCircle,
   traceroute,
+  remove,
   disconnect,
 }
 
@@ -173,6 +174,13 @@ Future<void> showNodeQuickActionsSheet(
         label: context.l10n.helpModeCircleManage,
         value: NodeQuickAction.manageHelpCircle,
       ),
+    if (!isMyNode)
+      BottomSheetAction(
+        icon: Icons.delete_outline,
+        label: context.l10n.nodeDetailMenuRemoveNode,
+        value: NodeQuickAction.remove,
+        isDestructive: true,
+      ),
     if (isMyNode && onDisconnect != null)
       BottomSheetAction(
         icon: Icons.link_off_rounded,
@@ -247,6 +255,8 @@ Future<void> showNodeQuickActionsSheet(
       );
     case NodeQuickAction.traceroute:
       await sendNodeTraceroute(context, ref, node);
+    case NodeQuickAction.remove:
+      await confirmAndRemoveNode(context, ref, node);
     case NodeQuickAction.disconnect:
       onDisconnect?.call();
   }

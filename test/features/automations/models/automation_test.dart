@@ -51,6 +51,33 @@ void main() {
       expect(modified.triggerCount, original.triggerCount);
     });
 
+    test('duplicated mints new id, resets stats and starts disabled', () {
+      final original = Automation(
+        id: 'orig-id',
+        name: 'Battery alert',
+        description: 'Notify on low battery',
+        enabled: true,
+        trigger: const AutomationTrigger(type: TriggerType.batteryLow),
+        actions: const [AutomationAction(type: ActionType.pushNotification)],
+        lastTriggered: DateTime(2026, 7, 1),
+        triggerCount: 12,
+      );
+
+      final copy = original.duplicated(name: 'Battery alert (Copy)');
+
+      expect(copy.id, isNot(original.id));
+      expect(copy.name, 'Battery alert (Copy)');
+      expect(copy.description, original.description);
+      expect(copy.enabled, isFalse);
+      expect(copy.trigger.type, original.trigger.type);
+      expect(copy.actions.length, original.actions.length);
+      expect(copy.lastTriggered, isNull);
+      expect(copy.triggerCount, 0);
+      // Action list is detached - mutating the copy must not touch the
+      // original.
+      expect(identical(copy.actions, original.actions), isFalse);
+    });
+
     test('toJson and fromJson round-trip', () {
       final original = Automation(
         id: 'test-id',

@@ -58,6 +58,7 @@ class OfflineQueueService {
   final List<QueuedMessage> _queue = [];
   bool _isProcessing = false;
   bool _isConnected = false;
+  Timer? _readinessRetryTimer;
   SendMessageCallback? _sendCallback;
   UpdateMessageCallback? _updateCallback;
   ReadyToSendCallback? _readyToSendCallback;
@@ -101,6 +102,11 @@ class OfflineQueueService {
     final wasConnected = _isConnected;
     _isConnected = isConnected;
 
+    if (!isConnected) {
+      _readinessRetryTimer?.cancel();
+      _readinessRetryTimer = null;
+    }
+
     if (!wasConnected && isConnected && _queue.isNotEmpty) {
       AppLogging.messages(
         '📤 Connection restored, processing ${_queue.length} queued messages',
@@ -142,6 +148,8 @@ class OfflineQueueService {
 
   /// Clear all queued messages
   void clear() {
+    _readinessRetryTimer?.cancel();
+    _readinessRetryTimer = null;
     _queue.clear();
     _ensureController.add(List.unmodifiable(_queue));
     AppLogging.messages('📤 Queue cleared');
@@ -151,95 +159,121 @@ class OfflineQueueService {
   Future<void> _processQueue() async {
     if (_isProcessing || !_isConnected || _sendCallback == null) return;
 
-    // Wait for protocol to be ready before processing
-    if (_readyToSendCallback != null) {
-      var attempts = 0;
-      while (!_readyToSendCallback!() && attempts < 50) {
-        AppLogging.messages(
-          '📤 Waiting for protocol to be ready... (${attempts + 1}/50)',
-        );
-        await Future.delayed(const Duration(milliseconds: 200));
-        attempts++;
-        if (!_isConnected) {
-          AppLogging.messages('📤 Disconnected while waiting, aborting queue');
+    // Claim the processing slot before the readiness wait so concurrent
+    // triggers (connection edge, enqueue, manual, readiness listener)
+    // cannot enter the drain loop together and double-send the head.
+    _isProcessing = true;
+    _readinessRetryTimer?.cancel();
+    _readinessRetryTimer = null;
+
+    try {
+      // Wait for protocol to be ready before processing
+      if (_readyToSendCallback != null) {
+        var attempts = 0;
+        while (!_readyToSendCallback!() && attempts < 50) {
+          AppLogging.messages(
+            '📤 Waiting for protocol to be ready... (${attempts + 1}/50)',
+          );
+          await Future.delayed(const Duration(milliseconds: 200));
+          attempts++;
+          if (!_isConnected) {
+            AppLogging.messages(
+              '📤 Disconnected while waiting, aborting queue',
+            );
+            return;
+          }
+        }
+        if (!_readyToSendCallback!()) {
+          // Do not strand the queue until the next connection edge:
+          // re-arm a retry so a slow config exchange still drains.
+          AppLogging.messages(
+            '📤 Protocol not ready after 10s, retrying in 5s',
+          );
+          _armReadinessRetry();
           return;
         }
       }
-      if (!_readyToSendCallback!()) {
-        AppLogging.messages('📤 Protocol not ready after 10s, aborting queue');
-        return;
-      }
-    }
 
-    _isProcessing = true;
-    AppLogging.messages('📤 Processing queue of ${_queue.length} messages');
+      AppLogging.messages('📤 Processing queue of ${_queue.length} messages');
 
-    while (_queue.isNotEmpty && _isConnected) {
-      final message = _queue.first;
+      while (_queue.isNotEmpty && _isConnected) {
+        final message = _queue.first;
 
-      try {
-        AppLogging.messages('📤 Sending queued message: ${message.id}');
+        try {
+          AppLogging.messages('📤 Sending queued message: ${message.id}');
 
-        final packetId = await _sendCallback!(
-          text: message.text,
-          to: message.to,
-          channel: message.channel,
-          wantAck: message.wantAck,
-          messageId: message.id,
-        );
+          final packetId = await _sendCallback!(
+            text: message.text,
+            to: message.to,
+            channel: message.channel,
+            wantAck: message.wantAck,
+            messageId: message.id,
+          );
 
-        // Update message status to sent
-        _updateCallback?.call(
-          message.id,
-          MessageStatus.sent,
-          packetId: packetId,
-        );
-
-        // Remove from queue on success
-        _queue.removeAt(0);
-        _ensureController.add(List.unmodifiable(_queue));
-
-        AppLogging.messages(
-          '📤 Queued message sent successfully: ${message.id}',
-        );
-
-        // Small delay between messages to avoid overwhelming the device
-        await Future.delayed(const Duration(milliseconds: 100));
-      } catch (e) {
-        AppLogging.messages(
-          '📤 Failed to send queued message: ${message.id} - $e',
-        );
-        message.retryCount++;
-
-        if (message.retryCount >= 3) {
-          // Max retries reached, mark as failed and remove
+          // Update message status to sent
           _updateCallback?.call(
             message.id,
-            MessageStatus.failed,
-            errorMessage: safeL10n().offlineQueueMaxRetries(e.toString()),
+            MessageStatus.sent,
+            packetId: packetId,
           );
+
+          // Remove from queue on success
           _queue.removeAt(0);
-          _ensureController.add(List.unmodifiable(_queue));
-        } else {
-          // Move to end of queue for retry
-          _queue.removeAt(0);
-          _queue.add(message);
           _ensureController.add(List.unmodifiable(_queue));
 
-          // Wait before retrying
-          await Future.delayed(const Duration(seconds: 2));
+          AppLogging.messages(
+            '📤 Queued message sent successfully: ${message.id}',
+          );
+
+          // Small delay between messages to avoid overwhelming the device
+          await Future.delayed(const Duration(milliseconds: 100));
+        } catch (e) {
+          AppLogging.messages(
+            '📤 Failed to send queued message: ${message.id} - $e',
+          );
+          message.retryCount++;
+
+          if (message.retryCount >= 3) {
+            // Max retries reached, mark as failed and remove
+            _updateCallback?.call(
+              message.id,
+              MessageStatus.failed,
+              errorMessage: safeL10n().offlineQueueMaxRetries(e.toString()),
+            );
+            _queue.removeAt(0);
+            _ensureController.add(List.unmodifiable(_queue));
+          } else {
+            // Move to end of queue for retry
+            _queue.removeAt(0);
+            _queue.add(message);
+            _ensureController.add(List.unmodifiable(_queue));
+
+            // Wait before retrying
+            await Future.delayed(const Duration(seconds: 2));
+          }
         }
       }
-    }
 
-    _isProcessing = false;
-    AppLogging.messages(
-      '📤 Queue processing complete, ${_queue.length} remaining',
-    );
+      AppLogging.messages(
+        '📤 Queue processing complete, ${_queue.length} remaining',
+      );
+    } finally {
+      _isProcessing = false;
+    }
+  }
+
+  void _armReadinessRetry() {
+    _readinessRetryTimer?.cancel();
+    _readinessRetryTimer = Timer(const Duration(seconds: 5), () {
+      _readinessRetryTimer = null;
+      processQueueIfNeeded();
+    });
   }
 
   /// Dispose resources
   void dispose() {
+    _readinessRetryTimer?.cancel();
+    _readinessRetryTimer = null;
     _queueController?.close();
     _queueController = null;
   }

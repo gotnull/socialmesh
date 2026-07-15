@@ -381,41 +381,6 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     }
   }
 
-  Future<void> _removeNode(BuildContext context, MeshNode node) async {
-    final confirmed = await AppBottomSheet.showConfirm(
-      context: context,
-      title: context.l10n.nodeDetailRemoveTitle,
-      message: context.l10n.nodeDetailRemoveMessage(node.displayName),
-      confirmLabel: context.l10n.nodeDetailRemoveConfirm,
-      isDestructive: true,
-    );
-
-    if (confirmed != true || !mounted) return;
-
-    final protocol = ref.read(protocolServiceProvider);
-    final nodesNotifier = ref.read(nodesProvider.notifier);
-
-    try {
-      await protocol.removeNode(node.nodeNum);
-      if (!mounted) return;
-      nodesNotifier.removeNode(node.nodeNum);
-      if (context.mounted) {
-        Navigator.pop(context);
-        showSuccessSnackBar(
-          context,
-          context.l10n.nodeDetailRemovedSnackbar(node.displayName),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(
-          context,
-          context.l10n.nodeDetailRemoveError(e.toString()),
-        );
-      }
-    }
-  }
-
   Future<void> _setFixedPosition(BuildContext context, MeshNode node) async {
     final protocol = ref.read(protocolServiceProvider);
 
@@ -1988,7 +1953,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               case 'admin_settings':
                 _configureRemotely(context, node);
               case 'remove':
-                _removeNode(context, node);
+                confirmAndRemoveNode(context, ref, node, popOnSuccess: true);
             }
           },
         ),

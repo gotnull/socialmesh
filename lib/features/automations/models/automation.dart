@@ -74,6 +74,21 @@ class Automation {
   bool get hasBranchStructure =>
       thenActions != null || effectiveElseActions != null;
 
+  /// Returns a detached copy of this automation for duplication: fresh id
+  /// and createdAt, run stats reset, and disabled so the copy cannot
+  /// double-fire the original's trigger before the user adjusts it.
+  Automation duplicated({required String name}) => Automation(
+    name: name,
+    description: description,
+    enabled: false,
+    trigger: trigger,
+    actions: List.of(actions),
+    conditions: conditions == null ? null : List.of(conditions!),
+    conditionTree: conditionTree,
+    thenActions: thenActions == null ? null : List.of(thenActions!),
+    elseActions: elseActions == null ? null : List.of(elseActions!),
+  );
+
   Automation copyWith({
     String? id,
     String? name,

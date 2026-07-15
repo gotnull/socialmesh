@@ -4368,6 +4368,12 @@ abstract class AppLocalizations {
   /// **'Automation created from template'**
   String get automationScreenCreatedFromTemplate;
 
+  /// Name given to a duplicated automation; {name} is the original automation's name
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (Copy)'**
+  String automationScreenCopyName(String name);
+
   /// Relative timestamp for events days ago; {count} is the number of days
   ///
   /// In en, this message translates to:
@@ -21135,6 +21141,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message queued - will send when connected'**
   String get messagingMessageQueuedOffline;
+
+  /// Error shown on a message bubble when the app restarted before a queued offline message could be transmitted; the user can tap retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent - the app closed before this message was sent'**
+  String get messagingUnsentAppRestart;
 
   /// Fallback rendered inside a chat bubble when the persisted message body is empty or whitespace-only and there is no text to show.
   ///

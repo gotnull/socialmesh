@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
@@ -23,6 +24,54 @@ import '../../utils/snackbar.dart';
 ///
 /// All `ref.read` calls happen BEFORE awaits (per CLAUDE.md async safety)
 /// and every post-await UI touch is guarded by `context.mounted`.
+
+/// Confirms and removes [node] from the device NodeDB and local state.
+/// Returns true when the node was actually removed. Set [popOnSuccess]
+/// when the calling screen presents the node itself and must close once
+/// the node no longer exists.
+Future<bool> confirmAndRemoveNode(
+  BuildContext context,
+  WidgetRef ref,
+  MeshNode node, {
+  bool popOnSuccess = false,
+}) async {
+  final confirmed = await AppBottomSheet.showConfirm(
+    context: context,
+    title: context.l10n.nodeDetailRemoveTitle,
+    message: context.l10n.nodeDetailRemoveMessage(node.displayName),
+    confirmLabel: context.l10n.nodeDetailRemoveConfirm,
+    isDestructive: true,
+  );
+  if (confirmed != true || !context.mounted) return false;
+
+  final protocol = ref.read(protocolServiceProvider);
+  final nodesNotifier = ref.read(nodesProvider.notifier);
+
+  try {
+    await protocol.removeNode(node.nodeNum);
+    nodesNotifier.removeNode(node.nodeNum);
+    AppLogging.nodes('[NodeActions] node removed nodeNum=${node.nodeNum}');
+    if (context.mounted) {
+      if (popOnSuccess) Navigator.pop(context);
+      showSuccessSnackBar(
+        context,
+        context.l10n.nodeDetailRemovedSnackbar(node.displayName),
+      );
+    }
+    return true;
+  } catch (e, st) {
+    AppLogging.nodes(
+      '[NodeActions] remove failed nodeNum=${node.nodeNum} error=$e\n$st',
+    );
+    if (context.mounted) {
+      showErrorSnackBar(
+        context,
+        context.l10n.nodeDetailRemoveError(e.toString()),
+      );
+    }
+    return false;
+  }
+}
 
 Future<void> toggleNodeFavorite(
   BuildContext context,

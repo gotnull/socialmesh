@@ -3280,6 +3280,15 @@
     "@automationScreenCreatedFromTemplate": {
         "description": "Success snackbar after adding a template-based automation"
     },
+    "automationScreenCopyName": "{name} (Copy)",
+    "@automationScreenCopyName": {
+        "description": "Name given to a duplicated automation; {name} is the original automation's name",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
     "automationScreenDaysAgo": "{count}d ago",
     "@automationScreenDaysAgo": {
         "description": "Relative timestamp for events days ago; {count} is the number of days",
@@ -16242,6 +16251,10 @@
     "messagingMessageQueuedOffline": "Message queued - will send when connected",
     "@messagingMessageQueuedOffline": {
         "description": "Info snackbar shown when a message is queued because the device is offline."
+    },
+    "messagingUnsentAppRestart": "Not sent - the app closed before this message was sent",
+    "@messagingUnsentAppRestart": {
+        "description": "Error shown on a message bubble when the app restarted before a queued offline message could be transmitted; the user can tap retry."
     },
     "messagingMessageUnableToDisplay": "(unable to display)",
     "@messagingMessageUnableToDisplay": {

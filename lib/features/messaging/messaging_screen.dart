@@ -1808,8 +1808,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       return;
     }
 
-    // Capture all provider references BEFORE any async operations
-    final myNodeNum = ref.read(myNodeNumProvider);
+    // Capture all provider references BEFORE any async operations.
+    // effectiveMyNodeNum covers the disconnected cold start: a from=0 row
+    // renders as inbound after restart and loses the failed/retry UI.
+    final myNodeNum = ref.read(effectiveMyNodeNumProvider);
     final nodes = ref.read(nodesProvider);
     final messagesNotifier = ref.read(messagesProvider.notifier);
     final connectionState = ref.read(connectionStateProvider);
@@ -2423,7 +2425,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     // messagesProvider-driven rebuild gives fresh values in busy channels
     // without adding independent rebuild triggers on every node tick.
     final nodes = ref.read(nodesProvider);
-    final myNodeNum = ref.watch(myNodeNumProvider);
+    final myNodeNum = ref.watch(effectiveMyNodeNumProvider);
     final channels = ref.read(channelsProvider);
 
     if (AppLogging.messagesLoggingEnabled) {
@@ -2936,7 +2938,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   if (index == filteredRows.length - 1 &&
                                       AppLogging.messagesLoggingEnabled) {
                                     AppLogging.messages(
-                                      '📨 Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
+                                      '📨 Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, status=${message.status.name}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
                                     );
                                   }
 
@@ -4659,11 +4661,20 @@ class MessagingPopupMenu extends ConsumerWidget {
     this.onAddChannel,
     this.onScanChannel,
     this.isConnected = false,
+    this.channelsTabActive,
   });
 
   final VoidCallback? onAddChannel;
   final VoidCallback? onScanChannel;
   final bool isConnected;
+
+  /// Resolves whether the Channels tab is active when the menu is used.
+  /// Contacts and Channels persist their view density independently, so
+  /// the shared menu toggles whichever list is on screen. Null means the
+  /// menu sits on a contacts-only surface.
+  final bool Function()? channelsTabActive;
+
+  bool _isChannelsTab() => channelsTabActive?.call() ?? false;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -4677,7 +4688,11 @@ class MessagingPopupMenu extends ConsumerWidget {
             if (onScanChannel != null) onScanChannel!();
             break;
           case 'view_mode':
-            ref.read(messagesCompactViewProvider.notifier).toggle();
+            if (_isChannelsTab()) {
+              ref.read(channelsCompactViewProvider.notifier).toggle();
+            } else {
+              ref.read(messagesCompactViewProvider.notifier).toggle();
+            }
             break;
           case 'week_view':
             if (!AppFeatureFlags.isMessageTimelineEnabled) {
@@ -4697,7 +4712,11 @@ class MessagingPopupMenu extends ConsumerWidget {
         }
       },
       itemBuilder: (context) {
-        final compactView = ref.read(messagesCompactViewProvider);
+        final compactView = ref.read(
+          _isChannelsTab()
+              ? channelsCompactViewProvider
+              : messagesCompactViewProvider,
+        );
         final items = <PopupMenuEntry<String>>[
           PopupMenuItem(
             value: 'view_mode',

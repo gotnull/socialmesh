@@ -103,6 +103,20 @@ class SettingsService {
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     await _migrateNotificationSettingsV2();
+    await _migrateChannelsViewMode();
+  }
+
+  /// One-time migration: snapshot the legacy shared Messages view-mode key
+  /// into the Channels-specific key. Contacts and Channels persist their
+  /// view density independently; seeding must happen exactly once so a
+  /// later Contacts toggle does not leak into Channels through the
+  /// fallback read.
+  Future<void> _migrateChannelsViewMode() async {
+    if (_preferences.getInt('channels_view_mode_index') != null) return;
+    await _preferences.setInt(
+      'channels_view_mode_index',
+      messagesViewModeIndex,
+    );
   }
 
   /// One-time migration: consolidate background-specific notification toggles
@@ -769,14 +783,25 @@ class SettingsService {
 
   int get nodeViewModeIndex => _preferences.getInt('node_view_mode_index') ?? 0;
 
-  // Messages surface view mode (0 = cards, 1 = compact). One value covers
-  // both the Contacts and Channels tabs, which share a single overflow menu.
+  // Messages surface view modes (0 = cards, 1 = compact). Contacts and
+  // Channels persist independently; the legacy shared key
+  // messages_view_mode_index keeps existing users' Contacts preference and
+  // seeds the Channels value on first read.
   Future<void> setMessagesViewModeIndex(int index) async {
     await _preferences.setInt('messages_view_mode_index', index);
   }
 
   int get messagesViewModeIndex =>
       _preferences.getInt('messages_view_mode_index') ?? 0;
+
+  Future<void> setChannelsViewModeIndex(int index) async {
+    await _preferences.setInt('channels_view_mode_index', index);
+  }
+
+  // Fallback covers the window before _migrateChannelsViewMode has run
+  // (or test containers that skip init); after init the key always exists.
+  int get channelsViewModeIndex =>
+      _preferences.getInt('channels_view_mode_index') ?? messagesViewModeIndex;
 
   // App-side display order for the Channels list, stored as radio slot
   // indices. Slots missing from the list (newly added channels) follow

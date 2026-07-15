@@ -18,6 +18,7 @@ class AutomationCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback? onShare;
   final VoidCallback? onRun;
+  final VoidCallback? onDuplicate;
   final AutomationHistoryEntry? lastRun;
 
   const AutomationCard({
@@ -28,6 +29,7 @@ class AutomationCard extends StatelessWidget {
     required this.onDelete,
     this.onShare,
     this.onRun,
+    this.onDuplicate,
     this.lastRun,
   });
 
@@ -247,6 +249,18 @@ class AutomationCard extends StatelessWidget {
                     onTap: onShare,
                     child: Icon(
                       Icons.qr_code_2,
+                      color: context.accentColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                ],
+                // Duplicate button
+                if (onDuplicate != null) ...[
+                  GestureDetector(
+                    onTap: onDuplicate,
+                    child: Icon(
+                      Icons.copy_outlined,
                       color: context.accentColor,
                       size: 20,
                     ),

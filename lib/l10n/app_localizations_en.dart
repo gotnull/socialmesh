@@ -2438,6 +2438,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Automation created from template';
 
   @override
+  String automationScreenCopyName(String name) {
+    return '$name (Copy)';
+  }
+
+  @override
   String automationScreenDaysAgo(int count) {
     return '${count}d ago';
   }
@@ -12080,6 +12085,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Message queued - will send when connected';
+
+  @override
+  String get messagingUnsentAppRestart =>
+      'Not sent - the app closed before this message was sent';
 
   @override
   String get messagingMessageUnableToDisplay => '(unable to display)';

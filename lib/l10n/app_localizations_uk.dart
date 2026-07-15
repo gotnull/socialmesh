@@ -2461,6 +2461,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Автоматизацію створено з шаблону';
 
   @override
+  String automationScreenCopyName(String name) {
+    return '$name (копія)';
+  }
+
+  @override
   String automationScreenDaysAgo(int count) {
     return '$countд тому';
   }
@@ -12241,6 +12246,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Повідомлення в черзі - буде надіслано після підключення';
+
+  @override
+  String get messagingUnsentAppRestart =>
+      'Не надіслано - застосунок було закрито до надсилання цього повідомлення';
 
   @override
   String get messagingMessageUnableToDisplay => '(не вдалося відобразити)';

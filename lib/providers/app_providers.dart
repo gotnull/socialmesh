@@ -35,6 +35,7 @@ import '../services/storage/message_database.dart';
 import '../services/mesh_packet_dedupe_store.dart';
 import '../services/notifications/notification_service.dart';
 import '../services/messaging/offline_queue_service.dart';
+import '../l10n/l10n_utils.dart';
 import '../services/location/location_service.dart';
 import '../services/location/phone_position_governor.dart';
 import '../services/live_activity/live_activity_service.dart';
@@ -4815,6 +4816,19 @@ class MessagesNotifier extends Notifier<List<Message>> {
       // session (the app was killed while a retry was in flight).
       // This is done here rather than in DmRetryCoordinator.start()
       // because at start time, messagesProvider may not have loaded yet.
+      //
+      // Pending outbound messages get the same treatment: the offline
+      // queue that would have sent them is in-memory only, so after a
+      // restart nothing will ever transmit them. Mark them failed so the
+      // user sees the retry affordance instead of a bubble that looks
+      // queued forever. Messages still held by the live queue (hot
+      // restart, provider container reuse) are left alone.
+      final liveQueueIds = ref
+          .read(offlineQueueProvider)
+          .queue
+          .map((q) => q.id)
+          .toSet();
+      final orphanedPending = <Message>[];
       final resetMessages = regularMessages.map((m) {
         if (m.status == MessageStatus.retrying) {
           AppLogging.messages(
@@ -4822,9 +4836,29 @@ class MessagesNotifier extends Notifier<List<Message>> {
           );
           return m.copyWith(status: MessageStatus.unconfirmed);
         }
+        if (m.status == MessageStatus.pending &&
+            m.sent &&
+            !m.received &&
+            !liveQueueIds.contains(m.id)) {
+          AppLogging.messages(
+            'MessagesNotifier: orphaned pending → failed: ${m.id}',
+          );
+          final failed = m.copyWith(
+            status: MessageStatus.failed,
+            errorMessage: safeL10n().messagingUnsentAppRestart,
+          );
+          orphanedPending.add(failed);
+          return failed;
+        }
         return m;
       }).toList();
       state = resetMessages;
+      // Persist the pending → failed conversion. Device reconcile and
+      // background merges re-read storage rows; a state-only conversion
+      // would be resurrected to pending by the stale row on reconnect.
+      for (final failed in orphanedPending) {
+        await _storage!.saveMessage(failed);
+      }
       AppLogging.messages(
         'Loaded ${regularMessages.length} messages from storage '
         '(${savedMessages.length - regularMessages.length} tapbacks excluded)',
@@ -6787,6 +6821,17 @@ final myNodeNumProvider = NotifierProvider<MyNodeNumNotifier, int?>(
   MyNodeNumNotifier.new,
 );
 
+/// Effective device identity for message attribution. Falls back to the
+/// persisted lastMyNodeNum while the protocol has not yet learned
+/// myNodeNum this session (disconnected cold start), so outbound bubbles
+/// composed or loaded before the config exchange still attribute to the
+/// user instead of rendering as inbound.
+final effectiveMyNodeNumProvider = Provider<int?>((ref) {
+  final live = ref.watch(myNodeNumProvider);
+  if (live != null) return live;
+  return ref.watch(settingsServiceProvider).value?.lastMyNodeNum;
+});
+
 // ============================================================================
 // REMOTE ADMINISTRATION
 // ============================================================================
@@ -7881,6 +7926,7 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
   // Note: We check settings asynchronously to avoid blocking provider initialization
   () async {
     final settings = await ref.read(settingsServiceProvider.future);
+    if (!ref.mounted) return;
     if (settings.lastDeviceProtocol != 'meshcore') {
       final currentState = ref.read(connectionStateProvider);
       currentState.whenData((state) {
@@ -7896,10 +7942,29 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
     next,
   ) async {
     final settings = await ref.read(settingsServiceProvider.future);
+    if (!ref.mounted) return;
     if (settings.lastDeviceProtocol == 'meshcore') return; // Skip for MeshCore
     next.whenData((state) {
       service.setConnectionState(state == DeviceConnectionState.connected);
     });
+  });
+
+  // Drain as soon as the protocol becomes ready. The connection-edge
+  // trigger races config exchange (the queue's readiness wait gives up
+  // after 10s); a readiness transition is the authoritative signal that
+  // configurationComplete flipped, so the queue never has to win that race.
+  ref.listen<AsyncValue<OperationalReadiness>>(meshtasticReadinessProvider, (
+    previous,
+    next,
+  ) async {
+    final becameReady =
+        next.value == OperationalReadiness.ready &&
+        previous?.value != OperationalReadiness.ready;
+    if (!becameReady) return;
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (!ref.mounted) return;
+    if (settings.lastDeviceProtocol == 'meshcore') return; // Skip for MeshCore
+    service.processQueueIfNeeded();
   });
 
   return service;
