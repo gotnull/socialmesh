@@ -106,7 +106,7 @@ dependencies:
   firebase_messaging: ^16.4.1
   characters: ^1.4.0
   cloud_firestore: ^6.6.0
-  cloud_functions: ^6.3.2
+  cloud_functions: ^6.3.5
   # Stripe SDK - native Payment Sheet for the external (off-store)
   # purchase path. Publishable key + merchantIdentifier configured
   # at app startup from .env.
