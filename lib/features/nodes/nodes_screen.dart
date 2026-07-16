@@ -1504,9 +1504,9 @@ class _NodeCard extends ConsumerWidget {
     ).scale(1.0).clamp(1.0, 1.5);
     final avatarSize = 56.0 * avatarScale;
     return Row(
-      // Centre the avatar against the full card content; the text column
-      // keeps its own top-down layout.
-      crossAxisAlignment: CrossAxisAlignment.center,
+      // Top-align the avatar with the card content: multi-line text
+      // columns pair with a top-aligned leading widget.
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           width: avatarSize + 18,
@@ -1941,9 +1941,10 @@ class _CompactNodeTile extends StatelessWidget {
           vertical: AppTheme.spacing8,
         ),
         child: Row(
-          // Centre the avatar against the tile content (matches the full
-          // node card); the text column keeps its own top-down layout.
-          crossAxisAlignment: CrossAxisAlignment.center,
+          // Top-align the avatar with the tile content (matches the full
+          // node card): multi-line text pairs with a top-aligned leading
+          // widget.
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Colored short-name circle (matches the Contacts list + expanded
             // node card). Every node - including our own - uses its

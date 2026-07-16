@@ -530,6 +530,161 @@ void main() {
     });
   });
 
+  group('early phase-1 re-send (start() config wait)', () {
+    // The re-send window is production-tuned to 8s; shrink it so the
+    // stall path fires inside a unit test.
+    const shortWindow = Duration(milliseconds: 100);
+
+    List<pb.ToRadio> decodedToRadios(_FakeTransport transport) =>
+        transport.sent.map((bytes) => pb.ToRadio.fromBuffer(bytes)).toList();
+
+    List<int> nodeInfoFrame(int nodeNum) {
+      final nodeInfo = pb.NodeInfo()..num = nodeNum;
+      return (pb.FromRadio()..nodeInfo = nodeInfo).writeToBuffer();
+    }
+
+    test(
+      'BLE stalled handshake re-sends heartbeat then wantConfigId once',
+      () async {
+        await _withTempDirectory((dir) async {
+          final transport = _FakeTransport();
+          final protocol = await _freshProtocol(dir, transport);
+          try {
+            protocol.earlyConfigRetryWindow = shortWindow;
+            final startFuture = protocol.start();
+            // Initial sequence: 200ms notification settle + heartbeat
+            // (100ms pause) + wantConfigId, then the shrunk retry window
+            // and the re-send's own heartbeat pause. Wait past all of it.
+            await Future<void>.delayed(const Duration(milliseconds: 900));
+
+            final nonces = _sentWantConfigNonces(transport).toList();
+            expect(
+              nonces.where((n) => n == _nonceInitialConfig).length,
+              2,
+              reason:
+                  'A stalled BLE handshake must re-send wantConfigId '
+                  '(69420) exactly once after the early retry window',
+            );
+            final frames = decodedToRadios(transport);
+            final secondWantConfigIndex = frames.lastIndexWhere(
+              (f) => f.hasWantConfigId(),
+            );
+            expect(
+              frames[secondWantConfigIndex - 1].hasHeartbeat(),
+              isTrue,
+              reason:
+                  'The BLE re-send must be preceded by a heartbeat to '
+                  'wake low-power radios',
+            );
+
+            // Completing the handshake settles start(). Then wait past
+            // the phase-2 heartbeat pause and ack the drain so stop()
+            // does not race the drain completer's await gap.
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceInitialConfig),
+            );
+            await startFuture;
+            expect(protocol.configurationComplete, isTrue);
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceQueueDrain),
+            );
+          } finally {
+            protocol.stop();
+          }
+        });
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+
+    test(
+      'BLE handshake with config frames flowing does NOT re-send',
+      () async {
+        await _withTempDirectory((dir) async {
+          final transport = _FakeTransport();
+          final protocol = await _freshProtocol(dir, transport);
+          try {
+            protocol.earlyConfigRetryWindow = shortWindow;
+            final startFuture = protocol.start();
+            // Feed a config-carrying frame as soon as the initial
+            // wantConfigId is on the wire, then wait past the retry
+            // window: the dump is flowing, so no re-send may fire.
+            while (_sentWantConfigNonces(transport).isEmpty) {
+              await Future<void>.delayed(const Duration(milliseconds: 20));
+            }
+            await protocol.handleIncomingPacket(nodeInfoFrame(0xB2));
+            await Future<void>.delayed(const Duration(milliseconds: 500));
+
+            expect(
+              _sentWantConfigNonces(
+                transport,
+              ).where((n) => n == _nonceInitialConfig).length,
+              1,
+              reason:
+                  'A slow-but-flowing config dump must not trigger the '
+                  'early re-send: a duplicate wantConfigId restarts the '
+                  'dump from scratch',
+            );
+            expect(protocol.configFramesSinceHandshake, greaterThan(0));
+            expect(protocol.handshakePhaseName, 'awaitingInitialConfig');
+            expect(protocol.handshakeStartedAt, isNotNull);
+
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceInitialConfig),
+            );
+            await startFuture;
+            // Wait past the phase-2 heartbeat pause and ack the drain so
+            // stop() does not race the drain completer's await gap.
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceQueueDrain),
+            );
+          } finally {
+            protocol.stop();
+          }
+        });
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+
+    test(
+      'completed handshake before the window fires means no re-send',
+      () async {
+        await _withTempDirectory((dir) async {
+          final transport = _FakeTransport();
+          final protocol = await _freshProtocol(dir, transport);
+          try {
+            protocol.earlyConfigRetryWindow = const Duration(milliseconds: 300);
+            final startFuture = protocol.start();
+            while (_sentWantConfigNonces(transport).isEmpty) {
+              await Future<void>.delayed(const Duration(milliseconds: 20));
+            }
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceInitialConfig),
+            );
+            await startFuture;
+
+            // Wait past the window: the timer must have been cancelled
+            // by the completed wait.
+            await Future<void>.delayed(const Duration(milliseconds: 600));
+            expect(
+              _sentWantConfigNonces(
+                transport,
+              ).where((n) => n == _nonceInitialConfig).length,
+              1,
+              reason:
+                  'A handshake that completes before the early retry '
+                  'window must never re-send wantConfigId',
+            );
+          } finally {
+            protocol.stop();
+          }
+        });
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+  });
+
   test(
     'queued packets replayed during drain are ingested and deduped',
     () async {

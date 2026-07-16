@@ -15,7 +15,9 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:socialmesh/core/transport.dart';
+import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
 import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
+import 'package:socialmesh/services/protocol/packet_framer.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
 class _CapabilityFakeTransport extends DeviceTransport {
@@ -207,6 +209,70 @@ void main() {
         }
       });
     });
+  });
+
+  group('early phase-1 re-send on direct-endpoint transport', () {
+    // Pins the TCP behaviour of the transport-aware early retry in
+    // start(): a single unconditional wantConfigId re-send, with no
+    // extra heartbeat (the heartbeat prefix is a BLE/USB wake concern).
+    test('stalled network handshake re-sends wantConfigId without a '
+        'second heartbeat', () async {
+      await _withTempDirectory((dir) async {
+        final transport = _CapabilityFakeTransport(
+          type: TransportType.network,
+          requiresFraming: true,
+          requiresWakeSequence: false,
+        );
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          protocol.earlyConfigRetryWindow = const Duration(milliseconds: 100);
+          final startFuture = protocol.start();
+          // Initial settle (200ms) + heartbeat pause (100ms) + the
+          // shrunk retry window, with slack.
+          await Future<void>.delayed(const Duration(milliseconds: 800));
+
+          // Network sends are framed: 0x94 0xC3 msb lsb + payload.
+          // Strip the 4-byte header to decode the ToRadio protobuf.
+          final frames = transport.sent
+              .where((b) => b.length > 4 && b[0] == 0x94 && b[1] == 0xC3)
+              .map((b) => pb.ToRadio.fromBuffer(b.sublist(4)))
+              .toList();
+          expect(
+            frames.where((f) => f.hasWantConfigId()).length,
+            2,
+            reason:
+                'A stalled direct-endpoint handshake must re-send '
+                'wantConfigId exactly once after the early retry window',
+          );
+          expect(
+            frames.where((f) => f.hasHeartbeat()).length,
+            1,
+            reason:
+                'The direct-endpoint re-send must not add a second '
+                'heartbeat; only the initial wake heartbeat is expected',
+          );
+
+          // Inbound data on a framed transport goes through the framer,
+          // so the acks must carry the frame header too.
+          await protocol.handleIncomingPacket(
+            PacketFramer.frame(
+              (pb.FromRadio()..configCompleteId = 69420).writeToBuffer(),
+            ),
+          );
+          await startFuture;
+          // Wait past the phase-2 heartbeat pause and ack the drain so
+          // stop() does not race the drain completer's await gap.
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+          await protocol.handleIncomingPacket(
+            PacketFramer.frame(
+              (pb.FromRadio()..configCompleteId = 69421).writeToBuffer(),
+            ),
+          );
+        } finally {
+          protocol.stop();
+        }
+      });
+    }, timeout: const Timeout(Duration(seconds: 30)));
   });
 
   group('network transport does not send wake bytes mid-flight', () {

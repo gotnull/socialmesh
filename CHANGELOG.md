@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (Bluetooth connection)
+
+- Radios that miss the app's first configuration request no longer hang the connection on "configuring" until Bluetooth drops: the app now re-sends the request once (with a wake-up heartbeat) after 8 seconds if the radio has not started its config dump. Previously only network (TCP) connections retried; Bluetooth and USB waited the full 30 seconds and often disconnected mid-wait, producing a constant connect/drop loop on some radios
+- If configuration still times out while the Bluetooth link is up, the app now performs a quick clean reconnect (up to 3 attempts) instead of sitting on "configuring" until the system kills the link
+- Bug reports and disconnect logs now record how far the configuration handshake got (phase, config frames received, start time) so stalled connections can be diagnosed from a single report
+
 ### Added (automations)
 
 - Automations can now be duplicated: a copy button on each automation card creates a "(Copy)" of the automation with fresh run stats and opens it in the editor. The copy starts disabled so it cannot double-fire the original's trigger before you adjust it
@@ -32,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (nodes list accessibility)
 
-- The coloured node avatar circles in the Nodes list now grow with the text-size setting (up to 1.5x) instead of staying fixed while the text scales, and they are vertically centred on the card instead of sitting high (#227)
+- The coloured node avatar circles in the Nodes list now grow with the text-size setting (up to 1.5x) instead of staying fixed while the text scales (#227)
 
 ### Fixed (MeshCore notifications)
 

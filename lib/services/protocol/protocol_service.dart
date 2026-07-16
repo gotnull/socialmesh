@@ -505,6 +505,13 @@ class ProtocolService {
   static const int _nonceQueueDrain = 69421;
   _HandshakePhase _handshakePhase = _HandshakePhase.idle;
 
+  // Configuring-phase progress markers. Stamped when phase 1 begins and
+  // incremented per config-carrying FromRadio frame until the handshake
+  // completes. Surfaced in bug-report payloads and disconnect logs so a
+  // stalled handshake can be distinguished from a slow config dump.
+  DateTime? _handshakeStartedAt;
+  int _configFramesSinceHandshake = 0;
+
   /// Completes when the phase-2 `configCompleteId(69421)` arrives. The
   /// queue-drain retry loop in `_requestQueueDrain` awaits this to decide
   /// whether to re-send. Fresh per attempt, recreated by
@@ -1511,6 +1518,18 @@ class ProtocolService {
   /// Convenience predicate: protocol is fully operational and TX is safe.
   bool get isOperational => _readiness == OperationalReadiness.ready;
 
+  /// Config-carrying frames decoded since the current handshake began.
+  /// Zero with a non-idle [handshakePhaseName] means the radio never
+  /// answered `wantConfigId`; a positive count means the dump started
+  /// but did not finish.
+  int get configFramesSinceHandshake => _configFramesSinceHandshake;
+
+  /// Name of the current wantConfig handshake phase, for diagnostics.
+  String get handshakePhaseName => _handshakePhase.name;
+
+  /// When phase 1 of the current handshake began, for diagnostics.
+  DateTime? get handshakeStartedAt => _handshakeStartedAt;
+
   /// Current session generation, set by [bindSessionGeneration] from the
   /// `RestoreSessionCoordinator` before each `start()` cycle.
   int get sessionGeneration => _sessionGeneration;
@@ -1763,45 +1782,55 @@ class ProtocolService {
         // Now we're waiting for config - enable the listener to complete on error
         waitingForConfig = true;
 
-        // Wait for config to complete with timeout.
-        //
-        // Transport-aware early recovery: TCP sessions have a different
-        // failure profile than BLE. NOTIFY-style flakiness does not exist
-        // on a raw TCP socket — if bytes do not arrive it is almost always
-        // because the firmware missed the first `wantConfigId` (common
-        // after a remote reboot). Rather than consume the full 30s wait,
-        // fire a single early retry so the user is not staring at a blank
-        // configuring screen for half a minute. BLE/USB keep their
-        // original single-shot behavior; the existing data-flow watchdog
-        // handles stalled NOTIFY paths separately.
+        // Wait for config to complete with timeout, with one early re-send
+        // if phase 1 goes unanswered. On TCP the firmware misses the first
+        // `wantConfigId` when it is mid-reboot; on BLE/USB a NOTIFY or
+        // write glitch can leave the link up but the handshake dead, which
+        // otherwise burns the whole wait until the OS drops the link
+        // mid-configuring. The re-send only fires when zero config frames
+        // have been decoded for this handshake: a large NodeDB dump can
+        // legitimately outlast the window, and a duplicate `wantConfigId`
+        // restarts the dump from scratch.
         AppLogging.protocol('Protocol: Waiting for configCompleteId...');
         const totalTimeout = Duration(seconds: 30);
-        const earlyRetryWindow = Duration(seconds: 8);
-        Timer? earlyRetryTimer;
-        if (_transport.reconnectMode == TransportReconnectMode.directEndpoint) {
-          earlyRetryTimer = Timer(earlyRetryWindow, () async {
-            // Idempotence: (1) completer nulled/completed means either
-            // success or stop()/error has already settled the wait — skip.
-            // (2) transport not connected means the socket already died
-            // and there is nothing to retry on.
-            final completer = _configCompleter;
-            if (completer == null || completer.isCompleted) return;
-            if (!_transport.isConnected) return;
+        final earlyRetryTimer = Timer(earlyConfigRetryWindow, () async {
+          // Idempotence: (1) completer nulled/completed means either
+          // success or stop()/error has already settled the wait - skip.
+          // (2) transport not connected means the link already died and
+          // there is nothing to retry on.
+          final completer = _configCompleter;
+          if (completer == null || completer.isCompleted) return;
+          if (!_transport.isConnected) return;
+          final isDirectEndpoint =
+              _transport.reconnectMode == TransportReconnectMode.directEndpoint;
+          if (!isDirectEndpoint && _configFramesSinceHandshake > 0) {
             AppLogging.protocol(
-              'HANDSHAKE: phase-1 not observed within '
-              '${earlyRetryWindow.inSeconds}s on '
-              '${_transport.type.name} — resending wantConfigId once '
-              '(bounded retry, not a handshake restart)',
+              'HANDSHAKE: phase-1 slow but flowing '
+              '($_configFramesSinceHandshake config frames) - '
+              'skipping early re-send',
             );
-            try {
-              await _requestConfiguration();
-            } catch (e) {
-              AppLogging.protocol(
-                'HANDSHAKE: early phase-1 retry send failed — $e',
-              );
+            return;
+          }
+          AppLogging.protocol(
+            'HANDSHAKE: phase-1 not observed within '
+            '${earlyConfigRetryWindow.inSeconds}s on '
+            '${_transport.type.name} - resending wantConfigId once '
+            '(bounded retry, not a handshake restart)',
+          );
+          try {
+            if (!isDirectEndpoint) {
+              // Mirror the initial wake sequence: a heartbeat wakes
+              // low-power radios and nudges the notification path before
+              // the re-sent request.
+              await _sendHeartbeat();
             }
-          });
-        }
+            await _requestConfiguration();
+          } catch (e) {
+            AppLogging.protocol(
+              'HANDSHAKE: early phase-1 retry send failed - $e',
+            );
+          }
+        });
         try {
           await _configCompleter!.future.timeout(
             totalTimeout,
@@ -1812,7 +1841,7 @@ class ProtocolService {
             },
           );
         } finally {
-          earlyRetryTimer?.cancel();
+          earlyRetryTimer.cancel();
         }
         AppLogging.debug('✅ Protocol: Configuration was received');
       } catch (e, st) {
@@ -2336,6 +2365,15 @@ class ProtocolService {
       // Debug: log which payload variant we got
       final variant = fromRadio.whichPayloadVariant();
       AppLogging.protocol('FromRadio payload variant: $variant');
+
+      if (_handshakePhase != _HandshakePhase.complete &&
+          (fromRadio.hasMyInfo() ||
+              fromRadio.hasNodeInfo() ||
+              fromRadio.hasChannel() ||
+              fromRadio.hasConfig() ||
+              fromRadio.hasMetadata())) {
+        _configFramesSinceHandshake++;
+      }
 
       if (fromRadio.hasPacket()) {
         await _handleMeshPacket(fromRadio.packet);
@@ -5785,6 +5823,12 @@ class ProtocolService {
       // Phase 1 of the two-step handshake: request the main configuration
       // bundle (config + NodeDB). The second phase (queue drain) is kicked
       // off on receipt of configCompleteId; see `_requestQueueDrain`.
+      // Progress markers reset only on first entry into phase 1 so a
+      // bounded re-send of the same handshake keeps its frame count.
+      if (_handshakePhase != _HandshakePhase.awaitingInitialConfig) {
+        _handshakeStartedAt = DateTime.now();
+        _configFramesSinceHandshake = 0;
+      }
       _handshakePhase = _HandshakePhase.awaitingInitialConfig;
       _setReadiness(
         OperationalReadiness.handshakePhase1,
@@ -9205,6 +9249,14 @@ class ProtocolService {
   /// pre-reset NodeDB and the cleared nodes reappear immediately.
   @visibleForTesting
   Duration nodeDbResetSettleDelay = const Duration(seconds: 2);
+
+  /// How long phase 1 of the wantConfig handshake may go unanswered
+  /// before the single early re-send fires (see `start()`). Long enough
+  /// that a healthy radio has always begun its config dump; far shorter
+  /// than the full config wait so a dead handshake recovers before the
+  /// OS tears the link down.
+  @visibleForTesting
+  Duration earlyConfigRetryWindow = const Duration(seconds: 8);
 
   /// Reset the node database (removes all learned nodes).
   /// This sends the reset command to the device and clears the local node cache.

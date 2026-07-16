@@ -357,6 +357,7 @@ class BugReportService with WidgetsBindingObserver {
       // Try to get device connection state if available
       try {
         final deviceConnection = ref.read(deviceConnectionProvider);
+        final protocol = ref.read(protocolServiceProvider);
         context['deviceConnection'] = {
           'state': deviceConnection.state.name,
           'reason': deviceConnection.reason.name,
@@ -367,6 +368,10 @@ class BugReportService with WidgetsBindingObserver {
           'lastConnectedAt': deviceConnection.lastConnectedAt
               ?.toIso8601String(),
           'lastDisconnectDetail': _lastDisconnectDetailString(),
+          'protocolReadiness': protocol.readiness.name,
+          'handshakePhase': protocol.handshakePhaseName,
+          'configFramesSinceHandshake': protocol.configFramesSinceHandshake,
+          'handshakeStartedAt': protocol.handshakeStartedAt?.toIso8601String(),
         };
 
         context['connectedMeshDevice'] = _buildConnectedMeshDeviceContext(

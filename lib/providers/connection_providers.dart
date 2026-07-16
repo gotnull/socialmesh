@@ -793,6 +793,14 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   bool _isInitialized = false;
   bool _userDisconnected = false; // Track if user manually disconnected
 
+  // Consecutive config-timeout teardowns since the last successful
+  // restore. Bounds the app-driven disconnect/reconnect recovery in
+  // `_initializeProtocolAfterAutoReconnect` so a radio that never
+  // completes configuration cannot keep the phone in a permanent
+  // disconnect loop.
+  int _configTimeoutTeardowns = 0;
+  static const int _maxConfigTimeoutTeardowns = 3;
+
   /// Owns the canonical reconnect routine. Lazy-init in [build] so the
   /// closure captures the current `ref` and `_userDisconnected` reads.
   late final RestoreSessionCoordinator _restoreCoordinator;
@@ -978,6 +986,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     _retryTimer = null;
     _backgroundScanInProgress = false;
     _reconnectAttempt = 0;
+    _configTimeoutTeardowns = 0;
     _userDisconnected = true;
 
     // Block re-arm via the global flag (read by the auto-reconnect
@@ -1292,6 +1301,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         reconnectAttempts: 0,
         connectionSessionId: _nextConnectionSessionId(),
       );
+      _configTimeoutTeardowns = 0;
 
       // Update legacy providers
       if (state.device != null) {
@@ -1365,16 +1375,75 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         }
       } else {
         // NOT an auth error — this is a generic config timeout or
-        // transport error. Let the normal retry logic handle it.
-        // Do NOT route to Scanner; the auto-reconnect manager will
-        // retry or the user can tap Retry on the banner.
+        // transport error. Do NOT route to Scanner.
         AppLogging.connection(
           '🔌 _initializeProtocolAfterAutoReconnect: Non-auth error — '
           'NOT routing to Scanner (error: $e)',
         );
+        await _handleNonAuthRestoreFailure();
       }
     }
   }
+
+  /// Recovery for a restore attempt that failed without an auth error
+  /// (typically a config-handshake timeout) while the link is still up.
+  ///
+  /// The auto-reconnect manager only reacts to a `disconnected`
+  /// transport event. Left alone, the app sits in `configuring` until
+  /// the OS eventually drops the link. Drive a bounded teardown instead
+  /// so the drop flows through the canonical reconnect pipeline
+  /// (_handleDisconnect -> autoReconnectManager -> _performReconnect).
+  /// Bounded so a radio that never completes configuration falls back
+  /// to the banner + manual Retry instead of looping forever.
+  /// Do NOT call startBackgroundConnection here - dual-scan race
+  /// (see _handleDisconnect's unexpectedDisconnect branch).
+  Future<void> _handleNonAuthRestoreFailure() async {
+    final transport = ref.read(transportProvider);
+    final regionApplying = ref.read(regionApplyInFlightProvider);
+    if (transport.isConnected &&
+        !_userDisconnected &&
+        !regionApplying &&
+        _configTimeoutTeardowns < _maxConfigTimeoutTeardowns) {
+      _configTimeoutTeardowns++;
+      AppLogging.connection(
+        '🔌 _handleNonAuthRestoreFailure: config did not complete but '
+        'link is still up - forcing teardown '
+        '$_configTimeoutTeardowns/$_maxConfigTimeoutTeardowns to '
+        're-enter the reconnect pipeline',
+      );
+      if (transport is ReceiveDiagnosticsSupport) {
+        (transport as ReceiveDiagnosticsSupport).noteDisconnectCause(
+          'config_timeout_retry',
+        );
+      }
+      try {
+        await transport.disconnect();
+      } catch (disconnectError) {
+        AppLogging.connection(
+          '🔌 _handleNonAuthRestoreFailure: teardown disconnect '
+          'failed - $disconnectError',
+        );
+      }
+    } else if (_configTimeoutTeardowns >= _maxConfigTimeoutTeardowns) {
+      AppLogging.connection(
+        '🔌 _handleNonAuthRestoreFailure: config-timeout teardown '
+        'budget exhausted ($_configTimeoutTeardowns) - leaving link '
+        'up; user can Retry from the banner',
+      );
+    }
+  }
+
+  /// Test-only seam driving [_handleNonAuthRestoreFailure] directly.
+  /// Production code reaches it via the restore-failure catch in
+  /// `_initializeProtocolAfterAutoReconnect`; driving the full restore
+  /// pipeline in a unit test is unnecessary overhead.
+  @visibleForTesting
+  Future<void> debugHandleNonAuthRestoreFailureForTest() =>
+      _handleNonAuthRestoreFailure();
+
+  /// Test-only view of the consecutive config-timeout teardown count.
+  @visibleForTesting
+  int get configTimeoutTeardownsForTesting => _configTimeoutTeardowns;
 
   /// Shared pre-scan BLE cleanup for background reconnect paths.
   ///
@@ -2673,11 +2742,15 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           'autoReconnectManagerProvider will handle reconnect',
         );
         final foreground = ref.read(appLifecycleProvider);
+        final protocol = ref.read(protocolServiceProvider);
         AppLogging.connection(
           'DISCONNECT_CONTEXT '
           '${disconnectDetail?.toLogPayload() ?? 'origin=unknown'} '
           'foreground=$foreground '
-          'reconnectAttempts=${state.reconnectAttempts}',
+          'reconnectAttempts=${state.reconnectAttempts} '
+          'readiness=${protocol.readiness.name} '
+          'phase=${protocol.handshakePhaseName} '
+          'configFrames=${protocol.configFramesSinceHandshake}',
         );
 
         // Defense: if the latch is still set but the Scanner is no
