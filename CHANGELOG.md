@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Radios that miss the app's first configuration request no longer hang the connection on "configuring" until Bluetooth drops: the app now re-sends the request once (with a wake-up heartbeat) after 8 seconds if the radio has not started its config dump. Previously only network (TCP) connections retried; Bluetooth and USB waited the full 30 seconds and often disconnected mid-wait, producing a constant connect/drop loop on some radios
 - If configuration still times out while the Bluetooth link is up, the app now performs a quick clean reconnect (up to 3 attempts) instead of sitting on "configuring" until the system kills the link
 - Bug reports and disconnect logs now record how far the configuration handshake got (phase, config frames received, start time) so stalled connections can be diagnosed from a single report
+- Going out of Bluetooth range and back no longer leaves the app permanently stuck on "Configuring SocialMesh" with every send blocked (#249). The second phase of the connect handshake previously gave up silently after three attempts; it now keeps retrying on a widening schedule (about a minute in total) and, if the radio still does not answer while the link is up, performs the same bounded clean reconnect as a configuration timeout - so the session heals itself instead of needing a manual disconnect/reconnect
+- The two automatic reconnect paths (in-app scan and system-level Bluetooth reconnect) no longer race each other: both now run the same canonical session restore, closing a gap where a system-level reconnect during scanning could leave the app connected but never re-run the configuration handshake
 
 ### Added (automations)
 
@@ -20,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added (nodes)
 
 - Remove Node is now available directly in the node long-press quick-actions sheet (with the same confirmation step as the detail screen), instead of only via the detail screen's overflow menu
+
+### Added (messages)
+
+- Message formatting, matching the official Meshtastic iOS app (#250). The composer shows a formatting toolbar while typing: bold, italic, strikethrough, code, and link buttons wrap or toggle the selected text with the same markdown markers the official app uses, and the link button prompts for a URL. Message bubbles render the formatting - styled text, monospaced code, and tappable links (behind the existing confirm-before-open sheet) - while malformed markup falls back to plain text
 
 ### Changed (messages)
 
@@ -52,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Incoming-message notifications work again: versions 1.52 and 1.53 shipped with an internal CarPlay flag mistakenly enabled, which silently suppressed every new-message banner on both iOS and Android while the messages themselves still arrived in-app. Suppression is now additionally gated so it can only engage when a CarPlay communication banner is guaranteed to replace the standard one (explicit opt-in, iOS only), so a stray flag flip can never silence messages again
 - Muting a channel no longer silences direct messages: a DM arriving on the Primary Channel slot (index 0) was suppressed when channel 0 was muted; per-channel mute now applies to channel broadcasts only
+- The iOS app icon unread badge now updates when a message arrives while the app is in the background, instead of only after opening and closing the app (#248). The badge count now travels inside the notification itself, so iOS applies it the moment the banner is delivered
+- Automation notifications (such as "node silent" alerts from a Dead Man's Switch automation) now respect the master notifications toggle, and a new "Automation alerts" switch on Settings > Notifications can silence them without disabling the automation. A still-silent node also alerts once per silent stretch instead of repeating every few minutes, re-arming only after the node is heard from again
 
 ### Fixed (map)
 
