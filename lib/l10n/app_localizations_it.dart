@@ -19349,6 +19349,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Accettazione automatica trasferimenti';
 
   @override
+  String get settingsSearchAutomationAlertsSubtitle =>
+      'Notifiche generate dalle automazioni, come gli avvisi di nodo inattivo';
+
+  @override
+  String get settingsSearchAutomationAlertsTitle => 'Avvisi automazioni';
+
+  @override
   String get settingsSearchAutomationsPackSubtitle =>
       'Azioni e trigger automatizzati';
 
@@ -28248,6 +28255,34 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helpCategorySafety => 'Sicurezza e regole';
+
+  @override
+  String get formattingBoldLabel => 'Grassetto';
+
+  @override
+  String get formattingItalicLabel => 'Corsivo';
+
+  @override
+  String get formattingStrikethroughLabel => 'Barrato';
+
+  @override
+  String get formattingCodeLabel => 'Codice';
+
+  @override
+  String get formattingLinkLabel => 'Inserisci link';
+
+  @override
+  String get formattingLinkSheetTitle => 'Inserisci link';
+
+  @override
+  String get formattingLinkSheetDescription =>
+      'Inserisci l\'URL per il testo selezionato';
+
+  @override
+  String get formattingLinkUrlHint => 'https://';
+
+  @override
+  String get formattingLinkInsertAction => 'Inserisci';
 
   @override
   String get flowNodeNodeOnline => 'Nodo online';

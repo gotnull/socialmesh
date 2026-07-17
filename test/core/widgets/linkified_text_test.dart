@@ -230,4 +230,133 @@ void main() {
       expect(coordSpan.recognizer, isNotNull);
     });
   });
+
+  group('LinkifiedText inline markdown', () {
+    Widget wrap(Widget child) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: child),
+    );
+
+    List<TextSpan> spansOf(WidgetTester tester) {
+      final richFinder = find.byWidgetPredicate(
+        (w) => w is Text && w.textSpan != null,
+      );
+      expect(richFinder, findsOneWidget);
+      final text = tester.widget<Text>(richFinder);
+      final root = text.textSpan! as TextSpan;
+      return root.children!.cast<TextSpan>();
+    }
+
+    TextSpan spanWithText(List<TextSpan> spans, String needle) =>
+        spans.firstWhere((s) => s.text == needle);
+
+    testWidgets('flag off renders markdown source literally', (tester) async {
+      await tester.pumpWidget(
+        wrap(const LinkifiedText(text: 'hello **world**')),
+      );
+      // Regression guard for MeshCore/SIP surfaces: identical plain output.
+      expect(find.text('hello **world**'), findsOneWidget);
+      expect(find.byType(Text), findsOneWidget);
+    });
+
+    testWidgets('bold segment gets FontWeight.w700', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const LinkifiedText(
+            text: 'hello **world**',
+            enableInlineMarkdown: true,
+          ),
+        ),
+      );
+      final spans = spansOf(tester);
+      expect(spanWithText(spans, 'world').style?.fontWeight, FontWeight.w700);
+      expect(spanWithText(spans, 'hello ').style?.fontWeight, isNull);
+    });
+
+    testWidgets('italic, strikethrough, and code segments styled', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const LinkifiedText(
+            text: '*a* ~~b~~ `c`',
+            enableInlineMarkdown: true,
+          ),
+        ),
+      );
+      final spans = spansOf(tester);
+      expect(spanWithText(spans, 'a').style?.fontStyle, FontStyle.italic);
+      expect(
+        spanWithText(spans, 'b').style?.decoration,
+        TextDecoration.lineThrough,
+      );
+      final code = spanWithText(spans, 'c');
+      expect(code.style?.fontFamily, isNotNull);
+      expect(code.style?.backgroundColor, isNotNull);
+    });
+
+    testWidgets('markdown link is tappable with underline', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const LinkifiedText(
+            text: 'see [docs](https://example.com) now',
+            enableInlineMarkdown: true,
+          ),
+        ),
+      );
+      final spans = spansOf(tester);
+      final link = spanWithText(spans, 'docs');
+      expect(link.recognizer, isNotNull);
+      expect(link.style?.decoration, TextDecoration.underline);
+    });
+
+    testWidgets('bare URL inside a bold segment stays tappable', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const LinkifiedText(
+            text: '**go to https://example.com now**',
+            enableInlineMarkdown: true,
+          ),
+        ),
+      );
+      final spans = spansOf(tester);
+      final url = spanWithText(spans, 'https://example.com');
+      expect(url.recognizer, isNotNull);
+      // Non-link parts of the bold segment keep the bold weight.
+      expect(spanWithText(spans, 'go to ').style?.fontWeight, FontWeight.w700);
+    });
+
+    testWidgets('code segment contents are not linkified', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const LinkifiedText(
+            text: 'run `https://example.com` raw',
+            enableInlineMarkdown: true,
+          ),
+        ),
+      );
+      final spans = spansOf(tester);
+      final code = spanWithText(spans, 'https://example.com');
+      expect(code.recognizer, isNull);
+    });
+
+    testWidgets('malformed markdown renders literally', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const LinkifiedText(
+            text: 'odd **pair and ~half',
+            enableInlineMarkdown: true,
+          ),
+        ),
+      );
+      // No crash; full source text visible.
+      final joined = spansOf(
+        tester,
+      ).map((s) => s.text).whereType<String>().join();
+      expect(joined, 'odd **pair and ~half');
+    });
+  });
 }

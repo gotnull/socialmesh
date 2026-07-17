@@ -3514,7 +3514,14 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           protocol.setBleModelNumber(transport.bleModelNumber);
           protocol.setBleManufacturerName(transport.bleManufacturerName);
 
-          await protocol.start();
+          // Canonical restore (refresh notifications -> stop -> bind
+          // session generation -> start) instead of a raw protocol.start().
+          // The coordinator's single-flight also collapses the race with
+          // the transport state-listener reconnect path, which fires on
+          // the same `connected` transition.
+          await ref
+              .read(deviceConnectionProvider.notifier)
+              .restoreSessionForAutoReconnect();
           AppLogging.connection('Protocol service started!');
 
           // Check if cancelled after protocol start

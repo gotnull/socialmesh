@@ -19384,6 +19384,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Übertragungen automatisch annehmen';
 
   @override
+  String get settingsSearchAutomationAlertsSubtitle =>
+      'Benachrichtigungen aus Automationen, z. B. Hinweise zu inaktiven Knoten';
+
+  @override
+  String get settingsSearchAutomationAlertsTitle =>
+      'Automations-Benachrichtigungen';
+
+  @override
   String get settingsSearchAutomationsPackSubtitle =>
       'Automatisierte Aktionen und Auslöser';
 
@@ -28326,6 +28334,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get helpCategorySafety => 'Sicherheit & Regeln';
+
+  @override
+  String get formattingBoldLabel => 'Fett';
+
+  @override
+  String get formattingItalicLabel => 'Kursiv';
+
+  @override
+  String get formattingStrikethroughLabel => 'Durchgestrichen';
+
+  @override
+  String get formattingCodeLabel => 'Code';
+
+  @override
+  String get formattingLinkLabel => 'Link einfügen';
+
+  @override
+  String get formattingLinkSheetTitle => 'Link einfügen';
+
+  @override
+  String get formattingLinkSheetDescription =>
+      'URL für den ausgewählten Text eingeben';
+
+  @override
+  String get formattingLinkUrlHint => 'https://';
+
+  @override
+  String get formattingLinkInsertAction => 'Einfügen';
 
   @override
   String get flowNodeNodeOnline => 'Knoten online';

@@ -693,6 +693,7 @@ class BottomSheetTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+  final TextCapitalization textCapitalization;
 
   const BottomSheetTextField({
     super.key,
@@ -707,6 +708,7 @@ class BottomSheetTextField extends StatelessWidget {
     this.inputFormatters,
     this.onChanged,
     this.onSubmitted,
+    this.textCapitalization = TextCapitalization.sentences,
   });
 
   @override
@@ -722,7 +724,7 @@ class BottomSheetTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
-      textCapitalization: TextCapitalization.sentences,
+      textCapitalization: textCapitalization,
       style: TextStyle(
         color: context.textPrimary,
         fontSize: 16,

@@ -3194,6 +3194,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         onSend: _sendMessage,
                         hintText: context.l10n.messagingMessageHint,
                         sendTooltip: context.l10n.messagingSendTooltip,
+                        enableFormattingToolbar: true,
                         maxLength: composerPayloadSizer.maxUtf8Bytes,
                         budgetResolver: composerPayloadSizer.measure,
                         budgetLabelBuilder: (context, budget) =>

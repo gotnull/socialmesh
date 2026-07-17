@@ -19463,6 +19463,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Acceptation automatique des transferts';
 
   @override
+  String get settingsSearchAutomationAlertsSubtitle =>
+      'Notifications émises par les automatisations, par exemple en cas de nœud inactif';
+
+  @override
+  String get settingsSearchAutomationAlertsTitle => 'Alertes d\'automatisation';
+
+  @override
   String get settingsSearchAutomationsPackSubtitle =>
       'Actions et déclencheurs automatisés';
 
@@ -28452,6 +28459,34 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get helpCategorySafety => 'Sécurité et règles';
+
+  @override
+  String get formattingBoldLabel => 'Gras';
+
+  @override
+  String get formattingItalicLabel => 'Italique';
+
+  @override
+  String get formattingStrikethroughLabel => 'Barré';
+
+  @override
+  String get formattingCodeLabel => 'Code';
+
+  @override
+  String get formattingLinkLabel => 'Insérer un lien';
+
+  @override
+  String get formattingLinkSheetTitle => 'Insérer un lien';
+
+  @override
+  String get formattingLinkSheetDescription =>
+      'Saisissez l\'URL pour le texte sélectionné';
+
+  @override
+  String get formattingLinkUrlHint => 'https://';
+
+  @override
+  String get formattingLinkInsertAction => 'Insérer';
 
   @override
   String get flowNodeNodeOnline => 'Noeud en ligne';

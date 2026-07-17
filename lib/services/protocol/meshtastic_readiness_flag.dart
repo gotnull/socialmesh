@@ -36,26 +36,49 @@ class MeshtasticReadinessFlags {
   /// side-effect is flagged.
   final bool watchdogEnabled;
 
-  const MeshtasticReadinessFlags({required this.watchdogEnabled});
+  /// Gate for the degraded-readiness recovery listener: when the protocol
+  /// surfaces `degraded` while the transport link is still up (phase-2
+  /// handshake exhausted its retries), the connection notifier drives one
+  /// bounded teardown through the existing config-timeout recovery path.
+  /// Unlike [watchdogEnabled] this defaults ON in every build mode - it
+  /// reacts only to a terminal protocol-declared failure, not to a timer
+  /// racing a legitimately slow handshake.
+  /// Kill switch: `MESHTASTIC_DEGRADED_RECOVERY_ENABLED=false`.
+  final bool degradedRecoveryEnabled;
+
+  const MeshtasticReadinessFlags({
+    required this.watchdogEnabled,
+    this.degradedRecoveryEnabled = true,
+  });
 
   /// Fully disabled. Used as a static fallback in tests where dotenv
   /// is not initialised.
   static const MeshtasticReadinessFlags disabled = MeshtasticReadinessFlags(
     watchdogEnabled: false,
+    degradedRecoveryEnabled: false,
   );
 
   /// Read the flag snapshot from the current `.env` environment.
   ///
-  /// Resolution order:
+  /// Resolution order (watchdog):
   /// 1. Env var present and parseable -> use that value.
   /// 2. Env var missing/unparseable + debug or profile build -> ON.
   /// 3. Env var missing/unparseable + release build -> OFF.
+  ///
+  /// Degraded recovery defaults ON in all build modes; only its env kill
+  /// switch can turn it off.
   factory MeshtasticReadinessFlags.fromEnv() {
     final envOverride = _readBoolOrNull(
       'MESHTASTIC_READINESS_WATCHDOG_ENABLED',
     );
     final defaultOn = kDebugMode || kProfileMode;
-    return MeshtasticReadinessFlags(watchdogEnabled: envOverride ?? defaultOn);
+    final degradedOverride = _readBoolOrNull(
+      'MESHTASTIC_DEGRADED_RECOVERY_ENABLED',
+    );
+    return MeshtasticReadinessFlags(
+      watchdogEnabled: envOverride ?? defaultOn,
+      degradedRecoveryEnabled: degradedOverride ?? true,
+    );
   }
 
   static bool? _readBoolOrNull(String key) {

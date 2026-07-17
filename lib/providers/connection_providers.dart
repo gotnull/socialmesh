@@ -839,8 +839,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       isAppBackgrounded: () => !ref.read(appLifecycleProvider),
     );
 
+    final readinessFlags = ref.read(meshtasticReadinessFlagsProvider);
     _watchdog = ReadinessWatchdog(
-      flags: ref.read(meshtasticReadinessFlagsProvider),
+      flags: readinessFlags,
       coordinator: _restoreCoordinator,
       readinessStream: ref.read(protocolServiceProvider).readinessStream,
       triggerRebuild: _triggerWatchdogRebuild,
@@ -848,11 +849,40 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     );
     _watchdog.start();
 
+    // Production self-heal for the phase-2 wedge: the protocol surfaces
+    // `degraded` (reason phase2_exhausted) when its extended queue-drain
+    // retries run out while the BLE link is still up. React with ONE
+    // bounded teardown through the existing config-timeout recovery so
+    // the drop re-enters the canonical reconnect pipeline. `ready` is the
+    // only signal that resets the teardown budget - a device that always
+    // passes phase-1 but never phase-2 must not refill its own budget.
+    final degradedRecoverySubscription = ref
+        .read(protocolServiceProvider)
+        .readinessStream
+        .listen((readiness) {
+          if (readiness == OperationalReadiness.ready) {
+            _configTimeoutTeardowns = 0;
+            return;
+          }
+          if (readiness != OperationalReadiness.degraded) return;
+          if (!readinessFlags.degradedRecoveryEnabled) return;
+          if (_userDisconnected) return;
+          final transport = ref.read(transportProvider);
+          // Transport-drop paths also emit `degraded`; those already flow
+          // through _handleDisconnect. Only a degraded-while-link-up wedge
+          // needs the forced teardown.
+          if (!transport.isConnected) return;
+          unawaited(
+            _handleNonAuthRestoreFailure(cause: 'phase2_degraded_teardown'),
+          );
+        });
+
     // Clean up subscriptions when provider is disposed
     ref.onDispose(() {
       AppLogging.connection('🔌 DeviceConnectionNotifier: Disposing...');
       _restoreCoordinator.invalidate('notifier_dispose');
       _watchdog.stop();
+      degradedRecoverySubscription.cancel();
       _connectionSubscription?.cancel();
       _scanTimer?.cancel();
       _retryTimer?.cancel();
@@ -877,6 +907,17 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// worth restoring?" decision (don't disturb a healthy session).
   Future<void> restoreSessionForLifecycleResume() async {
     await _restoreCoordinator.restoreSession(reason: 'lifecycle_resume');
+  }
+
+  /// Run the canonical restore routine from the auto-reconnect scanner
+  /// path (`_performReconnect` in app_providers.dart). Replaces that
+  /// path's former direct `protocol.start()` so both reconnect entry
+  /// points share the refresh-notifications -> stop -> bind-generation ->
+  /// start sequence, and the coordinator's single-flight collapses the
+  /// race with the transport state-listener path. Restore failures
+  /// propagate to the caller's retry loop.
+  Future<void> restoreSessionForAutoReconnect() async {
+    await _restoreCoordinator.restoreSession(reason: 'auto_reconnect_scan');
   }
 
   /// Watchdog rebuild trigger. Disconnects the transport (forcing iOS
@@ -1224,22 +1265,23 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// transport: BLE / USB / network). Bypasses `_connectToDevice` so
   /// it doesn't run a fresh scan/connect.
   Future<void> _initializeProtocolAfterAutoReconnect() async {
-    // Check if we should handle this reconnection
-    // We handle it in these cases:
-    // 1. autoReconnectState == connecting (our background reconnect initiated it)
     final autoReconnectState = ref.read(autoReconnectStateProvider);
 
-    // Note: We don't check regionConfigProvider here to avoid circular dependency
-    // during initialization. If region apply is in progress, the auto-reconnect
-    // state will be set to 'connecting' which we check above.
-    final shouldHandleReconnect =
-        autoReconnectState == AutoReconnectState.connecting;
-
-    if (!shouldHandleReconnect) {
+    // Skip only while a MANUAL connect owns the flow (the scanner screen
+    // runs its own connect + protocol start). Every other state must be
+    // handled here: an OS-level BLE reconnect can land while the
+    // auto-reconnect manager is `scanning` (or already reset to `idle`),
+    // and if nobody restores the protocol the session stays wedged at
+    // "configuring" until a manual disconnect/reconnect. Spurious extra
+    // invocations are safe - the restore coordinator's single-flight,
+    // session-generation, user-disconnect, transport-connected, and
+    // background-budget guards all apply downstream, and the caller's
+    // pairing-state guard already suppresses events on healthy sessions.
+    if (autoReconnectState == AutoReconnectState.manualConnecting) {
       AppLogging.connection(
         '🔌 _initializeProtocolAfterAutoReconnect: SKIPPING - '
         'autoReconnect=$autoReconnectState, '
-        'scanner is handling connection',
+        'manual connect flow is handling connection',
       );
       return;
     }
@@ -1301,7 +1343,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         reconnectAttempts: 0,
         connectionSessionId: _nextConnectionSessionId(),
       );
-      _configTimeoutTeardowns = 0;
+      // Teardown budget intentionally NOT reset here: restore success only
+      // proves phase-1. The readiness listener in build() resets it on
+      // `ready` (phase-2 complete) so a phase-1-passes/phase-2-never
+      // device cannot refill its own budget and loop forever.
 
       // Update legacy providers
       if (state.device != null) {
@@ -1397,7 +1442,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// to the banner + manual Retry instead of looping forever.
   /// Do NOT call startBackgroundConnection here - dual-scan race
   /// (see _handleDisconnect's unexpectedDisconnect branch).
-  Future<void> _handleNonAuthRestoreFailure() async {
+  Future<void> _handleNonAuthRestoreFailure({
+    String cause = 'config_timeout_retry',
+  }) async {
     final transport = ref.read(transportProvider);
     final regionApplying = ref.read(regionApplyInFlightProvider);
     if (transport.isConnected &&
@@ -1407,14 +1454,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       _configTimeoutTeardowns++;
       AppLogging.connection(
         '🔌 _handleNonAuthRestoreFailure: config did not complete but '
-        'link is still up - forcing teardown '
+        'link is still up - forcing teardown ($cause) '
         '$_configTimeoutTeardowns/$_maxConfigTimeoutTeardowns to '
         're-enter the reconnect pipeline',
       );
       if (transport is ReceiveDiagnosticsSupport) {
-        (transport as ReceiveDiagnosticsSupport).noteDisconnectCause(
-          'config_timeout_retry',
-        );
+        (transport as ReceiveDiagnosticsSupport).noteDisconnectCause(cause);
       }
       try {
         await transport.disconnect();

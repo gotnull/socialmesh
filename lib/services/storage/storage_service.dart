@@ -376,6 +376,21 @@ class SettingsService {
   bool get newNodeNotificationsEnabled =>
       _preferences.getBool('new_node_notifications_enabled') ?? true;
 
+  // Notification: Automation alerts (pushNotification actions fired by the
+  // automations engine, e.g. node-silent "hasn't been heard from" alerts).
+  // Synced automations can arrive from another device, so the user needs a
+  // notification-level switch independent of the automation's own enabled
+  // flag.
+  Future<void> setAutomationAlertNotificationsEnabled(bool enabled) async {
+    await _preferences.setBool(
+      'automation_alert_notifications_enabled',
+      enabled,
+    );
+  }
+
+  bool get automationAlertNotificationsEnabled =>
+      _preferences.getBool('automation_alert_notifications_enabled') ?? true;
+
   // Display: hide the new-nodes nav badge.
   // Decoupled from `newNodeNotificationsEnabled` on purpose — large-mesh
   // users (1000+ nodes) want to silence the constantly-incrementing

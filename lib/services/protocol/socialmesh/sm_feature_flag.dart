@@ -41,6 +41,7 @@ class SmFeatureFlag {
   final bool _bleReceiveStallDetectionEnabled;
   final bool _bleReceiveStallRecoveryResubscribe;
   bool _bleReceiveStallRecoveryReconnect;
+  final bool _meshtasticPhase2ExtendedRetryEnabled;
 
   /// Creates feature flags.
   ///
@@ -58,6 +59,7 @@ class SmFeatureFlag {
     bool? bleReceiveStallDetectionEnabled,
     bool? bleReceiveStallRecoveryResubscribe,
     bool? bleReceiveStallRecoveryReconnect,
+    bool? meshtasticPhase2ExtendedRetryEnabled,
   }) : _sipEnabled = sipEnabled ?? _parseBoolEnv('SIP_ENABLED') ?? false,
        _mrrpEnabled = mrrpEnabled ?? _parseBoolEnv('MRRP_ENABLED') ?? false,
        _mrrpHarnessEnabled =
@@ -69,7 +71,11 @@ class SmFeatureFlag {
        _bleReceiveStallRecoveryReconnect =
            bleReceiveStallRecoveryReconnect ??
            _parseBoolEnv('BLE_RX_STALL_RECOVERY_RECONNECT') ??
-           false;
+           false,
+       _meshtasticPhase2ExtendedRetryEnabled =
+           meshtasticPhase2ExtendedRetryEnabled ??
+           _parseBoolEnv('MESHTASTIC_PHASE2_EXTENDED_RETRY_ENABLED') ??
+           true;
 
   /// Whether the SocialMesh Interop Profile (SIP) is enabled.
   ///
@@ -134,6 +140,15 @@ class SmFeatureFlag {
   /// Set BLE receive-stall hard-reconnect-recovery enabled state.
   void setBleReceiveStallRecoveryReconnect(bool value) =>
       _bleReceiveStallRecoveryReconnect = value;
+
+  /// Whether the Meshtastic phase-2 handshake keeps re-driving the
+  /// queue-drain `wantConfigId` on a widening schedule after the fast
+  /// attempts are exhausted, then surfaces `degraded` readiness on final
+  /// failure. When false, exhaustion is silent and readiness stays pinned
+  /// at `handshakePhase2` (the pre-fix behavior).
+  /// Default: true. Kill switch: `MESHTASTIC_PHASE2_EXTENDED_RETRY_ENABLED=false`.
+  bool get meshtasticPhase2ExtendedRetryEnabled =>
+      _meshtasticPhase2ExtendedRetryEnabled;
 
   @override
   String toString() =>

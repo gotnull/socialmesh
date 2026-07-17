@@ -26121,6 +26121,14 @@
     "@settingsSearchAutoAcceptTransfersTitle": {
         "description": "Title for the auto-accept transfers search item."
     },
+    "settingsSearchAutomationAlertsSubtitle": "Notifications fired by your automations, such as node inactivity alerts",
+    "@settingsSearchAutomationAlertsSubtitle": {
+        "description": "Subtitle for the automation alerts notification toggle."
+    },
+    "settingsSearchAutomationAlertsTitle": "Automation alerts",
+    "@settingsSearchAutomationAlertsTitle": {
+        "description": "Title for the automation alerts notification toggle."
+    },
     "settingsSearchAutomationsPackSubtitle": "Automated actions and triggers",
     "@settingsSearchAutomationsPackSubtitle": {
         "description": "Subtitle for the automations pack search item."
@@ -37951,6 +37959,42 @@
     "helpCategorySafety": "Safety & Rules",
     "@helpCategorySafety": {
         "description": "Visual flow / help l10n"
+    },
+    "formattingBoldLabel": "Bold",
+    "@formattingBoldLabel": {
+        "description": "Tooltip and accessibility label for the composer bold formatting button."
+    },
+    "formattingItalicLabel": "Italic",
+    "@formattingItalicLabel": {
+        "description": "Tooltip and accessibility label for the composer italic formatting button."
+    },
+    "formattingStrikethroughLabel": "Strikethrough",
+    "@formattingStrikethroughLabel": {
+        "description": "Tooltip and accessibility label for the composer strikethrough formatting button."
+    },
+    "formattingCodeLabel": "Code",
+    "@formattingCodeLabel": {
+        "description": "Tooltip and accessibility label for the composer code formatting button."
+    },
+    "formattingLinkLabel": "Insert link",
+    "@formattingLinkLabel": {
+        "description": "Tooltip and accessibility label for the composer link formatting button."
+    },
+    "formattingLinkSheetTitle": "Insert Link",
+    "@formattingLinkSheetTitle": {
+        "description": "Title of the sheet asking for a URL to link the selected composer text to."
+    },
+    "formattingLinkSheetDescription": "Enter the URL for the selected text",
+    "@formattingLinkSheetDescription": {
+        "description": "Body copy of the insert-link sheet."
+    },
+    "formattingLinkUrlHint": "https://",
+    "@formattingLinkUrlHint": {
+        "description": "Placeholder/label for the URL field in the insert-link sheet."
+    },
+    "formattingLinkInsertAction": "Insert",
+    "@formattingLinkInsertAction": {
+        "description": "Confirm button of the insert-link sheet."
     },
     "flowNodeNodeOnline": "Node Online",
     "@flowNodeNodeOnline": {

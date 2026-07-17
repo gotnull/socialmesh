@@ -903,6 +903,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ),
         _SearchableSettingItem(
+          icon: Icons.bolt_outlined,
+          title: context.l10n.settingsSearchAutomationAlertsTitle,
+          subtitle: context.l10n.settingsSearchAutomationAlertsSubtitle,
+          keywords: [
+            'notification',
+            'automation',
+            'alert',
+            'silent',
+            'inactive',
+            'node',
+            'trigger',
+          ],
+          section: context.l10n.settingsSectionNotifications,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.automationAlertNotificationsEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setAutomationAlertNotificationsEnabled(
+                value,
+              );
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(automationAlertNotificationsEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
+        ),
+        _SearchableSettingItem(
           icon: Icons.volume_up_outlined,
           title: context.l10n.settingsSearchNotificationSoundTitle,
           subtitle: context.l10n.settingsSearchNotificationSoundSubtitle,

@@ -47,6 +47,13 @@ class MessageBubbleBody extends StatelessWidget {
         style: fallbackStyle,
       );
     }
-    return LinkifiedText(text: text, style: bodyStyle, linkStyle: linkStyle);
+    return LinkifiedText(
+      text: text,
+      style: bodyStyle,
+      linkStyle: linkStyle,
+      // Meshtastic clients exchange inline markdown; render it. MeshCore
+      // and SIP surfaces use LinkifiedText directly and stay plain.
+      enableInlineMarkdown: true,
+    );
   }
 }

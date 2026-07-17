@@ -15,6 +15,7 @@ import 'package:socialmesh/generated/meshtastic/portnums.pbenum.dart' as pn;
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
+import 'package:socialmesh/services/protocol/socialmesh/sm_feature_flag.dart';
 
 // Nonces the official Meshtastic clients (iOS app, ref:
 // meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager.swift
@@ -731,4 +732,261 @@ void main() {
       });
     },
   );
+
+  group('phase-2 extended retry (out-of-range reconnect wedge)', () {
+    // Compressed timings: each attempt is a heartbeat (100ms post-send
+    // pause) plus the per-attempt timeout, so waits below are sized in
+    // multiples of ~150ms per attempt.
+    const shortTimeout = Duration(milliseconds: 40);
+    const shortSchedule = [
+      Duration(milliseconds: 50),
+      Duration(milliseconds: 50),
+    ];
+
+    int drainSendCount(_FakeTransport transport) => _sentWantConfigNonces(
+      transport,
+    ).where((n) => n == _nonceQueueDrain).length;
+
+    test(
+      'exhaustion surfaces degraded readiness and stops sending',
+      () async {
+        await _withTempDirectory((dir) async {
+          final transport = _FakeTransport();
+          final protocol = await _freshProtocol(dir, transport);
+          try {
+            protocol.debugSetQueueDrainTimingsForTesting(
+              timeoutPerAttempt: shortTimeout,
+              extendedSchedule: shortSchedule,
+            );
+            await protocol.sendInitialConfigRequestForTest();
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceInitialConfig),
+            );
+
+            // 3 fast + 2 extended attempts at ~150ms each plus the
+            // schedule delays: comfortably done inside 1.5s.
+            await Future<void>.delayed(const Duration(milliseconds: 1500));
+
+            expect(
+              protocol.readiness,
+              OperationalReadiness.degraded,
+              reason:
+                  'Phase-2 exhaustion must surface degraded so the '
+                  'recovery pipeline gets a terminal signal - the silent '
+                  'give-up is the #249 wedge',
+            );
+            expect(
+              drainSendCount(transport),
+              3 + shortSchedule.length,
+              reason:
+                  'Every fast and extended attempt sends exactly one '
+                  'drain wantConfigId',
+            );
+
+            // No zombie retries after exhaustion.
+            final countAtExhaustion = drainSendCount(transport);
+            await Future<void>.delayed(const Duration(milliseconds: 400));
+            expect(drainSendCount(transport), countAtExhaustion);
+          } finally {
+            protocol.stop();
+          }
+        });
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+
+    test(
+      'late phase-2 ack after exhaustion recovers degraded -> ready',
+      () async {
+        await _withTempDirectory((dir) async {
+          final transport = _FakeTransport();
+          final protocol = await _freshProtocol(dir, transport);
+          try {
+            protocol.debugSetQueueDrainTimingsForTesting(
+              timeoutPerAttempt: shortTimeout,
+              extendedSchedule: shortSchedule,
+            );
+            // Full start() so the ready predicate (data subscription +
+            // myNodeNum) holds when the late ack finally lands.
+            final startFuture = protocol.start();
+            while (_sentWantConfigNonces(transport).isEmpty) {
+              await Future<void>.delayed(const Duration(milliseconds: 20));
+            }
+            await protocol.handleIncomingPacket(_myInfoFrame(0xAA));
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceInitialConfig),
+            );
+            await startFuture;
+
+            await Future<void>.delayed(const Duration(milliseconds: 1500));
+            expect(protocol.readiness, OperationalReadiness.degraded);
+
+            // The stray late configCompleteId(69421) must still complete
+            // phase-2: degraded -> ready with no new handshake.
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceQueueDrain),
+            );
+            await Future<void>.delayed(const Duration(milliseconds: 20));
+            expect(
+              protocol.readiness,
+              OperationalReadiness.ready,
+              reason:
+                  'A stray late drain ack must recover the session '
+                  'without a reconnect',
+            );
+            expect(protocol.handshakePhaseName, 'complete');
+          } finally {
+            protocol.stop();
+          }
+        });
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+
+    test(
+      'ack during the extended loop stops retries without degraded',
+      () async {
+        await _withTempDirectory((dir) async {
+          final transport = _FakeTransport();
+          final protocol = await _freshProtocol(dir, transport);
+          try {
+            // Long extended delays so the ack lands mid-sleep.
+            protocol.debugSetQueueDrainTimingsForTesting(
+              timeoutPerAttempt: shortTimeout,
+              extendedSchedule: const [
+                Duration(milliseconds: 600),
+                Duration(milliseconds: 600),
+              ],
+            );
+            await protocol.sendInitialConfigRequestForTest();
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceInitialConfig),
+            );
+
+            // Let the 3 fast attempts exhaust (~450ms), then ack while
+            // the loop sleeps before the first extended attempt.
+            await Future<void>.delayed(const Duration(milliseconds: 550));
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceQueueDrain),
+            );
+
+            // Wait past both extended slots: no further sends, and the
+            // loop must not overwrite the completed phase with degraded.
+            await Future<void>.delayed(const Duration(milliseconds: 1500));
+            expect(protocol.handshakePhaseName, 'complete');
+            expect(protocol.readiness, isNot(OperationalReadiness.degraded));
+            expect(
+              drainSendCount(transport),
+              3,
+              reason: 'No extended sends after the mid-loop ack',
+            );
+          } finally {
+            protocol.stop();
+          }
+        });
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+
+    test(
+      'transport drop mid-extended-loop aborts silently',
+      () async {
+        await _withTempDirectory((dir) async {
+          final transport = _FakeTransport();
+          final protocol = await _freshProtocol(dir, transport);
+          try {
+            protocol.debugSetQueueDrainTimingsForTesting(
+              timeoutPerAttempt: shortTimeout,
+              extendedSchedule: const [
+                Duration(milliseconds: 400),
+                Duration(milliseconds: 400),
+              ],
+            );
+            await protocol.sendInitialConfigRequestForTest();
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceInitialConfig),
+            );
+
+            // Drop the link while the loop sleeps before the first
+            // extended attempt.
+            await Future<void>.delayed(const Duration(milliseconds: 550));
+            transport.connected = false;
+            final countAtDrop = drainSendCount(transport);
+
+            await Future<void>.delayed(const Duration(milliseconds: 1200));
+            expect(
+              drainSendCount(transport),
+              countAtDrop,
+              reason: 'No drain sends after the transport dropped',
+            );
+            expect(
+              protocol.readiness,
+              isNot(OperationalReadiness.degraded),
+              reason:
+                  'The exhaustion transition belongs to the still-'
+                  'connected wedge; disconnects flow through the '
+                  'transport-state path instead',
+            );
+          } finally {
+            protocol.stop();
+          }
+        });
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+
+    test(
+      'kill switch off pins the pre-fix behavior (3 sends, silent)',
+      () async {
+        await _withTempDirectory((dir) async {
+          final transport = _FakeTransport();
+          final dedupeStore = MeshPacketDedupeStore(
+            dbPathOverride: p.join(
+              dir,
+              'dedupe_store_${DateTime.now().microsecondsSinceEpoch}.db',
+            ),
+          );
+          await dedupeStore.init();
+          final protocol = ProtocolService(
+            transport,
+            dedupeStore: dedupeStore,
+            smFeatureFlag: SmFeatureFlag(
+              meshtasticPhase2ExtendedRetryEnabled: false,
+            ),
+          );
+          try {
+            protocol.debugSetQueueDrainTimingsForTesting(
+              timeoutPerAttempt: shortTimeout,
+              extendedSchedule: shortSchedule,
+            );
+            await protocol.sendInitialConfigRequestForTest();
+            await protocol.handleIncomingPacket(
+              _configCompleteFrame(_nonceInitialConfig),
+            );
+
+            await Future<void>.delayed(const Duration(milliseconds: 1500));
+            expect(
+              drainSendCount(transport),
+              3,
+              reason: 'Kill switch restores exactly the 3 fast attempts',
+            );
+            expect(
+              protocol.readiness,
+              OperationalReadiness.handshakePhase2,
+              reason:
+                  'Kill switch restores the silent give-up: readiness '
+                  'stays pinned at handshakePhase2',
+            );
+          } finally {
+            protocol.stop();
+          }
+        });
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
+  });
 }
+
+List<int> _myInfoFrame(int nodeNum) =>
+    (pb.FromRadio()..myInfo = (pb.MyNodeInfo()..myNodeNum = nodeNum))
+        .writeToBuffer();

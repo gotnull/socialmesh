@@ -9944,6 +9944,33 @@
   "@flowNodeNodeOffline": {
     "description": "Visual flow / help l10n"
   },
+  "@formattingBoldLabel": {
+    "description": "Tooltip and accessibility label for the composer bold formatting button."
+  },
+  "@formattingItalicLabel": {
+    "description": "Tooltip and accessibility label for the composer italic formatting button."
+  },
+  "@formattingStrikethroughLabel": {
+    "description": "Tooltip and accessibility label for the composer strikethrough formatting button."
+  },
+  "@formattingCodeLabel": {
+    "description": "Tooltip and accessibility label for the composer code formatting button."
+  },
+  "@formattingLinkLabel": {
+    "description": "Tooltip and accessibility label for the composer link formatting button."
+  },
+  "@formattingLinkSheetTitle": {
+    "description": "Title of the sheet asking for a URL to link the selected composer text to."
+  },
+  "@formattingLinkSheetDescription": {
+    "description": "Body copy of the insert-link sheet."
+  },
+  "@formattingLinkUrlHint": {
+    "description": "Placeholder/label for the URL field in the insert-link sheet."
+  },
+  "@formattingLinkInsertAction": {
+    "description": "Confirm button of the insert-link sheet."
+  },
   "@flowNodeNodeOnline": {
     "description": "Visual flow / help l10n"
   },
@@ -25368,6 +25395,12 @@
   "@settingsSearchAutoAcceptTransfersTitle": {
     "description": "Title for the auto-accept transfers search item."
   },
+  "@settingsSearchAutomationAlertsSubtitle": {
+    "description": "Subtitle for the automation alerts notification toggle."
+  },
+  "@settingsSearchAutomationAlertsTitle": {
+    "description": "Title for the automation alerts notification toggle."
+  },
   "@settingsSearchAutomationsPackSubtitle": {
     "description": "Subtitle for the automations pack search item."
   },
@@ -36176,6 +36209,15 @@
   "flowNodeNodeIsOffline": "Nodo è offline",
   "flowNodeNodeIsOnline": "Nodo è online",
   "flowNodeNodeOffline": "Nodo offline",
+  "formattingBoldLabel": "Grassetto",
+  "formattingItalicLabel": "Corsivo",
+  "formattingStrikethroughLabel": "Barrato",
+  "formattingCodeLabel": "Codice",
+  "formattingLinkLabel": "Inserisci link",
+  "formattingLinkSheetTitle": "Inserisci link",
+  "formattingLinkSheetDescription": "Inserisci l'URL per il testo selezionato",
+  "formattingLinkUrlHint": "https://",
+  "formattingLinkInsertAction": "Inserisci",
   "flowNodeNodeOnline": "Nodo online",
   "flowNodeNodeSilent": "Nodo silenzioso",
   "flowNodeNodes": "Nodi",
@@ -42871,6 +42913,8 @@
   "settingsRnsCompanionTitle": "Servizi RNS (Companion)",
   "settingsSearchAutoAcceptTransfersSubtitle": "Accetta automaticamente le offerte di file in arrivo",
   "settingsSearchAutoAcceptTransfersTitle": "Accettazione automatica trasferimenti",
+  "settingsSearchAutomationAlertsSubtitle": "Notifiche generate dalle automazioni, come gli avvisi di nodo inattivo",
+  "settingsSearchAutomationAlertsTitle": "Avvisi automazioni",
   "settingsSearchAutomationsPackSubtitle": "Azioni e trigger automatizzati",
   "settingsSearchAutomationsPackTitle": "Pacchetto automazioni",
   "settingsSearchCannedMessagesSubtitle": "Messaggi preconfigurati sul dispositivo",

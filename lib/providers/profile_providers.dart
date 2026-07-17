@@ -418,6 +418,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         sipPlayTurnNotificationsEnabled:
             newPreferences.sipPlayTurnNotificationsEnabled ??
             existingPrefs.sipPlayTurnNotificationsEnabled,
+        automationAlertNotificationsEnabled:
+            newPreferences.automationAlertNotificationsEnabled ??
+            existingPrefs.automationAlertNotificationsEnabled,
         hapticFeedbackEnabled:
             newPreferences.hapticFeedbackEnabled ??
             existingPrefs.hapticFeedbackEnabled,

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../theme.dart';
 import '../../services/protocol/text_message_payload_budget.dart';
+import 'chat_formatting_toolbar.dart';
 
 typedef ChatComposerBudgetResolver =
     TextMessagePayloadBudget Function(String text);
@@ -29,6 +30,7 @@ class ChatComposer extends StatelessWidget {
     this.leading,
     this.sendTooltip,
     this.enabled = true,
+    this.enableFormattingToolbar = false,
     this.budgetResolver,
     this.budgetLabelBuilder,
   }) : assert(
@@ -46,6 +48,12 @@ class ChatComposer extends StatelessWidget {
   final Widget? leading;
   final String? sendTooltip;
   final bool enabled;
+
+  /// Shows the markdown formatting toolbar above the field while it has
+  /// focus. Off by default; only surfaces whose peers render inline
+  /// markdown (Meshtastic messaging) should enable it.
+  final bool enableFormattingToolbar;
+
   final ChatComposerBudgetResolver? budgetResolver;
   final ChatComposerBudgetLabelBuilder? budgetLabelBuilder;
 
@@ -115,6 +123,23 @@ class ChatComposer extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (enableFormattingToolbar)
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 150),
+                      alignment: Alignment.topCenter,
+                      child: enabled && focusNode.hasFocus
+                          ? Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppTheme.spacing4,
+                              ),
+                              child: ChatFormattingToolbar(
+                                controller: controller,
+                                focusNode: focusNode,
+                                maxLength: maxLength,
+                              ),
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
                   Container(
                     decoration: BoxDecoration(
                       color: isDark

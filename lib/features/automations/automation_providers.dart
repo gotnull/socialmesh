@@ -123,6 +123,14 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
     iftttService: iftttService,
     notifications: notifications,
     debugService: ref.watch(automationDebugServiceProvider),
+    onNotificationsAllowed: () {
+      // Fail-open while settings are still loading (matches the other
+      // notification gates): a missed suppression beats a missed alert.
+      final settings = ref.read(settingsServiceProvider).asData?.value;
+      if (settings == null) return true;
+      return settings.notificationsEnabled &&
+          settings.automationAlertNotificationsEnabled;
+    },
     onGetMyNodeNum: () => ref.read(myNodeNumProvider),
     onGetPhonePosition: () async {
       try {

@@ -19334,6 +19334,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Автоматически принимать передачи';
 
   @override
+  String get settingsSearchAutomationAlertsSubtitle =>
+      'Уведомления от автоматизаций, например о неактивных узлах';
+
+  @override
+  String get settingsSearchAutomationAlertsTitle => 'Оповещения автоматизаций';
+
+  @override
   String get settingsSearchAutomationsPackSubtitle =>
       'Автоматические действия и триггеры';
 
@@ -28256,6 +28263,34 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get helpCategorySafety => 'Безопасность и правила';
+
+  @override
+  String get formattingBoldLabel => 'Жирный';
+
+  @override
+  String get formattingItalicLabel => 'Курсив';
+
+  @override
+  String get formattingStrikethroughLabel => 'Зачёркнутый';
+
+  @override
+  String get formattingCodeLabel => 'Код';
+
+  @override
+  String get formattingLinkLabel => 'Вставить ссылку';
+
+  @override
+  String get formattingLinkSheetTitle => 'Вставить ссылку';
+
+  @override
+  String get formattingLinkSheetDescription =>
+      'Введите URL для выделенного текста';
+
+  @override
+  String get formattingLinkUrlHint => 'https://';
+
+  @override
+  String get formattingLinkInsertAction => 'Вставить';
 
   @override
   String get flowNodeNodeOnline => 'Узел онлайн';

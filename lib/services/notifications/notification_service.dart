@@ -1088,6 +1088,10 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      // Badge must ride in the notification payload: while backgrounded the
+      // process can be re-suspended before a follow-up platform-channel call
+      // drains, so a post-show setBadge is not guaranteed to run.
+      badgeNumber: newBadge,
       categoryIdentifier: reactionTarget == null
           ? null
           : NotificationActions.messageCategory,
@@ -1191,6 +1195,10 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      // Badge must ride in the notification payload: while backgrounded the
+      // process can be re-suspended before a follow-up platform-channel call
+      // drains, so a post-show setBadge is not guaranteed to run.
+      badgeNumber: newBadge,
       categoryIdentifier: reactionTarget == null
           ? null
           : NotificationActions.messageCategory,
@@ -1278,6 +1286,9 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      // Badge rides in the payload; a post-show channel call may never run
+      // while the app is backgrounded.
+      badgeNumber: newBadge,
     );
     final notificationDetails = NotificationDetails(
       android: androidDetails,
@@ -1350,6 +1361,9 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      // Badge rides in the payload; a post-show channel call may never run
+      // while the app is backgrounded.
+      badgeNumber: newBadge,
     );
     final notificationDetails = NotificationDetails(
       android: androidDetails,
@@ -1704,6 +1718,9 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      // Badge rides in the payload; a post-show channel call may never run
+      // while the app is backgrounded.
+      badgeNumber: newBadge,
     );
 
     await _notifications.show(
@@ -1786,6 +1803,9 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: playSound,
+      // Badge rides in the payload; a post-show channel call may never run
+      // while the app is backgrounded.
+      badgeNumber: newBadge,
     );
 
     await _notifications.show(

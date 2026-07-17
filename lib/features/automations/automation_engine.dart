@@ -87,6 +87,13 @@ class AutomationEngine {
   /// Used to enrich scheduled events with the phone's location.
   final Future<(double, double)?> Function()? onGetPhonePosition;
 
+  /// Callback asking whether automation push notifications may be shown.
+  /// Wired to the user's notification settings (master toggle + the
+  /// automation-alerts toggle). Null means always allowed. When it returns
+  /// false the pushNotification action is a silent no-op; every other
+  /// action type still runs.
+  final bool Function()? onNotificationsAllowed;
+
   // Track node states for change detection
   final Map<int, PresenceConfidence> _nodePresence = {};
   final Map<int, int> _nodeBatteryLevels = {};
@@ -105,6 +112,13 @@ class AutomationEngine {
   // Silent node monitoring
   Timer? _silentNodeTimer;
 
+  // One alert per silent episode: keyed "automationId_nodeNum", present while
+  // the alert for the current silent stretch has already fired. Cleared when
+  // the node is heard again so the next silence can alert once more. Without
+  // this the 5-minute monitor re-fires for a still-silent node every pass
+  // (the generic trigger throttle is only 1 minute).
+  final Set<String> _firedSilentAlerts = {};
+
   AutomationEngine({
     required this._repository,
     required this._iftttService,
@@ -115,6 +129,7 @@ class AutomationEngine {
     this.onSendToChannel,
     this.onGetMyNodeNum,
     this.onGetPhonePosition,
+    this.onNotificationsAllowed,
   });
 
   /// Set the scheduler (can be done after construction for dependency injection)
@@ -1332,6 +1347,17 @@ class AutomationEngine {
             );
           }
 
+          // Respect the user's notification settings: the master toggle and
+          // the automation-alerts toggle both silence this action without
+          // failing the automation (other actions still run).
+          if (onNotificationsAllowed?.call() == false) {
+            AppLogging.automations(
+              'Notification suppressed by user settings for '
+              '"${automation.name}"',
+            );
+            return ActionResult(actionName: actionName, success: true);
+          }
+
           // Build notification via the policy-driven renderer.
           // This resolves variables, enforces per-field grapheme limits,
           // and falls through template tiers if content exceeds the
@@ -1638,6 +1664,15 @@ class AutomationEngine {
     });
   }
 
+  /// Test seam: run one silent-node monitor pass (normally timer-driven).
+  @visibleForTesting
+  Future<void> debugCheckSilentNodesForTesting() => _checkSilentNodes();
+
+  /// Test seam: clear the generic trigger throttle so episode dedupe can be
+  /// asserted independently of the 1-minute throttle window.
+  @visibleForTesting
+  void debugClearTriggerThrottleForTesting() => _lastTriggerTimes.clear();
+
   /// Check for nodes that have been silent too long
   Future<void> _checkSilentNodes() async {
     final automations = _repository.automations
@@ -1655,7 +1690,10 @@ class AutomationEngine {
         // Skip if not monitoring this specific node
         if (trigger.nodeNum != null && trigger.nodeNum != nodeNum) continue;
 
+        final episodeKey = '${automation.id}_$nodeNum';
         if (DateTime.now().difference(lastHeard) > silentDuration) {
+          // One alert per silent episode; re-arms when the node is heard.
+          if (!_firedSilentAlerts.add(episodeKey)) continue;
           final silentPos = _nodePositions[nodeNum];
           await _processEvent(
             AutomationEvent(
@@ -1667,6 +1705,8 @@ class AutomationEngine {
               longitude: silentPos?.$2,
             ),
           );
+        } else {
+          _firedSilentAlerts.remove(episodeKey);
         }
       }
     }

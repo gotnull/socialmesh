@@ -33182,6 +33182,18 @@ abstract class AppLocalizations {
   /// **'Auto-accept transfers'**
   String get settingsSearchAutoAcceptTransfersTitle;
 
+  /// Subtitle for the automation alerts notification toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications fired by your automations, such as node inactivity alerts'**
+  String get settingsSearchAutomationAlertsSubtitle;
+
+  /// Title for the automation alerts notification toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automation alerts'**
+  String get settingsSearchAutomationAlertsTitle;
+
   /// Subtitle for the automations pack search item.
   ///
   /// In en, this message translates to:
@@ -48837,6 +48849,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Safety & Rules'**
   String get helpCategorySafety;
+
+  /// Tooltip and accessibility label for the composer bold formatting button.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get formattingBoldLabel;
+
+  /// Tooltip and accessibility label for the composer italic formatting button.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get formattingItalicLabel;
+
+  /// Tooltip and accessibility label for the composer strikethrough formatting button.
+  ///
+  /// In en, this message translates to:
+  /// **'Strikethrough'**
+  String get formattingStrikethroughLabel;
+
+  /// Tooltip and accessibility label for the composer code formatting button.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get formattingCodeLabel;
+
+  /// Tooltip and accessibility label for the composer link formatting button.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert link'**
+  String get formattingLinkLabel;
+
+  /// Title of the sheet asking for a URL to link the selected composer text to.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Link'**
+  String get formattingLinkSheetTitle;
+
+  /// Body copy of the insert-link sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the URL for the selected text'**
+  String get formattingLinkSheetDescription;
+
+  /// Placeholder/label for the URL field in the insert-link sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'https://'**
+  String get formattingLinkUrlHint;
+
+  /// Confirm button of the insert-link sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert'**
+  String get formattingLinkInsertAction;
 
   /// Visual flow / help l10n
   ///

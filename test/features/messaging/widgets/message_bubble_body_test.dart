@@ -80,6 +80,34 @@ void main() {
     expect(find.text(l10n.messagingMessageUnableToDisplay), findsNothing);
   });
 
+  testWidgets('renders inline markdown (bold span, no literal asterisks)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        MessageBubbleBody(
+          text: 'hello **world**',
+          bodyStyle: const TextStyle(fontSize: 14),
+          fallbackStyle: const TextStyle(
+            fontSize: 14,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ),
+    );
+
+    final richFinder = find.byWidgetPredicate(
+      (w) => w is Text && w.textSpan != null,
+    );
+    expect(richFinder, findsOneWidget);
+    final root = tester.widget<Text>(richFinder).textSpan! as TextSpan;
+    final bold = root.children!.cast<TextSpan>().firstWhere(
+      (s) => s.text == 'world',
+    );
+    expect(bold.style?.fontWeight, FontWeight.w700);
+    expect(find.textContaining('**'), findsNothing);
+  });
+
   testWidgets('renders emoji body unchanged', (tester) async {
     const body = '👋';
     await tester.pumpWidget(

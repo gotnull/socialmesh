@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/automations/automation_engine.dart';
 import 'package:socialmesh/features/automations/automation_repository.dart';
@@ -1947,6 +1948,105 @@ void main() {
 
       // The automation is stored - threshold is read from config
       expect(automation.trigger.silentMinutes, 5);
+    });
+
+    test(
+      'nodeSilent fires once per silent episode and re-arms on hearing',
+      () async {
+        final automation = Automation(
+          id: 'test-silent-episode',
+          name: 'Episode Silent Alert',
+          trigger: const AutomationTrigger(
+            type: TriggerType.nodeSilent,
+            config: {'silentMinutes': 30},
+          ),
+          actions: const [
+            AutomationAction(
+              type: ActionType.sendMessage,
+              config: {
+                'targetNodeNum': 999,
+                'messageText': '{{node.name}} has been silent',
+              },
+            ),
+          ],
+        );
+        mockRepository.addTestAutomation(automation);
+
+        MeshNode nodeHeard(Duration ago) => MeshNode(
+          nodeNum: 123,
+          shortName: 'TEST',
+          longName: 'Episode Test Node',
+          lastHeard: DateTime.now().subtract(ago),
+        );
+
+        await engine.processNodeUpdate(nodeHeard(const Duration(minutes: 35)));
+        await engine.debugCheckSilentNodesForTesting();
+        expect(sentMessages, hasLength(1));
+
+        // Still silent on the next monitor pass: no repeat alert, even with
+        // the generic 1-minute throttle window cleared.
+        engine.debugClearTriggerThrottleForTesting();
+        await engine.debugCheckSilentNodesForTesting();
+        expect(sentMessages, hasLength(1));
+
+        // Node heard again: the next pass re-arms without firing.
+        await engine.processNodeUpdate(nodeHeard(Duration.zero));
+        engine.debugClearTriggerThrottleForTesting();
+        await engine.debugCheckSilentNodesForTesting();
+        expect(sentMessages, hasLength(1));
+
+        // A new silent stretch alerts once more.
+        await engine.processNodeUpdate(nodeHeard(const Duration(minutes: 40)));
+        engine.debugClearTriggerThrottleForTesting();
+        await engine.debugCheckSilentNodesForTesting();
+        expect(sentMessages, hasLength(2));
+      },
+    );
+  });
+
+  group('AutomationEngine - Notification settings gate', () {
+    test('pushNotification is a silent no-op when disallowed; other actions '
+        'still run', () async {
+      final gatedEngine = AutomationEngine(
+        repository: mockRepository,
+        iftttService: mockIftttService,
+        notifications: FlutterLocalNotificationsPlugin(),
+        onNotificationsAllowed: () => false,
+        onSendMessage: (nodeNum, message, _) async {
+          sentMessages.add((nodeNum, message));
+          return true;
+        },
+      );
+
+      final automation = Automation(
+        id: 'test-gated-notification',
+        name: 'Gated Alert',
+        trigger: const AutomationTrigger(type: TriggerType.manual),
+        actions: const [
+          AutomationAction(
+            type: ActionType.pushNotification,
+            config: {
+              'notificationTitle': 'Gated title',
+              'notificationBody': 'Gated body',
+            },
+          ),
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {'targetNodeNum': 999, 'messageText': 'still runs'},
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // With the gate closed this must not reach the notifications plugin
+      // (which would throw MissingPluginException in a test binding) and
+      // must not fail the automation.
+      await gatedEngine.executeAutomationManually(
+        automation,
+        AutomationEvent(type: TriggerType.manual),
+      );
+
+      expect(sentMessages.map((m) => m.$2), contains('still runs'));
     });
   });
 

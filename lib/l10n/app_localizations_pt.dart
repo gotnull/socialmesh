@@ -19332,6 +19332,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Aceitar transferências automaticamente';
 
   @override
+  String get settingsSearchAutomationAlertsSubtitle =>
+      'Notificações geradas pelas automações, como alertas de nó inativo';
+
+  @override
+  String get settingsSearchAutomationAlertsTitle => 'Alertas de automação';
+
+  @override
   String get settingsSearchAutomationsPackSubtitle =>
       'Ações e gatilhos automatizados';
 
@@ -28229,6 +28236,34 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpCategorySafety => 'Segurança e regras';
+
+  @override
+  String get formattingBoldLabel => 'Negrito';
+
+  @override
+  String get formattingItalicLabel => 'Itálico';
+
+  @override
+  String get formattingStrikethroughLabel => 'Tachado';
+
+  @override
+  String get formattingCodeLabel => 'Código';
+
+  @override
+  String get formattingLinkLabel => 'Inserir link';
+
+  @override
+  String get formattingLinkSheetTitle => 'Inserir link';
+
+  @override
+  String get formattingLinkSheetDescription =>
+      'Insira a URL do texto selecionado';
+
+  @override
+  String get formattingLinkUrlHint => 'https://';
+
+  @override
+  String get formattingLinkInsertAction => 'Inserir';
 
   @override
   String get flowNodeNodeOnline => 'Nó online';

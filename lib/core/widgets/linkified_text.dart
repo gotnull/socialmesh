@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../utils/markdown_inline_parser.dart';
 import '../../utils/snackbar.dart';
 import '../l10n/l10n_extension.dart';
 import '../theme.dart';
@@ -31,12 +32,19 @@ class LinkifiedText extends StatefulWidget {
   final TextStyle? linkStyle;
   final TextAlign? textAlign;
 
+  /// When true, inline markdown (bold `**`, italic `*`, strikethrough `~~`,
+  /// code backtick, `[text](url)` links) is rendered with matching styles;
+  /// malformed markup falls back to literal text. Off by default so
+  /// existing plain-text surfaces are unchanged.
+  final bool enableInlineMarkdown;
+
   const LinkifiedText({
     super.key,
     required this.text,
     this.style,
     this.linkStyle,
     this.textAlign,
+    this.enableInlineMarkdown = false,
   });
 
   @override
@@ -59,34 +67,34 @@ class _LinkifiedTextState extends State<LinkifiedText> {
     _recognizers.clear();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    _clearRecognizers();
-    final urlMatches = detectUrls(widget.text);
+  TextStyle _resolveLinkStyle(TextStyle baseStyle) => widget.linkStyle != null
+      ? baseStyle.merge(widget.linkStyle)
+      : baseStyle.copyWith(
+          color: context.accentColor,
+          decoration: TextDecoration.underline,
+          decorationColor: context.accentColor,
+        );
+
+  // URL + coordinate tappable spans for one run of text. [segmentStyle] is
+  // null for the plain flag-off path (the outer TextSpan carries the style)
+  // and set for styled markdown segments.
+  List<InlineSpan> _linkifiedSpans(
+    String text,
+    TextStyle? segmentStyle,
+    TextStyle linkStyle,
+  ) {
+    final urlMatches = detectUrls(text);
     // Drop any coordinate that falls inside a detected URL (e.g. a maps link
     // with a "?q=lat,lng" query) so the same span isn't linkified twice.
-    final coordMatches = detectCoordinates(widget.text)
+    final coordMatches = detectCoordinates(text)
         .where(
           (c) => !urlMatches.any((u) => c.start < u.end && u.start < c.end),
         )
         .toList();
 
     if (urlMatches.isEmpty && coordMatches.isEmpty) {
-      return Text(
-        widget.text,
-        style: widget.style,
-        textAlign: widget.textAlign,
-      );
+      return [TextSpan(text: text, style: segmentStyle)];
     }
-
-    final baseStyle = widget.style ?? const TextStyle();
-    final linkStyle = widget.linkStyle != null
-        ? baseStyle.merge(widget.linkStyle)
-        : baseStyle.copyWith(
-            color: context.accentColor,
-            decoration: TextDecoration.underline,
-            decorationColor: context.accentColor,
-          );
 
     // Merge URL and coordinate ranges into one ordered, non-overlapping list.
     final ranges = <({int start, int end, VoidCallback onTap})>[
@@ -105,21 +113,103 @@ class _LinkifiedTextState extends State<LinkifiedText> {
     for (final r in ranges) {
       if (r.start < cursor) continue;
       if (r.start > cursor) {
-        spans.add(TextSpan(text: widget.text.substring(cursor, r.start)));
+        spans.add(
+          TextSpan(text: text.substring(cursor, r.start), style: segmentStyle),
+        );
       }
       final recognizer = TapGestureRecognizer()..onTap = r.onTap;
       _recognizers.add(recognizer);
       spans.add(
         TextSpan(
-          text: widget.text.substring(r.start, r.end),
+          text: text.substring(r.start, r.end),
           style: linkStyle,
           recognizer: recognizer,
         ),
       );
       cursor = r.end;
     }
-    if (cursor < widget.text.length) {
-      spans.add(TextSpan(text: widget.text.substring(cursor)));
+    if (cursor < text.length) {
+      spans.add(TextSpan(text: text.substring(cursor), style: segmentStyle));
+    }
+    return spans;
+  }
+
+  TextStyle _styleForSegment(InlineMarkdownSegment seg, TextStyle base) {
+    var style = base;
+    if (seg.bold) style = style.copyWith(fontWeight: FontWeight.w700);
+    if (seg.italic) style = style.copyWith(fontStyle: FontStyle.italic);
+    if (seg.code) {
+      // Pinned mono, not the preference-resolving AppTheme.fontFamily
+      // getter, so code spans read as code in every font mode.
+      style = style.copyWith(
+        fontFamily: AppTheme.brandedFontFamily,
+        backgroundColor: context.textPrimary.withValues(alpha: 0.08),
+      );
+    }
+    if (seg.strikethrough) {
+      style = style.copyWith(decoration: TextDecoration.lineThrough);
+    }
+    return style;
+  }
+
+  List<InlineSpan> _markdownSpans(TextStyle baseStyle, TextStyle linkStyle) {
+    final spans = <InlineSpan>[];
+    for (final seg in parseInlineMarkdown(widget.text)) {
+      final linkUrl = seg.linkUrl;
+      if (linkUrl != null) {
+        final recognizer = TapGestureRecognizer()
+          ..onTap = () => _confirmAndOpen(linkUrl);
+        _recognizers.add(recognizer);
+        var style = _styleForSegment(seg, baseStyle).merge(linkStyle);
+        if (seg.strikethrough) {
+          style = style.copyWith(
+            decoration: TextDecoration.combine(const [
+              TextDecoration.underline,
+              TextDecoration.lineThrough,
+            ]),
+          );
+        }
+        spans.add(
+          TextSpan(text: seg.text, style: style, recognizer: recognizer),
+        );
+        continue;
+      }
+      final segStyle = seg.isPlain ? null : _styleForSegment(seg, baseStyle);
+      if (seg.code) {
+        // Code contents are literal: no URL/coordinate linkification.
+        spans.add(TextSpan(text: seg.text, style: segStyle));
+        continue;
+      }
+      spans.addAll(_linkifiedSpans(seg.text, segStyle, linkStyle));
+    }
+    return spans;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _clearRecognizers();
+    final baseStyle = widget.style ?? const TextStyle();
+    final linkStyle = _resolveLinkStyle(baseStyle);
+
+    if (widget.enableInlineMarkdown &&
+        containsAnyMarkdownCandidate(widget.text)) {
+      final spans = _markdownSpans(baseStyle, linkStyle);
+      return Text.rich(
+        TextSpan(style: widget.style, children: spans),
+        textAlign: widget.textAlign,
+      );
+    }
+
+    final spans = _linkifiedSpans(widget.text, null, linkStyle);
+    if (spans.length == 1 && spans.single is TextSpan) {
+      final single = spans.single as TextSpan;
+      if (single.recognizer == null) {
+        return Text(
+          widget.text,
+          style: widget.style,
+          textAlign: widget.textAlign,
+        );
+      }
     }
 
     return Text.rich(

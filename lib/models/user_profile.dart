@@ -21,6 +21,10 @@ class UserPreferences {
   /// surfaces on SIP-enabled builds.
   final bool? sipPlayTurnNotificationsEnabled;
 
+  /// Automation alert notifications (pushNotification actions fired by the
+  /// automations engine, e.g. node-silent alerts).
+  final bool? automationAlertNotificationsEnabled;
+
   /// Haptic feedback settings
   final bool? hapticFeedbackEnabled;
   final int? hapticIntensity;
@@ -75,6 +79,7 @@ class UserPreferences {
     this.notificationSoundEnabled,
     this.notificationVibrationEnabled,
     this.sipPlayTurnNotificationsEnabled,
+    this.automationAlertNotificationsEnabled,
     this.hapticFeedbackEnabled,
     this.hapticIntensity,
     this.animationsEnabled,
@@ -116,6 +121,8 @@ class UserPreferences {
           json['notificationVibrationEnabled'] as bool?,
       sipPlayTurnNotificationsEnabled:
           json['sipPlayTurnNotificationsEnabled'] as bool?,
+      automationAlertNotificationsEnabled:
+          json['automationAlertNotificationsEnabled'] as bool?,
       hapticFeedbackEnabled: json['hapticFeedbackEnabled'] as bool?,
       hapticIntensity: json['hapticIntensity'] as int?,
       animationsEnabled: json['animationsEnabled'] as bool?,
@@ -170,6 +177,9 @@ class UserPreferences {
         'notificationVibrationEnabled': notificationVibrationEnabled,
       if (sipPlayTurnNotificationsEnabled != null)
         'sipPlayTurnNotificationsEnabled': sipPlayTurnNotificationsEnabled,
+      if (automationAlertNotificationsEnabled != null)
+        'automationAlertNotificationsEnabled':
+            automationAlertNotificationsEnabled,
       if (hapticFeedbackEnabled != null)
         'hapticFeedbackEnabled': hapticFeedbackEnabled,
       if (hapticIntensity != null) 'hapticIntensity': hapticIntensity,
@@ -223,6 +233,7 @@ class UserPreferences {
     bool? notificationSoundEnabled,
     bool? notificationVibrationEnabled,
     bool? sipPlayTurnNotificationsEnabled,
+    bool? automationAlertNotificationsEnabled,
     bool? hapticFeedbackEnabled,
     int? hapticIntensity,
     bool? animationsEnabled,
@@ -267,6 +278,9 @@ class UserPreferences {
       sipPlayTurnNotificationsEnabled:
           sipPlayTurnNotificationsEnabled ??
           this.sipPlayTurnNotificationsEnabled,
+      automationAlertNotificationsEnabled:
+          automationAlertNotificationsEnabled ??
+          this.automationAlertNotificationsEnabled,
       hapticFeedbackEnabled:
           hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
       hapticIntensity: hapticIntensity ?? this.hapticIntensity,

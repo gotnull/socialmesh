@@ -19140,6 +19140,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSearchAutoAcceptTransfersTitle => 'Auto-accept transfers';
 
   @override
+  String get settingsSearchAutomationAlertsSubtitle =>
+      'Notifications fired by your automations, such as node inactivity alerts';
+
+  @override
+  String get settingsSearchAutomationAlertsTitle => 'Automation alerts';
+
+  @override
   String get settingsSearchAutomationsPackSubtitle =>
       'Automated actions and triggers';
 
@@ -27923,6 +27930,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpCategorySafety => 'Safety & Rules';
+
+  @override
+  String get formattingBoldLabel => 'Bold';
+
+  @override
+  String get formattingItalicLabel => 'Italic';
+
+  @override
+  String get formattingStrikethroughLabel => 'Strikethrough';
+
+  @override
+  String get formattingCodeLabel => 'Code';
+
+  @override
+  String get formattingLinkLabel => 'Insert link';
+
+  @override
+  String get formattingLinkSheetTitle => 'Insert Link';
+
+  @override
+  String get formattingLinkSheetDescription =>
+      'Enter the URL for the selected text';
+
+  @override
+  String get formattingLinkUrlHint => 'https://';
+
+  @override
+  String get formattingLinkInsertAction => 'Insert';
 
   @override
   String get flowNodeNodeOnline => 'Node Online';
