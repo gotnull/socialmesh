@@ -5406,6 +5406,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Secouez votre appareil pour signaler un bug.\nVos signalements et les réponses éventuelles apparaîtront ici.';
 
   @override
+  String get feedbackGuestNoBugReports =>
+      'Connectez-vous pour voir vos signalements';
+
+  @override
+  String get feedbackGuestNoBugReportsDesc =>
+      'Vous utilisez SocialMesh en tant qu\'invité. Les signalements suivent le compte avec lequel vous vous connectez, alors connectez-vous avec la méthode utilisée auparavant pour voir votre historique.';
+
+  @override
+  String get feedbackGuestNoBugReportsAction => 'Se connecter';
+
+  @override
   String get feedbackNoMatchFilter =>
       'Aucun signalement ne correspond à ce filtre';
 
@@ -30794,6 +30805,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get accountSubLinkWithApple => 'Lier avec Apple';
+
+  @override
+  String get accountSubLinkWithGitHub => 'Lier avec GitHub';
 
   @override
   String get accountSubLinkWithX => 'Lier avec X';

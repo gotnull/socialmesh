@@ -5363,6 +5363,16 @@ class AppLocalizationsUk extends AppLocalizations {
       'Струсніть пристрій, щоб повідомити про помилку.\nВаші звіти та відповіді на них з\'являться тут.';
 
   @override
+  String get feedbackGuestNoBugReports => 'Увійдіть, щоб побачити свої звіти';
+
+  @override
+  String get feedbackGuestNoBugReportsDesc =>
+      'Ви користуєтеся SocialMesh як гість. Звіти прив\'язані до облікового запису, через який ви входите, тож увійдіть тим самим способом, що й раніше, щоб побачити свою історію.';
+
+  @override
+  String get feedbackGuestNoBugReportsAction => 'Увійти';
+
+  @override
   String get feedbackNoMatchFilter => 'Звіти за цим фільтром не знайдено';
 
   @override
@@ -30587,6 +30597,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get accountSubLinkWithApple => 'Пов\'язати з Apple';
+
+  @override
+  String get accountSubLinkWithGitHub => 'Пов\'язати з GitHub';
 
   @override
   String get accountSubLinkWithX => 'Пов\'язати з X';

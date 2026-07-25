@@ -6975,6 +6975,18 @@
     "@feedbackNoBugReportsDesc": {
         "description": "Empty state description"
     },
+    "feedbackGuestNoBugReports": "Sign in to see your reports",
+    "@feedbackGuestNoBugReports": {
+        "description": "Empty state headline shown to guest accounts"
+    },
+    "feedbackGuestNoBugReportsDesc": "You are using SocialMesh as a guest. Reports follow the account you sign in with, so sign in with the method you used before to see your history.",
+    "@feedbackGuestNoBugReportsDesc": {
+        "description": "Empty state description shown to guest accounts"
+    },
+    "feedbackGuestNoBugReportsAction": "Sign in",
+    "@feedbackGuestNoBugReportsAction": {
+        "description": "Empty state action button opening the account screen"
+    },
     "feedbackNoMatchFilter": "No reports match this filter",
     "@feedbackNoMatchFilter": {
         "description": "Empty state with filter"
@@ -40925,6 +40937,10 @@
     },
     "accountSubLinkWithApple": "Link with Apple",
     "@accountSubLinkWithApple": {
+        "description": "Text displayed in account management"
+    },
+    "accountSubLinkWithGitHub": "Link with GitHub",
+    "@accountSubLinkWithGitHub": {
         "description": "Text displayed in account management"
     },
     "accountSubLinkWithX": "Link with X",

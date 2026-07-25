@@ -5289,6 +5289,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Shake your device to report a bug.\nYour reports and any responses will appear here.';
 
   @override
+  String get feedbackGuestNoBugReports => 'Sign in to see your reports';
+
+  @override
+  String get feedbackGuestNoBugReportsDesc =>
+      'You are using SocialMesh as a guest. Reports follow the account you sign in with, so sign in with the method you used before to see your history.';
+
+  @override
+  String get feedbackGuestNoBugReportsAction => 'Sign in';
+
+  @override
   String get feedbackNoMatchFilter => 'No reports match this filter';
 
   @override
@@ -30211,6 +30221,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountSubLinkWithApple => 'Link with Apple';
+
+  @override
+  String get accountSubLinkWithGitHub => 'Link with GitHub';
 
   @override
   String get accountSubLinkWithX => 'Link with X';

@@ -9402,6 +9402,24 @@ abstract class AppLocalizations {
   /// **'Shake your device to report a bug.\nYour reports and any responses will appear here.'**
   String get feedbackNoBugReportsDesc;
 
+  /// Empty state headline shown to guest accounts
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see your reports'**
+  String get feedbackGuestNoBugReports;
+
+  /// Empty state description shown to guest accounts
+  ///
+  /// In en, this message translates to:
+  /// **'You are using SocialMesh as a guest. Reports follow the account you sign in with, so sign in with the method you used before to see your history.'**
+  String get feedbackGuestNoBugReportsDesc;
+
+  /// Empty state action button opening the account screen
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get feedbackGuestNoBugReportsAction;
+
   /// Empty state with filter
   ///
   /// In en, this message translates to:
@@ -52964,6 +52982,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Link with Apple'**
   String get accountSubLinkWithApple;
+
+  /// Text displayed in account management
+  ///
+  /// In en, this message translates to:
+  /// **'Link with GitHub'**
+  String get accountSubLinkWithGitHub;
 
   /// Text displayed in account management
   ///

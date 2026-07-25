@@ -10,13 +10,17 @@ import '../../utils/time_format.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/fullscreen_gallery.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/screenshot_thumbnail.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/auth_providers.dart';
+import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
+import '../settings/account_subscriptions_screen.dart';
 import 'bug_report_repository.dart';
 
 /// Filter options for the bug reports list.
@@ -174,6 +178,51 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
     ];
   }
 
+  // Empty state for the reports list.
+  //
+  // History is keyed to the Firebase uid that submitted each report, and a
+  // fresh install starts on a new anonymous uid. A guest therefore lands on
+  // an empty list even when they have history under a real account, so the
+  // guest variant points at sign-in instead of claiming there is nothing.
+  Widget _buildEmptySliver(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
+    final isGuest = user == null || user.isAnonymous;
+
+    return SliverFillRemaining(
+      child: AnimatedEmptyState(
+        config: AnimatedEmptyStateConfig(
+          icons: const [
+            Icons.bug_report_outlined,
+            Icons.forum_outlined,
+            Icons.task_alt_outlined,
+          ],
+          taglines: isGuest
+              ? [context.l10n.feedbackGuestNoBugReportsDesc]
+              : context.l10n.feedbackNoBugReportsDesc.split('\n'),
+          titlePrefix: '',
+          titleKeyword: isGuest
+              ? context.l10n.feedbackGuestNoBugReports
+              : context.l10n.feedbackNoBugReports,
+          titleSuffix: '',
+          actionLabel: isGuest
+              ? context.l10n.feedbackGuestNoBugReportsAction
+              : null,
+          actionIcon: isGuest ? Icons.login : null,
+          onAction: isGuest
+              ? () {
+                  ref.haptics.buttonTap();
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AccountSubscriptionsScreen(),
+                    ),
+                  );
+                }
+              : null,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final reportsAsync = ref.watch(myBugReportsProvider);
@@ -185,44 +234,7 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
         ...reportsAsync.when(
           data: (reports) {
             if (reports.isEmpty) {
-              return [
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppTheme.spacing32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.bug_report_outlined,
-                            size: 64,
-                            color: context.textTertiary,
-                          ),
-                          const SizedBox(height: AppTheme.spacing16),
-                          Text(
-                            context.l10n.feedbackNoBugReports,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spacing8),
-                          Text(
-                            context.l10n.feedbackNoBugReportsDesc,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ];
+              return [_buildEmptySliver(context)];
             }
 
             final filtered = _applySearch(_applyFilter(reports));

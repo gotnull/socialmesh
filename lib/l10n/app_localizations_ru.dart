@@ -5355,6 +5355,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'Встряхните устройство, чтобы сообщить об ошибке.\nВаши отчёты и ответы на них появятся здесь.';
 
   @override
+  String get feedbackGuestNoBugReports => 'Войдите, чтобы увидеть свои отчёты';
+
+  @override
+  String get feedbackGuestNoBugReportsDesc =>
+      'Вы используете SocialMesh как гость. Отчёты привязаны к аккаунту, через который выполнен вход, поэтому войдите тем же способом, что и раньше, чтобы увидеть свою историю.';
+
+  @override
+  String get feedbackGuestNoBugReportsAction => 'Войти';
+
+  @override
   String get feedbackNoMatchFilter => 'Нет отчётов, соответствующих фильтру';
 
   @override
@@ -30582,6 +30592,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accountSubLinkWithApple => 'Привязать через Apple';
+
+  @override
+  String get accountSubLinkWithGitHub => 'Привязать через GitHub';
 
   @override
   String get accountSubLinkWithX => 'Привязать через X';

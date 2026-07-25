@@ -5392,6 +5392,16 @@ class AppLocalizationsEs extends AppLocalizations {
       'Agite su dispositivo para reportar un error.\nSus reportes y las respuestas aparecerán aquí.';
 
   @override
+  String get feedbackGuestNoBugReports => 'Inicie sesión para ver sus reportes';
+
+  @override
+  String get feedbackGuestNoBugReportsDesc =>
+      'Está usando SocialMesh como invitado. Los reportes siguen a la cuenta con la que inicia sesión, así que inicie sesión con el método que usó antes para ver su historial.';
+
+  @override
+  String get feedbackGuestNoBugReportsAction => 'Iniciar sesión';
+
+  @override
   String get feedbackNoMatchFilter => 'Ningún reporte coincide con este filtro';
 
   @override
@@ -30711,6 +30721,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get accountSubLinkWithApple => 'Vincular con Apple';
+
+  @override
+  String get accountSubLinkWithGitHub => 'Vincular con GitHub';
 
   @override
   String get accountSubLinkWithX => 'Vincular con X';
