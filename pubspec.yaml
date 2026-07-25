@@ -84,7 +84,7 @@ dependencies:
   flutter_dotenv: ^6.0.1
   flutter_local_notifications: ^22.0.1
   just_audio: ^0.10.6
-  record: ^6.0.0
+  record: ^7.1.1
   live_activities: ^2.4.7
   package_info_plus: ^10.2.1
   device_info_plus: ^13.1.0
