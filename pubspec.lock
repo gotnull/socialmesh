@@ -1777,10 +1777,10 @@ packages:
     dependency: "direct main"
     description:
       name: open_mail_launcher
-      sha256: "3994869a8bb496c27e092f9a90ea63db583226ba93de13b05a256ae0776bfc4b"
+      sha256: "9160340d8f275bdde8ea237780a888eb0456f451d7ff5b4b87ea50f37df1eb93"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.0"
+    version: "0.3.1"
   package_config:
     dependency: transitive
     description:
