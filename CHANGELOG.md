@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (hostile node names)
+
+- A nearby node whose name contains emoji can no longer crash the app. Avatar and marker initials were cut by UTF-16 code unit, which could slice an emoji in half and leave a malformed character that crashes the system text renderer during layout. Names are now cut on character boundaries everywhere they are shortened, so the node list, node detail, messaging, remote admin and background notifications all stay up regardless of what a peer advertises
+- Node names arriving from the mesh are now capped in length. The radio firmware limits a long name to 40 bytes, but the over-the-air format does not, so a non-conforming node could advertise a name of any length and have it flow untruncated into every list and map label
+- Names read back from the NodeDex database, from NodeDex cloud sync, from the saved node-identity cache and from the World Mesh API are now repaired before display. Previously only the live radio path cleaned them, so a name saved by an older build, or synced from another device, could still reach the screen with characters that crash text layout
+- The saved node-identity cache no longer discards every stored name when a single record is unreadable, and a corrupt cache file no longer leaves node names permanently missing for the rest of the session
+
 ### Fixed (Bluetooth connection)
 
+- Occasional undecodable data from a radio no longer builds up over a session until the app drops the connection. The counter that watches for a run of unreadable packets was never cleared by a packet that read correctly, so ten bad packets spread across hours of healthy traffic would force a disconnect, and the cycle then repeated every ten packets
 - Radios that miss the app's first configuration request no longer hang the connection on "configuring" until Bluetooth drops: the app now re-sends the request once (with a wake-up heartbeat) after 8 seconds if the radio has not started its config dump. Previously only network (TCP) connections retried; Bluetooth and USB waited the full 30 seconds and often disconnected mid-wait, producing a constant connect/drop loop on some radios
 - If configuration still times out while the Bluetooth link is up, the app now performs a quick clean reconnect (up to 3 attempts) instead of sitting on "configuring" until the system kills the link
 - Bug reports and disconnect logs now record how far the configuration handshake got (phase, config frames received, start time) so stalled connections can be diagnosed from a single report

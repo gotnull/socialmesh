@@ -2386,6 +2386,11 @@ class ProtocolService {
 
       final fromRadio = pb.FromRadio.fromBuffer(packet);
       _lastSuccessfulDecodeAt = DateTime.now();
+      // A decode that lands clears the run. Without this the counter is
+      // cumulative for the lifetime of the service, so ten undecodable
+      // frames spread over hours of healthy traffic force a disconnect,
+      // and because reconnect succeeds the cycle then repeats every ten.
+      _consecutiveParseFailures = 0;
 
       // Debug: log which payload variant we got
       final variant = fromRadio.whichPayloadVariant();
@@ -3992,10 +3997,10 @@ class ProtocolService {
 
           final updatedNode = existingNode.copyWith(
             longName: user.longName.isNotEmpty
-                ? sanitizeExternalText(user.longName)
+                ? _sanitizedLongName(user.longName)
                 : existingNode.longName,
             shortName: user.shortName.isNotEmpty
-                ? sanitizeExternalText(user.shortName)
+                ? _sanitizedShortName(user.shortName)
                 : existingNode.shortName,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
@@ -4034,10 +4039,10 @@ class ProtocolService {
           final newNode = MeshNode(
             nodeNum: packet.from,
             longName: user.longName.isNotEmpty
-                ? sanitizeExternalText(user.longName)
+                ? _sanitizedLongName(user.longName)
                 : null,
             shortName: user.shortName.isNotEmpty
-                ? sanitizeExternalText(user.shortName)
+                ? _sanitizedShortName(user.shortName)
                 : null,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
@@ -5049,14 +5054,30 @@ class ProtocolService {
     }
   }
 
+  /// Sanitise and bound a peer-supplied `User.long_name`.
+  ///
+  /// The firmware caps long_name at 40 bytes and short_name at 5, but the
+  /// wire carries a plain length-delimited string, so a non-conforming or
+  /// hostile node can advertise a name of any length and nothing between
+  /// here and layout shortens it. The bound counts grapheme clusters, which
+  /// means a name that respects the firmware's byte cap is never truncated:
+  /// 39 bytes can never be more than 39 visible characters.
+  static String _sanitizedLongName(String value) =>
+      safeTruncate(sanitizeExternalText(value), maxLongNameLength);
+
+  /// Sanitise and bound a peer-supplied `User.short_name`. See
+  /// [_sanitizedLongName] for why the bound is in grapheme clusters.
+  static String _sanitizedShortName(String value) =>
+      safeTruncate(sanitizeExternalText(value), maxShortNameLength);
+
   /// Handle node info update
   void _handleNodeInfoUpdate(pb.MeshPacket packet, pb.Data data) {
     try {
       final user = pb.User.fromBuffer(data.payload);
 
       // Sanitize node names to prevent UTF-16 crashes when rendering text
-      final longName = sanitizeExternalText(user.longName);
-      final shortName = sanitizeExternalText(user.shortName);
+      final longName = _sanitizedLongName(user.longName);
+      final shortName = _sanitizedShortName(user.shortName);
 
       AppLogging.protocol(
         '🔑 📥 Received node info from ${packet.from.toRadixString(16)}: $longName ($shortName)',
@@ -5548,13 +5569,13 @@ class ProtocolService {
       // and should be replaced by null so displayName uses the proper fallback.
       final newLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
-          ? sanitizeExternalText(nodeInfo.user.longName)
+          ? _sanitizedLongName(nodeInfo.user.longName)
           : NodeDisplayNameResolver.sanitizeName(existingNode.longName) != null
           ? existingNode.longName
           : null;
       final newShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
-          ? sanitizeExternalText(nodeInfo.user.shortName)
+          ? _sanitizedShortName(nodeInfo.user.shortName)
           : NodeDisplayNameResolver.sanitizeName(existingNode.shortName) != null
           ? existingNode.shortName
           : null;
@@ -5619,11 +5640,11 @@ class ProtocolService {
       // Use null for empty strings to trigger fallback display logic, sanitize to prevent UTF-16 crashes
       final userLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
-          ? sanitizeExternalText(nodeInfo.user.longName)
+          ? _sanitizedLongName(nodeInfo.user.longName)
           : null;
       final userShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
-          ? sanitizeExternalText(nodeInfo.user.shortName)
+          ? _sanitizedShortName(nodeInfo.user.shortName)
           : null;
 
       updatedNode = MeshNode(
@@ -5671,10 +5692,10 @@ class ProtocolService {
       final user = nodeInfo.user;
       // Sanitize names for the callback as well
       final sanitizedLongName = user.longName.isNotEmpty
-          ? sanitizeExternalText(user.longName)
+          ? _sanitizedLongName(user.longName)
           : null;
       final sanitizedShortName = user.shortName.isNotEmpty
-          ? sanitizeExternalText(user.shortName)
+          ? _sanitizedShortName(user.shortName)
           : null;
       onIdentityUpdate?.call(
         nodeNum: nodeInfo.num,

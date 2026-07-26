@@ -326,16 +326,11 @@ class Message {
   }
 
   /// Get the sender's avatar name from cached info or fallback to hex ID
-  String get senderAvatarName {
-    if (senderShortName != null && senderShortName!.isNotEmpty) {
-      return sanitizeExternalText(senderShortName!);
-    }
-    if (senderLongName != null && senderLongName!.isNotEmpty) {
-      final sanitized = sanitizeExternalText(senderLongName!);
-      return sanitized.substring(0, sanitized.length.clamp(0, 4));
-    }
-    return NodeDisplayNameResolver.shortHex(from);
-  }
+  String get senderAvatarName => NodeDisplayNameResolver.resolveAvatarName(
+    nodeNum: from,
+    longName: senderLongName,
+    shortName: senderShortName,
+  );
 
   bool get isBroadcast => to == 0xFFFFFFFF;
   bool get isDirect => !isBroadcast;
@@ -910,18 +905,13 @@ class MeshNode {
     );
   }
 
-  /// Get a short display name suitable for avatars (max 4 chars)
+  /// Get a short display name suitable for avatars (max 4 characters)
   /// Prefers shortName, falls back to longName prefix, then last 4 hex digits
-  String get avatarName {
-    if (shortName != null && shortName!.isNotEmpty) {
-      return sanitizeExternalText(shortName!);
-    }
-    if (longName != null && longName!.isNotEmpty) {
-      final sanitized = sanitizeExternalText(longName!);
-      return sanitized.substring(0, sanitized.length.clamp(0, 4));
-    }
-    return NodeDisplayNameResolver.shortHex(nodeNum);
-  }
+  String get avatarName => NodeDisplayNameResolver.resolveAvatarName(
+    nodeNum: nodeNum,
+    longName: longName,
+    shortName: shortName,
+  );
 
   // Position must be non-null, finite, and not exactly 0,0 (invalid/unset
   // marker). The isFinite check is mandatory: flutter_map's Crs.checkLatLng

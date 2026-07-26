@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../utils/text_sanitizer.dart';
+import '../../utils/validation.dart';
 
 /// Centralized node display name resolution.
 ///
@@ -82,6 +83,39 @@ class NodeDisplayNameResolver {
     if (bleResolved != null) return bleResolved;
 
     return fallback ?? defaultName(nodeNum);
+  }
+
+  /// Resolves the short avatar or marker text for a node.
+  ///
+  /// Resolution order: [shortName], then the leading characters of
+  /// [longName], then the last 4 hex digits of [nodeNum].
+  ///
+  /// The result is sanitised and cut on grapheme-cluster boundaries. Slicing
+  /// a name by UTF-16 code unit can land between the halves of a surrogate
+  /// pair: one ASCII character followed by two emoji, cut at 4 code units,
+  /// leaves a lone high surrogate. Flutter's native paragraph builder throws
+  /// a fatal "string is not well-formed UTF-16" the moment such a string
+  /// reaches layout. Names are peer-supplied, so the cut position is
+  /// attacker-chosen.
+  static String resolveAvatarName({
+    required int nodeNum,
+    String? longName,
+    String? shortName,
+  }) {
+    final short = _normalizeAvatarSource(shortName);
+    if (short != null) return short;
+
+    final long = _normalizeAvatarSource(longName);
+    if (long != null) return long;
+
+    return shortHex(nodeNum);
+  }
+
+  static String? _normalizeAvatarSource(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final sanitized = sanitizeExternalText(value);
+    if (sanitized.isEmpty) return null;
+    return safeTruncate(sanitized, maxAvatarNameLength);
   }
 
   static bool isBleDefaultName(String? value) {

@@ -13,6 +13,7 @@ import 'dart:typed_data';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/logging.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../services/protocol/sip/sip_types.dart';
 import '../models/import_preview.dart';
 import '../models/nodedex_entry.dart';
@@ -667,6 +668,20 @@ class NodeDexSqliteStore {
     };
   }
 
+  /// Sanitised form of a peer- or cloud-supplied name column.
+  ///
+  /// Name columns are written raw: the live capture path sanitises upstream,
+  /// but the cloud-sync pull writes straight from Firestore and rows predating
+  /// that upstream guard were never repaired. C0/C1 control characters are
+  /// valid UTF-8, so SQLite stores and returns them untouched, and they crash
+  /// the native paragraph builder when the name reaches a `Text`. Sanitising
+  /// on read covers every source without needing a backfill migration.
+  static String? _sanitizedColumn(Object? value) {
+    if (value is! String || value.isEmpty) return null;
+    final sanitized = sanitizeExternalText(value);
+    return sanitized.isEmpty ? null : sanitized;
+  }
+
   /// Reconstruct a [NodeDexEntry] from a database row and its child rows.
   Future<NodeDexEntry> _rowToEntry(Map<String, Object?> row) async {
     final nodeNum = row[NodeDexTables.colNodeNum] as int;
@@ -774,11 +789,11 @@ class NodeDexSqliteStore {
       observedFromRegions: observedFromRegions,
       coSeenNodes: coSeen,
       sigil: sigil,
-      lastKnownName: row[NodeDexTables.colLastKnownName] as String?,
+      lastKnownName: _sanitizedColumn(row[NodeDexTables.colLastKnownName]),
       lastKnownHardware: row[NodeDexTables.colLastKnownHardware] as String?,
       lastKnownRole: row[NodeDexTables.colLastKnownRole] as String?,
       lastKnownFirmware: row[NodeDexTables.colLastKnownFirmware] as String?,
-      localNickname: row[NodeDexTables.colLocalNickname] as String?,
+      localNickname: _sanitizedColumn(row[NodeDexTables.colLocalNickname]),
       localNicknameUpdatedAtMs:
           row[NodeDexTables.colLocalNicknameUpdatedAtMs] as int?,
       sipCapable: row[NodeDexTables.colSipCapable] == 1 ? true : null,
@@ -791,7 +806,7 @@ class NodeDexSqliteStore {
             )
           : null,
       sipIdentityState: sipState,
-      sipDisplayName: row[NodeDexTables.colSipDisplayName] as String?,
+      sipDisplayName: _sanitizedColumn(row[NodeDexTables.colSipDisplayName]),
       mrrpServiceIds: row[NodeDexTables.colMrrpServiceIds] as String?,
       lastObservedOnPreset: row[NodeDexTables.colLastObservedOnPreset] as int?,
       lastObservedFrequencyOffset:

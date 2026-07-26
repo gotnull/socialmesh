@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
+import '../../utils/text_sanitizer.dart';
 
 class NodeIdentity {
   final int nodeNum;
@@ -48,11 +49,23 @@ class NodeIdentity {
   static NodeIdentity fromJson(int nodeNum, Map<String, dynamic> json) {
     return NodeIdentity(
       nodeNum: nodeNum,
-      longName: json['longName'] as String?,
-      shortName: json['shortName'] as String?,
+      longName: _sanitizedName(json['longName']),
+      shortName: _sanitizedName(json['shortName']),
       lastUpdatedAt: json['lastUpdatedAt'] as int? ?? 0,
       lastSeenAt: json['lastSeenAt'] as int?,
     );
+  }
+
+  /// Sanitised form of a persisted name, or null when absent or empty.
+  ///
+  /// `jsonEncode` escapes a lone UTF-16 surrogate to `\uD800` rather than
+  /// rejecting it, so this store round-trips a malformed name byte-perfectly
+  /// and indefinitely. Repairing on read is what stops a blob written by an
+  /// older build from reaching the renderer.
+  static String? _sanitizedName(Object? value) {
+    if (value is! String || value.isEmpty) return null;
+    final sanitized = sanitizeExternalText(value);
+    return sanitized.isEmpty ? null : sanitized;
   }
 }
 
@@ -78,20 +91,40 @@ class NodeIdentityStore {
     return _prefs!;
   }
 
+  /// Load every persisted identity.
+  ///
+  /// A corrupt or shape-shifted blob yields an empty map rather than
+  /// throwing. The caller sets its loaded flag only after this returns, so an
+  /// escaping exception would leave the notifier permanently unloaded and
+  /// re-throw on every rebuild, silently dropping every node's cached name.
+  /// A malformed entry is also skipped individually so one bad record cannot
+  /// discard the rest of the cache.
   Future<Map<int, NodeIdentity>> getAllIdentities() async {
     final raw = _preferences.getString(_key);
     if (raw == null || raw.isEmpty) return {};
 
-    final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    final Map<String, dynamic> decoded;
+    try {
+      decoded = jsonDecode(raw) as Map<String, dynamic>;
+    } catch (e) {
+      AppLogging.nodes('NODE_IDENTITY_LOAD_FAILED reason=decode error=$e');
+      return {};
+    }
+
     final identities = <int, NodeIdentity>{};
 
     for (final entry in decoded.entries) {
       final nodeNum = int.tryParse(entry.key, radix: 16);
       if (nodeNum == null) continue;
-      identities[nodeNum] = NodeIdentity.fromJson(
-        nodeNum,
-        entry.value as Map<String, dynamic>,
-      );
+      final value = entry.value;
+      if (value is! Map<String, dynamic>) continue;
+      try {
+        identities[nodeNum] = NodeIdentity.fromJson(nodeNum, value);
+      } catch (e) {
+        AppLogging.nodes(
+          'NODE_IDENTITY_LOAD_SKIPPED nodeNum=$nodeNum error=$e',
+        );
+      }
     }
 
     return identities;

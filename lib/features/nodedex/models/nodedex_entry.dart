@@ -17,6 +17,7 @@ import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/features/nodedex/models/observation_source.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/services/protocol/sip/sip_types.dart';
+import 'package:socialmesh/utils/text_sanitizer.dart';
 
 /// Social classification a user can assign to a node.
 ///
@@ -1715,6 +1716,18 @@ class NodeDexEntry {
     };
   }
 
+  /// Sanitised form of a name field arriving over cloud sync.
+  ///
+  /// The names in this payload originate from a peer radio on another
+  /// device, and `jsonDecode` reconstructs lone UTF-16 surrogates verbatim
+  /// from `\uD800`-style escapes. Repairing here stops a poisoned name from
+  /// re-entering local SQLite through the sync pull.
+  static String? _sanitizedJsonName(Object? value) {
+    if (value is! String || value.isEmpty) return null;
+    final sanitized = sanitizeExternalText(value);
+    return sanitized.isEmpty ? null : sanitized;
+  }
+
   /// Deserialize from JSON, supporting both schema v1 and v2.
   ///
   /// v1 `csn` format: `{"nodeNum": count}` (plain int values)
@@ -1772,11 +1785,11 @@ class NodeDexEntry {
       sigil: json['sig'] != null
           ? SigilData.fromJson(json['sig'] as Map<String, dynamic>)
           : null,
-      lastKnownName: json['lkn'] as String?,
+      lastKnownName: _sanitizedJsonName(json['lkn']),
       lastKnownHardware: json['lkh'] as String?,
       lastKnownRole: json['lkr'] as String?,
       lastKnownFirmware: json['lkf'] as String?,
-      localNickname: json['ln'] as String?,
+      localNickname: _sanitizedJsonName(json['ln']),
       localNicknameUpdatedAtMs: json['ln_ms'] as int?,
       sipCapable: json['sip_cap'] as bool?,
       sipPubkey: json['sip_pk'] != null

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import '../utils/text_sanitizer.dart';
 import 'presence_confidence.dart';
 
 /// Model for nodes from mesh-observer's nodes.json API
@@ -89,12 +90,24 @@ class WorldMeshNode {
     required this.seenBy,
   });
 
+  /// Sanitised form of a name arriving from the mesh-observer API.
+  ///
+  /// These names originate on peer radios and reach us as JSON, and
+  /// `jsonDecode` reconstructs a lone UTF-16 surrogate verbatim from a
+  /// `\uD800`-style escape. [displayName] feeds `Text` widgets directly, so
+  /// the repair has to happen at the parse boundary.
+  static String _sanitizedName(Object? value, String fallback) {
+    if (value is! String || value.isEmpty) return fallback;
+    final sanitized = sanitizeExternalText(value);
+    return sanitized.isEmpty ? fallback : sanitized;
+  }
+
   /// Parse from mesh-observer JSON format
   factory WorldMeshNode.fromJson(int nodeNum, Map<String, dynamic> json) {
     return WorldMeshNode(
       nodeNum: nodeNum,
-      longName: json['longName'] as String? ?? 'Unknown',
-      shortName: json['shortName'] as String? ?? '????',
+      longName: _sanitizedName(json['longName'], 'Unknown'),
+      shortName: _sanitizedName(json['shortName'], '????'),
       hwModel: json['hwModel'] as String? ?? 'UNKNOWN',
       role: json['role'] as String? ?? 'UNKNOWN',
       latitude: json['latitude'] as int? ?? 0,

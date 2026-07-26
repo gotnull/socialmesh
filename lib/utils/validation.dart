@@ -20,6 +20,12 @@ const int maxLongNameLength = 39;
 /// emoji is 3 bytes UTF-8, one supplementary-plane emoji is 4 bytes.
 const int maxShortNameLength = 4;
 
+/// Maximum length of avatar / marker text, in grapheme clusters rather than
+/// bytes. This is a rendering budget, not a wire limit, so it counts what the
+/// user sees: one emoji is one character here even though it costs 4 bytes on
+/// the wire and 2 UTF-16 code units in memory.
+const int maxAvatarNameLength = 4;
+
 /// Validates and sanitizes a channel name according to Meshtastic specs
 /// - Max 11 characters
 /// - No spaces (replaced with underscores)

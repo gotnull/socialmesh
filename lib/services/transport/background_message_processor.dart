@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:characters/characters.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +21,7 @@ import '../../services/notifications/channel_mute_prefs.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/message_database.dart';
 import '../../utils/text_sanitizer.dart';
+import '../../utils/validation.dart';
 
 // =============================================================================
 // Background Identity Resolver
@@ -66,13 +68,26 @@ class BackgroundIdentityResolver {
     try {
       final entry = await _store!.getEntry(nodeNum);
       if (entry != null) {
-        if (entry.localNickname != null) return entry.localNickname!;
-        if (entry.lastKnownName != null) return entry.lastKnownName!;
+        final nickname = _sanitizedOrNull(entry.localNickname);
+        if (nickname != null) return nickname;
+        final lastKnown = _sanitizedOrNull(entry.lastKnownName);
+        if (lastKnown != null) return lastKnown;
       }
     } catch (e) {
       AppLogging.ble('BackgroundIdentityResolver: resolve($nodeNum) error: $e');
     }
     return _fallbackName(nodeNum);
+  }
+
+  /// Sanitised form of [value], or null when it is absent or sanitises away.
+  ///
+  /// NodeDex rows are not sanitised on write and the cloud-sync pull path
+  /// writes names straight from Firestore, so this is the last boundary
+  /// before the name reaches a notification payload.
+  static String? _sanitizedOrNull(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final sanitized = sanitizeExternalText(value);
+    return sanitized.isEmpty ? null : sanitized;
   }
 
   /// Return the short name for [nodeNum], or `null` if unavailable.
@@ -86,9 +101,9 @@ class BackgroundIdentityResolver {
 
     try {
       final entry = await _store!.getEntry(nodeNum);
-      final name = entry?.lastKnownName;
-      if (name != null && name.length >= 2) {
-        return name.substring(0, name.length.clamp(0, 4));
+      final name = _sanitizedOrNull(entry?.lastKnownName);
+      if (name != null && name.characters.length >= 2) {
+        return safeTruncate(name, maxAvatarNameLength);
       }
     } catch (_) {
       // Fall through to null.

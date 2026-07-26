@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
+import '../../utils/text_sanitizer.dart';
 import '../node_color.dart';
 import '../theme.dart';
 
@@ -80,18 +81,19 @@ class NodeAvatar extends StatelessWidget {
 
   /// Get a display-friendly version of the text
   /// For long hex codes, format them nicely
+  ///
+  /// Length is measured in grapheme clusters and the cut goes through
+  /// [safeTruncate], so a name whose emoji straddles the boundary cannot
+  /// yield a lone UTF-16 surrogate. A raw code-unit `substring` here would,
+  /// and the native paragraph builder treats that as fatal during layout.
   String _getDisplayText() {
-    if (text.length <= 4) {
+    if (text.characters.length <= 4) {
       return text;
     }
 
-    // For longer text (like hex node IDs), take first 5 chars
+    // For longer text (like hex node IDs), take the first 5 characters
     // and display in a cleaner format
-    if (text.length > 5) {
-      return text.substring(0, 5).toLowerCase();
-    }
-
-    return text.toLowerCase();
+    return safeTruncate(text, 5).toLowerCase();
   }
 
   Color _getBatteryColor() {
