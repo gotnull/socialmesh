@@ -16,6 +16,10 @@ import 'background_message_processor.dart';
 const String _kBatteryPromptShown = 'bg_battery_prompt_shown';
 
 /// SharedPreferences key for the user-level background BLE toggle.
+///
+/// Read on Android to gate the foreground service, and on iOS to gate
+/// the OS-level pending reconnect that `BleTransport` arms after an
+/// unexpected disconnect in the background.
 const String kBgBleEnabled = 'bg_ble_enabled';
 
 /// SharedPreferences key for the Android persistent notification style

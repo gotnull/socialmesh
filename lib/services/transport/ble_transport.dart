@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/constants.dart';
@@ -95,6 +96,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   /// concurrent refresh attempts from racing into a double-`listen()`
   /// on the fromNum characteristic.
   bool _refreshInFlight = false;
+
+  /// Concurrency guard for `_adoptOsLevelReconnect()`. Prevents two
+  /// OS-level `connected` events from racing into a double bring-up.
+  bool _osReconnectAdoptInFlight = false;
 
   /// When the current session reached `connected`, for teardown uptime.
   DateTime? _connectedAt;
@@ -592,6 +597,24 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     try {
       AppLogging.ble('Connecting to ${device.name}...');
 
+      // Cancel any OS-level pending reconnect left over from a background
+      // drop. An explicit connect supersedes it, and a stale registration
+      // for a previous device would otherwise let flutter_blue_plus
+      // silently reconnect to it later - only `device.disconnect()`
+      // clears the registration.
+      final staleDevice = _device;
+      if (staleDevice != null && staleDevice.isAutoConnectEnabled) {
+        AppLogging.ble(
+          'BLE_OS_RECONNECT cancelling stale pending reconnect for '
+          '${staleDevice.remoteId}',
+        );
+        try {
+          await staleDevice.disconnect();
+        } catch (e) {
+          AppLogging.ble('⚠️ Stale pending-reconnect cancel failed: $e');
+        }
+      }
+
       // Find the device
       final List<BluetoothDevice> systemDevices =
           await FlutterBluePlus.systemDevices([]);
@@ -666,7 +689,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         }
       }
 
-      // Set up listener for disconnection events
+      // Set up listener for disconnection events. The subscription
+      // survives unexpected drops (only `disconnect()` cancels it), so it
+      // also observes OS-level reconnections completed by Core Bluetooth
+      // while no explicit connect() owns the flow.
       _deviceStateSubscription = _device!.connectionState.listen((state) {
         AppLogging.ble('Connection state changed: $state');
         if (state == BluetoothConnectionState.disconnected) {
@@ -678,6 +704,14 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             platformDescription: reason?.description,
           );
           _updateState(DeviceConnectionState.disconnected);
+          unawaited(_maybeArmOsPendingReconnect());
+        } else if (state == BluetoothConnectionState.connected &&
+            _state == DeviceConnectionState.disconnected) {
+          // A pending reconnect (armed below, or re-issued by
+          // flutter_blue_plus once the registration exists) completed at
+          // OS level. Adopt it: rediscover services and bring the session
+          // back up.
+          unawaited(_adoptOsLevelReconnect());
         }
       });
     } catch (e) {
@@ -686,6 +720,171 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;
+    }
+  }
+
+  /// Arm an OS-level pending reconnect after an unexpected disconnect
+  /// while the app is backgrounded (iOS only).
+  ///
+  /// iOS freezes Dart timers when the app suspends, so the scan-based
+  /// foreground auto-reconnect pipeline cannot run in the background.
+  /// Core Bluetooth, however, honours a pending connect indefinitely at
+  /// the OS level: when the radio advertises again, iOS re-establishes
+  /// the link and wakes the app (`bluetooth-central` background mode).
+  /// The resulting `connected` event reaches the transport state
+  /// listener, which adopts the link via [_adoptOsLevelReconnect].
+  ///
+  /// Once a device is registered (`autoConnect: true`), flutter_blue_plus
+  /// re-issues the pending connect itself after every later disconnect
+  /// until `disconnect()` clears the registration, so arming is skipped
+  /// when the registration already exists.
+  Future<void> _maybeArmOsPendingReconnect() async {
+    if (!shouldArmOsPendingReconnect(
+      platform: defaultTargetPlatform,
+      lifecycleState: SchedulerBinding.instance.lifecycleState,
+      hasDevice: _device != null,
+      registrationExists: _device?.isAutoConnectEnabled ?? false,
+      transportState: _state,
+    )) {
+      return;
+    }
+
+    // User-level background-connection toggle. Shared with the Android
+    // foreground service; on iOS it gates this pending reconnect, which
+    // is what makes the settings switch truthful on both platforms.
+    if (!await BackgroundBleService.isBackgroundBleEnabled()) {
+      AppLogging.ble(
+        'BLE_OS_RECONNECT arm skipped: background connection disabled',
+      );
+      return;
+    }
+
+    // Re-check after the pref read - an explicit connect()/disconnect()
+    // may have taken ownership during the await.
+    final device = _device;
+    if (device == null || _state != DeviceConnectionState.disconnected) {
+      return;
+    }
+
+    try {
+      // Returns as soon as the request is registered - the connection
+      // itself completes whenever the radio reappears, even days later.
+      await device.connect(license: License.free, autoConnect: true, mtu: null);
+      AppLogging.ble(
+        'BLE_OS_RECONNECT armed: pending reconnect registered for '
+        '"$_connectedDeviceName" (${device.remoteId})',
+      );
+    } catch (e) {
+      AppLogging.ble('⚠️ BLE_OS_RECONNECT arm failed: $e');
+    }
+  }
+
+  /// Whether an unexpected disconnect should arm an OS-level pending
+  /// reconnect. Pure so the guard matrix is unit-testable without the
+  /// Bluetooth stack.
+  ///
+  /// - iOS only: Android keeps the Dart isolate alive with a foreground
+  ///   service and runs [BackgroundReconnectManager]; a second reconnect
+  ///   path there would race it.
+  /// - Background only (`lifecycleState != resumed`): in the foreground
+  ///   the scan-based auto-reconnect pipeline owns recovery, with UI. A
+  ///   null lifecycle state counts as background - it means no frame has
+  ///   been produced yet, which never coincides with an interactive
+  ///   foreground session.
+  /// - Skipped when the flutter_blue_plus registration already exists:
+  ///   the plugin re-issues the pending connect itself on every
+  ///   disconnect once registered.
+  @visibleForTesting
+  static bool shouldArmOsPendingReconnect({
+    required TargetPlatform platform,
+    required AppLifecycleState? lifecycleState,
+    required bool hasDevice,
+    required bool registrationExists,
+    required DeviceConnectionState transportState,
+  }) {
+    if (platform != TargetPlatform.iOS) return false;
+    if (lifecycleState == AppLifecycleState.resumed) return false;
+    if (!hasDevice) return false;
+    if (registrationExists) return false;
+    return transportState == DeviceConnectionState.disconnected;
+  }
+
+  /// Adopt an OS-level reconnection that landed while no explicit
+  /// `connect()` owned the flow (transport state still `disconnected`).
+  ///
+  /// This happens when a pending reconnect armed by
+  /// [_maybeArmOsPendingReconnect] completes, or when flutter_blue_plus
+  /// re-issues a registered pending connect after a later drop. The GATT
+  /// link is up but the session is cold: services undiscovered,
+  /// characteristic handles stale, no notify subscription. Re-run the
+  /// bring-up tail of `connect()`; `_discoverServices()` emits
+  /// `connected`, and the provider layer's transport state listener then
+  /// restores the protocol session through the canonical
+  /// RestoreSessionCoordinator path.
+  Future<void> _adoptOsLevelReconnect() async {
+    if (_osReconnectAdoptInFlight) return;
+    if (_state != DeviceConnectionState.disconnected) return;
+    final device = _device;
+    if (device == null) return;
+
+    _osReconnectAdoptInFlight = true;
+    try {
+      AppLogging.ble('BLE_OS_RECONNECT adopting OS-level reconnection...');
+
+      // Honour the background-connection toggle if it was disabled after
+      // the registration was armed: drop the link instead of resurrecting
+      // the session behind the user's back. Foreground reconnects are
+      // always wanted - the toggle only governs background behaviour.
+      final backgrounded =
+          SchedulerBinding.instance.lifecycleState != AppLifecycleState.resumed;
+      if (backgrounded &&
+          !await BackgroundBleService.isBackgroundBleEnabled()) {
+        AppLogging.ble(
+          'BLE_OS_RECONNECT adoption declined: background connection '
+          'disabled - cancelling registration',
+        );
+        try {
+          await device.disconnect();
+        } catch (_) {}
+        return;
+      }
+      if (_state != DeviceConnectionState.disconnected) return;
+
+      // Claim the flow so a concurrent explicit connect() sees ownership
+      // and runs its force-cleanup path instead of racing the bring-up.
+      _updateState(DeviceConnectionState.connecting);
+
+      // Same stabilisation delay as the explicit connect() path - the
+      // device drops the link if hit too fast after GATT connect.
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!identical(_device, device) || !device.isConnected) {
+        AppLogging.ble('BLE_OS_RECONNECT adoption aborted: link gone');
+        if (_state == DeviceConnectionState.connecting) {
+          _updateState(DeviceConnectionState.disconnected);
+        }
+        return;
+      }
+
+      // Stale-session hygiene: cancel leftover subscriptions from before
+      // the drop so the restore path re-installs them cleanly instead of
+      // double-listening.
+      _pollingTimer?.cancel();
+      _pollingTimer = null;
+      final fromNumSub = _fromNumSubscription;
+      _fromNumSubscription = null;
+      await fromNumSub?.cancel();
+      final logRadioSub = _logRadioSubscription;
+      _logRadioSubscription = null;
+      await logRadioSub?.cancel();
+
+      await _discoverServices();
+      AppLogging.ble('BLE_OS_RECONNECT bring-up complete');
+    } catch (e) {
+      // _discoverServices() already tore down (disconnect + error state)
+      // on failure; nothing further to unwind here.
+      AppLogging.ble('⚠️ BLE_OS_RECONNECT bring-up failed: $e');
+    } finally {
+      _osReconnectAdoptInFlight = false;
     }
   }
 
