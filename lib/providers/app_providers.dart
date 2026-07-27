@@ -5453,6 +5453,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
   void addMessage(Message message) {
     if (_isDuplicateMessage(message)) {
       AppLogging.messages('📨 Duplicate message ignored: id=${message.id}');
+      _mergeDuplicateRxMetadata(message);
       return;
     }
 
@@ -5553,6 +5554,58 @@ class MessagesNotifier extends Notifier<List<Message>> {
       }
     }
     return false;
+  }
+
+  /// Merge receive-path metadata from a discarded duplicate into the
+  /// already-stored copy of the same packet.
+  ///
+  /// Policy: the first locally observed delivery path wins. A stored
+  /// message with a known transport (`viaMqtt` non-null) is never
+  /// overwritten — a later MQTT copy of a packet first heard over RF (or
+  /// vice versa) must not rewrite history. Only the unknown → known
+  /// direction is filled in, which covers copies that arrived without
+  /// radio metadata (push-delivered or legacy background rows) being
+  /// upgraded by the real packet. The same fill-if-absent rule is applied
+  /// to the other receive-path fields carried by the packet.
+  ///
+  /// Matching is restricted to packet identity (message id or packetId) —
+  /// content-fingerprint duplicates are too fuzzy to attribute metadata to.
+  void _mergeDuplicateRxMetadata(Message incoming) {
+    if (incoming.viaMqtt == null &&
+        incoming.hopCount == null &&
+        incoming.rxSnr == null &&
+        incoming.rxRssi == null &&
+        incoming.relayNode == null) {
+      return;
+    }
+    final existing = state.firstWhereOrNull(
+      (m) =>
+          (incoming.id.isNotEmpty && m.id == incoming.id) ||
+          (incoming.packetId != null && m.packetId == incoming.packetId),
+    );
+    if (existing == null || !existing.received) return;
+
+    final merged = existing.copyWith(
+      viaMqtt: existing.viaMqtt ?? incoming.viaMqtt,
+      hopCount: existing.hopCount ?? incoming.hopCount,
+      rxSnr: existing.rxSnr ?? incoming.rxSnr,
+      rxRssi: existing.rxRssi ?? incoming.rxRssi,
+      relayNode: existing.relayNode ?? incoming.relayNode,
+    );
+    final changed =
+        merged.viaMqtt != existing.viaMqtt ||
+        merged.hopCount != existing.hopCount ||
+        merged.rxSnr != existing.rxSnr ||
+        merged.rxRssi != existing.rxRssi ||
+        merged.relayNode != existing.relayNode;
+    if (!changed) return;
+
+    AppLogging.messages(
+      '📨 Merged rx metadata from duplicate into ${existing.id}: '
+      'viaMqtt=${merged.viaMqtt}, hopCount=${merged.hopCount}',
+    );
+    state = state.map((m) => m.id == existing.id ? merged : m).toList();
+    _storage?.saveMessage(merged);
   }
 
   void _addMessageToState(Message message) {

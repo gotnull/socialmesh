@@ -16016,6 +16016,15 @@
             }
         }
     },
+    "messageContextMenuTransport": "Transport: {label}",
+    "@messageContextMenuTransport": {
+        "description": "Delivery-path row in the message details section. {label} is the localised transport label (RF, MQTT or Unknown).",
+        "placeholders": {
+            "label": {
+                "type": "String"
+            }
+        }
+    },
     "messageContextMenuNoRecents": "No Recents",
     "@messageContextMenuNoRecents": {
         "description": "Placeholder text in the emoji picker when there are no recent emoji."
@@ -16493,13 +16502,26 @@
             }
         }
     },
-    "messagingTechInfoMqtt": "MQTT",
-    "@messagingTechInfoMqtt": {
-        "description": "Transport label when message arrived via MQTT."
+    "messagingTransportMqtt": "MQTT",
+    "@messagingTransportMqtt": {
+        "description": "Transport label when a message reached the connected node through an MQTT internet gateway (MeshPacket.via_mqtt == true). Brand/protocol name, keep verbatim in all locales."
     },
-    "messagingTechInfoRadio": "Radio",
-    "@messagingTechInfoRadio": {
-        "description": "Transport label when message arrived via radio (RF)."
+    "messagingTransportRf": "RF",
+    "@messagingTransportRf": {
+        "description": "Transport label when a message reached the connected node purely over LoRa radio (MeshPacket.via_mqtt == false). Technical abbreviation, keep verbatim in all locales."
+    },
+    "messagingTransportUnknown": "Unknown",
+    "@messagingTransportUnknown": {
+        "description": "Transport label when the delivery path of a message is not known (historical messages stored before via_mqtt was persisted, or firmware that did not populate the field)."
+    },
+    "messagingSemanticsReceivedVia": "Message received via {transport}",
+    "@messagingSemanticsReceivedVia": {
+        "description": "Accessibility label prefix for a received message's metadata line. {transport} is the localised transport label (RF, MQTT or Unknown).",
+        "placeholders": {
+            "transport": {
+                "type": "String"
+            }
+        }
     },
     "messagingTechInfoRssi": "RSSI {value} dBm",
     "@messagingTechInfoRssi": {
@@ -16569,7 +16591,7 @@
     "@messagingTechInfoExplainTransportTitle": {
         "description": "Title for the bottom sheet explaining transport type."
     },
-    "messagingTechInfoExplainTransportBody": "How this message reached you. 'Radio' means it travelled entirely over the mesh radio network. 'MQTT' means it passed through an internet gateway at some point.",
+    "messagingTechInfoExplainTransportBody": "How this message reached you. 'RF' means it travelled entirely over the mesh radio network. 'MQTT' means it passed through an internet gateway at some point. 'Unknown' means the delivery path was not recorded.",
     "@messagingTechInfoExplainTransportBody": {
         "description": "Explanation of transport type shown in a bottom sheet."
     },
@@ -49513,6 +49535,19 @@
         "description": "Default quick reply: acknowledgement."
     },
     "cannedResponseOk": "OK",
+    "@cannedResponseAlertBell": {
+        "description": "Label for the well-known alert-bell quick reply as shipped by stock Meshtastic clients. Used to re-localise legacy persisted entries whose stored text is the frozen English label."
+    },
+    "cannedResponseAlertBell": "Alert bell character",
+    "@messagingQuickResponseSemantics": {
+        "description": "Accessibility label for a quick-response tile in the Quick Responses sheet. {text} is the reply text that will be sent.",
+        "placeholders": {
+            "text": {
+                "type": "String"
+            }
+        }
+    },
+    "messagingQuickResponseSemantics": "Quick response: {text}",
     "@deepLinkUnableToOpenLink": {
         "description": "Generic fallback when a deep link cannot be opened."
     },

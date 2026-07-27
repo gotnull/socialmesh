@@ -13,8 +13,10 @@ import 'dm_channel_resolver.dart';
 import 'dm_contacts_provider.dart';
 import 'widgets/chat_composer.dart';
 import 'widgets/hop_count_chip.dart';
+import 'widgets/inbound_message_meta_line.dart';
 import 'widgets/message_bubble_body.dart';
 import 'widgets/messaging_unread_divider.dart';
+import 'widgets/quick_responses_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../utils/time_format.dart';
@@ -27,10 +29,10 @@ import '../../providers/review_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../models/tapback.dart';
-import '../../models/canned_response.dart';
 import '../../core/node_color.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/transport_path.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/presence_utils.dart';
 import '../../providers/presence_providers.dart';
@@ -51,7 +53,6 @@ import '../../core/widgets/node_avatar.dart';
 import '../channels/channel_options_sheet.dart';
 import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
-import '../settings/canned_responses_screen.dart';
 import '../settings/device_management_screen.dart';
 import '../settings/translation_settings_screen.dart';
 import '../nodes/node_quick_actions_sheet.dart';
@@ -1762,7 +1763,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     AppBottomSheet.show(
       context: context,
       padding: EdgeInsets.zero,
-      child: _QuickResponsesSheet(
+      child: QuickResponsesSheet(
         responses: responses,
         onSelect: (text) {
           navigator.pop();
@@ -3917,7 +3918,10 @@ class _MessageBubble extends ConsumerWidget {
                             ref: ref,
                           ),
                         const SizedBox(height: AppTheme.spacing2),
-                        _buildInboundMetadataLine(context),
+                        InboundMessageMetaLine(
+                          message: message,
+                          isEncrypted: isEncrypted,
+                        ),
                         if (showTechInfo)
                           _buildInlineTechInfo(context, ref, sentByMe: false),
                       ],
@@ -3989,35 +3993,6 @@ class _MessageBubble extends ConsumerWidget {
     return Tooltip(
       message: status.label,
       child: Icon(status.icon, size: status.size, color: status.color),
-    );
-  }
-
-  // Always-visible metadata line inside the received bubble: timestamp plus,
-  // when the packet carried them, hop count and SNR. Inbound-only - outbound
-  // messages reach the radio over BLE/USB and never carry receive metadata.
-  // A single wrapping Text keeps a long line from overflowing a bubble whose
-  // width was set by short message text.
-  Widget _buildInboundMetadataLine(BuildContext context) {
-    final l10n = context.l10n;
-    final timeFormat = AppTimeFormat.timeOnly(context);
-    final parts = <String>[
-      timeFormat.format(message.timestamp),
-      if (message.hopCount != null) hopCountLabel(l10n, message.hopCount!),
-      if (message.rxSnr != null)
-        l10n.messagingTechInfoSnr(message.rxSnr!.toStringAsFixed(1)),
-    ];
-    return Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (isEncrypted) ...[
-          Icon(Icons.lock, size: 10, color: context.textTertiary),
-          SizedBox(width: AppTheme.spacing3),
-        ],
-        Text(
-          parts.join(' · '),
-          style: TextStyle(fontSize: 11, color: context.textTertiary),
-        ),
-      ],
     );
   }
 
@@ -4154,17 +4129,29 @@ class _MessageBubble extends ConsumerWidget {
               explainTitle: l10n.messagingTechInfoExplainRssiTitle,
               explainBody: l10n.messagingTechInfoExplainRssiBody,
             ),
-          if (message.viaMqtt != null)
-            _TechInfoChip(
-              icon: message.viaMqtt == true ? Icons.cloud : Icons.cell_tower,
-              label: message.viaMqtt == true
-                  ? l10n.messagingTechInfoMqtt
-                  : l10n.messagingTechInfoRadio,
-              iconSize: iconSize,
-              color: color,
-              textStyle: textStyle,
-              explainTitle: l10n.messagingTechInfoExplainTransportTitle,
-              explainBody: l10n.messagingTechInfoExplainTransportBody,
+          // Transport chip: shown whenever the delivery path is known, and
+          // also on inbound bubbles that carry other radio metadata so an
+          // unrecorded path surfaces as an explicit "Unknown" rather than
+          // silently disappearing. Metadata-free inbound bubbles keep the
+          // "No radio data" note below instead.
+          if (message.viaMqtt != null || (!sentByMe && hasRadioInfo))
+            Builder(
+              builder: (context) {
+                final transport = classifyTransport(message.viaMqtt);
+                return _TechInfoChip(
+                  icon: switch (transport) {
+                    TransportPath.mqtt => Icons.cloud,
+                    TransportPath.rf => Icons.cell_tower,
+                    TransportPath.unknown => Icons.help_outline,
+                  },
+                  label: transport.localizedLabel(l10n),
+                  iconSize: iconSize,
+                  color: color,
+                  textStyle: textStyle,
+                  explainTitle: l10n.messagingTechInfoExplainTransportTitle,
+                  explainBody: l10n.messagingTechInfoExplainTransportBody,
+                );
+              },
             ),
           if (relay != null)
             _TechInfoChip(
@@ -4435,226 +4422,6 @@ class _MessageBubble extends ConsumerWidget {
 }
 
 /// Quick responses bottom sheet
-class _QuickResponsesSheet extends StatelessWidget {
-  final List<CannedResponse> responses;
-  final void Function(String text) onSelect;
-
-  /// Sends the alert-bell quick message: a bell-emoji text whose wire
-  /// payload carries ASCII BEL (0x07) so buzzer-equipped radios ring.
-  final VoidCallback onSendAlertBell;
-
-  const _QuickResponsesSheet({
-    required this.responses,
-    required this.onSelect,
-    required this.onSendAlertBell,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.5,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 0, 20, 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  ),
-                  child: Icon(Icons.bolt, color: context.accentColor, size: 18),
-                ),
-                SizedBox(width: AppTheme.spacing12),
-                Text(
-                  context.l10n.messagingQuickResponses,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(color: context.border, height: 1),
-          // Alert bell: one tap sends a ring, like the official app's
-          // quick-message bell.
-          GestureDetector(
-            onTap: onSendAlertBell,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing20,
-                vertical: AppTheme.spacing12,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.messagingAlertBellTooltip,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: context.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          context.l10n.messagingAlertBellSubtitle,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: AppTheme.spacing12),
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    ),
-                    child: Icon(
-                      Icons.notifications_active,
-                      color: context.accentColor,
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Divider(color: context.border, height: 1),
-          // Responses grid
-          Flexible(
-            child: responses.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.all(AppTheme.spacing32),
-                    child: Text(
-                      context.l10n.messagingNoQuickResponsesConfigured,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: context.textSecondary),
-                    ),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(AppTheme.spacing16),
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                          childAspectRatio: 3.5,
-                        ),
-                    itemCount: responses.length,
-                    itemBuilder: (context, index) {
-                      final response = responses[index];
-                      return _QuickResponseTile(
-                        response: response,
-                        onTap: () => onSelect(response.text),
-                      );
-                    },
-                  ),
-          ),
-          // Footer with settings link
-          Divider(color: context.border, height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: GestureDetector(
-              onTap: () {
-                // Capture navigator before pop since context becomes invalid after
-                final navigator = Navigator.of(context);
-                navigator.pop();
-                navigator.push(
-                  MaterialPageRoute(
-                    builder: (context) => const CannedResponsesScreen(),
-                  ),
-                );
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.settings,
-                    size: 16,
-                    color: context.textSecondary.withValues(alpha: 0.8),
-                  ),
-                  SizedBox(width: AppTheme.spacing8),
-                  Text(
-                    context.l10n.messagingConfigureQuickResponses,
-                    style: TextStyle(
-                      color: context.textSecondary.withValues(alpha: 0.8),
-                      fontSize: 13,
-                    ),
-                  ),
-                  SizedBox(width: AppTheme.spacing4),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 12,
-                    color: context.textSecondary.withValues(alpha: 0.6),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickResponseTile extends StatelessWidget {
-  final CannedResponse response;
-  final VoidCallback onTap;
-
-  const _QuickResponseTile({required this.response, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: context.background,
-      borderRadius: BorderRadius.circular(AppTheme.radius12),
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: Center(
-            child: Text(
-              response.text,
-              style: TextStyle(
-                color: context.textPrimary,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Popup menu for messaging screen with settings and help
 class MessagingPopupMenu extends ConsumerWidget {
   const MessagingPopupMenu({

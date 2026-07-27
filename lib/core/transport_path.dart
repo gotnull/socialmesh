@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import '../l10n/app_localizations.dart';
 
 /// Transport path classification for mesh packets.
 ///
@@ -30,27 +31,15 @@ enum TransportPath {
   /// Transport path is unknown (field not present or not applicable).
   unknown;
 
-  /// Human-readable label for UI display.
-  String get label {
+  /// Localised human-readable label for UI display.
+  String localizedLabel(AppLocalizations l10n) {
     switch (this) {
       case TransportPath.rf:
-        return 'RF';
+        return l10n.messagingTransportRf;
       case TransportPath.mqtt:
-        return 'MQTT';
+        return l10n.messagingTransportMqtt;
       case TransportPath.unknown:
-        return 'Unknown';
-    }
-  }
-
-  /// Shorter label for compact chips.
-  String get chipLabel {
-    switch (this) {
-      case TransportPath.rf:
-        return 'RF';
-      case TransportPath.mqtt:
-        return 'MQTT';
-      case TransportPath.unknown:
-        return '—';
+        return l10n.messagingTransportUnknown;
     }
   }
 }

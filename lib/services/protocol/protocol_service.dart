@@ -27,6 +27,7 @@ import '../../core/constants.dart';
 import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
 import 'mesh_packet_builder.dart';
+import 'mesh_packet_rx_metadata.dart';
 import 'reticulum/reticulum_fragment_event.dart';
 import 'reticulum/reticulum_safe_log.dart';
 import 'packet_framer.dart';
@@ -4227,13 +4228,7 @@ class ProtocolService {
 
   /// Compute hop count from hopStart and hopLimit fields in a MeshPacket.
   /// Returns null if hop info is unavailable.
-  int? _computeHopCount(pb.MeshPacket packet) {
-    if (packet.hasHopStart() && packet.hopStart > 0) {
-      final hops = packet.hopStart - packet.hopLimit;
-      return hops < 0 ? 0 : hops;
-    }
-    return null;
-  }
+  int? _computeHopCount(pb.MeshPacket packet) => computeHopCount(packet);
 
   // rxRssi/rxSnr describe the link to whatever transmitted this packet.
   // They may only be attributed to packet.from when that node *is* the
@@ -4342,7 +4337,7 @@ class ProtocolService {
         hopCount: _computeHopCount(packet),
         rxSnr: packet.hasRxSnr() ? packet.rxSnr.toDouble() : null,
         rxRssi: packet.hasRxRssi() ? packet.rxRssi : null,
-        viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : null,
+        viaMqtt: receiveViaMqtt(packet),
         relayNode: packet.hasRelayNode() ? packet.relayNode : null,
         senderLongName: senderLongName,
         senderShortName: senderShortName,

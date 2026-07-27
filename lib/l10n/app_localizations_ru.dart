@@ -12068,6 +12068,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String messageContextMenuTransport(String label) {
+    return 'Транспорт: $label';
+  }
+
+  @override
   String get messageContextMenuNoRecents => 'Нет недавних';
 
   @override
@@ -12412,10 +12417,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get messagingTechInfoMqtt => 'MQTT';
+  String get messagingTransportMqtt => 'MQTT';
 
   @override
-  String get messagingTechInfoRadio => 'Радио';
+  String get messagingTransportRf => 'RF';
+
+  @override
+  String get messagingTransportUnknown => 'Неизвестно';
+
+  @override
+  String messagingSemanticsReceivedVia(String transport) {
+    return 'Сообщение получено через $transport';
+  }
 
   @override
   String messagingTechInfoRssi(int value) {
@@ -12466,7 +12479,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get messagingTechInfoExplainTransportBody =>
-      'Как это сообщение достигло вас. «Радио» означает, что оно прошло полностью по сети mesh-радио. «MQTT» означает, что в какой-то момент оно прошло через интернет-шлюз.';
+      'Как это сообщение достигло вас. «RF» означает, что оно прошло полностью по сети mesh-радио. «MQTT» означает, что в какой-то момент оно прошло через интернет-шлюз. «Неизвестно» означает, что путь доставки не был записан.';
 
   @override
   String get messagingTechInfoExplainNodeIdTitle => 'ID узла отправителя';
@@ -37432,6 +37445,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cannedResponseOk => 'OK';
+
+  @override
+  String get cannedResponseAlertBell => 'Символ звонка оповещения';
+
+  @override
+  String messagingQuickResponseSemantics(String text) {
+    return 'Быстрый ответ: $text';
+  }
 
   @override
   String get deepLinkUnableToOpenLink => 'Не удалось открыть ссылку';

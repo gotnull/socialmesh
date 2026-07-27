@@ -27,7 +27,7 @@ class MessageDatabase {
   static const _dbName = 'messages.db';
   static const _tableName = 'messages';
   static const _readPositionsTableName = 'conversation_read_positions';
-  static const _dbVersion = 11;
+  static const _dbVersion = 12;
 
   /// Maximum messages retained per conversation (DM or channel).
   static const int maxMessagesPerConversation = 500;
@@ -256,6 +256,17 @@ class MessageDatabase {
           );
           AppLogging.storage('v11 migration: ensured relay_node column');
         }
+        if (oldVersion < 12) {
+          // Nullable tri-state column mirroring Message.viaMqtt: 1 = MQTT,
+          // 0 = RF, NULL = unknown. Legacy rows load as null so historical
+          // messages surface as "unknown" transport rather than being
+          // mislabelled RF.
+          await addColumnIfMissing(
+            'via_mqtt',
+            'ALTER TABLE $_tableName ADD COLUMN via_mqtt INTEGER', // lint-allow: hardcoded-string
+          );
+          AppLogging.storage('v12 migration: ensured via_mqtt column');
+        }
       },
       onDowngrade: (db, oldVersion, newVersion) async {
         // Retain the on-disk schema: every shipped schema is a strict
@@ -313,6 +324,7 @@ class MessageDatabase {
         rx_snr REAL,
         rx_rssi INTEGER,
         relay_node INTEGER,
+        via_mqtt INTEGER,
         sent_at INTEGER,
         last_attempt_at INTEGER,
         retry_count INTEGER NOT NULL DEFAULT 0,
@@ -730,6 +742,7 @@ class MessageDatabase {
       'rx_snr': message.rxSnr,
       'rx_rssi': message.rxRssi,
       'relay_node': message.relayNode,
+      'via_mqtt': message.viaMqtt == null ? null : (message.viaMqtt! ? 1 : 0),
       'sent_at': message.sentAt?.millisecondsSinceEpoch,
       'last_attempt_at': message.lastAttemptAt?.millisecondsSinceEpoch,
       'retry_count': message.retryCount,
@@ -775,6 +788,7 @@ class MessageDatabase {
       rxSnr: (row['rx_snr'] as num?)?.toDouble(),
       rxRssi: row['rx_rssi'] as int?,
       relayNode: row['relay_node'] as int?,
+      viaMqtt: row['via_mqtt'] == null ? null : (row['via_mqtt'] as int) == 1,
       sentAt: row['sent_at'] != null
           ? DateTime.fromMillisecondsSinceEpoch(row['sent_at'] as int)
           : null,

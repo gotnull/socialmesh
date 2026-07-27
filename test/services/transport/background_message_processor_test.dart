@@ -86,22 +86,26 @@ List<int> buildTextMessagePacket({
   int channel = 0,
   int replyId = 0,
   bool isEmoji = false,
+  bool? viaMqtt,
+  int? hopStart,
+  int? hopLimit,
 }) {
-  final fromRadio = pb.FromRadio(
-    id: 1,
-    packet: pb.MeshPacket(
-      from: from,
-      to: to,
-      id: packetId,
-      channel: channel,
-      decoded: pb.Data(
-        portnum: pn.PortNum.TEXT_MESSAGE_APP,
-        payload: utf8.encode(text),
-        replyId: replyId,
-        emoji: isEmoji ? 1 : 0,
-      ),
+  final packet = pb.MeshPacket(
+    from: from,
+    to: to,
+    id: packetId,
+    channel: channel,
+    decoded: pb.Data(
+      portnum: pn.PortNum.TEXT_MESSAGE_APP,
+      payload: utf8.encode(text),
+      replyId: replyId,
+      emoji: isEmoji ? 1 : 0,
     ),
   );
+  if (viaMqtt != null) packet.viaMqtt = viaMqtt;
+  if (hopStart != null) packet.hopStart = hopStart;
+  if (hopLimit != null) packet.hopLimit = hopLimit;
+  final fromRadio = pb.FromRadio(id: 1, packet: packet);
   return fromRadio.writeToBuffer();
 }
 
@@ -193,6 +197,63 @@ void main() {
       expect(saved.from, senderNode);
       expect(saved.text, msgText);
       expect(saved.received, true);
+    });
+
+    test('persists viaMqtt and hop metadata mirroring the foreground '
+        'ingest path', () async {
+      final processor = BackgroundMessageProcessor.instance;
+      processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
+      processor.start(transport);
+      processor.processingEnabled = true;
+
+      transport.emitData(
+        buildTextMessagePacket(
+          from: 0x1001,
+          to: 0xFFFFFFFF,
+          text: 'mqtt copy',
+          packetId: 201,
+          viaMqtt: true,
+          hopStart: 3,
+          hopLimit: 2,
+        ),
+      );
+      transport.emitData(
+        buildTextMessagePacket(
+          from: 0x1002,
+          to: 0xFFFFFFFF,
+          text: 'rf copy',
+          packetId: 202,
+          viaMqtt: false,
+          hopStart: 5,
+          hopLimit: 1,
+        ),
+      );
+      transport.emitData(
+        buildTextMessagePacket(
+          from: 0x1003,
+          to: 0xFFFFFFFF,
+          text: 'legacy no flag',
+          packetId: 203,
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+
+      final saved = await msgDb.loadConversation('channel:0');
+      final mqttMsg = saved.firstWhere((m) => m.packetId == 201);
+      expect(mqttMsg.viaMqtt, isTrue);
+      expect(mqttMsg.hopCount, 1);
+
+      final rfMsg = saved.firstWhere((m) => m.packetId == 202);
+      expect(rfMsg.viaMqtt, isFalse);
+      expect(rfMsg.hopCount, 4);
+
+      // via_mqtt is a plain proto3 bool: false is never encoded on the
+      // wire, so a live decoded packet without the field IS an RF
+      // delivery. Unknown exists only for rows persisted before the
+      // field was stored (covered by the migration test).
+      final legacyMsg = saved.firstWhere((m) => m.packetId == 203);
+      expect(legacyMsg.viaMqtt, isFalse);
+      expect(legacyMsg.hopCount, isNull);
     });
 
     test('duplicate detection skips already-persisted message', () async {

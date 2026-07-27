@@ -12163,6 +12163,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String messageContextMenuTransport(String label) {
+    return 'Transport : $label';
+  }
+
+  @override
   String get messageContextMenuNoRecents => 'Aucun récent';
 
   @override
@@ -12510,10 +12515,18 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get messagingTechInfoMqtt => 'MQTT';
+  String get messagingTransportMqtt => 'MQTT';
 
   @override
-  String get messagingTechInfoRadio => 'Radio';
+  String get messagingTransportRf => 'RF';
+
+  @override
+  String get messagingTransportUnknown => 'Inconnu';
+
+  @override
+  String messagingSemanticsReceivedVia(String transport) {
+    return 'Message reçu via $transport';
+  }
 
   @override
   String messagingTechInfoRssi(int value) {
@@ -12564,7 +12577,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get messagingTechInfoExplainTransportBody =>
-      'Comment ce message vous est parvenu. « Radio » signifie qu\'il a transité entièrement par le réseau radio maillé. « MQTT » signifie qu\'il est passé par une passerelle internet à un moment donné.';
+      'Comment ce message vous est parvenu. « RF » signifie qu\'il a transité entièrement par le réseau radio maillé. « MQTT » signifie qu\'il est passé par une passerelle internet à un moment donné. « Inconnu » signifie que le chemin de livraison n\'a pas été enregistré.';
 
   @override
   String get messagingTechInfoExplainNodeIdTitle => 'ID du nœud émetteur';
@@ -37701,6 +37714,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cannedResponseOk => 'OK';
+
+  @override
+  String get cannedResponseAlertBell => 'Caractère de cloche d\'alerte';
+
+  @override
+  String messagingQuickResponseSemantics(String text) {
+    return 'Réponse rapide : $text';
+  }
 
   @override
   String get deepLinkUnableToOpenLink => 'Impossible d\'ouvrir le lien';

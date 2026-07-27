@@ -557,7 +557,9 @@ class NodeInfoCard extends ConsumerWidget {
               if (node.viaMqtt)
                 NodeStatChip(
                   icon: Icons.cloud,
-                  value: classifyTransport(node.viaMqtt).label,
+                  value: classifyTransport(
+                    node.viaMqtt,
+                  ).localizedLabel(context.l10n),
                   color: context.textSecondary,
                 ),
               if (node.hopCount != null && node.hopCount! > 0)

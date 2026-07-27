@@ -17,6 +17,7 @@ import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../models/mesh_models.dart';
 import '../../services/carplay/carplay_feature_flags.dart';
 import '../../services/mesh_packet_dedupe_store.dart';
+import '../../services/protocol/mesh_packet_rx_metadata.dart';
 import '../../services/notifications/channel_mute_prefs.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/message_database.dart';
@@ -442,6 +443,13 @@ class BackgroundMessageProcessor {
       received: true,
       source: data.emoji != 0 ? MessageSource.tapback : MessageSource.unknown,
       packetId: packet.id,
+      // Receive-path metadata, mirroring the foreground ingest in
+      // ProtocolService._handleTextMessage so a message carries the same
+      // transport/hop/signal data regardless of which path stored it.
+      hopCount: computeHopCount(packet),
+      rxSnr: packet.hasRxSnr() ? packet.rxSnr.toDouble() : null,
+      rxRssi: packet.hasRxRssi() ? packet.rxRssi : null,
+      viaMqtt: receiveViaMqtt(packet),
       relayNode: packet.hasRelayNode() ? packet.relayNode : null,
       senderLongName: senderLongName,
       senderShortName: senderShortName,

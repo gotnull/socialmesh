@@ -1001,7 +1001,11 @@ class SettingsService {
           .map((j) => CannedResponse.fromJson(j))
           .toList();
       responses.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      return responses;
+      // Persisted rows freeze their text in the locale active at save
+      // time; stock built-in labels are re-resolved to the current
+      // locale on every read so they keep following the language
+      // setting. User-authored text is never rewritten.
+      return DefaultCannedResponses.localized(responses);
     } catch (e) {
       AppLogging.storage('⚠️ Error parsing canned responses: $e');
       return DefaultCannedResponses.all;

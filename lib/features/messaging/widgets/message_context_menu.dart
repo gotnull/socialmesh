@@ -472,6 +472,29 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
                 );
               },
             ),
+            // Delivery-path row. Always shown for received messages —
+            // "Unknown" is a deliberate statement (path not recorded), not
+            // a missing-data state to hide.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.messageContextMenuTransport(
+                        classifyTransport(
+                          widget.message.viaMqtt,
+                        ).localizedLabel(context.l10n),
+                      ),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 4, 16, 12),
               child: Wrap(
@@ -497,13 +520,6 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
                       icon: Icons.cell_tower,
                       label:
                           'RSSI ${widget.message.rxRssi} dBm', // lint-allow: hardcoded-string
-                    ),
-                  if (widget.message.viaMqtt != null)
-                    _DetailChip(
-                      icon: widget.message.viaMqtt == true
-                          ? Icons.cloud
-                          : Icons.cell_tower,
-                      label: classifyTransport(widget.message.viaMqtt).label,
                     ),
                 ],
               ),

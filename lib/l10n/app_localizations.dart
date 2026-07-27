@@ -20854,6 +20854,12 @@ abstract class AppLocalizations {
   /// **'Relay: {name}'**
   String messageContextMenuRelayNode(String name);
 
+  /// Delivery-path row in the message details section. {label} is the localised transport label (RF, MQTT or Unknown).
+  ///
+  /// In en, this message translates to:
+  /// **'Transport: {label}'**
+  String messageContextMenuTransport(String label);
+
   /// Placeholder text in the emoji picker when there are no recent emoji.
   ///
   /// In en, this message translates to:
@@ -21430,17 +21436,29 @@ abstract class AppLocalizations {
   /// **'{count} {count, plural, =1{hop} other{hops}}'**
   String messagingTechInfoHops(int count);
 
-  /// Transport label when message arrived via MQTT.
+  /// Transport label when a message reached the connected node through an MQTT internet gateway (MeshPacket.via_mqtt == true). Brand/protocol name, keep verbatim in all locales.
   ///
   /// In en, this message translates to:
   /// **'MQTT'**
-  String get messagingTechInfoMqtt;
+  String get messagingTransportMqtt;
 
-  /// Transport label when message arrived via radio (RF).
+  /// Transport label when a message reached the connected node purely over LoRa radio (MeshPacket.via_mqtt == false). Technical abbreviation, keep verbatim in all locales.
   ///
   /// In en, this message translates to:
-  /// **'Radio'**
-  String get messagingTechInfoRadio;
+  /// **'RF'**
+  String get messagingTransportRf;
+
+  /// Transport label when the delivery path of a message is not known (historical messages stored before via_mqtt was persisted, or firmware that did not populate the field).
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get messagingTransportUnknown;
+
+  /// Accessibility label prefix for a received message's metadata line. {transport} is the localised transport label (RF, MQTT or Unknown).
+  ///
+  /// In en, this message translates to:
+  /// **'Message received via {transport}'**
+  String messagingSemanticsReceivedVia(String transport);
 
   /// RSSI value label shown in inline technical info.
   ///
@@ -21517,7 +21535,7 @@ abstract class AppLocalizations {
   /// Explanation of transport type shown in a bottom sheet.
   ///
   /// In en, this message translates to:
-  /// **'How this message reached you. \'Radio\' means it travelled entirely over the mesh radio network. \'MQTT\' means it passed through an internet gateway at some point.'**
+  /// **'How this message reached you. \'RF\' means it travelled entirely over the mesh radio network. \'MQTT\' means it passed through an internet gateway at some point. \'Unknown\' means the delivery path was not recorded.'**
   String get messagingTechInfoExplainTransportBody;
 
   /// Title for the bottom sheet explaining sender node ID.
@@ -64603,6 +64621,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OK'**
   String get cannedResponseOk;
+
+  /// Label for the well-known alert-bell quick reply as shipped by stock Meshtastic clients. Used to re-localise legacy persisted entries whose stored text is the frozen English label.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert bell character'**
+  String get cannedResponseAlertBell;
+
+  /// Accessibility label for a quick-response tile in the Quick Responses sheet. {text} is the reply text that will be sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick response: {text}'**
+  String messagingQuickResponseSemantics(String text);
 
   /// Generic fallback when a deep link cannot be opened.
   ///
