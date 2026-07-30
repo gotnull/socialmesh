@@ -44,6 +44,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Messages composed while disconnected from the radio are no longer silently lost if the app restarts before reconnecting: they now show as failed with a retry button instead of appearing queued forever. Queued messages also send more reliably after reconnect (the queue now waits for the radio's config exchange to finish instead of giving up after 10 seconds)
 - Messages composed on a disconnected cold start (before the app has spoken to the radio this session) are now attributed to your own node via the last known device identity, instead of rendering as incoming bubbles after a restart
 
+### Fixed (nodes list accessibility)
+
+- The coloured node avatar circles in the Nodes list (both the expanded card and the compact tile) are now top-aligned with the card text instead of floating vertically centred beside multi-line entries (#227)
+
+### Fixed (notifications)
+
+- The iOS app icon unread badge now updates when a message arrives while the app is in the background, instead of only after opening and closing the app (#248). The badge count now travels inside the notification itself, so iOS applies it the moment the banner is delivered
+- Automation notifications (such as "node silent" alerts from a Dead Man's Switch automation) now respect the master notifications toggle, and a new "Automation alerts" switch on Settings > Notifications can silence them without disabling the automation. A still-silent node also alerts once per silent stretch instead of repeating every few minutes, re-arming only after the node is heard from again
+
+## [1.55.0] - 2026-07-10
+
 ### Fixed (telemetry charts)
 
 - Chart legends no longer clip when they wrap to a second line: the pinned legend header now measures its labels at the current text size and grows to fit every row instead of using a fixed 40px height (device metrics, environment metrics). The two screens now share one legend widget (#228)
@@ -66,8 +77,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Incoming-message notifications work again: versions 1.52 and 1.53 shipped with an internal CarPlay flag mistakenly enabled, which silently suppressed every new-message banner on both iOS and Android while the messages themselves still arrived in-app. Suppression is now additionally gated so it can only engage when a CarPlay communication banner is guaranteed to replace the standard one (explicit opt-in, iOS only), so a stray flag flip can never silence messages again
 - Muting a channel no longer silences direct messages: a DM arriving on the Primary Channel slot (index 0) was suppressed when channel 0 was muted; per-channel mute now applies to channel broadcasts only
-- The iOS app icon unread badge now updates when a message arrives while the app is in the background, instead of only after opening and closing the app (#248). The badge count now travels inside the notification itself, so iOS applies it the moment the banner is delivered
-- Automation notifications (such as "node silent" alerts from a Dead Man's Switch automation) now respect the master notifications toggle, and a new "Automation alerts" switch on Settings > Notifications can silence them without disabling the automation. A still-silent node also alerts once per silent stretch instead of repeating every few minutes, re-arming only after the node is heard from again
 
 ### Fixed (map)
 
@@ -85,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Channels can now be reordered: a "Reorder channels" action (long-press any channel, or the Channels screen menu) opens a drag-to-reorder sheet, and the chosen display order is remembered across app launches. Reordering is presentational only - the radio's channel slots and message routing are untouched, and channels added later simply follow the ordered ones
 - The Messages screen gains a "Compact View" toggle in its overflow menu, mirroring the Nodes screen option: both the Contacts and Channels lists switch to dense flat rows (smaller avatars and badges, single metadata line), and the choice is remembered across app launches
 - The Quick Responses sheet gains a "Send alert bell" action: one tap sends a message whose radio payload is exactly the ASCII bell character, byte-identical to the official clients' quick-message bell, so recipients whose radios have the External Notification module configured get a buzzer ring and official apps show their native bell rendering. Locally the message appears as a bell emoji, since a raw control character can never be shown in chat text
+- Message details (long-press a message) and the expanded technical info now show the node that relayed a received message, matching the official Meshtastic iOS app. The radio only sends the last byte of the relayer's ID, so the name is a best-effort match against known nodes and falls back to a hex byte (for example `0xC4`) when it cannot be resolved to a single node (#223)
 
 ### Added (map)
 
@@ -121,10 +131,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Air Quality Log now includes gas-resistance readings from BME680/688 VOC sensors, merged in from environment telemetry (historical readings included), with a gas-only card for nodes that share no other air-quality metrics
 - Air Quality and Environment Metrics log cards now show which node shared each reading, and tapping a card jumps to the map centred on that node (when it has a position); the back button returns straight to the log
 
-### Added (messaging)
-
-- Message details (long-press a message) and the expanded technical info now show the node that relayed a received message, matching the official Meshtastic iOS app. The radio only sends the last byte of the relayer's ID, so the name is a best-effort match against known nodes and falls back to a hex byte (for example `0xC4`) when it cannot be resolved to a single node (#223)
-
 ### Changed (messaging)
 
 - The hop count is no longer a separate pill under each received message. The bubble's timestamp line now reads time, hop count, and SNR in one line (for example `2:05 PM - Direct - SNR 6.5 dB`), so reception quality is visible at a glance without expanding the message (#224)
@@ -138,14 +144,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unfavoriting a node now sticks across reconnects. Previously the un-favourite admin message was fire-and-forget: if the radio missed it (or never saved its node database to flash before powering off), the radio kept reporting the node as a favourite and the app re-favourited it on every reconnect with no way to turn it off. The app now remembers an explicit un-favourite, refuses to let a stale device flag resurrect it, and automatically re-sends the un-favourite (and any lost favourites) to the radio after each reconnect until the radio confirms
 - Reset Node Database no longer races the radio: the app waited only half a second before re-requesting the radio's configuration, so a slow reset commit could replay the old node list straight back into the app. The wait now outlasts the firmware's commit window. Note that nodes still legitimately return over time as the radio re-hears them from the mesh, and immediately over MQTT while downlink is enabled
 
-### Added (security hardening)
-
-- Sensitive local databases (direct messages, saved routes, waypoints, peer-safety state, and the NodeDex journal) are now encrypted at rest with SQLCipher. The key is generated on-device and held in the iOS Keychain / Android Keystore, so message text, locations, and travel history are no longer readable from the raw database files (for example from a device backup, or on a lost or rooted/jailbroken phone). Existing data is migrated in place on first launch with no loss of history; if the one-time migration is ever interrupted it safely retries on the next launch
-- Tightened the Android network security configuration so first-party services and the fixed third-party APIs (socialmesh.app, Firebase/Google) are pinned to HTTPS and can no longer be silently downgraded to plain HTTP, while user-configured private/LAN webhooks continue to work over HTTP as before
-
 ### Added (offline maps)
 
 - On Android, offline map tiles can be stored on a removable SD card instead of internal memory. The storage picker lives in the "Download this area" sheet and in a new Settings > Data & Storage > Offline Map Storage tile (shown only when a card is present or a fallback needs explaining), which also shows the current cache size and offers to delete the old cache after a switch. Portable/removable cards only: cards formatted as internal (adopted) storage are part of internal memory by Android design. If the card goes missing the cache falls back to internal storage with a visible warning
+
+## [1.54.0] - 2026-07-06
+
+### Added (security hardening)
+
+- Sensitive local databases (direct messages, saved routes, waypoints, peer-safety state, and the NodeDex journal) are now encrypted at rest with SQLCipher. The key is generated on-device and held in the iOS Keychain / Android Keystore, so message text, locations, and travel history are no longer readable from the raw database files (for example from a device backup, or on a lost or rooted/jailbroken phone). Existing data is migrated in place on first launch with no loss of history; if the one-time migration is ever interrupted it safely retries on the next launch
+
+## [1.52.0] - 2026-06-26
+
+### Added (security hardening)
+
+- Tightened the Android network security configuration so first-party services and the fixed third-party APIs (socialmesh.app, Firebase/Google) are pinned to HTTPS and can no longer be silently downgraded to plain HTTP, while user-configured private/LAN webhooks continue to work over HTTP as before
+
+## [1.51.0] - 2026-06-15
+
+### Added (offline maps)
+
 - The map is now reachable without pairing a device: a new "Explore the map without a device" action on the scanner opens a lightweight, mesh-free map so a user can browse and pre-download an area before they have a node (for example, prepping for an off-grid trip). It carries no protocol state and offers a clear "Pair a node to unlock mesh features" return path
 - The offline map has a place-search bar (type a town/area to jump there) and a center-on-my-location button, so finding the region to pre-download no longer means panning the whole way by hand
 - New "Download this area" feature pre-downloads the visible region's tiles for true offline use: pick a detail level, see a live tile-count and storage estimate, and run the download with progress and cancel. Bulk download is allowed for the Terrain, Dark, and Light styles only (Satellite and the optional Mapbox styles are excluded per provider terms); Terrain uses a lower request concurrency and backs off on rate-limit responses
@@ -169,6 +187,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Zooming past a tile source's native maximum now "over-zooms" (upscales the last real tiles) instead of requesting non-existent tiles. On the Terrain (OpenTopoMap) style this removes the server's "max zoom" placeholder tile beyond zoom 17
 - Retina tiles are now requested only for sources that actually serve `@2x` tiles. Terrain no longer uses simulated retina, which lightens its tile-server load and keeps the offline download in sync with what the live map requests
+
+## [1.50.0] - 2026-06-12
 
 ### Changed (node visual identity)
 
@@ -233,6 +253,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BLE transport disconnect now null-sets each stream subscription before awaiting its cancel, so a concurrent connect can no longer have its fresh subscriptions orphaned by a late bulk null-set
 - Orphan protocol data-subscription detection now leaves a Crashlytics breadcrumb so lifecycle violations are visible in crash reports, not only debug logs
 
+### Fixed
+
+- Fatal iOS background crash (`NSInternalInconsistencyException - Sending a message before the FlutterEngine has been run`): the shake-to-report service now cancels its accelerometer subscription whenever the app leaves the foreground and resubscribes on resume, and no longer starts the 50 Hz sensor stream at all when shake-to-report is disabled
+- Peer-sent waypoint icons are validated as Unicode scalars at protocol ingestion (a surrogate half or out-of-range code point ingests as "no icon"), closing the last peer-controlled text field that previously relied on render-time guards alone against the fatal `string is not well-formed UTF-16` paragraph-builder crash
+- Remote-config watcher no longer disposes itself mid-sync: it read (not watched) the settings service it invalidates to notify watchers, and now also guards its `ref` after awaits, fixing the `Cannot use the Ref of StreamProvider<MeshConfigData?> after it has been disposed` error and the related circular-dependency provider read
+- Map tile updates now drop events that carry a non-finite camera snapshot (new `finiteCameraTileUpdateTransformer` applied to every `TileLayer`, enforced by a new `require-tile-update-transformer` lint rule), closing the residual `LatLng is not finite` path where a queued tile-update event computed with a NaN camera before the existing snap-back recovery ran
+
+## [1.49.0] - 2026-06-09
+
+### Fixed
+
+- Google Play "device isn't compatible" on devices whose reported feature profile does not advertise all hardware features (e.g. GrapheneOS with sandboxed Google Play). Bluetooth, BLE, location, GPS, microphone, WiFi (implied required by the WiFi state permissions), touchscreen (implied required for every app by default), and the CameraX-injected `camera.any` features are now soft-declared (`required="false"`) in the Android manifest so the Play Store no longer filters out those installs. None of these are mandatory: the app connects over BLE or USB and runs fully offline.
+
+## [1.39.0] - 2026-05-16
+
+### Fixed
+
+- Chat-bubble body font size unified to **14pt** across all three chat surfaces (MeshCore chat, SIP DM, Meshtastic messaging) for both inbound and outbound bubbles. Pre-D30, MeshCore and Meshtastic used 14pt outbound vs 15pt inbound, and SIP DM used 14pt for both — surfacing as inconsistent text rhythm in mixed-protocol conversations. **Canonical chat-body size is 14pt.** Note: commit `f3ece320`'s message text incorrectly says "15pt"; the diff in that commit is 14pt — the message is stale auto-generated text and the code outcome is what's documented here.
+
+## [1.25.0] - 2026-03-23
+
+### Added
+
+- iOS Live Activity toggle in Background Connection settings — "LIVE ACTIVITY" section with a "Dynamic Island & Lock Screen" switch; toggling off confirms via bottom sheet and ends any running activity immediately
+- In-app language selector re-enabled in Appearance & Accessibility settings (was previously hidden behind `LANGUAGE_SELECTOR_ENABLED` feature flag)
+
+### Changed
+
+- `LiveActivityManagerNotifier._startLiveActivity()` now checks the `live_activity_enabled` SharedPreferences key before starting a Live Activity; disabled state is respected across reconnections
+- `LiveActivityManagerNotifier` exposes a public `endLiveActivity()` method for use by settings UI
+
+### Dependencies
+
+- `subosito/flutter-action` 2.21.0 → 2.22.0 (CI GitHub Action)
+- `ffi` 2.1.5 → 2.2.0
+- `build_runner` 2.10.5 → 2.13.0 (up to 4× faster incremental builds)
+- `logger` 2.6.2 → 2.7.0
+- `purchases_flutter` 9.14.0 → 9.15.0
+- `fl_chart` 1.1.1 → 1.2.0
+- `json` gem 2.16.0 → 2.17.1.2 (iOS/Bundler — security fix CVE-2026-33210)
+
+## [1.19.0] - 2026-03-05
+
+### Added
+
+- Aether full-screen airport picker with 900+ airports including international airfields
+
+## [1.17.0] - 2026-03-03
+
 ### Added
 
 - RF vs MQTT transport indicator on message context menu (cloud icon for MQTT, cell tower icon for RF)
@@ -260,32 +329,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fatal iOS background crash (`NSInternalInconsistencyException - Sending a message before the FlutterEngine has been run`): the shake-to-report service now cancels its accelerometer subscription whenever the app leaves the foreground and resubscribes on resume, and no longer starts the 50 Hz sensor stream at all when shake-to-report is disabled
-- Peer-sent waypoint icons are validated as Unicode scalars at protocol ingestion (a surrogate half or out-of-range code point ingests as "no icon"), closing the last peer-controlled text field that previously relied on render-time guards alone against the fatal `string is not well-formed UTF-16` paragraph-builder crash
-- Remote-config watcher no longer disposes itself mid-sync: it read (not watched) the settings service it invalidates to notify watchers, and now also guards its `ref` after awaits, fixing the `Cannot use the Ref of StreamProvider<MeshConfigData?> after it has been disposed` error and the related circular-dependency provider read
-- Map tile updates now drop events that carry a non-finite camera snapshot (new `finiteCameraTileUpdateTransformer` applied to every `TileLayer`, enforced by a new `require-tile-update-transformer` lint rule), closing the residual `LatLng is not finite` path where a queued tile-update event computed with a NaN camera before the existing snap-back recovery ran
-- Google Play "device isn't compatible" on devices whose reported feature profile does not advertise all hardware features (e.g. GrapheneOS with sandboxed Google Play). Bluetooth, BLE, location, GPS, microphone, WiFi (implied required by the WiFi state permissions), touchscreen (implied required for every app by default), and the CameraX-injected `camera.any` features are now soft-declared (`required="false"`) in the Android manifest so the Play Store no longer filters out those installs. None of these are mandatory: the app connects over BLE or USB and runs fully offline.
-- Chat-bubble body font size unified to **14pt** across all three chat surfaces (MeshCore chat, SIP DM, Meshtastic messaging) for both inbound and outbound bubbles. Pre-D30, MeshCore and Meshtastic used 14pt outbound vs 15pt inbound, and SIP DM used 14pt for both — surfacing as inconsistent text rhythm in mixed-protocol conversations. **Canonical chat-body size is 14pt.** Note: commit `f3ece320`'s message text incorrectly says "15pt"; the diff in that commit is 14pt — the message is stale auto-generated text and the code outcome is what's documented here.
 - Compass widget now updates in real-time during programmatic "tap-to-north" animation (was frozen until manual gesture)
 - Measurement mode indicator text no longer clips on smaller screens
-- Appearance & Accessibility settings screen with live preview
-- Font mode selection: Branded (JetBrainsMono), System, or Accessibility (Inter)
-- Text size presets: System Default, Default, Large (15%), Extra Large (30%)
-- Display density modes: Compact, Comfortable, Large Touch
-- High contrast mode for enhanced visibility
-- Reduce motion option for minimal animations
-- Safe text scaling with layout-safe caps (max 1.5x)
-- Accessibility-aware animated widgets (AccessibleAnimatedContainer, AccessibleAnimatedOpacity)
-- AccessibleTapTarget widget for minimum tap target enforcement
-- Comprehensive unit and widget tests for accessibility layer
-- Traceroute help topic with guided tour (8 steps covering sending, cooldowns, results, history, and export)
-- Help menu integration on the Traceroute History screen
+
+## [1.16.0] - 2026-02-24
+
+### Added
+
 - SQLite-backed message persistence (`MessageDatabase`) replacing SharedPreferences JSON blob
 - Per-conversation message retention (500 messages per conversation, up from global 100)
 - Full message field serialization (status, packetId, routingError, errorMessage)
 - Automatic one-time migration from legacy SharedPreferences storage on first launch
 - Indexed queries by conversation key, node number, and packet ID
-- Aether full-screen airport picker with 900+ airports including international airfields
 - Aether airport search by name, IATA/ICAO code, and country with GPS distance sorting
 - Aether live flight data sticky header on the schedule screen (frosted-glass overlay with slide/fade/blur animations)
 - Aether flight search "En route" indicator when arrival airport is unavailable
@@ -299,18 +354,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cloudflare Worker proxy (opensky-proxy) for OpenSky API routing from Railway
 - Telegram bot /opensky_cache command for monitoring search cache freshness
 
-### Changed
-
-- MaterialApp now applies accessibility theme preferences via AccessibilityThemeAdapter
-- Theme integration includes font family, visual density, and high contrast adjustments
-- Animation durations respect reduce motion preference throughout the app
-- Aether flight search uses server-side cache instead of direct OpenSky calls (zero credit burn)
-- Aether flight validation proxied through Aether API (search cache + server-side fallback)
-- Aether route enrichment proxied through Aether API route cache (zero client-side credits)
-- Aether flight search changed from auto-search-on-keystroke to explicit submit
-- Aether flight status logic prioritizes time-based checks over GPS proximity
-- Aether flight lifecycle checks scoped to current user's flights only
-
 ### Fixed
 
 - Chat messages no longer disappear across app restarts (SQLite replaces lossy SharedPreferences blob)
@@ -320,27 +363,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aether skeleton shimmer transitions use AnimatedSwitcher with proper keyed children
 - Aether stale partial-match search results no longer overwrite newer results (generation counter)
 
-## [1.25.0] - 2026-03-23
+### Changed
+
+- Aether flight search uses server-side cache instead of direct OpenSky calls (zero credit burn)
+- Aether flight validation proxied through Aether API (search cache + server-side fallback)
+- Aether route enrichment proxied through Aether API route cache (zero client-side credits)
+- Aether flight search changed from auto-search-on-keystroke to explicit submit
+- Aether flight status logic prioritizes time-based checks over GPS proximity
+- Aether flight lifecycle checks scoped to current user's flights only
+
+## [1.14.1] - 2026-02-11
 
 ### Added
 
-- iOS Live Activity toggle in Background Connection settings — "LIVE ACTIVITY" section with a "Dynamic Island & Lock Screen" switch; toggling off confirms via bottom sheet and ends any running activity immediately
-- In-app language selector re-enabled in Appearance & Accessibility settings (was previously hidden behind `LANGUAGE_SELECTOR_ENABLED` feature flag)
+- Traceroute help topic with guided tour (8 steps covering sending, cooldowns, results, history, and export)
+- Help menu integration on the Traceroute History screen
+
+## [1.13.0] - 2026-02-06
+
+### Added
+
+- Appearance & Accessibility settings screen with live preview
+- Font mode selection: Branded (JetBrainsMono), System, or Accessibility (Inter)
+- Text size presets: System Default, Default, Large (15%), Extra Large (30%)
+- Display density modes: Compact, Comfortable, Large Touch
+- High contrast mode for enhanced visibility
+- Reduce motion option for minimal animations
+- Safe text scaling with layout-safe caps (max 1.5x)
+- Accessibility-aware animated widgets (AccessibleAnimatedContainer, AccessibleAnimatedOpacity)
+- AccessibleTapTarget widget for minimum tap target enforcement
+- Comprehensive unit and widget tests for accessibility layer
 
 ### Changed
 
-- `LiveActivityManagerNotifier._startLiveActivity()` now checks the `live_activity_enabled` SharedPreferences key before starting a Live Activity; disabled state is respected across reconnections
-- `LiveActivityManagerNotifier` exposes a public `endLiveActivity()` method for use by settings UI
-
-### Dependencies
-
-- `subosito/flutter-action` 2.21.0 → 2.22.0 (CI GitHub Action)
-- `ffi` 2.1.5 → 2.2.0
-- `build_runner` 2.10.5 → 2.13.0 (up to 4× faster incremental builds)
-- `logger` 2.6.2 → 2.7.0
-- `purchases_flutter` 9.14.0 → 9.15.0
-- `fl_chart` 1.1.1 → 1.2.0
-- `json` gem 2.16.0 → 2.17.1.2 (iOS/Bundler — security fix CVE-2026-33210)
+- MaterialApp now applies accessibility theme preferences via AccessibilityThemeAdapter
+- Theme integration includes font family, visual density, and high contrast adjustments
+- Animation durations respect reduce motion preference throughout the app
 
 ## [1.2.0] - 2026-02-01
 
