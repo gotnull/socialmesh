@@ -44,5 +44,27 @@ void main() {
       final decoded = pb.MeshPacket.fromBuffer(packet.writeToBuffer());
       expect(receiveViaMqtt(decoded), isTrue);
     });
+
+    test('true when the radio pulled the packet straight from a broker '
+        '(TRANSPORT_MQTT without via_mqtt)', () {
+      final packet = pb.MeshPacket(
+        transportMechanism: pb.MeshPacket_TransportMechanism.TRANSPORT_MQTT,
+      );
+      expect(receiveViaMqtt(packet), isTrue);
+    });
+
+    test('a LoRa transport mechanism does not flip an RF packet to MQTT', () {
+      final packet = pb.MeshPacket(
+        transportMechanism: pb.MeshPacket_TransportMechanism.TRANSPORT_LORA,
+      );
+      expect(receiveViaMqtt(packet), isFalse);
+    });
+
+    test('wire round-trip preserves a TRANSPORT_MQTT-only classification', () {
+      final packet = pb.MeshPacket(from: 1, id: 2)
+        ..transportMechanism = pb.MeshPacket_TransportMechanism.TRANSPORT_MQTT;
+      final decoded = pb.MeshPacket.fromBuffer(packet.writeToBuffer());
+      expect(receiveViaMqtt(decoded), isTrue);
+    });
   });
 }

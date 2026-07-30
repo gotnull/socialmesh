@@ -18,6 +18,13 @@ int? computeHopCount(pb.MeshPacket packet) {
 
 /// Delivery-path flag for a live decoded packet.
 ///
+/// A packet is classified MQTT when either firmware signal says so:
+/// `via_mqtt` marks a packet that crossed an MQTT gateway anywhere along
+/// its path, while `transport_mechanism == TRANSPORT_MQTT` records that
+/// the local radio itself received the packet from a broker (its own MQTT
+/// module), which firmware reports without also setting `via_mqtt`.
+/// Either alone must classify as MQTT or broker-sourced packets read as RF.
+///
 /// `MeshPacket.via_mqtt` is a plain proto3 bool: `false` is never encoded
 /// on the wire, so absence IS the value `false` — `hasViaMqtt()` cannot
 /// distinguish "firmware said RF" from "field missing" and gating on it
@@ -27,4 +34,9 @@ int? computeHopCount(pb.MeshPacket packet) {
 /// reached the radio purely over RF. "Unknown" (null) is reserved for
 /// rows persisted before this field was stored and for messages that
 /// never came from a decoded packet (push payloads, sent messages).
-bool receiveViaMqtt(pb.MeshPacket packet) => packet.viaMqtt;
+/// An absent `transport_mechanism` decodes as `TRANSPORT_INTERNAL` (0),
+/// so it can never force an MQTT classification on its own.
+bool receiveViaMqtt(pb.MeshPacket packet) =>
+    packet.viaMqtt ||
+    packet.transportMechanism ==
+        pb.MeshPacket_TransportMechanism.TRANSPORT_MQTT;

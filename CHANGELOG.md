@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Messages composed while disconnected from the radio are no longer silently lost if the app restarts before reconnecting: they now show as failed with a retry button instead of appearing queued forever. Queued messages also send more reliably after reconnect (the queue now waits for the radio's config exchange to finish instead of giving up after 10 seconds)
 - Messages composed on a disconnected cold start (before the app has spoken to the radio this session) are now attributed to your own node via the last known device identity, instead of rendering as incoming bubbles after a restart
+- Messages the radio pulls directly from an MQTT broker are now labelled MQTT: transport classification treats the packet's transport mechanism (TRANSPORT_MQTT) as authoritative alongside the via-MQTT gateway flag, so a broker-sourced message can no longer read as RF (#256)
 
 ### Fixed (nodes list accessibility)
 
