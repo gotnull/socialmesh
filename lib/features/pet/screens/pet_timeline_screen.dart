@@ -731,7 +731,7 @@ class _EmptySectionFiller extends StatelessWidget {
 // Entry row — dispatches to major / important / minor / grouped
 // ============================================================================
 
-class _EntryRow extends StatefulWidget {
+class _EntryRow extends ConsumerStatefulWidget {
   final PetTimelineEntry entry;
   final Color accent;
   final AppLocalizations l10n;
@@ -748,10 +748,10 @@ class _EntryRow extends StatefulWidget {
   });
 
   @override
-  State<_EntryRow> createState() => _EntryRowState();
+  ConsumerState<_EntryRow> createState() => _EntryRowState();
 }
 
-class _EntryRowState extends State<_EntryRow> {
+class _EntryRowState extends ConsumerState<_EntryRow> {
   bool _expanded = false;
 
   @override
@@ -805,7 +805,14 @@ class _EntryRowState extends State<_EntryRow> {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: isMajor || isImportant
-                    ? () => setState(() => _expanded = !_expanded)
+                    ? () {
+                        unawaited(
+                          ref
+                              .read(hapticServiceProvider)
+                              .trigger(HapticType.selection),
+                        );
+                        setState(() => _expanded = !_expanded);
+                      }
                     : null,
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spacing14),

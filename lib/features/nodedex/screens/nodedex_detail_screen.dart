@@ -183,482 +183,492 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final hexId =
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
-    return HelpTourController(
-      topicId: 'nodedex_detail',
-      stepKeys: const {},
-      child: GlassScaffold(
-        title: displayName,
-        actions: [
-          // Per-node Constellation view is gated behind a feature
-          // flag while the UX is iterating; default-off hides the
-          // icon so the feature is unreachable in production builds.
-          // Set `NODEDEX_CONSTELLATION_ENABLED=true` in `.env` to
-          // re-expose it.
-          if (AppFeatureFlags.isNodeDexConstellationEnabled)
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: HelpTourController(
+        topicId: 'nodedex_detail',
+        stepKeys: const {},
+        child: GlassScaffold(
+          title: displayName,
+          actions: [
+            // Per-node Constellation view is gated behind a feature
+            // flag while the UX is iterating; default-off hides the
+            // icon so the feature is unreachable in production builds.
+            // Set `NODEDEX_CONSTELLATION_ENABLED=true` in `.env` to
+            // re-expose it.
+            if (AppFeatureFlags.isNodeDexConstellationEnabled)
+              IconButton(
+                icon: Icon(
+                  Icons.scatter_plot_outlined,
+                  size: 20,
+                  color: context.accentColor,
+                ),
+                tooltip: context.l10n.nodedexConstellationOpenTooltip,
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  AppLogging.nodeDex(
+                    'Constellation: app-bar action tapped for node '
+                    '${widget.nodeNum}',
+                  );
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          NodeConstellationScreen(nodeNum: widget.nodeNum),
+                    ),
+                  );
+                },
+              ),
             IconButton(
               icon: Icon(
-                Icons.scatter_plot_outlined,
+                Icons.style_outlined,
                 size: 20,
                 color: context.accentColor,
               ),
-              tooltip: context.l10n.nodedexConstellationOpenTooltip,
+              tooltip: context.l10n.nodedexShareSigilCard,
               onPressed: () {
-                HapticFeedback.selectionClick();
                 AppLogging.nodeDex(
-                  'Constellation: app-bar action tapped for node '
-                  '${widget.nodeNum}',
+                  'Sigil card sheet opened for node ${widget.nodeNum}',
                 );
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        NodeConstellationScreen(nodeNum: widget.nodeNum),
-                  ),
+                showSigilCardSheet(
+                  context: context,
+                  entry: entry,
+                  traitResult: traitResult,
+                  node: node,
                 );
               },
             ),
-          IconButton(
-            icon: Icon(
-              Icons.style_outlined,
-              size: 20,
-              color: context.accentColor,
-            ),
-            tooltip: context.l10n.nodedexShareSigilCard,
-            onPressed: () {
-              AppLogging.nodeDex(
-                'Sigil card sheet opened for node ${widget.nodeNum}',
-              );
-              showSigilCardSheet(
-                context: context,
-                entry: entry,
-                traitResult: traitResult,
-                node: node,
-              );
-            },
-          ),
 
-          IcoHelpAppBarButton(topicId: 'nodedex_detail'),
-        ],
-        slivers: [
-          // Sigil hero section with identity overlay
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 0,
-              reduceMotion: reduceMotion,
-              child: IdentityOverlay(
-                nodeNum: entry.nodeNum,
-                density: disclosure.showOverlay ? disclosure.overlayDensity : 0,
-                pointCount: 20,
-                child: _SigilHeroSection(
-                  entry: entry,
-                  node: node,
-                  displayName: displayName,
-                  hexId: hexId,
-                  traitResult: traitResult,
-                  patinaResult: disclosure.showPatinaStamp
-                      ? patinaResult
-                      : null,
-                  evolution: SigilEvolution.fromPatina(
-                    patinaResult.score,
-                    trait: traitResult.primary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Auto summary card — computed encounter insights.
-          // Skipped for self: encounter-driven copy ("Most active in the
-          // night", "Spotted on N of the last M days") implies third-party
-          // observation and is misleading for the user's own device.
-          if (!isSelf)
+            IcoHelpAppBarButton(topicId: 'nodedex_detail'),
+          ],
+          slivers: [
+            // Sigil hero section with identity overlay
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 1,
+                index: 0,
                 reduceMotion: reduceMotion,
-                child: NodeDexCard(
-                  title: context.l10n.nodedexSummaryCardTitle,
-                  icon: Icons.auto_awesome_outlined,
-                  helpKey: 'auto_summary',
-                  child: NodeSummaryCard(
-                    summary: summary,
-                    accentColor:
-                        entry.sigil?.primaryColor ?? context.accentColor,
-                  ),
-                ),
-              ),
-            ),
-
-          // NodeBoard bridge — shows the node's personal BBS if it has one.
-          // Feature-flag gated; NodeBoardNodeCard itself renders nothing when
-          // the node has no associated board, so this is safe to always mount.
-          if (AppFeatureFlags.isNodeBoardEnabled)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 2,
-                reduceMotion: reduceMotion,
-                child: NodeBoardNodeCard(nodeId: hexId),
-              ),
-            ),
-
-          // Pet companion card — local companion when viewing own node,
-          // cached peer observation otherwise. The info sheet copy and
-          // empty-state copy both branch on this distinction; see
-          // PetCompanionContent + helpNodeDexSectionPetCompanion{Self,Remote}.
-          if (AppFeatureFlags.isPetEnabled)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 2,
-                reduceMotion: reduceMotion,
-                child: NodeDexCard(
-                  title: context.l10n.petCompanionSectionTitle,
-                  icon: Icons.egg_alt_outlined,
-                  helpKey: isSelf
-                      ? 'pet_companion_self'
-                      : 'pet_companion_remote',
-                  child: PetCompanionContent(nodeNum: entry.nodeNum),
-                ),
-              ),
-            ),
-
-          // Co-seen network card — animated avatar cluster with social context
-          if (recentCoSeenLinks.isNotEmpty)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 2,
-                reduceMotion: reduceMotion,
-                child: CoSeenNetworkCard(
+                child: IdentityOverlay(
                   nodeNum: entry.nodeNum,
-                  onTap: () => _showCoSeenSheet(context, entry),
-                ),
-              ),
-            ),
-
-          // Trait card — replaced by a self-device card for the user's own
-          // node (no archetype/Ghost/Familiar/etc. for self).
-          if (isSelf)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 2,
-                reduceMotion: reduceMotion,
-                child: const _SelfDeviceCard(),
-              ),
-            )
-          else if (disclosure.showPrimaryTrait)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 2,
-                reduceMotion: reduceMotion,
-                child: _TraitCard(traitResult: traitResult),
-              ),
-            ),
-
-          // Trait evidence bullets — skipped for self (no archetype to back).
-          if (!isSelf &&
-              disclosure.showTraitEvidence &&
-              scoredTraits.isNotEmpty)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 3,
-                reduceMotion: reduceMotion,
-                child: NodeDexCard(
-                  title: context.l10n.nodedexTraitEvidenceTitle,
-                  icon: Icons.fact_check_outlined,
-                  helpKey: 'trait_evidence',
-                  child: TraitEvidenceList(
-                    observations: scoredTraits.first.evidence
-                        .map((e) => e.observation)
-                        .toList(),
-                    accentColor:
-                        entry.sigil?.primaryColor ?? context.accentColor,
-                    visible: disclosure.showTraitEvidence,
-                    padded: false,
-                  ),
-                ),
-              ),
-            ),
-
-          // Field note — skipped for self (uses third-party-observation copy
-          // like "spotted on N of the last M days" that is misleading for
-          // the user's own device).
-          if (!isSelf && disclosure.showFieldNote)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 4,
-                reduceMotion: reduceMotion,
-                child: FieldNoteWidget(
-                  entry: entry,
-                  trait: traitResult.primary,
-                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
-                  units: ref.watch(measurementUnitsProvider),
-                  expanded: true,
-                  visible: disclosure.showFieldNote,
-                ),
-              ),
-            ),
-
-          // Observation timeline strip — encounter-density visual, skipped
-          // for self (self never accumulates encounters; see the !isOwnNode
-          // guard in NodeDexNotifier._handleNodesUpdate).
-          if (!isSelf && disclosure.showTimeline)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 5,
-                reduceMotion: reduceMotion,
-                child: NodeDexCard(
-                  title: context.l10n.nodedexObservationTimelineTitle,
-                  icon: Icons.timeline,
-                  helpKey: 'observation_timeline',
-                  child: ObservationTimeline(
+                  density: disclosure.showOverlay
+                      ? disclosure.overlayDensity
+                      : 0,
+                  pointCount: 20,
+                  child: _SigilHeroSection(
                     entry: entry,
+                    node: node,
+                    displayName: displayName,
+                    hexId: hexId,
+                    traitResult: traitResult,
+                    patinaResult: disclosure.showPatinaStamp
+                        ? patinaResult
+                        : null,
+                    evolution: SigilEvolution.fromPatina(
+                      patinaResult.score,
+                      trait: traitResult.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Auto summary card — computed encounter insights.
+            // Skipped for self: encounter-driven copy ("Most active in the
+            // night", "Spotted on N of the last M days") implies third-party
+            // observation and is misleading for the user's own device.
+            if (!isSelf)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 1,
+                  reduceMotion: reduceMotion,
+                  child: NodeDexCard(
+                    title: context.l10n.nodedexSummaryCardTitle,
+                    icon: Icons.auto_awesome_outlined,
+                    helpKey: 'auto_summary',
+                    child: NodeSummaryCard(
+                      summary: summary,
+                      accentColor:
+                          entry.sigil?.primaryColor ?? context.accentColor,
+                    ),
+                  ),
+                ),
+              ),
+
+            // NodeBoard bridge — shows the node's personal BBS if it has one.
+            // Feature-flag gated; NodeBoardNodeCard itself renders nothing when
+            // the node has no associated board, so this is safe to always mount.
+            if (AppFeatureFlags.isNodeBoardEnabled)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 2,
+                  reduceMotion: reduceMotion,
+                  child: NodeBoardNodeCard(nodeId: hexId),
+                ),
+              ),
+
+            // Pet companion card — local companion when viewing own node,
+            // cached peer observation otherwise. The info sheet copy and
+            // empty-state copy both branch on this distinction; see
+            // PetCompanionContent + helpNodeDexSectionPetCompanion{Self,Remote}.
+            if (AppFeatureFlags.isPetEnabled)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 2,
+                  reduceMotion: reduceMotion,
+                  child: NodeDexCard(
+                    title: context.l10n.petCompanionSectionTitle,
+                    icon: Icons.egg_alt_outlined,
+                    helpKey: isSelf
+                        ? 'pet_companion_self'
+                        : 'pet_companion_remote',
+                    child: PetCompanionContent(nodeNum: entry.nodeNum),
+                  ),
+                ),
+              ),
+
+            // Co-seen network card — animated avatar cluster with social context
+            if (recentCoSeenLinks.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 2,
+                  reduceMotion: reduceMotion,
+                  child: CoSeenNetworkCard(
+                    nodeNum: entry.nodeNum,
+                    onTap: () => _showCoSeenSheet(context, entry),
+                  ),
+                ),
+              ),
+
+            // Trait card — replaced by a self-device card for the user's own
+            // node (no archetype/Ghost/Familiar/etc. for self).
+            if (isSelf)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 2,
+                  reduceMotion: reduceMotion,
+                  child: const _SelfDeviceCard(),
+                ),
+              )
+            else if (disclosure.showPrimaryTrait)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 2,
+                  reduceMotion: reduceMotion,
+                  child: _TraitCard(traitResult: traitResult),
+                ),
+              ),
+
+            // Trait evidence bullets — skipped for self (no archetype to back).
+            if (!isSelf &&
+                disclosure.showTraitEvidence &&
+                scoredTraits.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 3,
+                  reduceMotion: reduceMotion,
+                  child: NodeDexCard(
+                    title: context.l10n.nodedexTraitEvidenceTitle,
+                    icon: Icons.fact_check_outlined,
+                    helpKey: 'trait_evidence',
+                    child: TraitEvidenceList(
+                      observations: scoredTraits.first.evidence
+                          .map((e) => e.observation)
+                          .toList(),
+                      accentColor:
+                          entry.sigil?.primaryColor ?? context.accentColor,
+                      visible: disclosure.showTraitEvidence,
+                      padded: false,
+                    ),
+                  ),
+                ),
+              ),
+
+            // Field note — skipped for self (uses third-party-observation copy
+            // like "spotted on N of the last M days" that is misleading for
+            // the user's own device).
+            if (!isSelf && disclosure.showFieldNote)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 4,
+                  reduceMotion: reduceMotion,
+                  child: FieldNoteWidget(
+                    entry: entry,
+                    trait: traitResult.primary,
                     accentColor:
                         entry.sigil?.primaryColor ?? context.accentColor,
-                    showDensityMarkers: true,
-                    showEncounterCount: true,
+                    units: ref.watch(measurementUnitsProvider),
+                    expanded: true,
+                    visible: disclosure.showFieldNote,
                   ),
                 ),
               ),
-            ),
 
-          // Reticulum (port-76) activity for this node, if any.
-          if (AppFeatureFlags.isReticulumTunnelEnabled)
-            SliverToBoxAdapter(
-              child: ReticulumActivityDetail(nodeNum: widget.nodeNum),
-            ),
-
-          // All scored traits list (progressive: only at Tier 3+).
-          // Skipped for self — same reason as the primary trait card.
-          if (!isSelf && disclosure.showAllTraits && scoredTraits.length > 1)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 6,
-                reduceMotion: reduceMotion,
-                child: NodeDexCard(
-                  title: context.l10n.nodedexAdditionalTraits,
-                  icon: Icons.bubble_chart_outlined,
-                  helpKey: 'additional_traits',
-                  child: _ScoredTraitsList(
-                    scoredTraits: scoredTraits,
-                    showEvidence: disclosure.showTraitEvidence,
+            // Observation timeline strip — encounter-density visual, skipped
+            // for self (self never accumulates encounters; see the !isOwnNode
+            // guard in NodeDexNotifier._handleNodesUpdate).
+            if (!isSelf && disclosure.showTimeline)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 5,
+                  reduceMotion: reduceMotion,
+                  child: NodeDexCard(
+                    title: context.l10n.nodedexObservationTimelineTitle,
+                    icon: Icons.timeline,
+                    helpKey: 'observation_timeline',
+                    child: ObservationTimeline(
+                      entry: entry,
+                      accentColor:
+                          entry.sigil?.primaryColor ?? context.accentColor,
+                      showDensityMarkers: true,
+                      showEncounterCount: true,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-          // Identity-rotated banner — surfaces when a firmware reset
-          // (factory wipe or pubkey rotation) was detected for this
-          // node_num. The pre-rotation stats are archived to
-          // nodedex_identity_history and accessible via the "View
-          // history" action on the banner.
-          if (entry.identityChangeCount > 0)
+            // Reticulum (port-76) activity for this node, if any.
+            if (AppFeatureFlags.isReticulumTunnelEnabled)
+              SliverToBoxAdapter(
+                child: ReticulumActivityDetail(nodeNum: widget.nodeNum),
+              ),
+
+            // All scored traits list (progressive: only at Tier 3+).
+            // Skipped for self — same reason as the primary trait card.
+            if (!isSelf && disclosure.showAllTraits && scoredTraits.length > 1)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 6,
+                  reduceMotion: reduceMotion,
+                  child: NodeDexCard(
+                    title: context.l10n.nodedexAdditionalTraits,
+                    icon: Icons.bubble_chart_outlined,
+                    helpKey: 'additional_traits',
+                    child: _ScoredTraitsList(
+                      scoredTraits: scoredTraits,
+                      showEvidence: disclosure.showTraitEvidence,
+                    ),
+                  ),
+                ),
+              ),
+
+            // Identity-rotated banner — surfaces when a firmware reset
+            // (factory wipe or pubkey rotation) was detected for this
+            // node_num. The pre-rotation stats are archived to
+            // nodedex_identity_history and accessible via the "View
+            // history" action on the banner.
+            if (entry.identityChangeCount > 0)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 7,
+                  reduceMotion: reduceMotion,
+                  child: _IdentityChangedBanner(
+                    entry: entry,
+                    nodeNum: widget.nodeNum,
+                  ),
+                ),
+              ),
+
+            // Discovery stats
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 7,
                 reduceMotion: reduceMotion,
-                child: _IdentityChangedBanner(
+                child: _DiscoveryStatsCard(
                   entry: entry,
-                  nodeNum: widget.nodeNum,
+                  node: node,
+                  isSelf: isSelf,
                 ),
               ),
             ),
 
-          // Discovery stats
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 7,
-              reduceMotion: reduceMotion,
-              child: _DiscoveryStatsCard(
-                entry: entry,
-                node: node,
-                isSelf: isSelf,
+            // Radio compatibility (hidden for self via the widget itself).
+            // Sits between Discovery and Signal Records so the user reads
+            // "what was observed" before "what the signal looked like".
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 8,
+                reduceMotion: reduceMotion,
+                child: RadioCompatibilityCard(nodeNum: widget.nodeNum),
               ),
             ),
-          ),
 
-          // Radio compatibility (hidden for self via the widget itself).
-          // Sits between Discovery and Signal Records so the user reads
-          // "what was observed" before "what the signal looked like".
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 8,
-              reduceMotion: reduceMotion,
-              child: RadioCompatibilityCard(nodeNum: widget.nodeNum),
-            ),
-          ),
-
-          // Signal records
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 9,
-              reduceMotion: reduceMotion,
-              child: _SignalRecordsCard(entry: entry),
-            ),
-          ),
-
-          // Device info (from live MeshNode data) — placed near signal records
-          if (node != null)
+            // Signal records
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 9,
                 reduceMotion: reduceMotion,
-                child: _DeviceInfoCard(node: node),
+                child: _SignalRecordsCard(entry: entry),
               ),
             ),
 
-          // MRRP services (from SERVICE_ADVERT)
-          if (entry.mrrpServiceIds != null && entry.mrrpServiceIds!.isNotEmpty)
+            // Device info (from live MeshNode data) — placed near signal records
+            if (node != null)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 9,
+                  reduceMotion: reduceMotion,
+                  child: _DeviceInfoCard(node: node),
+                ),
+              ),
+
+            // MRRP services (from SERVICE_ADVERT)
+            if (entry.mrrpServiceIds != null &&
+                entry.mrrpServiceIds!.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 10,
+                  reduceMotion: reduceMotion,
+                  child: _MrrpServicesCard(entry: entry),
+                ),
+              ),
+
+            // Classification + Note — rendered as full-width rows in
+            // one InfoTable so both share a single card outline and
+            // form one cohesive identity block.
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 10,
+                index: 11,
                 reduceMotion: reduceMotion,
-                child: _MrrpServicesCard(entry: entry),
-              ),
-            ),
-
-          // Classification + Note — rendered as full-width rows in
-          // one InfoTable so both share a single card outline and
-          // form one cohesive identity block.
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 11,
-              reduceMotion: reduceMotion,
-              child: _ClassificationAndNoteCard(
-                entry: entry,
-                onEditTag: () => _showTagSelector(context, entry),
-                onEditNote: () {
-                  AppLogging.nodeDex(
-                    'Note editor opened for node ${widget.nodeNum} '
-                    '(hasNote=${entry.userNote != null})',
-                  );
-                  NodeNoteEditSheet.show(
-                    context: context,
-                    nodeNum: widget.nodeNum,
-                    initialNote: entry.userNote,
-                  );
-                },
-              ),
-            ),
-          ),
-
-          // Node groups (user-defined organisation).
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 12,
-              reduceMotion: reduceMotion,
-              child: NodeGroupsCard(
-                nodeNum: widget.nodeNum,
-                nodeName: entry.localNickname ?? entry.lastKnownName,
-              ),
-            ),
-          ),
-
-          // Broadcast region history (where the remote node has broadcast
-          // its own position from).
-          if (entry.seenRegions.isNotEmpty)
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 13,
-                reduceMotion: reduceMotion,
-                child: _RegionListCard(
-                  regions: entry.seenRegions,
-                  title: context.l10n.nodedexBroadcastRegionsLabel,
-                  icon: Icons.public_outlined,
-                  rowIcon: Icons.pin_drop_outlined,
-                  helpKey: 'regions',
+                child: _ClassificationAndNoteCard(
+                  entry: entry,
+                  onEditTag: () => _showTagSelector(context, entry),
+                  onEditNote: () {
+                    AppLogging.nodeDex(
+                      'Note editor opened for node ${widget.nodeNum} '
+                      '(hasNote=${entry.userNote != null})',
+                    );
+                    NodeNoteEditSheet.show(
+                      context: context,
+                      nodeNum: widget.nodeNum,
+                      initialNote: entry.userNote,
+                    );
+                  },
                 ),
               ),
             ),
 
-          // Observed-from regions (where the local radio was when the
-          // remote was encountered).
-          if (entry.observedFromRegions.isNotEmpty)
+            // Node groups (user-defined organisation).
             SliverToBoxAdapter(
               child: _DetailEntrance(
-                index: 14,
+                index: 12,
                 reduceMotion: reduceMotion,
-                child: _RegionListCard(
-                  regions: entry.observedFromRegions,
-                  title: context.l10n.nodedexObservedFromRegionsLabel,
-                  icon: Icons.my_location_outlined,
-                  rowIcon: Icons.my_location,
-                  helpKey: 'regions',
-                ),
-              ),
-            ),
-
-          // Encounter activity — pinned header + body
-          if (entry.encounters.isNotEmpty) ...[
-            SliverPadding(
-              padding: const EdgeInsets.only(top: 4),
-              sliver: SliverPersistentHeader(
-                pinned: true,
-                delegate: _NodeDexStickyHeaderDelegate(
-                  title: context.l10n.nodedexEncounterActivityTitle,
-                  icon: Icons.insights,
-                  helpKey: 'encounters',
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 14,
-                reduceMotion: reduceMotion,
-                child: _EncounterActivityCard(entry: entry),
-              ),
-            ),
-          ],
-
-          // Co-seen nodes — pinned header + body
-          if (recentCoSeenLinks.isNotEmpty) ...[
-            SliverPadding(
-              padding: const EdgeInsets.only(top: 4),
-              sliver: SliverPersistentHeader(
-                pinned: true,
-                delegate: _NodeDexStickyHeaderDelegate(
-                  title: context.l10n.nodedexCoSeenLinksTitle,
-                  icon: Icons.auto_awesome,
-                  helpKey: 'coseen',
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _DetailEntrance(
-                index: 15,
-                reduceMotion: reduceMotion,
-                child: _CoSeenNodesBody(entry: entry),
-              ),
-            ),
-          ],
-
-          // Node activity timeline — unified chronological feed
-          SliverPadding(
-            padding: const EdgeInsets.only(top: 4),
-            sliver: SliverPersistentHeader(
-              pinned: true,
-              delegate: _NodeDexStickyHeaderDelegate(
-                title: context.l10n.nodedexActivityTimelineTitle,
-                icon: Icons.timeline,
-                helpKey: 'activity_timeline',
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 16,
-              reduceMotion: reduceMotion,
-              child: _StickyCardBody(
-                child: NodeActivityTimeline(
+                child: NodeGroupsCard(
                   nodeNum: widget.nodeNum,
-                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                  nodeName: entry.localNickname ?? entry.lastKnownName,
                 ),
               ),
             ),
-          ),
 
-          // Bottom padding
-          SliverToBoxAdapter(
-            child: SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
-          ),
-        ],
+            // Broadcast region history (where the remote node has broadcast
+            // its own position from).
+            if (entry.seenRegions.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 13,
+                  reduceMotion: reduceMotion,
+                  child: _RegionListCard(
+                    regions: entry.seenRegions,
+                    title: context.l10n.nodedexBroadcastRegionsLabel,
+                    icon: Icons.public_outlined,
+                    rowIcon: Icons.pin_drop_outlined,
+                    helpKey: 'regions',
+                  ),
+                ),
+              ),
+
+            // Observed-from regions (where the local radio was when the
+            // remote was encountered).
+            if (entry.observedFromRegions.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 14,
+                  reduceMotion: reduceMotion,
+                  child: _RegionListCard(
+                    regions: entry.observedFromRegions,
+                    title: context.l10n.nodedexObservedFromRegionsLabel,
+                    icon: Icons.my_location_outlined,
+                    rowIcon: Icons.my_location,
+                    helpKey: 'regions',
+                  ),
+                ),
+              ),
+
+            // Encounter activity — pinned header + body
+            if (entry.encounters.isNotEmpty) ...[
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 4),
+                sliver: SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _NodeDexStickyHeaderDelegate(
+                    title: context.l10n.nodedexEncounterActivityTitle,
+                    icon: Icons.insights,
+                    helpKey: 'encounters',
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 14,
+                  reduceMotion: reduceMotion,
+                  child: _EncounterActivityCard(entry: entry),
+                ),
+              ),
+            ],
+
+            // Co-seen nodes — pinned header + body
+            if (recentCoSeenLinks.isNotEmpty) ...[
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 4),
+                sliver: SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _NodeDexStickyHeaderDelegate(
+                    title: context.l10n.nodedexCoSeenLinksTitle,
+                    icon: Icons.auto_awesome,
+                    helpKey: 'coseen',
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _DetailEntrance(
+                  index: 15,
+                  reduceMotion: reduceMotion,
+                  child: _CoSeenNodesBody(entry: entry),
+                ),
+              ),
+            ],
+
+            // Node activity timeline — unified chronological feed
+            SliverPadding(
+              padding: const EdgeInsets.only(top: 4),
+              sliver: SliverPersistentHeader(
+                pinned: true,
+                delegate: _NodeDexStickyHeaderDelegate(
+                  title: context.l10n.nodedexActivityTimelineTitle,
+                  icon: Icons.timeline,
+                  helpKey: 'activity_timeline',
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 16,
+                reduceMotion: reduceMotion,
+                child: _StickyCardBody(
+                  child: NodeActivityTimeline(
+                    nodeNum: widget.nodeNum,
+                    accentColor:
+                        entry.sigil?.primaryColor ?? context.accentColor,
+                  ),
+                ),
+              ),
+            ),
+
+            // Bottom padding
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.of(context).padding.bottom + 24,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -398,6 +398,19 @@ grep_check() {
   done < <(grep -nE "$pattern" "$file" 2>/dev/null || true)
 }
 
+# True (exit 0) when an ERE matches on a non-comment line of the file.
+# Single awk process on purpose: a `grep -v | grep -q` pipe can die of
+# SIGPIPE under `set -o pipefail` when -q exits at the first match before
+# the producer finishes writing, which silently skips the rule on some
+# platforms while it fires on others.
+noncomment_match() {
+  local file="$1"
+  local pattern="$2"
+  awk -v pat="$pattern" \
+    '!/^[[:space:]]*\/\// && $0 ~ pat { found = 1; exit } END { exit found ? 0 : 1 }' \
+    "$file" 2>/dev/null
+}
+
 # ---------------------------------------------------------------------------
 # Per-file checks
 # ---------------------------------------------------------------------------
@@ -1346,8 +1359,8 @@ check_file() {
     fi
 
     # ERROR: TextField/TextFormField without maxLength
-    # Only check non-comment lines (grep -v strips // and /// lines)
-    if grep -vE '^\s*//' "$file" 2>/dev/null | grep -qE '(TextField|TextFormField)[[:space:]]*\(' 2>/dev/null; then
+    # Only check non-comment lines
+    if noncomment_match "$file" '(TextField|TextFormField)[[:space:]]*[(]'; then
       if ! grep -q 'maxLength' "$file" 2>/dev/null; then
         record_hit "$file" "1" "textfield-maxlength" \
           "TextField/TextFormField without maxLength — all text inputs must be bounded" "error"
@@ -1361,7 +1374,7 @@ check_file() {
     # HelpTourController wrapping its scaffold. Without the controller
     # the help button toggles state but no overlay appears.
     # ------------------------------------------------------------------
-    if grep -vE '^\s*//' "$file" 2>/dev/null | grep -q 'IcoHelpAppBarButton' 2>/dev/null; then
+    if noncomment_match "$file" 'IcoHelpAppBarButton'; then
       if ! grep -q 'HelpTourController' "$file" 2>/dev/null; then
         record_hit "$file" "1" "help-button-needs-controller" \
           "IcoHelpAppBarButton without HelpTourController — the tour overlay will not render" "error"
@@ -1484,7 +1497,7 @@ check_file() {
     # Honors // lint-allow: keyboard-dismissal exemption.
     # ------------------------------------------------------------------
     if grep -qE 'class[[:space:]]+[A-Za-z_]+Screen[[:space:]]+extends' "$file" 2>/dev/null; then
-      if grep -vE '^\s*//' "$file" 2>/dev/null | grep -qE '(TextField|TextFormField)[[:space:]]*\(' 2>/dev/null; then
+      if noncomment_match "$file" '(TextField|TextFormField)[[:space:]]*[(]'; then
         if ! grep -q 'lint-allow:.*keyboard-dismissal' "$file" 2>/dev/null; then
           # Strong check: Screen must wrap content in GestureDetector + unfocus.
           # onTapOutside alone is insufficient — it only fires when the field
@@ -1511,14 +1524,15 @@ check_file() {
     # ERROR: GestureDetector onTap without haptic feedback
     #
     # Interactive elements using GestureDetector.onTap should provide
-    # haptic feedback via HapticFeedback or HapticService.
+    # haptic feedback via HapticFeedback or HapticService (directly or
+    # through hapticServiceProvider).
     # Only checks non-comment lines. Exempt test files.
     # Honors // lint-allow: haptic-feedback exemption.
     # ------------------------------------------------------------------
     if [[ "$file" != test/* ]]; then
-      if grep -vE '^\s*//' "$file" 2>/dev/null | grep -q 'GestureDetector' 2>/dev/null; then
-        if grep -vE '^\s*//' "$file" 2>/dev/null | grep -q 'onTap' 2>/dev/null; then
-          if ! grep -qE '(HapticFeedback\.|HapticService|haptics\.)' "$file" 2>/dev/null; then
+      if noncomment_match "$file" 'GestureDetector'; then
+        if noncomment_match "$file" 'onTap'; then
+          if ! grep -qE '(HapticFeedback\.|HapticService|hapticServiceProvider|haptics\.)' "$file" 2>/dev/null; then
             if ! grep -q 'lint-allow:.*haptic-feedback' "$file" 2>/dev/null; then
               record_hit "$file" "1" "haptic-feedback" \
                 "GestureDetector onTap without haptic feedback — add HapticFeedback.lightImpact() or use HapticService" "error"

@@ -25,6 +25,7 @@ import '../../core/widgets/skeleton_config.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../services/haptic_service.dart';
 import '../../core/units/distance_format.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/presence_providers.dart';
@@ -1124,6 +1125,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
   }
 
   void _showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
+    unawaited(ref.read(hapticServiceProvider).trigger(HapticType.selection));
     showNodeDetailsSheet(context, node, isMyNode);
   }
 
@@ -1132,6 +1134,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     MeshNode node,
     bool isMyNode,
   ) {
+    unawaited(ref.read(hapticServiceProvider).trigger(HapticType.medium));
     return showNodeQuickActionsSheet(
       context,
       ref,

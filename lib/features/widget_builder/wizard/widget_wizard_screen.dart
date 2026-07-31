@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import '../../../core/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +19,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/premium_feature_gate.dart';
 import '../../../models/subscription_models.dart';
 import '../../../providers/app_providers.dart';
+import '../../../services/haptic_service.dart';
 import '../../../utils/snackbar.dart';
 
 /// Helper class for threshold lines
@@ -76,6 +79,10 @@ class WidgetWizardScreen extends ConsumerStatefulWidget {
 
 class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     with LifecycleSafeMixin<WidgetWizardScreen> {
+  void _selectionHaptic() {
+    unawaited(ref.read(hapticServiceProvider).trigger(HapticType.selection));
+  }
+
   int _currentStep = 0;
   late final PageController _pageController;
 
@@ -776,6 +783,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
   Future<void> _handleTemplateSelection(_WidgetTemplate template) async {
     // If same template, just select it
     if (_selectedTemplate?.id == template.id) return;
+
+    _selectionHaptic();
 
     // Check if we would lose data
     if (_wouldLoseDataOnTemplateSwitch(template)) {
@@ -1614,6 +1623,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
                 onTap: isDisabled
                     ? null
                     : () {
+                        _selectionHaptic();
                         setState(() {
                           if (isSelected) {
                             _selectedBindings.remove(binding.path);
@@ -1799,6 +1809,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
+            _selectionHaptic();
             setState(() {
               if (isSelected) {
                 _selectedActions.remove(action.type);
@@ -2043,7 +2054,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       children: colors.map((color) {
         final isSelected = _accentColor.toARGB32() == color.toARGB32();
         return GestureDetector(
-          onTap: () => setState(() => _accentColor = color),
+          onTap: () {
+            _selectionHaptic();
+            setState(() => _accentColor = color);
+          },
           child: Container(
             width: 44,
             height: 44,
@@ -2098,6 +2112,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
                   AppLogging.widgets(
                     '[LAYOUT_TAP] Tapped layout: ${layout.$2}, was: $_layoutStyle, now: ${layout.$1}',
                   );
+                  _selectionHaptic();
                   setState(() => _layoutStyle = layout.$1);
                 },
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
@@ -4341,6 +4356,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     // Only allow going to completed steps or current step
     if (step > _currentStep) return;
 
+    _selectionHaptic();
     _pageController.animateToPage(
       step,
       duration: const Duration(milliseconds: 300),
