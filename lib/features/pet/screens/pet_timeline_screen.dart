@@ -1619,8 +1619,10 @@ String _formatRelative(DateTime at, AppLocalizations l10n) {
 String _formatAbsolute(BuildContext context, DateTime at) {
   // Short absolute label that reads OK inline with the relative time.
   // Time portion respects the user's 12/24h preference via AppTimeFormat.
+  // Timeline records are stored UTC-flagged; render in the local zone.
+  final local = at.toLocal();
   final now = DateTime.now();
-  final sameYear = at.year == now.year;
+  final sameYear = local.year == now.year;
   const months = [
     '',
     'Jan',
@@ -1637,9 +1639,9 @@ String _formatAbsolute(BuildContext context, DateTime at) {
     'Dec',
   ];
   final date = sameYear
-      ? '${at.day} ${months[at.month]}'
-      : '${at.day} ${months[at.month]} ${at.year}';
-  final timeStr = AppTimeFormat.timeOnly(context).format(at);
+      ? '${local.day} ${months[local.month]}'
+      : '${local.day} ${months[local.month]} ${local.year}';
+  final timeStr = AppTimeFormat.timeOnly(context).format(local);
   return '$date · $timeStr';
 }
 

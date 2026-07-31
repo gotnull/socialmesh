@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Going out of Bluetooth range and back no longer leaves the app permanently stuck on "Configuring SocialMesh" with every send blocked (#249). The second phase of the connect handshake previously gave up silently after three attempts; it now keeps retrying on a widening schedule (about a minute in total) and, if the radio still does not answer while the link is up, performs the same bounded clean reconnect as a configuration timeout - so the session heals itself instead of needing a manual disconnect/reconnect
 - The two automatic reconnect paths (in-app scan and system-level Bluetooth reconnect) no longer race each other: both now run the same canonical session restore, closing a gap where a system-level reconnect during scanning could leave the app connected but never re-run the configuration handshake
 
+### Fixed (timestamps)
+
+- NodePet timeline entries (including the hatch date and stage-start dates), the NodePet recent-activity card, and the incident list's created-at label showed times in UTC instead of the phone's time zone - out by the full UTC offset for anyone not on UTC. All three now render in local time; message timestamps were already correct
+
 ### Added (automations)
 
 - Automations can now be duplicated: a copy button on each automation card creates a "(Copy)" of the automation with fresh run stats and opens it in the editor. The copy starts disabled so it cannot double-fire the original's trigger before you adjust it

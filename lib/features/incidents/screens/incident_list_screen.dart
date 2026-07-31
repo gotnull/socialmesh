@@ -202,7 +202,7 @@ class _IncidentTile extends ConsumerWidget {
                       AppTimeFormat.withDatePrefix(
                         context,
                         AppTimeFormat.fullDatePattern(context),
-                      ).format(incident.createdAt),
+                      ).format(incident.createdAt.toLocal()),
                       style: context.captionMutedStyle,
                     ),
                     if (incident.assigneeId != null)

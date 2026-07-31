@@ -491,7 +491,8 @@ class _TimelineEventTile extends StatelessWidget {
   ) {
     final diff = DateTime.now().difference(ts);
     final relative = _relative(diff, l10n);
-    final absolute = AppTimeFormat.dateAndTime(context).format(ts);
+    // Timeline records are stored UTC-flagged; render in the local zone.
+    final absolute = AppTimeFormat.dateAndTime(context).format(ts.toLocal());
     return '$relative  ·  $absolute';
   }
 
