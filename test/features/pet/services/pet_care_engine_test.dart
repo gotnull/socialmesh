@@ -271,6 +271,27 @@ void main() {
       s = engine.applyAction(s, CareAction.charge, start).state;
       expect(s.energy, energyBefore);
     });
+
+    test('sleep window is zone-flag independent (wall-clock semantics)', () {
+      // State rehydrated from the repository carries UTC-flagged
+      // DateTimes while fresh in-session timestamps are local. The
+      // window must evaluate identically for the same instant under
+      // either flag, or it shifts by the UTC offset after an app
+      // restart. Vacuous on a UTC-zoned test host (toLocal is then
+      // the identity); discriminating on any other host.
+      const config = PetConfig();
+      final engine = PetCareEngine(config: config);
+      for (var h = 0; h < 24; h++) {
+        final local = _day(1, h);
+        expect(
+          engine.isInSleepWindow(local.toUtc()),
+          engine.isInSleepWindow(local),
+          reason:
+              'hour $h: UTC-flagged and local-flagged views of the '
+              'same instant must agree',
+        );
+      }
+    });
   });
 
   group('PetCareEngine — sickness (acceptance #5)', () {

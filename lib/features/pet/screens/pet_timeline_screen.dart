@@ -30,8 +30,9 @@
 // Responsive: left rail at x=32 on narrow phones; on wide layouts the
 // whole column centers at max-width 560 so body text stays readable.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
@@ -40,6 +41,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/haptic_service.dart';
 import '../../../utils/time_format.dart';
 import '../models/care_event.dart';
 import '../models/pet_base_allele.dart';
@@ -81,6 +83,9 @@ class _PetTimelineScreenState extends ConsumerState<PetTimelineScreen> {
     return GlassScaffold.body(
       title: l10n.petTimelineScreenTitle,
       centerTitle: true,
+      // The timeline body is Column > Expanded > CustomScrollView; the
+      // inner scrollable must negotiate extent with the outer viewport.
+      hasScrollBody: true,
       body: asyncView.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorState(message: e.toString()),
@@ -150,30 +155,33 @@ class _TimelineBody extends StatelessWidget {
                             l10n: l10n,
                           ),
                         ),
-                      // Spine continuation — bridges the gap between
-                      // the last entry and the pinned upcoming node so
-                      // the rail reads as one continuous line.
+                      // "Next: …" flows directly after the last entry —
+                      // a short spine stub keeps the rail continuous
+                      // into the ghost node, and the timeline stays
+                      // compact when there are few events instead of
+                      // stranding the upcoming node at the bottom of
+                      // the viewport behind a screen of empty rail.
+                      if (view.upcoming != null) ...[
+                        SliverToBoxAdapter(child: _SpineSpacer(accent: accent)),
+                        SliverToBoxAdapter(
+                          child: _UpcomingNode(
+                            upcoming: view.upcoming!,
+                            accent: accent,
+                            l10n: l10n,
+                          ),
+                        ),
+                      ],
+                      // Bottom breathing room + home-indicator safe area.
                       SliverToBoxAdapter(
-                        child: _SpineSpacer(
-                          accent: accent,
-                          height: AppTheme.spacing16,
+                        child: SizedBox(
+                          height:
+                              MediaQuery.paddingOf(context).bottom +
+                              AppTheme.spacing16,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Pinned footer — "Next: …" sits at the bottom of the
-                // viewport. No top divider: the rail spine flows
-                // continuously into the dashed connector instead.
-                if (view.upcoming != null)
-                  ColoredBox(
-                    color: context.background,
-                    child: _UpcomingNode(
-                      upcoming: view.upcoming!,
-                      accent: accent,
-                      l10n: l10n,
-                    ),
-                  ),
               ],
             ),
           ),
@@ -298,7 +306,7 @@ class _EventCountPill extends StatelessWidget {
 // Origin node — DNA/hatch hero at the top of the spine
 // ============================================================================
 
-class _OriginNode extends StatelessWidget {
+class _OriginNode extends ConsumerWidget {
   final PetTimelineOrigin origin;
   final Color accent;
   final AppLocalizations l10n;
@@ -310,7 +318,7 @@ class _OriginNode extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final seedHex =
         '0x${origin.dnaSeed.toRadixString(16).padLeft(8, '0').toUpperCase()}';
     final hatchedText = _formatAbsolute(context, origin.hatchedAt);
@@ -341,7 +349,11 @@ class _OriginNode extends StatelessWidget {
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    HapticFeedback.selectionClick();
+                    unawaited(
+                      ref
+                          .read(hapticServiceProvider)
+                          .trigger(HapticType.selection),
+                    );
                     AppBottomSheet.showScrollable<void>(
                       context: context,
                       initialChildSize: 0.9,
@@ -1210,14 +1222,12 @@ class _UpcomingNode extends StatelessWidget {
   }
 }
 
-/// Solid spine continuation rendered between the last entry and the
-/// pinned upcoming node so the rail doesn't visually disconnect at the
-/// scroll-area boundary.
+/// Short spine stub between the last entry and the upcoming ghost
+/// node, keeping the rail visually continuous into "Next: …".
 class _SpineSpacer extends StatelessWidget {
   final Color accent;
-  final double height;
 
-  const _SpineSpacer({required this.accent, required this.height});
+  const _SpineSpacer({required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -1226,11 +1236,11 @@ class _SpineSpacer extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 40,
+            width: AppTheme.spacing40,
             child: Center(
               child: _DotsConnector(
                 color: accent.withValues(alpha: 0.55),
-                height: height,
+                height: AppTheme.spacing16,
               ),
             ),
           ),

@@ -135,7 +135,10 @@ class _PetDnaViewerBodyState extends State<_PetDnaViewerBody>
             ),
             IconButton(
               icon: Icon(Icons.close, color: context.textSecondary),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                if (!mounted) return;
+                Navigator.of(context).pop();
+              },
               tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
             ),
           ],

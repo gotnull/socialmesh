@@ -34,8 +34,15 @@ class PetCareEngine {
   // ---- Time helpers -----------------------------------------------------
 
   /// True iff [at] is inside the sleep window configured on [config].
+  ///
+  /// The window is wall-clock semantics (e.g. 22:00-07:00 device time), so
+  /// the hour is always read in the local zone. Callers pass a mix of
+  /// zone flags: fresh in-session timestamps are local, while state
+  /// rehydrated from the repository carries UTC-flagged DateTimes -
+  /// without normalisation the window would shift by the UTC offset
+  /// after every app restart.
   bool isInSleepWindow(DateTime at) {
-    final h = at.hour;
+    final h = at.toLocal().hour;
     final start = config.sleepWindowStartHour;
     final end = config.sleepWindowEndHour;
     if (start == end) return false;
