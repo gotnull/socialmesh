@@ -159,3 +159,6 @@ android/key.properties
 # xcodebuild MCP per-developer session defaults (machine-local paths)
 .xcodebuildmcp/
 logs_output.txt
+
+# Local security review reports may describe unresolved vulnerabilities.
+/socialmesh-security-assessment.md

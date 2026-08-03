@@ -188,7 +188,9 @@ Future<void> main() async {
   // vendored packages) so they appear on the Settings > Open Source page.
   registerThirdPartyLicenses();
 
-  // Load environment variables. Skipped on web because the .env asset
+  // Load allowlisted client environment variables. The raw .env contains
+  // server configuration and is deliberately never bundled.
+  // Skipped on web because the generated env asset
   // contains values that crash flutter_dotenv's web parser (Uncaught
   // SyntaxError during the fetched-asset parse step). Web is dashboard /
   // read-only this pass and does not need runtime env values; the
@@ -196,7 +198,7 @@ Future<void> main() async {
   // unavailable (`_safeGetEnv` returns null and the channel uses its
   // default).
   if (platformCapabilities.platformFamily != PlatformFamily.web) {
-    await dotenv.load(fileName: '.env');
+    await dotenv.load(fileName: '.env.client');
   } else {
     AppLogging.platform('boot: skipping dotenv.load on web');
   }

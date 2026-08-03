@@ -31,6 +31,9 @@ jobs:
       - name: Flutter version
         run: flutter --version
 
+      - name: Generate allowlisted client environment
+        run: dart run tool/generate_client_env.dart
+
       - name: Install dependencies
         run: flutter pub get
 

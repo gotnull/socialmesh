@@ -180,7 +180,9 @@ flutter:
 
   # Assets
   assets:
-    - .env
+    # Generated from .env using the explicit client runtime allowlist. The raw
+    # .env contains server credentials and must never enter a Flutter bundle.
+    - .env.client
     - assets/app_icons/
     - assets/app_icons/source/
     - assets/pet/

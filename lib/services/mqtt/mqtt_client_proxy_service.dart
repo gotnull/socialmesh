@@ -773,12 +773,11 @@ class MqttClientProxyService {
     // (no-downlink) connection, so the liveness watchdog leans on it.
     client.pongCallback = _onPong;
 
-    // TLS configuration
-    // The iOS app accepts self-signed certificates
+    // TLS configuration. Do not install an onBadCertificate callback here:
+    // the platform trust store must reject invalid chains and hostnames.
     if (useTls) {
       client.secure = true;
       client.securityContext = SecurityContext.defaultContext;
-      client.onBadCertificate = (Object _) => true; // Accept self-signed certs
     }
 
     // Authentication
