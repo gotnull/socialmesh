@@ -1502,10 +1502,7 @@ class _NodeCard extends ConsumerWidget {
     // The avatar circle follows the user's text size (clamped so the tile
     // keeps its shape); the fixed-width leading column tracks it so the
     // content column never shifts: avatar + 2x(3 ring + 3 pad + 3 pad).
-    final avatarScale = MediaQuery.textScalerOf(
-      context,
-    ).scale(1.0).clamp(1.0, 1.5);
-    final avatarSize = 56.0 * avatarScale;
+    final avatarSize = NodeAvatar.scaledSize(context, 56);
     return Row(
       // Top-align the avatar with the card content: multi-line text
       // columns pair with a top-aligned leading widget.
@@ -1961,9 +1958,7 @@ class _CompactNodeTile extends StatelessWidget {
                 nodeNum: node.nodeNum,
                 avatarColor: node.avatarColor,
               ),
-              size:
-                  36.0 *
-                  MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.5),
+              size: NodeAvatar.scaledSize(context, 36),
               showOnlineIndicator: presenceConfidence.isActive,
               onlineStatus: presenceConfidence.isActive
                   ? OnlineStatus.online

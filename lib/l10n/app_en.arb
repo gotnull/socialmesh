@@ -4213,6 +4213,26 @@
     "@channelFormUpdatedSnackbar": {
         "description": "Snackbar notification in channel configuration"
     },
+    "channelFormClearOldMessagesTitle": "Clear old messages?",
+    "@channelFormClearOldMessagesTitle": {
+        "description": "Title of the confirmation sheet shown after a channel's name or key changed, asking whether to delete messages received under the previous configuration"
+    },
+    "channelFormClearOldMessagesBody": "This channel's name or key changed. Messages received under the previous configuration are still shown in this channel and may look like they belong to the new one. Clearing only affects this device.",
+    "@channelFormClearOldMessagesBody": {
+        "description": "Body of the confirmation sheet shown after a channel's name or key changed"
+    },
+    "channelFormClearOldMessagesConfirm": "Clear",
+    "@channelFormClearOldMessagesConfirm": {
+        "description": "Destructive confirm button that deletes the old channel messages"
+    },
+    "channelFormClearOldMessagesKeep": "Keep",
+    "@channelFormClearOldMessagesKeep": {
+        "description": "Cancel button that keeps the old channel messages"
+    },
+    "channelFormClearOldMessagesSuccess": "Old messages cleared",
+    "@channelFormClearOldMessagesSuccess": {
+        "description": "Snackbar shown after old channel messages were deleted"
+    },
     "channelFormUplinkSubtitle": "Forward messages to MQTT server",
     "@channelFormUplinkSubtitle": {
         "description": "Uplink = forwarding local mesh radio messages to an internet MQTT server."

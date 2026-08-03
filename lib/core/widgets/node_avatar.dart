@@ -63,6 +63,14 @@ class NodeAvatar extends StatelessWidget {
     this.showBatteryBadge = false,
   });
 
+  /// Diameter for an avatar that follows the user's text size, clamped so
+  /// list tiles keep their shape at extreme accessibility scales. Any
+  /// fixed-width sibling column must be derived from the returned value,
+  /// not from the base diameter.
+  static double scaledSize(BuildContext context, double base) {
+    return base * MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.5);
+  }
+
   /// Calculate the optimal font size based on text length and avatar size
   double _calculateFontSize() {
     final baseSize = size * 0.3; // Base is 30% of avatar size

@@ -43,6 +43,7 @@ void main() {
   TraceRouteLog makeRun({
     String? id,
     required int targetNode,
+    int? originNodeNum,
     bool response = true,
     int hopsTowards = 0,
     int hopsBack = 0,
@@ -55,6 +56,7 @@ void main() {
       nodeNum: targetNode,
       timestamp: timestamp,
       targetNode: targetNode,
+      originNodeNum: originNodeNum,
       sent: true,
       response: response,
       hopsTowards: hopsTowards,
@@ -884,6 +886,169 @@ void main() {
       final loaded = (await repo.listRuns()).first;
       expect(loaded.snr, -12.5);
       expect(loaded.hops.first.snr, -20.0);
+
+      await db.close();
+    });
+  });
+
+  // =========================================================================
+  // Origin node persistence (schema v6)
+  // =========================================================================
+  group('SqliteTracerouteRepository — origin node', () {
+    test('originNodeNum round-trips through save and list', () async {
+      final (db, repo) = await createRepo();
+
+      await repo.saveRun(makeRun(targetNode: 0x100, originNodeNum: 0xA1));
+
+      final loaded = (await repo.listRuns()).first;
+      expect(loaded.originNodeNum, 0xA1);
+
+      await db.close();
+    });
+
+    test('runs without an origin read back as null', () async {
+      final (db, repo) = await createRepo();
+
+      await repo.saveRun(makeRun(targetNode: 0x100));
+
+      final loaded = (await repo.listRuns()).first;
+      expect(loaded.originNodeNum, isNull);
+
+      await db.close();
+    });
+
+    test(
+      'response does not consume a pending run from a different origin',
+      () async {
+        final (db, repo) = await createRepo();
+
+        // Pending sent while connected to radio A.
+        await repo.saveRun(
+          makeRun(targetNode: 0x100, originNodeNum: 0xA1, response: false),
+        );
+        // Response captured while connected to radio B.
+        await repo.replaceOrAddRun(
+          makeRun(targetNode: 0x100, originNodeNum: 0xB2, response: true),
+        );
+
+        final runs = await repo.listRuns(targetNodeId: 0x100);
+        expect(runs, hasLength(2));
+        final pending = runs.where((r) => !r.response).single;
+        expect(pending.originNodeNum, 0xA1);
+        final completed = runs.where((r) => r.response).single;
+        expect(completed.originNodeNum, 0xB2);
+
+        await db.close();
+      },
+    );
+
+    test('response replaces a pending run from the same origin', () async {
+      final (db, repo) = await createRepo();
+
+      await repo.saveRun(
+        makeRun(targetNode: 0x100, originNodeNum: 0xA1, response: false),
+      );
+      await repo.replaceOrAddRun(
+        makeRun(targetNode: 0x100, originNodeNum: 0xA1, response: true),
+      );
+
+      final runs = await repo.listRuns(targetNodeId: 0x100);
+      expect(runs, hasLength(1));
+      expect(runs.single.response, isTrue);
+      expect(runs.single.originNodeNum, 0xA1);
+
+      await db.close();
+    });
+
+    test('response replaces a legacy pending run with no origin', () async {
+      final (db, repo) = await createRepo();
+
+      await repo.saveRun(makeRun(targetNode: 0x100, response: false));
+      await repo.replaceOrAddRun(
+        makeRun(targetNode: 0x100, originNodeNum: 0xA1, response: true),
+      );
+
+      final runs = await repo.listRuns(targetNodeId: 0x100);
+      expect(runs, hasLength(1));
+      expect(runs.single.response, isTrue);
+
+      await db.close();
+    });
+
+    test('v5 database migrates to v6 and accepts origin writes', () async {
+      final path = _uniqueDbPath('traceroute_migration_v5');
+      addTearDown(() async {
+        for (final suffix in ['', '-journal', '-wal', '-shm']) {
+          final f = File('$path$suffix');
+          if (await f.exists()) await f.delete();
+        }
+      });
+
+      // Build a v5 database: current schema minus origin_node_id.
+      final legacy = await databaseFactory.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 5,
+          onCreate: (db, version) async {
+            await db.execute('''
+              CREATE TABLE ${TracerouteTables.runs} (
+                ${TracerouteTables.colId} TEXT PRIMARY KEY,
+                ${TracerouteTables.colCreatedAt} INTEGER NOT NULL,
+                ${TracerouteTables.colTargetNodeId} INTEGER NOT NULL,
+                ${TracerouteTables.colStatus} TEXT NOT NULL DEFAULT '${TracerouteTables.statusPending}',
+                ${TracerouteTables.colForwardHops} INTEGER,
+                ${TracerouteTables.colReturnHops} INTEGER,
+                ${TracerouteTables.colResponseReceived} INTEGER NOT NULL DEFAULT 0,
+                ${TracerouteTables.colSnr} REAL,
+                ${TracerouteTables.colViaMqtt} INTEGER,
+                ${TracerouteTables.colOriginLatitude} REAL,
+                ${TracerouteTables.colOriginLongitude} REAL,
+                ${TracerouteTables.colTargetLatitude} REAL,
+                ${TracerouteTables.colTargetLongitude} REAL,
+                ${TracerouteTables.colTargetSnrTowards} REAL,
+                ${TracerouteTables.colOriginSnrBack} REAL
+              )
+            ''');
+            await db.execute('''
+              CREATE TABLE ${TracerouteTables.hops} (
+                ${TracerouteTables.colHopId} TEXT PRIMARY KEY,
+                ${TracerouteTables.colRunId} TEXT NOT NULL,
+                ${TracerouteTables.colHopIndex} INTEGER NOT NULL,
+                ${TracerouteTables.colNodeId} INTEGER NOT NULL,
+                ${TracerouteTables.colHopSnr} REAL,
+                ${TracerouteTables.colRssi} INTEGER,
+                ${TracerouteTables.colDirection} TEXT NOT NULL,
+                ${TracerouteTables.colLatitude} REAL,
+                ${TracerouteTables.colLongitude} REAL
+              )
+            ''');
+          },
+        ),
+      );
+      await legacy.insert(TracerouteTables.runs, {
+        TracerouteTables.colId: 'legacy-run',
+        TracerouteTables.colCreatedAt: DateTime(
+          2026,
+          1,
+          1,
+        ).millisecondsSinceEpoch,
+        TracerouteTables.colTargetNodeId: 0x100,
+        TracerouteTables.colStatus: TracerouteTables.statusCompleted,
+        TracerouteTables.colResponseReceived: 1,
+      });
+      await legacy.close();
+
+      // Reopen through TracerouteDatabase: migration to v6 must run.
+      final db = TracerouteDatabase(dbPathOverride: path);
+      await db.open();
+      final repo = SqliteTracerouteRepository(db);
+
+      final legacyRun = (await repo.listRuns(targetNodeId: 0x100)).single;
+      expect(legacyRun.originNodeNum, isNull);
+
+      await repo.saveRun(makeRun(targetNode: 0x200, originNodeNum: 0xA1));
+      final migrated = (await repo.listRuns(targetNodeId: 0x200)).single;
+      expect(migrated.originNodeNum, 0xA1);
 
       await db.close();
     });

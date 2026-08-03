@@ -46,6 +46,10 @@ enum HapticType {
   error,
 }
 
+/// Platform haptic primitives a feedback sequence is built from, ordered
+/// weakest to strongest as rendered by the OS.
+enum HapticPrimitive { selectionClick, lightImpact, mediumImpact, heavyImpact }
+
 /// Service for managing haptic feedback throughout the app
 class HapticService {
   final Ref _ref;
@@ -62,128 +66,113 @@ class HapticService {
     if (!settings.hapticFeedbackEnabled) return;
 
     final intensity = HapticIntensity.fromValue(settings.hapticIntensity);
-
-    switch (type) {
-      case HapticType.selection:
-        await _triggerSelection(intensity);
-      case HapticType.light:
-        await _triggerLight(intensity);
-      case HapticType.medium:
-        await _triggerMedium(intensity);
-      case HapticType.heavy:
-        await _triggerHeavy(intensity);
-      case HapticType.success:
-        await _triggerSuccess(intensity);
-      case HapticType.warning:
-        await _triggerWarning(intensity);
-      case HapticType.error:
-        await _triggerError(intensity);
+    final pulses = pulsesFor(type, intensity);
+    final gap = pulseGapFor(type);
+    for (var i = 0; i < pulses.length; i++) {
+      if (i > 0) await Future.delayed(gap);
+      await _play(pulses[i]);
     }
   }
 
-  /// Selection click - adjusted by intensity
-  Future<void> _triggerSelection(HapticIntensity intensity) async {
-    switch (intensity) {
-      case HapticIntensity.light:
-        await HapticFeedback.selectionClick();
-      case HapticIntensity.medium:
-        await HapticFeedback.selectionClick();
-      case HapticIntensity.heavy:
-        await HapticFeedback.lightImpact();
-    }
+  /// The pulse sequence for a semantic event at a given intensity setting.
+  ///
+  /// The three settings are deliberately spread wide, because on much of the
+  /// hardware in the field adjacent impact styles render nearly identically:
+  /// Light tops out at [HapticPrimitive.lightImpact], Medium is the balanced
+  /// default, and Heavy leans on [HapticPrimitive.heavyImpact] - doubled for
+  /// the strongest events - so each setting feels clearly different from its
+  /// neighbours.
+  static List<HapticPrimitive> pulsesFor(
+    HapticType type,
+    HapticIntensity intensity,
+  ) {
+    return switch (type) {
+      HapticType.selection => switch (intensity) {
+        HapticIntensity.light => const [HapticPrimitive.selectionClick],
+        HapticIntensity.medium => const [HapticPrimitive.selectionClick],
+        HapticIntensity.heavy => const [HapticPrimitive.mediumImpact],
+      },
+      HapticType.light => switch (intensity) {
+        HapticIntensity.light => const [HapticPrimitive.selectionClick],
+        HapticIntensity.medium => const [HapticPrimitive.lightImpact],
+        HapticIntensity.heavy => const [HapticPrimitive.heavyImpact],
+      },
+      HapticType.medium => switch (intensity) {
+        HapticIntensity.light => const [HapticPrimitive.selectionClick],
+        HapticIntensity.medium => const [HapticPrimitive.mediumImpact],
+        HapticIntensity.heavy => const [HapticPrimitive.heavyImpact],
+      },
+      HapticType.heavy => switch (intensity) {
+        HapticIntensity.light => const [HapticPrimitive.lightImpact],
+        HapticIntensity.medium => const [HapticPrimitive.heavyImpact],
+        HapticIntensity.heavy => const [
+          HapticPrimitive.heavyImpact,
+          HapticPrimitive.heavyImpact,
+        ],
+      },
+      HapticType.success => switch (intensity) {
+        HapticIntensity.light => const [HapticPrimitive.lightImpact],
+        HapticIntensity.medium => const [
+          HapticPrimitive.mediumImpact,
+          HapticPrimitive.lightImpact,
+        ],
+        HapticIntensity.heavy => const [
+          HapticPrimitive.heavyImpact,
+          HapticPrimitive.heavyImpact,
+        ],
+      },
+      HapticType.warning => switch (intensity) {
+        HapticIntensity.light => const [
+          HapticPrimitive.lightImpact,
+          HapticPrimitive.lightImpact,
+        ],
+        HapticIntensity.medium => const [
+          HapticPrimitive.mediumImpact,
+          HapticPrimitive.mediumImpact,
+        ],
+        HapticIntensity.heavy => const [
+          HapticPrimitive.heavyImpact,
+          HapticPrimitive.heavyImpact,
+        ],
+      },
+      HapticType.error => switch (intensity) {
+        HapticIntensity.light => const [
+          HapticPrimitive.lightImpact,
+          HapticPrimitive.lightImpact,
+          HapticPrimitive.lightImpact,
+        ],
+        HapticIntensity.medium => const [
+          HapticPrimitive.mediumImpact,
+          HapticPrimitive.mediumImpact,
+          HapticPrimitive.mediumImpact,
+        ],
+        HapticIntensity.heavy => const [
+          HapticPrimitive.heavyImpact,
+          HapticPrimitive.heavyImpact,
+          HapticPrimitive.heavyImpact,
+        ],
+      },
+    };
   }
 
-  /// Light feedback - adjusted by intensity
-  Future<void> _triggerLight(HapticIntensity intensity) async {
-    switch (intensity) {
-      case HapticIntensity.light:
-        await HapticFeedback.selectionClick();
-      case HapticIntensity.medium:
-        await HapticFeedback.lightImpact();
-      case HapticIntensity.heavy:
-        await HapticFeedback.mediumImpact();
-    }
+  /// Gap between pulses when [pulsesFor] returns more than one.
+  static Duration pulseGapFor(HapticType type) {
+    return switch (type) {
+      HapticType.warning => const Duration(milliseconds: 150),
+      _ => const Duration(milliseconds: 100),
+    };
   }
 
-  /// Medium feedback - adjusted by intensity
-  Future<void> _triggerMedium(HapticIntensity intensity) async {
-    switch (intensity) {
-      case HapticIntensity.light:
-        await HapticFeedback.lightImpact();
-      case HapticIntensity.medium:
-        await HapticFeedback.mediumImpact();
-      case HapticIntensity.heavy:
-        await HapticFeedback.heavyImpact();
-    }
-  }
-
-  /// Heavy feedback - adjusted by intensity
-  Future<void> _triggerHeavy(HapticIntensity intensity) async {
-    switch (intensity) {
-      case HapticIntensity.light:
-        await HapticFeedback.mediumImpact();
-      case HapticIntensity.medium:
-        await HapticFeedback.heavyImpact();
-      case HapticIntensity.heavy:
-        // Double tap for extra heavy
-        await HapticFeedback.heavyImpact();
-        await Future.delayed(const Duration(milliseconds: 100));
-        await HapticFeedback.heavyImpact();
-    }
-  }
-
-  /// Success pattern
-  Future<void> _triggerSuccess(HapticIntensity intensity) async {
-    switch (intensity) {
-      case HapticIntensity.light:
-        await HapticFeedback.lightImpact();
-      case HapticIntensity.medium:
-        await HapticFeedback.mediumImpact();
-        await Future.delayed(const Duration(milliseconds: 100));
-        await HapticFeedback.lightImpact();
-      case HapticIntensity.heavy:
-        await HapticFeedback.heavyImpact();
-        await Future.delayed(const Duration(milliseconds: 100));
-        await HapticFeedback.mediumImpact();
-    }
-  }
-
-  /// Warning pattern
-  Future<void> _triggerWarning(HapticIntensity intensity) async {
-    switch (intensity) {
-      case HapticIntensity.light:
-        await HapticFeedback.lightImpact();
-        await Future.delayed(const Duration(milliseconds: 150));
-        await HapticFeedback.lightImpact();
-      case HapticIntensity.medium:
-        await HapticFeedback.mediumImpact();
-        await Future.delayed(const Duration(milliseconds: 150));
-        await HapticFeedback.mediumImpact();
-      case HapticIntensity.heavy:
-        await HapticFeedback.heavyImpact();
-        await Future.delayed(const Duration(milliseconds: 150));
-        await HapticFeedback.heavyImpact();
-    }
-  }
-
-  /// Error pattern - triple pulse
-  Future<void> _triggerError(HapticIntensity intensity) async {
-    switch (intensity) {
-      case HapticIntensity.light:
-        for (int i = 0; i < 3; i++) {
-          await HapticFeedback.lightImpact();
-          if (i < 2) await Future.delayed(const Duration(milliseconds: 100));
-        }
-      case HapticIntensity.medium:
-        for (int i = 0; i < 3; i++) {
-          await HapticFeedback.mediumImpact();
-          if (i < 2) await Future.delayed(const Duration(milliseconds: 100));
-        }
-      case HapticIntensity.heavy:
-        for (int i = 0; i < 3; i++) {
-          await HapticFeedback.heavyImpact();
-          if (i < 2) await Future.delayed(const Duration(milliseconds: 100));
-        }
+  static Future<void> _play(HapticPrimitive primitive) {
+    switch (primitive) {
+      case HapticPrimitive.selectionClick:
+        return HapticFeedback.selectionClick();
+      case HapticPrimitive.lightImpact:
+        return HapticFeedback.lightImpact();
+      case HapticPrimitive.mediumImpact:
+        return HapticFeedback.mediumImpact();
+      case HapticPrimitive.heavyImpact:
+        return HapticFeedback.heavyImpact();
     }
   }
 

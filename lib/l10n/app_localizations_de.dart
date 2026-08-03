@@ -3181,6 +3181,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channelFormUpdatedSnackbar => 'Kanal aktualisiert';
 
   @override
+  String get channelFormClearOldMessagesTitle => 'Alte Nachrichten löschen?';
+
+  @override
+  String get channelFormClearOldMessagesBody =>
+      'Name oder Schlüssel dieses Kanals wurden geändert. Nachrichten, die mit der vorherigen Konfiguration empfangen wurden, werden weiterhin in diesem Kanal angezeigt und können wie Teil des neuen wirken. Das Löschen betrifft nur dieses Gerät.';
+
+  @override
+  String get channelFormClearOldMessagesConfirm => 'Löschen';
+
+  @override
+  String get channelFormClearOldMessagesKeep => 'Behalten';
+
+  @override
+  String get channelFormClearOldMessagesSuccess => 'Alte Nachrichten gelöscht';
+
+  @override
   String get channelFormUplinkSubtitle =>
       'Nachrichten an den MQTT-Server weiterleiten';
 

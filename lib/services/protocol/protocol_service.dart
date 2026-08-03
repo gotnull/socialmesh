@@ -3035,6 +3035,10 @@ class ProtocolService {
       final log = TraceRouteLog(
         nodeNum: targetNode,
         targetNode: targetNode,
+        // Capture which node issued this traceroute so history entries
+        // keep naming their true origin after connecting to a different
+        // radio.
+        originNodeNum: _myNodeNum,
         sent: true,
         response: true,
         hopsTowards: forwardRoute.length,
@@ -8527,6 +8531,7 @@ class ProtocolService {
       TraceRouteLog(
         nodeNum: nodeNum,
         targetNode: nodeNum,
+        originNodeNum: _myNodeNum,
         sent: true,
         response: false,
         hopsTowards: 0,

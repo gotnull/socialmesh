@@ -3883,7 +3883,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     .updatePreferences(
                       UserPreferences(hapticIntensity: intensity.value),
                     );
-                ref.haptics.toggle();
+                // Preview with a standard-action pulse so the three options
+                // feel clearly different at the moment of choosing.
+                ref.haptics.trigger(HapticType.medium);
                 safeSetState(() {});
                 if (context.mounted) Navigator.pop(context);
               },

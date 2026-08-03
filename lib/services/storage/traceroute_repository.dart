@@ -92,14 +92,26 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
   Future<void> replaceOrAddRun(TraceRouteLog run) async {
     try {
       await _db.transaction((txn) async {
-        // Find the most recent pending run for this target node
+        // Find the most recent pending run for this target node. When the
+        // completed run knows its origin, only a placeholder issued by
+        // that same origin (or a legacy row with no recorded origin) may
+        // be replaced - a response captured on one radio must not consume
+        // a pending run issued from a different radio.
+        final originScope = run.originNodeNum == null
+            ? ''
+            : ' AND (${TracerouteTables.colOriginNodeId} = ? OR '
+                  '${TracerouteTables.colOriginNodeId} IS NULL)';
         final pending = await txn.query(
           TracerouteTables.runs,
           columns: [TracerouteTables.colId],
           where:
               '${TracerouteTables.colTargetNodeId} = ? AND '
-              '${TracerouteTables.colResponseReceived} = 0',
-          whereArgs: [run.targetNode],
+              '${TracerouteTables.colResponseReceived} = 0'
+              '$originScope',
+          whereArgs: [
+            run.targetNode,
+            if (run.originNodeNum != null) run.originNodeNum,
+          ],
           orderBy: '${TracerouteTables.colCreatedAt} DESC',
           limit: 1,
         );
@@ -390,6 +402,7 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       TracerouteTables.colTargetLongitude: run.targetLongitude,
       TracerouteTables.colTargetSnrTowards: run.targetSnrTowards,
       TracerouteTables.colOriginSnrBack: run.originSnrBack,
+      TracerouteTables.colOriginNodeId: run.originNodeNum,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -477,6 +490,7 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       nodeNum: targetNodeId,
       timestamp: DateTime.fromMillisecondsSinceEpoch(createdAtMs),
       targetNode: targetNodeId,
+      originNodeNum: row[TracerouteTables.colOriginNodeId] as int?,
       sent: true,
       response: responseReceived,
       hopsTowards: row[TracerouteTables.colForwardHops] as int? ?? 0,

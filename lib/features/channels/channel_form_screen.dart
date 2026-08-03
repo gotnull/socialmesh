@@ -3,6 +3,7 @@
 // lint-allow: haptic-feedback — GestureDetector is for keyboard dismissal, not user interaction
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/channel_key_field.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../models/mesh_models.dart';
@@ -271,6 +273,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
     final protocol = ref.read(protocolServiceProvider);
     final channelsNotifier = ref.read(channelsProvider.notifier);
     final secureStorage = ref.read(secureStorageProvider);
+    final messages = ref.read(messagesProvider);
+    final messagesNotifier = ref.read(messagesProvider.notifier);
 
     safeSetState(() => _isSaving = true);
 
@@ -394,9 +398,46 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
         'elapsedMs=${DateTime.now().difference(saveStartedAt).inMilliseconds}',
       );
 
+      // A changed name or key makes this a different logical channel, but
+      // messages are keyed by slot index only, so rows received under the
+      // previous configuration would keep rendering in the new channel's
+      // view as if they belonged to it. Offer to clear them (local-only,
+      // never silent - the user decides).
+      var clearedOldMessages = false;
+      if (isEditing && mounted) {
+        final old = widget.existingChannel!;
+        final identityChanged =
+            old.name != newChannel.name || !listEquals(old.psk, newChannel.psk);
+        final hasOldMessages = messages.any(
+          (m) => m.channel == index && m.isBroadcast,
+        );
+        if (identityChanged && hasOldMessages) {
+          final l10n = context.l10n;
+          final confirmed = await AppBottomSheet.showConfirm(
+            context: context,
+            title: l10n.channelFormClearOldMessagesTitle,
+            message: l10n.channelFormClearOldMessagesBody,
+            confirmLabel: l10n.channelFormClearOldMessagesConfirm,
+            cancelLabel: l10n.channelFormClearOldMessagesKeep,
+            isDestructive: true,
+          );
+          if (confirmed == true) {
+            final removed = await messagesNotifier.deleteChannelMessages(index);
+            clearedOldMessages = true;
+            AppLogging.channels(
+              'CHANNEL_SAVE_OLD_MESSAGES_CLEARED sessionId=$saveSessionId '
+              'channelIndex=$index removed=$removed',
+            );
+          }
+          if (!mounted) return;
+        }
+      }
+
       safeNavigatorPop();
       safeShowSnackBar(
-        isEditing
+        clearedOldMessages
+            ? context.l10n.channelFormClearOldMessagesSuccess
+            : isEditing
             ? context.l10n.channelFormUpdatedSnackbar
             : context.l10n.channelFormCreatedSnackbar,
       );

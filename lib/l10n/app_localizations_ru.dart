@@ -3164,6 +3164,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelFormUpdatedSnackbar => 'Канал обновлён';
 
   @override
+  String get channelFormClearOldMessagesTitle => 'Удалить старые сообщения?';
+
+  @override
+  String get channelFormClearOldMessagesBody =>
+      'Имя или ключ этого канала изменились. Сообщения, полученные при прежней конфигурации, всё ещё видны в этом канале и могут выглядеть как часть нового. Удаление затрагивает только это устройство.';
+
+  @override
+  String get channelFormClearOldMessagesConfirm => 'Удалить';
+
+  @override
+  String get channelFormClearOldMessagesKeep => 'Оставить';
+
+  @override
+  String get channelFormClearOldMessagesSuccess => 'Старые сообщения удалены';
+
+  @override
   String get channelFormUplinkSubtitle => 'Пересылать сообщения на сервер MQTT';
 
   @override

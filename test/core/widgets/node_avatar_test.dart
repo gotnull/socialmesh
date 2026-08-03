@@ -85,5 +85,34 @@ void main() {
 
       expect(find.text('abcde'), findsOneWidget);
     });
+
+    testWidgets('scaledSize follows the ambient text scaler, clamped', (
+      tester,
+    ) async {
+      final sizes = <double, double>{};
+      for (final scale in [0.8, 1.0, 1.25, 1.5, 2.0, 3.0]) {
+        await tester.pumpWidget(
+          _wrap(
+            Builder(
+              builder: (context) {
+                sizes[scale] = NodeAvatar.scaledSize(context, 48);
+                return const SizedBox.shrink();
+              },
+            ),
+            textScaler: TextScaler.linear(scale),
+          ),
+        );
+      }
+
+      // Never shrinks below the base diameter.
+      expect(sizes[0.8], 48);
+      expect(sizes[1.0], 48);
+      // Tracks the scaler through the working range.
+      expect(sizes[1.25], moreOrLessEquals(60, epsilon: 0.01));
+      expect(sizes[1.5], moreOrLessEquals(72, epsilon: 0.01));
+      // Clamps at 1.5x so tiles keep their shape at extreme scales.
+      expect(sizes[2.0], moreOrLessEquals(72, epsilon: 0.01));
+      expect(sizes[3.0], moreOrLessEquals(72, epsilon: 0.01));
+    });
   });
 }

@@ -24,7 +24,6 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/qr_share_sheet.dart';
 import '../../models/mesh_models.dart';
-import '../../models/telemetry_log.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/telemetry_providers.dart';
@@ -90,15 +89,6 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   bool _isTogglingFavorite = false;
   bool _isTogglingMute = false;
   bool _isSendingTraceroute = false;
-
-  /// Tracks the ID of the last traceroute result shown in the summary snackbar.
-  /// Prevents duplicate popups for the same result across rebuilds.
-  String? _lastShownTracerouteId;
-
-  /// Timestamp of the most recent traceroute request sent from this screen.
-  /// Used to ignore late-arriving responses from previous requests that
-  /// predate the current one (the mesh has no request-response correlation).
-  DateTime? _lastTracerouteSentAt;
 
   final ScrollController _scrollController = ScrollController();
   bool _showAppBarIdentity = false;
@@ -233,7 +223,6 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   Future<void> _sendTraceroute(BuildContext context, MeshNode node) async {
     if (_isSendingTraceroute) return;
     safeSetState(() => _isSendingTraceroute = true);
-    _lastTracerouteSentAt = DateTime.now();
     try {
       await sendNodeTraceroute(context, ref, node);
     } finally {
@@ -254,40 +243,6 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     TelemetryRequestType type,
   ) async {
     await requestNodeTelemetry(context, ref, node, type);
-  }
-
-  /// Formats a one-line traceroute summary: transport + hops + SNR.
-  String _formatTracerouteSummary(BuildContext context, TraceRouteLog log) {
-    final l10n = context.l10n;
-    final hops = log.hopsTowards;
-    final snr = log.snr;
-    final mqtt = log.viaMqtt ?? false;
-    final isDirect = hops == 0;
-
-    if (mqtt) {
-      if (isDirect && snr != null) {
-        return l10n.nodeDetailTracerouteSummaryMqttDirect(
-          snr.toStringAsFixed(1),
-        );
-      }
-      if (!isDirect && snr != null) {
-        return l10n.nodeDetailTracerouteSummaryMqtt(
-          hops,
-          snr.toStringAsFixed(1),
-        );
-      }
-    } else {
-      if (isDirect && snr != null) {
-        return l10n.nodeDetailTracerouteSummaryRfDirect(snr.toStringAsFixed(1));
-      }
-      if (!isDirect && snr != null) {
-        return l10n.nodeDetailTracerouteSummaryRf(hops, snr.toStringAsFixed(1));
-      }
-    }
-
-    // Fallback: no SNR available
-    if (isDirect) return l10n.nodeDetailTracerouteSummaryDirectNoSnr;
-    return l10n.nodeDetailTracerouteSummaryHopsOnly(hops);
   }
 
   Future<void> _showRebootConfirmation(
@@ -1674,54 +1629,10 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     final nodesMap = ref.watch(nodesProvider);
     final node = nodesMap[_initialNode.nodeNum] ?? _initialNode;
 
-    // Listen for new traceroute results and show a one-time summary popup.
-    ref.listen<AsyncValue<List<TraceRouteLog>>>(
-      nodeTraceRouteLogsProvider(node.nodeNum),
-      (prev, next) {
-        final logs = next.value;
-        if (logs == null || logs.isEmpty) return;
-
-        // Find the most recent completed result
-        final latest = logs.firstWhere(
-          (l) => l.response,
-          orElse: () => logs.first,
-        );
-        if (!latest.response) return;
-
-        // Ignore late-arriving responses from previous traceroute requests.
-        // The mesh has no request-response correlation, so a response that
-        // arrives after a new request was sent likely belongs to the old one.
-        if (_lastTracerouteSentAt != null &&
-            latest.timestamp.isBefore(_lastTracerouteSentAt!)) {
-          return;
-        }
-
-        // On the initial data load — whether prev was null (provider not yet
-        // observed) or prev had no value (AsyncLoading → AsyncData) — seed
-        // the dedup ID so pre-existing DB entries never trigger a snackbar.
-        if (prev == null || !prev.hasValue) {
-          _lastShownTracerouteId = latest.id;
-          return;
-        }
-
-        if (latest.id == _lastShownTracerouteId) return;
-
-        _lastShownTracerouteId = latest.id;
-
-        if (!mounted) return;
-        final l10n = context.l10n;
-        final summary = _formatTracerouteSummary(context, latest);
-        showActionSnackBar(
-          context,
-          '${l10n.nodeDetailTracerouteComplete}\n$summary',
-          actionLabel: l10n.nodeDetailTracerouteViewDetails,
-          onAction: () => _showTracerouteHistory(context, node),
-          type: SnackBarType.success,
-          duration: const Duration(seconds: 6),
-        );
-        HapticFeedback.mediumImpact();
-      },
-    );
+    // The "Traceroute complete" summary banner is owned globally by
+    // CountdownNotifier, so it appears regardless of which screen started
+    // the traceroute or which screen is on top when the reply lands. A
+    // screen-local listener here would double-announce.
 
     return GlassScaffold(
       controller: _scrollController,

@@ -4173,16 +4173,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final polylines = <Polyline>[];
     var droppedHops = 0;
 
-    // Resolve local device position as the start of the forward route.
-    // Prefer the stored position captured at traceroute time.
+    // Resolve the origin position as the start of the forward route.
+    // Prefer the stored position captured at traceroute time, then the
+    // recorded origin node's current position (falling back to the
+    // connected node for legacy rows without a recorded origin).
     var localPosition = _safeRoutePoint(
       log.originLatitude,
       log.originLongitude,
     );
-    if (localPosition == null && myNodeNum != null) {
-      final myNode = nodes[myNodeNum];
-      if (myNode != null && myNode.hasPosition) {
-        localPosition = safeLatLng(myNode.latitude, myNode.longitude);
+    final originFallbackNum = log.originNodeNum ?? myNodeNum;
+    if (localPosition == null && originFallbackNum != null) {
+      final originNode = nodes[originFallbackNum];
+      if (originNode != null && originNode.hasPosition) {
+        localPosition = safeLatLng(originNode.latitude, originNode.longitude);
       }
     }
 
@@ -4317,18 +4320,27 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
     }
 
-    final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    // Prefer the origin recorded at traceroute time so the marker keeps
+    // naming the node that actually issued the traceroute; legacy rows
+    // without a recorded origin fall back to the connected node.
+    final originNodeNum = log.originNodeNum ?? myNodeNum;
+    final originNode = originNodeNum != null ? nodes[originNodeNum] : null;
     var originPosition = _safeRoutePoint(
       log.originLatitude,
       log.originLongitude,
     );
-    if (originPosition == null && myNode != null && myNode.hasPosition) {
-      originPosition = safeLatLng(myNode.latitude, myNode.longitude);
+    if (originPosition == null &&
+        originNode != null &&
+        originNode.hasPosition) {
+      originPosition = safeLatLng(originNode.latitude, originNode.longitude);
     }
     if (originPosition != null) {
-      if (myNodeNum != null) seen.add(myNodeNum);
+      if (originNodeNum != null) seen.add(originNodeNum);
       final name =
-          myNode?.displayName ?? context.l10n.telemetryTracerouteYouLabel;
+          originNode?.displayName ??
+          (log.originNodeNum != null
+              ? NodeDisplayNameResolver.defaultName(log.originNodeNum!)
+              : context.l10n.telemetryTracerouteYouLabel);
       markers.add(
         _tracerouteLabelMarker(originPosition, name, AccentColors.purple),
       );
@@ -4385,12 +4397,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
       if (point != null) points.add(point);
     }
 
-    // Local device position - prefer stored position from traceroute time.
+    // Origin position - prefer stored position from traceroute time,
+    // then the recorded origin node (connected node for legacy rows).
     addIfFinite(log.originLatitude, log.originLongitude);
-    if (points.isEmpty && myNodeNum != null) {
-      final myNode = nodes[myNodeNum];
-      if (myNode != null && myNode.hasPosition) {
-        addIfFinite(myNode.latitude, myNode.longitude);
+    final originFallbackNum = log.originNodeNum ?? myNodeNum;
+    if (points.isEmpty && originFallbackNum != null) {
+      final originNode = nodes[originFallbackNum];
+      if (originNode != null && originNode.hasPosition) {
+        addIfFinite(originNode.latitude, originNode.longitude);
       }
     }
 

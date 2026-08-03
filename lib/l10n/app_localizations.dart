@@ -5604,6 +5604,36 @@ abstract class AppLocalizations {
   /// **'Channel updated'**
   String get channelFormUpdatedSnackbar;
 
+  /// Title of the confirmation sheet shown after a channel's name or key changed, asking whether to delete messages received under the previous configuration
+  ///
+  /// In en, this message translates to:
+  /// **'Clear old messages?'**
+  String get channelFormClearOldMessagesTitle;
+
+  /// Body of the confirmation sheet shown after a channel's name or key changed
+  ///
+  /// In en, this message translates to:
+  /// **'This channel\'s name or key changed. Messages received under the previous configuration are still shown in this channel and may look like they belong to the new one. Clearing only affects this device.'**
+  String get channelFormClearOldMessagesBody;
+
+  /// Destructive confirm button that deletes the old channel messages
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get channelFormClearOldMessagesConfirm;
+
+  /// Cancel button that keeps the old channel messages
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get channelFormClearOldMessagesKeep;
+
+  /// Snackbar shown after old channel messages were deleted
+  ///
+  /// In en, this message translates to:
+  /// **'Old messages cleared'**
+  String get channelFormClearOldMessagesSuccess;
+
   /// Uplink = forwarding local mesh radio messages to an internet MQTT server.
   ///
   /// In en, this message translates to:

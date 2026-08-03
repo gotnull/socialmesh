@@ -358,6 +358,12 @@ class PositionLog extends TelemetryLogEntry {
 /// Traceroute log entry
 class TraceRouteLog extends TelemetryLogEntry {
   final int targetNode;
+
+  /// The node that issued this traceroute (the locally connected node at
+  /// capture time). Persisted so history entries keep naming their true
+  /// origin after the app connects to a different radio. Null on legacy
+  /// rows recorded before the field existed.
+  final int? originNodeNum;
   final bool sent;
   final bool response;
   final int hopsTowards;
@@ -384,6 +390,7 @@ class TraceRouteLog extends TelemetryLogEntry {
     required super.nodeNum,
     super.timestamp,
     required this.targetNode,
+    this.originNodeNum,
     this.sent = true,
     this.response = false,
     this.hopsTowards = 0,
@@ -407,6 +414,7 @@ class TraceRouteLog extends TelemetryLogEntry {
           ? DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int)
           : null,
       targetNode: json['targetNode'] as int,
+      originNodeNum: json['originNodeNum'] as int?,
       sent: json['sent'] as bool? ?? true,
       response: json['response'] as bool? ?? false,
       hopsTowards: json['hopsTowards'] as int? ?? 0,
@@ -433,6 +441,7 @@ class TraceRouteLog extends TelemetryLogEntry {
     'nodeNum': nodeNum,
     'timestamp': timestamp.millisecondsSinceEpoch,
     'targetNode': targetNode,
+    'originNodeNum': originNodeNum,
     'sent': sent,
     'response': response,
     'hopsTowards': hopsTowards,

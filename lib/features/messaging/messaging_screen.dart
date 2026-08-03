@@ -15,6 +15,7 @@ import 'widgets/chat_composer.dart';
 import 'widgets/hop_count_chip.dart';
 import 'widgets/inbound_message_meta_line.dart';
 import 'widgets/message_bubble_body.dart';
+import 'widgets/message_date_separator.dart';
 import 'widgets/messaging_unread_divider.dart';
 import 'widgets/quick_responses_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -732,7 +733,9 @@ class _CompactContactTile extends StatelessWidget {
                     nodeNum: contact.nodeNum,
                     avatarColor: contact.avatarColor,
                   ),
-                  size: 36,
+                  // The circle follows the user's text size, matching the
+                  // Nodes list so the two surfaces read consistently.
+                  size: NodeAvatar.scaledSize(context, 36),
                 ),
                 if (contact.presence.isActive)
                   Positioned(
@@ -853,12 +856,13 @@ class _ContactTile extends StatelessWidget {
                 text: contact.shortName ?? safeTruncate(contact.displayName, 2),
                 // Deterministic per-node colour (user-set avatarColor wins),
                 // matching the Nodes list so the same node reads the same
-                // colour in both lists.
+                // colour in both lists. The circle also follows the user's
+                // text size, again matching the Nodes list.
                 color: resolveNodeColor(
                   nodeNum: contact.nodeNum,
                   avatarColor: contact.avatarColor,
                 ),
-                size: 48,
+                size: NodeAvatar.scaledSize(context, 48),
               ),
               if (contact.presence.isActive)
                 Positioned(
@@ -2914,22 +2918,48 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   final row = filteredRows[index];
                                   final showDividerAbove =
                                       dividerInsertIndex == index;
+                                  // Calendar-day separator above the first
+                                  // row of each local day. Suppressed while
+                                  // searching: a filtered window jumps
+                                  // across days, so per-row chips would
+                                  // outnumber the results. Wrapped into the
+                                  // same slot as the bubble (like the unread
+                                  // divider) to preserve index parity.
+                                  final showDateAbove =
+                                      !_isSearching &&
+                                      showsMessageDateSeparator(
+                                        index == 0
+                                            ? null
+                                            : filteredRows[index - 1]
+                                                  .sortTimestamp,
+                                        row.sortTimestamp,
+                                      );
+
+                                  Widget withInserts(Widget child) {
+                                    if (!showDateAbove && !showDividerAbove) {
+                                      return child;
+                                    }
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (showDateAbove)
+                                          MessageDateSeparator(
+                                            timestamp: row.sortTimestamp,
+                                          ),
+                                        if (showDividerAbove)
+                                          const MessagingUnreadDivider(),
+                                        child,
+                                      ],
+                                    );
+                                  }
 
                                   if (row.isOrphanPlaceholder) {
                                     return KeyedSubtree(
                                       key: ValueKey(row.key),
-                                      child: showDividerAbove
-                                          ? Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.stretch,
-                                              children: [
-                                                const MessagingUnreadDivider(),
-                                                _OrphanTapbackPlaceholder(
-                                                  row: row,
-                                                ),
-                                              ],
-                                            )
-                                          : _OrphanTapbackPlaceholder(row: row),
+                                      child: withInserts(
+                                        _OrphanTapbackPlaceholder(row: row),
+                                      ),
                                     );
                                   }
 
@@ -3046,16 +3076,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
                                   return KeyedSubtree(
                                     key: ValueKey(row.key),
-                                    child: showDividerAbove
-                                        ? Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              const MessagingUnreadDivider(),
-                                              bubble,
-                                            ],
-                                          )
-                                        : bubble,
+                                    child: withInserts(bubble),
                                   );
                                 },
                               );

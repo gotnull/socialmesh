@@ -14,7 +14,6 @@ import 'package:vector_math/vector_math_64.dart' show Vector3;
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../../services/haptic_service.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Provider to track discovered nodes for the overlay animation
@@ -22,11 +21,6 @@ final discoveredNodesQueueProvider =
     NotifierProvider<DiscoveredNodesNotifier, List<DiscoveredNodeEntry>>(
       DiscoveredNodesNotifier.new,
     );
-
-/// Provider for haptic service
-final hapticServiceProvider = Provider<HapticService>((ref) {
-  return HapticService(ref);
-});
 
 class DiscoveredNodeEntry {
   final MeshNode node;

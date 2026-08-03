@@ -3,16 +3,20 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../core/navigation.dart';
 import '../core/transport.dart';
 import '../models/mesh_models.dart';
+import '../models/telemetry_log.dart';
 import '../features/telemetry/traceroute_log_screen.dart';
+import '../features/telemetry/traceroute_summary.dart';
 import '../providers/app_providers.dart';
 import '../providers/telemetry_providers.dart';
 import '../features/nodes/node_display_name_resolver.dart';
+import '../services/haptic_service.dart';
 import '../utils/snackbar.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
@@ -96,6 +100,19 @@ class CountdownTask {
 class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   Timer? _tickTimer;
 
+  /// Most recent user-initiated traceroute send per target node. Gates the
+  /// global "Traceroute complete" banner so passive traceroute traffic
+  /// never pops a banner the user did not ask for.
+  final Map<int, DateTime> _tracerouteSentAt = {};
+
+  /// Run id of the last completion banner shown, to suppress duplicates.
+  String? _lastTracerouteBannerRunId;
+
+  /// How long after a send a response is still credited to that send. The
+  /// mesh has no request-response correlation, so this window is the only
+  /// tie between the banner and the user's action.
+  static const _tracerouteCompletionWindow = Duration(minutes: 2);
+
   /// Standard traceroute cooldown duration matching Meshtastic iOS.
   static const tracerouteCooldownSeconds = 30;
 
@@ -149,6 +166,18 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
       });
     });
 
+    // Listen for completed traceroute responses and show the summary
+    // banner globally. Ownership lives here - not on any screen - so the
+    // banner appears no matter where the traceroute was started from
+    // (node details, traceroute history, or the nodes-list long-press
+    // menu) and no matter which screen is on top when the reply lands.
+    ref.listen<AsyncValue<TraceRouteLog>>(tracerouteCompletionStreamProvider, (
+      previous,
+      next,
+    ) {
+      next.whenData(_onTracerouteResponse);
+    });
+
     return const {};
   }
 
@@ -197,6 +226,8 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
 
     final l10n = safeL10n();
 
+    _tracerouteSentAt[nodeNum] = DateTime.now();
+
     startCountdown(
       id: tracerouteId(nodeNum),
       label: l10n.countdownTracerouteTo(displayName),
@@ -204,6 +235,48 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
       type: CountdownType.traceroute,
       targetNodeNum: nodeNum,
     );
+  }
+
+  /// Whether a completed [run] earns the global "Traceroute complete"
+  /// banner: the user must have initiated a traceroute to that node
+  /// recently enough for the response to be theirs, and each run id is
+  /// announced at most once. Mutates the send/dedupe bookkeeping when it
+  /// returns true, so one send yields one banner even when duplicate
+  /// replies arrive. [now] is injectable for deterministic tests.
+  @visibleForTesting
+  bool shouldAnnounceTracerouteRun(TraceRouteLog run, {DateTime? now}) {
+    final sentAt = _tracerouteSentAt[run.targetNode];
+    if (sentAt == null) return false;
+    final reference = now ?? DateTime.now();
+    if (reference.difference(sentAt) > _tracerouteCompletionWindow) {
+      _tracerouteSentAt.remove(run.targetNode);
+      return false;
+    }
+    if (run.id == _lastTracerouteBannerRunId) return false;
+    _lastTracerouteBannerRunId = run.id;
+    _tracerouteSentAt.remove(run.targetNode);
+    return true;
+  }
+
+  /// Shows the global "Traceroute complete" summary banner for a completed
+  /// run that passes [shouldAnnounceTracerouteRun].
+  void _onTracerouteResponse(TraceRouteLog run) {
+    if (!shouldAnnounceTracerouteRun(run)) return;
+
+    final l10n = safeL10n();
+    final summary = formatTracerouteSummary(l10n, run);
+    showGlobalActionSnackBar(
+      '${l10n.nodeDetailTracerouteComplete}\n$summary',
+      actionLabel: l10n.nodeDetailTracerouteViewDetails,
+      onAction: () {
+        final ctx = navigatorKey.currentContext;
+        if (ctx == null) return;
+        TraceRouteLogScreen.open(ctx, nodeNum: run.targetNode);
+      },
+      type: SnackBarType.success,
+      duration: const Duration(seconds: 6),
+    );
+    ref.read(hapticServiceProvider).trigger(HapticType.success);
   }
 
   /// Convenience: start a device reboot countdown.

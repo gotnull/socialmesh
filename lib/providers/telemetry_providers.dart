@@ -174,6 +174,15 @@ final nodeTraceRouteLogsProvider =
       return repo.listRuns(targetNodeId: nodeNum);
     });
 
+/// Completed traceroute runs as they arrive from the radio. Emits fresh
+/// events only (no replay of persisted history), so listeners can treat
+/// every emission as a new response. Rebinds to the new stream when the
+/// protocol service is recreated on reconnect.
+final tracerouteCompletionStreamProvider = StreamProvider<TraceRouteLog>((ref) {
+  final protocol = ref.watch(protocolServiceProvider);
+  return protocol.traceRouteLogStream.where((run) => run.response);
+});
+
 /// PAX counter logs for a specific node
 final nodePaxCounterLogsProvider =
     FutureProvider.family<List<PaxCounterLog>, int>((ref, nodeNum) async {

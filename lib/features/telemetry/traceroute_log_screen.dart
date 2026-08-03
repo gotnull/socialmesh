@@ -826,12 +826,19 @@ class _TraceRouteCard extends StatelessWidget {
     final forwardHops = log.hops.where((h) => !h.back).toList();
     final returnHops = log.hops.where((h) => h.back).toList();
 
-    // Resolve our local node's display name for the return-path
-    // terminus. Falls back to a localised "You" label when the node
-    // table doesn't yet have an entry for the local device.
-    final myNode = myNodeNum != null ? allNodes[myNodeNum] : null;
+    // Resolve the origin node's display name for the return-path
+    // terminus. Prefer the origin recorded at capture time so history
+    // entries keep naming the node that actually issued the traceroute
+    // after connecting to a different radio; legacy rows without a
+    // recorded origin fall back to the currently connected node, then
+    // to a localised "You" label when the node table has no entry.
+    final originNum = log.originNodeNum ?? myNodeNum;
+    final originNode = originNum != null ? allNodes[originNum] : null;
     final myName =
-        myNode?.displayName ?? context.l10n.telemetryTracerouteYouLabel;
+        originNode?.displayName ??
+        (log.originNodeNum != null
+            ? NodeDisplayNameResolver.defaultName(log.originNodeNum!)
+            : context.l10n.telemetryTracerouteYouLabel);
 
     // Endpoint SNR rows. Meshtastic's RouteDiscovery appends one
     // extra SNR entry beyond the intermediate-hop list in each
@@ -847,7 +854,7 @@ class _TraceRouteCard extends StatelessWidget {
         : null;
     final returnTerminal = log.originSnrBack != null
         ? TraceRouteHop(
-            nodeNum: myNodeNum ?? 0,
+            nodeNum: originNum ?? 0,
             name: myName,
             snr: log.originSnrBack,
             back: true,
