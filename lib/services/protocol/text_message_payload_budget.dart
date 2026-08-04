@@ -65,14 +65,51 @@ class TextMessagePayloadTooLargeException implements Exception {
 /// `mesh.proto`. Upstream Android validates the encoded `Data` protobuf against
 /// that ceiling before sending. This helper mirrors that wire-level check so
 /// SocialMesh's composer UI and send path rely on the same source of truth.
+///
+/// PKI-encrypted DMs carry extra crypto overhead on the wire, so their
+/// encoded `Data` ceiling is lower — pass `pkiEncrypted: true` whenever the
+/// send path will attach the recipient's public key, or the firmware NAKs
+/// the packet with `Routing.Error.TOO_LARGE` even though the plain-text
+/// budget looked fine.
 class TextMessagePayloadSizer {
-  TextMessagePayloadSizer.standard({this.replyId, this.isEmoji = false})
-    : maxUtf8Bytes = _resolveMaxUtf8Bytes(replyId: replyId, isEmoji: isEmoji);
+  TextMessagePayloadSizer.standard({
+    this.replyId,
+    this.isEmoji = false,
+    this.pkiEncrypted = false,
+  }) : maxEncodedDataBytes = resolveMaxEncodedDataBytes(
+         pkiEncrypted: pkiEncrypted,
+       ),
+       maxUtf8Bytes = _resolveMaxUtf8Bytes(
+         replyId: replyId,
+         isEmoji: isEmoji,
+         pkiEncrypted: pkiEncrypted,
+       );
 
-  static final int maxEncodedDataBytes = mesh.Constants.DATA_PAYLOAD_LEN.value;
+  /// Ceiling for the encoded `Data` protobuf on channel-PSK packets.
+  static final int channelMaxEncodedDataBytes =
+      mesh.Constants.DATA_PAYLOAD_LEN.value;
+
+  // LoRa frame geometry mirrored from the Meshtastic firmware: 255-byte max
+  // frame, 16-byte packet header, and 12 bytes reserved on PKI-encrypted
+  // packets (8-byte auth tag + 4-byte extended nonce). The firmware rejects
+  // a PKI packet whose encoded `Data` exceeds 255 - 16 - 12 = 227 bytes
+  // with `Routing.Error.TOO_LARGE`, so the app-side budget must respect the
+  // same ceiling.
+  static const int _maxLoraFrameBytes = 255;
+  static const int _packetHeaderBytes = 16;
+  static const int _pkcOverheadBytes = 12;
+
+  /// Ceiling for the encoded `Data` protobuf on PKI-encrypted DMs.
+  static const int pkiMaxEncodedDataBytes =
+      _maxLoraFrameBytes - _packetHeaderBytes - _pkcOverheadBytes;
+
+  static int resolveMaxEncodedDataBytes({required bool pkiEncrypted}) =>
+      pkiEncrypted ? pkiMaxEncodedDataBytes : channelMaxEncodedDataBytes;
 
   final int? replyId;
   final bool isEmoji;
+  final bool pkiEncrypted;
+  final int maxEncodedDataBytes;
   final int maxUtf8Bytes;
 
   static bool hasSendableContent(String text) => text.trim().isNotEmpty;
@@ -97,12 +134,24 @@ class TextMessagePayloadSizer {
 
   static int utf8ByteLength(String text) => utf8.encode(text).length;
 
-  static int resolveMaxUtf8Bytes({int? replyId, bool isEmoji = false}) =>
-      _resolveMaxUtf8Bytes(replyId: replyId, isEmoji: isEmoji);
+  static int resolveMaxUtf8Bytes({
+    int? replyId,
+    bool isEmoji = false,
+    bool pkiEncrypted = false,
+  }) => _resolveMaxUtf8Bytes(
+    replyId: replyId,
+    isEmoji: isEmoji,
+    pkiEncrypted: pkiEncrypted,
+  );
 
-  static int _resolveMaxUtf8Bytes({int? replyId, required bool isEmoji}) {
+  static int _resolveMaxUtf8Bytes({
+    int? replyId,
+    required bool isEmoji,
+    required bool pkiEncrypted,
+  }) {
+    final ceiling = resolveMaxEncodedDataBytes(pkiEncrypted: pkiEncrypted);
     var low = 0;
-    var high = maxEncodedDataBytes;
+    var high = ceiling;
 
     while (low < high) {
       final mid = (low + high + 1) ~/ 2;
@@ -111,7 +160,7 @@ class TextMessagePayloadSizer {
         replyId: replyId,
         isEmoji: isEmoji,
       );
-      if (size <= maxEncodedDataBytes) {
+      if (size <= ceiling) {
         low = mid;
       } else {
         high = mid - 1;

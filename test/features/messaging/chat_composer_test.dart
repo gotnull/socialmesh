@@ -329,9 +329,10 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), '🙂' * 58);
+      // Programmatic sets bypass input formatters, mirroring an existing
+      // draft that lands over budget when the budget tightens (reply
+      // context added, recipient PKI key learned).
+      controller.text = '🙂' * 58;
       await tester.pump();
 
       expect(find.text('232/228 bytes'), findsOneWidget);
@@ -347,6 +348,44 @@ void main() {
       await tester.pump();
 
       expect(sendCalled, isFalse);
+    });
+
+    testWidgets('typed input cannot exceed the byte budget', (tester) async {
+      final sizer = TextMessagePayloadSizer.standard();
+
+      await tester.pumpWidget(
+        buildSubject(
+          maxLength: sizer.maxUtf8Bytes,
+          budgetResolver: sizer.measure,
+          budgetLabelBuilder: (_, budget) =>
+              '${budget.utf8Bytes}/${budget.maxUtf8Bytes} bytes',
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      final atLimit = 'a' * sizer.maxUtf8Bytes;
+      await tester.enterText(find.byType(TextField), atLimit);
+      await tester.pump();
+
+      expect(controller.text, atLimit);
+
+      // One more multi-byte character would cross the byte ceiling even
+      // though the character count is still under maxLength.
+      await tester.enterText(find.byType(TextField), '$atLimitä');
+      await tester.pump();
+
+      expect(controller.text, atLimit);
+
+      // Deleting from an over-budget draft must still be possible.
+      controller.text = '🙂' * 58;
+      await tester.pump();
+      final shrunk = '🙂' * 57;
+      await tester.enterText(find.byType(TextField), shrunk);
+      await tester.pump();
+
+      expect(controller.text, shrunk);
     });
 
     testWidgets(

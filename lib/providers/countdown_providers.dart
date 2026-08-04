@@ -55,8 +55,15 @@ class CountdownTask {
   /// Total duration in seconds (used for progress calculation).
   final int totalSeconds;
 
-  /// Seconds remaining. Decremented every tick by the notifier.
+  /// Seconds remaining. Refreshed every tick by the notifier from [endsAt].
   final int remainingSeconds;
+
+  /// Wall-clock deadline for this countdown. The tick loop recomputes
+  /// [remainingSeconds] from this instead of decrementing, so time spent
+  /// with the app suspended (screen locked, backgrounded) still counts —
+  /// a cooldown that expired while locked completes on the first tick
+  /// after resume rather than freezing where it left off.
+  final DateTime endsAt;
 
   /// The target node number (if applicable). Used for the "View" action
   /// when the countdown completes.
@@ -70,6 +77,7 @@ class CountdownTask {
     required this.label,
     required this.totalSeconds,
     required this.remainingSeconds,
+    required this.endsAt,
     this.targetNodeNum,
     required this.type,
   });
@@ -87,6 +95,7 @@ class CountdownTask {
       label: label,
       totalSeconds: totalSeconds,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
+      endsAt: endsAt,
       targetNodeNum: targetNodeNum,
       type: type,
     );
@@ -203,6 +212,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
       label: label,
       totalSeconds: totalSeconds,
       remainingSeconds: totalSeconds,
+      endsAt: DateTime.now().add(Duration(seconds: totalSeconds)),
       targetNodeNum: targetNodeNum,
       type: type,
     );
@@ -438,11 +448,15 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
       return;
     }
 
+    final now = DateTime.now();
     final updated = <String, CountdownTask>{};
     final completed = <CountdownTask>[];
 
     for (final entry in state.entries) {
-      final remaining = entry.value.remainingSeconds - 1;
+      // Wall-clock anchored: time spent suspended (screen locked,
+      // backgrounded) counts toward the countdown, so expiry is detected
+      // on the first tick after resume instead of resuming a frozen count.
+      final remaining = entry.value.endsAt.difference(now).inSeconds;
       if (remaining <= 0) {
         completed.add(entry.value);
       } else {

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +14,30 @@ typedef ChatComposerBudgetResolver =
     TextMessagePayloadBudget Function(String text);
 typedef ChatComposerBudgetLabelBuilder =
     String Function(BuildContext context, TextMessagePayloadBudget budget);
+
+/// Blocks edits that would push the field past [maxBytes] UTF-8 bytes.
+///
+/// Flutter's built-in length limiting counts characters, so a character cap
+/// under-constrains multi-byte text (umlauts, emoji) when the wire budget is
+/// measured in bytes. Shrinking edits are always allowed so an over-budget
+/// draft (e.g. after a reply context tightens the budget) can still be
+/// deleted back under the limit.
+class Utf8LengthLimitingTextInputFormatter extends TextInputFormatter {
+  const Utf8LengthLimitingTextInputFormatter(this.maxBytes);
+
+  final int maxBytes;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final newBytes = utf8.encode(newValue.text).length;
+    if (newBytes <= maxBytes) return newValue;
+    if (newBytes <= utf8.encode(oldValue.text).length) return newValue;
+    return oldValue;
+  }
+}
 
 /// A neutral chat message composer with multiline input, an explicit Send
 /// button, and keyboard shortcuts.
@@ -42,6 +68,10 @@ class ChatComposer extends StatelessWidget {
   final FocusNode focusNode;
   final VoidCallback onSend;
   final String hintText;
+
+  /// Maximum UTF-8 bytes accepted by the field. Enforced by a byte-aware
+  /// input formatter in addition to Flutter's character-based `maxLength`,
+  /// so multi-byte text cannot be typed past a byte-measured wire budget.
   final int maxLength;
   final int minLines;
   final int maxLines;
@@ -151,6 +181,9 @@ class ChatComposer extends StatelessWidget {
                       onKeyEvent: _handleKeyEvent,
                       child: TextField(
                         maxLength: maxLength,
+                        inputFormatters: [
+                          Utf8LengthLimitingTextInputFormatter(maxLength),
+                        ],
                         controller: controller,
                         focusNode: focusNode,
                         enabled: enabled,

@@ -82,6 +82,9 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
   // Optional per-node filter: seeded from widget.nodeNum, clearable so the user
   // can broaden from a single node to all nodes via the chip's close icon.
+  // The app-bar traceroute action stays bound to widget.nodeNum, not this
+  // filter — clearing the chip to browse all history must not remove the
+  // ability to re-run the traceroute the screen was opened for.
   int? _filterNodeNum;
 
   @override
@@ -97,7 +100,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
   }
 
   Future<void> _sendTraceroute() async {
-    final nodeNum = _filterNodeNum;
+    final nodeNum = widget.nodeNum;
     if (nodeNum == null) return;
 
     final cooldownRemaining = ref
@@ -314,7 +317,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
               ? context.l10n.telemetryTracerouteTitle
               : null,
           actions: [
-            if (_filterNodeNum != null)
+            if (widget.nodeNum != null)
               _buildTracerouteAppBarAction(
                 context,
                 cooldownRemaining,

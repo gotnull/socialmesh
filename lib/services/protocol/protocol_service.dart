@@ -6223,9 +6223,22 @@ class ProtocolService {
         );
       }
 
+      // Auto-PKI: if the caller didn't pre-resolve the recipient's pubkey
+      // but our nodeDB has one for [to], attach it so firmware encrypts
+      // with PKI instead of channel PSK. Mirrors meshtastic-ios behaviour
+      // where `UserEntity.pkiEncrypted == true` flips DMs to PKI without
+      // any caller-side decision. Broadcasts (`to == 0xFFFFFFFF`) are
+      // skipped — PKI is unicast-only. Resolved before the size check
+      // because PKI packets have a lower encoded-`Data` ceiling.
+      final effectivePkiKey = _resolveEffectivePkiKey(
+        to: to,
+        callerPkiKey: pkiPublicKey,
+      );
+
       final payloadBudget = TextMessagePayloadSizer.standard(
         replyId: replyId,
         isEmoji: isEmoji,
+        pkiEncrypted: effectivePkiKey != null && effectivePkiKey.isNotEmpty,
       ).measure(text);
       if (!payloadBudget.fitsInPacket) {
         throw TextMessagePayloadTooLargeException(payloadBudget);
@@ -6249,17 +6262,6 @@ class ProtocolService {
         'emoji=${data.hasEmoji() ? data.emoji : "unset"}, '
         'replyId=${data.hasReplyId() ? data.replyId : "unset"}, '
         'payloadLen=${data.payload.length}',
-      );
-
-      // Auto-PKI: if the caller didn't pre-resolve the recipient's pubkey
-      // but our nodeDB has one for [to], attach it so firmware encrypts
-      // with PKI instead of channel PSK. Mirrors meshtastic-ios behaviour
-      // where `UserEntity.pkiEncrypted == true` flips DMs to PKI without
-      // any caller-side decision. Broadcasts (`to == 0xFFFFFFFF`) are
-      // skipped — PKI is unicast-only.
-      final effectivePkiKey = _resolveEffectivePkiKey(
-        to: to,
-        callerPkiKey: pkiPublicKey,
       );
 
       final packet = MeshPacketBuilder.userPayload(
@@ -7859,9 +7861,17 @@ class ProtocolService {
       // a raw control character must never reach a rendered Text() widget.
       final wireText = includeAlertBell ? '\u0007' : text;
 
+      // Auto-PKI: see [sendMessage] for rationale. Resolved before the size
+      // check because PKI packets have a lower encoded-`Data` ceiling.
+      final effectivePkiKey = _resolveEffectivePkiKey(
+        to: to,
+        callerPkiKey: pkiPublicKey,
+      );
+
       final payloadBudget = TextMessagePayloadSizer.standard(
         replyId: replyId,
         isEmoji: isEmoji,
+        pkiEncrypted: effectivePkiKey != null && effectivePkiKey.isNotEmpty,
       ).measure(wireText);
       if (!payloadBudget.fitsInPacket) {
         throw TextMessagePayloadTooLargeException(payloadBudget);
@@ -7885,12 +7895,6 @@ class ProtocolService {
       if (isEmoji) {
         data.emoji = 1;
       }
-
-      // Auto-PKI: see [sendMessage] for rationale.
-      final effectivePkiKey = _resolveEffectivePkiKey(
-        to: to,
-        callerPkiKey: pkiPublicKey,
-      );
 
       final packet = MeshPacketBuilder.userPayload(
         myNodeNum: _myNodeNum!,
@@ -8478,6 +8482,12 @@ class ProtocolService {
     }
   }
 
+  /// Bounds the local transport write for a traceroute request. A BLE write
+  /// whose completion event is lost (peripheral drops while the phone locks
+  /// mid-write) would otherwise leave the returned future pending forever,
+  /// pinning callers' in-flight UI state with no button and no cooldown.
+  static const Duration _tracerouteSendTimeout = Duration(seconds: 10);
+
   /// Send a traceroute request to a specific node
   /// Returns immediately - results come via mesh packet responses.
   /// Emits a placeholder [TraceRouteLog] with `response: false` so the UI
@@ -8506,7 +8516,9 @@ class ProtocolService {
     final toRadio = pb.ToRadio()..packet = packet;
     final bytes = toRadio.writeToBuffer();
 
-    await _transport.send(_prepareForSend(bytes));
+    await _transport
+        .send(_prepareForSend(bytes))
+        .timeout(_tracerouteSendTimeout);
 
     // Snapshot origin (local device) position for pending entry
     double? originLat, originLon;

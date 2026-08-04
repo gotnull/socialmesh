@@ -1790,6 +1790,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
   }
 
+  // A DM to a node with a known curve25519 pubkey is auto-upgraded to PKI
+  // encryption by the send path, and PKI packets carry crypto overhead that
+  // lowers the usable payload budget. The composer counter and the pre-send
+  // check must budget against the same ceiling the radio will enforce.
+  bool _pkiEncryptedForOutbound(Map<int, MeshNode> nodes) {
+    if (widget.type != ConversationType.directMessage) return false;
+    final nodeNum = widget.nodeNum;
+    if (nodeNum == null) return false;
+    final publicKey = nodes[nodeNum]?.publicKey;
+    return publicKey != null && publicKey.isNotEmpty;
+  }
+
   // [includeAlertBell] replaces the wire payload with exactly the ASCII
   // BEL character (0x07) so buzzer-equipped radios ring; the typed text is
   // kept for local display/history only. The measured string mirrors the
@@ -1801,6 +1813,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final replyPacketId = _replyingTo?.packetId;
     final textPayloadBudget = TextMessagePayloadSizer.standard(
       replyId: replyPacketId,
+      pkiEncrypted: _pkiEncryptedForOutbound(ref.read(nodesProvider)),
     ).measure(includeAlertBell ? _alertBellChar : text);
     if (!textPayloadBudget.fitsInPacket) {
       showErrorSnackBar(
@@ -3208,6 +3221,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       final composerPayloadSizer =
                           TextMessagePayloadSizer.standard(
                             replyId: _replyingTo?.packetId,
+                            pkiEncrypted: _pkiEncryptedForOutbound(
+                              ref.watch(nodesProvider),
+                            ),
                           );
 
                       return ChatComposer(
