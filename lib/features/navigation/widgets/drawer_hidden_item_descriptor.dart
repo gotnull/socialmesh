@@ -92,12 +92,6 @@ DrawerHiddenItemDescriptor? drawerHiddenItemDescriptor(
         label: l10n.navigationTelemetry,
         iconColor: AccentColors.green,
       );
-    case 'device_shop':
-      return DrawerHiddenItemDescriptor(
-        icon: Icons.storefront_outlined,
-        label: l10n.deviceShopTitle,
-        iconColor: AccentColors.cyan,
-      );
     case 'file_transfers':
       return DrawerHiddenItemDescriptor(
         icon: Icons.swap_vert,

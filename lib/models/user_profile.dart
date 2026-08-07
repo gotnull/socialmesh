@@ -377,9 +377,6 @@ class UserProfile {
   /// User's preferred accent color index
   final int? accentColorIndex;
 
-  /// IDs of marketplace widgets installed by the user
-  final List<String> installedWidgetIds;
-
   /// User preferences that sync to cloud
   final UserPreferences? preferences;
 
@@ -419,7 +416,6 @@ class UserProfile {
     this.primaryNodeId,
     this.linkedNodeIds = const [],
     this.accentColorIndex,
-    this.installedWidgetIds = const [],
     this.preferences,
     required this.createdAt,
     required this.updatedAt,
@@ -486,11 +482,6 @@ class UserProfile {
               .toList() ??
           const [],
       accentColorIndex: json['accentColorIndex'] as int?,
-      installedWidgetIds:
-          (json['installedWidgetIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
       preferences: json['preferences'] != null
           ? UserPreferences.fromJson(
               json['preferences'] as Map<String, dynamic>,
@@ -521,7 +512,6 @@ class UserProfile {
       'primaryNodeId': primaryNodeId,
       'linkedNodeIds': linkedNodeIds,
       'accentColorIndex': accentColorIndex,
-      'installedWidgetIds': installedWidgetIds,
       'preferences': preferences?.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
@@ -555,7 +545,6 @@ class UserProfile {
     int? primaryNodeId,
     List<int>? linkedNodeIds,
     int? accentColorIndex,
-    List<String>? installedWidgetIds,
     UserPreferences? preferences,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -587,7 +576,6 @@ class UserProfile {
           : (primaryNodeId ?? this.primaryNodeId),
       linkedNodeIds: linkedNodeIds ?? this.linkedNodeIds,
       accentColorIndex: accentColorIndex ?? this.accentColorIndex,
-      installedWidgetIds: installedWidgetIds ?? this.installedWidgetIds,
       preferences: preferences ?? this.preferences,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),

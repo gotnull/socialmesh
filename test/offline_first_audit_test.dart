@@ -138,45 +138,6 @@ void main() {
     });
   });
 
-  group('Offline-First: Error State Visibility', () {
-    test('no silent SizedBox.shrink in device shop main screen', () {
-      // Focus on device_shop_screen.dart which depends on external LILYGO
-      // HTTP API. Other shop screens using Firestore (review_moderation,
-      // search_products, partners) benefit from Firestore persistence cache
-      // and SizedBox.shrink is acceptable for those.
-      final file = File(
-        'lib/features/device_shop/screens/device_shop_screen.dart',
-      );
-      expect(file.existsSync(), isTrue);
-      final content = file.readAsStringSync();
-      final lines = content.split('\n');
-      final violations = <String>[];
-
-      for (int i = 0; i < lines.length; i++) {
-        final line = lines[i].trim();
-        if (line.contains('error:') && line.contains('SizedBox.shrink')) {
-          // Allow SizedBox.shrink for Firestore-cached sections (Partners)
-          // which benefit from Firestore offline persistence.
-          // Check surrounding lines for Firestore provider context.
-          final context5 = lines
-              .sublist((i - 5).clamp(0, lines.length), i)
-              .join(' ');
-          if (context5.contains('officialPartnersProvider')) continue;
-
-          violations.add('device_shop_screen.dart:${i + 1}');
-        }
-      }
-
-      expect(
-        violations,
-        isEmpty,
-        reason:
-            'Silent error handlers in device shop main screen: '
-            '${violations.join(', ')}',
-      );
-    });
-  });
-
   group('Offline-First: Connectivity Guards', () {
     test('Firebase Storage upload methods check connectivity', () {
       final files = getAllDartFiles(libDir);

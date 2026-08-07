@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/admin_config.dart';
 
+import '../core/ble_system_devices.dart';
 import '../core/constants.dart';
 import '../core/logging.dart';
 import '../core/platform/noop_device_transport.dart';
@@ -3296,7 +3297,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         StreamSubscription? subscription;
 
         // Meshtastic service UUID
-        const serviceUuid = '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
+        const serviceUuid = MeshtasticBleUuids.serviceUuid;
 
         // Collect ALL Meshtastic candidates for logical matching.
         // If the exact BLE ID is not found (e.g. ESP32 changed UUID

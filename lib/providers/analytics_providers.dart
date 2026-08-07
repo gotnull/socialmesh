@@ -105,14 +105,6 @@ class AnalyticsEvents {
     );
   }
 
-  // Widget marketplace
-  static Future<void> widgetDownloaded(String widgetId) async {
-    await _analytics?.logEvent(
-      name: 'widget_downloaded',
-      parameters: {'widget_id': widgetId},
-    );
-  }
-
   // Automations
   static Future<void> automationCreated(String triggerType) async {
     await _analytics?.logEvent(

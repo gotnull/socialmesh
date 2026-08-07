@@ -9,491 +9,8 @@ class AppLocalizationsUk extends AppLocalizations {
   AppLocalizationsUk([String locale = 'uk']) : super(locale);
 
   @override
-  String get adminProductsActivate => 'Активувати';
-
-  @override
-  String get adminProductsActive => 'Активний';
-
-  @override
-  String get adminProductsActiveSubtitle => 'Товар відображається в крамниці';
-
-  @override
-  String get adminProductsAddImage => 'Додати зображення';
-
-  @override
-  String get adminProductsAddTitle => 'Додати товар';
-
-  @override
-  String get adminProductsAddTooltip => 'Додати товар';
-
-  @override
-  String get adminProductsAllCategories => 'Всі категорії';
-
-  @override
-  String get adminProductsBasicInfoSection => 'Основна інформація';
-
-  @override
-  String get adminProductsBatteryHint => 'напр., 4000 мАг';
-
-  @override
-  String get adminProductsBatteryLabel => 'Ємність акумулятора';
-
-  @override
-  String get adminProductsBluetooth => 'Bluetooth';
-
-  @override
-  String get adminProductsCategoryLabel => 'Категорія *';
-
-  @override
-  String get adminProductsCategorySellerSection => 'Категорія і продавець';
-
-  @override
-  String get adminProductsChipsetHint => 'напр., ESP32-S3';
-
-  @override
-  String get adminProductsChipsetLabel => 'Чипсет';
-
-  @override
-  String get adminProductsComparePriceHint => 'Початкова ціна для акції';
-
-  @override
-  String get adminProductsComparePriceLabel => 'Порівняти ціну';
-
-  @override
-  String get adminProductsCreate => 'Створити товар';
-
-  @override
-  String get adminProductsCreated => 'Товар створено';
-
-  @override
-  String get adminProductsDeactivate => 'Деактивувати';
-
-  @override
-  String get adminProductsDelete => 'Видалити';
-
-  @override
-  String get adminProductsDeleteConfirmMessage =>
-      'Ви впевнені, що хочете остаточно видалити цей товар?';
-
-  @override
-  String get adminProductsDeleteConfirmTitle => 'Видалити товар';
-
-  @override
-  String get adminProductsDeleteMenu => 'Видалити';
-
-  @override
-  String adminProductsDeleteMessage(String name) {
-    return 'Ви впевнені, що хочете остаточно видалити \"$name\"?\n\nЦю дію неможливо скасувати.';
-  }
-
-  @override
-  String get adminProductsDeleteTitle => 'Видалити товар';
-
-  @override
-  String get adminProductsDeleteTooltip => 'Видалити';
-
-  @override
-  String get adminProductsDeleted => 'Товар видалено';
-
-  @override
-  String get adminProductsDeletedSuccess => 'Товар видалено';
-
-  @override
-  String get adminProductsDimensionsHint => 'напр., 100x50x25 мм';
-
-  @override
-  String get adminProductsDimensionsLabel => 'Розміри';
-
-  @override
-  String get adminProductsDisplay => 'Дисплей';
-
-  @override
-  String get adminProductsEdit => 'Редагувати';
-
-  @override
-  String get adminProductsEditTitle => 'Редагувати товар';
-
-  @override
-  String adminProductsErrorLoadingSellers(String error) {
-    return 'Помилка завантаження продавців: $error';
-  }
-
-  @override
-  String get adminProductsFeatured => 'Вибране';
-
-  @override
-  String get adminProductsFeaturedBadge => 'ВИБРАНЕ';
-
-  @override
-  String get adminProductsFeaturedOrderHelper =>
-      'Керує порядком відображення у розділі вибраних';
-
-  @override
-  String get adminProductsFeaturedOrderHint =>
-      'Менші числа відображаються першими (0 = вгорі)';
-
-  @override
-  String get adminProductsFeaturedOrderLabel => 'Порядок у вибраному';
-
-  @override
-  String get adminProductsFeaturedSubtitle =>
-      'Показати у розділі вибраних товарів';
-
-  @override
-  String get adminProductsFilterTooltip => 'Фільтрувати за категорією';
-
-  @override
-  String get adminProductsFrequencyBandsSection => 'Частотні діапазони';
-
-  @override
-  String get adminProductsFullDescHint => 'Детальний опис товару';
-
-  @override
-  String get adminProductsFullDescLabel => 'Повний опис *';
-
-  @override
-  String get adminProductsGps => 'GPS';
-
-  @override
-  String get adminProductsHideInactive => 'Приховати неактивні';
-
-  @override
-  String get adminProductsImageRequired => 'Потрібне принаймні одне зображення';
-
-  @override
-  String get adminProductsImageWarning =>
-      'Будь ласка, додайте принаймні одне зображення';
-
-  @override
-  String get adminProductsImagesSection => 'Зображення товару';
-
-  @override
-  String get adminProductsInStock => 'В наявності';
-
-  @override
-  String get adminProductsInactiveBadge => 'НЕАКТИВНИЙ';
-
-  @override
-  String get adminProductsInvalid => 'Недійсний';
-
-  @override
-  String get adminProductsLoraChipHint => 'напр., SX1262';
-
-  @override
-  String get adminProductsLoraChipLabel => 'Чип LoRa';
-
-  @override
-  String get adminProductsMainImage => 'Головне';
-
-  @override
-  String get adminProductsNameHint => 'напр., T-Beam Supreme';
-
-  @override
-  String get adminProductsNameLabel => 'Назва товару *';
-
-  @override
-  String get adminProductsNotFound => 'Товарів не знайдено';
-
-  @override
-  String get adminProductsPhysicalSpecsSection => 'Фізичні характеристики';
-
-  @override
-  String get adminProductsPriceLabel => 'Ціна (USD) *';
-
-  @override
-  String get adminProductsPricingSection => 'Ціноутворення';
-
-  @override
-  String get adminProductsPurchaseLinkSection => 'Посилання для покупки';
-
-  @override
-  String get adminProductsPurchaseUrlLabel => 'URL для покупки';
-
-  @override
-  String get adminProductsRequired => 'Обов\'язково';
-
-  @override
-  String get adminProductsSaveChanges => 'Зберегти зміни';
-
-  @override
-  String get adminProductsSearchHint => 'Пошук товарів...';
-
-  @override
-  String get adminProductsSelectSeller => 'Вибрати продавця';
-
-  @override
-  String get adminProductsSelectSellerWarning =>
-      'Будь ласка, виберіть продавця';
-
-  @override
-  String get adminProductsSellerLabel => 'Продавець *';
-
-  @override
-  String get adminProductsShortDescHint => 'Короткий опис (макс. 150 символів)';
-
-  @override
-  String get adminProductsShortDescLabel => 'Короткий опис';
-
-  @override
-  String get adminProductsShowInactive => 'Показати неактивні';
-
-  @override
-  String get adminProductsStockHint =>
-      'Залиште порожнім для необмеженої кількості';
-
-  @override
-  String get adminProductsStockLabel => 'Кількість на складі';
-
-  @override
-  String get adminProductsStockSection => 'Склад і статус';
-
-  @override
-  String get adminProductsTagsHint => 'meshtastic, lora, gps (через кому)';
-
-  @override
-  String get adminProductsTagsLabel => 'Теги';
-
-  @override
-  String get adminProductsTagsSection => 'Теги';
-
-  @override
-  String get adminProductsTechSpecsSection => 'Технічні характеристики';
-
-  @override
-  String get adminProductsTitle => 'Управління товарами';
-
-  @override
-  String get adminProductsUpdated => 'Товар оновлено';
-
-  @override
-  String get adminProductsUploading => 'Завантаження...';
-
-  @override
   String get adminProductsVendorUnverifiedSubtitle =>
       'Позначте, коли постачальник підтвердить точність усіх характеристик';
-
-  @override
-  String get adminProductsVendorVerificationSection =>
-      'Верифікація постачальника';
-
-  @override
-  String get adminProductsVendorVerifiedSubtitle =>
-      'Характеристики перевірено постачальником';
-
-  @override
-  String get adminProductsVendorVerifiedTitle =>
-      'Характеристики верифіковано постачальником';
-
-  @override
-  String get adminProductsWeightHint => 'напр., 50 г';
-
-  @override
-  String get adminProductsWeightLabel => 'Вага';
-
-  @override
-  String get adminProductsWifi => 'WiFi';
-
-  @override
-  String get adminSellersActivate => 'Активувати';
-
-  @override
-  String get adminSellersActive => 'Активний';
-
-  @override
-  String get adminSellersActiveSubtitle =>
-      'Продавець відображається в крамниці';
-
-  @override
-  String get adminSellersAddTitle => 'Додати продавця';
-
-  @override
-  String get adminSellersAddTooltip => 'Додати продавця';
-
-  @override
-  String get adminSellersBasicInfoSection => 'Основна інформація';
-
-  @override
-  String get adminSellersCancel => 'Скасувати';
-
-  @override
-  String get adminSellersClearDiscount => 'Очистити промокод';
-
-  @override
-  String get adminSellersContactInfoSection => 'Контактна інформація';
-
-  @override
-  String get adminSellersCountriesHint => 'US, CA, UK, DE (через кому)';
-
-  @override
-  String get adminSellersCountriesLabel => 'Країни';
-
-  @override
-  String get adminSellersCreate => 'Створити продавця';
-
-  @override
-  String get adminSellersCreated => 'Продавця створено';
-
-  @override
-  String get adminSellersDangerZone => 'Небезпечна зона';
-
-  @override
-  String get adminSellersDeactivate => 'Деактивувати';
-
-  @override
-  String get adminSellersDeleteConfirm => 'Видалити';
-
-  @override
-  String get adminSellersDeleteDescription =>
-      'Остаточно видалити цього продавця та деактивувати всі його товари. Цю дію неможливо скасувати.';
-
-  @override
-  String adminSellersDeleteDialogMessage(String name) {
-    return 'Ви впевнені, що хочете остаточно видалити \"$name\"?';
-  }
-
-  @override
-  String get adminSellersDeleteDialogTitle => 'Видалити продавця';
-
-  @override
-  String get adminSellersDeletePermanently => 'Видалити продавця назавжди';
-
-  @override
-  String adminSellersDeleteProductWarning(int productCount) {
-    return 'Цей продавець має $productCount товарів. Видалення продавця також видалить усі його товари.';
-  }
-
-  @override
-  String get adminSellersDeleteTitle => 'Видалити продавця';
-
-  @override
-  String get adminSellersDeleteTooltip => 'Видалити продавця';
-
-  @override
-  String get adminSellersDeleteUndoWarning => 'Цю дію неможливо скасувати.';
-
-  @override
-  String get adminSellersDeleted => 'Продавця видалено';
-
-  @override
-  String get adminSellersDescriptionHint => 'Короткий опис продавця';
-
-  @override
-  String get adminSellersDescriptionLabel => 'Опис';
-
-  @override
-  String get adminSellersDiscountCodeHint => 'напр., MESH10';
-
-  @override
-  String get adminSellersDiscountCodeLabel => 'Промокод';
-
-  @override
-  String get adminSellersDiscountDisplayHint =>
-      'напр., 10% знижки для користувачів SocialMesh';
-
-  @override
-  String get adminSellersDiscountDisplayLabel => 'Відображуваний підпис';
-
-  @override
-  String get adminSellersDiscountExpired => 'Термін дії промокоду закінчився';
-
-  @override
-  String get adminSellersDiscountExpiryLabel =>
-      'Дата закінчення (необов\'язково)';
-
-  @override
-  String get adminSellersDiscountNoExpiry => 'Без обмеження терміну';
-
-  @override
-  String get adminSellersDiscountSection => 'Промокод партнера';
-
-  @override
-  String get adminSellersDiscountTermsHint =>
-      'напр., Не можна поєднувати з іншими пропозиціями';
-
-  @override
-  String get adminSellersDiscountTermsLabel => 'Умови і положення';
-
-  @override
-  String get adminSellersEdit => 'Редагувати';
-
-  @override
-  String get adminSellersEditTitle => 'Редагувати продавця';
-
-  @override
-  String get adminSellersEmailHint => 'support@example.com';
-
-  @override
-  String get adminSellersEmailLabel => 'Контактна електронна пошта';
-
-  @override
-  String get adminSellersHideInactive => 'Приховати неактивних';
-
-  @override
-  String get adminSellersInactiveBadge => 'НЕАКТИВНИЙ';
-
-  @override
-  String get adminSellersLogoSection => 'Логотип продавця';
-
-  @override
-  String get adminSellersNameHint => 'напр., LilyGO, RAK Wireless';
-
-  @override
-  String get adminSellersNameLabel => 'Назва продавця *';
-
-  @override
-  String get adminSellersNotFound => 'Продавців не знайдено';
-
-  @override
-  String get adminSellersOfficialPartner => 'Офіційний партнер';
-
-  @override
-  String get adminSellersOfficialPartnerSubtitle =>
-      'Відображати як офіційного партнера Meshtastic';
-
-  @override
-  String get adminSellersPartnerBadge => 'ПАРТНЕР';
-
-  @override
-  String get adminSellersRemoveLogo => 'Видалити';
-
-  @override
-  String get adminSellersSaveChanges => 'Зберегти зміни';
-
-  @override
-  String get adminSellersSearchHint => 'Пошук продавців...';
-
-  @override
-  String get adminSellersShippingSection => 'Країни доставки';
-
-  @override
-  String get adminSellersShowInactive => 'Показати неактивних';
-
-  @override
-  String get adminSellersStatusSection => 'Статус і верифікація';
-
-  @override
-  String get adminSellersTitle => 'Управління продавцями';
-
-  @override
-  String get adminSellersUpdated => 'Продавця оновлено';
-
-  @override
-  String get adminSellersUploadLogo => 'Завантажити логотип';
-
-  @override
-  String get adminSellersUploading => 'Завантаження...';
-
-  @override
-  String get adminSellersVerifiedBadge => 'ВЕРИФІКОВАНИЙ';
-
-  @override
-  String get adminSellersVerifiedSubtitle => 'Особу продавця верифіковано';
-
-  @override
-  String get adminSellersVerifiedToggle => 'Верифікований';
-
-  @override
-  String get adminSellersWebsiteLabel => 'URL вебсайту *';
 
   @override
   String get aetherDetailAltitude => 'Висота';
@@ -2971,65 +2488,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get automationVariableSectionUniversal => 'Універсальні';
 
   @override
-  String get categoryProductsApplyFilters => 'Застосувати фільтри';
-
-  @override
-  String get categoryProductsClearFilters => 'Скинути фільтри';
-
-  @override
-  String get categoryProductsErrorLoading => 'Помилка завантаження товарів';
-
-  @override
-  String get categoryProductsFilter => 'Фільтр';
-
-  @override
-  String get categoryProductsFiltersTitle => 'Фільтри';
-
-  @override
-  String get categoryProductsFrequencyBands => 'Частотні діапазони';
-
-  @override
-  String get categoryProductsInStockOnly => 'Тільки в наявності';
-
-  @override
-  String get categoryProductsNotFound => 'Товарів не знайдено';
-
-  @override
-  String get categoryProductsOutOfStock => 'НЕМАЄ В НАЯВНОСТІ';
-
-  @override
-  String get categoryProductsPriceRange => 'Діапазон цін';
-
-  @override
-  String get categoryProductsReset => 'Скинути';
-
-  @override
-  String categoryProductsResultCount(int count) {
-    return '$count товарів';
-  }
-
-  @override
-  String get categoryProductsRetry => 'Повторити';
-
-  @override
-  String get categoryProductsSortNewest => 'Спочатку нові';
-
-  @override
-  String get categoryProductsSortPopular => 'Найпопулярніші';
-
-  @override
-  String get categoryProductsSortPriceHigh => 'Ціна: від високої до низької';
-
-  @override
-  String get categoryProductsSortPriceLow => 'Ціна: від низької до високої';
-
-  @override
-  String get categoryProductsSortRating => 'Найвищий рейтинг';
-
-  @override
-  String get categoryProductsTryFilters => 'Спробуйте змінити фільтри';
-
-  @override
   String get channelFormApproxLocationTitle => 'Приблизне місцезнаходження';
 
   @override
@@ -3749,11 +3207,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get commonDone => 'Готово';
-
-  @override
-  String commonErrorWithDetails(String error) {
-    return 'Помилка: $error';
-  }
 
   @override
   String get commonGoBack => 'Назад';
@@ -4891,154 +4344,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get deviceSheetUsb => 'USB';
 
   @override
-  String get deviceShopBecomeSeller => 'Стати продавцем';
-
-  @override
-  String get deviceShopBecomeSellerBody =>
-      'Ви виробник або дистриб\'ютор пристроїв, сумісних з Meshtastic? Приєднуйтесь до нашого маркетплейсу, щоб охопити ентузіастів мережевого радіозв\'язку по всьому світу.';
-
-  @override
-  String get deviceShopBrowseByCategory => 'Перегляд за категорією';
-
-  @override
-  String get deviceShopCategories => 'Категорії';
-
-  @override
-  String get deviceShopClear => 'Очистити';
-
-  @override
-  String get deviceShopConnectToBrowse =>
-      'Підключіться для перегляду пристроїв';
-
-  @override
-  String get deviceShopContactUs => 'Зв\'яжіться з нами';
-
-  @override
-  String get deviceShopContactEmailSubject =>
-      'Запит щодо продавця в магазині пристроїв';
-
-  @override
-  String get deviceShopContactEmailBody =>
-      'Привіт, команда SocialMesh!\n\nЯ зацікавлений(-а) у тому, щоб стати продавцем у магазині пристроїв.\n\nНазва компанії:\nВебсайт:\nТипи продуктів:\nРегіон(и):\n\nДодаткові деталі:\n';
-
-  @override
-  String get deviceShopErrorLoadingProducts => 'Помилка завантаження товарів';
-
-  @override
-  String get deviceShopFavoritesTooltip => 'Вибране';
-
-  @override
-  String get deviceShopRemoveFavoriteTitle => 'Видалити з вибраного?';
-
-  @override
-  String get deviceShopRemoveFavoriteMessage =>
-      'Цей товар буде видалено з вашого вибраного.';
-
-  @override
-  String get deviceShopFeatured => 'Рекомендовані';
-
-  @override
-  String get deviceShopFilterAll => 'Усі';
-
-  @override
-  String get deviceShopHelpTooltip => 'Довідка';
-
-  @override
-  String get deviceShopMarketplaceDisclaimer =>
-      'Покупки здійснюються в офіційному магазині продавця. SocialMesh може отримувати невелику комісію від покупок, здійснених за цими посиланнями. SocialMesh не несе відповідальності за оплату, доставку, гарантію або повернення.';
-
-  @override
-  String get deviceShopMarketplaceInfoTitle => 'Інформація про маркетплейс';
-
-  @override
-  String get deviceShopInStock => 'В наявності';
-
-  @override
-  String get deviceShopNewArrivals => 'Нові надходження';
-
-  @override
-  String get deviceShopNoInternet => 'Немає підключення до інтернету';
-
-  @override
-  String deviceShopNoResults(String query) {
-    return 'Нічого не знайдено за запитом \"$query\"';
-  }
-
-  @override
-  String get deviceShopOfficialPartners => 'Офіційні партнери';
-
-  @override
-  String get deviceShopOnSale => 'Розпродаж';
-
-  @override
-  String get deviceShopOutOfStock => 'НЕМАЄ В НАЯВНОСТІ';
-
-  @override
-  String get deviceShopPopularDevices => 'Популярні пристрої';
-
-  @override
-  String get deviceShopRecentSearches => 'Останні пошуки';
-
-  @override
-  String get deviceShopRetry => 'Спробувати знову';
-
-  @override
-  String get deviceShopSearchHint => 'Пошук пристроїв, модулів, антен...';
-
-  @override
-  String get deviceShopSeeAll => 'Дивитися всі';
-
-  @override
-  String get deviceShopSellYourDevices => 'Продавайте свої пристрої Meshtastic';
-
-  @override
-  String get deviceShopSupportEmail => 'support@socialmesh.app';
-
-  @override
-  String get deviceShopTitle => 'Магазин пристроїв';
-
-  @override
-  String get deviceShopTrending => 'У тренді';
-
-  @override
-  String get deviceShopTryAgain => 'Спробуйте знову за мить';
-
-  @override
-  String get deviceShopTryDifferentKeywords => 'Спробуйте інші ключові слова';
-
-  @override
-  String get deviceShopUnableToLoad => 'Неможливо завантажити товари';
-
-  @override
-  String deviceShopErrorWithDetails(String error) {
-    return 'Помилка: $error';
-  }
-
-  @override
-  String deviceShopFailedToUploadImage(String error) {
-    return 'Помилка завантаження зображення: $error';
-  }
-
-  @override
-  String deviceShopFailedToUploadLogo(String error) {
-    return 'Помилка завантаження логотипу: $error';
-  }
-
-  @override
-  String get deviceShopFieldRequired => 'Обов\'язкове поле';
-
-  @override
-  String get deviceShopGoBackTooltip => 'Назад';
-
-  @override
-  String get deviceShopRefreshTooltip => 'Оновити';
-
-  @override
-  String deviceShopReviewSubmitFailed(String error) {
-    return 'Помилка надсилання відгуку: $error';
-  }
-
-  @override
   String get discoveryDiscoveredBadge => 'ВИЯВЛЕНО';
 
   @override
@@ -5289,49 +4594,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get favoritesTitle => 'Улюблені вузли';
-
-  @override
-  String get featuredProductsDiscard => 'Відхилити';
-
-  @override
-  String get featuredProductsEmpty => 'Немає рекомендованих товарів';
-
-  @override
-  String get featuredProductsEmptySubtitle =>
-      'Позначте товари як рекомендовані, щоб керувати їх порядком тут';
-
-  @override
-  String get featuredProductsOrderUpdated => 'Порядок рекомендованих оновлено';
-
-  @override
-  String get featuredProductsRemove => 'Видалити';
-
-  @override
-  String featuredProductsRemoveMessage(String name) {
-    return 'Видалити \"$name\" з рекомендованих товарів?';
-  }
-
-  @override
-  String get featuredProductsRemoveTitle => 'Видалити з рекомендованих';
-
-  @override
-  String get featuredProductsRemoveTooltip => 'Видалити з рекомендованих';
-
-  @override
-  String get featuredProductsRemoved => 'Видалено з рекомендованих';
-
-  @override
-  String get featuredProductsReorderInfo =>
-      'Перетягуйте товари для зміни порядку. Товари вгорі відображатимуться першими в розділі рекомендованих.';
-
-  @override
-  String get featuredProductsSave => 'Зберегти';
-
-  @override
-  String get featuredProductsTitle => 'Рекомендовані товари';
-
-  @override
-  String get featuredProductsUnsavedChanges => 'Є незбережені зміни';
 
   @override
   String get feedbackBugReportsTitle => 'Мої звіти про помилки';
@@ -6679,9 +5941,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get helpCenterScreenCreateSignal => 'Створити сигнал';
 
   @override
-  String get helpCenterScreenDeviceShop => 'Магазин пристроїв';
-
-  @override
   String get helpCenterScreenMap => 'Карта';
 
   @override
@@ -6737,9 +5996,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get helpCenterScreenWidgetDashboard => 'Панель віджетів';
-
-  @override
-  String get helpCenterScreenWidgetMarketplace => 'Маркетплейс віджетів';
 
   @override
   String get helpCenterScreenWorldMesh => 'Світова мережа';
@@ -7282,9 +6538,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsAgeGroupSubtitleAdult => '18 років або старше';
-
-  @override
-  String get lilygoModelPriceUnavailable => 'Ціна недоступна';
 
   @override
   String get linkDeviceBannerLinkButton => 'Прив\'язати';
@@ -17331,271 +16584,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get presenceWillAppear => 'Вузли з\'являтимуться тут у міру виявлення';
 
   @override
-  String get productDetailAnonymous => 'Анонімно';
-
-  @override
-  String get productDetailBattery => 'Батарея';
-
-  @override
-  String get productDetailBeFirstReviewer =>
-      'Будьте першим, хто залишить відгук про цей продукт!';
-
-  @override
-  String get productDetailBluetooth => 'Bluetooth';
-
-  @override
-  String get productDetailBuyNow => 'Купити зараз';
-
-  @override
-  String productDetailBySeller(String seller) {
-    return 'від $seller';
-  }
-
-  @override
-  String get productDetailCancel => 'Скасувати';
-
-  @override
-  String get productDetailChipset => 'Чіпсет';
-
-  @override
-  String get productDetailContactSeller => 'Зв\'язатися з продавцем';
-
-  @override
-  String get productDetailContactToPurchase =>
-      'Зв\'яжіться з продавцем для придбання цього продукту.';
-
-  @override
-  String productDetailDaysAgo(int count) {
-    return '$count днів тому';
-  }
-
-  @override
-  String get productDetailDescription => 'Опис';
-
-  @override
-  String get productDetailDimensions => 'Розміри';
-
-  @override
-  String productDetailDiscountBadge(int percent) {
-    return '-$percent% ЗНИЖКА';
-  }
-
-  @override
-  String get productDetailDisplay => 'Дисплей';
-
-  @override
-  String get productDetailEdit => 'Редагувати';
-
-  @override
-  String get productDetailErrorLoading => 'Помилка завантаження продукту';
-
-  @override
-  String productDetailEstimatedDelivery(int days) {
-    return 'Приблизно $days днів';
-  }
-
-  @override
-  String get productDetailFeatures => 'Характеристики';
-
-  @override
-  String get productDetailFirmware => 'Прошивка';
-
-  @override
-  String get productDetailFreeShipping => 'Безкоштовна доставка';
-
-  @override
-  String get productDetailFrequencyBands => 'Частотні діапазони';
-
-  @override
-  String get productDetailGoBack => 'Назад';
-
-  @override
-  String get productDetailGps => 'GPS';
-
-  @override
-  String get productDetailHardwareVersion => 'Версія апаратного забезпечення';
-
-  @override
-  String productDetailImageCounter(int current, int total) {
-    return '$current / $total';
-  }
-
-  @override
-  String productDetailInStockCount(int quantity) {
-    return 'В наявності ($quantity шт.)';
-  }
-
-  @override
-  String get productDetailIncludedAccessories => 'Комплектні аксесуари';
-
-  @override
-  String get productDetailLoraChip => 'Чіп LoRa';
-
-  @override
-  String get productDetailMeshtasticCompatible => 'Сумісний з Meshtastic';
-
-  @override
-  String productDetailMonthsAgo(int count) {
-    return '$count місяців тому';
-  }
-
-  @override
-  String get productDetailNoReviews => 'Відгуків поки немає';
-
-  @override
-  String get productDetailNotFound => 'Продукт не знайдено';
-
-  @override
-  String get productDetailOutOfStock => 'Немає в наявності';
-
-  @override
-  String get productDetailOutOfStockButton => 'Немає в наявності';
-
-  @override
-  String get productDetailPurchaseDisclaimer =>
-      'Покупки завершуються в офіційному магазині продавця · SocialMesh може отримувати комісію';
-
-  @override
-  String get productDetailPurchaseTitle => 'Придбання';
-
-  @override
-  String get productDetailReadMore => 'Читати далі';
-
-  @override
-  String get productDetailRetry => 'Повторити';
-
-  @override
-  String productDetailReviewCount(int count) {
-    return '($count відгуків)';
-  }
-
-  @override
-  String get productDetailReviewHint =>
-      'Поділіться враженнями від цього продукту...';
-
-  @override
-  String productDetailReviewPrivacyNotice(String userName) {
-    return 'Ваш відгук буде публічним і опублікованим як \"$userName\". Відгуки модеруються перед публікацією на сторінці продукту.';
-  }
-
-  @override
-  String get productDetailReviewSubmitted =>
-      'Відгук надіслано на модерацію. Дякуємо!';
-
-  @override
-  String get productDetailReviewTitleLabel => 'Заголовок (необов\'язково)';
-
-  @override
-  String get productDetailReviewValidation =>
-      'Будь ласка, напишіть опис відгуку';
-
-  @override
-  String get productDetailReviewVerified => 'Перевірено';
-
-  @override
-  String get productDetailReviews => 'Відгуки';
-
-  @override
-  String productDetailSelectedPrice(String price) {
-    return 'Вибрано: \$$price';
-  }
-
-  @override
-  String get productDetailSellerResponse => 'Відповідь продавця';
-
-  @override
-  String get productDetailShipping => 'Доставка';
-
-  @override
-  String productDetailShippingCost(String cost) {
-    return 'Доставка: \$$cost';
-  }
-
-  @override
-  String productDetailShipsTo(String countries) {
-    return 'Доставка до: $countries';
-  }
-
-  @override
-  String get productDetailShowLess => 'Показати менше';
-
-  @override
-  String get productDetailSignInFavorites => 'Увійдіть, щоб зберегти в обране';
-
-  @override
-  String get productDetailSignInReview => 'Увійдіть, щоб написати відгук';
-
-  @override
-  String productDetailSoldCount(int count) {
-    return 'Продано $count шт.';
-  }
-
-  @override
-  String get productDetailSubmitReview => 'Надіслати відгук';
-
-  @override
-  String get productDetailTechSpecs => 'Технічні характеристики';
-
-  @override
-  String get productDetailTitle => 'Продукт';
-
-  @override
-  String get productDetailToday => 'Сьогодні';
-
-  @override
-  String get productDetailTotal => 'Разом';
-
-  @override
-  String get productDetailUnableToLoadPage => 'Не вдалося завантажити сторінку';
-
-  @override
-  String get productDetailUnableToLoadReviews =>
-      'Не вдалося завантажити відгуки';
-
-  @override
-  String get productDetailVendorVerified => 'Постачальника перевірено';
-
-  @override
-  String productDetailVerifiedOn(String date) {
-    return 'Перевірено $date';
-  }
-
-  @override
-  String get productDetailWebviewOffline =>
-      'Для відображення цього вмісту потрібне інтернет-з\'єднання. Перевірте з\'єднання та спробуйте ще раз.';
-
-  @override
-  String productDetailWeeksAgo(int count) {
-    return '$count тижнів тому';
-  }
-
-  @override
-  String get productDetailWeight => 'Вага';
-
-  @override
-  String get productDetailWifi => 'WiFi';
-
-  @override
-  String get productDetailWriteReview => 'Написати відгук';
-
-  @override
-  String get productDetailWriteReviewTitle => 'Написати відгук';
-
-  @override
-  String productDetailYearsAgo(int count) {
-    return '$count років тому';
-  }
-
-  @override
-  String get productDetailYesterday => 'Вчора';
-
-  @override
-  String get productDetailYourRating => 'Ваша оцінка';
-
-  @override
-  String get productDetailYourReview => 'Ваш відгук *';
-
-  @override
   String get profileBasicInfo => 'Основна інформація';
 
   @override
@@ -18945,125 +17933,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'SocialMesh у вебі працює в режимі панелі: він переглядає mesh-активність, синхронізовану з парним мобільним пристроєм, але не може підключитися до радіо напряму. Відкрийте SocialMesh на телефоні, щоб під\'єднати пристрій.';
 
   @override
-  String get searchProductsBrowseByCategory => 'Переглянути за категорією';
-
-  @override
-  String get searchProductsClear => 'Очистити';
-
-  @override
-  String get searchProductsHint => 'Пошук пристроїв, модулів, антен...';
-
-  @override
-  String searchProductsNoResults(String query) {
-    return 'Результатів для \"$query\" не знайдено';
-  }
-
-  @override
-  String get searchProductsOutOfStock => 'Немає в наявності';
-
-  @override
-  String get searchProductsRecentSearches => 'Нещодавні пошуки';
-
-  @override
-  String searchProductsResultCount(int count, String query) {
-    return '$count результатів для \"$query\"';
-  }
-
-  @override
-  String get searchProductsRetry => 'Повторити';
-
-  @override
-  String get searchProductsSearchFailed => 'Пошук не вдався';
-
-  @override
-  String get searchProductsTrending => 'Популярне';
-
-  @override
-  String get searchProductsTryDifferent =>
-      'Спробуйте інші ключові слова або перегляньте категорії';
-
-  @override
-  String get sellerProfileAbout => 'Про продавця';
-
-  @override
-  String get sellerProfileApplyCodeHint =>
-      'Застосуйте цей код при оформленні замовлення в магазині продавця';
-
-  @override
-  String get sellerProfileCodeCopied => 'Код скопійовано до буфера обміну';
-
-  @override
-  String get sellerProfileContactShipping => 'Контакти та доставка';
-
-  @override
-  String get sellerProfileDiscountExclusive =>
-      'Ексклюзивний код знижки для користувачів SocialMesh';
-
-  @override
-  String get sellerProfileEmail => 'Електронна пошта';
-
-  @override
-  String get sellerProfileErrorLoading => 'Помилка завантаження продавця';
-
-  @override
   String get sellerProfileFoundedStat => 'Засновано';
 
   @override
-  String get sellerProfileGoBack => 'Назад';
-
-  @override
-  String get sellerProfileNoProducts => 'Товарів ще немає';
-
-  @override
-  String sellerProfileNoSearchResults(String query) {
-    return 'Товарів за запитом «$query» не знайдено';
-  }
-
-  @override
-  String get sellerProfileNotFound => 'Продавця не знайдено';
-
-  @override
-  String get sellerProfileOfficialPartner => 'Офіційний партнер';
-
-  @override
-  String get sellerProfilePartnerDiscount => 'Партнерська знижка';
-
-  @override
-  String sellerProfileProductsCount(int count) {
-    return 'Товари ($count)';
-  }
-
-  @override
-  String get sellerProfileProductsStat => 'Товари';
-
-  @override
-  String get sellerProfileRevealCode => 'Показати код';
-
-  @override
-  String sellerProfileReviewCount(int count) {
-    return '$count відгуків';
-  }
-
-  @override
   String get sellerProfileSalesStat => 'Продажі';
-
-  @override
-  String get sellerProfileSearchHint => 'Пошук товарів...';
-
-  @override
-  String get sellerProfileShipsTo => 'Доставка до';
-
-  @override
-  String get sellerProfileTitle => 'Продавець';
-
-  @override
-  String get sellerProfileCopyCodeTooltip => 'Копіювати код';
-
-  @override
-  String get sellerProfileUnableToLoad => 'Не вдалося завантажити товари';
-
-  @override
-  String get sellerProfileWebsite => 'Вебсайт';
 
   @override
   String get serialConfigBaudRate => 'Швидкість передачі';
@@ -20155,227 +19028,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String settingsVersionString(String version) {
     return 'Версія $version';
-  }
-
-  @override
-  String get shopAdminDashboardAccessDenied => 'Доступ заборонено';
-
-  @override
-  String get shopAdminDashboardAccessRequired =>
-      'Потрібен доступ адміністратора';
-
-  @override
-  String shopAdminDashboardActiveCount(int count) {
-    return '$count активних';
-  }
-
-  @override
-  String get shopAdminDashboardAddProduct => 'Додати товар';
-
-  @override
-  String get shopAdminDashboardAddSeller => 'Додати продавця';
-
-  @override
-  String get shopAdminDashboardError => 'Помилка';
-
-  @override
-  String get shopAdminDashboardEstRevenue => 'Прогн. дохід';
-
-  @override
-  String get shopAdminDashboardFeatured => 'Рекомендовані товари';
-
-  @override
-  String get shopAdminDashboardFeaturedSubtitle =>
-      'Керування порядком відображення рекомендованих товарів';
-
-  @override
-  String get shopAdminDashboardInactive => 'Неактивний';
-
-  @override
-  String get shopAdminDashboardManagement => 'Управління';
-
-  @override
-  String get shopAdminDashboardNoPermission =>
-      'У вас немає дозволу для доступу до цього розділу.';
-
-  @override
-  String get shopAdminDashboardOutOfStock => 'Немає в наявності';
-
-  @override
-  String get shopAdminDashboardProducts => 'Товари';
-
-  @override
-  String get shopAdminDashboardProductsSubtitle =>
-      'Керування всіма товарними позиціями';
-
-  @override
-  String get shopAdminDashboardQuickActions => 'Швидкі дії';
-
-  @override
-  String get shopAdminDashboardRefresh => 'Оновити';
-
-  @override
-  String get shopAdminDashboardReviews => 'Відгуки';
-
-  @override
-  String get shopAdminDashboardReviewsMgmt => 'Відгуки';
-
-  @override
-  String get shopAdminDashboardReviewsSubtitle =>
-      'Модерація відгуків про товари';
-
-  @override
-  String get shopAdminDashboardSellers => 'Продавці';
-
-  @override
-  String get shopAdminDashboardSellersSubtitle =>
-      'Керування профілями продавців і партнерствами';
-
-  @override
-  String get shopAdminDashboardTitle => 'Адмін магазину';
-
-  @override
-  String get shopAdminDashboardTotalProducts => 'Всього товарів';
-
-  @override
-  String get shopAdminDashboardTotalSales => 'Всього продажів';
-
-  @override
-  String get shopAdminDashboardTotalSellers => 'Всього продавців';
-
-  @override
-  String get shopAdminDashboardTotalViews => 'Всього переглядів';
-
-  @override
-  String get shopFavoritesEmpty => 'Вибраних товарів ще немає';
-
-  @override
-  String get shopFavoritesEmptySubtitle =>
-      'Натисніть значок серця на товарах, щоб зберегти їх';
-
-  @override
-  String get shopFavoritesErrorLoading => 'Помилка завантаження вибраного';
-
-  @override
-  String get shopFavoritesInStock => 'В наявності';
-
-  @override
-  String get shopFavoritesOutOfStock => 'Немає в наявності';
-
-  @override
-  String get shopFavoritesProductRemoved => 'Товар більше не доступний';
-
-  @override
-  String get shopFavoritesRetry => 'Повторити';
-
-  @override
-  String get shopFavoritesSignIn => 'Увійдіть, щоб зберегти вибране';
-
-  @override
-  String get shopFavoritesSignInSubtitle =>
-      'Ваші улюблені пристрої з\'являться тут';
-
-  @override
-  String get shopFavoritesTitle => 'Вибране';
-
-  @override
-  String get shopFavoritesUnableToLoad => 'Неможливо завантажити товар';
-
-  @override
-  String get shopModelBandAu915 => 'AU 915МГц';
-
-  @override
-  String get shopModelBandAu915Range => '915-928 МГц';
-
-  @override
-  String get shopModelBandCn470 => 'CN 470МГц';
-
-  @override
-  String get shopModelBandCn470Range => '470-510 МГц';
-
-  @override
-  String get shopModelBandEu868 => 'EU 868МГц';
-
-  @override
-  String get shopModelBandEu868Range => '863-870 МГц';
-
-  @override
-  String get shopModelBandIn865 => 'IN 865МГц';
-
-  @override
-  String get shopModelBandIn865Range => '865-867 МГц';
-
-  @override
-  String get shopModelBandJp920 => 'JP 920МГц';
-
-  @override
-  String get shopModelBandJp920Range => '920-925 МГц';
-
-  @override
-  String get shopModelBandKr920 => 'KR 920МГц';
-
-  @override
-  String get shopModelBandKr920Range => '920-923 МГц';
-
-  @override
-  String get shopModelBandMulti => 'Багатодіапазонний';
-
-  @override
-  String get shopModelBandMultiRange => 'Кілька частот';
-
-  @override
-  String get shopModelBandUs915 => 'US 915МГц';
-
-  @override
-  String get shopModelBandUs915Range => '902-928 МГц';
-
-  @override
-  String get shopModelCategoryAccessories => 'Аксесуари';
-
-  @override
-  String get shopModelCategoryAccessoriesDescription =>
-      'Кабелі, акумулятори та інше';
-
-  @override
-  String get shopModelCategoryAntennas => 'Антени';
-
-  @override
-  String get shopModelCategoryAntennasDescription => 'Антени та RF-аксесуари';
-
-  @override
-  String get shopModelCategoryEnclosures => 'Корпуси';
-
-  @override
-  String get shopModelCategoryEnclosuresDescription => 'Чохли та корпуси';
-
-  @override
-  String get shopModelCategoryKits => 'Набори';
-
-  @override
-  String get shopModelCategoryKitsDescription => 'DIY-набори та комплекти';
-
-  @override
-  String get shopModelCategoryModules => 'Модулі';
-
-  @override
-  String get shopModelCategoryModulesDescription => 'Додаткові модулі та плати';
-
-  @override
-  String get shopModelCategoryNodes => 'Вузли';
-
-  @override
-  String get shopModelCategoryNodesDescription => 'Готові пристрої Meshtastic';
-
-  @override
-  String get shopModelCategorySolar => 'Сонячна енергетика';
-
-  @override
-  String get shopModelCategorySolarDescription =>
-      'Сонячні панелі та рішення для живлення';
-
-  @override
-  String shopModelPriceFrom(String price) {
-    return 'Від \$$price';
   }
 
   @override
@@ -24725,14 +23377,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get widgetBuilderBroadcastSubtitle => 'Трансляція всім у каналі';
 
   @override
-  String get widgetBuilderBrowseMarketplace => 'Переглянути маркетплейс';
-
-  @override
-  String widgetBuilderByAuthor(String author) {
-    return 'автор: $author';
-  }
-
-  @override
   String get widgetBuilderCancel => 'Скасувати';
 
   @override
@@ -24742,30 +23386,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get widgetBuilderCannotSaveTitle => 'Неможливо зберегти віджет';
-
-  @override
-  String get widgetBuilderCategoryCharts => 'Графіки';
-
-  @override
-  String get widgetBuilderCategoryDeviceStatus => 'Стан пристрою';
-
-  @override
-  String get widgetBuilderCategoryLocation => 'Місцезнаходження';
-
-  @override
-  String get widgetBuilderCategoryMeshNetwork => 'Mesh-мережа';
-
-  @override
-  String get widgetBuilderCategoryMetrics => 'Метрики';
-
-  @override
-  String get widgetBuilderCategoryOther => 'Інше';
-
-  @override
-  String get widgetBuilderCategoryUtility => 'Утиліти';
-
-  @override
-  String get widgetBuilderCategoryWeather => 'Погода';
 
   @override
   String get widgetBuilderChooseAction => 'Виберіть дію для цього елемента';
@@ -24816,10 +23436,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get widgetBuilderDiscardChangesTitle => 'Відхилити зміни?';
 
   @override
-  String get widgetBuilderDiscoverCommunity =>
-      'Ознайомтеся з віджетами, створеними спільнотою';
-
-  @override
   String get widgetBuilderDuplicate => 'Дублювати';
 
   @override
@@ -24849,11 +23465,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String widgetBuilderFailedToInstall(String error) {
-    return 'Помилка встановлення: $error';
-  }
-
-  @override
   String widgetBuilderFailedToReject(String error) {
     return 'Помилка відхилення: $error';
   }
@@ -24871,11 +23482,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String widgetBuilderFailedToShareLocation(String error) {
     return 'Помилка передачі місцезнаходження: $error';
-  }
-
-  @override
-  String widgetBuilderFailedToSubmit(String error) {
-    return 'Помилка надсилання: $error';
   }
 
   @override
@@ -25108,11 +23714,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get widgetBuilderImportedSuccessAction => 'Віджет успішно імпортовано';
 
   @override
-  String widgetBuilderInstalledSuccess(String name) {
-    return '$name встановлено!';
-  }
-
-  @override
   String get widgetBuilderKeepCurrent => 'Залишити поточний';
 
   @override
@@ -25180,184 +23781,25 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get widgetBuilderMakeUnique =>
-      'Зробіть ваш віджет більш унікальним перед надсиланням.';
-
-  @override
   String get widgetBuilderMapView => 'Перегляд карти';
 
   @override
-  String get widgetBuilderMarketplace => 'Маркетплейс';
-
-  @override
-  String get widgetBuilderMarketplaceAlreadyInstalled => 'Вже встановлено';
-
-  @override
-  String get widgetBuilderMarketplaceApprove => 'Схвалити';
-
-  @override
-  String get widgetBuilderMarketplaceCancel => 'Скасувати';
-
-  @override
-  String get widgetBuilderMarketplaceDescription => 'Опис';
-
-  @override
-  String widgetBuilderMarketplaceRatingWithCount(String rating, int count) {
-    return '$rating ($count)';
-  }
-
-  @override
-  String get widgetBuilderMarketplaceEnterReason => 'Введіть причину...';
-
-  @override
-  String widgetBuilderMarketplaceFailedLoadPending(String error) {
-    return 'Не вдалося завантажити очікуючі віджети: $error';
-  }
-
-  @override
-  String get widgetBuilderMarketplaceFailedLoadCategory =>
-      'Не вдалося завантажити категорію';
-
-  @override
-  String get widgetBuilderMarketplaceFailedNewest =>
-      'Не вдалося завантажити найновіші віджети';
-
-  @override
-  String get widgetBuilderMarketplaceFailedPopular =>
-      'Не вдалося завантажити популярні віджети';
-
-  @override
-  String get widgetBuilderMarketplaceFavoritesHint =>
-      'Натисніть іконку серця на будь-якому віджеті, щоб додати його сюди';
-
-  @override
-  String widgetBuilderMarketplaceFavoritesWithCount(int count) {
-    return 'Вибране ($count)';
-  }
-
-  @override
-  String get widgetBuilderMarketplaceHelpTooltip => 'Довідка';
-
-  @override
-  String get widgetBuilderMarketplaceInstallWidget => 'Встановити віджет';
-
-  @override
-  String widgetBuilderMarketplaceDaysAgo(int count) {
+  String widgetBuilderDaysAgo(int count) {
     return '$count дн. тому';
   }
 
   @override
-  String widgetBuilderMarketplaceHoursAgo(int count) {
+  String widgetBuilderHoursAgo(int count) {
     return '$count год. тому';
   }
 
   @override
-  String widgetBuilderMarketplaceInstallsCount(int count) {
-    return '$count встановлень';
-  }
+  String get widgetBuilderJustNow => 'Щойно';
 
   @override
-  String get widgetBuilderMarketplaceJustNow => 'Щойно';
-
-  @override
-  String widgetBuilderMarketplaceMinutesAgo(int count) {
+  String widgetBuilderMinutesAgo(int count) {
     return '$count хв. тому';
   }
-
-  @override
-  String get widgetBuilderMarketplaceLoadingPreview =>
-      'Завантаження попереднього перегляду...';
-
-  @override
-  String get widgetBuilderMarketplaceNoFavorites => 'Немає улюблених віджетів';
-
-  @override
-  String get widgetBuilderMarketplaceNoFeatured =>
-      'Немає рекомендованих віджетів';
-
-  @override
-  String get widgetBuilderMarketplaceNoNew => 'Немає нових віджетів';
-
-  @override
-  String get widgetBuilderMarketplaceNoPending =>
-      'Немає віджетів, що очікують схвалення';
-
-  @override
-  String get widgetBuilderMarketplaceNoPopular => 'Немає популярних віджетів';
-
-  @override
-  String get widgetBuilderMarketplaceNoWidgets => 'Немає доступних віджетів';
-
-  @override
-  String get widgetBuilderMarketplaceNoWidgetsFound => 'Віджетів не знайдено';
-
-  @override
-  String get widgetBuilderMarketplaceNoWidgetsInCategory =>
-      'Немає віджетів у цій категорії';
-
-  @override
-  String get widgetBuilderMarketplaceNotAuthenticated => 'Не автентифіковано';
-
-  @override
-  String get widgetBuilderMarketplacePending => 'ОЧІКУЄ';
-
-  @override
-  String get widgetBuilderMarketplacePleaseEnterReason =>
-      'Будь ласка, введіть причину';
-
-  @override
-  String get widgetBuilderMarketplaceProcessing => 'Обробка...';
-
-  @override
-  String get widgetBuilderMarketplaceRejectButton => 'Відхилити';
-
-  @override
-  String get widgetBuilderMarketplaceRejectWidget => 'Відхилити віджет';
-
-  @override
-  String get widgetBuilderMarketplaceRequiresInternet =>
-      'Для встановлення віджетів необхідне підключення до інтернету.';
-
-  @override
-  String get widgetBuilderMarketplaceRetry => 'Повторити';
-
-  @override
-  String get widgetBuilderMarketplaceSearchHint => 'Пошук віджетів...';
-
-  @override
-  String get widgetBuilderMarketplaceShareTooltip => 'Поділитися віджетом';
-
-  @override
-  String get widgetBuilderMarketplaceSharingRequiresInternet =>
-      'Для поширення віджетів необхідне підключення до інтернету.';
-
-  @override
-  String get widgetBuilderMarketplaceTabCategories => 'Категорії';
-
-  @override
-  String get widgetBuilderMarketplaceTabFavorites => 'Вибране';
-
-  @override
-  String get widgetBuilderMarketplaceTabFeatured => 'Рекомендовані';
-
-  @override
-  String get widgetBuilderMarketplaceTabNew => 'Нові';
-
-  @override
-  String get widgetBuilderMarketplaceTabPopular => 'Популярні';
-
-  @override
-  String get widgetBuilderMarketplaceTags => 'Теги';
-
-  @override
-  String get widgetBuilderMarketplaceTitle => 'Маркетплейс віджетів';
-
-  @override
-  String get widgetBuilderMarketplaceUnableToLoad =>
-      'Не вдалося завантажити маркетплейс';
-
-  @override
-  String get widgetBuilderMarketplaceWidgetApproval => 'Схвалення віджета';
 
   @override
   String get widgetBuilderMediumOnlyOneRow =>
@@ -25406,9 +23848,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get widgetBuilderNone => 'Немає';
 
   @override
-  String get widgetBuilderOk => 'OK';
-
-  @override
   String get widgetBuilderOptions => 'Параметри';
 
   @override
@@ -25442,13 +23881,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String widgetBuilderRemovedFromDashboard(String name) {
     return '$name видалено з панелі';
   }
-
-  @override
-  String get widgetBuilderReviewGuidelines => 'Правила перегляду';
-
-  @override
-  String get widgetBuilderReviewGuidelinesText =>
-      '• Віджет буде перевірено на якість\n• Схожі віджети можуть бути відхилені\n• Ви будете вказані як автор';
 
   @override
   String get widgetBuilderSave => 'Зберегти';
@@ -25534,21 +23966,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get widgetBuilderSignInToShare => 'Увійдіть, щоб ділитися віджетами';
 
   @override
-  String get widgetBuilderSignInToSubmit => 'Увійдіть, щоб надсилати віджети';
-
-  @override
-  String get widgetBuilderSimilarWidgetExists =>
-      'Схожий віджет вже існує в маркетплейсі:';
-
-  @override
-  String widgetBuilderSimilarWidgetExistsError(String name) {
-    return 'Схожий віджет вже існує: $name';
-  }
-
-  @override
-  String get widgetBuilderSimilarWidgetFound => 'Знайдено схожий віджет';
-
-  @override
   String get widgetBuilderSizeCustom => 'Довільний розмір';
 
   @override
@@ -25556,26 +23973,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get widgetBuilderSizeMedium => 'Середній (2x1)';
-
-  @override
-  String get widgetBuilderSubmitButton => 'Надіслати';
-
-  @override
-  String get widgetBuilderSubmitAnyway => 'Надіслати однаково';
-
-  @override
-  String get widgetBuilderSubmitCancel => 'Скасувати';
-
-  @override
-  String get widgetBuilderSubmitTitle => 'Надіслати до маркетплейсу';
-
-  @override
-  String get widgetBuilderSubmitToMarketplace => 'Надіслати до маркетплейсу';
-
-  @override
-  String widgetBuilderSubmittedForReview(String name) {
-    return '$name надіслано на перевірку';
-  }
 
   @override
   String get widgetBuilderSwitch => 'Перемикач';
@@ -26193,17 +24590,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get deepLinkFailedToJoinChannel => 'Не вдалося приєднатися до каналу';
 
   @override
-  String get deepLinkLoadingWidget => 'Завантаження віджета';
-
-  @override
-  String deepLinkErrorLoadingWidget(String error) {
-    return 'Помилка завантаження віджета: $error';
-  }
-
-  @override
-  String get deepLinkSomethingWentWrong => 'Щось пішло не так';
-
-  @override
   String deepLinkProfileTitle(String displayName) {
     return '@$displayName';
   }
@@ -26244,9 +24630,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get blockedRouteConnectDeviceButton => 'Підключити пристрій';
-
-  @override
-  String get deepLinkWidgetNotFound => 'Віджет не знайдено';
 
   @override
   String get deepLinkAlreadyHaveChannel => 'Цей канал у вас вже є';
@@ -32649,23 +31032,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get adminPanelTitle => 'Адмінпанель';
 
   @override
-  String get adminPanelSectionShop => 'УПРАВЛІННЯ КРАМНИЦЕЮ';
-
-  @override
-  String get adminPanelShopDashboard => 'Панель керування крамницею';
-
-  @override
-  String get adminPanelShopDashboardSub =>
-      'Управління товарами, замовленнями та запасами';
-
-  @override
-  String get adminPanelDeviceShop => 'Крамниця пристроїв';
-
-  @override
-  String get adminPanelDeviceShopSub =>
-      'Переглядати та керувати списками пристроїв';
-
-  @override
   String get adminPanelSectionModeration => 'МОДЕРАЦІЯ КОНТЕНТУ';
 
   @override
@@ -32688,9 +31054,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get adminPanelReportedContentSub =>
       'Перевірка позначених публікацій і коментарів';
-
-  @override
-  String get adminPanelWidgetReview => 'Огляд маркетплейсу віджетів';
 
   @override
   String get adminPanelWidgetReviewSub =>
@@ -34829,13 +33192,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get helpWidgetBuilderOverviewDescription => 'Створюйте власні віджети';
 
   @override
-  String get helpMarketplaceOverviewTitle => 'Маркетплейс віджетів';
-
-  @override
-  String get helpMarketplaceOverviewDescription =>
-      'Відкривайте віджети, створені спільнотою';
-
-  @override
   String get helpSignalsOverviewTitle => 'Сигнали';
 
   @override
@@ -34896,13 +33252,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get helpTimelineOverviewDescription =>
       'Історія активності вашої мережі';
-
-  @override
-  String get helpDeviceShopOverviewTitle => 'Магазин пристроїв';
-
-  @override
-  String get helpDeviceShopOverviewDescription =>
-      'Перегляд обладнання Meshtastic';
 
   @override
   String get helpOfflineMapsOverviewTitle => 'Офлайн-карти';
@@ -35289,22 +33638,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Використовуйте **Попередній перегляд**, щоб побачити, як виглядає ваш віджет з реальними даними перед збереженням. Налаштовуйте до ідеального результату!';
 
   @override
-  String get helpMarketplaceIntroBubble =>
-      'Ласкаво просимо до **Маркетплейсу**! Переглядайте віджети, створені іншими радіоентузіастами з усього світу!';
-
-  @override
-  String get helpMarketplaceBrowseBubble =>
-      'Переглядайте за **категорією** - знаходьте статусні дисплеї, графіки, індикатори або творчі дизайни. Торкніться будь-якого віджета для попереднього перегляду!';
-
-  @override
-  String get helpMarketplaceInstallBubble =>
-      'Знайшли щось до душі? **Торкніться встановити** - і він додається до вашої колекції. Використовуйте його на своїй інформаційній панелі просто зараз!';
-
-  @override
-  String get helpMarketplaceShareBubble =>
-      'Створили щось цікаве? **Поділіться своїми віджетами** на маркетплейсі та допоможіть спільноті!';
-
-  @override
   String get helpSignalsIntroBubble =>
       'Ласкаво просимо до **Сигналів**! Транслюйте моменти у вашу мережу. Сигнали є **тимчасовими** - ви обираєте, як довго вони тривають, від **15 хвилин** до **24 годин**.';
 
@@ -35483,18 +33816,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get helpTimelineTapBubble =>
       '**Торкніться будь-якої події**, щоб переглянути повні деталі. Відмінно для діагностики або розуміння того, що відбувається у вашій мережі!';
-
-  @override
-  String get helpShopIntroBubble =>
-      'Ласкаво просимо до **Магазину пристроїв**! Переглядайте сумісні радіо та аксесуари Meshtastic.';
-
-  @override
-  String get helpShopCompareBubble =>
-      '**Порівнюйте пристрої** за дальністю, батареєю та функціями. Кожен оцінено, щоб допомогти вам вибрати!';
-
-  @override
-  String get helpShopLinksBubble =>
-      'Торкніться **Купити**, щоб відвідати надійних продавців. Ціни та наявність зазначені з реальних магазинів!';
 
   @override
   String get helpOfflineIntroBubble =>
@@ -42357,16 +40678,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get whatsNewVersion1360Subtitle => 'Версія 1.36.0';
-
-  @override
-  String get whatsNewDeviceShopTitle => 'Магазин пристроїв';
-
-  @override
-  String get whatsNewDeviceShopDescription =>
-      'Переглядайте сумісні з Meshtastic пристрої від офіційних партнерів і перевірених продавців - усе в одному місці. Фільтруйте за категорією, сортуйте за ціною або новинками, переходьте до крамниці продавця для покупки.\n\nПокупки здійснюються на сайті продавця; SocialMesh не обробляє платежі, доставку чи повернення. Знайдіть у меню під розділом «Інструменти».';
-
-  @override
-  String get whatsNewCtaOpenDeviceShop => 'Відкрити магазин пристроїв';
 
   @override
   String get whatsNewVersion1410Subtitle => 'Версія 1.41.0';

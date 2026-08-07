@@ -17,6 +17,7 @@ class NodeHealthBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = colorFor(state);
+    final foreground = context.readableAccent(color);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacing8,
@@ -30,7 +31,7 @@ class NodeHealthBadge extends StatelessWidget {
       child: Text(
         labelFor(context, state),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
+          color: foreground,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.3,
         ),

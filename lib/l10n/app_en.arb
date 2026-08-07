@@ -55,641 +55,9 @@
         "description": "Activity-timeline summary line for an identity rotation event where no prior pubkey was recorded."
     },
     "@@locale": "en",
-    "adminProductsActivate": "Activate",
-    "@adminProductsActivate": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsActive": "Active",
-    "@adminProductsActive": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsActiveSubtitle": "Product is visible in the shop",
-    "@adminProductsActiveSubtitle": {
-        "description": "Subtitle in admin panel"
-    },
-    "adminProductsAddImage": "Add Image",
-    "@adminProductsAddImage": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsAddTitle": "Add Product",
-    "@adminProductsAddTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminProductsAddTooltip": "Add Product",
-    "@adminProductsAddTooltip": {
-        "description": "Tooltip in admin panel"
-    },
-    "adminProductsAllCategories": "All Categories",
-    "@adminProductsAllCategories": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsBasicInfoSection": "Basic Information",
-    "@adminProductsBasicInfoSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsBatteryHint": "e.g., 4000mAh",
-    "@adminProductsBatteryHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsBatteryLabel": "Battery Capacity",
-    "@adminProductsBatteryLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsBluetooth": "Bluetooth",
-    "@adminProductsBluetooth": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsCategoryLabel": "Category *",
-    "@adminProductsCategoryLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsCategorySellerSection": "Category & Seller",
-    "@adminProductsCategorySellerSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsChipsetHint": "e.g., ESP32-S3",
-    "@adminProductsChipsetHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsChipsetLabel": "Chipset",
-    "@adminProductsChipsetLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsComparePriceHint": "Original price for sale",
-    "@adminProductsComparePriceHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsComparePriceLabel": "Compare at Price",
-    "@adminProductsComparePriceLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsCreate": "Create Product",
-    "@adminProductsCreate": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsCreated": "Product created",
-    "@adminProductsCreated": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsDeactivate": "Deactivate",
-    "@adminProductsDeactivate": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsDelete": "Delete",
-    "@adminProductsDelete": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsDeleteConfirmMessage": "Are you sure you want to permanently delete this product?",
-    "@adminProductsDeleteConfirmMessage": {
-        "description": "Confirmation prompt in admin panel"
-    },
-    "adminProductsDeleteConfirmTitle": "Delete Product",
-    "@adminProductsDeleteConfirmTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminProductsDeleteMenu": "Delete",
-    "@adminProductsDeleteMenu": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsDeleteMessage": "Are you sure you want to permanently delete \"{name}\"?\n\nThis action cannot be undone.",
-    "@adminProductsDeleteMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        },
-        "description": "Text in admin panel Parameters: {name} = display name."
-    },
-    "adminProductsDeleteTitle": "Delete Product",
-    "@adminProductsDeleteTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminProductsDeleteTooltip": "Delete",
-    "@adminProductsDeleteTooltip": {
-        "description": "Tooltip in admin panel"
-    },
-    "adminProductsDeleted": "Product deleted",
-    "@adminProductsDeleted": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsDeletedSuccess": "Product deleted",
-    "@adminProductsDeletedSuccess": {
-        "description": "Success message in admin panel"
-    },
-    "adminProductsDimensionsHint": "e.g., 100x50x25mm",
-    "@adminProductsDimensionsHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsDimensionsLabel": "Dimensions",
-    "@adminProductsDimensionsLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsDisplay": "Display",
-    "@adminProductsDisplay": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsEdit": "Edit",
-    "@adminProductsEdit": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsEditTitle": "Edit Product",
-    "@adminProductsEditTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminProductsErrorLoadingSellers": "Error loading sellers: {error}",
-    "@adminProductsErrorLoadingSellers": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        },
-        "description": "Error message in admin panel Parameters: {error} = error/status message."
-    },
-    "adminProductsFeatured": "Featured",
-    "@adminProductsFeatured": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsFeaturedBadge": "FEATURED",
-    "@adminProductsFeaturedBadge": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsFeaturedOrderHelper": "Controls display order in featured section",
-    "@adminProductsFeaturedOrderHelper": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsFeaturedOrderHint": "Lower numbers appear first (0 = top)",
-    "@adminProductsFeaturedOrderHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsFeaturedOrderLabel": "Featured Order",
-    "@adminProductsFeaturedOrderLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsFeaturedSubtitle": "Show in featured products section",
-    "@adminProductsFeaturedSubtitle": {
-        "description": "Subtitle in admin panel"
-    },
-    "adminProductsFilterTooltip": "Filter by category",
-    "@adminProductsFilterTooltip": {
-        "description": "Tooltip in admin panel"
-    },
-    "adminProductsFrequencyBandsSection": "Frequency Bands",
-    "@adminProductsFrequencyBandsSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsFullDescHint": "Detailed product description",
-    "@adminProductsFullDescHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsFullDescLabel": "Full Description *",
-    "@adminProductsFullDescLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsGps": "GPS",
-    "@adminProductsGps": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsHideInactive": "Hide inactive",
-    "@adminProductsHideInactive": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsImageRequired": "At least one image is required",
-    "@adminProductsImageRequired": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsImageWarning": "Please add at least one image",
-    "@adminProductsImageWarning": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsImagesSection": "Product Images",
-    "@adminProductsImagesSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsInStock": "In Stock",
-    "@adminProductsInStock": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsInactiveBadge": "INACTIVE",
-    "@adminProductsInactiveBadge": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsInvalid": "Invalid",
-    "@adminProductsInvalid": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsLoraChipHint": "e.g., SX1262",
-    "@adminProductsLoraChipHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsLoraChipLabel": "LoRa Chip",
-    "@adminProductsLoraChipLabel": {
-        "description": "LoRa = Long Range radio technology used by mesh devices. This labels the specific LoRa radio chip model."
-    },
-    "adminProductsMainImage": "Main",
-    "@adminProductsMainImage": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsNameHint": "e.g., T-Beam Supreme",
-    "@adminProductsNameHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsNameLabel": "Product Name *",
-    "@adminProductsNameLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsNotFound": "No products found",
-    "@adminProductsNotFound": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsPhysicalSpecsSection": "Physical Specifications",
-    "@adminProductsPhysicalSpecsSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsPriceLabel": "Price (USD) *",
-    "@adminProductsPriceLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsPricingSection": "Pricing",
-    "@adminProductsPricingSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsPurchaseLinkSection": "Purchase Link",
-    "@adminProductsPurchaseLinkSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsPurchaseUrlLabel": "Purchase URL",
-    "@adminProductsPurchaseUrlLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsRequired": "Required",
-    "@adminProductsRequired": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsSaveChanges": "Save Changes",
-    "@adminProductsSaveChanges": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsSearchHint": "Search products...",
-    "@adminProductsSearchHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsSelectSeller": "Select seller",
-    "@adminProductsSelectSeller": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsSelectSellerWarning": "Please select a seller",
-    "@adminProductsSelectSellerWarning": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsSellerLabel": "Seller *",
-    "@adminProductsSellerLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsShortDescHint": "Brief summary (max 150 chars)",
-    "@adminProductsShortDescHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsShortDescLabel": "Short Description",
-    "@adminProductsShortDescLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsShowInactive": "Show inactive",
-    "@adminProductsShowInactive": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsStockHint": "Leave empty for unlimited",
-    "@adminProductsStockHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsStockLabel": "Stock Quantity",
-    "@adminProductsStockLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsStockSection": "Stock & Status",
-    "@adminProductsStockSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsTagsHint": "meshtastic, lora, gps (comma separated)",
-    "@adminProductsTagsHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsTagsLabel": "Tags",
-    "@adminProductsTagsLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsTagsSection": "Tags",
-    "@adminProductsTagsSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsTechSpecsSection": "Technical Specifications",
-    "@adminProductsTechSpecsSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsTitle": "Manage Products",
-    "@adminProductsTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminProductsUpdated": "Product updated",
-    "@adminProductsUpdated": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsUploading": "Uploading...",
-    "@adminProductsUploading": {
-        "description": "Text displayed in admin panel"
-    },
     "adminProductsVendorUnverifiedSubtitle": "Mark when vendor confirms all specs are accurate",
     "@adminProductsVendorUnverifiedSubtitle": {
         "description": "Subtitle in admin panel"
-    },
-    "adminProductsVendorVerificationSection": "Vendor Verification",
-    "@adminProductsVendorVerificationSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminProductsVendorVerifiedSubtitle": "Specifications have been verified by the vendor",
-    "@adminProductsVendorVerifiedSubtitle": {
-        "description": "Subtitle in admin panel"
-    },
-    "adminProductsVendorVerifiedTitle": "Vendor Verified Specs",
-    "@adminProductsVendorVerifiedTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminProductsWeightHint": "e.g., 50g",
-    "@adminProductsWeightHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminProductsWeightLabel": "Weight",
-    "@adminProductsWeightLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminProductsWifi": "WiFi",
-    "@adminProductsWifi": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersActivate": "Activate",
-    "@adminSellersActivate": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersActive": "Active",
-    "@adminSellersActive": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersActiveSubtitle": "Seller is visible in the shop",
-    "@adminSellersActiveSubtitle": {
-        "description": "Subtitle in admin panel"
-    },
-    "adminSellersAddTitle": "Add Seller",
-    "@adminSellersAddTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminSellersAddTooltip": "Add Seller",
-    "@adminSellersAddTooltip": {
-        "description": "Tooltip in admin panel"
-    },
-    "adminSellersBasicInfoSection": "Basic Information",
-    "@adminSellersBasicInfoSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersCancel": "Cancel",
-    "@adminSellersCancel": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersClearDiscount": "Clear Discount Code",
-    "@adminSellersClearDiscount": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersContactInfoSection": "Contact Information",
-    "@adminSellersContactInfoSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersCountriesHint": "US, CA, UK, DE (comma separated)",
-    "@adminSellersCountriesHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminSellersCountriesLabel": "Countries",
-    "@adminSellersCountriesLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminSellersCreate": "Create Seller",
-    "@adminSellersCreate": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersCreated": "Seller created",
-    "@adminSellersCreated": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDangerZone": "Danger Zone",
-    "@adminSellersDangerZone": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDeactivate": "Deactivate",
-    "@adminSellersDeactivate": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDeleteConfirm": "Delete",
-    "@adminSellersDeleteConfirm": {
-        "description": "Confirmation prompt in admin panel"
-    },
-    "adminSellersDeleteDescription": "Permanently delete this seller and deactivate all their products. This action cannot be undone.",
-    "@adminSellersDeleteDescription": {
-        "description": "Description text in admin panel"
-    },
-    "adminSellersDeleteDialogMessage": "Are you sure you want to permanently delete \"{name}\"?",
-    "@adminSellersDeleteDialogMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        },
-        "description": "Text in admin panel Parameters: {name} = display name."
-    },
-    "adminSellersDeleteDialogTitle": "Delete Seller",
-    "@adminSellersDeleteDialogTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminSellersDeletePermanently": "Delete Seller Permanently",
-    "@adminSellersDeletePermanently": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDeleteProductWarning": "This seller has {productCount} products. Deleting the seller will also delete all their products.",
-    "@adminSellersDeleteProductWarning": {
-        "description": "Warning when deleting a seller with products",
-        "placeholders": {
-            "productCount": {
-                "type": "int"
-            }
-        }
-    },
-    "adminSellersDeleteTitle": "Delete Seller",
-    "@adminSellersDeleteTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminSellersDeleteTooltip": "Delete Seller",
-    "@adminSellersDeleteTooltip": {
-        "description": "Tooltip in admin panel"
-    },
-    "adminSellersDeleteUndoWarning": "This action cannot be undone.",
-    "@adminSellersDeleteUndoWarning": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDeleted": "Seller deleted",
-    "@adminSellersDeleted": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDescriptionHint": "Brief description of the seller",
-    "@adminSellersDescriptionHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminSellersDescriptionLabel": "Description",
-    "@adminSellersDescriptionLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminSellersDiscountCodeHint": "e.g., MESH10",
-    "@adminSellersDiscountCodeHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminSellersDiscountCodeLabel": "Discount Code",
-    "@adminSellersDiscountCodeLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminSellersDiscountDisplayHint": "e.g., 10% off for SocialMesh users",
-    "@adminSellersDiscountDisplayHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminSellersDiscountDisplayLabel": "Display Label",
-    "@adminSellersDiscountDisplayLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminSellersDiscountExpired": "Discount code has expired",
-    "@adminSellersDiscountExpired": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDiscountExpiryLabel": "Expiry Date (optional)",
-    "@adminSellersDiscountExpiryLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminSellersDiscountNoExpiry": "No expiry",
-    "@adminSellersDiscountNoExpiry": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDiscountSection": "Partner Discount Code",
-    "@adminSellersDiscountSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersDiscountTermsHint": "e.g., Cannot be combined with other offers",
-    "@adminSellersDiscountTermsHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminSellersDiscountTermsLabel": "Terms & Conditions",
-    "@adminSellersDiscountTermsLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminSellersEdit": "Edit",
-    "@adminSellersEdit": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersEditTitle": "Edit Seller",
-    "@adminSellersEditTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminSellersEmailHint": "support@example.com",
-    "@adminSellersEmailHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminSellersEmailLabel": "Contact Email",
-    "@adminSellersEmailLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminSellersHideInactive": "Hide inactive",
-    "@adminSellersHideInactive": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersInactiveBadge": "INACTIVE",
-    "@adminSellersInactiveBadge": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersLogoSection": "Seller Logo",
-    "@adminSellersLogoSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersNameHint": "e.g., LilyGO, RAK Wireless",
-    "@adminSellersNameHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminSellersNameLabel": "Seller Name *",
-    "@adminSellersNameLabel": {
-        "description": "Label in admin panel"
-    },
-    "adminSellersNotFound": "No sellers found",
-    "@adminSellersNotFound": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersOfficialPartner": "Official Partner",
-    "@adminSellersOfficialPartner": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersOfficialPartnerSubtitle": "Display as official Meshtastic partner",
-    "@adminSellersOfficialPartnerSubtitle": {
-        "description": "Subtitle in admin panel"
-    },
-    "adminSellersPartnerBadge": "PARTNER",
-    "@adminSellersPartnerBadge": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersRemoveLogo": "Remove",
-    "@adminSellersRemoveLogo": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersSaveChanges": "Save Changes",
-    "@adminSellersSaveChanges": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersSearchHint": "Search sellers...",
-    "@adminSellersSearchHint": {
-        "description": "Hint text for an input field in admin panel"
-    },
-    "adminSellersShippingSection": "Shipping Countries",
-    "@adminSellersShippingSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersShowInactive": "Show inactive",
-    "@adminSellersShowInactive": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersStatusSection": "Status & Verification",
-    "@adminSellersStatusSection": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersTitle": "Manage Sellers",
-    "@adminSellersTitle": {
-        "description": "Title for the admin panel screen"
-    },
-    "adminSellersUpdated": "Seller updated",
-    "@adminSellersUpdated": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersUploadLogo": "Upload Logo",
-    "@adminSellersUploadLogo": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersUploading": "Uploading...",
-    "@adminSellersUploading": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersVerifiedBadge": "VERIFIED",
-    "@adminSellersVerifiedBadge": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersVerifiedSubtitle": "Seller identity has been verified",
-    "@adminSellersVerifiedSubtitle": {
-        "description": "Subtitle in admin panel"
-    },
-    "adminSellersVerifiedToggle": "Verified",
-    "@adminSellersVerifiedToggle": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminSellersWebsiteLabel": "Website URL *",
-    "@adminSellersWebsiteLabel": {
-        "description": "Label in admin panel"
     },
     "aetherDetailAltitude": "Altitude",
     "@aetherDetailAltitude": {
@@ -3944,87 +3312,6 @@
     "@automationVariableSectionUniversal": {
         "description": "Section header for universal variables in the picker"
     },
-    "categoryProductsApplyFilters": "Apply Filters",
-    "@categoryProductsApplyFilters": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsClearFilters": "Clear Filters",
-    "@categoryProductsClearFilters": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsErrorLoading": "Error loading products",
-    "@categoryProductsErrorLoading": {
-        "description": "Error message in device shop category"
-    },
-    "categoryProductsFilter": "Filter",
-    "@categoryProductsFilter": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsFiltersTitle": "Filters",
-    "@categoryProductsFiltersTitle": {
-        "description": "Title for the device shop category screen"
-    },
-    "categoryProductsFrequencyBands": "Frequency Bands",
-    "@categoryProductsFrequencyBands": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsInStockOnly": "In Stock Only",
-    "@categoryProductsInStockOnly": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsNotFound": "No products found",
-    "@categoryProductsNotFound": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsOutOfStock": "OUT OF STOCK",
-    "@categoryProductsOutOfStock": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsPriceRange": "Price Range",
-    "@categoryProductsPriceRange": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsReset": "Reset",
-    "@categoryProductsReset": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsResultCount": "{count} products",
-    "@categoryProductsResultCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "Text in device shop Parameters: {count} = numeric count."
-    },
-    "categoryProductsRetry": "Retry",
-    "@categoryProductsRetry": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsSortNewest": "Newest First",
-    "@categoryProductsSortNewest": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsSortPopular": "Most Popular",
-    "@categoryProductsSortPopular": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsSortPriceHigh": "Price: High to Low",
-    "@categoryProductsSortPriceHigh": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsSortPriceLow": "Price: Low to High",
-    "@categoryProductsSortPriceLow": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsSortRating": "Highest Rated",
-    "@categoryProductsSortRating": {
-        "description": "Text displayed in device shop category"
-    },
-    "categoryProductsTryFilters": "Try adjusting your filters",
-    "@categoryProductsTryFilters": {
-        "description": "Text displayed in device shop category"
-    },
     "channelFormApproxLocationTitle": "Approximate Location",
     "@channelFormApproxLocationTitle": {
         "description": "Title for the channel configuration screen"
@@ -4959,15 +4246,6 @@
     "commonDone": "Done",
     "@commonDone": {
         "description": "Label for a Done button."
-    },
-    "commonErrorWithDetails": "Error: {error}",
-    "@commonErrorWithDetails": {
-        "description": "Generic error message with details.",
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
     },
     "commonGoBack": "Go Back",
     "@commonGoBack": {
@@ -6399,207 +5677,6 @@
     "@deviceSheetUsb": {
         "description": "Text displayed in developer tools"
     },
-    "deviceShopBecomeSeller": "Become a Seller",
-    "@deviceShopBecomeSeller": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopBecomeSellerBody": "Are you a manufacturer or distributor of Meshtastic-compatible devices? Join our marketplace to reach mesh radio enthusiasts worldwide.",
-    "@deviceShopBecomeSellerBody": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopBrowseByCategory": "Browse by Category",
-    "@deviceShopBrowseByCategory": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopCategories": "Categories",
-    "@deviceShopCategories": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopClear": "Clear",
-    "@deviceShopClear": {
-        "description": "Button to clear/reset device shop search filters."
-    },
-    "deviceShopConnectToBrowse": "Connect to browse devices",
-    "@deviceShopConnectToBrowse": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopContactUs": "Contact Us",
-    "@deviceShopContactUs": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopContactEmailSubject": "Device Shop seller inquiry",
-    "@deviceShopContactEmailSubject": {
-        "description": "Default email subject when user taps Contact Us from Device Shop seller section"
-    },
-    "deviceShopContactEmailBody": "Hi SocialMesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n",
-    "@deviceShopContactEmailBody": {
-        "description": "Default email body template when user taps Contact Us from Device Shop seller section"
-    },
-    "deviceShopErrorLoadingProducts": "Error loading products",
-    "@deviceShopErrorLoadingProducts": {
-        "description": "Error message in developer tools"
-    },
-    "deviceShopFavoritesTooltip": "Favorites",
-    "@deviceShopFavoritesTooltip": {
-        "description": "Tooltip in developer tools"
-    },
-    "deviceShopRemoveFavoriteTitle": "Remove from Favorites?",
-    "@deviceShopRemoveFavoriteTitle": {
-        "description": "Title of the confirmation sheet before removing a product from favorites"
-    },
-    "deviceShopRemoveFavoriteMessage": "This product will be removed from your favorites.",
-    "@deviceShopRemoveFavoriteMessage": {
-        "description": "Body of the confirmation sheet before removing a product from favorites"
-    },
-    "deviceShopFeatured": "Featured",
-    "@deviceShopFeatured": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopFilterAll": "All",
-    "@deviceShopFilterAll": {
-        "description": "Label for Device Shop top-level filter chip showing all products"
-    },
-    "deviceShopHelpTooltip": "Help",
-    "@deviceShopHelpTooltip": {
-        "description": "Tooltip in developer tools"
-    },
-    "deviceShopMarketplaceDisclaimer": "Purchases are completed on the seller's official store. SocialMesh may earn a small commission from purchases made through these links. SocialMesh does not handle payment, shipping, warranty, or returns.",
-    "@deviceShopMarketplaceDisclaimer": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopMarketplaceInfoTitle": "Marketplace Information",
-    "@deviceShopMarketplaceInfoTitle": {
-        "description": "Title for the developer tools screen"
-    },
-    "deviceShopInStock": "In Stock",
-    "@deviceShopInStock": {
-        "description": "Label for Device Shop top-level in-stock filter chip"
-    },
-    "deviceShopNewArrivals": "New Arrivals",
-    "@deviceShopNewArrivals": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopNoInternet": "No internet connection",
-    "@deviceShopNoInternet": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopNoResults": "No results for \"{query}\"",
-    "@deviceShopNoResults": {
-        "placeholders": {
-            "query": {
-                "type": "String"
-            }
-        },
-        "description": "Text in developer tools Parameters: {query}."
-    },
-    "deviceShopOfficialPartners": "Official Partners",
-    "@deviceShopOfficialPartners": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopOnSale": "On Sale",
-    "@deviceShopOnSale": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopOutOfStock": "OUT OF STOCK",
-    "@deviceShopOutOfStock": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopPopularDevices": "Popular Devices",
-    "@deviceShopPopularDevices": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopRecentSearches": "Recent Searches",
-    "@deviceShopRecentSearches": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopRetry": "Retry",
-    "@deviceShopRetry": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopSearchHint": "Search devices, modules, antennas...",
-    "@deviceShopSearchHint": {
-        "description": "Hint text for an input field in developer tools"
-    },
-    "deviceShopSeeAll": "See All",
-    "@deviceShopSeeAll": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopSellYourDevices": "Sell your Meshtastic devices",
-    "@deviceShopSellYourDevices": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopSupportEmail": "support@socialmesh.app",
-    "@deviceShopSupportEmail": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopTitle": "Device Shop",
-    "@deviceShopTitle": {
-        "description": "Title for the developer tools screen"
-    },
-    "deviceShopTrending": "Trending",
-    "@deviceShopTrending": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopTryAgain": "Try again in a moment",
-    "@deviceShopTryAgain": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopTryDifferentKeywords": "Try different keywords",
-    "@deviceShopTryDifferentKeywords": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopUnableToLoad": "Unable to load products",
-    "@deviceShopUnableToLoad": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopErrorWithDetails": "Error: {error}",
-    "@deviceShopErrorWithDetails": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        },
-        "description": "Error message in developer tools Parameters: {error} = error/status message."
-    },
-    "deviceShopFailedToUploadImage": "Failed to upload image: {error}",
-    "@deviceShopFailedToUploadImage": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        },
-        "description": "Error message in developer tools Parameters: {error} = error/status message."
-    },
-    "deviceShopFailedToUploadLogo": "Failed to upload logo: {error}",
-    "@deviceShopFailedToUploadLogo": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        },
-        "description": "Error message in developer tools Parameters: {error} = error/status message."
-    },
-    "deviceShopFieldRequired": "Required",
-    "@deviceShopFieldRequired": {
-        "description": "Text displayed in developer tools"
-    },
-    "deviceShopGoBackTooltip": "Go back",
-    "@deviceShopGoBackTooltip": {
-        "description": "Tooltip for back button on product detail screen"
-    },
-    "deviceShopRefreshTooltip": "Refresh",
-    "@deviceShopRefreshTooltip": {
-        "description": "Tooltip for refresh button on product detail screen"
-    },
-    "deviceShopReviewSubmitFailed": "Failed to submit review: {error}",
-    "@deviceShopReviewSubmitFailed": {
-        "description": "Error snackbar when review submission fails",
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
     "discoveryDiscoveredBadge": "DISCOVERED",
     "@discoveryDiscoveredBadge": {
         "description": "Badge label shown on newly discovered node cards."
@@ -6877,63 +5954,6 @@
     "favoritesTitle": "Favorite Nodes",
     "@favoritesTitle": {
         "description": "Screen or section title"
-    },
-    "featuredProductsDiscard": "Discard",
-    "@featuredProductsDiscard": {
-        "description": "UI text: featured products discard"
-    },
-    "featuredProductsEmpty": "No featured products",
-    "@featuredProductsEmpty": {
-        "description": "Empty state message"
-    },
-    "featuredProductsEmptySubtitle": "Mark products as featured to manage their order here",
-    "@featuredProductsEmptySubtitle": {
-        "description": "Subtitle or secondary text"
-    },
-    "featuredProductsOrderUpdated": "Featured order updated",
-    "@featuredProductsOrderUpdated": {
-        "description": "UI text: featured products order updated"
-    },
-    "featuredProductsRemove": "Remove",
-    "@featuredProductsRemove": {
-        "description": "UI text: featured products remove"
-    },
-    "featuredProductsRemoveMessage": "Remove \"{name}\" from featured products?",
-    "@featuredProductsRemoveMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: featured products remove message Parameters: {name} = display name."
-    },
-    "featuredProductsRemoveTitle": "Remove from Featured",
-    "@featuredProductsRemoveTitle": {
-        "description": "Screen or section title"
-    },
-    "featuredProductsRemoveTooltip": "Remove from featured",
-    "@featuredProductsRemoveTooltip": {
-        "description": "Tooltip text"
-    },
-    "featuredProductsRemoved": "Removed from featured",
-    "@featuredProductsRemoved": {
-        "description": "UI text: featured products removed"
-    },
-    "featuredProductsReorderInfo": "Drag and drop products to reorder. Products at the top will appear first in the featured section.",
-    "@featuredProductsReorderInfo": {
-        "description": "UI text: featured products reorder info"
-    },
-    "featuredProductsSave": "Save",
-    "@featuredProductsSave": {
-        "description": "UI text: featured products save"
-    },
-    "featuredProductsTitle": "Featured Products",
-    "@featuredProductsTitle": {
-        "description": "Screen or section title"
-    },
-    "featuredProductsUnsavedChanges": "You have unsaved changes",
-    "@featuredProductsUnsavedChanges": {
-        "description": "UI text: featured products unsaved changes"
     },
     "feedbackBugReportsTitle": "My Bug Reports",
     "@feedbackBugReportsTitle": {
@@ -8853,10 +7873,6 @@
     "@helpCenterScreenCreateSignal": {
         "description": "Screen name shown in help article topic chips for the Create Signal screen."
     },
-    "helpCenterScreenDeviceShop": "Device Shop",
-    "@helpCenterScreenDeviceShop": {
-        "description": "Screen name shown in help article topic chips for the Device Shop screen."
-    },
     "helpCenterScreenMap": "Map",
     "@helpCenterScreenMap": {
         "description": "Screen name shown in help article topic chips for the Map screen."
@@ -8932,10 +7948,6 @@
     "helpCenterScreenWidgetDashboard": "Widget Dashboard",
     "@helpCenterScreenWidgetDashboard": {
         "description": "Screen name shown in help article topic chips for the Widget Dashboard screen."
-    },
-    "helpCenterScreenWidgetMarketplace": "Widget Marketplace",
-    "@helpCenterScreenWidgetMarketplace": {
-        "description": "Screen name shown in help article topic chips for the Widget Marketplace screen."
     },
     "helpCenterScreenWorldMesh": "World Mesh",
     "@helpCenterScreenWorldMesh": {
@@ -9660,10 +8672,6 @@
     "settingsAgeGroupSubtitleAdult": "18 or older",
     "@settingsAgeGroupSubtitleAdult": {
         "description": "Subtitle showing the 18+ age group in Settings"
-    },
-    "lilygoModelPriceUnavailable": "Price unavailable",
-    "@lilygoModelPriceUnavailable": {
-        "description": "UI text: lilygo model price unavailable"
     },
     "linkDeviceBannerLinkButton": "Link",
     "@linkDeviceBannerLinkButton": {
@@ -23334,389 +22342,6 @@
     "@presenceWillAppear": {
         "description": "UI text: presence will appear"
     },
-    "productDetailAnonymous": "Anonymous",
-    "@productDetailAnonymous": {
-        "description": "UI text: product detail anonymous"
-    },
-    "productDetailBattery": "Battery",
-    "@productDetailBattery": {
-        "description": "UI text: product detail battery"
-    },
-    "productDetailBeFirstReviewer": "Be the first to review this product!",
-    "@productDetailBeFirstReviewer": {
-        "description": "UI text: product detail be first reviewer"
-    },
-    "productDetailBluetooth": "Bluetooth",
-    "@productDetailBluetooth": {
-        "description": "UI text: product detail bluetooth"
-    },
-    "productDetailBuyNow": "Buy Now",
-    "@productDetailBuyNow": {
-        "description": "UI text: product detail buy now"
-    },
-    "productDetailBySeller": "by {seller}",
-    "@productDetailBySeller": {
-        "placeholders": {
-            "seller": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: product detail by seller Parameters: {seller}."
-    },
-    "productDetailCancel": "Cancel",
-    "@productDetailCancel": {
-        "description": "UI text: product detail cancel"
-    },
-    "productDetailChipset": "Chipset",
-    "@productDetailChipset": {
-        "description": "UI text: product detail chipset"
-    },
-    "productDetailContactSeller": "Contact Seller",
-    "@productDetailContactSeller": {
-        "description": "UI text: product detail contact seller"
-    },
-    "productDetailContactToPurchase": "Contact the seller to purchase this product.",
-    "@productDetailContactToPurchase": {
-        "description": "UI text: product detail contact to purchase"
-    },
-    "productDetailDaysAgo": "{count} days ago",
-    "@productDetailDaysAgo": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail days ago Parameters: {count} = numeric count."
-    },
-    "productDetailDescription": "Description",
-    "@productDetailDescription": {
-        "description": "Description text"
-    },
-    "productDetailDimensions": "Dimensions",
-    "@productDetailDimensions": {
-        "description": "UI text: product detail dimensions"
-    },
-    "productDetailDiscountBadge": "-{percent}% OFF",
-    "@productDetailDiscountBadge": {
-        "placeholders": {
-            "percent": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail discount badge Parameters: {percent}."
-    },
-    "productDetailDisplay": "Display",
-    "@productDetailDisplay": {
-        "description": "UI text: product detail display"
-    },
-    "productDetailEdit": "Edit",
-    "@productDetailEdit": {
-        "description": "UI text: product detail edit"
-    },
-    "productDetailErrorLoading": "Error loading product",
-    "@productDetailErrorLoading": {
-        "description": "Error message shown to the user"
-    },
-    "productDetailEstimatedDelivery": "Estimated {days} days",
-    "@productDetailEstimatedDelivery": {
-        "placeholders": {
-            "days": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail estimated delivery Parameters: {days} = time duration."
-    },
-    "productDetailFeatures": "Features",
-    "@productDetailFeatures": {
-        "description": "UI text: product detail features"
-    },
-    "productDetailFirmware": "Firmware",
-    "@productDetailFirmware": {
-        "description": "UI text: product detail firmware"
-    },
-    "productDetailFreeShipping": "Free Shipping",
-    "@productDetailFreeShipping": {
-        "description": "UI text: product detail free shipping"
-    },
-    "productDetailFrequencyBands": "Frequency Bands",
-    "@productDetailFrequencyBands": {
-        "description": "UI text: product detail frequency bands"
-    },
-    "productDetailGoBack": "Go Back",
-    "@productDetailGoBack": {
-        "description": "UI text: product detail go back"
-    },
-    "productDetailGps": "GPS",
-    "@productDetailGps": {
-        "description": "UI text: product detail gps"
-    },
-    "productDetailHardwareVersion": "Hardware Version",
-    "@productDetailHardwareVersion": {
-        "description": "UI text: product detail hardware version"
-    },
-    "productDetailImageCounter": "{current} / {total}",
-    "@productDetailImageCounter": {
-        "placeholders": {
-            "current": {
-                "type": "int"
-            },
-            "total": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail image counter Parameters: {current}, {total} = numeric count."
-    },
-    "productDetailInStockCount": "In Stock ({quantity} available)",
-    "@productDetailInStockCount": {
-        "placeholders": {
-            "quantity": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail in stock count Parameters: {quantity}."
-    },
-    "productDetailIncludedAccessories": "Included Accessories",
-    "@productDetailIncludedAccessories": {
-        "description": "UI text: product detail included accessories"
-    },
-    "productDetailLoraChip": "LoRa Chip",
-    "@productDetailLoraChip": {
-        "description": "LoRa = Long Range, a radio modulation technology. This labels the radio chip in the device."
-    },
-    "productDetailMeshtasticCompatible": "Meshtastic Compatible",
-    "@productDetailMeshtasticCompatible": {
-        "description": "UI text: product detail meshtastic compatible"
-    },
-    "productDetailMonthsAgo": "{count} months ago",
-    "@productDetailMonthsAgo": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail months ago Parameters: {count} = numeric count."
-    },
-    "productDetailNoReviews": "No reviews yet",
-    "@productDetailNoReviews": {
-        "description": "UI text: product detail no reviews"
-    },
-    "productDetailNotFound": "Product not found",
-    "@productDetailNotFound": {
-        "description": "UI text: product detail not found"
-    },
-    "productDetailOutOfStock": "Out of Stock",
-    "@productDetailOutOfStock": {
-        "description": "UI text: product detail out of stock"
-    },
-    "productDetailOutOfStockButton": "Out of Stock",
-    "@productDetailOutOfStockButton": {
-        "description": "Button or action label"
-    },
-    "productDetailPurchaseDisclaimer": "Purchases completed on seller's official store · SocialMesh may earn a commission",
-    "@productDetailPurchaseDisclaimer": {
-        "description": "UI text: product detail purchase disclaimer"
-    },
-    "productDetailPurchaseTitle": "Purchase",
-    "@productDetailPurchaseTitle": {
-        "description": "Screen or section title"
-    },
-    "productDetailReadMore": "Read More",
-    "@productDetailReadMore": {
-        "description": "UI text: product detail read more"
-    },
-    "productDetailRetry": "Retry",
-    "@productDetailRetry": {
-        "description": "UI text: product detail retry"
-    },
-    "productDetailReviewCount": "({count} reviews)",
-    "@productDetailReviewCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail review count Parameters: {count} = numeric count."
-    },
-    "productDetailReviewHint": "Share your experience with this product...",
-    "@productDetailReviewHint": {
-        "description": "Input field hint text"
-    },
-    "productDetailReviewPrivacyNotice": "Your review will be public and posted as \"{userName}\". Reviews are moderated before appearing on the product page.",
-    "@productDetailReviewPrivacyNotice": {
-        "placeholders": {
-            "userName": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: product detail review privacy notice Parameters: {userName} = display name."
-    },
-    "productDetailReviewSubmitted": "Review submitted for moderation. Thank you!",
-    "@productDetailReviewSubmitted": {
-        "description": "UI text: product detail review submitted"
-    },
-    "productDetailReviewTitleLabel": "Title (optional)",
-    "@productDetailReviewTitleLabel": {
-        "description": "UI label"
-    },
-    "productDetailReviewValidation": "Please write a review description",
-    "@productDetailReviewValidation": {
-        "description": "UI text: product detail review validation"
-    },
-    "productDetailReviewVerified": "Verified",
-    "@productDetailReviewVerified": {
-        "description": "UI text: product detail review verified"
-    },
-    "productDetailReviews": "Reviews",
-    "@productDetailReviews": {
-        "description": "UI text: product detail reviews"
-    },
-    "productDetailSelectedPrice": "Selected: ${price}",
-    "@productDetailSelectedPrice": {
-        "placeholders": {
-            "price": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: product detail selected price Parameters: {price}."
-    },
-    "productDetailSellerResponse": "Seller Response",
-    "@productDetailSellerResponse": {
-        "description": "UI text: product detail seller response"
-    },
-    "productDetailShipping": "Shipping",
-    "@productDetailShipping": {
-        "description": "UI text: product detail shipping"
-    },
-    "productDetailShippingCost": "Shipping: ${cost}",
-    "@productDetailShippingCost": {
-        "placeholders": {
-            "cost": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: product detail shipping cost Parameters: {cost}."
-    },
-    "productDetailShipsTo": "Ships to: {countries}",
-    "@productDetailShipsTo": {
-        "placeholders": {
-            "countries": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: product detail ships to Parameters: {countries}."
-    },
-    "productDetailShowLess": "Show Less",
-    "@productDetailShowLess": {
-        "description": "UI text: product detail show less"
-    },
-    "productDetailSignInFavorites": "Sign in to save favorites",
-    "@productDetailSignInFavorites": {
-        "description": "UI text: product detail sign in favorites"
-    },
-    "productDetailSignInReview": "Sign in to write a review",
-    "@productDetailSignInReview": {
-        "description": "UI text: product detail sign in to write review"
-    },
-    "productDetailSoldCount": "{count} sold",
-    "@productDetailSoldCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail sold count Parameters: {count} = numeric count."
-    },
-    "productDetailSubmitReview": "Submit Review",
-    "@productDetailSubmitReview": {
-        "description": "UI text: product detail submit review"
-    },
-    "productDetailTechSpecs": "Technical Specifications",
-    "@productDetailTechSpecs": {
-        "description": "UI text: product detail tech specs"
-    },
-    "productDetailTitle": "Product",
-    "@productDetailTitle": {
-        "description": "Screen or section title"
-    },
-    "productDetailToday": "Today",
-    "@productDetailToday": {
-        "description": "UI text: product detail today"
-    },
-    "productDetailTotal": "Total",
-    "@productDetailTotal": {
-        "description": "UI text: product detail total"
-    },
-    "productDetailUnableToLoadPage": "Unable to load page",
-    "@productDetailUnableToLoadPage": {
-        "description": "UI text: product detail unable to load page"
-    },
-    "productDetailUnableToLoadReviews": "Unable to load reviews",
-    "@productDetailUnableToLoadReviews": {
-        "description": "UI text: product detail unable to load reviews"
-    },
-    "productDetailVendorVerified": "Vendor Verified",
-    "@productDetailVendorVerified": {
-        "description": "UI text: product detail vendor verified"
-    },
-    "productDetailVerifiedOn": "Verified on {date}",
-    "@productDetailVerifiedOn": {
-        "placeholders": {
-            "date": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: product detail verified on Parameters: {date} = formatted date/time."
-    },
-    "productDetailWebviewOffline": "This content requires an internet connection. Please check your connection and try again.",
-    "@productDetailWebviewOffline": {
-        "description": "UI text: product detail webview offline"
-    },
-    "productDetailWeeksAgo": "{count} weeks ago",
-    "@productDetailWeeksAgo": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail weeks ago Parameters: {count} = numeric count."
-    },
-    "productDetailWeight": "Weight",
-    "@productDetailWeight": {
-        "description": "UI text: product detail weight"
-    },
-    "productDetailWifi": "WiFi",
-    "@productDetailWifi": {
-        "description": "UI text: product detail wifi"
-    },
-    "productDetailWriteReview": "Write Review",
-    "@productDetailWriteReview": {
-        "description": "UI text: product detail write review"
-    },
-    "productDetailWriteReviewTitle": "Write a Review",
-    "@productDetailWriteReviewTitle": {
-        "description": "Screen or section title"
-    },
-    "productDetailYearsAgo": "{count} years ago",
-    "@productDetailYearsAgo": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: product detail years ago Parameters: {count} = numeric count."
-    },
-    "productDetailYesterday": "Yesterday",
-    "@productDetailYesterday": {
-        "description": "UI text: product detail yesterday"
-    },
-    "productDetailYourRating": "Your Rating",
-    "@productDetailYourRating": {
-        "description": "UI text: product detail your rating"
-    },
-    "productDetailYourReview": "Your Review *",
-    "@productDetailYourReview": {
-        "description": "UI text: product detail your review"
-    },
     "profileBasicInfo": "Basic Info",
     "@profileBasicInfo": {
         "description": "Text displayed in user profile"
@@ -25564,177 +24189,13 @@
     "@scannerWebDashboardDescription": {
         "description": "Description shown to web users explaining the dashboard-only browser build and how to enable a real connection."
     },
-    "searchProductsBrowseByCategory": "Browse by Category",
-    "@searchProductsBrowseByCategory": {
-        "description": "UI text: search products browse by category"
-    },
-    "searchProductsClear": "Clear",
-    "@searchProductsClear": {
-        "description": "UI text: search products clear"
-    },
-    "searchProductsHint": "Search devices, modules, antennas...",
-    "@searchProductsHint": {
-        "description": "Input field hint text"
-    },
-    "searchProductsNoResults": "No results for \"{query}\"",
-    "@searchProductsNoResults": {
-        "placeholders": {
-            "query": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: search products no results Parameters: {query}."
-    },
-    "searchProductsOutOfStock": "Out of Stock",
-    "@searchProductsOutOfStock": {
-        "description": "UI text: search products out of stock"
-    },
-    "searchProductsRecentSearches": "Recent Searches",
-    "@searchProductsRecentSearches": {
-        "description": "UI text: search products recent searches"
-    },
-    "searchProductsResultCount": "{count} results for \"{query}\"",
-    "@searchProductsResultCount": {
-        "description": "Search results count with query text",
-        "placeholders": {
-            "count": {
-                "type": "int"
-            },
-            "query": {
-                "type": "String"
-            }
-        }
-    },
-    "searchProductsRetry": "Retry",
-    "@searchProductsRetry": {
-        "description": "UI text: search products retry"
-    },
-    "searchProductsSearchFailed": "Search failed",
-    "@searchProductsSearchFailed": {
-        "description": "Error message shown to the user"
-    },
-    "searchProductsTrending": "Trending",
-    "@searchProductsTrending": {
-        "description": "UI text: search products trending"
-    },
-    "searchProductsTryDifferent": "Try different keywords or browse categories",
-    "@searchProductsTryDifferent": {
-        "description": "UI text: search products try different"
-    },
-    "sellerProfileAbout": "About",
-    "@sellerProfileAbout": {
-        "description": "UI text: seller profile about"
-    },
-    "sellerProfileApplyCodeHint": "Apply this code at checkout on the seller's store",
-    "@sellerProfileApplyCodeHint": {
-        "description": "Input field hint text"
-    },
-    "sellerProfileCodeCopied": "Code copied to clipboard",
-    "@sellerProfileCodeCopied": {
-        "description": "UI text: seller profile code copied"
-    },
-    "sellerProfileContactShipping": "Contact & Shipping",
-    "@sellerProfileContactShipping": {
-        "description": "UI text: seller profile contact shipping"
-    },
-    "sellerProfileDiscountExclusive": "Exclusive discount code for SocialMesh users",
-    "@sellerProfileDiscountExclusive": {
-        "description": "UI text: seller profile discount exclusive"
-    },
-    "sellerProfileEmail": "Email",
-    "@sellerProfileEmail": {
-        "description": "UI text: seller profile email"
-    },
-    "sellerProfileErrorLoading": "Error loading seller",
-    "@sellerProfileErrorLoading": {
-        "description": "Error message shown to the user"
-    },
     "sellerProfileFoundedStat": "Founded",
     "@sellerProfileFoundedStat": {
         "description": "UI text: seller profile founded stat"
     },
-    "sellerProfileGoBack": "Go Back",
-    "@sellerProfileGoBack": {
-        "description": "UI text: seller profile go back"
-    },
-    "sellerProfileNoProducts": "No products listed yet",
-    "@sellerProfileNoProducts": {
-        "description": "UI text: seller profile no products"
-    },
-    "sellerProfileNoSearchResults": "No products match \"{query}\"",
-    "@sellerProfileNoSearchResults": {
-        "placeholders": {
-            "query": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: seller profile no search results Parameters: {query}."
-    },
-    "sellerProfileNotFound": "Seller not found",
-    "@sellerProfileNotFound": {
-        "description": "UI text: seller profile not found"
-    },
-    "sellerProfileOfficialPartner": "Official Partner",
-    "@sellerProfileOfficialPartner": {
-        "description": "UI text: seller profile official partner"
-    },
-    "sellerProfilePartnerDiscount": "Partner Discount",
-    "@sellerProfilePartnerDiscount": {
-        "description": "UI text: seller profile partner discount"
-    },
-    "sellerProfileProductsCount": "Products ({count})",
-    "@sellerProfileProductsCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: seller profile products count Parameters: {count} = numeric count."
-    },
-    "sellerProfileProductsStat": "Products",
-    "@sellerProfileProductsStat": {
-        "description": "UI text: seller profile products stat"
-    },
-    "sellerProfileRevealCode": "Reveal Code",
-    "@sellerProfileRevealCode": {
-        "description": "UI text: seller profile reveal code"
-    },
-    "sellerProfileReviewCount": "{count} reviews",
-    "@sellerProfileReviewCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: seller profile review count Parameters: {count} = numeric count."
-    },
     "sellerProfileSalesStat": "Sales",
     "@sellerProfileSalesStat": {
         "description": "UI text: seller profile sales stat"
-    },
-    "sellerProfileSearchHint": "Search products...",
-    "@sellerProfileSearchHint": {
-        "description": "Input field hint text"
-    },
-    "sellerProfileShipsTo": "Ships to",
-    "@sellerProfileShipsTo": {
-        "description": "UI text: seller profile ships to"
-    },
-    "sellerProfileTitle": "Seller",
-    "@sellerProfileTitle": {
-        "description": "Screen or section title"
-    },
-    "sellerProfileCopyCodeTooltip": "Copy code",
-    "@sellerProfileCopyCodeTooltip": {
-        "description": "Tooltip for copy discount code button"
-    },
-    "sellerProfileUnableToLoad": "Unable to load products",
-    "@sellerProfileUnableToLoad": {
-        "description": "UI text: seller profile unable to load"
-    },
-    "sellerProfileWebsite": "Website",
-    "@sellerProfileWebsite": {
-        "description": "UI text: seller profile website"
     },
     "serialConfigBaudRate": "Baud Rate",
     "@serialConfigBaudRate": {
@@ -27070,292 +25531,6 @@
                 "type": "String"
             }
         }
-    },
-    "shopAdminDashboardAccessDenied": "Access Denied",
-    "@shopAdminDashboardAccessDenied": {
-        "description": "UI text: shop admin dashboard access denied"
-    },
-    "shopAdminDashboardAccessRequired": "Admin Access Required",
-    "@shopAdminDashboardAccessRequired": {
-        "description": "UI text: shop admin dashboard access required"
-    },
-    "shopAdminDashboardActiveCount": "{count} active",
-    "@shopAdminDashboardActiveCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: shop admin dashboard active count Parameters: {count} = numeric count."
-    },
-    "shopAdminDashboardAddProduct": "Add Product",
-    "@shopAdminDashboardAddProduct": {
-        "description": "UI text: shop admin dashboard add product"
-    },
-    "shopAdminDashboardAddSeller": "Add Seller",
-    "@shopAdminDashboardAddSeller": {
-        "description": "UI text: shop admin dashboard add seller"
-    },
-    "shopAdminDashboardError": "Error",
-    "@shopAdminDashboardError": {
-        "description": "Error message shown to the user"
-    },
-    "shopAdminDashboardEstRevenue": "Est. Revenue",
-    "@shopAdminDashboardEstRevenue": {
-        "description": "UI text: shop admin dashboard est revenue"
-    },
-    "shopAdminDashboardFeatured": "Featured Products",
-    "@shopAdminDashboardFeatured": {
-        "description": "UI text: shop admin dashboard featured"
-    },
-    "shopAdminDashboardFeaturedSubtitle": "Manage featured product display order",
-    "@shopAdminDashboardFeaturedSubtitle": {
-        "description": "Subtitle or secondary text"
-    },
-    "shopAdminDashboardInactive": "Inactive",
-    "@shopAdminDashboardInactive": {
-        "description": "UI text: shop admin dashboard inactive"
-    },
-    "shopAdminDashboardManagement": "Management",
-    "@shopAdminDashboardManagement": {
-        "description": "UI text: shop admin dashboard management"
-    },
-    "shopAdminDashboardNoPermission": "You do not have permission to access this area.",
-    "@shopAdminDashboardNoPermission": {
-        "description": "UI text: shop admin dashboard no permission"
-    },
-    "shopAdminDashboardOutOfStock": "Out of Stock",
-    "@shopAdminDashboardOutOfStock": {
-        "description": "UI text: shop admin dashboard out of stock"
-    },
-    "shopAdminDashboardProducts": "Products",
-    "@shopAdminDashboardProducts": {
-        "description": "UI text: shop admin dashboard products"
-    },
-    "shopAdminDashboardProductsSubtitle": "Manage all product listings",
-    "@shopAdminDashboardProductsSubtitle": {
-        "description": "Subtitle or secondary text"
-    },
-    "shopAdminDashboardQuickActions": "Quick Actions",
-    "@shopAdminDashboardQuickActions": {
-        "description": "UI text: shop admin dashboard quick actions"
-    },
-    "shopAdminDashboardRefresh": "Refresh",
-    "@shopAdminDashboardRefresh": {
-        "description": "UI text: shop admin dashboard refresh"
-    },
-    "shopAdminDashboardReviews": "Reviews",
-    "@shopAdminDashboardReviews": {
-        "description": "UI text: shop admin dashboard reviews"
-    },
-    "shopAdminDashboardReviewsMgmt": "Reviews",
-    "@shopAdminDashboardReviewsMgmt": {
-        "description": "UI text: shop admin dashboard reviews mgmt"
-    },
-    "shopAdminDashboardReviewsSubtitle": "Moderate product reviews",
-    "@shopAdminDashboardReviewsSubtitle": {
-        "description": "Subtitle or secondary text"
-    },
-    "shopAdminDashboardSellers": "Sellers",
-    "@shopAdminDashboardSellers": {
-        "description": "UI text: shop admin dashboard sellers"
-    },
-    "shopAdminDashboardSellersSubtitle": "Manage seller profiles and partnerships",
-    "@shopAdminDashboardSellersSubtitle": {
-        "description": "Subtitle or secondary text"
-    },
-    "shopAdminDashboardTitle": "Shop Admin",
-    "@shopAdminDashboardTitle": {
-        "description": "Screen or section title"
-    },
-    "shopAdminDashboardTotalProducts": "Total Products",
-    "@shopAdminDashboardTotalProducts": {
-        "description": "UI text: shop admin dashboard total products"
-    },
-    "shopAdminDashboardTotalSales": "Total Sales",
-    "@shopAdminDashboardTotalSales": {
-        "description": "UI text: shop admin dashboard total sales"
-    },
-    "shopAdminDashboardTotalSellers": "Total Sellers",
-    "@shopAdminDashboardTotalSellers": {
-        "description": "UI text: shop admin dashboard total sellers"
-    },
-    "shopAdminDashboardTotalViews": "Total Views",
-    "@shopAdminDashboardTotalViews": {
-        "description": "UI text: shop admin dashboard total views"
-    },
-    "shopFavoritesEmpty": "No favorites yet",
-    "@shopFavoritesEmpty": {
-        "description": "Empty state message"
-    },
-    "shopFavoritesEmptySubtitle": "Tap the heart icon on products to save them",
-    "@shopFavoritesEmptySubtitle": {
-        "description": "Subtitle or secondary text"
-    },
-    "shopFavoritesErrorLoading": "Error loading favorites",
-    "@shopFavoritesErrorLoading": {
-        "description": "Error message shown to the user"
-    },
-    "shopFavoritesInStock": "In Stock",
-    "@shopFavoritesInStock": {
-        "description": "UI text: shop favorites in stock"
-    },
-    "shopFavoritesOutOfStock": "Out of Stock",
-    "@shopFavoritesOutOfStock": {
-        "description": "UI text: shop favorites out of stock"
-    },
-    "shopFavoritesProductRemoved": "Product no longer available",
-    "@shopFavoritesProductRemoved": {
-        "description": "UI text: shop favorites product removed"
-    },
-    "shopFavoritesRetry": "Retry",
-    "@shopFavoritesRetry": {
-        "description": "UI text: shop favorites retry"
-    },
-    "shopFavoritesSignIn": "Sign in to save favorites",
-    "@shopFavoritesSignIn": {
-        "description": "UI text: shop favorites sign in"
-    },
-    "shopFavoritesSignInSubtitle": "Your favorite devices will appear here",
-    "@shopFavoritesSignInSubtitle": {
-        "description": "Subtitle or secondary text"
-    },
-    "shopFavoritesTitle": "Favorites",
-    "@shopFavoritesTitle": {
-        "description": "Screen or section title"
-    },
-    "shopFavoritesUnableToLoad": "Unable to load product",
-    "@shopFavoritesUnableToLoad": {
-        "description": "UI text: shop favorites unable to load"
-    },
-    "shopModelBandAu915": "AU 915MHz",
-    "@shopModelBandAu915": {
-        "description": "UI text: shop model band au915"
-    },
-    "shopModelBandAu915Range": "915-928 MHz",
-    "@shopModelBandAu915Range": {
-        "description": "UI text: shop model band au915 range"
-    },
-    "shopModelBandCn470": "CN 470MHz",
-    "@shopModelBandCn470": {
-        "description": "UI text: shop model band cn470"
-    },
-    "shopModelBandCn470Range": "470-510 MHz",
-    "@shopModelBandCn470Range": {
-        "description": "UI text: shop model band cn470 range"
-    },
-    "shopModelBandEu868": "EU 868MHz",
-    "@shopModelBandEu868": {
-        "description": "UI text: shop model band eu868"
-    },
-    "shopModelBandEu868Range": "863-870 MHz",
-    "@shopModelBandEu868Range": {
-        "description": "UI text: shop model band eu868 range"
-    },
-    "shopModelBandIn865": "IN 865MHz",
-    "@shopModelBandIn865": {
-        "description": "UI text: shop model band in865"
-    },
-    "shopModelBandIn865Range": "865-867 MHz",
-    "@shopModelBandIn865Range": {
-        "description": "UI text: shop model band in865 range"
-    },
-    "shopModelBandJp920": "JP 920MHz",
-    "@shopModelBandJp920": {
-        "description": "UI text: shop model band jp920"
-    },
-    "shopModelBandJp920Range": "920-925 MHz",
-    "@shopModelBandJp920Range": {
-        "description": "UI text: shop model band jp920 range"
-    },
-    "shopModelBandKr920": "KR 920MHz",
-    "@shopModelBandKr920": {
-        "description": "UI text: shop model band kr920"
-    },
-    "shopModelBandKr920Range": "920-923 MHz",
-    "@shopModelBandKr920Range": {
-        "description": "UI text: shop model band kr920 range"
-    },
-    "shopModelBandMulti": "Multi-band",
-    "@shopModelBandMulti": {
-        "description": "UI text: shop model band multi"
-    },
-    "shopModelBandMultiRange": "Multiple frequencies",
-    "@shopModelBandMultiRange": {
-        "description": "UI text: shop model band multi range"
-    },
-    "shopModelBandUs915": "US 915MHz",
-    "@shopModelBandUs915": {
-        "description": "UI text: shop model band us915"
-    },
-    "shopModelBandUs915Range": "902-928 MHz",
-    "@shopModelBandUs915Range": {
-        "description": "UI text: shop model band us915 range"
-    },
-    "shopModelCategoryAccessories": "Accessories",
-    "@shopModelCategoryAccessories": {
-        "description": "UI text: shop model category accessories"
-    },
-    "shopModelCategoryAccessoriesDescription": "Cables, batteries, and more",
-    "@shopModelCategoryAccessoriesDescription": {
-        "description": "Description text"
-    },
-    "shopModelCategoryAntennas": "Antennas",
-    "@shopModelCategoryAntennas": {
-        "description": "UI text: shop model category antennas"
-    },
-    "shopModelCategoryAntennasDescription": "Antennas and RF accessories",
-    "@shopModelCategoryAntennasDescription": {
-        "description": "Description text"
-    },
-    "shopModelCategoryEnclosures": "Enclosures",
-    "@shopModelCategoryEnclosures": {
-        "description": "UI text: shop model category enclosures"
-    },
-    "shopModelCategoryEnclosuresDescription": "Cases and enclosures",
-    "@shopModelCategoryEnclosuresDescription": {
-        "description": "Description text"
-    },
-    "shopModelCategoryKits": "Kits",
-    "@shopModelCategoryKits": {
-        "description": "UI text: shop model category kits"
-    },
-    "shopModelCategoryKitsDescription": "DIY kits and bundles",
-    "@shopModelCategoryKitsDescription": {
-        "description": "Description text"
-    },
-    "shopModelCategoryModules": "Modules",
-    "@shopModelCategoryModules": {
-        "description": "UI text: shop model category modules"
-    },
-    "shopModelCategoryModulesDescription": "Add-on modules and boards",
-    "@shopModelCategoryModulesDescription": {
-        "description": "Description text"
-    },
-    "shopModelCategoryNodes": "Nodes",
-    "@shopModelCategoryNodes": {
-        "description": "UI text: shop model category nodes"
-    },
-    "shopModelCategoryNodesDescription": "Complete Meshtastic devices",
-    "@shopModelCategoryNodesDescription": {
-        "description": "Description text"
-    },
-    "shopModelCategorySolar": "Solar",
-    "@shopModelCategorySolar": {
-        "description": "UI text: shop model category solar"
-    },
-    "shopModelCategorySolarDescription": "Solar panels and power solutions",
-    "@shopModelCategorySolarDescription": {
-        "description": "Description text"
-    },
-    "shopModelPriceFrom": "From ${price}",
-    "@shopModelPriceFrom": {
-        "placeholders": {
-            "price": {
-                "type": "String"
-            }
-        },
-        "description": "UI text: shop model price from Parameters: {price}."
     },
     "showcaseCardAmplify": "Amplify your reach",
     "@showcaseCardAmplify": {
@@ -33305,19 +31480,6 @@
     "@widgetBuilderBroadcastSubtitle": {
         "description": "Broadcast option subtitle"
     },
-    "widgetBuilderBrowseMarketplace": "Browse Marketplace",
-    "@widgetBuilderBrowseMarketplace": {
-        "description": "CTA title"
-    },
-    "widgetBuilderByAuthor": "by {author}",
-    "@widgetBuilderByAuthor": {
-        "description": "Marketplace widget author attribution",
-        "placeholders": {
-            "author": {
-                "type": "String"
-            }
-        }
-    },
     "widgetBuilderCancel": "Cancel",
     "@widgetBuilderCancel": {
         "description": "Cancel button label"
@@ -33334,38 +31496,6 @@
     "widgetBuilderCannotSaveTitle": "Cannot Save Widget",
     "@widgetBuilderCannotSaveTitle": {
         "description": "Validation banner title"
-    },
-    "widgetBuilderCategoryCharts": "Charts",
-    "@widgetBuilderCategoryCharts": {
-        "description": "Category display name"
-    },
-    "widgetBuilderCategoryDeviceStatus": "Device Status",
-    "@widgetBuilderCategoryDeviceStatus": {
-        "description": "Category display name"
-    },
-    "widgetBuilderCategoryLocation": "Location",
-    "@widgetBuilderCategoryLocation": {
-        "description": "Category display name"
-    },
-    "widgetBuilderCategoryMeshNetwork": "Mesh Network",
-    "@widgetBuilderCategoryMeshNetwork": {
-        "description": "Category display name"
-    },
-    "widgetBuilderCategoryMetrics": "Metrics",
-    "@widgetBuilderCategoryMetrics": {
-        "description": "Category display name"
-    },
-    "widgetBuilderCategoryOther": "Other",
-    "@widgetBuilderCategoryOther": {
-        "description": "Category display name"
-    },
-    "widgetBuilderCategoryUtility": "Utility",
-    "@widgetBuilderCategoryUtility": {
-        "description": "Category display name"
-    },
-    "widgetBuilderCategoryWeather": "Weather",
-    "@widgetBuilderCategoryWeather": {
-        "description": "Category display name"
     },
     "widgetBuilderChooseAction": "Choose an action for this element",
     "@widgetBuilderChooseAction": {
@@ -33427,10 +31557,6 @@
     "@widgetBuilderDiscardChangesTitle": {
         "description": "Discard changes confirmation title"
     },
-    "widgetBuilderDiscoverCommunity": "Discover widgets created by the community",
-    "@widgetBuilderDiscoverCommunity": {
-        "description": "CTA subtitle"
-    },
     "widgetBuilderDuplicate": "Duplicate",
     "@widgetBuilderDuplicate": {
         "description": "Context menu action"
@@ -33473,15 +31599,6 @@
             }
         }
     },
-    "widgetBuilderFailedToInstall": "Failed to install: {error}",
-    "@widgetBuilderFailedToInstall": {
-        "description": "Error snackbar when marketplace install fails",
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
     "widgetBuilderFailedToReject": "Failed to reject: {error}",
     "@widgetBuilderFailedToReject": {
         "description": "Error snackbar when rejection fails",
@@ -33512,15 +31629,6 @@
     "widgetBuilderFailedToShareLocation": "Failed to share location: {error}",
     "@widgetBuilderFailedToShareLocation": {
         "description": "Error snackbar when location share fails",
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "widgetBuilderFailedToSubmit": "Failed to submit: {error}",
-    "@widgetBuilderFailedToSubmit": {
-        "description": "Error snackbar when marketplace submission fails",
         "placeholders": {
             "error": {
                 "type": "String"
@@ -33827,15 +31935,6 @@
     "@widgetBuilderImportedSuccessAction": {
         "description": "Success snackbar with action on import via edit"
     },
-    "widgetBuilderInstalledSuccess": "{name} installed!",
-    "@widgetBuilderInstalledSuccess": {
-        "description": "Success snackbar when marketplace widget installed",
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
     "widgetBuilderKeepCurrent": "Keep Current",
     "@widgetBuilderKeepCurrent": {
         "description": "Button label to keep current widget style"
@@ -33921,94 +32020,12 @@
             }
         }
     },
-    "widgetBuilderMakeUnique": "Consider making your widget more unique before submitting.",
-    "@widgetBuilderMakeUnique": {
-        "description": "Hint text for duplicate widget"
-    },
     "widgetBuilderMapView": "Map View",
     "@widgetBuilderMapView": {
         "description": "Label shown on map element placeholder"
     },
-    "widgetBuilderMarketplace": "Marketplace",
-    "@widgetBuilderMarketplace": {
-        "description": "Overflow menu item label"
-    },
-    "widgetBuilderMarketplaceAlreadyInstalled": "Already Installed",
-    "@widgetBuilderMarketplaceAlreadyInstalled": {
-        "description": "Install button label when already installed"
-    },
-    "widgetBuilderMarketplaceApprove": "Approve",
-    "@widgetBuilderMarketplaceApprove": {
-        "description": "Approve button label"
-    },
-    "widgetBuilderMarketplaceCancel": "Cancel",
-    "@widgetBuilderMarketplaceCancel": {
-        "description": "Cancel button label"
-    },
-    "widgetBuilderMarketplaceDescription": "Description",
-    "@widgetBuilderMarketplaceDescription": {
-        "description": "Section header on details screen"
-    },
-    "widgetBuilderMarketplaceRatingWithCount": "{rating} ({count})",
-    "@widgetBuilderMarketplaceRatingWithCount": {
-        "description": "Rating display with count",
-        "placeholders": {
-            "rating": {
-                "type": "String"
-            },
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "widgetBuilderMarketplaceEnterReason": "Enter reason...",
-    "@widgetBuilderMarketplaceEnterReason": {
-        "description": "Reject reason hint text"
-    },
-    "widgetBuilderMarketplaceFailedLoadPending": "Failed to load pending widgets: {error}",
-    "@widgetBuilderMarketplaceFailedLoadPending": {
-        "description": "Error when loading pending widgets for approval",
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "widgetBuilderMarketplaceFailedLoadCategory": "Failed to load category",
-    "@widgetBuilderMarketplaceFailedLoadCategory": {
-        "description": "Error state for category screen"
-    },
-    "widgetBuilderMarketplaceFailedNewest": "Failed to load newest widgets",
-    "@widgetBuilderMarketplaceFailedNewest": {
-        "description": "Error state for newest tab"
-    },
-    "widgetBuilderMarketplaceFailedPopular": "Failed to load popular widgets",
-    "@widgetBuilderMarketplaceFailedPopular": {
-        "description": "Error state for popular tab"
-    },
-    "widgetBuilderMarketplaceFavoritesHint": "Tap the heart icon on any widget to add it here",
-    "@widgetBuilderMarketplaceFavoritesHint": {
-        "description": "Empty state hint for favorites tab"
-    },
-    "widgetBuilderMarketplaceFavoritesWithCount": "Favorites ({count})",
-    "@widgetBuilderMarketplaceFavoritesWithCount": {
-        "description": "Favorites tab label with count",
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "widgetBuilderMarketplaceHelpTooltip": "Help",
-    "@widgetBuilderMarketplaceHelpTooltip": {
-        "description": "Tooltip for help button"
-    },
-    "widgetBuilderMarketplaceInstallWidget": "Install Widget",
-    "@widgetBuilderMarketplaceInstallWidget": {
-        "description": "Install button label"
-    },
-    "widgetBuilderMarketplaceDaysAgo": "{count}d ago",
-    "@widgetBuilderMarketplaceDaysAgo": {
+    "widgetBuilderDaysAgo": "{count}d ago",
+    "@widgetBuilderDaysAgo": {
         "description": "Relative time in days",
         "placeholders": {
             "count": {
@@ -34016,8 +32033,8 @@
             }
         }
     },
-    "widgetBuilderMarketplaceHoursAgo": "{count}h ago",
-    "@widgetBuilderMarketplaceHoursAgo": {
+    "widgetBuilderHoursAgo": "{count}h ago",
+    "@widgetBuilderHoursAgo": {
         "description": "Relative time in hours",
         "placeholders": {
             "count": {
@@ -34025,143 +32042,18 @@
             }
         }
     },
-    "widgetBuilderMarketplaceInstallsCount": "{count} installs",
-    "@widgetBuilderMarketplaceInstallsCount": {
-        "description": "Install count display",
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "widgetBuilderMarketplaceJustNow": "Just now",
-    "@widgetBuilderMarketplaceJustNow": {
+    "widgetBuilderJustNow": "Just now",
+    "@widgetBuilderJustNow": {
         "description": "Relative time for very recent actions"
     },
-    "widgetBuilderMarketplaceMinutesAgo": "{count}m ago",
-    "@widgetBuilderMarketplaceMinutesAgo": {
+    "widgetBuilderMinutesAgo": "{count}m ago",
+    "@widgetBuilderMinutesAgo": {
         "description": "Relative time in minutes",
         "placeholders": {
             "count": {
                 "type": "int"
             }
         }
-    },
-    "widgetBuilderMarketplaceLoadingPreview": "Loading preview...",
-    "@widgetBuilderMarketplaceLoadingPreview": {
-        "description": "Loading text while preview renders"
-    },
-    "widgetBuilderMarketplaceNoFavorites": "No favorite widgets yet",
-    "@widgetBuilderMarketplaceNoFavorites": {
-        "description": "Empty state for favorites tab"
-    },
-    "widgetBuilderMarketplaceNoFeatured": "No featured widgets",
-    "@widgetBuilderMarketplaceNoFeatured": {
-        "description": "Empty state for featured tab"
-    },
-    "widgetBuilderMarketplaceNoNew": "No new widgets yet",
-    "@widgetBuilderMarketplaceNoNew": {
-        "description": "Empty state for newest tab"
-    },
-    "widgetBuilderMarketplaceNoPending": "No widgets pending approval",
-    "@widgetBuilderMarketplaceNoPending": {
-        "description": "Empty state message"
-    },
-    "widgetBuilderMarketplaceNoPopular": "No popular widgets yet",
-    "@widgetBuilderMarketplaceNoPopular": {
-        "description": "Empty state for popular tab"
-    },
-    "widgetBuilderMarketplaceNoWidgets": "No widgets available",
-    "@widgetBuilderMarketplaceNoWidgets": {
-        "description": "Empty state for widget grid"
-    },
-    "widgetBuilderMarketplaceNoWidgetsFound": "No widgets found",
-    "@widgetBuilderMarketplaceNoWidgetsFound": {
-        "description": "Empty search results message"
-    },
-    "widgetBuilderMarketplaceNoWidgetsInCategory": "No widgets in this category",
-    "@widgetBuilderMarketplaceNoWidgetsInCategory": {
-        "description": "Empty state for category screen"
-    },
-    "widgetBuilderMarketplaceNotAuthenticated": "Not authenticated",
-    "@widgetBuilderMarketplaceNotAuthenticated": {
-        "description": "Error message when user is not signed in"
-    },
-    "widgetBuilderMarketplacePending": "PENDING",
-    "@widgetBuilderMarketplacePending": {
-        "description": "Status badge label"
-    },
-    "widgetBuilderMarketplacePleaseEnterReason": "Please enter a reason",
-    "@widgetBuilderMarketplacePleaseEnterReason": {
-        "description": "Validation error when no reason provided"
-    },
-    "widgetBuilderMarketplaceProcessing": "Processing...",
-    "@widgetBuilderMarketplaceProcessing": {
-        "description": "Button label while processing"
-    },
-    "widgetBuilderMarketplaceRejectButton": "Reject",
-    "@widgetBuilderMarketplaceRejectButton": {
-        "description": "Card reject button label"
-    },
-    "widgetBuilderMarketplaceRejectWidget": "Reject Widget",
-    "@widgetBuilderMarketplaceRejectWidget": {
-        "description": "Reject dialog title"
-    },
-    "widgetBuilderMarketplaceRequiresInternet": "Installing widgets requires an internet connection.",
-    "@widgetBuilderMarketplaceRequiresInternet": {
-        "description": "Error message when offline"
-    },
-    "widgetBuilderMarketplaceRetry": "Retry",
-    "@widgetBuilderMarketplaceRetry": {
-        "description": "Retry button label"
-    },
-    "widgetBuilderMarketplaceSearchHint": "Search widgets...",
-    "@widgetBuilderMarketplaceSearchHint": {
-        "description": "Search bar hint text"
-    },
-    "widgetBuilderMarketplaceShareTooltip": "Share Widget",
-    "@widgetBuilderMarketplaceShareTooltip": {
-        "description": "Tooltip for share button on details screen"
-    },
-    "widgetBuilderMarketplaceSharingRequiresInternet": "Sharing widgets requires an internet connection.",
-    "@widgetBuilderMarketplaceSharingRequiresInternet": {
-        "description": "Error message when offline for sharing"
-    },
-    "widgetBuilderMarketplaceTabCategories": "Categories",
-    "@widgetBuilderMarketplaceTabCategories": {
-        "description": "Tab label"
-    },
-    "widgetBuilderMarketplaceTabFavorites": "Favorites",
-    "@widgetBuilderMarketplaceTabFavorites": {
-        "description": "Tab label (with optional count)"
-    },
-    "widgetBuilderMarketplaceTabFeatured": "Featured",
-    "@widgetBuilderMarketplaceTabFeatured": {
-        "description": "Tab label"
-    },
-    "widgetBuilderMarketplaceTabNew": "New",
-    "@widgetBuilderMarketplaceTabNew": {
-        "description": "Tab label"
-    },
-    "widgetBuilderMarketplaceTabPopular": "Popular",
-    "@widgetBuilderMarketplaceTabPopular": {
-        "description": "Tab label"
-    },
-    "widgetBuilderMarketplaceTags": "Tags",
-    "@widgetBuilderMarketplaceTags": {
-        "description": "Section header on details screen"
-    },
-    "widgetBuilderMarketplaceTitle": "Widget Marketplace",
-    "@widgetBuilderMarketplaceTitle": {
-        "description": "Screen title"
-    },
-    "widgetBuilderMarketplaceUnableToLoad": "Unable to load marketplace",
-    "@widgetBuilderMarketplaceUnableToLoad": {
-        "description": "Error state message"
-    },
-    "widgetBuilderMarketplaceWidgetApproval": "Widget Approval",
-    "@widgetBuilderMarketplaceWidgetApproval": {
-        "description": "Screen title"
     },
     "widgetBuilderMediumOnlyOneRow": "Medium widgets only allow 1 row",
     "@widgetBuilderMediumOnlyOneRow": {
@@ -34219,10 +32111,6 @@
     "@widgetBuilderNone": {
         "description": "Option label for no binding selected"
     },
-    "widgetBuilderOk": "OK",
-    "@widgetBuilderOk": {
-        "description": "OK button on similar widget dialog"
-    },
     "widgetBuilderOptions": "Options",
     "@widgetBuilderOptions": {
         "description": "Options section header"
@@ -34272,14 +32160,6 @@
                 "type": "String"
             }
         }
-    },
-    "widgetBuilderReviewGuidelines": "Review Guidelines",
-    "@widgetBuilderReviewGuidelines": {
-        "description": "Review guidelines section title"
-    },
-    "widgetBuilderReviewGuidelinesText": "• Widget will be reviewed for quality\n• Similar widgets may be rejected\n• You'll be credited as the author",
-    "@widgetBuilderReviewGuidelinesText": {
-        "description": "Review guidelines bullet points"
     },
     "widgetBuilderSave": "Save",
     "@widgetBuilderSave": {
@@ -34386,27 +32266,6 @@
     "@widgetBuilderSignInToShare": {
         "description": "Snackbar when not signed in"
     },
-    "widgetBuilderSignInToSubmit": "Sign in to submit widgets",
-    "@widgetBuilderSignInToSubmit": {
-        "description": "Snackbar msg when not signed in"
-    },
-    "widgetBuilderSimilarWidgetExists": "A similar widget already exists in the marketplace:",
-    "@widgetBuilderSimilarWidgetExists": {
-        "description": "Similar widget warning message"
-    },
-    "widgetBuilderSimilarWidgetExistsError": "Similar widget already exists: {name}",
-    "@widgetBuilderSimilarWidgetExistsError": {
-        "description": "Error snackbar for duplicate marketplace submission",
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "widgetBuilderSimilarWidgetFound": "Similar Widget Found",
-    "@widgetBuilderSimilarWidgetFound": {
-        "description": "Similar widget warning title"
-    },
     "widgetBuilderSizeCustom": "Custom size",
     "@widgetBuilderSizeCustom": {
         "description": "Size display name"
@@ -34418,35 +32277,6 @@
     "widgetBuilderSizeMedium": "Medium (2x1)",
     "@widgetBuilderSizeMedium": {
         "description": "Size display name"
-    },
-    "widgetBuilderSubmitButton": "Submit",
-    "@widgetBuilderSubmitButton": {
-        "description": "Submit button label"
-    },
-    "widgetBuilderSubmitAnyway": "Submit Anyway",
-    "@widgetBuilderSubmitAnyway": {
-        "description": "Submit anyway button on similar widget dialog"
-    },
-    "widgetBuilderSubmitCancel": "Cancel",
-    "@widgetBuilderSubmitCancel": {
-        "description": "Cancel button on submit dialog"
-    },
-    "widgetBuilderSubmitTitle": "Submit to Marketplace",
-    "@widgetBuilderSubmitTitle": {
-        "description": "Submit dialog title"
-    },
-    "widgetBuilderSubmitToMarketplace": "Submit to Marketplace",
-    "@widgetBuilderSubmitToMarketplace": {
-        "description": "Context menu action"
-    },
-    "widgetBuilderSubmittedForReview": "{name} submitted for review",
-    "@widgetBuilderSubmittedForReview": {
-        "description": "Success snackbar when widget submitted to marketplace",
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
     },
     "widgetBuilderSwitch": "Switch",
     "@widgetBuilderSwitch": {
@@ -35302,23 +33132,6 @@
     "@deepLinkFailedToJoinChannel": {
         "description": "Error message in deep link handling"
     },
-    "deepLinkLoadingWidget": "Loading Widget",
-    "@deepLinkLoadingWidget": {
-        "description": "Text displayed in deep link handling"
-    },
-    "deepLinkErrorLoadingWidget": "Error loading widget: {error}",
-    "@deepLinkErrorLoadingWidget": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        },
-        "description": "Error message in deep link handling Parameters: {error} = error/status message."
-    },
-    "deepLinkSomethingWentWrong": "Something went wrong",
-    "@deepLinkSomethingWentWrong": {
-        "description": "Text displayed in deep link handling"
-    },
     "deepLinkProfileTitle": "@{displayName}",
     "@deepLinkProfileTitle": {
         "placeholders": {
@@ -35377,10 +33190,6 @@
     "blockedRouteConnectDeviceButton": "Connect Device",
     "@blockedRouteConnectDeviceButton": {
         "description": "Button or action label"
-    },
-    "deepLinkWidgetNotFound": "Widget not found",
-    "@deepLinkWidgetNotFound": {
-        "description": "Text displayed in deep link handling"
     },
     "deepLinkAlreadyHaveChannel": "You already have this channel",
     "@deepLinkAlreadyHaveChannel": {
@@ -43497,26 +41306,6 @@
     "@adminPanelTitle": {
         "description": "Title for the admin panel screen"
     },
-    "adminPanelSectionShop": "SHOP MANAGEMENT",
-    "@adminPanelSectionShop": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminPanelShopDashboard": "Shop Admin Dashboard",
-    "@adminPanelShopDashboard": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminPanelShopDashboardSub": "Manage products, orders, and inventory",
-    "@adminPanelShopDashboardSub": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminPanelDeviceShop": "Device Shop",
-    "@adminPanelDeviceShop": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminPanelDeviceShopSub": "View and manage device listings",
-    "@adminPanelDeviceShopSub": {
-        "description": "Text displayed in admin panel"
-    },
     "adminPanelSectionModeration": "CONTENT MODERATION",
     "@adminPanelSectionModeration": {
         "description": "Text displayed in admin panel"
@@ -43543,10 +41332,6 @@
     },
     "adminPanelReportedContentSub": "Review flagged posts and comments",
     "@adminPanelReportedContentSub": {
-        "description": "Text displayed in admin panel"
-    },
-    "adminPanelWidgetReview": "Widget Marketplace Review",
-    "@adminPanelWidgetReview": {
         "description": "Text displayed in admin panel"
     },
     "adminPanelWidgetReviewSub": "Approve pending widget submissions",
@@ -46440,14 +44225,6 @@
     "@helpWidgetBuilderOverviewDescription": {
         "description": "Description for widget_builder_overview help topic"
     },
-    "helpMarketplaceOverviewTitle": "Widget Marketplace",
-    "@helpMarketplaceOverviewTitle": {
-        "description": "Title for marketplace_overview help topic"
-    },
-    "helpMarketplaceOverviewDescription": "Discover widgets made by the community",
-    "@helpMarketplaceOverviewDescription": {
-        "description": "Description for marketplace_overview help topic"
-    },
     "helpSignalsOverviewTitle": "Signals",
     "@helpSignalsOverviewTitle": {
         "description": "Title for signals_overview help topic"
@@ -46519,14 +44296,6 @@
     "helpTimelineOverviewDescription": "Your mesh activity history",
     "@helpTimelineOverviewDescription": {
         "description": "Description for timeline_overview help topic"
-    },
-    "helpDeviceShopOverviewTitle": "Device Shop",
-    "@helpDeviceShopOverviewTitle": {
-        "description": "Title for device_shop_overview help topic"
-    },
-    "helpDeviceShopOverviewDescription": "Browse Meshtastic hardware",
-    "@helpDeviceShopOverviewDescription": {
-        "description": "Description for device_shop_overview help topic"
     },
     "helpOfflineMapsOverviewTitle": "Offline Maps",
     "@helpOfflineMapsOverviewTitle": {
@@ -46928,22 +44697,6 @@
     "@helpBuilderPreviewBubble": {
         "description": "Help bubble text for step builder_preview"
     },
-    "helpMarketplaceIntroBubble": "Welcome to the **Marketplace**! Browse widgets created by other mesh enthusiasts around the world!",
-    "@helpMarketplaceIntroBubble": {
-        "description": "Help bubble text for step marketplace_intro"
-    },
-    "helpMarketplaceBrowseBubble": "Browse by **category** - find status displays, charts, gauges, or creative designs. Tap any widget to preview it!",
-    "@helpMarketplaceBrowseBubble": {
-        "description": "Help bubble text for step marketplace_browse"
-    },
-    "helpMarketplaceInstallBubble": "Found one you like? **Tap install** and it's added to your collection. Use it on your dashboard right away!",
-    "@helpMarketplaceInstallBubble": {
-        "description": "Help bubble text for step marketplace_install"
-    },
-    "helpMarketplaceShareBubble": "Made something cool? **Share your widgets** to the marketplace and help the community!",
-    "@helpMarketplaceShareBubble": {
-        "description": "Help bubble text for step marketplace_share"
-    },
     "helpSignalsIntroBubble": "Welcome to **Signals**! Broadcast moments to your mesh. Signals are **ephemeral** - you choose how long they last, from **15 minutes** up to **24 hours**.",
     "@helpSignalsIntroBubble": {
         "description": "Help bubble text for step signals_intro"
@@ -47123,18 +44876,6 @@
     "helpTimelineTapBubble": "**Tap any event** to see full details. Great for debugging or understanding what's happening on your network!",
     "@helpTimelineTapBubble": {
         "description": "Help bubble text for step timeline_tap"
-    },
-    "helpShopIntroBubble": "Welcome to the **Device Shop**! Browse Meshtastic-compatible radios and accessories.",
-    "@helpShopIntroBubble": {
-        "description": "Help bubble text for step shop_intro"
-    },
-    "helpShopCompareBubble": "**Compare devices** by range, battery, and features. I've rated each one to help you choose!",
-    "@helpShopCompareBubble": {
-        "description": "Help bubble text for step shop_compare"
-    },
-    "helpShopLinksBubble": "Tap **Buy** to visit trusted vendors. Prices and availability shown are from real stores!",
-    "@helpShopLinksBubble": {
-        "description": "Help bubble text for step shop_links"
     },
     "helpOfflineIntroBubble": "**Offline Maps** let you use the map without internet! Essential for adventures off the grid.",
     "@helpOfflineIntroBubble": {
@@ -55972,18 +53713,6 @@
     "whatsNewVersion1360Subtitle": "Version 1.36.0",
     "@whatsNewVersion1360Subtitle": {
         "description": "Subtitle for the What's New popup for version 1.36.0."
-    },
-    "whatsNewDeviceShopTitle": "Device Shop",
-    "@whatsNewDeviceShopTitle": {
-        "description": "Title for the Device Shop feature in What's New."
-    },
-    "whatsNewDeviceShopDescription": "Browse Meshtastic-compatible hardware from official partners and trusted sellers - all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller's store to buy.\n\nPurchases happen on the seller's site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.",
-    "@whatsNewDeviceShopDescription": {
-        "description": "Description for the Device Shop feature in What's New."
-    },
-    "whatsNewCtaOpenDeviceShop": "Open Device Shop",
-    "@whatsNewCtaOpenDeviceShop": {
-        "description": "CTA button label to open the Device Shop screen from What's New."
     },
     "whatsNewVersion1410Subtitle": "Version 1.41.0",
     "@whatsNewVersion1410Subtitle": {

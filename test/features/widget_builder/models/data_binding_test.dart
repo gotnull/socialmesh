@@ -439,9 +439,9 @@ void main() {
       );
     });
 
-    group('marketplace widget binding aliases', () {
-      // These are binding paths used by marketplace widgets that need proper labels
-      final marketplaceBindingPaths = [
+    group('shared widget binding aliases', () {
+      // These are binding paths used by shared widgets that need proper labels
+      final sharedBindingPaths = [
         'node.pressure',
         'device.snr',
         'device.rssi',
@@ -458,7 +458,7 @@ void main() {
         'node.role',
       ];
 
-      for (final path in marketplaceBindingPaths) {
+      for (final path in sharedBindingPaths) {
         test('$path exists in registry with proper label', () {
           final binding = BindingRegistry.bindings.firstWhere(
             (b) => b.path == path,
@@ -528,7 +528,7 @@ void main() {
       });
     });
 
-    group('preview mode for marketplace bindings', () {
+    group('preview mode for shared bindings', () {
       late DataBindingEngine engine;
 
       setUp(() {

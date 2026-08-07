@@ -472,7 +472,7 @@ void main() {
       expect(result.routeName, '/main');
     });
 
-    test('routes widget link to /widget-detail', () {
+    test('routes bare widget ID link to /widget-import', () {
       final link = ParsedDeepLink(
         type: DeepLinkType.widget,
         originalUri: 'socialmesh://widget/w1',
@@ -481,8 +481,8 @@ void main() {
 
       final result = deepLinkRouter.route(link);
 
-      expect(result.routeName, '/widget-detail');
-      expect(result.arguments?['widgetId'], 'w1');
+      expect(result.routeName, '/widget-import');
+      expect(result.arguments?['firestoreId'], 'w1');
     });
 
     test('routes widget link with base64 data to /widget-import', () {

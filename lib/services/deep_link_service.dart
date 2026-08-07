@@ -55,7 +55,7 @@ class ProfileDeepLink extends DeepLinkData {
   const ProfileDeepLink({required this.profileId});
 }
 
-/// Widget marketplace deep link
+/// Shared widget deep link
 class WidgetDeepLink extends DeepLinkData {
   final String widgetId;
 

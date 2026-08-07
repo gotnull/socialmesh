@@ -67,10 +67,8 @@ class AppLogging {
   static bool? _socialLoggingEnabled;
   static bool? _storageLoggingEnabled;
   static bool? _permissionsLoggingEnabled;
-  static bool? _marketplaceLoggingEnabled;
   static bool? _qrLoggingEnabled;
   static bool? _bugReportLoggingEnabled;
-  static bool? _shopLoggingEnabled;
   static bool? _nodeDexLoggingEnabled;
   static bool? _nodeBoardLoggingEnabled;
   static bool? _petLoggingEnabled;
@@ -291,12 +289,6 @@ class AppLogging {
     return _permissionsLoggingEnabled!;
   }
 
-  static bool get marketplaceLoggingEnabled {
-    _marketplaceLoggingEnabled ??=
-        _safeGetEnv('MARKETPLACE_LOGGING_ENABLED')?.toLowerCase() != 'false';
-    return _marketplaceLoggingEnabled!;
-  }
-
   static bool get qrLoggingEnabled {
     _qrLoggingEnabled ??=
         _safeGetEnv('QR_LOGGING_ENABLED')?.toLowerCase() != 'false';
@@ -307,12 +299,6 @@ class AppLogging {
     _bugReportLoggingEnabled ??=
         _safeGetEnv('BUG_REPORT_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _bugReportLoggingEnabled!;
-  }
-
-  static bool get shopLoggingEnabled {
-    _shopLoggingEnabled ??=
-        _safeGetEnv('SHOP_LOGGING_ENABLED')?.toLowerCase() != 'false';
-    return _shopLoggingEnabled!;
   }
 
   static bool get nodeDexLoggingEnabled {
@@ -568,20 +554,12 @@ class AppLogging {
     if (permissionsLoggingEnabled) debugPrint('Permissions: $message');
   }
 
-  static void marketplace(String message) {
-    if (marketplaceLoggingEnabled) debugPrint('Marketplace: $message');
-  }
-
   static void qr(String message) {
     if (qrLoggingEnabled) debugPrint('QR: $message');
   }
 
   static void bugReport(String message) {
     if (bugReportLoggingEnabled) debugPrint('BugReport: $message');
-  }
-
-  static void shop(String message) {
-    if (shopLoggingEnabled) debugPrint('Shop: $message');
   }
 
   static void nodeDex(String message) {
@@ -1205,10 +1183,8 @@ class AppLogging {
     _socialLoggingEnabled = null;
     _storageLoggingEnabled = null;
     _permissionsLoggingEnabled = null;
-    _marketplaceLoggingEnabled = null;
     _qrLoggingEnabled = null;
     _bugReportLoggingEnabled = null;
-    _shopLoggingEnabled = null;
     _nodeDexLoggingEnabled = null;
     _nodeBoardLoggingEnabled = null;
     _petLoggingEnabled = null;
@@ -1283,10 +1259,8 @@ class AppLogging {
     _socialLoggingEnabled = null;
     _storageLoggingEnabled = null;
     _permissionsLoggingEnabled = null;
-    _marketplaceLoggingEnabled = null;
     _qrLoggingEnabled = null;
     _bugReportLoggingEnabled = null;
-    _shopLoggingEnabled = null;
     _nodeDexLoggingEnabled = null;
     _nodeBoardLoggingEnabled = null;
     _petLoggingEnabled = null;

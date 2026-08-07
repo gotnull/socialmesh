@@ -84,4 +84,76 @@ void main() {
       expect(AccentColors.rose, const Color(0xFFF43F5E));
     });
   });
+
+  group('readableAccent', () {
+    Future<BuildContext> pumpContext(
+      WidgetTester tester,
+      Brightness brightness,
+    ) async {
+      late BuildContext captured;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(brightness: brightness),
+          home: Builder(
+            builder: (context) {
+              captured = context;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      return captured;
+    }
+
+    // Colours the Node Details badges actually use; warning yellow and
+    // success green were unreadable on light surfaces before the guard.
+    const brightStatusColors = [
+      AppTheme.warningYellow,
+      AppTheme.successGreen,
+      AccentColors.green,
+      AccentColors.lime,
+      AccentColors.yellow,
+    ];
+
+    double contrastAgainstWhite(Color color) {
+      final l = color.computeLuminance();
+      return 1.05 / (l + 0.05);
+    }
+
+    testWidgets('darkens bright status colours to >=4.2:1 on light theme', (
+      tester,
+    ) async {
+      final context = await pumpContext(tester, Brightness.light);
+      for (final color in brightStatusColors) {
+        final adjusted = context.readableAccent(color);
+        expect(
+          contrastAgainstWhite(adjusted),
+          greaterThanOrEqualTo(4.2),
+          reason: 'readableAccent($color) must be legible on white surfaces',
+        );
+        // Hue must survive the adjustment.
+        expect(
+          HSLColor.fromColor(adjusted).hue,
+          closeTo(HSLColor.fromColor(color).hue, 1.0),
+        );
+      }
+    });
+
+    testWidgets('leaves already-dark colours unchanged on light theme', (
+      tester,
+    ) async {
+      final context = await pumpContext(tester, Brightness.light);
+      const darkRed = Color(0xFF7F1D1D);
+      expect(context.readableAccent(darkRed), darkRed);
+    });
+
+    testWidgets('passes every colour through unchanged on dark theme', (
+      tester,
+    ) async {
+      final context = await pumpContext(tester, Brightness.dark);
+      for (final color in brightStatusColors) {
+        expect(context.readableAccent(color), color);
+      }
+    });
+  });
 }

@@ -474,8 +474,6 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
       'tak_gateway_overview' => context.l10n.helpCenterScreenTakGateway,
       'dashboard_overview' => context.l10n.helpCenterScreenWidgetDashboard,
       'widget_builder_overview' => context.l10n.helpCenterScreenWidgetBuilder,
-      'marketplace_overview' => context.l10n.helpCenterScreenWidgetMarketplace,
-      'device_shop_overview' => context.l10n.helpCenterScreenDeviceShop,
       'nodedex_overview' ||
       'nodedex_album' ||
       'nodedex_detail' ||

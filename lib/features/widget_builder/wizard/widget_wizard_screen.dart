@@ -1722,7 +1722,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
           }
         }
         // Skip device.* aliases that duplicate node.* bindings (same label)
-        // These are internal aliases for marketplace widget compatibility
+        // These are internal aliases for shared widget compatibility
         if (binding.path.startsWith('device.') &&
             seenLabels.contains(
               BindingRegistry.localizedLabel(binding.path, context.l10n),

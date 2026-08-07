@@ -145,7 +145,7 @@ final widgetSyncServiceProvider = Provider<WidgetSyncService?>((ref) {
 /// ```
 ///
 /// The service is automatically wired to the SQLite store (when ready)
-/// and has SharedPreferences initialized for marketplace tracking.
+/// and has SharedPreferences initialized.
 ///
 /// Replaces the previous pattern of:
 /// ```dart
@@ -200,31 +200,22 @@ final widgetStorageServiceProvider = FutureProvider<WidgetStorageService>((
 // Widget Builder Screen List Provider
 // =============================================================================
 
-/// Combined state for the widget builder screen: the user's widgets plus the
-/// subset that came from the marketplace.
-typedef WidgetBuilderListState = ({
-  List<WidgetSchema> widgets,
-  Set<String> marketplaceIds,
-});
-
 /// AsyncNotifier that owns the widget builder screen's list state.
 ///
-/// Previously the screen carried local `_myWidgets`, `_marketplaceIds`,
-/// `_isLoading`, and `_lastRefreshTrigger` fields, with a fire-and-forget
-/// `_loadWidgets()` running from `initState` AND from a post-frame trigger
-/// watcher. Sync arrivals re-entered `_loadWidgets()` and reset
-/// `_isLoading = true`, flashing the spinner / empty state over a populated
-/// list. This notifier replaces that pattern: the screen watches the
-/// notifier, and sync pull arrivals update state in-place without flipping
-/// to loading.
-class WidgetBuilderListNotifier extends AsyncNotifier<WidgetBuilderListState> {
+/// Previously the screen carried local `_myWidgets`, `_isLoading`, and
+/// `_lastRefreshTrigger` fields, with a fire-and-forget `_loadWidgets()`
+/// running from `initState` AND from a post-frame trigger watcher. Sync
+/// arrivals re-entered `_loadWidgets()` and reset `_isLoading = true`,
+/// flashing the spinner / empty state over a populated list. This notifier
+/// replaces that pattern: the screen watches the notifier, and sync pull
+/// arrivals update state in-place without flipping to loading.
+class WidgetBuilderListNotifier extends AsyncNotifier<List<WidgetSchema>> {
   int _emitCount = 0;
 
-  void _emit(AsyncValue<WidgetBuilderListState> next, String reason) {
+  void _emit(AsyncValue<List<WidgetSchema>> next, String reason) {
     _emitCount++;
     final desc = next.when(
-      data: (data) =>
-          'data(widgets=${data.widgets.length}, marketplace=${data.marketplaceIds.length})',
+      data: (data) => 'data(widgets=${data.length})',
       loading: () => 'loading',
       error: (e, _) => 'error($e)',
     );
@@ -233,7 +224,7 @@ class WidgetBuilderListNotifier extends AsyncNotifier<WidgetBuilderListState> {
   }
 
   @override
-  Future<WidgetBuilderListState> build() async {
+  Future<List<WidgetSchema>> build() async {
     AppLogging.widgets(
       'build() entered (notifier id=${identityHashCode(this)})',
     );
@@ -251,7 +242,7 @@ class WidgetBuilderListNotifier extends AsyncNotifier<WidgetBuilderListState> {
       };
     }, fireImmediately: true);
 
-    // Manual triggers from marketplace imports / share imports / etc.
+    // Manual triggers from share imports / etc.
     ref.listen<int>(widgetRefreshTriggerProvider, (prev, next) {
       if (prev == null || next == prev) return;
       AppLogging.widgets(
@@ -263,23 +254,17 @@ class WidgetBuilderListNotifier extends AsyncNotifier<WidgetBuilderListState> {
 
     final result = await _load();
     AppLogging.widgets(
-      'build() initial _load() complete '
-      '(widgets=${result.widgets.length}, marketplace=${result.marketplaceIds.length})',
+      'build() initial _load() complete (widgets=${result.length})',
     );
     return result;
   }
 
-  Future<WidgetBuilderListState> _load() async {
+  Future<List<WidgetSchema>> _load() async {
     AppLogging.widgets('_load() awaiting widgetStorageServiceProvider');
     final storageService = await ref.read(widgetStorageServiceProvider.future);
     final widgets = await storageService.getWidgets();
-    final marketplaceIds = (await storageService.getInstalledMarketplaceIds())
-        .toSet();
-    AppLogging.widgets(
-      '_load() storage returned widgets=${widgets.length}, '
-      'marketplace=${marketplaceIds.length}',
-    );
-    return (widgets: widgets, marketplaceIds: marketplaceIds);
+    AppLogging.widgets('_load() storage returned widgets=${widgets.length}');
+    return widgets;
   }
 
   /// Reload from storage, keeping previous data visible while the new data
@@ -299,20 +284,15 @@ class WidgetBuilderListNotifier extends AsyncNotifier<WidgetBuilderListState> {
   /// Optimistically drop a widget from the in-memory state so the UI
   /// updates before the storage delete completes. The next refresh()
   /// (or sync pull) reconciles authoritatively.
-  void removeWidgetLocally(String schemaId, {String? marketplaceId}) {
+  void removeWidgetLocally(String schemaId) {
     final current = state.asData?.value;
     if (current == null) return;
-    final newWidgets = current.widgets.where((w) => w.id != schemaId).toList();
-    final newMarketplaceIds = current.marketplaceIds.toSet()
-      ..remove(marketplaceId ?? schemaId);
-    _emit(
-      AsyncValue.data((widgets: newWidgets, marketplaceIds: newMarketplaceIds)),
-      'removeWidgetLocally($schemaId)',
-    );
+    final newWidgets = current.where((w) => w.id != schemaId).toList();
+    _emit(AsyncValue.data(newWidgets), 'removeWidgetLocally($schemaId)');
   }
 }
 
 final widgetBuilderListProvider =
-    AsyncNotifierProvider<WidgetBuilderListNotifier, WidgetBuilderListState>(
+    AsyncNotifierProvider<WidgetBuilderListNotifier, List<WidgetSchema>>(
       WidgetBuilderListNotifier.new,
     );

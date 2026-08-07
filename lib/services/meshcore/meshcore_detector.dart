@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import '../../core/ble_system_devices.dart';
 import '../../core/meshcore_constants.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_device.dart';
@@ -67,8 +68,7 @@ class MeshProtocolDetector {
   MeshProtocolDetector._();
 
   /// Meshtastic BLE service UUID.
-  static const String _meshtasticServiceUuid =
-      '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
+  static const String _meshtasticServiceUuid = MeshtasticBleUuids.serviceUuid;
 
   /// Detect protocol type from device info and advertisement data.
   ///

@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../core/ble_system_devices.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/safety/error_handler.dart';
@@ -1010,7 +1011,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             '📡 SCANNER: User just disconnected - cleaning all system devices',
           );
           try {
-            final systemDevices = await FlutterBluePlus.systemDevices([]);
+            final systemDevices = await meshSystemDevices();
             for (final device in systemDevices) {
               try {
                 if (defaultTargetPlatform == TargetPlatform.android) {
@@ -1036,7 +1037,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         // 4. Try to disconnect any stale connections to our saved device
         if (_savedDeviceId != null) {
           try {
-            final systemDevices = await FlutterBluePlus.systemDevices([]);
+            final systemDevices = await meshSystemDevices();
             for (final device in systemDevices) {
               if (device.remoteId.toString() == _savedDeviceId) {
                 AppLogging.connection(

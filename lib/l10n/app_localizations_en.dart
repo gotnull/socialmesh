@@ -9,485 +9,8 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get adminProductsActivate => 'Activate';
-
-  @override
-  String get adminProductsActive => 'Active';
-
-  @override
-  String get adminProductsActiveSubtitle => 'Product is visible in the shop';
-
-  @override
-  String get adminProductsAddImage => 'Add Image';
-
-  @override
-  String get adminProductsAddTitle => 'Add Product';
-
-  @override
-  String get adminProductsAddTooltip => 'Add Product';
-
-  @override
-  String get adminProductsAllCategories => 'All Categories';
-
-  @override
-  String get adminProductsBasicInfoSection => 'Basic Information';
-
-  @override
-  String get adminProductsBatteryHint => 'e.g., 4000mAh';
-
-  @override
-  String get adminProductsBatteryLabel => 'Battery Capacity';
-
-  @override
-  String get adminProductsBluetooth => 'Bluetooth';
-
-  @override
-  String get adminProductsCategoryLabel => 'Category *';
-
-  @override
-  String get adminProductsCategorySellerSection => 'Category & Seller';
-
-  @override
-  String get adminProductsChipsetHint => 'e.g., ESP32-S3';
-
-  @override
-  String get adminProductsChipsetLabel => 'Chipset';
-
-  @override
-  String get adminProductsComparePriceHint => 'Original price for sale';
-
-  @override
-  String get adminProductsComparePriceLabel => 'Compare at Price';
-
-  @override
-  String get adminProductsCreate => 'Create Product';
-
-  @override
-  String get adminProductsCreated => 'Product created';
-
-  @override
-  String get adminProductsDeactivate => 'Deactivate';
-
-  @override
-  String get adminProductsDelete => 'Delete';
-
-  @override
-  String get adminProductsDeleteConfirmMessage =>
-      'Are you sure you want to permanently delete this product?';
-
-  @override
-  String get adminProductsDeleteConfirmTitle => 'Delete Product';
-
-  @override
-  String get adminProductsDeleteMenu => 'Delete';
-
-  @override
-  String adminProductsDeleteMessage(String name) {
-    return 'Are you sure you want to permanently delete \"$name\"?\n\nThis action cannot be undone.';
-  }
-
-  @override
-  String get adminProductsDeleteTitle => 'Delete Product';
-
-  @override
-  String get adminProductsDeleteTooltip => 'Delete';
-
-  @override
-  String get adminProductsDeleted => 'Product deleted';
-
-  @override
-  String get adminProductsDeletedSuccess => 'Product deleted';
-
-  @override
-  String get adminProductsDimensionsHint => 'e.g., 100x50x25mm';
-
-  @override
-  String get adminProductsDimensionsLabel => 'Dimensions';
-
-  @override
-  String get adminProductsDisplay => 'Display';
-
-  @override
-  String get adminProductsEdit => 'Edit';
-
-  @override
-  String get adminProductsEditTitle => 'Edit Product';
-
-  @override
-  String adminProductsErrorLoadingSellers(String error) {
-    return 'Error loading sellers: $error';
-  }
-
-  @override
-  String get adminProductsFeatured => 'Featured';
-
-  @override
-  String get adminProductsFeaturedBadge => 'FEATURED';
-
-  @override
-  String get adminProductsFeaturedOrderHelper =>
-      'Controls display order in featured section';
-
-  @override
-  String get adminProductsFeaturedOrderHint =>
-      'Lower numbers appear first (0 = top)';
-
-  @override
-  String get adminProductsFeaturedOrderLabel => 'Featured Order';
-
-  @override
-  String get adminProductsFeaturedSubtitle =>
-      'Show in featured products section';
-
-  @override
-  String get adminProductsFilterTooltip => 'Filter by category';
-
-  @override
-  String get adminProductsFrequencyBandsSection => 'Frequency Bands';
-
-  @override
-  String get adminProductsFullDescHint => 'Detailed product description';
-
-  @override
-  String get adminProductsFullDescLabel => 'Full Description *';
-
-  @override
-  String get adminProductsGps => 'GPS';
-
-  @override
-  String get adminProductsHideInactive => 'Hide inactive';
-
-  @override
-  String get adminProductsImageRequired => 'At least one image is required';
-
-  @override
-  String get adminProductsImageWarning => 'Please add at least one image';
-
-  @override
-  String get adminProductsImagesSection => 'Product Images';
-
-  @override
-  String get adminProductsInStock => 'In Stock';
-
-  @override
-  String get adminProductsInactiveBadge => 'INACTIVE';
-
-  @override
-  String get adminProductsInvalid => 'Invalid';
-
-  @override
-  String get adminProductsLoraChipHint => 'e.g., SX1262';
-
-  @override
-  String get adminProductsLoraChipLabel => 'LoRa Chip';
-
-  @override
-  String get adminProductsMainImage => 'Main';
-
-  @override
-  String get adminProductsNameHint => 'e.g., T-Beam Supreme';
-
-  @override
-  String get adminProductsNameLabel => 'Product Name *';
-
-  @override
-  String get adminProductsNotFound => 'No products found';
-
-  @override
-  String get adminProductsPhysicalSpecsSection => 'Physical Specifications';
-
-  @override
-  String get adminProductsPriceLabel => 'Price (USD) *';
-
-  @override
-  String get adminProductsPricingSection => 'Pricing';
-
-  @override
-  String get adminProductsPurchaseLinkSection => 'Purchase Link';
-
-  @override
-  String get adminProductsPurchaseUrlLabel => 'Purchase URL';
-
-  @override
-  String get adminProductsRequired => 'Required';
-
-  @override
-  String get adminProductsSaveChanges => 'Save Changes';
-
-  @override
-  String get adminProductsSearchHint => 'Search products...';
-
-  @override
-  String get adminProductsSelectSeller => 'Select seller';
-
-  @override
-  String get adminProductsSelectSellerWarning => 'Please select a seller';
-
-  @override
-  String get adminProductsSellerLabel => 'Seller *';
-
-  @override
-  String get adminProductsShortDescHint => 'Brief summary (max 150 chars)';
-
-  @override
-  String get adminProductsShortDescLabel => 'Short Description';
-
-  @override
-  String get adminProductsShowInactive => 'Show inactive';
-
-  @override
-  String get adminProductsStockHint => 'Leave empty for unlimited';
-
-  @override
-  String get adminProductsStockLabel => 'Stock Quantity';
-
-  @override
-  String get adminProductsStockSection => 'Stock & Status';
-
-  @override
-  String get adminProductsTagsHint => 'meshtastic, lora, gps (comma separated)';
-
-  @override
-  String get adminProductsTagsLabel => 'Tags';
-
-  @override
-  String get adminProductsTagsSection => 'Tags';
-
-  @override
-  String get adminProductsTechSpecsSection => 'Technical Specifications';
-
-  @override
-  String get adminProductsTitle => 'Manage Products';
-
-  @override
-  String get adminProductsUpdated => 'Product updated';
-
-  @override
-  String get adminProductsUploading => 'Uploading...';
-
-  @override
   String get adminProductsVendorUnverifiedSubtitle =>
       'Mark when vendor confirms all specs are accurate';
-
-  @override
-  String get adminProductsVendorVerificationSection => 'Vendor Verification';
-
-  @override
-  String get adminProductsVendorVerifiedSubtitle =>
-      'Specifications have been verified by the vendor';
-
-  @override
-  String get adminProductsVendorVerifiedTitle => 'Vendor Verified Specs';
-
-  @override
-  String get adminProductsWeightHint => 'e.g., 50g';
-
-  @override
-  String get adminProductsWeightLabel => 'Weight';
-
-  @override
-  String get adminProductsWifi => 'WiFi';
-
-  @override
-  String get adminSellersActivate => 'Activate';
-
-  @override
-  String get adminSellersActive => 'Active';
-
-  @override
-  String get adminSellersActiveSubtitle => 'Seller is visible in the shop';
-
-  @override
-  String get adminSellersAddTitle => 'Add Seller';
-
-  @override
-  String get adminSellersAddTooltip => 'Add Seller';
-
-  @override
-  String get adminSellersBasicInfoSection => 'Basic Information';
-
-  @override
-  String get adminSellersCancel => 'Cancel';
-
-  @override
-  String get adminSellersClearDiscount => 'Clear Discount Code';
-
-  @override
-  String get adminSellersContactInfoSection => 'Contact Information';
-
-  @override
-  String get adminSellersCountriesHint => 'US, CA, UK, DE (comma separated)';
-
-  @override
-  String get adminSellersCountriesLabel => 'Countries';
-
-  @override
-  String get adminSellersCreate => 'Create Seller';
-
-  @override
-  String get adminSellersCreated => 'Seller created';
-
-  @override
-  String get adminSellersDangerZone => 'Danger Zone';
-
-  @override
-  String get adminSellersDeactivate => 'Deactivate';
-
-  @override
-  String get adminSellersDeleteConfirm => 'Delete';
-
-  @override
-  String get adminSellersDeleteDescription =>
-      'Permanently delete this seller and deactivate all their products. This action cannot be undone.';
-
-  @override
-  String adminSellersDeleteDialogMessage(String name) {
-    return 'Are you sure you want to permanently delete \"$name\"?';
-  }
-
-  @override
-  String get adminSellersDeleteDialogTitle => 'Delete Seller';
-
-  @override
-  String get adminSellersDeletePermanently => 'Delete Seller Permanently';
-
-  @override
-  String adminSellersDeleteProductWarning(int productCount) {
-    return 'This seller has $productCount products. Deleting the seller will also delete all their products.';
-  }
-
-  @override
-  String get adminSellersDeleteTitle => 'Delete Seller';
-
-  @override
-  String get adminSellersDeleteTooltip => 'Delete Seller';
-
-  @override
-  String get adminSellersDeleteUndoWarning => 'This action cannot be undone.';
-
-  @override
-  String get adminSellersDeleted => 'Seller deleted';
-
-  @override
-  String get adminSellersDescriptionHint => 'Brief description of the seller';
-
-  @override
-  String get adminSellersDescriptionLabel => 'Description';
-
-  @override
-  String get adminSellersDiscountCodeHint => 'e.g., MESH10';
-
-  @override
-  String get adminSellersDiscountCodeLabel => 'Discount Code';
-
-  @override
-  String get adminSellersDiscountDisplayHint =>
-      'e.g., 10% off for SocialMesh users';
-
-  @override
-  String get adminSellersDiscountDisplayLabel => 'Display Label';
-
-  @override
-  String get adminSellersDiscountExpired => 'Discount code has expired';
-
-  @override
-  String get adminSellersDiscountExpiryLabel => 'Expiry Date (optional)';
-
-  @override
-  String get adminSellersDiscountNoExpiry => 'No expiry';
-
-  @override
-  String get adminSellersDiscountSection => 'Partner Discount Code';
-
-  @override
-  String get adminSellersDiscountTermsHint =>
-      'e.g., Cannot be combined with other offers';
-
-  @override
-  String get adminSellersDiscountTermsLabel => 'Terms & Conditions';
-
-  @override
-  String get adminSellersEdit => 'Edit';
-
-  @override
-  String get adminSellersEditTitle => 'Edit Seller';
-
-  @override
-  String get adminSellersEmailHint => 'support@example.com';
-
-  @override
-  String get adminSellersEmailLabel => 'Contact Email';
-
-  @override
-  String get adminSellersHideInactive => 'Hide inactive';
-
-  @override
-  String get adminSellersInactiveBadge => 'INACTIVE';
-
-  @override
-  String get adminSellersLogoSection => 'Seller Logo';
-
-  @override
-  String get adminSellersNameHint => 'e.g., LilyGO, RAK Wireless';
-
-  @override
-  String get adminSellersNameLabel => 'Seller Name *';
-
-  @override
-  String get adminSellersNotFound => 'No sellers found';
-
-  @override
-  String get adminSellersOfficialPartner => 'Official Partner';
-
-  @override
-  String get adminSellersOfficialPartnerSubtitle =>
-      'Display as official Meshtastic partner';
-
-  @override
-  String get adminSellersPartnerBadge => 'PARTNER';
-
-  @override
-  String get adminSellersRemoveLogo => 'Remove';
-
-  @override
-  String get adminSellersSaveChanges => 'Save Changes';
-
-  @override
-  String get adminSellersSearchHint => 'Search sellers...';
-
-  @override
-  String get adminSellersShippingSection => 'Shipping Countries';
-
-  @override
-  String get adminSellersShowInactive => 'Show inactive';
-
-  @override
-  String get adminSellersStatusSection => 'Status & Verification';
-
-  @override
-  String get adminSellersTitle => 'Manage Sellers';
-
-  @override
-  String get adminSellersUpdated => 'Seller updated';
-
-  @override
-  String get adminSellersUploadLogo => 'Upload Logo';
-
-  @override
-  String get adminSellersUploading => 'Uploading...';
-
-  @override
-  String get adminSellersVerifiedBadge => 'VERIFIED';
-
-  @override
-  String get adminSellersVerifiedSubtitle =>
-      'Seller identity has been verified';
-
-  @override
-  String get adminSellersVerifiedToggle => 'Verified';
-
-  @override
-  String get adminSellersWebsiteLabel => 'Website URL *';
 
   @override
   String get aetherDetailAltitude => 'Altitude';
@@ -2932,65 +2455,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automationVariableSectionUniversal => 'Universal';
 
   @override
-  String get categoryProductsApplyFilters => 'Apply Filters';
-
-  @override
-  String get categoryProductsClearFilters => 'Clear Filters';
-
-  @override
-  String get categoryProductsErrorLoading => 'Error loading products';
-
-  @override
-  String get categoryProductsFilter => 'Filter';
-
-  @override
-  String get categoryProductsFiltersTitle => 'Filters';
-
-  @override
-  String get categoryProductsFrequencyBands => 'Frequency Bands';
-
-  @override
-  String get categoryProductsInStockOnly => 'In Stock Only';
-
-  @override
-  String get categoryProductsNotFound => 'No products found';
-
-  @override
-  String get categoryProductsOutOfStock => 'OUT OF STOCK';
-
-  @override
-  String get categoryProductsPriceRange => 'Price Range';
-
-  @override
-  String get categoryProductsReset => 'Reset';
-
-  @override
-  String categoryProductsResultCount(int count) {
-    return '$count products';
-  }
-
-  @override
-  String get categoryProductsRetry => 'Retry';
-
-  @override
-  String get categoryProductsSortNewest => 'Newest First';
-
-  @override
-  String get categoryProductsSortPopular => 'Most Popular';
-
-  @override
-  String get categoryProductsSortPriceHigh => 'Price: High to Low';
-
-  @override
-  String get categoryProductsSortPriceLow => 'Price: Low to High';
-
-  @override
-  String get categoryProductsSortRating => 'Highest Rated';
-
-  @override
-  String get categoryProductsTryFilters => 'Try adjusting your filters';
-
-  @override
   String get channelFormApproxLocationTitle => 'Approximate Location';
 
   @override
@@ -3700,11 +3164,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonDone => 'Done';
-
-  @override
-  String commonErrorWithDetails(String error) {
-    return 'Error: $error';
-  }
 
   @override
   String get commonGoBack => 'Go Back';
@@ -4819,152 +4278,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceSheetUsb => 'USB';
 
   @override
-  String get deviceShopBecomeSeller => 'Become a Seller';
-
-  @override
-  String get deviceShopBecomeSellerBody =>
-      'Are you a manufacturer or distributor of Meshtastic-compatible devices? Join our marketplace to reach mesh radio enthusiasts worldwide.';
-
-  @override
-  String get deviceShopBrowseByCategory => 'Browse by Category';
-
-  @override
-  String get deviceShopCategories => 'Categories';
-
-  @override
-  String get deviceShopClear => 'Clear';
-
-  @override
-  String get deviceShopConnectToBrowse => 'Connect to browse devices';
-
-  @override
-  String get deviceShopContactUs => 'Contact Us';
-
-  @override
-  String get deviceShopContactEmailSubject => 'Device Shop seller inquiry';
-
-  @override
-  String get deviceShopContactEmailBody =>
-      'Hi SocialMesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n';
-
-  @override
-  String get deviceShopErrorLoadingProducts => 'Error loading products';
-
-  @override
-  String get deviceShopFavoritesTooltip => 'Favorites';
-
-  @override
-  String get deviceShopRemoveFavoriteTitle => 'Remove from Favorites?';
-
-  @override
-  String get deviceShopRemoveFavoriteMessage =>
-      'This product will be removed from your favorites.';
-
-  @override
-  String get deviceShopFeatured => 'Featured';
-
-  @override
-  String get deviceShopFilterAll => 'All';
-
-  @override
-  String get deviceShopHelpTooltip => 'Help';
-
-  @override
-  String get deviceShopMarketplaceDisclaimer =>
-      'Purchases are completed on the seller\'s official store. SocialMesh may earn a small commission from purchases made through these links. SocialMesh does not handle payment, shipping, warranty, or returns.';
-
-  @override
-  String get deviceShopMarketplaceInfoTitle => 'Marketplace Information';
-
-  @override
-  String get deviceShopInStock => 'In Stock';
-
-  @override
-  String get deviceShopNewArrivals => 'New Arrivals';
-
-  @override
-  String get deviceShopNoInternet => 'No internet connection';
-
-  @override
-  String deviceShopNoResults(String query) {
-    return 'No results for \"$query\"';
-  }
-
-  @override
-  String get deviceShopOfficialPartners => 'Official Partners';
-
-  @override
-  String get deviceShopOnSale => 'On Sale';
-
-  @override
-  String get deviceShopOutOfStock => 'OUT OF STOCK';
-
-  @override
-  String get deviceShopPopularDevices => 'Popular Devices';
-
-  @override
-  String get deviceShopRecentSearches => 'Recent Searches';
-
-  @override
-  String get deviceShopRetry => 'Retry';
-
-  @override
-  String get deviceShopSearchHint => 'Search devices, modules, antennas...';
-
-  @override
-  String get deviceShopSeeAll => 'See All';
-
-  @override
-  String get deviceShopSellYourDevices => 'Sell your Meshtastic devices';
-
-  @override
-  String get deviceShopSupportEmail => 'support@socialmesh.app';
-
-  @override
-  String get deviceShopTitle => 'Device Shop';
-
-  @override
-  String get deviceShopTrending => 'Trending';
-
-  @override
-  String get deviceShopTryAgain => 'Try again in a moment';
-
-  @override
-  String get deviceShopTryDifferentKeywords => 'Try different keywords';
-
-  @override
-  String get deviceShopUnableToLoad => 'Unable to load products';
-
-  @override
-  String deviceShopErrorWithDetails(String error) {
-    return 'Error: $error';
-  }
-
-  @override
-  String deviceShopFailedToUploadImage(String error) {
-    return 'Failed to upload image: $error';
-  }
-
-  @override
-  String deviceShopFailedToUploadLogo(String error) {
-    return 'Failed to upload logo: $error';
-  }
-
-  @override
-  String get deviceShopFieldRequired => 'Required';
-
-  @override
-  String get deviceShopGoBackTooltip => 'Go back';
-
-  @override
-  String get deviceShopRefreshTooltip => 'Refresh';
-
-  @override
-  String deviceShopReviewSubmitFailed(String error) {
-    return 'Failed to submit review: $error';
-  }
-
-  @override
   String get discoveryDiscoveredBadge => 'DISCOVERED';
 
   @override
@@ -5214,49 +4527,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get favoritesTitle => 'Favorite Nodes';
-
-  @override
-  String get featuredProductsDiscard => 'Discard';
-
-  @override
-  String get featuredProductsEmpty => 'No featured products';
-
-  @override
-  String get featuredProductsEmptySubtitle =>
-      'Mark products as featured to manage their order here';
-
-  @override
-  String get featuredProductsOrderUpdated => 'Featured order updated';
-
-  @override
-  String get featuredProductsRemove => 'Remove';
-
-  @override
-  String featuredProductsRemoveMessage(String name) {
-    return 'Remove \"$name\" from featured products?';
-  }
-
-  @override
-  String get featuredProductsRemoveTitle => 'Remove from Featured';
-
-  @override
-  String get featuredProductsRemoveTooltip => 'Remove from featured';
-
-  @override
-  String get featuredProductsRemoved => 'Removed from featured';
-
-  @override
-  String get featuredProductsReorderInfo =>
-      'Drag and drop products to reorder. Products at the top will appear first in the featured section.';
-
-  @override
-  String get featuredProductsSave => 'Save';
-
-  @override
-  String get featuredProductsTitle => 'Featured Products';
-
-  @override
-  String get featuredProductsUnsavedChanges => 'You have unsaved changes';
 
   @override
   String get feedbackBugReportsTitle => 'My Bug Reports';
@@ -6586,9 +5856,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpCenterScreenCreateSignal => 'Create Signal';
 
   @override
-  String get helpCenterScreenDeviceShop => 'Device Shop';
-
-  @override
   String get helpCenterScreenMap => 'Map';
 
   @override
@@ -6644,9 +5911,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpCenterScreenWidgetDashboard => 'Widget Dashboard';
-
-  @override
-  String get helpCenterScreenWidgetMarketplace => 'Widget Marketplace';
 
   @override
   String get helpCenterScreenWorldMesh => 'World Mesh';
@@ -7180,9 +6444,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAgeGroupSubtitleAdult => '18 or older';
-
-  @override
-  String get lilygoModelPriceUnavailable => 'Price unavailable';
 
   @override
   String get linkDeviceBannerLinkButton => 'Link';
@@ -17130,270 +16391,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Nodes will appear here as they are discovered';
 
   @override
-  String get productDetailAnonymous => 'Anonymous';
-
-  @override
-  String get productDetailBattery => 'Battery';
-
-  @override
-  String get productDetailBeFirstReviewer =>
-      'Be the first to review this product!';
-
-  @override
-  String get productDetailBluetooth => 'Bluetooth';
-
-  @override
-  String get productDetailBuyNow => 'Buy Now';
-
-  @override
-  String productDetailBySeller(String seller) {
-    return 'by $seller';
-  }
-
-  @override
-  String get productDetailCancel => 'Cancel';
-
-  @override
-  String get productDetailChipset => 'Chipset';
-
-  @override
-  String get productDetailContactSeller => 'Contact Seller';
-
-  @override
-  String get productDetailContactToPurchase =>
-      'Contact the seller to purchase this product.';
-
-  @override
-  String productDetailDaysAgo(int count) {
-    return '$count days ago';
-  }
-
-  @override
-  String get productDetailDescription => 'Description';
-
-  @override
-  String get productDetailDimensions => 'Dimensions';
-
-  @override
-  String productDetailDiscountBadge(int percent) {
-    return '-$percent% OFF';
-  }
-
-  @override
-  String get productDetailDisplay => 'Display';
-
-  @override
-  String get productDetailEdit => 'Edit';
-
-  @override
-  String get productDetailErrorLoading => 'Error loading product';
-
-  @override
-  String productDetailEstimatedDelivery(int days) {
-    return 'Estimated $days days';
-  }
-
-  @override
-  String get productDetailFeatures => 'Features';
-
-  @override
-  String get productDetailFirmware => 'Firmware';
-
-  @override
-  String get productDetailFreeShipping => 'Free Shipping';
-
-  @override
-  String get productDetailFrequencyBands => 'Frequency Bands';
-
-  @override
-  String get productDetailGoBack => 'Go Back';
-
-  @override
-  String get productDetailGps => 'GPS';
-
-  @override
-  String get productDetailHardwareVersion => 'Hardware Version';
-
-  @override
-  String productDetailImageCounter(int current, int total) {
-    return '$current / $total';
-  }
-
-  @override
-  String productDetailInStockCount(int quantity) {
-    return 'In Stock ($quantity available)';
-  }
-
-  @override
-  String get productDetailIncludedAccessories => 'Included Accessories';
-
-  @override
-  String get productDetailLoraChip => 'LoRa Chip';
-
-  @override
-  String get productDetailMeshtasticCompatible => 'Meshtastic Compatible';
-
-  @override
-  String productDetailMonthsAgo(int count) {
-    return '$count months ago';
-  }
-
-  @override
-  String get productDetailNoReviews => 'No reviews yet';
-
-  @override
-  String get productDetailNotFound => 'Product not found';
-
-  @override
-  String get productDetailOutOfStock => 'Out of Stock';
-
-  @override
-  String get productDetailOutOfStockButton => 'Out of Stock';
-
-  @override
-  String get productDetailPurchaseDisclaimer =>
-      'Purchases completed on seller\'s official store · SocialMesh may earn a commission';
-
-  @override
-  String get productDetailPurchaseTitle => 'Purchase';
-
-  @override
-  String get productDetailReadMore => 'Read More';
-
-  @override
-  String get productDetailRetry => 'Retry';
-
-  @override
-  String productDetailReviewCount(int count) {
-    return '($count reviews)';
-  }
-
-  @override
-  String get productDetailReviewHint =>
-      'Share your experience with this product...';
-
-  @override
-  String productDetailReviewPrivacyNotice(String userName) {
-    return 'Your review will be public and posted as \"$userName\". Reviews are moderated before appearing on the product page.';
-  }
-
-  @override
-  String get productDetailReviewSubmitted =>
-      'Review submitted for moderation. Thank you!';
-
-  @override
-  String get productDetailReviewTitleLabel => 'Title (optional)';
-
-  @override
-  String get productDetailReviewValidation =>
-      'Please write a review description';
-
-  @override
-  String get productDetailReviewVerified => 'Verified';
-
-  @override
-  String get productDetailReviews => 'Reviews';
-
-  @override
-  String productDetailSelectedPrice(String price) {
-    return 'Selected: \$$price';
-  }
-
-  @override
-  String get productDetailSellerResponse => 'Seller Response';
-
-  @override
-  String get productDetailShipping => 'Shipping';
-
-  @override
-  String productDetailShippingCost(String cost) {
-    return 'Shipping: \$$cost';
-  }
-
-  @override
-  String productDetailShipsTo(String countries) {
-    return 'Ships to: $countries';
-  }
-
-  @override
-  String get productDetailShowLess => 'Show Less';
-
-  @override
-  String get productDetailSignInFavorites => 'Sign in to save favorites';
-
-  @override
-  String get productDetailSignInReview => 'Sign in to write a review';
-
-  @override
-  String productDetailSoldCount(int count) {
-    return '$count sold';
-  }
-
-  @override
-  String get productDetailSubmitReview => 'Submit Review';
-
-  @override
-  String get productDetailTechSpecs => 'Technical Specifications';
-
-  @override
-  String get productDetailTitle => 'Product';
-
-  @override
-  String get productDetailToday => 'Today';
-
-  @override
-  String get productDetailTotal => 'Total';
-
-  @override
-  String get productDetailUnableToLoadPage => 'Unable to load page';
-
-  @override
-  String get productDetailUnableToLoadReviews => 'Unable to load reviews';
-
-  @override
-  String get productDetailVendorVerified => 'Vendor Verified';
-
-  @override
-  String productDetailVerifiedOn(String date) {
-    return 'Verified on $date';
-  }
-
-  @override
-  String get productDetailWebviewOffline =>
-      'This content requires an internet connection. Please check your connection and try again.';
-
-  @override
-  String productDetailWeeksAgo(int count) {
-    return '$count weeks ago';
-  }
-
-  @override
-  String get productDetailWeight => 'Weight';
-
-  @override
-  String get productDetailWifi => 'WiFi';
-
-  @override
-  String get productDetailWriteReview => 'Write Review';
-
-  @override
-  String get productDetailWriteReviewTitle => 'Write a Review';
-
-  @override
-  String productDetailYearsAgo(int count) {
-    return '$count years ago';
-  }
-
-  @override
-  String get productDetailYesterday => 'Yesterday';
-
-  @override
-  String get productDetailYourRating => 'Your Rating';
-
-  @override
-  String get productDetailYourReview => 'Your Review *';
-
-  @override
   String get profileBasicInfo => 'Basic Info';
 
   @override
@@ -18732,125 +17729,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.';
 
   @override
-  String get searchProductsBrowseByCategory => 'Browse by Category';
-
-  @override
-  String get searchProductsClear => 'Clear';
-
-  @override
-  String get searchProductsHint => 'Search devices, modules, antennas...';
-
-  @override
-  String searchProductsNoResults(String query) {
-    return 'No results for \"$query\"';
-  }
-
-  @override
-  String get searchProductsOutOfStock => 'Out of Stock';
-
-  @override
-  String get searchProductsRecentSearches => 'Recent Searches';
-
-  @override
-  String searchProductsResultCount(int count, String query) {
-    return '$count results for \"$query\"';
-  }
-
-  @override
-  String get searchProductsRetry => 'Retry';
-
-  @override
-  String get searchProductsSearchFailed => 'Search failed';
-
-  @override
-  String get searchProductsTrending => 'Trending';
-
-  @override
-  String get searchProductsTryDifferent =>
-      'Try different keywords or browse categories';
-
-  @override
-  String get sellerProfileAbout => 'About';
-
-  @override
-  String get sellerProfileApplyCodeHint =>
-      'Apply this code at checkout on the seller\'s store';
-
-  @override
-  String get sellerProfileCodeCopied => 'Code copied to clipboard';
-
-  @override
-  String get sellerProfileContactShipping => 'Contact & Shipping';
-
-  @override
-  String get sellerProfileDiscountExclusive =>
-      'Exclusive discount code for SocialMesh users';
-
-  @override
-  String get sellerProfileEmail => 'Email';
-
-  @override
-  String get sellerProfileErrorLoading => 'Error loading seller';
-
-  @override
   String get sellerProfileFoundedStat => 'Founded';
 
   @override
-  String get sellerProfileGoBack => 'Go Back';
-
-  @override
-  String get sellerProfileNoProducts => 'No products listed yet';
-
-  @override
-  String sellerProfileNoSearchResults(String query) {
-    return 'No products match \"$query\"';
-  }
-
-  @override
-  String get sellerProfileNotFound => 'Seller not found';
-
-  @override
-  String get sellerProfileOfficialPartner => 'Official Partner';
-
-  @override
-  String get sellerProfilePartnerDiscount => 'Partner Discount';
-
-  @override
-  String sellerProfileProductsCount(int count) {
-    return 'Products ($count)';
-  }
-
-  @override
-  String get sellerProfileProductsStat => 'Products';
-
-  @override
-  String get sellerProfileRevealCode => 'Reveal Code';
-
-  @override
-  String sellerProfileReviewCount(int count) {
-    return '$count reviews';
-  }
-
-  @override
   String get sellerProfileSalesStat => 'Sales';
-
-  @override
-  String get sellerProfileSearchHint => 'Search products...';
-
-  @override
-  String get sellerProfileShipsTo => 'Ships to';
-
-  @override
-  String get sellerProfileTitle => 'Seller';
-
-  @override
-  String get sellerProfileCopyCodeTooltip => 'Copy code';
-
-  @override
-  String get sellerProfileUnableToLoad => 'Unable to load products';
-
-  @override
-  String get sellerProfileWebsite => 'Website';
 
   @override
   String get serialConfigBaudRate => 'Baud Rate';
@@ -19920,226 +18802,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String settingsVersionString(String version) {
     return 'Version $version';
-  }
-
-  @override
-  String get shopAdminDashboardAccessDenied => 'Access Denied';
-
-  @override
-  String get shopAdminDashboardAccessRequired => 'Admin Access Required';
-
-  @override
-  String shopAdminDashboardActiveCount(int count) {
-    return '$count active';
-  }
-
-  @override
-  String get shopAdminDashboardAddProduct => 'Add Product';
-
-  @override
-  String get shopAdminDashboardAddSeller => 'Add Seller';
-
-  @override
-  String get shopAdminDashboardError => 'Error';
-
-  @override
-  String get shopAdminDashboardEstRevenue => 'Est. Revenue';
-
-  @override
-  String get shopAdminDashboardFeatured => 'Featured Products';
-
-  @override
-  String get shopAdminDashboardFeaturedSubtitle =>
-      'Manage featured product display order';
-
-  @override
-  String get shopAdminDashboardInactive => 'Inactive';
-
-  @override
-  String get shopAdminDashboardManagement => 'Management';
-
-  @override
-  String get shopAdminDashboardNoPermission =>
-      'You do not have permission to access this area.';
-
-  @override
-  String get shopAdminDashboardOutOfStock => 'Out of Stock';
-
-  @override
-  String get shopAdminDashboardProducts => 'Products';
-
-  @override
-  String get shopAdminDashboardProductsSubtitle =>
-      'Manage all product listings';
-
-  @override
-  String get shopAdminDashboardQuickActions => 'Quick Actions';
-
-  @override
-  String get shopAdminDashboardRefresh => 'Refresh';
-
-  @override
-  String get shopAdminDashboardReviews => 'Reviews';
-
-  @override
-  String get shopAdminDashboardReviewsMgmt => 'Reviews';
-
-  @override
-  String get shopAdminDashboardReviewsSubtitle => 'Moderate product reviews';
-
-  @override
-  String get shopAdminDashboardSellers => 'Sellers';
-
-  @override
-  String get shopAdminDashboardSellersSubtitle =>
-      'Manage seller profiles and partnerships';
-
-  @override
-  String get shopAdminDashboardTitle => 'Shop Admin';
-
-  @override
-  String get shopAdminDashboardTotalProducts => 'Total Products';
-
-  @override
-  String get shopAdminDashboardTotalSales => 'Total Sales';
-
-  @override
-  String get shopAdminDashboardTotalSellers => 'Total Sellers';
-
-  @override
-  String get shopAdminDashboardTotalViews => 'Total Views';
-
-  @override
-  String get shopFavoritesEmpty => 'No favorites yet';
-
-  @override
-  String get shopFavoritesEmptySubtitle =>
-      'Tap the heart icon on products to save them';
-
-  @override
-  String get shopFavoritesErrorLoading => 'Error loading favorites';
-
-  @override
-  String get shopFavoritesInStock => 'In Stock';
-
-  @override
-  String get shopFavoritesOutOfStock => 'Out of Stock';
-
-  @override
-  String get shopFavoritesProductRemoved => 'Product no longer available';
-
-  @override
-  String get shopFavoritesRetry => 'Retry';
-
-  @override
-  String get shopFavoritesSignIn => 'Sign in to save favorites';
-
-  @override
-  String get shopFavoritesSignInSubtitle =>
-      'Your favorite devices will appear here';
-
-  @override
-  String get shopFavoritesTitle => 'Favorites';
-
-  @override
-  String get shopFavoritesUnableToLoad => 'Unable to load product';
-
-  @override
-  String get shopModelBandAu915 => 'AU 915MHz';
-
-  @override
-  String get shopModelBandAu915Range => '915-928 MHz';
-
-  @override
-  String get shopModelBandCn470 => 'CN 470MHz';
-
-  @override
-  String get shopModelBandCn470Range => '470-510 MHz';
-
-  @override
-  String get shopModelBandEu868 => 'EU 868MHz';
-
-  @override
-  String get shopModelBandEu868Range => '863-870 MHz';
-
-  @override
-  String get shopModelBandIn865 => 'IN 865MHz';
-
-  @override
-  String get shopModelBandIn865Range => '865-867 MHz';
-
-  @override
-  String get shopModelBandJp920 => 'JP 920MHz';
-
-  @override
-  String get shopModelBandJp920Range => '920-925 MHz';
-
-  @override
-  String get shopModelBandKr920 => 'KR 920MHz';
-
-  @override
-  String get shopModelBandKr920Range => '920-923 MHz';
-
-  @override
-  String get shopModelBandMulti => 'Multi-band';
-
-  @override
-  String get shopModelBandMultiRange => 'Multiple frequencies';
-
-  @override
-  String get shopModelBandUs915 => 'US 915MHz';
-
-  @override
-  String get shopModelBandUs915Range => '902-928 MHz';
-
-  @override
-  String get shopModelCategoryAccessories => 'Accessories';
-
-  @override
-  String get shopModelCategoryAccessoriesDescription =>
-      'Cables, batteries, and more';
-
-  @override
-  String get shopModelCategoryAntennas => 'Antennas';
-
-  @override
-  String get shopModelCategoryAntennasDescription =>
-      'Antennas and RF accessories';
-
-  @override
-  String get shopModelCategoryEnclosures => 'Enclosures';
-
-  @override
-  String get shopModelCategoryEnclosuresDescription => 'Cases and enclosures';
-
-  @override
-  String get shopModelCategoryKits => 'Kits';
-
-  @override
-  String get shopModelCategoryKitsDescription => 'DIY kits and bundles';
-
-  @override
-  String get shopModelCategoryModules => 'Modules';
-
-  @override
-  String get shopModelCategoryModulesDescription => 'Add-on modules and boards';
-
-  @override
-  String get shopModelCategoryNodes => 'Nodes';
-
-  @override
-  String get shopModelCategoryNodesDescription => 'Complete Meshtastic devices';
-
-  @override
-  String get shopModelCategorySolar => 'Solar';
-
-  @override
-  String get shopModelCategorySolarDescription =>
-      'Solar panels and power solutions';
-
-  @override
-  String shopModelPriceFrom(String price) {
-    return 'From \$$price';
   }
 
   @override
@@ -24430,14 +23092,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Broadcast to everyone on channel';
 
   @override
-  String get widgetBuilderBrowseMarketplace => 'Browse Marketplace';
-
-  @override
-  String widgetBuilderByAuthor(String author) {
-    return 'by $author';
-  }
-
-  @override
   String get widgetBuilderCancel => 'Cancel';
 
   @override
@@ -24447,30 +23101,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetBuilderCannotSaveTitle => 'Cannot Save Widget';
-
-  @override
-  String get widgetBuilderCategoryCharts => 'Charts';
-
-  @override
-  String get widgetBuilderCategoryDeviceStatus => 'Device Status';
-
-  @override
-  String get widgetBuilderCategoryLocation => 'Location';
-
-  @override
-  String get widgetBuilderCategoryMeshNetwork => 'Mesh Network';
-
-  @override
-  String get widgetBuilderCategoryMetrics => 'Metrics';
-
-  @override
-  String get widgetBuilderCategoryOther => 'Other';
-
-  @override
-  String get widgetBuilderCategoryUtility => 'Utility';
-
-  @override
-  String get widgetBuilderCategoryWeather => 'Weather';
 
   @override
   String get widgetBuilderChooseAction => 'Choose an action for this element';
@@ -24520,10 +23150,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetBuilderDiscardChangesTitle => 'Discard Changes?';
 
   @override
-  String get widgetBuilderDiscoverCommunity =>
-      'Discover widgets created by the community';
-
-  @override
   String get widgetBuilderDuplicate => 'Duplicate';
 
   @override
@@ -24553,11 +23179,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String widgetBuilderFailedToInstall(String error) {
-    return 'Failed to install: $error';
-  }
-
-  @override
   String widgetBuilderFailedToReject(String error) {
     return 'Failed to reject: $error';
   }
@@ -24575,11 +23196,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String widgetBuilderFailedToShareLocation(String error) {
     return 'Failed to share location: $error';
-  }
-
-  @override
-  String widgetBuilderFailedToSubmit(String error) {
-    return 'Failed to submit: $error';
   }
 
   @override
@@ -24812,11 +23428,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Widget imported successfully';
 
   @override
-  String widgetBuilderInstalledSuccess(String name) {
-    return '$name installed!';
-  }
-
-  @override
   String get widgetBuilderKeepCurrent => 'Keep Current';
 
   @override
@@ -24881,181 +23492,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get widgetBuilderMakeUnique =>
-      'Consider making your widget more unique before submitting.';
-
-  @override
   String get widgetBuilderMapView => 'Map View';
 
   @override
-  String get widgetBuilderMarketplace => 'Marketplace';
-
-  @override
-  String get widgetBuilderMarketplaceAlreadyInstalled => 'Already Installed';
-
-  @override
-  String get widgetBuilderMarketplaceApprove => 'Approve';
-
-  @override
-  String get widgetBuilderMarketplaceCancel => 'Cancel';
-
-  @override
-  String get widgetBuilderMarketplaceDescription => 'Description';
-
-  @override
-  String widgetBuilderMarketplaceRatingWithCount(String rating, int count) {
-    return '$rating ($count)';
-  }
-
-  @override
-  String get widgetBuilderMarketplaceEnterReason => 'Enter reason...';
-
-  @override
-  String widgetBuilderMarketplaceFailedLoadPending(String error) {
-    return 'Failed to load pending widgets: $error';
-  }
-
-  @override
-  String get widgetBuilderMarketplaceFailedLoadCategory =>
-      'Failed to load category';
-
-  @override
-  String get widgetBuilderMarketplaceFailedNewest =>
-      'Failed to load newest widgets';
-
-  @override
-  String get widgetBuilderMarketplaceFailedPopular =>
-      'Failed to load popular widgets';
-
-  @override
-  String get widgetBuilderMarketplaceFavoritesHint =>
-      'Tap the heart icon on any widget to add it here';
-
-  @override
-  String widgetBuilderMarketplaceFavoritesWithCount(int count) {
-    return 'Favorites ($count)';
-  }
-
-  @override
-  String get widgetBuilderMarketplaceHelpTooltip => 'Help';
-
-  @override
-  String get widgetBuilderMarketplaceInstallWidget => 'Install Widget';
-
-  @override
-  String widgetBuilderMarketplaceDaysAgo(int count) {
+  String widgetBuilderDaysAgo(int count) {
     return '${count}d ago';
   }
 
   @override
-  String widgetBuilderMarketplaceHoursAgo(int count) {
+  String widgetBuilderHoursAgo(int count) {
     return '${count}h ago';
   }
 
   @override
-  String widgetBuilderMarketplaceInstallsCount(int count) {
-    return '$count installs';
-  }
+  String get widgetBuilderJustNow => 'Just now';
 
   @override
-  String get widgetBuilderMarketplaceJustNow => 'Just now';
-
-  @override
-  String widgetBuilderMarketplaceMinutesAgo(int count) {
+  String widgetBuilderMinutesAgo(int count) {
     return '${count}m ago';
   }
-
-  @override
-  String get widgetBuilderMarketplaceLoadingPreview => 'Loading preview...';
-
-  @override
-  String get widgetBuilderMarketplaceNoFavorites => 'No favorite widgets yet';
-
-  @override
-  String get widgetBuilderMarketplaceNoFeatured => 'No featured widgets';
-
-  @override
-  String get widgetBuilderMarketplaceNoNew => 'No new widgets yet';
-
-  @override
-  String get widgetBuilderMarketplaceNoPending => 'No widgets pending approval';
-
-  @override
-  String get widgetBuilderMarketplaceNoPopular => 'No popular widgets yet';
-
-  @override
-  String get widgetBuilderMarketplaceNoWidgets => 'No widgets available';
-
-  @override
-  String get widgetBuilderMarketplaceNoWidgetsFound => 'No widgets found';
-
-  @override
-  String get widgetBuilderMarketplaceNoWidgetsInCategory =>
-      'No widgets in this category';
-
-  @override
-  String get widgetBuilderMarketplaceNotAuthenticated => 'Not authenticated';
-
-  @override
-  String get widgetBuilderMarketplacePending => 'PENDING';
-
-  @override
-  String get widgetBuilderMarketplacePleaseEnterReason =>
-      'Please enter a reason';
-
-  @override
-  String get widgetBuilderMarketplaceProcessing => 'Processing...';
-
-  @override
-  String get widgetBuilderMarketplaceRejectButton => 'Reject';
-
-  @override
-  String get widgetBuilderMarketplaceRejectWidget => 'Reject Widget';
-
-  @override
-  String get widgetBuilderMarketplaceRequiresInternet =>
-      'Installing widgets requires an internet connection.';
-
-  @override
-  String get widgetBuilderMarketplaceRetry => 'Retry';
-
-  @override
-  String get widgetBuilderMarketplaceSearchHint => 'Search widgets...';
-
-  @override
-  String get widgetBuilderMarketplaceShareTooltip => 'Share Widget';
-
-  @override
-  String get widgetBuilderMarketplaceSharingRequiresInternet =>
-      'Sharing widgets requires an internet connection.';
-
-  @override
-  String get widgetBuilderMarketplaceTabCategories => 'Categories';
-
-  @override
-  String get widgetBuilderMarketplaceTabFavorites => 'Favorites';
-
-  @override
-  String get widgetBuilderMarketplaceTabFeatured => 'Featured';
-
-  @override
-  String get widgetBuilderMarketplaceTabNew => 'New';
-
-  @override
-  String get widgetBuilderMarketplaceTabPopular => 'Popular';
-
-  @override
-  String get widgetBuilderMarketplaceTags => 'Tags';
-
-  @override
-  String get widgetBuilderMarketplaceTitle => 'Widget Marketplace';
-
-  @override
-  String get widgetBuilderMarketplaceUnableToLoad =>
-      'Unable to load marketplace';
-
-  @override
-  String get widgetBuilderMarketplaceWidgetApproval => 'Widget Approval';
 
   @override
   String get widgetBuilderMediumOnlyOneRow => 'Medium widgets only allow 1 row';
@@ -25101,9 +23556,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetBuilderNone => 'None';
 
   @override
-  String get widgetBuilderOk => 'OK';
-
-  @override
   String get widgetBuilderOptions => 'Options';
 
   @override
@@ -25138,13 +23590,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String widgetBuilderRemovedFromDashboard(String name) {
     return '$name removed from Dashboard';
   }
-
-  @override
-  String get widgetBuilderReviewGuidelines => 'Review Guidelines';
-
-  @override
-  String get widgetBuilderReviewGuidelinesText =>
-      '• Widget will be reviewed for quality\n• Similar widgets may be rejected\n• You\'ll be credited as the author';
 
   @override
   String get widgetBuilderSave => 'Save';
@@ -25229,21 +23674,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetBuilderSignInToShare => 'Sign in to share widgets';
 
   @override
-  String get widgetBuilderSignInToSubmit => 'Sign in to submit widgets';
-
-  @override
-  String get widgetBuilderSimilarWidgetExists =>
-      'A similar widget already exists in the marketplace:';
-
-  @override
-  String widgetBuilderSimilarWidgetExistsError(String name) {
-    return 'Similar widget already exists: $name';
-  }
-
-  @override
-  String get widgetBuilderSimilarWidgetFound => 'Similar Widget Found';
-
-  @override
   String get widgetBuilderSizeCustom => 'Custom size';
 
   @override
@@ -25251,26 +23681,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetBuilderSizeMedium => 'Medium (2x1)';
-
-  @override
-  String get widgetBuilderSubmitButton => 'Submit';
-
-  @override
-  String get widgetBuilderSubmitAnyway => 'Submit Anyway';
-
-  @override
-  String get widgetBuilderSubmitCancel => 'Cancel';
-
-  @override
-  String get widgetBuilderSubmitTitle => 'Submit to Marketplace';
-
-  @override
-  String get widgetBuilderSubmitToMarketplace => 'Submit to Marketplace';
-
-  @override
-  String widgetBuilderSubmittedForReview(String name) {
-    return '$name submitted for review';
-  }
 
   @override
   String get widgetBuilderSwitch => 'Switch';
@@ -25876,17 +24286,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deepLinkFailedToJoinChannel => 'Failed to join channel';
 
   @override
-  String get deepLinkLoadingWidget => 'Loading Widget';
-
-  @override
-  String deepLinkErrorLoadingWidget(String error) {
-    return 'Error loading widget: $error';
-  }
-
-  @override
-  String get deepLinkSomethingWentWrong => 'Something went wrong';
-
-  @override
   String deepLinkProfileTitle(String displayName) {
     return '@$displayName';
   }
@@ -25927,9 +24326,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blockedRouteConnectDeviceButton => 'Connect Device';
-
-  @override
-  String get deepLinkWidgetNotFound => 'Widget not found';
 
   @override
   String get deepLinkAlreadyHaveChannel => 'You already have this channel';
@@ -32242,22 +30638,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminPanelTitle => 'Admin';
 
   @override
-  String get adminPanelSectionShop => 'SHOP MANAGEMENT';
-
-  @override
-  String get adminPanelShopDashboard => 'Shop Admin Dashboard';
-
-  @override
-  String get adminPanelShopDashboardSub =>
-      'Manage products, orders, and inventory';
-
-  @override
-  String get adminPanelDeviceShop => 'Device Shop';
-
-  @override
-  String get adminPanelDeviceShopSub => 'View and manage device listings';
-
-  @override
   String get adminPanelSectionModeration => 'CONTENT MODERATION';
 
   @override
@@ -32278,9 +30658,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminPanelReportedContentSub =>
       'Review flagged posts and comments';
-
-  @override
-  String get adminPanelWidgetReview => 'Widget Marketplace Review';
 
   @override
   String get adminPanelWidgetReviewSub => 'Approve pending widget submissions';
@@ -34401,13 +32778,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create your own custom widgets';
 
   @override
-  String get helpMarketplaceOverviewTitle => 'Widget Marketplace';
-
-  @override
-  String get helpMarketplaceOverviewDescription =>
-      'Discover widgets made by the community';
-
-  @override
   String get helpSignalsOverviewTitle => 'Signals';
 
   @override
@@ -34465,12 +32835,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpTimelineOverviewDescription => 'Your mesh activity history';
-
-  @override
-  String get helpDeviceShopOverviewTitle => 'Device Shop';
-
-  @override
-  String get helpDeviceShopOverviewDescription => 'Browse Meshtastic hardware';
 
   @override
   String get helpOfflineMapsOverviewTitle => 'Offline Maps';
@@ -34854,22 +33218,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use **Preview** to see how your widget looks with real data before saving. Tweak until it\'s perfect!';
 
   @override
-  String get helpMarketplaceIntroBubble =>
-      'Welcome to the **Marketplace**! Browse widgets created by other mesh enthusiasts around the world!';
-
-  @override
-  String get helpMarketplaceBrowseBubble =>
-      'Browse by **category** - find status displays, charts, gauges, or creative designs. Tap any widget to preview it!';
-
-  @override
-  String get helpMarketplaceInstallBubble =>
-      'Found one you like? **Tap install** and it\'s added to your collection. Use it on your dashboard right away!';
-
-  @override
-  String get helpMarketplaceShareBubble =>
-      'Made something cool? **Share your widgets** to the marketplace and help the community!';
-
-  @override
   String get helpSignalsIntroBubble =>
       'Welcome to **Signals**! Broadcast moments to your mesh. Signals are **ephemeral** - you choose how long they last, from **15 minutes** up to **24 hours**.';
 
@@ -35048,18 +33396,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpTimelineTapBubble =>
       '**Tap any event** to see full details. Great for debugging or understanding what\'s happening on your network!';
-
-  @override
-  String get helpShopIntroBubble =>
-      'Welcome to the **Device Shop**! Browse Meshtastic-compatible radios and accessories.';
-
-  @override
-  String get helpShopCompareBubble =>
-      '**Compare devices** by range, battery, and features. I\'ve rated each one to help you choose!';
-
-  @override
-  String get helpShopLinksBubble =>
-      'Tap **Buy** to visit trusted vendors. Prices and availability shown are from real stores!';
 
   @override
   String get helpOfflineIntroBubble =>
@@ -41875,16 +40211,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewVersion1360Subtitle => 'Version 1.36.0';
-
-  @override
-  String get whatsNewDeviceShopTitle => 'Device Shop';
-
-  @override
-  String get whatsNewDeviceShopDescription =>
-      'Browse Meshtastic-compatible hardware from official partners and trusted sellers - all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.';
-
-  @override
-  String get whatsNewCtaOpenDeviceShop => 'Open Device Shop';
 
   @override
   String get whatsNewVersion1410Subtitle => 'Version 1.41.0';

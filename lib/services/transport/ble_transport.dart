@@ -5,6 +5,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import '../../core/ble_system_devices.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/meshcore_constants.dart';
@@ -156,8 +157,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
   // Meshtastic BLE service and characteristic UUIDs (from official docs)
   // https://meshtastic.org/docs/development/device/client-api/
-  static const String _serviceUuid =
-      '6ba1b218-15a8-461f-9fa8-5dcae273eafd'; // lint-allow: hardcoded-string
+  static const String _serviceUuid = MeshtasticBleUuids.serviceUuid;
   static const String _toRadioUuid = 'f75c76d2-129e-4dad-a1dd-7866124401e7';
   static const String _fromRadioUuid =
       '2c55e69e-4993-11ed-b878-0242ac120002'; // lint-allow: hardcoded-string
@@ -616,8 +616,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       }
 
       // Find the device
-      final List<BluetoothDevice> systemDevices =
-          await FlutterBluePlus.systemDevices([]);
+      final List<BluetoothDevice> systemDevices = await meshSystemDevices();
       try {
         _device = systemDevices.firstWhere(
           (d) => d.remoteId.toString() == device.id,

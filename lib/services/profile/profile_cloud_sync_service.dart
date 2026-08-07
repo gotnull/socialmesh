@@ -1178,7 +1178,6 @@ class ProfileCloudSyncService {
     final data = <String, dynamic>{
       'displayName': profile.displayName,
       'linkedNodeIds': profile.linkedNodeIds,
-      'installedWidgetIds': profile.installedWidgetIds,
       'createdAt': profile.createdAt.toIso8601String(),
       'updatedAt': FieldValue.serverTimestamp(),
       // Do NOT include: followerCount, followingCount, postCount, isVerified
@@ -1234,11 +1233,6 @@ class ProfileCloudSyncService {
               .toList() ??
           const [],
       accentColorIndex: data['accentColorIndex'] as int?,
-      installedWidgetIds:
-          (data['installedWidgetIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
       preferences: data['preferences'] != null
           ? UserPreferences.fromJson(
               data['preferences'] as Map<String, dynamic>,
@@ -1261,30 +1255,22 @@ class ProfileCloudSyncService {
 
   /// Merge local and cloud profiles with conflict resolution
   /// Strategy: Use cloud values for synced fields, preserve local customizations
-  /// For installedWidgetIds and linkedNodeIds: use the newer profile's list (NOT union) to respect deletions
+  /// For linkedNodeIds: use the newer profile's list (NOT union) to respect deletions
   UserProfile _mergeProfiles(UserProfile? local, UserProfile cloud) {
     AppLogging.auth(
       'ProfileSync: Merging profiles - local.isSynced: ${local?.isSynced}, cloud.avatarUrl: ${cloud.avatarUrl}',
     );
     if (local == null) return cloud;
 
-    // If local has never been synced, prefer cloud but merge widget IDs (union)
-    // This preserves any local installations made before first sync
+    // If local has never been synced, prefer cloud but merge linked nodes
+    // (union) to preserve any local links made before first sync
     if (!local.isSynced) {
       AppLogging.auth('ProfileSync: Local not synced, using cloud profile');
-      // Only use union for first-time sync to preserve local installations
-      final mergedWidgetIds = <String>{
-        ...local.installedWidgetIds,
-        ...cloud.installedWidgetIds,
-      }.toList();
       // Merge linked nodes (union for first sync)
       final mergedLinkedNodes = <int>{
         ...local.linkedNodeIds,
         ...cloud.linkedNodeIds,
       }.toList();
-      AppLogging.auth(
-        'ProfileSync: First sync - merging widget IDs: local=${local.installedWidgetIds}, cloud=${cloud.installedWidgetIds}, merged=$mergedWidgetIds',
-      );
       return cloud.copyWith(
         // Preserve any local customizations that don't exist in cloud
         bio: cloud.bio ?? local.bio,
@@ -1294,25 +1280,20 @@ class ProfileCloudSyncService {
         primaryNodeId: cloud.primaryNodeId ?? local.primaryNodeId,
         linkedNodeIds: mergedLinkedNodes,
         accentColorIndex: cloud.accentColorIndex ?? local.accentColorIndex,
-        installedWidgetIds: mergedWidgetIds,
         preferences: cloud.preferences ?? local.preferences,
       );
     }
 
     // Both synced - use most recently updated
-    // IMPORTANT: Use the newer profile's installedWidgetIds and linkedNodeIds (NOT union) to respect deletions
+    // IMPORTANT: Use the newer profile's linkedNodeIds (NOT union) to respect deletions
     AppLogging.auth(
       'ProfileSync: Both synced - local.updatedAt: ${local.updatedAt}, cloud.updatedAt: ${cloud.updatedAt}',
     );
     if (local.updatedAt.isAfter(cloud.updatedAt)) {
-      AppLogging.auth(
-        'ProfileSync: Local is newer, using local installedWidgetIds: ${local.installedWidgetIds}',
-      );
+      AppLogging.auth('ProfileSync: Local is newer, using local profile');
       return local.copyWith(isSynced: true);
     }
-    AppLogging.auth(
-      'ProfileSync: Cloud is newer, using cloud installedWidgetIds: ${cloud.installedWidgetIds}',
-    );
+    AppLogging.auth('ProfileSync: Cloud is newer, using cloud profile');
     AppLogging.auth(
       'ProfileSync: Cloud accentColorIndex: ${cloud.accentColorIndex}',
     );

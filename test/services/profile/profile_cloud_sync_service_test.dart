@@ -361,7 +361,6 @@ void main() {
       expect(map['displayName'], 'gotnull');
       // Non-null required keys must always be present.
       expect(map.containsKey('linkedNodeIds'), isTrue);
-      expect(map.containsKey('installedWidgetIds'), isTrue);
       expect(map.containsKey('createdAt'), isTrue);
       expect(map.containsKey('updatedAt'), isTrue);
       // Null optionals must NOT appear as keys — that's what caused

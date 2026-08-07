@@ -622,7 +622,7 @@ class DeepLinkParser {
   /// Parse a widget deep link.
   /// Handles:
   /// - id:{firestoreId} - Cloud-stored widget from QR code sharing
-  /// - Marketplace widget IDs (Firestore document IDs)
+  /// - Bare shared-widget IDs (Firestore document IDs, legacy links)
   /// - Base64-encoded widget schemas (legacy from QR code sharing)
   ParsedDeepLink _parseWidgetLink(String? data, String original) {
     if (data == null || data.isEmpty) {
@@ -658,7 +658,7 @@ class DeepLinkParser {
       );
     }
 
-    // Otherwise treat as marketplace widget ID
+    // Otherwise treat as a bare shared-widget ID (legacy links)
     return ParsedDeepLink(
       type: DeepLinkType.widget,
       originalUri: original,

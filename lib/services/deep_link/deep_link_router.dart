@@ -177,7 +177,7 @@ class DeepLinkRouter {
   }
 
   /// Route a widget deep link.
-  /// Handles marketplace widget IDs, Firestore IDs, and base64-encoded widget schemas.
+  /// Handles shared-widget Firestore IDs and base64-encoded widget schemas.
   DeepLinkRouteResult _routeWidget(ParsedDeepLink link) {
     // Cloud-stored widget via Firestore ID (from QR code sharing)
     if (link.hasWidgetFirestoreId) {
@@ -197,7 +197,7 @@ class DeepLinkRouter {
       );
     }
 
-    // Marketplace widget by ID
+    // Bare widget ID (legacy links) - treat as a shared-widget Firestore ID
     if (link.widgetId == null) {
       return DeepLinkRouteResult(
         routeName: '/main',
@@ -206,8 +206,9 @@ class DeepLinkRouter {
     }
 
     return DeepLinkRouteResult(
-      routeName: '/widget-detail',
-      arguments: {'widgetId': link.widgetId},
+      routeName: '/widget-import',
+      arguments: {'firestoreId': link.widgetId},
+      requiresDevice: false,
     );
   }
 

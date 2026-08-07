@@ -83,9 +83,6 @@ class LegalConstants {
   /// Payments, Subscriptions, and Refunds (Section G)
   static const String anchorPayments = 'payments';
 
-  /// Device Shop / Marketplace (third-party seller terms)
-  static const String anchorMarketplace = 'marketplace';
-
   /// Intellectual Property
   static const String anchorIntellectualProperty = 'intellectual-property';
 
@@ -124,7 +121,6 @@ class LegalConstants {
     anchorAcceptableUse,
     anchorRadioCompliance,
     anchorPayments,
-    anchorMarketplace,
     anchorIntellectualProperty,
     anchorPrivacyIncorporation,
     anchorThirdPartyServices,

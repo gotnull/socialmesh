@@ -10,7 +10,6 @@ import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
 
-import '../widget_sync_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
@@ -37,7 +36,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   String? _selectedElementId;
   final bool _showPreview = false;
   bool _showToolbox = true;
-  bool _isMarketplaceWidget = false;
 
   // Track if we're in portrait mode
   bool get _isPortrait =>
@@ -48,19 +46,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   void initState() {
     super.initState();
     _schema = widget.initialSchema ?? _createDefaultSchema();
-    _checkMarketplaceStatus();
-  }
-
-  Future<void> _checkMarketplaceStatus() async {
-    if (widget.initialSchema != null) {
-      final storage = await ref.read(widgetStorageServiceProvider.future);
-      if (!mounted) return;
-      final isMarketplace = await storage.isMarketplaceWidget(_schema.id);
-      if (!mounted) return;
-      if (isMarketplace) {
-        safeSetState(() => _isMarketplaceWidget = true);
-      }
-    }
   }
 
   WidgetSchema _createDefaultSchema() {
@@ -217,7 +202,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   }
 
   Widget _buildFullscreenCanvas() {
-    // Render widget at ACTUAL size it will appear in marketplace/dashboard
+    // Render widget at the ACTUAL size it will appear on the dashboard
     // Full width with height based on size setting
     final previewHeight = _getPreviewHeight();
 
@@ -236,7 +221,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                     final isHovering = candidateData.isNotEmpty;
 
                     return Container(
-                      // Full width like marketplace cards
+                      // Full width like dashboard cards
                       width: double.infinity,
                       height: previewHeight,
                       decoration: BoxDecoration(
@@ -1206,7 +1191,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   }
 
   Widget _buildCanvas() {
-    // Render widget at ACTUAL size it will appear in marketplace/dashboard
+    // Render widget at the ACTUAL size it will appear on the dashboard
     final previewHeight = _getPreviewHeight();
 
     return Container(
@@ -1242,12 +1227,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
                     ),
                   ),
                 ),
-                // Size selector (hidden for marketplace widgets)
-                if (!_isMarketplaceWidget) _buildSizeSelector(),
+                _buildSizeSelector(),
               ],
             ),
           ),
-          // Canvas area - render at actual marketplace size
+          // Canvas area - render at actual dashboard size
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -1322,9 +1306,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
     );
   }
 
-  /// Returns the ACTUAL height at which widgets render in marketplace/dashboard
+  /// Returns the ACTUAL height at which widgets render on the dashboard
   /// This MUST match the heights used in:
-  /// - widget_marketplace_screen.dart (_MarketplaceWidgetCard)
   /// - widget_builder_screen.dart (_buildWidgetCard)
   /// - dashboard_screen.dart
   double _getPreviewHeight() {
@@ -1333,9 +1316,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
     }
     switch (_schema.size) {
       case CustomWidgetSize.medium:
-        return 120.0; // Matches marketplace preview height
+        return 120.0; // Matches dashboard preview height
       case CustomWidgetSize.large:
-        return 180.0; // Matches marketplace preview height
+        return 180.0; // Matches dashboard preview height
       case CustomWidgetSize.custom:
         return _schema.customHeight ?? 120.0;
     }

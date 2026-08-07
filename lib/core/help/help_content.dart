@@ -687,46 +687,6 @@ class HelpContent {
   );
 
   // ============================================================================
-  // WIDGET MARKETPLACE HELP
-  // ============================================================================
-
-  static final HelpTopic marketplaceOverview = HelpTopic(
-    id: 'marketplace_overview',
-    title: 'Widget Marketplace',
-    description: 'Discover widgets made by the community',
-    icon: Icons.store,
-    category: catSettings,
-    priority: 11,
-    steps: [
-      HelpStep(
-        id: 'marketplace_intro',
-        bubbleText:
-            "Welcome to the **Marketplace**! Browse widgets created by other mesh enthusiasts around the world!",
-        icoMood: MeshBrainMood.excited,
-        canGoBack: false,
-      ),
-      HelpStep(
-        id: 'marketplace_browse',
-        bubbleText:
-            "Browse by **category** - find status displays, charts, gauges, or creative designs. Tap any widget to preview it!",
-        icoMood: MeshBrainMood.speaking,
-      ),
-      HelpStep(
-        id: 'marketplace_install',
-        bubbleText:
-            "Found one you like? **Tap install** and it's added to your collection. Use it on your dashboard right away!",
-        icoMood: MeshBrainMood.approving,
-      ),
-      HelpStep(
-        id: 'marketplace_share',
-        bubbleText:
-            "Made something cool? **Share your widgets** to the marketplace and help the community!",
-        icoMood: MeshBrainMood.playful,
-      ),
-    ],
-  );
-
-  // ============================================================================
   // SIGNALS HELP
   // ============================================================================
 
@@ -1160,40 +1120,6 @@ class HelpContent {
         id: 'timeline_tap',
         bubbleText:
             "**Tap any event** to see full details. Great for debugging or understanding what's happening on your network!",
-        icoMood: MeshBrainMood.approving,
-      ),
-    ],
-  );
-
-  // ============================================================================
-  // DEVICE SHOP HELP
-  // ============================================================================
-
-  static final HelpTopic deviceShopOverview = HelpTopic(
-    id: 'device_shop_overview',
-    title: 'Device Shop',
-    description: 'Browse Meshtastic hardware',
-    icon: Icons.shopping_bag,
-    category: catDevice,
-    priority: 17,
-    steps: [
-      HelpStep(
-        id: 'shop_intro',
-        bubbleText:
-            "Welcome to the **Device Shop**! Browse Meshtastic-compatible radios and accessories.",
-        icoMood: MeshBrainMood.speaking,
-        canGoBack: false,
-      ),
-      HelpStep(
-        id: 'shop_compare',
-        bubbleText:
-            "**Compare devices** by range, battery, and features. I've rated each one to help you choose!",
-        icoMood: MeshBrainMood.curious,
-      ),
-      HelpStep(
-        id: 'shop_links',
-        bubbleText:
-            "Tap **Buy** to visit trusted vendors. Prices and availability shown are from real stores!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -2512,7 +2438,6 @@ class HelpContent {
     signalMetrics,
     dashboardOverview,
     widgetBuilderOverview,
-    marketplaceOverview,
     signalsOverview,
     signalCreation,
     signalDetail,
@@ -2522,7 +2447,6 @@ class HelpContent {
     settingsOverview,
     profileOverview,
     timelineOverview,
-    deviceShopOverview,
     offlineMapsOverview,
     radioConfigOverview,
     nodeDexOverview,
@@ -2590,7 +2514,6 @@ class HelpContent {
         'automations_overview' => l10n.helpAutomationsOverviewTitle,
         'dashboard_overview' => l10n.helpDashboardOverviewTitle,
         'widget_builder_overview' => l10n.helpWidgetBuilderOverviewTitle,
-        'marketplace_overview' => l10n.helpMarketplaceOverviewTitle,
         'signals_overview' => l10n.helpSignalsOverviewTitle,
         'signal_creation' => l10n.helpSignalCreationTitle,
         'signal_detail' => l10n.helpSignalDetailTitle,
@@ -2600,7 +2523,6 @@ class HelpContent {
         'settings_overview' => l10n.helpSettingsOverviewTitle,
         'profile_overview' => l10n.helpProfileOverviewTitle,
         'timeline_overview' => l10n.helpTimelineOverviewTitle,
-        'device_shop_overview' => l10n.helpDeviceShopOverviewTitle,
         'offline_maps_overview' => l10n.helpOfflineMapsOverviewTitle,
         'radio_config_overview' => l10n.helpRadioConfigOverviewTitle,
         'presence_overview' => l10n.helpPresenceOverviewTitle,
@@ -2641,7 +2563,6 @@ class HelpContent {
         'automations_overview' => l10n.helpAutomationsOverviewDescription,
         'dashboard_overview' => l10n.helpDashboardOverviewDescription,
         'widget_builder_overview' => l10n.helpWidgetBuilderOverviewDescription,
-        'marketplace_overview' => l10n.helpMarketplaceOverviewDescription,
         'signals_overview' => l10n.helpSignalsOverviewDescription,
         'signal_creation' => l10n.helpSignalCreationDescription,
         'signal_detail' => l10n.helpSignalDetailDescription,
@@ -2651,7 +2572,6 @@ class HelpContent {
         'settings_overview' => l10n.helpSettingsOverviewDescription,
         'profile_overview' => l10n.helpProfileOverviewDescription,
         'timeline_overview' => l10n.helpTimelineOverviewDescription,
-        'device_shop_overview' => l10n.helpDeviceShopOverviewDescription,
         'offline_maps_overview' => l10n.helpOfflineMapsOverviewDescription,
         'radio_config_overview' => l10n.helpRadioConfigOverviewDescription,
         'presence_overview' => l10n.helpPresenceOverviewDescription,
@@ -2744,10 +2664,6 @@ class HelpContent {
     'builder_templates' => l10n.helpBuilderTemplatesBubble,
     'builder_bindings' => l10n.helpBuilderBindingsBubble,
     'builder_preview' => l10n.helpBuilderPreviewBubble,
-    'marketplace_intro' => l10n.helpMarketplaceIntroBubble,
-    'marketplace_browse' => l10n.helpMarketplaceBrowseBubble,
-    'marketplace_install' => l10n.helpMarketplaceInstallBubble,
-    'marketplace_share' => l10n.helpMarketplaceShareBubble,
     'signals_intro' => l10n.helpSignalsIntroBubble,
     'signals_create' => l10n.helpSignalsCreateBubble,
     'signals_proximity' => l10n.helpSignalsProximityBubble,
@@ -2793,9 +2709,6 @@ class HelpContent {
     'timeline_intro' => l10n.helpTimelineIntroBubble,
     'timeline_filter' => l10n.helpTimelineFilterBubble,
     'timeline_tap' => l10n.helpTimelineTapBubble,
-    'shop_intro' => l10n.helpShopIntroBubble,
-    'shop_compare' => l10n.helpShopCompareBubble,
-    'shop_links' => l10n.helpShopLinksBubble,
     'offline_intro' => l10n.helpOfflineIntroBubble,
     'offline_download' => l10n.helpOfflineDownloadBubble,
     'offline_manage' => l10n.helpOfflineManageBubble,

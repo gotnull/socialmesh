@@ -130,9 +130,6 @@ import 'features/sip/sip_hub_screen.dart';
 import 'features/sip/sip_dm_screen.dart';
 import 'providers/sip_providers.dart';
 import 'services/protocol/sip/sip_dm.dart';
-import 'features/widget_builder/marketplace/widget_marketplace_screen.dart';
-import 'features/widget_builder/marketplace/widget_marketplace_service.dart';
-import 'features/widget_builder/marketplace/marketplace_providers.dart';
 import 'services/user_presence_service.dart';
 import 'services/accessibility_preferences_service.dart';
 import 'services/channel_crypto_service.dart';
@@ -2298,15 +2295,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
               );
             }
           }
-          if (settings.name == '/widget-detail') {
-            final args = settings.arguments as Map<String, dynamic>?;
-            final widgetId = args?['widgetId'] as String?;
-            if (widgetId != null) {
-              return MaterialPageRoute(
-                builder: (context) => _WidgetDetailLoader(widgetId: widgetId),
-              );
-            }
-          }
           if (settings.name == '/automation-import') {
             final args = settings.arguments as Map<String, dynamic>?;
             return MaterialPageRoute(
@@ -2826,180 +2814,6 @@ class _ChannelInviteRedeemerState extends ConsumerState<_ChannelInviteRedeemer>
           );
         },
       ),
-    );
-  }
-}
-
-/// Loader widget that fetches widget data from marketplace or shared_widgets collection
-/// and navigates to appropriate screen.
-///
-/// Tries marketplace API first, then falls back to shared_widgets Firestore collection.
-class _WidgetDetailLoader extends ConsumerStatefulWidget {
-  final String widgetId;
-
-  const _WidgetDetailLoader({required this.widgetId});
-
-  @override
-  ConsumerState<_WidgetDetailLoader> createState() =>
-      _WidgetDetailLoaderState();
-}
-
-class _WidgetDetailLoaderState extends ConsumerState<_WidgetDetailLoader>
-    with LifecycleSafeMixin<_WidgetDetailLoader> {
-  bool _isLoading = true;
-  String? _error;
-  MarketplaceWidget? _marketplaceWidget;
-  bool _isSharedWidget = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadWidget();
-  }
-
-  Future<void> _loadWidget() async {
-    AppLogging.widgets(
-      '[WidgetDetailLoader] Loading widget: ${widget.widgetId}',
-    );
-
-    try {
-      // First try marketplace API
-      final service = ref.read(marketplaceServiceProvider);
-      try {
-        final marketplaceWidget = await service.getWidget(widget.widgetId);
-        AppLogging.widgets(
-          '[WidgetDetailLoader] Found in marketplace: ${marketplaceWidget.name}',
-        );
-        if (mounted) {
-          setState(() {
-            _marketplaceWidget = marketplaceWidget;
-            _isLoading = false;
-          });
-        }
-        return;
-      } catch (e) {
-        AppLogging.widgets(
-          '[WidgetDetailLoader] Not in marketplace, trying shared_widgets: $e',
-        );
-      }
-
-      // Fall back to shared_widgets collection
-      final doc = await FirebaseFirestore.instance
-          .collection('shared_widgets')
-          .doc(widget.widgetId)
-          .get();
-
-      if (doc.exists) {
-        AppLogging.widgets(
-          '[WidgetDetailLoader] Found in shared_widgets collection',
-        );
-        if (mounted) {
-          setState(() {
-            _isSharedWidget = true;
-            _isLoading = false;
-          });
-        }
-        return;
-      }
-
-      // Widget not found anywhere
-      AppLogging.widgets(
-        '[WidgetDetailLoader] Widget not found in marketplace or shared_widgets',
-      );
-      if (mounted) {
-        setState(() {
-          _error = 'widget_not_found';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      AppLogging.widgets('[WidgetDetailLoader] Error loading widget: $e');
-      if (mounted) {
-        setState(() {
-          _error = '$e';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: Text(context.l10n.deepLinkLoadingWidget)),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_error != null) {
-      final errorText = _error == 'widget_not_found'
-          ? context.l10n.deepLinkWidgetNotFound
-          : context.l10n.deepLinkErrorLoadingWidget(_error!);
-      return Scaffold(
-        appBar: AppBar(title: Text(context.l10n.deepLinkLoadingWidget)),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 48,
-                color: AppTheme.errorRed,
-              ),
-              const SizedBox(height: AppTheme.spacing16),
-              Text(errorText),
-              const SizedBox(height: AppTheme.spacing16),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(context.l10n.commonGoBack),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // If it's a shared widget, redirect to import screen
-    if (_isSharedWidget) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final navigator = navigatorKey.currentState;
-        if (navigator == null) return;
-        navigator.pushReplacement(
-          MaterialPageRoute(
-            builder: (context) =>
-                WidgetImportScreen(firestoreId: widget.widgetId),
-          ),
-        );
-      });
-      return Scaffold(
-        appBar: AppBar(title: Text(context.l10n.deepLinkLoadingWidget)),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // If it's a marketplace widget, redirect to details screen
-    if (_marketplaceWidget != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final navigator = navigatorKey.currentState;
-        if (navigator == null) return;
-        navigator.pushReplacement(
-          MaterialPageRoute(
-            builder: (context) =>
-                WidgetDetailsScreen(marketplaceWidget: _marketplaceWidget!),
-          ),
-        );
-      });
-      return Scaffold(
-        appBar: AppBar(title: Text(context.l10n.deepLinkLoadingWidget)),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // Shouldn't reach here
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.deepLinkLoadingWidget)),
-      body: Center(child: Text(context.l10n.deepLinkSomethingWentWrong)),
     );
   }
 }

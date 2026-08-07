@@ -137,7 +137,7 @@ class BindingRegistry {
       maxValue: 15,
       defaultFormat: '{value} dB',
     ),
-    // Alias for node.snr (used by some marketplace widgets)
+    // Alias for node.snr (used by some shared widgets)
     BindingDefinition(
       path: 'device.snr',
       label: 'SNR',
@@ -161,7 +161,7 @@ class BindingRegistry {
       maxValue: 0,
       defaultFormat: '{value} dBm',
     ),
-    // Alias for node.rssi (used by some marketplace widgets)
+    // Alias for node.rssi (used by some shared widgets)
     BindingDefinition(
       path: 'device.rssi',
       label: 'RSSI', // lint-allow: hardcoded-string
@@ -298,7 +298,7 @@ class BindingRegistry {
       unit: 'hPa',
       defaultFormat: '{value} hPa',
     ),
-    // Alias for node.barometricPressure (used by some marketplace widgets)
+    // Alias for node.barometricPressure (used by some shared widgets)
     BindingDefinition(
       path: 'node.pressure',
       label: 'Pressure',
@@ -1609,17 +1609,16 @@ class DataBindingEngine {
     final diff = now.difference(dt);
 
     if (diff.inSeconds < 60) {
-      return _l10n?.widgetBuilderMarketplaceJustNow ??
+      return _l10n?.widgetBuilderJustNow ??
           'Just now'; // lint-allow: hardcoded-string
     } else if (diff.inMinutes < 60) {
-      return _l10n?.widgetBuilderMarketplaceMinutesAgo(diff.inMinutes) ??
+      return _l10n?.widgetBuilderMinutesAgo(diff.inMinutes) ??
           '${diff.inMinutes}m ago';
     } else if (diff.inHours < 24) {
-      return _l10n?.widgetBuilderMarketplaceHoursAgo(diff.inHours) ??
+      return _l10n?.widgetBuilderHoursAgo(diff.inHours) ??
           '${diff.inHours}h ago';
     } else {
-      return _l10n?.widgetBuilderMarketplaceDaysAgo(diff.inDays) ??
-          '${diff.inDays}d ago';
+      return _l10n?.widgetBuilderDaysAgo(diff.inDays) ?? '${diff.inDays}d ago';
     }
   }
 }

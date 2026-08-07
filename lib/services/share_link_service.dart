@@ -144,7 +144,7 @@ class ShareLinkService {
     );
   }
 
-  /// Share a widget from the marketplace with rich preview
+  /// Share a widget with rich preview
   Future<void> shareWidget({
     required String widgetId,
     required String widgetName,

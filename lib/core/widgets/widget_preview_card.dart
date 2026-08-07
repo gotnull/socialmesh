@@ -9,7 +9,7 @@ import '../../features/widget_builder/renderer/widget_renderer.dart';
 import '../../providers/app_providers.dart';
 import '../theme.dart';
 
-/// A reusable widget preview card used across Marketplace, My Widgets, and other places.
+/// A reusable widget preview card used across My Widgets and other places.
 /// Shows a widget rendered from its schema with optional metadata below.
 class WidgetPreviewCard extends ConsumerWidget {
   /// The widget schema to render
@@ -247,67 +247,5 @@ class WidgetPreviewCardLoading extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// Stats widget for marketplace items (rating + installs + favorite)
-class WidgetMarketplaceStats extends StatelessWidget {
-  final double rating;
-  final int installs;
-  final bool isFavorited;
-  final VoidCallback? onFavoriteToggle;
-
-  const WidgetMarketplaceStats({
-    super.key,
-    required this.rating,
-    required this.installs,
-    this.isFavorited = false,
-    this.onFavoriteToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.star, size: 14, color: AppTheme.warningYellow),
-        const SizedBox(width: AppTheme.spacing4),
-        Text(
-          rating.toStringAsFixed(1),
-          style: TextStyle(
-            color: context.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(width: AppTheme.spacing12),
-        Icon(Icons.download_done, size: 14, color: context.textTertiary),
-        const SizedBox(width: AppTheme.spacing4),
-        Text(
-          _formatInstalls(installs),
-          style: TextStyle(color: context.textSecondary, fontSize: 12),
-        ),
-        if (onFavoriteToggle != null) ...[
-          const SizedBox(width: AppTheme.spacing12),
-          GestureDetector(
-            onTap: onFavoriteToggle,
-            child: Icon(
-              isFavorited ? Icons.favorite : Icons.favorite_border,
-              size: 18,
-              color: isFavorited ? AppTheme.errorRed : context.textTertiary,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  String _formatInstalls(int count) {
-    if (count >= 1000000) {
-      return '${(count / 1000000).toStringAsFixed(1)}M';
-    } else if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(1)}K';
-    }
-    return count.toString();
   }
 }

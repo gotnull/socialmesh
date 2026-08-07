@@ -10,9 +10,6 @@ import '../services/widget_sqlite_store.dart';
 
 class WidgetStorageService {
   static const _storageKey = 'custom_widgets';
-  static const _installedKey = 'installed_widgets';
-  // Maps schema ID (UUID) -> marketplace ID (Firebase doc ID)
-  static const _schemaToMarketplaceKey = 'schema_to_marketplace_map';
   static const _migratedKey = 'widgets_migrated_to_sqlite';
 
   SharedPreferences? _prefs;
@@ -115,8 +112,6 @@ class WidgetStorageService {
     }
 
     // Clear the old SharedPreferences key for widgets data
-    // (keep _installedKey and _schemaToMarketplaceKey — those are
-    // marketplace tracking, not widget schema storage)
     await _prefs?.remove(_storageKey);
     await _prefs?.setBool(_migratedKey, true);
 
@@ -283,8 +278,7 @@ class WidgetStorageService {
   }
 
   /// Delete a widget
-  /// Returns the marketplace ID if this was a marketplace widget (for profile cleanup)
-  Future<String?> deleteWidget(String id) async {
+  Future<void> deleteWidget(String id) async {
     AppLogging.widgets('deleteWidget entry id=$id');
     AppLogging.sync(
       '[WidgetStorage] deleteWidget() ENTER — '
@@ -301,43 +295,8 @@ class WidgetStorageService {
         await _saveWidgetsList(widgets);
       }
 
-      // Look up marketplace ID from schema ID mapping
-      final marketplaceId = await getMarketplaceIdForSchema(id);
-      AppLogging.widgets(
-        '[WidgetStorage] deleteWidget: schemaId=$id, marketplaceId=$marketplaceId',
-      );
-
-      // Remove from marketplace installed list using marketplace ID
-      final installed = _preferences.getStringList(_installedKey) ?? [];
-      final idToRemove = marketplaceId ?? id;
-      if (installed.contains(idToRemove)) {
-        installed.remove(idToRemove);
-        await _preferences.setStringList(_installedKey, installed);
-        AppLogging.widgets(
-          '[WidgetStorage] Removed from marketplace installed list: $idToRemove',
-        );
-        AppLogging.widgets(
-          'Removed from marketplace installed list: $idToRemove',
-        );
-      }
-
-      // Also remove schema ID if it was stored directly (user-created widgets)
-      if (installed.contains(id) && id != idToRemove) {
-        installed.remove(id);
-        await _preferences.setStringList(_installedKey, installed);
-      }
-
-      // Remove from schema->marketplace mapping
-      if (marketplaceId != null) {
-        await _removeSchemaToMarketplaceMapping(id);
-      }
-
       AppLogging.widgets('Deleted widget: $id');
-      AppLogging.sync(
-        '[WidgetStorage] deleteWidget() EXIT — '
-        'id=$id deleted, marketplaceId=$marketplaceId',
-      );
-      return marketplaceId; // Return for profile cleanup
+      AppLogging.sync('[WidgetStorage] deleteWidget() EXIT — id=$id deleted');
     } catch (e) {
       AppLogging.widgets('Error deleting widget: $e');
       AppLogging.sync('[WidgetStorage] deleteWidget() ERROR: $e');
@@ -402,102 +361,6 @@ class WidgetStorageService {
     }
   }
 
-  /// Save widgets installed from marketplace
-  /// [marketplaceId] is the Firebase document ID from the marketplace (optional, defaults to widget.id)
-  Future<void> installMarketplaceWidget(
-    WidgetSchema widget, {
-    String? marketplaceId,
-  }) async {
-    AppLogging.widgets(
-      'installMarketplaceWidget entry '
-      'id=${widget.id} name="${widget.name}" marketplaceId=$marketplaceId',
-    );
-    try {
-      // Save to regular storage
-      await saveWidget(widget);
-
-      // Track marketplace ID (Firebase doc ID) as installed
-      // This is the ID stored in user profile's installedWidgetIds
-      final idToTrack = marketplaceId ?? widget.id;
-      final installed = _preferences.getStringList(_installedKey) ?? [];
-      if (!installed.contains(idToTrack)) {
-        installed.add(idToTrack);
-        await _preferences.setStringList(_installedKey, installed);
-        AppLogging.widgets(
-          '[WidgetStorage] Tracking marketplace ID: $idToTrack for widget: ${widget.name}',
-        );
-      }
-
-      // Store schema ID -> marketplace ID mapping for deletion lookup
-      if (marketplaceId != null && marketplaceId != widget.id) {
-        await _saveSchemaToMarketplaceMapping(widget.id, marketplaceId);
-        AppLogging.widgets(
-          '[WidgetStorage] Saved mapping: ${widget.id} -> $marketplaceId',
-        );
-      }
-
-      AppLogging.widgets(
-        'Installed marketplace widget: ${widget.name} (marketplace ID: $idToTrack)',
-      );
-    } catch (e) {
-      AppLogging.widgets('⚠️ Error installing marketplace widget: $e');
-      rethrow;
-    }
-  }
-
-  /// Check if a widget is from the marketplace
-  Future<bool> isMarketplaceWidget(String id) async {
-    final installed = _preferences.getStringList(_installedKey) ?? [];
-    return installed.contains(id);
-  }
-
-  /// Get IDs of widgets installed from marketplace
-  Future<List<String>> getInstalledMarketplaceIds() async {
-    return _preferences.getStringList(_installedKey) ?? [];
-  }
-
-  /// Get marketplace ID for a schema ID (used during deletion)
-  Future<String?> getMarketplaceIdForSchema(String schemaId) async {
-    final mapJson = _preferences.getString(_schemaToMarketplaceKey);
-    if (mapJson == null || mapJson.isEmpty) return null;
-    try {
-      final map = jsonDecode(mapJson) as Map<String, dynamic>;
-      return map[schemaId] as String?;
-    } catch (e) {
-      AppLogging.widgets(
-        '[WidgetStorage] Error reading schema->marketplace map: $e',
-      );
-      return null;
-    }
-  }
-
-  /// Save schema ID -> marketplace ID mapping
-  Future<void> _saveSchemaToMarketplaceMapping(
-    String schemaId,
-    String marketplaceId,
-  ) async {
-    final mapJson = _preferences.getString(_schemaToMarketplaceKey);
-    Map<String, dynamic> map = {};
-    if (mapJson != null && mapJson.isNotEmpty) {
-      try {
-        map = jsonDecode(mapJson) as Map<String, dynamic>;
-      } catch (_) {}
-    }
-    map[schemaId] = marketplaceId;
-    await _preferences.setString(_schemaToMarketplaceKey, jsonEncode(map));
-  }
-
-  /// Remove schema ID from mapping
-  Future<void> _removeSchemaToMarketplaceMapping(String schemaId) async {
-    final mapJson = _preferences.getString(_schemaToMarketplaceKey);
-    if (mapJson == null || mapJson.isEmpty) return;
-    try {
-      final map = jsonDecode(mapJson) as Map<String, dynamic>;
-      map.remove(schemaId);
-      await _preferences.setString(_schemaToMarketplaceKey, jsonEncode(map));
-    } catch (_) {}
-  }
-
   Future<void> _saveWidgetsList(List<WidgetSchema> widgets) async {
     final json = jsonEncode(widgets.map((w) => w.toJson()).toList());
     await _preferences.setString(_storageKey, json);
@@ -509,8 +372,6 @@ class WidgetStorageService {
       await _sharedStore!.clearAll();
     }
     await _preferences.remove(_storageKey);
-    await _preferences.remove(_installedKey);
-    await _preferences.remove(_schemaToMarketplaceKey);
     AppLogging.widgets('Cleared all custom widgets');
   }
 }

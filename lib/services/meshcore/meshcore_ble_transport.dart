@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import '../../core/ble_system_devices.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../core/meshcore_constants.dart';
@@ -117,7 +118,7 @@ class MeshCoreBleTransport implements MeshTransport {
       );
 
       // Get or create BluetoothDevice
-      final systemDevices = await FlutterBluePlus.systemDevices([]);
+      final systemDevices = await meshSystemDevices();
       try {
         _device = systemDevices.firstWhere(
           (d) => d.remoteId.toString() == device.id,

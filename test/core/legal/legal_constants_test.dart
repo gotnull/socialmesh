@@ -140,16 +140,8 @@ void main() {
         );
       });
 
-      test('allAnchors has expected count of 17 sections', () {
-        expect(LegalConstants.allAnchors.length, equals(17));
-      });
-
-      test('allAnchors includes marketplace section', () {
-        expect(
-          LegalConstants.allAnchors,
-          contains(LegalConstants.anchorMarketplace),
-        );
-        expect(LegalConstants.anchorMarketplace, equals('marketplace'));
+      test('allAnchors has expected count of 16 sections', () {
+        expect(LegalConstants.allAnchors.length, equals(16));
       });
     });
 

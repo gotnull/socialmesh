@@ -55,7 +55,6 @@ import '../settings/subscription_screen.dart';
 import '../settings/translation_settings_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
-import '../device_shop/screens/device_shop_screen.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
@@ -1433,15 +1432,6 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
       sectionHeader: l10n.navigationSectionTools,
       iconColor: AccentColors.green,
       requiresConnection: false,
-    ),
-    DrawerMenuItem(
-      id: 'device_shop',
-      icon: Icons.storefront_outlined,
-      label: l10n.deviceShopTitle,
-      screen: const DeviceShopScreen(),
-      iconColor: AccentColors.cyan,
-      requiresConnection: false,
-      whatsNewBadgeKey: 'device_shop',
     ),
     if (AppFeatureFlags.isFileTransferEnabled)
       DrawerMenuItem(

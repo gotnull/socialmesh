@@ -20,6 +20,7 @@ import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/ble_system_devices.dart';
 import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
@@ -1515,7 +1516,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     // 2. Check system devices for stale connections to our target
     try {
-      final systemDevices = await FlutterBluePlus.systemDevices([]);
+      final systemDevices = await meshSystemDevices();
       for (final device in systemDevices) {
         if (device.remoteId.toString() == targetDeviceId) {
           AppLogging.connection(
@@ -2121,7 +2122,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       // Check system devices first (iOS may know about the peripheral)
       try {
-        final systemDevices = await FlutterBluePlus.systemDevices([]);
+        final systemDevices = await meshSystemDevices();
         AppLogging.connection(
           '🔌 MeshCore background connect: Found ${systemDevices.length} system devices',
         );
@@ -3041,7 +3042,6 @@ enum FeatureId {
   about,
   account,
   profileView,
-  deviceShop,
   subscription,
   themeSettings,
 
@@ -3089,7 +3089,6 @@ const Map<FeatureId, FeatureRequirement> _featureRegistry = {
   FeatureId.about: FeatureRequirement.none,
   FeatureId.account: FeatureRequirement.none,
   FeatureId.profileView: FeatureRequirement.none,
-  FeatureId.deviceShop: FeatureRequirement.none,
   FeatureId.subscription: FeatureRequirement.none,
   FeatureId.themeSettings: FeatureRequirement.none,
 

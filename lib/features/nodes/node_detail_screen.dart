@@ -2289,6 +2289,7 @@ class _BadgePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final foreground = filled ? Colors.white : context.readableAccent(color);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -2299,7 +2300,7 @@ class _BadgePill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 12, color: filled ? Colors.white : color),
+            Icon(icon, size: 12, color: foreground),
             const SizedBox(width: AppTheme.spacing4),
           ],
           Text(
@@ -2307,7 +2308,7 @@ class _BadgePill extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
-              color: filled ? Colors.white : color,
+              color: foreground,
               letterSpacing: 0.3,
             ),
           ),
@@ -2333,6 +2334,7 @@ class _QuickStatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final foreground = context.readableAccent(color);
     final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -2343,14 +2345,14 @@ class _QuickStatChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: color),
+          Icon(icon, size: 13, color: foreground),
           const SizedBox(width: AppTheme.spacing5),
           Text(
             value,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: color,
+              color: foreground,
             ),
           ),
         ],

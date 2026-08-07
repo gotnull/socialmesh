@@ -1034,11 +1034,12 @@ class _UniversalQrScannerScreenState
           arguments: {'base64Data': parsed.widgetBase64Data},
         );
       } else {
-        // Handle marketplace widget ID
+        // Bare widget ID (legacy QR codes) - treat as a shared-widget
+        // Firestore ID
         Navigator.pushNamed(
           context,
-          '/widget-detail',
-          arguments: {'widgetId': parsed.widgetId},
+          '/widget-import',
+          arguments: {'firestoreId': parsed.widgetId},
         );
       }
     }

@@ -1396,6 +1396,32 @@ extension ThemeAwareColors on BuildContext {
   Color get textTertiary =>
       Theme.of(this).extension<AppTextColors>()?.tertiary ??
       (isDarkMode ? AppTheme.textTertiary : AppTheme.textTertiaryLight);
+
+  /// Legibility guard for tinted chip/badge foregrounds. Bright status
+  /// colours (warning yellow, success green) are unreadable as text on the
+  /// low-alpha tint of themselves that pill badges use in light mode. In
+  /// light mode this darkens the colour along its own hue until it clears
+  /// roughly 4.5:1 against a white surface; dark mode passes through
+  /// unchanged. Use for text/icon/border foregrounds on tinted pills, not
+  /// for filled surfaces.
+  Color readableAccent(Color color) {
+    if (isDarkMode) return color;
+    // Relative luminance ceiling giving ~4.5:1 contrast against white.
+    const maxLuminance = 0.18;
+    if (color.computeLuminance() <= maxLuminance) return color;
+    final hsl = HSLColor.fromColor(color);
+    var lo = 0.0;
+    var hi = hsl.lightness;
+    for (var i = 0; i < 8; i++) {
+      final mid = (lo + hi) / 2;
+      if (hsl.withLightness(mid).toColor().computeLuminance() > maxLuminance) {
+        hi = mid;
+      } else {
+        lo = mid;
+      }
+    }
+    return hsl.withLightness(lo).toColor();
+  }
 }
 
 /// Semantic color constants for intentional white usage on colored backgrounds.

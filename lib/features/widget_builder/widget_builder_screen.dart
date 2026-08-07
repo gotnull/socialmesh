@@ -17,17 +17,12 @@ import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'widget_sync_providers.dart';
 import 'wizard/widget_wizard_screen.dart';
-import 'marketplace/widget_marketplace_screen.dart';
-import 'marketplace/widget_marketplace_service.dart';
-import 'marketplace/marketplace_providers.dart';
 import 'widget_share_utils.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/widget_preview_card.dart';
-import '../../providers/auth_providers.dart';
-import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
@@ -44,124 +39,12 @@ class WidgetBuilderScreen extends ConsumerStatefulWidget {
 
 class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     with LifecycleSafeMixin<WidgetBuilderScreen> {
-  bool _didCheckProfileRestore = false;
-
   Future<void> _refreshList() =>
       ref.read(widgetBuilderListProvider.notifier).refresh();
-
-  /// Compare the user profile's installed marketplace IDs against what we
-  /// actually have locally and re-install anything missing. Fires once per
-  /// screen mount, the first time the list provider produces data.
-  Future<void> _checkAndRestoreFromProfile(Set<String> marketplaceIds) async {
-    AppLogging.widgets(
-      '_checkAndRestoreFromProfile entry '
-      '(local marketplace=$marketplaceIds)',
-    );
-    final profile = ref.read(userProfileProvider).value;
-    if (profile == null || profile.installedWidgetIds.isEmpty) {
-      AppLogging.widgets(
-        '_checkAndRestoreFromProfile SKIP: profile null '
-        'or installedWidgetIds empty',
-      );
-      return;
-    }
-    final missingIds = profile.installedWidgetIds
-        .where((id) => !marketplaceIds.contains(id))
-        .toList();
-    AppLogging.widgets(
-      '_checkAndRestoreFromProfile '
-      'profile.installedWidgetIds=${profile.installedWidgetIds} '
-      'missing=$missingIds',
-    );
-    AppLogging.widgets(
-      '[WidgetBuilder] Profile installedWidgetIds: ${profile.installedWidgetIds}',
-    );
-    AppLogging.widgets(
-      '[WidgetBuilder] Missing IDs (in profile but not local): $missingIds',
-    );
-    if (missingIds.isEmpty) return;
-
-    AppLogging.widgets(
-      '_checkAndRestoreFromProfile '
-      'restoring ${missingIds.length} widgets from cloud — '
-      'this WILL cause a list change',
-    );
-    AppLogging.widgets(
-      '[WidgetBuilder] Found ${missingIds.length} widgets to restore from cloud',
-    );
-    final storageService = await ref.read(widgetStorageServiceProvider.future);
-    if (!mounted) return;
-    await _restoreMissingWidgets(missingIds, storageService);
-    if (!mounted) return;
-    await _refreshList();
-  }
-
-  /// Restore widgets from marketplace that are in profile but not local storage
-  Future<void> _restoreMissingWidgets(
-    List<String> widgetIds,
-    WidgetStorageService storageService,
-  ) async {
-    final service = ref.read(marketplaceServiceProvider);
-    final failedIds = <String>[];
-
-    for (final marketplaceId in widgetIds) {
-      try {
-        AppLogging.widgets(
-          '[WidgetBuilder] Restoring widget with marketplace ID: $marketplaceId',
-        );
-        // Use previewWidget to NOT increment install count (user already owns this)
-        final schema = await service.previewWidget(marketplaceId);
-        // Pass the marketplace ID so it's tracked correctly
-        await storageService.installMarketplaceWidget(
-          schema,
-          marketplaceId: marketplaceId,
-        );
-        AppLogging.widgets(
-          '[WidgetBuilder] Restored widget: ${schema.name} (marketplace ID: $marketplaceId)',
-        );
-      } catch (e) {
-        AppLogging.widgets(
-          '[WidgetBuilder] Failed to restore widget $marketplaceId: $e - removing from profile',
-        );
-        failedIds.add(marketplaceId);
-      }
-    }
-
-    // Clean up any widgets that couldn't be restored (deleted from marketplace, etc.)
-    for (final failedId in failedIds) {
-      try {
-        await ref
-            .read(userProfileProvider.notifier)
-            .removeInstalledWidget(failedId);
-        AppLogging.widgets(
-          '[WidgetBuilder] Removed unrestorable widget $failedId from profile',
-        );
-      } catch (e) {
-        AppLogging.widgets(
-          '[WidgetBuilder] Failed to remove $failedId from profile: $e',
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final listAsync = ref.watch(widgetBuilderListProvider);
-
-    // One-shot: on the first successful load, check the user profile for
-    // marketplace widgets that need restoring from cloud. The notifier
-    // refreshes itself on sync arrivals, so this only needs to fire once
-    // per screen mount.
-    ref.listen<AsyncValue<WidgetBuilderListState>>(widgetBuilderListProvider, (
-      prev,
-      next,
-    ) {
-      if (_didCheckProfileRestore) return;
-      final data = next.asData?.value;
-      if (data == null) return;
-      _didCheckProfileRestore = true;
-      _checkAndRestoreFromProfile(data.marketplaceIds);
-    });
 
     return HelpTourController(
       topicId: 'widget_builder_overview',
@@ -178,8 +61,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
           AppBarOverflowMenu<String>(
             onSelected: (value) {
               switch (value) {
-                case 'marketplace':
-                  _openMarketplace();
                 case 'help':
                   ref
                       .read(helpProvider.notifier)
@@ -187,14 +68,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'marketplace',
-                child: ListTile(
-                  leading: Icon(Icons.store, color: context.accentColor),
-                  title: Text(context.l10n.widgetBuilderMarketplace),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
               PopupMenuItem(
                 value: 'help',
                 child: ListTile(
@@ -215,26 +88,23 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             AppLogging.widgets('screen RENDER -> ERROR ($e)');
             return _buildDetailedEmptyState();
           },
-          data: (data) {
-            if (data.widgets.isEmpty) {
+          data: (widgets) {
+            if (widgets.isEmpty) {
               AppLogging.widgets('screen RENDER -> EMPTY (Quick Start)');
             } else {
               AppLogging.widgets(
                 'screen RENDER -> LIST '
-                '(count=${data.widgets.length})',
+                '(count=${widgets.length})',
               );
             }
-            return _buildWidgetList(data.widgets, data.marketplaceIds);
+            return _buildWidgetList(widgets);
           },
         ),
       ),
     );
   }
 
-  Widget _buildWidgetList(
-    List<WidgetSchema> widgets,
-    Set<String> marketplaceIds,
-  ) {
+  Widget _buildWidgetList(List<WidgetSchema> widgets) {
     if (widgets.isEmpty) {
       return _buildDetailedEmptyState();
     }
@@ -246,22 +116,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         itemCount: widgets.length,
         itemBuilder: (context, index) {
           final schema = widgets[index];
-          final isFromMarketplace = marketplaceIds.contains(schema.id);
-          return _buildWidgetCard(
-            schema,
-            isTemplate: false,
-            isFromMarketplace: isFromMarketplace,
-          );
+          return _buildWidgetCard(schema, isTemplate: false);
         },
       ),
     );
   }
 
-  Widget _buildWidgetCard(
-    WidgetSchema schema, {
-    required bool isTemplate,
-    bool isFromMarketplace = false,
-  }) {
+  Widget _buildWidgetCard(WidgetSchema schema, {required bool isTemplate}) {
     // Check if this widget is already on the dashboard
     final dashboardWidgets = ref.watch(dashboardWidgetsProvider);
     final isOnDashboard = dashboardWidgets.any(
@@ -272,9 +133,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       schema: schema,
       title: schema.name,
       subtitle: schema.description,
-      titleLeading: isFromMarketplace
-          ? Icon(Icons.store, size: 14, color: context.accentColor)
-          : null,
       onShare: isTemplate ? null : () => _shareWidget(schema),
       trailing: isTemplate
           ? TextButton(
@@ -346,24 +204,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                     ],
                   ),
                 ),
-                if (!isFromMarketplace)
-                  PopupMenuItem(
-                    value: 'submit_marketplace',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.upload_rounded,
-                          size: 18,
-                          color: context.accentColor,
-                        ),
-                        SizedBox(width: AppTheme.spacing8),
-                        Text(
-                          context.l10n.widgetBuilderSubmitToMarketplace,
-                          style: TextStyle(color: context.accentColor),
-                        ),
-                      ],
-                    ),
-                  ),
                 PopupMenuItem(
                   value: 'delete',
                   child: Row(
@@ -411,11 +251,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
           // Widget Types - Exploration path
           _buildWidgetTypesSection(hasWidgetsPack),
-
-          const SizedBox(height: AppTheme.spacing24),
-
-          // Marketplace CTA
-          _buildMarketplaceSection(),
 
           // Bottom padding
           SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
@@ -731,60 +566,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
           }).toList(),
         ),
       ],
-    );
-  }
-
-  /// Marketplace section
-  Widget _buildMarketplaceSection() {
-    return BouncyTap(
-      onTap: _openMarketplace,
-      child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacing16),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(AppTheme.radius16),
-          border: Border.all(color: context.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AccentColors.purple, AccentColors.blue],
-                ),
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-              ),
-              child: const Icon(Icons.store, size: 24, color: Colors.white),
-            ),
-            const SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.widgetBuilderBrowseMarketplace,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    context.l10n.widgetBuilderDiscoverCommunity,
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: context.textTertiary),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1161,9 +942,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         await _refreshList();
         AppLogging.widgets('[WidgetBuilder] Widget duplicated');
         break;
-      case 'submit_marketplace':
-        _submitToMarketplace(schema);
-        break;
       case 'delete':
         _confirmDelete(schema);
         break;
@@ -1216,7 +994,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     // Capture refs BEFORE showing dialog (before any await)
     final dashboardNotifier = ref.read(dashboardWidgetsProvider.notifier);
     final delStorage = ref.read(widgetStorageServiceProvider).asData?.value;
-    final profileNotifier = ref.read(userProfileProvider.notifier);
 
     AppBottomSheet.show(
       context: context,
@@ -1301,15 +1078,13 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                       dashboardNotifier.removeWidget(widgetToRemove.id);
                     }
 
-                    // Delete from local storage and get marketplace ID
+                    // Delete from local storage
                     AppLogging.sync(
                       '[WidgetBuilder] DELETE widget — id=$schemaId, name=$schemaName',
                     );
-                    final marketplaceId = await delStorage?.deleteWidget(
-                      schemaId,
-                    );
+                    await delStorage?.deleteWidget(schemaId);
                     AppLogging.widgets(
-                      '[WidgetBuilder] Deleted widget $schemaId, marketplaceId=$marketplaceId',
+                      '[WidgetBuilder] Deleted widget $schemaId',
                     );
                     AppLogging.sync(
                       '[WidgetBuilder] Widget deleted from storage, '
@@ -1330,18 +1105,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
                     if (!mounted) return;
 
-                    // Remove from user profile using marketplace ID (or schema ID as fallback)
-                    final idToRemoveFromProfile = marketplaceId ?? schemaId;
-                    await profileNotifier.removeInstalledWidget(
-                      idToRemoveFromProfile,
-                    );
-                    AppLogging.widgets(
-                      '[WidgetBuilder] Removed $idToRemoveFromProfile from profile',
-                    );
-
-                    if (!mounted) return;
-
-                    // Reconcile marketplace IDs with the final storage state.
+                    // Reconcile the list with the final storage state.
                     await _refreshList();
                     showGlobalSuccessSnackBar('Deleted "$schemaName"');
                   },
@@ -1356,352 +1120,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         ],
       ),
     );
-  }
-
-  void _openMarketplace() async {
-    await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (context) => const WidgetMarketplaceScreen()),
-    );
-    await _refreshList();
-  }
-
-  void _submitToMarketplace(WidgetSchema schema) async {
-    AppLogging.marketplace('═══════════════════════════════════════════════');
-    AppLogging.marketplace('📤 SUBMIT TO MARKETPLACE - START');
-    AppLogging.marketplace('═══════════════════════════════════════════════');
-    AppLogging.marketplace('Widget name: ${schema.name}');
-    AppLogging.marketplace('Widget ID: ${schema.id}');
-    AppLogging.marketplace('Widget size: ${schema.size}');
-    AppLogging.marketplace('Widget tags: ${schema.tags}');
-    AppLogging.marketplace('Widget description: ${schema.description}');
-
-    // Show confirmation dialog with submission requirements
-    AppLogging.marketplace('📋 Showing confirmation dialog...');
-    final confirmed = await AppBottomSheet.show<bool>(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.l10n.widgetBuilderSubmitTitle,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          Text(
-            'Submit "${schema.name}" for marketplace approval?', // lint-allow: hardcoded-string
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.textSecondary),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing12),
-            decoration: BoxDecoration(
-              color: context.background,
-              borderRadius: BorderRadius.circular(AppTheme.radius8),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: context.accentColor,
-                    ),
-                    SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      context.l10n.widgetBuilderReviewGuidelines,
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: AppTheme.spacing8),
-                Text(
-                  context.l10n.widgetBuilderReviewGuidelinesText,
-                  style: TextStyle(
-                    color: context.textTertiary,
-                    fontSize: 12,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing24),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: SemanticColors.divider),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
-                  child: Text(context.l10n.widgetBuilderSubmitCancel),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: context.accentColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
-                  child: Text(context.l10n.widgetBuilderSubmitButton),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !mounted) {
-      AppLogging.marketplace('❌ User cancelled or widget unmounted');
-      AppLogging.marketplace('   confirmed=$confirmed, mounted=$mounted');
-      return;
-    }
-
-    AppLogging.marketplace('✅ User confirmed submission');
-
-    // Show loading indicator
-    AppLogging.marketplace('⏳ Showing loading indicator...');
-    AppBottomSheet.show(
-      context: context,
-      isDismissible: false,
-      child: const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      AppLogging.marketplace('🔑 Getting auth service and token...');
-      final service = ref.read(marketplaceServiceProvider);
-      final authService = ref.read(authServiceProvider);
-      final token = await authService.getIdToken();
-
-      AppLogging.marketplace(
-        '   Token obtained: ${token != null ? "YES (${token.length} chars)" : "NO"}',
-      );
-
-      if (token == null) {
-        AppLogging.marketplace('❌ No auth token - user not signed in');
-        if (mounted) Navigator.pop(context);
-        if (mounted) {
-          showSignInRequiredSnackBar(
-            context,
-            context.l10n.widgetBuilderSignInToSubmit,
-          );
-        }
-        return;
-      }
-
-      // Check for duplicates first
-      AppLogging.marketplace('🔍 Checking for duplicates...');
-      AppLogging.marketplace('   Widget name: ${schema.name}');
-      final duplicateCheck = await service.checkDuplicate(schema, token);
-      AppLogging.marketplace('   Duplicate check result:');
-      AppLogging.marketplace('   - isDuplicate: ${duplicateCheck.isDuplicate}');
-      AppLogging.marketplace(
-        '   - duplicateName: ${duplicateCheck.duplicateName}',
-      );
-      AppLogging.marketplace(
-        '   - similarityScore: ${duplicateCheck.similarityScore}',
-      );
-
-      if (mounted) Navigator.pop(context); // Close loading
-
-      if (duplicateCheck.isDuplicate) {
-        AppLogging.marketplace(
-          '⚠️ Duplicate detected - showing warning dialog',
-        );
-        // Show duplicate warning - let user choose to submit anyway
-        if (mounted) {
-          final submitAnyway = await AppBottomSheet.show<bool>(
-            context: context,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      color: AppTheme.warningYellow,
-                      size: 24,
-                    ),
-                    SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      context.l10n.widgetBuilderSimilarWidgetFound,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.spacing16),
-                Text(
-                  context.l10n.widgetBuilderSimilarWidgetExists,
-                  style: TextStyle(color: context.textSecondary),
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  decoration: BoxDecoration(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        duplicateCheck.duplicateName ?? 'Unknown',
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (duplicateCheck.similarityScore != null) ...[
-                        const SizedBox(height: AppTheme.spacing4),
-                        Text(
-                          'Similarity: ${(duplicateCheck.similarityScore! * 100).toInt()}%', // lint-allow: hardcoded-string
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-                Text(
-                  context.l10n.widgetBuilderMakeUnique,
-                  style: TextStyle(color: context.textTertiary, fontSize: 13),
-                ),
-                const SizedBox(height: AppTheme.spacing24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: context.textTertiary),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius12,
-                            ),
-                          ),
-                        ),
-                        child: Text(context.l10n.widgetBuilderOk),
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: context.accentColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius12,
-                            ),
-                          ),
-                        ),
-                        child: Text(context.l10n.widgetBuilderSubmitAnyway),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-
-          if (submitAnyway != true || !mounted) {
-            AppLogging.marketplace(
-              '↩️ User chose not to submit after duplicate warning',
-            );
-            return;
-          }
-
-          AppLogging.marketplace(
-            '⚡ User chose to submit anyway despite duplicate warning',
-          );
-
-          // Show loading indicator for submission
-          AppBottomSheet.show(
-            context: context,
-            isDismissible: false,
-            child: const Center(child: CircularProgressIndicator()),
-          );
-        } else {
-          return;
-        }
-      }
-
-      // Submit to marketplace
-      AppLogging.marketplace('📤 Submitting widget to marketplace...');
-      AppLogging.marketplace('   Calling service.submitWidget()');
-      final result = await service.submitWidget(schema, token);
-      AppLogging.marketplace('✅ Widget submitted successfully!');
-      AppLogging.marketplace('   Result ID: ${result.id}');
-      AppLogging.marketplace('   Result status: ${result.status}');
-      AppLogging.marketplace('═══════════════════════════════════════════════');
-      AppLogging.marketplace('📤 SUBMIT TO MARKETPLACE - COMPLETE');
-      AppLogging.marketplace('═══════════════════════════════════════════════');
-
-      if (mounted) {
-        showSuccessSnackBar(
-          context,
-          context.l10n.widgetBuilderSubmittedForReview(schema.name),
-        );
-      }
-    } on MarketplaceDuplicateException catch (e) {
-      AppLogging.marketplace('❌ MarketplaceDuplicateException: ${e.message}');
-      AppLogging.marketplace('   duplicateName: ${e.duplicateName}');
-      if (mounted) {
-        showErrorSnackBar(
-          context,
-          context.l10n.widgetBuilderSimilarWidgetExistsError(
-            e.duplicateName ?? '',
-          ),
-        );
-      }
-    } on MarketplaceException catch (e) {
-      AppLogging.marketplace('❌ MarketplaceException: ${e.message}');
-      if (mounted) {
-        showErrorSnackBar(context, e.message);
-      }
-    } catch (e, stackTrace) {
-      AppLogging.marketplace('❌ Unexpected error: $e');
-      AppLogging.marketplace('   Stack trace: $stackTrace');
-      if (mounted) {
-        showErrorSnackBar(
-          context,
-          context.l10n.widgetBuilderFailedToSubmit(e.toString()),
-        );
-      }
-    }
   }
 }
 

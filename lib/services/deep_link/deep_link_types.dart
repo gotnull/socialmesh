@@ -17,7 +17,7 @@ enum DeepLinkType {
   /// User profile: socialmesh://profile/{displayName} or https://socialmesh.app/share/profile/{displayName}
   profile,
 
-  /// Widget marketplace: socialmesh://widget/{widgetId} or https://socialmesh.app/share/widget/{id}
+  /// Shared widget: socialmesh://widget/{widgetId} or https://socialmesh.app/share/widget/{id}
   widget,
 
   /// Social post: socialmesh://post/{postId} or https://socialmesh.app/share/post/{id}
@@ -130,7 +130,7 @@ class ParsedDeepLink {
   final String? profileDisplayName;
 
   // Widget-specific fields
-  /// Marketplace widget ID (Firestore document ID)
+  /// Shared widget ID (Firestore document ID)
   final String? widgetId;
 
   /// Base64-encoded widget schema for direct sharing (QR code/deep link)

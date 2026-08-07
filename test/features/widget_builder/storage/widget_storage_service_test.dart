@@ -200,64 +200,16 @@ void main() {
       });
     });
 
-    group('marketplace widgets', () {
-      test('installMarketplaceWidget saves and tracks widget', () async {
-        final widgetsBefore = await service.getWidgets();
-        final countBefore = widgetsBefore.length;
-
-        final widget = createTestWidget();
-        await service.installMarketplaceWidget(widget);
-
-        final widgetsAfter = await service.getWidgets();
-        expect(widgetsAfter.length, countBefore + 1);
-
-        final isMarketplace = await service.isMarketplaceWidget(widget.id);
-        expect(isMarketplace, isTrue);
-      });
-
-      test('isMarketplaceWidget returns false for regular widget', () async {
-        final widget = createTestWidget();
-        await service.saveWidget(widget);
-
-        final isMarketplace = await service.isMarketplaceWidget(widget.id);
-        expect(isMarketplace, isFalse);
-      });
-
-      test(
-        'getInstalledMarketplaceIds returns marketplace widget IDs',
-        () async {
-          final widget1 = createTestWidget(name: 'Marketplace 1');
-          final widget2 = createTestWidget(name: 'Regular');
-          final widget3 = createTestWidget(name: 'Marketplace 2');
-
-          await service.installMarketplaceWidget(widget1);
-          await service.saveWidget(widget2);
-          await service.installMarketplaceWidget(widget3);
-
-          final marketplaceIds = await service.getInstalledMarketplaceIds();
-          expect(marketplaceIds.length, 2);
-          expect(marketplaceIds, contains(widget1.id));
-          expect(marketplaceIds, contains(widget3.id));
-          expect(marketplaceIds, isNot(contains(widget2.id)));
-        },
-      );
-    });
-
     group('clearAll', () {
       test('removes all widgets', () async {
         await service.saveWidget(createTestWidget(name: 'Widget 1'));
         await service.saveWidget(createTestWidget(name: 'Widget 2'));
-        await service.installMarketplaceWidget(
-          createTestWidget(name: 'Marketplace'),
-        );
 
         await service.clearAll();
 
         final widgets = await service.getWidgets();
-        final marketplaceIds = await service.getInstalledMarketplaceIds();
 
         expect(widgets, isEmpty);
-        expect(marketplaceIds, isEmpty);
       });
     });
   });
