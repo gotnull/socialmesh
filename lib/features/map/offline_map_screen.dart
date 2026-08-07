@@ -116,7 +116,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
     }
     safeSetState(() => _isSearching = true);
     try {
-      final results = await geocoding.locationFromAddress(q);
+      final results = await geocoding.Geocoding().locationFromAddress(q);
       if (!mounted) return;
       if (results.isEmpty) {
         showWarningSnackBar(context, context.l10n.offlineMapSearchFailed);
