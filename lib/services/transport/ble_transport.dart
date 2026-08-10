@@ -37,6 +37,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   BluetoothCharacteristic? _rxCharacteristic;
   BluetoothCharacteristic? _fromNumCharacteristic;
   BluetoothCharacteristic? _logRadioCharacteristic;
+
+  /// Present only on firmware that can speak through the node's buzzer.
+  /// Absent everywhere else, so nothing may treat it as required.
+  BluetoothCharacteristic? _speechCharacteristic;
   StreamSubscription? _deviceStateSubscription;
   StreamSubscription? _characteristicSubscription;
   StreamSubscription? _fromNumSubscription;
@@ -163,6 +167,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       '2c55e69e-4993-11ed-b878-0242ac120002'; // lint-allow: hardcoded-string
   static const String _fromNumUuid = 'ed9da18c-a800-4f66-a670-aa7547e34453';
   // LogRadio characteristic - streams LogRecord protobufs from device firmware
+  /// Conditioned 8-bit PCM for the node's buzzer. Not part of stock
+  /// Meshtastic: only firmware built to speak exposes it.
+  static const String _speechUuid = '7b1e8a40-2c9f-4d3b-9f27-6c1a5b0e3d11';
+
   static const String _logRadioUuid =
       '5a3d6e49-06e6-4423-9944-e9de8cdf9547'; // lint-allow: hardcoded-string
 
@@ -956,6 +964,9 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         } else if (uuid == _logRadioUuid.toLowerCase()) {
           _logRadioCharacteristic = characteristic;
           AppLogging.ble('Found logRadio characteristic (device logs)');
+        } else if (uuid == _speechUuid.toLowerCase()) {
+          _speechCharacteristic = characteristic;
+          AppLogging.ble('Found speech characteristic (buzzer PCM)');
         }
       }
 
@@ -1460,6 +1471,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
       _device = null;
       _txCharacteristic = null;
+      _speechCharacteristic = null;
       _rxCharacteristic = null;
       _logRadioCharacteristic = null;
       _consecutiveAuthErrors = 0;
@@ -1478,6 +1490,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       // Still clean up state even on error
       _device = null;
       _txCharacteristic = null;
+      _speechCharacteristic = null;
       _rxCharacteristic = null;
       await BackgroundBleService.instance.stop();
       _updateState(DeviceConnectionState.disconnected);
@@ -1498,6 +1511,52 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       deviceName: _connectedDeviceName,
       transport: this,
     );
+  }
+
+  /// True when the connected node runs firmware that can speak. Stock
+  /// Meshtastic does not expose the characteristic, so callers must check
+  /// this rather than assume it.
+  bool get supportsSpeech => _speechCharacteristic != null;
+
+  /// Writes a framed utterance (see `BuzzerSpeechCodec.frame`) to the node,
+  /// which plays it through its buzzer.
+  ///
+  /// Chunked into MTU-sized acknowledged writes. Acknowledged deliberately:
+  /// unacknowledged writes drop packets under load, and the firmware needs the
+  /// declared length to arrive before it will play anything. It recovers from
+  /// a short utterance rather than wedging, but a dropped chunk still costs
+  /// audible words.
+  Future<void> sendSpeech(List<int> framed) async {
+    if (_state != DeviceConnectionState.connected) {
+      throw const TransportSendError('Not connected');
+    }
+    final characteristic = _speechCharacteristic;
+    if (characteristic == null) {
+      throw const TransportSendError(
+        'This node is not running firmware that can speak',
+      );
+    }
+
+    // Leave room for the 3-byte ATT write header.
+    final mtu = _device?.mtuNow ?? 23;
+    final chunk = (mtu - 3).clamp(20, 512);
+
+    try {
+      AppLogging.ble(
+        'Speech: sending \${framed.length} bytes in \$chunk-byte writes',
+      );
+      for (var offset = 0; offset < framed.length; offset += chunk) {
+        final end = (offset + chunk).clamp(0, framed.length);
+        await characteristic.write(
+          framed.sublist(offset, end),
+          withoutResponse: false,
+        );
+      }
+      AppLogging.ble('Speech: sent');
+    } catch (e) {
+      AppLogging.ble('⚠️ Speech send failed: \$e');
+      rethrow;
+    }
   }
 
   @override
@@ -1548,6 +1607,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         );
         if (_state == DeviceConnectionState.connected) {
           _txCharacteristic = null;
+          _speechCharacteristic = null;
           _rxCharacteristic = null;
           _device = null;
           _updateState(DeviceConnectionState.disconnected);
