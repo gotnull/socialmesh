@@ -53,7 +53,17 @@ import 'core/third_party_licenses.dart';
 import 'features/debug/app_log_screen.dart' as app_log;
 import 'core/widgets/connecting_content.dart';
 import 'core/widgets/gradient_border_container.dart';
+import 'core/routing/conversation_routes.dart';
+import 'core/routing/notification_routes.dart';
 import 'core/routing/route_guard.dart';
+import 'features/device/firmware_update_screen.dart';
+import 'features/meshcore/screens/meshcore_nodes_screen.dart';
+import 'features/nodes/node_detail_screen.dart';
+import 'features/pet/screens/pet_home_screen.dart';
+import 'features/tak/providers/tak_providers.dart';
+import 'features/tak/screens/tak_event_detail_screen.dart';
+import 'features/telemetry/detection_sensor_log_screen.dart';
+import 'features/waypoints/providers/waypoint_providers.dart';
 import 'providers/splash_mesh_provider.dart';
 import 'providers/connection_providers.dart' as conn;
 import 'providers/lifecycle_command_provider.dart';
@@ -1494,7 +1504,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           // (declined). Skip the push when already on the hub so
           // back-tapping doesn't reveal a stack of duplicate hubs.
           // Consent is still a manual tap — never auto-accepted.
-          if (!_topRouteIsSipHub(navigator)) {
+          if (!isTopRouteNamed(navigator, _kSipHubRouteName)) {
             navigator.push(
               MaterialPageRoute(
                 builder: (_) => const SipHubScreen(),
@@ -1514,7 +1524,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           // surfaces nothing.
           if (AppFeatureFlags.isMeshIncidentsEnabled &&
               AppFeatureFlags.isIncidentHelpRequestEnabled &&
-              !_topRouteIsHelpResponderInbox(navigator)) {
+              !isTopRouteNamed(navigator, _kHelpResponderInboxRouteName)) {
             navigator.push(
               MaterialPageRoute(
                 builder: (_) => const HelpResponderInboxScreen(),
@@ -1540,7 +1550,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           //   - Both off → no-op (the body selector also returns null
           //     in this case so the notification never fires).
           if (AppFeatureFlags.isHandshakeEnabled) {
-            if (!_topRouteIsSipHub(navigator)) {
+            if (!isTopRouteNamed(navigator, _kSipHubRouteName)) {
               navigator.push(
                 MaterialPageRoute(
                   builder: (_) => const SipHubScreen(),
@@ -1549,7 +1559,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
               );
             }
           } else if (AppFeatureFlags.isMeshCanvasEnabled) {
-            if (!_topRouteIsMeshCanvasOverview(navigator)) {
+            if (!isTopRouteNamed(navigator, _kMeshCanvasOverviewRouteName)) {
               navigator.push(
                 MaterialPageRoute(
                   builder: (_) => const MeshCanvasOverviewScreen(),
@@ -1591,10 +1601,258 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           _routeToMeshCoreChannel(navigator, nav.targetId);
           break;
 
+        case 'meshcore-advert':
+        case 'meshcore-advert-summary':
+          // A MeshCore peer (or a batch of them) advertised. The contact
+          // list is the surface that shows them; the advert payload's
+          // pubkey is not enough to open a thread the user has not
+          // accepted yet.
+          pushRouteUnlessOnTop(
+            navigator,
+            routeName: meshCoreNodesRouteName,
+            builder: (_) => const MeshCoreNodesScreen(),
+          );
+          break;
+
+        case 'sip_dm':
+          // Inbound SIP DM. Payload is `sip_dm:<sessionTag>`.
+          _routeToSipDm(navigator, nav.targetId);
+          break;
+
+        case 'sip_play_turn':
+          // It is the user's turn in a SIP Play game. Games live inside
+          // the DM thread, so this lands on the same screen a completed
+          // handshake does. Payload is
+          // `sip_play_turn:<peerNodeId>:<gameTypeCode>`.
+          _routeToSipHandshakeCompleted(
+            navigator,
+            nav.targetId?.split(':').first,
+          );
+          break;
+
+        case 'node':
+          // A new node was discovered. Payload is `node:<nodeNum>`.
+          _routeToNodeDetail(navigator, nav.targetId);
+          break;
+
+        case 'detection':
+          // Detection-sensor trigger. Payload is
+          // `detection:<nodeNum>:<detected>`; the log screen filters to
+          // the reporting node.
+          _routeToDetectionLog(navigator, nav.targetId);
+          break;
+
+        case 'waypoint':
+          // A peer shared a waypoint. Payload is `waypoint:<id>`.
+          _routeToWaypoint(navigator, nav.targetId);
+          break;
+
+        case 'tak':
+          // TAK event. Payload is `tak:<uid>`.
+          _routeToTakEvent(navigator, nav.targetId);
+          break;
+
+        case 'aether':
+          // Aether flight event. Payload is `aether:<flightNumber>`.
+          _routeToAetherFlight(navigator, nav.targetId);
+          break;
+
+        case 'pet':
+          // NodePet milestone or care alert. Payload is
+          // `pet:milestone:<stage>` or `pet:care:sick`; both open the
+          // pet's home screen, which surfaces either state.
+          pushRouteUnlessOnTop(
+            navigator,
+            routeName: petHomeRouteName,
+            builder: (_) => const PetHomeScreen(),
+          );
+          break;
+
+        case 'firmware':
+          // Firmware update available. Payload is `firmware:<level>`.
+          pushRouteUnlessOnTop(
+            navigator,
+            routeName: firmwareUpdateRouteName,
+            builder: (_) => const FirmwareUpdateScreen(),
+          );
+          break;
+
+        case 'batched_dm':
+          // Summary of several DMs from different peers — no single
+          // thread to open, so land on the conversation list.
+          pushNamedUnlessOnTop(navigator, '/messages');
+          break;
+
+        case 'batched_channel':
+          pushNamedUnlessOnTop(navigator, '/channels');
+          break;
+
+        case 'batched_nodes':
+          pushNamedUnlessOnTop(navigator, '/nodes');
+          break;
+
+        case 'bug_report':
+          // Local mirror of a `bug_report_response` push. The parser puts
+          // the report id in [nav.deepLink] because this payload uses the
+          // `type|value` separator.
+          navigator.pushNamed(
+            '/my-bug-reports',
+            arguments: nav.deepLink != null && nav.deepLink!.isNotEmpty
+                ? {'reportId': nav.deepLink}
+                : null,
+          );
+          break;
+
         default:
           AppLogging.notifications('🔔 Unknown notification type: ${nav.type}');
       }
     });
+  }
+
+  /// Open the SIP DM thread for the session encoded in [targetId] (a
+  /// `sip_dm:` payload). Falls back to the hub when the tag will not
+  /// parse or the session has already been torn down.
+  void _routeToSipDm(NavigatorState navigator, String? targetId) {
+    final sessionTag = targetId != null
+        ? int.tryParse(targetId.split(':').first)
+        : null;
+    if (sessionTag != null) {
+      final sessions = ref.read(sipActiveSessionsProvider);
+      final exists = sessions.any((s) => s.sessionTag == sessionTag);
+      if (exists) {
+        pushRouteUnlessOnTop(
+          navigator,
+          routeName: sipDmRouteName(sessionTag),
+          builder: (_) => SipDmScreen(sessionTag: sessionTag),
+        );
+        return;
+      }
+      AppLogging.notifications(
+        '🔔 sip_dm tap: session $sessionTag is gone, falling back to hub',
+      );
+    }
+    if (!isTopRouteNamed(navigator, _kSipHubRouteName)) {
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => const SipHubScreen(),
+          settings: const RouteSettings(name: _kSipHubRouteName),
+        ),
+      );
+    }
+  }
+
+  /// Open the node detail screen for a `node:` payload. Falls back to the
+  /// node list when the node is not in the store.
+  void _routeToNodeDetail(NavigatorState navigator, String? targetId) {
+    final nodeNum = targetId != null
+        ? int.tryParse(targetId.split(':').first)
+        : null;
+    final node = nodeNum != null ? ref.read(nodesProvider)[nodeNum] : null;
+    if (nodeNum == null || node == null) {
+      AppLogging.notifications(
+        '🔔 Node tap: $targetId unknown, opening node list',
+      );
+      pushNamedUnlessOnTop(navigator, '/nodes');
+      return;
+    }
+    pushRouteUnlessOnTop(
+      navigator,
+      routeName: nodeDetailRouteName(nodeNum),
+      builder: (_) => NodeDetailScreen(
+        node: node,
+        isMyNode: nodeNum == ref.read(myNodeNumProvider),
+      ),
+    );
+  }
+
+  /// Open the detection-sensor log for a `detection:` payload, scoped to
+  /// the reporting node when the id parses.
+  void _routeToDetectionLog(NavigatorState navigator, String? targetId) {
+    final nodeNum = targetId != null
+        ? int.tryParse(targetId.split(':').first)
+        : null;
+    if (nodeNum == null) return;
+    pushRouteUnlessOnTop(
+      navigator,
+      routeName: detectionLogRouteName(nodeNum),
+      builder: (_) => DetectionSensorLogScreen(nodeNum: nodeNum),
+    );
+  }
+
+  /// Centre the map on the shared waypoint in a `waypoint:` payload.
+  /// Falls back to the plain map when the waypoint has since expired or
+  /// was deleted for everyone.
+  void _routeToWaypoint(NavigatorState navigator, String? targetId) {
+    final waypointId = targetId != null
+        ? int.tryParse(targetId.split(':').first)
+        : null;
+    if (waypointId == null) {
+      pushNamedUnlessOnTop(navigator, '/map');
+      return;
+    }
+    final waypoints = ref.read(meshWaypointsProvider);
+    final matches = waypoints.where((w) => w.id == waypointId);
+    final waypoint = matches.isEmpty ? null : matches.first;
+    if (waypoint == null) {
+      AppLogging.notifications(
+        '🔔 Waypoint tap: $waypointId is gone, opening the map',
+      );
+      pushNamedUnlessOnTop(navigator, '/map');
+      return;
+    }
+    pushRouteUnlessOnTop(
+      navigator,
+      routeName: waypointMapRouteName(waypointId),
+      builder: (_) => MapScreen(
+        initialLatitude: waypoint.latitude,
+        initialLongitude: waypoint.longitude,
+        initialLocationLabel: waypoint.name,
+      ),
+    );
+  }
+
+  /// Open the TAK event detail for a `tak:` payload. No-op when the event
+  /// has aged out of the active set — there is nothing to show.
+  void _routeToTakEvent(NavigatorState navigator, String? targetId) {
+    final uid = targetId;
+    if (uid == null || uid.isEmpty) return;
+    final events = ref.read(takActiveEventsProvider);
+    final matches = events.where((e) => e.uid == uid);
+    final event = matches.isEmpty ? null : matches.first;
+    if (event == null) {
+      AppLogging.notifications(
+        '🔔 TAK tap: event $uid no longer active, skipping navigation',
+      );
+      return;
+    }
+    pushRouteUnlessOnTop(
+      navigator,
+      routeName: takEventRouteName(uid),
+      builder: (_) => TakEventDetailScreen(event: event),
+    );
+  }
+
+  /// Open the Aether flight detail for an `aether:` payload. No-op when
+  /// the flight is not in the current list.
+  void _routeToAetherFlight(NavigatorState navigator, String? targetId) {
+    final flightNumber = targetId;
+    if (flightNumber == null || flightNumber.isEmpty) return;
+    final flights = ref.read(aetherFlightsProvider).value ?? const [];
+    final matches = flights.where(
+      (f) => f.flightNumber.toUpperCase() == flightNumber.toUpperCase(),
+    );
+    final flight = matches.isEmpty ? null : matches.first;
+    if (flight == null) {
+      AppLogging.notifications(
+        '🔔 Aether tap: flight $flightNumber not loaded, skipping navigation',
+      );
+      return;
+    }
+    pushRouteUnlessOnTop(
+      navigator,
+      routeName: aetherFlightRouteName(flightNumber),
+      builder: (_) => AetherFlightDetailScreen(flight: flight),
+    );
   }
 
   /// Open the Meshtastic DM thread for the peer encoded in [targetId]
@@ -1605,7 +1863,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         ? int.tryParse(targetId.split(':').first)
         : null;
     if (nodeNum == null) {
-      navigator.pushNamed('/messages');
+      pushNamedUnlessOnTop(navigator, '/messages');
       return;
     }
     final node = ref.read(nodesProvider)[nodeNum];
@@ -1613,19 +1871,24 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       AppLogging.notifications(
         '🔔 DM tap: node $nodeNum unknown, opening conversation list',
       );
-      navigator.pushNamed('/messages');
+      pushNamedUnlessOnTop(navigator, '/messages');
       return;
     }
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          type: ConversationType.directMessage,
-          nodeNum: nodeNum,
-          title: node.displayName,
-          avatarColor: node.avatarColor,
-        ),
+    final pushed = pushRouteUnlessOnTop(
+      navigator,
+      routeName: meshtasticDmRouteName(nodeNum),
+      builder: (_) => ChatScreen(
+        type: ConversationType.directMessage,
+        nodeNum: nodeNum,
+        title: node.displayName,
+        avatarColor: node.avatarColor,
       ),
     );
+    if (!pushed) {
+      AppLogging.notifications(
+        '🔔 DM tap: thread with $nodeNum already on top, staying put',
+      );
+    }
   }
 
   /// Open the Meshtastic channel thread for the index encoded in
@@ -1636,7 +1899,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         ? int.tryParse(targetId.split(':').first)
         : null;
     if (channelIndex == null) {
-      navigator.pushNamed('/channels');
+      pushNamedUnlessOnTop(navigator, '/channels');
       return;
     }
     final channels = ref.read(channelsProvider);
@@ -1646,7 +1909,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       AppLogging.notifications(
         '🔔 Channel tap: index $channelIndex unknown, opening channel list',
       );
-      navigator.pushNamed('/channels');
+      pushNamedUnlessOnTop(navigator, '/channels');
       return;
     }
     final l10n = safeL10n();
@@ -1655,15 +1918,20 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
               ? l10n.channelsPrimaryChannelName
               : l10n.channelsDefaultChannelName(channelIndex))
         : channel.name;
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          type: ConversationType.channel,
-          channelIndex: channelIndex,
-          title: title,
-        ),
+    final pushed = pushRouteUnlessOnTop(
+      navigator,
+      routeName: meshtasticChannelRouteName(channelIndex),
+      builder: (_) => ChatScreen(
+        type: ConversationType.channel,
+        channelIndex: channelIndex,
+        title: title,
       ),
     );
+    if (!pushed) {
+      AppLogging.notifications(
+        '🔔 Channel tap: index $channelIndex already on top, staying put',
+      );
+    }
   }
 
   /// Open the MeshCore contact chat for the pubkey encoded in [targetId]
@@ -1681,11 +1949,16 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       );
       return;
     }
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => MeshCoreChatScreen.contact(contact: contact),
-      ),
+    final pushed = pushRouteUnlessOnTop(
+      navigator,
+      routeName: meshCoreContactRouteName(pubKeyHex),
+      builder: (_) => MeshCoreChatScreen.contact(contact: contact),
     );
+    if (!pushed) {
+      AppLogging.notifications(
+        '🔔 MeshCore DM tap: contact thread already on top, staying put',
+      );
+    }
   }
 
   /// Open the MeshCore channel chat for the index encoded in [targetId]
@@ -1706,11 +1979,17 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       );
       return;
     }
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => MeshCoreChatScreen.channel(channel: channel),
-      ),
+    final pushed = pushRouteUnlessOnTop(
+      navigator,
+      routeName: meshCoreChannelRouteName(channelIndex),
+      builder: (_) => MeshCoreChatScreen.channel(channel: channel),
     );
+    if (!pushed) {
+      AppLogging.notifications(
+        '🔔 MeshCore channel tap: index $channelIndex already on top, '
+        'staying put',
+      );
+    }
   }
 
   /// Resolve the SIP DM session for [peerNodeIdStr] and push
@@ -1742,7 +2021,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         'falling back to hub',
       );
     }
-    if (!_topRouteIsSipHub(navigator)) {
+    if (!isTopRouteNamed(navigator, _kSipHubRouteName)) {
       navigator.push(
         MaterialPageRoute(
           builder: (_) => const SipHubScreen(),
@@ -1753,9 +2032,9 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   }
 
   /// Route name used to identify a [SipHubScreen] in the navigator
-  /// stack. A named route lets [_topRouteIsSipHub] short-circuit
+  /// stack. A named route lets [isTopRouteNamed] short-circuit
   /// duplicate pushes when a notification tap arrives while the hub
-  /// is already on top — without it, a second push stacks an
+  /// is already on top - without it, a second push stacks an
   /// identical Handshake screen and the user has to tap back twice
   /// to return.
   ///
@@ -1768,40 +2047,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       'MeshCanvasOverviewScreen';
   static const String _kHelpResponderInboxRouteName =
       'HelpResponderInboxScreen';
-
-  /// Mirror of [_topRouteIsSipHub] for the Help responder inbox, so a repeat
-  /// notification tap doesn't stack duplicate inboxes.
-  bool _topRouteIsHelpResponderInbox(NavigatorState navigator) {
-    var top = false;
-    navigator.popUntil((route) {
-      top = route.settings.name == _kHelpResponderInboxRouteName;
-      return true; // stop iteration immediately, no actual pop
-    });
-    return top;
-  }
-
-  /// True if the topmost route on [navigator]'s stack is a
-  /// [SipHubScreen] (identified by the [_kSipHubRouteName] tag).
-  /// Uses `popUntil` with a stop-on-first-iteration predicate to
-  /// inspect the top route without modifying the stack.
-  bool _topRouteIsSipHub(NavigatorState navigator) {
-    var top = false;
-    navigator.popUntil((route) {
-      top = route.settings.name == _kSipHubRouteName;
-      return true; // stop iteration immediately, no actual pop
-    });
-    return top;
-  }
-
-  /// Mirror of [_topRouteIsSipHub] for the MeshCanvas overview.
-  bool _topRouteIsMeshCanvasOverview(NavigatorState navigator) {
-    var top = false;
-    navigator.popUntil((route) {
-      top = route.settings.name == _kMeshCanvasOverviewRouteName;
-      return true;
-    });
-    return top;
-  }
 
   Future<void> _loadAccentColor() async {
     final settings = await ref.read(settingsServiceProvider.future);

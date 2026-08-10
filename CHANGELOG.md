@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (notification taps)
+
+- Tapping notification after notification for the same conversation no longer stacks a pile of identical screens. If the thread the notification is about is already the screen you are on, the tap keeps you there instead of pushing another copy, so one back tap returns you to where you started rather than to another copy of the same chat. Applies to Meshtastic channels and direct messages and to MeshCore channels and contacts, whichever way the thread was opened
+- The channel list and conversation list a notification falls back to when the thread cannot be resolved no longer stack either. Repeated taps while the radio was still sending its channel config used to pile a channel list on top of whatever you were reading
+- Notification taps that previously did nothing at all now open the right screen. Batched message and node summaries open the matching list, a discovered node opens its detail screen, a detection-sensor trigger opens the sensor log for the node that reported it, a shared waypoint opens the map centred on it, a TAK event opens its detail screen, an Aether flight opens its flight screen, NodePet milestone and care alerts open the pet, a firmware notice opens the updater, MeshCore adverts open the contact list, an incoming SIP direct message opens that conversation, a SIP Play turn opens the game thread, and a bug-report reply opens the report
+
 ### Fixed (hostile node names)
 
 - A nearby node whose name contains emoji can no longer crash the app. Avatar and marker initials were cut by UTF-16 code unit, which could slice an emoji in half and leave a malformed character that crashes the system text renderer during layout. Names are now cut on character boundaries everywhere they are shortened, so the node list, node detail, messaging, remote admin and background notifications all stay up regardless of what a peer advertises

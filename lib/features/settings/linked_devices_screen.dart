@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/routing/conversation_routes.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/node_color.dart';
 import '../../core/theme.dart';
@@ -736,6 +737,7 @@ class _LinkedDeviceCard extends StatelessWidget {
               nodeNum: nodeId,
               title: node?.displayName ?? '!${nodeId.toRadixString(16)}',
             ),
+            settings: RouteSettings(name: meshtasticDmRouteName(nodeId)),
           ),
         ),
       ),

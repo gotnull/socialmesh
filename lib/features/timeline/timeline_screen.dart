@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/routing/conversation_routes.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -630,6 +631,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 channelIndex: channel,
                 title: context.l10n.timelineFilterMessages,
               ),
+              settings: RouteSettings(
+                name: meshtasticChannelRouteName(channel),
+              ),
             ),
           );
         } else {
@@ -646,6 +650,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   nodeNum: otherNodeNum,
                   title: otherNode?.displayName ?? _formatNodeId(otherNodeNum),
                   avatarColor: otherNode?.avatarColor,
+                ),
+                settings: RouteSettings(
+                  name: meshtasticDmRouteName(otherNodeNum),
                 ),
               ),
             );

@@ -19,6 +19,7 @@ import '../../providers/countdown_providers.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
+import '../../core/routing/conversation_routes.dart';
 import '../../core/safe_lat_lng.dart';
 import '../../core/widgets/linkified_text.dart';
 import 'map_session_providers.dart';
@@ -4559,6 +4560,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           title: node.displayName,
           avatarColor: node.avatarColor,
         ),
+        settings: RouteSettings(name: meshtasticDmRouteName(node.nodeNum)),
       ),
     );
   }

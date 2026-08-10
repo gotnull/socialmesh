@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
+import '../../../core/routing/conversation_routes.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
@@ -372,6 +373,9 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
                     MaterialPageRoute(
                       builder: (context) =>
                           MeshCoreChatScreen.contact(contact: contact),
+                      settings: RouteSettings(
+                        name: meshCoreContactRouteName(contact.publicKeyHex),
+                      ),
                     ),
                   ),
                   onLongPress: () => _showContactOptions(contact),
@@ -519,6 +523,9 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
               MaterialPageRoute(
                 builder: (context) =>
                     MeshCoreChatScreen.contact(contact: contact),
+                settings: RouteSettings(
+                  name: meshCoreContactRouteName(contact.publicKeyHex),
+                ),
               ),
             );
           },

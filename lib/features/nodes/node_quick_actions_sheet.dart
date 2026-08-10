@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/routing/conversation_routes.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/node_avatar.dart';
@@ -220,6 +221,7 @@ Future<void> showNodeQuickActionsSheet(
             title: node.displayName,
             avatarColor: node.avatarColor,
           ),
+          settings: RouteSettings(name: meshtasticDmRouteName(node.nodeNum)),
         ),
       );
     case NodeQuickAction.showOnMap:

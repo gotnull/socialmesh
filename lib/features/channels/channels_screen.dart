@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/routing/conversation_routes.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/channels_display_order_provider.dart';
@@ -589,6 +590,7 @@ void _openChannelChatFor(BuildContext context, ChannelConfig channel) {
         channelIndex: channel.index,
         title: _channelDisplayName(context, channel),
       ),
+      settings: RouteSettings(name: meshtasticChannelRouteName(channel.index)),
     ),
   );
 }

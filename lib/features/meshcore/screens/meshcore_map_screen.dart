@@ -16,6 +16,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/logging.dart';
 import '../../../core/los_analysis.dart';
 import '../../../core/map_config.dart';
+import '../../../core/routing/conversation_routes.dart';
 import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
@@ -1772,6 +1773,9 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                       MaterialPageRoute(
                         builder: (_) =>
                             MeshCoreChatScreen.contact(contact: contact),
+                        settings: RouteSettings(
+                          name: meshCoreContactRouteName(contact.publicKeyHex),
+                        ),
                       ),
                     );
                   },

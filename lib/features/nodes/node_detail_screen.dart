@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/routing/conversation_routes.dart';
 import '../../utils/time_format.dart';
 import '../../utils/timestamp_validation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -196,6 +197,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           title: node.displayName,
           avatarColor: node.avatarColor,
         ),
+        settings: RouteSettings(name: meshtasticDmRouteName(node.nodeNum)),
       ),
     );
   }

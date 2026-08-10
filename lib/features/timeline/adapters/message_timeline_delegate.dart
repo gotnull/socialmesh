@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/routing/conversation_routes.dart';
 import '../../messaging/messaging_screen.dart';
 import '../domain/timeline_interaction.dart';
 import '../domain/timeline_item.dart';
@@ -75,6 +76,7 @@ class MessageTimelineDelegate extends TimelineInteractionDelegate {
                     channelIndex: channelIndex,
                     title: channelName,
                   ),
+                  routeName: meshtasticChannelRouteName(channelIndex),
                 ),
               );
             },
@@ -106,6 +108,7 @@ class MessageTimelineDelegate extends TimelineInteractionDelegate {
                     nodeNum: nodeNum,
                     title: nodeName,
                   ),
+                  routeName: meshtasticDmRouteName(nodeNum),
                 ),
               );
             },
@@ -121,11 +124,17 @@ class MessageTimelineDelegate extends TimelineInteractionDelegate {
     return _platformRoute<T>(builder: (_) => screen);
   }
 
-  static Route<T> _platformRoute<T>({required WidgetBuilder builder}) {
+  static Route<T> _platformRoute<T>({
+    required WidgetBuilder builder,
+    String? routeName,
+  }) {
+    final settings = routeName == null ? null : RouteSettings(name: routeName);
     return switch (defaultTargetPlatform) {
-      TargetPlatform.iOS ||
-      TargetPlatform.macOS => CupertinoPageRoute<T>(builder: builder),
-      _ => MaterialPageRoute<T>(builder: builder),
+      TargetPlatform.iOS || TargetPlatform.macOS => CupertinoPageRoute<T>(
+        builder: builder,
+        settings: settings,
+      ),
+      _ => MaterialPageRoute<T>(builder: builder, settings: settings),
     };
   }
 }

@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/navigation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -53,12 +54,7 @@ class TraceRouteLogScreen extends ConsumerStatefulWidget {
   /// when the screen the user is currently on was itself opened this way.
   static void open(BuildContext context, {int? nodeNum}) {
     final navigator = Navigator.of(context);
-    var alreadyOnHistory = false;
-    navigator.popUntil((route) {
-      alreadyOnHistory = route.settings.name == routeName;
-      return true; // predicate true on the top route ⇒ never actually pops
-    });
-    if (alreadyOnHistory) return;
+    if (isTopRouteNamed(navigator, routeName)) return;
     navigator.push(
       MaterialPageRoute<void>(
         settings: const RouteSettings(name: routeName),

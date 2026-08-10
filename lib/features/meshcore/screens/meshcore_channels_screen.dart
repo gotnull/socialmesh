@@ -3,6 +3,7 @@
 // lint-allow: keyboard-dismissal — TextFields are in bottom-sheet sub-widgets, not the main screen
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
+import '../../../core/routing/conversation_routes.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 
 import 'package:flutter/material.dart';
@@ -539,6 +540,9 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                           MaterialPageRoute(
                             builder: (context) =>
                                 MeshCoreChatScreen.channel(channel: channel),
+                            settings: RouteSettings(
+                              name: meshCoreChannelRouteName(channel.index),
+                            ),
                           ),
                         ),
                         onLongPress: () => _showChannelOptions(channel),
@@ -554,6 +558,9 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                           MaterialPageRoute(
                             builder: (context) =>
                                 MeshCoreChatScreen.channel(channel: channel),
+                            settings: RouteSettings(
+                              name: meshCoreChannelRouteName(channel.index),
+                            ),
                           ),
                         ),
                         onLongPress: () => _showChannelOptions(channel),
@@ -1263,6 +1270,9 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
               MaterialPageRoute(
                 builder: (context) =>
                     MeshCoreChatScreen.channel(channel: channel),
+                settings: RouteSettings(
+                  name: meshCoreChannelRouteName(channel.index),
+                ),
               ),
             );
           },

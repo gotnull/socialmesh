@@ -6,6 +6,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 import '../../core/logging.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/routing/conversation_routes.dart';
 import 'package:flutter/material.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
@@ -545,6 +546,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
             title: contact.displayName,
             avatarColor: contact.avatarColor,
           ),
+          settings: RouteSettings(name: meshtasticDmRouteName(contact.nodeNum)),
         ),
       );
     }
