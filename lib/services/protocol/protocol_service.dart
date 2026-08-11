@@ -4513,6 +4513,7 @@ class ProtocolService {
               channelUtilization: channelUtil,
               airUtilTx: airUtilTx,
               uptimeSeconds: uptimeSeconds,
+              deviceMetricsFromNodeDb: false,
               lastHeard: _resolvePacketLastHeard(
                 packet,
                 existing: existingDeviceNode.lastHeard,
@@ -5606,6 +5607,12 @@ class ProtocolService {
         batteryLevel: nodeInfo.hasDeviceMetrics()
             ? nodeInfo.deviceMetrics.batteryLevel
             : existingNode.batteryLevel,
+        // NodeDB metrics are the radio's cached copy, not a fresh sample.
+        // History loggers key off this to avoid re-charting a stale
+        // battery reading at the current wall clock.
+        deviceMetricsFromNodeDb: nodeInfo.hasDeviceMetrics()
+            ? true
+            : existingNode.deviceMetricsFromNodeDb,
         lastHeard: deviceLastHeard,
         role: role,
         avatarColor: null,
@@ -5669,6 +5676,7 @@ class ProtocolService {
         batteryLevel: nodeInfo.hasDeviceMetrics()
             ? nodeInfo.deviceMetrics.batteryLevel
             : null,
+        deviceMetricsFromNodeDb: nodeInfo.hasDeviceMetrics(),
         lastHeard: deviceLastHeard,
         firstHeard: DateTime.now(),
         role: role,

@@ -735,8 +735,15 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
       try {
         final id = node.nodeNum;
 
-        // Log device metrics only when values actually change
-        if (node.batteryLevel != null || node.voltage != null) {
+        // Log device metrics only when values actually change, and only
+        // when they came from a live telemetry packet. A NodeDB NodeInfo
+        // replay (connect/reconnect config dump) carries the radio's
+        // cached battery reading — logging it would re-chart a stale
+        // value at the current wall clock as a spurious flat step. The
+        // fingerprint is left untouched so the next live sample still
+        // logs normally.
+        if (!node.deviceMetricsFromNodeDb &&
+            (node.batteryLevel != null || node.voltage != null)) {
           final cached = _lastDevice[id];
           if (cached == null || !cached.matches(node)) {
             _lastDevice[id] = _DeviceMetricsFingerprint(

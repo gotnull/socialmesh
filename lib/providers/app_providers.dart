@@ -5510,8 +5510,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // deterministic SHA1 id and the device-delivered copy has a random UUID,
     // so layers 1-3 miss it once the signature window expires.
     // Skip for user-sent messages — the user deliberately resending the same
-    // text is intentional, not a duplicate.
-    if (!message.sent && _isContentDuplicate(message)) {
+    // text is intentional, not a duplicate. Skip canonical tapbacks too:
+    // state only ever holds non-tapback rows, so a content match against it
+    // can never be the same physical reaction — only a regular message that
+    // happens to share the emoji text.
+    if (!message.sent &&
+        !message.isCanonicalTapback &&
+        _isContentDuplicate(message)) {
       AppLogging.messages(
         '📨 Dedup Layer 4 (content match): from=${message.from}, '
         'channel=${message.channel}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
@@ -5721,11 +5726,20 @@ class MessagesNotifier extends Notifier<List<Message>> {
     ref.read(messageTimelineEpochProvider.notifier).bump();
   }
 
+  // Signature for the short-window rapid-fire dedupe (Layer 3). It must
+  // collapse cross-path copies of the same physical packet (which always
+  // share sender, text, timestamp, and replyId) while never collapsing
+  // distinct packets from different senders. Message timestamps derive
+  // from rxTime, which has one-second resolution, and broker-fed rooms
+  // deliver in bursts - so several members reacting with the same emoji
+  // in the same second is normal traffic, not a duplicate. Sender and
+  // replyId keep those apart.
   String _messageSignature(Message message) {
     final target = message.isBroadcast
         ? 'channel:${message.channel ?? 0}' // lint-allow: hardcoded-string
         : 'dm:${message.from == ref.read(myNodeNumProvider) ? message.to : message.from}';
-    return '$target|${message.text}|${message.timestamp.millisecondsSinceEpoch}';
+    return '$target|${message.from}|${message.replyId ?? 0}|${message.text}|'
+        '${message.timestamp.millisecondsSinceEpoch}';
   }
 
   void _recordMessageSignature(Message message) {

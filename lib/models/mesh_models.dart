@@ -479,6 +479,13 @@ class MeshNode {
   final double? airUtilTx; // Airtime TX utilization %
   final int? uptimeSeconds; // Device uptime in seconds
 
+  /// True while the device-metric fields above (and [batteryLevel]) were
+  /// last populated from a NodeDB `NodeInfo` replay rather than a live
+  /// telemetry packet. NodeDB values are the radio's cached copy and can
+  /// be arbitrarily old, so history loggers must not chart them as fresh
+  /// samples. Cleared when live device telemetry arrives.
+  final bool deviceMetricsFromNodeDb;
+
   // Environment Metrics
   final double? barometricPressure; // Pressure in hPa
   final double? gasResistance; // Gas resistance for IAQ
@@ -595,6 +602,7 @@ class MeshNode {
     this.channelUtilization,
     this.airUtilTx,
     this.uptimeSeconds,
+    this.deviceMetricsFromNodeDb = false,
     // Environment Metrics
     this.barometricPressure,
     this.gasResistance,
@@ -709,6 +717,7 @@ class MeshNode {
     double? channelUtilization,
     double? airUtilTx,
     int? uptimeSeconds,
+    bool? deviceMetricsFromNodeDb,
     // Environment Metrics
     double? barometricPressure,
     double? gasResistance,
@@ -819,6 +828,8 @@ class MeshNode {
       channelUtilization: channelUtilization ?? this.channelUtilization,
       airUtilTx: airUtilTx ?? this.airUtilTx,
       uptimeSeconds: uptimeSeconds ?? this.uptimeSeconds,
+      deviceMetricsFromNodeDb:
+          deviceMetricsFromNodeDb ?? this.deviceMetricsFromNodeDb,
       // Environment Metrics
       barometricPressure: barometricPressure ?? this.barometricPressure,
       gasResistance: gasResistance ?? this.gasResistance,

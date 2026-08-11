@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (reactions)
+
+- Reactions in busy channels are no longer swallowed by the rapid-fire duplicate filter. The filter keyed on channel + text + a one-second-resolution timestamp, so when several members reacted with the same emoji within the same second (typical of MQTT-fed rooms, where the broker delivers in bursts) every reaction after the first was silently dropped. The filter now also keys on the sender and the reacted-to message, so only true cross-path copies of the same reaction are collapsed
+- A reaction is no longer suppressed when the same member posted the same emoji as a normal message moments earlier
+
+### Fixed (telemetry charts)
+
+- Battery % no longer draws a spurious staircase step at every reconnect (#285). The connect handshake replays the radio's cached node records, and the cached battery reading was being logged as a fresh sample at the current time, repeating the pre-disconnect value. Cached records now update the display only; chart history rows are written only from live telemetry packets
+
 ### Fixed (notification taps)
 
 - Tapping notification after notification for the same conversation no longer stacks a pile of identical screens. If the thread the notification is about is already the screen you are on, the tap keeps you there instead of pushing another copy, so one back tap returns you to where you started rather than to another copy of the same chat. Applies to Meshtastic channels and direct messages and to MeshCore channels and contacts, whichever way the thread was opened
