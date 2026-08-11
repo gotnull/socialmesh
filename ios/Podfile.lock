@@ -1395,7 +1395,6 @@ PODS:
     - Flutter
   - flutter_image_compress_common (1.0.0):
     - Flutter
-    - Mantle
     - SDWebImage
     - SDWebImageWebPCoder
   - flutter_inappwebview_ios (0.0.1):
@@ -1611,9 +1610,6 @@ PODS:
     - libwebp/sharpyuv
   - live_activities (0.0.1):
     - Flutter
-  - Mantle (2.2.0):
-    - Mantle/extobjc (= 2.2.0)
-  - Mantle/extobjc (2.2.0)
   - mobile_scanner (7.0.0):
     - Flutter
     - FlutterMacOS
@@ -1635,21 +1631,21 @@ PODS:
     - Flutter
   - permission_handler_apple (9.3.0):
     - Flutter
-  - photo_manager (3.9.0):
+  - photo_manager (3.11.0):
     - Flutter
     - FlutterMacOS
   - PromisesObjC (2.4.0)
   - PromisesSwift (2.4.0):
     - PromisesObjC (= 2.4.0)
-  - purchases_flutter (10.4.1):
+  - purchases_flutter (10.7.0):
     - Flutter
-    - PurchasesHybridCommon (= 18.19.0)
-  - PurchasesHybridCommon (18.19.0):
-    - RevenueCat (= 5.80.2)
+    - PurchasesHybridCommon (= 18.28.0)
+  - PurchasesHybridCommon (18.28.0):
+    - RevenueCat (= 5.83.0)
   - RecaptchaInterop (101.0.0)
   - record_ios (2.0.0):
     - Flutter
-  - RevenueCat (5.80.2)
+  - RevenueCat (5.83.0)
   - SDWebImage (5.21.7):
     - SDWebImage/Core (= 5.21.7)
   - SDWebImage/Core (5.21.7)
@@ -1842,7 +1838,6 @@ SPEC REPOS:
     - GTMSessionFetcher
     - leveldb-library
     - libwebp
-    - Mantle
     - nanopb
     - NordicDFU
     - OrderedSet
@@ -2020,7 +2015,7 @@ SPEC CHECKSUMS:
   flutter_blue_plus_darwin: ee2377ea51a6c9e481f2ed76ec597717ef5d287d
   flutter_compass: b236ab69b61545cce89fd58527f401a7587d5cc1
   flutter_foreground_task: a159d2c2173b33699ddb3e6c2a067045d7cebb89
-  flutter_image_compress_common: 1697a328fd72bfb335507c6bca1a65fa5ad87df1
+  flutter_image_compress_common: 11d5dcfb36f4ded92320bfa896261813a073240e
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
   flutter_local_notifications: 643a3eda1ce1c0599413ca31672536d423dee214
   flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
@@ -2044,7 +2039,6 @@ SPEC CHECKSUMS:
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   live_activities: 4dfa736d0736e1c77866a2f9c056a76513cc9e7b
-  Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
   mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   nordic_dfu: 05681503e4969f1dfe11903be2bf8840bf5691c9
@@ -2053,14 +2047,14 @@ SPEC CHECKSUMS:
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
-  photo_manager: 25fd77df14f4f0ba5ef99e2c61814dde77e2bceb
+  photo_manager: 6ab48c2ce7ec21aa06d59e6cc049f0b6d9ba7f94
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
-  purchases_flutter: 1bfc08dbcd8f55c6e79dfc055a76fe2081a2b729
-  PurchasesHybridCommon: 1eb67a6c8997233b35ed9b4eee8205dd8dd92890
+  purchases_flutter: 174b063d0e6f1f31424adedfcc3a7cda540fe026
+  PurchasesHybridCommon: 8563d6a7d832332beb9b30478dbe56eeaa0dd425
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   record_ios: 390a30c7caaf8b5d0fb1cb1d2fd5064b48b4520c
-  RevenueCat: b772273e51fa103a2ecc644439dd54a5dec199f3
+  RevenueCat: a83de0391a1061302699cb55eb1ff0662f5768b5
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
   sensors_plus: b70a93b69dafdabd26ce4ac3f4d0529ab9acc4ca

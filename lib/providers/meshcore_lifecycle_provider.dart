@@ -27,12 +27,15 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../models/mesh_device.dart' show MeshConnectionState;
 import '../services/meshcore/connection_coordinator.dart';
+import '../services/meshcore/meshcore_os_reconnect_armer.dart';
+import '../services/transport/background_ble_service.dart';
 import 'app_lifecycle_provider.dart';
 import 'app_providers.dart';
 import 'meshcore_providers.dart';
@@ -103,6 +106,13 @@ MeshCoreReconnectGateOutcome evaluateMeshCoreReconnectGate({
 final meshCoreLifecycleProvider = Provider<void>((ref) {
   AppLogging.connection('🔄 meshCoreLifecycleProvider INITIALIZED');
 
+  // iOS background recovery: at most one OS-level pending-reconnect
+  // registration lives here. Armed instead of the immediate dispatch when
+  // a BLE peer drops while the app is backgrounded; its callback routes
+  // straight back into the canonical coordinator reconnect below.
+  final osReconnectArmer = MeshCoreOsReconnectArmer();
+  ref.onDispose(osReconnectArmer.dispose);
+
   // Tracks whether we recently fired a reconnect attempt so the foreground
   // and stream listeners can't double-arm in the same window.
   DateTime? lastDispatchAt;
@@ -141,10 +151,53 @@ final meshCoreLifecycleProvider = Provider<void>((ref) {
     }
 
     final lastDeviceId = settings.lastDeviceId!;
+    final isTcp = MeshCoreTcpDeviceId.tryParse(lastDeviceId) != null;
+
+    // Background BLE drop on iOS: an immediate direct-connect attempt
+    // would die with the suspend, so register an OS-level pending
+    // reconnect instead. iOS re-establishes the link whenever the radio
+    // reappears and wakes the app; the callback then dispatches the same
+    // canonical reconnect path used everywhere else.
+    final isForeground = ref.read(appLifecycleProvider);
+    final backgroundBleEnabled = !isForeground && !isTcp
+        ? await BackgroundBleService.isBackgroundBleEnabled()
+        : false;
+    if (!ref.mounted) return;
+    if (shouldArmMeshCoreOsReconnect(
+      platform: defaultTargetPlatform,
+      isForeground: isForeground,
+      isTcpDevice: isTcp,
+      coordinatorConnected: coordinator.isConnected,
+      coordinatorConnecting: coordinator.isConnecting,
+      alreadyArmed: osReconnectArmer.isArmed,
+      backgroundBleEnabled: backgroundBleEnabled,
+    )) {
+      lastDispatchAt = DateTime.now();
+      AppLogging.meshcore(
+        'event=reconnect.route route=os_pending_reconnect trigger=$trigger',
+      );
+      await osReconnectArmer.arm(
+        deviceId: lastDeviceId,
+        onLinkReestablished: (deviceId) async {
+          if (!ref.mounted) return;
+          lastDispatchAt = DateTime.now();
+          AppLogging.meshcore(
+            'event=reconnect.started trigger=os_pending_reconnect '
+            'transport=ble',
+          );
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.scanning);
+          dispatchReconnectMeshCoreAware(ref, deviceId);
+        },
+      );
+      return;
+    }
+
     lastDispatchAt = DateTime.now();
     AppLogging.meshcore(
       'event=reconnect.started trigger=$trigger '
-      'transport=${MeshCoreTcpDeviceId.tryParse(lastDeviceId) != null ? "tcp" : "ble"}',
+      'transport=${isTcp ? "tcp" : "ble"}',
     );
     ref
         .read(autoReconnectStateProvider.notifier)
@@ -155,12 +208,31 @@ final meshCoreLifecycleProvider = Provider<void>((ref) {
   // Foreground transitions trigger a check.
   ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
     if (!isForeground) return;
+    // Foreground recovery owns the flow from here: stop listening for the
+    // OS-level link event so it can't double-dispatch. The registration
+    // itself stays as a safety net; the next transport disconnect clears
+    // it.
+    if (osReconnectArmer.isArmed) {
+      unawaited(osReconnectArmer.cancel(releaseRegistration: false));
+    }
     // Wait a tick so platform channels (BT adapter state, etc.) settle
     // before we kick off a reconnect.
     Timer(const Duration(milliseconds: 250), () {
       if (!ref.mounted) return;
       maybeReconnect('foreground');
     });
+  });
+
+  // User-initiated disconnect: a peer armed for background recovery must
+  // not resurrect behind the user's back, so drop the OS registration
+  // along with the listener.
+  ref.listen<bool>(userDisconnectedProvider, (previous, isUserDisconnected) {
+    if (!isUserDisconnected) return;
+    if (!osReconnectArmer.isArmed) return;
+    AppLogging.meshcore(
+      'event=os_reconnect.cancel.trigger reason=user_disconnect',
+    );
+    unawaited(osReconnectArmer.cancel(releaseRegistration: true));
   });
 
   // Mid-session disconnect: when the coordinator transitions into
