@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (message length limit)
+
+- Sending a maximum-length direct message no longer fails with "Message too large" (#270). The composer's byte counter budgeted every message against the plain-text ceiling (228 bytes), but a DM to a node with a known public key is sent encrypted, and the radio reserves 14 extra bytes on those packets: 12 bytes of crypto overhead plus a 2-byte flags field the firmware stamps onto the payload before its size check. The counter now shows the encrypted ceiling (220 bytes) for those conversations and the app blocks an oversized send before the radio has to reject it
+- The message input now enforces its limit in UTF-8 bytes rather than characters, so multi-byte text (umlauts, emoji) can no longer be typed past the wire budget
+
 ### Fixed (reactions)
 
 - Reactions in busy channels are no longer swallowed by the rapid-fire duplicate filter. The filter keyed on channel + text + a one-second-resolution timestamp, so when several members reacted with the same emoji within the same second (typical of MQTT-fed rooms, where the broker delivers in bursts) every reaction after the first was silently dropped. The filter now also keys on the sender and the reacted-to message, so only true cross-path copies of the same reaction are collapsed

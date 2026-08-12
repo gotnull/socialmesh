@@ -91,17 +91,27 @@ class TextMessagePayloadSizer {
 
   // LoRa frame geometry mirrored from the Meshtastic firmware: 255-byte max
   // frame, 16-byte packet header, and 12 bytes reserved on PKI-encrypted
-  // packets (8-byte auth tag + 4-byte extended nonce). The firmware rejects
-  // a PKI packet whose encoded `Data` exceeds 255 - 16 - 12 = 227 bytes
-  // with `Routing.Error.TOO_LARGE`, so the app-side budget must respect the
-  // same ceiling.
+  // packets (8-byte auth tag + 4-byte extended nonce). Before running its
+  // size check, the firmware also stamps `Data.bitfield` (field 9: the
+  // ok-to-MQTT and want-response bits) onto every packet it originates,
+  // which re-encodes 2 bytes larger than the `Data` the app measures here
+  // (1 tag byte + 1 varint byte). The firmware rejects a PKI packet whose
+  // re-encoded `Data` exceeds 255 - 16 - 12 = 227 bytes with
+  // `Routing.Error.TOO_LARGE`, so the app-side ceiling is 227 - 2 = 225
+  // encoded bytes. The channel-PSK path needs no bitfield reserve: its
+  // firmware ceiling is 255 - 16 = 239, and `DATA_PAYLOAD_LEN` (233) plus
+  // the bitfield still fits.
   static const int _maxLoraFrameBytes = 255;
   static const int _packetHeaderBytes = 16;
   static const int _pkcOverheadBytes = 12;
+  static const int _firmwareBitfieldBytes = 2;
 
-  /// Ceiling for the encoded `Data` protobuf on PKI-encrypted DMs.
+  /// Ceiling for the app-encoded `Data` protobuf on PKI-encrypted DMs.
   static const int pkiMaxEncodedDataBytes =
-      _maxLoraFrameBytes - _packetHeaderBytes - _pkcOverheadBytes;
+      _maxLoraFrameBytes -
+      _packetHeaderBytes -
+      _pkcOverheadBytes -
+      _firmwareBitfieldBytes;
 
   static int resolveMaxEncodedDataBytes({required bool pkiEncrypted}) =>
       pkiEncrypted ? pkiMaxEncodedDataBytes : channelMaxEncodedDataBytes;

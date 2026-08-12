@@ -43,16 +43,18 @@ void main() {
     test('PKI-encrypted DMs budget for firmware crypto overhead', () {
       final sizer = TextMessagePayloadSizer.standard(pkiEncrypted: true);
 
-      expect(sizer.maxEncodedDataBytes, 227);
-      expect(sizer.maxUtf8Bytes, 222);
+      // 255 frame - 16 header - 12 PKC - 2 firmware bitfield = 225 encoded,
+      // which leaves 220 UTF-8 text bytes.
+      expect(sizer.maxEncodedDataBytes, 225);
+      expect(sizer.maxUtf8Bytes, 220);
 
-      final exact = sizer.measure('a' * 222);
-      final over = sizer.measure('a' * 223);
+      final exact = sizer.measure('a' * 220);
+      final over = sizer.measure('a' * 221);
 
       expect(exact.fitsInPacket, isTrue);
-      expect(exact.encodedDataBytes, 227);
+      expect(exact.encodedDataBytes, 225);
       expect(over.fitsInPacket, isFalse);
-      expect(over.encodedDataBytes, 228);
+      expect(over.encodedDataBytes, 226);
     });
 
     test('PKI-encrypted replies stack crypto and reply overhead', () {
@@ -61,18 +63,18 @@ void main() {
         pkiEncrypted: true,
       );
 
-      expect(sizer.maxUtf8Bytes, 217);
+      expect(sizer.maxUtf8Bytes, 215);
 
-      final exact = sizer.measure('a' * 217);
-      final over = sizer.measure('a' * 218);
+      final exact = sizer.measure('a' * 215);
+      final over = sizer.measure('a' * 216);
 
       expect(exact.fitsInPacket, isTrue);
       expect(over.fitsInPacket, isFalse);
     });
 
-    test('a draft in the 223-228 byte band fits plain but not PKI', () {
+    test('a draft in the 221-228 byte band fits plain but not PKI', () {
       // The band where the channel-PSK ceiling (228 text bytes) accepts a
-      // message the PKI ceiling (222 text bytes) must reject.
+      // message the PKI ceiling (220 text bytes) must reject.
       final text = 'ä' * 113; // 226 UTF-8 bytes
 
       final plain = TextMessagePayloadSizer.standard().measure(text);
