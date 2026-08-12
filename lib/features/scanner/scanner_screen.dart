@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/ble_system_devices.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
+import '../../core/meshcore_constants.dart';
 import '../../core/safety/error_handler.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../providers/connection_providers.dart' as conn;
@@ -45,6 +46,34 @@ import 'widgets/network_connection_section.dart';
 import '../onboarding/meshtastic_onboarding_flow.dart';
 import '../onboarding/meshtastic_onboarding_state.dart';
 
+/// Rescan pacing for the scanner's continuous scan loop. Healthy scans
+/// restart on the normal short cadence; after a scanner-level failure
+/// the interval doubles per consecutive failure (5, 10, 20, 40, then
+/// capped at 60 seconds) so the retry loop stays far below Android's
+/// scan-start throttle of five starts per 30 seconds - repeatedly
+/// re-registering against a wedged or throttled scanner only prolongs
+/// the failure state.
+@visibleForTesting
+Duration scannerRescanDelay(int failureStreak) {
+  if (failureStreak <= 0) return const Duration(seconds: 3);
+  final shift = failureStreak - 1;
+  final seconds = shift >= 4 ? 60 : 5 << shift;
+  return Duration(seconds: seconds);
+}
+
+/// The BLE service UUID a saved device is known to expose, derived from
+/// the saved id: MeshCore ids carry a `meshcore-` prefix, Meshtastic ids
+/// are the bare BLE remote id. The saved-device placeholder row must be
+/// seeded with this UUID so `detectProtocol()` resolves it the way a
+/// live advertisement would - name-based detection resolves renamed
+/// nodes to `unknown`, and unknown rows silently ignore taps, which
+/// must never happen to a device the user already paired with.
+@visibleForTesting
+String savedDeviceServiceUuid(String savedDeviceId) =>
+    savedDeviceId.startsWith('meshcore-')
+    ? MeshCoreBleUuids.serviceUuid
+    : MeshtasticBleUuids.serviceUuid;
+
 class ScannerScreen extends ConsumerStatefulWidget {
   final bool isOnboarding;
   final bool isInline;
@@ -68,6 +97,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   String? _errorMessage;
   String? _savedDeviceNotFoundName;
   bool _showPairingInvalidationHint = false;
+
+  /// Set when the OS-level BLE scanner rejected the scan itself
+  /// (Android SCAN_FAILED_* codes surfaced as [BleScanFailure]).
+  /// Drives the localised recovery card instead of the raw-exception
+  /// error banner.
+  BleScanFailureKind? _scanStackFailureKind;
+
+  /// Consecutive scan cycles that ended in a scanner-level failure.
+  /// Paces [_scheduleRescan] with exponential backoff so a failing
+  /// scan loop never trips Android's scan-start throttle (5 starts
+  /// per 30 s). Reset to zero by any successfully completed scan.
+  int _scanFailureStreak = 0;
   bool _showAutoReconnectDisabledHint = false;
   String? _savedDeviceId;
   String? _savedDeviceName;
@@ -1154,6 +1195,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         '📡 SCANNER: Scan stream completed, found ${_devices.length} devices',
       );
 
+      // A completed scan cycle proves the OS scanner accepted our
+      // registration again - clear the scan-failure recovery card and
+      // reset the rescan backoff to the normal cadence.
+      _scanFailureStreak = 0;
+      if (mounted && _scanStackFailureKind != null) {
+        AppLogging.connection(
+          'SCANNER_SCAN_FAILURE_CLEARED reason=successful_scan',
+        );
+        safeSetState(() {
+          _scanStackFailureKind = null;
+        });
+      }
+
       // A successful scan proves the BLE adapter is alive AND the app
       // has permission to use it. Clear any BLE-state error banner
       // that a PRIOR scan attempt set (transient init wedge,
@@ -1199,11 +1253,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     } catch (e) {
       AppLogging.connection('📡 SCANNER: Scan error: $e');
       if (mounted) {
-        final message = e.toString().replaceFirst('Exception: ', '');
-        safeSetState(() {
-          _errorMessage = message;
-          _showPairingInvalidationHint = false;
-        });
+        if (e is BleScanFailure) {
+          // OS-level scanner rejection: show the localised recovery
+          // card and lengthen the rescan cadence instead of echoing
+          // the raw plugin exception in the error banner.
+          _scanFailureStreak++;
+          safeSetState(() {
+            _scanStackFailureKind = e.kind;
+            _errorMessage = null;
+            _showPairingInvalidationHint = false;
+          });
+        } else {
+          final message = e.toString().replaceFirst('Exception: ', '');
+          safeSetState(() {
+            _errorMessage = message;
+            _showPairingInvalidationHint = false;
+          });
+        }
       }
     } finally {
       AppLogging.connection('📡 SCANNER: Scan finally block, mounted=$mounted');
@@ -1220,7 +1286,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   void _scheduleRescan() {
     _rescanTimer?.cancel();
     if (!mounted || _connecting) return;
-    _rescanTimer = Timer(const Duration(seconds: 3), () {
+    final delay = scannerRescanDelay(_scanFailureStreak);
+    if (_scanFailureStreak > 0) {
+      AppLogging.connection(
+        'SCANNER_RESCAN_BACKOFF streak=$_scanFailureStreak '
+        'delaySeconds=${delay.inSeconds}',
+      );
+    }
+    _rescanTimer = Timer(delay, () {
       if (mounted && !_connecting && !_scanning) {
         _startScan(isRescan: true);
       }
@@ -1447,7 +1520,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // BLE. Default kept for defensive resilience if a future caller
     // forgets to pre-gate on transport type.
     final type = _savedDeviceTransportType ?? TransportType.ble;
-    return DeviceInfo(id: _savedDeviceId!, name: name, type: type);
+    // Seed the placeholder with the service UUID the saved device is
+    // known to expose so detectProtocol() resolves it the way a live
+    // advertisement would. Name-based detection must not be the
+    // fallback here: a node renamed away from the stock naming pattern
+    // resolves to `unknown`, and the row's tap handler silently
+    // ignores unknown devices - a saved device the user already paired
+    // with must always be connectable.
+    return DeviceInfo(
+      id: _savedDeviceId!,
+      name: name,
+      type: type,
+      serviceUuids: [savedDeviceServiceUuid(_savedDeviceId!)],
+    );
   }
 
   Future<void> _connect(DeviceInfo device) async {
@@ -2400,6 +2485,113 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       );
                       setState(() => _errorMessage = null);
                     },
+                  ),
+
+                // OS-level scanner rejection (Android SCAN_FAILED_*).
+                // Localised recovery guidance in place of the raw
+                // plugin exception text. Suppressed while the
+                // pairing-refresh card is up - that flow already owns
+                // the recovery messaging for its scenario.
+                if (_scanStackFailureKind != null &&
+                    !_showPairingInvalidationHint)
+                  Container(
+                    key: const ValueKey('scanner-scan-failure-card'),
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _scanStackFailureKind ==
+                                        BleScanFailureKind.throttled
+                                    ? context.l10n.scannerScanThrottledTitle
+                                    : context.l10n.scannerScanStackErrorTitle,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.spacing8),
+                            InkWell(
+                              onTap: () {
+                                AppLogging.connection(
+                                  'SCANNER_SCAN_FAILURE_DISMISSED '
+                                  'reason=user_x',
+                                );
+                                setState(() => _scanStackFailureKind = null);
+                              },
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius4,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(
+                                  AppTheme.spacing2,
+                                ),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 18,
+                                  color: context.textTertiary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppTheme.spacing8),
+                        Text(
+                          _scanStackFailureKind == BleScanFailureKind.throttled
+                              ? context.l10n.scannerScanThrottledBody
+                              : context.l10n.scannerScanStackErrorBody,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.textSecondary,
+                            height: 1.4,
+                          ),
+                        ),
+                        if (_scanStackFailureKind ==
+                            BleScanFailureKind.stackFailure) ...[
+                          const SizedBox(height: AppTheme.spacing12),
+                          TextButton.icon(
+                            onPressed: _openBluetoothSettings,
+                            icon: Icon(
+                              Icons.bluetooth_rounded,
+                              size: 16,
+                              color: context.textPrimary,
+                            ),
+                            label: Text(
+                              context
+                                  .l10n
+                                  .scannerPairingRefreshOpenBluetoothSettings,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 10,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
 
                 if (_showPairingInvalidationHint)

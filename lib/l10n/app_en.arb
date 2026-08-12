@@ -24093,6 +24093,22 @@
     "@scannerPairingRefreshScanAgain": {
         "description": "Secondary action on the pairing-refresh card — re-runs the BLE scan after the user has forgotten the stale pairing in Bluetooth Settings."
     },
+    "scannerScanStackErrorTitle": "Bluetooth scanning failed",
+    "@scannerScanStackErrorTitle": {
+        "description": "Title of the recovery card shown when the OS-level BLE scanner rejects the scan registration (Android SCAN_FAILED_APPLICATION_REGISTRATION_FAILED and similar). A phone-side Bluetooth stack fault, not an app or radio fault."
+    },
+    "scannerScanStackErrorBody": "Your phone's Bluetooth service refused to start the scan. This is a phone-side glitch: turn Bluetooth off and on again (or restart your phone), and scanning will resume automatically.",
+    "@scannerScanStackErrorBody": {
+        "description": "Body copy of the scan-failure recovery card. Explains the Android Bluetooth stack wedge and the user-side recovery (cycle Bluetooth or reboot); the app keeps retrying in the background with backoff."
+    },
+    "scannerScanThrottledTitle": "Bluetooth scanning paused",
+    "@scannerScanThrottledTitle": {
+        "description": "Title of the recovery card shown when Android temporarily throttles BLE scanning (SCAN_FAILED_SCANNING_TOO_FREQUENTLY)."
+    },
+    "scannerScanThrottledBody": "The system temporarily limited Bluetooth scanning because scans started too often. Scanning will retry automatically shortly.",
+    "@scannerScanThrottledBody": {
+        "description": "Body copy of the throttled-scan card. No user action needed; the app backs off and retries on its own."
+    },
     "scannerPinRequiredError": "Connection failed - please try again and enter the PIN when prompted",
     "@scannerPinRequiredError": {
         "description": "Error thrown when Meshtastic config is not received, indicating a PIN/auth issue."

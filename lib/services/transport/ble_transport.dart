@@ -267,6 +267,49 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     }
   }
 
+  /// Maps an Android scanner-service rejection onto the typed
+  /// [BleScanFailure] the UI layer can localise and pace retries from.
+  /// Returns null for anything that is not an Android scan-level
+  /// failure (adapter-off, permissions, and every iOS error keep their
+  /// existing handling).
+  ///
+  /// Android `ScanCallback` codes:
+  ///  - 2 SCAN_FAILED_APPLICATION_REGISTRATION_FAILED
+  ///  - 3 SCAN_FAILED_INTERNAL_ERROR
+  ///  - 5 SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES
+  ///    → the Bluetooth stack itself is wedged; app-side retries do not
+  ///      help and each one burns a slot in the OS scan-start throttle
+  ///      (5 starts per 30 s), so these are surfaced without retrying.
+  ///  - 6 SCAN_FAILED_SCANNING_TOO_FREQUENTLY
+  ///    → throttled; a backed-off retry succeeds on its own.
+  static BleScanFailure? classifyAndroidScanFailure(Object error) {
+    if (error is! FlutterBluePlusException) return null;
+    if (error.platform != ErrorPlatform.android) return null;
+    // Scan-level failures only: connect-path exceptions reuse the same
+    // numeric range with different meanings (e.g. android-code 5 is
+    // GATT_INSUFFICIENT_AUTHENTICATION on connect but
+    // OUT_OF_HARDWARE_RESOURCES on scan).
+    if (error.function != 'scan' && error.function != 'startScan') {
+      return null;
+    }
+    switch (error.code) {
+      case 2:
+      case 3:
+      case 5:
+        return BleScanFailure(
+          kind: BleScanFailureKind.stackFailure,
+          platformCode: error.code!,
+        );
+      case 6:
+        return BleScanFailure(
+          kind: BleScanFailureKind.throttled,
+          platformCode: error.code!,
+        );
+      default:
+        return null;
+    }
+  }
+
   @override
   Stream<DeviceInfo> scan({Duration? timeout, bool scanAll = false}) {
     AppLogging.ble('📡 BLE_TRANSPORT: scan() called (scanAll: $scanAll)');
@@ -385,6 +428,23 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             retryCount++;
             final errorStr = e.toString();
             AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: startScan() error: $errorStr');
+
+            // Android scanner-service rejection (registration failed,
+            // internal error, out of resources, throttled). Do NOT
+            // retry here: a wedged stack does not recover between
+            // immediate retries, and every startScan attempt counts
+            // toward the OS scan-start throttle. The scanner surface
+            // paces retries with backoff and shows recovery guidance.
+            final scanFailure = classifyAndroidScanFailure(e);
+            if (scanFailure != null) {
+              AppLogging.ble(
+                '⚠️ 📡 BLE_TRANSPORT: Android scan failure '
+                'kind=${scanFailure.kind.name} '
+                'code=${scanFailure.platformCode} — not retrying',
+              );
+              controller.addError(scanFailure);
+              return;
+            }
 
             // iOS Core Bluetooth surfaces a few distinct state codes
             // through the same `bluetooth must be turned on` umbrella
@@ -512,7 +572,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
           onError: (e) {
             AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: scanResults error: $e');
             if (!controller.isClosed) {
-              controller.addError(e);
+              // Android delivers scanner-service failures through the
+              // results stream (onScanFailed) as well as from
+              // startScan itself — classify both paths identically.
+              controller.addError(classifyAndroidScanFailure(e) ?? e);
             }
           },
           onDone: () {

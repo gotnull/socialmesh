@@ -30482,6 +30482,30 @@ abstract class AppLocalizations {
   /// **'Scan again'**
   String get scannerPairingRefreshScanAgain;
 
+  /// Title of the recovery card shown when the OS-level BLE scanner rejects the scan registration (Android SCAN_FAILED_APPLICATION_REGISTRATION_FAILED and similar). A phone-side Bluetooth stack fault, not an app or radio fault.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth scanning failed'**
+  String get scannerScanStackErrorTitle;
+
+  /// Body copy of the scan-failure recovery card. Explains the Android Bluetooth stack wedge and the user-side recovery (cycle Bluetooth or reboot); the app keeps retrying in the background with backoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone\'s Bluetooth service refused to start the scan. This is a phone-side glitch: turn Bluetooth off and on again (or restart your phone), and scanning will resume automatically.'**
+  String get scannerScanStackErrorBody;
+
+  /// Title of the recovery card shown when Android temporarily throttles BLE scanning (SCAN_FAILED_SCANNING_TOO_FREQUENTLY).
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth scanning paused'**
+  String get scannerScanThrottledTitle;
+
+  /// Body copy of the throttled-scan card. No user action needed; the app backs off and retries on its own.
+  ///
+  /// In en, this message translates to:
+  /// **'The system temporarily limited Bluetooth scanning because scans started too often. Scanning will retry automatically shortly.'**
+  String get scannerScanThrottledBody;
+
   /// Error thrown when Meshtastic config is not received, indicating a PIN/auth issue.
   ///
   /// In en, this message translates to:

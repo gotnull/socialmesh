@@ -17835,6 +17835,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scannerPairingRefreshScanAgain => 'Сканировать снова';
 
   @override
+  String get scannerScanStackErrorTitle =>
+      'Не удалось запустить сканирование Bluetooth';
+
+  @override
+  String get scannerScanStackErrorBody =>
+      'Служба Bluetooth телефона отклонила запуск сканирования. Это сбой на стороне телефона: выключите и снова включите Bluetooth (или перезагрузите телефон), после чего сканирование возобновится автоматически.';
+
+  @override
+  String get scannerScanThrottledTitle =>
+      'Сканирование Bluetooth приостановлено';
+
+  @override
+  String get scannerScanThrottledBody =>
+      'Система временно ограничила сканирование Bluetooth из-за слишком частых запусков. Сканирование автоматически возобновится в ближайшее время.';
+
+  @override
   String get scannerPinRequiredError =>
       'Ошибка подключения - повторите попытку и введите PIN при появлении запроса';
 

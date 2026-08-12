@@ -74,6 +74,36 @@ class TransportSendError implements Exception {
   String toString() => 'TransportSendError: $message';
 }
 
+/// How an OS-level BLE scan registration failed.
+///
+/// `stackFailure` covers the Android scanner-service failures that mean
+/// the Bluetooth stack itself is in a bad state (scan client registration
+/// refused, internal error, out of hardware resources). Retrying from the
+/// app does not help; the user has to cycle Bluetooth off and on (or
+/// reboot). `throttled` means Android rejected the scan because scans
+/// were started too frequently - backing off and retrying later succeeds
+/// without any user action.
+enum BleScanFailureKind { stackFailure, throttled }
+
+/// Typed error emitted by [DeviceTransport.scan] when the OS-level BLE
+/// scanner rejects the scan itself (as opposed to the adapter being off
+/// or permission missing). Carries the platform error code so logs stay
+/// diagnosable, while UI layers key off [kind] to show a localised
+/// recovery message instead of the raw plugin exception text.
+class BleScanFailure implements Exception {
+  final BleScanFailureKind kind;
+
+  /// The raw Android `ScanCallback` error code (e.g. 2 for
+  /// SCAN_FAILED_APPLICATION_REGISTRATION_FAILED).
+  final int platformCode;
+
+  const BleScanFailure({required this.kind, required this.platformCode});
+
+  @override
+  String toString() =>
+      'BleScanFailure(kind: ${kind.name}, platformCode: $platformCode)';
+}
+
 /// Abstract transport interface
 abstract class DeviceTransport {
   /// Get the transport type

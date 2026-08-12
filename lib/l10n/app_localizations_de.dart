@@ -17880,6 +17880,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get scannerPairingRefreshScanAgain => 'Erneut scannen';
 
   @override
+  String get scannerScanStackErrorTitle => 'Bluetooth-Scan fehlgeschlagen';
+
+  @override
+  String get scannerScanStackErrorBody =>
+      'Der Bluetooth-Dienst des Telefons hat den Start des Scans abgelehnt. Das ist eine Störung auf Telefonseite: Bluetooth aus- und wieder einschalten (oder das Telefon neu starten), danach wird der Scan automatisch fortgesetzt.';
+
+  @override
+  String get scannerScanThrottledTitle => 'Bluetooth-Scan pausiert';
+
+  @override
+  String get scannerScanThrottledBody =>
+      'Das System hat das Bluetooth-Scannen vorübergehend eingeschränkt, weil Scans zu häufig gestartet wurden. Der Scan wird in Kürze automatisch fortgesetzt.';
+
+  @override
   String get scannerPinRequiredError =>
       'Verbindung fehlgeschlagen - versuchen Sie es erneut und geben Sie bei Aufforderung die PIN ein';
 

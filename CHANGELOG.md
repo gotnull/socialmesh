@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (device scanning)
+
+- Tapping your saved radio in the Devices list now always starts a connection. The saved-device row was routed through the same protocol guesswork as anonymous scan results, so a radio renamed away from the stock "Name 1234" pattern was treated as an unknown device and the tap was silently ignored - the only workaround was to unpair and pair again. The device's protocol is already known from when it was first paired, so the row now connects directly
+- Android's "SCAN_FAILED_APPLICATION_REGISTRATION_FAILED" plugin error is no longer shown raw (and untranslated) in the scan error banner. When Android's Bluetooth service refuses to start a scan - a phone-side state that clears after toggling Bluetooth off and on - the app now shows a plain-language recovery card with a shortcut to Bluetooth settings, and clears it automatically once scanning recovers
+- A failing scan no longer retries every 3 seconds. Android limits apps to five scan starts per 30 seconds and slows down offenders, so the fixed retry loop could keep the scanner stuck in the very throttled state it was trying to escape. Failed scans now back off (5, 10, 20, 40, then 60 seconds between retries) until a scan succeeds
+
 ### Fixed (message length limit)
 
 - Sending a maximum-length direct message no longer fails with "Message too large" (#270). The composer's byte counter budgeted every message against the plain-text ceiling (228 bytes), but a DM to a node with a known public key is sent encrypted, and the radio reserves 14 extra bytes on those packets: 12 bytes of crypto overhead plus a 2-byte flags field the firmware stamps onto the payload before its size check. The counter now shows the encrypted ceiling (220 bytes) for those conversations and the app blocks an oversized send before the radio has to reject it

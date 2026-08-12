@@ -17656,6 +17656,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scannerPairingRefreshScanAgain => 'Scan again';
 
   @override
+  String get scannerScanStackErrorTitle => 'Bluetooth scanning failed';
+
+  @override
+  String get scannerScanStackErrorBody =>
+      'Your phone\'s Bluetooth service refused to start the scan. This is a phone-side glitch: turn Bluetooth off and on again (or restart your phone), and scanning will resume automatically.';
+
+  @override
+  String get scannerScanThrottledTitle => 'Bluetooth scanning paused';
+
+  @override
+  String get scannerScanThrottledBody =>
+      'The system temporarily limited Bluetooth scanning because scans started too often. Scanning will retry automatically shortly.';
+
+  @override
   String get scannerPinRequiredError =>
       'Connection failed - please try again and enter the PIN when prompted';
 
