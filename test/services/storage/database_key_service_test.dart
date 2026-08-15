@@ -17,6 +17,10 @@ class _FakeSecureStorage extends FlutterSecureStorage {
   bool throwOnRead = false;
   bool throwOnWrite = false;
 
+  /// Fails this many reads and then behaves, standing in for a keystore that
+  /// becomes readable a moment after launch.
+  int throwOnFirstReads = 0;
+
   _FakeSecureStorage() : super();
 
   @override
@@ -30,7 +34,7 @@ class _FakeSecureStorage extends FlutterSecureStorage {
     WindowsOptions? wOptions,
   }) async {
     readCount++;
-    if (throwOnRead) {
+    if (throwOnRead || throwOnFirstReads >= readCount) {
       throw PlatformException(code: '-25308', message: 'keystore locked');
     }
     return store[key];
@@ -114,5 +118,67 @@ void main() {
     // After the lock clears, a retry succeeds with the original key.
     storage.throwOnRead = false;
     expect(await service.getOrCreateKey(), existing);
+  });
+
+  test('a keystore that frees up mid-ladder returns the stored key', () async {
+    final storage = _FakeSecureStorage();
+    final existing = base64Encode(List<int>.filled(32, 9));
+    storage.store[DatabaseKeyService.storageKey] = existing;
+    // Locked for the first attempt, readable by the second.
+    storage.throwOnFirstReads = 1;
+
+    final service = DatabaseKeyService(
+      storage: storage,
+      retryBackoff: const [Duration.zero, Duration.zero],
+    );
+
+    expect(await service.getOrCreateKey(), existing);
+    expect(storage.readCount, 2);
+    // The whole point: no fresh key was invented on the way through.
+    expect(storage.writeCount, 0);
+  });
+
+  test(
+    'gives up once the ladder is spent, then retries on a later call',
+    () async {
+      final storage = _FakeSecureStorage();
+      final existing = base64Encode(List<int>.filled(32, 11));
+      storage.store[DatabaseKeyService.storageKey] = existing;
+      storage.throwOnRead = true;
+
+      final service = DatabaseKeyService(
+        storage: storage,
+        retryBackoff: const [Duration.zero, Duration.zero],
+      );
+
+      await expectLater(
+        service.getOrCreateKey(),
+        throwsA(isA<DatabaseKeyUnavailableException>()),
+      );
+      // One attempt per rung plus the first try.
+      expect(storage.readCount, 3);
+      expect(storage.writeCount, 0);
+
+      // The failed load is not memoised, so the next open reads again.
+      storage.throwOnRead = false;
+      expect(await service.getOrCreateKey(), existing);
+      expect(storage.readCount, 4);
+    },
+  );
+
+  test('reports whether the key was generated this launch', () async {
+    final fresh = _FakeSecureStorage();
+    final generating = DatabaseKeyService(storage: fresh);
+    expect(generating.keyGeneratedThisLaunch, isFalse);
+    await generating.getOrCreateKey();
+    expect(generating.keyGeneratedThisLaunch, isTrue);
+
+    final stocked = _FakeSecureStorage();
+    stocked.store[DatabaseKeyService.storageKey] = base64Encode(
+      List<int>.filled(32, 3),
+    );
+    final loading = DatabaseKeyService(storage: stocked);
+    await loading.getOrCreateKey();
+    expect(loading.keyGeneratedThisLaunch, isFalse);
   });
 }

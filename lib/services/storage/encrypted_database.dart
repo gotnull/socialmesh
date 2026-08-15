@@ -9,6 +9,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart' as cipher;
 import '../../core/logging.dart';
 import 'database_key_service.dart';
 import 'database_migration.dart';
+import 'database_open_diagnostics.dart';
 
 /// Whether at-rest encryption is available on the current platform. Only the
 /// mobile targets ship the SQLCipher native library; unit tests and desktop run
@@ -49,16 +50,20 @@ Future<sqflite.Database> openEncryptedDatabase(
     );
   }
 
-  // Throws DatabaseKeyUnavailableException if the keystore is locked before the
-  // first post-boot unlock. The caller defers and retries — an encrypted file
-  // cannot be opened without its key.
-  final key = await (keyService ?? DatabaseKeyService.instance)
-      .getOrCreateKey();
+  // Retries a locked keystore internally, then throws
+  // DatabaseKeyUnavailableException — an encrypted file cannot be opened
+  // without its key, and inventing one orphans the file for good. The memoised
+  // key is cleared on failure, so a later open (the provider rebuilding after
+  // the device is unlocked) reads the keystore again.
+  final resolvedKeyService = keyService ?? DatabaseKeyService.instance;
+  final key = await resolvedKeyService.getOrCreateKey();
 
   var openEncrypted = true;
+  var wasPlaintext = false;
   try {
     await recoverInterruptedMigration(path);
-    if (await isPlaintextSqlite(path)) {
+    wasPlaintext = await isPlaintextSqlite(path);
+    if (wasPlaintext) {
       await migratePlaintextToEncrypted(
         path: path,
         key: key,
@@ -75,16 +80,36 @@ Future<sqflite.Database> openEncryptedDatabase(
     openEncrypted = false;
   }
 
-  return cipher.openDatabase(
-    path,
-    password: openEncrypted ? key : null,
-    version: version,
-    onConfigure: onConfigure,
-    onCreate: onCreate,
-    onUpgrade: onUpgrade,
-    onDowngrade: onDowngrade,
-    onOpen: onOpen,
-  );
+  try {
+    return await cipher.openDatabase(
+      path,
+      password: openEncrypted ? key : null,
+      version: version,
+      onConfigure: onConfigure,
+      onCreate: onCreate,
+      onUpgrade: onUpgrade,
+      onDowngrade: onDowngrade,
+      onOpen: onOpen,
+    );
+  } catch (error) {
+    // Describe the file and the key before the failure travels on. The error
+    // itself carries only `open_failed <path>`, which cannot distinguish a
+    // mismatched key from a file the platform is withholding.
+    try {
+      await recordDatabaseOpenFailure(
+        path: path,
+        openedEncrypted: openEncrypted,
+        wasPlaintextBeforeOpen: wasPlaintext,
+        keyGeneratedThisLaunch: resolvedKeyService.keyGeneratedThisLaunch,
+        sqliteResultCode: error is sqflite.DatabaseException
+            ? error.getResultCode()
+            : null,
+      );
+    } catch (_) {
+      // Diagnostics must never displace the failure they describe.
+    }
+    rethrow;
+  }
 }
 
 String _basename(String path) => path.split('/').last;

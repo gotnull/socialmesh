@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Channel history no longer merges across radios. It was keyed on the channel slot alone, so two radios on different channel sets shared one "Primary" thread
 - Existing data is moved to the radio it came from on first launch, and a radio is identified by its own node number, so a rotated Bluetooth address or reaching the same radio over Wi-Fi instead of Bluetooth still lands in the right place
 
+### Fixed (databases at launch)
+
+- A database that could not be opened because the phone's keystore was not ready yet is now retried instead of failing outright. The encryption key lives in the iOS Keychain / Android Keystore, and an app launched in the background moments before the keystore becomes readable got one attempt and gave up, leaving the store it was opening in an error state for the rest of that launch
+- When a database open still fails, the app now records what it found - whether the file was there, how big it was, whether it was still unencrypted, and whether the key had just been created - so the cause is visible in crash reporting instead of a bare "open failed". No behaviour change beyond the report
+
 ### Fixed (incomplete installs)
 
 - An Android install that is missing the app's native code now explains itself instead of disappearing behind "SocialMesh keeps stopping". A copy installed from a bare APK file rather than Google Play, cloned into a container app, or left half-written by an interrupted update has no engine to start, so it died on every launch with nothing to tell the user why. Those launches now land on a screen that names the problem and offers a one-tap route back to the Play listing
