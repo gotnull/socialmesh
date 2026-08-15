@@ -21,12 +21,11 @@
 
 import 'dart:convert';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import '../../models/telemetry_log.dart';
 
 /// Schema version for the Telemetry SQLite database.
@@ -91,8 +90,7 @@ class TelemetryDatabase {
     if (_testDbPath != null) {
       dbPath = _testDbPath;
     } else {
-      final documentsDir = await getApplicationDocumentsDirectory();
-      dbPath = p.join(documentsDir.path, _dbName);
+      dbPath = await RadioScope.instance.databasePath(_dbName);
     }
 
     _db = await openDatabase(

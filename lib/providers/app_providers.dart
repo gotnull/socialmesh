@@ -10,11 +10,13 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'radio_scope_providers.dart';
 import '../config/admin_config.dart';
 
 import '../core/ble_system_devices.dart';
 import '../core/constants.dart';
 import '../core/logging.dart';
+import '../core/radio_scope.dart';
 import '../core/platform/noop_device_transport.dart';
 import '../core/platform/platform_capabilities.dart';
 import '../core/platform/platform_capabilities_provider.dart';
@@ -61,7 +63,6 @@ import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../generated/meshtastic/mesh.pb.dart' as mesh_pb;
 import 'meshcore_providers.dart';
 import 'social_providers.dart';
-import 'telemetry_providers.dart';
 import '../services/meshcore/connection_coordinator.dart'
     show MeshCoreTcpDeviceId;
 import 'connection_providers.dart';
@@ -714,14 +715,20 @@ final showAllBleDevicesProvider = Provider<bool>((ref) {
 });
 
 // Message storage service (SQLite-backed)
+//
+// Radio-scoped: watching radioScopeProvider reopens the database against the
+// connected radio's own file, and rebuilds MessagesNotifier off it.
 final messageStorageProvider = FutureProvider<MessageDatabase>((ref) async {
+  ref.watch(radioScopeProvider);
   final service = MessageDatabase();
   await service.init();
+  bindStoreToRadioScope(ref, service, service.close);
   return service;
 });
 
 // Node storage service - persists nodes and positions
 final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
+  ref.watch(radioScopeProvider);
   final service = NodeStorageService();
   await service.init();
   return service;
@@ -731,6 +738,7 @@ final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
 final nodeIdentityStoreProvider = FutureProvider<NodeIdentityStore>((
   ref,
 ) async {
+  ref.watch(radioScopeProvider);
   final service = NodeIdentityStore();
   await service.init();
   return service;
@@ -740,6 +748,7 @@ final nodeIdentityStoreProvider = FutureProvider<NodeIdentityStore>((
 final deviceFavoritesProvider = FutureProvider<DeviceFavoritesService>((
   ref,
 ) async {
+  ref.watch(radioScopeProvider);
   final service = DeviceFavoritesService();
   await service.init();
   return service;
@@ -1887,6 +1896,36 @@ ActiveDeviceTransition classifyDeviceTransition({
   );
 }
 
+/// The node number to bind the storage scope to when the device id itself
+/// is not yet mapped to a radio.
+///
+/// `lastMyNodeNum` describes the radio we last talked to, so it is only the
+/// right answer when this connect reaches that same radio: the same device
+/// id, a rotated BLE UUID, or the same radio over another transport. On a
+/// genuine switch it names the *other* radio, and returning it would point
+/// the new radio at the previous one's data — exactly the leak scoping
+/// exists to close.
+@visibleForTesting
+int? scopeNodeNumForTransition(
+  ActiveDeviceTransition transition,
+  int? lastMyNodeNum,
+) => _scopeNodeNumForTransition(transition, lastMyNodeNum);
+
+int? _scopeNodeNumForTransition(
+  ActiveDeviceTransition transition,
+  int? lastMyNodeNum,
+) {
+  switch (transition.kind) {
+    case DeviceTransitionKind.sameDevice:
+    case DeviceTransitionKind.transportRebind:
+    case DeviceTransitionKind.sameRadioCrossTransport:
+      return lastMyNodeNum;
+    case DeviceTransitionKind.firstEver:
+    case DeviceTransitionKind.deviceSwitch:
+      return null;
+  }
+}
+
 /// Central pre-connect preparation. **Must** be called before
 /// `ref.read(transportProvider)` in every connect entrypoint — it
 /// decides the transition kind, clears state in the correct order to
@@ -1946,6 +1985,20 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
     previousDeviceId: transition.previousDeviceId,
     newDeviceId: transition.newDeviceId,
     isTransportRebind: transition.isLogicalRebind,
+  );
+
+  // Point storage at the radio we are connecting to. Runs AFTER the
+  // in-memory clear above and BEFORE the transport flip: the clear bumps
+  // NodesNotifier's epoch, so doing it after the scope change would
+  // abandon the hydration the scope change just started, and the new
+  // radio's cached nodes would stay unloaded for the session.
+  await RadioScope.instance.useDevice(
+    deviceId: device.id,
+    label: device.name,
+    knownNodeNum: _scopeNodeNumForTransition(
+      transition,
+      settings.lastMyNodeNum,
+    ),
   );
 
   // For same-radio cross-transport: preserve the persisted node cache
@@ -2176,6 +2229,17 @@ Future<ActiveDeviceTransition> prepareForDeviceTransition(
     isTransportRebind: transition.isLogicalRebind,
   );
 
+  // See the Ref variant for why this runs between the in-memory clear and
+  // the transport flip.
+  await RadioScope.instance.useDevice(
+    deviceId: device.id,
+    label: device.name,
+    knownNodeNum: _scopeNodeNumForTransition(
+      transition,
+      settings.lastMyNodeNum,
+    ),
+  );
+
   if (transition.forceFreshHydration) {
     AppLogging.connection(
       '🔄 DEVICE TRANSITION: forceFreshHydration — preserving persisted '
@@ -2204,23 +2268,27 @@ Future<ActiveDeviceTransition> prepareForDeviceTransition(
   return transition;
 }
 
-/// Helper function to clear all device-specific data before connecting to a (potentially different) device.
-/// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
-/// Should be called BEFORE protocol.start() in all connection paths.
+/// Resets the in-memory view of the mesh before connecting to a
+/// (potentially different) device. Should be called BEFORE protocol.start()
+/// in all connection paths.
+///
+/// **This never deletes persisted data.** Isolation between radios is a
+/// storage-scope concern now: each radio's stores live under its own scope
+/// ([RadioScope]), so a switch swaps datasets and the previous radio's
+/// history survives for when the user goes back to it. What this clears is
+/// the in-memory node map and channel list, which would otherwise still be
+/// showing the previous radio's mesh while the new one hydrates.
 ///
 /// When both [previousDeviceId] and [newDeviceId] are non-null AND differ,
-/// node data is auto-cleared regardless of [clearNodeData]. This prevents
-/// the cross-device leak where `NodeStorageService` (a single SQLite store
-/// that is NOT scoped per radio) loads every node identity ever seen into
-/// the UI, making every device appear to have the same node count (the
-/// historical union, not the device's actual NodeDB).
+/// the in-memory reset happens regardless of [clearNodeData], so the new
+/// radio never renders the previous one's nodes.
 ///
 /// Pass [isTransportRebind] as `true` when the caller has already
 /// determined (e.g. via `_tryLogicalDeviceMatch` or [isLogicalRebindForTest])
 /// that the new BLE UUID belongs to the SAME physical radio as the last
 /// one — BLE peripheral UUIDs rotate on ESP32 / nRF hardware. When true,
-/// the raw-UUID mismatch auto-clear is suppressed so we do not wipe the
-/// user's NodeDB on a same-radio reconnect.
+/// the raw-UUID mismatch auto-reset is suppressed so a same-radio reconnect
+/// keeps the mesh on screen.
 Future<void> clearDeviceDataBeforeConnect(
   WidgetRef ref, {
   bool clearNodeData = false,
@@ -2232,14 +2300,14 @@ Future<void> clearDeviceDataBeforeConnect(
   if (isDeviceSwitch && isTransportRebind) {
     AppLogging.app(
       '🔁 Transport rebind ($previousDeviceId -> $newDeviceId) — same '
-      'physical radio under a new BLE UUID; suppressing device-switch '
-      'auto-clear so cached node data is preserved',
+      'physical radio under a new BLE UUID; suppressing the device-switch '
+      'reset so the mesh stays on screen',
     );
   } else if (isDeviceSwitch && !clearNodeData) {
     AppLogging.app(
       '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
-      'forcing node data clear so the new device\'s NodeDB does not get '
-      'unioned with the prior device\'s persisted nodes',
+      'resetting the in-memory node map so the new radio does not render '
+      'the previous one\'s mesh while it hydrates',
     );
     clearNodeData = true;
   }
@@ -2290,53 +2358,20 @@ Future<void> clearDeviceDataBeforeConnect(
   // by nodeNum when the device re-sends its NodeDB after reconnection.
   // Pass clearNodeData: true only when switching to a new device or
   // explicitly forgetting the current one.
-  nodesNotifier?.clearNodes();
+  // In-memory only. The persisted stores are radio-scoped, so the previous
+  // radio's nodes, telemetry and routes stay in its own scope rather than
+  // being deleted — see [RadioScope]. What has to go is the in-memory view,
+  // which still holds the previous radio's mesh until the new one hydrates.
+  nodesNotifier?.clearNodesInMemory();
   channelsNotifier.clearChannels();
 
   // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
   // Without this, every reconnect re-discovers the same nodes and inflates the count.
   newNodesNotifier.reset();
 
-  // Clear persistent storage — each wrapped in try/catch because the
-  // databases may be in an inconsistent state after account deletion
-  // (files deleted, WAL/SHM journals stale). A failure here must never
-  // prevent the user from reconnecting to a device.
-
-  // Clear persistent device-scoped storage only when switching devices.
-  // Node identities, telemetry history, and recorded routes are all
-  // preserved across a same-device reconnect (including app relaunch +
-  // auto-reconnect) so collected statistics survive an app restart. They
-  // are wiped only on a genuine device switch or an explicit forget, where
-  // the old device's data must not union with the new device's fresh dump.
-  if (clearNodeData) {
-    try {
-      final nodeStorage = await ref.read(nodeStorageProvider.future);
-      await nodeStorage.clearNodes();
-    } catch (e) {
-      AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
-    }
-
-    // Clear telemetry data (device metrics, environment metrics, positions, etc.)
-    try {
-      final telemetryStorage = await ref.read(telemetryStorageProvider.future);
-      await telemetryStorage.clearAllData();
-    } catch (e) {
-      AppLogging.app('⚠️ clearDeviceData: telemetry.clearAllData failed: $e');
-    }
-
-    // Clear routes
-    try {
-      final routeStorage = await ref.read(routeStorageProvider.future);
-      await routeStorage.clearAllRoutes();
-    } catch (e) {
-      AppLogging.app(
-        '⚠️ clearDeviceData: routeStorage.clearAllRoutes failed: $e',
-      );
-    }
-  }
-
   AppLogging.app(
-    '✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device',
+    '✅ Device data cleared (in-memory nodes '
+    '${clearNodeData ? 'reset' : 'preserved'}) - ready for fresh data from device',
   );
 }
 
@@ -2354,14 +2389,14 @@ Future<void> clearDeviceDataBeforeConnectRef(
   if (isDeviceSwitch && isTransportRebind) {
     AppLogging.app(
       '🔁 Transport rebind ($previousDeviceId -> $newDeviceId) — same '
-      'physical radio under a new BLE UUID; suppressing device-switch '
-      'auto-clear so cached node data is preserved',
+      'physical radio under a new BLE UUID; suppressing the device-switch '
+      'reset so the mesh stays on screen',
     );
   } else if (isDeviceSwitch && !clearNodeData) {
     AppLogging.app(
       '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
-      'forcing node data clear so the new device\'s NodeDB does not get '
-      'unioned with the prior device\'s persisted nodes',
+      'resetting the in-memory node map so the new radio does not render '
+      'the previous one\'s mesh while it hydrates',
     );
     clearNodeData = true;
   }
@@ -2385,54 +2420,21 @@ Future<void> clearDeviceDataBeforeConnectRef(
   // by nodeNum when the device re-sends its NodeDB after reconnection.
   // Pass clearNodeData: true only when switching to a new device or
   // explicitly forgetting the current one.
+  // In-memory only. The persisted stores are radio-scoped, so the previous
+  // radio's nodes, telemetry and routes stay in its own scope rather than
+  // being deleted — see [RadioScope]. What has to go is the in-memory view,
+  // which still holds the previous radio's mesh until the new one hydrates.
   if (clearNodeData) {
-    ref.read(nodesProvider.notifier).clearNodes();
+    ref.read(nodesProvider.notifier).clearNodesInMemory();
   }
   ref.read(channelsProvider.notifier).clearChannels();
 
   // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
   ref.read(newNodesCountProvider.notifier).reset();
 
-  // Clear persistent storage — each wrapped in try/catch because the
-  // databases may be in an inconsistent state after account deletion
-  // (files deleted, WAL/SHM journals stale). A failure here must never
-  // prevent the user from reconnecting to a device.
-
-  // Clear persistent device-scoped storage only when switching devices.
-  // Node identities, telemetry history, and recorded routes are all
-  // preserved across a same-device reconnect (including app relaunch +
-  // auto-reconnect) so collected statistics survive an app restart. They
-  // are wiped only on a genuine device switch or an explicit forget, where
-  // the old device's data must not union with the new device's fresh dump.
-  if (clearNodeData) {
-    try {
-      final nodeStorage = await ref.read(nodeStorageProvider.future);
-      await nodeStorage.clearNodes();
-    } catch (e) {
-      AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
-    }
-
-    // Clear telemetry data (device metrics, environment metrics, positions, etc.)
-    try {
-      final telemetryStorage = await ref.read(telemetryStorageProvider.future);
-      await telemetryStorage.clearAllData();
-    } catch (e) {
-      AppLogging.app('⚠️ clearDeviceData: telemetry.clearAllData failed: $e');
-    }
-
-    // Clear routes
-    try {
-      final routeStorage = await ref.read(routeStorageProvider.future);
-      await routeStorage.clearAllRoutes();
-    } catch (e) {
-      AppLogging.app(
-        '⚠️ clearDeviceData: routeStorage.clearAllRoutes failed: $e',
-      );
-    }
-  }
-
   AppLogging.app(
-    '✅ Device data cleared (nodes ${clearNodeData ? 'cleared' : 'preserved'}) - ready for fresh data from device',
+    '✅ Device data cleared (in-memory nodes '
+    '${clearNodeData ? 'reset' : 'preserved'}) - ready for fresh data from device',
   );
 }
 
@@ -3821,15 +3823,14 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
 });
 
 final meshPacketDedupeStoreProvider = Provider<MeshPacketDedupeStore>((ref) {
+  ref.watch(radioScopeProvider);
   final store = MeshPacketDedupeStore();
   unawaited(
     store.init().catchError((Object e) {
       AppLogging.protocol('MeshPacketDedupeStore init failed (non-fatal): $e');
     }),
   );
-  ref.onDispose(() {
-    store.dispose();
-  });
+  bindStoreToRadioScope(ref, store, store.dispose);
   return store;
 });
 
@@ -6717,7 +6718,16 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     _storage?.deleteNode(nodeNum);
   }
 
-  void clearNodes() {
+  void clearNodes() => _clear(clearStorage: true);
+
+  /// Drops the in-memory node map but leaves the persisted cache alone.
+  ///
+  /// Used when the connection moves to another radio: each radio's nodes
+  /// live in its own storage scope, so the previous radio's cache must
+  /// survive while the view resets for the new one.
+  void clearNodesInMemory() => _clear(clearStorage: false);
+
+  void _clear({required bool clearStorage}) {
     // Bump the epoch first so any `_init` currently awaiting
     // `loadNodes()` will detect the clear on resumption and abandon its
     // stale-state writeback. See `_clearEpoch` docs.
@@ -6728,7 +6738,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     _coalesceTimer?.cancel();
     _coalesceTimer = null;
     state = {};
-    _storage?.clearNodes();
+    if (clearStorage) {
+      _storage?.clearNodes();
+    }
   }
 }
 
@@ -6889,6 +6901,16 @@ class MyNodeNumNotifier extends Notifier<int?> {
     if (settings != null) {
       await settings.setLastMyNodeNum(nodeNum);
     }
+    // The radio has told us who it is. Bind storage to that identity: a
+    // first-ever connect opened a provisional scope keyed by device id, and
+    // this promotes it (and remembers the mapping, so the next connect to
+    // the same device lands in the right scope before a single byte is
+    // read).
+    await RadioScope.instance.useNodeNum(
+      nodeNum,
+      deviceId: settings?.lastDeviceId,
+      label: settings?.lastDeviceName,
+    );
   }
 }
 

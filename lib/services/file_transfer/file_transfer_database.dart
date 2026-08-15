@@ -4,11 +4,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import '../protocol/socialmesh/sm_file_transfer.dart';
 import 'file_transfer_engine.dart';
 
@@ -36,8 +35,7 @@ class FileTransferDatabase {
     _initStarted = true;
 
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(dir.path, _dbName);
+      final dbPath = await RadioScope.instance.databasePath(_dbName);
 
       _db = await openDatabase(
         dbPath,

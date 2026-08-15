@@ -16,8 +16,13 @@
 // same physical radio.
 //
 // These tests pin the suppression behaviour end-to-end: given a rebind,
-// `nodeStorage.clearNodes()` must NOT be called, and the in-memory
-// NodesNotifier must retain its existing nodes.
+// the in-memory NodesNotifier must retain its existing nodes.
+//
+// Since storage became radio-scoped, the connect path no longer deletes
+// persisted stores at all — a true switch resets the in-memory view and
+// leaves the previous radio's cache in its own scope. The persisted
+// assertions here pin that: preserved on rebind AND on switch, for
+// different reasons.
 
 import 'dart:io';
 
@@ -231,7 +236,8 @@ void main() {
     );
 
     test(
-      'true switch: UUIDs differ + isTransportRebind=false wipes cached nodes',
+      'true switch: UUIDs differ + isTransportRebind=false resets the '
+      'in-memory view and leaves the previous radio\'s cache in its scope',
       () async {
         final h = await _makeHarness(lastMyNodeNum: 0x1234abcd);
         addTearDown(h.container.dispose);
@@ -251,13 +257,16 @@ void main() {
         expect(
           h.container.read(nodesProvider).length,
           0,
-          reason: 'True device switch must wipe in-memory nodes',
+          reason: 'True device switch must reset the in-memory node map',
         );
         final stored = await h.nodeStorage.loadNodes();
         expect(
           stored,
-          hasLength(0),
-          reason: 'True device switch must wipe persisted nodes',
+          hasLength(3),
+          reason:
+              'The persisted cache belongs to the previous radio and stays in '
+              'its own storage scope — the switch swaps datasets rather than '
+              'deleting one',
         );
       },
     );

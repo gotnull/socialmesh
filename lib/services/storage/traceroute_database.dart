@@ -13,11 +13,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 
 /// Schema version for the Traceroute SQLite database.
 ///
@@ -338,10 +337,8 @@ class TracerouteDatabase {
     _initFailed = false;
   }
 
-  Future<String> _defaultPath() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return p.join(dir.path, _dbFileName);
-  }
+  Future<String> _defaultPath() =>
+      RadioScope.instance.databasePath(_dbFileName);
 
   List<String> _tableNames() => [TracerouteTables.hops, TracerouteTables.runs];
 }

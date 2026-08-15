@@ -10,14 +10,13 @@ import '../../../services/notifications/notification_service.dart';
 import '../../../services/protocol/protocol_service.dart';
 import '../models/mesh_waypoint.dart';
 import '../services/waypoint_database.dart';
+import '../../../providers/radio_scope_providers.dart';
 
 /// SQLite store for received/created Meshtastic waypoints (singleton).
 final waypointDatabaseProvider = Provider<WaypointDatabase>((ref) {
+  ref.watch(radioScopeProvider);
   final db = WaypointDatabase();
-  ref.onDispose(() {
-    AppLogging.map('Disposing WaypointDatabase provider');
-    db.close();
-  });
+  bindStoreToRadioScope(ref, db, db.close);
   return db;
 });
 

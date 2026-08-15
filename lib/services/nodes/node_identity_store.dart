@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import '../../utils/text_sanitizer.dart';
 
 class NodeIdentity {
@@ -70,7 +71,9 @@ class NodeIdentity {
 }
 
 class NodeIdentityStore {
-  static const String _key = 'node_identities';
+  /// Radio-scoped: identities are keyed by node number, which only names a
+  /// peer within the mesh the radio is on.
+  static String get _key => RadioScope.instance.prefsKey('node_identities');
   SharedPreferences? _prefs;
   static final RegExp _bleDefaultPattern = RegExp(
     r'^Meshtastic_[0-9a-fA-F]{4}$',
@@ -100,7 +103,10 @@ class NodeIdentityStore {
   /// A malformed entry is also skipped individually so one bad record cannot
   /// discard the rest of the cache.
   Future<Map<int, NodeIdentity>> getAllIdentities() async {
-    final raw = _preferences.getString(_key);
+    final raw = RadioScope.instance.readScoped(
+      'node_identities',
+      _preferences.getString,
+    );
     if (raw == null || raw.isEmpty) return {};
 
     final Map<String, dynamic> decoded;

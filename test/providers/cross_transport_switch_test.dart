@@ -25,6 +25,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/radio_scope.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
@@ -141,6 +142,21 @@ Future<_Harness> _makeHarness({
   if (lastMyNodeNum != null) {
     await settings.setLastMyNodeNum(lastMyNodeNum);
   }
+
+  // Boot the storage scope the way `main()` does, so the persisted node
+  // cache these tests write lands in the scope of the radio the harness
+  // says we were last connected to.
+  final scopeRoot = await Directory.systemTemp.createTemp('cross_transport_');
+  addTearDown(() async {
+    RadioScope.instance.debugSetRoot(null);
+    try {
+      await scopeRoot.delete(recursive: true);
+    } on FileSystemException {
+      // Already gone.
+    }
+  });
+  RadioScope.instance.debugSetRoot(scopeRoot);
+  await RadioScope.instance.init();
 
   final nodeStorage = NodeStorageService();
   await nodeStorage.init();

@@ -11,10 +11,10 @@
 // same radio, so all collected device metrics, position logs, and sensor
 // data were wiped on restart even though nothing was switched.
 //
-// Fix: the telemetry and route clears now live inside the `if (clearNodeData)`
-// block. They survive a same-device reconnect and are wiped only on a genuine
-// device switch or an explicit forget, where the old device's data must not
-// union with the new device's fresh dump.
+// Fix: the connect path no longer deletes persisted stores at all. Telemetry
+// survives every reconnect, and cross-radio isolation comes from storage
+// scoping instead — each radio's telemetry lives in its own scope, so a
+// switch swaps the dataset rather than erasing the previous radio's history.
 
 import 'dart:io';
 
@@ -24,6 +24,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:socialmesh/core/radio_scope.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/models/telemetry_log.dart';
 import 'package:socialmesh/providers/app_providers.dart';
@@ -217,31 +218,11 @@ void main() {
     );
 
     test(
-      'explicit device-forget (clearNodeData: true) wipes telemetry history',
+      'a device switch does not delete the previous radio\'s telemetry',
       () async {
-        await seedTelemetry();
-
-        await clearDeviceDataBeforeConnectRef(
-          capturedRef,
-          clearNodeData: true,
-          previousDeviceId: 'AA:BB:CC:DD:EE:01',
-          newDeviceId: 'AA:BB:CC:DD:EE:01',
-        );
-
-        expect(
-          await telemetry.getAllDeviceMetrics(),
-          isEmpty,
-          reason: 'explicit forget should wipe stale telemetry',
-        );
-      },
-    );
-
-    test(
-      'device switch (differing ids) wipes telemetry even when caller passes '
-      'clearNodeData: false',
-      () async {
-        // The isDeviceSwitch auto-clear overrides the explicit flag so the
-        // previous device\'s telemetry cannot bleed into the new device.
+        // Isolation is a storage-scope concern now: the previous radio's
+        // history stays in its own scope so returning to that radio still
+        // shows it. Deleting here would make the switch lossy.
         await seedTelemetry();
 
         await clearDeviceDataBeforeConnectRef(
@@ -253,10 +234,64 @@ void main() {
 
         expect(
           await telemetry.getAllDeviceMetrics(),
-          isEmpty,
-          reason: 'a genuine device switch should still clear stale telemetry',
+          isNotEmpty,
+          reason: "a switch must not destroy the previous radio's telemetry",
         );
       },
     );
+
+    test('an explicit forget does not delete telemetry either', () async {
+      await seedTelemetry();
+
+      await clearDeviceDataBeforeConnectRef(
+        capturedRef,
+        clearNodeData: true,
+        previousDeviceId: 'AA:BB:CC:DD:EE:01',
+        newDeviceId: 'AA:BB:CC:DD:EE:01',
+      );
+
+      expect(
+        await telemetry.getAllDeviceMetrics(),
+        isNotEmpty,
+        reason:
+            'forgetting a pairing is not a request to erase its history; '
+            'deleting a radio profile is an explicit user action',
+      );
+    });
+
+    test('telemetry collected on one radio is invisible on another', () async {
+      final scopeRoot = Directory.systemTemp.createTempSync('telemetry_scope');
+      addTearDown(() async {
+        RadioScope.instance.debugSetRoot(null);
+        try {
+          scopeRoot.deleteSync(recursive: true);
+        } on FileSystemException {
+          // Already gone.
+        }
+      });
+      RadioScope.instance.debugSetRoot(scopeRoot);
+      await RadioScope.instance.init();
+
+      await RadioScope.instance.useNodeNum(0x1234abcd);
+      final radioA = TelemetryDatabase();
+      await radioA.init();
+      await radioA.addDeviceMetrics(
+        DeviceMetricsLog(nodeNum: 0x1234, batteryLevel: 88, voltage: 4.0),
+      );
+      expect(await radioA.getAllDeviceMetrics(), isNotEmpty);
+      await radioA.close();
+
+      await RadioScope.instance.useNodeNum(0x9999beef);
+      final radioB = TelemetryDatabase();
+      await radioB.init();
+      expect(await radioB.getAllDeviceMetrics(), isEmpty);
+      await radioB.close();
+
+      await RadioScope.instance.useNodeNum(0x1234abcd);
+      final radioAAgain = TelemetryDatabase();
+      await radioAAgain.init();
+      expect(await radioAAgain.getAllDeviceMetrics(), isNotEmpty);
+      await radioAAgain.close();
+    });
   });
 }

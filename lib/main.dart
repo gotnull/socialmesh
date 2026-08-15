@@ -36,6 +36,7 @@ import 'core/transport.dart';
 import 'core/platform/platform_capabilities.dart';
 import 'core/platform/platform_capabilities_provider.dart';
 import 'core/platform/sqflite_init.dart';
+import 'core/radio_scope.dart';
 import 'services/config/remote_flag_overrides_service.dart';
 import 'services/protocol/protocol_service.dart' show OperationalReadiness;
 
@@ -182,6 +183,18 @@ Future<void> main() async {
       platformCapabilities.platformFamily == PlatformFamily.desktop) {
     await initDesktopSqflite();
     AppLogging.platform('boot: sqflite ffi backend activated for desktop');
+  }
+
+  // Resolve which radio's storage scope this launch starts in, and move
+  // pre-scoping files into it on the first run after upgrade. Must happen
+  // before anything opens a scoped database or reads a scoped preference,
+  // or that store binds to the legacy scope for the rest of the session.
+  if (platformCapabilities.supportsLocalDatabase) {
+    try {
+      await RadioScope.instance.init();
+    } catch (e) {
+      AppLogging.storage('boot: radio scope init failed: $e');
+    }
   }
 
   // Tee debugPrint into iOS os_log so Dart logs are visible via MCP log

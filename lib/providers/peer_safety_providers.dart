@@ -29,6 +29,7 @@ import '../core/logging.dart';
 import '../services/protocol/sip/peer_rate_limiter.dart';
 import '../services/protocol/sip/peer_safety_gate.dart';
 import '../services/storage/peer_safety_store.dart';
+import 'radio_scope_providers.dart';
 
 /// Snapshot of the manager's hot-path caches.
 class PeerSafetyManagerState {
@@ -65,13 +66,10 @@ class PeerSafetyManagerState {
 /// Lazily-opened persistence layer. Every consumer of the safety
 /// store goes through this provider so the lifecycle is centralised.
 final peerSafetyStoreProvider = FutureProvider<PeerSafetyStore>((ref) async {
+  ref.watch(radioScopeProvider);
   final store = PeerSafetyStore();
   await store.init();
-  ref.onDispose(() async {
-    try {
-      await store.close();
-    } catch (_) {}
-  });
+  bindStoreToRadioScope(ref, store, store.close);
   return store;
 });
 

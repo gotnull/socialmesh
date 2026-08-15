@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
 import '../../models/tapback.dart';
@@ -1276,9 +1277,15 @@ class SettingsService {
 /// independently of node data so favorites survive device reconnects/clears
 class DeviceFavoritesService {
   SharedPreferences? _prefs;
-  static const String _favoritesKey = 'device_favorites';
-  static const String _ignoredKey = 'device_ignored';
-  static const String _unfavoriteTombstonesKey = 'device_unfavorite_tombstones';
+
+  /// Radio-scoped: favourite and ignored sets are node numbers, which only
+  /// identify a peer within the mesh they were seen on.
+  static String get _favoritesKey =>
+      RadioScope.instance.prefsKey('device_favorites');
+  static String get _ignoredKey =>
+      RadioScope.instance.prefsKey('device_ignored');
+  static String get _unfavoriteTombstonesKey =>
+      RadioScope.instance.prefsKey('device_unfavorite_tombstones');
 
   DeviceFavoritesService();
 
@@ -1295,7 +1302,12 @@ class DeviceFavoritesService {
 
   /// Get all favorite node numbers
   Set<int> get favorites {
-    final list = _preferences.getStringList(_favoritesKey) ?? [];
+    final list =
+        RadioScope.instance.readScoped(
+          'device_favorites',
+          _preferences.getStringList,
+        ) ??
+        [];
     return list.map((s) => int.parse(s)).toSet();
   }
 
@@ -1337,7 +1349,12 @@ class DeviceFavoritesService {
   /// While a node is tombstoned, a device-reported favourite must not
   /// resurrect the local favourite state.
   Set<int> get unfavoriteTombstones {
-    final list = _preferences.getStringList(_unfavoriteTombstonesKey) ?? [];
+    final list =
+        RadioScope.instance.readScoped(
+          'device_unfavorite_tombstones',
+          _preferences.getStringList,
+        ) ??
+        [];
     return list.map((s) => int.parse(s)).toSet();
   }
 
@@ -1368,7 +1385,12 @@ class DeviceFavoritesService {
 
   /// Get all ignored node numbers
   Set<int> get ignored {
-    final list = _preferences.getStringList(_ignoredKey) ?? [];
+    final list =
+        RadioScope.instance.readScoped(
+          'device_ignored',
+          _preferences.getStringList,
+        ) ??
+        [];
     return list.map((s) => int.parse(s)).toSet();
   }
 
@@ -1409,7 +1431,10 @@ class DeviceFavoritesService {
 /// Node storage service - persists nodes and positions locally
 class NodeStorageService {
   SharedPreferences? _prefs;
-  static const String _nodesKey = 'nodes';
+
+  /// Radio-scoped: the node cache describes one mesh as seen through one
+  /// radio. Sharing it across radios unions two meshes into one list.
+  static String get _nodesKey => RadioScope.instance.prefsKey('nodes');
 
   NodeStorageService();
 
@@ -1507,7 +1532,10 @@ class NodeStorageService {
   /// Load all nodes from local storage
   Future<List<MeshNode>> loadNodes() async {
     try {
-      final jsonString = _preferences.getString(_nodesKey);
+      final jsonString = RadioScope.instance.readScoped(
+        'nodes',
+        _preferences.getString,
+      );
       if (jsonString == null || jsonString.isEmpty) {
         return [];
       }

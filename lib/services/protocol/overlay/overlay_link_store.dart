@@ -14,11 +14,10 @@ library;
 
 import 'dart:typed_data';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/radio_scope.dart';
 import 'overlay_link_models.dart';
 import 'overlay_types.dart';
 
@@ -54,8 +53,13 @@ class OverlayLinkStore {
     if (_testDbPath != null) {
       dbPath = _testDbPath;
     } else {
-      final dir = await getApplicationDocumentsDirectory();
-      dbPath = p.join(dir.path, _dbName);
+      // Radio-scoped: link records are keyed by `peerNodeNum`, which is only
+      // meaningful inside one mesh. Two radios on different meshes can hand
+      // out the same node number for different people, and the canonical-
+      // link-per-peer lookup would then bridge them. Endpoint identity and
+      // resource transfers stay unscoped — they are bound to the peer's
+      // persona, not to the mesh it was reached over.
+      dbPath = await RadioScope.instance.databasePath(_dbName);
     }
 
     _db = await openDatabase(

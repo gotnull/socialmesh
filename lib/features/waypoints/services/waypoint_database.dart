@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../core/radio_scope.dart';
 import '../../../services/storage/encrypted_database.dart';
 
 import '../../../core/logging.dart';
@@ -36,8 +35,7 @@ class WaypointDatabase {
     if (_testDbPath != null) {
       dbPath = _testDbPath;
     } else {
-      final dir = await getApplicationDocumentsDirectory();
-      dbPath = p.join(dir.path, _dbName);
+      dbPath = await RadioScope.instance.databasePath(_dbName);
     }
     AppLogging.map('Initializing waypoint database: $dbPath');
 

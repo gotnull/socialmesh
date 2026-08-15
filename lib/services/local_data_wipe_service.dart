@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../core/logging.dart';
+import '../core/radio_scope.dart';
 
 /// Deletes all local SQLite database files and signal image caches.
 ///
@@ -93,6 +94,12 @@ class LocalDataWipeService {
       deleted += await _deleteFile(p.join(dir.path, '$_dedupeDbPath-journal'));
       deleted += await _deleteFile(p.join(dir.path, '$_dedupeDbPath-wal'));
       deleted += await _deleteFile(p.join(dir.path, '$_dedupeDbPath-shm'));
+
+      // Delete every radio's scope directory. Scoped databases live under
+      // `radios/<scope>/`, so the flat sweep above never reaches them.
+      deleted += await _deleteDirectory(
+        (await RadioScope.instance.scopeRootDirectory()).path,
+      );
 
       // Delete signal image caches
       for (final cacheDir in _signalCacheDirs) {

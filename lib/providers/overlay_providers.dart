@@ -53,6 +53,7 @@ import '../services/protocol/overlay/overlay_resource_store.dart';
 import '../services/protocol/overlay/overlay_secure_session_manager.dart';
 import 'app_providers.dart';
 import 'sip_providers.dart';
+import 'radio_scope_providers.dart';
 
 /// Exposes the overlay feature flag snapshot. Re-evaluated only when
 /// the provider is invalidated.
@@ -62,11 +63,10 @@ final overlayFlagProvider = Provider<OverlayFeatureFlags>((ref) {
 
 /// SQLite store for link state. One instance per app lifetime.
 final overlayLinkStoreProvider = FutureProvider<OverlayLinkStore>((ref) async {
+  ref.watch(radioScopeProvider);
   final store = OverlayLinkStore();
   await store.init();
-  ref.onDispose(() async {
-    await store.close();
-  });
+  bindStoreToRadioScope(ref, store, store.close);
   return store;
 });
 

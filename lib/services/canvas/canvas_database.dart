@@ -9,11 +9,10 @@
 // DROP tables on live users.
 library;
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import 'canvas_constants.dart';
 
 /// Owns the `canvas.db` SQLite connection and its schema.
@@ -37,8 +36,7 @@ class CanvasDatabase {
     if (_testDbPath != null) {
       dbPath = _testDbPath;
     } else {
-      final documentsDir = await getApplicationDocumentsDirectory();
-      dbPath = p.join(documentsDir.path, CanvasDbConfig.dbName);
+      dbPath = await RadioScope.instance.databasePath(CanvasDbConfig.dbName);
     }
 
     AppLogging.meshCanvas('opening canvas.db at $dbPath');

@@ -14,13 +14,11 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import 'mesh_post.dart';
 
 /// Schema version for mesh_feed.db.
@@ -73,12 +71,8 @@ class MeshFeedDatabase {
     }
   }
 
-  Future<String> _defaultPath() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final dbDir = Directory(p.join(dir.path, 'databases'));
-    if (!dbDir.existsSync()) dbDir.createSync(recursive: true);
-    return p.join(dbDir.path, 'mesh_feed.db');
-  }
+  Future<String> _defaultPath() =>
+      RadioScope.instance.databasePath('mesh_feed.db');
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''

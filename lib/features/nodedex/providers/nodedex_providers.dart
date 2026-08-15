@@ -49,6 +49,7 @@ import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
 import '../services/trust_score.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
+import '../../../providers/radio_scope_providers.dart';
 
 const Duration _kCoSeenRecentActivityWindow = Duration(minutes: 30);
 const double _kCoSeenMaxPlausibleDistanceMeters = 100000.0;
@@ -113,10 +114,9 @@ NodeIngestSource _classifyIngestSource(
 
 /// Provides the NodeDex SQLite database instance.
 final nodeDexDatabaseProvider = Provider<NodeDexDatabase>((ref) {
+  ref.watch(radioScopeProvider);
   final db = NodeDexDatabase();
-  ref.onDispose(() {
-    db.close();
-  });
+  bindStoreToRadioScope(ref, db, db.close);
   return db;
 });
 

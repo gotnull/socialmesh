@@ -8,11 +8,10 @@
 /// up periodically.
 library;
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/radio_scope.dart';
 import '../models/mesh_service_instance.dart';
 
 /// Maximum locally persisted service instances.
@@ -35,9 +34,7 @@ class MeshServiceStore {
     if (_dbPathOverride != null) {
       dbPath = _dbPathOverride;
     } else {
-      final dir = await getApplicationDocumentsDirectory();
-      dbPath = p.join(
-        dir.path,
+      dbPath = await RadioScope.instance.databasePath(
         'mesh_services.db',
       ); // lint-allow: hardcoded-string
     }

@@ -3,11 +3,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../core/logging.dart';
+import '../core/radio_scope.dart';
 
 /// Metadata key for a mesh packet dedupe entry.
 ///
@@ -231,14 +230,8 @@ class MeshPacketDedupeStore {
     }
   }
 
-  Future<String> _defaultDbPath() async {
-    final documentsDir = await getApplicationDocumentsDirectory();
-    final dbDir = Directory(p.join(documentsDir.path, 'cache'));
-    if (!await dbDir.exists()) {
-      await dbDir.create(recursive: true);
-    }
-    return p.join(dbDir.path, 'mesh_seen_packets.db');
-  }
+  Future<String> _defaultDbPath() =>
+      RadioScope.instance.databasePath('mesh_seen_packets.db');
 
   /// Get the database, initializing if needed.
   ///

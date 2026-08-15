@@ -32,6 +32,7 @@ import '../services/mesh_feed/mesh_propagation_policy.dart';
 import '../services/mesh_feed/mesh_sync_service.dart';
 import '../services/mesh_sync/lan_sync_service.dart';
 import 'app_providers.dart';
+import 'radio_scope_providers.dart';
 
 // ---------------------------------------------------------------------------
 // Feature flag
@@ -53,9 +54,10 @@ final opportunisticSyncEnabledProvider = Provider<bool>((ref) {
 
 /// Initialises and exposes the mesh feed database.
 final meshFeedDatabaseProvider = FutureProvider<MeshFeedDatabase>((ref) async {
+  ref.watch(radioScopeProvider);
   final db = MeshFeedDatabase();
   await db.open();
-  ref.onDispose(() => db.close());
+  bindStoreToRadioScope(ref, db, db.close);
   return db;
 });
 

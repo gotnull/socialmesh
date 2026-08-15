@@ -19,6 +19,7 @@ import '../services/tak_proximity_monitor.dart';
 import 'tak_settings_provider.dart';
 import '../services/tak_stale_monitor.dart';
 import 'tak_tracking_provider.dart';
+import '../../../providers/radio_scope_providers.dart';
 
 /// Whether the TAK Gateway feature is enabled.
 final isTakEnabledProvider = Provider<bool>((ref) {
@@ -29,12 +30,10 @@ final isTakEnabledProvider = Provider<bool>((ref) {
 
 /// TAK event database instance (singleton).
 final takDatabaseProvider = Provider<TakDatabase>((ref) {
+  ref.watch(radioScopeProvider);
   AppLogging.tak('Creating TakDatabase provider');
   final db = TakDatabase();
-  ref.onDispose(() {
-    AppLogging.tak('Disposing TakDatabase provider');
-    db.close();
-  });
+  bindStoreToRadioScope(ref, db, db.close);
   return db;
 });
 

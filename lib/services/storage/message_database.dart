@@ -2,13 +2,12 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../models/mesh_models.dart';
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import 'conversation_read_position.dart';
 import 'encrypted_database.dart';
 import '../../utils/text_sanitizer.dart';
@@ -50,8 +49,7 @@ class MessageDatabase {
     if (_testDbPath != null) {
       dbPath = _testDbPath;
     } else {
-      final documentsDir = await getApplicationDocumentsDirectory();
-      dbPath = p.join(documentsDir.path, _dbName);
+      dbPath = await RadioScope.instance.databasePath(_dbName);
     }
 
     _db = await openEncryptedDatabase(

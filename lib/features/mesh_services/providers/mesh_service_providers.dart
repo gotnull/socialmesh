@@ -25,6 +25,7 @@ import '../../../services/protocol/sip/mrrp_constants.dart';
 import '../../../services/protocol/sip/mrrp_service_registry.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 import '../../../providers/mrrp_providers.dart';
+import '../../../providers/radio_scope_providers.dart';
 
 /// Whether the Mesh Services feature is enabled.
 final meshServicesEnabledProvider = Provider<bool>((ref) {
@@ -38,11 +39,10 @@ final meshServiceStoreProvider = Provider<MeshServiceStore?>((ref) {
   final enabled = ref.watch(meshServicesEnabledProvider);
   if (!enabled) return null;
 
+  ref.watch(radioScopeProvider);
   final store = MeshServiceStore();
   // Open is async — callers must await ensureOpen before operating.
-  ref.onDispose(() {
-    store.close();
-  });
+  bindStoreToRadioScope(ref, store, store.close);
   return store;
 });
 

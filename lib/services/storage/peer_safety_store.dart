@@ -23,13 +23,12 @@
 ///   nodedex.db, traceroute.db). Adding T+S does NOT mutate them.
 library;
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'encrypted_database.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 
 /// Local-only safety state for a peer.
 ///
@@ -158,8 +157,7 @@ class PeerSafetyStore {
     if (_testDbPath != null) {
       dbPath = _testDbPath;
     } else {
-      final dir = await getApplicationDocumentsDirectory();
-      dbPath = p.join(dir.path, _dbName);
+      dbPath = await RadioScope.instance.databasePath(_dbName);
     }
 
     _db = await openEncryptedDatabase(

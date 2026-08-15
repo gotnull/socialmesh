@@ -4,8 +4,7 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
 import 'encrypted_database.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import '../../core/radio_scope.dart';
 import '../../models/route.dart';
 
 /// Storage service for GPS routes using SQLite
@@ -28,8 +27,7 @@ class RouteStorageService {
     if (_testDbPath != null) {
       dbPath = _testDbPath;
     } else {
-      final documentsDir = await getApplicationDocumentsDirectory();
-      dbPath = p.join(documentsDir.path, _dbName);
+      dbPath = await RadioScope.instance.databasePath(_dbName);
     }
 
     _db = await openEncryptedDatabase(

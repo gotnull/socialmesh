@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (switching between radios)
+
+- Each radio now keeps its own data. Messages, nodes, favourites, telemetry, routes, traceroutes, NodeDex entries, waypoints, the mesh feed and the rest of the mesh-observed stores are filed under the radio they were heard through, so connecting a second radio shows that radio's mesh instead of the first one's leftovers. Switching back restores what was there
+- Connecting a different radio no longer deletes the previous one's history. The old behaviour wiped the node cache, telemetry and routes on every switch - and left messages, favourites, traceroutes, waypoints and everything else behind - so going A to B to A lost A's data for good while B still showed A's conversations
+- The direct-message list no longer invents contacts after a switch. Sent messages were matched against the currently connected radio's node number, so every message you had sent from the previous radio resolved its peer to that radio itself and it appeared in the contact list, alongside conversations with peers the new radio has never heard
+- Channel history no longer merges across radios. It was keyed on the channel slot alone, so two radios on different channel sets shared one "Primary" thread
+- Existing data is moved to the radio it came from on first launch, and a radio is identified by its own node number, so a rotated Bluetooth address or reaching the same radio over Wi-Fi instead of Bluetooth still lands in the right place
+
 ### Fixed (incomplete installs)
 
 - An Android install that is missing the app's native code now explains itself instead of disappearing behind "SocialMesh keeps stopping". A copy installed from a bare APK file rather than Google Play, cloned into a container app, or left half-written by an interrupted update has no engine to start, so it died on every launch with nothing to tell the user why. Those launches now land on a screen that names the problem and offers a one-tap route back to the Play listing

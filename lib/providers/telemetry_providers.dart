@@ -15,6 +15,7 @@ import '../services/storage/traceroute_repository.dart';
 import '../services/storage/route_storage_service.dart';
 import '../services/protocol/protocol_service.dart';
 import 'app_providers.dart';
+import 'radio_scope_providers.dart';
 
 // SharedPreferences instance for storage services
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((
@@ -25,16 +26,19 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences>((
 
 // Telemetry storage service (SQLite-backed)
 final telemetryStorageProvider = FutureProvider<TelemetryDatabase>((ref) async {
+  ref.watch(radioScopeProvider);
   final db = TelemetryDatabase();
   await db.init();
-  ref.onDispose(() => db.close());
+  bindStoreToRadioScope(ref, db, db.close);
   return db;
 });
 
 // Route storage service (SQLite-backed)
 final routeStorageProvider = FutureProvider<RouteStorageService>((ref) async {
+  ref.watch(radioScopeProvider);
   final service = RouteStorageService();
   await service.init();
+  bindStoreToRadioScope(ref, service, service.close);
   // Auto-prune routes older than 365 days on startup
   await service.pruneExpiredRoutes();
   return service;
@@ -43,6 +47,7 @@ final routeStorageProvider = FutureProvider<RouteStorageService>((ref) async {
 // Traceroute repository (SQLite-backed, persists across restarts)
 final tracerouteRepositoryProvider = FutureProvider<SqliteTracerouteRepository>(
   (ref) async {
+    ref.watch(radioScopeProvider);
     final db = TracerouteDatabase();
     await db.open();
 
@@ -61,7 +66,7 @@ final tracerouteRepositoryProvider = FutureProvider<SqliteTracerouteRepository>(
       AppLogging.storage('Traceroute migration failed (non-fatal): $e');
     }
 
-    ref.onDispose(() => db.close());
+    bindStoreToRadioScope(ref, db, db.close);
     return repo;
   },
 );

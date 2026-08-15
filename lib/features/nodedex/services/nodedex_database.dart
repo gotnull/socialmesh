@@ -12,10 +12,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../core/radio_scope.dart';
 import '../../../services/storage/encrypted_database.dart';
 
 import '../../../core/logging.dart';
@@ -922,10 +921,8 @@ class NodeDexDatabase {
     _initFailed = false;
   }
 
-  Future<String> _defaultPath() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return p.join(dir.path, _dbFileName);
-  }
+  Future<String> _defaultPath() =>
+      RadioScope.instance.databasePath(_dbFileName);
 
   List<String> _tableNames() => [
     NodeDexTables.entries,

@@ -32,18 +32,17 @@ import 'stl_providers.dart';
 import '../services/security/stl_envelope.dart';
 
 import 'package:socialmesh/l10n/l10n_utils.dart';
+import 'radio_scope_providers.dart';
 
 // ---------------------------------------------------------------------------
 // Database provider
 // ---------------------------------------------------------------------------
 
 final fileTransferDatabaseProvider = Provider<FileTransferDatabase>((ref) {
+  ref.watch(radioScopeProvider);
   AppLogging.fileTransfer('Provider: creating FileTransferDatabase');
   final db = FileTransferDatabase();
-  ref.onDispose(() {
-    AppLogging.fileTransfer('Provider: disposing FileTransferDatabase');
-    db.close();
-  });
+  bindStoreToRadioScope(ref, db, db.close);
   return db;
 });
 

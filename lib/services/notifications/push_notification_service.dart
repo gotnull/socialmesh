@@ -16,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
 import '../../core/navigation.dart';
+import '../../core/radio_scope.dart';
 import '../../features/feedback/bug_response_quick_sheet.dart';
 import '../../l10n/l10n_utils.dart';
 import '../../providers/profile_providers.dart';
@@ -36,6 +37,11 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (data.containsKey('type') &&
       (data['type'] == 'direct_message' || data['type'] == 'channel_message')) {
     try {
+      // This runs in its own isolate, so the storage scope has to be resolved
+      // here too. Without it the scope falls back to `legacy` and the message
+      // is persisted into a database the app never reads.
+      await RadioScope.instance.init();
+
       // Initialize storage service and save the message
       final storage = MessageDatabase();
       await storage.init();

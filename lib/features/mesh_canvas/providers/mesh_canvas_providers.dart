@@ -36,15 +36,14 @@ import '../../../services/canvas/canvas_sync_coordinator.dart';
 import '../../../services/canvas/mrrp_service_canvas.dart';
 import 'mesh_canvas_participation_providers.dart';
 import 'presence_providers.dart';
+import '../../../providers/radio_scope_providers.dart';
 
 /// Owns the `canvas.db` connection for the app's lifetime.
 final canvasDatabaseProvider = FutureProvider<CanvasDatabase>((ref) async {
+  ref.watch(radioScopeProvider);
   final db = CanvasDatabase();
   await db.init();
-  ref.onDispose(() {
-    // Close is fire-and-forget; provider teardown can't await.
-    db.close();
-  });
+  bindStoreToRadioScope(ref, db, db.close);
   return db;
 });
 
