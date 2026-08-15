@@ -44559,5 +44559,29 @@
     "commonRemove": "Rimuovi",
     "@commonRemove": {
         "description": "Short label for a Remove confirm button (full context is in the dialog title)."
-    }
+    },
+    "radioProfilesTitle": "Dati radio",
+    "radioProfilesBannerTitle": "Ogni radio conserva i propri dati",
+    "radioProfilesBannerBody": "Messaggi, nodi, telemetria e tutto ciò che l'app riceve vengono archiviati per la radio da cui provengono, così le radio non mostrano mai la mesh di un'altra. Eliminando una radio qui rimuovi soltanto i suoi dati.",
+    "radioProfilesSectionInUse": "IN USO",
+    "radioProfilesSectionStored": "ARCHIVIATE",
+    "radioProfilesTileSubtitle": "{nodeId} · {size}",
+    "radioProfilesTileSubtitleUnidentified": "Non ha mai comunicato il suo numero di nodo · {size}",
+    "radioProfilesUnidentifiedRadio": "Radio non identificata",
+    "radioProfilesDeleteTooltip": "Elimina i dati di questa radio",
+    "radioProfilesDeleteTitle": "Eliminare i dati della radio?",
+    "radioProfilesDeleteMessage": "Verranno rimossi tutti i messaggi, i nodi, le posizioni e le letture raccolti dall'app tramite {name}. La tua radio e le altre radio conservano i propri dati.",
+    "radioProfilesDeleteConfirm": "Elimina",
+    "radioProfilesDeleted": "Dati di {name} eliminati",
+    "radioProfilesDeleteFailed": "Impossibile eliminare questi dati. La radio a cui appartengono potrebbe essere quella in uso.",
+    "radioProfilesLoadFailedTitle": "Impossibile leggere i dati radio archiviati",
+    "radioProfilesEmptyTitlePrefix": "Nessun ",
+    "radioProfilesEmptyTitleKeyword": "dato radio",
+    "radioProfilesEmptyTitleSuffix": " archiviato",
+    "radioProfilesEmptyTagline1": "Collega una radio e la sua mesh finirà qui",
+    "radioProfilesEmptyTagline2": "Un archivio per radio, sempre separati",
+    "radioProfilesEmptyTagline3": "Niente da ripulire",
+    "settingsTileRadioProfilesTitle": "Dati radio",
+    "settingsTileRadioProfilesSubtitle": "Visualizza ed elimina i dati archiviati per ogni radio",
+    "radioProfilesLoadFailedBody": "Impossibile leggere i dati radio archiviati. Di solito basta riavviare l'app."
 }

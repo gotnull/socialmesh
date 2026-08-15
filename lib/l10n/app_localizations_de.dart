@@ -44284,4 +44284,92 @@ class AppLocalizationsDe extends AppLocalizations {
   String helpModeCircleRemoveConfirmBody(String name) {
     return '$name kann dann keine Hilfeanfragen mehr mit dir austauschen. Du kannst die Person später wieder hinzufügen.';
   }
+
+  @override
+  String get radioProfilesTitle => 'Funkgerätedaten';
+
+  @override
+  String get radioProfilesBannerTitle =>
+      'Jedes Funkgerät behält seine eigenen Daten';
+
+  @override
+  String get radioProfilesBannerBody =>
+      'Nachrichten, Knoten, Telemetrie und alles andere, was die App empfängt, werden bei dem Funkgerät gespeichert, über das sie hereinkamen. So zeigt kein Funkgerät das Mesh eines anderen. Wer hier ein Funkgerät löscht, entfernt nur dessen Daten.';
+
+  @override
+  String get radioProfilesSectionInUse => 'IN VERWENDUNG';
+
+  @override
+  String get radioProfilesSectionStored => 'GESPEICHERT';
+
+  @override
+  String radioProfilesTileSubtitle(String nodeId, String size) {
+    return '$nodeId · $size';
+  }
+
+  @override
+  String radioProfilesTileSubtitleUnidentified(String size) {
+    return 'Hat nie seine Knotennummer gemeldet · $size';
+  }
+
+  @override
+  String get radioProfilesUnidentifiedRadio => 'Unbekanntes Funkgerät';
+
+  @override
+  String get radioProfilesDeleteTooltip => 'Daten dieses Funkgeräts löschen';
+
+  @override
+  String get radioProfilesDeleteTitle => 'Funkgerätedaten löschen?';
+
+  @override
+  String radioProfilesDeleteMessage(String name) {
+    return 'Damit werden alle Nachrichten, Knoten, Positionen und Messwerte entfernt, die die App über $name gesammelt hat. Dein eigenes Funkgerät und die übrigen behalten ihre Daten.';
+  }
+
+  @override
+  String get radioProfilesDeleteConfirm => 'Löschen';
+
+  @override
+  String radioProfilesDeleted(String name) {
+    return 'Daten von $name gelöscht';
+  }
+
+  @override
+  String get radioProfilesDeleteFailed =>
+      'Diese Daten konnten nicht gelöscht werden. Das zugehörige Funkgerät ist möglicherweise gerade in Verwendung.';
+
+  @override
+  String get radioProfilesLoadFailedTitle =>
+      'Gespeicherte Funkgerätedaten konnten nicht gelesen werden';
+
+  @override
+  String get radioProfilesEmptyTitlePrefix => 'Noch keine ';
+
+  @override
+  String get radioProfilesEmptyTitleKeyword => 'Funkgerätedaten';
+
+  @override
+  String get radioProfilesEmptyTitleSuffix => ' gespeichert';
+
+  @override
+  String get radioProfilesEmptyTagline1 =>
+      'Verbinde ein Funkgerät, dann landet sein Mesh hier';
+
+  @override
+  String get radioProfilesEmptyTagline2 =>
+      'Ein Datenbestand pro Funkgerät, sauber getrennt';
+
+  @override
+  String get radioProfilesEmptyTagline3 => 'Nichts aufzuräumen';
+
+  @override
+  String get settingsTileRadioProfilesTitle => 'Funkgerätedaten';
+
+  @override
+  String get settingsTileRadioProfilesSubtitle =>
+      'Die für jedes Funkgerät gespeicherten Daten ansehen und löschen';
+
+  @override
+  String get radioProfilesLoadFailedBody =>
+      'Die gespeicherten Funkgerätedaten konnten nicht gelesen werden. Ein Neustart der App behebt das meistens.';
 }

@@ -42,6 +42,15 @@ final radioScopeProvider = NotifierProvider<RadioScopeNotifier, String>(
   RadioScopeNotifier.new,
 );
 
+/// Stored radio profiles, largest first. Consumed by the Radio Data screen;
+/// invalidate it after deleting a profile to refresh the list.
+final radioScopeListProvider = FutureProvider<List<RadioScopeInfo>>((
+  ref,
+) async {
+  ref.watch(radioScopeProvider);
+  return RadioScope.instance.list();
+});
+
 /// Registers [store] with the scope so it is closed before a scope change,
 /// and unregisters it when the owning provider disposes.
 ///

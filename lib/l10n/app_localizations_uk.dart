@@ -44188,4 +44188,91 @@ class AppLocalizationsUk extends AppLocalizations {
   String helpModeCircleRemoveConfirmBody(String name) {
     return '$name більше не зможе надсилати вам запити про допомогу чи отримувати їх від вас. Ви можете додати його знову пізніше.';
   }
+
+  @override
+  String get radioProfilesTitle => 'Дані рацій';
+
+  @override
+  String get radioProfilesBannerTitle => 'Кожна рація зберігає власні дані';
+
+  @override
+  String get radioProfilesBannerBody =>
+      'Повідомлення, вузли, телеметрія й усе інше, що отримує застосунок, зберігається для тієї рації, через яку надійшло, тож рації ніколи не показують чужу мережу. Видалення тут прибирає дані лише цієї рації.';
+
+  @override
+  String get radioProfilesSectionInUse => 'ВИКОРИСТОВУЄТЬСЯ';
+
+  @override
+  String get radioProfilesSectionStored => 'ЗБЕРЕЖЕНО';
+
+  @override
+  String radioProfilesTileSubtitle(String nodeId, String size) {
+    return '$nodeId · $size';
+  }
+
+  @override
+  String radioProfilesTileSubtitleUnidentified(String size) {
+    return 'Так і не повідомила номер вузла · $size';
+  }
+
+  @override
+  String get radioProfilesUnidentifiedRadio => 'Невідома рація';
+
+  @override
+  String get radioProfilesDeleteTooltip => 'Видалити дані цієї рації';
+
+  @override
+  String get radioProfilesDeleteTitle => 'Видалити дані рації?';
+
+  @override
+  String radioProfilesDeleteMessage(String name) {
+    return 'Буде видалено всі повідомлення, вузли, координати та показники, які застосунок зібрав через $name. Дані вашої рації та інших рацій залишаться.';
+  }
+
+  @override
+  String get radioProfilesDeleteConfirm => 'Видалити';
+
+  @override
+  String radioProfilesDeleted(String name) {
+    return 'Дані $name видалено';
+  }
+
+  @override
+  String get radioProfilesDeleteFailed =>
+      'Не вдалося видалити ці дані. Можливо, ця рація зараз використовується.';
+
+  @override
+  String get radioProfilesLoadFailedTitle =>
+      'Не вдалося прочитати збережені дані рацій';
+
+  @override
+  String get radioProfilesEmptyTitlePrefix => 'Немає збережених ';
+
+  @override
+  String get radioProfilesEmptyTitleKeyword => 'даних рацій';
+
+  @override
+  String get radioProfilesEmptyTitleSuffix => '';
+
+  @override
+  String get radioProfilesEmptyTagline1 =>
+      'Підключіть рацію — і її мережа з\'явиться тут';
+
+  @override
+  String get radioProfilesEmptyTagline2 =>
+      'Окремий набір даних для кожної рації';
+
+  @override
+  String get radioProfilesEmptyTagline3 => 'Нічого прибирати';
+
+  @override
+  String get settingsTileRadioProfilesTitle => 'Дані рацій';
+
+  @override
+  String get settingsTileRadioProfilesSubtitle =>
+      'Переглядайте та видаляйте дані, збережені для кожної рації';
+
+  @override
+  String get radioProfilesLoadFailedBody =>
+      'Не вдалося прочитати збережені дані рацій. Зазвичай допомагає перезапуск застосунку.';
 }

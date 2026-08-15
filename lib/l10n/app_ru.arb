@@ -13384,5 +13384,29 @@
     "commonRemove": "Удалить",
     "@commonRemove": {
         "description": "Short label for a Remove confirm button (full context is in the dialog title)."
-    }
+    },
+    "radioProfilesTitle": "Данные раций",
+    "radioProfilesBannerTitle": "У каждой рации свои данные",
+    "radioProfilesBannerBody": "Сообщения, узлы, телеметрия и всё остальное, что принимает приложение, сохраняются для той рации, через которую пришли, поэтому рации никогда не показывают чужую сеть. Удаление здесь убирает данные только этой рации.",
+    "radioProfilesSectionInUse": "ИСПОЛЬЗУЕТСЯ",
+    "radioProfilesSectionStored": "СОХРАНЕНО",
+    "radioProfilesTileSubtitle": "{nodeId} · {size}",
+    "radioProfilesTileSubtitleUnidentified": "Так и не сообщила номер узла · {size}",
+    "radioProfilesUnidentifiedRadio": "Неопознанная рация",
+    "radioProfilesDeleteTooltip": "Удалить данные этой рации",
+    "radioProfilesDeleteTitle": "Удалить данные рации?",
+    "radioProfilesDeleteMessage": "Будут удалены все сообщения, узлы, координаты и показания, собранные приложением через {name}. Данные вашей рации и остальных раций сохранятся.",
+    "radioProfilesDeleteConfirm": "Удалить",
+    "radioProfilesDeleted": "Данные {name} удалены",
+    "radioProfilesDeleteFailed": "Не удалось удалить эти данные. Возможно, эта рация используется сейчас.",
+    "radioProfilesLoadFailedTitle": "Не удалось прочитать сохранённые данные раций",
+    "radioProfilesEmptyTitlePrefix": "Нет сохранённых ",
+    "radioProfilesEmptyTitleKeyword": "данных раций",
+    "radioProfilesEmptyTitleSuffix": "",
+    "radioProfilesEmptyTagline1": "Подключите рацию, и её сеть появится здесь",
+    "radioProfilesEmptyTagline2": "Отдельный набор данных для каждой рации",
+    "radioProfilesEmptyTagline3": "Очищать нечего",
+    "settingsTileRadioProfilesTitle": "Данные раций",
+    "settingsTileRadioProfilesSubtitle": "Просмотр и удаление данных, сохранённых для каждой рации",
+    "radioProfilesLoadFailedBody": "Не удалось прочитать сохранённые данные раций. Обычно помогает перезапуск приложения."
 }

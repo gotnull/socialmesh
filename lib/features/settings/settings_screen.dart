@@ -99,6 +99,7 @@ import '../../providers/reticulum_providers.dart';
 import '../mesh_services/rns_companion_services_screen.dart';
 import '../tak/screens/tak_settings_screen.dart';
 import 'network_endpoints_screen.dart';
+import 'radio_profiles_screen.dart';
 import 'reticulum_bridge_screen.dart';
 import 'reticulum_diagnostics_screen.dart';
 import 'translation_settings_screen.dart';
@@ -1086,6 +1087,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const DataExportScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.folder_shared_outlined,
+          title: context.l10n.settingsTileRadioProfilesTitle,
+          subtitle: context.l10n.settingsTileRadioProfilesSubtitle,
+          keywords: const [
+            'radio',
+            'node',
+            'storage',
+            'data',
+            'delete',
+            'scope',
+            'profile',
+            'switch',
+          ],
+          section: context.l10n.settingsSectionDataStorage,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const RadioProfilesScreen()),
           ),
         ),
         _SearchableSettingItem(

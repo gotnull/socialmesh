@@ -13384,5 +13384,29 @@
     "commonRemove": "Entfernen",
     "@commonRemove": {
         "description": "Short label for a Remove confirm button (full context is in the dialog title)."
-    }
+    },
+    "radioProfilesTitle": "Funkgerätedaten",
+    "radioProfilesBannerTitle": "Jedes Funkgerät behält seine eigenen Daten",
+    "radioProfilesBannerBody": "Nachrichten, Knoten, Telemetrie und alles andere, was die App empfängt, werden bei dem Funkgerät gespeichert, über das sie hereinkamen. So zeigt kein Funkgerät das Mesh eines anderen. Wer hier ein Funkgerät löscht, entfernt nur dessen Daten.",
+    "radioProfilesSectionInUse": "IN VERWENDUNG",
+    "radioProfilesSectionStored": "GESPEICHERT",
+    "radioProfilesTileSubtitle": "{nodeId} · {size}",
+    "radioProfilesTileSubtitleUnidentified": "Hat nie seine Knotennummer gemeldet · {size}",
+    "radioProfilesUnidentifiedRadio": "Unbekanntes Funkgerät",
+    "radioProfilesDeleteTooltip": "Daten dieses Funkgeräts löschen",
+    "radioProfilesDeleteTitle": "Funkgerätedaten löschen?",
+    "radioProfilesDeleteMessage": "Damit werden alle Nachrichten, Knoten, Positionen und Messwerte entfernt, die die App über {name} gesammelt hat. Dein eigenes Funkgerät und die übrigen behalten ihre Daten.",
+    "radioProfilesDeleteConfirm": "Löschen",
+    "radioProfilesDeleted": "Daten von {name} gelöscht",
+    "radioProfilesDeleteFailed": "Diese Daten konnten nicht gelöscht werden. Das zugehörige Funkgerät ist möglicherweise gerade in Verwendung.",
+    "radioProfilesLoadFailedTitle": "Gespeicherte Funkgerätedaten konnten nicht gelesen werden",
+    "radioProfilesEmptyTitlePrefix": "Noch keine ",
+    "radioProfilesEmptyTitleKeyword": "Funkgerätedaten",
+    "radioProfilesEmptyTitleSuffix": " gespeichert",
+    "radioProfilesEmptyTagline1": "Verbinde ein Funkgerät, dann landet sein Mesh hier",
+    "radioProfilesEmptyTagline2": "Ein Datenbestand pro Funkgerät, sauber getrennt",
+    "radioProfilesEmptyTagline3": "Nichts aufzuräumen",
+    "settingsTileRadioProfilesTitle": "Funkgerätedaten",
+    "settingsTileRadioProfilesSubtitle": "Die für jedes Funkgerät gespeicherten Daten ansehen und löschen",
+    "radioProfilesLoadFailedBody": "Die gespeicherten Funkgerätedaten konnten nicht gelesen werden. Ein Neustart der App behebt das meistens."
 }

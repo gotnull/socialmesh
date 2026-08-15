@@ -13384,5 +13384,29 @@
     "commonRemove": "Retirer",
     "@commonRemove": {
         "description": "Short label for a Remove confirm button (full context is in the dialog title)."
-    }
+    },
+    "radioProfilesTitle": "Données des radios",
+    "radioProfilesBannerTitle": "Chaque radio conserve ses propres données",
+    "radioProfilesBannerBody": "Les messages, les nœuds, la télémétrie et tout ce que l'application reçoit sont enregistrés pour la radio par laquelle ils sont arrivés : aucune radio n'affiche donc le maillage d'une autre. Supprimer une radio ici n'efface que ses données.",
+    "radioProfilesSectionInUse": "EN COURS D'UTILISATION",
+    "radioProfilesSectionStored": "ENREGISTRÉES",
+    "radioProfilesTileSubtitle": "{nodeId} · {size}",
+    "radioProfilesTileSubtitleUnidentified": "N'a jamais communiqué son numéro de nœud · {size}",
+    "radioProfilesUnidentifiedRadio": "Radio non identifiée",
+    "radioProfilesDeleteTooltip": "Supprimer les données de cette radio",
+    "radioProfilesDeleteTitle": "Supprimer les données de la radio ?",
+    "radioProfilesDeleteMessage": "Cela supprime tous les messages, nœuds, positions et relevés collectés par l'application via {name}. Votre radio et les autres conservent leurs données.",
+    "radioProfilesDeleteConfirm": "Supprimer",
+    "radioProfilesDeleted": "Données de {name} supprimées",
+    "radioProfilesDeleteFailed": "Ces données n'ont pas pu être supprimées. La radio concernée est peut-être celle en cours d'utilisation.",
+    "radioProfilesLoadFailedTitle": "Impossible de lire les données de radio enregistrées",
+    "radioProfilesEmptyTitlePrefix": "Aucune ",
+    "radioProfilesEmptyTitleKeyword": "donnée de radio",
+    "radioProfilesEmptyTitleSuffix": " enregistrée",
+    "radioProfilesEmptyTagline1": "Connectez une radio et son maillage apparaîtra ici",
+    "radioProfilesEmptyTagline2": "Un jeu de données par radio, bien séparés",
+    "radioProfilesEmptyTagline3": "Rien à nettoyer",
+    "settingsTileRadioProfilesTitle": "Données des radios",
+    "settingsTileRadioProfilesSubtitle": "Consulter et supprimer les données enregistrées pour chaque radio",
+    "radioProfilesLoadFailedBody": "Les données de radio enregistrées n'ont pas pu être lues. Redémarrer l'application suffit généralement."
 }

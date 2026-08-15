@@ -76057,6 +76057,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} will no longer send or receive Help Requests with you. You can add them again later.'**
   String helpModeCircleRemoveConfirmBody(String name);
+
+  /// No description provided for @radioProfilesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio Data'**
+  String get radioProfilesTitle;
+
+  /// No description provided for @radioProfilesBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Each radio keeps its own data'**
+  String get radioProfilesBannerTitle;
+
+  /// No description provided for @radioProfilesBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages, nodes, telemetry and everything else the app hears is stored against the radio it came through, so radios never show each other\'s mesh. Deleting a radio here removes only that radio\'s data.'**
+  String get radioProfilesBannerBody;
+
+  /// No description provided for @radioProfilesSectionInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'IN USE'**
+  String get radioProfilesSectionInUse;
+
+  /// No description provided for @radioProfilesSectionStored.
+  ///
+  /// In en, this message translates to:
+  /// **'STORED'**
+  String get radioProfilesSectionStored;
+
+  /// Subtitle on a stored radio row: its Meshtastic node id followed by how much disk its data uses. {nodeId} is like !a6960864, {size} like 12.4 MB.
+  ///
+  /// In en, this message translates to:
+  /// **'{nodeId} · {size}'**
+  String radioProfilesTileSubtitle(String nodeId, String size);
+
+  /// Subtitle for a stored radio that disconnected before reporting its node number. {size} is like 4.0 KB.
+  ///
+  /// In en, this message translates to:
+  /// **'Never reported its node number · {size}'**
+  String radioProfilesTileSubtitleUnidentified(String size);
+
+  /// No description provided for @radioProfilesUnidentifiedRadio.
+  ///
+  /// In en, this message translates to:
+  /// **'Unidentified radio'**
+  String get radioProfilesUnidentifiedRadio;
+
+  /// No description provided for @radioProfilesDeleteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this radio\'s data'**
+  String get radioProfilesDeleteTooltip;
+
+  /// No description provided for @radioProfilesDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete radio data?'**
+  String get radioProfilesDeleteTitle;
+
+  /// Body of the confirmation shown before deleting one radio's stored data. {name} is the radio's advertised name or node id.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes every message, node, position and reading the app collected through {name}. Your own radio and the other radios keep their data.'**
+  String radioProfilesDeleteMessage(String name);
+
+  /// No description provided for @radioProfilesDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get radioProfilesDeleteConfirm;
+
+  /// Success message after deleting a radio's stored data. {name} is the radio's advertised name or node id.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted the data from {name}'**
+  String radioProfilesDeleted(String name);
+
+  /// No description provided for @radioProfilesDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That data could not be deleted. The radio it belongs to may be the one in use.'**
+  String get radioProfilesDeleteFailed;
+
+  /// No description provided for @radioProfilesLoadFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read stored radio data'**
+  String get radioProfilesLoadFailedTitle;
+
+  /// No description provided for @radioProfilesEmptyTitlePrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get radioProfilesEmptyTitlePrefix;
+
+  /// No description provided for @radioProfilesEmptyTitleKeyword.
+  ///
+  /// In en, this message translates to:
+  /// **'radio data'**
+  String get radioProfilesEmptyTitleKeyword;
+
+  /// No description provided for @radioProfilesEmptyTitleSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' stored yet'**
+  String get radioProfilesEmptyTitleSuffix;
+
+  /// No description provided for @radioProfilesEmptyTagline1.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a radio and its mesh lands here'**
+  String get radioProfilesEmptyTagline1;
+
+  /// No description provided for @radioProfilesEmptyTagline2.
+  ///
+  /// In en, this message translates to:
+  /// **'One dataset per radio, kept apart'**
+  String get radioProfilesEmptyTagline2;
+
+  /// No description provided for @radioProfilesEmptyTagline3.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to clean up'**
+  String get radioProfilesEmptyTagline3;
+
+  /// No description provided for @settingsTileRadioProfilesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio data'**
+  String get settingsTileRadioProfilesTitle;
+
+  /// No description provided for @settingsTileRadioProfilesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See and delete the data stored for each radio'**
+  String get settingsTileRadioProfilesSubtitle;
+
+  /// No description provided for @radioProfilesLoadFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The stored radio data could not be read. Restarting the app usually clears this.'**
+  String get radioProfilesLoadFailedBody;
 }
 
 class _AppLocalizationsDelegate

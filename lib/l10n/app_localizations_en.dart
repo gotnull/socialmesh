@@ -43668,4 +43668,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String helpModeCircleRemoveConfirmBody(String name) {
     return '$name will no longer send or receive Help Requests with you. You can add them again later.';
   }
+
+  @override
+  String get radioProfilesTitle => 'Radio Data';
+
+  @override
+  String get radioProfilesBannerTitle => 'Each radio keeps its own data';
+
+  @override
+  String get radioProfilesBannerBody =>
+      'Messages, nodes, telemetry and everything else the app hears is stored against the radio it came through, so radios never show each other\'s mesh. Deleting a radio here removes only that radio\'s data.';
+
+  @override
+  String get radioProfilesSectionInUse => 'IN USE';
+
+  @override
+  String get radioProfilesSectionStored => 'STORED';
+
+  @override
+  String radioProfilesTileSubtitle(String nodeId, String size) {
+    return '$nodeId · $size';
+  }
+
+  @override
+  String radioProfilesTileSubtitleUnidentified(String size) {
+    return 'Never reported its node number · $size';
+  }
+
+  @override
+  String get radioProfilesUnidentifiedRadio => 'Unidentified radio';
+
+  @override
+  String get radioProfilesDeleteTooltip => 'Delete this radio\'s data';
+
+  @override
+  String get radioProfilesDeleteTitle => 'Delete radio data?';
+
+  @override
+  String radioProfilesDeleteMessage(String name) {
+    return 'This removes every message, node, position and reading the app collected through $name. Your own radio and the other radios keep their data.';
+  }
+
+  @override
+  String get radioProfilesDeleteConfirm => 'Delete';
+
+  @override
+  String radioProfilesDeleted(String name) {
+    return 'Deleted the data from $name';
+  }
+
+  @override
+  String get radioProfilesDeleteFailed =>
+      'That data could not be deleted. The radio it belongs to may be the one in use.';
+
+  @override
+  String get radioProfilesLoadFailedTitle => 'Could not read stored radio data';
+
+  @override
+  String get radioProfilesEmptyTitlePrefix => 'No ';
+
+  @override
+  String get radioProfilesEmptyTitleKeyword => 'radio data';
+
+  @override
+  String get radioProfilesEmptyTitleSuffix => ' stored yet';
+
+  @override
+  String get radioProfilesEmptyTagline1 =>
+      'Connect a radio and its mesh lands here';
+
+  @override
+  String get radioProfilesEmptyTagline2 => 'One dataset per radio, kept apart';
+
+  @override
+  String get radioProfilesEmptyTagline3 => 'Nothing to clean up';
+
+  @override
+  String get settingsTileRadioProfilesTitle => 'Radio data';
+
+  @override
+  String get settingsTileRadioProfilesSubtitle =>
+      'See and delete the data stored for each radio';
+
+  @override
+  String get radioProfilesLoadFailedBody =>
+      'The stored radio data could not be read. Restarting the app usually clears this.';
 }

@@ -14,11 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The direct-message list no longer invents contacts after a switch. Sent messages were matched against the currently connected radio's node number, so every message you had sent from the previous radio resolved its peer to that radio itself and it appeared in the contact list, alongside conversations with peers the new radio has never heard
 - Channel history no longer merges across radios. It was keyed on the channel slot alone, so two radios on different channel sets shared one "Primary" thread
 - Existing data is moved to the radio it came from on first launch, and a radio is identified by its own node number, so a rotated Bluetooth address or reaching the same radio over Wi-Fi instead of Bluetooth still lands in the right place
+- Settings > Data & Storage > Radio data lists what each radio has stored, with its name, node id and size, and deletes the ones you no longer want. The radio you are connected to is listed but cannot be deleted while it is in use
+- A radio's name no longer degrades to its address. Reconnecting to a saved Wi-Fi radio passed the endpoint as the device name, overwriting the name the radio actually advertises, so a radio that showed as "0864_0864" became "tcp:192.168.5.104:4403" after the next launch
+- Fixed the store that remembers which radio a device belongs to losing its entries on iOS, which made a known radio start from an empty mesh for a moment on connect before it recovered
 
 ### Fixed (profile images)
 
 - A profile banner whose local file has gone missing now falls back to the default banner instead of throwing. The network branch already had a fallback; the local-file branch did not, so a banner picked from the gallery and later deleted from the phone raised an error every time the profile screen was built
 - An avatar or banner that fails to download no longer files a crash report. A timed-out or dropped image fetch is the network, not a defect, but it reached reporting because the failure carries the HTTP stack rather than an image one and its message never mentions an image. A genuinely malformed image URL still reports, since that one is a defect
+
+### Fixed (connection errors)
+
+- A connect attempt that fails because the phone tore down the Bluetooth service under it no longer files a crash report. The app already knew that message was a normal lifecycle event, but only when it arrived bare; by the time the connect path had restated it for the error banner it was no longer recognised, and an explicit report from the scanner's error handler filed it anyway. The banner still tells you the connection failed
+- Errors reported by hand from a catch block now go through the same "is this actually a defect" check the automatic reporting already used, so the two paths no longer disagree about what is worth recording
 
 ### Fixed (background downloads)
 

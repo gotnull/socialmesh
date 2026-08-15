@@ -58179,5 +58179,64 @@
             }
         },
         "description": "Body of the confirmation shown before removing a peer from the Help Circle."
-    }
+    },
+    "radioProfilesTitle": "Radio Data",
+    "radioProfilesBannerTitle": "Each radio keeps its own data",
+    "radioProfilesBannerBody": "Messages, nodes, telemetry and everything else the app hears is stored against the radio it came through, so radios never show each other's mesh. Deleting a radio here removes only that radio's data.",
+    "radioProfilesSectionInUse": "IN USE",
+    "radioProfilesSectionStored": "STORED",
+    "radioProfilesTileSubtitle": "{nodeId} · {size}",
+    "radioProfilesTileSubtitleUnidentified": "Never reported its node number · {size}",
+    "radioProfilesUnidentifiedRadio": "Unidentified radio",
+    "radioProfilesDeleteTooltip": "Delete this radio's data",
+    "radioProfilesDeleteTitle": "Delete radio data?",
+    "radioProfilesDeleteMessage": "This removes every message, node, position and reading the app collected through {name}. Your own radio and the other radios keep their data.",
+    "radioProfilesDeleteConfirm": "Delete",
+    "radioProfilesDeleted": "Deleted the data from {name}",
+    "radioProfilesDeleteFailed": "That data could not be deleted. The radio it belongs to may be the one in use.",
+    "radioProfilesLoadFailedTitle": "Could not read stored radio data",
+    "radioProfilesEmptyTitlePrefix": "No ",
+    "radioProfilesEmptyTitleKeyword": "radio data",
+    "radioProfilesEmptyTitleSuffix": " stored yet",
+    "radioProfilesEmptyTagline1": "Connect a radio and its mesh lands here",
+    "radioProfilesEmptyTagline2": "One dataset per radio, kept apart",
+    "radioProfilesEmptyTagline3": "Nothing to clean up",
+    "settingsTileRadioProfilesTitle": "Radio data",
+    "settingsTileRadioProfilesSubtitle": "See and delete the data stored for each radio",
+    "@radioProfilesTileSubtitle": {
+        "placeholders": {
+            "nodeId": {
+                "type": "String"
+            },
+            "size": {
+                "type": "String"
+            }
+        },
+        "description": "Subtitle on a stored radio row: its Meshtastic node id followed by how much disk its data uses. {nodeId} is like !a6960864, {size} like 12.4 MB."
+    },
+    "@radioProfilesTileSubtitleUnidentified": {
+        "placeholders": {
+            "size": {
+                "type": "String"
+            }
+        },
+        "description": "Subtitle for a stored radio that disconnected before reporting its node number. {size} is like 4.0 KB."
+    },
+    "@radioProfilesDeleteMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        },
+        "description": "Body of the confirmation shown before deleting one radio's stored data. {name} is the radio's advertised name or node id."
+    },
+    "@radioProfilesDeleted": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        },
+        "description": "Success message after deleting a radio's stored data. {name} is the radio's advertised name or node id."
+    },
+    "radioProfilesLoadFailedBody": "The stored radio data could not be read. Restarting the app usually clears this."
 }

@@ -44175,4 +44175,91 @@ class AppLocalizationsIt extends AppLocalizations {
   String helpModeCircleRemoveConfirmBody(String name) {
     return '$name non potrà più inviare o ricevere richieste di aiuto con te. Puoi aggiungerlo di nuovo in seguito.';
   }
+
+  @override
+  String get radioProfilesTitle => 'Dati radio';
+
+  @override
+  String get radioProfilesBannerTitle => 'Ogni radio conserva i propri dati';
+
+  @override
+  String get radioProfilesBannerBody =>
+      'Messaggi, nodi, telemetria e tutto ciò che l\'app riceve vengono archiviati per la radio da cui provengono, così le radio non mostrano mai la mesh di un\'altra. Eliminando una radio qui rimuovi soltanto i suoi dati.';
+
+  @override
+  String get radioProfilesSectionInUse => 'IN USO';
+
+  @override
+  String get radioProfilesSectionStored => 'ARCHIVIATE';
+
+  @override
+  String radioProfilesTileSubtitle(String nodeId, String size) {
+    return '$nodeId · $size';
+  }
+
+  @override
+  String radioProfilesTileSubtitleUnidentified(String size) {
+    return 'Non ha mai comunicato il suo numero di nodo · $size';
+  }
+
+  @override
+  String get radioProfilesUnidentifiedRadio => 'Radio non identificata';
+
+  @override
+  String get radioProfilesDeleteTooltip => 'Elimina i dati di questa radio';
+
+  @override
+  String get radioProfilesDeleteTitle => 'Eliminare i dati della radio?';
+
+  @override
+  String radioProfilesDeleteMessage(String name) {
+    return 'Verranno rimossi tutti i messaggi, i nodi, le posizioni e le letture raccolti dall\'app tramite $name. La tua radio e le altre radio conservano i propri dati.';
+  }
+
+  @override
+  String get radioProfilesDeleteConfirm => 'Elimina';
+
+  @override
+  String radioProfilesDeleted(String name) {
+    return 'Dati di $name eliminati';
+  }
+
+  @override
+  String get radioProfilesDeleteFailed =>
+      'Impossibile eliminare questi dati. La radio a cui appartengono potrebbe essere quella in uso.';
+
+  @override
+  String get radioProfilesLoadFailedTitle =>
+      'Impossibile leggere i dati radio archiviati';
+
+  @override
+  String get radioProfilesEmptyTitlePrefix => 'Nessun ';
+
+  @override
+  String get radioProfilesEmptyTitleKeyword => 'dato radio';
+
+  @override
+  String get radioProfilesEmptyTitleSuffix => ' archiviato';
+
+  @override
+  String get radioProfilesEmptyTagline1 =>
+      'Collega una radio e la sua mesh finirà qui';
+
+  @override
+  String get radioProfilesEmptyTagline2 =>
+      'Un archivio per radio, sempre separati';
+
+  @override
+  String get radioProfilesEmptyTagline3 => 'Niente da ripulire';
+
+  @override
+  String get settingsTileRadioProfilesTitle => 'Dati radio';
+
+  @override
+  String get settingsTileRadioProfilesSubtitle =>
+      'Visualizza ed elimina i dati archiviati per ogni radio';
+
+  @override
+  String get radioProfilesLoadFailedBody =>
+      'Impossibile leggere i dati radio archiviati. Di solito basta riavviare l\'app.';
 }

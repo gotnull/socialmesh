@@ -44459,4 +44459,93 @@ class AppLocalizationsFr extends AppLocalizations {
   String helpModeCircleRemoveConfirmBody(String name) {
     return '$name ne pourra plus échanger de demandes d\'aide avec vous. Vous pourrez l\'ajouter de nouveau plus tard.';
   }
+
+  @override
+  String get radioProfilesTitle => 'Données des radios';
+
+  @override
+  String get radioProfilesBannerTitle =>
+      'Chaque radio conserve ses propres données';
+
+  @override
+  String get radioProfilesBannerBody =>
+      'Les messages, les nœuds, la télémétrie et tout ce que l\'application reçoit sont enregistrés pour la radio par laquelle ils sont arrivés : aucune radio n\'affiche donc le maillage d\'une autre. Supprimer une radio ici n\'efface que ses données.';
+
+  @override
+  String get radioProfilesSectionInUse => 'EN COURS D\'UTILISATION';
+
+  @override
+  String get radioProfilesSectionStored => 'ENREGISTRÉES';
+
+  @override
+  String radioProfilesTileSubtitle(String nodeId, String size) {
+    return '$nodeId · $size';
+  }
+
+  @override
+  String radioProfilesTileSubtitleUnidentified(String size) {
+    return 'N\'a jamais communiqué son numéro de nœud · $size';
+  }
+
+  @override
+  String get radioProfilesUnidentifiedRadio => 'Radio non identifiée';
+
+  @override
+  String get radioProfilesDeleteTooltip =>
+      'Supprimer les données de cette radio';
+
+  @override
+  String get radioProfilesDeleteTitle => 'Supprimer les données de la radio ?';
+
+  @override
+  String radioProfilesDeleteMessage(String name) {
+    return 'Cela supprime tous les messages, nœuds, positions et relevés collectés par l\'application via $name. Votre radio et les autres conservent leurs données.';
+  }
+
+  @override
+  String get radioProfilesDeleteConfirm => 'Supprimer';
+
+  @override
+  String radioProfilesDeleted(String name) {
+    return 'Données de $name supprimées';
+  }
+
+  @override
+  String get radioProfilesDeleteFailed =>
+      'Ces données n\'ont pas pu être supprimées. La radio concernée est peut-être celle en cours d\'utilisation.';
+
+  @override
+  String get radioProfilesLoadFailedTitle =>
+      'Impossible de lire les données de radio enregistrées';
+
+  @override
+  String get radioProfilesEmptyTitlePrefix => 'Aucune ';
+
+  @override
+  String get radioProfilesEmptyTitleKeyword => 'donnée de radio';
+
+  @override
+  String get radioProfilesEmptyTitleSuffix => ' enregistrée';
+
+  @override
+  String get radioProfilesEmptyTagline1 =>
+      'Connectez une radio et son maillage apparaîtra ici';
+
+  @override
+  String get radioProfilesEmptyTagline2 =>
+      'Un jeu de données par radio, bien séparés';
+
+  @override
+  String get radioProfilesEmptyTagline3 => 'Rien à nettoyer';
+
+  @override
+  String get settingsTileRadioProfilesTitle => 'Données des radios';
+
+  @override
+  String get settingsTileRadioProfilesSubtitle =>
+      'Consulter et supprimer les données enregistrées pour chaque radio';
+
+  @override
+  String get radioProfilesLoadFailedBody =>
+      'Les données de radio enregistrées n\'ont pas pu être lues. Redémarrer l\'application suffit généralement.';
 }

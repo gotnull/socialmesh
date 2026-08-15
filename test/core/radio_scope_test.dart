@@ -117,6 +117,17 @@ void main() {
       expect(RadioScope.instance.currentKey, 'node-1234abcd');
     });
 
+    test(
+      'creates no scope directory when there is nothing to migrate',
+      () async {
+        // A fresh install must not end up with an empty scope, which would
+        // surface on the Radio Data screen as a radio holding no data.
+        await RadioScope.instance.init();
+
+        expect(await RadioScope.instance.list(), isEmpty);
+      },
+    );
+
     test('runs once', () async {
       SharedPreferences.setMockInitialValues({'nodes': 'first'});
       await RadioScope.instance.init();
@@ -319,6 +330,88 @@ void main() {
         RadioScope.instance.readScoped('nodes', prefs.getString),
         'scoped',
       );
+    });
+  });
+
+  group('labels', () {
+    test('a real advertised name survives later auto-reconnects', () async {
+      await RadioScope.instance.init();
+      const endpoint = 'tcp:192.168.5.104:4403';
+
+      // Discovered over mDNS, so the connect carries the radio's own name.
+      await RadioScope.instance.useDevice(deviceId: endpoint, label: '0864');
+      await RadioScope.instance.useNodeNum(0xa6960864, deviceId: endpoint);
+      await writeScopedFile('messages.db', 'x');
+      // Auto-reconnect only knows the saved endpoint, and passes it as the
+      // device "name". That must not replace the real one.
+      await RadioScope.instance.useDevice(deviceId: endpoint, label: endpoint);
+
+      final scope = (await RadioScope.instance.list()).single;
+      expect(scope.label, '0864');
+    });
+
+    test('a synthetic name still seeds a radio with no name yet', () async {
+      await RadioScope.instance.init();
+      const endpoint = 'tcp:192.168.5.77:4403';
+
+      await RadioScope.instance.useDevice(deviceId: endpoint, label: endpoint);
+      await RadioScope.instance.useNodeNum(0xb0b0beef, deviceId: endpoint);
+      await writeScopedFile('messages.db', 'x');
+
+      final scope = (await RadioScope.instance.list()).single;
+      expect(scope.label, endpoint);
+    });
+
+    test('a real name replaces a synthetic one', () async {
+      await RadioScope.instance.init();
+      const endpoint = 'tcp:192.168.5.77:4403';
+
+      await RadioScope.instance.useDevice(deviceId: endpoint, label: endpoint);
+      await RadioScope.instance.useNodeNum(0xb0b0beef, deviceId: endpoint);
+      await RadioScope.instance.useDevice(
+        deviceId: endpoint,
+        label: 'Fake Radio B',
+      );
+      await writeScopedFile('messages.db', 'x');
+
+      final scope = (await RadioScope.instance.list()).single;
+      expect(scope.label, 'Fake Radio B');
+    });
+  });
+
+  group('stored maps', () {
+    test('reads entries written with the legacy NUL separator', () async {
+      // An install from the build that wrote NUL-separated entries must keep
+      // its device mapping, or its next connect opens a provisional scope
+      // and the radio appears to have lost its data.
+      SharedPreferences.setMockInitialValues({
+        'radio_scope_current': 'node-a6960864',
+        'radio_scope_migrated': true,
+        'radio_scope_devices': ['ble-legacy\u0000node-a6960864'],
+        'radio_scope_labels': ['node-a6960864\u0000Legacy Radio'],
+      });
+      RadioScope.instance.debugSetRoot(root);
+      await RadioScope.instance.init();
+
+      final changed = await RadioScope.instance.useDevice(
+        deviceId: 'ble-legacy',
+      );
+
+      expect(changed, isFalse);
+      expect(RadioScope.instance.currentKey, 'node-a6960864');
+    });
+
+    test('round-trips a label containing spaces', () async {
+      await RadioScope.instance.init();
+      await RadioScope.instance.useDevice(
+        deviceId: 'ble-x',
+        label: 'Meshtastic Base Station 1',
+      );
+      await RadioScope.instance.useNodeNum(0x1234, deviceId: 'ble-x');
+      await writeScopedFile('messages.db', 'x');
+
+      final scope = (await RadioScope.instance.list()).single;
+      expect(scope.label, 'Meshtastic Base Station 1');
     });
   });
 

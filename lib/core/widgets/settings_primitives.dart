@@ -66,6 +66,14 @@ class SettingsTile extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
 
+  /// Vertical alignment of the icon, text column and trailing widget.
+  ///
+  /// Defaults to centre, which is right for the single-line rows this tile
+  /// was built for. Pass [CrossAxisAlignment.start] when the subtitle can
+  /// wrap: a centred icon beside a two-line column reads as misaligned, and
+  /// the trailing action drifts away from the title it acts on.
+  final CrossAxisAlignment crossAxisAlignment;
+
   const SettingsTile({
     super.key,
     required this.icon,
@@ -74,6 +82,7 @@ class SettingsTile extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.onTap,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
   });
 
   @override
@@ -81,6 +90,7 @@ class SettingsTile extends StatelessWidget {
     final body = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
+        crossAxisAlignment: crossAxisAlignment,
         children: [
           Icon(icon, color: iconColor ?? context.textSecondary),
           SizedBox(width: AppTheme.spacing16),

@@ -44138,4 +44138,92 @@ class AppLocalizationsPt extends AppLocalizations {
   String helpModeCircleRemoveConfirmBody(String name) {
     return '$name não poderá mais enviar ou receber pedidos de ajuda com você. Você pode adicioná-lo novamente depois.';
   }
+
+  @override
+  String get radioProfilesTitle => 'Dados do rádio';
+
+  @override
+  String get radioProfilesBannerTitle =>
+      'Cada rádio guarda os seus próprios dados';
+
+  @override
+  String get radioProfilesBannerBody =>
+      'Mensagens, nós, telemetria e tudo o que a aplicação recebe ficam guardados no rádio de onde vieram, por isso os rádios nunca mostram a mesh uns dos outros. Eliminar um rádio aqui remove apenas os dados desse rádio.';
+
+  @override
+  String get radioProfilesSectionInUse => 'EM USO';
+
+  @override
+  String get radioProfilesSectionStored => 'GUARDADOS';
+
+  @override
+  String radioProfilesTileSubtitle(String nodeId, String size) {
+    return '$nodeId · $size';
+  }
+
+  @override
+  String radioProfilesTileSubtitleUnidentified(String size) {
+    return 'Nunca comunicou o seu número de nó · $size';
+  }
+
+  @override
+  String get radioProfilesUnidentifiedRadio => 'Rádio não identificado';
+
+  @override
+  String get radioProfilesDeleteTooltip => 'Eliminar os dados deste rádio';
+
+  @override
+  String get radioProfilesDeleteTitle => 'Eliminar os dados do rádio?';
+
+  @override
+  String radioProfilesDeleteMessage(String name) {
+    return 'Isto remove todas as mensagens, nós, posições e leituras que a aplicação recolheu através de $name. O seu rádio e os restantes mantêm os seus dados.';
+  }
+
+  @override
+  String get radioProfilesDeleteConfirm => 'Eliminar';
+
+  @override
+  String radioProfilesDeleted(String name) {
+    return 'Dados de $name eliminados';
+  }
+
+  @override
+  String get radioProfilesDeleteFailed =>
+      'Não foi possível eliminar estes dados. O rádio a que pertencem pode ser o que está em uso.';
+
+  @override
+  String get radioProfilesLoadFailedTitle =>
+      'Não foi possível ler os dados de rádio guardados';
+
+  @override
+  String get radioProfilesEmptyTitlePrefix => 'Sem ';
+
+  @override
+  String get radioProfilesEmptyTitleKeyword => 'dados de rádio';
+
+  @override
+  String get radioProfilesEmptyTitleSuffix => ' guardados';
+
+  @override
+  String get radioProfilesEmptyTagline1 =>
+      'Ligue um rádio e a mesh dele aparece aqui';
+
+  @override
+  String get radioProfilesEmptyTagline2 =>
+      'Um conjunto de dados por rádio, sempre separados';
+
+  @override
+  String get radioProfilesEmptyTagline3 => 'Nada para limpar';
+
+  @override
+  String get settingsTileRadioProfilesTitle => 'Dados do rádio';
+
+  @override
+  String get settingsTileRadioProfilesSubtitle =>
+      'Ver e eliminar os dados guardados de cada rádio';
+
+  @override
+  String get radioProfilesLoadFailedBody =>
+      'Não foi possível ler os dados de rádio guardados. Reiniciar a aplicação costuma resolver.';
 }

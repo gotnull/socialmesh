@@ -44172,4 +44172,91 @@ class AppLocalizationsRu extends AppLocalizations {
   String helpModeCircleRemoveConfirmBody(String name) {
     return '$name больше не сможет отправлять вам запросы о помощи или получать их от вас. Вы можете добавить его снова позже.';
   }
+
+  @override
+  String get radioProfilesTitle => 'Данные раций';
+
+  @override
+  String get radioProfilesBannerTitle => 'У каждой рации свои данные';
+
+  @override
+  String get radioProfilesBannerBody =>
+      'Сообщения, узлы, телеметрия и всё остальное, что принимает приложение, сохраняются для той рации, через которую пришли, поэтому рации никогда не показывают чужую сеть. Удаление здесь убирает данные только этой рации.';
+
+  @override
+  String get radioProfilesSectionInUse => 'ИСПОЛЬЗУЕТСЯ';
+
+  @override
+  String get radioProfilesSectionStored => 'СОХРАНЕНО';
+
+  @override
+  String radioProfilesTileSubtitle(String nodeId, String size) {
+    return '$nodeId · $size';
+  }
+
+  @override
+  String radioProfilesTileSubtitleUnidentified(String size) {
+    return 'Так и не сообщила номер узла · $size';
+  }
+
+  @override
+  String get radioProfilesUnidentifiedRadio => 'Неопознанная рация';
+
+  @override
+  String get radioProfilesDeleteTooltip => 'Удалить данные этой рации';
+
+  @override
+  String get radioProfilesDeleteTitle => 'Удалить данные рации?';
+
+  @override
+  String radioProfilesDeleteMessage(String name) {
+    return 'Будут удалены все сообщения, узлы, координаты и показания, собранные приложением через $name. Данные вашей рации и остальных раций сохранятся.';
+  }
+
+  @override
+  String get radioProfilesDeleteConfirm => 'Удалить';
+
+  @override
+  String radioProfilesDeleted(String name) {
+    return 'Данные $name удалены';
+  }
+
+  @override
+  String get radioProfilesDeleteFailed =>
+      'Не удалось удалить эти данные. Возможно, эта рация используется сейчас.';
+
+  @override
+  String get radioProfilesLoadFailedTitle =>
+      'Не удалось прочитать сохранённые данные раций';
+
+  @override
+  String get radioProfilesEmptyTitlePrefix => 'Нет сохранённых ';
+
+  @override
+  String get radioProfilesEmptyTitleKeyword => 'данных раций';
+
+  @override
+  String get radioProfilesEmptyTitleSuffix => '';
+
+  @override
+  String get radioProfilesEmptyTagline1 =>
+      'Подключите рацию, и её сеть появится здесь';
+
+  @override
+  String get radioProfilesEmptyTagline2 =>
+      'Отдельный набор данных для каждой рации';
+
+  @override
+  String get radioProfilesEmptyTagline3 => 'Очищать нечего';
+
+  @override
+  String get settingsTileRadioProfilesTitle => 'Данные раций';
+
+  @override
+  String get settingsTileRadioProfilesSubtitle =>
+      'Просмотр и удаление данных, сохранённых для каждой рации';
+
+  @override
+  String get radioProfilesLoadFailedBody =>
+      'Не удалось прочитать сохранённые данные раций. Обычно помогает перезапуск приложения.';
 }

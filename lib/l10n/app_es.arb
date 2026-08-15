@@ -13384,5 +13384,29 @@
     "commonRemove": "Quitar",
     "@commonRemove": {
         "description": "Short label for a Remove confirm button (full context is in the dialog title)."
-    }
+    },
+    "radioProfilesTitle": "Datos de la radio",
+    "radioProfilesBannerTitle": "Cada radio conserva sus propios datos",
+    "radioProfilesBannerBody": "Los mensajes, nodos, telemetría y todo lo demás que recibe la aplicación se guardan en la radio por la que llegaron, así que ninguna radio muestra la malla de otra. Eliminar una radio aquí borra solo sus datos.",
+    "radioProfilesSectionInUse": "EN USO",
+    "radioProfilesSectionStored": "GUARDADAS",
+    "radioProfilesTileSubtitle": "{nodeId} · {size}",
+    "radioProfilesTileSubtitleUnidentified": "Nunca comunicó su número de nodo · {size}",
+    "radioProfilesUnidentifiedRadio": "Radio sin identificar",
+    "radioProfilesDeleteTooltip": "Eliminar los datos de esta radio",
+    "radioProfilesDeleteTitle": "¿Eliminar los datos de la radio?",
+    "radioProfilesDeleteMessage": "Se eliminarán todos los mensajes, nodos, posiciones y lecturas que la aplicación recogió a través de {name}. Tu radio y las demás conservan sus datos.",
+    "radioProfilesDeleteConfirm": "Eliminar",
+    "radioProfilesDeleted": "Datos de {name} eliminados",
+    "radioProfilesDeleteFailed": "No se pudieron eliminar estos datos. La radio a la que pertenecen puede ser la que está en uso.",
+    "radioProfilesLoadFailedTitle": "No se pudieron leer los datos de radio guardados",
+    "radioProfilesEmptyTitlePrefix": "Sin ",
+    "radioProfilesEmptyTitleKeyword": "datos de radio",
+    "radioProfilesEmptyTitleSuffix": " guardados",
+    "radioProfilesEmptyTagline1": "Conecta una radio y su malla aparecerá aquí",
+    "radioProfilesEmptyTagline2": "Un conjunto de datos por radio, siempre separados",
+    "radioProfilesEmptyTagline3": "Nada que limpiar",
+    "settingsTileRadioProfilesTitle": "Datos de la radio",
+    "settingsTileRadioProfilesSubtitle": "Consulta y elimina los datos guardados de cada radio",
+    "radioProfilesLoadFailedBody": "No se pudieron leer los datos de radio guardados. Reiniciar la aplicación suele solucionarlo."
 }
