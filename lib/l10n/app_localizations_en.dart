@@ -43753,4 +43753,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get radioProfilesLoadFailedBody =>
       'The stored radio data could not be read. Restarting the app usually clears this.';
+
+  @override
+  String get nodedexTabGroups => 'Groups';
 }

@@ -55,7 +55,6 @@ import 'manage_node_groups_screen.dart';
 import '../services/trust_score.dart';
 
 import '../../settings/settings_screen.dart';
-import '../map/nodedex_map_screen.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/sigil_painter.dart';
@@ -193,8 +192,6 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
             AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
-                  case 'map':
-                    openNodeDexMap(context);
                   case 'help':
                     ref
                         .read(helpProvider.notifier)
@@ -210,15 +207,6 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                 }
               },
               itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'map',
-                  child: ListTile(
-                    leading: const Icon(Icons.map_outlined),
-                    title: Text(context.l10n.nodedexMapTooltip),
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
                 PopupMenuItem(
                   value: 'help',
                   child: ListTile(

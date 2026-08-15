@@ -13408,5 +13408,6 @@
     "radioProfilesEmptyTagline3": "Rien à nettoyer",
     "settingsTileRadioProfilesTitle": "Données des radios",
     "settingsTileRadioProfilesSubtitle": "Consulter et supprimer les données enregistrées pour chaque radio",
-    "radioProfilesLoadFailedBody": "Les données de radio enregistrées n'ont pas pu être lues. Redémarrer l'application suffit généralement."
+    "radioProfilesLoadFailedBody": "Les données de radio enregistrées n'ont pas pu être lues. Redémarrer l'application suffit généralement.",
+    "nodedexTabGroups": "Groupes"
 }

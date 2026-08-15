@@ -56,10 +56,10 @@ class DrawerMenuItem {
   final List<DrawerMenuItem>? children;
 
   /// Custom open handler. When set, takes precedence over [screen] /
-  /// [tabIndex] in the drawer dispatch — used for entries that route
-  /// through a feature-specific entry-point function (e.g.
-  /// `openNodeDexMap` which fires NodeDex-tagged telemetry before
-  /// pushing the canonical MapScreen).
+  /// [tabIndex] in the drawer dispatch — for entries that route through a
+  /// feature-specific entry-point function rather than pushing a screen
+  /// directly, typically because the entry point logs or resolves state
+  /// first.
   final void Function(BuildContext context)? onOpen;
 
   bool get hasChildren => children != null && children!.isNotEmpty;

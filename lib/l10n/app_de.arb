@@ -13408,5 +13408,6 @@
     "radioProfilesEmptyTagline3": "Nichts aufzuräumen",
     "settingsTileRadioProfilesTitle": "Funkgerätedaten",
     "settingsTileRadioProfilesSubtitle": "Die für jedes Funkgerät gespeicherten Daten ansehen und löschen",
-    "radioProfilesLoadFailedBody": "Die gespeicherten Funkgerätedaten konnten nicht gelesen werden. Ein Neustart der App behebt das meistens."
+    "radioProfilesLoadFailedBody": "Die gespeicherten Funkgerätedaten konnten nicht gelesen werden. Ein Neustart der App behebt das meistens.",
+    "nodedexTabGroups": "Gruppen"
 }

@@ -13408,5 +13408,6 @@
     "radioProfilesEmptyTagline3": "Нічого прибирати",
     "settingsTileRadioProfilesTitle": "Дані рацій",
     "settingsTileRadioProfilesSubtitle": "Переглядайте та видаляйте дані, збережені для кожної рації",
-    "radioProfilesLoadFailedBody": "Не вдалося прочитати збережені дані рацій. Зазвичай допомагає перезапуск застосунку."
+    "radioProfilesLoadFailedBody": "Не вдалося прочитати збережені дані рацій. Зазвичай допомагає перезапуск застосунку.",
+    "nodedexTabGroups": "Групи"
 }

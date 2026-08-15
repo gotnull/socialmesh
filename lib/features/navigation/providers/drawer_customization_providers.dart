@@ -49,14 +49,28 @@ class DrawerCustomizationState {
   }
 }
 
+/// Drawer item ids that have shipped and since been retired.
+///
+/// A drawer id is a release contract: user customization is persisted
+/// against it. When an item genuinely goes away, its id has to be pruned
+/// from that persisted state, or the customize sheet keeps listing it as a
+/// hidden item the user can never restore - rendered as a raw id, because
+/// no descriptor answers for it any more.
+///
+/// * `nodedex_map` - the NodeDex map became a tab in the NodeDex shell, so
+///   it is no longer a drawer entry that can be hidden or reordered.
+const Set<String> kRetiredDrawerItemIds = {'nodedex_map'};
+
 class DrawerCustomizationNotifier
     extends AsyncNotifier<DrawerCustomizationState> {
   @override
   Future<DrawerCustomizationState> build() async {
     final settings = await ref.watch(settingsServiceProvider.future);
     return DrawerCustomizationState(
-      hiddenIds: settings.drawerHiddenItems.toSet(),
-      customOrder: settings.drawerItemOrder,
+      hiddenIds: pruneRetiredDrawerIds(settings.drawerHiddenItems).toSet(),
+      customOrder: settings.drawerItemOrder == null
+          ? null
+          : pruneRetiredDrawerIds(settings.drawerItemOrder!),
     );
   }
 
@@ -152,6 +166,16 @@ final drawerEditModeProvider = NotifierProvider<DrawerEditModeNotifier, bool>(
 /// declared section).
 ///
 /// Items with `id == null` cannot be hidden.
+/// Drops [kRetiredDrawerItemIds] from a persisted id list.
+///
+/// Applied on read rather than rewritten to storage: a user who downgrades
+/// keeps whatever they had, and the prune costs one pass over a handful of
+/// ids.
+List<String> pruneRetiredDrawerIds(List<String> ids) => [
+  for (final id in ids)
+    if (!kRetiredDrawerItemIds.contains(id)) id,
+];
+
 List<DrawerMenuItem> applyDrawerCustomization(
   List<DrawerMenuItem> defaultList,
   DrawerCustomizationState state,

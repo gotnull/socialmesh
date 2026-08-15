@@ -13408,5 +13408,6 @@
     "radioProfilesEmptyTagline3": "Nada que limpiar",
     "settingsTileRadioProfilesTitle": "Datos de la radio",
     "settingsTileRadioProfilesSubtitle": "Consulta y elimina los datos guardados de cada radio",
-    "radioProfilesLoadFailedBody": "No se pudieron leer los datos de radio guardados. Reiniciar la aplicación suele solucionarlo."
+    "radioProfilesLoadFailedBody": "No se pudieron leer los datos de radio guardados. Reiniciar la aplicación suele solucionarlo.",
+    "nodedexTabGroups": "Grupos"
 }

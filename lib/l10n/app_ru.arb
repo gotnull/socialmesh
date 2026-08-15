@@ -13408,5 +13408,6 @@
     "radioProfilesEmptyTagline3": "Очищать нечего",
     "settingsTileRadioProfilesTitle": "Данные раций",
     "settingsTileRadioProfilesSubtitle": "Просмотр и удаление данных, сохранённых для каждой рации",
-    "radioProfilesLoadFailedBody": "Не удалось прочитать сохранённые данные раций. Обычно помогает перезапуск приложения."
+    "radioProfilesLoadFailedBody": "Не удалось прочитать сохранённые данные раций. Обычно помогает перезапуск приложения.",
+    "nodedexTabGroups": "Группы"
 }

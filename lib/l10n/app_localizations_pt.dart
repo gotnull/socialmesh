@@ -44226,4 +44226,7 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get radioProfilesLoadFailedBody =>
       'Não foi possível ler os dados de rádio guardados. Reiniciar a aplicação costuma resolver.';
+
+  @override
+  String get nodedexTabGroups => 'Grupos';
 }

@@ -44583,5 +44583,6 @@
     "radioProfilesEmptyTagline3": "Niente da ripulire",
     "settingsTileRadioProfilesTitle": "Dati radio",
     "settingsTileRadioProfilesSubtitle": "Visualizza ed elimina i dati archiviati per ogni radio",
-    "radioProfilesLoadFailedBody": "Impossibile leggere i dati radio archiviati. Di solito basta riavviare l'app."
+    "radioProfilesLoadFailedBody": "Impossibile leggere i dati radio archiviati. Di solito basta riavviare l'app.",
+    "nodedexTabGroups": "Gruppi"
 }

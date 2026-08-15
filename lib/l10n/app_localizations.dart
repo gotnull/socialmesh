@@ -76201,6 +76201,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The stored radio data could not be read. Restarting the app usually clears this.'**
   String get radioProfilesLoadFailedBody;
+
+  /// Bottom bar tab label inside NodeDex for the node groups screen. Kept to one short word so the label never wraps.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get nodedexTabGroups;
 }
 
 class _AppLocalizationsDelegate

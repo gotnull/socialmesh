@@ -373,10 +373,45 @@ void main() {
     // referenced it. Pin the full set here. When adding a new item:
     // add it to this list and the SharedPreferences side stays in
     // lockstep.
+    //
+    // Retiring an id is allowed, but only with a migration: add it to
+    // `kRetiredDrawerItemIds` so the persisted state is pruned on read,
+    // then drop it from these lists. Without the prune, the customize
+    // sheet keeps listing a hidden item that no longer exists and renders
+    // it as a raw id. `nodedex_map` went that way when the NodeDex map
+    // became a tab in the NodeDex shell.
+    test('a retired id is pruned from persisted customization', () {
+      // The user hid NodeDex Map back when it was a drawer child. Their
+      // stored state still names it; the prune is what stops the
+      // customize sheet listing an item that no longer exists.
+      expect(pruneRetiredDrawerIds(['nodedex', 'nodedex_map', 'presence']), [
+        'nodedex',
+        'presence',
+      ]);
+    });
+
+    test('pruning leaves a list with no retired ids untouched', () {
+      const order = ['nodedex', 'presence', 'world_map'];
+      expect(pruneRetiredDrawerIds(order), order);
+    });
+
+    test('a retired id has no hidden-item descriptor', () {
+      // The descriptor and the prune have to agree: an id that still
+      // resolved here would render in the sheet after being pruned out of
+      // the user's state, which is the same mystery row in reverse.
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      for (final id in kRetiredDrawerItemIds) {
+        expect(
+          drawerHiddenItemDescriptor(id, l10n),
+          isNull,
+          reason: 'Retired drawer id "$id" must not resolve a descriptor',
+        );
+      }
+    });
+
     test('all customizable top-level items have stable IDs', () {
       const expectedIds = [
         'nodedex',
-        'nodedex_map',
         'nodeboard',
         'operations',
         'presence',
@@ -425,7 +460,6 @@ void main() {
     test('every customizable id resolves to a hidden-item descriptor', () {
       const expectedIds = [
         'nodedex',
-        'nodedex_map',
         'nodeboard',
         'operations',
         'presence',

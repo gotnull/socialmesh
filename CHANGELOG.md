@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (NodeDex navigation)
+
+- NodeDex now has its own bottom bar with NodeDex, Map and Groups. The map used to be a sub-item under NodeDex in the drawer and a line in the overflow menu, and node groups were reachable only from a button inside the list; all three are now the same kind of thing in the same place
+- Opening NodeDex no longer builds its map. The map is constructed the first time you tap the Map tab and kept alive after that, so switching back and forth holds its position
+- If you had hidden or reordered "NodeDex Map" in the drawer, that setting is now discarded rather than leaving an entry you could never restore in the drawer customise sheet
+
 ### Changed (switching between radios)
 
 - Each radio now keeps its own data. Messages, nodes, favourites, telemetry, routes, traceroutes, NodeDex entries, waypoints, the mesh feed and the rest of the mesh-observed stores are filed under the radio they were heard through, so connecting a second radio shows that radio's mesh instead of the first one's leftovers. Switching back restores what was there

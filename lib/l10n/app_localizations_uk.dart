@@ -44275,4 +44275,7 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get radioProfilesLoadFailedBody =>
       'Не вдалося прочитати збережені дані рацій. Зазвичай допомагає перезапуск застосунку.';
+
+  @override
+  String get nodedexTabGroups => 'Групи';
 }

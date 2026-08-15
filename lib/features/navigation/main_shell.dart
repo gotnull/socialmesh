@@ -59,8 +59,7 @@ import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
 import '../mesh_canvas/screens/mesh_canvas_overview_screen.dart';
-import '../nodedex/map/nodedex_map_screen.dart';
-import '../nodedex/screens/nodedex_screen.dart';
+import '../nodedex/screens/nodedex_shell_screen.dart';
 import '../operations/presentation/operations_screen.dart';
 import '../aether/screens/aether_screen.dart';
 import '../file_transfer/screens/file_transfers_container_screen.dart';
@@ -1334,21 +1333,14 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
       id: 'nodedex',
       icon: Icons.auto_stories_outlined,
       label: l10n.navigationNodeDex,
-      screen: const NodeDexScreen(),
+      // The map and the groups screen are tabs inside the NodeDex shell
+      // rather than drawer children: they are two more ways of reading the
+      // same collection, so they belong beside it, not under it.
+      screen: const NodeDexShellScreen(),
       sectionHeader: l10n.navigationSectionDiscover,
       iconColor: AccentColors.yellow,
       requiresConnection: false,
       whatsNewBadgeKey: 'nodedex',
-      children: [
-        DrawerMenuItem(
-          id: 'nodedex_map',
-          icon: Icons.map_outlined,
-          label: l10n.nodedexMapTooltip,
-          onOpen: openNodeDexMap,
-          iconColor: AccentColors.blue,
-          requiresConnection: false,
-        ),
-      ],
     ),
     if (AppFeatureFlags.isNodeBoardEnabled)
       DrawerMenuItem(

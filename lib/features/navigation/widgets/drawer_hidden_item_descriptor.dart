@@ -38,12 +38,6 @@ DrawerHiddenItemDescriptor? drawerHiddenItemDescriptor(
         label: l10n.navigationNodeDex,
         iconColor: AccentColors.yellow,
       );
-    case 'nodedex_map':
-      return DrawerHiddenItemDescriptor(
-        icon: Icons.map_outlined,
-        label: l10n.nodedexMapTooltip,
-        iconColor: AccentColors.blue,
-      );
     case 'nodeboard':
       return DrawerHiddenItemDescriptor(
         icon: Icons.dashboard_outlined,

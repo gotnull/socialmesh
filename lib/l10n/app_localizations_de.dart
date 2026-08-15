@@ -44372,4 +44372,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get radioProfilesLoadFailedBody =>
       'Die gespeicherten Funkgerätedaten konnten nicht gelesen werden. Ein Neustart der App behebt das meistens.';
+
+  @override
+  String get nodedexTabGroups => 'Gruppen';
 }
