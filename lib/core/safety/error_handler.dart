@@ -244,9 +244,12 @@ class AppErrorHandler {
 
     // Transient TLS / socket drops. Distinguish from genuine connectivity
     // failures (e.g. "Connection refused") by matching only the drop messages.
+    // HttpException belongs here for the server half of the same event: a
+    // connection closed mid-body arrives as HttpException, not SocketException.
     final message = error.toString().toLowerCase();
     if (error is HandshakeException ||
         error is SocketException ||
+        error is HttpException ||
         message.contains('handshakeexception')) {
       if (message.contains('connection terminated') ||
           message.contains('connection reset') ||

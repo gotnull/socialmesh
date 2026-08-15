@@ -745,6 +745,32 @@ void main() {
       );
     });
 
+    test('suppresses an HttpException closed mid-body', () {
+      // The server half of a dropped connection: the body stops arriving and
+      // dart:io raises HttpException rather than SocketException. Reported
+      // from a background isolate whose stack is a single dart:isolate frame,
+      // so the type and message are all there is to go on.
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          const HttpException('Connection closed while receiving data'),
+          StackTrace.fromString(
+            '#0 _RawReceivePort._handleMessage (dart:isolate)',
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('does NOT suppress an HttpException that is not a drop', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          const HttpException('Invalid status code 500'),
+          StackTrace.current,
+        ),
+        isFalse,
+      );
+    });
+
     test('does NOT suppress genuine StateError', () {
       expect(
         AppErrorHandler.isRecoverableTransientError(
