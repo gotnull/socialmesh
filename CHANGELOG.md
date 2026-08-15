@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Channel history no longer merges across radios. It was keyed on the channel slot alone, so two radios on different channel sets shared one "Primary" thread
 - Existing data is moved to the radio it came from on first launch, and a radio is identified by its own node number, so a rotated Bluetooth address or reaching the same radio over Wi-Fi instead of Bluetooth still lands in the right place
 
+### Fixed (profile images)
+
+- A profile banner whose local file has gone missing now falls back to the default banner instead of throwing. The network branch already had a fallback; the local-file branch did not, so a banner picked from the gallery and later deleted from the phone raised an error every time the profile screen was built
+- An avatar or banner that fails to download no longer files a crash report. A timed-out or dropped image fetch is the network, not a defect, but it reached reporting because the failure carries the HTTP stack rather than an image one and its message never mentions an image. A genuinely malformed image URL still reports, since that one is a defect
+
 ### Fixed (databases at launch)
 
 - A database that could not be opened because the phone's keystore was not ready yet is now retried instead of failing outright. The encryption key lives in the iOS Keychain / Android Keystore, and an app launched in the background moments before the keystore becomes readable got one attempt and gave up, leaving the store it was opening in an error state for the rest of that launch

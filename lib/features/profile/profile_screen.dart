@@ -2648,6 +2648,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
                                                           profile.bannerUrl!,
                                                         ),
                                                         fit: BoxFit.cover,
+                                                        errorBuilder:
+                                                            (
+                                                              ctx,
+                                                              err,
+                                                              stack,
+                                                            ) => DefaultBanner(
+                                                              accentColor:
+                                                                  accentColor,
+                                                            ),
                                                       )
                                               else
                                                 DefaultBanner(

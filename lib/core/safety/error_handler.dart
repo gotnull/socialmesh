@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
-import 'dart:io' show HandshakeException, Platform, SocketException;
+import 'dart:io'
+    show HandshakeException, HttpException, Platform, SocketException;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -231,6 +232,16 @@ class AppErrorHandler {
       return true;
     }
 
+    // A network image that fails to fetch surfaces with the HTTP stack on top
+    // and no completer frame at all, so neither check above sees it, and the
+    // error text ("Operation timed out ... address = ...") never says image.
+    // Only the transport failures are swallowed: a malformed image URL throws
+    // an ArgumentError on this same path and stays reportable, because that
+    // one is a defect rather than the network.
+    if (_isImageLoadStack(stackStr) && _isNetworkTransportError(error)) {
+      return true;
+    }
+
     // Transient TLS / socket drops. Distinguish from genuine connectivity
     // failures (e.g. "Connection refused") by matching only the drop messages.
     final message = error.toString().toLowerCase();
@@ -413,6 +424,22 @@ class AppErrorHandler {
   }
 
   /// Check if error is image-related.
+  /// Frames that only appear while an image provider is resolving a source.
+  /// The completer checks miss the network loader, which fails before a
+  /// completer is ever on the stack.
+  static bool _isImageLoadStack(String stack) =>
+      stack.contains('NetworkImage._loadAsync') ||
+      stack.contains('_network_image_io.dart') ||
+      stack.contains('ImageProvider.resolveStreamForKey') ||
+      stack.contains('_ImageState._resolveImage');
+
+  /// Whether the failure is the network rather than the code that used it.
+  static bool _isNetworkTransportError(Object error) =>
+      error is SocketException ||
+      error is HttpException ||
+      error is HandshakeException ||
+      error is TimeoutException;
+
   static bool _isImageError(Object exception, String? library) {
     if (library == 'image resource service') return true;
 

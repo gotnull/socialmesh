@@ -688,6 +688,63 @@ void main() {
       );
     });
 
+    test('suppresses a network-image fetch that times out', () {
+      // The shape reported from production: HTTP frames on top, the image
+      // provider underneath, no completer frame, and an error message that
+      // never says "image".
+      final stack = StackTrace.fromString(
+        '#0 _HttpClient.getUrl (dart:_http)\n'
+        '#1 NetworkImage._loadAsync '
+        '(package:flutter/src/painting/_network_image_io.dart:120)\n'
+        '#2 ImageProvider.resolveStreamForKey '
+        '(package:flutter/src/painting/image_provider.dart:546)',
+      );
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          const SocketException(
+            'Operation timed out (OS Error: Operation timed out, errno = 60), '
+            'address = firebasestorage.googleapis.com, port = 63659',
+          ),
+          stack,
+        ),
+        isTrue,
+      );
+    });
+
+    test('does NOT suppress a malformed image URL on the same path', () {
+      // A local file path handed to a network loader is a defect, not the
+      // network, and has to keep reporting even though it fails here too.
+      final stack = StackTrace.fromString(
+        '#0 _HttpClient.getUrl (dart:_http)\n'
+        '#1 NetworkImage._loadAsync '
+        '(package:flutter/src/painting/_network_image_io.dart:120)',
+      );
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          ArgumentError.value(
+            'file:///Documents/profile_avatars/a.jpg',
+            'url',
+            'No host specified in URI',
+          ),
+          stack,
+        ),
+        isFalse,
+      );
+    });
+
+    test('does NOT suppress a socket timeout away from the image path', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          const SocketException('Operation timed out'),
+          StackTrace.fromString(
+            '#0 _HttpClient.getUrl (dart:_http)\n'
+            '#1 SyncService.upload (package:socialmesh/services/sync.dart:12)',
+          ),
+        ),
+        isFalse,
+      );
+    });
+
     test('does NOT suppress genuine StateError', () {
       expect(
         AppErrorHandler.isRecoverableTransientError(
