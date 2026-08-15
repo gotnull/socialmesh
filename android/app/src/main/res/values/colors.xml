@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#1F2633</color>
+
+    <!-- Recovery screen shown when the install is missing its native libraries.
+         Painted explicitly rather than through the platform theme: the screen has
+         to render identically on a package that is too broken to start Flutter. -->
+    <color name="broken_install_background">#1F2633</color>
+    <color name="broken_install_title">#FFFFFF</color>
+    <color name="broken_install_body">#C2CAD6</color>
+    <color name="broken_install_action">#4F6AF6</color>
+    <color name="broken_install_action_label">#FFFFFF</color>
 </resources>

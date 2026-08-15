@@ -159,6 +159,18 @@
                 <data android:pathPattern=".*\\.gpx" />
             </intent-filter>
         </activity>
+        <!-- Recovery screen for an install that is missing its native libraries.
+             Lives in its own process and its own task so it survives the kill of
+             the process that could not start the Flutter engine. -->
+        <activity
+            android:name=".BrokenInstallActivity"
+            android:exported="false"
+            android:process=":brokeninstall"
+            android:taskAffinity="com.gotnull.socialmesh.brokeninstall"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:theme="@style/NormalTheme" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

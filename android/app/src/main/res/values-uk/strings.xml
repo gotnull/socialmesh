@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="broken_install_title">Ця копія SocialMesh неповна</string>
+    <string name="broken_install_body">У цій інсталяції бракує частини застосунку, тому він не може запуститися. Зазвичай так стається, коли застосунок встановлено з файлу, а не з Google Play, або коли оновлення не завершилося. Повторне встановлення з Google Play вирішить проблему.</string>
+    <string name="broken_install_action">Відкрити Google Play</string>
+</resources>

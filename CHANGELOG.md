@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (incomplete installs)
+
+- An Android install that is missing the app's native code now explains itself instead of disappearing behind "SocialMesh keeps stopping". A copy installed from a bare APK file rather than Google Play, cloned into a container app, or left half-written by an interrupted update has no engine to start, so it died on every launch with nothing to tell the user why. Those launches now land on a screen that names the problem and offers a one-tap route back to the Play listing
+- A background wake-up on such an install stays silent. A push message or a scheduled task that hits the same missing library fails on its own rather than throwing a full-screen error over whatever you were doing at the time
+
 ### Fixed (device scanning)
 
 - Tapping your saved radio in the Devices list now always starts a connection. The saved-device row was routed through the same protocol guesswork as anonymous scan results, so a radio renamed away from the stock "Name 1234" pattern was treated as an unknown device and the tap was silently ignored - the only workaround was to unpair and pair again. The device's protocol is already known from when it was first paired, so the row now connects directly

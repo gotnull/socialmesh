@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="broken_install_title">Esta cópia do SocialMesh está incompleta</string>
+    <string name="broken_install_body">Falta parte da aplicação nesta instalação, por isso não consegue iniciar. Isto acontece normalmente quando a aplicação foi instalada a partir de um ficheiro em vez do Google Play, ou quando uma atualização não terminou. Instalá-la novamente a partir do Google Play resolve o problema.</string>
+    <string name="broken_install_action">Abrir o Google Play</string>
+</resources>
