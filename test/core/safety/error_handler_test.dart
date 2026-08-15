@@ -771,6 +771,31 @@ void main() {
       );
     });
 
+    test('suppresses a lifecycle string that was wrapped on its way up', () {
+      // The protocol layer restates the platform string for the user before
+      // rethrowing, which used to hide it from the exact-match branch above.
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          Exception('Protocol configuration failed: Service stopped'),
+          StackTrace.current,
+        ),
+        isTrue,
+      );
+    });
+
+    test(
+      'does NOT suppress an error that merely mentions a lifecycle string',
+      () {
+        expect(
+          AppErrorHandler.isRecoverableTransientError(
+            Exception('Service stopped before the config write completed'),
+            StackTrace.current,
+          ),
+          isFalse,
+        );
+      },
+    );
+
     test('does NOT suppress genuine StateError', () {
       expect(
         AppErrorHandler.isRecoverableTransientError(

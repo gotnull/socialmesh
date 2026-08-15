@@ -267,6 +267,16 @@ class AppErrorHandler {
       }
     }
 
+    // The same lifecycle strings also arrive wrapped, because a layer between
+    // the platform and here restates them for the user ("Protocol
+    // configuration failed: Service stopped"). The wrap is deliberate and the
+    // failure is no less transient for having been described, so match the
+    // trailing form too. Anchored at the end so a message that merely mentions
+    // one of these in passing is not swallowed.
+    for (final transient in const ['connection reset', 'service stopped']) {
+      if (message.trimRight().endsWith(transient)) return true;
+    }
+
     return false;
   }
 
@@ -479,7 +489,18 @@ class AppErrorHandler {
   ///
   /// Sanitizes PII and adds breadcrumb context before recording. Use this
   /// instead of calling `FirebaseCrashlytics.instance.recordError()` directly.
+  ///
+  /// Transients are dropped here for the same reason the two automatic entry
+  /// points drop them: a link that went away is not a defect. Without this,
+  /// an explicit call from a catch block reports what the global handlers
+  /// would have discarded.
   static void reportError(Object error, StackTrace? stack, {String? context}) {
+    if (isRecoverableTransientError(error, stack)) {
+      _loggerForError(error, stack)(
+        'reportError [SUPPRESSED transient]: $error',
+      );
+      return;
+    }
     _reportToCrashlytics(error, stack, reason: context);
   }
 
