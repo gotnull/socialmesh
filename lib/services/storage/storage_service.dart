@@ -377,6 +377,16 @@ class SettingsService {
   bool get newNodeNotificationsEnabled =>
       _preferences.getBool('new_node_notifications_enabled') ?? true;
 
+  // Notification: Waypoints (shared mesh waypoints received from other
+  // nodes). Separate from the master toggle so schedule-rebroadcast-heavy
+  // meshes can silence waypoint alerts without losing message notifications.
+  Future<void> setWaypointNotificationsEnabled(bool enabled) async {
+    await _preferences.setBool('waypoint_notifications_enabled', enabled);
+  }
+
+  bool get waypointNotificationsEnabled =>
+      _preferences.getBool('waypoint_notifications_enabled') ?? true;
+
   // Notification: Automation alerts (pushNotification actions fired by the
   // automations engine, e.g. node-silent "hasn't been heard from" alerts).
   // Synced automations can arrive from another device, so the user needs a

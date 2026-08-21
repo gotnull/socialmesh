@@ -871,6 +871,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             },
           ),
         ),
+        _SearchableSettingItem(
+          icon: Icons.pin_drop_outlined,
+          title: context.l10n.settingsSearchWaypointNotificationsTitle,
+          subtitle: context.l10n.settingsSearchWaypointNotificationsSubtitle,
+          keywords: ['notification', 'waypoint', 'poi', 'pin', 'map'],
+          section: context.l10n.settingsSectionNotifications,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.waypointNotificationsEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setWaypointNotificationsEnabled(value);
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(waypointNotificationsEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
+        ),
         // SIP Play game turn notifications. Gated on the Handshake intent
         // flag so the row stays hidden in MeshCanvas-only builds that turn
         // SIP transport on implicitly.
@@ -2929,6 +2949,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                         UserPreferences(
                                           channelMessageNotificationsEnabled:
                                               value,
+                                        ),
+                                      );
+                                  safeSetState(() {});
+                                },
+                              ),
+                            ),
+                            _SettingsTile(
+                              icon: Icons.pin_drop_outlined,
+                              title: context.l10n.settingsTileWaypointsTitle,
+                              subtitle:
+                                  context.l10n.settingsTileWaypointsSubtitle,
+                              trailing: ThemedSwitch(
+                                value: settingsService
+                                    .waypointNotificationsEnabled,
+                                onChanged: (value) async {
+                                  HapticFeedback.selectionClick();
+                                  await settingsService
+                                      .setWaypointNotificationsEnabled(value);
+                                  ref
+                                      .read(userProfileProvider.notifier)
+                                      .updatePreferences(
+                                        UserPreferences(
+                                          waypointNotificationsEnabled: value,
                                         ),
                                       );
                                   safeSetState(() {});

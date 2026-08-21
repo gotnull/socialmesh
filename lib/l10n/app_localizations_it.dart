@@ -18450,6 +18450,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSearchThemePackTitle => 'Pacchetto temi';
 
   @override
+  String get settingsSearchWaypointNotificationsSubtitle =>
+      'Notifica quando i punti di passaggio vengono condivisi sulla mesh';
+
+  @override
+  String get settingsSearchWaypointNotificationsTitle =>
+      'Notifiche punti di passaggio';
+
+  @override
   String get settingsSearchWidgetPackSubtitle => 'Widget per la schermata Home';
 
   @override
@@ -19007,6 +19015,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsTileVibrationTitle => 'Vibrazione';
+
+  @override
+  String get settingsTileWaypointsSubtitle =>
+      'Notifica quando i punti di passaggio vengono condivisi sulla mesh';
+
+  @override
+  String get settingsTileWaypointsTitle => 'Punti di passaggio';
 
   @override
   String get settingsTileWhatsNewSubtitle =>
@@ -42914,7 +42929,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String licenseOrgMembersRevokedTileTitle(String member) {
-    return '$member — posto revocato';
+    return '$member - posto revocato';
   }
 
   @override
@@ -42971,7 +42986,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get licenseOrgMembersRevokeErrorRateLimit =>
-      'Troppe revoche — riprova tra un minuto';
+      'Troppe revoche - riprova tra un minuto';
 
   @override
   String get licenseOrgMembersReinstateAction => 'Ripristina posto';
@@ -42985,7 +43000,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get licenseOrgMembersReinstateErrorOverCapacity =>
-      'Il gruppo è al limite di posti — revoca qualcun altro prima';
+      'Il gruppo è al limite di posti - revoca qualcun altro prima';
 
   @override
   String get licenseOrgMembersReinstateErrorPermission =>
@@ -42993,15 +43008,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get licenseOrgMembersReinstateErrorRateLimit =>
-      'Troppi ripristini — riprova tra un minuto';
+      'Troppi ripristini - riprova tra un minuto';
 
   @override
   String get licenseOrgMembersReinstateErrorGeneric =>
-      'Impossibile ripristinare il posto — riprova';
+      'Impossibile ripristinare il posto - riprova';
 
   @override
   String get licenseOrgMembersRevokeErrorGeneric =>
-      'Impossibile revocare il posto — riprova';
+      'Impossibile revocare il posto - riprova';
 
   @override
   String get licenseOrgMembersRoleOwner => 'Proprietario';
@@ -43162,7 +43177,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get licenseOrgInviteMintExhausted =>
-      'Posti esauriti — rigenera dopo aver revocato';
+      'Posti esauriti - rigenera dopo aver revocato';
 
   @override
   String get licenseOrgInviteRegenerateAction => 'Rigenera link';
@@ -43543,7 +43558,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get licenseOrgNameErrorGeneric =>
-      'Impossibile salvare il nome — riprova';
+      'Impossibile salvare il nome - riprova';
 
   @override
   String get licenseOrgNameEmptyPlaceholder => 'Community senza nome';
@@ -44265,4 +44280,288 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nodedexTabGroups => 'Gruppi';
+
+  @override
+  String get navigationTeams => 'Teams';
+
+  @override
+  String get teamsScreenTitle => 'Teams';
+
+  @override
+  String get teamsCheckingLabel => 'Controllo dei tuoi Teams...';
+
+  @override
+  String get teamsOfflineTitle => 'Offline';
+
+  @override
+  String get teamsOfflineBody =>
+      'Sei offline, quindi non possiamo controllare i tuoi Teams in questo momento.';
+
+  @override
+  String get teamsUnavailableTitle => 'Impossibile caricare i Teams';
+
+  @override
+  String get teamsUnavailableBody =>
+      'Non siamo riusciti a caricare i tuoi Teams. Riprova.';
+
+  @override
+  String get teamsRetryAction => 'Riprova';
+
+  @override
+  String get teamsEmptyTitlePrefix => 'Non fai ancora parte di nessun ';
+
+  @override
+  String get teamsEmptyTitleKeyword => 'Team';
+
+  @override
+  String get teamsEmptyTitleSuffix => '';
+
+  @override
+  String get teamsEmptyTagline =>
+      'Le organizzazioni di cui fai parte compaiono qui.';
+
+  @override
+  String get teamsAccountRequiredTitle => 'Accedi per usare Teams';
+
+  @override
+  String get teamsAccountRequiredBody =>
+      'Teams richiede un account per mantenere la tua appartenenza all\'organizzazione.';
+
+  @override
+  String get teamsDisabledBody => 'Teams non è abilitato in questa build.';
+
+  @override
+  String get fleetScreenTitle => 'Fleet';
+
+  @override
+  String get fleetSectionInService => 'In servizio';
+
+  @override
+  String get fleetSectionRetired => 'Ritirata';
+
+  @override
+  String get fleetEmptyTitlePrefix => 'Nessuna radio in questa ';
+
+  @override
+  String get fleetEmptyTitleKeyword => 'Fleet';
+
+  @override
+  String get fleetEmptyTitleSuffix => '';
+
+  @override
+  String get fleetEmptyTagline => 'Aggiungi una radio per sapere chi ha cosa.';
+
+  @override
+  String get fleetRetiredEmpty => 'Nessuna radio ritirata.';
+
+  @override
+  String get fleetAddAction => 'Aggiungi radio';
+
+  @override
+  String get fleetEnrolHeader => 'Radio note tramite il protocollo attivo';
+
+  @override
+  String get fleetEnrolHeaderBody =>
+      'SocialMesh vede queste radio tramite il protocollo attivo. Aggiungendone una, entra nella Fleet di questo Team.';
+
+  @override
+  String get fleetEnrolBoundaryNote =>
+      'Aggiungere una radio la registra nella Fleet dell\'organizzazione. Non modifica la configurazione della radio.';
+
+  @override
+  String get fleetEnrolNoCandidates =>
+      'Al momento non ci sono radio visibili tramite il protocollo attivo.';
+
+  @override
+  String get fleetCandidateAvailable => 'Disponibile';
+
+  @override
+  String get fleetCandidateAlreadyInFleet => 'Già nella Fleet';
+
+  @override
+  String get fleetCandidateRetired => 'Ritirata';
+
+  @override
+  String get fleetCandidateIdentityUnavailable => 'Identità non disponibile';
+
+  @override
+  String get fleetCandidateIdentityUnavailableHelp =>
+      'SocialMesh non riesce a ricavare un\'identità Fleet per questa radio.';
+
+  @override
+  String get fleetCandidateLocalDevice => 'Questo dispositivo';
+
+  @override
+  String get fleetAddConfirm => 'Aggiungi alla Fleet';
+
+  @override
+  String get fleetLabelName => 'Nome';
+
+  @override
+  String get fleetLabelTransport => 'Trasporto';
+
+  @override
+  String get fleetLabelIdentity => 'Identità';
+
+  @override
+  String get fleetLabelHardware => 'Hardware';
+
+  @override
+  String get fleetLabelFirmware => 'Firmware';
+
+  @override
+  String get fleetLabelAssignedTo => 'Assegnata a';
+
+  @override
+  String get fleetLabelPurpose => 'Scopo';
+
+  @override
+  String get fleetLabelTags => 'Tag';
+
+  @override
+  String get fleetLabelNotes => 'Note';
+
+  @override
+  String get fleetLabelAdded => 'Aggiunta';
+
+  @override
+  String get fleetLabelUpdated => 'Aggiornata';
+
+  @override
+  String get fleetLabelStatus => 'Stato';
+
+  @override
+  String get fleetSnapshotNote =>
+      'Registrato al momento dell\'aggiunta, non in tempo reale.';
+
+  @override
+  String get fleetAssignTitle => 'Assegna radio';
+
+  @override
+  String get fleetAssignMember => 'Membro del Team';
+
+  @override
+  String get fleetAssignOrgPool => 'Pool dell\'organizzazione';
+
+  @override
+  String get fleetAssignUnassigned => 'Non assegnata';
+
+  @override
+  String get fleetAssignNobody => 'Non assegnata';
+
+  @override
+  String get fleetAssignInactiveMember => 'Non è più un membro attivo';
+
+  @override
+  String get fleetPurposeHint =>
+      'Ad esempio: Cancello Nord, Controllo Evento, Veicolo 2';
+
+  @override
+  String get fleetRetireAction => 'Ritira';
+
+  @override
+  String get fleetRetireConfirmTitle => 'Ritirare questa radio?';
+
+  @override
+  String get fleetRetireConfirmBody =>
+      'Verrà rimossa dalla Fleet attiva. La scheda e la cronologia restano e potrai ritrovarla tra le ritirate.';
+
+  @override
+  String get fleetMeshCoreResetNote =>
+      'Dopo un ripristino di fabbrica di MeshCore, SocialMesh potrebbe riconoscere la radio come un nuovo dispositivo della Fleet.';
+
+  @override
+  String get fleetErrorPermissionDenied =>
+      'Solo i proprietari e gli amministratori possono modificare la Fleet.';
+
+  @override
+  String get fleetErrorOrgNotEligible =>
+      'La Fleet non è abilitata per questa organizzazione.';
+
+  @override
+  String get fleetErrorDeviceRetired =>
+      'Questa radio è stata ritirata. Non può essere aggiunta di nuovo.';
+
+  @override
+  String get fleetErrorAssigneeNotMember =>
+      'Quella persona non è più un membro attivo.';
+
+  @override
+  String get fleetErrorInvalidInput =>
+      'Non è stato possibile salvare alcuni dati. Controllali e riprova.';
+
+  @override
+  String get fleetErrorUnavailable =>
+      'Non è stato possibile contattare SocialMesh. Riprova.';
+
+  @override
+  String get fleetErrorGeneric => 'Qualcosa è andato storto.';
+
+  @override
+  String get fleetOfflineWriteBlocked =>
+      'Sei offline. Le modifiche alla Fleet richiedono una connessione.';
+
+  @override
+  String get fleetAddedSnack => 'Aggiunta alla Fleet';
+
+  @override
+  String get fleetAlreadyAddedSnack => 'Già nella Fleet';
+
+  @override
+  String get fleetAssignedSnack => 'Assegnazione aggiornata';
+
+  @override
+  String get fleetUpdatedSnack => 'Dati salvati';
+
+  @override
+  String get fleetRetiredSnack => 'Radio ritirata';
+
+  @override
+  String fleetLastSynced(String age) {
+    return 'Ultima sincronizzazione $age';
+  }
+
+  @override
+  String fleetSyncedMinutes(int minutes) {
+    return '$minutes min fa';
+  }
+
+  @override
+  String fleetSyncedHours(int hours) {
+    return '$hours h fa';
+  }
+
+  @override
+  String fleetSyncedDays(int days) {
+    return '$days g fa';
+  }
+
+  @override
+  String get fleetEntrySubtitle => 'Radio registrate da questo Team';
+
+  @override
+  String get fleetEnrolNoProtocol =>
+      'Collega una radio per vedere cosa può aggiungere SocialMesh.';
+
+  @override
+  String get fleetEnrolSourceUnavailable =>
+      'Non è stato possibile leggere le radio di questa mesh. Riprova.';
+
+  @override
+  String get fleetAssignNoMembers =>
+      'Questo team non ha ancora altri membri attivi. Usa il pool dell\'organizzazione o lascialo non assegnato.';
+
+  @override
+  String get fleetAssignPartialSave =>
+      'L\'assegnazione è stata salvata, ma lo scopo no. Prova a salvare di nuovo lo scopo.';
+
+  @override
+  String get fleetDetailSectionRecord => 'Scheda della flotta';
+
+  @override
+  String get fleetDetailSectionSnapshot => 'Rilevato all\'aggiunta';
+
+  @override
+  String get fleetDetailMissing =>
+      'Questa radio non fa più parte della flotta di questo team.';
 }

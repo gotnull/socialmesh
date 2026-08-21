@@ -18487,6 +18487,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsSearchThemePackTitle => 'Design-Paket';
 
   @override
+  String get settingsSearchWaypointNotificationsSubtitle =>
+      'Benachrichtigen, wenn Wegpunkte im Mesh geteilt werden';
+
+  @override
+  String get settingsSearchWaypointNotificationsTitle =>
+      'Wegpunkt-Benachrichtigungen';
+
+  @override
   String get settingsSearchWidgetPackSubtitle =>
       'Widgets für den Startbildschirm';
 
@@ -19052,6 +19060,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsTileVibrationTitle => 'Vibration';
+
+  @override
+  String get settingsTileWaypointsSubtitle =>
+      'Benachrichtigen, wenn Wegpunkte im Mesh geteilt werden';
+
+  @override
+  String get settingsTileWaypointsTitle => 'Wegpunkte';
 
   @override
   String get settingsTileWhatsNewSubtitle =>
@@ -43025,7 +43040,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String licenseOrgMembersRevokedTileTitle(String member) {
-    return '$member — Platz entzogen';
+    return '$member - Platz entzogen';
   }
 
   @override
@@ -43082,7 +43097,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get licenseOrgMembersRevokeErrorRateLimit =>
-      'Zu viele Entzüge — versuche es in einer Minute erneut';
+      'Zu viele Entzüge - versuche es in einer Minute erneut';
 
   @override
   String get licenseOrgMembersReinstateAction => 'Platz wiederherstellen';
@@ -43096,7 +43111,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get licenseOrgMembersReinstateErrorOverCapacity =>
-      'Die Gruppe ist am Platzlimit — entzieh zuerst jemand anderem';
+      'Die Gruppe ist am Platzlimit - entzieh zuerst jemand anderem';
 
   @override
   String get licenseOrgMembersReinstateErrorPermission =>
@@ -43104,15 +43119,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get licenseOrgMembersReinstateErrorRateLimit =>
-      'Zu viele Wiederherstellungen — versuche es in einer Minute erneut';
+      'Zu viele Wiederherstellungen - versuche es in einer Minute erneut';
 
   @override
   String get licenseOrgMembersReinstateErrorGeneric =>
-      'Platz konnte nicht wiederhergestellt werden — bitte erneut versuchen';
+      'Platz konnte nicht wiederhergestellt werden - bitte erneut versuchen';
 
   @override
   String get licenseOrgMembersRevokeErrorGeneric =>
-      'Platz konnte nicht entzogen werden — bitte erneut versuchen';
+      'Platz konnte nicht entzogen werden - bitte erneut versuchen';
 
   @override
   String get licenseOrgMembersRoleOwner => 'Besitzer';
@@ -43274,7 +43289,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get licenseOrgInviteMintExhausted =>
-      'Alle Plätze belegt — nach einer Entziehung neu erstellen';
+      'Alle Plätze belegt - nach einer Entziehung neu erstellen';
 
   @override
   String get licenseOrgInviteRegenerateAction => 'Link neu erstellen';
@@ -43655,7 +43670,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get licenseOrgNameErrorGeneric =>
-      'Name konnte nicht gespeichert werden — bitte erneut versuchen';
+      'Name konnte nicht gespeichert werden - bitte erneut versuchen';
 
   @override
   String get licenseOrgNameEmptyPlaceholder => 'Unbenannte Community';
@@ -44375,4 +44390,289 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nodedexTabGroups => 'Gruppen';
+
+  @override
+  String get navigationTeams => 'Teams';
+
+  @override
+  String get teamsScreenTitle => 'Teams';
+
+  @override
+  String get teamsCheckingLabel => 'Teams werden geprüft...';
+
+  @override
+  String get teamsOfflineTitle => 'Offline';
+
+  @override
+  String get teamsOfflineBody =>
+      'Du bist offline, daher können wir deine Teams gerade nicht prüfen.';
+
+  @override
+  String get teamsUnavailableTitle => 'Teams konnten nicht geladen werden';
+
+  @override
+  String get teamsUnavailableBody =>
+      'Wir konnten deine Teams nicht laden. Versuche es erneut.';
+
+  @override
+  String get teamsRetryAction => 'Erneut versuchen';
+
+  @override
+  String get teamsEmptyTitlePrefix => 'Du bist noch in keinem ';
+
+  @override
+  String get teamsEmptyTitleKeyword => 'Team';
+
+  @override
+  String get teamsEmptyTitleSuffix => '';
+
+  @override
+  String get teamsEmptyTagline =>
+      'Organisationen, zu denen du gehörst, erscheinen hier.';
+
+  @override
+  String get teamsAccountRequiredTitle => 'Melde dich an, um Teams zu nutzen';
+
+  @override
+  String get teamsAccountRequiredBody =>
+      'Teams benötigt ein Konto, damit deine Organisationsmitgliedschaft erhalten bleibt.';
+
+  @override
+  String get teamsDisabledBody => 'Teams ist in diesem Build nicht aktiviert.';
+
+  @override
+  String get fleetScreenTitle => 'Fleet';
+
+  @override
+  String get fleetSectionInService => 'Im Einsatz';
+
+  @override
+  String get fleetSectionRetired => 'Ausgemustert';
+
+  @override
+  String get fleetEmptyTitlePrefix => 'Noch keine Funkgeräte in dieser ';
+
+  @override
+  String get fleetEmptyTitleKeyword => 'Fleet';
+
+  @override
+  String get fleetEmptyTitleSuffix => '';
+
+  @override
+  String get fleetEmptyTagline =>
+      'Füge ein Funkgerät hinzu, um nachzuverfolgen, wer was hat.';
+
+  @override
+  String get fleetRetiredEmpty => 'Keine ausgemusterten Funkgeräte.';
+
+  @override
+  String get fleetAddAction => 'Funkgerät hinzufügen';
+
+  @override
+  String get fleetEnrolHeader =>
+      'Über das aktive Protokoll bekannte Funkgeräte';
+
+  @override
+  String get fleetEnrolHeaderBody =>
+      'Diese Funkgeräte sind für SocialMesh über das aktive Protokoll sichtbar. Wenn du eines aufnimmst, wird es der Fleet dieses Teams hinzugefügt.';
+
+  @override
+  String get fleetEnrolBoundaryNote =>
+      'Beim Hinzufügen wird das Funkgerät in der Fleet der Organisation erfasst. Die Konfiguration des Funkgeräts wird nicht verändert.';
+
+  @override
+  String get fleetEnrolNoCandidates =>
+      'Über das aktive Protokoll sind derzeit keine Funkgeräte sichtbar.';
+
+  @override
+  String get fleetCandidateAvailable => 'Verfügbar';
+
+  @override
+  String get fleetCandidateAlreadyInFleet => 'Bereits in der Fleet';
+
+  @override
+  String get fleetCandidateRetired => 'Ausgemustert';
+
+  @override
+  String get fleetCandidateIdentityUnavailable => 'Identität nicht verfügbar';
+
+  @override
+  String get fleetCandidateIdentityUnavailableHelp =>
+      'SocialMesh kann für dieses Funkgerät keine Fleet-Identität ableiten.';
+
+  @override
+  String get fleetCandidateLocalDevice => 'Dieses Gerät';
+
+  @override
+  String get fleetAddConfirm => 'Zur Fleet hinzufügen';
+
+  @override
+  String get fleetLabelName => 'Name';
+
+  @override
+  String get fleetLabelTransport => 'Übertragung';
+
+  @override
+  String get fleetLabelIdentity => 'Identität';
+
+  @override
+  String get fleetLabelHardware => 'Hardware';
+
+  @override
+  String get fleetLabelFirmware => 'Firmware';
+
+  @override
+  String get fleetLabelAssignedTo => 'Zugewiesen an';
+
+  @override
+  String get fleetLabelPurpose => 'Zweck';
+
+  @override
+  String get fleetLabelTags => 'Tags';
+
+  @override
+  String get fleetLabelNotes => 'Notizen';
+
+  @override
+  String get fleetLabelAdded => 'Hinzugefügt';
+
+  @override
+  String get fleetLabelUpdated => 'Aktualisiert';
+
+  @override
+  String get fleetLabelStatus => 'Status';
+
+  @override
+  String get fleetSnapshotNote => 'Beim Hinzufügen erfasst, nicht live.';
+
+  @override
+  String get fleetAssignTitle => 'Funkgerät zuweisen';
+
+  @override
+  String get fleetAssignMember => 'Teammitglied';
+
+  @override
+  String get fleetAssignOrgPool => 'Organisationspool';
+
+  @override
+  String get fleetAssignUnassigned => 'Nicht zugewiesen';
+
+  @override
+  String get fleetAssignNobody => 'Nicht zugewiesen';
+
+  @override
+  String get fleetAssignInactiveMember => 'Kein aktives Mitglied mehr';
+
+  @override
+  String get fleetPurposeHint =>
+      'Zum Beispiel: Nordtor, Einsatzleitung, Fahrzeug 2';
+
+  @override
+  String get fleetRetireAction => 'Ausmustern';
+
+  @override
+  String get fleetRetireConfirmTitle => 'Dieses Funkgerät ausmustern?';
+
+  @override
+  String get fleetRetireConfirmBody =>
+      'Es wird aus der aktiven Fleet entfernt. Der Eintrag und die Historie bleiben erhalten und sind weiterhin unter „Ausgemustert“ zu finden.';
+
+  @override
+  String get fleetMeshCoreResetNote =>
+      'Nach einem MeshCore-Werksreset erkennt SocialMesh das Funkgerät möglicherweise als neues Fleet-Gerät.';
+
+  @override
+  String get fleetErrorPermissionDenied =>
+      'Nur Eigentümer und Admins können die Fleet ändern.';
+
+  @override
+  String get fleetErrorOrgNotEligible =>
+      'Fleet ist für diese Organisation nicht aktiviert.';
+
+  @override
+  String get fleetErrorDeviceRetired =>
+      'Dieses Funkgerät wurde ausgemustert. Es kann nicht erneut hinzugefügt werden.';
+
+  @override
+  String get fleetErrorAssigneeNotMember =>
+      'Diese Person ist kein aktives Mitglied mehr.';
+
+  @override
+  String get fleetErrorInvalidInput =>
+      'Einige Angaben konnten nicht gespeichert werden. Bitte prüfen und erneut versuchen.';
+
+  @override
+  String get fleetErrorUnavailable =>
+      'SocialMesh war nicht erreichbar. Versuche es erneut.';
+
+  @override
+  String get fleetErrorGeneric => 'Etwas ist schiefgelaufen.';
+
+  @override
+  String get fleetOfflineWriteBlocked =>
+      'Du bist offline. Fleet-Änderungen benötigen eine Verbindung.';
+
+  @override
+  String get fleetAddedSnack => 'Zur Fleet hinzugefügt';
+
+  @override
+  String get fleetAlreadyAddedSnack => 'Bereits in der Fleet';
+
+  @override
+  String get fleetAssignedSnack => 'Zuweisung aktualisiert';
+
+  @override
+  String get fleetUpdatedSnack => 'Angaben gespeichert';
+
+  @override
+  String get fleetRetiredSnack => 'Funkgerät ausgemustert';
+
+  @override
+  String fleetLastSynced(String age) {
+    return 'Zuletzt synchronisiert $age';
+  }
+
+  @override
+  String fleetSyncedMinutes(int minutes) {
+    return 'vor $minutes Min.';
+  }
+
+  @override
+  String fleetSyncedHours(int hours) {
+    return 'vor $hours Std.';
+  }
+
+  @override
+  String fleetSyncedDays(int days) {
+    return 'vor $days T.';
+  }
+
+  @override
+  String get fleetEntrySubtitle => 'Von diesem Team erfasste Funkgeräte';
+
+  @override
+  String get fleetEnrolNoProtocol =>
+      'Verbinde ein Funkgerät, um zu sehen, was SocialMesh aufnehmen kann.';
+
+  @override
+  String get fleetEnrolSourceUnavailable =>
+      'Die Funkgeräte in diesem Mesh konnten nicht gelesen werden. Versuche es erneut.';
+
+  @override
+  String get fleetAssignNoMembers =>
+      'Dieses Team hat noch keine weiteren aktiven Mitglieder. Nutze den Organisationspool oder lasse es nicht zugewiesen.';
+
+  @override
+  String get fleetAssignPartialSave =>
+      'Die Zuweisung wurde gespeichert, der Zweck jedoch nicht. Versuche, den Zweck erneut zu speichern.';
+
+  @override
+  String get fleetDetailSectionRecord => 'Flotteneintrag';
+
+  @override
+  String get fleetDetailSectionSnapshot => 'Beim Hinzufügen erfasst';
+
+  @override
+  String get fleetDetailMissing =>
+      'Dieses Funkgerät gehört nicht mehr zur Flotte dieses Teams.';
 }

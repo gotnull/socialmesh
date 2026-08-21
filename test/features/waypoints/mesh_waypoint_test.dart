@@ -95,6 +95,41 @@ void main() {
       expect(_wp(icon: 0x1F4CD).hasRenderableIcon, isTrue);
     });
 
+    test('sameContentAs matches on wire fields only', () {
+      final base = MeshWaypoint(
+        id: 9,
+        latitude: 10.5,
+        longitude: 20.5,
+        expire: 1700001234,
+        lockedTo: 0x50,
+        name: 'Camp',
+        description: 'Base',
+        icon: 0x1F4CD,
+        sourceNodeNum: 0x10,
+        receivedAt: _zero,
+      );
+
+      // Local bookkeeping differences (source, receipt time, ownership) do
+      // not count as content changes - a scheduled rebroadcast must compare
+      // equal so it cannot re-alert. Neither does a rolled-forward expiry,
+      // which rebroadcasters refresh on every transmission.
+      final rebroadcast = base.copyWith(
+        sourceNodeNum: 0x99,
+        receivedAt: DateTime.fromMillisecondsSinceEpoch(1700000099000),
+        isMine: true,
+        expire: 1700009999,
+      );
+      expect(base.sameContentAs(rebroadcast), isTrue);
+
+      // Any user-visible field change counts.
+      expect(base.sameContentAs(base.copyWith(name: 'Moved')), isFalse);
+      expect(base.sameContentAs(base.copyWith(description: 'x')), isFalse);
+      expect(base.sameContentAs(base.copyWith(latitude: 10.6)), isFalse);
+      expect(base.sameContentAs(base.copyWith(longitude: 20.6)), isFalse);
+      expect(base.sameContentAs(base.copyWith(icon: 0x1F525)), isFalse);
+      expect(base.sameContentAs(base.copyWith(lockedTo: 0)), isFalse);
+    });
+
     test('malformed icon scalars fall back instead of crashing render', () {
       // A peer fully controls the wire `icon`; a surrogate half or out-of-range
       // scalar would form malformed UTF-16 and crash the paragraph builder.

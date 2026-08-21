@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (waypoint notifications)
+
+- Repeated broadcasts of an unchanged waypoint no longer alert every time. Some relay tools rebroadcast their waypoints on a schedule, and each repeat raised a fresh notification even though nothing about the waypoint had changed; now only a new waypoint or an actual edit alerts
+- Waypoint alerts can be silenced on their own. Settings > Notifications has a Waypoints switch, so schedule-heavy meshes can turn just those off without losing message notifications. The switch syncs across devices with the rest of the notification preferences
+- Waypoint alerts now respect the master notification switch, which they previously ignored
+
+### Fixed (organisation membership)
+
+- Joining an organisation from an invite link now actually gives you the organisation. The membership row was written correctly when you accepted the invite, but the app's query for "which organisations do I belong to" was refused by the security rules and never returned anything, so the organisation stayed invisible no matter how many times you rejoined. Only people who had *created* an organisation were unaffected, because that case is answered by a different query
+- Packs an organisation had bought for you now unlock. Org-owned entitlements require both a seat and a recognised membership, and since membership never resolved, the seat had nothing to match against. Anyone who joined rather than created an organisation had been paying into a pack they could not use
+- The failure was silent. The membership query treats an error as "you belong to nothing", which is the right call for deciding what to unlock but meant the refusal looked exactly like a legitimately empty account. It surfaced only once the app started distinguishing "we could not check" from "we checked and there is nothing"
+
 ### Changed (NodeDex navigation)
 
 - NodeDex now has its own bottom bar with NodeDex, Map and Groups. The map used to be a sub-item under NodeDex in the drawer and a line in the overflow menu, and node groups were reachable only from a button inside the list; all three are now the same kind of thing in the same place

@@ -421,6 +421,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         automationAlertNotificationsEnabled:
             newPreferences.automationAlertNotificationsEnabled ??
             existingPrefs.automationAlertNotificationsEnabled,
+        waypointNotificationsEnabled:
+            newPreferences.waypointNotificationsEnabled ??
+            existingPrefs.waypointNotificationsEnabled,
         hapticFeedbackEnabled:
             newPreferences.hapticFeedbackEnabled ??
             existingPrefs.hapticFeedbackEnabled,

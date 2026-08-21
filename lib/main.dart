@@ -2203,6 +2203,11 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         prefs.notificationVibrationEnabled!,
       );
     }
+    if (prefs.waypointNotificationsEnabled != null) {
+      await settings.setWaypointNotificationsEnabled(
+        prefs.waypointNotificationsEnabled!,
+      );
+    }
 
     // Load haptic settings from cloud
     if (prefs.hapticFeedbackEnabled != null) {

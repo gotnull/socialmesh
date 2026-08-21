@@ -31526,6 +31526,18 @@ abstract class AppLocalizations {
   /// **'Theme Pack'**
   String get settingsSearchThemePackTitle;
 
+  /// Subtitle for the waypoint notifications search item.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when waypoints are shared on the mesh'**
+  String get settingsSearchWaypointNotificationsSubtitle;
+
+  /// Title for the waypoint notifications search item.
+  ///
+  /// In en, this message translates to:
+  /// **'Waypoint notifications'**
+  String get settingsSearchWaypointNotificationsTitle;
+
   /// Subtitle for the widget pack search item.
   ///
   /// In en, this message translates to:
@@ -32509,6 +32521,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Vibration'**
   String get settingsTileVibrationTitle;
+
+  /// Subtitle for the waypoint notifications settings tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when waypoints are shared on the mesh'**
+  String get settingsTileWaypointsSubtitle;
+
+  /// Title for the waypoint notifications settings tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Waypoints'**
+  String get settingsTileWaypointsTitle;
 
   /// Subtitle of the what's new settings tile.
   ///
@@ -74021,7 +74045,7 @@ abstract class AppLocalizations {
   /// Title row on a revoked-seat history tile in the License Org Members sheet. Placeholder is the opaque #ABCDEF label derived from the revoked member's uid.
   ///
   /// In en, this message translates to:
-  /// **'{member} — seat revoked'**
+  /// **'{member} - seat revoked'**
   String licenseOrgMembersRevokedTileTitle(String member);
 
   /// Subtitle on a revoked-seat history tile naming who performed the revoke. Placeholder is the actor's opaque #ABCDEF label or 'system' for refund-cascade revokes.
@@ -74099,7 +74123,7 @@ abstract class AppLocalizations {
   /// Error snackbar shown when revokeLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap).
   ///
   /// In en, this message translates to:
-  /// **'Too many revokes — try again in a minute'**
+  /// **'Too many revokes - try again in a minute'**
   String get licenseOrgMembersRevokeErrorRateLimit;
 
   /// Owner/admin-only action on a Revoked-section tile. Tapping calls reinstateLicenseSeat and flips the seat back to active; the same member regains premium-feature access without redeeming a fresh invite.
@@ -74123,7 +74147,7 @@ abstract class AppLocalizations {
   /// Error snackbar when reinstating would push the org past its seat capacity. Backend rejects with failed-precondition + 'seat capacity' in the message.
   ///
   /// In en, this message translates to:
-  /// **'Group is at the seat cap — revoke someone else first'**
+  /// **'Group is at the seat cap - revoke someone else first'**
   String get licenseOrgMembersReinstateErrorOverCapacity;
 
   /// Error snackbar shown when reinstateLicenseSeat returns permission-denied (caller is not owner/admin).
@@ -74135,19 +74159,19 @@ abstract class AppLocalizations {
   /// Error snackbar shown when reinstateLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap).
   ///
   /// In en, this message translates to:
-  /// **'Too many reinstates — try again in a minute'**
+  /// **'Too many reinstates - try again in a minute'**
   String get licenseOrgMembersReinstateErrorRateLimit;
 
   /// Fallback error snackbar for any other reinstate failure (network, internal, not-found, org-suspended).
   ///
   /// In en, this message translates to:
-  /// **'Could not reinstate the seat — try again'**
+  /// **'Could not reinstate the seat - try again'**
   String get licenseOrgMembersReinstateErrorGeneric;
 
   /// Fallback error snackbar for any other revoke failure (network, internal, not-found).
   ///
   /// In en, this message translates to:
-  /// **'Could not revoke the seat — try again'**
+  /// **'Could not revoke the seat - try again'**
   String get licenseOrgMembersRevokeErrorGeneric;
 
   /// Role label on a member tile in the License Org Members sheet when the member is the org owner.
@@ -74411,7 +74435,7 @@ abstract class AppLocalizations {
   /// Subtitle shown on the rendered invite link tile when usedCount has reached maxUses. The link no longer admits new joins; owner needs to revoke someone or buy more seats.
   ///
   /// In en, this message translates to:
-  /// **'All seats taken — regenerate after revoking'**
+  /// **'All seats taken - regenerate after revoking'**
   String get licenseOrgInviteMintExhausted;
 
   /// Secondary action on the rendered invite link tile that mints a fresh URL. Replaces the current link — anyone holding the previous URL will see 'this invite was cancelled'.
@@ -74531,7 +74555,7 @@ abstract class AppLocalizations {
   /// Empty state shown inside the Seat Usage section when no active seats exist for the org.
   ///
   /// In en, this message translates to:
-  /// **'No seats allocated yet — share an invite to get members in.'**
+  /// **'No seats allocated yet - share an invite to get members in.'**
   String get licenseOrgSeatUsageEmptyState;
 
   /// Error state shown inside the Seat Usage section when getLicenseOrgSeatUtilization fails.
@@ -74969,7 +74993,7 @@ abstract class AppLocalizations {
   /// Fallback error snackbar for any other rename failure (network, internal, not-found).
   ///
   /// In en, this message translates to:
-  /// **'Could not save the name — try again'**
+  /// **'Could not save the name - try again'**
   String get licenseOrgNameErrorGeneric;
 
   /// Display label substituted for the raw orgId slug on the overview card and members sheet when the owner hasn't named the org yet. Replaces the legacy slug fallback like 'cleanrun-pack-ten'.
@@ -76207,6 +76231,510 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Groups'**
   String get nodedexTabGroups;
+
+  /// Drawer label for the Teams feature.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams'**
+  String get navigationTeams;
+
+  /// App bar title for the Teams screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams'**
+  String get teamsScreenTitle;
+
+  /// Shown while organisation membership is still being established.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your Teams...'**
+  String get teamsCheckingLabel;
+
+  /// Title when membership cannot be established because the device is offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get teamsOfflineTitle;
+
+  /// Body explaining that being offline prevents checking Teams. Must never imply the user has no Teams.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline, so we can\'t check your Teams right now.'**
+  String get teamsOfflineBody;
+
+  /// Title when the membership query failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load Teams'**
+  String get teamsUnavailableTitle;
+
+  /// Body when the membership query failed. Must never imply the user has no Teams.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your Teams. Try again.'**
+  String get teamsUnavailableBody;
+
+  /// Button that retries establishing organisation membership.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get teamsRetryAction;
+
+  /// First part of the confident empty-state title, shown only when membership resolved successfully and is genuinely empty.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re not in any '**
+  String get teamsEmptyTitlePrefix;
+
+  /// Highlighted keyword in the empty-state title.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams'**
+  String get teamsEmptyTitleKeyword;
+
+  /// Final part of the empty-state title.
+  ///
+  /// In en, this message translates to:
+  /// **' yet'**
+  String get teamsEmptyTitleSuffix;
+
+  /// Tagline under the Teams empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Organisations you belong to appear here.'**
+  String get teamsEmptyTagline;
+
+  /// Title shown when the user is signed out or anonymous.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to use Teams'**
+  String get teamsAccountRequiredTitle;
+
+  /// Body explaining why Teams needs a durable account.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams needs an account so your organisation membership stays with you.'**
+  String get teamsAccountRequiredBody;
+
+  /// Shown when the Teams feature flag is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams is not enabled in this build.'**
+  String get teamsDisabledBody;
+
+  /// App bar title for a Team's Fleet inventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet'**
+  String get fleetScreenTitle;
+
+  /// Section header for Fleet devices currently in use.
+  ///
+  /// In en, this message translates to:
+  /// **'In service'**
+  String get fleetSectionInService;
+
+  /// Section header for retired Fleet devices.
+  ///
+  /// In en, this message translates to:
+  /// **'Retired'**
+  String get fleetSectionRetired;
+
+  /// First part of the Fleet empty-state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No radios in this '**
+  String get fleetEmptyTitlePrefix;
+
+  /// Highlighted keyword in the Fleet empty-state title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet'**
+  String get fleetEmptyTitleKeyword;
+
+  /// Final part of the Fleet empty-state title.
+  ///
+  /// In en, this message translates to:
+  /// **' yet'**
+  String get fleetEmptyTitleSuffix;
+
+  /// Tagline under the Fleet empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a radio to start tracking who has what.'**
+  String get fleetEmptyTagline;
+
+  /// Shown when the retired Fleet list is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No retired radios.'**
+  String get fleetRetiredEmpty;
+
+  /// Action that opens the radio picker to enrol a radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Add radio'**
+  String get fleetAddAction;
+
+  /// Header above the list of radios that can be enrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Radios known through the active protocol'**
+  String get fleetEnrolHeader;
+
+  /// Explains that visibility is not ownership, and that enrolment creates the organisational relationship.
+  ///
+  /// In en, this message translates to:
+  /// **'These radios are visible to SocialMesh through the active protocol. Enrolling one adds it to this Team\'s Fleet.'**
+  String get fleetEnrolHeaderBody;
+
+  /// Makes the boundary explicit: enrolment is metadata only, never a device write.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding a radio records it in the organisation\'s Fleet. It does not change the radio\'s configuration.'**
+  String get fleetEnrolBoundaryNote;
+
+  /// Shown when the enrol picker has nothing to offer.
+  ///
+  /// In en, this message translates to:
+  /// **'No radios are visible through the active protocol right now.'**
+  String get fleetEnrolNoCandidates;
+
+  /// Candidate state: can be enrolled now.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get fleetCandidateAvailable;
+
+  /// Candidate state: already enrolled in this Team's Fleet.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in Fleet'**
+  String get fleetCandidateAlreadyInFleet;
+
+  /// Candidate state: a retired Fleet record already exists for this radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Retired'**
+  String get fleetCandidateRetired;
+
+  /// Candidate state: SocialMesh cannot derive a canonical Fleet identity from the observation.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity unavailable'**
+  String get fleetCandidateIdentityUnavailable;
+
+  /// Help text under the identity-unavailable candidate state.
+  ///
+  /// In en, this message translates to:
+  /// **'SocialMesh can\'t derive a Fleet identity for this radio.'**
+  String get fleetCandidateIdentityUnavailableHelp;
+
+  /// Marks the radio this phone is currently connected to.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get fleetCandidateLocalDevice;
+
+  /// Confirms enrolling the selected radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Fleet'**
+  String get fleetAddConfirm;
+
+  /// Fleet detail row: friendly name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get fleetLabelName;
+
+  /// Fleet detail row: which mesh transport the radio uses.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get fleetLabelTransport;
+
+  /// Fleet detail row: canonical transport identity.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get fleetLabelIdentity;
+
+  /// Fleet detail row: hardware model recorded when the radio was added.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware'**
+  String get fleetLabelHardware;
+
+  /// Fleet detail row: firmware version recorded when the radio was added.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware'**
+  String get fleetLabelFirmware;
+
+  /// Fleet detail row: who holds the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to'**
+  String get fleetLabelAssignedTo;
+
+  /// Fleet detail row: what the radio is for.
+  ///
+  /// In en, this message translates to:
+  /// **'Purpose'**
+  String get fleetLabelPurpose;
+
+  /// Fleet detail row: admin-applied tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get fleetLabelTags;
+
+  /// Fleet detail row: free-form notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get fleetLabelNotes;
+
+  /// Fleet detail row: when the radio was enrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get fleetLabelAdded;
+
+  /// Fleet detail row: when the record last changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get fleetLabelUpdated;
+
+  /// Fleet detail row: in service or retired.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get fleetLabelStatus;
+
+  /// Clarifies that hardware and firmware are enrolment snapshots, not current readings.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded when this radio was added, not live.'**
+  String get fleetSnapshotNote;
+
+  /// Title of the assignment sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign radio'**
+  String get fleetAssignTitle;
+
+  /// Assignment option: a named person holds the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Team member'**
+  String get fleetAssignMember;
+
+  /// Assignment option: the organisation holds it as a loaner.
+  ///
+  /// In en, this message translates to:
+  /// **'Organisation pool'**
+  String get fleetAssignOrgPool;
+
+  /// Assignment option: custody is not recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned'**
+  String get fleetAssignUnassigned;
+
+  /// Shown in a Fleet row when nobody holds the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Not assigned'**
+  String get fleetAssignNobody;
+
+  /// Shown when the assigned person has since been removed from the organisation.
+  ///
+  /// In en, this message translates to:
+  /// **'No longer an active member'**
+  String get fleetAssignInactiveMember;
+
+  /// Hint text for the purpose field.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: North Gate, Event Control, Vehicle 2'**
+  String get fleetPurposeHint;
+
+  /// Action that retires a Fleet device.
+  ///
+  /// In en, this message translates to:
+  /// **'Retire'**
+  String get fleetRetireAction;
+
+  /// Confirmation title before retiring a Fleet device.
+  ///
+  /// In en, this message translates to:
+  /// **'Retire this radio?'**
+  String get fleetRetireConfirmTitle;
+
+  /// Explains that retirement is reversible in the sense that the record survives.
+  ///
+  /// In en, this message translates to:
+  /// **'It will be removed from the active Fleet. Its record and history are kept, and you can still find it under Retired.'**
+  String get fleetRetireConfirmBody;
+
+  /// Honest disclosure of the MeshCore identity limitation.
+  ///
+  /// In en, this message translates to:
+  /// **'After a MeshCore factory reset, SocialMesh may recognise the radio as a new Fleet device.'**
+  String get fleetMeshCoreResetNote;
+
+  /// Error: caller lacks the role.
+  ///
+  /// In en, this message translates to:
+  /// **'Only owners and admins can change the Fleet.'**
+  String get fleetErrorPermissionDenied;
+
+  /// Error: the org lacks the fleet capability, or is suspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet is not enabled for this organisation.'**
+  String get fleetErrorOrgNotEligible;
+
+  /// Error: enrolment hit an existing retired record.
+  ///
+  /// In en, this message translates to:
+  /// **'This radio was retired. It can\'t be added again.'**
+  String get fleetErrorDeviceRetired;
+
+  /// Error: the chosen assignee is not an active member of the organisation.
+  ///
+  /// In en, this message translates to:
+  /// **'That person is no longer an active member.'**
+  String get fleetErrorAssigneeNotMember;
+
+  /// Error: server-side validation refused the input.
+  ///
+  /// In en, this message translates to:
+  /// **'Some details couldn\'t be saved. Check them and try again.'**
+  String get fleetErrorInvalidInput;
+
+  /// Error: transport failure, retryable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach SocialMesh. Try again.'**
+  String get fleetErrorUnavailable;
+
+  /// Error: unrecognised failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong.'**
+  String get fleetErrorGeneric;
+
+  /// Shown when a Fleet mutation is attempted without connectivity.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline. Fleet changes need a connection.'**
+  String get fleetOfflineWriteBlocked;
+
+  /// Confirmation after enrolling a radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to Fleet'**
+  String get fleetAddedSnack;
+
+  /// Shown when enrolment was a no-op because the radio was already enrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in Fleet'**
+  String get fleetAlreadyAddedSnack;
+
+  /// Confirmation after changing custody.
+  ///
+  /// In en, this message translates to:
+  /// **'Assignment updated'**
+  String get fleetAssignedSnack;
+
+  /// Confirmation after editing Fleet metadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Details saved'**
+  String get fleetUpdatedSnack;
+
+  /// Confirmation after retiring a Fleet device.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio retired'**
+  String get fleetRetiredSnack;
+
+  /// Banner shown once above a stale Fleet list. Says nothing about whether changes are possible.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {age}'**
+  String fleetLastSynced(String age);
+
+  /// Relative age in minutes for the Fleet sync banner.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String fleetSyncedMinutes(int minutes);
+
+  /// Relative age in hours for the Fleet sync banner.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h ago'**
+  String fleetSyncedHours(int hours);
+
+  /// Relative age in days for the Fleet sync banner.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} d ago'**
+  String fleetSyncedDays(int days);
+
+  /// Subtitle on the Fleet navigation row in the Teams list.
+  ///
+  /// In en, this message translates to:
+  /// **'Radios this Team is tracking'**
+  String get fleetEntrySubtitle;
+
+  /// Shown in the enrol picker when no radio is connected, so there is no protocol to observe through. Distinct from finding no radios.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a radio to see what SocialMesh can enrol.'**
+  String get fleetEnrolNoProtocol;
+
+  /// Shown when the radio source itself failed. Never presented as an empty list.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the radios on this mesh. Try again.'**
+  String get fleetEnrolSourceUnavailable;
+
+  /// Shown when Team member is chosen but the roster has no active members to assign to.
+  ///
+  /// In en, this message translates to:
+  /// **'This Team has no other active members yet. Use the organisation pool or leave it unassigned.'**
+  String get fleetAssignNoMembers;
+
+  /// Shown when assignment and purpose both changed, the assignment write succeeded and the purpose write failed. Names which half landed so the admin does not redo finished work.
+  ///
+  /// In en, this message translates to:
+  /// **'The assignment was saved, but the purpose was not. Try saving the purpose again.'**
+  String get fleetAssignPartialSave;
+
+  /// Section title above the configured metadata an admin recorded about a fleet radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet record'**
+  String get fleetDetailSectionRecord;
+
+  /// Section title above the hardware and firmware captured at enrolment. Not live values.
+  ///
+  /// In en, this message translates to:
+  /// **'Observed when added'**
+  String get fleetDetailSectionSnapshot;
+
+  /// Shown when the fleet record backing an open detail screen is no longer in the fleet.
+  ///
+  /// In en, this message translates to:
+  /// **'This radio is no longer in this Team\'s Fleet.'**
+  String get fleetDetailMissing;
 }
 
 class _AppLocalizationsDelegate

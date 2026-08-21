@@ -25,6 +25,9 @@ class UserPreferences {
   /// automations engine, e.g. node-silent alerts).
   final bool? automationAlertNotificationsEnabled;
 
+  /// Waypoint notifications (shared mesh waypoints from other nodes).
+  final bool? waypointNotificationsEnabled;
+
   /// Haptic feedback settings
   final bool? hapticFeedbackEnabled;
   final int? hapticIntensity;
@@ -80,6 +83,7 @@ class UserPreferences {
     this.notificationVibrationEnabled,
     this.sipPlayTurnNotificationsEnabled,
     this.automationAlertNotificationsEnabled,
+    this.waypointNotificationsEnabled,
     this.hapticFeedbackEnabled,
     this.hapticIntensity,
     this.animationsEnabled,
@@ -123,6 +127,8 @@ class UserPreferences {
           json['sipPlayTurnNotificationsEnabled'] as bool?,
       automationAlertNotificationsEnabled:
           json['automationAlertNotificationsEnabled'] as bool?,
+      waypointNotificationsEnabled:
+          json['waypointNotificationsEnabled'] as bool?,
       hapticFeedbackEnabled: json['hapticFeedbackEnabled'] as bool?,
       hapticIntensity: json['hapticIntensity'] as int?,
       animationsEnabled: json['animationsEnabled'] as bool?,
@@ -180,6 +186,8 @@ class UserPreferences {
       if (automationAlertNotificationsEnabled != null)
         'automationAlertNotificationsEnabled':
             automationAlertNotificationsEnabled,
+      if (waypointNotificationsEnabled != null)
+        'waypointNotificationsEnabled': waypointNotificationsEnabled,
       if (hapticFeedbackEnabled != null)
         'hapticFeedbackEnabled': hapticFeedbackEnabled,
       if (hapticIntensity != null) 'hapticIntensity': hapticIntensity,
@@ -234,6 +242,7 @@ class UserPreferences {
     bool? notificationVibrationEnabled,
     bool? sipPlayTurnNotificationsEnabled,
     bool? automationAlertNotificationsEnabled,
+    bool? waypointNotificationsEnabled,
     bool? hapticFeedbackEnabled,
     int? hapticIntensity,
     bool? animationsEnabled,
@@ -281,6 +290,8 @@ class UserPreferences {
       automationAlertNotificationsEnabled:
           automationAlertNotificationsEnabled ??
           this.automationAlertNotificationsEnabled,
+      waypointNotificationsEnabled:
+          waypointNotificationsEnabled ?? this.waypointNotificationsEnabled,
       hapticFeedbackEnabled:
           hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
       hapticIntensity: hapticIntensity ?? this.hapticIntensity,

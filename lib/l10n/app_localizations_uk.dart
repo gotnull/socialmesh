@@ -18466,6 +18466,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsSearchThemePackTitle => 'Пакет тем';
 
   @override
+  String get settingsSearchWaypointNotificationsSubtitle =>
+      'Сповіщати, коли в мережі з\'являються спільні точки маршруту';
+
+  @override
+  String get settingsSearchWaypointNotificationsTitle =>
+      'Сповіщення про точки маршруту';
+
+  @override
   String get settingsSearchWidgetPackSubtitle => 'Віджети головного екрана';
 
   @override
@@ -19026,6 +19034,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsTileVibrationTitle => 'Вібрація';
+
+  @override
+  String get settingsTileWaypointsSubtitle =>
+      'Сповіщати, коли в мережі з\'являються спільні точки маршруту';
+
+  @override
+  String get settingsTileWaypointsTitle => 'Точки маршруту';
 
   @override
   String get settingsTileWhatsNewSubtitle =>
@@ -42926,7 +42941,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String licenseOrgMembersRevokedTileTitle(String member) {
-    return '$member — місце відкликано';
+    return '$member - місце відкликано';
   }
 
   @override
@@ -42983,7 +42998,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgMembersRevokeErrorRateLimit =>
-      'Забагато відкликань — спробуйте за хвилину';
+      'Забагато відкликань - спробуйте за хвилину';
 
   @override
   String get licenseOrgMembersReinstateAction => 'Відновити місце';
@@ -42996,7 +43011,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgMembersReinstateErrorOverCapacity =>
-      'Група досягла ліміту місць — спочатку відкличте чиєсь інше';
+      'Група досягла ліміту місць - спочатку відкличте чиєсь інше';
 
   @override
   String get licenseOrgMembersReinstateErrorPermission =>
@@ -43004,15 +43019,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgMembersReinstateErrorRateLimit =>
-      'Забагато відновлень — спробуйте за хвилину';
+      'Забагато відновлень - спробуйте за хвилину';
 
   @override
   String get licenseOrgMembersReinstateErrorGeneric =>
-      'Не вдалося відновити місце — спробуйте знову';
+      'Не вдалося відновити місце - спробуйте знову';
 
   @override
   String get licenseOrgMembersRevokeErrorGeneric =>
-      'Не вдалося відкликати місце — спробуйте знову';
+      'Не вдалося відкликати місце - спробуйте знову';
 
   @override
   String get licenseOrgMembersRoleOwner => 'Власник';
@@ -43171,7 +43186,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgInviteMintExhausted =>
-      'Усі місця зайняті — спочатку відкличте когось, потім згенеруйте знову';
+      'Усі місця зайняті - спочатку відкличте когось, потім згенеруйте знову';
 
   @override
   String get licenseOrgInviteRegenerateAction => 'Згенерувати знову';
@@ -43182,7 +43197,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgInviteRegenerateConfirmBody =>
-      'Тим, хто ще не приєднався, знадобиться нове посилання. Хто вже приєднався — збереже доступ.';
+      'Тим, хто ще не приєднався, знадобиться нове посилання. Хто вже приєднався - збереже доступ.';
 
   @override
   String get licenseOrgInviteRegenerateConfirmButton => 'Створити';
@@ -43558,7 +43573,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgNameErrorGeneric =>
-      'Не вдалося зберегти назву — спробуйте ще раз';
+      'Не вдалося зберегти назву - спробуйте ще раз';
 
   @override
   String get licenseOrgNameEmptyPlaceholder => 'Спільнота без назви';
@@ -44278,4 +44293,288 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodedexTabGroups => 'Групи';
+
+  @override
+  String get navigationTeams => 'Teams';
+
+  @override
+  String get teamsScreenTitle => 'Teams';
+
+  @override
+  String get teamsCheckingLabel => 'Перевіряємо ваші Teams...';
+
+  @override
+  String get teamsOfflineTitle => 'Немає підключення';
+
+  @override
+  String get teamsOfflineBody =>
+      'Ви не в мережі, тому ми не можемо перевірити ваші Teams зараз.';
+
+  @override
+  String get teamsUnavailableTitle => 'Не вдалося завантажити Teams';
+
+  @override
+  String get teamsUnavailableBody =>
+      'Не вдалося завантажити ваші Teams. Спробуйте ще раз.';
+
+  @override
+  String get teamsRetryAction => 'Повторити';
+
+  @override
+  String get teamsEmptyTitlePrefix => 'Ви ще не входите до жодної ';
+
+  @override
+  String get teamsEmptyTitleKeyword => 'Team';
+
+  @override
+  String get teamsEmptyTitleSuffix => '';
+
+  @override
+  String get teamsEmptyTagline =>
+      'Організації, до яких ви належите, з\'являться тут.';
+
+  @override
+  String get teamsAccountRequiredTitle => 'Увійдіть, щоб користуватися Teams';
+
+  @override
+  String get teamsAccountRequiredBody =>
+      'Для Teams потрібен обліковий запис, щоб ваше членство в організації збереглося.';
+
+  @override
+  String get teamsDisabledBody => 'Teams не увімкнено в цій збірці.';
+
+  @override
+  String get fleetScreenTitle => 'Fleet';
+
+  @override
+  String get fleetSectionInService => 'В експлуатації';
+
+  @override
+  String get fleetSectionRetired => 'Виведено';
+
+  @override
+  String get fleetEmptyTitlePrefix => 'У цій Fleet ще немає рацій';
+
+  @override
+  String get fleetEmptyTitleKeyword => 'Fleet';
+
+  @override
+  String get fleetEmptyTitleSuffix => '';
+
+  @override
+  String get fleetEmptyTagline => 'Додайте рацію, щоб бачити, у кого що є.';
+
+  @override
+  String get fleetRetiredEmpty => 'Немає виведених рацій.';
+
+  @override
+  String get fleetAddAction => 'Додати рацію';
+
+  @override
+  String get fleetEnrolHeader => 'Рації, відомі через активний протокол';
+
+  @override
+  String get fleetEnrolHeaderBody =>
+      'SocialMesh бачить ці рації через активний протокол. Додавання рації вносить її до Fleet цієї Team.';
+
+  @override
+  String get fleetEnrolBoundaryNote =>
+      'Додавання записує рацію до Fleet організації. Налаштування самої рації не змінюються.';
+
+  @override
+  String get fleetEnrolNoCandidates =>
+      'Наразі через активний протокол не видно жодної рації.';
+
+  @override
+  String get fleetCandidateAvailable => 'Доступна';
+
+  @override
+  String get fleetCandidateAlreadyInFleet => 'Уже у Fleet';
+
+  @override
+  String get fleetCandidateRetired => 'Виведена';
+
+  @override
+  String get fleetCandidateIdentityUnavailable => 'Ідентифікатор недоступний';
+
+  @override
+  String get fleetCandidateIdentityUnavailableHelp =>
+      'SocialMesh не може визначити ідентифікатор Fleet для цієї рації.';
+
+  @override
+  String get fleetCandidateLocalDevice => 'Цей пристрій';
+
+  @override
+  String get fleetAddConfirm => 'Додати до Fleet';
+
+  @override
+  String get fleetLabelName => 'Назва';
+
+  @override
+  String get fleetLabelTransport => 'Транспорт';
+
+  @override
+  String get fleetLabelIdentity => 'Ідентифікатор';
+
+  @override
+  String get fleetLabelHardware => 'Обладнання';
+
+  @override
+  String get fleetLabelFirmware => 'Прошивка';
+
+  @override
+  String get fleetLabelAssignedTo => 'Закріплено за';
+
+  @override
+  String get fleetLabelPurpose => 'Призначення';
+
+  @override
+  String get fleetLabelTags => 'Теги';
+
+  @override
+  String get fleetLabelNotes => 'Нотатки';
+
+  @override
+  String get fleetLabelAdded => 'Додано';
+
+  @override
+  String get fleetLabelUpdated => 'Оновлено';
+
+  @override
+  String get fleetLabelStatus => 'Статус';
+
+  @override
+  String get fleetSnapshotNote =>
+      'Записано під час додавання рації, не в реальному часі.';
+
+  @override
+  String get fleetAssignTitle => 'Закріпити рацію';
+
+  @override
+  String get fleetAssignMember => 'Учасник Team';
+
+  @override
+  String get fleetAssignOrgPool => 'Пул організації';
+
+  @override
+  String get fleetAssignUnassigned => 'Не закріплено';
+
+  @override
+  String get fleetAssignNobody => 'Не закріплено';
+
+  @override
+  String get fleetAssignInactiveMember => 'Більше не активний учасник';
+
+  @override
+  String get fleetPurposeHint =>
+      'Наприклад: Північна брама, Керування подією, Машина 2';
+
+  @override
+  String get fleetRetireAction => 'Вивести';
+
+  @override
+  String get fleetRetireConfirmTitle => 'Вивести цю рацію з експлуатації?';
+
+  @override
+  String get fleetRetireConfirmBody =>
+      'Її буде прибрано з активної Fleet. Запис та історія збережуться, і її можна буде знайти серед виведених.';
+
+  @override
+  String get fleetMeshCoreResetNote =>
+      'Після скидання MeshCore до заводських налаштувань SocialMesh може розпізнати рацію як новий пристрій Fleet.';
+
+  @override
+  String get fleetErrorPermissionDenied =>
+      'Змінювати Fleet можуть лише власники та адміністратори.';
+
+  @override
+  String get fleetErrorOrgNotEligible =>
+      'Fleet не увімкнено для цієї організації.';
+
+  @override
+  String get fleetErrorDeviceRetired =>
+      'Цю рацію виведено з експлуатації. Додати її знову не можна.';
+
+  @override
+  String get fleetErrorAssigneeNotMember =>
+      'Ця особа більше не активний учасник.';
+
+  @override
+  String get fleetErrorInvalidInput =>
+      'Деякі дані не вдалося зберегти. Перевірте їх і спробуйте ще раз.';
+
+  @override
+  String get fleetErrorUnavailable =>
+      'Не вдалося зв\'язатися з SocialMesh. Спробуйте ще раз.';
+
+  @override
+  String get fleetErrorGeneric => 'Щось пішло не так.';
+
+  @override
+  String get fleetOfflineWriteBlocked =>
+      'Ви не в мережі. Для змін у Fleet потрібне підключення.';
+
+  @override
+  String get fleetAddedSnack => 'Додано до Fleet';
+
+  @override
+  String get fleetAlreadyAddedSnack => 'Уже у Fleet';
+
+  @override
+  String get fleetAssignedSnack => 'Закріплення оновлено';
+
+  @override
+  String get fleetUpdatedSnack => 'Дані збережено';
+
+  @override
+  String get fleetRetiredSnack => 'Рацію виведено';
+
+  @override
+  String fleetLastSynced(String age) {
+    return 'Останню синхронізацію виконано $age';
+  }
+
+  @override
+  String fleetSyncedMinutes(int minutes) {
+    return '$minutes хв тому';
+  }
+
+  @override
+  String fleetSyncedHours(int hours) {
+    return '$hours год тому';
+  }
+
+  @override
+  String fleetSyncedDays(int days) {
+    return '$days дн тому';
+  }
+
+  @override
+  String get fleetEntrySubtitle => 'Рації, які веде ця Team';
+
+  @override
+  String get fleetEnrolNoProtocol =>
+      'Під\'єднайте рацію, щоб побачити, що SocialMesh може додати.';
+
+  @override
+  String get fleetEnrolSourceUnavailable =>
+      'Не вдалося прочитати рації в цій мережі. Спробуйте ще раз.';
+
+  @override
+  String get fleetAssignNoMembers =>
+      'У цій команді поки немає інших активних учасників. Скористайтеся пулом організації або залиште без призначення.';
+
+  @override
+  String get fleetAssignPartialSave =>
+      'Призначення збережено, але мету - ні. Спробуйте зберегти мету ще раз.';
+
+  @override
+  String get fleetDetailSectionRecord => 'Запис флоту';
+
+  @override
+  String get fleetDetailSectionSnapshot => 'Зафіксовано під час додавання';
+
+  @override
+  String get fleetDetailMissing =>
+      'Ця рація більше не входить до флоту цієї команди.';
 }

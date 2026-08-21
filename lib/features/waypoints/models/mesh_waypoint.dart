@@ -86,6 +86,24 @@ class MeshWaypoint {
   // render correctly.
   String get iconEmoji => hasRenderableIcon ? String.fromCharCodes([icon]) : '';
 
+  // True when [other] carries the same user-visible content as this waypoint.
+  // A scheduled rebroadcast of an unchanged waypoint must compare equal so
+  // the notification path can stay silent instead of re-alerting on every
+  // repeat. Local bookkeeping ([sourceNodeNum], [receivedAt], [isMine]) is
+  // ignored, and so is [expire]: rebroadcasters roll the expiry forward on
+  // every transmission, and a new expiry alone changes nothing worth an
+  // alert. The delete sentinel never reaches this comparison - the event
+  // path handles expire == 1 before reconciliation.
+  bool sameContentAs(MeshWaypoint other) {
+    return id == other.id &&
+        latitude == other.latitude &&
+        longitude == other.longitude &&
+        lockedTo == other.lockedTo &&
+        name == other.name &&
+        description == other.description &&
+        icon == other.icon;
+  }
+
   // Build from a decoded protocol event. [myNodeNum] resolves [isMine].
   factory MeshWaypoint.fromEvent(MeshWaypointEvent event, {int? myNodeNum}) {
     return MeshWaypoint(

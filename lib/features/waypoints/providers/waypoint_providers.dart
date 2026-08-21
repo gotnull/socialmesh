@@ -87,6 +87,10 @@ class WaypointsNotifier extends AsyncNotifier<List<MeshWaypoint>> {
     final incoming = MeshWaypoint.fromEvent(event, myNodeNum: _myNodeNum);
     final idx = current.indexWhere((w) => w.id == incoming.id);
 
+    // Repeat broadcasts of an unchanged waypoint (relay schedulers rebroadcast
+    // on a timer) must not re-alert: only a new id or changed content counts.
+    var contentChanged = true;
+
     if (idx >= 0) {
       // Locked-edit rule: reject updates to a locked waypoint unless the
       // update originates from the node that owns the lock.
@@ -98,6 +102,7 @@ class WaypointsNotifier extends AsyncNotifier<List<MeshWaypoint>> {
         );
         return;
       }
+      contentChanged = !existing.sameContentAs(incoming);
       await db.upsert(incoming);
       current[idx] = incoming;
     } else {
@@ -106,8 +111,9 @@ class WaypointsNotifier extends AsyncNotifier<List<MeshWaypoint>> {
     }
     state = AsyncData(current);
 
-    // Notify on inbound waypoints from other nodes (never our own echo).
-    if (!incoming.isMine) {
+    // Notify on inbound waypoints from other nodes (never our own echo),
+    // gated on the master and per-category notification toggles.
+    if (!incoming.isMine && contentChanged && _waypointNotificationsAllowed()) {
       final nodes = ref.read(nodesProvider);
       final senderName =
           nodes[event.fromNodeNum]?.displayName ??
@@ -120,6 +126,13 @@ class WaypointsNotifier extends AsyncNotifier<List<MeshWaypoint>> {
         ),
       );
     }
+  }
+
+  bool _waypointNotificationsAllowed() {
+    final settings = ref.read(settingsServiceProvider).value;
+    if (settings == null) return true;
+    return settings.notificationsEnabled &&
+        settings.waypointNotificationsEnabled;
   }
 
   Future<void> _runCleanup() async {
