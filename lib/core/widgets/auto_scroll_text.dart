@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:socialmesh/core/theme.dart';
 
@@ -39,6 +41,16 @@ class _AutoScrollTextState extends State<AutoScrollText> {
   bool _isScrolling = false;
   double _scrollPosition = 0;
 
+  /// The in-flight delay, held so disposal can cancel it.
+  ///
+  /// An uncancellable delay left a pending timer behind after the widget
+  /// was disposed. The `mounted` guards stop the work, but the timer
+  /// still outlives the widget - which trips `flutter_test`'s
+  /// pending-timer assertion and fails any widget test covering a screen
+  /// that contains a marquee.
+  Timer? _delayTimer;
+  Completer<void>? _delayCompleter;
+
   @override
   void initState() {
     super.initState();
@@ -56,9 +68,27 @@ class _AutoScrollTextState extends State<AutoScrollText> {
 
   @override
   void dispose() {
+    _delayTimer?.cancel();
+    _delayTimer = null;
+    // Completed rather than abandoned: an un-completed future would
+    // leave the scroll loop suspended forever holding this State.
+    final pending = _delayCompleter;
+    if (pending != null && !pending.isCompleted) pending.complete();
+    _delayCompleter = null;
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// A cancellable delay. Cancelled and completed on dispose.
+  Future<void> _delay(Duration duration) {
+    _delayTimer?.cancel();
+    final completer = Completer<void>();
+    _delayCompleter = completer;
+    _delayTimer = Timer(duration, () {
+      if (!completer.isCompleted) completer.complete();
+    });
+    return completer.future;
   }
 
   void _startScrollAnimation() async {
@@ -66,12 +96,12 @@ class _AutoScrollTextState extends State<AutoScrollText> {
     _isScrolling = true;
 
     // Wait before starting
-    await Future.delayed(widget.delayBefore);
+    await _delay(widget.delayBefore);
     if (!mounted) return;
 
     // Wait for scroll controller to be attached
     while (mounted && !_scrollController.hasClients) {
-      await Future.delayed(const Duration(milliseconds: 50));
+      await _delay(const Duration(milliseconds: 50));
     }
     if (!mounted) return;
 
@@ -95,7 +125,7 @@ class _AutoScrollTextState extends State<AutoScrollText> {
       if (!mounted) return;
 
       // Pause at end
-      await Future.delayed(widget.pauseBetween);
+      await _delay(widget.pauseBetween);
       if (!mounted) return;
 
       // Scroll back to start
@@ -109,7 +139,7 @@ class _AutoScrollTextState extends State<AutoScrollText> {
       if (!mounted) return;
 
       // Pause before repeating
-      await Future.delayed(widget.pauseBetween);
+      await _delay(widget.pauseBetween);
     }
 
     _isScrolling = false;
