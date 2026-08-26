@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (first connect to a radio)
+
+- Connecting to a radio the app has never seen before no longer wrecks the session seconds after it configures. Storage is filed per radio, and a never-seen radio's identity only arrives once it reports its node number, so the storage layer re-homed its files mid-session - and one of the rebuilt stores dragged the live protocol session down with it, replacing a fully configured session with one that had never spoken to the radio. The app then looked connected but showed an empty channel list, no configuration, and never recovered until a manual disconnect and reconnect. Switching between radios hit the same path, which is how it was reported ("switching between few nodes all channels are lost"). The store now re-homes itself without touching the protocol session
+
 ### Fixed (waypoint notifications)
 
 - Repeated broadcasts of an unchanged waypoint no longer alert every time. Some relay tools rebroadcast their waypoints on a schedule, and each repeat raised a fresh notification even though nothing about the waypoint had changed; now only a new waypoint or an actual edit alerts

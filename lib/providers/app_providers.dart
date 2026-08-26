@@ -3822,15 +3822,26 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
   return PushNotificationService();
 });
 
+// Deliberately does NOT watch radioScopeProvider, unlike the other scoped
+// stores. protocolServiceProvider watches this provider, so a rebuild here
+// tears down the live ProtocolService - and the scope promotion that fires
+// when a first-ever radio reports its node number lands seconds AFTER the
+// config handshake completed, which replaced a configured protocol instance
+// with a fresh one that never ran start(). The session then looked connected
+// but had no channels, no config, and no handshake. The store instead
+// re-scopes itself: RadioScope closes it before a scope switch, and the next
+// hasSeen/markSeen reopens it against the new scope's database path.
 final meshPacketDedupeStoreProvider = Provider<MeshPacketDedupeStore>((ref) {
-  ref.watch(radioScopeProvider);
   final store = MeshPacketDedupeStore();
   unawaited(
     store.init().catchError((Object e) {
       AppLogging.protocol('MeshPacketDedupeStore init failed (non-fatal): $e');
     }),
   );
-  bindStoreToRadioScope(ref, store, store.dispose);
+  ref.onDispose(() {
+    RadioScope.instance.unregisterCloser(store);
+    unawaited(store.dispose());
+  });
   return store;
 });
 

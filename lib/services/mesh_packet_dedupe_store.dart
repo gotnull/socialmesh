@@ -79,6 +79,17 @@ class MeshPacketDedupeStore {
     // If already initialized, return immediately
     if (_db != null && _db!.isOpen) return;
 
+    // Register with the radio scope on every (re)open, not once: the scope
+    // drops its closer set after closing stores for a scope switch, and this
+    // store reopens lazily in the new scope on the next hasSeen/markSeen
+    // rather than through a provider rebuild. A provider rebuild here is not
+    // an option - the protocol service watches this provider, and rebuilding
+    // it mid-session discards a configured protocol instance whose
+    // replacement never runs start().
+    if (_dbPathOverride == null) {
+      RadioScope.instance.registerCloser(this, dispose);
+    }
+
     // If init already failed this session, don't retry
     if (_initFailed) {
       AppLogging.protocol('MeshPacketDedupeStore: Skipping init (failed)');
