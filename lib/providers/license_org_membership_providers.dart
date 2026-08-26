@@ -39,6 +39,79 @@ final licenseOrgMembershipRepositoryProvider =
       return FirestoreLicenseOrgMembershipRepository();
     });
 
+/// Membership org-id set PLUS whether it is an authoritative answer.
+///
+/// **This is the single membership authority.** It has two projections:
+/// this one for surfaces that must distinguish "you belong to nothing"
+/// from "we have not established that yet", and
+/// [currentUserLicenseOrgIdsProvider] for access decisions, which only
+/// ever needs the ids and fails closed.
+///
+/// Yields an empty, UNRESOLVED state when any precondition fails:
+///
+///   - `AppFeatureFlags.isGroupLicensingEnabled` is false
+///   - current user is null (signed out)
+///   - current user is anonymous (guest)
+///   - current user has an empty uid
+///   - the underlying repository stream errors
+///
+/// Those paths report `hasResolvedRemote: false` on purpose: none of
+/// them consulted the server, so no authoritative answer exists. A
+/// surface must handle auth and feature-gate states explicitly rather
+/// than inferring "this user has no organisations" from them.
+final currentUserLicenseOrgMembershipStateProvider =
+    StreamProvider<LicenseOrgMembershipSetState>((ref) async* {
+      if (!AppFeatureFlags.isGroupLicensingEnabled) {
+        AppLogging.groupLicensing(
+          '[LicenseOrgMembership] feature flag disabled - yielding empty',
+        );
+        yield LicenseOrgMembershipSetState.unresolved;
+        return;
+      }
+
+      final user = ref.watch(currentUserProvider);
+      if (user == null) {
+        yield LicenseOrgMembershipSetState.unresolved;
+        return;
+      }
+      if (user.isAnonymous) {
+        AppLogging.groupLicensing(
+          '[LicenseOrgMembership] anonymous user - yielding empty '
+          '(guest mode is license-org-blind)',
+        );
+        yield LicenseOrgMembershipSetState.unresolved;
+        return;
+      }
+      if (user.uid.isEmpty) {
+        yield LicenseOrgMembershipSetState.unresolved;
+        return;
+      }
+
+      final repo = ref.watch(licenseOrgMembershipRepositoryProvider);
+
+      // Yield empty immediately so subscribers do not block on the first
+      // Firestore snapshot - matches the offline-first contract used by
+      // externalEntitlementsProvider. Marked unresolved so no surface
+      // mistakes this sentinel for a real answer.
+      yield LicenseOrgMembershipSetState.unresolved;
+
+      try {
+        await for (final state in repo.watchCurrentUserOrgIdState(user.uid)) {
+          yield state;
+        }
+      } catch (e) {
+        AppLogging.groupLicensing(
+          '[LicenseOrgMembership] repository stream threw - failing closed '
+          '(error class: ${e.runtimeType})',
+        );
+        // FAILED, not pending. Ids still fail closed to empty exactly as
+        // before, but a stream that threw is a failure, not an
+        // in-flight query - a surface must be able to offer a retry
+        // rather than sit in a spinner forever.
+        yield LicenseOrgMembershipSetState.failed;
+      }
+    });
+
 /// Set of license org ids the current user is an active owner /
 /// admin / member of. Yields an empty set when any precondition
 /// fails:
@@ -49,57 +122,24 @@ final licenseOrgMembershipRepositoryProvider =
 ///   - current user has an empty uid
 ///   - the underlying repository stream errors
 ///
-/// This is the only public entry point for "what license orgs does
-/// this user belong to?". Future slices that grant org-owned
+/// This is the entry point for "what license orgs does this user
+/// belong to?" for ACCESS decisions. Slices that grant org-owned
 /// entitlements watch this provider; no other code path should
 /// construct a [LicenseOrgMembershipRepository] directly.
-final currentUserLicenseOrgIdsProvider = StreamProvider<Set<String>>((
+///
+/// Derived from [currentUserLicenseOrgMembershipStateProvider] rather
+/// than opening its own subscription, so there is one Firestore
+/// listener and one authority. The emitted values and their timing are
+/// unchanged from when this provider owned the stream itself - the
+/// fail-closed contract pinned by
+/// `test/providers/license_org_membership_providers_test.dart` holds
+/// exactly as before.
+final currentUserLicenseOrgIdsProvider = Provider<AsyncValue<Set<String>>>((
   ref,
-) async* {
-  if (!AppFeatureFlags.isGroupLicensingEnabled) {
-    AppLogging.groupLicensing(
-      '[LicenseOrgMembership] feature flag disabled - yielding empty',
-    );
-    yield const <String>{};
-    return;
-  }
-
-  final user = ref.watch(currentUserProvider);
-  if (user == null) {
-    yield const <String>{};
-    return;
-  }
-  if (user.isAnonymous) {
-    AppLogging.groupLicensing(
-      '[LicenseOrgMembership] anonymous user - yielding empty '
-      '(guest mode is license-org-blind)',
-    );
-    yield const <String>{};
-    return;
-  }
-  if (user.uid.isEmpty) {
-    yield const <String>{};
-    return;
-  }
-
-  final repo = ref.watch(licenseOrgMembershipRepositoryProvider);
-
-  // Yield empty immediately so subscribers do not block on the first
-  // Firestore snapshot - matches the offline-first contract used by
-  // externalEntitlementsProvider.
-  yield const <String>{};
-
-  try {
-    await for (final ids in repo.watchCurrentUserOrgIds(user.uid)) {
-      yield ids;
-    }
-  } catch (e) {
-    AppLogging.groupLicensing(
-      '[LicenseOrgMembership] repository stream threw - failing closed '
-      '(error class: ${e.runtimeType})',
-    );
-    yield const <String>{};
-  }
+) {
+  return ref
+      .watch(currentUserLicenseOrgMembershipStateProvider)
+      .whenData((state) => state.orgIds);
 });
 
 /// Convenience checker: does the current user belong to license org

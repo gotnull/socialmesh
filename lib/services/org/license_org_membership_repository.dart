@@ -27,13 +27,134 @@ import '../../core/logging.dart';
 import '../../models/license_org.dart';
 import '../../models/license_org_membership.dart';
 
+/// How far the membership query has got.
+///
+/// A boolean would conflate [pending] with [failed], and those need
+/// different surfaces: pending is a spinner, failed needs an
+/// explanation and a retry. Collapsing them would leave a screen
+/// showing "Checking..." forever after a hard failure, with no
+/// recovery affordance and nothing to indicate anything is wrong -
+/// which is worse than a wrong empty state, because it is a dead end.
+enum LicenseOrgMembershipResolution {
+  /// No answer yet: the synchronous sentinel, or a query still in
+  /// flight. Also the terminal state for the auth / feature gates,
+  /// which never consult the server at all - surfaces must handle
+  /// signed-out, anonymous and flag-off explicitly rather than falling
+  /// through to this.
+  pending,
+
+  /// Every underlying query answered. [LicenseOrgMembershipSetState.orgIds]
+  /// is authoritative, and an empty set here genuinely means "belongs
+  /// to no organisations".
+  resolved,
+
+  /// At least one underlying query failed. The ids still fail closed to
+  /// empty, but that empty set is not an answer.
+  failed,
+}
+
+/// Combine the per-query resolutions into the union's resolution.
+///
+/// Failure dominates: if either query failed, the union can only ever
+/// be a subset, so reporting it as authoritative would understate the
+/// user's memberships. Otherwise both must have answered.
+LicenseOrgMembershipResolution _combine(
+  LicenseOrgMembershipResolution owned,
+  LicenseOrgMembershipResolution member,
+) {
+  if (owned == LicenseOrgMembershipResolution.failed ||
+      member == LicenseOrgMembershipResolution.failed) {
+    return LicenseOrgMembershipResolution.failed;
+  }
+  if (owned == LicenseOrgMembershipResolution.resolved &&
+      member == LicenseOrgMembershipResolution.resolved) {
+    return LicenseOrgMembershipResolution.resolved;
+  }
+  return LicenseOrgMembershipResolution.pending;
+}
+
+/// The org-id set plus whether it is an authoritative answer yet.
+///
+/// Exists because an empty set alone is ambiguous. The stream emits
+/// `{}` synchronously on subscribe so nothing blocks on a Firestore
+/// round trip, which means a consumer seeing `{}` cannot tell
+/// "you belong to no organisations" from "we have not asked yet" or
+/// "the query failed". Entitlement code does not care - both mean
+/// grant nothing - but a user-facing surface that renders
+/// "You're not in any organisation" on the sentinel would be stating
+/// something demonstrably false during normal startup.
+///
+/// This is metadata ABOUT the same single membership source, not a
+/// second source of membership truth. There is exactly one authority
+/// with two projections: [orgIds] for access decisions and
+/// [hasResolvedRemote] for honest presentation.
+class LicenseOrgMembershipSetState {
+  /// Org ids the user is an active owner / admin / member of.
+  ///
+  /// Fails closed identically in every error path, exactly as before:
+  /// an error yields the empty set, never a retained stale set.
+  final Set<String> orgIds;
+
+  /// How far the underlying queries got. See
+  /// [LicenseOrgMembershipResolution].
+  final LicenseOrgMembershipResolution resolution;
+
+  const LicenseOrgMembershipSetState({
+    required this.orgIds,
+    required this.resolution,
+  });
+
+  /// The synchronous sentinel: nothing known yet.
+  static const LicenseOrgMembershipSetState unresolved =
+      LicenseOrgMembershipSetState(
+        orgIds: <String>{},
+        resolution: LicenseOrgMembershipResolution.pending,
+      );
+
+  /// A query failed. Ids still fail closed to empty, but a surface must
+  /// offer recovery rather than sit in a spinner.
+  static const LicenseOrgMembershipSetState failed =
+      LicenseOrgMembershipSetState(
+        orgIds: <String>{},
+        resolution: LicenseOrgMembershipResolution.failed,
+      );
+
+  /// True only when [orgIds] is an authoritative answer.
+  ///
+  /// The one predicate a surface may use to decide whether an empty set
+  /// can be rendered as "you belong to no organisations".
+  bool get hasResolvedRemote =>
+      resolution == LicenseOrgMembershipResolution.resolved;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LicenseOrgMembershipSetState &&
+          resolution == other.resolution &&
+          orgIds.length == other.orgIds.length &&
+          orgIds.containsAll(other.orgIds);
+
+  @override
+  int get hashCode => Object.hash(resolution, Object.hashAllUnordered(orgIds));
+
+  @override
+  String toString() =>
+      'LicenseOrgMembershipSetState(count: ${orgIds.length}, '
+      'resolution: ${resolution.name})';
+}
+
 /// Streams the set of license org ids a given uid is an active owner
 /// / admin / member of. Implementations MUST fail closed: any error
 /// path must emit an empty set rather than rethrow.
 abstract class LicenseOrgMembershipRepository {
-  /// Emits the current org-id set on subscribe, then re-emits on every
-  /// underlying change. Empty set on null / empty uid.
-  Stream<Set<String>> watchCurrentUserOrgIds(String uid);
+  /// Emits the current org-id set plus its resolution state on
+  /// subscribe, then re-emits on every underlying change. Empty and
+  /// unresolved on null / empty uid.
+  ///
+  /// The id-set semantics are unchanged from the original
+  /// `Stream<Set<String>>` contract - same values, same timing, same
+  /// fail-closed error behaviour. Only the resolution metadata is new.
+  Stream<LicenseOrgMembershipSetState> watchCurrentUserOrgIdState(String uid);
 
   /// Streams the [LicenseOrg] doc at `license_orgs/{orgId}`. Emits
   /// null when the doc is missing, malformed, suspended, or on any
@@ -85,18 +206,36 @@ class FirestoreLicenseOrgMembershipRepository
     : _firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
-  Stream<Set<String>> watchCurrentUserOrgIds(String uid) {
-    if (uid.isEmpty) return Stream.value(const <String>{});
+  Stream<LicenseOrgMembershipSetState> watchCurrentUserOrgIdState(String uid) {
+    if (uid.isEmpty) {
+      return Stream.value(LicenseOrgMembershipSetState.unresolved);
+    }
 
-    final controller = StreamController<Set<String>>();
+    final controller = StreamController<LicenseOrgMembershipSetState>();
     Set<String> ownedIds = const {};
     Set<String> memberIds = const {};
+    // Resolution is tracked per underlying query and combined. A user
+    // can own one org and be a member of another, so the answer is only
+    // authoritative once BOTH have reported - treating either alone as
+    // resolved would let an empty owned-set be presented as "no
+    // organisations" while the membership query was still in flight.
+    //
+    // A failure in EITHER query poisons the union: the remaining query
+    // can only ever produce a subset, so reporting it as authoritative
+    // would understate the user's memberships.
+    var ownedResolution = LicenseOrgMembershipResolution.pending;
+    var memberResolution = LicenseOrgMembershipResolution.pending;
     StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? ownedSub;
     StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? memberSub;
 
     void emit() {
       if (controller.isClosed) return;
-      controller.add({...ownedIds, ...memberIds});
+      controller.add(
+        LicenseOrgMembershipSetState(
+          orgIds: {...ownedIds, ...memberIds},
+          resolution: _combine(ownedResolution, memberResolution),
+        ),
+      );
     }
 
     Future<void> handleMemberSnapshot(
@@ -124,6 +263,7 @@ class FirestoreLicenseOrgMembershipRepository
         }
       }
       memberIds = next;
+      memberResolution = LicenseOrgMembershipResolution.resolved;
       emit();
     }
 
@@ -140,6 +280,7 @@ class FirestoreLicenseOrgMembershipRepository
                   .where((o) => o != null && o.isAccessActive)
                   .map((o) => o!.id)
                   .toSet();
+              ownedResolution = LicenseOrgMembershipResolution.resolved;
               emit();
             },
             onError: (Object e) {
@@ -148,6 +289,11 @@ class FirestoreLicenseOrgMembershipRepository
                 'failing closed (error class: ${e.runtimeType})',
               );
               ownedIds = const {};
+              // Ids still fail closed exactly as before. Resolution
+              // drops too: after a failure we no longer hold an
+              // authoritative answer, so a surface must not render the
+              // empty set as a confident "no organisations".
+              ownedResolution = LicenseOrgMembershipResolution.failed;
               emit();
             },
           );
@@ -170,12 +316,16 @@ class FirestoreLicenseOrgMembershipRepository
                 'failing closed (error class: ${e.runtimeType})',
               );
               memberIds = const {};
+              memberResolution = LicenseOrgMembershipResolution.failed;
               emit();
             },
           );
 
-      // Emit an initial empty set so subscribers do not block waiting
-      // for the first Firestore snapshot.
+      // Emit an initial empty, UNRESOLVED state so subscribers do not
+      // block waiting for the first Firestore snapshot. Consumers that
+      // only need access decisions read the ids and fail closed;
+      // consumers that render text must check hasResolvedRemote before
+      // claiming the user belongs to nothing.
       emit();
     };
 

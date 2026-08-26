@@ -58614,5 +58614,33 @@
   "fleetDetailMissing": "This radio is no longer in this Team's Fleet.",
   "@fleetDetailMissing": {
     "description": "Shown when the fleet record backing an open detail screen is no longer in the fleet."
+  },
+  "fleetLoadFailedTitle": "Couldn't load this Fleet",
+  "@fleetLoadFailedTitle": {
+    "description": "Shown when the authoritative fleet read failed and there are no cached rows. Must never be confused with a genuinely empty fleet."
+  },
+  "fleetLoadFailedBody": "The radios in this Team couldn't be fetched, so this list may be incomplete. Check your connection and try again.",
+  "@fleetLoadFailedBody": {
+    "description": "Explains that the list could not be fetched rather than claiming the Team has no radios."
+  },
+  "licenseOrgAuditActionFleetDeviceEnrolled": "Radio added to Fleet",
+  "@licenseOrgAuditActionFleetDeviceEnrolled": {
+    "description": "Audit log label for the FleetDeviceEnrolled action."
+  },
+  "licenseOrgAuditActionFleetDeviceUpdated": "Fleet radio details changed",
+  "@licenseOrgAuditActionFleetDeviceUpdated": {
+    "description": "Audit log label for the FleetDeviceUpdated action."
+  },
+  "licenseOrgAuditActionFleetDeviceAssigned": "Fleet radio reassigned",
+  "@licenseOrgAuditActionFleetDeviceAssigned": {
+    "description": "Audit log label for the FleetDeviceAssigned action."
+  },
+  "licenseOrgAuditActionFleetDeviceRetired": "Fleet radio retired",
+  "@licenseOrgAuditActionFleetDeviceRetired": {
+    "description": "Audit log label for the FleetDeviceRetired action."
+  },
+  "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Pilot organisation created",
+  "@licenseOrgAuditActionPilotLicenseOrgProvisioned": {
+    "description": "Audit log label for the PilotLicenseOrgProvisioned action."
   }
 }

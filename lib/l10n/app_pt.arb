@@ -44672,5 +44672,12 @@
   "fleetAssignPartialSave": "A atribuição foi salva, mas a finalidade não. Tente salvar a finalidade novamente.",
   "fleetDetailSectionRecord": "Registro da frota",
   "fleetDetailSectionSnapshot": "Observado ao adicionar",
-  "fleetDetailMissing": "Este rádio não está mais na frota desta equipe."
+  "fleetDetailMissing": "Este rádio não está mais na frota desta equipe.",
+  "fleetLoadFailedTitle": "Não foi possível carregar esta frota",
+  "fleetLoadFailedBody": "Os rádios desta equipe não puderam ser obtidos, então esta lista pode estar incompleta. Verifique sua conexão e tente novamente.",
+  "licenseOrgAuditActionFleetDeviceEnrolled": "Rádio adicionado à frota",
+  "licenseOrgAuditActionFleetDeviceUpdated": "Detalhes do rádio da frota alterados",
+  "licenseOrgAuditActionFleetDeviceAssigned": "Rádio da frota reatribuído",
+  "licenseOrgAuditActionFleetDeviceRetired": "Rádio da frota desativado",
+  "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Organização piloto criada"
 }

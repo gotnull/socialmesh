@@ -1,0 +1,206 @@
+{
+  "_comment": [
+    "Canonical fleet identity test vectors. READ BY BOTH SIDES:",
+    "  test/models/license_org_fleet_device_test.dart",
+    "  backend/functions/src/__tests__/license_org_fleet.test.ts",
+    "",
+    "The Dart client and the TypeScript callables both derive fleet",
+    "document ids. If the two implementations ever disagree, an admin",
+    "enrolling a radio from one path would create a duplicate record",
+    "instead of addressing the existing one. These fixed vectors are the",
+    "shared contract that makes that drift a test failure rather than a",
+    "production surprise.",
+    "",
+    "Do not edit an expected value to make a test pass. Changing any of",
+    "these changes document ids for already-enrolled radios.",
+    "",
+    "See docs/teams/PHASE-1-DESIGN.md."
+  ],
+
+  "meshtasticIdentity": [
+    {
+      "why": "ordinary node number",
+      "nodeNum": 2177117588,
+      "expected": "mt-81c42d94"
+    },
+    {
+      "why": "requires zero padding to 8 hex chars",
+      "nodeNum": 43981,
+      "expected": "mt-0000abcd"
+    },
+    {
+      "why": "zero is a legal node number",
+      "nodeNum": 0,
+      "expected": "mt-00000000"
+    },
+    {
+      "why": "exactly the signed 32-bit boundary",
+      "nodeNum": 2147483647,
+      "expected": "mt-7fffffff"
+    },
+    {
+      "why": "above the signed boundary - must stay unsigned, not wrap negative",
+      "nodeNum": 2147483648,
+      "expected": "mt-80000000"
+    },
+    {
+      "why": "all bits set",
+      "nodeNum": 4294967295,
+      "expected": "mt-ffffffff"
+    },
+    {
+      "why": "negative input masks to unsigned (Dart & 0xFFFFFFFF, TS >>> 0)",
+      "nodeNum": -1,
+      "expected": "mt-ffffffff"
+    },
+    {
+      "why": "negative input, non-trivial low bits",
+      "nodeNum": -2130706433,
+      "expected": "mt-80ffffff"
+    }
+  ],
+
+  "meshCoreIdentity": [
+    {
+      "why": "full 32-byte key, ascending byte pattern - never truncated",
+      "publicKeyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "expected": "mc-000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "why": "all bits set",
+      "publicKeyHex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "expected": "mc-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    {
+      "why": "leading zero bytes must survive, not be trimmed",
+      "publicKeyHex": "0000000000000000000000000000000000000000000000000000000000000001",
+      "expected": "mc-0000000000000000000000000000000000000000000000000000000000000001"
+    }
+  ],
+
+  "meshCoreIdentityInvalid": [
+    { "why": "31 bytes - too short", "byteLength": 31 },
+    { "why": "33 bytes - too long", "byteLength": 33 },
+    { "why": "empty", "byteLength": 0 }
+  ],
+
+  "fleetDeviceId": [
+    {
+      "why": "meshtastic radio in one org",
+      "licenseOrgId": "acme-team",
+      "transportIdentity": "mt-81c42d94",
+      "expected": "acme-team__mt-81c42d94"
+    },
+    {
+      "why": "SAME radio in a DIFFERENT org must yield a different id",
+      "licenseOrgId": "alpine-expedition",
+      "transportIdentity": "mt-81c42d94",
+      "expected": "alpine-expedition__mt-81c42d94"
+    },
+    {
+      "why": "meshcore radio, full key retained inside the composed id",
+      "licenseOrgId": "acme-team",
+      "transportIdentity": "mc-000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "expected": "acme-team__mc-000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "why": "minimum length org slug",
+      "licenseOrgId": "abc",
+      "transportIdentity": "mt-00000000",
+      "expected": "abc__mt-00000000"
+    },
+    {
+      "why": "digits and hyphens are legal in a slug",
+      "licenseOrgId": "team-42-north",
+      "transportIdentity": "mt-ffffffff",
+      "expected": "team-42-north__mt-ffffffff"
+    }
+  ],
+
+  "fleetDeviceIdInvalid": [
+    {
+      "why": "org slug shorter than 3",
+      "licenseOrgId": "ab",
+      "transportIdentity": "mt-81c42d94"
+    },
+    {
+      "why": "org slug with an underscore would make the separator ambiguous",
+      "licenseOrgId": "acme_team",
+      "transportIdentity": "mt-81c42d94"
+    },
+    {
+      "why": "uppercase is not a legal slug",
+      "licenseOrgId": "AcmeTeam",
+      "transportIdentity": "mt-81c42d94"
+    },
+    {
+      "why": "leading hyphen is not a legal slug",
+      "licenseOrgId": "-acme",
+      "transportIdentity": "mt-81c42d94"
+    },
+    {
+      "why": "trailing hyphen is not a legal slug",
+      "licenseOrgId": "acme-",
+      "transportIdentity": "mt-81c42d94"
+    },
+    {
+      "why": "identity too short",
+      "licenseOrgId": "acme-team",
+      "transportIdentity": "mt-abc"
+    },
+    {
+      "why": "uppercase hex is not canonical",
+      "licenseOrgId": "acme-team",
+      "transportIdentity": "mt-81C42D94"
+    },
+    {
+      "why": "unknown transport prefix",
+      "licenseOrgId": "acme-team",
+      "transportIdentity": "xx-81c42d94"
+    },
+    {
+      "why": "truncated meshcore key must be rejected, never accepted short",
+      "licenseOrgId": "acme-team",
+      "transportIdentity": "mc-000102030405060708090a0b0c0d0e0f"
+    },
+    {
+      "why": "no prefix at all",
+      "licenseOrgId": "acme-team",
+      "transportIdentity": "81c42d94"
+    }
+  ],
+
+  "auditDeviceRef": [
+    {
+      "why": "meshtastic identity is already short enough to pass through",
+      "transportIdentity": "mt-81c42d94",
+      "expected": "mt-81c42d94"
+    },
+    {
+      "why": "meshcore is shortened to fit the 64-char audit targetId cap",
+      "transportIdentity": "mc-000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "expected": "mc-0001020304050607"
+    },
+    {
+      "why": "shortening is deterministic for the all-ones key",
+      "transportIdentity": "mc-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "expected": "mc-ffffffffffffffff"
+    }
+  ],
+
+  "auditTargetIdMaxLength": 64,
+
+  "documentIdSafety": {
+    "_comment": [
+      "Every composed id must satisfy these, asserted on the full",
+      "fleetDeviceId vector set rather than on a single example.",
+      "The reserved pattern is what makes the '__' separator safe: an",
+      "id always begins with a slug character, so it can never both",
+      "start and end with a double underscore."
+    ],
+    "mustNotContain": ["/"],
+    "mustNotEqual": [".", ".."],
+    "reservedPatternMustNotMatch": "^__.*__$",
+    "maxBytes": 1500
+  }
+}

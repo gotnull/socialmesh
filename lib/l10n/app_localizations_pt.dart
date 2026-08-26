@@ -44529,4 +44529,31 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get fleetDetailMissing =>
       'Este rádio não está mais na frota desta equipe.';
+
+  @override
+  String get fleetLoadFailedTitle => 'Não foi possível carregar esta frota';
+
+  @override
+  String get fleetLoadFailedBody =>
+      'Os rádios desta equipe não puderam ser obtidos, então esta lista pode estar incompleta. Verifique sua conexão e tente novamente.';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceEnrolled =>
+      'Rádio adicionado à frota';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceUpdated =>
+      'Detalhes do rádio da frota alterados';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceAssigned =>
+      'Rádio da frota reatribuído';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceRetired =>
+      'Rádio da frota desativado';
+
+  @override
+  String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
+      'Organização piloto criada';
 }

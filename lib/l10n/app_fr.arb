@@ -13497,5 +13497,12 @@
   "fleetAssignPartialSave": "L'attribution a été enregistrée, mais pas l'objectif. Essayez d'enregistrer l'objectif à nouveau.",
   "fleetDetailSectionRecord": "Fiche de flotte",
   "fleetDetailSectionSnapshot": "Relevé lors de l'ajout",
-  "fleetDetailMissing": "Cette radio ne fait plus partie de la flotte de cette équipe."
+  "fleetDetailMissing": "Cette radio ne fait plus partie de la flotte de cette équipe.",
+  "fleetLoadFailedTitle": "Impossible de charger cette flotte",
+  "fleetLoadFailedBody": "Les radios de cette équipe n'ont pas pu être récupérées, cette liste peut donc être incomplète. Vérifiez votre connexion et réessayez.",
+  "licenseOrgAuditActionFleetDeviceEnrolled": "Radio ajoutée à la flotte",
+  "licenseOrgAuditActionFleetDeviceUpdated": "Détails de la radio de flotte modifiés",
+  "licenseOrgAuditActionFleetDeviceAssigned": "Radio de flotte réattribuée",
+  "licenseOrgAuditActionFleetDeviceRetired": "Radio de flotte retirée",
+  "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Organisation pilote créée"
 }

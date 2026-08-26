@@ -29,6 +29,7 @@ import '../../core/widgets/primary_gradient_button.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../models/license_org_audit_event.dart';
+import 'utils/audit_action_label.dart';
 import '../../providers/license_org_audit_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/license_org.dart';
@@ -981,7 +982,7 @@ class _AuditRow extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _actionLabel(l10n, event.action),
+                  licenseOrgAuditActionLabel(l10n, event.action),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1090,41 +1091,15 @@ class _AuditRow extends ConsumerWidget {
         return Icons.block_outlined;
       case LicenseOrgAuditAction.licenseOrgRenamed:
         return Icons.edit_outlined;
+      case LicenseOrgAuditAction.fleetDeviceEnrolled:
+      case LicenseOrgAuditAction.fleetDeviceUpdated:
+      case LicenseOrgAuditAction.fleetDeviceAssigned:
+      case LicenseOrgAuditAction.fleetDeviceRetired:
+        return Icons.devices_outlined;
+      case LicenseOrgAuditAction.pilotLicenseOrgProvisioned:
+        return Icons.flag_outlined;
       case LicenseOrgAuditAction.unknown:
         return Icons.history_outlined;
-    }
-  }
-
-  static String _actionLabel(AppLocalizations l10n, LicenseOrgAuditAction a) {
-    switch (a) {
-      case LicenseOrgAuditAction.seatCodeMinted:
-        return l10n.licenseOrgAuditActionSeatCodeMinted;
-      case LicenseOrgAuditAction.seatCodeRedeemed:
-        return l10n.licenseOrgAuditActionSeatCodeRedeemed;
-      case LicenseOrgAuditAction.seatCodeReplayed:
-        return l10n.licenseOrgAuditActionSeatCodeReplayed;
-      case LicenseOrgAuditAction.seatRevokedManual:
-        return l10n.licenseOrgAuditActionSeatRevokedManual;
-      case LicenseOrgAuditAction.seatReplacementMinted:
-        return l10n.licenseOrgAuditActionSeatReplacementMinted;
-      case LicenseOrgAuditAction.seatReinstated:
-        return l10n.licenseOrgAuditActionSeatReinstated;
-      case LicenseOrgAuditAction.memberInvited:
-        return l10n.licenseOrgAuditActionMemberInvited;
-      case LicenseOrgAuditAction.memberJoined:
-        return l10n.licenseOrgAuditActionMemberJoined;
-      case LicenseOrgAuditAction.orgPurchased:
-        return l10n.licenseOrgAuditActionOrgPurchased;
-      case LicenseOrgAuditAction.orgOwnerCollision:
-        return l10n.licenseOrgAuditActionOrgOwnerCollision;
-      case LicenseOrgAuditAction.orgSeatRevokedRefund:
-        return l10n.licenseOrgAuditActionOrgSeatRevokedRefund;
-      case LicenseOrgAuditAction.orgSuspendedDrained:
-        return l10n.licenseOrgAuditActionOrgSuspendedDrained;
-      case LicenseOrgAuditAction.licenseOrgRenamed:
-        return l10n.licenseOrgAuditActionLicenseOrgRenamed;
-      case LicenseOrgAuditAction.unknown:
-        return l10n.licenseOrgAuditActionUnknown;
     }
   }
 

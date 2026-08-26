@@ -46,6 +46,59 @@ enum LicenseOrgStatus {
   String toWire() => name;
 }
 
+/// Whether an org is authorised to use the Teams fleet, and on what
+/// basis.
+///
+/// **This is a DISPLAY value on the client. It is never a security
+/// boundary.** Authorisation lives in `firestore.rules`
+/// (`hasLicenseOrgFleetAccess`) and in every fleet callable. A screen
+/// may branch on this to render "Pilot access" / "Fleet access not
+/// enabled"; it must never treat that branch as the thing preventing an
+/// unauthorised operation, because the client copy is trivially
+/// forgeable and the server never consults it.
+///
+/// The value is a grant REASON, not a billing state, so a future
+/// commercial entitlement grants [commercial] without any enforcement
+/// point changing.
+///
+/// Wire mapping deliberately differs from the other enums in this file:
+/// an ABSENT field means [none], not [unknown]. An org that predates
+/// the capability genuinely has no access, and saying "unknown" about
+/// it would be less accurate than saying "not granted". [unknown] is
+/// reserved for a value this build does not recognise - a newer server
+/// grant kind - which is a real third display state: we should not
+/// claim access is granted, nor confidently claim it is denied.
+enum LicenseOrgFleetAccess {
+  none,
+  pilot,
+  commercial,
+  unknown;
+
+  static LicenseOrgFleetAccess fromWire(String? value) {
+    if (value == null || value.isEmpty) return LicenseOrgFleetAccess.none;
+    switch (value) {
+      case 'none':
+        return LicenseOrgFleetAccess.none;
+      case 'pilot':
+        return LicenseOrgFleetAccess.pilot;
+      case 'commercial':
+        return LicenseOrgFleetAccess.commercial;
+      default:
+        return LicenseOrgFleetAccess.unknown;
+    }
+  }
+
+  String toWire() => name;
+
+  /// True when this build recognises the value as a grant.
+  ///
+  /// Presentation only. Never gate an operation on it - the server is
+  /// the authority and will refuse regardless of what this returns.
+  bool get isGrantedForDisplay =>
+      this == LicenseOrgFleetAccess.pilot ||
+      this == LicenseOrgFleetAccess.commercial;
+}
+
 /// A group / community license owner.
 ///
 /// One [LicenseOrg] document per organisation, keyed by a slug-style
@@ -79,6 +132,12 @@ class LicenseOrg {
   /// product that doesn't declare a capacity.
   final int? seatCapacity;
 
+  /// Whether this org may use the Teams fleet, and on what basis.
+  ///
+  /// DISPLAY ONLY - see [LicenseOrgFleetAccess]. Defaults to
+  /// [LicenseOrgFleetAccess.none] when the server has not granted it.
+  final LicenseOrgFleetAccess fleetAccess;
+
   const LicenseOrg({
     required this.id,
     required this.name,
@@ -86,6 +145,7 @@ class LicenseOrg {
     required this.createdAt,
     required this.status,
     this.seatCapacity,
+    this.fleetAccess = LicenseOrgFleetAccess.none,
   });
 
   /// Parse a Firestore document. Returns null when required fields
@@ -110,6 +170,7 @@ class LicenseOrg {
     } else if (created is String) {
       createdAt = DateTime.tryParse(created)?.toUtc();
     }
+    final fleetAccessRaw = data['fleetAccess'];
     final seatCapacityRaw = data['seatCapacity'];
     final int? seatCapacity = switch (seatCapacityRaw) {
       final int v when v > 0 => v,
@@ -123,6 +184,12 @@ class LicenseOrg {
       createdAt: createdAt,
       status: LicenseOrgStatus.fromWire(data['status'] as String?),
       seatCapacity: seatCapacity,
+      // Type-checked rather than cast: a malformed value must degrade
+      // to "not granted" like every other parser in this file, never
+      // throw into a Riverpod stream.
+      fleetAccess: LicenseOrgFleetAccess.fromWire(
+        fleetAccessRaw is String ? fleetAccessRaw : null,
+      ),
     );
   }
 
@@ -138,6 +205,7 @@ class LicenseOrg {
     DateTime? createdAt,
     LicenseOrgStatus? status,
     int? seatCapacity,
+    LicenseOrgFleetAccess? fleetAccess,
   }) {
     return LicenseOrg(
       id: id ?? this.id,
@@ -146,6 +214,7 @@ class LicenseOrg {
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
       seatCapacity: seatCapacity ?? this.seatCapacity,
+      fleetAccess: fleetAccess ?? this.fleetAccess,
     );
   }
 
@@ -158,14 +227,22 @@ class LicenseOrg {
           ownerUid == other.ownerUid &&
           createdAt == other.createdAt &&
           status == other.status &&
-          seatCapacity == other.seatCapacity;
+          seatCapacity == other.seatCapacity &&
+          fleetAccess == other.fleetAccess;
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, ownerUid, createdAt, status, seatCapacity);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    ownerUid,
+    createdAt,
+    status,
+    seatCapacity,
+    fleetAccess,
+  );
 
   @override
   String toString() =>
       'LicenseOrg(id: $id, ownerUid: $ownerUid, status: $status, '
-      'seatCapacity: $seatCapacity)';
+      'seatCapacity: $seatCapacity, fleetAccess: ${fleetAccess.name})';
 }

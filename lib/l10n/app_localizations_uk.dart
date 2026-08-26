@@ -44577,4 +44577,31 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get fleetDetailMissing =>
       'Ця рація більше не входить до флоту цієї команди.';
+
+  @override
+  String get fleetLoadFailedTitle => 'Не вдалося завантажити цей флот';
+
+  @override
+  String get fleetLoadFailedBody =>
+      'Не вдалося отримати рації цієї команди, тому список може бути неповним. Перевірте з\'єднання та спробуйте ще раз.';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceEnrolled =>
+      'Рацію додано до флоту';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceUpdated =>
+      'Дані рації флоту змінено';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceAssigned =>
+      'Рацію флоту перепризначено';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceRetired =>
+      'Рацію флоту виведено з експлуатації';
+
+  @override
+  String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
+      'Пілотну організацію створено';
 }

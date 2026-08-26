@@ -64,8 +64,8 @@ class _FakeRepo implements LicenseOrgMembershipRepository {
        members = members ?? const {};
 
   @override
-  Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
-      Stream.value(const <String>{});
+  Stream<LicenseOrgMembershipSetState> watchCurrentUserOrgIdState(String uid) =>
+      Stream.value(LicenseOrgMembershipSetState.unresolved);
 
   @override
   Stream<LicenseOrg?> watchLicenseOrg(String orgId) =>

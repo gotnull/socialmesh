@@ -34,6 +34,7 @@
 #   stream-subscription-cancel StreamSubscription without cancel
 #   keyboard-dismissal         Screen with text input, no dismissal
 #   haptic-feedback            GestureDetector onTap without haptics
+#   self-inset-double-padding  SettingsTile/SectionHeader in horizontal Padding
 #   no-scrollable-in-glass-body  Scrollable in GlassScaffold.body()
 #   dart-format                File not formatted (--format flag)
 #
@@ -577,7 +578,13 @@ check_file() {
     fi
 
     # BLOCK: FloatingActionButton (except glass_scaffold.dart which IS the FAB wrapper)
-    if [[ "$file" != *"glass_scaffold.dart" ]]; then
+    #
+    # Tests are exempt. A test file cannot ship a FAB into the product, and
+    # the identifier appears there precisely to assert ABSENCE -
+    # `expect(find.byType(FloatingActionButton), findsNothing)` is the rule
+    # being enforced, not broken. Flagging it blocks the commit for writing
+    # the very guarantee this rule exists to protect.
+    if [[ "$file" != *"glass_scaffold.dart" ]] && [[ "$file" != test/* ]]; then
       grep_check "$file" \
         'FloatingActionButton' \
         "no-fab" \
@@ -1539,6 +1546,61 @@ check_file() {
             fi
           fi
         fi
+      fi
+    fi
+
+    # ------------------------------------------------------------------
+    # ERROR: self-inset row primitive nested inside a horizontal Padding
+    #
+    # SettingsTile and SettingsSectionHeader carry their OWN horizontal
+    # inset (margin / padding of spacing16). Wrapping them in a Padding
+    # or SliverPadding that also applies a horizontal inset adds the two
+    # together, so that row renders 16pt narrower per side than sibling
+    # rows which only receive one of them. The result is a stepped left
+    # edge running down the screen.
+    #
+    # The fix is never to shrink one child: give the sliver a VERTICAL
+    # inset only, and let every row own its horizontal inset. Wrap any
+    # child that has none (a bare card) in its own Padding.
+    #
+    # Uses dart format's deterministic indentation to track nesting.
+    # Honors // lint-allow: self-inset-double-padding.
+    # ------------------------------------------------------------------
+    if [[ "$file" != test/* ]]; then
+      if ! grep -q 'lint-allow:.*self-inset-double-padding' "$file" 2>/dev/null; then
+        while IFS='|' read -r _hitline _hitwidget; do
+          [ -z "$_hitline" ] && continue
+          record_hit "$file" "$_hitline" "self-inset-double-padding" \
+            "$_hitwidget already has a horizontal inset - nesting it in a horizontal Padding double-pads it and steps it in from its siblings. Make the parent inset vertical-only." "error"
+        done < <(awk '
+          BEGIN { top = 0 }
+          {
+            line = $0
+            indent = match(line, /[^ ]/) - 1
+            while (top > 0 && indent <= scopeIndent[top]) top--
+            if (line ~ /(SliverPadding|Padding)\(/) {
+              pendingIndent = indent; pending = 1; horiz = 0
+            }
+            if (pending) {
+              if (line ~ /EdgeInsets\.symmetric\(/ && line ~ /horizontal:/) horiz = 1
+              if (line ~ /EdgeInsets\.all\(/) horiz = 1
+              if (line ~ /EdgeInsets\.fromLTRB\(/) fromltrb = FNR
+              if (line ~ /horizontal: *(AppTheme\.spacing)?(8|12|16|20|24)/) horiz = 1
+              if (fromltrb && FNR > fromltrb && FNR <= fromltrb + 1) {
+                if (line ~ /AppTheme\.spacing(8|12|16|20|24)/ || line ~ /^ *[1-9]/) horiz = 1
+                fromltrb = 0
+              }
+              if (line ~ /(child|sliver): / || line ~ /^[ ]*\)/) {
+                if (horiz) { top++; scopeIndent[top] = pendingIndent }
+                pending = 0
+              }
+            }
+            if (top > 0 && line ~ /(SettingsTile|SettingsSectionHeader)\(/) {
+              w = (line ~ /SettingsTile/) ? "SettingsTile" : "SettingsSectionHeader"
+              print FNR "|" w
+            }
+          }
+        ' "$file")
       fi
     fi
 

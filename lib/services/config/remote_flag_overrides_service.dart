@@ -79,6 +79,8 @@ class RemoteFlagOverridesService {
     'TRANSLATION_ENABLED',
     'STRIPE_PURCHASES_ENABLED',
     'BMC_PURCHASE_ENABLED',
+    'LICENSE_ORG_FLEET_ENABLED',
+    'TEAMS_ENABLED',
     // SmFeatureFlag (lib/services/protocol/socialmesh/sm_feature_flag.dart)
     'BLE_RX_STALL_RECOVERY_RECONNECT',
     // AppLogging (lib/core/logging.dart)

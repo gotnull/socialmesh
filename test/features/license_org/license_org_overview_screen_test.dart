@@ -69,8 +69,13 @@ class _FakeRepo implements LicenseOrgMembershipRepository {
        _memberships = memberships ?? const {};
 
   @override
-  Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
-      Stream.value(_orgIds);
+  Stream<LicenseOrgMembershipSetState> watchCurrentUserOrgIdState(String uid) =>
+      Stream.value(
+        LicenseOrgMembershipSetState(
+          orgIds: _orgIds,
+          resolution: LicenseOrgMembershipResolution.resolved,
+        ),
+      );
 
   @override
   Stream<LicenseOrg?> watchLicenseOrg(String orgId) =>
@@ -146,6 +151,11 @@ void main() {
       // NOT pumpAndSettle - the radar pulse never settles.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
+      // The card watches licenseOrgProvider(orgId), a SEPARATE stream
+      // from the membership set, so it needs its own frame to settle.
+      // A fixed two-pump budget was only ever sufficient by accident of
+      // the membership provider's internal hop count.
+      await tester.pump(const Duration(milliseconds: 100));
 
       // No card rendered.
       expect(find.byType(LicenseOrgOverviewCard), findsNothing);
@@ -185,6 +195,11 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      // The card watches licenseOrgProvider(orgId), a SEPARATE stream
+      // from the membership set, so it needs its own frame to settle.
+      // A fixed two-pump budget was only ever sufficient by accident of
+      // the membership provider's internal hop count.
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byType(LicenseOrgOverviewCard), findsOneWidget);
@@ -231,6 +246,11 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      // The card watches licenseOrgProvider(orgId), a SEPARATE stream
+      // from the membership set, so it needs its own frame to settle.
+      // A fixed two-pump budget was only ever sufficient by accident of
+      // the membership provider's internal hop count.
       await tester.pump(const Duration(milliseconds: 100));
 
       // The "Admin" badge label is in uppercase, the row value cell
@@ -285,6 +305,11 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
+      // The card watches licenseOrgProvider(orgId), a SEPARATE stream
+      // from the membership set, so it needs its own frame to settle.
+      // A fixed two-pump budget was only ever sufficient by accident of
+      // the membership provider's internal hop count.
+      await tester.pump(const Duration(milliseconds: 100));
 
       final cards = find.byType(LicenseOrgOverviewCard);
       expect(cards, findsNWidgets(2));
@@ -325,6 +350,11 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      // The card watches licenseOrgProvider(orgId), a SEPARATE stream
+      // from the membership set, so it needs its own frame to settle.
+      // A fixed two-pump budget was only ever sufficient by accident of
+      // the membership provider's internal hop count.
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(

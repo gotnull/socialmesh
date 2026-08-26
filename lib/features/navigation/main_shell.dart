@@ -74,6 +74,7 @@ import '../mesh_explorer/mesh_explorer_screen.dart';
 import '../mesh_feed/screens/mesh_feed_screen.dart';
 import '../nodeboard/screens/nodeboard_list_screen.dart';
 import '../incidents/screens/mesh_incident_list_screen.dart';
+import '../teams/presentation/teams_screen.dart';
 import '../tak/screens/tak_screen.dart';
 import '../../providers/mesh_explorer_providers.dart';
 import '../../providers/whats_new_providers.dart';
@@ -1351,6 +1352,21 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
         iconColor: AccentColors.coral,
         requiresConnection: false,
         whatsNewBadgeKey: 'nodeboard',
+      ),
+    // Teams is backed by `license_orgs` and is deliberately NOT in
+    // DrawerEnterpriseSection - that section belongs to the separate
+    // custom-claims `orgs/` multi-tenancy system and is gated on an
+    // orgId claim Teams users will never hold. Gated on product
+    // visibility only; who may READ organisation data is decided by
+    // firestore.rules, never by this flag.
+    if (AppFeatureFlags.isTeamsEnabled)
+      DrawerMenuItem(
+        id: 'teams',
+        icon: Icons.groups_outlined,
+        label: l10n.navigationTeams,
+        screen: const TeamsScreen(),
+        iconColor: AccentColors.teal,
+        requiresConnection: false,
       ),
     if (AppFeatureFlags.isOperationsEnabled)
       DrawerMenuItem(

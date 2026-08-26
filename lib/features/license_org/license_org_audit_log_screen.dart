@@ -39,6 +39,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/license_org_audit_event.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/license_org_audit_providers.dart';
+import 'utils/audit_action_label.dart';
 
 enum _OutcomeFilter { all, success, rejected }
 
@@ -49,39 +50,6 @@ enum _OutcomeFilter { all, success, rejected }
 class _ActionPickerResult {
   final LicenseOrgAuditAction? value;
   const _ActionPickerResult(this.value);
-}
-
-String _actionLabel(AppLocalizations l10n, LicenseOrgAuditAction a) {
-  switch (a) {
-    case LicenseOrgAuditAction.seatCodeMinted:
-      return l10n.licenseOrgAuditActionSeatCodeMinted;
-    case LicenseOrgAuditAction.seatCodeRedeemed:
-      return l10n.licenseOrgAuditActionSeatCodeRedeemed;
-    case LicenseOrgAuditAction.seatCodeReplayed:
-      return l10n.licenseOrgAuditActionSeatCodeReplayed;
-    case LicenseOrgAuditAction.seatRevokedManual:
-      return l10n.licenseOrgAuditActionSeatRevokedManual;
-    case LicenseOrgAuditAction.seatReplacementMinted:
-      return l10n.licenseOrgAuditActionSeatReplacementMinted;
-    case LicenseOrgAuditAction.seatReinstated:
-      return l10n.licenseOrgAuditActionSeatReinstated;
-    case LicenseOrgAuditAction.memberInvited:
-      return l10n.licenseOrgAuditActionMemberInvited;
-    case LicenseOrgAuditAction.memberJoined:
-      return l10n.licenseOrgAuditActionMemberJoined;
-    case LicenseOrgAuditAction.orgPurchased:
-      return l10n.licenseOrgAuditActionOrgPurchased;
-    case LicenseOrgAuditAction.orgOwnerCollision:
-      return l10n.licenseOrgAuditActionOrgOwnerCollision;
-    case LicenseOrgAuditAction.orgSeatRevokedRefund:
-      return l10n.licenseOrgAuditActionOrgSeatRevokedRefund;
-    case LicenseOrgAuditAction.orgSuspendedDrained:
-      return l10n.licenseOrgAuditActionOrgSuspendedDrained;
-    case LicenseOrgAuditAction.licenseOrgRenamed:
-      return l10n.licenseOrgAuditActionLicenseOrgRenamed;
-    case LicenseOrgAuditAction.unknown:
-      return l10n.licenseOrgAuditActionUnknown;
-  }
 }
 
 class LicenseOrgAuditLogScreen extends ConsumerStatefulWidget {
@@ -261,7 +229,7 @@ class _LicenseOrgAuditLogScreenState
   Widget _buildActionFilterRow(BuildContext context, AppLocalizations l10n) {
     final selectionLabel = _action == null
         ? l10n.licenseOrgAuditActionFilterAll
-        : _actionLabel(l10n, _action!);
+        : licenseOrgAuditActionLabel(l10n, _action!);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
       child: InkWell(
@@ -411,7 +379,7 @@ class _LicenseOrgAuditLogScreenState
                         KeyedSubtree(
                           key: Key('audit-action-picker-row-${a.name}'),
                           child: pickerRow(
-                            label: _actionLabel(l10n, a),
+                            label: licenseOrgAuditActionLabel(l10n, a),
                             selected: _action == a,
                             onTap: () => Navigator.of(
                               sheetContext,
@@ -564,7 +532,7 @@ class _AuditLogRow extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _actionLabel(l10n, event.action),
+                  licenseOrgAuditActionLabel(l10n, event.action),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -673,6 +641,13 @@ class _AuditLogRow extends ConsumerWidget {
         return Icons.block_outlined;
       case LicenseOrgAuditAction.licenseOrgRenamed:
         return Icons.edit_outlined;
+      case LicenseOrgAuditAction.fleetDeviceEnrolled:
+      case LicenseOrgAuditAction.fleetDeviceUpdated:
+      case LicenseOrgAuditAction.fleetDeviceAssigned:
+      case LicenseOrgAuditAction.fleetDeviceRetired:
+        return Icons.devices_outlined;
+      case LicenseOrgAuditAction.pilotLicenseOrgProvisioned:
+        return Icons.flag_outlined;
       case LicenseOrgAuditAction.unknown:
         return Icons.history_outlined;
     }

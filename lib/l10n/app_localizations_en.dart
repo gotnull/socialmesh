@@ -44052,4 +44052,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fleetDetailMissing =>
       'This radio is no longer in this Team\'s Fleet.';
+
+  @override
+  String get fleetLoadFailedTitle => 'Couldn\'t load this Fleet';
+
+  @override
+  String get fleetLoadFailedBody =>
+      'The radios in this Team couldn\'t be fetched, so this list may be incomplete. Check your connection and try again.';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceEnrolled => 'Radio added to Fleet';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceUpdated =>
+      'Fleet radio details changed';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceAssigned =>
+      'Fleet radio reassigned';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceRetired => 'Fleet radio retired';
+
+  @override
+  String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
+      'Pilot organisation created';
 }

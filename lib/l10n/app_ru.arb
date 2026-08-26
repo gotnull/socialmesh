@@ -13497,5 +13497,12 @@
   "fleetAssignPartialSave": "Назначение сохранено, а назначение цели - нет. Попробуйте сохранить цель ещё раз.",
   "fleetDetailSectionRecord": "Запись автопарка",
   "fleetDetailSectionSnapshot": "Зафиксировано при добавлении",
-  "fleetDetailMissing": "Эта рация больше не входит в парк этой команды."
+  "fleetDetailMissing": "Эта рация больше не входит в парк этой команды.",
+  "fleetLoadFailedTitle": "Не удалось загрузить этот парк",
+  "fleetLoadFailedBody": "Не удалось получить рации этой команды, поэтому список может быть неполным. Проверьте соединение и попробуйте снова.",
+  "licenseOrgAuditActionFleetDeviceEnrolled": "Рация добавлена в парк",
+  "licenseOrgAuditActionFleetDeviceUpdated": "Данные рации парка изменены",
+  "licenseOrgAuditActionFleetDeviceAssigned": "Рация парка переназначена",
+  "licenseOrgAuditActionFleetDeviceRetired": "Рация парка выведена из эксплуатации",
+  "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Пилотная организация создана"
 }

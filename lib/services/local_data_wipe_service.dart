@@ -20,7 +20,7 @@ import '../core/radio_scope.dart';
 /// [closeAllDatabases] callback that closes every open database handle
 /// before file deletion begins.
 class LocalDataWipeService {
-  /// All 10 SQLite database filenames that live directly under
+  /// Every SQLite database filename that lives directly under
   /// `getApplicationDocumentsDirectory()`.
   static const List<String> _dbFiles = [
     'messages.db',
@@ -36,6 +36,9 @@ class LocalDataWipeService {
     'tasks.db',
     'file_transfers.db',
     'mesh_services.db',
+    // License-org cache. Rows are uid-keyed so another account cannot
+    // read them, but account deletion must still remove the file.
+    'license_org_cache.db',
   ];
 
   /// Database in a subdirectory.

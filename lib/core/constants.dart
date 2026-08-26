@@ -527,6 +527,42 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Teams product surface is visible.
+  /// Set `TEAMS_ENABLED=true` in `.env` to enable.
+  /// Default: false.
+  ///
+  /// Product VISIBILITY only - it decides whether the Teams entry point
+  /// exists, never who may read or write organisation data. Membership
+  /// is authorised by `firestore.rules`; this flag is not an
+  /// authorisation boundary and the client owns it.
+  static bool get isTeamsEnabled {
+    try {
+      final raw = dotenv.env['TEAMS_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the Teams fleet inventory is active.
+  /// Set `LICENSE_ORG_FLEET_ENABLED=true` in `.env` to enable.
+  /// Default: false. With the flag off, `licenseOrgFleetProvider` always
+  /// yields an empty snapshot and the local cache is never consulted,
+  /// so a partial roll-out cannot surface an incomplete surface.
+  ///
+  /// This is a CLIENT gate only. It is never an authorisation boundary -
+  /// fleet reads are authorised by `firestore.rules` and fleet writes by
+  /// the Admin-SDK callables, neither of which consults this flag.
+  /// See docs/teams/PHASE-1-DESIGN.md.
+  static bool get isLicenseOrgFleetEnabled {
+    try {
+      final raw = dotenv.env['LICENSE_ORG_FLEET_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Shorthand that turns on every flag required for the SIP handshake
   /// + secure-DM stack: SIP, MRRP, and the three overlay flags (link,
   /// resource, secure). Set `HANDSHAKE_ENABLED=true` in `.env` to enable

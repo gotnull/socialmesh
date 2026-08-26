@@ -44672,5 +44672,12 @@
   "fleetAssignPartialSave": "L'assegnazione è stata salvata, ma lo scopo no. Prova a salvare di nuovo lo scopo.",
   "fleetDetailSectionRecord": "Scheda della flotta",
   "fleetDetailSectionSnapshot": "Rilevato all'aggiunta",
-  "fleetDetailMissing": "Questa radio non fa più parte della flotta di questo team."
+  "fleetDetailMissing": "Questa radio non fa più parte della flotta di questo team.",
+  "fleetLoadFailedTitle": "Impossibile caricare questa flotta",
+  "fleetLoadFailedBody": "Non è stato possibile recuperare le radio di questo team, quindi l'elenco potrebbe essere incompleto. Controlla la connessione e riprova.",
+  "licenseOrgAuditActionFleetDeviceEnrolled": "Radio aggiunta alla flotta",
+  "licenseOrgAuditActionFleetDeviceUpdated": "Dettagli della radio di flotta modificati",
+  "licenseOrgAuditActionFleetDeviceAssigned": "Radio di flotta riassegnata",
+  "licenseOrgAuditActionFleetDeviceRetired": "Radio di flotta ritirata",
+  "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Organizzazione pilota creata"
 }

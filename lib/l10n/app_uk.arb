@@ -13497,5 +13497,12 @@
   "fleetAssignPartialSave": "Призначення збережено, але мету - ні. Спробуйте зберегти мету ще раз.",
   "fleetDetailSectionRecord": "Запис флоту",
   "fleetDetailSectionSnapshot": "Зафіксовано під час додавання",
-  "fleetDetailMissing": "Ця рація більше не входить до флоту цієї команди."
+  "fleetDetailMissing": "Ця рація більше не входить до флоту цієї команди.",
+  "fleetLoadFailedTitle": "Не вдалося завантажити цей флот",
+  "fleetLoadFailedBody": "Не вдалося отримати рації цієї команди, тому список може бути неповним. Перевірте з'єднання та спробуйте ще раз.",
+  "licenseOrgAuditActionFleetDeviceEnrolled": "Рацію додано до флоту",
+  "licenseOrgAuditActionFleetDeviceUpdated": "Дані рації флоту змінено",
+  "licenseOrgAuditActionFleetDeviceAssigned": "Рацію флоту перепризначено",
+  "licenseOrgAuditActionFleetDeviceRetired": "Рацію флоту виведено з експлуатації",
+  "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Пілотну організацію створено"
 }

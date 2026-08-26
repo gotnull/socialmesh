@@ -39,6 +39,8 @@ import '../settings/theme_settings_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../meshcore/widgets/meshcore_drawer_node_header.dart';
 import '../meshcore/widgets/meshcore_shell_nav_bar_item.dart';
+import '../../core/constants.dart';
+import '../teams/presentation/teams_screen.dart';
 
 // MeshCore bottom navigation tab items
 class _MeshCoreNavItem {
@@ -639,6 +641,21 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     dividerAlpha: dividerAlpha,
                     isLastSection: false,
                     tiles: [
+                      // Organisation membership has nothing to do with
+                      // which radio protocol is active, so Teams is
+                      // reachable from both shells.
+                      if (AppFeatureFlags.isTeamsEnabled)
+                        DrawerMenuTile(
+                          icon: Icons.groups_outlined,
+                          label: l10n.navigationTeams,
+                          isSelected: false,
+                          iconColor: AccentColors.teal,
+                          onTap: () {
+                            ref.haptics.tabChange();
+                            Navigator.pop(context);
+                            Navigator.push(context, TeamsScreen.route());
+                          },
+                        ),
                       DrawerMenuTile(
                         icon: Icons.build_outlined,
                         label: l10n.meshcoreShellNavTools,

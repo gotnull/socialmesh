@@ -44562,4 +44562,31 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get fleetDetailMissing =>
       'Эта рация больше не входит в парк этой команды.';
+
+  @override
+  String get fleetLoadFailedTitle => 'Не удалось загрузить этот парк';
+
+  @override
+  String get fleetLoadFailedBody =>
+      'Не удалось получить рации этой команды, поэтому список может быть неполным. Проверьте соединение и попробуйте снова.';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceEnrolled =>
+      'Рация добавлена в парк';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceUpdated =>
+      'Данные рации парка изменены';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceAssigned =>
+      'Рация парка переназначена';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceRetired =>
+      'Рация парка выведена из эксплуатации';
+
+  @override
+  String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
+      'Пилотная организация создана';
 }

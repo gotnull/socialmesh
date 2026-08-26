@@ -100,6 +100,112 @@ void main() {
     });
   });
 
+  group('LicenseOrgFleetAccess.fromWire', () {
+    test('absent means none, not unknown', () {
+      // An org predating the capability genuinely has no access.
+      // Reporting "unknown" about it would be less accurate than
+      // reporting "not granted".
+      expect(LicenseOrgFleetAccess.fromWire(null), LicenseOrgFleetAccess.none);
+      expect(LicenseOrgFleetAccess.fromWire(''), LicenseOrgFleetAccess.none);
+    });
+
+    test('explicit none means none', () {
+      expect(
+        LicenseOrgFleetAccess.fromWire('none'),
+        LicenseOrgFleetAccess.none,
+      );
+    });
+
+    test('recognised grants map through', () {
+      expect(
+        LicenseOrgFleetAccess.fromWire('pilot'),
+        LicenseOrgFleetAccess.pilot,
+      );
+      expect(
+        LicenseOrgFleetAccess.fromWire('commercial'),
+        LicenseOrgFleetAccess.commercial,
+      );
+    });
+
+    test('an unrecognised value is unknown, NOT none', () {
+      // A newer server grant kind is a genuine third display state: we
+      // must not claim access is granted, nor confidently claim it is
+      // denied. Collapsing it to `none` would assert a denial we cannot
+      // support.
+      expect(
+        LicenseOrgFleetAccess.fromWire('enterprise-2029'),
+        LicenseOrgFleetAccess.unknown,
+      );
+      expect(
+        LicenseOrgFleetAccess.fromWire('PILOT'),
+        LicenseOrgFleetAccess.unknown,
+      );
+    });
+
+    test('round trips through toWire', () {
+      for (final access in LicenseOrgFleetAccess.values) {
+        if (access == LicenseOrgFleetAccess.unknown) continue;
+        expect(LicenseOrgFleetAccess.fromWire(access.toWire()), access);
+      }
+    });
+
+    test('isGrantedForDisplay covers only recognised grants', () {
+      expect(LicenseOrgFleetAccess.pilot.isGrantedForDisplay, isTrue);
+      expect(LicenseOrgFleetAccess.commercial.isGrantedForDisplay, isTrue);
+      expect(LicenseOrgFleetAccess.none.isGrantedForDisplay, isFalse);
+      // Unknown is deliberately not a grant for display purposes - we
+      // render an indeterminate state rather than implying access.
+      expect(LicenseOrgFleetAccess.unknown.isGrantedForDisplay, isFalse);
+    });
+  });
+
+  group('LicenseOrg fleetAccess parsing', () {
+    Map<String, dynamic> wire({Object? fleetAccess}) => <String, dynamic>{
+      'ownerUid': 'owner-uid',
+      'status': 'active',
+      'name': 'Acme',
+      if (fleetAccess != null) 'fleetAccess': fleetAccess,
+    };
+
+    test('defaults to none when the field is absent', () {
+      final org = LicenseOrg.fromMap('acme-team', wire());
+      expect(org, isNotNull);
+      expect(org!.fleetAccess, LicenseOrgFleetAccess.none);
+    });
+
+    test('parses a pilot grant', () {
+      final org = LicenseOrg.fromMap('acme-team', wire(fleetAccess: 'pilot'));
+      expect(org!.fleetAccess, LicenseOrgFleetAccess.pilot);
+    });
+
+    test('parses a commercial grant', () {
+      final org = LicenseOrg.fromMap(
+        'acme-team',
+        wire(fleetAccess: 'commercial'),
+      );
+      expect(org!.fleetAccess, LicenseOrgFleetAccess.commercial);
+    });
+
+    test('a non-string value degrades to none rather than throwing', () {
+      final org = LicenseOrg.fromMap('acme-team', wire(fleetAccess: 42));
+      expect(org, isNotNull);
+      expect(org!.fleetAccess, LicenseOrgFleetAccess.none);
+    });
+
+    test('fleetAccess participates in equality', () {
+      final base = LicenseOrg.fromMap('acme-team', wire(fleetAccess: 'pilot'))!;
+      expect(
+        base,
+        isNot(base.copyWith(fleetAccess: LicenseOrgFleetAccess.commercial)),
+      );
+    });
+
+    test('toString does not imply authority', () {
+      final org = LicenseOrg.fromMap('acme-team', wire(fleetAccess: 'pilot'))!;
+      expect(org.toString(), contains('fleetAccess: pilot'));
+    });
+  });
+
   group('equality and copyWith', () {
     LicenseOrg sample() => LicenseOrg(
       id: 'acme-eng-team',

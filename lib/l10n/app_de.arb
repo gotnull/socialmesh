@@ -13497,5 +13497,12 @@
   "fleetAssignPartialSave": "Die Zuweisung wurde gespeichert, der Zweck jedoch nicht. Versuche, den Zweck erneut zu speichern.",
   "fleetDetailSectionRecord": "Flotteneintrag",
   "fleetDetailSectionSnapshot": "Beim Hinzufügen erfasst",
-  "fleetDetailMissing": "Dieses Funkgerät gehört nicht mehr zur Flotte dieses Teams."
+  "fleetDetailMissing": "Dieses Funkgerät gehört nicht mehr zur Flotte dieses Teams.",
+  "fleetLoadFailedTitle": "Flotte konnte nicht geladen werden",
+  "fleetLoadFailedBody": "Die Funkgeräte dieses Teams konnten nicht abgerufen werden, daher ist diese Liste möglicherweise unvollständig. Prüfe deine Verbindung und versuche es erneut.",
+  "licenseOrgAuditActionFleetDeviceEnrolled": "Funkgerät zur Flotte hinzugefügt",
+  "licenseOrgAuditActionFleetDeviceUpdated": "Flotten-Funkgerätdetails geändert",
+  "licenseOrgAuditActionFleetDeviceAssigned": "Flotten-Funkgerät neu zugewiesen",
+  "licenseOrgAuditActionFleetDeviceRetired": "Flotten-Funkgerät ausgemustert",
+  "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Pilotorganisation erstellt"
 }

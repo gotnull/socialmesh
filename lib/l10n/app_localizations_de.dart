@@ -44675,4 +44675,31 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fleetDetailMissing =>
       'Dieses Funkgerät gehört nicht mehr zur Flotte dieses Teams.';
+
+  @override
+  String get fleetLoadFailedTitle => 'Flotte konnte nicht geladen werden';
+
+  @override
+  String get fleetLoadFailedBody =>
+      'Die Funkgeräte dieses Teams konnten nicht abgerufen werden, daher ist diese Liste möglicherweise unvollständig. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceEnrolled =>
+      'Funkgerät zur Flotte hinzugefügt';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceUpdated =>
+      'Flotten-Funkgerätdetails geändert';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceAssigned =>
+      'Flotten-Funkgerät neu zugewiesen';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceRetired =>
+      'Flotten-Funkgerät ausgemustert';
+
+  @override
+  String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
+      'Pilotorganisation erstellt';
 }

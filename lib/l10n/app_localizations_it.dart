@@ -44564,4 +44564,31 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get fleetDetailMissing =>
       'Questa radio non fa più parte della flotta di questo team.';
+
+  @override
+  String get fleetLoadFailedTitle => 'Impossibile caricare questa flotta';
+
+  @override
+  String get fleetLoadFailedBody =>
+      'Non è stato possibile recuperare le radio di questo team, quindi l\'elenco potrebbe essere incompleto. Controlla la connessione e riprova.';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceEnrolled =>
+      'Radio aggiunta alla flotta';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceUpdated =>
+      'Dettagli della radio di flotta modificati';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceAssigned =>
+      'Radio di flotta riassegnata';
+
+  @override
+  String get licenseOrgAuditActionFleetDeviceRetired =>
+      'Radio di flotta ritirata';
+
+  @override
+  String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
+      'Organizzazione pilota creata';
 }

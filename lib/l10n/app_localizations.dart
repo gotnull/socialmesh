@@ -76735,6 +76735,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This radio is no longer in this Team\'s Fleet.'**
   String get fleetDetailMissing;
+
+  /// Shown when the authoritative fleet read failed and there are no cached rows. Must never be confused with a genuinely empty fleet.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this Fleet'**
+  String get fleetLoadFailedTitle;
+
+  /// Explains that the list could not be fetched rather than claiming the Team has no radios.
+  ///
+  /// In en, this message translates to:
+  /// **'The radios in this Team couldn\'t be fetched, so this list may be incomplete. Check your connection and try again.'**
+  String get fleetLoadFailedBody;
+
+  /// Audit log label for the FleetDeviceEnrolled action.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio added to Fleet'**
+  String get licenseOrgAuditActionFleetDeviceEnrolled;
+
+  /// Audit log label for the FleetDeviceUpdated action.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet radio details changed'**
+  String get licenseOrgAuditActionFleetDeviceUpdated;
+
+  /// Audit log label for the FleetDeviceAssigned action.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet radio reassigned'**
+  String get licenseOrgAuditActionFleetDeviceAssigned;
+
+  /// Audit log label for the FleetDeviceRetired action.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet radio retired'**
+  String get licenseOrgAuditActionFleetDeviceRetired;
+
+  /// Audit log label for the PilotLicenseOrgProvisioned action.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilot organisation created'**
+  String get licenseOrgAuditActionPilotLicenseOrgProvisioned;
 }
 
 class _AppLocalizationsDelegate

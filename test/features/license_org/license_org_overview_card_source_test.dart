@@ -27,9 +27,17 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   late String src;
 
+  late String labelSrc;
+
   setUpAll(() {
     src = File(
       'lib/features/license_org/license_org_overview_card.dart',
+    ).readAsStringSync();
+    // The action->label mapping used to be duplicated in this card and
+    // in the audit log screen, and the copies drifted. It now lives in
+    // one shared helper, which is where the label assertions belong.
+    labelSrc = File(
+      'lib/features/license_org/utils/audit_action_label.dart',
     ).readAsStringSync();
   });
 
@@ -214,9 +222,33 @@ void main() {
     test(
       'label switch resolves to licenseOrgAuditActionLicenseOrgRenamed l10n key',
       () {
-        expect(src, contains('l10n.licenseOrgAuditActionLicenseOrgRenamed'));
+        expect(
+          labelSrc,
+          contains('l10n.licenseOrgAuditActionLicenseOrgRenamed'),
+        );
       },
     );
+
+    test('the card delegates to the one shared label mapping', () {
+      // Guards the regression this extraction fixed: a second copy of
+      // the switch in the card would silently stop matching the audit
+      // screen the next time an action gains real copy.
+      expect(src, contains('licenseOrgAuditActionLabel('));
+      expect(src, isNot(contains('static String _actionLabel(')));
+    });
+
+    test('fleet actions have real labels, not the generic fallback', () {
+      // These rendered as "Other event" until the fleet UI shipped.
+      for (final key in [
+        'licenseOrgAuditActionFleetDeviceEnrolled',
+        'licenseOrgAuditActionFleetDeviceUpdated',
+        'licenseOrgAuditActionFleetDeviceAssigned',
+        'licenseOrgAuditActionFleetDeviceRetired',
+        'licenseOrgAuditActionPilotLicenseOrgProvisioned',
+      ]) {
+        expect(labelSrc, contains('l10n.$key'));
+      }
+    });
   });
 
   // ===========================================================================

@@ -39,6 +39,15 @@ enum LicenseOrgAuditAction {
   orgSeatRevokedRefund('org_seat_revoked_refund'),
   orgSuspendedDrained('org_suspended_drained'),
   licenseOrgRenamed('license_org_renamed'),
+  // Teams fleet inventory. Wire values are snake_case to match the
+  // server-side VALID_ACTIONS allowlist; using `.name` here would emit
+  // camelCase and the audit helper would reject the write, rolling back
+  // the whole transaction it is part of.
+  fleetDeviceEnrolled('fleet_device_enrolled'),
+  fleetDeviceUpdated('fleet_device_updated'),
+  fleetDeviceAssigned('fleet_device_assigned'),
+  fleetDeviceRetired('fleet_device_retired'),
+  pilotLicenseOrgProvisioned('pilot_license_org_provisioned'),
   unknown('');
 
   final String wire;
@@ -117,6 +126,7 @@ enum LicenseOrgAuditTargetKind {
   licenseOrgMembership('license_org_membership'),
   licenseSeatCode('license_seat_code'),
   orgSeatAllocation('org_seat_allocation'),
+  licenseOrgFleetDevice('license_org_fleet_device'),
   unknown('');
 
   final String wire;

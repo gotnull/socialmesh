@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Waypoint alerts can be silenced on their own. Settings > Notifications has a Waypoints switch, so schedule-heavy meshes can turn just those off without losing message notifications. The switch syncs across devices with the rest of the notification preferences
 - Waypoint alerts now respect the master notification switch, which they previously ignored
 
+## [1.59.0] - 2026-08-26
+
 ### Fixed (organisation membership)
 
 - Joining an organisation from an invite link now actually gives you the organisation. The membership row was written correctly when you accepted the invite, but the app's query for "which organisations do I belong to" was refused by the security rules and never returned anything, so the organisation stayed invisible no matter how many times you rejoined. Only people who had *created* an organisation were unaffected, because that case is answered by a different query

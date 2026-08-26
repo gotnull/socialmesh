@@ -55,8 +55,8 @@ class _StubRepo implements LicenseOrgMembershipRepository {
        _memberships = memberships ?? const {};
 
   @override
-  Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
-      Stream.value(const <String>{});
+  Stream<LicenseOrgMembershipSetState> watchCurrentUserOrgIdState(String uid) =>
+      Stream.value(LicenseOrgMembershipSetState.unresolved);
 
   @override
   Stream<LicenseOrg?> watchLicenseOrg(String orgId) =>

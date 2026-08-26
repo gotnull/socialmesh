@@ -52,9 +52,18 @@ class _StubRepo implements LicenseOrgMembershipRepository {
 
   _StubRepo(this._byUid);
 
+  // Call sites express membership as a plain id set. The fake wraps it
+  // as a RESOLVED answer, which is what a stubbed server that responds
+  // means - so these tests keep pinning the id-set contract exactly as
+  // they did before resolution metadata existed.
   @override
-  Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
-      _byUid[uid] ?? Stream.value(const <String>{});
+  Stream<LicenseOrgMembershipSetState> watchCurrentUserOrgIdState(String uid) =>
+      (_byUid[uid] ?? Stream.value(const <String>{})).map(
+        (ids) => LicenseOrgMembershipSetState(
+          orgIds: ids,
+          resolution: LicenseOrgMembershipResolution.resolved,
+        ),
+      );
 
   // Unused by this test file; the org / membership streams are
   // exercised by license_org_overview_providers_test.dart. Stubbed
@@ -73,8 +82,10 @@ class _StubRepo implements LicenseOrgMembershipRepository {
 
 class _ThrowingRepo implements LicenseOrgMembershipRepository {
   @override
-  Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
-      Stream<Set<String>>.error(StateError('Firestore unavailable'));
+  Stream<LicenseOrgMembershipSetState> watchCurrentUserOrgIdState(String uid) =>
+      Stream<LicenseOrgMembershipSetState>.error(
+        StateError('Firestore unavailable'),
+      );
 
   @override
   Stream<LicenseOrg?> watchLicenseOrg(String orgId) => Stream.value(null);
@@ -122,24 +133,35 @@ ProviderContainer _container({
   );
 }
 
+/// Drain microtasks until the membership stream reports an
+/// AUTHORITATIVE answer, or the budget expires.
+///
+/// The previous version returned on the first `hasValue`, which could
+/// be the synchronous `{}` sentinel rather than the real result - it
+/// passed only by microtask luck. Resolution state makes the settling
+/// condition expressible, so the race is gone rather than retuned.
+///
+/// The gate cases (flag off, signed out, anonymous, empty uid) never
+/// resolve by design: they short-circuit without consulting the
+/// server. For those the loop simply drains its budget, which is still
+/// correct - the assertions that follow read a fully-settled provider
+/// either way. That is why this does not throw on budget exhaustion.
 Future<void> _pumpUntilNonLoading(
   ProviderContainer c, {
   bool requireData = true,
 }) async {
-  final sub = c.listen<AsyncValue<Set<String>>>(
-    currentUserLicenseOrgIdsProvider,
+  final sub = c.listen<AsyncValue<LicenseOrgMembershipSetState>>(
+    currentUserLicenseOrgMembershipStateProvider,
     (_, _) {},
     fireImmediately: true,
   );
   try {
     for (var i = 0; i < 50; i++) {
       final v = sub.read();
-      if (requireData ? v.hasValue : !v.isLoading) return;
+      if (v.hasValue && v.requireValue.hasResolvedRemote) return;
+      if (!requireData && !v.isLoading) return;
       await Future<void>.delayed(Duration.zero);
     }
-    throw StateError(
-      'currentUserLicenseOrgIdsProvider did not settle within pump budget',
-    );
   } finally {
     sub.close();
   }
@@ -303,6 +325,176 @@ void main() {
         }),
         isNull,
         reason: 'empty orgId must drop the row',
+      );
+    });
+  });
+
+  group('resolution state', () {
+    // The synchronous {} sentinel is indistinguishable from a genuine
+    // "you belong to nothing" if all a consumer sees is the id set.
+    // Entitlement code does not care - both grant nothing - but a
+    // user-facing surface must not claim the user has no organisations
+    // while the query is still in flight.
+
+    test('the sentinel is empty AND unresolved', () async {
+      _setFlag(enabled: true);
+      final c = _container(
+        user: _FakeUser(uid: 'user-1'),
+        // Never emits, so the sentinel is all a consumer can see.
+        repo: _StubRepo({'user-1': const Stream<Set<String>>.empty()}),
+      );
+      addTearDown(c.dispose);
+
+      final sub = c.listen<AsyncValue<LicenseOrgMembershipSetState>>(
+        currentUserLicenseOrgMembershipStateProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+      addTearDown(sub.close);
+      for (var i = 0; i < 5; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      final state = sub.read().requireValue;
+      expect(state.orgIds, isEmpty);
+      expect(
+        state.resolution,
+        LicenseOrgMembershipResolution.pending,
+        reason: 'an unanswered query must never look authoritative',
+      );
+      expect(state.hasResolvedRemote, isFalse);
+    });
+
+    test('a genuinely empty answer is empty AND resolved', () async {
+      _setFlag(enabled: true);
+      final c = _container(
+        user: _FakeUser(uid: 'user-1'),
+        repo: _StubRepo({'user-1': Stream.value(const <String>{})}),
+      );
+      addTearDown(c.dispose);
+      await _pumpUntilNonLoading(c);
+
+      final state = c
+          .read(currentUserLicenseOrgMembershipStateProvider)
+          .requireValue;
+      expect(state.orgIds, isEmpty);
+      expect(
+        state.resolution,
+        LicenseOrgMembershipResolution.resolved,
+        reason: 'only this state may be rendered as "no organisations"',
+      );
+      expect(state.hasResolvedRemote, isTrue);
+    });
+
+    test('a populated answer is resolved', () async {
+      _setFlag(enabled: true);
+      final c = _container(
+        user: _FakeUser(uid: 'user-1'),
+        repo: _StubRepo({
+          'user-1': Stream.value(const {'acme-eng-team'}),
+        }),
+      );
+      addTearDown(c.dispose);
+      await _pumpUntilNonLoading(c);
+
+      final state = c
+          .read(currentUserLicenseOrgMembershipStateProvider)
+          .requireValue;
+      expect(state.orgIds, {'acme-eng-team'});
+      expect(state.resolution, LicenseOrgMembershipResolution.resolved);
+    });
+
+    test('a stream error is unresolved, not an authoritative empty', () async {
+      _setFlag(enabled: true);
+      final c = _container(
+        user: _FakeUser(uid: 'user-1'),
+        repo: _ThrowingRepo(),
+      );
+      addTearDown(c.dispose);
+      // Must subscribe, not just delay: an unlistened provider is never
+      // initialised, so it would still read AsyncLoading. The error path
+      // never resolves, hence requireData: false.
+      await _pumpUntilNonLoading(c, requireData: false);
+
+      final state = c
+          .read(currentUserLicenseOrgMembershipStateProvider)
+          .requireValue;
+      // Ids still fail closed, unchanged.
+      expect(state.orgIds, isEmpty);
+      // FAILED, not pending. The distinction is what lets the UI offer a
+      // retry instead of showing "Checking..." forever - a dead end with
+      // no recovery affordance is worse than a wrong empty state.
+      expect(state.resolution, LicenseOrgMembershipResolution.failed);
+      expect(state.hasResolvedRemote, isFalse);
+    });
+
+    test('the auth and flag gates are unresolved, not authoritative', () async {
+      // None of these consulted the server, so none of them can support
+      // a confident "this user belongs to no organisations". The UI must
+      // handle signed-out / anonymous / flag-off as their own states.
+      _setFlag(enabled: false);
+      final flagOff = _container(
+        user: _FakeUser(uid: 'user-1'),
+        repo: _StubRepo({
+          'user-1': Stream.value(const {'acme-eng-team'}),
+        }),
+      );
+      addTearDown(flagOff.dispose);
+      await _pumpUntilNonLoading(flagOff, requireData: false);
+      expect(
+        flagOff
+            .read(currentUserLicenseOrgMembershipStateProvider)
+            .requireValue
+            .resolution,
+        LicenseOrgMembershipResolution.pending,
+      );
+
+      _setFlag(enabled: true);
+      final signedOut = _container(user: null, repo: _StubRepo(const {}));
+      addTearDown(signedOut.dispose);
+      await _pumpUntilNonLoading(signedOut, requireData: false);
+      expect(
+        signedOut
+            .read(currentUserLicenseOrgMembershipStateProvider)
+            .requireValue
+            .resolution,
+        LicenseOrgMembershipResolution.pending,
+      );
+
+      final anon = _container(
+        user: _FakeUser(uid: 'anon-1', isAnonymous: true),
+        repo: _StubRepo(const {}),
+      );
+      addTearDown(anon.dispose);
+      await _pumpUntilNonLoading(anon, requireData: false);
+      expect(
+        anon
+            .read(currentUserLicenseOrgMembershipStateProvider)
+            .requireValue
+            .resolution,
+        LicenseOrgMembershipResolution.pending,
+      );
+    });
+
+    test('the ids projection matches the state exactly', () async {
+      _setFlag(enabled: true);
+      // One authority, two projections: the derived provider must never
+      // disagree with the state it is derived from.
+      final c = _container(
+        user: _FakeUser(uid: 'user-1'),
+        repo: _StubRepo({
+          'user-1': Stream.value(const {'acme-eng-team', 'beta-club'}),
+        }),
+      );
+      addTearDown(c.dispose);
+      await _pumpUntilNonLoading(c);
+
+      expect(
+        c.read(currentUserLicenseOrgIdsProvider).value,
+        c
+            .read(currentUserLicenseOrgMembershipStateProvider)
+            .requireValue
+            .orgIds,
       );
     });
   });

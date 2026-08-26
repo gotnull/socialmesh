@@ -91,8 +91,13 @@ class _StubMembershipRepo implements LicenseOrgMembershipRepository {
   _StubMembershipRepo(this._orgIds);
 
   @override
-  Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
-      Stream.value(_orgIds);
+  Stream<LicenseOrgMembershipSetState> watchCurrentUserOrgIdState(String uid) =>
+      Stream.value(
+        LicenseOrgMembershipSetState(
+          orgIds: _orgIds,
+          resolution: LicenseOrgMembershipResolution.resolved,
+        ),
+      );
 
   @override
   Stream<LicenseOrg?> watchLicenseOrg(String orgId) => Stream.value(null);

@@ -13497,5 +13497,12 @@
   "fleetAssignPartialSave": "La asignación se guardó, pero el propósito no. Intenta guardar el propósito de nuevo.",
   "fleetDetailSectionRecord": "Registro de flota",
   "fleetDetailSectionSnapshot": "Observado al añadirlo",
-  "fleetDetailMissing": "Esta radio ya no está en la flota de este equipo."
+  "fleetDetailMissing": "Esta radio ya no está en la flota de este equipo.",
+  "fleetLoadFailedTitle": "No se pudo cargar esta flota",
+  "fleetLoadFailedBody": "No se pudieron obtener las radios de este equipo, así que esta lista puede estar incompleta. Comprueba tu conexión e inténtalo de nuevo.",
+  "licenseOrgAuditActionFleetDeviceEnrolled": "Radio añadida a la flota",
+  "licenseOrgAuditActionFleetDeviceUpdated": "Detalles de la radio de flota modificados",
+  "licenseOrgAuditActionFleetDeviceAssigned": "Radio de flota reasignada",
+  "licenseOrgAuditActionFleetDeviceRetired": "Radio de flota retirada",
+  "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Organización piloto creada"
 }
