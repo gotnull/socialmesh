@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Connecting to a radio the app has never seen before no longer wrecks the session seconds after it configures. Storage is filed per radio, and a never-seen radio's identity only arrives once it reports its node number, so the storage layer re-homed its files mid-session - and one of the rebuilt stores dragged the live protocol session down with it, replacing a fully configured session with one that had never spoken to the radio. The app then looked connected but showed an empty channel list, no configuration, and never recovered until a manual disconnect and reconnect. Switching between radios hit the same path, which is how it was reported ("switching between few nodes all channels are lost"). The store now re-homes itself without touching the protocol session
 
+### Fixed (device config backup)
+
+- Backing up the device config no longer sits on a spinner for minutes when the radio does not answer. The backup reads up to nineteen configuration sections and waited out each unanswered request in sequence, so a radio that answered none of them (seen on 2.8.0 alpha firmware) held the spinner for the sum of every timeout; the sections are now requested together, the whole capture is bounded by a single timeout, and the partial-backup notice reports what did not answer
+
+### Fixed (battery optimisation guide)
+
+- Android no longer re-prompts about battery optimisation after the exemption has been granted. The guide sheet only remembered "don't show again"; it never asked the system whether the app was already exempt, so anyone who granted the exemption but dismissed the sheet another way was nagged on every connect
+
 ### Fixed (waypoint notifications)
 
 - Repeated broadcasts of an unchanged waypoint no longer alert every time. Some relay tools rebroadcast their waypoints on a schedule, and each repeat raised a fresh notification even though nothing about the waypoint had changed; now only a new waypoint or an actual edit alerts

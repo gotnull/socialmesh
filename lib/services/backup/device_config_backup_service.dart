@@ -429,101 +429,129 @@ class DeviceConfigBackupService {
       return reader(gateway.snapshot());
     }
 
-    final owner = await resolve(
+    // Start every section resolution up front so unanswered sections time
+    // out concurrently rather than in sequence. A radio that answers none
+    // of the admin gets (seen in the field on 2.8.0 alpha firmware) used to
+    // hold the spinner for sections-times-timeout - minutes - which reads
+    // as a hang; concurrent resolution bounds the whole capture at roughly
+    // one refresh timeout. The get requests themselves are fire-and-forget
+    // one-packet admin sends, serialised by the transport, so starting them
+    // together does not change what reaches the radio.
+    final ownerF = resolve(
       DeviceConfigSection.owner,
       initial.owner,
       (s) => s.owner,
     );
-    final lora = await resolve(
+    final loraF = resolve(
       DeviceConfigSection.lora,
       initial.lora,
       (s) => s.lora,
     );
-    final device = await resolve(
+    final deviceF = resolve(
       DeviceConfigSection.device,
       initial.device,
       (s) => s.device,
     );
-    final position = await resolve(
+    final positionF = resolve(
       DeviceConfigSection.position,
       initial.position,
       (s) => s.position,
     );
-    final power = await resolve(
+    final powerF = resolve(
       DeviceConfigSection.power,
       initial.power,
       (s) => s.power,
     );
-    final network = await resolve(
+    final networkF = resolve(
       DeviceConfigSection.network,
       initial.network,
       (s) => s.network,
     );
-    final display = await resolve(
+    final displayF = resolve(
       DeviceConfigSection.display,
       initial.display,
       (s) => s.display,
     );
-    final bluetooth = await resolve(
+    final bluetoothF = resolve(
       DeviceConfigSection.bluetooth,
       initial.bluetooth,
       (s) => s.bluetooth,
     );
-    final security = await resolve(
+    final securityF = resolve(
       DeviceConfigSection.security,
       initial.security,
       (s) => s.security,
     );
-    final mqtt = await resolve(
+    final mqttF = resolve(
       DeviceConfigSection.mqtt,
       initial.mqtt,
       (s) => s.mqtt,
     );
-    final serial = await resolve(
+    final serialF = resolve(
       DeviceConfigSection.serial,
       initial.serial,
       (s) => s.serial,
     );
-    final extNotif = await resolve(
+    final extNotifF = resolve(
       DeviceConfigSection.externalNotification,
       initial.externalNotification,
       (s) => s.externalNotification,
     );
-    final storeForward = await resolve(
+    final storeForwardF = resolve(
       DeviceConfigSection.storeForward,
       initial.storeForward,
       (s) => s.storeForward,
     );
-    final rangeTest = await resolve(
+    final rangeTestF = resolve(
       DeviceConfigSection.rangeTest,
       initial.rangeTest,
       (s) => s.rangeTest,
     );
-    final telemetry = await resolve(
+    final telemetryF = resolve(
       DeviceConfigSection.telemetry,
       initial.telemetry,
       (s) => s.telemetry,
     );
-    final cannedMsg = await resolve(
+    final cannedMsgF = resolve(
       DeviceConfigSection.cannedMessage,
       initial.cannedMessage,
       (s) => s.cannedMessage,
     );
-    final ambientLighting = await resolve(
+    final ambientLightingF = resolve(
       DeviceConfigSection.ambientLighting,
       initial.ambientLighting,
       (s) => s.ambientLighting,
     );
-    final detectionSensor = await resolve(
+    final detectionSensorF = resolve(
       DeviceConfigSection.detectionSensor,
       initial.detectionSensor,
       (s) => s.detectionSensor,
     );
-    final paxcounter = await resolve(
+    final paxcounterF = resolve(
       DeviceConfigSection.paxcounter,
       initial.paxcounter,
       (s) => s.paxcounter,
     );
+
+    final owner = await ownerF;
+    final lora = await loraF;
+    final device = await deviceF;
+    final position = await positionF;
+    final power = await powerF;
+    final network = await networkF;
+    final display = await displayF;
+    final bluetooth = await bluetoothF;
+    final security = await securityF;
+    final mqtt = await mqttF;
+    final serial = await serialF;
+    final extNotif = await extNotifF;
+    final storeForward = await storeForwardF;
+    final rangeTest = await rangeTestF;
+    final telemetry = await telemetryF;
+    final cannedMsg = await cannedMsgF;
+    final ambientLighting = await ambientLightingF;
+    final detectionSensor = await detectionSensorF;
+    final paxcounter = await paxcounterF;
 
     final moduleConfigBytes = <BundleModuleType, List<int>>{};
     void addModule<T>(

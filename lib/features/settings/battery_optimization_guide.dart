@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/l10n/l10n_extension.dart';
@@ -123,6 +124,18 @@ Future<void> showBatteryOptimizationGuide(
     final dismissed = prefs.getBool(kBatteryGuideDismissed) ?? false;
     if (dismissed) {
       AppLogging.ble('BatteryOptimizationGuide: already dismissed, skipping');
+      return;
+    }
+    // A user who has already exempted the app needs no guidance. Without
+    // this check the guide reappeared on every connect for users who had
+    // done exactly what it asks, because the dismissed flag was only
+    // written when they ticked "don't show again".
+    final isIgnoring =
+        await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+    if (isIgnoring) {
+      AppLogging.ble(
+        'BatteryOptimizationGuide: exemption already granted, skipping',
+      );
       return;
     }
   }
