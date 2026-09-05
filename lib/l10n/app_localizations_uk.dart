@@ -44432,7 +44432,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get radioProfilesBannerBody =>
-      'Повідомлення, вузли, телеметрія й усе інше, що отримує застосунок, зберігається для тієї рації, через яку надійшло, тож рації ніколи не показують чужу мережу. Видалення тут прибирає дані лише цієї рації.';
+      'Повідомлення, вузли, телеметрія й усе інше, що отримує застосунок, зберігається для тієї рації, через яку надійшло, тож рації ніколи не показують чужу мережу, якщо тільки ви не зробите нижче дані однієї рації спільними для іншої. Видалення тут прибирає дані лише цієї рації.';
 
   @override
   String get radioProfilesSectionInUse => 'ВИКОРИСТОВУЄТЬСЯ';
@@ -44471,6 +44471,60 @@ class AppLocalizationsUk extends AppLocalizations {
   String radioProfilesDeleted(String name) {
     return 'Дані $name видалено';
   }
+
+  @override
+  String get radioProfilesShareTooltip => 'Використовувати дані іншої рації';
+
+  @override
+  String get radioProfilesSharePickerTitle => 'Спільні дані з';
+
+  @override
+  String get radioProfilesShareConfirmTitle => 'Зробити дані спільними?';
+
+  @override
+  String radioProfilesShareConfirmMessage(Object radio, Object target) {
+    return 'Відтепер $radio читатиме й записуватиме повідомлення, вузли та історію, збережені для $target. Її власні дані залишаться тут окремим записом, доки ви їх не видалите. Спільний доступ можна вимкнути будь-коли.';
+  }
+
+  @override
+  String get radioProfilesShareConfirm => 'Зробити спільними';
+
+  @override
+  String radioProfilesShared(Object radio, Object target) {
+    return '$radio тепер використовує дані $target';
+  }
+
+  @override
+  String get radioProfilesShareFailed => 'Не вдалося зробити дані спільними';
+
+  @override
+  String radioProfilesSharesWith(Object target) {
+    return 'Використовує дані $target';
+  }
+
+  @override
+  String get radioProfilesStopSharingTooltip => 'Вимкнути спільний доступ';
+
+  @override
+  String get radioProfilesStopSharingConfirmTitle =>
+      'Вимкнути спільний доступ?';
+
+  @override
+  String radioProfilesStopSharingConfirmMessage(Object radio) {
+    return '$radio повернеться до своїх збережених даних. Нічого не видаляється.';
+  }
+
+  @override
+  String get radioProfilesStopSharingConfirm => 'Вимкнути';
+
+  @override
+  String radioProfilesStoppedSharing(Object radio) {
+    return '$radio знову використовує свої дані';
+  }
+
+  @override
+  String get radioProfilesNoShareTargets =>
+      'Спочатку підключіть другу рацію. Для спільного доступу потрібні дані іншої рації.';
 
   @override
   String get radioProfilesDeleteFailed =>

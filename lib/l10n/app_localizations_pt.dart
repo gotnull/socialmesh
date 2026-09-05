@@ -44382,7 +44382,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get radioProfilesBannerBody =>
-      'Mensagens, nós, telemetria e tudo o que a aplicação recebe ficam guardados no rádio de onde vieram, por isso os rádios nunca mostram a mesh uns dos outros. Eliminar um rádio aqui remove apenas os dados desse rádio.';
+      'Mensagens, nós, telemetria e tudo o que a aplicação recebe ficam guardados no rádio de onde vieram, por isso os rádios nunca mostram a mesh uns dos outros, a menos que partilhe abaixo os dados de um rádio com outro. Eliminar um rádio aqui remove apenas os dados desse rádio.';
 
   @override
   String get radioProfilesSectionInUse => 'EM USO';
@@ -44421,6 +44421,60 @@ class AppLocalizationsPt extends AppLocalizations {
   String radioProfilesDeleted(String name) {
     return 'Dados de $name eliminados';
   }
+
+  @override
+  String get radioProfilesShareTooltip =>
+      'Compartilhar os dados de outro rádio';
+
+  @override
+  String get radioProfilesSharePickerTitle => 'Compartilhar dados com';
+
+  @override
+  String get radioProfilesShareConfirmTitle => 'Compartilhar dados do rádio?';
+
+  @override
+  String radioProfilesShareConfirmMessage(Object radio, Object target) {
+    return 'A partir de agora, $radio vai ler e gravar as mensagens, os nós e o histórico armazenados para $target. Os dados próprios dele ficam aqui como uma entrada separada até você excluí-los. Você pode parar de compartilhar a qualquer momento.';
+  }
+
+  @override
+  String get radioProfilesShareConfirm => 'Compartilhar';
+
+  @override
+  String radioProfilesShared(Object radio, Object target) {
+    return '$radio agora compartilha dados com $target';
+  }
+
+  @override
+  String get radioProfilesShareFailed => 'Falha ao compartilhar';
+
+  @override
+  String radioProfilesSharesWith(Object target) {
+    return 'Compartilha dados com $target';
+  }
+
+  @override
+  String get radioProfilesStopSharingTooltip => 'Parar de compartilhar';
+
+  @override
+  String get radioProfilesStopSharingConfirmTitle => 'Parar de compartilhar?';
+
+  @override
+  String radioProfilesStopSharingConfirmMessage(Object radio) {
+    return '$radio volta a usar os próprios dados armazenados. Nada é excluído.';
+  }
+
+  @override
+  String get radioProfilesStopSharingConfirm => 'Parar';
+
+  @override
+  String radioProfilesStoppedSharing(Object radio) {
+    return '$radio usa os próprios dados novamente';
+  }
+
+  @override
+  String get radioProfilesNoShareTargets =>
+      'Conecte um segundo rádio primeiro. Compartilhar exige os dados de outro rádio.';
 
   @override
   String get radioProfilesDeleteFailed =>

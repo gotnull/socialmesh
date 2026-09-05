@@ -24,13 +24,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The Dark and Light map styles no longer carry CARTO's repeated "API key required" overlay (#303). CARTO, which serves those two basemaps, started watermarking every tile requested without a key in late August, so the overlay appeared on every app version at once. The app now sends a CARTO basemaps key with those tile requests on every map surface, including the offline tile downloader and the flight route map. Satellite and Terrain were never affected. Offline regions downloaded for Dark or Light before this version need downloading again, since the tile addresses changed and the old tiles no longer match
 
+### Added (radios that share one dataset)
+
+- Two or more radios can now share one set of messages, nodes and history (#302). On Settings > Data & Storage > Radio data, each identified radio has a share action: pick another radio and from then on both read and write the same dataset, so switching between a home node and a mobile node on the same network shows one merged conversation history. Nothing is moved or merged on disk: the sharing radio's own data stays listed as a separate entry until you delete it, and Stop sharing returns the radio to it. Radios you do not group keep their separate storage, so a node on a different network stays separate. Sharing into a radio that is itself sharing follows through to the radio that owns the data, and deleting a dataset ends any sharing arrangements on it
+
 ### Fixed (Radio data only reachable through search)
 
 - The Radio data screen, which lists what is stored under each radio and lets you switch between radios or delete one radio's data, now has its own tile in Settings > Data & Storage. It was registered for the settings search but missing from the browsable list, so it could only be found by typing its name (#302)
 
-### Changed (launch diagnostics)
+### Changed (faster first screen)
 
-- The app log now carries a single BOOT_TIMELINE line per launch that times every step the app waits on before its first screen (environment, bundled data, Firebase, sign-in) and again when the main shell becomes ready. A slow launch can now be attributed from an exported log instead of a video, which is the next step on the connect-time comparison in #298
+- The main screen appears sooner after a cold launch (#298). Notification setup, the slowest single step on the way to the first screen, now runs once the screen decision has been made instead of before it, and the offline map cache lookup overlaps the other start-up steps instead of adding to them. Nothing users can see changes except the wait: a notification tap that launched the app is still routed once setup completes
+- The app log now carries a single BOOT_TIMELINE line per launch that times every step the app waits on before its first screen (environment, bundled data, Firebase, sign-in) and again when the main shell becomes ready, so a slow launch can be attributed from an exported log instead of a video
+
+### Changed (dependencies)
+
+- Firebase libraries, notifications, photo library access and the encrypted database driver updated to their current releases
 
 ### Fixed (distances rounded to whole kilometres)
 

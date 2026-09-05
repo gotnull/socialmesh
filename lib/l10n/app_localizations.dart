@@ -76451,7 +76451,7 @@ abstract class AppLocalizations {
   /// No description provided for @radioProfilesBannerBody.
   ///
   /// In en, this message translates to:
-  /// **'Messages, nodes, telemetry and everything else the app hears is stored against the radio it came through, so radios never show each other\'s mesh. Deleting a radio here removes only that radio\'s data.'**
+  /// **'Messages, nodes, telemetry and everything else the app hears is stored against the radio it came through, so radios never show each other\'s mesh unless you share one radio\'s data with another below. Deleting a radio here removes only that radio\'s data.'**
   String get radioProfilesBannerBody;
 
   /// No description provided for @radioProfilesSectionInUse.
@@ -76513,6 +76513,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deleted the data from {name}'**
   String radioProfilesDeleted(String name);
+
+  /// No description provided for @radioProfilesShareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Share another radio\'s data'**
+  String get radioProfilesShareTooltip;
+
+  /// No description provided for @radioProfilesSharePickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share data with'**
+  String get radioProfilesSharePickerTitle;
+
+  /// No description provided for @radioProfilesShareConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share radio data?'**
+  String get radioProfilesShareConfirmTitle;
+
+  /// No description provided for @radioProfilesShareConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{radio} will read and write the messages, nodes and history stored for {target} from now on. Its own stored data stays here as a separate entry until you delete it. You can stop sharing at any time.'**
+  String radioProfilesShareConfirmMessage(Object radio, Object target);
+
+  /// No description provided for @radioProfilesShareConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get radioProfilesShareConfirm;
+
+  /// No description provided for @radioProfilesShared.
+  ///
+  /// In en, this message translates to:
+  /// **'{radio} now shares data with {target}'**
+  String radioProfilesShared(Object radio, Object target);
+
+  /// No description provided for @radioProfilesShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing failed'**
+  String get radioProfilesShareFailed;
+
+  /// No description provided for @radioProfilesSharesWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares data with {target}'**
+  String radioProfilesSharesWith(Object target);
+
+  /// No description provided for @radioProfilesStopSharingTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get radioProfilesStopSharingTooltip;
+
+  /// No description provided for @radioProfilesStopSharingConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing?'**
+  String get radioProfilesStopSharingConfirmTitle;
+
+  /// No description provided for @radioProfilesStopSharingConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{radio} goes back to its own stored data. Nothing is deleted.'**
+  String radioProfilesStopSharingConfirmMessage(Object radio);
+
+  /// No description provided for @radioProfilesStopSharingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get radioProfilesStopSharingConfirm;
+
+  /// No description provided for @radioProfilesStoppedSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'{radio} uses its own data again'**
+  String radioProfilesStoppedSharing(Object radio);
+
+  /// No description provided for @radioProfilesNoShareTargets.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a second radio first. Sharing needs another radio\'s data to share with.'**
+  String get radioProfilesNoShareTargets;
 
   /// No description provided for @radioProfilesDeleteFailed.
   ///

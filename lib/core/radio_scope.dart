@@ -119,6 +119,7 @@ class RadioScopeInfo {
     required this.label,
     required this.sizeBytes,
     required this.isCurrent,
+    this.sharesWith,
   });
 
   final String key;
@@ -126,11 +127,18 @@ class RadioScopeInfo {
   final int sizeBytes;
   final bool isCurrent;
 
+  /// Scope whose data this radio reads and writes instead of its own, or
+  /// null when it uses its own. See [RadioScope.shareScope].
+  final String? sharesWith;
+
   /// Node number this scope belongs to, or null for a provisional scope.
-  int? get nodeNum => key.startsWith(_nodeScopePrefix)
-      ? int.tryParse(key.substring(_nodeScopePrefix.length), radix: 16)
-      : null;
+  int? get nodeNum => nodeNumForRadioScopeKey(key);
 }
+
+/// Node number encoded in a node scope [key], or null for any other key.
+int? nodeNumForRadioScopeKey(String key) => key.startsWith(_nodeScopePrefix)
+    ? int.tryParse(key.substring(_nodeScopePrefix.length), radix: 16)
+    : null;
 
 /// Closes an open store so its files can be moved or reopened elsewhere.
 typedef RadioScopedCloser = Future<void> Function();
@@ -155,6 +163,11 @@ class RadioScope {
   // with a new number and the same key; the key is what proves the two
   // scopes are one radio.
   static const String _prefsPublicKeysKey = 'radio_scope_pubkeys';
+  // Scopes that share another scope's data: identity scope -> the scope it
+  // reads and writes instead. A radio grouped this way keeps its own
+  // identity (label, key, device ids) while its traffic lands in the shared
+  // dataset, so the grouping can be undone without moving anything.
+  static const String _prefsAliasesKey = 'radio_scope_aliases';
   static const String _prefsMigratedKey = 'radio_scope_migrated';
   static const String _tcpDeviceIdPrefix = 'tcp:';
   // Separates key from value in the flat StringList-backed maps below.
@@ -171,6 +184,9 @@ class RadioScope {
   static const int _emptyDatabaseBytes = 64 * 1024;
 
   String _current = kLegacyRadioScopeKey;
+  // Identity scope of the radio last bound through [useNodeNum]. Differs
+  // from [_current] only while that radio shares another scope's data.
+  String? _lastIdentity;
   bool _initialised = false;
   Directory? _rootOverride;
   final Map<Object, RadioScopedCloser> _closers = {};
@@ -250,17 +266,25 @@ class RadioScope {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final known = _readMap(prefs, _prefsDeviceMapKey)[deviceId];
-    final target =
+    final identity =
         known ??
         (knownNodeNum != null
             ? radioScopeKeyForNodeNum(knownNodeNum)
             : radioScopeKeyForDeviceId(deviceId));
     if (known == null && knownNodeNum != null) {
-      await _rememberMapping(prefs, _prefsDeviceMapKey, deviceId, target);
+      await _rememberMapping(prefs, _prefsDeviceMapKey, deviceId, identity);
     }
     if (label != null) {
-      await _rememberLabel(prefs, target, label, synthetic: label == deviceId);
+      await _rememberLabel(
+        prefs,
+        identity,
+        label,
+        synthetic: label == deviceId,
+      );
     }
+    // Bookkeeping stays with the radio's own identity; storage follows any
+    // sharing arrangement it is part of.
+    final target = _resolveAlias(prefs, identity);
     if (target == _current) return false;
     AppLogging.storage(
       'RADIO SCOPE: device $deviceId -> scope $target (was $_current)',
@@ -290,19 +314,50 @@ class RadioScope {
     List<int>? ownPublicKey,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final target = radioScopeKeyForNodeNum(nodeNum);
+    final identity = radioScopeKeyForNodeNum(nodeNum);
     final publicKeyHex = _publicKeyHex(ownPublicKey);
     final previousScopeForDevice = deviceId != null
         ? _readMap(prefs, _prefsDeviceMapKey)[deviceId]
         : null;
     if (deviceId != null) {
-      await _rememberMapping(prefs, _prefsDeviceMapKey, deviceId, target);
+      await _rememberMapping(prefs, _prefsDeviceMapKey, deviceId, identity);
     }
     if (label != null) {
-      await _rememberLabel(prefs, target, label, synthetic: label == deviceId);
+      await _rememberLabel(
+        prefs,
+        identity,
+        label,
+        synthetic: label == deviceId,
+      );
     }
     if (publicKeyHex != null) {
-      await _rememberMapping(prefs, _prefsPublicKeysKey, target, publicKeyHex);
+      await _rememberMapping(
+        prefs,
+        _prefsPublicKeysKey,
+        identity,
+        publicKeyHex,
+      );
+    }
+    _lastIdentity = identity;
+
+    final target = _resolveAlias(prefs, identity);
+    if (target != identity) {
+      // This radio shares another radio's data. The arrangement is explicit,
+      // so none of the renumbering inference below applies: land on the
+      // shared scope, folding in only the provisional directory a fresh
+      // connect may have opened in the meantime.
+      if (target == _current) return false;
+      AppLogging.storage(
+        'RADIO SCOPE: $identity shares data with $target - switching',
+      );
+      await _closeOpenStores();
+      if (isProvisionalRadioScopeKey(_current)) {
+        await _promoteDirectory(from: _current, to: target);
+        await _promotePreferences(prefs, from: _current, to: target);
+      }
+      await _setCurrent(prefs, target);
+      _changes.add(target);
+      return true;
     }
 
     if (target == _current) {
@@ -373,6 +428,7 @@ class RadioScope {
   Future<List<RadioScopeInfo>> list() async {
     final prefs = await SharedPreferences.getInstance();
     final labels = _readMap(prefs, _prefsLabelsKey);
+    final aliases = _readMap(prefs, _prefsAliasesKey);
     final root = await _scopeRoot(create: false);
     if (!await root.exists()) return const [];
     final scopes = <RadioScopeInfo>[];
@@ -385,6 +441,7 @@ class RadioScope {
           label: labels[key],
           sizeBytes: await _directorySize(entity),
           isCurrent: key == _current,
+          sharesWith: aliases[key],
         ),
       );
     }
@@ -415,8 +472,80 @@ class RadioScope {
     await _writeMap(prefs, _prefsDeviceMapKey, devices);
     final keys = _readMap(prefs, _prefsPublicKeysKey)..remove(key);
     await _writeMap(prefs, _prefsPublicKeysKey, keys);
+    // A deleted dataset can no longer be shared into; radios that shared it
+    // go back to their own. A radio whose own leftover data is deleted keeps
+    // its sharing arrangement.
+    final aliases = _readMap(prefs, _prefsAliasesKey)
+      ..removeWhere((_, into) => into == key);
+    await _writeMap(prefs, _prefsAliasesKey, aliases);
     AppLogging.storage('RADIO SCOPE: deleted scope $key');
     return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Shared datasets
+  // ---------------------------------------------------------------------------
+
+  /// Makes the radio behind [key] read and write [into]'s data from now on.
+  ///
+  /// Nothing is moved or merged: [key]'s own dataset stays on disk as a
+  /// stored profile until the user deletes it, and [stopSharing] returns
+  /// the radio to it. Both scopes must be node scopes. Sharing into a scope
+  /// that itself shares another follows the chain, so every arrangement
+  /// ends on a scope that owns its data. Returns false when the request is
+  /// not applicable.
+  Future<bool> shareScope({required String key, required String into}) async {
+    if (isProvisionalRadioScopeKey(key) || isProvisionalRadioScopeKey(into)) {
+      return false;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final canonical = _resolveAlias(prefs, into);
+    if (canonical == key) return false;
+
+    final aliases = _readMap(prefs, _prefsAliasesKey);
+    aliases[key] = canonical;
+    // Anyone who shared [key] now shares what [key] shares.
+    for (final entry in aliases.entries.toList()) {
+      if (entry.value == key) aliases[entry.key] = canonical;
+    }
+    await _writeMap(prefs, _prefsAliasesKey, aliases);
+    AppLogging.storage('RADIO SCOPE: $key now shares data with $canonical');
+
+    // The active session moves when it belongs to a radio now sharing.
+    final activeIdentity = _lastIdentity ?? _current;
+    final activeTarget = _resolveAlias(prefs, activeIdentity);
+    if (activeTarget != _current) {
+      await _applyScope(prefs, activeTarget);
+    }
+    return true;
+  }
+
+  /// Ends [key]'s sharing arrangement; the radio uses its own data again.
+  /// Returns false when [key] was not sharing.
+  Future<bool> stopSharing(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final aliases = _readMap(prefs, _prefsAliasesKey);
+    if (aliases.remove(key) == null) return false;
+    await _writeMap(prefs, _prefsAliasesKey, aliases);
+    AppLogging.storage('RADIO SCOPE: $key uses its own data again');
+    if (_lastIdentity == key && _current != key) {
+      await _applyScope(prefs, key);
+    }
+    return true;
+  }
+
+  /// Scope [key] stores into: itself, or the scope it shares.
+  String _resolveAlias(SharedPreferences prefs, String key) {
+    final aliases = _readMap(prefs, _prefsAliasesKey);
+    var resolved = key;
+    // Arrangements are flattened on write, so one hop is the norm; the loop
+    // bound only guards against a hand-edited preference forming a cycle.
+    for (var hop = 0; hop < 8; hop++) {
+      final next = aliases[resolved];
+      if (next == null || next == resolved) break;
+      resolved = next;
+    }
+    return resolved;
   }
 
   // ---------------------------------------------------------------------------
@@ -528,6 +657,7 @@ class RadioScope {
   void debugSetRoot(Directory? root, {String? currentKey}) {
     _rootOverride = root;
     _current = currentKey ?? kLegacyRadioScopeKey;
+    _lastIdentity = null;
     _initialised = false;
     _closers.clear();
   }

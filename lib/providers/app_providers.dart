@@ -166,25 +166,10 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
     _transition(AppInitState.initializing, 'initialize');
     try {
-      // Phase 1: Critical services (fast, <500ms target)
-      // Initialize notification service. Gated on capability: on platforms
-      // without notifications (web today, desktop pending wiring) this
-      // call would reach dart:io Platform.is* internally and crash boot.
-      final caps = ref.read(platformCapabilitiesProvider);
-      if (caps.supportsNotifications) {
-        await NotificationService().initialize();
-        // Launch-time clear-on-open: a cold start never fires a `resumed`
-        // lifecycle transition, so without this a badge set during the
-        // previous background session would survive the relaunch. cancelAll
-        // inside clearBadge does not erase the plugin's launch details, so
-        // cold-start notification tap routing is unaffected.
-        await NotificationService().clearBadge();
-      } else {
-        AppLogging.platform(
-          'AppInit: notifications unsupported on ${caps.platformFamily.name} - skipping NotificationService init',
-        );
-      }
-      BootTimeline.instance.mark('appInit_notifications');
+      // Phase 1: Critical services (fast, <500ms target). Notification
+      // plugin setup is deliberately not here: it is the slowest step on
+      // the way to the first screen and nothing the shell renders depends
+      // on it, so it runs in the `finally` below, after the shell is up.
 
       // Initialize storage services
       final settings = await ref.read(settingsServiceProvider.future);
@@ -274,7 +259,44 @@ class AppInitNotifier extends Notifier<AppInitState> {
     } catch (e) {
       AppLogging.debug('App initialization failed: $e');
       _transition(AppInitState.error, 'initialize:error($e)');
+    } finally {
+      await _initialiseNotifications();
     }
+  }
+
+  /// Notification plugin setup, run once the shell decision has been made.
+  ///
+  /// Gated on capability: on platforms without notifications (web today,
+  /// desktop pending wiring) the plugin call would reach dart:io
+  /// Platform.is* internally and crash boot. Failures are logged and never
+  /// change the app state, which has already been decided by the time this
+  /// runs. The plugin buffers a cold-start notification tap until
+  /// `initialize` is called, so routing that tap still works; a message
+  /// notification that would fire inside this window is skipped, and the
+  /// app is in the foreground at that moment anyway.
+  Future<void> _initialiseNotifications() async {
+    final caps = ref.read(platformCapabilitiesProvider);
+    if (!caps.supportsNotifications) {
+      AppLogging.platform(
+        'AppInit: notifications unsupported on ${caps.platformFamily.name} - skipping NotificationService init',
+      );
+      return;
+    }
+    try {
+      await NotificationService().initialize();
+      // Launch-time clear-on-open: a cold start never fires a `resumed`
+      // lifecycle transition, so without this a badge set during the
+      // previous background session would survive the relaunch. cancelAll
+      // inside clearBadge does not erase the plugin's launch details, so
+      // cold-start notification tap routing is unaffected.
+      await NotificationService().clearBadge();
+    } catch (e) {
+      AppLogging.notifications('AppInit: notification setup failed: $e');
+    }
+    BootTimeline.instance.mark('appInit_notifications');
+    AppLogging.connection(
+      BootTimeline.instance.summary('appInit_notifications_done'),
+    );
   }
 
   /// Initialize non-critical services in background

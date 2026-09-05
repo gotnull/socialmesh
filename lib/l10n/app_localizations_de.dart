@@ -44527,7 +44527,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get radioProfilesBannerBody =>
-      'Nachrichten, Knoten, Telemetrie und alles andere, was die App empfängt, werden bei dem Funkgerät gespeichert, über das sie hereinkamen. So zeigt kein Funkgerät das Mesh eines anderen. Wer hier ein Funkgerät löscht, entfernt nur dessen Daten.';
+      'Nachrichten, Knoten, Telemetrie und alles andere, was die App empfängt, werden bei dem Funkgerät gespeichert, über das sie hereinkamen. So zeigt kein Funkgerät das Mesh eines anderen, sofern du unten nicht die Daten eines Funkgeräts mit einem anderen teilst. Wer hier ein Funkgerät löscht, entfernt nur dessen Daten.';
 
   @override
   String get radioProfilesSectionInUse => 'IN VERWENDUNG';
@@ -44566,6 +44566,60 @@ class AppLocalizationsDe extends AppLocalizations {
   String radioProfilesDeleted(String name) {
     return 'Daten von $name gelöscht';
   }
+
+  @override
+  String get radioProfilesShareTooltip =>
+      'Daten eines anderen Funkgeräts mitbenutzen';
+
+  @override
+  String get radioProfilesSharePickerTitle => 'Daten teilen mit';
+
+  @override
+  String get radioProfilesShareConfirmTitle => 'Funkgerätdaten teilen?';
+
+  @override
+  String radioProfilesShareConfirmMessage(Object radio, Object target) {
+    return '$radio liest und schreibt ab jetzt die für $target gespeicherten Nachrichten, Knoten und den Verlauf. Die eigenen gespeicherten Daten bleiben hier als separater Eintrag, bis du sie löschst. Das Teilen lässt sich jederzeit beenden.';
+  }
+
+  @override
+  String get radioProfilesShareConfirm => 'Teilen';
+
+  @override
+  String radioProfilesShared(Object radio, Object target) {
+    return '$radio teilt jetzt die Daten mit $target';
+  }
+
+  @override
+  String get radioProfilesShareFailed => 'Teilen fehlgeschlagen';
+
+  @override
+  String radioProfilesSharesWith(Object target) {
+    return 'Teilt die Daten mit $target';
+  }
+
+  @override
+  String get radioProfilesStopSharingTooltip => 'Teilen beenden';
+
+  @override
+  String get radioProfilesStopSharingConfirmTitle => 'Teilen beenden?';
+
+  @override
+  String radioProfilesStopSharingConfirmMessage(Object radio) {
+    return '$radio verwendet wieder die eigenen gespeicherten Daten. Nichts wird gelöscht.';
+  }
+
+  @override
+  String get radioProfilesStopSharingConfirm => 'Beenden';
+
+  @override
+  String radioProfilesStoppedSharing(Object radio) {
+    return '$radio verwendet wieder die eigenen Daten';
+  }
+
+  @override
+  String get radioProfilesNoShareTargets =>
+      'Verbinde zuerst ein zweites Funkgerät. Zum Teilen braucht es die Daten eines anderen Funkgeräts.';
 
   @override
   String get radioProfilesDeleteFailed =>

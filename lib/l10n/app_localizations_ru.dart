@@ -44418,7 +44418,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get radioProfilesBannerBody =>
-      'Сообщения, узлы, телеметрия и всё остальное, что принимает приложение, сохраняются для той рации, через которую пришли, поэтому рации никогда не показывают чужую сеть. Удаление здесь убирает данные только этой рации.';
+      'Сообщения, узлы, телеметрия и всё остальное, что принимает приложение, сохраняются для той рации, через которую пришли, поэтому рации никогда не показывают чужую сеть, если только вы не сделаете ниже данные одной рации общими для другой. Удаление здесь убирает данные только этой рации.';
 
   @override
   String get radioProfilesSectionInUse => 'ИСПОЛЬЗУЕТСЯ';
@@ -44457,6 +44457,59 @@ class AppLocalizationsRu extends AppLocalizations {
   String radioProfilesDeleted(String name) {
     return 'Данные $name удалены';
   }
+
+  @override
+  String get radioProfilesShareTooltip => 'Использовать данные другой рации';
+
+  @override
+  String get radioProfilesSharePickerTitle => 'Общие данные с';
+
+  @override
+  String get radioProfilesShareConfirmTitle => 'Сделать данные общими?';
+
+  @override
+  String radioProfilesShareConfirmMessage(Object radio, Object target) {
+    return 'С этого момента $radio будет читать и записывать сообщения, узлы и историю, сохранённые для $target. Её собственные данные останутся здесь отдельной записью, пока вы их не удалите. Общий доступ можно отключить в любой момент.';
+  }
+
+  @override
+  String get radioProfilesShareConfirm => 'Сделать общими';
+
+  @override
+  String radioProfilesShared(Object radio, Object target) {
+    return '$radio теперь использует данные $target';
+  }
+
+  @override
+  String get radioProfilesShareFailed => 'Не удалось сделать данные общими';
+
+  @override
+  String radioProfilesSharesWith(Object target) {
+    return 'Использует данные $target';
+  }
+
+  @override
+  String get radioProfilesStopSharingTooltip => 'Отключить общий доступ';
+
+  @override
+  String get radioProfilesStopSharingConfirmTitle => 'Отключить общий доступ?';
+
+  @override
+  String radioProfilesStopSharingConfirmMessage(Object radio) {
+    return '$radio вернётся к своим сохранённым данным. Ничего не удаляется.';
+  }
+
+  @override
+  String get radioProfilesStopSharingConfirm => 'Отключить';
+
+  @override
+  String radioProfilesStoppedSharing(Object radio) {
+    return '$radio снова использует свои данные';
+  }
+
+  @override
+  String get radioProfilesNoShareTargets =>
+      'Сначала подключите вторую рацию. Для общего доступа нужны данные другой рации.';
 
   @override
   String get radioProfilesDeleteFailed =>

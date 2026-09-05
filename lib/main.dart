@@ -287,14 +287,19 @@ Future<void> main() async {
   // config is fixed on first use). Without this, cached/pre-downloaded tiles
   // live in the OS-evictable cache dir and expire on their HTTP headers —
   // unusable for off-grid trips. Web noops; never block boot on failure.
-  if (platformCapabilities.platformFamily != PlatformFamily.web) {
-    try {
-      await OfflineTileCache.instance.configure();
-    } catch (e) {
-      AppLogging.platform('boot: offline tile cache config failed: $e');
-    }
-  }
-  BootTimeline.instance.mark('tile_cache');
+  //
+  // Started here and joined just before runApp: its directory lookup is the
+  // first call into the file-system plugin and takes over a second on a
+  // cold start, so it overlaps the remaining boot steps instead of adding
+  // to them. runApp still waits for it, which keeps the "before any map
+  // renders" guarantee.
+  final Future<void> tileCacheReady =
+      platformCapabilities.platformFamily != PlatformFamily.web
+      ? OfflineTileCache.instance.configure().catchError((Object e) {
+          AppLogging.platform('boot: offline tile cache config failed: $e');
+        })
+      : Future<void>.value();
+  BootTimeline.instance.mark('tile_cache_started');
 
   // Stripe SDK init for the external (off-store) Payment Sheet path.
   // The publishable key is mode-aware on the server (the createCheckout
@@ -419,6 +424,9 @@ Future<void> main() async {
       AppLogging.app('⚠️ _initializeFirebaseServices failed (non-fatal): $e');
     }),
   );
+
+  await tileCacheReady;
+  BootTimeline.instance.mark('tile_cache_joined');
 
   // One line per launch with every awaited pre-runApp step timed, so a
   // long native launch screen can be attributed from an app log.
