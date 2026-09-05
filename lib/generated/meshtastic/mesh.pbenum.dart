@@ -158,14 +158,14 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(26, _omitEnumNames ? '' : 'RAK11310');
 
   ///
-  ///  Makerfabs SenseLoRA Receiver (RP2040 + RFM96)
-  static const HardwareModel SENSELORA_RP2040 =
-      HardwareModel._(27, _omitEnumNames ? '' : 'SENSELORA_RP2040');
+  ///  Makerfabs Tracker Reserved
+  static const HardwareModel MAKERFABS_TRACKER =
+      HardwareModel._(27, _omitEnumNames ? '' : 'MAKERFABS_TRACKER');
 
   ///
-  ///  Makerfabs SenseLoRA Industrial Monitor (ESP32-S3 + RFM96)
-  static const HardwareModel SENSELORA_S3 =
-      HardwareModel._(28, _omitEnumNames ? '' : 'SENSELORA_S3');
+  ///  Makerfabs Reserved
+  static const HardwareModel MAKERFABS_RESERVED =
+      HardwareModel._(28, _omitEnumNames ? '' : 'MAKERFABS_RESERVED');
 
   ///
   ///  Canary Radio Company - CanaryOne: https://canaryradio.io/products/canaryone
@@ -683,10 +683,10 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(127, _omitEnumNames ? '' : 'HELTEC_MESH_NODE_T096');
 
   ///
-  ///  Seeed studio T1000-E Pro tracker card. NRF52840 w/ LR2021 radio,
+  ///  Seeed studio Mesh Tracker X1card. NRF52840 w/ LR2021 radio,
   ///  GPS, button, buzzer, and sensors.
-  static const HardwareModel TRACKER_T1000_E_PRO =
-      HardwareModel._(128, _omitEnumNames ? '' : 'TRACKER_T1000_E_PRO');
+  static const HardwareModel MESH_TRACKER_X1 =
+      HardwareModel._(128, _omitEnumNames ? '' : 'MESH_TRACKER_X1');
 
   ///
   ///  Elecrow ThinkNode M7, M8 and M9
@@ -743,6 +743,36 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(140, _omitEnumNames ? '' : 'MESHNOLOGY_W10');
 
   ///
+  ///  Heltec ESP32S3 + SX1262
+  static const HardwareModel HELTEC_RC32 =
+      HardwareModel._(141, _omitEnumNames ? '' : 'HELTEC_RC32');
+
+  ///
+  ///  Heltec NRF52840 + SX1262
+  static const HardwareModel HELTEC_RC52 =
+      HardwareModel._(142, _omitEnumNames ? '' : 'HELTEC_RC52');
+
+  ///
+  ///  Heltec ESP32C6 + SX1262
+  static const HardwareModel HELTEC_RCC6 =
+      HardwareModel._(143, _omitEnumNames ? '' : 'HELTEC_RCC6');
+
+  ///
+  ///  Seeed Wio Tracker L1 Pro 1W, nRF52840 + SX1262 with 1 W external PA
+  static const HardwareModel SEEED_WIO_TRACKER_L1_PRO_1W =
+      HardwareModel._(144, _omitEnumNames ? '' : 'SEEED_WIO_TRACKER_L1_PRO_1W');
+
+  ///
+  ///  Meshnology W12
+  static const HardwareModel MESHNOLOGY_W12 =
+      HardwareModel._(145, _omitEnumNames ? '' : 'MESHNOLOGY_W12');
+
+  ///
+  ///  Seeed Studio MeshPager X2
+  static const HardwareModel MESHPAGER_X2 =
+      HardwareModel._(146, _omitEnumNames ? '' : 'MESHPAGER_X2');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -777,8 +807,8 @@ class HardwareModel extends $pb.ProtobufEnum {
     HELTEC_WIRELESS_BRIDGE,
     STATION_G1,
     RAK11310,
-    SENSELORA_RP2040,
-    SENSELORA_S3,
+    MAKERFABS_TRACKER,
+    MAKERFABS_RESERVED,
     CANARYONE,
     RP2040_LORA,
     STATION_G2,
@@ -878,7 +908,7 @@ class HardwareModel extends $pb.ProtobufEnum {
     MINI_EPAPER_S3,
     TDISPLAY_S3_PRO,
     HELTEC_MESH_NODE_T096,
-    TRACKER_T1000_E_PRO,
+    MESH_TRACKER_X1,
     THINKNODE_M7,
     THINKNODE_M8,
     THINKNODE_M9,
@@ -891,6 +921,12 @@ class HardwareModel extends $pb.ProtobufEnum {
     CROWPANEL_P4,
     HELTEC_MESH_TOWER_V2,
     MESHNOLOGY_W10,
+    HELTEC_RC32,
+    HELTEC_RC52,
+    HELTEC_RCC6,
+    SEEED_WIO_TRACKER_L1_PRO_1W,
+    MESHNOLOGY_W12,
+    MESHPAGER_X2,
     PRIVATE_HW,
   ];
 
@@ -1071,6 +1107,21 @@ class FirmwareEdition extends $pb.ProtobufEnum {
       FirmwareEdition._(19, _omitEnumNames ? '' : 'HAMVENTION');
 
   ///
+  ///  FAB, the international Fab Lab digital fabrication conference
+  static const FirmwareEdition FAB =
+      FirmwareEdition._(20, _omitEnumNames ? '' : 'FAB');
+
+  ///
+  ///  Dragon Con, the yearly pop culture convention in Atlanta, GA
+  static const FirmwareEdition DRAGON_CON =
+      FirmwareEdition._(21, _omitEnumNames ? '' : 'DRAGON_CON');
+
+  ///
+  ///  Chaos Communication Congress, the hacker conference held yearly in Germany
+  static const FirmwareEdition CCC =
+      FirmwareEdition._(22, _omitEnumNames ? '' : 'CCC');
+
+  ///
   ///  Placeholder for DIY and unofficial events
   static const FirmwareEdition DIY_EDITION =
       FirmwareEdition._(127, _omitEnumNames ? '' : 'DIY_EDITION');
@@ -1082,6 +1133,9 @@ class FirmwareEdition extends $pb.ProtobufEnum {
     DEFCON,
     BURNING_MAN,
     HAMVENTION,
+    FAB,
+    DRAGON_CON,
+    CCC,
     DIY_EDITION,
   ];
 
@@ -1702,6 +1756,12 @@ class MeshPacket_TransportMechanism extends $pb.ProtobufEnum {
   static const MeshPacket_TransportMechanism TRANSPORT_API =
       MeshPacket_TransportMechanism._(7, _omitEnumNames ? '' : 'TRANSPORT_API');
 
+  ///
+  ///  Arrived via Unicast UDP
+  static const MeshPacket_TransportMechanism TRANSPORT_UNICAST_UDP =
+      MeshPacket_TransportMechanism._(
+          8, _omitEnumNames ? '' : 'TRANSPORT_UNICAST_UDP');
+
   static const $core.List<MeshPacket_TransportMechanism> values =
       <MeshPacket_TransportMechanism>[
     TRANSPORT_INTERNAL,
@@ -1712,10 +1772,11 @@ class MeshPacket_TransportMechanism extends $pb.ProtobufEnum {
     TRANSPORT_MQTT,
     TRANSPORT_MULTICAST_UDP,
     TRANSPORT_API,
+    TRANSPORT_UNICAST_UDP,
   ];
 
   static final $core.List<MeshPacket_TransportMechanism?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 7);
+      $pb.ProtobufEnum.$_initByValueList(values, 8);
   static MeshPacket_TransportMechanism? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -1808,16 +1869,27 @@ class LockdownStatus_State extends $pb.ProtobufEnum {
   static const LockdownStatus_State UNLOCK_FAILED =
       LockdownStatus_State._(4, _omitEnumNames ? '' : 'UNLOCK_FAILED');
 
+  ///
+  ///  Lockdown is supported by this firmware but not currently active
+  ///  (no passphrase has been provisioned, or it was disabled via
+  ///  AdminMessage.lockdown_auth.disable). The device is operating in
+  ///  normal, non-encrypted mode. Clients render the lockdown-mode
+  ///  toggle as OFF on receiving this. Distinct from NEEDS_PROVISION,
+  ///  which is only used during an in-progress enable flow.
+  static const LockdownStatus_State DISABLED =
+      LockdownStatus_State._(5, _omitEnumNames ? '' : 'DISABLED');
+
   static const $core.List<LockdownStatus_State> values = <LockdownStatus_State>[
     STATE_UNSPECIFIED,
     NEEDS_PROVISION,
     LOCKED,
     UNLOCKED,
     UNLOCK_FAILED,
+    DISABLED,
   ];
 
   static final $core.List<LockdownStatus_State?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 4);
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
   static LockdownStatus_State? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

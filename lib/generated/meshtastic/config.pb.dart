@@ -1730,6 +1730,7 @@ class Config_SecurityConfig extends $pb.GeneratedMessage {
     $core.bool? serialEnabled,
     $core.bool? debugLogApiEnabled,
     $core.bool? adminChannelEnabled,
+    Config_SecurityConfig_PacketSignaturePolicy? packetSignaturePolicy,
   }) {
     final result = create();
     if (publicKey != null) result.publicKey = publicKey;
@@ -1741,6 +1742,8 @@ class Config_SecurityConfig extends $pb.GeneratedMessage {
       result.debugLogApiEnabled = debugLogApiEnabled;
     if (adminChannelEnabled != null)
       result.adminChannelEnabled = adminChannelEnabled;
+    if (packetSignaturePolicy != null)
+      result.packetSignaturePolicy = packetSignaturePolicy;
     return result;
   }
 
@@ -1767,6 +1770,9 @@ class Config_SecurityConfig extends $pb.GeneratedMessage {
     ..aOB(5, _omitFieldNames ? '' : 'serialEnabled')
     ..aOB(6, _omitFieldNames ? '' : 'debugLogApiEnabled')
     ..aOB(8, _omitFieldNames ? '' : 'adminChannelEnabled')
+    ..aE<Config_SecurityConfig_PacketSignaturePolicy>(
+        9, _omitFieldNames ? '' : 'packetSignaturePolicy',
+        enumValues: Config_SecurityConfig_PacketSignaturePolicy.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1863,6 +1869,20 @@ class Config_SecurityConfig extends $pb.GeneratedMessage {
   $core.bool hasAdminChannelEnabled() => $_has(6);
   @$pb.TagNumber(8)
   void clearAdminChannelEnabled() => $_clearField(8);
+
+  ///
+  ///  Determines the packet signature policy applied to remotely received mesh packets.
+  @$pb.TagNumber(9)
+  Config_SecurityConfig_PacketSignaturePolicy get packetSignaturePolicy =>
+      $_getN(7);
+  @$pb.TagNumber(9)
+  set packetSignaturePolicy(
+          Config_SecurityConfig_PacketSignaturePolicy value) =>
+      $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasPacketSignaturePolicy() => $_has(7);
+  @$pb.TagNumber(9)
+  void clearPacketSignaturePolicy() => $_clearField(9);
 }
 
 ///

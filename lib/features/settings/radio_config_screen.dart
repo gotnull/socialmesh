@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/meshtastic/modem_preset_metadata.dart';
 import '../../core/meshtastic/region_metadata.dart';
+import '../../core/meshtastic/region_presets.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -1067,7 +1068,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                   config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
               onChanged: (value) {
                 if (value != null) {
-                  setState(() => _selectedRegion = value);
+                  _onRegionSelected(value);
                 }
               },
             ),
@@ -1077,8 +1078,52 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     );
   }
 
+  /// Legal-preset info for [region] from the radio's 2.8+ region preset
+  /// map. Null when the radio sent no map (older firmware) or the map has
+  /// no entry for the region: both mean no constraint.
+  RegionPresetInfo? _presetInfoFor(
+    config_pbenum.Config_LoRaConfig_RegionCode? region,
+  ) {
+    if (region == null) return null;
+    final map = ref.read(protocolServiceProvider).regionPresets;
+    if (map == null) return null;
+    return decodeRegionPresetMap(map)[region];
+  }
+
+  /// Applies a region choice and keeps the preset legal for it. When the
+  /// radio's map says the current preset is not allowed in the new region
+  /// the picker moves to that region's default, as the firmware itself
+  /// would, and says so.
+  void _onRegionSelected(config_pbenum.Config_LoRaConfig_RegionCode region) {
+    final info = _presetInfoFor(region);
+    final current = _selectedModemPreset;
+    final mustSwitch = info != null && current != null && !info.allows(current);
+    setState(() {
+      _selectedRegion = region;
+      if (mustSwitch) _selectedModemPreset = info.defaultPreset;
+    });
+    if (mustSwitch) {
+      final l = context.l10n;
+      final label =
+          modemPresetMetadataFor(info.defaultPreset)?.label(l) ??
+          info.defaultPreset.name;
+      showInfoSnackBar(context, l.radioConfigPresetChangedForRegion(label));
+    }
+  }
+
   Widget _buildModemPresetSelector() {
     final l = context.l10n;
+    // Constrain the list to what the radio reports as legal for the
+    // selected region. The preset the radio currently holds stays visible
+    // even if the map disallows it, so the user can see what they are
+    // moving away from rather than an unexplained empty selection.
+    final info = _presetInfoFor(_selectedRegion);
+    final presets = kModemPresetMetadata.where(
+      (p) =>
+          info == null ||
+          info.allows(p.preset) ||
+          p.preset == _selectedModemPreset,
+    );
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -1093,8 +1138,12 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
             l.radioConfigPresetMustMatch,
             style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
+          if (info?.licensedOnly == true) ...[
+            SizedBox(height: AppTheme.spacing12),
+            StatusBanner.warning(title: l.radioConfigLicensedOnlyBand),
+          ],
           SizedBox(height: AppTheme.spacing16),
-          ...kModemPresetMetadata.map((p) {
+          ...presets.map((p) {
             final isSelected = _selectedModemPreset == p.preset;
             return InkWell(
               onTap: () => setState(() => _selectedModemPreset = p.preset),

@@ -94,6 +94,24 @@ const DeviceProfile$json = {
       '10': 'cannedMessages',
       '17': true
     },
+    {
+      '1': 'is_unmessagable',
+      '3': 9,
+      '4': 1,
+      '5': 8,
+      '9': 8,
+      '10': 'isUnmessagable',
+      '17': true
+    },
+    {
+      '1': 'is_licensed',
+      '3': 10,
+      '4': 1,
+      '5': 8,
+      '9': 9,
+      '10': 'isLicensed',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_long_name'},
@@ -104,6 +122,8 @@ const DeviceProfile$json = {
     {'1': '_fixed_position'},
     {'1': '_ringtone'},
     {'1': '_canned_messages'},
+    {'1': '_is_unmessagable'},
+    {'1': '_is_licensed'},
   ],
 };
 
@@ -116,6 +136,8 @@ final $typed_data.Uint8List deviceProfileDescriptor = $convert.base64Decode(
     'dWxlQ29uZmlnSARSDG1vZHVsZUNvbmZpZ4gBARJACg5maXhlZF9wb3NpdGlvbhgGIAEoCzIULm'
     '1lc2h0YXN0aWMuUG9zaXRpb25IBVINZml4ZWRQb3NpdGlvbogBARIfCghyaW5ndG9uZRgHIAEo'
     'CUgGUghyaW5ndG9uZYgBARIsCg9jYW5uZWRfbWVzc2FnZXMYCCABKAlIB1IOY2FubmVkTWVzc2'
-    'FnZXOIAQFCDAoKX2xvbmdfbmFtZUINCgtfc2hvcnRfbmFtZUIOCgxfY2hhbm5lbF91cmxCCQoH'
-    'X2NvbmZpZ0IQCg5fbW9kdWxlX2NvbmZpZ0IRCg9fZml4ZWRfcG9zaXRpb25CCwoJX3Jpbmd0b2'
-    '5lQhIKEF9jYW5uZWRfbWVzc2FnZXM=');
+    'FnZXOIAQESLAoPaXNfdW5tZXNzYWdhYmxlGAkgASgISAhSDmlzVW5tZXNzYWdhYmxliAEBEiQK'
+    'C2lzX2xpY2Vuc2VkGAogASgISAlSCmlzTGljZW5zZWSIAQFCDAoKX2xvbmdfbmFtZUINCgtfc2'
+    'hvcnRfbmFtZUIOCgxfY2hhbm5lbF91cmxCCQoHX2NvbmZpZ0IQCg5fbW9kdWxlX2NvbmZpZ0IR'
+    'Cg9fZml4ZWRfcG9zaXRpb25CCwoJX3Jpbmd0b25lQhIKEF9jYW5uZWRfbWVzc2FnZXNCEgoQX2'
+    'lzX3VubWVzc2FnYWJsZUIOCgxfaXNfbGljZW5zZWQ=');

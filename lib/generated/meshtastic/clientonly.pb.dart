@@ -32,6 +32,8 @@ class DeviceProfile extends $pb.GeneratedMessage {
     $1.Position? fixedPosition,
     $core.String? ringtone,
     $core.String? cannedMessages,
+    $core.bool? isUnmessagable,
+    $core.bool? isLicensed,
   }) {
     final result = create();
     if (longName != null) result.longName = longName;
@@ -42,6 +44,8 @@ class DeviceProfile extends $pb.GeneratedMessage {
     if (fixedPosition != null) result.fixedPosition = fixedPosition;
     if (ringtone != null) result.ringtone = ringtone;
     if (cannedMessages != null) result.cannedMessages = cannedMessages;
+    if (isUnmessagable != null) result.isUnmessagable = isUnmessagable;
+    if (isLicensed != null) result.isLicensed = isLicensed;
     return result;
   }
 
@@ -69,6 +73,8 @@ class DeviceProfile extends $pb.GeneratedMessage {
         subBuilder: $1.Position.create)
     ..aOS(7, _omitFieldNames ? '' : 'ringtone')
     ..aOS(8, _omitFieldNames ? '' : 'cannedMessages')
+    ..aOB(9, _omitFieldNames ? '' : 'isUnmessagable')
+    ..aOB(10, _omitFieldNames ? '' : 'isLicensed')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -183,6 +189,28 @@ class DeviceProfile extends $pb.GeneratedMessage {
   $core.bool hasCannedMessages() => $_has(7);
   @$pb.TagNumber(8)
   void clearCannedMessages() => $_clearField(8);
+
+  ///
+  ///  Is the node unmessagable
+  @$pb.TagNumber(9)
+  $core.bool get isUnmessagable => $_getBF(8);
+  @$pb.TagNumber(9)
+  set isUnmessagable($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasIsUnmessagable() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearIsUnmessagable() => $_clearField(9);
+
+  ///
+  ///  Is this node in licensed user mode
+  @$pb.TagNumber(10)
+  $core.bool get isLicensed => $_getBF(9);
+  @$pb.TagNumber(10)
+  set isLicensed($core.bool value) => $_setBool(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasIsLicensed() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearIsLicensed() => $_clearField(10);
 }
 
 const $core.bool _omitFieldNames =

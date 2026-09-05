@@ -17249,6 +17249,46 @@ class AppLocalizationsPt extends AppLocalizations {
   String get regionSelectionRegionItu3_2mFreq => '144-148 MHz';
 
   @override
+  String get regionSelectionRegionItu1_70cm => 'UIT R1 70cm';
+
+  @override
+  String get regionSelectionRegionItu1_70cmDesc =>
+      'Banda de radioamador 70cm da Região 1 da UIT';
+
+  @override
+  String get regionSelectionRegionItu1_70cmFreq => '430-440 MHz';
+
+  @override
+  String get regionSelectionRegionItu2_70cm => 'UIT R2 70cm';
+
+  @override
+  String get regionSelectionRegionItu2_70cmDesc =>
+      'Banda de radioamador 70cm da Região 2 da UIT';
+
+  @override
+  String get regionSelectionRegionItu2_70cmFreq => '420-450 MHz';
+
+  @override
+  String get regionSelectionRegionItu3_70cm => 'UIT R3 70cm';
+
+  @override
+  String get regionSelectionRegionItu3_70cmDesc =>
+      'Banda de radioamador 70cm da Região 3 da UIT';
+
+  @override
+  String get regionSelectionRegionItu3_70cmFreq => '430-450 MHz';
+
+  @override
+  String get regionSelectionRegionItu2_125cm => 'UIT R2 1,25m';
+
+  @override
+  String get regionSelectionRegionItu2_125cmDesc =>
+      'Banda de radioamador 1,25m da Região 2 da UIT';
+
+  @override
+  String get regionSelectionRegionItu2_125cmFreq => '220-225 MHz';
+
+  @override
   String get regionSelectionRegionEu866 => 'EU 866';
 
   @override
@@ -27924,6 +27964,36 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get radioConfigPresetNarrowSlowDesc =>
       'EU 868MHz estreito, maior alcance';
+
+  @override
+  String get radioConfigPresetTinyFast => 'Minúsculo Rápido';
+
+  @override
+  String get radioConfigPresetTinyFastDesc =>
+      'Predefinição de radioamador a 20 kHz, como Long Fast';
+
+  @override
+  String get radioConfigPresetTinySlow => 'Minúsculo Lento';
+
+  @override
+  String get radioConfigPresetTinySlowDesc =>
+      'Predefinição de radioamador a 20 kHz, como Long Moderate';
+
+  @override
+  String get radioConfigPresetMediumTurbo => 'Médio Turbo';
+
+  @override
+  String get radioConfigPresetMediumTurboDesc =>
+      'Médio alcance a 500 kHz, não é legal em todas as regiões';
+
+  @override
+  String get radioConfigLicensedOnlyBand =>
+      'Apenas operadores licenciados. Esta região é uma banda de radioamador, por isso as predefinições oferecidas limitam-se às que o rádio indica como legais.';
+
+  @override
+  String radioConfigPresetChangedForRegion(String preset) {
+    return 'Predefinição alterada para $preset, a predefinição do rádio para esta região. A anterior não é legal aqui.';
+  }
 
   @override
   String get radioConfigPresetMustMatch =>

@@ -161,6 +161,14 @@ class PortNum extends $pb.ProtobufEnum {
       PortNum._(36, _omitEnumNames ? '' : 'NODE_STATUS_APP');
 
   ///
+  ///  Beacon module broadcast packets.
+  ///  ENCODING: protobuf
+  ///  Periodically broadcast by nodes in beacon mode; received by nodes with MeshBeaconConfig.FLAG_LISTEN_ENABLED.
+  ///  Carries a text message plus optional channel/preset offers for client apps.
+  static const PortNum MESH_BEACON_APP =
+      PortNum._(37, _omitEnumNames ? '' : 'MESH_BEACON_APP');
+
+  ///
   ///  Provides a hardware serial interface to send and receive from the Meshtastic network.
   ///  Connect to the RX/TX pins of a device with 38400 8N1. Packets received from the Meshtastic
   ///  network is forwarded to the RX pin while sending a packet to TX will go out to the Mesh network.
@@ -262,6 +270,12 @@ class PortNum extends $pb.ProtobufEnum {
   static const PortNum ATAK_PLUGIN_V2 =
       PortNum._(78, _omitEnumNames ? '' : 'ATAK_PLUGIN_V2');
 
+  /// signed firmware updates over lora.
+  ///
+  /// ENCODING: binary (ota-common transport frames)
+  static const PortNum LORA_OTA_APP =
+      PortNum._(79, _omitEnumNames ? '' : 'LORA_OTA_APP');
+
   ///
   ///  GroupAlarm integration
   ///  Used for transporting GroupAlarm-related messages between Meshtastic nodes
@@ -306,6 +320,7 @@ class PortNum extends $pb.ProtobufEnum {
     PAXCOUNTER_APP,
     STORE_FORWARD_PLUSPLUS_APP,
     NODE_STATUS_APP,
+    MESH_BEACON_APP,
     SERIAL_APP,
     STORE_FORWARD_APP,
     RANGE_TEST_APP,
@@ -321,6 +336,7 @@ class PortNum extends $pb.ProtobufEnum {
     RETICULUM_TUNNEL_APP,
     CAYENNE_APP,
     ATAK_PLUGIN_V2,
+    LORA_OTA_APP,
     GROUPALARM_APP,
     PRIVATE_APP,
     ATAK_FORWARDER,

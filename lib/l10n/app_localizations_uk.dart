@@ -17280,6 +17280,46 @@ class AppLocalizationsUk extends AppLocalizations {
   String get regionSelectionRegionItu3_2mFreq => '144-148 МГц';
 
   @override
+  String get regionSelectionRegionItu1_70cm => 'ITU R1 70см';
+
+  @override
+  String get regionSelectionRegionItu1_70cmDesc =>
+      'Аматорський діапазон 70см регіону 1 ITU';
+
+  @override
+  String get regionSelectionRegionItu1_70cmFreq => '430-440 МГц';
+
+  @override
+  String get regionSelectionRegionItu2_70cm => 'ITU R2 70см';
+
+  @override
+  String get regionSelectionRegionItu2_70cmDesc =>
+      'Аматорський діапазон 70см регіону 2 ITU';
+
+  @override
+  String get regionSelectionRegionItu2_70cmFreq => '420-450 МГц';
+
+  @override
+  String get regionSelectionRegionItu3_70cm => 'ITU R3 70см';
+
+  @override
+  String get regionSelectionRegionItu3_70cmDesc =>
+      'Аматорський діапазон 70см регіону 3 ITU';
+
+  @override
+  String get regionSelectionRegionItu3_70cmFreq => '430-450 МГц';
+
+  @override
+  String get regionSelectionRegionItu2_125cm => 'ITU R2 1,25м';
+
+  @override
+  String get regionSelectionRegionItu2_125cmDesc =>
+      'Аматорський діапазон 1,25м регіону 2 ITU';
+
+  @override
+  String get regionSelectionRegionItu2_125cmFreq => '220-225 МГц';
+
+  @override
   String get regionSelectionRegionEu866 => 'EU 866';
 
   @override
@@ -27971,6 +28011,36 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get radioConfigPresetNarrowSlowDesc =>
       'EU 868МГц вузький, більша дальність';
+
+  @override
+  String get radioConfigPresetTinyFast => 'Tiny Fast';
+
+  @override
+  String get radioConfigPresetTinyFastDesc =>
+      'Пресет аматорського діапазону 20 кГц, як Long Fast';
+
+  @override
+  String get radioConfigPresetTinySlow => 'Tiny Slow';
+
+  @override
+  String get radioConfigPresetTinySlowDesc =>
+      'Пресет аматорського діапазону 20 кГц, як Long Moderate';
+
+  @override
+  String get radioConfigPresetMediumTurbo => 'Medium Turbo';
+
+  @override
+  String get radioConfigPresetMediumTurboDesc =>
+      'Середня дальність на 500 кГц, не дозволений у всіх регіонах';
+
+  @override
+  String get radioConfigLicensedOnlyBand =>
+      'Лише для ліцензованих операторів. Цей регіон є аматорським діапазоном, тому пропонуються лише пресети, які радіо вважає дозволеними.';
+
+  @override
+  String radioConfigPresetChangedForRegion(String preset) {
+    return 'Пресет змінено на $preset, значення радіо за замовчуванням для цього регіону. Попередній пресет тут не дозволений.';
+  }
 
   @override
   String get radioConfigPresetMustMatch =>

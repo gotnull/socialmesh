@@ -595,6 +595,7 @@ const AdminMessage_ModuleConfigType$json = {
     {'1': 'STATUSMESSAGE_CONFIG', '2': 13},
     {'1': 'TRAFFICMANAGEMENT_CONFIG', '2': 14},
     {'1': 'TAK_CONFIG', '2': 15},
+    {'1': 'MESHBEACON_CONFIG', '2': 16},
   ],
 };
 
@@ -686,15 +687,15 @@ final $typed_data.Uint8List adminMessageDescriptor = $convert.base64Decode(
     'SVRJT05fQ09ORklHEAESEAoMUE9XRVJfQ09ORklHEAISEgoOTkVUV09SS19DT05GSUcQAxISCg'
     '5ESVNQTEFZX0NPTkZJRxAEEg8KC0xPUkFfQ09ORklHEAUSFAoQQkxVRVRPT1RIX0NPTkZJRxAG'
     'EhMKD1NFQ1VSSVRZX0NPTkZJRxAHEhUKEVNFU1NJT05LRVlfQ09ORklHEAgSEwoPREVWSUNFVU'
-    'lfQ09ORklHEAkigwMKEE1vZHVsZUNvbmZpZ1R5cGUSDwoLTVFUVF9DT05GSUcQABIRCg1TRVJJ'
+    'lfQ09ORklHEAkimgMKEE1vZHVsZUNvbmZpZ1R5cGUSDwoLTVFUVF9DT05GSUcQABIRCg1TRVJJ'
     'QUxfQ09ORklHEAESEwoPRVhUTk9USUZfQ09ORklHEAISFwoTU1RPUkVGT1JXQVJEX0NPTkZJRx'
     'ADEhQKEFJBTkdFVEVTVF9DT05GSUcQBBIUChBURUxFTUVUUllfQ09ORklHEAUSFAoQQ0FOTkVE'
     'TVNHX0NPTkZJRxAGEhAKDEFVRElPX0NPTkZJRxAHEhkKFVJFTU9URUhBUkRXQVJFX0NPTkZJRx'
     'AIEhcKE05FSUdIQk9SSU5GT19DT05GSUcQCRIaChZBTUJJRU5UTElHSFRJTkdfQ09ORklHEAoS'
     'GgoWREVURUNUSU9OU0VOU09SX0NPTkZJRxALEhUKEVBBWENPVU5URVJfQ09ORklHEAwSGAoUU1'
     'RBVFVTTUVTU0FHRV9DT05GSUcQDRIcChhUUkFGRklDTUFOQUdFTUVOVF9DT05GSUcQDhIOCgpU'
-    'QUtfQ09ORklHEA8iIwoOQmFja3VwTG9jYXRpb24SCQoFRkxBU0gQABIGCgJTRBABQhEKD3BheW'
-    'xvYWRfdmFyaWFudA==');
+    'QUtfQ09ORklHEA8SFQoRTUVTSEJFQUNPTl9DT05GSUcQECIjCg5CYWNrdXBMb2NhdGlvbhIJCg'
+    'VGTEFTSBAAEgYKAlNEEAFCEQoPcGF5bG9hZF92YXJpYW50');
 
 @$core.Deprecated('Use lockdownAuthDescriptor instead')
 const LockdownAuth$json = {
@@ -710,6 +711,14 @@ const LockdownAuth$json = {
       '10': 'validUntilEpoch'
     },
     {'1': 'lock_now', '3': 4, '4': 1, '5': 8, '10': 'lockNow'},
+    {
+      '1': 'max_session_seconds',
+      '3': 5,
+      '4': 1,
+      '5': 13,
+      '10': 'maxSessionSeconds'
+    },
+    {'1': 'disable', '3': 6, '4': 1, '5': 8, '10': 'disable'},
   ],
 };
 
@@ -717,7 +726,9 @@ const LockdownAuth$json = {
 final $typed_data.Uint8List lockdownAuthDescriptor = $convert.base64Decode(
     'CgxMb2NrZG93bkF1dGgSHgoKcGFzc3BocmFzZRgBIAEoDFIKcGFzc3BocmFzZRInCg9ib290c1'
     '9yZW1haW5pbmcYAiABKA1SDmJvb3RzUmVtYWluaW5nEioKEXZhbGlkX3VudGlsX2Vwb2NoGAMg'
-    'ASgNUg92YWxpZFVudGlsRXBvY2gSGQoIbG9ja19ub3cYBCABKAhSB2xvY2tOb3c=');
+    'ASgNUg92YWxpZFVudGlsRXBvY2gSGQoIbG9ja19ub3cYBCABKAhSB2xvY2tOb3cSLgoTbWF4X3'
+    'Nlc3Npb25fc2Vjb25kcxgFIAEoDVIRbWF4U2Vzc2lvblNlY29uZHMSGAoHZGlzYWJsZRgGIAEo'
+    'CFIHZGlzYWJsZQ==');
 
 @$core.Deprecated('Use hamParametersDescriptor instead')
 const HamParameters$json = {
@@ -727,6 +738,7 @@ const HamParameters$json = {
     {'1': 'tx_power', '3': 2, '4': 1, '5': 5, '10': 'txPower'},
     {'1': 'frequency', '3': 3, '4': 1, '5': 2, '10': 'frequency'},
     {'1': 'short_name', '3': 4, '4': 1, '5': 9, '10': 'shortName'},
+    {'1': 'long_name', '3': 5, '4': 1, '5': 9, '10': 'longName'},
   ],
 };
 
@@ -734,7 +746,7 @@ const HamParameters$json = {
 final $typed_data.Uint8List hamParametersDescriptor = $convert.base64Decode(
     'Cg1IYW1QYXJhbWV0ZXJzEhsKCWNhbGxfc2lnbhgBIAEoCVIIY2FsbFNpZ24SGQoIdHhfcG93ZX'
     'IYAiABKAVSB3R4UG93ZXISHAoJZnJlcXVlbmN5GAMgASgCUglmcmVxdWVuY3kSHQoKc2hvcnRf'
-    'bmFtZRgEIAEoCVIJc2hvcnROYW1l');
+    'bmFtZRgEIAEoCVIJc2hvcnROYW1lEhsKCWxvbmdfbmFtZRgFIAEoCVIIbG9uZ05hbWU=');
 
 @$core.Deprecated('Use nodeRemoteHardwarePinsResponseDescriptor instead')
 const NodeRemoteHardwarePinsResponse$json = {
@@ -875,6 +887,30 @@ const SensorConfig$json = {
       '6': '.meshtastic.SHTXX_config',
       '10': 'shtxxConfig'
     },
+    {
+      '1': 'ds248x_config',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.DS248X_config',
+      '10': 'ds248xConfig'
+    },
+    {
+      '1': 'sen6x_config',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.SEN6X_config',
+      '10': 'sen6xConfig'
+    },
+    {
+      '1': 'as3935_config',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.AS3935_config',
+      '10': 'as3935Config'
+    },
   ],
 };
 
@@ -884,7 +920,11 @@ final $typed_data.Uint8List sensorConfigDescriptor = $convert.base64Decode(
     '9jb25maWdSC3NjZDR4Q29uZmlnEjsKDHNlbjV4X2NvbmZpZxgCIAEoCzIYLm1lc2h0YXN0aWMu'
     'U0VONVhfY29uZmlnUgtzZW41eENvbmZpZxI7CgxzY2QzMF9jb25maWcYAyABKAsyGC5tZXNodG'
     'FzdGljLlNDRDMwX2NvbmZpZ1ILc2NkMzBDb25maWcSOwoMc2h0eHhfY29uZmlnGAQgASgLMhgu'
-    'bWVzaHRhc3RpYy5TSFRYWF9jb25maWdSC3NodHh4Q29uZmln');
+    'bWVzaHRhc3RpYy5TSFRYWF9jb25maWdSC3NodHh4Q29uZmlnEj4KDWRzMjQ4eF9jb25maWcYBS'
+    'ABKAsyGS5tZXNodGFzdGljLkRTMjQ4WF9jb25maWdSDGRzMjQ4eENvbmZpZxI7CgxzZW42eF9j'
+    'b25maWcYBiABKAsyGC5tZXNodGFzdGljLlNFTjZYX2NvbmZpZ1ILc2VuNnhDb25maWcSPgoNYX'
+    'MzOTM1X2NvbmZpZxgHIAEoCzIZLm1lc2h0YXN0aWMuQVMzOTM1X2NvbmZpZ1IMYXMzOTM1Q29u'
+    'Zmln');
 
 @$core.Deprecated('Use sCD4X_configDescriptor instead')
 const SCD4X_config$json = {
@@ -999,18 +1039,132 @@ const SEN5X_config$json = {
       '10': 'setOneShotMode',
       '17': true
     },
+    {
+      '1': 'start_fan_cleaning',
+      '3': 3,
+      '4': 1,
+      '5': 8,
+      '9': 2,
+      '10': 'startFanCleaning',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_set_temperature'},
     {'1': '_set_one_shot_mode'},
+    {'1': '_start_fan_cleaning'},
   ],
 };
 
 /// Descriptor for `SEN5X_config`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List sEN5X_configDescriptor = $convert.base64Decode(
     'CgxTRU41WF9jb25maWcSLAoPc2V0X3RlbXBlcmF0dXJlGAEgASgCSABSDnNldFRlbXBlcmF0dX'
-    'JliAEBEi4KEXNldF9vbmVfc2hvdF9tb2RlGAIgASgISAFSDnNldE9uZVNob3RNb2RliAEBQhIK'
-    'EF9zZXRfdGVtcGVyYXR1cmVCFAoSX3NldF9vbmVfc2hvdF9tb2Rl');
+    'JliAEBEi4KEXNldF9vbmVfc2hvdF9tb2RlGAIgASgISAFSDnNldE9uZVNob3RNb2RliAEBEjEK'
+    'EnN0YXJ0X2Zhbl9jbGVhbmluZxgDIAEoCEgCUhBzdGFydEZhbkNsZWFuaW5niAEBQhIKEF9zZX'
+    'RfdGVtcGVyYXR1cmVCFAoSX3NldF9vbmVfc2hvdF9tb2RlQhUKE19zdGFydF9mYW5fY2xlYW5p'
+    'bmc=');
+
+@$core.Deprecated('Use sEN6X_configDescriptor instead')
+const SEN6X_config$json = {
+  '1': 'SEN6X_config',
+  '2': [
+    {
+      '1': 'set_temperature',
+      '3': 1,
+      '4': 1,
+      '5': 2,
+      '9': 0,
+      '10': 'setTemperature',
+      '17': true
+    },
+    {
+      '1': 'set_one_shot_mode',
+      '3': 2,
+      '4': 1,
+      '5': 8,
+      '9': 1,
+      '10': 'setOneShotMode',
+      '17': true
+    },
+    {
+      '1': 'start_fan_cleaning',
+      '3': 3,
+      '4': 1,
+      '5': 8,
+      '9': 2,
+      '10': 'startFanCleaning',
+      '17': true
+    },
+    {
+      '1': 'set_asc',
+      '3': 4,
+      '4': 1,
+      '5': 8,
+      '9': 3,
+      '10': 'setAsc',
+      '17': true
+    },
+    {
+      '1': 'set_target_co2_conc',
+      '3': 5,
+      '4': 1,
+      '5': 13,
+      '9': 4,
+      '10': 'setTargetCo2Conc',
+      '17': true
+    },
+    {
+      '1': 'set_altitude',
+      '3': 6,
+      '4': 1,
+      '5': 13,
+      '9': 5,
+      '10': 'setAltitude',
+      '17': true
+    },
+    {
+      '1': 'set_ambient_pressure',
+      '3': 7,
+      '4': 1,
+      '5': 13,
+      '9': 6,
+      '10': 'setAmbientPressure',
+      '17': true
+    },
+    {
+      '1': 'factory_reset',
+      '3': 8,
+      '4': 1,
+      '5': 8,
+      '9': 7,
+      '10': 'factoryReset',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_set_temperature'},
+    {'1': '_set_one_shot_mode'},
+    {'1': '_start_fan_cleaning'},
+    {'1': '_set_asc'},
+    {'1': '_set_target_co2_conc'},
+    {'1': '_set_altitude'},
+    {'1': '_set_ambient_pressure'},
+    {'1': '_factory_reset'},
+  ],
+};
+
+/// Descriptor for `SEN6X_config`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sEN6X_configDescriptor = $convert.base64Decode(
+    'CgxTRU42WF9jb25maWcSLAoPc2V0X3RlbXBlcmF0dXJlGAEgASgCSABSDnNldFRlbXBlcmF0dX'
+    'JliAEBEi4KEXNldF9vbmVfc2hvdF9tb2RlGAIgASgISAFSDnNldE9uZVNob3RNb2RliAEBEjEK'
+    'EnN0YXJ0X2Zhbl9jbGVhbmluZxgDIAEoCEgCUhBzdGFydEZhbkNsZWFuaW5niAEBEhwKB3NldF'
+    '9hc2MYBCABKAhIA1IGc2V0QXNjiAEBEjIKE3NldF90YXJnZXRfY28yX2NvbmMYBSABKA1IBFIQ'
+    'c2V0VGFyZ2V0Q28yQ29uY4gBARImCgxzZXRfYWx0aXR1ZGUYBiABKA1IBVILc2V0QWx0aXR1ZG'
+    'WIAQESNQoUc2V0X2FtYmllbnRfcHJlc3N1cmUYByABKA1IBlISc2V0QW1iaWVudFByZXNzdXJl'
+    'iAEBEigKDWZhY3RvcnlfcmVzZXQYCCABKAhIB1IMZmFjdG9yeVJlc2V0iAEBQhIKEF9zZXRfdG'
+    'VtcGVyYXR1cmVCFAoSX3NldF9vbmVfc2hvdF9tb2RlQhUKE19zdGFydF9mYW5fY2xlYW5pbmdC'
+    'CgoIX3NldF9hc2NCFgoUX3NldF90YXJnZXRfY28yX2NvbmNCDwoNX3NldF9hbHRpdHVkZUIXCh'
+    'Vfc2V0X2FtYmllbnRfcHJlc3N1cmVCEAoOX2ZhY3RvcnlfcmVzZXQ=');
 
 @$core.Deprecated('Use sCD30_configDescriptor instead')
 const SCD30_config$json = {
@@ -1115,3 +1269,51 @@ const SHTXX_config$json = {
 final $typed_data.Uint8List sHTXX_configDescriptor = $convert.base64Decode(
     'CgxTSFRYWF9jb25maWcSJgoMc2V0X2FjY3VyYWN5GAEgASgNSABSC3NldEFjY3VyYWN5iAEBQg'
     '8KDV9zZXRfYWNjdXJhY3k=');
+
+@$core.Deprecated('Use dS248X_configDescriptor instead')
+const DS248X_config$json = {
+  '1': 'DS248X_config',
+  '2': [
+    {
+      '1': 'main_temperature_channel',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'mainTemperatureChannel',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_main_temperature_channel'},
+  ],
+};
+
+/// Descriptor for `DS248X_config`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List dS248X_configDescriptor = $convert.base64Decode(
+    'Cg1EUzI0OFhfY29uZmlnEj0KGG1haW5fdGVtcGVyYXR1cmVfY2hhbm5lbBgBIAEoDUgAUhZtYW'
+    'luVGVtcGVyYXR1cmVDaGFubmVsiAEBQhsKGV9tYWluX3RlbXBlcmF0dXJlX2NoYW5uZWw=');
+
+@$core.Deprecated('Use aS3935_configDescriptor instead')
+const AS3935_config$json = {
+  '1': 'AS3935_config',
+  '2': [
+    {
+      '1': 'set_tuning_cap_pf',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'setTuningCapPf',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_set_tuning_cap_pf'},
+  ],
+};
+
+/// Descriptor for `AS3935_config`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List aS3935_configDescriptor = $convert.base64Decode(
+    'Cg1BUzM5MzVfY29uZmlnEi4KEXNldF90dW5pbmdfY2FwX3BmGAEgASgNSABSDnNldFR1bmluZ0'
+    'NhcFBmiAEBQhQKEl9zZXRfdHVuaW5nX2NhcF9wZg==');

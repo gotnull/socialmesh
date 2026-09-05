@@ -65,14 +65,7 @@ class DeviceHardwareCatalog {
     40: DeviceArchitecture.nrf52840, // NRF52840_PCA10059
     75: DeviceArchitecture.nrf52840, // ME25LS01_4Y10TD
     82: DeviceArchitecture.nrf52840, // MS24SF1
-    118: DeviceArchitecture.nrf52840, // RAK6421
-    121: DeviceArchitecture.nrf52840, // MESHSTICK_1262
-    127: DeviceArchitecture.nrf52840, // HELTEC_MESH_NODE_T096
-    128: DeviceArchitecture.nrf52840, // TRACKER_T1000_E_PRO (proto comment)
-    133: DeviceArchitecture.nrf52840, // HELTEC_MESH_NODE_T1 (proto comment)
     135: DeviceArchitecture.nrf52840, // T_IMPULSE_PLUS
-    136: DeviceArchitecture.nrf52840, // T_ECHO_CARD
-    139: DeviceArchitecture.nrf52840, // HELTEC_MESH_TOWER_V2 (firmware variant)
     // esp32
     19: DeviceArchitecture.esp32, // LORA_TYPE
     20: DeviceArchitecture.esp32, // WIPHONE
@@ -85,9 +78,7 @@ class DeviceHardwareCatalog {
     74: DeviceArchitecture.esp32, // RADIOMASTER_900_BANDIT
     77: DeviceArchitecture.esp32, // M5STACK_COREBASIC
     78: DeviceArchitecture.esp32, // M5STACK_CORE2
-    124: DeviceArchitecture.esp32, // TBEAM_BPF
     // esp32s3
-    28: DeviceArchitecture.esp32s3, // SENSELORA_S3
     54: DeviceArchitecture.esp32s3, // EBYTE_ESP32_S3
     55: DeviceArchitecture.esp32s3, // ESP32_S3_PICO
     60: DeviceArchitecture.esp32s3, // TD_LORAC
@@ -100,15 +91,11 @@ class DeviceHardwareCatalog {
     92: DeviceArchitecture.esp32s3, // HELTEC_SENSOR_HUB
     98: DeviceArchitecture.esp32s3, // LINK_32
     104: DeviceArchitecture.esp32s3, // M5STACK_RESERVED
-    114: DeviceArchitecture.esp32s3, // T_WATCH_ULTRA
     126: DeviceArchitecture.esp32s3, // TDISPLAY_S3_PRO
     132: DeviceArchitecture.esp32s3, // HELTEC_V4_R8 (proto comment)
-    134: DeviceArchitecture.esp32s3, // STATION_G3 (firmware variant)
     // esp32c6
-    83: DeviceArchitecture.esp32c6, // TLORA_C6
     87: DeviceArchitecture.esp32c6, // MESHLINK
     // rp2040
-    27: DeviceArchitecture.rp2040, // SENSELORA_RP2040
     76: DeviceArchitecture.rp2040, // RP2040_FEATHER_RFM95
     // rp2350
     79: DeviceArchitecture.rp2350, // RPI_PICO2
@@ -118,26 +105,22 @@ class DeviceHardwareCatalog {
     // unknown / not flashable in-app
     37: DeviceArchitecture.unknown, // PORTDUINO (Linux native)
     38: DeviceArchitecture.unknown, // ANDROID_SIM
-    // Chipset unconfirmed — proto comment bundles M7/M8/M9 with no MCU and
-    // upstream JSON has not yet listed them. Mapped to unknown so the DFU
-    // flow correctly reports "update not supported" instead of routing to
-    // the wrong update path.
-    129: DeviceArchitecture.unknown, // THINKNODE_M7
-    130: DeviceArchitecture.unknown, // THINKNODE_M8
-    131: DeviceArchitecture.unknown, // THINKNODE_M9
-    // Seeed Tracker L2 — proto comment omits the MCU and the upstream JSON
-    // has not listed it yet, so the chipset is unconfirmed. Mapped to unknown
-    // until verified rather than guessing a DFU path.
-    137: DeviceArchitecture.unknown, // SEEED_WIO_TRACKER_L2
+    // Protobuf 2.8 reassigned values 27 and 28 from the retired SenseLoRa
+    // boards to Makerfabs hardware. Neither the upstream JSON nor a firmware
+    // variant exists for them yet, so the MCU is unconfirmed. Mapped to
+    // unknown rather than inheriting the SenseLoRa architectures that used
+    // to sit on these numbers.
+    27: DeviceArchitecture.unknown, // MAKERFABS_TRACKER
+    28: DeviceArchitecture.unknown, // MAKERFABS_RESERVED
     // Elecrow CrowPanel Advance P4 — ESP32-P4, an architecture meshtastic
     // firmware does not yet publish a release asset for. Mapped to unknown so
     // the update flow reports "not supported" instead of routing to a
     // nonexistent firmware-esp32p4- archive (404 on OTA).
     138: DeviceArchitecture.unknown, // CROWPANEL_P4
-    // Meshnology W10: proto adds the hwModel but the upstream firmware has not
-    // published a variant or board file yet, so the MCU is unconfirmed. Mapped
-    // to unknown until verified rather than guessing a DFU path.
-    140: DeviceArchitecture.unknown, // MESHNOLOGY_W10
+    // MeshPager X2: protobuf 2.8 adds the hwModel but neither the upstream
+    // JSON nor a firmware variant lists it yet, so the MCU is unconfirmed.
+    // Mapped to unknown until verified rather than guessing a DFU path.
+    146: DeviceArchitecture.unknown, // MESHPAGER_X2
     255: DeviceArchitecture.unknown, // PRIVATE_HW
   };
 

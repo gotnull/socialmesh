@@ -18,7 +18,13 @@ import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../services/protocol/admin_target.dart';
 
-/// Screen for configuring traffic management module settings (v2.7.19)
+/// Screen for configuring the traffic management module.
+///
+/// Firmware 2.8 dropped the module's boolean switches: every feature is
+/// now a single numeric field where a non-zero value means enabled and
+/// zero means off. The switches on this screen are a presentation layer
+/// over that rule - turning a feature off writes zero, turning it on
+/// restores the last value shown on its slider.
 class TrafficManagementConfigScreen extends ConsumerStatefulWidget {
   const TrafficManagementConfigScreen({super.key});
 
@@ -30,34 +36,31 @@ class TrafficManagementConfigScreen extends ConsumerStatefulWidget {
 class _TrafficManagementConfigScreenState
     extends ConsumerState<TrafficManagementConfigScreen>
     with LifecycleSafeMixin {
+  static const int _defaultPositionMinIntervalSecs = 60;
+  static const int _defaultNodeinfoMaxHops = 3;
+  static const int _defaultRateLimitWindowSecs = 60;
+  static const int _defaultRateLimitMaxPackets = 10;
+  static const int _defaultUnknownPacketThreshold = 5;
+
   bool _isLoading = false;
   bool _isSaving = false;
 
-  // Master toggle
-  bool _enabled = false;
-
-  // Position deduplication
+  // Position deduplication: suppression window, 0 = off.
   bool _positionDedupEnabled = false;
-  int _positionPrecisionBits = 16;
-  int _positionMinIntervalSecs = 60;
+  int _positionMinIntervalSecs = _defaultPositionMinIntervalSecs;
 
-  // NodeInfo direct response
+  // NodeInfo direct response: max hop distance served from cache, 0 = off.
   bool _nodeinfoDirectResponse = false;
-  int _nodeinfoDirectResponseMaxHops = 3;
+  int _nodeinfoDirectResponseMaxHops = _defaultNodeinfoMaxHops;
 
-  // Rate limiting
+  // Per-node rate limiting: window and packet budget, either 0 = off.
   bool _rateLimitEnabled = false;
-  int _rateLimitWindowSecs = 60;
-  int _rateLimitMaxPackets = 10;
+  int _rateLimitWindowSecs = _defaultRateLimitWindowSecs;
+  int _rateLimitMaxPackets = _defaultRateLimitMaxPackets;
 
-  // Unknown packet handling
+  // Unknown packet handling: drop threshold, 0 = off.
   bool _dropUnknownEnabled = false;
-  int _unknownPacketThreshold = 5;
-
-  // Hop management
-  bool _exhaustHopTelemetry = false;
-  bool _exhaustHopPosition = false;
-  bool _routerPreserveHops = false;
+  int _unknownPacketThreshold = _defaultUnknownPacketThreshold;
 
   StreamSubscription<module_pb.ModuleConfig_TrafficManagementConfig>?
   _configSubscription;
@@ -76,32 +79,26 @@ class _TrafficManagementConfigScreenState
 
   void _applyConfig(module_pb.ModuleConfig_TrafficManagementConfig config) {
     safeSetState(() {
-      _enabled = config.enabled;
-      _positionDedupEnabled = config.positionDedupEnabled;
-      _positionPrecisionBits = config.positionPrecisionBits > 0
-          ? config.positionPrecisionBits
-          : 16;
+      _positionDedupEnabled = config.positionMinIntervalSecs > 0;
       _positionMinIntervalSecs = config.positionMinIntervalSecs > 0
           ? config.positionMinIntervalSecs
-          : 60;
-      _nodeinfoDirectResponse = config.nodeinfoDirectResponse;
+          : _defaultPositionMinIntervalSecs;
+      _nodeinfoDirectResponse = config.nodeinfoDirectResponseMaxHops > 0;
       _nodeinfoDirectResponseMaxHops = config.nodeinfoDirectResponseMaxHops > 0
           ? config.nodeinfoDirectResponseMaxHops
-          : 3;
-      _rateLimitEnabled = config.rateLimitEnabled;
+          : _defaultNodeinfoMaxHops;
+      _rateLimitEnabled =
+          config.rateLimitWindowSecs > 0 && config.rateLimitMaxPackets > 0;
       _rateLimitWindowSecs = config.rateLimitWindowSecs > 0
           ? config.rateLimitWindowSecs
-          : 60;
+          : _defaultRateLimitWindowSecs;
       _rateLimitMaxPackets = config.rateLimitMaxPackets > 0
           ? config.rateLimitMaxPackets
-          : 10;
-      _dropUnknownEnabled = config.dropUnknownEnabled;
+          : _defaultRateLimitMaxPackets;
+      _dropUnknownEnabled = config.unknownPacketThreshold > 0;
       _unknownPacketThreshold = config.unknownPacketThreshold > 0
           ? config.unknownPacketThreshold
-          : 5;
-      _exhaustHopTelemetry = config.exhaustHopTelemetry;
-      _exhaustHopPosition = config.exhaustHopPosition;
-      _routerPreserveHops = config.routerPreserveHops;
+          : _defaultUnknownPacketThreshold;
     });
   }
 
@@ -150,20 +147,17 @@ class _TrafficManagementConfigScreenState
         ref.read(remoteAdminTargetProvider),
       );
       await protocol.setTrafficManagementConfig(
-        enabled: _enabled,
-        positionDedupEnabled: _positionDedupEnabled,
-        positionPrecisionBits: _positionPrecisionBits,
-        positionMinIntervalSecs: _positionMinIntervalSecs,
-        nodeinfoDirectResponse: _nodeinfoDirectResponse,
-        nodeinfoDirectResponseMaxHops: _nodeinfoDirectResponseMaxHops,
-        rateLimitEnabled: _rateLimitEnabled,
-        rateLimitWindowSecs: _rateLimitWindowSecs,
-        rateLimitMaxPackets: _rateLimitMaxPackets,
-        dropUnknownEnabled: _dropUnknownEnabled,
-        unknownPacketThreshold: _unknownPacketThreshold,
-        exhaustHopTelemetry: _exhaustHopTelemetry,
-        exhaustHopPosition: _exhaustHopPosition,
-        routerPreserveHops: _routerPreserveHops,
+        positionMinIntervalSecs: _positionDedupEnabled
+            ? _positionMinIntervalSecs
+            : 0,
+        nodeinfoDirectResponseMaxHops: _nodeinfoDirectResponse
+            ? _nodeinfoDirectResponseMaxHops
+            : 0,
+        rateLimitWindowSecs: _rateLimitEnabled ? _rateLimitWindowSecs : 0,
+        rateLimitMaxPackets: _rateLimitEnabled ? _rateLimitMaxPackets : 0,
+        unknownPacketThreshold: _dropUnknownEnabled
+            ? _unknownPacketThreshold
+            : 0,
         target: target,
       );
 
@@ -213,10 +207,6 @@ class _TrafficManagementConfigScreenState
             padding: const EdgeInsets.all(AppTheme.spacing16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _SectionHeader(title: context.l10n.trafficMgmtSectionGeneral),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildGeneralSection(),
-                const SizedBox(height: AppTheme.spacing24),
                 _SectionHeader(
                   title: context.l10n.trafficMgmtSectionPositionDedup,
                 ),
@@ -238,10 +228,6 @@ class _TrafficManagementConfigScreenState
                 ),
                 const SizedBox(height: AppTheme.spacing8),
                 _buildUnknownPacketsSection(),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(title: context.l10n.trafficMgmtSectionHopMgmt),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildHopManagementSection(),
                 const SizedBox(height: AppTheme.spacing32),
               ]),
             ),
@@ -250,410 +236,217 @@ class _TrafficManagementConfigScreenState
     );
   }
 
-  Widget _buildGeneralSection() {
+  Widget _card({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(AppTheme.radius12),
       ),
       padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: _SettingsTile(
-        icon: Icons.traffic,
-        title: context.l10n.trafficMgmtEnable,
-        subtitle: context.l10n.trafficMgmtEnableSubtitle,
-        trailing: ThemedSwitch(
-          value: _enabled,
-          onChanged: (value) {
-            HapticFeedback.selectionClick();
-            setState(() => _enabled = value);
-          },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+
+  Widget _sliderLabel(String title, String description) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: AppTheme.spacing16),
+        Divider(color: context.border),
+        const SizedBox(height: AppTheme.spacing8),
+        Text(
+          title,
+          style: TextStyle(
+            color: context.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
+        const SizedBox(height: AppTheme.spacing4),
+        Text(
+          description,
+          style: TextStyle(color: context.textSecondary, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _slider({
+    required int value,
+    required int min,
+    required int max,
+    required String label,
+    required ValueChanged<int> onChanged,
+  }) {
+    return SliderTheme(
+      data: SliderThemeData(
+        inactiveTrackColor: SemanticColors.divider,
+        thumbColor: context.accentColor,
+        overlayColor: context.accentColor.withAlpha(30),
+      ),
+      child: Slider(
+        value: value.toDouble(),
+        min: min.toDouble(),
+        max: max.toDouble(),
+        divisions: max - min,
+        label: label,
+        onChanged: (v) => onChanged(v.toInt()),
       ),
     );
   }
 
   Widget _buildPositionDedupSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SettingsTile(
-            icon: Icons.filter_alt,
-            title: context.l10n.trafficMgmtPositionDedup,
-            subtitle: context.l10n.trafficMgmtPositionDedupSubtitle,
-            trailing: ThemedSwitch(
-              value: _positionDedupEnabled,
-              onChanged: _enabled
-                  ? (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _positionDedupEnabled = value);
-                    }
-                  : null,
-            ),
+    return _card(
+      children: [
+        _SettingsTile(
+          icon: Icons.filter_alt,
+          title: context.l10n.trafficMgmtPositionDedup,
+          subtitle: context.l10n.trafficMgmtPositionDedupSubtitle,
+          trailing: ThemedSwitch(
+            value: _positionDedupEnabled,
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _positionDedupEnabled = value);
+            },
           ),
-          if (_positionDedupEnabled && _enabled) ...[
-            const SizedBox(height: AppTheme.spacing16),
-            Divider(color: context.border),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.trafficMgmtPrecisionBits(_positionPrecisionBits),
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              context.l10n.trafficMgmtPrecisionBitsDesc,
-              style: TextStyle(color: context.textSecondary, fontSize: 12),
-            ),
-            SliderTheme(
-              data: SliderThemeData(
-                inactiveTrackColor: SemanticColors.divider,
-                thumbColor: context.accentColor,
-                overlayColor: context.accentColor.withAlpha(30),
-              ),
-              child: Slider(
-                value: _positionPrecisionBits.toDouble(),
-                min: 0,
-                max: 32,
-                divisions: 32,
-                label: context.l10n.trafficMgmtPrecisionBitsLabel(
-                  _positionPrecisionBits,
-                ),
-                onChanged: (value) {
-                  setState(() => _positionPrecisionBits = value.toInt());
-                },
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.trafficMgmtMinInterval(_positionMinIntervalSecs),
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              context.l10n.trafficMgmtMinIntervalDesc,
-              style: TextStyle(color: context.textSecondary, fontSize: 12),
-            ),
-            SliderTheme(
-              data: SliderThemeData(
-                inactiveTrackColor: SemanticColors.divider,
-                thumbColor: context.accentColor,
-                overlayColor: context.accentColor.withAlpha(30),
-              ),
-              child: Slider(
-                value: _positionMinIntervalSecs.toDouble(),
-                min: 10,
-                max: 600,
-                divisions: 59,
-                label:
-                    '${_positionMinIntervalSecs}s', // lint-allow: hardcoded-string
-                onChanged: (value) {
-                  setState(() => _positionMinIntervalSecs = value.toInt());
-                },
-              ),
-            ),
-          ],
+        ),
+        if (_positionDedupEnabled) ...[
+          _sliderLabel(
+            context.l10n.trafficMgmtMinInterval(_positionMinIntervalSecs),
+            context.l10n.trafficMgmtMinIntervalDesc,
+          ),
+          _slider(
+            value: _positionMinIntervalSecs,
+            min: 10,
+            max: 600,
+            label:
+                '${_positionMinIntervalSecs}s', // lint-allow: hardcoded-string
+            onChanged: (v) => setState(() => _positionMinIntervalSecs = v),
+          ),
         ],
-      ),
+      ],
     );
   }
 
   Widget _buildNodeinfoSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SettingsTile(
-            icon: Icons.info_outline,
-            title: context.l10n.trafficMgmtDirectResponse,
-            subtitle: context.l10n.trafficMgmtDirectResponseSubtitle,
-            trailing: ThemedSwitch(
-              value: _nodeinfoDirectResponse,
-              onChanged: _enabled
-                  ? (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _nodeinfoDirectResponse = value);
-                    }
-                  : null,
-            ),
+    return _card(
+      children: [
+        _SettingsTile(
+          icon: Icons.info_outline,
+          title: context.l10n.trafficMgmtDirectResponse,
+          subtitle: context.l10n.trafficMgmtDirectResponseSubtitle,
+          trailing: ThemedSwitch(
+            value: _nodeinfoDirectResponse,
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _nodeinfoDirectResponse = value);
+            },
           ),
-          if (_nodeinfoDirectResponse && _enabled) ...[
-            const SizedBox(height: AppTheme.spacing16),
-            Divider(color: context.border),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.trafficMgmtMaxHops(_nodeinfoDirectResponseMaxHops),
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              context.l10n.trafficMgmtMaxHopsDesc,
-              style: TextStyle(color: context.textSecondary, fontSize: 12),
-            ),
-            SliderTheme(
-              data: SliderThemeData(
-                inactiveTrackColor: SemanticColors.divider,
-                thumbColor: context.accentColor,
-                overlayColor: context.accentColor.withAlpha(30),
-              ),
-              child: Slider(
-                value: _nodeinfoDirectResponseMaxHops.toDouble(),
-                min: 0,
-                max: 7,
-                divisions: 7,
-                label:
-                    '$_nodeinfoDirectResponseMaxHops', // lint-allow: hardcoded-string
-                onChanged: (value) {
-                  setState(
-                    () => _nodeinfoDirectResponseMaxHops = value.toInt(),
-                  );
-                },
-              ),
-            ),
-          ],
+        ),
+        if (_nodeinfoDirectResponse) ...[
+          _sliderLabel(
+            context.l10n.trafficMgmtMaxHops(_nodeinfoDirectResponseMaxHops),
+            context.l10n.trafficMgmtMaxHopsDesc,
+          ),
+          _slider(
+            value: _nodeinfoDirectResponseMaxHops,
+            min: 1,
+            max: 7,
+            label:
+                '$_nodeinfoDirectResponseMaxHops', // lint-allow: hardcoded-string
+            onChanged: (v) =>
+                setState(() => _nodeinfoDirectResponseMaxHops = v),
+          ),
         ],
-      ),
+      ],
     );
   }
 
   Widget _buildRateLimitSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SettingsTile(
-            icon: Icons.speed,
-            title: context.l10n.trafficMgmtPerNodeRateLimit,
-            subtitle: context.l10n.trafficMgmtPerNodeRateLimitSubtitle,
-            trailing: ThemedSwitch(
-              value: _rateLimitEnabled,
-              onChanged: _enabled
-                  ? (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _rateLimitEnabled = value);
-                    }
-                  : null,
+    return _card(
+      children: [
+        _SettingsTile(
+          icon: Icons.speed,
+          title: context.l10n.trafficMgmtPerNodeRateLimit,
+          subtitle: context.l10n.trafficMgmtPerNodeRateLimitSubtitle,
+          trailing: ThemedSwitch(
+            value: _rateLimitEnabled,
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _rateLimitEnabled = value);
+            },
+          ),
+        ),
+        if (_rateLimitEnabled) ...[
+          _sliderLabel(
+            context.l10n.trafficMgmtWindow(_rateLimitWindowSecs),
+            context.l10n.trafficMgmtWindowDesc,
+          ),
+          _slider(
+            value: _rateLimitWindowSecs,
+            min: 10,
+            max: 300,
+            label: '${_rateLimitWindowSecs}s', // lint-allow: hardcoded-string
+            onChanged: (v) => setState(() => _rateLimitWindowSecs = v),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            context.l10n.trafficMgmtMaxPackets(_rateLimitMaxPackets),
+            style: TextStyle(
+              color: context.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          if (_rateLimitEnabled && _enabled) ...[
-            const SizedBox(height: AppTheme.spacing16),
-            Divider(color: context.border),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.trafficMgmtWindow(_rateLimitWindowSecs),
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              context.l10n.trafficMgmtWindowDesc,
-              style: TextStyle(color: context.textSecondary, fontSize: 12),
-            ),
-            SliderTheme(
-              data: SliderThemeData(
-                inactiveTrackColor: SemanticColors.divider,
-                thumbColor: context.accentColor,
-                overlayColor: context.accentColor.withAlpha(30),
-              ),
-              child: Slider(
-                value: _rateLimitWindowSecs.toDouble(),
-                min: 10,
-                max: 300,
-                divisions: 29,
-                label:
-                    '${_rateLimitWindowSecs}s', // lint-allow: hardcoded-string
-                onChanged: (value) {
-                  setState(() => _rateLimitWindowSecs = value.toInt());
-                },
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.trafficMgmtMaxPackets(_rateLimitMaxPackets),
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              context.l10n.trafficMgmtMaxPacketsDesc,
-              style: TextStyle(color: context.textSecondary, fontSize: 12),
-            ),
-            SliderTheme(
-              data: SliderThemeData(
-                inactiveTrackColor: SemanticColors.divider,
-                thumbColor: context.accentColor,
-                overlayColor: context.accentColor.withAlpha(30),
-              ),
-              child: Slider(
-                value: _rateLimitMaxPackets.toDouble(),
-                min: 1,
-                max: 50,
-                divisions: 49,
-                label: '$_rateLimitMaxPackets', // lint-allow: hardcoded-string
-                onChanged: (value) {
-                  setState(() => _rateLimitMaxPackets = value.toInt());
-                },
-              ),
-            ),
-          ],
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            context.l10n.trafficMgmtMaxPacketsDesc,
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
+          ),
+          _slider(
+            value: _rateLimitMaxPackets,
+            min: 1,
+            max: 50,
+            label: '$_rateLimitMaxPackets', // lint-allow: hardcoded-string
+            onChanged: (v) => setState(() => _rateLimitMaxPackets = v),
+          ),
         ],
-      ),
+      ],
     );
   }
 
   Widget _buildUnknownPacketsSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SettingsTile(
-            icon: Icons.help_outline,
-            title: context.l10n.trafficMgmtDropUnknown,
-            subtitle: context.l10n.trafficMgmtDropUnknownSubtitle,
-            trailing: ThemedSwitch(
-              value: _dropUnknownEnabled,
-              onChanged: _enabled
-                  ? (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _dropUnknownEnabled = value);
-                    }
-                  : null,
-            ),
+    return _card(
+      children: [
+        _SettingsTile(
+          icon: Icons.help_outline,
+          title: context.l10n.trafficMgmtDropUnknown,
+          subtitle: context.l10n.trafficMgmtDropUnknownSubtitle,
+          trailing: ThemedSwitch(
+            value: _dropUnknownEnabled,
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _dropUnknownEnabled = value);
+            },
           ),
-          if (_dropUnknownEnabled && _enabled) ...[
-            const SizedBox(height: AppTheme.spacing16),
-            Divider(color: context.border),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.trafficMgmtThreshold(_unknownPacketThreshold),
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              context.l10n.trafficMgmtThresholdDesc,
-              style: TextStyle(color: context.textSecondary, fontSize: 12),
-            ),
-            SliderTheme(
-              data: SliderThemeData(
-                inactiveTrackColor: SemanticColors.divider,
-                thumbColor: context.accentColor,
-                overlayColor: context.accentColor.withAlpha(30),
-              ),
-              child: Slider(
-                value: _unknownPacketThreshold.toDouble(),
-                min: 1,
-                max: 20,
-                divisions: 19,
-                label:
-                    '$_unknownPacketThreshold', // lint-allow: hardcoded-string
-                onChanged: (value) {
-                  setState(() => _unknownPacketThreshold = value.toInt());
-                },
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHopManagementSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SettingsTile(
-            icon: Icons.compress,
-            title: context.l10n.trafficMgmtExhaustHopTelemetry,
-            subtitle: context.l10n.trafficMgmtExhaustHopTelemetrySub,
-            trailing: ThemedSwitch(
-              value: _exhaustHopTelemetry,
-              onChanged: _enabled
-                  ? (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _exhaustHopTelemetry = value);
-                    }
-                  : null,
-            ),
+        ),
+        if (_dropUnknownEnabled) ...[
+          _sliderLabel(
+            context.l10n.trafficMgmtThreshold(_unknownPacketThreshold),
+            context.l10n.trafficMgmtThresholdDesc,
           ),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.compress,
-            title: context.l10n.trafficMgmtExhaustHopPosition,
-            subtitle: context.l10n.trafficMgmtExhaustHopPositionSub,
-            trailing: ThemedSwitch(
-              value: _exhaustHopPosition,
-              onChanged: _enabled
-                  ? (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _exhaustHopPosition = value);
-                    }
-                  : null,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.route,
-            title: context.l10n.trafficMgmtPreserveRouterHops,
-            subtitle: context.l10n.trafficMgmtPreserveRouterHopsSub,
-            trailing: ThemedSwitch(
-              value: _routerPreserveHops,
-              onChanged: _enabled
-                  ? (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _routerPreserveHops = value);
-                    }
-                  : null,
-            ),
+          _slider(
+            value: _unknownPacketThreshold,
+            min: 1,
+            max: 20,
+            label: '$_unknownPacketThreshold', // lint-allow: hardcoded-string
+            onChanged: (v) => setState(() => _unknownPacketThreshold = v),
           ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -674,6 +467,7 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: context.textSecondary, size: 22),
         SizedBox(width: AppTheme.spacing12),

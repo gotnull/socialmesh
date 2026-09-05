@@ -178,6 +178,15 @@ const ModuleConfig$json = {
       '9': 0,
       '10': 'tak'
     },
+    {
+      '1': 'mesh_beacon',
+      '3': 17,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.MeshBeaconConfig',
+      '9': 0,
+      '10': 'meshBeacon'
+    },
   ],
   '3': [
     ModuleConfig_MQTTConfig$json,
@@ -196,6 +205,7 @@ const ModuleConfig$json = {
     ModuleConfig_CannedMessageConfig$json,
     ModuleConfig_AmbientLightingConfig$json,
     ModuleConfig_StatusMessageConfig$json,
+    ModuleConfig_MeshBeaconConfig$json,
     ModuleConfig_TAKConfig$json
   ],
   '8': [
@@ -427,21 +437,6 @@ const ModuleConfig_PaxcounterConfig$json = {
 const ModuleConfig_TrafficManagementConfig$json = {
   '1': 'TrafficManagementConfig',
   '2': [
-    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
-    {
-      '1': 'position_dedup_enabled',
-      '3': 2,
-      '4': 1,
-      '5': 8,
-      '10': 'positionDedupEnabled'
-    },
-    {
-      '1': 'position_precision_bits',
-      '3': 3,
-      '4': 1,
-      '5': 13,
-      '10': 'positionPrecisionBits'
-    },
     {
       '1': 'position_min_interval_secs',
       '3': 4,
@@ -450,25 +445,11 @@ const ModuleConfig_TrafficManagementConfig$json = {
       '10': 'positionMinIntervalSecs'
     },
     {
-      '1': 'nodeinfo_direct_response',
-      '3': 5,
-      '4': 1,
-      '5': 8,
-      '10': 'nodeinfoDirectResponse'
-    },
-    {
       '1': 'nodeinfo_direct_response_max_hops',
       '3': 6,
       '4': 1,
       '5': 13,
       '10': 'nodeinfoDirectResponseMaxHops'
-    },
-    {
-      '1': 'rate_limit_enabled',
-      '3': 7,
-      '4': 1,
-      '5': 8,
-      '10': 'rateLimitEnabled'
     },
     {
       '1': 'rate_limit_window_secs',
@@ -485,40 +466,34 @@ const ModuleConfig_TrafficManagementConfig$json = {
       '10': 'rateLimitMaxPackets'
     },
     {
-      '1': 'drop_unknown_enabled',
-      '3': 10,
-      '4': 1,
-      '5': 8,
-      '10': 'dropUnknownEnabled'
-    },
-    {
       '1': 'unknown_packet_threshold',
       '3': 11,
       '4': 1,
       '5': 13,
       '10': 'unknownPacketThreshold'
     },
-    {
-      '1': 'exhaust_hop_telemetry',
-      '3': 12,
-      '4': 1,
-      '5': 8,
-      '10': 'exhaustHopTelemetry'
-    },
-    {
-      '1': 'exhaust_hop_position',
-      '3': 13,
-      '4': 1,
-      '5': 8,
-      '10': 'exhaustHopPosition'
-    },
-    {
-      '1': 'router_preserve_hops',
-      '3': 14,
-      '4': 1,
-      '5': 8,
-      '10': 'routerPreserveHops'
-    },
+  ],
+  '9': [
+    {'1': 1, '2': 2},
+    {'1': 2, '2': 3},
+    {'1': 3, '2': 4},
+    {'1': 5, '2': 6},
+    {'1': 7, '2': 8},
+    {'1': 10, '2': 11},
+    {'1': 12, '2': 13},
+    {'1': 13, '2': 14},
+    {'1': 14, '2': 15},
+  ],
+  '10': [
+    'enabled',
+    'position_dedup_enabled',
+    'position_precision_bits',
+    'nodeinfo_direct_response',
+    'rate_limit_enabled',
+    'drop_unknown_enabled',
+    'exhaust_hop_telemetry',
+    'exhaust_hop_position',
+    'router_preserve_hops'
   ],
 };
 
@@ -898,6 +873,128 @@ const ModuleConfig_StatusMessageConfig$json = {
 };
 
 @$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_MeshBeaconConfig$json = {
+  '1': 'MeshBeaconConfig',
+  '2': [
+    {'1': 'flags', '3': 1, '4': 1, '5': 13, '10': 'flags'},
+    {
+      '1': 'broadcast_message',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '10': 'broadcastMessage'
+    },
+    {
+      '1': 'broadcast_offer_channel',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.ChannelSettings',
+      '10': 'broadcastOfferChannel'
+    },
+    {
+      '1': 'broadcast_offer_region',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.Config.LoRaConfig.RegionCode',
+      '10': 'broadcastOfferRegion'
+    },
+    {
+      '1': 'broadcast_offer_preset',
+      '3': 7,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.Config.LoRaConfig.ModemPreset',
+      '9': 0,
+      '10': 'broadcastOfferPreset',
+      '17': true
+    },
+    {
+      '1': 'broadcast_interval_secs',
+      '3': 11,
+      '4': 1,
+      '5': 13,
+      '10': 'broadcastIntervalSecs'
+    },
+    {
+      '1': 'broadcast_targets',
+      '3': 13,
+      '4': 3,
+      '5': 11,
+      '6': '.meshtastic.ModuleConfig.MeshBeaconConfig.BroadcastTarget',
+      '10': 'broadcastTargets'
+    },
+  ],
+  '3': [ModuleConfig_MeshBeaconConfig_BroadcastTarget$json],
+  '4': [ModuleConfig_MeshBeaconConfig_Flags$json],
+  '8': [
+    {'1': '_broadcast_offer_preset'},
+  ],
+  '9': [
+    {'1': 3, '2': 4},
+    {'1': 8, '2': 9},
+    {'1': 9, '2': 10},
+    {'1': 10, '2': 11},
+  ],
+  '10': [
+    'broadcast_send_as_node',
+    'broadcast_on_channel',
+    'broadcast_on_region',
+    'broadcast_on_preset'
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_MeshBeaconConfig_BroadcastTarget$json = {
+  '1': 'BroadcastTarget',
+  '2': [
+    {
+      '1': 'preset',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.Config.LoRaConfig.ModemPreset',
+      '9': 0,
+      '10': 'preset',
+      '17': true
+    },
+    {
+      '1': 'region',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.Config.LoRaConfig.RegionCode',
+      '10': 'region'
+    },
+    {
+      '1': 'channel_index',
+      '3': 4,
+      '4': 1,
+      '5': 13,
+      '9': 1,
+      '10': 'channelIndex',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_preset'},
+    {'1': '_channel_index'},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
+const ModuleConfig_MeshBeaconConfig_Flags$json = {
+  '1': 'Flags',
+  '2': [
+    {'1': 'FLAG_NONE', '2': 0},
+    {'1': 'FLAG_LISTEN_ENABLED', '2': 1},
+    {'1': 'FLAG_BROADCAST_ENABLED', '2': 2},
+    {'1': 'FLAG_LEGACY_SPLIT', '2': 4},
+  ],
+};
+
+@$core.Deprecated('Use moduleConfigDescriptor instead')
 const ModuleConfig_TAKConfig$json = {
   '1': 'TAKConfig',
   '2': [
@@ -945,125 +1042,140 @@ final $typed_data.Uint8List moduleConfigDescriptor = $convert.base64Decode(
     'bmZpZy5TdGF0dXNNZXNzYWdlQ29uZmlnSABSDXN0YXR1c21lc3NhZ2USYQoSdHJhZmZpY19tYW'
     '5hZ2VtZW50GA8gASgLMjAubWVzaHRhc3RpYy5Nb2R1bGVDb25maWcuVHJhZmZpY01hbmFnZW1l'
     'bnRDb25maWdIAFIRdHJhZmZpY01hbmFnZW1lbnQSNgoDdGFrGBAgASgLMiIubWVzaHRhc3RpYy'
-    '5Nb2R1bGVDb25maWcuVEFLQ29uZmlnSABSA3RhaxrKAwoKTVFUVENvbmZpZxIYCgdlbmFibGVk'
-    'GAEgASgIUgdlbmFibGVkEhgKB2FkZHJlc3MYAiABKAlSB2FkZHJlc3MSGgoIdXNlcm5hbWUYAy'
-    'ABKAlSCHVzZXJuYW1lEhoKCHBhc3N3b3JkGAQgASgJUghwYXNzd29yZBItChJlbmNyeXB0aW9u'
-    'X2VuYWJsZWQYBSABKAhSEWVuY3J5cHRpb25FbmFibGVkEiUKDGpzb25fZW5hYmxlZBgGIAEoCE'
-    'ICGAFSC2pzb25FbmFibGVkEh8KC3Rsc19lbmFibGVkGAcgASgIUgp0bHNFbmFibGVkEhIKBHJv'
-    'b3QYCCABKAlSBHJvb3QSNQoXcHJveHlfdG9fY2xpZW50X2VuYWJsZWQYCSABKAhSFHByb3h5VG'
-    '9DbGllbnRFbmFibGVkEjIKFW1hcF9yZXBvcnRpbmdfZW5hYmxlZBgKIAEoCFITbWFwUmVwb3J0'
-    'aW5nRW5hYmxlZBJaChNtYXBfcmVwb3J0X3NldHRpbmdzGAsgASgLMioubWVzaHRhc3RpYy5Nb2'
-    'R1bGVDb25maWcuTWFwUmVwb3J0U2V0dGluZ3NSEW1hcFJlcG9ydFNldHRpbmdzGqwBChFNYXBS'
-    'ZXBvcnRTZXR0aW5ncxIyChVwdWJsaXNoX2ludGVydmFsX3NlY3MYASABKA1SE3B1Ymxpc2hJbn'
-    'RlcnZhbFNlY3MSLQoScG9zaXRpb25fcHJlY2lzaW9uGAIgASgNUhFwb3NpdGlvblByZWNpc2lv'
-    'bhI0ChZzaG91bGRfcmVwb3J0X2xvY2F0aW9uGAMgASgIUhRzaG91bGRSZXBvcnRMb2NhdGlvbh'
-    'qzAQoUUmVtb3RlSGFyZHdhcmVDb25maWcSGAoHZW5hYmxlZBgBIAEoCFIHZW5hYmxlZBI7Chph'
-    'bGxvd191bmRlZmluZWRfcGluX2FjY2VzcxgCIAEoCFIXYWxsb3dVbmRlZmluZWRQaW5BY2Nlc3'
-    'MSRAoOYXZhaWxhYmxlX3BpbnMYAyADKAsyHS5tZXNodGFzdGljLlJlbW90ZUhhcmR3YXJlUGlu'
-    'Ug1hdmFpbGFibGVQaW5zGoUBChJOZWlnaGJvckluZm9Db25maWcSGAoHZW5hYmxlZBgBIAEoCF'
-    'IHZW5hYmxlZBInCg91cGRhdGVfaW50ZXJ2YWwYAiABKA1SDnVwZGF0ZUludGVydmFsEiwKEnRy'
-    'YW5zbWl0X292ZXJfbG9yYRgDIAEoCFIQdHJhbnNtaXRPdmVyTG9yYRqHBAoVRGV0ZWN0aW9uU2'
-    'Vuc29yQ29uZmlnEhgKB2VuYWJsZWQYASABKAhSB2VuYWJsZWQSNAoWbWluaW11bV9icm9hZGNh'
-    'c3Rfc2VjcxgCIAEoDVIUbWluaW11bUJyb2FkY2FzdFNlY3MSMAoUc3RhdGVfYnJvYWRjYXN0X3'
-    'NlY3MYAyABKA1SEnN0YXRlQnJvYWRjYXN0U2VjcxIbCglzZW5kX2JlbGwYBCABKAhSCHNlbmRC'
-    'ZWxsEhIKBG5hbWUYBSABKAlSBG5hbWUSHwoLbW9uaXRvcl9waW4YBiABKA1SCm1vbml0b3JQaW'
-    '4ScAoWZGV0ZWN0aW9uX3RyaWdnZXJfdHlwZRgHIAEoDjI6Lm1lc2h0YXN0aWMuTW9kdWxlQ29u'
-    'ZmlnLkRldGVjdGlvblNlbnNvckNvbmZpZy5UcmlnZ2VyVHlwZVIUZGV0ZWN0aW9uVHJpZ2dlcl'
-    'R5cGUSHQoKdXNlX3B1bGx1cBgIIAEoCFIJdXNlUHVsbHVwIogBCgtUcmlnZ2VyVHlwZRINCglM'
-    'T0dJQ19MT1cQABIOCgpMT0dJQ19ISUdIEAESEAoMRkFMTElOR19FREdFEAISDwoLUklTSU5HX0'
-    'VER0UQAxIaChZFSVRIRVJfRURHRV9BQ1RJVkVfTE9XEAQSGwoXRUlUSEVSX0VER0VfQUNUSVZF'
-    'X0hJR0gQBRqiAwoLQXVkaW9Db25maWcSJQoOY29kZWMyX2VuYWJsZWQYASABKAhSDWNvZGVjMk'
-    'VuYWJsZWQSFwoHcHR0X3BpbhgCIAEoDVIGcHR0UGluEkkKB2JpdHJhdGUYAyABKA4yLy5tZXNo'
-    'dGFzdGljLk1vZHVsZUNvbmZpZy5BdWRpb0NvbmZpZy5BdWRpb19CYXVkUgdiaXRyYXRlEhUKBm'
-    'kyc193cxgEIAEoDVIFaTJzV3MSFQoGaTJzX3NkGAUgASgNUgVpMnNTZBIXCgdpMnNfZGluGAYg'
-    'ASgNUgZpMnNEaW4SFwoHaTJzX3NjaxgHIAEoDVIGaTJzU2NrIqcBCgpBdWRpb19CYXVkEhIKDk'
-    'NPREVDMl9ERUZBVUxUEAASDwoLQ09ERUMyXzMyMDAQARIPCgtDT0RFQzJfMjQwMBACEg8KC0NP'
-    'REVDMl8xNjAwEAMSDwoLQ09ERUMyXzE0MDAQBBIPCgtDT0RFQzJfMTMwMBAFEg8KC0NPREVDMl'
-    '8xMjAwEAYSDgoKQ09ERUMyXzcwMBAHEg8KC0NPREVDMl83MDBCEAgatgEKEFBheGNvdW50ZXJD'
-    'b25maWcSGAoHZW5hYmxlZBgBIAEoCFIHZW5hYmxlZBI8ChpwYXhjb3VudGVyX3VwZGF0ZV9pbn'
-    'RlcnZhbBgCIAEoDVIYcGF4Y291bnRlclVwZGF0ZUludGVydmFsEiUKDndpZmlfdGhyZXNob2xk'
-    'GAMgASgFUg13aWZpVGhyZXNob2xkEiMKDWJsZV90aHJlc2hvbGQYBCABKAVSDGJsZVRocmVzaG'
-    '9sZBr+BQoXVHJhZmZpY01hbmFnZW1lbnRDb25maWcSGAoHZW5hYmxlZBgBIAEoCFIHZW5hYmxl'
-    'ZBI0ChZwb3NpdGlvbl9kZWR1cF9lbmFibGVkGAIgASgIUhRwb3NpdGlvbkRlZHVwRW5hYmxlZB'
-    'I2Chdwb3NpdGlvbl9wcmVjaXNpb25fYml0cxgDIAEoDVIVcG9zaXRpb25QcmVjaXNpb25CaXRz'
-    'EjsKGnBvc2l0aW9uX21pbl9pbnRlcnZhbF9zZWNzGAQgASgNUhdwb3NpdGlvbk1pbkludGVydm'
-    'FsU2VjcxI4Chhub2RlaW5mb19kaXJlY3RfcmVzcG9uc2UYBSABKAhSFm5vZGVpbmZvRGlyZWN0'
-    'UmVzcG9uc2USSAohbm9kZWluZm9fZGlyZWN0X3Jlc3BvbnNlX21heF9ob3BzGAYgASgNUh1ub2'
-    'RlaW5mb0RpcmVjdFJlc3BvbnNlTWF4SG9wcxIsChJyYXRlX2xpbWl0X2VuYWJsZWQYByABKAhS'
-    'EHJhdGVMaW1pdEVuYWJsZWQSMwoWcmF0ZV9saW1pdF93aW5kb3dfc2VjcxgIIAEoDVITcmF0ZU'
-    'xpbWl0V2luZG93U2VjcxIzChZyYXRlX2xpbWl0X21heF9wYWNrZXRzGAkgASgNUhNyYXRlTGlt'
-    'aXRNYXhQYWNrZXRzEjAKFGRyb3BfdW5rbm93bl9lbmFibGVkGAogASgIUhJkcm9wVW5rbm93bk'
-    'VuYWJsZWQSOAoYdW5rbm93bl9wYWNrZXRfdGhyZXNob2xkGAsgASgNUhZ1bmtub3duUGFja2V0'
-    'VGhyZXNob2xkEjIKFWV4aGF1c3RfaG9wX3RlbGVtZXRyeRgMIAEoCFITZXhoYXVzdEhvcFRlbG'
-    'VtZXRyeRIwChRleGhhdXN0X2hvcF9wb3NpdGlvbhgNIAEoCFISZXhoYXVzdEhvcFBvc2l0aW9u'
-    'EjAKFHJvdXRlcl9wcmVzZXJ2ZV9ob3BzGA4gASgIUhJyb3V0ZXJQcmVzZXJ2ZUhvcHMa7AUKDF'
-    'NlcmlhbENvbmZpZxIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEhIKBGVjaG8YAiABKAhSBGVj'
-    'aG8SEAoDcnhkGAMgASgNUgNyeGQSEAoDdHhkGAQgASgNUgN0eGQSRQoEYmF1ZBgFIAEoDjIxLm'
-    '1lc2h0YXN0aWMuTW9kdWxlQ29uZmlnLlNlcmlhbENvbmZpZy5TZXJpYWxfQmF1ZFIEYmF1ZBIY'
-    'Cgd0aW1lb3V0GAYgASgNUgd0aW1lb3V0EkUKBG1vZGUYByABKA4yMS5tZXNodGFzdGljLk1vZH'
-    'VsZUNvbmZpZy5TZXJpYWxDb25maWcuU2VyaWFsX01vZGVSBG1vZGUSPwocb3ZlcnJpZGVfY29u'
-    'c29sZV9zZXJpYWxfcG9ydBgIIAEoCFIZb3ZlcnJpZGVDb25zb2xlU2VyaWFsUG9ydCKKAgoLU2'
-    'VyaWFsX0JhdWQSEAoMQkFVRF9ERUZBVUxUEAASDAoIQkFVRF8xMTAQARIMCghCQVVEXzMwMBAC'
-    'EgwKCEJBVURfNjAwEAMSDQoJQkFVRF8xMjAwEAQSDQoJQkFVRF8yNDAwEAUSDQoJQkFVRF80OD'
-    'AwEAYSDQoJQkFVRF85NjAwEAcSDgoKQkFVRF8xOTIwMBAIEg4KCkJBVURfMzg0MDAQCRIOCgpC'
-    'QVVEXzU3NjAwEAoSDwoLQkFVRF8xMTUyMDAQCxIPCgtCQVVEXzIzMDQwMBAMEg8KC0JBVURfND'
-    'YwODAwEA0SDwoLQkFVRF81NzYwMDAQDhIPCgtCQVVEXzkyMTYwMBAPIpMBCgtTZXJpYWxfTW9k'
-    'ZRILCgdERUZBVUxUEAASCgoGU0lNUExFEAESCQoFUFJPVE8QAhILCgdURVhUTVNHEAMSCAoETk'
-    '1FQRAEEgsKB0NBTFRPUE8QBRIICgRXUzg1EAYSDQoJVkVfRElSRUNUEAcSDQoJTVNfQ09ORklH'
-    'EAgSBwoDTE9HEAkSCwoHTE9HVEVYVBAKGqwEChpFeHRlcm5hbE5vdGlmaWNhdGlvbkNvbmZpZx'
-    'IYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEhsKCW91dHB1dF9tcxgCIAEoDVIIb3V0cHV0TXMS'
-    'FgoGb3V0cHV0GAMgASgNUgZvdXRwdXQSIQoMb3V0cHV0X3ZpYnJhGAggASgNUgtvdXRwdXRWaW'
-    'JyYRIjCg1vdXRwdXRfYnV6emVyGAkgASgNUgxvdXRwdXRCdXp6ZXISFgoGYWN0aXZlGAQgASgI'
-    'UgZhY3RpdmUSIwoNYWxlcnRfbWVzc2FnZRgFIAEoCFIMYWxlcnRNZXNzYWdlEi4KE2FsZXJ0X2'
-    '1lc3NhZ2VfdmlicmEYCiABKAhSEWFsZXJ0TWVzc2FnZVZpYnJhEjAKFGFsZXJ0X21lc3NhZ2Vf'
-    'YnV6emVyGAsgASgIUhJhbGVydE1lc3NhZ2VCdXp6ZXISHQoKYWxlcnRfYmVsbBgGIAEoCFIJYW'
-    'xlcnRCZWxsEigKEGFsZXJ0X2JlbGxfdmlicmEYDCABKAhSDmFsZXJ0QmVsbFZpYnJhEioKEWFs'
-    'ZXJ0X2JlbGxfYnV6emVyGA0gASgIUg9hbGVydEJlbGxCdXp6ZXISFwoHdXNlX3B3bRgHIAEoCF'
-    'IGdXNlUHdtEh8KC25hZ190aW1lb3V0GA4gASgNUgpuYWdUaW1lb3V0EikKEXVzZV9pMnNfYXNf'
-    'YnV6emVyGA8gASgIUg51c2VJMnNBc0J1enplchrlAQoSU3RvcmVGb3J3YXJkQ29uZmlnEhgKB2'
-    'VuYWJsZWQYASABKAhSB2VuYWJsZWQSHAoJaGVhcnRiZWF0GAIgASgIUgloZWFydGJlYXQSGAoH'
-    'cmVjb3JkcxgDIAEoDVIHcmVjb3JkcxIsChJoaXN0b3J5X3JldHVybl9tYXgYBCABKA1SEGhpc3'
-    'RvcnlSZXR1cm5NYXgSMgoVaGlzdG9yeV9yZXR1cm5fd2luZG93GAUgASgNUhNoaXN0b3J5UmV0'
-    'dXJuV2luZG93EhsKCWlzX3NlcnZlchgGIAEoCFIIaXNTZXJ2ZXIafwoPUmFuZ2VUZXN0Q29uZm'
-    'lnEhgKB2VuYWJsZWQYASABKAhSB2VuYWJsZWQSFgoGc2VuZGVyGAIgASgNUgZzZW5kZXISEgoE'
-    'c2F2ZRgDIAEoCFIEc2F2ZRImCg9jbGVhcl9vbl9yZWJvb3QYBCABKAhSDWNsZWFyT25SZWJvb3'
-    'Qa9gYKD1RlbGVtZXRyeUNvbmZpZxI0ChZkZXZpY2VfdXBkYXRlX2ludGVydmFsGAEgASgNUhRk'
-    'ZXZpY2VVcGRhdGVJbnRlcnZhbBI+ChtlbnZpcm9ubWVudF91cGRhdGVfaW50ZXJ2YWwYAiABKA'
-    '1SGWVudmlyb25tZW50VXBkYXRlSW50ZXJ2YWwSRgofZW52aXJvbm1lbnRfbWVhc3VyZW1lbnRf'
-    'ZW5hYmxlZBgDIAEoCFIdZW52aXJvbm1lbnRNZWFzdXJlbWVudEVuYWJsZWQSPAoaZW52aXJvbm'
-    '1lbnRfc2NyZWVuX2VuYWJsZWQYBCABKAhSGGVudmlyb25tZW50U2NyZWVuRW5hYmxlZBJECh5l'
-    'bnZpcm9ubWVudF9kaXNwbGF5X2ZhaHJlbmhlaXQYBSABKAhSHGVudmlyb25tZW50RGlzcGxheU'
-    'ZhaHJlbmhlaXQSLgoTYWlyX3F1YWxpdHlfZW5hYmxlZBgGIAEoCFIRYWlyUXVhbGl0eUVuYWJs'
-    'ZWQSMAoUYWlyX3F1YWxpdHlfaW50ZXJ2YWwYByABKA1SEmFpclF1YWxpdHlJbnRlcnZhbBI6Ch'
-    'lwb3dlcl9tZWFzdXJlbWVudF9lbmFibGVkGAggASgIUhdwb3dlck1lYXN1cmVtZW50RW5hYmxl'
-    'ZBIyChVwb3dlcl91cGRhdGVfaW50ZXJ2YWwYCSABKA1SE3Bvd2VyVXBkYXRlSW50ZXJ2YWwSMA'
-    'oUcG93ZXJfc2NyZWVuX2VuYWJsZWQYCiABKAhSEnBvd2VyU2NyZWVuRW5hYmxlZBI8ChpoZWFs'
-    'dGhfbWVhc3VyZW1lbnRfZW5hYmxlZBgLIAEoCFIYaGVhbHRoTWVhc3VyZW1lbnRFbmFibGVkEj'
-    'QKFmhlYWx0aF91cGRhdGVfaW50ZXJ2YWwYDCABKA1SFGhlYWx0aFVwZGF0ZUludGVydmFsEjIK'
-    'FWhlYWx0aF9zY3JlZW5fZW5hYmxlZBgNIAEoCFITaGVhbHRoU2NyZWVuRW5hYmxlZBI4ChhkZX'
-    'ZpY2VfdGVsZW1ldHJ5X2VuYWJsZWQYDiABKAhSFmRldmljZVRlbGVtZXRyeUVuYWJsZWQSOwoa'
-    'YWlyX3F1YWxpdHlfc2NyZWVuX2VuYWJsZWQYDyABKAhSF2FpclF1YWxpdHlTY3JlZW5FbmFibG'
-    'VkGpoGChNDYW5uZWRNZXNzYWdlQ29uZmlnEicKD3JvdGFyeTFfZW5hYmxlZBgBIAEoCFIOcm90'
-    'YXJ5MUVuYWJsZWQSKgoRaW5wdXRicm9rZXJfcGluX2EYAiABKA1SD2lucHV0YnJva2VyUGluQR'
-    'IqChFpbnB1dGJyb2tlcl9waW5fYhgDIAEoDVIPaW5wdXRicm9rZXJQaW5CEjIKFWlucHV0YnJv'
-    'a2VyX3Bpbl9wcmVzcxgEIAEoDVITaW5wdXRicm9rZXJQaW5QcmVzcxJtChRpbnB1dGJyb2tlcl'
-    '9ldmVudF9jdxgFIAEoDjI7Lm1lc2h0YXN0aWMuTW9kdWxlQ29uZmlnLkNhbm5lZE1lc3NhZ2VD'
-    'b25maWcuSW5wdXRFdmVudENoYXJSEmlucHV0YnJva2VyRXZlbnRDdxJvChVpbnB1dGJyb2tlcl'
-    '9ldmVudF9jY3cYBiABKA4yOy5tZXNodGFzdGljLk1vZHVsZUNvbmZpZy5DYW5uZWRNZXNzYWdl'
-    'Q29uZmlnLklucHV0RXZlbnRDaGFyUhNpbnB1dGJyb2tlckV2ZW50Q2N3EnMKF2lucHV0YnJva2'
-    'VyX2V2ZW50X3ByZXNzGAcgASgOMjsubWVzaHRhc3RpYy5Nb2R1bGVDb25maWcuQ2FubmVkTWVz'
-    'c2FnZUNvbmZpZy5JbnB1dEV2ZW50Q2hhclIVaW5wdXRicm9rZXJFdmVudFByZXNzEicKD3VwZG'
-    '93bjFfZW5hYmxlZBgIIAEoCFIOdXBkb3duMUVuYWJsZWQSHAoHZW5hYmxlZBgJIAEoCEICGAFS'
-    'B2VuYWJsZWQSMAoSYWxsb3dfaW5wdXRfc291cmNlGAogASgJQgIYAVIQYWxsb3dJbnB1dFNvdX'
-    'JjZRIbCglzZW5kX2JlbGwYCyABKAhSCHNlbmRCZWxsImMKDklucHV0RXZlbnRDaGFyEggKBE5P'
-    'TkUQABIGCgJVUBAREggKBERPV04QEhIICgRMRUZUEBMSCQoFUklHSFQQFBIKCgZTRUxFQ1QQCh'
-    'IICgRCQUNLEBsSCgoGQ0FOQ0VMEBgaigEKFUFtYmllbnRMaWdodGluZ0NvbmZpZxIbCglsZWRf'
-    'c3RhdGUYASABKAhSCGxlZFN0YXRlEhgKB2N1cnJlbnQYAiABKA1SB2N1cnJlbnQSEAoDcmVkGA'
-    'MgASgNUgNyZWQSFAoFZ3JlZW4YBCABKA1SBWdyZWVuEhIKBGJsdWUYBSABKA1SBGJsdWUaNgoT'
-    'U3RhdHVzTWVzc2FnZUNvbmZpZxIfCgtub2RlX3N0YXR1cxgBIAEoCVIKbm9kZVN0YXR1cxpdCg'
-    'lUQUtDb25maWcSJAoEdGVhbRgBIAEoDjIQLm1lc2h0YXN0aWMuVGVhbVIEdGVhbRIqCgRyb2xl'
-    'GAIgASgOMhYubWVzaHRhc3RpYy5NZW1iZXJSb2xlUgRyb2xlQhEKD3BheWxvYWRfdmFyaWFudA'
-    '==');
+    '5Nb2R1bGVDb25maWcuVEFLQ29uZmlnSABSA3RhaxJMCgttZXNoX2JlYWNvbhgRIAEoCzIpLm1l'
+    'c2h0YXN0aWMuTW9kdWxlQ29uZmlnLk1lc2hCZWFjb25Db25maWdIAFIKbWVzaEJlYWNvbhrKAw'
+    'oKTVFUVENvbmZpZxIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEhgKB2FkZHJlc3MYAiABKAlS'
+    'B2FkZHJlc3MSGgoIdXNlcm5hbWUYAyABKAlSCHVzZXJuYW1lEhoKCHBhc3N3b3JkGAQgASgJUg'
+    'hwYXNzd29yZBItChJlbmNyeXB0aW9uX2VuYWJsZWQYBSABKAhSEWVuY3J5cHRpb25FbmFibGVk'
+    'EiUKDGpzb25fZW5hYmxlZBgGIAEoCEICGAFSC2pzb25FbmFibGVkEh8KC3Rsc19lbmFibGVkGA'
+    'cgASgIUgp0bHNFbmFibGVkEhIKBHJvb3QYCCABKAlSBHJvb3QSNQoXcHJveHlfdG9fY2xpZW50'
+    'X2VuYWJsZWQYCSABKAhSFHByb3h5VG9DbGllbnRFbmFibGVkEjIKFW1hcF9yZXBvcnRpbmdfZW'
+    '5hYmxlZBgKIAEoCFITbWFwUmVwb3J0aW5nRW5hYmxlZBJaChNtYXBfcmVwb3J0X3NldHRpbmdz'
+    'GAsgASgLMioubWVzaHRhc3RpYy5Nb2R1bGVDb25maWcuTWFwUmVwb3J0U2V0dGluZ3NSEW1hcF'
+    'JlcG9ydFNldHRpbmdzGqwBChFNYXBSZXBvcnRTZXR0aW5ncxIyChVwdWJsaXNoX2ludGVydmFs'
+    'X3NlY3MYASABKA1SE3B1Ymxpc2hJbnRlcnZhbFNlY3MSLQoScG9zaXRpb25fcHJlY2lzaW9uGA'
+    'IgASgNUhFwb3NpdGlvblByZWNpc2lvbhI0ChZzaG91bGRfcmVwb3J0X2xvY2F0aW9uGAMgASgI'
+    'UhRzaG91bGRSZXBvcnRMb2NhdGlvbhqzAQoUUmVtb3RlSGFyZHdhcmVDb25maWcSGAoHZW5hYm'
+    'xlZBgBIAEoCFIHZW5hYmxlZBI7ChphbGxvd191bmRlZmluZWRfcGluX2FjY2VzcxgCIAEoCFIX'
+    'YWxsb3dVbmRlZmluZWRQaW5BY2Nlc3MSRAoOYXZhaWxhYmxlX3BpbnMYAyADKAsyHS5tZXNodG'
+    'FzdGljLlJlbW90ZUhhcmR3YXJlUGluUg1hdmFpbGFibGVQaW5zGoUBChJOZWlnaGJvckluZm9D'
+    'b25maWcSGAoHZW5hYmxlZBgBIAEoCFIHZW5hYmxlZBInCg91cGRhdGVfaW50ZXJ2YWwYAiABKA'
+    '1SDnVwZGF0ZUludGVydmFsEiwKEnRyYW5zbWl0X292ZXJfbG9yYRgDIAEoCFIQdHJhbnNtaXRP'
+    'dmVyTG9yYRqHBAoVRGV0ZWN0aW9uU2Vuc29yQ29uZmlnEhgKB2VuYWJsZWQYASABKAhSB2VuYW'
+    'JsZWQSNAoWbWluaW11bV9icm9hZGNhc3Rfc2VjcxgCIAEoDVIUbWluaW11bUJyb2FkY2FzdFNl'
+    'Y3MSMAoUc3RhdGVfYnJvYWRjYXN0X3NlY3MYAyABKA1SEnN0YXRlQnJvYWRjYXN0U2VjcxIbCg'
+    'lzZW5kX2JlbGwYBCABKAhSCHNlbmRCZWxsEhIKBG5hbWUYBSABKAlSBG5hbWUSHwoLbW9uaXRv'
+    'cl9waW4YBiABKA1SCm1vbml0b3JQaW4ScAoWZGV0ZWN0aW9uX3RyaWdnZXJfdHlwZRgHIAEoDj'
+    'I6Lm1lc2h0YXN0aWMuTW9kdWxlQ29uZmlnLkRldGVjdGlvblNlbnNvckNvbmZpZy5UcmlnZ2Vy'
+    'VHlwZVIUZGV0ZWN0aW9uVHJpZ2dlclR5cGUSHQoKdXNlX3B1bGx1cBgIIAEoCFIJdXNlUHVsbH'
+    'VwIogBCgtUcmlnZ2VyVHlwZRINCglMT0dJQ19MT1cQABIOCgpMT0dJQ19ISUdIEAESEAoMRkFM'
+    'TElOR19FREdFEAISDwoLUklTSU5HX0VER0UQAxIaChZFSVRIRVJfRURHRV9BQ1RJVkVfTE9XEA'
+    'QSGwoXRUlUSEVSX0VER0VfQUNUSVZFX0hJR0gQBRqiAwoLQXVkaW9Db25maWcSJQoOY29kZWMy'
+    'X2VuYWJsZWQYASABKAhSDWNvZGVjMkVuYWJsZWQSFwoHcHR0X3BpbhgCIAEoDVIGcHR0UGluEk'
+    'kKB2JpdHJhdGUYAyABKA4yLy5tZXNodGFzdGljLk1vZHVsZUNvbmZpZy5BdWRpb0NvbmZpZy5B'
+    'dWRpb19CYXVkUgdiaXRyYXRlEhUKBmkyc193cxgEIAEoDVIFaTJzV3MSFQoGaTJzX3NkGAUgAS'
+    'gNUgVpMnNTZBIXCgdpMnNfZGluGAYgASgNUgZpMnNEaW4SFwoHaTJzX3NjaxgHIAEoDVIGaTJz'
+    'U2NrIqcBCgpBdWRpb19CYXVkEhIKDkNPREVDMl9ERUZBVUxUEAASDwoLQ09ERUMyXzMyMDAQAR'
+    'IPCgtDT0RFQzJfMjQwMBACEg8KC0NPREVDMl8xNjAwEAMSDwoLQ09ERUMyXzE0MDAQBBIPCgtD'
+    'T0RFQzJfMTMwMBAFEg8KC0NPREVDMl8xMjAwEAYSDgoKQ09ERUMyXzcwMBAHEg8KC0NPREVDMl'
+    '83MDBCEAgatgEKEFBheGNvdW50ZXJDb25maWcSGAoHZW5hYmxlZBgBIAEoCFIHZW5hYmxlZBI8'
+    'ChpwYXhjb3VudGVyX3VwZGF0ZV9pbnRlcnZhbBgCIAEoDVIYcGF4Y291bnRlclVwZGF0ZUludG'
+    'VydmFsEiUKDndpZmlfdGhyZXNob2xkGAMgASgFUg13aWZpVGhyZXNob2xkEiMKDWJsZV90aHJl'
+    'c2hvbGQYBCABKAVSDGJsZVRocmVzaG9sZBq7BAoXVHJhZmZpY01hbmFnZW1lbnRDb25maWcSOw'
+    'oacG9zaXRpb25fbWluX2ludGVydmFsX3NlY3MYBCABKA1SF3Bvc2l0aW9uTWluSW50ZXJ2YWxT'
+    'ZWNzEkgKIW5vZGVpbmZvX2RpcmVjdF9yZXNwb25zZV9tYXhfaG9wcxgGIAEoDVIdbm9kZWluZm'
+    '9EaXJlY3RSZXNwb25zZU1heEhvcHMSMwoWcmF0ZV9saW1pdF93aW5kb3dfc2VjcxgIIAEoDVIT'
+    'cmF0ZUxpbWl0V2luZG93U2VjcxIzChZyYXRlX2xpbWl0X21heF9wYWNrZXRzGAkgASgNUhNyYX'
+    'RlTGltaXRNYXhQYWNrZXRzEjgKGHVua25vd25fcGFja2V0X3RocmVzaG9sZBgLIAEoDVIWdW5r'
+    'bm93blBhY2tldFRocmVzaG9sZEoECAEQAkoECAIQA0oECAMQBEoECAUQBkoECAcQCEoECAoQC0'
+    'oECAwQDUoECA0QDkoECA4QD1IHZW5hYmxlZFIWcG9zaXRpb25fZGVkdXBfZW5hYmxlZFIXcG9z'
+    'aXRpb25fcHJlY2lzaW9uX2JpdHNSGG5vZGVpbmZvX2RpcmVjdF9yZXNwb25zZVIScmF0ZV9saW'
+    '1pdF9lbmFibGVkUhRkcm9wX3Vua25vd25fZW5hYmxlZFIVZXhoYXVzdF9ob3BfdGVsZW1ldHJ5'
+    'UhRleGhhdXN0X2hvcF9wb3NpdGlvblIUcm91dGVyX3ByZXNlcnZlX2hvcHMa7AUKDFNlcmlhbE'
+    'NvbmZpZxIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEhIKBGVjaG8YAiABKAhSBGVjaG8SEAoD'
+    'cnhkGAMgASgNUgNyeGQSEAoDdHhkGAQgASgNUgN0eGQSRQoEYmF1ZBgFIAEoDjIxLm1lc2h0YX'
+    'N0aWMuTW9kdWxlQ29uZmlnLlNlcmlhbENvbmZpZy5TZXJpYWxfQmF1ZFIEYmF1ZBIYCgd0aW1l'
+    'b3V0GAYgASgNUgd0aW1lb3V0EkUKBG1vZGUYByABKA4yMS5tZXNodGFzdGljLk1vZHVsZUNvbm'
+    'ZpZy5TZXJpYWxDb25maWcuU2VyaWFsX01vZGVSBG1vZGUSPwocb3ZlcnJpZGVfY29uc29sZV9z'
+    'ZXJpYWxfcG9ydBgIIAEoCFIZb3ZlcnJpZGVDb25zb2xlU2VyaWFsUG9ydCKKAgoLU2VyaWFsX0'
+    'JhdWQSEAoMQkFVRF9ERUZBVUxUEAASDAoIQkFVRF8xMTAQARIMCghCQVVEXzMwMBACEgwKCEJB'
+    'VURfNjAwEAMSDQoJQkFVRF8xMjAwEAQSDQoJQkFVRF8yNDAwEAUSDQoJQkFVRF80ODAwEAYSDQ'
+    'oJQkFVRF85NjAwEAcSDgoKQkFVRF8xOTIwMBAIEg4KCkJBVURfMzg0MDAQCRIOCgpCQVVEXzU3'
+    'NjAwEAoSDwoLQkFVRF8xMTUyMDAQCxIPCgtCQVVEXzIzMDQwMBAMEg8KC0JBVURfNDYwODAwEA'
+    '0SDwoLQkFVRF81NzYwMDAQDhIPCgtCQVVEXzkyMTYwMBAPIpMBCgtTZXJpYWxfTW9kZRILCgdE'
+    'RUZBVUxUEAASCgoGU0lNUExFEAESCQoFUFJPVE8QAhILCgdURVhUTVNHEAMSCAoETk1FQRAEEg'
+    'sKB0NBTFRPUE8QBRIICgRXUzg1EAYSDQoJVkVfRElSRUNUEAcSDQoJTVNfQ09ORklHEAgSBwoD'
+    'TE9HEAkSCwoHTE9HVEVYVBAKGqwEChpFeHRlcm5hbE5vdGlmaWNhdGlvbkNvbmZpZxIYCgdlbm'
+    'FibGVkGAEgASgIUgdlbmFibGVkEhsKCW91dHB1dF9tcxgCIAEoDVIIb3V0cHV0TXMSFgoGb3V0'
+    'cHV0GAMgASgNUgZvdXRwdXQSIQoMb3V0cHV0X3ZpYnJhGAggASgNUgtvdXRwdXRWaWJyYRIjCg'
+    '1vdXRwdXRfYnV6emVyGAkgASgNUgxvdXRwdXRCdXp6ZXISFgoGYWN0aXZlGAQgASgIUgZhY3Rp'
+    'dmUSIwoNYWxlcnRfbWVzc2FnZRgFIAEoCFIMYWxlcnRNZXNzYWdlEi4KE2FsZXJ0X21lc3NhZ2'
+    'VfdmlicmEYCiABKAhSEWFsZXJ0TWVzc2FnZVZpYnJhEjAKFGFsZXJ0X21lc3NhZ2VfYnV6emVy'
+    'GAsgASgIUhJhbGVydE1lc3NhZ2VCdXp6ZXISHQoKYWxlcnRfYmVsbBgGIAEoCFIJYWxlcnRCZW'
+    'xsEigKEGFsZXJ0X2JlbGxfdmlicmEYDCABKAhSDmFsZXJ0QmVsbFZpYnJhEioKEWFsZXJ0X2Jl'
+    'bGxfYnV6emVyGA0gASgIUg9hbGVydEJlbGxCdXp6ZXISFwoHdXNlX3B3bRgHIAEoCFIGdXNlUH'
+    'dtEh8KC25hZ190aW1lb3V0GA4gASgNUgpuYWdUaW1lb3V0EikKEXVzZV9pMnNfYXNfYnV6emVy'
+    'GA8gASgIUg51c2VJMnNBc0J1enplchrlAQoSU3RvcmVGb3J3YXJkQ29uZmlnEhgKB2VuYWJsZW'
+    'QYASABKAhSB2VuYWJsZWQSHAoJaGVhcnRiZWF0GAIgASgIUgloZWFydGJlYXQSGAoHcmVjb3Jk'
+    'cxgDIAEoDVIHcmVjb3JkcxIsChJoaXN0b3J5X3JldHVybl9tYXgYBCABKA1SEGhpc3RvcnlSZX'
+    'R1cm5NYXgSMgoVaGlzdG9yeV9yZXR1cm5fd2luZG93GAUgASgNUhNoaXN0b3J5UmV0dXJuV2lu'
+    'ZG93EhsKCWlzX3NlcnZlchgGIAEoCFIIaXNTZXJ2ZXIafwoPUmFuZ2VUZXN0Q29uZmlnEhgKB2'
+    'VuYWJsZWQYASABKAhSB2VuYWJsZWQSFgoGc2VuZGVyGAIgASgNUgZzZW5kZXISEgoEc2F2ZRgD'
+    'IAEoCFIEc2F2ZRImCg9jbGVhcl9vbl9yZWJvb3QYBCABKAhSDWNsZWFyT25SZWJvb3Qa9gYKD1'
+    'RlbGVtZXRyeUNvbmZpZxI0ChZkZXZpY2VfdXBkYXRlX2ludGVydmFsGAEgASgNUhRkZXZpY2VV'
+    'cGRhdGVJbnRlcnZhbBI+ChtlbnZpcm9ubWVudF91cGRhdGVfaW50ZXJ2YWwYAiABKA1SGWVudm'
+    'lyb25tZW50VXBkYXRlSW50ZXJ2YWwSRgofZW52aXJvbm1lbnRfbWVhc3VyZW1lbnRfZW5hYmxl'
+    'ZBgDIAEoCFIdZW52aXJvbm1lbnRNZWFzdXJlbWVudEVuYWJsZWQSPAoaZW52aXJvbm1lbnRfc2'
+    'NyZWVuX2VuYWJsZWQYBCABKAhSGGVudmlyb25tZW50U2NyZWVuRW5hYmxlZBJECh5lbnZpcm9u'
+    'bWVudF9kaXNwbGF5X2ZhaHJlbmhlaXQYBSABKAhSHGVudmlyb25tZW50RGlzcGxheUZhaHJlbm'
+    'hlaXQSLgoTYWlyX3F1YWxpdHlfZW5hYmxlZBgGIAEoCFIRYWlyUXVhbGl0eUVuYWJsZWQSMAoU'
+    'YWlyX3F1YWxpdHlfaW50ZXJ2YWwYByABKA1SEmFpclF1YWxpdHlJbnRlcnZhbBI6Chlwb3dlcl'
+    '9tZWFzdXJlbWVudF9lbmFibGVkGAggASgIUhdwb3dlck1lYXN1cmVtZW50RW5hYmxlZBIyChVw'
+    'b3dlcl91cGRhdGVfaW50ZXJ2YWwYCSABKA1SE3Bvd2VyVXBkYXRlSW50ZXJ2YWwSMAoUcG93ZX'
+    'Jfc2NyZWVuX2VuYWJsZWQYCiABKAhSEnBvd2VyU2NyZWVuRW5hYmxlZBI8ChpoZWFsdGhfbWVh'
+    'c3VyZW1lbnRfZW5hYmxlZBgLIAEoCFIYaGVhbHRoTWVhc3VyZW1lbnRFbmFibGVkEjQKFmhlYW'
+    'x0aF91cGRhdGVfaW50ZXJ2YWwYDCABKA1SFGhlYWx0aFVwZGF0ZUludGVydmFsEjIKFWhlYWx0'
+    'aF9zY3JlZW5fZW5hYmxlZBgNIAEoCFITaGVhbHRoU2NyZWVuRW5hYmxlZBI4ChhkZXZpY2VfdG'
+    'VsZW1ldHJ5X2VuYWJsZWQYDiABKAhSFmRldmljZVRlbGVtZXRyeUVuYWJsZWQSOwoaYWlyX3F1'
+    'YWxpdHlfc2NyZWVuX2VuYWJsZWQYDyABKAhSF2FpclF1YWxpdHlTY3JlZW5FbmFibGVkGpoGCh'
+    'NDYW5uZWRNZXNzYWdlQ29uZmlnEicKD3JvdGFyeTFfZW5hYmxlZBgBIAEoCFIOcm90YXJ5MUVu'
+    'YWJsZWQSKgoRaW5wdXRicm9rZXJfcGluX2EYAiABKA1SD2lucHV0YnJva2VyUGluQRIqChFpbn'
+    'B1dGJyb2tlcl9waW5fYhgDIAEoDVIPaW5wdXRicm9rZXJQaW5CEjIKFWlucHV0YnJva2VyX3Bp'
+    'bl9wcmVzcxgEIAEoDVITaW5wdXRicm9rZXJQaW5QcmVzcxJtChRpbnB1dGJyb2tlcl9ldmVudF'
+    '9jdxgFIAEoDjI7Lm1lc2h0YXN0aWMuTW9kdWxlQ29uZmlnLkNhbm5lZE1lc3NhZ2VDb25maWcu'
+    'SW5wdXRFdmVudENoYXJSEmlucHV0YnJva2VyRXZlbnRDdxJvChVpbnB1dGJyb2tlcl9ldmVudF'
+    '9jY3cYBiABKA4yOy5tZXNodGFzdGljLk1vZHVsZUNvbmZpZy5DYW5uZWRNZXNzYWdlQ29uZmln'
+    'LklucHV0RXZlbnRDaGFyUhNpbnB1dGJyb2tlckV2ZW50Q2N3EnMKF2lucHV0YnJva2VyX2V2ZW'
+    '50X3ByZXNzGAcgASgOMjsubWVzaHRhc3RpYy5Nb2R1bGVDb25maWcuQ2FubmVkTWVzc2FnZUNv'
+    'bmZpZy5JbnB1dEV2ZW50Q2hhclIVaW5wdXRicm9rZXJFdmVudFByZXNzEicKD3VwZG93bjFfZW'
+    '5hYmxlZBgIIAEoCFIOdXBkb3duMUVuYWJsZWQSHAoHZW5hYmxlZBgJIAEoCEICGAFSB2VuYWJs'
+    'ZWQSMAoSYWxsb3dfaW5wdXRfc291cmNlGAogASgJQgIYAVIQYWxsb3dJbnB1dFNvdXJjZRIbCg'
+    'lzZW5kX2JlbGwYCyABKAhSCHNlbmRCZWxsImMKDklucHV0RXZlbnRDaGFyEggKBE5PTkUQABIG'
+    'CgJVUBAREggKBERPV04QEhIICgRMRUZUEBMSCQoFUklHSFQQFBIKCgZTRUxFQ1QQChIICgRCQU'
+    'NLEBsSCgoGQ0FOQ0VMEBgaigEKFUFtYmllbnRMaWdodGluZ0NvbmZpZxIbCglsZWRfc3RhdGUY'
+    'ASABKAhSCGxlZFN0YXRlEhgKB2N1cnJlbnQYAiABKA1SB2N1cnJlbnQSEAoDcmVkGAMgASgNUg'
+    'NyZWQSFAoFZ3JlZW4YBCABKA1SBWdyZWVuEhIKBGJsdWUYBSABKA1SBGJsdWUaNgoTU3RhdHVz'
+    'TWVzc2FnZUNvbmZpZxIfCgtub2RlX3N0YXR1cxgBIAEoCVIKbm9kZVN0YXR1cxrkBwoQTWVzaE'
+    'JlYWNvbkNvbmZpZxIUCgVmbGFncxgBIAEoDVIFZmxhZ3MSKwoRYnJvYWRjYXN0X21lc3NhZ2UY'
+    'BCABKAlSEGJyb2FkY2FzdE1lc3NhZ2USUwoXYnJvYWRjYXN0X29mZmVyX2NoYW5uZWwYBSABKA'
+    'syGy5tZXNodGFzdGljLkNoYW5uZWxTZXR0aW5nc1IVYnJvYWRjYXN0T2ZmZXJDaGFubmVsEl4K'
+    'FmJyb2FkY2FzdF9vZmZlcl9yZWdpb24YBiABKA4yKC5tZXNodGFzdGljLkNvbmZpZy5Mb1JhQ2'
+    '9uZmlnLlJlZ2lvbkNvZGVSFGJyb2FkY2FzdE9mZmVyUmVnaW9uEmQKFmJyb2FkY2FzdF9vZmZl'
+    'cl9wcmVzZXQYByABKA4yKS5tZXNodGFzdGljLkNvbmZpZy5Mb1JhQ29uZmlnLk1vZGVtUHJlc2'
+    'V0SABSFGJyb2FkY2FzdE9mZmVyUHJlc2V0iAEBEjYKF2Jyb2FkY2FzdF9pbnRlcnZhbF9zZWNz'
+    'GAsgASgNUhVicm9hZGNhc3RJbnRlcnZhbFNlY3MSZgoRYnJvYWRjYXN0X3RhcmdldHMYDSADKA'
+    'syOS5tZXNodGFzdGljLk1vZHVsZUNvbmZpZy5NZXNoQmVhY29uQ29uZmlnLkJyb2FkY2FzdFRh'
+    'cmdldFIQYnJvYWRjYXN0VGFyZ2V0cxriAQoPQnJvYWRjYXN0VGFyZ2V0EkYKBnByZXNldBgBIA'
+    'EoDjIpLm1lc2h0YXN0aWMuQ29uZmlnLkxvUmFDb25maWcuTW9kZW1QcmVzZXRIAFIGcHJlc2V0'
+    'iAEBEkAKBnJlZ2lvbhgCIAEoDjIoLm1lc2h0YXN0aWMuQ29uZmlnLkxvUmFDb25maWcuUmVnaW'
+    '9uQ29kZVIGcmVnaW9uEigKDWNoYW5uZWxfaW5kZXgYBCABKA1IAVIMY2hhbm5lbEluZGV4iAEB'
+    'QgkKB19wcmVzZXRCEAoOX2NoYW5uZWxfaW5kZXgiYgoFRmxhZ3MSDQoJRkxBR19OT05FEAASFw'
+    'oTRkxBR19MSVNURU5fRU5BQkxFRBABEhoKFkZMQUdfQlJPQURDQVNUX0VOQUJMRUQQAhIVChFG'
+    'TEFHX0xFR0FDWV9TUExJVBAEQhkKF19icm9hZGNhc3Rfb2ZmZXJfcHJlc2V0SgQIAxAESgQICB'
+    'AJSgQICRAKSgQIChALUhZicm9hZGNhc3Rfc2VuZF9hc19ub2RlUhRicm9hZGNhc3Rfb25fY2hh'
+    'bm5lbFITYnJvYWRjYXN0X29uX3JlZ2lvblITYnJvYWRjYXN0X29uX3ByZXNldBpdCglUQUtDb2'
+    '5maWcSJAoEdGVhbRgBIAEoDjIQLm1lc2h0YXN0aWMuVGVhbVIEdGVhbRIqCgRyb2xlGAIgASgO'
+    'MhYubWVzaHRhc3RpYy5NZW1iZXJSb2xlUgRyb2xlQhEKD3BheWxvYWRfdmFyaWFudA==');
 
 @$core.Deprecated('Use remoteHardwarePinDescriptor instead')
 const RemoteHardwarePin$json = {

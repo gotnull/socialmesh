@@ -721,6 +721,7 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
 
   ///
   ///  Ukraine 868mhz
+  @$core.Deprecated('This enum value is deprecated')
   static const Config_LoRaConfig_RegionCode UA_868 =
       Config_LoRaConfig_RegionCode._(15, _omitEnumNames ? '' : 'UA_868');
 
@@ -811,6 +812,31 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
   static const Config_LoRaConfig_RegionCode ITU3_2M =
       Config_LoRaConfig_RegionCode._(33, _omitEnumNames ? '' : 'ITU3_2M');
 
+  ///
+  ///  ITU Region 1 Amateur Radio 70cm band (430-440 MHz)
+  static const Config_LoRaConfig_RegionCode ITU1_70CM =
+      Config_LoRaConfig_RegionCode._(34, _omitEnumNames ? '' : 'ITU1_70CM');
+
+  ///
+  ///  ITU Region 2 Amateur Radio 70cm band (420-450 MHz)
+  ///  Note: Some countries do not allocate 420-430 MHz or 440-450 MHz.
+  ///  Check local law!
+  static const Config_LoRaConfig_RegionCode ITU2_70CM =
+      Config_LoRaConfig_RegionCode._(35, _omitEnumNames ? '' : 'ITU2_70CM');
+
+  ///
+  ///  ITU Region 3 Amateur Radio 70cm band (430-450 MHz)
+  ///  Note: Some countries do not allocate 440-450 MHz. Check local law!
+  static const Config_LoRaConfig_RegionCode ITU3_70CM =
+      Config_LoRaConfig_RegionCode._(36, _omitEnumNames ? '' : 'ITU3_70CM');
+
+  ///
+  ///  ITU Region 2 Amateur Radio 1.25m '125cm' band (220-225 MHz)
+  ///  Note: Some countries do not allocate 220-222 MHz (Ex: USA/Canada).
+  ///  Check local law!
+  static const Config_LoRaConfig_RegionCode ITU2_125CM =
+      Config_LoRaConfig_RegionCode._(37, _omitEnumNames ? '' : 'ITU2_125CM');
+
   static const $core.List<Config_LoRaConfig_RegionCode> values =
       <Config_LoRaConfig_RegionCode>[
     UNSET,
@@ -847,10 +873,14 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
     EU_917,
     EU_N_868,
     ITU3_2M,
+    ITU1_70CM,
+    ITU2_70CM,
+    ITU3_70CM,
+    ITU2_125CM,
   ];
 
   static final $core.List<Config_LoRaConfig_RegionCode?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 33);
+      $pb.ProtobufEnum.$_initByValueList(values, 37);
   static Config_LoRaConfig_RegionCode? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -948,6 +978,33 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
   static const Config_LoRaConfig_ModemPreset NARROW_SLOW =
       Config_LoRaConfig_ModemPreset._(13, _omitEnumNames ? '' : 'NARROW_SLOW');
 
+  ///
+  ///  Tiny Fast
+  ///  Preset optimized for compliance with Amateur Radio restrictions with 20kHz bandwidth.
+  ///  Many regions limit data transmission bandwidth in lower amateur bands (2 Meter).
+  ///  Note: TCXO with tight tolerances (±5 ppm or better) is *absolutely required* at these narrow bandwidths.
+  ///  Only compatible with SX127x and SX126x chipsets.
+  ///  Comparable link budget and data rate to LONG_FAST.
+  static const Config_LoRaConfig_ModemPreset TINY_FAST =
+      Config_LoRaConfig_ModemPreset._(14, _omitEnumNames ? '' : 'TINY_FAST');
+
+  ///
+  ///  Tiny Slow
+  ///  Preset optimized for compliance with Amateur Radio restrictions with 20kHz bandwidth.
+  ///  Many regions limit data transmission bandwidth in lower amateur bands (2 Meter).
+  ///  Note: TCXO with tight tolerances (±5 ppm or better) is *absolutely required* at these narrow bandwidths.
+  ///  Only compatible with SX127x and SX126x chipsets.
+  ///  Comparable link budget and data rate to LONG_MODERATE.
+  static const Config_LoRaConfig_ModemPreset TINY_SLOW =
+      Config_LoRaConfig_ModemPreset._(15, _omitEnumNames ? '' : 'TINY_SLOW');
+
+  ///
+  ///  Medium Range - Turbo
+  ///  This preset performs similarly to MEDIUM_FAST, but with 500kHz bandwidth.
+  ///  It is not legal to use in all regions due to this wider bandwidth.
+  static const Config_LoRaConfig_ModemPreset MEDIUM_TURBO =
+      Config_LoRaConfig_ModemPreset._(16, _omitEnumNames ? '' : 'MEDIUM_TURBO');
+
   static const $core.List<Config_LoRaConfig_ModemPreset> values =
       <Config_LoRaConfig_ModemPreset>[
     LONG_FAST,
@@ -964,10 +1021,13 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
     LITE_SLOW,
     NARROW_FAST,
     NARROW_SLOW,
+    TINY_FAST,
+    TINY_SLOW,
+    MEDIUM_TURBO,
   ];
 
   static final $core.List<Config_LoRaConfig_ModemPreset?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 13);
+      $pb.ProtobufEnum.$_initByValueList(values, 16);
   static Config_LoRaConfig_ModemPreset? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -1036,6 +1096,49 @@ class Config_BluetoothConfig_PairingMode extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const Config_BluetoothConfig_PairingMode._(super.value, super.name);
+}
+
+///
+///  Controls how the device authenticates remotely received mesh packets.
+class Config_SecurityConfig_PacketSignaturePolicy extends $pb.ProtobufEnum {
+  ///
+  ///  Accept unsigned packets for maximum compatibility while still rejecting malformed or invalid signatures.
+  ///  This is the default to avoid legacy nodes dropping signed packets during rebroadcast.
+  static const Config_SecurityConfig_PacketSignaturePolicy
+      PACKET_SIGNATURE_POLICY_COMPATIBLE =
+      Config_SecurityConfig_PacketSignaturePolicy._(
+          0, _omitEnumNames ? '' : 'PACKET_SIGNATURE_POLICY_COMPATIBLE');
+
+  ///
+  ///  Prefer authenticated packets while retaining compatibility with unsigned packets from nodes not known to sign.
+  ///  Rejects unsigned, signable broadcasts from nodes that have previously signed.
+  static const Config_SecurityConfig_PacketSignaturePolicy
+      PACKET_SIGNATURE_POLICY_BALANCED =
+      Config_SecurityConfig_PacketSignaturePolicy._(
+          1, _omitEnumNames ? '' : 'PACKET_SIGNATURE_POLICY_BALANCED');
+
+  ///
+  ///  Accept only packets authenticated by a verified XEdDSA signature or successful PKI decryption.
+  ///  Unsigned, malformed, invalid, or unverifiable packets are ignored.
+  static const Config_SecurityConfig_PacketSignaturePolicy
+      PACKET_SIGNATURE_POLICY_STRICT =
+      Config_SecurityConfig_PacketSignaturePolicy._(
+          2, _omitEnumNames ? '' : 'PACKET_SIGNATURE_POLICY_STRICT');
+
+  static const $core.List<Config_SecurityConfig_PacketSignaturePolicy> values =
+      <Config_SecurityConfig_PacketSignaturePolicy>[
+    PACKET_SIGNATURE_POLICY_COMPATIBLE,
+    PACKET_SIGNATURE_POLICY_BALANCED,
+    PACKET_SIGNATURE_POLICY_STRICT,
+  ];
+
+  static final $core.List<Config_SecurityConfig_PacketSignaturePolicy?>
+      _byValue = $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static Config_SecurityConfig_PacketSignaturePolicy? valueOf(
+          $core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const Config_SecurityConfig_PacketSignaturePolicy._(super.value, super.name);
 }
 
 const $core.bool _omitEnumNames =

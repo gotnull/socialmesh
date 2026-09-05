@@ -14,7 +14,9 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'atak.pbenum.dart' as $0;
+import 'atak.pbenum.dart' as $2;
+import 'channel.pb.dart' as $0;
+import 'config.pbenum.dart' as $1;
 import 'module_config.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -947,48 +949,23 @@ class ModuleConfig_PaxcounterConfig extends $pb.GeneratedMessage {
 ///  Provides packet inspection and traffic shaping to help reduce channel utilization
 class ModuleConfig_TrafficManagementConfig extends $pb.GeneratedMessage {
   factory ModuleConfig_TrafficManagementConfig({
-    $core.bool? enabled,
-    $core.bool? positionDedupEnabled,
-    $core.int? positionPrecisionBits,
     $core.int? positionMinIntervalSecs,
-    $core.bool? nodeinfoDirectResponse,
     $core.int? nodeinfoDirectResponseMaxHops,
-    $core.bool? rateLimitEnabled,
     $core.int? rateLimitWindowSecs,
     $core.int? rateLimitMaxPackets,
-    $core.bool? dropUnknownEnabled,
     $core.int? unknownPacketThreshold,
-    $core.bool? exhaustHopTelemetry,
-    $core.bool? exhaustHopPosition,
-    $core.bool? routerPreserveHops,
   }) {
     final result = create();
-    if (enabled != null) result.enabled = enabled;
-    if (positionDedupEnabled != null)
-      result.positionDedupEnabled = positionDedupEnabled;
-    if (positionPrecisionBits != null)
-      result.positionPrecisionBits = positionPrecisionBits;
     if (positionMinIntervalSecs != null)
       result.positionMinIntervalSecs = positionMinIntervalSecs;
-    if (nodeinfoDirectResponse != null)
-      result.nodeinfoDirectResponse = nodeinfoDirectResponse;
     if (nodeinfoDirectResponseMaxHops != null)
       result.nodeinfoDirectResponseMaxHops = nodeinfoDirectResponseMaxHops;
-    if (rateLimitEnabled != null) result.rateLimitEnabled = rateLimitEnabled;
     if (rateLimitWindowSecs != null)
       result.rateLimitWindowSecs = rateLimitWindowSecs;
     if (rateLimitMaxPackets != null)
       result.rateLimitMaxPackets = rateLimitMaxPackets;
-    if (dropUnknownEnabled != null)
-      result.dropUnknownEnabled = dropUnknownEnabled;
     if (unknownPacketThreshold != null)
       result.unknownPacketThreshold = unknownPacketThreshold;
-    if (exhaustHopTelemetry != null)
-      result.exhaustHopTelemetry = exhaustHopTelemetry;
-    if (exhaustHopPosition != null)
-      result.exhaustHopPosition = exhaustHopPosition;
-    if (routerPreserveHops != null)
-      result.routerPreserveHops = routerPreserveHops;
     return result;
   }
 
@@ -1006,26 +983,16 @@ class ModuleConfig_TrafficManagementConfig extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ModuleConfig.TrafficManagementConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'enabled')
-    ..aOB(2, _omitFieldNames ? '' : 'positionDedupEnabled')
-    ..aI(3, _omitFieldNames ? '' : 'positionPrecisionBits',
-        fieldType: $pb.PbFieldType.OU3)
     ..aI(4, _omitFieldNames ? '' : 'positionMinIntervalSecs',
         fieldType: $pb.PbFieldType.OU3)
-    ..aOB(5, _omitFieldNames ? '' : 'nodeinfoDirectResponse')
     ..aI(6, _omitFieldNames ? '' : 'nodeinfoDirectResponseMaxHops',
         fieldType: $pb.PbFieldType.OU3)
-    ..aOB(7, _omitFieldNames ? '' : 'rateLimitEnabled')
     ..aI(8, _omitFieldNames ? '' : 'rateLimitWindowSecs',
         fieldType: $pb.PbFieldType.OU3)
     ..aI(9, _omitFieldNames ? '' : 'rateLimitMaxPackets',
         fieldType: $pb.PbFieldType.OU3)
-    ..aOB(10, _omitFieldNames ? '' : 'dropUnknownEnabled')
     ..aI(11, _omitFieldNames ? '' : 'unknownPacketThreshold',
         fieldType: $pb.PbFieldType.OU3)
-    ..aOB(12, _omitFieldNames ? '' : 'exhaustHopTelemetry')
-    ..aOB(13, _omitFieldNames ? '' : 'exhaustHopPosition')
-    ..aOB(14, _omitFieldNames ? '' : 'routerPreserveHops')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1052,159 +1019,67 @@ class ModuleConfig_TrafficManagementConfig extends $pb.GeneratedMessage {
   static ModuleConfig_TrafficManagementConfig? _defaultInstance;
 
   ///
-  ///  Master enable for traffic management module
-  @$pb.TagNumber(1)
-  $core.bool get enabled => $_getBF(0);
-  @$pb.TagNumber(1)
-  set enabled($core.bool value) => $_setBool(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasEnabled() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearEnabled() => $_clearField(1);
-
-  ///
-  ///  Enable position deduplication to drop redundant position broadcasts
-  @$pb.TagNumber(2)
-  $core.bool get positionDedupEnabled => $_getBF(1);
-  @$pb.TagNumber(2)
-  set positionDedupEnabled($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPositionDedupEnabled() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPositionDedupEnabled() => $_clearField(2);
-
-  ///
-  ///  Number of bits of precision for position deduplication (0-32)
-  @$pb.TagNumber(3)
-  $core.int get positionPrecisionBits => $_getIZ(2);
-  @$pb.TagNumber(3)
-  set positionPrecisionBits($core.int value) => $_setUnsignedInt32(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasPositionPrecisionBits() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearPositionPrecisionBits() => $_clearField(3);
-
-  ///
-  ///  Minimum interval in seconds between position updates from the same node
+  ///  Minimum interval in seconds between position updates from the same node.
+  ///  A non-zero value implicitly enables the suppression window; 0 disables it.
   @$pb.TagNumber(4)
-  $core.int get positionMinIntervalSecs => $_getIZ(3);
+  $core.int get positionMinIntervalSecs => $_getIZ(0);
   @$pb.TagNumber(4)
-  set positionMinIntervalSecs($core.int value) => $_setUnsignedInt32(3, value);
+  set positionMinIntervalSecs($core.int value) => $_setUnsignedInt32(0, value);
   @$pb.TagNumber(4)
-  $core.bool hasPositionMinIntervalSecs() => $_has(3);
+  $core.bool hasPositionMinIntervalSecs() => $_has(0);
   @$pb.TagNumber(4)
   void clearPositionMinIntervalSecs() => $_clearField(4);
 
   ///
-  ///  Enable direct response to NodeInfo requests from local cache
-  @$pb.TagNumber(5)
-  $core.bool get nodeinfoDirectResponse => $_getBF(4);
-  @$pb.TagNumber(5)
-  set nodeinfoDirectResponse($core.bool value) => $_setBool(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasNodeinfoDirectResponse() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearNodeinfoDirectResponse() => $_clearField(5);
-
-  ///
-  ///  Minimum hop distance from requestor before responding to NodeInfo requests
+  ///  Maximum hop distance from the requestor at which direct NodeInfo responses
+  ///  are served from the local cache. A non-zero value implicitly enables direct
+  ///  response; 0 disables it.
   @$pb.TagNumber(6)
-  $core.int get nodeinfoDirectResponseMaxHops => $_getIZ(5);
+  $core.int get nodeinfoDirectResponseMaxHops => $_getIZ(1);
   @$pb.TagNumber(6)
   set nodeinfoDirectResponseMaxHops($core.int value) =>
-      $_setUnsignedInt32(5, value);
+      $_setUnsignedInt32(1, value);
   @$pb.TagNumber(6)
-  $core.bool hasNodeinfoDirectResponseMaxHops() => $_has(5);
+  $core.bool hasNodeinfoDirectResponseMaxHops() => $_has(1);
   @$pb.TagNumber(6)
   void clearNodeinfoDirectResponseMaxHops() => $_clearField(6);
 
   ///
-  ///  Enable per-node rate limiting to throttle chatty nodes
-  @$pb.TagNumber(7)
-  $core.bool get rateLimitEnabled => $_getBF(6);
-  @$pb.TagNumber(7)
-  set rateLimitEnabled($core.bool value) => $_setBool(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasRateLimitEnabled() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearRateLimitEnabled() => $_clearField(7);
-
-  ///
-  ///  Time window in seconds for rate limiting calculations
+  ///  Time window in seconds for per-node rate limiting.
+  ///  A non-zero value implicitly enables rate limiting; 0 disables it.
   @$pb.TagNumber(8)
-  $core.int get rateLimitWindowSecs => $_getIZ(7);
+  $core.int get rateLimitWindowSecs => $_getIZ(2);
   @$pb.TagNumber(8)
-  set rateLimitWindowSecs($core.int value) => $_setUnsignedInt32(7, value);
+  set rateLimitWindowSecs($core.int value) => $_setUnsignedInt32(2, value);
   @$pb.TagNumber(8)
-  $core.bool hasRateLimitWindowSecs() => $_has(7);
+  $core.bool hasRateLimitWindowSecs() => $_has(2);
   @$pb.TagNumber(8)
   void clearRateLimitWindowSecs() => $_clearField(8);
 
   ///
-  ///  Maximum packets allowed per node within the rate limit window
+  ///  Maximum packets allowed per node within the rate limit window.
+  ///  A non-zero value implicitly enables rate limiting; 0 disables it.
   @$pb.TagNumber(9)
-  $core.int get rateLimitMaxPackets => $_getIZ(8);
+  $core.int get rateLimitMaxPackets => $_getIZ(3);
   @$pb.TagNumber(9)
-  set rateLimitMaxPackets($core.int value) => $_setUnsignedInt32(8, value);
+  set rateLimitMaxPackets($core.int value) => $_setUnsignedInt32(3, value);
   @$pb.TagNumber(9)
-  $core.bool hasRateLimitMaxPackets() => $_has(8);
+  $core.bool hasRateLimitMaxPackets() => $_has(3);
   @$pb.TagNumber(9)
   void clearRateLimitMaxPackets() => $_clearField(9);
 
   ///
-  ///  Enable dropping of unknown/undecryptable packets per rate_limit_window_secs
-  @$pb.TagNumber(10)
-  $core.bool get dropUnknownEnabled => $_getBF(9);
-  @$pb.TagNumber(10)
-  set dropUnknownEnabled($core.bool value) => $_setBool(9, value);
-  @$pb.TagNumber(10)
-  $core.bool hasDropUnknownEnabled() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearDropUnknownEnabled() => $_clearField(10);
-
-  ///
-  ///  Number of unknown packets before dropping from a node
+  ///  Maximum unknown/undecryptable packets per rate window before the source
+  ///  is dropped. A non-zero value implicitly enables unknown-packet filtering;
+  ///  0 disables it.
   @$pb.TagNumber(11)
-  $core.int get unknownPacketThreshold => $_getIZ(10);
+  $core.int get unknownPacketThreshold => $_getIZ(4);
   @$pb.TagNumber(11)
-  set unknownPacketThreshold($core.int value) => $_setUnsignedInt32(10, value);
+  set unknownPacketThreshold($core.int value) => $_setUnsignedInt32(4, value);
   @$pb.TagNumber(11)
-  $core.bool hasUnknownPacketThreshold() => $_has(10);
+  $core.bool hasUnknownPacketThreshold() => $_has(4);
   @$pb.TagNumber(11)
   void clearUnknownPacketThreshold() => $_clearField(11);
-
-  ///
-  ///  Set hop_limit to 0 for relayed telemetry broadcasts (own packets unaffected)
-  @$pb.TagNumber(12)
-  $core.bool get exhaustHopTelemetry => $_getBF(11);
-  @$pb.TagNumber(12)
-  set exhaustHopTelemetry($core.bool value) => $_setBool(11, value);
-  @$pb.TagNumber(12)
-  $core.bool hasExhaustHopTelemetry() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearExhaustHopTelemetry() => $_clearField(12);
-
-  ///
-  ///  Set hop_limit to 0 for relayed position broadcasts (own packets unaffected)
-  @$pb.TagNumber(13)
-  $core.bool get exhaustHopPosition => $_getBF(12);
-  @$pb.TagNumber(13)
-  set exhaustHopPosition($core.bool value) => $_setBool(12, value);
-  @$pb.TagNumber(13)
-  $core.bool hasExhaustHopPosition() => $_has(12);
-  @$pb.TagNumber(13)
-  void clearExhaustHopPosition() => $_clearField(13);
-
-  ///
-  ///  Preserve hop_limit for router-to-router traffic
-  @$pb.TagNumber(14)
-  $core.bool get routerPreserveHops => $_getBF(13);
-  @$pb.TagNumber(14)
-  set routerPreserveHops($core.bool value) => $_setBool(13, value);
-  @$pb.TagNumber(14)
-  $core.bool hasRouterPreserveHops() => $_has(13);
-  @$pb.TagNumber(14)
-  void clearRouterPreserveHops() => $_clearField(14);
 }
 
 ///
@@ -2588,11 +2463,278 @@ class ModuleConfig_StatusMessageConfig extends $pb.GeneratedMessage {
 }
 
 ///
+///  One entry in the broadcast destination list.
+///  Each entry names one set of radio settings to send a beacon copy on.
+class ModuleConfig_MeshBeaconConfig_BroadcastTarget
+    extends $pb.GeneratedMessage {
+  factory ModuleConfig_MeshBeaconConfig_BroadcastTarget({
+    $1.Config_LoRaConfig_ModemPreset? preset,
+    $1.Config_LoRaConfig_RegionCode? region,
+    $core.int? channelIndex,
+  }) {
+    final result = create();
+    if (preset != null) result.preset = preset;
+    if (region != null) result.region = region;
+    if (channelIndex != null) result.channelIndex = channelIndex;
+    return result;
+  }
+
+  ModuleConfig_MeshBeaconConfig_BroadcastTarget._();
+
+  factory ModuleConfig_MeshBeaconConfig_BroadcastTarget.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_MeshBeaconConfig_BroadcastTarget.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.MeshBeaconConfig.BroadcastTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<$1.Config_LoRaConfig_ModemPreset>(1, _omitFieldNames ? '' : 'preset',
+        enumValues: $1.Config_LoRaConfig_ModemPreset.values)
+    ..aE<$1.Config_LoRaConfig_RegionCode>(2, _omitFieldNames ? '' : 'region',
+        enumValues: $1.Config_LoRaConfig_RegionCode.values)
+    ..aI(4, _omitFieldNames ? '' : 'channelIndex',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_MeshBeaconConfig_BroadcastTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_MeshBeaconConfig_BroadcastTarget copyWith(
+          void Function(ModuleConfig_MeshBeaconConfig_BroadcastTarget)
+              updates) =>
+      super.copyWith((message) =>
+              updates(message as ModuleConfig_MeshBeaconConfig_BroadcastTarget))
+          as ModuleConfig_MeshBeaconConfig_BroadcastTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_MeshBeaconConfig_BroadcastTarget create() =>
+      ModuleConfig_MeshBeaconConfig_BroadcastTarget._();
+  @$core.override
+  ModuleConfig_MeshBeaconConfig_BroadcastTarget createEmptyInstance() =>
+      create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_MeshBeaconConfig_BroadcastTarget getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ModuleConfig_MeshBeaconConfig_BroadcastTarget>(create);
+  static ModuleConfig_MeshBeaconConfig_BroadcastTarget? _defaultInstance;
+
+  ///
+  ///  Modem preset to use for this target.
+  ///  Falls back to the running config preset if unset.
+  @$pb.TagNumber(1)
+  $1.Config_LoRaConfig_ModemPreset get preset => $_getN(0);
+  @$pb.TagNumber(1)
+  set preset($1.Config_LoRaConfig_ModemPreset value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPreset() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPreset() => $_clearField(1);
+
+  ///
+  ///  Region to use for this target. UNSET means use the running config region.
+  @$pb.TagNumber(2)
+  $1.Config_LoRaConfig_RegionCode get region => $_getN(1);
+  @$pb.TagNumber(2)
+  set region($1.Config_LoRaConfig_RegionCode value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRegion() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRegion() => $_clearField(2);
+
+  ///
+  ///  Index into the device's channel table (0..MAX_NUM_CHANNELS-1) of the channel to
+  ///  transmit this target's beacon on. The referenced channel must already be configured
+  ///  on the node (its key is needed to encrypt). If unset, the default channel for the
+  ///  preset is used.
+  @$pb.TagNumber(4)
+  $core.int get channelIndex => $_getIZ(2);
+  @$pb.TagNumber(4)
+  set channelIndex($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(4)
+  $core.bool hasChannelIndex() => $_has(2);
+  @$pb.TagNumber(4)
+  void clearChannelIndex() => $_clearField(4);
+}
+
+///
+///  MeshBeacon module config
+class ModuleConfig_MeshBeaconConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_MeshBeaconConfig({
+    $core.int? flags,
+    $core.String? broadcastMessage,
+    $0.ChannelSettings? broadcastOfferChannel,
+    $1.Config_LoRaConfig_RegionCode? broadcastOfferRegion,
+    $1.Config_LoRaConfig_ModemPreset? broadcastOfferPreset,
+    $core.int? broadcastIntervalSecs,
+    $core.Iterable<ModuleConfig_MeshBeaconConfig_BroadcastTarget>?
+        broadcastTargets,
+  }) {
+    final result = create();
+    if (flags != null) result.flags = flags;
+    if (broadcastMessage != null) result.broadcastMessage = broadcastMessage;
+    if (broadcastOfferChannel != null)
+      result.broadcastOfferChannel = broadcastOfferChannel;
+    if (broadcastOfferRegion != null)
+      result.broadcastOfferRegion = broadcastOfferRegion;
+    if (broadcastOfferPreset != null)
+      result.broadcastOfferPreset = broadcastOfferPreset;
+    if (broadcastIntervalSecs != null)
+      result.broadcastIntervalSecs = broadcastIntervalSecs;
+    if (broadcastTargets != null)
+      result.broadcastTargets.addAll(broadcastTargets);
+    return result;
+  }
+
+  ModuleConfig_MeshBeaconConfig._();
+
+  factory ModuleConfig_MeshBeaconConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_MeshBeaconConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.MeshBeaconConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'flags', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(4, _omitFieldNames ? '' : 'broadcastMessage')
+    ..aOM<$0.ChannelSettings>(5, _omitFieldNames ? '' : 'broadcastOfferChannel',
+        subBuilder: $0.ChannelSettings.create)
+    ..aE<$1.Config_LoRaConfig_RegionCode>(
+        6, _omitFieldNames ? '' : 'broadcastOfferRegion',
+        enumValues: $1.Config_LoRaConfig_RegionCode.values)
+    ..aE<$1.Config_LoRaConfig_ModemPreset>(
+        7, _omitFieldNames ? '' : 'broadcastOfferPreset',
+        enumValues: $1.Config_LoRaConfig_ModemPreset.values)
+    ..aI(11, _omitFieldNames ? '' : 'broadcastIntervalSecs',
+        fieldType: $pb.PbFieldType.OU3)
+    ..pPM<ModuleConfig_MeshBeaconConfig_BroadcastTarget>(
+        13, _omitFieldNames ? '' : 'broadcastTargets',
+        subBuilder: ModuleConfig_MeshBeaconConfig_BroadcastTarget.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_MeshBeaconConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_MeshBeaconConfig copyWith(
+          void Function(ModuleConfig_MeshBeaconConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as ModuleConfig_MeshBeaconConfig))
+          as ModuleConfig_MeshBeaconConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_MeshBeaconConfig create() =>
+      ModuleConfig_MeshBeaconConfig._();
+  @$core.override
+  ModuleConfig_MeshBeaconConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_MeshBeaconConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_MeshBeaconConfig>(create);
+  static ModuleConfig_MeshBeaconConfig? _defaultInstance;
+
+  ///
+  ///  Bitwise-OR of Flags values (listen / broadcast / legacy-split toggles).
+  @$pb.TagNumber(1)
+  $core.int get flags => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set flags($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFlags() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFlags() => $_clearField(1);
+
+  ///
+  ///  Message to include in each beacon broadcast. Max 100 bytes enforced by firmware.
+  @$pb.TagNumber(4)
+  $core.String get broadcastMessage => $_getSZ(1);
+  @$pb.TagNumber(4)
+  set broadcastMessage($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(4)
+  $core.bool hasBroadcastMessage() => $_has(1);
+  @$pb.TagNumber(4)
+  void clearBroadcastMessage() => $_clearField(4);
+
+  ///
+  ///  Optional channel (name + PSK) to advertise in the MeshBeacon offer_channel field.
+  @$pb.TagNumber(5)
+  $0.ChannelSettings get broadcastOfferChannel => $_getN(2);
+  @$pb.TagNumber(5)
+  set broadcastOfferChannel($0.ChannelSettings value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasBroadcastOfferChannel() => $_has(2);
+  @$pb.TagNumber(5)
+  void clearBroadcastOfferChannel() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.ChannelSettings ensureBroadcastOfferChannel() => $_ensure(2);
+
+  ///
+  ///  Optional region to advertise in the MeshBeacon offer_region field.
+  @$pb.TagNumber(6)
+  $1.Config_LoRaConfig_RegionCode get broadcastOfferRegion => $_getN(3);
+  @$pb.TagNumber(6)
+  set broadcastOfferRegion($1.Config_LoRaConfig_RegionCode value) =>
+      $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasBroadcastOfferRegion() => $_has(3);
+  @$pb.TagNumber(6)
+  void clearBroadcastOfferRegion() => $_clearField(6);
+
+  ///
+  ///  Optional modem preset to advertise in the MeshBeacon offer_preset field.
+  @$pb.TagNumber(7)
+  $1.Config_LoRaConfig_ModemPreset get broadcastOfferPreset => $_getN(4);
+  @$pb.TagNumber(7)
+  set broadcastOfferPreset($1.Config_LoRaConfig_ModemPreset value) =>
+      $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasBroadcastOfferPreset() => $_has(4);
+  @$pb.TagNumber(7)
+  void clearBroadcastOfferPreset() => $_clearField(7);
+
+  ///
+  ///  How often to broadcast, in seconds. Min 3600 (1 h), default 3600.
+  @$pb.TagNumber(11)
+  $core.int get broadcastIntervalSecs => $_getIZ(5);
+  @$pb.TagNumber(11)
+  set broadcastIntervalSecs($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(11)
+  $core.bool hasBroadcastIntervalSecs() => $_has(5);
+  @$pb.TagNumber(11)
+  void clearBroadcastIntervalSecs() => $_clearField(11);
+
+  ///
+  ///  Broadcast destination list.
+  ///  The broadcaster sends one beacon copy per distinct destination, in sequence, temporarily
+  ///  switching the radio to that entry's preset/region/channel for each.
+  ///  When empty, a single beacon is sent on the node's running preset and region over the
+  ///  primary channel.
+  ///  Entries that resolve to the same effective preset, region and channel are deduplicated, so
+  ///  a duplicate entry does not produce a second transmission.
+  @$pb.TagNumber(13)
+  $pb.PbList<ModuleConfig_MeshBeaconConfig_BroadcastTarget>
+      get broadcastTargets => $_getList(6);
+}
+
+///
 ///  TAK team/role configuration
 class ModuleConfig_TAKConfig extends $pb.GeneratedMessage {
   factory ModuleConfig_TAKConfig({
-    $0.Team? team,
-    $0.MemberRole? role,
+    $2.Team? team,
+    $2.MemberRole? role,
   }) {
     final result = create();
     if (team != null) result.team = team;
@@ -2613,9 +2755,9 @@ class ModuleConfig_TAKConfig extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ModuleConfig.TAKConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..aE<$0.Team>(1, _omitFieldNames ? '' : 'team', enumValues: $0.Team.values)
-    ..aE<$0.MemberRole>(2, _omitFieldNames ? '' : 'role',
-        enumValues: $0.MemberRole.values)
+    ..aE<$2.Team>(1, _omitFieldNames ? '' : 'team', enumValues: $2.Team.values)
+    ..aE<$2.MemberRole>(2, _omitFieldNames ? '' : 'role',
+        enumValues: $2.MemberRole.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2642,9 +2784,9 @@ class ModuleConfig_TAKConfig extends $pb.GeneratedMessage {
   ///  Team color.
   ///  Default Unspecifed_Color -> firmware uses Cyan
   @$pb.TagNumber(1)
-  $0.Team get team => $_getN(0);
+  $2.Team get team => $_getN(0);
   @$pb.TagNumber(1)
-  set team($0.Team value) => $_setField(1, value);
+  set team($2.Team value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasTeam() => $_has(0);
   @$pb.TagNumber(1)
@@ -2654,9 +2796,9 @@ class ModuleConfig_TAKConfig extends $pb.GeneratedMessage {
   ///  Member role.
   ///  Default Unspecifed -> firmware uses TeamMember
   @$pb.TagNumber(2)
-  $0.MemberRole get role => $_getN(1);
+  $2.MemberRole get role => $_getN(1);
   @$pb.TagNumber(2)
-  set role($0.MemberRole value) => $_setField(2, value);
+  set role($2.MemberRole value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasRole() => $_has(1);
   @$pb.TagNumber(2)
@@ -2680,6 +2822,7 @@ enum ModuleConfig_PayloadVariant {
   statusmessage,
   trafficManagement,
   tak,
+  meshBeacon,
   notSet
 }
 
@@ -2703,6 +2846,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
     ModuleConfig_StatusMessageConfig? statusmessage,
     ModuleConfig_TrafficManagementConfig? trafficManagement,
     ModuleConfig_TAKConfig? tak,
+    ModuleConfig_MeshBeaconConfig? meshBeacon,
   }) {
     final result = create();
     if (mqtt != null) result.mqtt = mqtt;
@@ -2722,6 +2866,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
     if (statusmessage != null) result.statusmessage = statusmessage;
     if (trafficManagement != null) result.trafficManagement = trafficManagement;
     if (tak != null) result.tak = tak;
+    if (meshBeacon != null) result.meshBeacon = meshBeacon;
     return result;
   }
 
@@ -2752,13 +2897,14 @@ class ModuleConfig extends $pb.GeneratedMessage {
     14: ModuleConfig_PayloadVariant.statusmessage,
     15: ModuleConfig_PayloadVariant.trafficManagement,
     16: ModuleConfig_PayloadVariant.tak,
+    17: ModuleConfig_PayloadVariant.meshBeacon,
     0: ModuleConfig_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ModuleConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
     ..aOM<ModuleConfig_MQTTConfig>(1, _omitFieldNames ? '' : 'mqtt',
         subBuilder: ModuleConfig_MQTTConfig.create)
     ..aOM<ModuleConfig_SerialConfig>(2, _omitFieldNames ? '' : 'serial',
@@ -2801,6 +2947,9 @@ class ModuleConfig extends $pb.GeneratedMessage {
         subBuilder: ModuleConfig_TrafficManagementConfig.create)
     ..aOM<ModuleConfig_TAKConfig>(16, _omitFieldNames ? '' : 'tak',
         subBuilder: ModuleConfig_TAKConfig.create)
+    ..aOM<ModuleConfig_MeshBeaconConfig>(
+        17, _omitFieldNames ? '' : 'meshBeacon',
+        subBuilder: ModuleConfig_MeshBeaconConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2838,6 +2987,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(14)
   @$pb.TagNumber(15)
   @$pb.TagNumber(16)
+  @$pb.TagNumber(17)
   ModuleConfig_PayloadVariant whichPayloadVariant() =>
       _ModuleConfig_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -2856,6 +3006,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(14)
   @$pb.TagNumber(15)
   @$pb.TagNumber(16)
+  @$pb.TagNumber(17)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -3076,6 +3227,19 @@ class ModuleConfig extends $pb.GeneratedMessage {
   void clearTak() => $_clearField(16);
   @$pb.TagNumber(16)
   ModuleConfig_TAKConfig ensureTak() => $_ensure(15);
+
+  ///
+  ///  MeshBeacon module config
+  @$pb.TagNumber(17)
+  ModuleConfig_MeshBeaconConfig get meshBeacon => $_getN(16);
+  @$pb.TagNumber(17)
+  set meshBeacon(ModuleConfig_MeshBeaconConfig value) => $_setField(17, value);
+  @$pb.TagNumber(17)
+  $core.bool hasMeshBeacon() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearMeshBeacon() => $_clearField(17);
+  @$pb.TagNumber(17)
+  ModuleConfig_MeshBeaconConfig ensureMeshBeacon() => $_ensure(16);
 }
 
 ///

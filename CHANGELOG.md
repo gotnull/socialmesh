@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.61.0] - 2026-09-05
 
+### Changed (Meshtastic protobufs 2.8.0)
+
+- The app now speaks the firmware 2.8.0 protocol definitions (#306). New modem presets Tiny Fast, Tiny Slow and Medium Turbo, and the ITU amateur 70cm and 1.25m regions, appear in the radio configuration and region pickers
+- Traffic Management settings work again on firmware 2.8. The module's on/off switches were removed from the protocol in favour of "a non-zero value means enabled" on each numeric field, so the screen read every setting as off and wrote nothing the radio understood. Each feature's switch now maps onto its field, and the position precision and hop management controls, which 2.8 dropped, are gone
+- The modem preset picker honours the region-to-preset legality map a 2.8 radio sends when it connects: only presets legal for the selected region are offered, choosing a region where the current preset is illegal moves to the radio's default for that region and says so, and amateur bands carry a licensed-operators-only notice (#308). Radios on older firmware send no map and see no change
+- Firmware update targets refreshed against the upstream hardware table: 18 new boards, and the three hardware IDs firmware 2.8 reassigned (Makerfabs Tracker, Makerfabs reserved, MeshPager X2) report "update not supported" until their chipset is confirmed rather than inheriting the previous board's update path
+
 ### Fixed (region setup on firmware 2.8)
 
 - Choosing a region on a radio running firmware 2.8.0 or newer no longer ends in "Timed out waiting for device to reconnect after region change" a minute and a half later, with the region silently applied all along. Firmware 2.8 reprograms the radio in place instead of rebooting, so the app was waiting for a disconnect and reconnect that never came. The app now also reads the LoRa configuration back a few seconds after the write and accepts the region the moment the radio reports it, while radios that still reboot are handled exactly as before. Reproduced against the 2.8.0 simulator radio

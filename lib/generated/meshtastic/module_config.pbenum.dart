@@ -373,5 +373,53 @@ class ModuleConfig_CannedMessageConfig_InputEventChar extends $pb.ProtobufEnum {
       super.value, super.name);
 }
 
+///
+///  Boolean options for the beacon module, packed into the `flags` bitfield below.
+///  OR the FLAG_* values together; a flag is on when its bit is set.
+class ModuleConfig_MeshBeaconConfig_Flags extends $pb.ProtobufEnum {
+  ///
+  ///  No options enabled.
+  static const ModuleConfig_MeshBeaconConfig_Flags FLAG_NONE =
+      ModuleConfig_MeshBeaconConfig_Flags._(
+          0, _omitEnumNames ? '' : 'FLAG_NONE');
+
+  ///
+  ///  Enable receiving MESH_BEACON_APP packets from other nodes.
+  ///  The text portion is delivered to the local message inbox.
+  ///  Offered channel/preset are stored for the client app to act on.
+  static const ModuleConfig_MeshBeaconConfig_Flags FLAG_LISTEN_ENABLED =
+      ModuleConfig_MeshBeaconConfig_Flags._(
+          1, _omitEnumNames ? '' : 'FLAG_LISTEN_ENABLED');
+
+  ///
+  ///  Enable periodically broadcasting MESH_BEACON_APP packets from this node.
+  static const ModuleConfig_MeshBeaconConfig_Flags FLAG_BROADCAST_ENABLED =
+      ModuleConfig_MeshBeaconConfig_Flags._(
+          2, _omitEnumNames ? '' : 'FLAG_BROADCAST_ENABLED');
+
+  ///
+  ///  When both text and offer content are present, split the beacon into a separate
+  ///  MESH_BEACON_APP (offer only) and TEXT_MESSAGE_APP (text only) packet, so firmware
+  ///  that only decodes TEXT_MESSAGE_APP still receives the human-readable text.
+  static const ModuleConfig_MeshBeaconConfig_Flags FLAG_LEGACY_SPLIT =
+      ModuleConfig_MeshBeaconConfig_Flags._(
+          4, _omitEnumNames ? '' : 'FLAG_LEGACY_SPLIT');
+
+  static const $core.List<ModuleConfig_MeshBeaconConfig_Flags> values =
+      <ModuleConfig_MeshBeaconConfig_Flags>[
+    FLAG_NONE,
+    FLAG_LISTEN_ENABLED,
+    FLAG_BROADCAST_ENABLED,
+    FLAG_LEGACY_SPLIT,
+  ];
+
+  static final $core.List<ModuleConfig_MeshBeaconConfig_Flags?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static ModuleConfig_MeshBeaconConfig_Flags? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ModuleConfig_MeshBeaconConfig_Flags._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

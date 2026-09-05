@@ -17299,6 +17299,46 @@ class AppLocalizationsDe extends AppLocalizations {
   String get regionSelectionRegionItu3_2mFreq => '144-148 MHz';
 
   @override
+  String get regionSelectionRegionItu1_70cm => 'ITU R1 70cm';
+
+  @override
+  String get regionSelectionRegionItu1_70cmDesc =>
+      'ITU Region 1 Amateurfunk 70cm-Band';
+
+  @override
+  String get regionSelectionRegionItu1_70cmFreq => '430-440 MHz';
+
+  @override
+  String get regionSelectionRegionItu2_70cm => 'ITU R2 70cm';
+
+  @override
+  String get regionSelectionRegionItu2_70cmDesc =>
+      'ITU Region 2 Amateurfunk 70cm-Band';
+
+  @override
+  String get regionSelectionRegionItu2_70cmFreq => '420-450 MHz';
+
+  @override
+  String get regionSelectionRegionItu3_70cm => 'ITU R3 70cm';
+
+  @override
+  String get regionSelectionRegionItu3_70cmDesc =>
+      'ITU Region 3 Amateurfunk 70cm-Band';
+
+  @override
+  String get regionSelectionRegionItu3_70cmFreq => '430-450 MHz';
+
+  @override
+  String get regionSelectionRegionItu2_125cm => 'ITU R2 1,25m';
+
+  @override
+  String get regionSelectionRegionItu2_125cmDesc =>
+      'ITU Region 2 Amateurfunk 1,25m-Band';
+
+  @override
+  String get regionSelectionRegionItu2_125cmFreq => '220-225 MHz';
+
+  @override
   String get regionSelectionRegionEu866 => 'EU 866';
 
   @override
@@ -28024,6 +28064,36 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get radioConfigPresetNarrowSlowDesc =>
       'EU 868MHz schmal, größere Reichweite';
+
+  @override
+  String get radioConfigPresetTinyFast => 'Winzig Schnell';
+
+  @override
+  String get radioConfigPresetTinyFastDesc =>
+      'Amateurfunk-Preset mit 20 kHz, wie Long Fast';
+
+  @override
+  String get radioConfigPresetTinySlow => 'Winzig Langsam';
+
+  @override
+  String get radioConfigPresetTinySlowDesc =>
+      'Amateurfunk-Preset mit 20 kHz, wie Long Moderate';
+
+  @override
+  String get radioConfigPresetMediumTurbo => 'Mittel Turbo';
+
+  @override
+  String get radioConfigPresetMediumTurboDesc =>
+      'Mittlere Reichweite mit 500 kHz, nicht in jeder Region zulässig';
+
+  @override
+  String get radioConfigLicensedOnlyBand =>
+      'Nur für lizenzierte Funker. Diese Region ist ein Amateurfunkband, daher werden nur die Presets angeboten, die das Funkgerät als zulässig meldet.';
+
+  @override
+  String radioConfigPresetChangedForRegion(String preset) {
+    return 'Preset auf $preset geändert, die Vorgabe des Funkgeräts für diese Region. Das vorherige Preset ist hier nicht zulässig.';
+  }
 
   @override
   String get radioConfigPresetMustMatch =>

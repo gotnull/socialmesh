@@ -29480,6 +29480,78 @@ abstract class AppLocalizations {
   /// **'144-148 MHz'**
   String get regionSelectionRegionItu3_2mFreq;
 
+  /// UI text: region selection ITU Region 1 Amateur Radio 70cm band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R1 70cm'**
+  String get regionSelectionRegionItu1_70cm;
+
+  /// UI text: region selection ITU R1 70cm description
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 1 amateur radio 70cm band'**
+  String get regionSelectionRegionItu1_70cmDesc;
+
+  /// UI text: region selection ITU R1 70cm freq
+  ///
+  /// In en, this message translates to:
+  /// **'430-440 MHz'**
+  String get regionSelectionRegionItu1_70cmFreq;
+
+  /// UI text: region selection ITU Region 2 Amateur Radio 70cm band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R2 70cm'**
+  String get regionSelectionRegionItu2_70cm;
+
+  /// UI text: region selection ITU R2 70cm description
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 2 amateur radio 70cm band'**
+  String get regionSelectionRegionItu2_70cmDesc;
+
+  /// UI text: region selection ITU R2 70cm freq
+  ///
+  /// In en, this message translates to:
+  /// **'420-450 MHz'**
+  String get regionSelectionRegionItu2_70cmFreq;
+
+  /// UI text: region selection ITU Region 3 Amateur Radio 70cm band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R3 70cm'**
+  String get regionSelectionRegionItu3_70cm;
+
+  /// UI text: region selection ITU R3 70cm description
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 3 amateur radio 70cm band'**
+  String get regionSelectionRegionItu3_70cmDesc;
+
+  /// UI text: region selection ITU R3 70cm freq
+  ///
+  /// In en, this message translates to:
+  /// **'430-450 MHz'**
+  String get regionSelectionRegionItu3_70cmFreq;
+
+  /// UI text: region selection ITU Region 2 Amateur Radio 1.25m (125cm) band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R2 1.25m'**
+  String get regionSelectionRegionItu2_125cm;
+
+  /// UI text: region selection ITU R2 1.25m description
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 2 amateur radio 1.25m band'**
+  String get regionSelectionRegionItu2_125cmDesc;
+
+  /// UI text: region selection ITU R2 1.25m freq
+  ///
+  /// In en, this message translates to:
+  /// **'220-225 MHz'**
+  String get regionSelectionRegionItu2_125cmFreq;
+
   /// UI text: region selection EU 866MHz Short-Range Devices band
   ///
   /// In en, this message translates to:
@@ -48266,6 +48338,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'EU 868MHz narrow, longer range'**
   String get radioConfigPresetNarrowSlowDesc;
+
+  /// Label for tiny fast modem preset (20 kHz amateur band)
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny Fast'**
+  String get radioConfigPresetTinyFast;
+
+  /// Description for tiny fast modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'20 kHz amateur band preset, like Long Fast'**
+  String get radioConfigPresetTinyFastDesc;
+
+  /// Label for tiny slow modem preset (20 kHz amateur band)
+  ///
+  /// In en, this message translates to:
+  /// **'Tiny Slow'**
+  String get radioConfigPresetTinySlow;
+
+  /// Description for tiny slow modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'20 kHz amateur band preset, like Long Moderate'**
+  String get radioConfigPresetTinySlowDesc;
+
+  /// Label for medium turbo modem preset (500 kHz)
+  ///
+  /// In en, this message translates to:
+  /// **'Medium Turbo'**
+  String get radioConfigPresetMediumTurbo;
+
+  /// Description for medium turbo modem preset
+  ///
+  /// In en, this message translates to:
+  /// **'Medium range at 500 kHz, not legal in every region'**
+  String get radioConfigPresetMediumTurboDesc;
+
+  /// Warning banner on the LoRa config screen when the selected region is flagged licensed-only by the radio's region preset map
+  ///
+  /// In en, this message translates to:
+  /// **'Licensed operators only. This region is an amateur radio band, so the presets offered are limited to those the radio reports as legal for it.'**
+  String get radioConfigLicensedOnlyBand;
+
+  /// Snackbar shown when the selected modem preset is replaced because it is not legal in the newly selected region
+  ///
+  /// In en, this message translates to:
+  /// **'Preset changed to {preset}, the radio\'s default for this region. The previous preset is not legal here.'**
+  String radioConfigPresetChangedForRegion(String preset);
 
   /// UI text: radio config preset must match
   ///

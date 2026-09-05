@@ -54,6 +54,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
 
   ///
   ///  TODO - REMOVE High accuracy temperature and humidity
+  @$core.Deprecated('This enum value is deprecated')
   static const TelemetrySensorType SHTC3 =
       TelemetrySensorType._(7, _omitEnumNames ? '' : 'SHTC3');
 
@@ -79,6 +80,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
 
   ///
   ///  TODO - REMOVE High accuracy temperature and humidity
+  @$core.Deprecated('This enum value is deprecated')
   static const TelemetrySensorType SHT31 =
       TelemetrySensorType._(12, _omitEnumNames ? '' : 'SHT31');
 
@@ -104,6 +106,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
 
   ///
   ///  TODO - REMOVE Sensirion High accuracy temperature and humidity
+  @$core.Deprecated('This enum value is deprecated')
   static const TelemetrySensorType SHT4X =
       TelemetrySensorType._(17, _omitEnumNames ? '' : 'SHT4X');
 
@@ -254,6 +257,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
 
   ///
   ///  TODO - REMOVE STH21 Temperature and R. Humidity sensor
+  @$core.Deprecated('This enum value is deprecated')
   static const TelemetrySensorType SHT21 =
       TelemetrySensorType._(47, _omitEnumNames ? '' : 'SHT21');
 
@@ -286,6 +290,26 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
   ///  ICM-42607-P 6‑Axis IMU
   static const TelemetrySensorType ICM42607P =
       TelemetrySensorType._(53, _omitEnumNames ? '' : 'ICM42607P');
+
+  ///
+  ///  SPA06 pressure and temperature
+  static const TelemetrySensorType SPA06 =
+      TelemetrySensorType._(54, _omitEnumNames ? '' : 'SPA06');
+
+  ///
+  ///  HM330X PM SENSOR
+  static const TelemetrySensorType HM330X =
+      TelemetrySensorType._(55, _omitEnumNames ? '' : 'HM330X');
+
+  ///
+  ///  Sensirion SEN6X PM/RHT/VOC/NOx/CO2/HCHO sensor family (SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C)
+  static const TelemetrySensorType SEN6X =
+      TelemetrySensorType._(56, _omitEnumNames ? '' : 'SEN6X');
+
+  ///
+  ///  AS3935 Franklin lightning sensor
+  static const TelemetrySensorType AS3935 =
+      TelemetrySensorType._(57, _omitEnumNames ? '' : 'AS3935');
 
   static const $core.List<TelemetrySensorType> values = <TelemetrySensorType>[
     SENSOR_UNSET,
@@ -342,10 +366,14 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
     DS248X,
     MMC5983MA,
     ICM42607P,
+    SPA06,
+    HM330X,
+    SEN6X,
+    AS3935,
   ];
 
   static final $core.List<TelemetrySensorType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 53);
+      $pb.ProtobufEnum.$_initByValueList(values, 57);
   static TelemetrySensorType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

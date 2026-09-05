@@ -98,6 +98,21 @@ final List<ModemPresetMetadata> kModemPresetMetadata = <ModemPresetMetadata>[
     label: (l) => l.radioConfigPresetNarrowSlow,
     description: (l) => l.radioConfigPresetNarrowSlowDesc,
   ),
+  ModemPresetMetadata(
+    preset: config_pbenum.Config_LoRaConfig_ModemPreset.TINY_FAST,
+    label: (l) => l.radioConfigPresetTinyFast,
+    description: (l) => l.radioConfigPresetTinyFastDesc,
+  ),
+  ModemPresetMetadata(
+    preset: config_pbenum.Config_LoRaConfig_ModemPreset.TINY_SLOW,
+    label: (l) => l.radioConfigPresetTinySlow,
+    description: (l) => l.radioConfigPresetTinySlowDesc,
+  ),
+  ModemPresetMetadata(
+    preset: config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_TURBO,
+    label: (l) => l.radioConfigPresetMediumTurbo,
+    description: (l) => l.radioConfigPresetMediumTurboDesc,
+  ),
 ];
 
 final Map<config_pbenum.Config_LoRaConfig_ModemPreset, ModemPresetMetadata>

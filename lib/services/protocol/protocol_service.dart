@@ -410,6 +410,7 @@ class ProtocolService {
   final StreamController<String> _ringtoneTextController;
   final StreamController<module_pb.ModuleConfig_TrafficManagementConfig>
   _trafficManagementConfigController;
+  final StreamController<pb.LoRaRegionPresetMap> _regionPresetsController;
   final StreamController<pb.ClientNotification> _clientNotificationController;
   final StreamController<pb.User> _userConfigController;
   final StreamController<DetectionSensorEvent> _detectionSensorEventController;
@@ -635,6 +636,11 @@ class ProtocolService {
   module_pb.ModuleConfig_CannedMessageConfig? _currentCannedMessageConfig;
   module_pb.ModuleConfig_TrafficManagementConfig?
   _currentTrafficManagementConfig;
+
+  // Region -> legal-preset map advertised by a 2.8+ radio during the
+  // want_config handshake. Null until the radio sends it; older firmware
+  // never does, and callers must treat null as "no constraint".
+  pb.LoRaRegionPresetMap? _regionPresets;
   pb.User? _currentUserConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
@@ -1158,6 +1164,8 @@ class ProtocolService {
            StreamController<
              module_pb.ModuleConfig_TrafficManagementConfig
            >.broadcast(),
+       _regionPresetsController =
+           StreamController<pb.LoRaRegionPresetMap>.broadcast(),
        _clientNotificationController =
            StreamController<pb.ClientNotification>.broadcast(),
        _userConfigController = StreamController<pb.User>.broadcast(),
@@ -1485,6 +1493,14 @@ class ProtocolService {
   /// Current traffic management config
   module_pb.ModuleConfig_TrafficManagementConfig?
   get currentTrafficManagementConfig => _currentTrafficManagementConfig;
+
+  /// Region -> legal-preset map from the connected radio (firmware 2.8+).
+  /// Null when the radio has not sent one; that means no constraint.
+  pb.LoRaRegionPresetMap? get regionPresets => _regionPresets;
+
+  /// Emits each region -> legal-preset map as the radio sends it.
+  Stream<pb.LoRaRegionPresetMap> get regionPresetsStream =>
+      _regionPresetsController.stream;
 
   /// Stream of user (owner) config updates
   Stream<pb.User> get userConfigStream => _userConfigController.stream;
@@ -2419,6 +2435,15 @@ class ProtocolService {
         _handleFromRadioConfig(fromRadio.config);
       } else if (fromRadio.hasMetadata()) {
         _handleFromRadioMetadata(fromRadio.metadata);
+      } else if (fromRadio.hasRegionPresets()) {
+        // Sent once per handshake, right after metadata, by 2.8+ firmware.
+        _regionPresets = fromRadio.regionPresets;
+        AppLogging.protocol(
+          'FromRadio region presets: '
+          '${fromRadio.regionPresets.groups.length} groups, '
+          '${fromRadio.regionPresets.regionGroups.length} regions',
+        );
+        _regionPresetsController.add(fromRadio.regionPresets);
       } else if (fromRadio.hasMqttClientProxyMessage()) {
         _proxyFramesForwardedFromRadio++;
         AppLogging.mqttProxy(
@@ -3869,7 +3894,9 @@ class ProtocolService {
         if (moduleConfig.hasTrafficManagement()) {
           final tmConfig = moduleConfig.trafficManagement;
           AppLogging.protocol(
-            'Received Traffic Management config - enabled: ${tmConfig.enabled}',
+            'Received Traffic Management config - '
+            'positionMinIntervalSecs: ${tmConfig.positionMinIntervalSecs}, '
+            'rateLimitWindowSecs: ${tmConfig.rateLimitWindowSecs}',
           );
           if (isLocalResponse) {
             _currentTrafficManagementConfig = tmConfig;
@@ -5881,6 +5908,10 @@ class ProtocolService {
       if (_handshakePhase != _HandshakePhase.awaitingInitialConfig) {
         _handshakeStartedAt = DateTime.now();
         _configFramesSinceHandshake = 0;
+        // A fresh handshake re-sends the map on 2.8+; on older firmware it
+        // never arrives, so a stale map from a previous radio must not
+        // constrain this one.
+        _regionPresets = null;
       }
       _handshakePhase = _HandshakePhase.awaitingInitialConfig;
       _setReadiness(
@@ -10748,41 +10779,27 @@ class ProtocolService {
     await setModuleConfig(moduleConfig, target: target);
   }
 
-  /// Set traffic management module configuration (v2.7.19)
+  /// Set traffic management module configuration.
+  ///
+  /// Firmware 2.8 replaced the module's boolean switches with the
+  /// "non-zero implies enabled" rule on each numeric field, so callers
+  /// pass 0 to turn a feature off and a positive value to turn it on.
   Future<void> setTrafficManagementConfig({
-    required bool enabled,
-    required bool positionDedupEnabled,
-    required int positionPrecisionBits,
     required int positionMinIntervalSecs,
-    required bool nodeinfoDirectResponse,
     required int nodeinfoDirectResponseMaxHops,
-    required bool rateLimitEnabled,
     required int rateLimitWindowSecs,
     required int rateLimitMaxPackets,
-    required bool dropUnknownEnabled,
     required int unknownPacketThreshold,
-    required bool exhaustHopTelemetry,
-    required bool exhaustHopPosition,
-    required bool routerPreserveHops,
     AdminTarget? target,
   }) async {
     AppLogging.protocol('Setting traffic management config');
 
     final tmConfig = module_pb.ModuleConfig_TrafficManagementConfig()
-      ..enabled = enabled
-      ..positionDedupEnabled = positionDedupEnabled
-      ..positionPrecisionBits = positionPrecisionBits
       ..positionMinIntervalSecs = positionMinIntervalSecs
-      ..nodeinfoDirectResponse = nodeinfoDirectResponse
       ..nodeinfoDirectResponseMaxHops = nodeinfoDirectResponseMaxHops
-      ..rateLimitEnabled = rateLimitEnabled
       ..rateLimitWindowSecs = rateLimitWindowSecs
       ..rateLimitMaxPackets = rateLimitMaxPackets
-      ..dropUnknownEnabled = dropUnknownEnabled
-      ..unknownPacketThreshold = unknownPacketThreshold
-      ..exhaustHopTelemetry = exhaustHopTelemetry
-      ..exhaustHopPosition = exhaustHopPosition
-      ..routerPreserveHops = routerPreserveHops;
+      ..unknownPacketThreshold = unknownPacketThreshold;
 
     final moduleConfig = module_pb.ModuleConfig()..trafficManagement = tmConfig;
     await setModuleConfig(moduleConfig, target: target);
@@ -11581,6 +11598,7 @@ class ProtocolService {
     await _fileTransferController.close();
     await _deliveryController.close();
     await _regionController.close();
+    await _regionPresetsController.close();
     await _clientNotificationController.close();
     await _userConfigController.close();
     await _traceRouteLogController.close();

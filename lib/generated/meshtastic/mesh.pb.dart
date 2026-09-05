@@ -321,7 +321,7 @@ class Position extends $pb.GeneratedMessage {
   void clearGpsAccuracy() => $_clearField(14);
 
   ///
-  ///  Ground speed in m/s and True North TRACK in 1/100 degrees
+  ///  Ground speed in km/h and True North TRACK in 1/100 degrees
   ///  Clarification of terms:
   ///  - "track" is the direction of motion (measured in horizontal plane)
   ///  - "heading" is where the fuselage points (measured in horizontal plane)
@@ -538,6 +538,9 @@ class User extends $pb.GeneratedMessage {
 
   ///
   ///  A full name for this user, i.e. "Kevin Hester"
+  ///  Limited to 24 bytes of UTF-8: longer names are accepted from senders
+  ///  built against the older 39-byte limit, but devices truncate them before
+  ///  storing or rebroadcasting. Clients should enforce 24 bytes in their UI.
   @$pb.TagNumber(2)
   $core.String get longName => $_getSZ(1);
   @$pb.TagNumber(2)
@@ -840,6 +843,7 @@ class Data extends $pb.GeneratedMessage {
     $core.int? replyId,
     $core.int? emoji,
     $core.int? bitfield,
+    $core.List<$core.int>? xeddsaSignature,
   }) {
     final result = create();
     if (portnum != null) result.portnum = portnum;
@@ -851,6 +855,7 @@ class Data extends $pb.GeneratedMessage {
     if (replyId != null) result.replyId = replyId;
     if (emoji != null) result.emoji = emoji;
     if (bitfield != null) result.bitfield = bitfield;
+    if (xeddsaSignature != null) result.xeddsaSignature = xeddsaSignature;
     return result;
   }
 
@@ -878,6 +883,8 @@ class Data extends $pb.GeneratedMessage {
     ..aI(7, _omitFieldNames ? '' : 'replyId', fieldType: $pb.PbFieldType.OF3)
     ..aI(8, _omitFieldNames ? '' : 'emoji', fieldType: $pb.PbFieldType.OF3)
     ..aI(9, _omitFieldNames ? '' : 'bitfield', fieldType: $pb.PbFieldType.OU3)
+    ..a<$core.List<$core.int>>(
+        10, _omitFieldNames ? '' : 'xeddsaSignature', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1006,6 +1013,17 @@ class Data extends $pb.GeneratedMessage {
   $core.bool hasBitfield() => $_has(8);
   @$pb.TagNumber(9)
   void clearBitfield() => $_clearField(9);
+
+  ///
+  ///  XEdDSA signature for the payload
+  @$pb.TagNumber(10)
+  $core.List<$core.int> get xeddsaSignature => $_getN(9);
+  @$pb.TagNumber(10)
+  set xeddsaSignature($core.List<$core.int> value) => $_setBytes(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasXeddsaSignature() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearXeddsaSignature() => $_clearField(10);
 }
 
 ///
@@ -1482,6 +1500,115 @@ class RemoteShell extends $pb.GeneratedMessage {
 }
 
 ///
+///  A rectangular, axis-aligned geographic bounding box.
+///  Used to define a rectangular geofence region for a Waypoint.
+///  Fields are ordered west, south, east, north to match the standard bounding box
+///  convention used by GeoJSON and PMTiles (min longitude, min latitude, max longitude, max latitude),
+///  so the box can drive an offline map extract directly.
+///  All coordinates are in degrees scaled by 1e-7 (same convention as Position and Waypoint).
+class BoundingBox extends $pb.GeneratedMessage {
+  factory BoundingBox({
+    $core.int? longitudeWestI,
+    $core.int? latitudeSouthI,
+    $core.int? longitudeEastI,
+    $core.int? latitudeNorthI,
+  }) {
+    final result = create();
+    if (longitudeWestI != null) result.longitudeWestI = longitudeWestI;
+    if (latitudeSouthI != null) result.latitudeSouthI = latitudeSouthI;
+    if (longitudeEastI != null) result.longitudeEastI = longitudeEastI;
+    if (latitudeNorthI != null) result.latitudeNorthI = latitudeNorthI;
+    return result;
+  }
+
+  BoundingBox._();
+
+  factory BoundingBox.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BoundingBox.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BoundingBox',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'longitudeWestI',
+        fieldType: $pb.PbFieldType.OSF3)
+    ..aI(2, _omitFieldNames ? '' : 'latitudeSouthI',
+        fieldType: $pb.PbFieldType.OSF3)
+    ..aI(3, _omitFieldNames ? '' : 'longitudeEastI',
+        fieldType: $pb.PbFieldType.OSF3)
+    ..aI(4, _omitFieldNames ? '' : 'latitudeNorthI',
+        fieldType: $pb.PbFieldType.OSF3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BoundingBox clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BoundingBox copyWith(void Function(BoundingBox) updates) =>
+      super.copyWith((message) => updates(message as BoundingBox))
+          as BoundingBox;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BoundingBox create() => BoundingBox._();
+  @$core.override
+  BoundingBox createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BoundingBox getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BoundingBox>(create);
+  static BoundingBox? _defaultInstance;
+
+  ///
+  ///  Western edge of the box - minimum longitude (south-west corner)
+  @$pb.TagNumber(1)
+  $core.int get longitudeWestI => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set longitudeWestI($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLongitudeWestI() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLongitudeWestI() => $_clearField(1);
+
+  ///
+  ///  Southern edge of the box - minimum latitude (south-west corner)
+  @$pb.TagNumber(2)
+  $core.int get latitudeSouthI => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set latitudeSouthI($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLatitudeSouthI() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLatitudeSouthI() => $_clearField(2);
+
+  ///
+  ///  Eastern edge of the box - maximum longitude (north-east corner)
+  @$pb.TagNumber(3)
+  $core.int get longitudeEastI => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set longitudeEastI($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLongitudeEastI() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLongitudeEastI() => $_clearField(3);
+
+  ///
+  ///  Northern edge of the box - maximum latitude (north-east corner)
+  @$pb.TagNumber(4)
+  $core.int get latitudeNorthI => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set latitudeNorthI($core.int value) => $_setSignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasLatitudeNorthI() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearLatitudeNorthI() => $_clearField(4);
+}
+
+///
 ///  Waypoint message, used to share arbitrary locations across the mesh
 class Waypoint extends $pb.GeneratedMessage {
   factory Waypoint({
@@ -1493,6 +1620,11 @@ class Waypoint extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? description,
     $core.int? icon,
+    $core.int? geofenceRadius,
+    BoundingBox? boundingBox,
+    $core.bool? notifyOnEnter,
+    $core.bool? notifyOnExit,
+    $core.bool? notifyFavoritesOnly,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -1503,6 +1635,12 @@ class Waypoint extends $pb.GeneratedMessage {
     if (name != null) result.name = name;
     if (description != null) result.description = description;
     if (icon != null) result.icon = icon;
+    if (geofenceRadius != null) result.geofenceRadius = geofenceRadius;
+    if (boundingBox != null) result.boundingBox = boundingBox;
+    if (notifyOnEnter != null) result.notifyOnEnter = notifyOnEnter;
+    if (notifyOnExit != null) result.notifyOnExit = notifyOnExit;
+    if (notifyFavoritesOnly != null)
+      result.notifyFavoritesOnly = notifyFavoritesOnly;
     return result;
   }
 
@@ -1528,6 +1666,13 @@ class Waypoint extends $pb.GeneratedMessage {
     ..aOS(6, _omitFieldNames ? '' : 'name')
     ..aOS(7, _omitFieldNames ? '' : 'description')
     ..aI(8, _omitFieldNames ? '' : 'icon', fieldType: $pb.PbFieldType.OF3)
+    ..aI(9, _omitFieldNames ? '' : 'geofenceRadius',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOM<BoundingBox>(10, _omitFieldNames ? '' : 'boundingBox',
+        subBuilder: BoundingBox.create)
+    ..aOB(11, _omitFieldNames ? '' : 'notifyOnEnter')
+    ..aOB(12, _omitFieldNames ? '' : 'notifyOnExit')
+    ..aOB(13, _omitFieldNames ? '' : 'notifyFavoritesOnly')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1636,6 +1781,71 @@ class Waypoint extends $pb.GeneratedMessage {
   $core.bool hasIcon() => $_has(7);
   @$pb.TagNumber(8)
   void clearIcon() => $_clearField(8);
+
+  ///
+  ///  If greater than zero, defines a circular geofence centred on this waypoint's
+  ///  location (latitude_i / longitude_i) with this radius in meters.
+  ///  Zero means the waypoint has no circular geofence.
+  @$pb.TagNumber(9)
+  $core.int get geofenceRadius => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set geofenceRadius($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasGeofenceRadius() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearGeofenceRadius() => $_clearField(9);
+
+  ///
+  ///  Optional rectangular geofence region for this waypoint.
+  ///  May be used instead of, or in addition to, geofence_radius.
+  @$pb.TagNumber(10)
+  BoundingBox get boundingBox => $_getN(9);
+  @$pb.TagNumber(10)
+  set boundingBox(BoundingBox value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasBoundingBox() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearBoundingBox() => $_clearField(10);
+  @$pb.TagNumber(10)
+  BoundingBox ensureBoundingBox() => $_ensure(9);
+
+  ///
+  ///  If true, a notification should be raised when a tracked node enters this
+  ///  waypoint's geofence (the circular radius and/or the bounding box).
+  @$pb.TagNumber(11)
+  $core.bool get notifyOnEnter => $_getBF(10);
+  @$pb.TagNumber(11)
+  set notifyOnEnter($core.bool value) => $_setBool(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasNotifyOnEnter() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearNotifyOnEnter() => $_clearField(11);
+
+  ///
+  ///  If true, a notification should be raised when a tracked node exits this
+  ///  waypoint's geofence (the circular radius and/or the bounding box).
+  @$pb.TagNumber(12)
+  $core.bool get notifyOnExit => $_getBF(11);
+  @$pb.TagNumber(12)
+  set notifyOnExit($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasNotifyOnExit() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearNotifyOnExit() => $_clearField(12);
+
+  ///
+  ///  If true, only raise geofence enter/exit notifications for nodes that are
+  ///  marked as favorites on the receiving device. Applies to both notify_on_enter
+  ///  and notify_on_exit. Favorite status is resolved locally per receiver, so the
+  ///  same waypoint alerts each node only for its own favorites.
+  @$pb.TagNumber(13)
+  $core.bool get notifyFavoritesOnly => $_getBF(12);
+  @$pb.TagNumber(13)
+  set notifyFavoritesOnly($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasNotifyFavoritesOnly() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearNotifyFavoritesOnly() => $_clearField(13);
 }
 
 ///
@@ -1842,6 +2052,7 @@ class MeshPacket extends $pb.GeneratedMessage {
     $core.int? relayNode,
     $core.int? txAfter,
     MeshPacket_TransportMechanism? transportMechanism,
+    $core.bool? xeddsaSigned,
   }) {
     final result = create();
     if (from != null) result.from = from;
@@ -1866,6 +2077,7 @@ class MeshPacket extends $pb.GeneratedMessage {
     if (txAfter != null) result.txAfter = txAfter;
     if (transportMechanism != null)
       result.transportMechanism = transportMechanism;
+    if (xeddsaSigned != null) result.xeddsaSigned = xeddsaSigned;
     return result;
   }
 
@@ -1916,6 +2128,7 @@ class MeshPacket extends $pb.GeneratedMessage {
     ..aE<MeshPacket_TransportMechanism>(
         21, _omitFieldNames ? '' : 'transportMechanism',
         enumValues: MeshPacket_TransportMechanism.values)
+    ..aOB(22, _omitFieldNames ? '' : 'xeddsaSigned')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2036,6 +2249,12 @@ class MeshPacket extends $pb.GeneratedMessage {
   ///  Note: this field is _never_ sent on the radio link itself (to save space) Times
   ///  are typically not sent over the mesh, but they will be added to any Packet
   ///  (chain of SubPacket) sent to the phone (so the phone can know exact time of reception)
+  ///  Explicit presence: firmware cannot always attach a trustworthy wall-clock timestamp at the
+  ///  moment of reception - a node with no GPS and no phone connected yet has no time source at
+  ///  all. has_rx_time disambiguates that state from a genuine (if coincidental) 1970-01-01
+  ///  reading. A packet delivered with this field absent may still be re-timestamped once a valid
+  ///  clock becomes available, before the phone ever sees it - "absent" is not guaranteed
+  ///  permanent, only "not yet known at last observation".
   @$pb.TagNumber(7)
   $core.int get rxTime => $_getIZ(6);
   @$pb.TagNumber(7)
@@ -2105,6 +2324,9 @@ class MeshPacket extends $pb.GeneratedMessage {
 
   ///
   ///  rssi of received packet. Only sent to phone for dispay purposes.
+  ///  Explicit presence: rssi 0 is a legitimate reading on some radios (SX126x can report exactly
+  ///  0 dBm; SX127x's formula can even go positive). has_rx_rssi disambiguates; a replayed packet
+  ///  built from history should leave this field absent rather than emitting 0.
   @$pb.TagNumber(12)
   $core.int get rxRssi => $_getIZ(11);
   @$pb.TagNumber(12)
@@ -2143,6 +2365,10 @@ class MeshPacket extends $pb.GeneratedMessage {
   ///
   ///  Hop limit with which the original packet started. Sent via LoRa using three bits in the unencrypted header.
   ///  When receiving a packet, the difference between hop_start and hop_limit gives how many hops it traveled.
+  ///  hop_start == 0 does not necessarily mean a direct (0-hop) neighbor: firmware prior to 2.3.0
+  ///  never populated this field, so a receiver can only trust hop_start == 0 as genuine once it has
+  ///  decoded the packet and confirmed the sender's bitfield is present (added in 2.5.0). Until then,
+  ///  or for a sender that never sets that bitfield, treat hop_start == 0 as unknown, not direct.
   @$pb.TagNumber(15)
   $core.int get hopStart => $_getIZ(14);
   @$pb.TagNumber(15)
@@ -2222,6 +2448,17 @@ class MeshPacket extends $pb.GeneratedMessage {
   $core.bool hasTransportMechanism() => $_has(20);
   @$pb.TagNumber(21)
   void clearTransportMechanism() => $_clearField(21);
+
+  ///
+  ///  Indicates whether the packet has a valid signature
+  @$pb.TagNumber(22)
+  $core.bool get xeddsaSigned => $_getBF(21);
+  @$pb.TagNumber(22)
+  set xeddsaSigned($core.bool value) => $_setBool(21, value);
+  @$pb.TagNumber(22)
+  $core.bool hasXeddsaSigned() => $_has(21);
+  @$pb.TagNumber(22)
+  void clearXeddsaSigned() => $_clearField(22);
 }
 
 ///
@@ -2256,6 +2493,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     $core.bool? isIgnored,
     $core.bool? isKeyManuallyVerified,
     $core.bool? isMuted,
+    $core.bool? hasXeddsaSigned,
   }) {
     final result = create();
     if (num != null) result.num = num;
@@ -2272,6 +2510,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     if (isKeyManuallyVerified != null)
       result.isKeyManuallyVerified = isKeyManuallyVerified;
     if (isMuted != null) result.isMuted = isMuted;
+    if (hasXeddsaSigned != null) result.hasXeddsaSigned = hasXeddsaSigned;
     return result;
   }
 
@@ -2303,6 +2542,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     ..aOB(11, _omitFieldNames ? '' : 'isIgnored')
     ..aOB(12, _omitFieldNames ? '' : 'isKeyManuallyVerified')
     ..aOB(13, _omitFieldNames ? '' : 'isMuted')
+    ..aOB(14, _omitFieldNames ? '' : 'hasXeddsaSigned')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2478,6 +2718,19 @@ class NodeInfo extends $pb.GeneratedMessage {
   $core.bool hasIsMuted() => $_has(12);
   @$pb.TagNumber(13)
   void clearIsMuted() => $_clearField(13);
+
+  ///
+  ///  True if node is signing its packets via XEdDSA
+  ///  Persists between NodeDB internal clean ups
+  ///  LSB 1 of the bitfield
+  @$pb.TagNumber(14)
+  $core.bool get hasXeddsaSigned => $_getBF(13);
+  @$pb.TagNumber(14)
+  set hasXeddsaSigned($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasHasXeddsaSigned() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearHasXeddsaSigned() => $_clearField(14);
 }
 
 ///
@@ -2849,6 +3102,7 @@ enum FromRadio_PayloadVariant {
   clientNotification,
   deviceuiConfig,
   lockdownStatus,
+  regionPresets,
   notSet
 }
 
@@ -2877,6 +3131,7 @@ class FromRadio extends $pb.GeneratedMessage {
     ClientNotification? clientNotification,
     $5.DeviceUIConfig? deviceuiConfig,
     LockdownStatus? lockdownStatus,
+    LoRaRegionPresetMap? regionPresets,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -2899,6 +3154,7 @@ class FromRadio extends $pb.GeneratedMessage {
       result.clientNotification = clientNotification;
     if (deviceuiConfig != null) result.deviceuiConfig = deviceuiConfig;
     if (lockdownStatus != null) result.lockdownStatus = lockdownStatus;
+    if (regionPresets != null) result.regionPresets = regionPresets;
     return result;
   }
 
@@ -2930,13 +3186,14 @@ class FromRadio extends $pb.GeneratedMessage {
     16: FromRadio_PayloadVariant.clientNotification,
     17: FromRadio_PayloadVariant.deviceuiConfig,
     18: FromRadio_PayloadVariant.lockdownStatus,
+    19: FromRadio_PayloadVariant.regionPresets,
     0: FromRadio_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'FromRadio',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
+    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
     ..aI(1, _omitFieldNames ? '' : 'id', fieldType: $pb.PbFieldType.OU3)
     ..aOM<MeshPacket>(2, _omitFieldNames ? '' : 'packet',
         subBuilder: MeshPacket.create)
@@ -2973,6 +3230,8 @@ class FromRadio extends $pb.GeneratedMessage {
         protoName: 'deviceuiConfig', subBuilder: $5.DeviceUIConfig.create)
     ..aOM<LockdownStatus>(18, _omitFieldNames ? '' : 'lockdownStatus',
         subBuilder: LockdownStatus.create)
+    ..aOM<LoRaRegionPresetMap>(19, _omitFieldNames ? '' : 'regionPresets',
+        subBuilder: LoRaRegionPresetMap.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3010,6 +3269,7 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(16)
   @$pb.TagNumber(17)
   @$pb.TagNumber(18)
+  @$pb.TagNumber(19)
   FromRadio_PayloadVariant whichPayloadVariant() =>
       _FromRadio_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
@@ -3029,6 +3289,7 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(16)
   @$pb.TagNumber(17)
   @$pb.TagNumber(18)
+  @$pb.TagNumber(19)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -3272,6 +3533,23 @@ class FromRadio extends $pb.GeneratedMessage {
   void clearLockdownStatus() => $_clearField(18);
   @$pb.TagNumber(18)
   LockdownStatus ensureLockdownStatus() => $_ensure(17);
+
+  ///
+  ///  Map of which modem presets are legal in each LoRa region. Sent once
+  ///  during the want_config handshake (right after `metadata`, before the
+  ///  first `channel`) so client UIs can prevent the user from selecting an
+  ///  illegal region+preset combination. A region that does not appear in
+  ///  any group carries no constraint info and should not be restricted.
+  @$pb.TagNumber(19)
+  LoRaRegionPresetMap get regionPresets => $_getN(18);
+  @$pb.TagNumber(19)
+  set regionPresets(LoRaRegionPresetMap value) => $_setField(19, value);
+  @$pb.TagNumber(19)
+  $core.bool hasRegionPresets() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearRegionPresets() => $_clearField(19);
+  @$pb.TagNumber(19)
+  LoRaRegionPresetMap ensureRegionPresets() => $_ensure(18);
 }
 
 ///
@@ -4505,6 +4783,7 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     $core.bool? hasRemoteHardware,
     $core.bool? hasPKC,
     $core.int? excludedModules,
+    $core.bool? hasXeddsa,
   }) {
     final result = create();
     if (firmwareVersion != null) result.firmwareVersion = firmwareVersion;
@@ -4520,6 +4799,7 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     if (hasRemoteHardware != null) result.hasRemoteHardware = hasRemoteHardware;
     if (hasPKC != null) result.hasPKC = hasPKC;
     if (excludedModules != null) result.excludedModules = excludedModules;
+    if (hasXeddsa != null) result.hasXeddsa = hasXeddsa;
     return result;
   }
 
@@ -4554,6 +4834,7 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     ..aOB(11, _omitFieldNames ? '' : 'hasPKC', protoName: 'hasPKC')
     ..aI(12, _omitFieldNames ? '' : 'excludedModules',
         fieldType: $pb.PbFieldType.OU3)
+    ..aOB(14, _omitFieldNames ? '' : 'hasXeddsa')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4707,6 +4988,258 @@ class DeviceMetadata extends $pb.GeneratedMessage {
   $core.bool hasExcludedModules() => $_has(11);
   @$pb.TagNumber(12)
   void clearExcludedModules() => $_clearField(12);
+
+  ///
+  ///  Indicates whether this firmware build includes XEdDSA packet signature verification.
+  ///  This is a read-only capability and must be false when XEdDSA is not compiled in.
+  @$pb.TagNumber(14)
+  $core.bool get hasXeddsa => $_getBF(12);
+  @$pb.TagNumber(14)
+  set hasXeddsa($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(14)
+  $core.bool hasHasXeddsa() => $_has(12);
+  @$pb.TagNumber(14)
+  void clearHasXeddsa() => $_clearField(14);
+}
+
+///
+///  A distinct set of legal modem presets shared by one or more LoRa regions.
+///  Regions that have an identical preset list / default / licensing reference
+///  the same group (by index) via LoRaRegionPresetMap.region_groups. This keeps
+///  the whole map small enough to fit in a single FromRadio packet, since most
+///  regions share the one standard preset list.
+class LoRaPresetGroup extends $pb.GeneratedMessage {
+  factory LoRaPresetGroup({
+    $core.Iterable<$1.Config_LoRaConfig_ModemPreset>? presets,
+    $1.Config_LoRaConfig_ModemPreset? defaultPreset,
+    $core.bool? licensedOnly,
+  }) {
+    final result = create();
+    if (presets != null) result.presets.addAll(presets);
+    if (defaultPreset != null) result.defaultPreset = defaultPreset;
+    if (licensedOnly != null) result.licensedOnly = licensedOnly;
+    return result;
+  }
+
+  LoRaPresetGroup._();
+
+  factory LoRaPresetGroup.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory LoRaPresetGroup.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LoRaPresetGroup',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..pc<$1.Config_LoRaConfig_ModemPreset>(
+        1, _omitFieldNames ? '' : 'presets', $pb.PbFieldType.KE,
+        valueOf: $1.Config_LoRaConfig_ModemPreset.valueOf,
+        enumValues: $1.Config_LoRaConfig_ModemPreset.values,
+        defaultEnumValue: $1.Config_LoRaConfig_ModemPreset.LONG_FAST)
+    ..aE<$1.Config_LoRaConfig_ModemPreset>(
+        2, _omitFieldNames ? '' : 'defaultPreset',
+        enumValues: $1.Config_LoRaConfig_ModemPreset.values)
+    ..aOB(3, _omitFieldNames ? '' : 'licensedOnly')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoRaPresetGroup clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoRaPresetGroup copyWith(void Function(LoRaPresetGroup) updates) =>
+      super.copyWith((message) => updates(message as LoRaPresetGroup))
+          as LoRaPresetGroup;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LoRaPresetGroup create() => LoRaPresetGroup._();
+  @$core.override
+  LoRaPresetGroup createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static LoRaPresetGroup getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LoRaPresetGroup>(create);
+  static LoRaPresetGroup? _defaultInstance;
+
+  ///
+  ///  The modem presets that are legal for every region referencing this group.
+  @$pb.TagNumber(1)
+  $pb.PbList<$1.Config_LoRaConfig_ModemPreset> get presets => $_getList(0);
+
+  ///
+  ///  The firmware's default modem preset for regions in this group.
+  ///  Always one of `presets`. Clients should select this when switching to one
+  ///  of these regions, or when the current preset is not legal in the new region.
+  @$pb.TagNumber(2)
+  $1.Config_LoRaConfig_ModemPreset get defaultPreset => $_getN(1);
+  @$pb.TagNumber(2)
+  set defaultPreset($1.Config_LoRaConfig_ModemPreset value) =>
+      $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDefaultPreset() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDefaultPreset() => $_clearField(2);
+
+  ///
+  ///  True if regions referencing this group are for licensed operators only
+  ///  (e.g. amateur / ham radio bands). Clients should warn or gate accordingly.
+  @$pb.TagNumber(3)
+  $core.bool get licensedOnly => $_getBF(2);
+  @$pb.TagNumber(3)
+  set licensedOnly($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLicensedOnly() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLicensedOnly() => $_clearField(3);
+}
+
+///
+///  Associates a single LoRa region with its preset group.
+class LoRaRegionPresets extends $pb.GeneratedMessage {
+  factory LoRaRegionPresets({
+    $1.Config_LoRaConfig_RegionCode? region,
+    $core.int? groupIndex,
+  }) {
+    final result = create();
+    if (region != null) result.region = region;
+    if (groupIndex != null) result.groupIndex = groupIndex;
+    return result;
+  }
+
+  LoRaRegionPresets._();
+
+  factory LoRaRegionPresets.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory LoRaRegionPresets.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LoRaRegionPresets',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<$1.Config_LoRaConfig_RegionCode>(1, _omitFieldNames ? '' : 'region',
+        enumValues: $1.Config_LoRaConfig_RegionCode.values)
+    ..aI(2, _omitFieldNames ? '' : 'groupIndex', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoRaRegionPresets clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoRaRegionPresets copyWith(void Function(LoRaRegionPresets) updates) =>
+      super.copyWith((message) => updates(message as LoRaRegionPresets))
+          as LoRaRegionPresets;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LoRaRegionPresets create() => LoRaRegionPresets._();
+  @$core.override
+  LoRaRegionPresets createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static LoRaRegionPresets getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LoRaRegionPresets>(create);
+  static LoRaRegionPresets? _defaultInstance;
+
+  ///
+  ///  The LoRa region this entry describes.
+  @$pb.TagNumber(1)
+  $1.Config_LoRaConfig_RegionCode get region => $_getN(0);
+  @$pb.TagNumber(1)
+  set region($1.Config_LoRaConfig_RegionCode value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRegion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRegion() => $_clearField(1);
+
+  ///
+  ///  Index into LoRaRegionPresetMap.groups for the preset list that is legal
+  ///  in `region`.
+  @$pb.TagNumber(2)
+  $core.int get groupIndex => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set groupIndex($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasGroupIndex() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearGroupIndex() => $_clearField(2);
+}
+
+///
+///  Map describing which modem presets are valid for each LoRa region. Sent by
+///  the firmware during the want_config handshake (as FromRadio.region_presets)
+///  so that client UIs can prevent illegal region+preset selections.
+///
+///  Delivery is grouped to save space: `groups` holds each distinct preset list,
+///  and `region_groups` maps every known region to one of those groups by index.
+///  A region that does NOT appear in `region_groups` carries no constraint
+///  information and should not be restricted by the client (e.g. firmware that
+///  predates this message, or a region with no firmware table entry). Clients
+///  must also tolerate this whole message being absent.
+class LoRaRegionPresetMap extends $pb.GeneratedMessage {
+  factory LoRaRegionPresetMap({
+    $core.Iterable<LoRaPresetGroup>? groups,
+    $core.Iterable<LoRaRegionPresets>? regionGroups,
+  }) {
+    final result = create();
+    if (groups != null) result.groups.addAll(groups);
+    if (regionGroups != null) result.regionGroups.addAll(regionGroups);
+    return result;
+  }
+
+  LoRaRegionPresetMap._();
+
+  factory LoRaRegionPresetMap.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory LoRaRegionPresetMap.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LoRaRegionPresetMap',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..pPM<LoRaPresetGroup>(1, _omitFieldNames ? '' : 'groups',
+        subBuilder: LoRaPresetGroup.create)
+    ..pPM<LoRaRegionPresets>(2, _omitFieldNames ? '' : 'regionGroups',
+        subBuilder: LoRaRegionPresets.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoRaRegionPresetMap clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoRaRegionPresetMap copyWith(void Function(LoRaRegionPresetMap) updates) =>
+      super.copyWith((message) => updates(message as LoRaRegionPresetMap))
+          as LoRaRegionPresetMap;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LoRaRegionPresetMap create() => LoRaRegionPresetMap._();
+  @$core.override
+  LoRaRegionPresetMap createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static LoRaRegionPresetMap getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LoRaRegionPresetMap>(create);
+  static LoRaRegionPresetMap? _defaultInstance;
+
+  ///
+  ///  One entry per distinct (preset-list, default, licensing) combination.
+  ///  Referenced by index from `region_groups`.
+  @$pb.TagNumber(1)
+  $pb.PbList<LoRaPresetGroup> get groups => $_getList(0);
+
+  ///
+  ///  One entry per known LoRa region, pointing at its preset group.
+  @$pb.TagNumber(2)
+  $pb.PbList<LoRaRegionPresets> get regionGroups => $_getList(1);
 }
 
 ///

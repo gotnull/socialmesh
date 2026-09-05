@@ -26,17 +26,29 @@ const TelemetrySensorType$json = {
     {'1': 'INA260', '2': 4},
     {'1': 'INA219', '2': 5},
     {'1': 'BMP280', '2': 6},
-    {'1': 'SHTC3', '2': 7},
+    {
+      '1': 'SHTC3',
+      '2': 7,
+      '3': {'1': true},
+    },
     {'1': 'LPS22', '2': 8},
     {'1': 'QMC6310', '2': 9},
     {'1': 'QMI8658', '2': 10},
     {'1': 'QMC5883L', '2': 11},
-    {'1': 'SHT31', '2': 12},
+    {
+      '1': 'SHT31',
+      '2': 12,
+      '3': {'1': true},
+    },
     {'1': 'PMSA003I', '2': 13},
     {'1': 'INA3221', '2': 14},
     {'1': 'BMP085', '2': 15},
     {'1': 'RCWL9620', '2': 16},
-    {'1': 'SHT4X', '2': 17},
+    {
+      '1': 'SHT4X',
+      '2': 17,
+      '3': {'1': true},
+    },
     {'1': 'VEML7700', '2': 18},
     {'1': 'MLX90632', '2': 19},
     {'1': 'OPT3001', '2': 20},
@@ -66,13 +78,21 @@ const TelemetrySensorType$json = {
     {'1': 'TSL2561', '2': 44},
     {'1': 'BH1750', '2': 45},
     {'1': 'HDC1080', '2': 46},
-    {'1': 'SHT21', '2': 47},
+    {
+      '1': 'SHT21',
+      '2': 47,
+      '3': {'1': true},
+    },
     {'1': 'STC31', '2': 48},
     {'1': 'SCD30', '2': 49},
     {'1': 'SHTXX', '2': 50},
     {'1': 'DS248X', '2': 51},
     {'1': 'MMC5983MA', '2': 52},
     {'1': 'ICM42607P', '2': 53},
+    {'1': 'SPA06', '2': 54},
+    {'1': 'HM330X', '2': 55},
+    {'1': 'SEN6X', '2': 56},
+    {'1': 'AS3935', '2': 57},
   ],
 };
 
@@ -80,18 +100,19 @@ const TelemetrySensorType$json = {
 final $typed_data.Uint8List telemetrySensorTypeDescriptor = $convert.base64Decode(
     'ChNUZWxlbWV0cnlTZW5zb3JUeXBlEhAKDFNFTlNPUl9VTlNFVBAAEgoKBkJNRTI4MBABEgoKBk'
     'JNRTY4MBACEgsKB01DUDk4MDgQAxIKCgZJTkEyNjAQBBIKCgZJTkEyMTkQBRIKCgZCTVAyODAQ'
-    'BhIJCgVTSFRDMxAHEgkKBUxQUzIyEAgSCwoHUU1DNjMxMBAJEgsKB1FNSTg2NTgQChIMCghRTU'
-    'M1ODgzTBALEgkKBVNIVDMxEAwSDAoIUE1TQTAwM0kQDRILCgdJTkEzMjIxEA4SCgoGQk1QMDg1'
-    'EA8SDAoIUkNXTDk2MjAQEBIJCgVTSFQ0WBAREgwKCFZFTUw3NzAwEBISDAoITUxYOTA2MzIQEx'
-    'ILCgdPUFQzMDAxEBQSDAoITFRSMzkwVVYQFRIOCgpUU0wyNTkxMUZOEBYSCQoFQUhUMTAQFxIQ'
-    'CgxERlJPQk9UX0xBUksQGBILCgdOQVU3ODAyEBkSCgoGQk1QM1hYEBoSDAoISUNNMjA5NDgQGx'
-    'IMCghNQVgxNzA0OBAcEhEKDUNVU1RPTV9TRU5TT1IQHRIMCghNQVgzMDEwMhAeEgwKCE1MWDkw'
-    'NjE0EB8SCQoFU0NENFgQIBILCgdSQURTRU5TECESCgoGSU5BMjI2ECISEAoMREZST0JPVF9SQU'
-    'lOECMSCgoGRFBTMzEwECQSDAoIUkFLMTIwMzUQJRIMCghNQVgxNzI2MRAmEgsKB1BDVDIwNzUQ'
-    'JxILCgdBRFMxWDE1ECgSDwoLQURTMVgxNV9BTFQQKRIJCgVTRkEzMBAqEgkKBVNFTjVYECsSCw'
-    'oHVFNMMjU2MRAsEgoKBkJIMTc1MBAtEgsKB0hEQzEwODAQLhIJCgVTSFQyMRAvEgkKBVNUQzMx'
-    'EDASCQoFU0NEMzAQMRIJCgVTSFRYWBAyEgoKBkRTMjQ4WBAzEg0KCU1NQzU5ODNNQRA0Eg0KCU'
-    'lDTTQyNjA3UBA1');
+    'BhINCgVTSFRDMxAHGgIIARIJCgVMUFMyMhAIEgsKB1FNQzYzMTAQCRILCgdRTUk4NjU4EAoSDA'
+    'oIUU1DNTg4M0wQCxINCgVTSFQzMRAMGgIIARIMCghQTVNBMDAzSRANEgsKB0lOQTMyMjEQDhIK'
+    'CgZCTVAwODUQDxIMCghSQ1dMOTYyMBAQEg0KBVNIVDRYEBEaAggBEgwKCFZFTUw3NzAwEBISDA'
+    'oITUxYOTA2MzIQExILCgdPUFQzMDAxEBQSDAoITFRSMzkwVVYQFRIOCgpUU0wyNTkxMUZOEBYS'
+    'CQoFQUhUMTAQFxIQCgxERlJPQk9UX0xBUksQGBILCgdOQVU3ODAyEBkSCgoGQk1QM1hYEBoSDA'
+    'oISUNNMjA5NDgQGxIMCghNQVgxNzA0OBAcEhEKDUNVU1RPTV9TRU5TT1IQHRIMCghNQVgzMDEw'
+    'MhAeEgwKCE1MWDkwNjE0EB8SCQoFU0NENFgQIBILCgdSQURTRU5TECESCgoGSU5BMjI2ECISEA'
+    'oMREZST0JPVF9SQUlOECMSCgoGRFBTMzEwECQSDAoIUkFLMTIwMzUQJRIMCghNQVgxNzI2MRAm'
+    'EgsKB1BDVDIwNzUQJxILCgdBRFMxWDE1ECgSDwoLQURTMVgxNV9BTFQQKRIJCgVTRkEzMBAqEg'
+    'kKBVNFTjVYECsSCwoHVFNMMjU2MRAsEgoKBkJIMTc1MBAtEgsKB0hEQzEwODAQLhINCgVTSFQy'
+    'MRAvGgIIARIJCgVTVEMzMRAwEgkKBVNDRDMwEDESCQoFU0hUWFgQMhIKCgZEUzI0OFgQMxINCg'
+    'lNTUM1OTgzTUEQNBINCglJQ000MjYwN1AQNRIJCgVTUEEwNhA2EgoKBkhNMzMwWBA3EgkKBVNF'
+    'TjZYEDgSCgoGQVMzOTM1EDk=');
 
 @$core.Deprecated('Use deviceMetricsDescriptor instead')
 const DeviceMetrics$json = {
@@ -352,7 +373,170 @@ const EnvironmentMetrics$json = {
       '3': 23,
       '4': 3,
       '5': 2,
-      '10': 'oneWireTemperature'
+      '8': {'3': true},
+      '10': 'oneWireTemperature',
+    },
+    {
+      '1': 'adc_voltage_ch0',
+      '3': 24,
+      '4': 1,
+      '5': 2,
+      '9': 22,
+      '10': 'adcVoltageCh0',
+      '17': true
+    },
+    {
+      '1': 'adc_voltage_ch1',
+      '3': 25,
+      '4': 1,
+      '5': 2,
+      '9': 23,
+      '10': 'adcVoltageCh1',
+      '17': true
+    },
+    {
+      '1': 'adc_voltage_ch2',
+      '3': 26,
+      '4': 1,
+      '5': 2,
+      '9': 24,
+      '10': 'adcVoltageCh2',
+      '17': true
+    },
+    {
+      '1': 'adc_voltage_ch3',
+      '3': 27,
+      '4': 1,
+      '5': 2,
+      '9': 25,
+      '10': 'adcVoltageCh3',
+      '17': true
+    },
+    {
+      '1': 'adc_voltage_ch4',
+      '3': 28,
+      '4': 1,
+      '5': 2,
+      '9': 26,
+      '10': 'adcVoltageCh4',
+      '17': true
+    },
+    {
+      '1': 'adc_voltage_ch5',
+      '3': 29,
+      '4': 1,
+      '5': 2,
+      '9': 27,
+      '10': 'adcVoltageCh5',
+      '17': true
+    },
+    {
+      '1': 'adc_voltage_ch6',
+      '3': 30,
+      '4': 1,
+      '5': 2,
+      '9': 28,
+      '10': 'adcVoltageCh6',
+      '17': true
+    },
+    {
+      '1': 'adc_voltage_ch7',
+      '3': 31,
+      '4': 1,
+      '5': 2,
+      '9': 29,
+      '10': 'adcVoltageCh7',
+      '17': true
+    },
+    {
+      '1': 'one_wire_temperature_ch0',
+      '3': 32,
+      '4': 1,
+      '5': 2,
+      '9': 30,
+      '10': 'oneWireTemperatureCh0',
+      '17': true
+    },
+    {
+      '1': 'one_wire_temperature_ch1',
+      '3': 33,
+      '4': 1,
+      '5': 2,
+      '9': 31,
+      '10': 'oneWireTemperatureCh1',
+      '17': true
+    },
+    {
+      '1': 'one_wire_temperature_ch2',
+      '3': 34,
+      '4': 1,
+      '5': 2,
+      '9': 32,
+      '10': 'oneWireTemperatureCh2',
+      '17': true
+    },
+    {
+      '1': 'one_wire_temperature_ch3',
+      '3': 35,
+      '4': 1,
+      '5': 2,
+      '9': 33,
+      '10': 'oneWireTemperatureCh3',
+      '17': true
+    },
+    {
+      '1': 'one_wire_temperature_ch4',
+      '3': 36,
+      '4': 1,
+      '5': 2,
+      '9': 34,
+      '10': 'oneWireTemperatureCh4',
+      '17': true
+    },
+    {
+      '1': 'one_wire_temperature_ch5',
+      '3': 37,
+      '4': 1,
+      '5': 2,
+      '9': 35,
+      '10': 'oneWireTemperatureCh5',
+      '17': true
+    },
+    {
+      '1': 'one_wire_temperature_ch6',
+      '3': 38,
+      '4': 1,
+      '5': 2,
+      '9': 36,
+      '10': 'oneWireTemperatureCh6',
+      '17': true
+    },
+    {
+      '1': 'one_wire_temperature_ch7',
+      '3': 39,
+      '4': 1,
+      '5': 2,
+      '9': 37,
+      '10': 'oneWireTemperatureCh7',
+      '17': true
+    },
+    {
+      '1': 'lightning_strike_count_1h',
+      '3': 40,
+      '4': 1,
+      '5': 13,
+      '9': 38,
+      '10': 'lightningStrikeCount1h',
+      '17': true
+    },
+    {
+      '1': 'lightning_distance_km',
+      '3': 41,
+      '4': 1,
+      '5': 2,
+      '9': 39,
+      '10': 'lightningDistanceKm',
+      '17': true
     },
   ],
   '8': [
@@ -378,6 +562,24 @@ const EnvironmentMetrics$json = {
     {'1': '_rainfall_24h'},
     {'1': '_soil_moisture'},
     {'1': '_soil_temperature'},
+    {'1': '_adc_voltage_ch0'},
+    {'1': '_adc_voltage_ch1'},
+    {'1': '_adc_voltage_ch2'},
+    {'1': '_adc_voltage_ch3'},
+    {'1': '_adc_voltage_ch4'},
+    {'1': '_adc_voltage_ch5'},
+    {'1': '_adc_voltage_ch6'},
+    {'1': '_adc_voltage_ch7'},
+    {'1': '_one_wire_temperature_ch0'},
+    {'1': '_one_wire_temperature_ch1'},
+    {'1': '_one_wire_temperature_ch2'},
+    {'1': '_one_wire_temperature_ch3'},
+    {'1': '_one_wire_temperature_ch4'},
+    {'1': '_one_wire_temperature_ch5'},
+    {'1': '_one_wire_temperature_ch6'},
+    {'1': '_one_wire_temperature_ch7'},
+    {'1': '_lightning_strike_count_1h'},
+    {'1': '_lightning_distance_km'},
   ],
 };
 
@@ -397,14 +599,40 @@ final $typed_data.Uint8List environmentMetricsDescriptor = $convert.base64Decode
     'xsiAEBEiEKCXJhZGlhdGlvbhgSIAEoAkgRUglyYWRpYXRpb26IAQESJAoLcmFpbmZhbGxfMWgY'
     'EyABKAJIElIKcmFpbmZhbGwxaIgBARImCgxyYWluZmFsbF8yNGgYFCABKAJIE1ILcmFpbmZhbG'
     'wyNGiIAQESKAoNc29pbF9tb2lzdHVyZRgVIAEoDUgUUgxzb2lsTW9pc3R1cmWIAQESLgoQc29p'
-    'bF90ZW1wZXJhdHVyZRgWIAEoAkgVUg9zb2lsVGVtcGVyYXR1cmWIAQESMAoUb25lX3dpcmVfdG'
-    'VtcGVyYXR1cmUYFyADKAJSEm9uZVdpcmVUZW1wZXJhdHVyZUIOCgxfdGVtcGVyYXR1cmVCFAoS'
-    'X3JlbGF0aXZlX2h1bWlkaXR5QhYKFF9iYXJvbWV0cmljX3ByZXNzdXJlQhEKD19nYXNfcmVzaX'
-    'N0YW5jZUIKCghfdm9sdGFnZUIKCghfY3VycmVudEIGCgRfaWFxQgsKCV9kaXN0YW5jZUIGCgRf'
-    'bHV4QgwKCl93aGl0ZV9sdXhCCQoHX2lyX2x1eEIJCgdfdXZfbHV4QhEKD193aW5kX2RpcmVjdG'
-    'lvbkINCgtfd2luZF9zcGVlZEIJCgdfd2VpZ2h0QgwKCl93aW5kX2d1c3RCDAoKX3dpbmRfbHVs'
-    'bEIMCgpfcmFkaWF0aW9uQg4KDF9yYWluZmFsbF8xaEIPCg1fcmFpbmZhbGxfMjRoQhAKDl9zb2'
-    'lsX21vaXN0dXJlQhMKEV9zb2lsX3RlbXBlcmF0dXJl');
+    'bF90ZW1wZXJhdHVyZRgWIAEoAkgVUg9zb2lsVGVtcGVyYXR1cmWIAQESNAoUb25lX3dpcmVfdG'
+    'VtcGVyYXR1cmUYFyADKAJCAhgBUhJvbmVXaXJlVGVtcGVyYXR1cmUSKwoPYWRjX3ZvbHRhZ2Vf'
+    'Y2gwGBggASgCSBZSDWFkY1ZvbHRhZ2VDaDCIAQESKwoPYWRjX3ZvbHRhZ2VfY2gxGBkgASgCSB'
+    'dSDWFkY1ZvbHRhZ2VDaDGIAQESKwoPYWRjX3ZvbHRhZ2VfY2gyGBogASgCSBhSDWFkY1ZvbHRh'
+    'Z2VDaDKIAQESKwoPYWRjX3ZvbHRhZ2VfY2gzGBsgASgCSBlSDWFkY1ZvbHRhZ2VDaDOIAQESKw'
+    'oPYWRjX3ZvbHRhZ2VfY2g0GBwgASgCSBpSDWFkY1ZvbHRhZ2VDaDSIAQESKwoPYWRjX3ZvbHRh'
+    'Z2VfY2g1GB0gASgCSBtSDWFkY1ZvbHRhZ2VDaDWIAQESKwoPYWRjX3ZvbHRhZ2VfY2g2GB4gAS'
+    'gCSBxSDWFkY1ZvbHRhZ2VDaDaIAQESKwoPYWRjX3ZvbHRhZ2VfY2g3GB8gASgCSB1SDWFkY1Zv'
+    'bHRhZ2VDaDeIAQESPAoYb25lX3dpcmVfdGVtcGVyYXR1cmVfY2gwGCAgASgCSB5SFW9uZVdpcm'
+    'VUZW1wZXJhdHVyZUNoMIgBARI8ChhvbmVfd2lyZV90ZW1wZXJhdHVyZV9jaDEYISABKAJIH1IV'
+    'b25lV2lyZVRlbXBlcmF0dXJlQ2gxiAEBEjwKGG9uZV93aXJlX3RlbXBlcmF0dXJlX2NoMhgiIA'
+    'EoAkggUhVvbmVXaXJlVGVtcGVyYXR1cmVDaDKIAQESPAoYb25lX3dpcmVfdGVtcGVyYXR1cmVf'
+    'Y2gzGCMgASgCSCFSFW9uZVdpcmVUZW1wZXJhdHVyZUNoM4gBARI8ChhvbmVfd2lyZV90ZW1wZX'
+    'JhdHVyZV9jaDQYJCABKAJIIlIVb25lV2lyZVRlbXBlcmF0dXJlQ2g0iAEBEjwKGG9uZV93aXJl'
+    'X3RlbXBlcmF0dXJlX2NoNRglIAEoAkgjUhVvbmVXaXJlVGVtcGVyYXR1cmVDaDWIAQESPAoYb2'
+    '5lX3dpcmVfdGVtcGVyYXR1cmVfY2g2GCYgASgCSCRSFW9uZVdpcmVUZW1wZXJhdHVyZUNoNogB'
+    'ARI8ChhvbmVfd2lyZV90ZW1wZXJhdHVyZV9jaDcYJyABKAJIJVIVb25lV2lyZVRlbXBlcmF0dX'
+    'JlQ2g3iAEBEj4KGWxpZ2h0bmluZ19zdHJpa2VfY291bnRfMWgYKCABKA1IJlIWbGlnaHRuaW5n'
+    'U3RyaWtlQ291bnQxaIgBARI3ChVsaWdodG5pbmdfZGlzdGFuY2Vfa20YKSABKAJIJ1ITbGlnaH'
+    'RuaW5nRGlzdGFuY2VLbYgBAUIOCgxfdGVtcGVyYXR1cmVCFAoSX3JlbGF0aXZlX2h1bWlkaXR5'
+    'QhYKFF9iYXJvbWV0cmljX3ByZXNzdXJlQhEKD19nYXNfcmVzaXN0YW5jZUIKCghfdm9sdGFnZU'
+    'IKCghfY3VycmVudEIGCgRfaWFxQgsKCV9kaXN0YW5jZUIGCgRfbHV4QgwKCl93aGl0ZV9sdXhC'
+    'CQoHX2lyX2x1eEIJCgdfdXZfbHV4QhEKD193aW5kX2RpcmVjdGlvbkINCgtfd2luZF9zcGVlZE'
+    'IJCgdfd2VpZ2h0QgwKCl93aW5kX2d1c3RCDAoKX3dpbmRfbHVsbEIMCgpfcmFkaWF0aW9uQg4K'
+    'DF9yYWluZmFsbF8xaEIPCg1fcmFpbmZhbGxfMjRoQhAKDl9zb2lsX21vaXN0dXJlQhMKEV9zb2'
+    'lsX3RlbXBlcmF0dXJlQhIKEF9hZGNfdm9sdGFnZV9jaDBCEgoQX2FkY192b2x0YWdlX2NoMUIS'
+    'ChBfYWRjX3ZvbHRhZ2VfY2gyQhIKEF9hZGNfdm9sdGFnZV9jaDNCEgoQX2FkY192b2x0YWdlX2'
+    'NoNEISChBfYWRjX3ZvbHRhZ2VfY2g1QhIKEF9hZGNfdm9sdGFnZV9jaDZCEgoQX2FkY192b2x0'
+    'YWdlX2NoN0IbChlfb25lX3dpcmVfdGVtcGVyYXR1cmVfY2gwQhsKGV9vbmVfd2lyZV90ZW1wZX'
+    'JhdHVyZV9jaDFCGwoZX29uZV93aXJlX3RlbXBlcmF0dXJlX2NoMkIbChlfb25lX3dpcmVfdGVt'
+    'cGVyYXR1cmVfY2gzQhsKGV9vbmVfd2lyZV90ZW1wZXJhdHVyZV9jaDRCGwoZX29uZV93aXJlX3'
+    'RlbXBlcmF0dXJlX2NoNUIbChlfb25lX3dpcmVfdGVtcGVyYXR1cmVfY2g2QhsKGV9vbmVfd2ly'
+    'ZV90ZW1wZXJhdHVyZV9jaDdCHAoaX2xpZ2h0bmluZ19zdHJpa2VfY291bnRfMWhCGAoWX2xpZ2'
+    'h0bmluZ19kaXN0YW5jZV9rbQ==');
 
 @$core.Deprecated('Use powerMetricsDescriptor instead')
 const PowerMetrics$json = {
@@ -469,90 +697,100 @@ const PowerMetrics$json = {
       '3': 7,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 6,
       '10': 'ch4Voltage',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch4_current',
       '3': 8,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 7,
       '10': 'ch4Current',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch5_voltage',
       '3': 9,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 8,
       '10': 'ch5Voltage',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch5_current',
       '3': 10,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 9,
       '10': 'ch5Current',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch6_voltage',
       '3': 11,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 10,
       '10': 'ch6Voltage',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch6_current',
       '3': 12,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 11,
       '10': 'ch6Current',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch7_voltage',
       '3': 13,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 12,
       '10': 'ch7Voltage',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch7_current',
       '3': 14,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 13,
       '10': 'ch7Current',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch8_voltage',
       '3': 15,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 14,
       '10': 'ch8Voltage',
-      '17': true
+      '17': true,
     },
     {
       '1': 'ch8_current',
       '3': 16,
       '4': 1,
       '5': 2,
+      '8': {'3': true},
       '9': 15,
       '10': 'ch8Current',
-      '17': true
+      '17': true,
     },
   ],
   '8': [
@@ -581,18 +819,19 @@ final $typed_data.Uint8List powerMetricsDescriptor = $convert.base64Decode(
     'tjaDFfY3VycmVudBgCIAEoAkgBUgpjaDFDdXJyZW50iAEBEiQKC2NoMl92b2x0YWdlGAMgASgC'
     'SAJSCmNoMlZvbHRhZ2WIAQESJAoLY2gyX2N1cnJlbnQYBCABKAJIA1IKY2gyQ3VycmVudIgBAR'
     'IkCgtjaDNfdm9sdGFnZRgFIAEoAkgEUgpjaDNWb2x0YWdliAEBEiQKC2NoM19jdXJyZW50GAYg'
-    'ASgCSAVSCmNoM0N1cnJlbnSIAQESJAoLY2g0X3ZvbHRhZ2UYByABKAJIBlIKY2g0Vm9sdGFnZY'
-    'gBARIkCgtjaDRfY3VycmVudBgIIAEoAkgHUgpjaDRDdXJyZW50iAEBEiQKC2NoNV92b2x0YWdl'
-    'GAkgASgCSAhSCmNoNVZvbHRhZ2WIAQESJAoLY2g1X2N1cnJlbnQYCiABKAJICVIKY2g1Q3Vycm'
-    'VudIgBARIkCgtjaDZfdm9sdGFnZRgLIAEoAkgKUgpjaDZWb2x0YWdliAEBEiQKC2NoNl9jdXJy'
-    'ZW50GAwgASgCSAtSCmNoNkN1cnJlbnSIAQESJAoLY2g3X3ZvbHRhZ2UYDSABKAJIDFIKY2g3Vm'
-    '9sdGFnZYgBARIkCgtjaDdfY3VycmVudBgOIAEoAkgNUgpjaDdDdXJyZW50iAEBEiQKC2NoOF92'
-    'b2x0YWdlGA8gASgCSA5SCmNoOFZvbHRhZ2WIAQESJAoLY2g4X2N1cnJlbnQYECABKAJID1IKY2'
-    'g4Q3VycmVudIgBAUIOCgxfY2gxX3ZvbHRhZ2VCDgoMX2NoMV9jdXJyZW50Qg4KDF9jaDJfdm9s'
-    'dGFnZUIOCgxfY2gyX2N1cnJlbnRCDgoMX2NoM192b2x0YWdlQg4KDF9jaDNfY3VycmVudEIOCg'
-    'xfY2g0X3ZvbHRhZ2VCDgoMX2NoNF9jdXJyZW50Qg4KDF9jaDVfdm9sdGFnZUIOCgxfY2g1X2N1'
-    'cnJlbnRCDgoMX2NoNl92b2x0YWdlQg4KDF9jaDZfY3VycmVudEIOCgxfY2g3X3ZvbHRhZ2VCDg'
-    'oMX2NoN19jdXJyZW50Qg4KDF9jaDhfdm9sdGFnZUIOCgxfY2g4X2N1cnJlbnQ=');
+    'ASgCSAVSCmNoM0N1cnJlbnSIAQESKAoLY2g0X3ZvbHRhZ2UYByABKAJCAhgBSAZSCmNoNFZvbH'
+    'RhZ2WIAQESKAoLY2g0X2N1cnJlbnQYCCABKAJCAhgBSAdSCmNoNEN1cnJlbnSIAQESKAoLY2g1'
+    'X3ZvbHRhZ2UYCSABKAJCAhgBSAhSCmNoNVZvbHRhZ2WIAQESKAoLY2g1X2N1cnJlbnQYCiABKA'
+    'JCAhgBSAlSCmNoNUN1cnJlbnSIAQESKAoLY2g2X3ZvbHRhZ2UYCyABKAJCAhgBSApSCmNoNlZv'
+    'bHRhZ2WIAQESKAoLY2g2X2N1cnJlbnQYDCABKAJCAhgBSAtSCmNoNkN1cnJlbnSIAQESKAoLY2'
+    'g3X3ZvbHRhZ2UYDSABKAJCAhgBSAxSCmNoN1ZvbHRhZ2WIAQESKAoLY2g3X2N1cnJlbnQYDiAB'
+    'KAJCAhgBSA1SCmNoN0N1cnJlbnSIAQESKAoLY2g4X3ZvbHRhZ2UYDyABKAJCAhgBSA5SCmNoOF'
+    'ZvbHRhZ2WIAQESKAoLY2g4X2N1cnJlbnQYECABKAJCAhgBSA9SCmNoOEN1cnJlbnSIAQFCDgoM'
+    'X2NoMV92b2x0YWdlQg4KDF9jaDFfY3VycmVudEIOCgxfY2gyX3ZvbHRhZ2VCDgoMX2NoMl9jdX'
+    'JyZW50Qg4KDF9jaDNfdm9sdGFnZUIOCgxfY2gzX2N1cnJlbnRCDgoMX2NoNF92b2x0YWdlQg4K'
+    'DF9jaDRfY3VycmVudEIOCgxfY2g1X3ZvbHRhZ2VCDgoMX2NoNV9jdXJyZW50Qg4KDF9jaDZfdm'
+    '9sdGFnZUIOCgxfY2g2X2N1cnJlbnRCDgoMX2NoN192b2x0YWdlQg4KDF9jaDdfY3VycmVudEIO'
+    'CgxfY2g4X3ZvbHRhZ2VCDgoMX2NoOF9jdXJyZW50');
 
 @$core.Deprecated('Use airQualityMetricsDescriptor instead')
 const AirQualityMetrics$json = {
@@ -815,6 +1054,15 @@ const AirQualityMetrics$json = {
       '10': 'particlesTps',
       '17': true
     },
+    {
+      '1': 'pm_status_flags',
+      '3': 26,
+      '4': 1,
+      '5': 13,
+      '9': 25,
+      '10': 'pmStatusFlags',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_pm10_standard'},
@@ -842,6 +1090,7 @@ const AirQualityMetrics$json = {
     {'1': '_pm_voc_idx'},
     {'1': '_pm_nox_idx'},
     {'1': '_particles_tps'},
+    {'1': '_pm_status_flags'},
   ],
 };
 
@@ -866,16 +1115,17 @@ final $typed_data.Uint8List airQualityMetricsDescriptor = $convert.base64Decode(
     'Ug1wYXJ0aWNsZXM0MHVtiAEBEioKDnBtX3RlbXBlcmF0dXJlGBUgASgCSBRSDXBtVGVtcGVyYX'
     'R1cmWIAQESJAoLcG1faHVtaWRpdHkYFiABKAJIFVIKcG1IdW1pZGl0eYgBARIhCgpwbV92b2Nf'
     'aWR4GBcgASgCSBZSCHBtVm9jSWR4iAEBEiEKCnBtX25veF9pZHgYGCABKAJIF1IIcG1Ob3hJZH'
-    'iIAQESKAoNcGFydGljbGVzX3RwcxgZIAEoAkgYUgxwYXJ0aWNsZXNUcHOIAQFCEAoOX3BtMTBf'
-    'c3RhbmRhcmRCEAoOX3BtMjVfc3RhbmRhcmRCEQoPX3BtMTAwX3N0YW5kYXJkQhUKE19wbTEwX2'
-    'Vudmlyb25tZW50YWxCFQoTX3BtMjVfZW52aXJvbm1lbnRhbEIWChRfcG0xMDBfZW52aXJvbm1l'
-    'bnRhbEIRCg9fcGFydGljbGVzXzAzdW1CEQoPX3BhcnRpY2xlc18wNXVtQhEKD19wYXJ0aWNsZX'
-    'NfMTB1bUIRCg9fcGFydGljbGVzXzI1dW1CEQoPX3BhcnRpY2xlc181MHVtQhIKEF9wYXJ0aWNs'
-    'ZXNfMTAwdW1CBgoEX2NvMkISChBfY28yX3RlbXBlcmF0dXJlQg8KDV9jbzJfaHVtaWRpdHlCFA'
-    'oSX2Zvcm1fZm9ybWFsZGVoeWRlQhAKDl9mb3JtX2h1bWlkaXR5QhMKEV9mb3JtX3RlbXBlcmF0'
-    'dXJlQhAKDl9wbTQwX3N0YW5kYXJkQhEKD19wYXJ0aWNsZXNfNDB1bUIRCg9fcG1fdGVtcGVyYX'
-    'R1cmVCDgoMX3BtX2h1bWlkaXR5Qg0KC19wbV92b2NfaWR4Qg0KC19wbV9ub3hfaWR4QhAKDl9w'
-    'YXJ0aWNsZXNfdHBz');
+    'iIAQESKAoNcGFydGljbGVzX3RwcxgZIAEoAkgYUgxwYXJ0aWNsZXNUcHOIAQESKwoPcG1fc3Rh'
+    'dHVzX2ZsYWdzGBogASgNSBlSDXBtU3RhdHVzRmxhZ3OIAQFCEAoOX3BtMTBfc3RhbmRhcmRCEA'
+    'oOX3BtMjVfc3RhbmRhcmRCEQoPX3BtMTAwX3N0YW5kYXJkQhUKE19wbTEwX2Vudmlyb25tZW50'
+    'YWxCFQoTX3BtMjVfZW52aXJvbm1lbnRhbEIWChRfcG0xMDBfZW52aXJvbm1lbnRhbEIRCg9fcG'
+    'FydGljbGVzXzAzdW1CEQoPX3BhcnRpY2xlc18wNXVtQhEKD19wYXJ0aWNsZXNfMTB1bUIRCg9f'
+    'cGFydGljbGVzXzI1dW1CEQoPX3BhcnRpY2xlc181MHVtQhIKEF9wYXJ0aWNsZXNfMTAwdW1CBg'
+    'oEX2NvMkISChBfY28yX3RlbXBlcmF0dXJlQg8KDV9jbzJfaHVtaWRpdHlCFAoSX2Zvcm1fZm9y'
+    'bWFsZGVoeWRlQhAKDl9mb3JtX2h1bWlkaXR5QhMKEV9mb3JtX3RlbXBlcmF0dXJlQhAKDl9wbT'
+    'QwX3N0YW5kYXJkQhEKD19wYXJ0aWNsZXNfNDB1bUIRCg9fcG1fdGVtcGVyYXR1cmVCDgoMX3Bt'
+    'X2h1bWlkaXR5Qg0KC19wbV92b2NfaWR4Qg0KC19wbV9ub3hfaWR4QhAKDl9wYXJ0aWNsZXNfdH'
+    'BzQhIKEF9wbV9zdGF0dXNfZmxhZ3M=');
 
 @$core.Deprecated('Use localStatsDescriptor instead')
 const LocalStats$json = {
@@ -1201,6 +1451,18 @@ final $typed_data.Uint8List nau7802ConfigDescriptor = $convert.base64Decode(
     'Cg1OYXU3ODAyQ29uZmlnEh4KCnplcm9PZmZzZXQYASABKAVSCnplcm9PZmZzZXQSLAoRY2FsaW'
     'JyYXRpb25GYWN0b3IYAiABKAJSEWNhbGlicmF0aW9uRmFjdG9y');
 
+@$core.Deprecated('Use aS3935ConfigDescriptor instead')
+const AS3935Config$json = {
+  '1': 'AS3935Config',
+  '2': [
+    {'1': 'tuning_cap_pf', '3': 1, '4': 1, '5': 13, '10': 'tuningCapPf'},
+  ],
+};
+
+/// Descriptor for `AS3935Config`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List aS3935ConfigDescriptor = $convert.base64Decode(
+    'CgxBUzM5MzVDb25maWcSIgoNdHVuaW5nX2NhcF9wZhgBIAEoDVILdHVuaW5nQ2FwUGY=');
+
 @$core.Deprecated('Use sEN5XStateDescriptor instead')
 const SEN5XState$json = {
   '1': 'SEN5XState',
@@ -1258,6 +1520,70 @@ const SEN5XState$json = {
 /// Descriptor for `SEN5XState`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List sEN5XStateDescriptor = $convert.base64Decode(
     'CgpTRU41WFN0YXRlEiwKEmxhc3RfY2xlYW5pbmdfdGltZRgBIAEoDVIQbGFzdENsZWFuaW5nVG'
+    'ltZRIuChNsYXN0X2NsZWFuaW5nX3ZhbGlkGAIgASgIUhFsYXN0Q2xlYW5pbmdWYWxpZBIiCg1v'
+    'bmVfc2hvdF9tb2RlGAMgASgIUgtvbmVTaG90TW9kZRIpCg52b2Nfc3RhdGVfdGltZRgEIAEoDU'
+    'gAUgx2b2NTdGF0ZVRpbWWIAQESKwoPdm9jX3N0YXRlX3ZhbGlkGAUgASgISAFSDXZvY1N0YXRl'
+    'VmFsaWSIAQESKwoPdm9jX3N0YXRlX2FycmF5GAYgASgGSAJSDXZvY1N0YXRlQXJyYXmIAQFCEQ'
+    'oPX3ZvY19zdGF0ZV90aW1lQhIKEF92b2Nfc3RhdGVfdmFsaWRCEgoQX3ZvY19zdGF0ZV9hcnJh'
+    'eQ==');
+
+@$core.Deprecated('Use sEN6XStateDescriptor instead')
+const SEN6XState$json = {
+  '1': 'SEN6XState',
+  '2': [
+    {
+      '1': 'last_cleaning_time',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '10': 'lastCleaningTime'
+    },
+    {
+      '1': 'last_cleaning_valid',
+      '3': 2,
+      '4': 1,
+      '5': 8,
+      '10': 'lastCleaningValid'
+    },
+    {'1': 'one_shot_mode', '3': 3, '4': 1, '5': 8, '10': 'oneShotMode'},
+    {
+      '1': 'voc_state_time',
+      '3': 4,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'vocStateTime',
+      '17': true
+    },
+    {
+      '1': 'voc_state_valid',
+      '3': 5,
+      '4': 1,
+      '5': 8,
+      '9': 1,
+      '10': 'vocStateValid',
+      '17': true
+    },
+    {
+      '1': 'voc_state_array',
+      '3': 6,
+      '4': 1,
+      '5': 6,
+      '9': 2,
+      '10': 'vocStateArray',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_voc_state_time'},
+    {'1': '_voc_state_valid'},
+    {'1': '_voc_state_array'},
+  ],
+};
+
+/// Descriptor for `SEN6XState`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sEN6XStateDescriptor = $convert.base64Decode(
+    'CgpTRU42WFN0YXRlEiwKEmxhc3RfY2xlYW5pbmdfdGltZRgBIAEoDVIQbGFzdENsZWFuaW5nVG'
     'ltZRIuChNsYXN0X2NsZWFuaW5nX3ZhbGlkGAIgASgIUhFsYXN0Q2xlYW5pbmdWYWxpZBIiCg1v'
     'bmVfc2hvdF9tb2RlGAMgASgIUgtvbmVTaG90TW9kZRIpCg52b2Nfc3RhdGVfdGltZRgEIAEoDU'
     'gAUgx2b2NTdGF0ZVRpbWWIAQESKwoPdm9jX3N0YXRlX3ZhbGlkGAUgASgISAFSDXZvY1N0YXRl'

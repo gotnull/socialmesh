@@ -1558,12 +1558,16 @@ class LockdownAuth extends $pb.GeneratedMessage {
     $core.int? bootsRemaining,
     $core.int? validUntilEpoch,
     $core.bool? lockNow,
+    $core.int? maxSessionSeconds,
+    $core.bool? disable,
   }) {
     final result = create();
     if (passphrase != null) result.passphrase = passphrase;
     if (bootsRemaining != null) result.bootsRemaining = bootsRemaining;
     if (validUntilEpoch != null) result.validUntilEpoch = validUntilEpoch;
     if (lockNow != null) result.lockNow = lockNow;
+    if (maxSessionSeconds != null) result.maxSessionSeconds = maxSessionSeconds;
+    if (disable != null) result.disable = disable;
     return result;
   }
 
@@ -1587,6 +1591,9 @@ class LockdownAuth extends $pb.GeneratedMessage {
     ..aI(3, _omitFieldNames ? '' : 'validUntilEpoch',
         fieldType: $pb.PbFieldType.OU3)
     ..aOB(4, _omitFieldNames ? '' : 'lockNow')
+    ..aI(5, _omitFieldNames ? '' : 'maxSessionSeconds',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(6, _omitFieldNames ? '' : 'disable')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1660,6 +1667,81 @@ class LockdownAuth extends $pb.GeneratedMessage {
   $core.bool hasLockNow() => $_has(3);
   @$pb.TagNumber(4)
   void clearLockNow() => $_clearField(4);
+
+  ///
+  ///  Optional per-boot uptime cap on the unlocked session, in seconds.
+  ///  0 = unlimited (token-only enforcement, suitable for unattended
+  ///  tower / infrastructure nodes).
+  ///
+  ///  When non-zero, the firmware arms an uptime timer at unlock. On
+  ///  each expiry, while there is still boot-count budget, the firmware
+  ///  decrements the on-flash boot count in place, revokes per-
+  ///  connection admin auth (clients must re-authenticate to see
+  ///  content), re-engages the screen lock, and re-arms the timer
+  ///  without rebooting. Mesh routing keeps running across session
+  ///  boundaries; only when the boot-count budget reaches zero does
+  ///  the device hard-lock and reboot.
+  ///
+  ///  Total exposure ceiling = ((resolved boot count) + 1) * max_session_seconds.
+  ///  The +1 accounts for the initial passphrase-unlocked session
+  ///  itself, since boots_remaining is the number of subsequent
+  ///  session rolls (each consuming one boot from the rollback ledger).
+  ///  The resolved boot count is the value the firmware writes into the
+  ///  token at unlock time: the client-supplied boots_remaining when
+  ///  non-zero, otherwise the firmware default (TOKEN_DEFAULT_BOOTS).
+  ///  Note that boots_remaining == 0 in this message means "use firmware
+  ///  default", NOT "zero boots" — a client computing the ceiling for
+  ///  display should mirror that resolution rather than multiplying the
+  ///  raw request value.
+  ///
+  ///  The cap is persisted in the token, so it survives token-based
+  ///  auto-unlock across reboots. Explicit operator Lock Now still
+  ///  deletes the token and forces passphrase re-entry.
+  ///
+  ///  Uses millis() (CPU uptime), not wall-clock time, so the cap is
+  ///  immune to GPS spoofing, RTC backup-battery removal, and Faraday
+  ///  cage isolation — none of those move the uptime counter. The only
+  ///  way to reset the session clock is a reboot, which costs a boot
+  ///  from the on-flash, HMAC-bound counter.
+  @$pb.TagNumber(5)
+  $core.int get maxSessionSeconds => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set maxSessionSeconds($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMaxSessionSeconds() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMaxSessionSeconds() => $_clearField(5);
+
+  ///
+  ///  Disable lockdown mode. Requires a valid passphrase in the same
+  ///  message (the device must prove the operator owns it before
+  ///  reverting at-rest encryption). On success the firmware decrypts
+  ///  every stored config / channel / nodedb file back to plaintext,
+  ///  removes the wrapped DEK, unlock token, monotonic-counter, and
+  ///  backoff files, and reboots out of lockdown.
+  ///
+  ///  This is the inverse of the provision/unlock path: it is how the
+  ///  client app's "lockdown mode" toggle returns a device to normal
+  ///  operation.
+  ///
+  ///  NOT reversed by this operation: APPROTECT. Once the debug port
+  ///  lockout has been burned (on silicon where it is effective) it is
+  ///  permanent — disabling lockdown decrypts your data and removes the
+  ///  access gates, but the SWD/JTAG port stays locked for the life of
+  ///  the device (recoverable only via a full chip erase over a debug
+  ///  probe, which destroys all data). Clients should make this
+  ///  irreversibility clear at the moment lockdown is first enabled.
+  ///
+  ///  When true the passphrase field is still required; boots_remaining,
+  ///  valid_until_epoch, max_session_seconds, and lock_now are ignored.
+  @$pb.TagNumber(6)
+  $core.bool get disable => $_getBF(5);
+  @$pb.TagNumber(6)
+  set disable($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDisable() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDisable() => $_clearField(6);
 }
 
 ///
@@ -1670,12 +1752,14 @@ class HamParameters extends $pb.GeneratedMessage {
     $core.int? txPower,
     $core.double? frequency,
     $core.String? shortName,
+    $core.String? longName,
   }) {
     final result = create();
     if (callSign != null) result.callSign = callSign;
     if (txPower != null) result.txPower = txPower;
     if (frequency != null) result.frequency = frequency;
     if (shortName != null) result.shortName = shortName;
+    if (longName != null) result.longName = longName;
     return result;
   }
 
@@ -1696,6 +1780,7 @@ class HamParameters extends $pb.GeneratedMessage {
     ..aI(2, _omitFieldNames ? '' : 'txPower')
     ..aD(3, _omitFieldNames ? '' : 'frequency', fieldType: $pb.PbFieldType.OF)
     ..aOS(4, _omitFieldNames ? '' : 'shortName')
+    ..aOS(5, _omitFieldNames ? '' : 'longName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1762,6 +1847,18 @@ class HamParameters extends $pb.GeneratedMessage {
   $core.bool hasShortName() => $_has(3);
   @$pb.TagNumber(4)
   void clearShortName() => $_clearField(4);
+
+  ///
+  ///  Optional long name of user
+  ///  Appended to callsign
+  @$pb.TagNumber(5)
+  $core.String get longName => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set longName($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasLongName() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearLongName() => $_clearField(5);
 }
 
 ///
@@ -2033,12 +2130,18 @@ class SensorConfig extends $pb.GeneratedMessage {
     SEN5X_config? sen5xConfig,
     SCD30_config? scd30Config,
     SHTXX_config? shtxxConfig,
+    DS248X_config? ds248xConfig,
+    SEN6X_config? sen6xConfig,
+    AS3935_config? as3935Config,
   }) {
     final result = create();
     if (scd4xConfig != null) result.scd4xConfig = scd4xConfig;
     if (sen5xConfig != null) result.sen5xConfig = sen5xConfig;
     if (scd30Config != null) result.scd30Config = scd30Config;
     if (shtxxConfig != null) result.shtxxConfig = shtxxConfig;
+    if (ds248xConfig != null) result.ds248xConfig = ds248xConfig;
+    if (sen6xConfig != null) result.sen6xConfig = sen6xConfig;
+    if (as3935Config != null) result.as3935Config = as3935Config;
     return result;
   }
 
@@ -2063,6 +2166,12 @@ class SensorConfig extends $pb.GeneratedMessage {
         subBuilder: SCD30_config.create)
     ..aOM<SHTXX_config>(4, _omitFieldNames ? '' : 'shtxxConfig',
         subBuilder: SHTXX_config.create)
+    ..aOM<DS248X_config>(5, _omitFieldNames ? '' : 'ds248xConfig',
+        subBuilder: DS248X_config.create)
+    ..aOM<SEN6X_config>(6, _omitFieldNames ? '' : 'sen6xConfig',
+        subBuilder: SEN6X_config.create)
+    ..aOM<AS3935_config>(7, _omitFieldNames ? '' : 'as3935Config',
+        subBuilder: AS3935_config.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2135,6 +2244,45 @@ class SensorConfig extends $pb.GeneratedMessage {
   void clearShtxxConfig() => $_clearField(4);
   @$pb.TagNumber(4)
   SHTXX_config ensureShtxxConfig() => $_ensure(3);
+
+  ///
+  ///  DS248X-800 temperature sensor configuration
+  @$pb.TagNumber(5)
+  DS248X_config get ds248xConfig => $_getN(4);
+  @$pb.TagNumber(5)
+  set ds248xConfig(DS248X_config value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasDs248xConfig() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDs248xConfig() => $_clearField(5);
+  @$pb.TagNumber(5)
+  DS248X_config ensureDs248xConfig() => $_ensure(4);
+
+  ///
+  ///  SEN6X PM/RHT/VOC/NOx/CO2/HCHO Sensor configuration
+  @$pb.TagNumber(6)
+  SEN6X_config get sen6xConfig => $_getN(5);
+  @$pb.TagNumber(6)
+  set sen6xConfig(SEN6X_config value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSen6xConfig() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSen6xConfig() => $_clearField(6);
+  @$pb.TagNumber(6)
+  SEN6X_config ensureSen6xConfig() => $_ensure(5);
+
+  ///
+  ///  AS3935 lightning sensor configuration
+  @$pb.TagNumber(7)
+  AS3935_config get as3935Config => $_getN(6);
+  @$pb.TagNumber(7)
+  set as3935Config(AS3935_config value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasAs3935Config() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAs3935Config() => $_clearField(7);
+  @$pb.TagNumber(7)
+  AS3935_config ensureAs3935Config() => $_ensure(6);
 }
 
 class SCD4X_config extends $pb.GeneratedMessage {
@@ -2286,10 +2434,12 @@ class SEN5X_config extends $pb.GeneratedMessage {
   factory SEN5X_config({
     $core.double? setTemperature,
     $core.bool? setOneShotMode,
+    $core.bool? startFanCleaning,
   }) {
     final result = create();
     if (setTemperature != null) result.setTemperature = setTemperature;
     if (setOneShotMode != null) result.setOneShotMode = setOneShotMode;
+    if (startFanCleaning != null) result.startFanCleaning = startFanCleaning;
     return result;
   }
 
@@ -2309,6 +2459,7 @@ class SEN5X_config extends $pb.GeneratedMessage {
     ..aD(1, _omitFieldNames ? '' : 'setTemperature',
         fieldType: $pb.PbFieldType.OF)
     ..aOB(2, _omitFieldNames ? '' : 'setOneShotMode')
+    ..aOB(3, _omitFieldNames ? '' : 'startFanCleaning')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2351,6 +2502,176 @@ class SEN5X_config extends $pb.GeneratedMessage {
   $core.bool hasSetOneShotMode() => $_has(1);
   @$pb.TagNumber(2)
   void clearSetOneShotMode() => $_clearField(2);
+
+  ///
+  ///  Trigger a fan cleaning cycle
+  @$pb.TagNumber(3)
+  $core.bool get startFanCleaning => $_getBF(2);
+  @$pb.TagNumber(3)
+  set startFanCleaning($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStartFanCleaning() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStartFanCleaning() => $_clearField(3);
+}
+
+class SEN6X_config extends $pb.GeneratedMessage {
+  factory SEN6X_config({
+    $core.double? setTemperature,
+    $core.bool? setOneShotMode,
+    $core.bool? startFanCleaning,
+    $core.bool? setAsc,
+    $core.int? setTargetCo2Conc,
+    $core.int? setAltitude,
+    $core.int? setAmbientPressure,
+    $core.bool? factoryReset,
+  }) {
+    final result = create();
+    if (setTemperature != null) result.setTemperature = setTemperature;
+    if (setOneShotMode != null) result.setOneShotMode = setOneShotMode;
+    if (startFanCleaning != null) result.startFanCleaning = startFanCleaning;
+    if (setAsc != null) result.setAsc = setAsc;
+    if (setTargetCo2Conc != null) result.setTargetCo2Conc = setTargetCo2Conc;
+    if (setAltitude != null) result.setAltitude = setAltitude;
+    if (setAmbientPressure != null)
+      result.setAmbientPressure = setAmbientPressure;
+    if (factoryReset != null) result.factoryReset = factoryReset;
+    return result;
+  }
+
+  SEN6X_config._();
+
+  factory SEN6X_config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SEN6X_config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SEN6X_config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aD(1, _omitFieldNames ? '' : 'setTemperature',
+        fieldType: $pb.PbFieldType.OF)
+    ..aOB(2, _omitFieldNames ? '' : 'setOneShotMode')
+    ..aOB(3, _omitFieldNames ? '' : 'startFanCleaning')
+    ..aOB(4, _omitFieldNames ? '' : 'setAsc')
+    ..aI(5, _omitFieldNames ? '' : 'setTargetCo2Conc',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'setAltitude',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(7, _omitFieldNames ? '' : 'setAmbientPressure',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(8, _omitFieldNames ? '' : 'factoryReset')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SEN6X_config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SEN6X_config copyWith(void Function(SEN6X_config) updates) =>
+      super.copyWith((message) => updates(message as SEN6X_config))
+          as SEN6X_config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SEN6X_config create() => SEN6X_config._();
+  @$core.override
+  SEN6X_config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SEN6X_config getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SEN6X_config>(create);
+  static SEN6X_config? _defaultInstance;
+
+  ///
+  ///  Reference temperature in degC
+  @$pb.TagNumber(1)
+  $core.double get setTemperature => $_getN(0);
+  @$pb.TagNumber(1)
+  set setTemperature($core.double value) => $_setFloat(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSetTemperature() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSetTemperature() => $_clearField(1);
+
+  ///
+  ///  One-shot mode (true for low power - one-shot mode, false for normal - continuous mode)
+  @$pb.TagNumber(2)
+  $core.bool get setOneShotMode => $_getBF(1);
+  @$pb.TagNumber(2)
+  set setOneShotMode($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSetOneShotMode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSetOneShotMode() => $_clearField(2);
+
+  ///
+  ///  Trigger a fan cleaning cycle
+  @$pb.TagNumber(3)
+  $core.bool get startFanCleaning => $_getBF(2);
+  @$pb.TagNumber(3)
+  set startFanCleaning($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStartFanCleaning() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStartFanCleaning() => $_clearField(3);
+
+  ///
+  ///  Set Automatic self-calibration enabled (CO2-capable variants only: SEN63C, SEN66, SEN69C)
+  @$pb.TagNumber(4)
+  $core.bool get setAsc => $_getBF(3);
+  @$pb.TagNumber(4)
+  set setAsc($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSetAsc() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSetAsc() => $_clearField(4);
+
+  ///
+  ///  Recalibration target CO2 concentration in ppm (FRC only), CO2-capable variants only
+  @$pb.TagNumber(5)
+  $core.int get setTargetCo2Conc => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set setTargetCo2Conc($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSetTargetCo2Conc() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSetTargetCo2Conc() => $_clearField(5);
+
+  ///
+  ///  Altitude of sensor in meters above sea level. 0 - 3000m (overrides ambient pressure), CO2-capable variants only
+  @$pb.TagNumber(6)
+  $core.int get setAltitude => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set setAltitude($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSetAltitude() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSetAltitude() => $_clearField(6);
+
+  ///
+  ///  Sensor ambient pressure in Pa. 70000 - 120000 Pa (overrides altitude), CO2-capable variants only
+  @$pb.TagNumber(7)
+  $core.int get setAmbientPressure => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set setAmbientPressure($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSetAmbientPressure() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSetAmbientPressure() => $_clearField(7);
+
+  ///
+  ///  Perform a factory reset of the CO2 sensor's calibration, CO2-capable variants only
+  @$pb.TagNumber(8)
+  $core.bool get factoryReset => $_getBF(7);
+  @$pb.TagNumber(8)
+  set factoryReset($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasFactoryReset() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearFactoryReset() => $_clearField(8);
 }
 
 class SCD30_config extends $pb.GeneratedMessage {
@@ -2539,6 +2860,122 @@ class SHTXX_config extends $pb.GeneratedMessage {
   $core.bool hasSetAccuracy() => $_has(0);
   @$pb.TagNumber(1)
   void clearSetAccuracy() => $_clearField(1);
+}
+
+class DS248X_config extends $pb.GeneratedMessage {
+  factory DS248X_config({
+    $core.int? mainTemperatureChannel,
+  }) {
+    final result = create();
+    if (mainTemperatureChannel != null)
+      result.mainTemperatureChannel = mainTemperatureChannel;
+    return result;
+  }
+
+  DS248X_config._();
+
+  factory DS248X_config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DS248X_config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DS248X_config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'mainTemperatureChannel',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DS248X_config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DS248X_config copyWith(void Function(DS248X_config) updates) =>
+      super.copyWith((message) => updates(message as DS248X_config))
+          as DS248X_config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DS248X_config create() => DS248X_config._();
+  @$core.override
+  DS248X_config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DS248X_config getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DS248X_config>(create);
+  static DS248X_config? _defaultInstance;
+
+  ///
+  ///  Main channel for temperature reporting (0-7)
+  @$pb.TagNumber(1)
+  $core.int get mainTemperatureChannel => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set mainTemperatureChannel($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMainTemperatureChannel() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMainTemperatureChannel() => $_clearField(1);
+}
+
+class AS3935_config extends $pb.GeneratedMessage {
+  factory AS3935_config({
+    $core.int? setTuningCapPf,
+  }) {
+    final result = create();
+    if (setTuningCapPf != null) result.setTuningCapPf = setTuningCapPf;
+    return result;
+  }
+
+  AS3935_config._();
+
+  factory AS3935_config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory AS3935_config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AS3935_config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'setTuningCapPf',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AS3935_config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AS3935_config copyWith(void Function(AS3935_config) updates) =>
+      super.copyWith((message) => updates(message as AS3935_config))
+          as AS3935_config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AS3935_config create() => AS3935_config._();
+  @$core.override
+  AS3935_config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static AS3935_config getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AS3935_config>(create);
+  static AS3935_config? _defaultInstance;
+
+  ///
+  ///  Antenna tuning capacitance in pF, 0 to 120 in steps of 8. The antenna tank must
+  ///  resonate within 3.5% of 500kHz; the correct trim is specific to the sensor board.
+  @$pb.TagNumber(1)
+  $core.int get setTuningCapPf => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set setTuningCapPf($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSetTuningCapPf() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSetTuningCapPf() => $_clearField(1);
 }
 
 const $core.bool _omitFieldNames =

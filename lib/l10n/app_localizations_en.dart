@@ -17081,6 +17081,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get regionSelectionRegionItu3_2mFreq => '144-148 MHz';
 
   @override
+  String get regionSelectionRegionItu1_70cm => 'ITU R1 70cm';
+
+  @override
+  String get regionSelectionRegionItu1_70cmDesc =>
+      'ITU Region 1 amateur radio 70cm band';
+
+  @override
+  String get regionSelectionRegionItu1_70cmFreq => '430-440 MHz';
+
+  @override
+  String get regionSelectionRegionItu2_70cm => 'ITU R2 70cm';
+
+  @override
+  String get regionSelectionRegionItu2_70cmDesc =>
+      'ITU Region 2 amateur radio 70cm band';
+
+  @override
+  String get regionSelectionRegionItu2_70cmFreq => '420-450 MHz';
+
+  @override
+  String get regionSelectionRegionItu3_70cm => 'ITU R3 70cm';
+
+  @override
+  String get regionSelectionRegionItu3_70cmDesc =>
+      'ITU Region 3 amateur radio 70cm band';
+
+  @override
+  String get regionSelectionRegionItu3_70cmFreq => '430-450 MHz';
+
+  @override
+  String get regionSelectionRegionItu2_125cm => 'ITU R2 1.25m';
+
+  @override
+  String get regionSelectionRegionItu2_125cmDesc =>
+      'ITU Region 2 amateur radio 1.25m band';
+
+  @override
+  String get regionSelectionRegionItu2_125cmFreq => '220-225 MHz';
+
+  @override
   String get regionSelectionRegionEu866 => 'EU 866';
 
   @override
@@ -27618,6 +27658,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get radioConfigPresetNarrowSlowDesc =>
       'EU 868MHz narrow, longer range';
+
+  @override
+  String get radioConfigPresetTinyFast => 'Tiny Fast';
+
+  @override
+  String get radioConfigPresetTinyFastDesc =>
+      '20 kHz amateur band preset, like Long Fast';
+
+  @override
+  String get radioConfigPresetTinySlow => 'Tiny Slow';
+
+  @override
+  String get radioConfigPresetTinySlowDesc =>
+      '20 kHz amateur band preset, like Long Moderate';
+
+  @override
+  String get radioConfigPresetMediumTurbo => 'Medium Turbo';
+
+  @override
+  String get radioConfigPresetMediumTurboDesc =>
+      'Medium range at 500 kHz, not legal in every region';
+
+  @override
+  String get radioConfigLicensedOnlyBand =>
+      'Licensed operators only. This region is an amateur radio band, so the presets offered are limited to those the radio reports as legal for it.';
+
+  @override
+  String radioConfigPresetChangedForRegion(String preset) {
+    return 'Preset changed to $preset, the radio\'s default for this region. The previous preset is not legal here.';
+  }
 
   @override
   String get radioConfigPresetMustMatch =>

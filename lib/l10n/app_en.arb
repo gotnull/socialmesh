@@ -23255,6 +23255,54 @@
   "@regionSelectionRegionItu3_2mFreq": {
     "description": "UI text: region selection ITU R3 2m freq"
   },
+  "regionSelectionRegionItu1_70cm": "ITU R1 70cm",
+  "@regionSelectionRegionItu1_70cm": {
+    "description": "UI text: region selection ITU Region 1 Amateur Radio 70cm band"
+  },
+  "regionSelectionRegionItu1_70cmDesc": "ITU Region 1 amateur radio 70cm band",
+  "@regionSelectionRegionItu1_70cmDesc": {
+    "description": "UI text: region selection ITU R1 70cm description"
+  },
+  "regionSelectionRegionItu1_70cmFreq": "430-440 MHz",
+  "@regionSelectionRegionItu1_70cmFreq": {
+    "description": "UI text: region selection ITU R1 70cm freq"
+  },
+  "regionSelectionRegionItu2_70cm": "ITU R2 70cm",
+  "@regionSelectionRegionItu2_70cm": {
+    "description": "UI text: region selection ITU Region 2 Amateur Radio 70cm band"
+  },
+  "regionSelectionRegionItu2_70cmDesc": "ITU Region 2 amateur radio 70cm band",
+  "@regionSelectionRegionItu2_70cmDesc": {
+    "description": "UI text: region selection ITU R2 70cm description"
+  },
+  "regionSelectionRegionItu2_70cmFreq": "420-450 MHz",
+  "@regionSelectionRegionItu2_70cmFreq": {
+    "description": "UI text: region selection ITU R2 70cm freq"
+  },
+  "regionSelectionRegionItu3_70cm": "ITU R3 70cm",
+  "@regionSelectionRegionItu3_70cm": {
+    "description": "UI text: region selection ITU Region 3 Amateur Radio 70cm band"
+  },
+  "regionSelectionRegionItu3_70cmDesc": "ITU Region 3 amateur radio 70cm band",
+  "@regionSelectionRegionItu3_70cmDesc": {
+    "description": "UI text: region selection ITU R3 70cm description"
+  },
+  "regionSelectionRegionItu3_70cmFreq": "430-450 MHz",
+  "@regionSelectionRegionItu3_70cmFreq": {
+    "description": "UI text: region selection ITU R3 70cm freq"
+  },
+  "regionSelectionRegionItu2_125cm": "ITU R2 1.25m",
+  "@regionSelectionRegionItu2_125cm": {
+    "description": "UI text: region selection ITU Region 2 Amateur Radio 1.25m (125cm) band"
+  },
+  "regionSelectionRegionItu2_125cmDesc": "ITU Region 2 amateur radio 1.25m band",
+  "@regionSelectionRegionItu2_125cmDesc": {
+    "description": "UI text: region selection ITU R2 1.25m description"
+  },
+  "regionSelectionRegionItu2_125cmFreq": "220-225 MHz",
+  "@regionSelectionRegionItu2_125cmFreq": {
+    "description": "UI text: region selection ITU R2 1.25m freq"
+  },
   "regionSelectionRegionEu866": "EU 866",
   "@regionSelectionRegionEu866": {
     "description": "UI text: region selection EU 866MHz Short-Range Devices band"
@@ -37453,6 +37501,43 @@
   "radioConfigPresetNarrowSlowDesc": "EU 868MHz narrow, longer range",
   "@radioConfigPresetNarrowSlowDesc": {
     "description": "Description for narrow slow modem preset"
+  },
+  "radioConfigPresetTinyFast": "Tiny Fast",
+  "@radioConfigPresetTinyFast": {
+    "description": "Label for tiny fast modem preset (20 kHz amateur band)"
+  },
+  "radioConfigPresetTinyFastDesc": "20 kHz amateur band preset, like Long Fast",
+  "@radioConfigPresetTinyFastDesc": {
+    "description": "Description for tiny fast modem preset"
+  },
+  "radioConfigPresetTinySlow": "Tiny Slow",
+  "@radioConfigPresetTinySlow": {
+    "description": "Label for tiny slow modem preset (20 kHz amateur band)"
+  },
+  "radioConfigPresetTinySlowDesc": "20 kHz amateur band preset, like Long Moderate",
+  "@radioConfigPresetTinySlowDesc": {
+    "description": "Description for tiny slow modem preset"
+  },
+  "radioConfigPresetMediumTurbo": "Medium Turbo",
+  "@radioConfigPresetMediumTurbo": {
+    "description": "Label for medium turbo modem preset (500 kHz)"
+  },
+  "radioConfigPresetMediumTurboDesc": "Medium range at 500 kHz, not legal in every region",
+  "@radioConfigPresetMediumTurboDesc": {
+    "description": "Description for medium turbo modem preset"
+  },
+  "radioConfigLicensedOnlyBand": "Licensed operators only. This region is an amateur radio band, so the presets offered are limited to those the radio reports as legal for it.",
+  "@radioConfigLicensedOnlyBand": {
+    "description": "Warning banner on the LoRa config screen when the selected region is flagged licensed-only by the radio's region preset map"
+  },
+  "radioConfigPresetChangedForRegion": "Preset changed to {preset}, the radio's default for this region. The previous preset is not legal here.",
+  "@radioConfigPresetChangedForRegion": {
+    "description": "Snackbar shown when the selected modem preset is replaced because it is not legal in the newly selected region",
+    "placeholders": {
+      "preset": {
+        "type": "String"
+      }
+    }
   },
   "radioConfigPresetMustMatch": "All devices in the mesh must use the same preset",
   "@radioConfigPresetMustMatch": {
