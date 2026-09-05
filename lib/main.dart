@@ -28,6 +28,7 @@ import 'package:socialmesh/services/watch_companion/watch_companion_providers.da
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
+import 'core/boot_timeline.dart';
 import 'core/constants.dart';
 import 'core/theme.dart';
 import 'core/widgets/glass_scaffold.dart';
@@ -222,6 +223,7 @@ Future<void> main() async {
   } else {
     AppLogging.platform('boot: skipping dotenv.load on web');
   }
+  BootTimeline.instance.mark('dotenv');
 
   // Bridge category-based console logging into the in-app log viewer.
   // Categories that call _appLogSink (currently mqttProxy) will appear
@@ -264,17 +266,21 @@ Future<void> main() async {
       'and BackgroundBleService init',
     );
   }
+  BootTimeline.instance.mark('ble_options');
 
   // Initialize profanity checker (load banned words from assets)
   await ProfanityChecker.instance.load();
+  BootTimeline.instance.mark('profanity_list');
 
   // Load the Meshtastic hardware catalog (architecture mapping for firmware
   // updates) from the bundled asset before any UI can query it.
   await DeviceHardwareCatalog.instance.load();
+  BootTimeline.instance.mark('hardware_catalog');
 
   // Initialize accessibility preferences before UI renders
   // This ensures text scaling and density are applied from first frame
   await AccessibilityPreferencesService().initialize();
+  BootTimeline.instance.mark('accessibility_prefs');
 
   // Reconfigure flutter_map's built-in tile cache to a DURABLE directory with
   // a long freshness window, BEFORE any map renders (the cache singleton's
@@ -288,6 +294,7 @@ Future<void> main() async {
       AppLogging.platform('boot: offline tile cache config failed: $e');
     }
   }
+  BootTimeline.instance.mark('tile_cache');
 
   // Stripe SDK init for the external (off-store) Payment Sheet path.
   // The publishable key is mode-aware on the server (the createCheckout
@@ -331,6 +338,7 @@ Future<void> main() async {
       AppLogging.purchase('boot: Stripe init failed (non-fatal): $e');
     }
   }
+  BootTimeline.instance.mark('stripe');
 
   // Initialize Firebase core BEFORE runApp — per Google's official docs.
   // This is a local operation (reads google-services.json), no network needed.
@@ -340,6 +348,7 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     AppLogging.app('🔥 Firebase core initialized');
+    BootTimeline.instance.mark('firebase_init');
 
     // Remote env-flag overrides: apply cached overrides immediately,
     // then subscribe to Firestore in the background. Never blocks
@@ -399,6 +408,7 @@ Future<void> main() async {
     AppLogging.app('Firebase unavailable: $e - app running in offline mode');
     firebaseReadyCompleter.complete(false);
   }
+  BootTimeline.instance.mark('firebase_auth');
 
   // Ancillary services (Firestore settings, Analytics, Push, etc.)
   // run in background — they must never block app startup or sign-in.
@@ -409,6 +419,10 @@ Future<void> main() async {
       AppLogging.app('⚠️ _initializeFirebaseServices failed (non-fatal): $e');
     }),
   );
+
+  // One line per launch with every awaited pre-runApp step timed, so a
+  // long native launch screen can be attributed from an app log.
+  AppLogging.connection(BootTimeline.instance.summary('runApp'));
 
   runApp(
     ProviderScope(

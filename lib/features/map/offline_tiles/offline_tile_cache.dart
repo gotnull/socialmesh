@@ -17,6 +17,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/boot_timeline.dart';
 import '../../../core/logging.dart';
 import '../../../core/map_config.dart';
 import '../../../core/safe_lat_lng.dart';
@@ -92,11 +93,13 @@ class OfflineTileCache {
     if (_provider != null) return;
     final prefs = await SharedPreferences.getInstance();
     final preferSd = prefs.getBool(offlineMapStorageOnSdCardKey) ?? false;
+    BootTimeline.instance.mark('tile_cache_prefs');
     final resolved = await storage.resolveRoot(
       preferSd
           ? OfflineTileStorageLocation.sdCard
           : OfflineTileStorageLocation.internal,
     );
+    BootTimeline.instance.mark('tile_cache_root');
     _fellBackToInternal = resolved.fellBack;
     _activeCacheRoot = resolved.path;
     _provider = BuiltInMapCachingProvider.getOrCreateInstance(
@@ -104,6 +107,7 @@ class OfflineTileCache {
       overrideFreshAge: kOfflineTileFreshAge,
       maxCacheSize: kOfflineCacheMaxBytes,
     );
+    BootTimeline.instance.mark('tile_cache_provider');
     AppLogging.map(
       'Offline tile cache configured at ${resolved.path}'
       '${resolved.fellBack ? ' (SD card unavailable, fell back)' : ''}',

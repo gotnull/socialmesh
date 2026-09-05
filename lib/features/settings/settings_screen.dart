@@ -3313,6 +3313,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
+                          // Per-radio data (what is stored under each radio,
+                          // switch between radios, delete a radio's data).
+                          _SettingsTile(
+                            icon: Icons.folder_shared_outlined,
+                            title: context.l10n.settingsTileRadioProfilesTitle,
+                            subtitle:
+                                context.l10n.settingsTileRadioProfilesSubtitle,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RadioProfilesScreen(),
+                              ),
+                            ),
+                          ),
                           // Offline map storage location — only rendered
                           // when actionable (removable SD card present, or
                           // a fallback warning to surface).

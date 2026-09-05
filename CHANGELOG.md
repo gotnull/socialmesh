@@ -22,7 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Dark and Light map watermark)
 
-- The Dark and Light map styles no longer carry CARTO's repeated "API key required" overlay (#303). CARTO, which serves those two basemaps, started watermarking every tile requested without a key in late August, so the overlay appeared on every app version at once. The app now sends a CARTO basemaps key with those tile requests on every map surface, including the offline tile downloader and the flight route map. Satellite and Terrain were never affected
+- The Dark and Light map styles no longer carry CARTO's repeated "API key required" overlay (#303). CARTO, which serves those two basemaps, started watermarking every tile requested without a key in late August, so the overlay appeared on every app version at once. The app now sends a CARTO basemaps key with those tile requests on every map surface, including the offline tile downloader and the flight route map. Satellite and Terrain were never affected. Offline regions downloaded for Dark or Light before this version need downloading again, since the tile addresses changed and the old tiles no longer match
+
+### Fixed (Radio data only reachable through search)
+
+- The Radio data screen, which lists what is stored under each radio and lets you switch between radios or delete one radio's data, now has its own tile in Settings > Data & Storage. It was registered for the settings search but missing from the browsable list, so it could only be found by typing its name (#302)
+
+### Changed (launch diagnostics)
+
+- The app log now carries a single BOOT_TIMELINE line per launch that times every step the app waits on before its first screen (environment, bundled data, Firebase, sign-in) and again when the main shell becomes ready. A slow launch can now be attributed from an exported log instead of a video, which is the next step on the connect-time comparison in #298
 
 ### Fixed (distances rounded to whole kilometres)
 

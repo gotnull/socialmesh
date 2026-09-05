@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import '../../core/boot_timeline.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import 'dart:async';
@@ -280,6 +281,7 @@ class NotificationService {
       settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationResponse,
     );
+    BootTimeline.instance.mark('notif_plugin_init');
 
     // Request permissions on iOS/macOS
     if (Platform.isIOS || Platform.isMacOS) {
@@ -298,6 +300,7 @@ class NotificationService {
         );
       }
     }
+    BootTimeline.instance.mark('notif_permissions');
 
     // Request permissions on Android 13+
     if (Platform.isAndroid) {

@@ -14,6 +14,7 @@ import 'radio_scope_providers.dart';
 import '../config/admin_config.dart';
 
 import '../core/ble_system_devices.dart';
+import '../core/boot_timeline.dart';
 import '../core/constants.dart';
 import '../core/logging.dart';
 import '../core/radio_scope.dart';
@@ -183,12 +184,15 @@ class AppInitNotifier extends Notifier<AppInitState> {
           'AppInit: notifications unsupported on ${caps.platformFamily.name} - skipping NotificationService init',
         );
       }
+      BootTimeline.instance.mark('appInit_notifications');
 
       // Initialize storage services
       final settings = await ref.read(settingsServiceProvider.future);
+      BootTimeline.instance.mark('appInit_settings');
 
       // Check age eligibility FIRST — must confirm 16+ before anything else
       final ageState = await ref.read(ageEligibilityProvider.future);
+      BootTimeline.instance.mark('appInit_age');
       if (ageState.needsConfirmation) {
         _transition(
           AppInitState.needsAgeEligibility,
@@ -254,6 +258,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
         if (settings.autoReconnect) {
           // Auto-reconnect enabled - go to main UI, connection happens in background
           _transition(AppInitState.ready, 'initialize:paired+autoReconnect');
+          AppLogging.connection(BootTimeline.instance.summary('appInit_ready'));
         } else {
           // Auto-reconnect disabled - go to scanner so user can manually connect
           // This respects the user's choice to not auto-connect
