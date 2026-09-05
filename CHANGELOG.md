@@ -5,11 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.61.0] - 2026-09-05
 
 ### Fixed (region setup on firmware 2.8)
 
 - Choosing a region on a radio running firmware 2.8.0 or newer no longer ends in "Timed out waiting for device to reconnect after region change" a minute and a half later, with the region silently applied all along. Firmware 2.8 reprograms the radio in place instead of rebooting, so the app was waiting for a disconnect and reconnect that never came. The app now also reads the LoRa configuration back a few seconds after the write and accepts the region the moment the radio reports it, while radios that still reboot are handled exactly as before. Reproduced against the 2.8.0 simulator radio
+
+### Fixed (resending direct messages)
+
+- A direct message that was acknowledged only by a relay node, never by the recipient, can now be resent from the long-press menu. Such a message counted as delivered, so it was excluded from the Resend action and from the unconfirmed timeout, leaving no way to try again short of typing it out afresh
+
+### Fixed (channel chat sender labels)
+
+- A node whose short name is an emoji, or any other non-ASCII text, now shows that short name on its channel messages. The chat label kept only printable ASCII, so such a name came out empty and the message fell back to the node's ID digits
+
+### Fixed (help cards on the light theme)
+
+- The text of an Ico help card after its highlighted words was drawn in white regardless of theme, so on the light theme the tail of every card message vanished into the card. It now follows the theme's text colour like the rest of the card
+
+### Fixed (requests to nodes on secondary channels)
+
+- Traceroute and position requests are now sent on the channel the target node was last heard on, as node info requests already were. A request sent on the primary channel never decrypts for a node that lives on a secondary channel, including nodes reached through an MQTT or UDP bridge, so it could never be relayed or answered (#312)
 
 ### Fixed (reconnecting on iOS)
 

@@ -97,7 +97,10 @@ class DmRetryCoordinator {
     // Guard: don't double-resend
     if (message.status == MessageStatus.retrying) return;
 
-    // Mark as retrying before the async send so the UI updates immediately
+    // Mark as retrying before the async send so the UI updates immediately.
+    // A relay-acknowledged DM arrives here as delivered with acked=true and
+    // realAck=false; clear both so the new attempt starts from a clean
+    // acknowledgement state instead of carrying the relay's tick forward.
     notifier.updateMessage(
       message.id,
       message.copyWith(
@@ -106,6 +109,8 @@ class DmRetryCoordinator {
         retryCount: message.retryCount + 1,
         errorMessage: null,
         routingError: null,
+        acked: false,
+        clearRealAck: true,
       ),
     );
 

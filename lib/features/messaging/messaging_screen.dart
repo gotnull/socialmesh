@@ -3383,8 +3383,11 @@ class _MessageBubble extends ConsumerWidget {
 
   /// Get a display-safe short name (replaces unrenderable chars with node ID hex)
   String _getSafeShortName() {
-    // Filter to only printable ASCII characters (space through tilde)
-    final sanitized = senderShortName.replaceAll(RegExp(r'[^\x20-\x7E]'), '');
+    // Strip only what cannot be rendered (control characters, malformed
+    // surrogates). Anything else the radio accepts as a short name is a
+    // legal label here too: an emoji-only short name must show as that
+    // emoji, not fall through to the node ID.
+    final sanitized = sanitizeExternalText(senderShortName).trim();
     if (sanitized.isEmpty) {
       // Fallback to last 4 hex digits of node number
       return message.from

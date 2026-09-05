@@ -389,13 +389,15 @@ class _RichTextParser {
       lastEnd = match.end;
     }
 
-    // Add remaining text
+    // Add remaining text. Same colour as the leading spans: the caller
+    // passes the theme's primary text colour, and a fixed white here
+    // renders the tail of every message invisible on the light theme.
     if (lastEnd < text.length) {
       spans.add(
         TextSpan(
           text: text.substring(lastEnd),
           style: TextStyle(
-            color: Colors.white,
+            color: textColor,
             fontSize: 15,
             height: 1.5,
             fontFamily: AppTheme.fontFamily,

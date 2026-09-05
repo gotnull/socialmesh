@@ -86,6 +86,7 @@ Message _makeDm({
   int retryCount = 0,
   bool autoRetryEnabled = false,
   int? packetId,
+  bool? realAck,
 }) {
   return Message(
     id: id,
@@ -95,6 +96,7 @@ Message _makeDm({
     channel: 0,
     sent: true,
     status: status,
+    realAck: realAck,
     source: MessageSource.manual,
     sentAt: sentAt ?? DateTime.now(),
     lastAttemptAt: lastAttemptAt,
@@ -155,9 +157,30 @@ void main() {
       expect(_makeDm(status: MessageStatus.retrying).canResend, isFalse);
     });
 
-    test('canResend: false for delivered or pending', () {
-      expect(_makeDm(status: MessageStatus.delivered).canResend, isFalse);
-      expect(_makeDm(status: MessageStatus.pending).canResend, isFalse);
+    test(
+      'canResend: false for pending and for recipient-confirmed delivery',
+      () {
+        expect(_makeDm(status: MessageStatus.pending).canResend, isFalse);
+        expect(
+          _makeDm(status: MessageStatus.delivered, realAck: true).canResend,
+          isFalse,
+        );
+        // Legacy rows with an unknown ack kind stay excluded so old delivered
+        // messages do not grow a Resend action after an upgrade.
+        expect(_makeDm(status: MessageStatus.delivered).canResend, isFalse);
+      },
+    );
+
+    test('canResend: true when only a relay acknowledged the DM', () {
+      // An implicit mesh ack marks the message delivered with realAck=false:
+      // the mesh repeated it, the recipient never confirmed it. The user
+      // must be able to resend such a message by hand.
+      final relayAcked = _makeDm(
+        status: MessageStatus.delivered,
+        realAck: false,
+      );
+      expect(relayAcked.isRelayAckedOnly, isTrue);
+      expect(relayAcked.canResend, isTrue);
     });
 
     test('canEnableAutoRetry: true for unconfirmed without auto-retry', () {

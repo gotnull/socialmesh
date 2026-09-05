@@ -360,10 +360,22 @@ class Message {
     return 'pkt-$fromHex-$pktHex'; // lint-allow: hardcoded-string
   }
 
+  /// True when the only acknowledgement for this DM came from a relay node
+  /// (implicit mesh ack): the mesh heard and repeated it, but the recipient
+  /// never confirmed receipt. Legacy rows with an unknown ack kind
+  /// (`realAck == null`) are not counted, so old delivered messages do not
+  /// suddenly grow a Resend action.
+  bool get isRelayAckedOnly =>
+      isDirect && status == MessageStatus.delivered && realAck == false;
+
   /// Returns true when a manual Resend action should be offered: the message
-  /// is a DM from us, is in an unconfirmed/failed state, and is not currently
-  /// being retried automatically.
-  bool get canResend => isDirect && (isUnconfirmed || isFailed) && !isRetrying;
+  /// is a DM from us that the recipient has not confirmed (unconfirmed,
+  /// failed, or acknowledged only by a relay), and it is not currently being
+  /// retried automatically.
+  bool get canResend =>
+      isDirect &&
+      (isUnconfirmed || isFailed || isRelayAckedOnly) &&
+      !isRetrying;
 
   /// Returns true when the user can enable bounded auto-retry.
   bool get canEnableAutoRetry =>

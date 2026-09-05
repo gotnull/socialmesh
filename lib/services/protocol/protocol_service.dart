@@ -8390,11 +8390,16 @@ class ProtocolService {
         ..payload = position.writeToBuffer()
         ..wantResponse = true;
 
+      // Same channel rule as node info and traceroute requests: the
+      // target can only decrypt and answer on the channel it was last
+      // heard on.
+      final targetNode = _nodes[nodeNum];
       final packet = MeshPacketBuilder.userPayload(
         myNodeNum: _myNodeNum ?? 0,
         to: nodeNum,
         data: data,
         packetId: _generatePacketId(),
+        channel: targetNode?.lastHeardChannel ?? 0,
         wantAck: true,
       );
 
@@ -8513,11 +8518,18 @@ class ProtocolService {
       ..payload = routeDiscovery.writeToBuffer()
       ..wantResponse = true;
 
+    // Send on the channel the target was last heard on. A traceroute on
+    // the primary channel only reaches nodes that share the primary
+    // PSK; a node heard through a secondary channel (including one
+    // bridged over MQTT or UDP) can only decrypt, relay and answer a
+    // request sent on that same channel.
+    final targetNode = _nodes[nodeNum];
     final packet = MeshPacketBuilder.userPayload(
       myNodeNum: _myNodeNum ?? 0,
       to: nodeNum,
       data: data,
       packetId: _generatePacketId(),
+      channel: targetNode?.lastHeardChannel ?? 0,
       wantAck: true,
     );
 
