@@ -13494,6 +13494,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Слабкий';
 
   @override
+  String get nodeDetailTracerouteChannelTitle => 'Надіслати трасування каналом';
+
+  @override
+  String get nodeDetailTracerouteChannelLastHeard => 'Останній раз чутно тут';
+
+  @override
+  String get nodeDetailTracerouteLongPressHint =>
+      'Утримуйте, щоб вибрати канал';
+
+  @override
   String nodeDetailTracerouteCooldownTooltip(int seconds) {
     return 'Затримка трасування маршруту: $secondsс';
   }

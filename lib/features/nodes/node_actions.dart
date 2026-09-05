@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
@@ -171,16 +172,100 @@ Future<void> toggleNodeMute(
   }
 }
 
-/// Sends a traceroute to [node]. Returns true on success, false when
-/// the cooldown blocks the send or the device is disconnected. Callers
-/// own busy-flag state (the persistent cooldown toolbar is the canonical
-/// "in progress" indicator; this helper does not require additional
-/// inline spinners).
-Future<bool> sendNodeTraceroute(
+/// Lets the user choose which channel a traceroute to [node] goes out on.
+///
+/// Returns the chosen channel index, or null when the sheet was dismissed.
+/// The channel [node] was last heard on is preselected and tagged; it is
+/// what a plain tap on the traceroute button uses, so the picker only earns
+/// its keep when the node lives behind another channel (an MQTT or UDP
+/// bridged secondary, for example). Disabled channel slots are not offered.
+Future<int?> pickTracerouteChannel(
   BuildContext context,
   WidgetRef ref,
   MeshNode node,
 ) async {
+  final l10n = context.l10n;
+  final channels =
+      ref
+          .read(channelsProvider)
+          .where((c) => c.index == 0 || c.role != 'DISABLED')
+          .toList()
+        ..sort((a, b) => a.index.compareTo(b.index));
+  if (channels.isEmpty) return null;
+
+  final lastHeard = node.lastHeardChannel ?? 0;
+  final preselected = channels.firstWhere(
+    (c) => c.index == lastHeard,
+    orElse: () => channels.first,
+  );
+
+  String nameOf(ChannelConfig c) {
+    if (c.name.isNotEmpty) return c.name;
+    return c.index == 0
+        ? l10n.channelFormPrimaryChannelTitle
+        : l10n.channelsDefaultChannelName(c.index);
+  }
+
+  final picked = await AppBottomSheet.showPicker<ChannelConfig>(
+    context: context,
+    title: l10n.nodeDetailTracerouteChannelTitle,
+    items: channels,
+    selectedItem: preselected,
+    itemBuilder: (channel, isSelected) => Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing24,
+        vertical: AppTheme.spacing12,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            isSelected
+                ? Icons.radio_button_checked
+                : Icons.radio_button_unchecked,
+            color: isSelected ? context.accentColor : context.textSecondary,
+          ),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${channel.index}  ${nameOf(channel)}',
+                  style: TextStyle(
+                    color: isSelected
+                        ? context.textPrimary
+                        : context.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (channel.index == lastHeard)
+                  Text(
+                    l10n.nodeDetailTracerouteChannelLastHeard,
+                    style: TextStyle(color: context.textTertiary, fontSize: 12),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+  return picked?.index;
+}
+
+/// Sends a traceroute to [node]. Returns true on success, false when
+/// the cooldown blocks the send or the device is disconnected. Callers
+/// own busy-flag state (the persistent cooldown toolbar is the canonical
+/// "in progress" indicator; this helper does not require additional
+/// inline spinners). [channel] overrides the channel index; by default the
+/// request goes out on the channel [node] was last heard on.
+Future<bool> sendNodeTraceroute(
+  BuildContext context,
+  WidgetRef ref,
+  MeshNode node, {
+  int? channel,
+}) async {
   final cooldownNotifier = ref.read(countdownProvider.notifier);
   final cooldownRemaining = cooldownNotifier.globalTracerouteRemaining;
   if (cooldownRemaining > 0) {
@@ -218,10 +303,11 @@ Future<bool> sendNodeTraceroute(
 
   final protocol = ref.read(protocolServiceProvider);
   try {
-    await protocol.sendTraceroute(node.nodeNum);
+    await protocol.sendTraceroute(node.nodeNum, channel: channel);
     cooldownNotifier.startTracerouteCountdown(node.nodeNum);
     AppLogging.telemetry(
-      '[NodeActions] traceroute sent nodeNum=${node.nodeNum}',
+      '[NodeActions] traceroute sent nodeNum=${node.nodeNum}'
+      '${channel != null ? ' channel=$channel' : ''}',
     );
     if (context.mounted) {
       showSuccessSnackBar(

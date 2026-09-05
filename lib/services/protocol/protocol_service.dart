@@ -8537,9 +8537,17 @@ class ProtocolService {
   /// Emits a placeholder [TraceRouteLog] with `response: false` so the UI
   /// can show a "No Response" entry while waiting.  When the inbound
   /// response arrives, the placeholder is replaced by the full log.
-  Future<void> sendTraceroute(int nodeNum) async {
+  /// Sends a traceroute request to [nodeNum].
+  ///
+  /// [channel] overrides the channel index the request goes out on. When
+  /// omitted the request uses the channel the target was last heard on,
+  /// falling back to the primary channel.
+  Future<void> sendTraceroute(int nodeNum, {int? channel}) async {
     _assertOperational('sendTraceroute');
-    AppLogging.protocol('Sending traceroute to node $nodeNum');
+    AppLogging.protocol(
+      'Sending traceroute to node $nodeNum'
+      '${channel != null ? ' on channel $channel' : ''}',
+    );
 
     // Create an empty RouteDiscovery for the request
     final routeDiscovery = pb.RouteDiscovery();
@@ -8560,7 +8568,7 @@ class ProtocolService {
       to: nodeNum,
       data: data,
       packetId: _generatePacketId(),
-      channel: targetNode?.lastHeardChannel ?? 0,
+      channel: channel ?? targetNode?.lastHeardChannel ?? 0,
       wantAck: true,
     );
 

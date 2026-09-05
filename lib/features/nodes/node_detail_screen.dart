@@ -232,6 +232,21 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     }
   }
 
+  Future<void> _pickTracerouteChannel(
+    BuildContext context,
+    MeshNode node,
+  ) async {
+    if (_isSendingTraceroute) return;
+    final channel = await pickTracerouteChannel(context, ref, node);
+    if (channel == null || !mounted || !context.mounted) return;
+    safeSetState(() => _isSendingTraceroute = true);
+    try {
+      await sendNodeTraceroute(context, ref, node, channel: channel);
+    } finally {
+      if (mounted) safeSetState(() => _isSendingTraceroute = false);
+    }
+  }
+
   void _showTracerouteHistory(BuildContext context, MeshNode node) {
     if (!mounted) return;
     TraceRouteLogScreen.open(context, nodeNum: node.nodeNum);
@@ -1597,11 +1612,14 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               : context.l10n.nodeDetailMuteTooltip,
         ),
         const SizedBox(width: AppTheme.spacing8),
-        // Traceroute
+        // Traceroute: tap sends on the channel the node was last heard on,
+        // long-press picks the channel (a node reachable only through an
+        // MQTT or UDP bridged channel needs the request on that channel).
         _TracerouteButton(
           node: node,
           isSending: _isSendingTraceroute,
           onPressed: () => _sendTraceroute(context, node),
+          onLongPress: () => _pickTracerouteChannel(context, node),
         ),
         const SizedBox(width: AppTheme.spacing8),
         // Message button
@@ -2192,11 +2210,13 @@ class _TracerouteButton extends ConsumerWidget {
   final MeshNode node;
   final bool isSending;
   final VoidCallback onPressed;
+  final VoidCallback? onLongPress;
 
   const _TracerouteButton({
     required this.node,
     required this.isSending,
     required this.onPressed,
+    this.onLongPress,
   });
 
   @override
@@ -2264,12 +2284,18 @@ class _TracerouteButton extends ConsumerWidget {
                 ),
               ),
             )
-          : IconButton(
-              onPressed: onPressed,
-              icon: Icon(Icons.route, color: context.textSecondary, size: 22),
-              tooltip: context.l10n.nodeDetailTracerouteTooltip,
-              padding: const EdgeInsets.all(AppTheme.spacing12),
-              constraints: const BoxConstraints(),
+          : GestureDetector(
+              onLongPress: onLongPress,
+              child: IconButton(
+                onPressed: onPressed,
+                icon: Icon(Icons.route, color: context.textSecondary, size: 22),
+                tooltip: onLongPress == null
+                    ? context.l10n.nodeDetailTracerouteTooltip
+                    : '${context.l10n.nodeDetailTracerouteTooltip}\n'
+                          '${context.l10n.nodeDetailTracerouteLongPressHint}',
+                padding: const EdgeInsets.all(AppTheme.spacing12),
+                constraints: const BoxConstraints(),
+              ),
             ),
     );
   }

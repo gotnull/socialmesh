@@ -17979,6 +17979,18 @@
   "@nodeDetailSignalWeak": {
     "description": "Signal quality label for weak RSSI."
   },
+  "nodeDetailTracerouteChannelTitle": "Send traceroute on channel",
+  "@nodeDetailTracerouteChannelTitle": {
+    "description": "Title of the channel picker shown on long-press of the traceroute button"
+  },
+  "nodeDetailTracerouteChannelLastHeard": "Last heard here",
+  "@nodeDetailTracerouteChannelLastHeard": {
+    "description": "Tag on the channel the target node was last heard on, in the traceroute channel picker"
+  },
+  "nodeDetailTracerouteLongPressHint": "Long-press to choose the channel",
+  "@nodeDetailTracerouteLongPressHint": {
+    "description": "Tooltip on the traceroute button explaining that a long-press opens the channel picker"
+  },
   "nodeDetailTracerouteCooldownTooltip": "Traceroute cooldown: {seconds}s",
   "@nodeDetailTracerouteCooldownTooltip": {
     "description": "Tooltip showing remaining traceroute cooldown.",

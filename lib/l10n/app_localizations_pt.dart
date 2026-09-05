@@ -13465,6 +13465,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Fraco';
 
   @override
+  String get nodeDetailTracerouteChannelTitle => 'Enviar traceroute no canal';
+
+  @override
+  String get nodeDetailTracerouteChannelLastHeard =>
+      'Ouvido aqui pela última vez';
+
+  @override
+  String get nodeDetailTracerouteLongPressHint =>
+      'Toque longo para escolher o canal';
+
+  @override
   String nodeDetailTracerouteCooldownTooltip(int seconds) {
     return 'Cooldown do traceroute: ${seconds}s';
   }

@@ -6877,6 +6877,7 @@ final deviceConfigBackupServiceProvider = Provider<DeviceConfigBackupService>((
 // My node number - updates when received from device
 class MyNodeNumNotifier extends Notifier<int?> {
   StreamSubscription<int>? _myNodeNumSubscription;
+  StreamSubscription<OperationalReadiness>? _readinessSubscription;
 
   @override
   int? build() {
@@ -6885,6 +6886,20 @@ class MyNodeNumNotifier extends Notifier<int?> {
     // Set up disposal
     ref.onDispose(() {
       _myNodeNumSubscription?.cancel();
+      _readinessSubscription?.cancel();
+    });
+
+    // The node number arrives before the radio's own NodeInfo, so the
+    // first scope binding has no public key to hand. Re-bind once the
+    // session is ready: by then the own node carries its key, which is
+    // what lets the scope resolver recognise a radio that firmware 2.8
+    // renumbered and fold its old history under the new number.
+    _readinessSubscription = protocol.readinessStream.listen((readiness) {
+      if (!ref.mounted) return;
+      if (readiness != OperationalReadiness.ready) return;
+      final nodeNum = protocol.myNodeNum;
+      if (nodeNum == null) return;
+      unawaited(_bindRadioScope(protocol, nodeNum));
     });
 
     // Initialize with existing myNodeNum from protocol service
@@ -6917,10 +6932,16 @@ class MyNodeNumNotifier extends Notifier<int?> {
     // this promotes it (and remembers the mapping, so the next connect to
     // the same device lands in the right scope before a single byte is
     // read).
+    await _bindRadioScope(ref.read(protocolServiceProvider), nodeNum);
+  }
+
+  Future<void> _bindRadioScope(ProtocolService protocol, int nodeNum) async {
+    final settings = ref.read(settingsServiceProvider).value;
     await RadioScope.instance.useNodeNum(
       nodeNum,
       deviceId: settings?.lastDeviceId,
       label: settings?.lastDeviceName,
+      ownPublicKey: protocol.nodes[nodeNum]?.publicKey,
     );
   }
 }

@@ -13532,6 +13532,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Débil';
 
   @override
+  String get nodeDetailTracerouteChannelTitle =>
+      'Enviar traceroute por el canal';
+
+  @override
+  String get nodeDetailTracerouteChannelLastHeard => 'Oído aquí por última vez';
+
+  @override
+  String get nodeDetailTracerouteLongPressHint =>
+      'Mantén pulsado para elegir el canal';
+
+  @override
   String nodeDetailTracerouteCooldownTooltip(int seconds) {
     return 'Espera del traceroute: ${seconds}s';
   }

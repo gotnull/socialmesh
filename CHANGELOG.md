@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The modem preset picker honours the region-to-preset legality map a 2.8 radio sends when it connects: only presets legal for the selected region are offered, choosing a region where the current preset is illegal moves to the radio's default for that region and says so, and amateur bands carry a licensed-operators-only notice (#308). Radios on older firmware send no map and see no change
 - Firmware update targets refreshed against the upstream hardware table: 18 new boards, and the three hardware IDs firmware 2.8 reassigned (Makerfabs Tracker, Makerfabs reserved, MeshPager X2) report "update not supported" until their chipset is confirmed rather than inheriting the previous board's update path
 
+### Fixed (radios renumbered by firmware 2.8)
+
+- A radio upgraded to firmware 2.8 keeps its messages, nodes and history in the app. Firmware 2.8 derives the node number from the radio's public key, so an upgraded radio reports a new number, and the app files data per radio under that number: the radio came back looking brand new with everything filed under its old number. The app now records each radio's public key and, when a known key shows up under a new number, moves the old history under the new one. Where the key is not yet known, a Bluetooth identity that belonged to the old number is trusted as the same radio; a TCP endpoint is not, since those are shared between radios (#310)
+
 ### Fixed (recovering banner)
 
 - Retry on the "Connection is still recovering" banner now does something. That banner means the link to the radio is up but the configuration handshake failed, typically after the radio rebooted a few times mid-setup. Retry used to hand off to the reconnect path, which declined to act because the device already counted as connected, so the button was inert exactly when it was needed. It now re-runs the handshake on the existing link. Tapping the banner body in that state does the same instead of flashing the Devices screen and bouncing back
@@ -45,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (requests to nodes on secondary channels)
 
+- Long-pressing the traceroute button on a node's page opens a channel picker, with the channel the node was last heard on preselected, for nodes that live behind a bridged secondary channel (#312)
 - Traceroute and position requests are now sent on the channel the target node was last heard on, as node info requests already were. A request sent on the primary channel never decrypts for a node that lives on a secondary channel, including nodes reached through an MQTT or UDP bridge, so it could never be relayed or answered (#312)
 
 ### Fixed (reconnecting on iOS)

@@ -23068,6 +23068,24 @@ abstract class AppLocalizations {
   /// **'Weak'**
   String get nodeDetailSignalWeak;
 
+  /// Title of the channel picker shown on long-press of the traceroute button
+  ///
+  /// In en, this message translates to:
+  /// **'Send traceroute on channel'**
+  String get nodeDetailTracerouteChannelTitle;
+
+  /// Tag on the channel the target node was last heard on, in the traceroute channel picker
+  ///
+  /// In en, this message translates to:
+  /// **'Last heard here'**
+  String get nodeDetailTracerouteChannelLastHeard;
+
+  /// Tooltip on the traceroute button explaining that a long-press opens the channel picker
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press to choose the channel'**
+  String get nodeDetailTracerouteLongPressHint;
+
   /// Tooltip showing remaining traceroute cooldown.
   ///
   /// In en, this message translates to:

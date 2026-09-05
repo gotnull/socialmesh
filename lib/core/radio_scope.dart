@@ -150,7 +150,13 @@ class RadioScope {
   static const String _prefsCurrentKey = 'radio_scope_current';
   static const String _prefsDeviceMapKey = 'radio_scope_devices';
   static const String _prefsLabelsKey = 'radio_scope_labels';
+  // Radio's own public key (hex) per node scope. Firmware 2.8 derives the
+  // node number from the public key, so a radio upgraded to it comes back
+  // with a new number and the same key; the key is what proves the two
+  // scopes are one radio.
+  static const String _prefsPublicKeysKey = 'radio_scope_pubkeys';
   static const String _prefsMigratedKey = 'radio_scope_migrated';
+  static const String _tcpDeviceIdPrefix = 'tcp:';
   // Separates key from value in the flat StringList-backed maps below.
   // A space is safe because keys are device ids and scope keys, neither of
   // which contains one, and it keeps the stored value readable in a plist
@@ -268,21 +274,53 @@ class RadioScope {
   /// When the session is still on a provisional scope the directory and
   /// preference values recorded so far are promoted into the node scope, so
   /// nothing observed between connect and identity is stranded.
+  ///
+  /// [ownPublicKey] is the radio's own public key when known. It is
+  /// recorded against the node scope and is what identifies a radio whose
+  /// node number changed (firmware 2.8 derives the number from the key):
+  /// the old scope is folded into the new one so its history follows the
+  /// radio. Callers should pass it whenever they have it, including on a
+  /// repeat call for the same node number once the key has arrived.
+  ///
   /// Returns true when the scope changed.
   Future<bool> useNodeNum(
     int nodeNum, {
     String? deviceId,
     String? label,
+    List<int>? ownPublicKey,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final target = radioScopeKeyForNodeNum(nodeNum);
+    final publicKeyHex = _publicKeyHex(ownPublicKey);
+    final previousScopeForDevice = deviceId != null
+        ? _readMap(prefs, _prefsDeviceMapKey)[deviceId]
+        : null;
     if (deviceId != null) {
       await _rememberMapping(prefs, _prefsDeviceMapKey, deviceId, target);
     }
     if (label != null) {
       await _rememberLabel(prefs, target, label, synthetic: label == deviceId);
     }
-    if (target == _current) return false;
+    if (publicKeyHex != null) {
+      await _rememberMapping(prefs, _prefsPublicKeysKey, target, publicKeyHex);
+    }
+
+    if (target == _current) {
+      // Same identity as the active scope. If another node scope carries
+      // this radio's key, the radio was renumbered and the connect path
+      // already landed on the new number: fold the old scope in now that
+      // the key proves they are one radio.
+      final donor = _renumberedDonor(prefs, target: target, key: publicKeyHex);
+      if (donor == null) return false;
+      AppLogging.storage(
+        'RADIO SCOPE: $target carries the key recorded for $donor - '
+        'renumbered radio, folding $donor into $target',
+      );
+      await _closeOpenStores();
+      await _foldScope(prefs, from: donor, into: target);
+      _changes.add(target);
+      return true;
+    }
 
     if (isProvisionalRadioScopeKey(_current)) {
       AppLogging.storage(
@@ -297,9 +335,32 @@ class RadioScope {
       return true;
     }
 
-    // A node number that disagrees with a node scope means a device switch
-    // slipped past the connect path. Follow the radio rather than keep
-    // writing its data into the previous radio's scope.
+    // A node scope that disagrees with the reported number is either a
+    // device switch that slipped past the connect path, or the same radio
+    // under a new number. The key decides when it is known; failing that,
+    // a per-radio device id (BLE, not a reusable TCP endpoint) that was
+    // mapped to the active scope, with nothing yet filed under the new
+    // number, is taken as the same radio.
+    if (await _isRenumberedRadio(
+      prefs,
+      from: _current,
+      to: target,
+      key: publicKeyHex,
+      deviceId: deviceId,
+      previousScopeForDevice: previousScopeForDevice,
+    )) {
+      AppLogging.storage(
+        'RADIO SCOPE: radio renumbered $_current -> $target, moving its data',
+      );
+      await _closeOpenStores();
+      await _foldScope(prefs, from: _current, into: target);
+      await _setCurrent(prefs, target);
+      _changes.add(target);
+      return true;
+    }
+
+    // Follow the radio rather than keep writing its data into the previous
+    // radio's scope.
     AppLogging.storage(
       'RADIO SCOPE: identity $target does not match active scope $_current '
       '— switching without promotion',
@@ -352,8 +413,110 @@ class RadioScope {
     final devices = _readMap(prefs, _prefsDeviceMapKey)
       ..removeWhere((_, scope) => scope == key);
     await _writeMap(prefs, _prefsDeviceMapKey, devices);
+    final keys = _readMap(prefs, _prefsPublicKeysKey)..remove(key);
+    await _writeMap(prefs, _prefsPublicKeysKey, keys);
     AppLogging.storage('RADIO SCOPE: deleted scope $key');
     return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Renumbered radios
+  // ---------------------------------------------------------------------------
+
+  String? _publicKeyHex(List<int>? key) {
+    if (key == null || key.isEmpty) return null;
+    final buffer = StringBuffer();
+    for (final byte in key) {
+      buffer.write((byte & 0xFF).toRadixString(16).padLeft(2, '0'));
+    }
+    return buffer.toString();
+  }
+
+  /// Another node scope recorded with the same public key as [target].
+  String? _renumberedDonor(
+    SharedPreferences prefs, {
+    required String target,
+    required String? key,
+  }) {
+    if (key == null) return null;
+    for (final entry in _readMap(prefs, _prefsPublicKeysKey).entries) {
+      if (entry.key == target) continue;
+      if (entry.value == key && !isProvisionalRadioScopeKey(entry.key)) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  /// Whether the radio active under [from] is the same radio now reporting
+  /// the node number behind [to].
+  Future<bool> _isRenumberedRadio(
+    SharedPreferences prefs, {
+    required String from,
+    required String to,
+    required String? key,
+    required String? deviceId,
+    required String? previousScopeForDevice,
+  }) async {
+    if (isProvisionalRadioScopeKey(from)) return false;
+    final recordedKey = _readMap(prefs, _prefsPublicKeysKey)[from];
+    if (key != null && recordedKey != null) {
+      // Both keys known: they decide, in either direction.
+      return key == recordedKey;
+    }
+    // No key to compare. A TCP endpoint is reused freely across radios, so
+    // it says nothing; a BLE or USB identity belongs to one radio. If that
+    // identity was filed under [from] and nothing has been filed under
+    // [to] yet, the radio kept its identity and changed its number.
+    if (deviceId == null || deviceId.startsWith(_tcpDeviceIdPrefix)) {
+      return false;
+    }
+    if (previousScopeForDevice != from) return false;
+    return !await _scopeHasData(to);
+  }
+
+  Future<bool> _scopeHasData(String key) async {
+    final dir = await _directoryFor(key, create: false);
+    if (!await dir.exists()) return false;
+    return await _directorySize(dir) > _emptyDatabaseBytes;
+  }
+
+  /// Moves everything filed under [from] into [into] and forgets [from]:
+  /// directory (when [into] holds nothing yet), preference values (where
+  /// [into] has none), label, device mappings and recorded key. Stores must
+  /// already be closed.
+  Future<void> _foldScope(
+    SharedPreferences prefs, {
+    required String from,
+    required String into,
+  }) async {
+    final target = await _directoryFor(into, create: false);
+    if (await target.exists() && !await _scopeHasData(into)) {
+      // Only empty schemas from the moments before the identity resolved.
+      await target.delete(recursive: true);
+    }
+    await _promoteDirectory(from: from, to: into);
+    await _promotePreferences(prefs, from: from, to: into);
+    await _promoteLabel(prefs, from: from, to: into);
+
+    final devices = _readMap(prefs, _prefsDeviceMapKey);
+    var devicesChanged = false;
+    for (final entry in devices.entries.toList()) {
+      if (entry.value == from) {
+        devices[entry.key] = into;
+        devicesChanged = true;
+      }
+    }
+    if (devicesChanged) {
+      await _writeMap(prefs, _prefsDeviceMapKey, devices);
+    }
+
+    final keys = _readMap(prefs, _prefsPublicKeysKey);
+    final carriedKey = keys.remove(from);
+    if (carriedKey != null) {
+      keys.putIfAbsent(into, () => carriedKey);
+    }
+    await _writeMap(prefs, _prefsPublicKeysKey, keys);
   }
 
   /// Root of the scope tree, for the account-deletion wipe.

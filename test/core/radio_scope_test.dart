@@ -228,6 +228,181 @@ void main() {
     });
   });
 
+  // Firmware 2.8 derives the node number from the radio's public key, so a
+  // radio upgraded to it reports a new number with the same key. Its
+  // history must follow it rather than sit in a scope nothing selects.
+  group('renumbered radios', () {
+    const key = [1, 2, 3, 4, 250, 251, 252, 253];
+    const otherKey = [9, 9, 9, 9];
+
+    test('same key under a new number moves the old scope across', () async {
+      await RadioScope.instance.init();
+      await RadioScope.instance.useNodeNum(
+        0xa6960864,
+        deviceId: 'tcp:192.168.5.104:4403',
+        label: 'socialmesh.app',
+        ownPublicKey: key,
+      );
+      await writeScopedFile('messages.db', 'years of history');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('rs/node-a6960864/nodes', '[{"nodeNum":7}]');
+
+      await RadioScope.instance.useNodeNum(
+        0x6944378a,
+        deviceId: 'tcp:192.168.5.104:4403',
+        ownPublicKey: key,
+      );
+
+      expect(RadioScope.instance.currentKey, 'node-6944378a');
+      expect(
+        File(
+          p.join(scopeDir('node-6944378a').path, 'messages.db'),
+        ).readAsStringSync(),
+        'years of history',
+      );
+      expect(scopeDir('node-a6960864').existsSync(), isFalse);
+      expect(prefs.getString('rs/node-6944378a/nodes'), '[{"nodeNum":7}]');
+      expect(prefs.getString('rs/node-a6960864/nodes'), isNull);
+
+      // The device now maps to the new scope and the label came along.
+      await RadioScope.instance.useNodeNum(0x1111);
+      await RadioScope.instance.useDevice(deviceId: 'tcp:192.168.5.104:4403');
+      expect(RadioScope.instance.currentKey, 'node-6944378a');
+      final scopes = await RadioScope.instance.list();
+      expect(
+        scopes.firstWhere((s) => s.key == 'node-6944378a').label,
+        'socialmesh.app',
+      );
+    });
+
+    test(
+      'a different key over the same TCP endpoint is another radio',
+      () async {
+        await RadioScope.instance.init();
+        await RadioScope.instance.useNodeNum(
+          0x1111,
+          deviceId: 'tcp:127.0.0.1:4403',
+          ownPublicKey: key,
+        );
+        await writeScopedFile('messages.db', 'radio one');
+
+        await RadioScope.instance.useNodeNum(
+          0x2222,
+          deviceId: 'tcp:127.0.0.1:4403',
+          ownPublicKey: otherKey,
+        );
+
+        expect(RadioScope.instance.currentKey, 'node-00002222');
+        expect(
+          File(
+            p.join(scopeDir('node-00001111').path, 'messages.db'),
+          ).readAsStringSync(),
+          'radio one',
+        );
+      },
+    );
+
+    test('the key arriving after the switch folds the old scope in', () async {
+      // Real ordering: the connect path lands on the new number before
+      // the radio's own NodeInfo (and key) has been replayed.
+      await RadioScope.instance.init();
+      await RadioScope.instance.useNodeNum(0x1111, ownPublicKey: key);
+      await writeScopedFile('messages.db', 'radio one');
+
+      final switched = await RadioScope.instance.useNodeNum(
+        0x2222,
+        deviceId: 'tcp:10.0.0.1:4403',
+      );
+      expect(switched, isTrue);
+      expect(RadioScope.instance.currentKey, 'node-00002222');
+
+      final folded = await RadioScope.instance.useNodeNum(
+        0x2222,
+        deviceId: 'tcp:10.0.0.1:4403',
+        ownPublicKey: key,
+      );
+
+      expect(folded, isTrue);
+      expect(RadioScope.instance.currentKey, 'node-00002222');
+      expect(
+        File(
+          p.join(scopeDir('node-00002222').path, 'messages.db'),
+        ).readAsStringSync(),
+        'radio one',
+      );
+      expect(scopeDir('node-00001111').existsSync(), isFalse);
+
+      // Nothing left to fold: a repeat call with the key is a no-op.
+      final again = await RadioScope.instance.useNodeNum(
+        0x2222,
+        ownPublicKey: key,
+      );
+      expect(again, isFalse);
+    });
+
+    test('a per-radio BLE identity is trusted when no key is known', () async {
+      await RadioScope.instance.init();
+      await RadioScope.instance.useDevice(deviceId: 'ble-uuid-0864');
+      await RadioScope.instance.useNodeNum(0x1111, deviceId: 'ble-uuid-0864');
+      await writeScopedFile('messages.db', 'radio one');
+
+      await RadioScope.instance.useNodeNum(0x2222, deviceId: 'ble-uuid-0864');
+
+      expect(RadioScope.instance.currentKey, 'node-00002222');
+      expect(
+        File(
+          p.join(scopeDir('node-00002222').path, 'messages.db'),
+        ).readAsStringSync(),
+        'radio one',
+      );
+      expect(scopeDir('node-00001111').existsSync(), isFalse);
+    });
+
+    test(
+      'a BLE identity does not move data into a scope that has its own',
+      () async {
+        await RadioScope.instance.init();
+        await RadioScope.instance.useNodeNum(0x2222);
+        await writeScopedFile(
+          'messages.db',
+          'existing radio two history that is well past the empty threshold '
+              '${'x' * (70 * 1024)}',
+        );
+        await RadioScope.instance.useNodeNum(0x1111, deviceId: 'ble-uuid-0864');
+        await writeScopedFile('messages.db', 'radio one');
+
+        await RadioScope.instance.useNodeNum(0x2222, deviceId: 'ble-uuid-0864');
+
+        expect(RadioScope.instance.currentKey, 'node-00002222');
+        expect(
+          File(
+            p.join(scopeDir('node-00001111').path, 'messages.db'),
+          ).readAsStringSync(),
+          'radio one',
+        );
+      },
+    );
+
+    test('deleting a scope forgets its recorded key', () async {
+      await RadioScope.instance.init();
+      await RadioScope.instance.useNodeNum(0x1111, ownPublicKey: key);
+      await writeScopedFile('messages.db', 'radio one');
+      await RadioScope.instance.useNodeNum(0x3333, ownPublicKey: otherKey);
+
+      expect(await RadioScope.instance.deleteScope('node-00001111'), isTrue);
+
+      // A later radio with the deleted scope's key starts fresh.
+      await RadioScope.instance.useNodeNum(0x4444, ownPublicKey: key);
+      expect(RadioScope.instance.currentKey, 'node-00004444');
+      expect(
+        File(
+          await RadioScope.instance.databasePath('messages.db'),
+        ).existsSync(),
+        isFalse,
+      );
+    });
+  });
+
   group('switching', () {
     test('each radio keeps its own files across a switch and back', () async {
       await RadioScope.instance.init();
