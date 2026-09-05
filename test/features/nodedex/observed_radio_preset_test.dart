@@ -77,8 +77,8 @@ void main() {
   // ===========================================================================
 
   group('ObservedRadioPreset enum', () {
-    test('all 14 values exist', () {
-      expect(ObservedRadioPreset.values.length, equals(14));
+    test('all 17 values exist', () {
+      expect(ObservedRadioPreset.values.length, equals(17));
       expect(
         ObservedRadioPreset.values.map((v) => v.name).toSet(),
         equals({
@@ -96,6 +96,9 @@ void main() {
           'liteSlow',
           'narrowFast',
           'narrowSlow',
+          'tinyFast',
+          'tinySlow',
+          'mediumTurbo',
         }),
       );
     });
@@ -185,11 +188,11 @@ void main() {
 
     test('fromProtobufValue returns null for out-of-range values', () {
       expect(ObservedRadioPreset.fromProtobufValue(-1), isNull);
-      expect(ObservedRadioPreset.fromProtobufValue(14), isNull);
+      expect(ObservedRadioPreset.fromProtobufValue(17), isNull);
       expect(ObservedRadioPreset.fromProtobufValue(999), isNull);
     });
 
-    test('_byValue mapping covers all 14 values with no gaps', () {
+    test('_byValue mapping covers all 17 values with no gaps', () {
       // Verify round-trip: every enum value can be recovered via
       // fromProtobufValue using its own protobufValue.
       for (final preset in ObservedRadioPreset.values) {
@@ -201,11 +204,11 @@ void main() {
               'should round-trip through fromProtobufValue',
         );
       }
-      // Verify the values form a contiguous range 0-13.
+      // Verify the values form a contiguous range 0-16.
       final allValues =
           ObservedRadioPreset.values.map((p) => p.protobufValue).toList()
             ..sort();
-      expect(allValues, equals(List.generate(14, (i) => i)));
+      expect(allValues, equals(List.generate(17, (i) => i)));
     });
   });
 

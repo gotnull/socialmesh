@@ -6942,12 +6942,19 @@ class MyNodeNumNotifier extends Notifier<int?> {
 
   Future<void> _bindRadioScope(ProtocolService protocol, int nodeNum) async {
     final settings = ref.read(settingsServiceProvider).value;
-    await RadioScope.instance.useNodeNum(
-      nodeNum,
-      deviceId: settings?.lastDeviceId,
-      label: settings?.lastDeviceName,
-      ownPublicKey: protocol.nodes[nodeNum]?.publicKey,
-    );
+    try {
+      await RadioScope.instance.useNodeNum(
+        nodeNum,
+        deviceId: settings?.lastDeviceId,
+        label: settings?.lastDeviceName,
+        ownPublicKey: protocol.nodes[nodeNum]?.publicKey,
+      );
+    } catch (e) {
+      // Scope binding is bookkeeping on top of an already-ready session;
+      // a storage failure here must never surface as an unhandled error
+      // on the readiness path.
+      AppLogging.storage('RadioScope bind for $nodeNum failed: $e');
+    }
   }
 }
 

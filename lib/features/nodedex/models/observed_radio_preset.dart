@@ -82,7 +82,19 @@ enum ObservedRadioPreset {
 
   /// EU 868MHz narrow (62.5 kHz). New in protobufs v2.7.23.
   /// Protobuf value: 13.
-  narrowSlow(13, config_pbenum.Config_LoRaConfig_ModemPreset.NARROW_SLOW);
+  narrowSlow(13, config_pbenum.Config_LoRaConfig_ModemPreset.NARROW_SLOW),
+
+  /// Tiny range, fast data rate. New in protobufs v2.8.0.
+  /// Protobuf value: 14.
+  tinyFast(14, config_pbenum.Config_LoRaConfig_ModemPreset.TINY_FAST),
+
+  /// Tiny range, slow data rate. New in protobufs v2.8.0.
+  /// Protobuf value: 15.
+  tinySlow(15, config_pbenum.Config_LoRaConfig_ModemPreset.TINY_SLOW),
+
+  /// Medium range, turbo data rate. New in protobufs v2.8.0.
+  /// Protobuf value: 16.
+  mediumTurbo(16, config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_TURBO);
 
   /// The integer value matching `Config_LoRaConfig_ModemPreset.value`.
   /// Used for SQLite persistence and protobuf interop.
