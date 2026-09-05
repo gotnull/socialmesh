@@ -17,6 +17,7 @@
 #   no-unimplemented           throw UnimplementedError
 #   no-bare-scaffold           Bare Scaffold (use GlassScaffold)
 #   no-bare-switch             Bare Switch/SwitchListTile (use ThemedSwitch)
+#   no-rounded-distance        Raw latlong2 Distance() (rounds to whole units; use core/units/geo_distance.dart)
 #   no-bare-dropdown           Bare DropdownButton (wrap in DropdownButtonHideUnderline)
 #   no-ignore-directive        // ignore: outside lib/generated/
 #   no-railway-domains         Railway *.up.railway.app domains
@@ -815,6 +816,29 @@ check_file() {
       "no-switch-list-tile" \
       "SwitchListTile — use ListTile with ThemedSwitch trailing instead" \
       "error" true true
+  fi
+
+  # ------------------------------------------------------------------
+  # BLOCK: Raw latlong2 Distance() construction (use core/units/geo_distance.dart)
+  # latlong2 rounds every Distance() result to a whole unit unless built
+  # with roundResult: false, so `.as(LengthUnit.Kilometer, ...)` reads 0 km
+  # under 500 m and then steps 1 km, 2 km, 3 km. The helper file owns the
+  # one unrounded instance; everything else calls distanceKmBetween /
+  # distanceMetersBetween.
+  # Honors: // lint-allow: no-rounded-distance — <reason> (same line or file level)
+  # ------------------------------------------------------------------
+  if [ "$in_lib" = true ] && [ "$in_lib_generated" = false ] \
+     && [[ "$file" != *"core/units/geo_distance.dart" ]]; then
+    if ! grep -q 'lint-allow:.*no-rounded-distance' "$file" 2>/dev/null; then
+      while IFS=: read -r lineno matched_line; do
+        line_in_scope "$file" "$lineno" || continue
+        local trimmed="${matched_line#"${matched_line%%[![:space:]]*}"}"
+        [[ "$trimmed" == //* ]] && continue
+        [[ "$matched_line" == import* ]] && continue
+        record_hit "$file" "$lineno" "no-rounded-distance" \
+          "Raw latlong2 Distance() rounds to whole units — use distanceKmBetween / distanceMetersBetween from core/units/geo_distance.dart" "error"
+      done < <(grep -nE '\b(Distance|DistanceVincenty|DistanceHaversine)[[:space:]]*\(' "$file" 2>/dev/null || true)
+    fi
   fi
 
   # ------------------------------------------------------------------

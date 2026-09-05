@@ -9,6 +9,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import '../../core/units/geo_distance.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/map_config.dart';
@@ -243,10 +244,8 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
     // Long press no longer used for radius - use edge drag instead
   }
 
-  double _calculateDistance(LatLng from, LatLng to) {
-    const Distance distance = Distance();
-    return distance.as(LengthUnit.Meter, from, to);
-  }
+  double _calculateDistance(LatLng from, LatLng to) =>
+      distanceMetersBetween(from, to);
 
   /// Check if a screen point is near the geofence edge
   bool _isNearGeofenceEdge(Offset screenPoint) {

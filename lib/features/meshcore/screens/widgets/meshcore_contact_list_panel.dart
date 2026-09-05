@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../../core/units/geo_distance.dart';
 
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme.dart';
@@ -168,11 +169,7 @@ class MeshCoreContactListPanel extends ConsumerWidget {
     final lat = c.latitude!;
     final lon = c.longitude!;
     if (lat == self.latitude && lon == self.longitude) return 0.0;
-    try {
-      return const Distance().as(LengthUnit.Kilometer, self, LatLng(lat, lon));
-    } catch (_) {
-      return null;
-    }
+    return distanceKmBetween(self, LatLng(lat, lon));
   }
 
   static String? _formatDistance(

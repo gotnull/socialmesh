@@ -65,6 +65,14 @@ class AppUrls {
   static String get maptilerToken =>
       dotenv.isInitialized ? (dotenv.env['MAPTILER_TOKEN'] ?? '') : '';
 
+  /// CARTO basemaps API key appended to the dark / light raster tile URLs.
+  /// CARTO still serves tiles without a key but overlays an "API key
+  /// required" watermark on each one, so an empty value renders watermarked
+  /// rather than failing. Guarded on `isInitialized` for the same reason as
+  /// [maptilerToken]: `MapConfig.isCartoKeyActive` reads this directly.
+  static String get cartoApiKey =>
+      dotenv.isInitialized ? (dotenv.env['CARTO_API_KEY'] ?? '') : '';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';

@@ -23,6 +23,7 @@ import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
+import '../../generated/meshtastic/mesh_beacon.pb.dart' as mesh_beacon_pb;
 import '../../core/constants.dart';
 import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
@@ -142,6 +143,70 @@ class DetectionSensorEvent {
       sensorName: sensorName,
       detected: detected,
       receivedAt: DateTime.now(),
+    );
+  }
+}
+
+/// Beacon announcement received on MESH_BEACON_APP (firmware 2.8+).
+///
+/// Carries the sender's human-readable message plus whatever the beacon
+/// offers: a channel (name + PSK), a region and a modem preset. The
+/// firmware never applies an offer on its own; the app surfaces it and
+/// leaves the decision to the user.
+class MeshBeaconEvent {
+  final int senderNodeId;
+  final String message;
+
+  /// Name of the offered channel. Empty when the beacon offers a channel
+  /// under its default (preset-derived) name; null when no channel is
+  /// offered at all.
+  final String? offerChannelName;
+
+  /// Pre-shared key of the offered channel; null when none is offered.
+  final List<int>? offerChannelPsk;
+  final config_pbenum.Config_LoRaConfig_RegionCode? offerRegion;
+  final config_pbenum.Config_LoRaConfig_ModemPreset? offerPreset;
+  final DateTime receivedAt;
+
+  const MeshBeaconEvent({
+    required this.senderNodeId,
+    required this.message,
+    required this.receivedAt,
+    this.offerChannelName,
+    this.offerChannelPsk,
+    this.offerRegion,
+    this.offerPreset,
+  });
+
+  /// True when the beacon carries a channel the user could add.
+  bool get hasChannelOffer => offerChannelPsk != null;
+
+  /// True when the beacon advertises a region or modem preset.
+  bool get hasRadioOffer => offerRegion != null || offerPreset != null;
+
+  /// Decode a MESH_BEACON_APP payload. Text fields pass through
+  /// [sanitizeExternalText] because they render verbatim in the UI.
+  factory MeshBeaconEvent.fromPayload(
+    int senderNodeId,
+    List<int> payload, {
+    DateTime? receivedAt,
+  }) {
+    final beacon = mesh_beacon_pb.MeshBeacon.fromBuffer(payload);
+    final channel = beacon.hasOfferChannel() ? beacon.offerChannel : null;
+    final region =
+        beacon.offerRegion != config_pbenum.Config_LoRaConfig_RegionCode.UNSET
+        ? beacon.offerRegion
+        : null;
+    return MeshBeaconEvent(
+      senderNodeId: senderNodeId,
+      message: sanitizeExternalText(beacon.message).trim(),
+      offerChannelName: channel == null
+          ? null
+          : sanitizeExternalText(channel.name).trim(),
+      offerChannelPsk: channel == null ? null : List<int>.from(channel.psk),
+      offerRegion: region,
+      offerPreset: beacon.hasOfferPreset() ? beacon.offerPreset : null,
+      receivedAt: receivedAt ?? DateTime.now(),
     );
   }
 }
@@ -414,6 +479,15 @@ class ProtocolService {
   final StreamController<pb.ClientNotification> _clientNotificationController;
   final StreamController<pb.User> _userConfigController;
   final StreamController<DetectionSensorEvent> _detectionSensorEventController;
+  final StreamController<MeshBeaconEvent> _meshBeaconEventController;
+  final StreamController<module_pb.ModuleConfig_MeshBeaconConfig>
+  _meshBeaconConfigController;
+
+  /// Most recent beacon announcements, newest first, capped at
+  /// [_maxRecentMeshBeacons]. In-memory only: beacons repeat hourly so
+  /// there is nothing worth persisting.
+  final List<MeshBeaconEvent> _recentMeshBeacons = <MeshBeaconEvent>[];
+  static const int _maxRecentMeshBeacons = 20;
   final StreamController<MeshWaypointEvent> _waypointController;
   final StreamController<TraceRouteLog> _traceRouteLogController;
   final StreamController<MeshTelemetry> _meshTelemetryController;
@@ -631,6 +705,7 @@ class ProtocolService {
   module_pb.ModuleConfig_StoreForwardConfig? _currentStoreForwardConfig;
   module_pb.ModuleConfig_DetectionSensorConfig? _currentDetectionSensorConfig;
   module_pb.ModuleConfig_RangeTestConfig? _currentRangeTestConfig;
+  module_pb.ModuleConfig_MeshBeaconConfig? _currentMeshBeaconConfig;
   module_pb.ModuleConfig_ExternalNotificationConfig?
   _currentExternalNotificationConfig;
   module_pb.ModuleConfig_CannedMessageConfig? _currentCannedMessageConfig;
@@ -1150,6 +1225,10 @@ class ProtocolService {
            >.broadcast(),
        _rangeTestConfigController =
            StreamController<module_pb.ModuleConfig_RangeTestConfig>.broadcast(),
+       _meshBeaconConfigController =
+           StreamController<
+             module_pb.ModuleConfig_MeshBeaconConfig
+           >.broadcast(),
        _externalNotificationConfigController =
            StreamController<
              module_pb.ModuleConfig_ExternalNotificationConfig
@@ -1171,6 +1250,8 @@ class ProtocolService {
        _userConfigController = StreamController<pb.User>.broadcast(),
        _detectionSensorEventController =
            StreamController<DetectionSensorEvent>.broadcast(),
+       _meshBeaconEventController =
+           StreamController<MeshBeaconEvent>.broadcast(),
        _waypointController = StreamController<MeshWaypointEvent>.broadcast(),
        _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
        _meshTelemetryController = StreamController<MeshTelemetry>.broadcast(),
@@ -1274,6 +1355,14 @@ class ProtocolService {
   /// Stream of detection sensor events (DETECTION_SENSOR_APP portnum)
   Stream<DetectionSensorEvent> get detectionSensorEventStream =>
       _detectionSensorEventController.stream;
+
+  /// Stream of beacon announcements (MESH_BEACON_APP portnum).
+  Stream<MeshBeaconEvent> get meshBeaconEventStream =>
+      _meshBeaconEventController.stream;
+
+  /// Beacon announcements received this session, newest first.
+  List<MeshBeaconEvent> get recentMeshBeacons =>
+      List<MeshBeaconEvent>.unmodifiable(_recentMeshBeacons);
 
   /// Stream of Meshtastic waypoint events (WAYPOINT_APP portnum). Emits on
   /// every inbound waypoint and on local sends (self-echo) so the sender sees
@@ -1460,6 +1549,14 @@ class ProtocolService {
   /// Current range test config
   module_pb.ModuleConfig_RangeTestConfig? get currentRangeTestConfig =>
       _currentRangeTestConfig;
+
+  /// Stream of mesh beacon config updates (firmware 2.8+)
+  Stream<module_pb.ModuleConfig_MeshBeaconConfig> get meshBeaconConfigStream =>
+      _meshBeaconConfigController.stream;
+
+  /// Current mesh beacon config
+  module_pb.ModuleConfig_MeshBeaconConfig? get currentMeshBeaconConfig =>
+      _currentMeshBeaconConfig;
 
   /// Stream of external notification config updates
   Stream<module_pb.ModuleConfig_ExternalNotificationConfig>
@@ -2897,6 +2994,9 @@ class ProtocolService {
           case pn.PortNum.DETECTION_SENSOR_APP:
             _handleDetectionSensorMessage(packet, data);
             break;
+          case pn.PortNum.MESH_BEACON_APP:
+            _handleMeshBeaconMessage(packet, data);
+            break;
           case pn.PortNum.WAYPOINT_APP:
             _handleWaypointMessage(packet, data);
             break;
@@ -3547,6 +3647,36 @@ class ProtocolService {
     }
   }
 
+  /// Handle beacon announcements (MESH_BEACON_APP portnum, firmware 2.8+).
+  ///
+  /// The text portion goes through the regular text-message path so it
+  /// lands in the channel inbox, matching what the firmware does for its
+  /// on-device inbox. Offers (channel, region, preset) are cached for the
+  /// Mesh Beacon screen and are never applied automatically.
+  void _handleMeshBeaconMessage(pb.MeshPacket packet, pb.Data data) {
+    try {
+      final event = MeshBeaconEvent.fromPayload(packet.from, data.payload);
+      AppLogging.protocol(
+        'RX_MESH_BEACON from=${packet.from.toRadixString(16)} '
+        'text=${event.message.isNotEmpty} channel=${event.hasChannelOffer} '
+        'region=${event.offerRegion?.name} preset=${event.offerPreset?.name}',
+      );
+      if (event.message.isNotEmpty) {
+        final textData = pb.Data()
+          ..portnum = pn.PortNum.TEXT_MESSAGE_APP
+          ..payload = utf8.encode(event.message);
+        _handleTextMessage(packet, textData);
+      }
+      _recentMeshBeacons.insert(0, event);
+      if (_recentMeshBeacons.length > _maxRecentMeshBeacons) {
+        _recentMeshBeacons.removeLast();
+      }
+      _meshBeaconEventController.add(event);
+    } catch (e) {
+      AppLogging.protocol('Failed to parse mesh beacon message: $e');
+    }
+  }
+
   /// Handle Meshtastic waypoint messages (WAYPOINT_APP portnum).
   ///
   /// Decodes the `Waypoint` proto, converts the 1e7-scaled coordinates to
@@ -3864,6 +3994,19 @@ class ProtocolService {
             _currentRangeTestConfig = rtConfig;
           }
           _rangeTestConfigController.add(rtConfig);
+        }
+
+        // Handle Mesh Beacon config (firmware 2.8+)
+        if (moduleConfig.hasMeshBeacon()) {
+          final mbConfig = moduleConfig.meshBeacon;
+          AppLogging.protocol(
+            'Received Mesh Beacon config - flags: ${mbConfig.flags} '
+            'interval: ${mbConfig.broadcastIntervalSecs}s',
+          );
+          if (isLocalResponse) {
+            _currentMeshBeaconConfig = mbConfig;
+          }
+          _meshBeaconConfigController.add(mbConfig);
         }
 
         // Handle External Notification config
@@ -10685,6 +10828,10 @@ class ProtocolService {
       _currentRangeTestConfig = moduleConfig.rangeTest;
       _rangeTestConfigController.add(moduleConfig.rangeTest);
     }
+    if (moduleConfig.hasMeshBeacon()) {
+      _currentMeshBeaconConfig = moduleConfig.meshBeacon;
+      _meshBeaconConfigController.add(moduleConfig.meshBeacon);
+    }
     if (moduleConfig.hasExternalNotification()) {
       _currentExternalNotificationConfig = moduleConfig.externalNotification;
       _externalNotificationConfigController.add(
@@ -11612,6 +11759,8 @@ class ProtocolService {
     await _traceRouteLogController.close();
     await _meshTelemetryController.close();
     await _waypointController.close();
+    await _meshBeaconEventController.close();
+    await _meshBeaconConfigController.close();
     await _mqttClientProxyMessageController.close();
     await _localConfigWriteController.close();
     await _readinessController.close();

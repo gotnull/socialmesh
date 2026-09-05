@@ -12,6 +12,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import '../../core/units/geo_distance.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../utils/text_sanitizer.dart';
@@ -2544,9 +2545,7 @@ class _WorldMeasurementCardState extends State<_WorldMeasurementCard> {
     }
   }
 
-  double _distanceKm() {
-    return const Distance().as(LengthUnit.Kilometer, widget.start, widget.end);
-  }
+  double _distanceKm() => distanceKmBetween(widget.start, widget.end);
 
   String _pointLabel(LatLng point, WorldMeshNode? node, String prefix) {
     if (node != null) {

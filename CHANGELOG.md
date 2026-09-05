@@ -15,6 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The modem preset picker honours the region-to-preset legality map a 2.8 radio sends when it connects: only presets legal for the selected region are offered, choosing a region where the current preset is illegal moves to the radio's default for that region and says so, and amateur bands carry a licensed-operators-only notice (#308). Radios on older firmware send no map and see no change
 - Firmware update targets refreshed against the upstream hardware table: 18 new boards, and the three hardware IDs firmware 2.8 reassigned (Makerfabs Tracker, Makerfabs reserved, MeshPager X2) report "update not supported" until their chipset is confirmed rather than inheriting the previous board's update path
 
+### Added (Mesh Beacon, firmware 2.8)
+
+- New Mesh Beacon module screen under Settings > Modules, shown for radios on firmware 2.8 or newer (#307). Listen and Broadcast switches map onto the module's flag bits, with the beacon message (100 bytes), the broadcast interval in hours (the firmware's one-hour floor is the slider's start), the legacy split option, and the channel, region and modem preset the beacon offers. Broadcast targets the radio already holds are carried across a save untouched
+- Beacons received from other nodes are decoded from the MESH_BEACON_APP port. Their text is delivered into the channel conversation like any other message, and the beacon itself, with whatever it offers, is listed on the Mesh Beacon screen with the sender and time. An offered channel can be added to the first free slot with one tap; a channel whose key you already hold says so instead. Offered regions and presets are shown for information and are never applied automatically, matching the firmware's own rule
+
+### Fixed (Dark and Light map watermark)
+
+- The Dark and Light map styles no longer carry CARTO's repeated "API key required" overlay (#303). CARTO, which serves those two basemaps, started watermarking every tile requested without a key in late August, so the overlay appeared on every app version at once. The app now sends a CARTO basemaps key with those tile requests on every map surface, including the offline tile downloader and the flight route map. Satellite and Terrain were never affected
+
+### Fixed (distances rounded to whole kilometres)
+
+- Distances on the map, in the measurement tool and in the MeshCore contact list are no longer rounded to whole kilometres. The distance library rounds its results to a whole unit unless told otherwise, so anything under 500 m read as "0 m" and everything beyond stepped 1 km, 2 km, 3 km. All geographic distances now go through one unrounded helper, so a node 400 m away reads 400 m and one 1.3 km away reads 1.3 km
+
 ### Fixed (radios renumbered by firmware 2.8)
 
 - A radio upgraded to firmware 2.8 keeps its messages, nodes and history in the app. Firmware 2.8 derives the node number from the radio's public key, so an upgraded radio reports a new number, and the app files data per radio under that number: the radio came back looking brand new with everything filed under its old number. The app now records each radio's public key and, when a known key shows up under a new number, moves the old history under the new one. Where the key is not yet known, a Bluetooth identity that belonged to the old number is trusted as the same radio; a TCP endpoint is not, since those are shared between radios (#310)

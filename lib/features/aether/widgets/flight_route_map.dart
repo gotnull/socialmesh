@@ -95,26 +95,26 @@ class FlightRouteMap extends StatelessWidget {
               backgroundColor: AppTheme.darkBackground,
             ),
             children: [
-              // Dark tile layer (same as mesh map). Routes to mapbox/dark-v11
-              // when Mapbox is active so the visual matches the rest of the app.
+              // Dark tile layer (same as mesh map), resolved through MapConfig
+              // so it follows the same provider chain as every other map
+              // surface: Mapbox when active, else CARTO with its API key.
               TileLayer(
-                urlTemplate:
-                    MapConfig.mapboxUrlForStyle(
-                      MapTileStyle.dark,
-                      satelliteLabelsOn: false,
-                    ) ??
-                    MapTileStyle.dark.url,
-                subdomains: MapConfig.isMapboxActive
-                    ? const <String>[]
-                    : MapTileStyle.dark.subdomains,
+                urlTemplate: MapConfig.urlForStyle(
+                  MapTileStyle.dark,
+                  satelliteLabelsOn: false,
+                ),
+                subdomains: MapConfig.subdomainsForStyle(MapTileStyle.dark),
                 // Cap requests at the source's native zoom so any deeper
                 // interaction zoom upscales the last real tiles instead of
                 // requesting a non-existent tile.
-                maxNativeZoom: MapConfig.isMapboxActive
-                    ? 18
-                    : MapTileStyle.dark.maxNativeZoom,
+                maxNativeZoom: MapConfig.maxNativeZoomForStyle(
+                  MapTileStyle.dark,
+                ),
                 userAgentPackageName: MapConfig.userAgentPackageName,
-                retinaMode: MapConfig.isMapboxActive,
+                retinaMode: MapConfig.resolvedRetinaMode(
+                  MapTileStyle.dark,
+                  satelliteLabelsOn: false,
+                ),
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                 tileUpdateTransformer: finiteCameraTileUpdateTransformer,
               ),

@@ -17,6 +17,7 @@ import '../../utils/text_sanitizer.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/countdown_providers.dart';
 import 'package:latlong2/latlong.dart';
+import '../../core/units/geo_distance.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
 import '../../core/routing/conversation_routes.dart';
@@ -698,8 +699,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     // Only add if position changed significantly (> 10 meters)
     if (trails.isEmpty ||
-        const Distance().as(
-              LengthUnit.Meter,
+        distanceMetersBetween(
               LatLng(trails.last.latitude, trails.last.longitude),
               LatLng(lat, lng),
             ) >
@@ -786,16 +786,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   ) {
     // Vincenty formula throws on identical / near-identical points
     if (lat1 == lat2 && lng1 == lng2) return 0.0;
-    try {
-      return const Distance().as(
-        LengthUnit.Kilometer,
-        LatLng(lat1, lng1),
-        LatLng(lat2, lng2),
-      );
-    } catch (_) {
-      // Vincenty can also fail on near-antipodal points
-      return 0.0;
-    }
+    return distanceKmBetween(LatLng(lat1, lng1), LatLng(lat2, lng2));
   }
 
   String _formatDistance(double km) =>
@@ -3172,7 +3163,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final altA = _measureNodeA?.altitude;
     final altB = _measureNodeB?.altitude;
-    final distanceM = const Distance().as(LengthUnit.Meter, start, end);
+    final distanceM = distanceMetersBetween(start, end);
 
     Color lineColor;
     if (altA != null && altB != null) {
@@ -5491,9 +5482,7 @@ class _MeasurementCardState extends State<_MeasurementCard> {
   String _formatDistance(double km) =>
       formatDistanceKm(km, widget.units, context.l10n);
 
-  double _calculateDistanceKm() {
-    return const Distance().as(LengthUnit.Kilometer, widget.start, widget.end);
-  }
+  double _calculateDistanceKm() => distanceKmBetween(widget.start, widget.end);
 
   String _pointLabel(LatLng point, MeshNode? node, String prefix) {
     if (node != null) {

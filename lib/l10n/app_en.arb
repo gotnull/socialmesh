@@ -25583,6 +25583,14 @@
   "@settingsTileTrafficManagementTitle": {
     "description": "Title of the traffic management settings tile."
   },
+  "settingsTileMeshBeaconTitle": "Mesh Beacon",
+  "@settingsTileMeshBeaconTitle": {
+    "description": "Title of the Mesh Beacon module settings tile (firmware 2.8+)."
+  },
+  "settingsTileMeshBeaconSubtitle": "Announce your mesh and listen for beacons",
+  "@settingsTileMeshBeaconSubtitle": {
+    "description": "Subtitle of the Mesh Beacon module settings tile."
+  },
   "settingsTileVibrationSubtitle": "Vibrate with notifications",
   "@settingsTileVibrationSubtitle": {
     "description": "Subtitle of the notification vibration toggle tile."
@@ -41430,6 +41438,177 @@
       }
     },
     "description": "Error message Parameters: {error} = error/status message."
+  },
+  "meshBeaconTitle": "Mesh Beacon",
+  "@meshBeaconTitle": {
+    "description": "Title of the Mesh Beacon module configuration screen."
+  },
+  "meshBeaconSave": "Save",
+  "@meshBeaconSave": {
+    "description": "App bar action that writes the Mesh Beacon configuration to the radio."
+  },
+  "meshBeaconInfoTitle": "Firmware 2.8 and later",
+  "@meshBeaconInfoTitle": {
+    "description": "Title of the info banner at the top of the Mesh Beacon screen."
+  },
+  "meshBeaconInfoDescription": "A beacon is a periodic announcement carrying a short message and, optionally, a channel, region or modem preset that nearby nodes can adopt. Nothing is applied automatically: offers appear below for you to act on.",
+  "@meshBeaconInfoDescription": {
+    "description": "Body of the info banner explaining what a mesh beacon is."
+  },
+  "meshBeaconSectionListen": "LISTEN",
+  "@meshBeaconSectionListen": {
+    "description": "Uppercase section header for the listen settings."
+  },
+  "meshBeaconSectionBroadcast": "BROADCAST",
+  "@meshBeaconSectionBroadcast": {
+    "description": "Uppercase section header for the broadcast settings."
+  },
+  "meshBeaconSectionOffer": "OFFER IN BEACON",
+  "@meshBeaconSectionOffer": {
+    "description": "Uppercase section header for the channel/region/preset offered inside outgoing beacons."
+  },
+  "meshBeaconSectionReceived": "RECEIVED BEACONS",
+  "@meshBeaconSectionReceived": {
+    "description": "Uppercase section header listing beacons received from other nodes."
+  },
+  "meshBeaconListen": "Listen for beacons",
+  "@meshBeaconListen": {
+    "description": "Switch title enabling reception of beacon announcements."
+  },
+  "meshBeaconListenSubtitle": "Beacon text is delivered to your messages and any offered channel or preset is kept here for you to review",
+  "@meshBeaconListenSubtitle": {
+    "description": "Subtitle under the listen switch."
+  },
+  "meshBeaconBroadcast": "Broadcast beacons",
+  "@meshBeaconBroadcast": {
+    "description": "Switch title enabling periodic beacon broadcasts from this radio."
+  },
+  "meshBeaconBroadcastSubtitle": "Periodically announce this mesh to nodes in range",
+  "@meshBeaconBroadcastSubtitle": {
+    "description": "Subtitle under the broadcast switch."
+  },
+  "meshBeaconMessage": "Beacon message",
+  "@meshBeaconMessage": {
+    "description": "Label of the text field holding the beacon message (max 100 bytes)."
+  },
+  "meshBeaconInterval": "{hours, plural, =1{Broadcast every hour} other{Broadcast every {hours} hours}}",
+  "@meshBeaconInterval": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    },
+    "description": "Slider title showing the broadcast interval in hours."
+  },
+  "meshBeaconIntervalDesc": "Beacons use airtime. The firmware enforces a one-hour minimum.",
+  "@meshBeaconIntervalDesc": {
+    "description": "Helper text under the interval slider."
+  },
+  "meshBeaconLegacySplit": "Legacy split",
+  "@meshBeaconLegacySplit": {
+    "description": "Switch title for sending beacon text as a separate plain text message."
+  },
+  "meshBeaconLegacySplitSubtitle": "Also send the text as a plain message so older firmware still shows it",
+  "@meshBeaconLegacySplitSubtitle": {
+    "description": "Subtitle under the legacy split switch."
+  },
+  "meshBeaconOfferChannel": "Channel",
+  "@meshBeaconOfferChannel": {
+    "description": "Picker row title for the channel offered in outgoing beacons."
+  },
+  "meshBeaconOfferChannelSubtitle": "Share a channel (name and key) that listeners can add",
+  "@meshBeaconOfferChannelSubtitle": {
+    "description": "Subtitle under the offered channel row when no channel is selected."
+  },
+  "meshBeaconOfferRegion": "Region",
+  "@meshBeaconOfferRegion": {
+    "description": "Picker row title for the LoRa region offered in outgoing beacons."
+  },
+  "meshBeaconOfferPreset": "Modem preset",
+  "@meshBeaconOfferPreset": {
+    "description": "Picker row title for the modem preset offered in outgoing beacons."
+  },
+  "meshBeaconOfferNone": "None",
+  "@meshBeaconOfferNone": {
+    "description": "Picker option meaning nothing is offered for this field."
+  },
+  "meshBeaconReceivedEmpty": "No beacons received yet. They arrive from nodes that broadcast them on this mesh.",
+  "@meshBeaconReceivedEmpty": {
+    "description": "Body shown in the received beacons section when none have arrived."
+  },
+  "meshBeaconAddChannel": "Add this channel",
+  "@meshBeaconAddChannel": {
+    "description": "Tooltip of the button that adds a channel offered by a received beacon."
+  },
+  "meshBeaconChannelAlreadyPresent": "This channel is already in your channel list",
+  "@meshBeaconChannelAlreadyPresent": {
+    "description": "Shown when the offered channel's key already matches one of the user's channels."
+  },
+  "meshBeaconNoFreeChannelSlot": "All channel slots are in use. Remove a channel first.",
+  "@meshBeaconNoFreeChannelSlot": {
+    "description": "Warning when there is no free channel slot for the offered channel."
+  },
+  "meshBeaconChannelAdded": "Channel {name} added",
+  "@meshBeaconChannelAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    },
+    "description": "Success message after adding an offered channel. {name} = channel name."
+  },
+  "meshBeaconChannelAddFailed": "Failed to add channel: {error}",
+  "@meshBeaconChannelAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    },
+    "description": "Error message when adding an offered channel fails. {error} = error text."
+  },
+  "meshBeaconOfferedChannelLabel": "Channel: {channel}",
+  "@meshBeaconOfferedChannelLabel": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    },
+    "description": "Metadata label on a received beacon. {channel} = offered channel name."
+  },
+  "meshBeaconOfferedRegionLabel": "Region: {region}",
+  "@meshBeaconOfferedRegionLabel": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    },
+    "description": "Metadata label on a received beacon. {region} = offered region name."
+  },
+  "meshBeaconOfferedPresetLabel": "Preset: {preset}",
+  "@meshBeaconOfferedPresetLabel": {
+    "placeholders": {
+      "preset": {
+        "type": "String"
+      }
+    },
+    "description": "Metadata label on a received beacon. {preset} = offered modem preset name."
+  },
+  "meshBeaconUnnamedChannel": "Unnamed channel",
+  "@meshBeaconUnnamedChannel": {
+    "description": "Fallback name for an offered channel that carries no name."
+  },
+  "meshBeaconSaved": "Mesh beacon configuration saved",
+  "@meshBeaconSaved": {
+    "description": "Success message after saving the Mesh Beacon configuration."
+  },
+  "meshBeaconSaveFailed": "Failed to save: {error}",
+  "@meshBeaconSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    },
+    "description": "Error message when saving the Mesh Beacon configuration fails. {error} = error text."
   },
   "adminPanelTitle": "Admin",
   "@adminPanelTitle": {

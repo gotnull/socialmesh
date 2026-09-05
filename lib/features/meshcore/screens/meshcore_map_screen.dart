@@ -12,6 +12,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../core/units/geo_distance.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/logging.dart';
 import '../../../core/los_analysis.dart';
@@ -2058,7 +2059,7 @@ class _MeshCoreMeasurementCard extends StatelessWidget {
   }
 
   void _showActionsSheet(BuildContext context) {
-    final distanceKm = const Distance().as(LengthUnit.Kilometer, start, end);
+    final distanceKm = distanceKmBetween(start, end);
     final bearing = calculateBearing(
       start.latitude,
       start.longitude,
@@ -2152,7 +2153,7 @@ class _MeshCoreMeasurementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final distanceKm = const Distance().as(LengthUnit.Kilometer, start, end);
+    final distanceKm = distanceKmBetween(start, end);
     final bearing = calculateBearing(
       start.latitude,
       start.longitude,

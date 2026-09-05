@@ -32600,6 +32600,18 @@ abstract class AppLocalizations {
   /// **'Traffic Management'**
   String get settingsTileTrafficManagementTitle;
 
+  /// Title of the Mesh Beacon module settings tile (firmware 2.8+).
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Beacon'**
+  String get settingsTileMeshBeaconTitle;
+
+  /// Subtitle of the Mesh Beacon module settings tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Announce your mesh and listen for beacons'**
+  String get settingsTileMeshBeaconSubtitle;
+
   /// Subtitle of the notification vibration toggle tile.
   ///
   /// In en, this message translates to:
@@ -53742,6 +53754,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to save: {error}'**
   String trafficMgmtSaveFailed(String error);
+
+  /// Title of the Mesh Beacon module configuration screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Beacon'**
+  String get meshBeaconTitle;
+
+  /// App bar action that writes the Mesh Beacon configuration to the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get meshBeaconSave;
+
+  /// Title of the info banner at the top of the Mesh Beacon screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware 2.8 and later'**
+  String get meshBeaconInfoTitle;
+
+  /// Body of the info banner explaining what a mesh beacon is.
+  ///
+  /// In en, this message translates to:
+  /// **'A beacon is a periodic announcement carrying a short message and, optionally, a channel, region or modem preset that nearby nodes can adopt. Nothing is applied automatically: offers appear below for you to act on.'**
+  String get meshBeaconInfoDescription;
+
+  /// Uppercase section header for the listen settings.
+  ///
+  /// In en, this message translates to:
+  /// **'LISTEN'**
+  String get meshBeaconSectionListen;
+
+  /// Uppercase section header for the broadcast settings.
+  ///
+  /// In en, this message translates to:
+  /// **'BROADCAST'**
+  String get meshBeaconSectionBroadcast;
+
+  /// Uppercase section header for the channel/region/preset offered inside outgoing beacons.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFER IN BEACON'**
+  String get meshBeaconSectionOffer;
+
+  /// Uppercase section header listing beacons received from other nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'RECEIVED BEACONS'**
+  String get meshBeaconSectionReceived;
+
+  /// Switch title enabling reception of beacon announcements.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen for beacons'**
+  String get meshBeaconListen;
+
+  /// Subtitle under the listen switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Beacon text is delivered to your messages and any offered channel or preset is kept here for you to review'**
+  String get meshBeaconListenSubtitle;
+
+  /// Switch title enabling periodic beacon broadcasts from this radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast beacons'**
+  String get meshBeaconBroadcast;
+
+  /// Subtitle under the broadcast switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Periodically announce this mesh to nodes in range'**
+  String get meshBeaconBroadcastSubtitle;
+
+  /// Label of the text field holding the beacon message (max 100 bytes).
+  ///
+  /// In en, this message translates to:
+  /// **'Beacon message'**
+  String get meshBeaconMessage;
+
+  /// Slider title showing the broadcast interval in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours, plural, =1{Broadcast every hour} other{Broadcast every {hours} hours}}'**
+  String meshBeaconInterval(int hours);
+
+  /// Helper text under the interval slider.
+  ///
+  /// In en, this message translates to:
+  /// **'Beacons use airtime. The firmware enforces a one-hour minimum.'**
+  String get meshBeaconIntervalDesc;
+
+  /// Switch title for sending beacon text as a separate plain text message.
+  ///
+  /// In en, this message translates to:
+  /// **'Legacy split'**
+  String get meshBeaconLegacySplit;
+
+  /// Subtitle under the legacy split switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Also send the text as a plain message so older firmware still shows it'**
+  String get meshBeaconLegacySplitSubtitle;
+
+  /// Picker row title for the channel offered in outgoing beacons.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get meshBeaconOfferChannel;
+
+  /// Subtitle under the offered channel row when no channel is selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a channel (name and key) that listeners can add'**
+  String get meshBeaconOfferChannelSubtitle;
+
+  /// Picker row title for the LoRa region offered in outgoing beacons.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get meshBeaconOfferRegion;
+
+  /// Picker row title for the modem preset offered in outgoing beacons.
+  ///
+  /// In en, this message translates to:
+  /// **'Modem preset'**
+  String get meshBeaconOfferPreset;
+
+  /// Picker option meaning nothing is offered for this field.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get meshBeaconOfferNone;
+
+  /// Body shown in the received beacons section when none have arrived.
+  ///
+  /// In en, this message translates to:
+  /// **'No beacons received yet. They arrive from nodes that broadcast them on this mesh.'**
+  String get meshBeaconReceivedEmpty;
+
+  /// Tooltip of the button that adds a channel offered by a received beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this channel'**
+  String get meshBeaconAddChannel;
+
+  /// Shown when the offered channel's key already matches one of the user's channels.
+  ///
+  /// In en, this message translates to:
+  /// **'This channel is already in your channel list'**
+  String get meshBeaconChannelAlreadyPresent;
+
+  /// Warning when there is no free channel slot for the offered channel.
+  ///
+  /// In en, this message translates to:
+  /// **'All channel slots are in use. Remove a channel first.'**
+  String get meshBeaconNoFreeChannelSlot;
+
+  /// Success message after adding an offered channel. {name} = channel name.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {name} added'**
+  String meshBeaconChannelAdded(String name);
+
+  /// Error message when adding an offered channel fails. {error} = error text.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add channel: {error}'**
+  String meshBeaconChannelAddFailed(String error);
+
+  /// Metadata label on a received beacon. {channel} = offered channel name.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel: {channel}'**
+  String meshBeaconOfferedChannelLabel(String channel);
+
+  /// Metadata label on a received beacon. {region} = offered region name.
+  ///
+  /// In en, this message translates to:
+  /// **'Region: {region}'**
+  String meshBeaconOfferedRegionLabel(String region);
+
+  /// Metadata label on a received beacon. {preset} = offered modem preset name.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset: {preset}'**
+  String meshBeaconOfferedPresetLabel(String preset);
+
+  /// Fallback name for an offered channel that carries no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed channel'**
+  String get meshBeaconUnnamedChannel;
+
+  /// Success message after saving the Mesh Beacon configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh beacon configuration saved'**
+  String get meshBeaconSaved;
+
+  /// Error message when saving the Mesh Beacon configuration fails. {error} = error text.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save: {error}'**
+  String meshBeaconSaveFailed(String error);
 
   /// Title for the admin panel screen
   ///

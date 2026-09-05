@@ -77,27 +77,20 @@ class MapConfig {
   static bool styleSupportsRetina(MapTileStyle style) =>
       style.url.contains('{r}');
 
-  /// Create a TileLayer with the default dark style
-  static TileLayer darkTileLayer() {
-    return TileLayer(
-      urlTemplate: MapTileStyle.dark.url,
-      subdomains: MapTileStyle.dark.subdomains,
-      maxNativeZoom: MapTileStyle.dark.maxNativeZoom,
-      retinaMode: styleSupportsRetina(MapTileStyle.dark),
-      userAgentPackageName: userAgentPackageName,
-      evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-      errorTileCallback: _onTileError,
-      tileUpdateTransformer: finiteCameraTileUpdateTransformer,
-    );
-  }
+  /// Create a TileLayer with the default dark style, resolved through the
+  /// same provider chain as the live map widgets.
+  static TileLayer darkTileLayer() => tileLayerForStyle(MapTileStyle.dark);
 
-  /// Create a TileLayer for a given style.
+  /// Create a TileLayer for a given style. URL, subdomains, native zoom and
+  /// retina mode all resolve through [urlForStyle] and its siblings so the
+  /// layer never leaks a keyless CARTO URL, or a raw OpenTopoMap URL, when a
+  /// keyed provider is configured.
   static TileLayer tileLayerForStyle(MapTileStyle style) {
     return TileLayer(
-      urlTemplate: style.url,
-      subdomains: style.subdomains,
-      maxNativeZoom: style.maxNativeZoom,
-      retinaMode: styleSupportsRetina(style),
+      urlTemplate: urlForStyle(style, satelliteLabelsOn: false),
+      subdomains: subdomainsForStyle(style),
+      maxNativeZoom: maxNativeZoomForStyle(style),
+      retinaMode: resolvedRetinaMode(style, satelliteLabelsOn: false),
       userAgentPackageName: userAgentPackageName,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
       errorTileCallback: _onTileError,
@@ -188,8 +181,31 @@ class MapConfig {
   static const String maptilerAttributionUrl =
       'https://www.maptiler.com/copyright/';
 
+  /// True when a CARTO basemaps API key is present. CARTO still serves its
+  /// raster basemaps without a key but overlays an "API key required"
+  /// watermark on every tile, so the key is what makes dark / light render
+  /// clean. No feature flag: presence of the key is the switch, as for
+  /// MapTiler.
+  static bool get isCartoKeyActive => AppUrls.cartoApiKey.isNotEmpty;
+
+  /// Whether [style] is served from CARTO's raster basemaps.
+  static bool isCartoStyle(MapTileStyle style) =>
+      style == MapTileStyle.dark || style == MapTileStyle.light;
+
+  /// [style]'s CARTO URL with the API key appended as a `key` query
+  /// parameter, or null when [style] is not a CARTO basemap or no key is
+  /// configured. The query string sits after the `{r}` placeholder, so
+  /// flutter_map's `@2x` substitution is untouched and the offline cache key
+  /// (a hash of the resolved URL) is the same one the live map requests.
+  static String? cartoUrlForStyle(MapTileStyle style) {
+    if (!isCartoStyle(style) || !isCartoKeyActive) return null;
+    final key = Uri.encodeQueryComponent(AppUrls.cartoApiKey);
+    return '${style.url}?key=$key';
+  }
+
   /// Resolved tile URL for a style: Mapbox when active, else MapTiler for
-  /// terrain when active, else the style's own template. Single source of truth
+  /// terrain when active, else CARTO with its API key for dark / light when a
+  /// key is configured, else the style's own template. Single source of truth
   /// so map widgets stop hand-writing `mapboxUrlForStyle(...) ?? style.url`.
   static String urlForStyle(
     MapTileStyle style, {
@@ -204,6 +220,8 @@ class MapConfig {
       final maptiler = maptilerTerrainUrl();
       if (maptiler != null) return maptiler;
     }
+    final carto = cartoUrlForStyle(style);
+    if (carto != null) return carto;
     return style.url;
   }
 
@@ -282,6 +300,8 @@ class MapConfig {
 /// non-existent tiles (which return a server placeholder, e.g. OpenTopoMap's
 /// "max zoom layer 17" error image).
 enum MapTileStyle {
+  // CARTO templates are keyless here; MapConfig.cartoUrlForStyle appends the
+  // API key at resolve time so the key never sits in a const.
   dark(
     'Dark',
     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',

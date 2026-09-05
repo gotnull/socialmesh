@@ -165,6 +165,27 @@ void main() {
     });
   });
 
+  group('AppUrls map provider tokens', () {
+    test('cartoApiKey and maptilerToken are empty when unset', () {
+      dotenv.loadFromString(envString: 'TEST_MODE=true');
+      expect(AppUrls.cartoApiKey, isEmpty);
+      expect(AppUrls.maptilerToken, isEmpty);
+    });
+
+    test('cartoApiKey reads CARTO_API_KEY', () {
+      dotenv.loadFromString(envString: 'TEST_MODE=true\nCARTO_API_KEY=abc123');
+      expect(AppUrls.cartoApiKey, 'abc123');
+    });
+
+    test('cartoApiKey is empty before dotenv is initialised', () {
+      // MapConfig reads the key with no feature-flag short-circuit, so the
+      // getter must not throw NotInitializedError in dotenv-less tests.
+      dotenv.clean();
+      expect(AppUrls.cartoApiKey, isEmpty);
+      dotenv.loadFromString(envString: 'TEST_MODE=true');
+    });
+  });
+
   group('AppFeatureFlags', () {
     test('message timeline defaults to disabled', () {
       dotenv.loadFromString(envString: 'TEST_MODE=true');

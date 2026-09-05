@@ -75,6 +75,7 @@ import 'linked_devices_screen.dart';
 import 'data_export_screen.dart';
 import '../device/serial_config_screen.dart';
 import 'traffic_management_config_screen.dart';
+import 'mesh_beacon_config_screen.dart';
 import '../device/gps_status_screen.dart';
 import '../device/firmware_update_screen.dart';
 import '../device/ambient_lighting_config_screen.dart';
@@ -168,19 +169,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   /// every write is silently dropped, so the entry is hidden instead.
   static final SemanticVersion _rangeTestRemovedFrom = SemanticVersion(2, 8, 0);
 
+  /// Firmware that introduced the Mesh Beacon module.
+  static final SemanticVersion _meshBeaconAddedIn = SemanticVersion(2, 8, 0);
+
+  /// Firmware version of the connected radio, or null when unknown or
+  /// unparseable. Firmware reports `major.minor.patch.<hash>`; the parser
+  /// wants at most three numeric components.
+  SemanticVersion? _connectedFirmwareVersion(WidgetRef ref) {
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    if (myNodeNum == null) return null;
+    final raw = ref.watch(nodesProvider)[myNodeNum]?.firmwareVersion;
+    if (raw == null || raw.isEmpty) return null;
+    return SemanticVersion.tryParse(raw.split('.').take(3).join('.'));
+  }
+
   /// Whether the connected radio still ships the Range Test module.
   /// Unknown or unparseable firmware keeps the entry visible: hiding a
   /// module on a guess is worse than showing it to a radio that lacks it.
   bool _rangeTestAvailable(WidgetRef ref) {
-    final myNodeNum = ref.watch(myNodeNumProvider);
-    if (myNodeNum == null) return true;
-    final raw = ref.watch(nodesProvider)[myNodeNum]?.firmwareVersion;
-    if (raw == null || raw.isEmpty) return true;
-    // Firmware reports "major.minor.patch.<hash>"; the parser wants at
-    // most three numeric components.
-    final version = SemanticVersion.tryParse(raw.split('.').take(3).join('.'));
+    final version = _connectedFirmwareVersion(ref);
     if (version == null) return true;
     return !version.isAtLeast(_rangeTestRemovedFrom);
+  }
+
+  /// Whether the connected radio ships the Mesh Beacon module. Unknown
+  /// firmware keeps the entry visible for the same reason as above.
+  bool _meshBeaconAvailable(WidgetRef ref) {
+    final version = _connectedFirmwareVersion(ref);
+    if (version == null) return true;
+    return version.isAtLeast(_meshBeaconAddedIn);
   }
 
   List<_SearchableSettingItem> _getSearchableSettings(
@@ -1508,6 +1525,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ),
         ),
+        if (_meshBeaconAvailable(ref))
+          _SearchableSettingItem(
+            icon: Icons.cell_tower,
+            title: context.l10n.settingsTileMeshBeaconTitle,
+            subtitle: context.l10n.settingsTileMeshBeaconSubtitle,
+            keywords: ['beacon', 'meshbeacon', 'announce', 'offer', '2.8'],
+            section: context.l10n.settingsSectionModules,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MeshBeaconConfigScreen()),
+            ),
+          ),
 
         // Telemetry Logs
         _SearchableSettingItem(
@@ -3647,6 +3676,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
+                          if (_meshBeaconAvailable(ref))
+                            _SettingsTile(
+                              icon: Icons.cell_tower,
+                              title: context.l10n.settingsTileMeshBeaconTitle,
+                              subtitle:
+                                  context.l10n.settingsTileMeshBeaconSubtitle,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const MeshBeaconConfigScreen(),
+                                ),
+                              ),
+                            ),
 
                           const SizedBox(height: AppTheme.spacing16),
 

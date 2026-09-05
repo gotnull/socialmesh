@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/map_config.dart';
 
@@ -215,6 +217,166 @@ void main() {
             satelliteLabelsOn: false,
           ),
           '© OSM © CARTO',
+        );
+      });
+    });
+
+    group('CARTO basemaps API key', () {
+      // dotenv is not loaded by default in this file, so the key is empty and
+      // dark / light resolve to their keyless templates. The keyed cases load
+      // dotenv explicitly and clean it again so every other group keeps its
+      // "no dotenv" contract regardless of test order.
+      tearDown(dotenv.clean);
+
+      test('inactive by default in tests (no dotenv loaded)', () {
+        expect(MapConfig.isCartoKeyActive, isFalse);
+        for (final style in MapTileStyle.values) {
+          expect(MapConfig.cartoUrlForStyle(style), isNull);
+        }
+      });
+
+      test('isCartoStyle covers exactly dark and light', () {
+        expect(MapConfig.isCartoStyle(MapTileStyle.dark), isTrue);
+        expect(MapConfig.isCartoStyle(MapTileStyle.light), isTrue);
+        expect(MapConfig.isCartoStyle(MapTileStyle.satellite), isFalse);
+        expect(MapConfig.isCartoStyle(MapTileStyle.terrain), isFalse);
+      });
+
+      test('stays inactive when dotenv is loaded without the key', () {
+        dotenv.loadFromString(envString: 'TEST_MODE=true');
+        expect(MapConfig.isCartoKeyActive, isFalse);
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.dark, satelliteLabelsOn: false),
+          MapTileStyle.dark.url,
+        );
+      });
+
+      test('stays inactive when the key is present but blank', () {
+        dotenv.loadFromString(envString: 'TEST_MODE=true\nCARTO_API_KEY=');
+        expect(MapConfig.isCartoKeyActive, isFalse);
+        expect(MapConfig.cartoUrlForStyle(MapTileStyle.dark), isNull);
+      });
+
+      test('appends the key to dark and light only', () {
+        dotenv.loadFromString(envString: 'CARTO_API_KEY=abc123');
+        expect(MapConfig.isCartoKeyActive, isTrue);
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.dark, satelliteLabelsOn: false),
+          '${MapTileStyle.dark.url}?key=abc123',
+        );
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.light, satelliteLabelsOn: false),
+          '${MapTileStyle.light.url}?key=abc123',
+        );
+        expect(
+          MapConfig.urlForStyle(
+            MapTileStyle.satellite,
+            satelliteLabelsOn: false,
+          ),
+          MapTileStyle.satellite.url,
+        );
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.terrain, satelliteLabelsOn: false),
+          MapTileStyle.terrain.url,
+        );
+      });
+
+      test('key sits after the {r} placeholder so @2x substitution holds', () {
+        dotenv.loadFromString(envString: 'CARTO_API_KEY=abc123');
+        final url = MapConfig.urlForStyle(
+          MapTileStyle.dark,
+          satelliteLabelsOn: false,
+        );
+        expect(url.indexOf('{r}'), lessThan(url.indexOf('?key=')));
+        expect(url, endsWith('{r}.png?key=abc123'));
+      });
+
+      test('keyed dark / light keep subdomains, retina and native zoom', () {
+        dotenv.loadFromString(envString: 'CARTO_API_KEY=abc123');
+        expect(MapConfig.subdomainsForStyle(MapTileStyle.dark), [
+          'a',
+          'b',
+          'c',
+          'd',
+        ]);
+        expect(
+          MapConfig.resolvedRetinaMode(
+            MapTileStyle.dark,
+            satelliteLabelsOn: false,
+          ),
+          isTrue,
+        );
+        expect(
+          MapConfig.maxNativeZoomForStyle(MapTileStyle.light),
+          MapTileStyle.light.maxNativeZoom,
+        );
+      });
+
+      test('key is query-encoded', () {
+        dotenv.loadFromString(envString: 'CARTO_API_KEY=a b&c=d');
+        expect(
+          MapConfig.cartoUrlForStyle(MapTileStyle.dark),
+          endsWith('?key=a+b%26c%3Dd'),
+        );
+      });
+
+      test('Mapbox wins over the CARTO key when active', () {
+        dotenv.loadFromString(
+          envString:
+              'CARTO_API_KEY=abc123\nMAPBOX_ENABLED=true\nMAPBOX_TOKEN=pk.test',
+        );
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.dark, satelliteLabelsOn: false),
+          startsWith('https://api.mapbox.com/'),
+        );
+      });
+
+      test('tile layer factories carry the key', () {
+        dotenv.loadFromString(envString: 'CARTO_API_KEY=abc123');
+        expect(MapConfig.darkTileLayer().urlTemplate, endsWith('?key=abc123'));
+        expect(
+          MapConfig.tileLayerForStyle(MapTileStyle.light).urlTemplate,
+          endsWith('?key=abc123'),
+        );
+        expect(
+          MapConfig.tileLayerForStyle(MapTileStyle.satellite).urlTemplate,
+          MapTileStyle.satellite.url,
+        );
+      });
+
+      test('flutter_map resolves a concrete keyed retina tile URL', () {
+        // Runs the template through flutter_map's own resolver, the same path
+        // the live map and the offline cache key use, so the {s} / {r}
+        // substitutions are pinned against the query string. Subdomain index
+        // is (x + y) % 4, so (1, 2) lands on 'd'.
+        dotenv.loadFromString(envString: 'CARTO_API_KEY=abc123');
+        final url = NetworkTileProvider().getTileUrl(
+          TileCoordinates(1, 2, 3),
+          MapConfig.darkTileLayer(),
+        );
+        expect(
+          url,
+          'https://d.basemaps.cartocdn.com/dark_all/3/1/2@2x.png?key=abc123',
+        );
+      });
+
+      test('attribution is unchanged by the key', () {
+        // CARTO's free tier is conditioned on CARTO + OSM attribution staying
+        // visible, so the key must never swap the label or link.
+        dotenv.loadFromString(envString: 'CARTO_API_KEY=abc123');
+        expect(
+          MapConfig.attributionLabel(
+            MapTileStyle.dark,
+            satelliteLabelsOn: false,
+          ),
+          '© OSM © CARTO',
+        );
+        expect(
+          MapConfig.attributionUrl(
+            MapTileStyle.light,
+            satelliteLabelsOn: false,
+          ),
+          'https://carto.com/attributions',
         );
       });
     });

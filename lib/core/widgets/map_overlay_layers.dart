@@ -68,6 +68,8 @@ bool connectionPrefilterMayBeWithin(
 double _distanceKm(double lat1, double lng1, double lat2, double lng2) {
   if (lat1 == lat2 && lng1 == lng2) return 0.0;
   try {
+    // lint-allow: no-rounded-distance — threshold decision, never displayed;
+    // the prefilter above is calibrated to this rounding.
     return const Distance().as(
       LengthUnit.Kilometer,
       LatLng(lat1, lng1),

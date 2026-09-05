@@ -18853,6 +18853,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTileTrafficManagementTitle => 'Traffic Management';
 
   @override
+  String get settingsTileMeshBeaconTitle => 'Mesh Beacon';
+
+  @override
+  String get settingsTileMeshBeaconSubtitle =>
+      'Announce your mesh and listen for beacons';
+
+  @override
   String get settingsTileVibrationSubtitle => 'Vibrate with notifications';
 
   @override
@@ -30740,6 +30747,137 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String trafficMgmtSaveFailed(String error) {
+    return 'Failed to save: $error';
+  }
+
+  @override
+  String get meshBeaconTitle => 'Mesh Beacon';
+
+  @override
+  String get meshBeaconSave => 'Save';
+
+  @override
+  String get meshBeaconInfoTitle => 'Firmware 2.8 and later';
+
+  @override
+  String get meshBeaconInfoDescription =>
+      'A beacon is a periodic announcement carrying a short message and, optionally, a channel, region or modem preset that nearby nodes can adopt. Nothing is applied automatically: offers appear below for you to act on.';
+
+  @override
+  String get meshBeaconSectionListen => 'LISTEN';
+
+  @override
+  String get meshBeaconSectionBroadcast => 'BROADCAST';
+
+  @override
+  String get meshBeaconSectionOffer => 'OFFER IN BEACON';
+
+  @override
+  String get meshBeaconSectionReceived => 'RECEIVED BEACONS';
+
+  @override
+  String get meshBeaconListen => 'Listen for beacons';
+
+  @override
+  String get meshBeaconListenSubtitle =>
+      'Beacon text is delivered to your messages and any offered channel or preset is kept here for you to review';
+
+  @override
+  String get meshBeaconBroadcast => 'Broadcast beacons';
+
+  @override
+  String get meshBeaconBroadcastSubtitle =>
+      'Periodically announce this mesh to nodes in range';
+
+  @override
+  String get meshBeaconMessage => 'Beacon message';
+
+  @override
+  String meshBeaconInterval(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'Broadcast every $hours hours',
+      one: 'Broadcast every hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshBeaconIntervalDesc =>
+      'Beacons use airtime. The firmware enforces a one-hour minimum.';
+
+  @override
+  String get meshBeaconLegacySplit => 'Legacy split';
+
+  @override
+  String get meshBeaconLegacySplitSubtitle =>
+      'Also send the text as a plain message so older firmware still shows it';
+
+  @override
+  String get meshBeaconOfferChannel => 'Channel';
+
+  @override
+  String get meshBeaconOfferChannelSubtitle =>
+      'Share a channel (name and key) that listeners can add';
+
+  @override
+  String get meshBeaconOfferRegion => 'Region';
+
+  @override
+  String get meshBeaconOfferPreset => 'Modem preset';
+
+  @override
+  String get meshBeaconOfferNone => 'None';
+
+  @override
+  String get meshBeaconReceivedEmpty =>
+      'No beacons received yet. They arrive from nodes that broadcast them on this mesh.';
+
+  @override
+  String get meshBeaconAddChannel => 'Add this channel';
+
+  @override
+  String get meshBeaconChannelAlreadyPresent =>
+      'This channel is already in your channel list';
+
+  @override
+  String get meshBeaconNoFreeChannelSlot =>
+      'All channel slots are in use. Remove a channel first.';
+
+  @override
+  String meshBeaconChannelAdded(String name) {
+    return 'Channel $name added';
+  }
+
+  @override
+  String meshBeaconChannelAddFailed(String error) {
+    return 'Failed to add channel: $error';
+  }
+
+  @override
+  String meshBeaconOfferedChannelLabel(String channel) {
+    return 'Channel: $channel';
+  }
+
+  @override
+  String meshBeaconOfferedRegionLabel(String region) {
+    return 'Region: $region';
+  }
+
+  @override
+  String meshBeaconOfferedPresetLabel(String preset) {
+    return 'Preset: $preset';
+  }
+
+  @override
+  String get meshBeaconUnnamedChannel => 'Unnamed channel';
+
+  @override
+  String get meshBeaconSaved => 'Mesh beacon configuration saved';
+
+  @override
+  String meshBeaconSaveFailed(String error) {
     return 'Failed to save: $error';
   }
 

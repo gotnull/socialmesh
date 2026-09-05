@@ -19080,6 +19080,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsTileTrafficManagementTitle => 'Керування трафіком';
 
   @override
+  String get settingsTileMeshBeaconTitle => 'Mesh Beacon';
+
+  @override
+  String get settingsTileMeshBeaconSubtitle =>
+      'Оголошуйте свою мережу та слухайте маяки';
+
+  @override
   String get settingsTileVibrationSubtitle => 'Вібрувати при сповіщеннях';
 
   @override
@@ -31135,6 +31142,139 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String trafficMgmtSaveFailed(String error) {
+    return 'Не вдалося зберегти: $error';
+  }
+
+  @override
+  String get meshBeaconTitle => 'Mesh Beacon';
+
+  @override
+  String get meshBeaconSave => 'Зберегти';
+
+  @override
+  String get meshBeaconInfoTitle => 'Прошивка 2.8 і новіша';
+
+  @override
+  String get meshBeaconInfoDescription =>
+      'Маяк - це періодичне оголошення з коротким повідомленням і, за бажанням, каналом, регіоном або пресетом модема, які можуть прийняти сусідні вузли. Нічого не застосовується автоматично: пропозиції з\'являються нижче, а рішення за вами.';
+
+  @override
+  String get meshBeaconSectionListen => 'ПРИЙМАННЯ';
+
+  @override
+  String get meshBeaconSectionBroadcast => 'МОВЛЕННЯ';
+
+  @override
+  String get meshBeaconSectionOffer => 'ПРОПОЗИЦІЯ В МАЯКУ';
+
+  @override
+  String get meshBeaconSectionReceived => 'ОТРИМАНІ МАЯКИ';
+
+  @override
+  String get meshBeaconListen => 'Слухати маяки';
+
+  @override
+  String get meshBeaconListenSubtitle =>
+      'Текст маяка потрапляє у ваші повідомлення, а запропонований канал або пресет зберігається тут для вашого рішення';
+
+  @override
+  String get meshBeaconBroadcast => 'Транслювати маяки';
+
+  @override
+  String get meshBeaconBroadcastSubtitle =>
+      'Періодично оголошувати про цю мережу вузлам у зоні прийому';
+
+  @override
+  String get meshBeaconMessage => 'Повідомлення маяка';
+
+  @override
+  String meshBeaconInterval(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'Транслювати кожні $hours години',
+      many: 'Транслювати кожні $hours годин',
+      few: 'Транслювати кожні $hours години',
+      one: 'Транслювати кожну $hours годину',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshBeaconIntervalDesc =>
+      'Маяки займають ефірний час. Прошивка вимагає інтервал не менше години.';
+
+  @override
+  String get meshBeaconLegacySplit => 'Сумісний режим';
+
+  @override
+  String get meshBeaconLegacySplitSubtitle =>
+      'Додатково надсилати текст звичайним повідомленням, щоб старі прошивки теж його показували';
+
+  @override
+  String get meshBeaconOfferChannel => 'Канал';
+
+  @override
+  String get meshBeaconOfferChannelSubtitle =>
+      'Поділитися каналом (ім\'я та ключ), який слухачі зможуть додати';
+
+  @override
+  String get meshBeaconOfferRegion => 'Регіон';
+
+  @override
+  String get meshBeaconOfferPreset => 'Пресет модема';
+
+  @override
+  String get meshBeaconOfferNone => 'Немає';
+
+  @override
+  String get meshBeaconReceivedEmpty =>
+      'Маяків ще не отримано. Вони надходять від вузлів, які транслюють їх у цій мережі.';
+
+  @override
+  String get meshBeaconAddChannel => 'Додати цей канал';
+
+  @override
+  String get meshBeaconChannelAlreadyPresent =>
+      'Цей канал уже є у вашому списку каналів';
+
+  @override
+  String get meshBeaconNoFreeChannelSlot =>
+      'Усі слоти каналів зайняті. Спочатку видаліть один канал.';
+
+  @override
+  String meshBeaconChannelAdded(String name) {
+    return 'Канал $name додано';
+  }
+
+  @override
+  String meshBeaconChannelAddFailed(String error) {
+    return 'Не вдалося додати канал: $error';
+  }
+
+  @override
+  String meshBeaconOfferedChannelLabel(String channel) {
+    return 'Канал: $channel';
+  }
+
+  @override
+  String meshBeaconOfferedRegionLabel(String region) {
+    return 'Регіон: $region';
+  }
+
+  @override
+  String meshBeaconOfferedPresetLabel(String preset) {
+    return 'Пресет: $preset';
+  }
+
+  @override
+  String get meshBeaconUnnamedChannel => 'Канал без назви';
+
+  @override
+  String get meshBeaconSaved => 'Налаштування Mesh Beacon збережено';
+
+  @override
+  String meshBeaconSaveFailed(String error) {
     return 'Не вдалося зберегти: $error';
   }
 

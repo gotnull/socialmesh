@@ -2284,17 +2284,30 @@ class _TracerouteButton extends ConsumerWidget {
                 ),
               ),
             )
-          : GestureDetector(
-              onLongPress: onLongPress,
-              child: IconButton(
-                onPressed: onPressed,
-                icon: Icon(Icons.route, color: context.textSecondary, size: 22),
-                tooltip: onLongPress == null
-                    ? context.l10n.nodeDetailTracerouteTooltip
-                    : '${context.l10n.nodeDetailTracerouteTooltip}\n'
-                          '${context.l10n.nodeDetailTracerouteLongPressHint}',
-                padding: const EdgeInsets.all(AppTheme.spacing12),
-                constraints: const BoxConstraints(),
+          // A long-press tooltip would win the gesture arena over the
+          // channel picker, so when a long-press action exists the tooltip
+          // is manual: it still labels the button for assistive tech but
+          // leaves the gesture to the detector.
+          : Tooltip(
+              message: onLongPress == null
+                  ? context.l10n.nodeDetailTracerouteTooltip
+                  : '${context.l10n.nodeDetailTracerouteTooltip}\n'
+                        '${context.l10n.nodeDetailTracerouteLongPressHint}',
+              triggerMode: onLongPress == null
+                  ? TooltipTriggerMode.longPress
+                  : TooltipTriggerMode.manual,
+              child: GestureDetector(
+                onLongPress: onLongPress,
+                child: IconButton(
+                  onPressed: onPressed,
+                  icon: Icon(
+                    Icons.route,
+                    color: context.textSecondary,
+                    size: 22,
+                  ),
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
+                  constraints: const BoxConstraints(),
+                ),
               ),
             ),
     );
