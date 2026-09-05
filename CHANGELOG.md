@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Choosing a region on a radio running firmware 2.8.0 or newer no longer ends in "Timed out waiting for device to reconnect after region change" a minute and a half later, with the region silently applied all along. Firmware 2.8 reprograms the radio in place instead of rebooting, so the app was waiting for a disconnect and reconnect that never came. The app now also reads the LoRa configuration back a few seconds after the write and accepts the region the moment the radio reports it, while radios that still reboot are handled exactly as before. Reproduced against the 2.8.0 simulator radio
 
+### Fixed (opening a conversation from a notification)
+
+- Opening Channels or Messages from a notification while the app was showing the Devices screen left you on a screen with no bottom bar and a menu button that did nothing. The screen is pushed above the main shell, whose drawer is not built in that state, so the menu had nothing to open. A screen pushed above the shell now shows a back arrow in place of the menu button, and tapping it returns to the shell with its bottom bar
+
 ### Fixed (resending direct messages)
 
 - A direct message that was acknowledged only by a relay node, never by the recipient, can now be resent from the long-press menu. Such a message counted as delivered, so it was excluded from the Resend action and from the unconfirmed timeout, leaving no way to try again short of typing it out afresh

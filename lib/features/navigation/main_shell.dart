@@ -157,6 +157,30 @@ class HamburgerMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldKey = ref.watch(mainShellScaffoldKeyProvider);
     final theme = Theme.of(context);
+
+    // A screen that was pushed as its own route (a notification tap opening
+    // Channels or Messages, a deep link) sits above MainShell and has no
+    // bottom bar of its own. Its only way home is a pop, so it gets a back
+    // arrow instead of the hamburger. The hamburger's drawer belongs to
+    // MainShell's Scaffold, which may not even be built while the shell is
+    // in set-up mode, so on a pushed screen the menu icon would either open
+    // a drawer behind the current screen or do nothing at all.
+    final route = ModalRoute.of(context);
+    final isPushedAboveShell = route != null && !route.isFirst;
+    if (isPushedAboveShell) {
+      return IconButton(
+        icon: Icon(
+          Icons.arrow_back,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        ),
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          Navigator.of(context).maybePop();
+        },
+        tooltip: context.l10n.commonBack,
+      );
+    }
+
     final newPeerCount = ref.watch(newMeshPeerCountProvider);
     final hasUnseenWhatsNew = ref.watch(whatsNewHasUnseenProvider);
 
