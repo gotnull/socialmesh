@@ -72,9 +72,10 @@ class MeshMapWidget extends StatefulWidget {
   /// Callback when a node marker is tapped
   final void Function(MeshNode)? onNodeTap;
 
-  /// Opacity applied to peer node markers (0.2-1.0) so the map underneath stays
-  /// visible. The own node is always fully opaque. Mirrors the main map
-  /// screen's overlay-transparency setting.
+  /// Opacity applied to every node marker, own node included (0.2-1.0), so
+  /// the map underneath stays visible. Mirrors the main map screen's
+  /// overlay-transparency setting; the own node stays distinguishable by its
+  /// larger marker and styling rather than by being exempt from the setting.
   final double nodeOverlayOpacity;
 
   /// Whether to animate tile loading
@@ -367,7 +368,6 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
                   }
                 : null,
             child: _applyOverlayOpacity(
-              isMyNode: isMyNode,
               child: MeshNodeMarker(
                 node: d.node,
                 isMyNode: isMyNode,
@@ -381,11 +381,13 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
     );
   }
 
-  // Fades peer node markers per the overlay-opacity setting so the map
-  // underneath stays visible. The own node is always fully opaque so it can
-  // never be lost on the map.
-  Widget _applyOverlayOpacity({required bool isMyNode, required Widget child}) {
-    if (isMyNode || widget.nodeOverlayOpacity >= 1.0) return child;
+  // Fades node markers per the overlay-opacity setting so the map underneath
+  // stays visible. The own node is faded like every other marker: users set
+  // this to see the map through the markers, and an always-opaque own node
+  // read as the setting silently not applying. Its larger marker keeps it
+  // findable at any opacity the setting allows.
+  Widget _applyOverlayOpacity({required Widget child}) {
+    if (widget.nodeOverlayOpacity >= 1.0) return child;
     return Opacity(opacity: widget.nodeOverlayOpacity, child: child);
   }
 

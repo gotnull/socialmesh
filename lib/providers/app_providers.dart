@@ -7614,10 +7614,11 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       await protocol.setRegion(region);
       await _awaitRegionConfirmation(region, sessionId);
 
-      // If we get here, _awaitRegionConfirmation completed successfully.
-      // This means the device rebooted and reconnected, confirming the region was applied.
-      // Note: The session ID will have changed because reconnection creates a new session.
-      // This is expected behavior - don't treat session change as an error here.
+      // If we get here, _awaitRegionConfirmation completed successfully:
+      // either the device rebooted and came back ready with the region,
+      // or (firmware 2.8+) it applied the region live and the read-back
+      // confirmed it. In the reboot case the session ID will have
+      // changed - that is expected, not an error.
 
       if (!ref.mounted) return;
 
@@ -7673,6 +7674,15 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     }
   }
 
+  /// Delay before the first LoRa config read-back after a region write.
+  /// Long enough for firmware that reboots on LoRa changes to have
+  /// dropped the link, so a probe never completes the wait on a device
+  /// that is about to go down.
+  static const _regionLiveProbeInitialDelay = Duration(seconds: 12);
+
+  /// Interval between LoRa config read-backs while the link stays up.
+  static const _regionLiveProbeInterval = Duration(seconds: 5);
+
   Future<void> _awaitRegionConfirmation(
     config_pbenum.Config_LoRaConfig_RegionCode region,
     int sessionId,
@@ -7684,6 +7694,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     final completer = Completer<void>();
     ProviderSubscription<DeviceConnectionState2>? connectionSub;
     ProviderSubscription<AsyncValue<OperationalReadiness>>? readinessSub;
+    StreamSubscription<config_pbenum.Config_LoRaConfig_RegionCode>? regionSub;
+    Timer? liveProbeTimer;
     bool sawDisconnect = false;
     bool sawReconnect = false;
     bool readinessReady = false;
@@ -7846,6 +7858,48 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       },
     );
 
+    // Firmware 2.8+ applies LoRa config live: the radio is reprogrammed
+    // in place and the device does not reboot. The link never drops,
+    // readiness never leaves ready, and neither arm above can fire, so
+    // the wait would run into the timeout even though the region was
+    // accepted. Confirm the write by reading the LoRa config back
+    // instead: the region stream echoes the device's answer, and a
+    // match while no disconnect has been seen proves the device holds
+    // the requested region in the current session.
+    //
+    // Older firmware schedules its reboot a few seconds after the
+    // write and would answer a probe with the new region before going
+    // down. Completing on that answer would drop the in-flight guard
+    // just as the device disconnects, so the first probe waits out
+    // that window. Once a disconnect is seen the probe stays silent
+    // and the reconnect / readiness arms own completion.
+    regionSub = protocol.regionStream.listen((reported) {
+      if (sawDisconnect || !deviceMatches) return;
+      if (reported == region) {
+        completeSuccess('live_apply_confirmed');
+      }
+    });
+    void probeLiveRegion() {
+      if (completer.isCompleted || sawDisconnect) return;
+      if (!protocol.isConnected ||
+          protocol.readiness != OperationalReadiness.ready) {
+        return;
+      }
+      AppLogging.connection(
+        'REGION_CONFIRMATION: live_probe target=${targetDeviceId ?? "null"} '
+        'session=$sessionId region=${region.name}',
+      );
+      unawaited(protocol.getLoRaConfig());
+    }
+
+    liveProbeTimer = Timer(_regionLiveProbeInitialDelay, () {
+      probeLiveRegion();
+      liveProbeTimer = Timer.periodic(
+        _regionLiveProbeInterval,
+        (_) => probeLiveRegion(),
+      );
+    });
+
     try {
       await completer.future.timeout(
         const Duration(seconds: 90),
@@ -7864,6 +7918,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     } finally {
       connectionSub.close();
       readinessSub.close();
+      liveProbeTimer?.cancel();
+      await regionSub.cancel();
     }
   }
 }

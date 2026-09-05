@@ -818,7 +818,6 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       false; // Track PIN/auth failure through disconnect sequence
   int _missingDeviceAttempts = 0;
   DateTime? _firstMissingAttemptAt;
-  static const int _maxInvalidationAttempts = 3;
   static const Duration _invalidationWindow = Duration(seconds: 120);
   int _connectionSessionId = 0;
   int _reconnectAttempt = 0; // Current retry attempt (0-based)
@@ -1773,6 +1772,48 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         return;
       }
 
+      // Strategy 1 (iOS): connect straight to the saved peripheral before
+      // scanning. iOS lets an app connect to a peripheral it has met before
+      // by identifier alone, and CoreBluetooth completes that connect the
+      // moment the radio is back in range - no advertisement needs to be
+      // caught. The 5-second service-filtered scan below misses a radio
+      // that has just returned from out of range often enough that users
+      // saw "not found" while the radio sat in the raw device list; the
+      // official app recovers through this path, so we try it first. A
+      // failed direct attempt falls through to the scan unchanged.
+      if (Platform.isIOS) {
+        final directTarget = DeviceInfo(
+          id: lastDeviceId,
+          name: lastDeviceName ?? '',
+          type: TransportType.ble,
+        );
+        AppLogging.connection(
+          '🔌 startBackgroundConnection: Strategy 1 - direct connect to '
+          'saved peripheral $lastDeviceId',
+        );
+        try {
+          await _connectToDevice(directTarget);
+          _reconnectAttempt = 0;
+          _retryTimer?.cancel();
+          return;
+        } catch (e) {
+          if (state.state == DevicePairingState.pairedDeviceInvalidated) {
+            // A genuine pairing failure was surfaced by the connect path;
+            // the invalidation flow owns the UI from here.
+            return;
+          }
+          if (_userDisconnected) return;
+          AppLogging.connection(
+            '🔌 startBackgroundConnection: Strategy 1 failed ($e) - '
+            'falling back to scan',
+          );
+          state = state.copyWith(state: DevicePairingState.scanning);
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.scanning);
+        }
+      }
+
       // Scan for 5 seconds
       AppLogging.connection(
         '🔌 startBackgroundConnection: Starting 5s scan...',
@@ -2326,6 +2367,19 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         .setState(AutoReconnectState.idle);
   }
 
+  /// Records that a reconnect scan did not see the saved radio.
+  ///
+  /// A missing radio is treated as unreachable, never as a lost pairing:
+  /// a radio that is switched off or out of range for a few minutes looks
+  /// identical to one that was factory reset, and forgetting the saved
+  /// device on that signal alone threw away a perfectly good pairing,
+  /// then told the user to re-pair a radio that connects fine on the next
+  /// tap. Pairing invalidation is reserved for an actual auth or bond
+  /// signal (a connect failure with a pairing error code, or Android
+  /// reporting the bond gone), which arrive through other paths.
+  ///
+  /// The miss counter is kept for diagnostics only. Returns false: the
+  /// saved device is never invalidated here.
   Future<bool> reportMissingSavedDevice() async {
     if (state.state == DevicePairingState.pairedDeviceInvalidated) {
       return true;
@@ -2339,11 +2393,11 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     }
 
     _missingDeviceAttempts++;
-
-    if (_missingDeviceAttempts >= _maxInvalidationAttempts) {
-      await handlePairingInvalidation(PairingInvalidationReason.missingDevice);
-      return true;
-    }
+    AppLogging.connection(
+      'SAVED_DEVICE_MISSING attempt=$_missingDeviceAttempts '
+      'window=${_invalidationWindow.inSeconds}s - treating as unreachable, '
+      'pairing kept',
+    );
 
     state = state.copyWith(
       state: DevicePairingState.disconnected,

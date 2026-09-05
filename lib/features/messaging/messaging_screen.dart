@@ -417,10 +417,12 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
         ),
         // Role filter chip row (orthogonal to the presence chips above).
         // Hides itself entirely when only one role is present in the
-        // mesh, so small-mesh users see no extra chrome.
+        // mesh, so small-mesh users see no extra chrome. Counts the same
+        // population as the contacts list - every node except our own -
+        // so "All roles" agrees with "All" instead of running one higher.
         SliverToBoxAdapter(
           child: RoleFilterChipRow(
-            nodes: nodes.values,
+            nodes: nodes.values.where((n) => n.nodeNum != myNodeNum),
             selectedRole: _activeRoleFilter,
             source: 'contacts',
             onRoleSelected: (role) => setState(() => _activeRoleFilter = role),

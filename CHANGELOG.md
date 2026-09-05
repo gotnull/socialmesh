@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (region setup on firmware 2.8)
+
+- Choosing a region on a radio running firmware 2.8.0 or newer no longer ends in "Timed out waiting for device to reconnect after region change" a minute and a half later, with the region silently applied all along. Firmware 2.8 reprograms the radio in place instead of rebooting, so the app was waiting for a disconnect and reconnect that never came. The app now also reads the LoRa configuration back a few seconds after the write and accepts the region the moment the radio reports it, while radios that still reboot are handled exactly as before. Reproduced against the 2.8.0 simulator radio
+
+### Fixed (reconnecting on iOS)
+
+- A radio that went out of range for a few minutes is no longer treated as a lost pairing. Three missed reconnect scans within two minutes used to forget the saved radio outright and show the "pairing needs to be refreshed" guidance, even though the radio still sat in the device list and connected on a single tap; a missing radio is now simply unreachable, and the saved pairing survives. Re-pair guidance is reserved for an actual authentication or bond failure
+- Automatic reconnect on iOS now connects straight to the saved radio before scanning for it. iOS can reconnect to a radio it has met before by identity alone, completing the moment it is back in range, whereas the short filtered scan often missed a radio that had just returned. The scan remains as the fallback
+
+### Fixed (traceroute)
+
+- Tapping Traceroute the instant the button re-enabled no longer earns a "can only be sent once every 30 seconds" refusal from the radio and a second full wait. The radio times its window from when it received the request, later than the app's countdown started, so the countdown now runs two seconds longer than the radio's window (#305)
+
+### Fixed (contacts)
+
+- The "All roles" chip on the Contacts tab now counts the same nodes as the "All" chip. It was counting every node including your own radio, which the contacts list rightly excludes, so the two numbers disagreed by one (#304)
+
+### Fixed (map)
+
+- The map's node transparency setting now applies to your own node as well. Your marker was exempt by design, which read as the setting not working; it stays distinguishable by its larger marker (#311)
+
+### Changed (settings)
+
+- Range Test settings are hidden when the connected radio runs firmware 2.8.0 or newer, where the module no longer exists and every write to it was silently dropped (#309)
+
 ### Fixed (first connect to a radio)
 
 - Connecting to a radio the app has never seen before no longer wrecks the session seconds after it configures. Storage is filed per radio, and a never-seen radio's identity only arrives once it reports its node number, so the storage layer re-homed its files mid-session - and one of the rebuilt stores dragged the live protocol session down with it, replacing a fully configured session with one that had never spoken to the radio. The app then looked connected but showed an empty channel list, no configuration, and never recovered until a manual disconnect and reconnect. Switching between radios hit the same path, which is how it was reported ("switching between few nodes all channels are lost"). The store now re-homes itself without touching the protocol session

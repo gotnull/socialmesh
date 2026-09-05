@@ -378,6 +378,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         '✅ _persistAndDismiss: applyRegion completed, dismissing',
       );
       if (!mounted) return;
+      // Firmware 2.8+ applies the region live without rebooting, so the
+      // reboot banner started above would otherwise keep counting down
+      // on a radio that never went away. A radio that did reboot has
+      // already cancelled it on reconnect, so this is a no-op there.
+      ref
+          .read(countdownProvider.notifier)
+          .cancelCountdown(CountdownNotifier.deviceRebootId);
       _popOrSetReady(navigator);
     } on Exception catch (e) {
       // Unlock the UI so the user can retry

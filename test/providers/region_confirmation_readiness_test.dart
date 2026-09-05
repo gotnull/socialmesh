@@ -169,10 +169,66 @@ void main() {
     });
   });
 
+  group('live apply (firmware 2.8+, no reboot) is confirmed by read-back', () {
+    test('a region-stream arm completes the wait when the device reports '
+        'the requested region without a disconnect', () {
+      // Firmware 2.8 reprograms the radio in place for LoRa config
+      // writes. The link never drops and readiness never leaves ready,
+      // so neither the connection arm nor the readiness arm can fire.
+      // Without this arm the wait runs into the 90s timeout and the
+      // user is told the apply failed although the device accepted it.
+      final collapsed = source.replaceAll(RegExp(r'\s+'), ' ');
+      expect(
+        collapsed.contains('regionSub = protocol.regionStream.listen('),
+        isTrue,
+        reason: 'the read-back arm must subscribe to protocol.regionStream',
+      );
+      expect(
+        collapsed.contains(
+          'if (sawDisconnect || !deviceMatches) return; '
+          "if (reported == region) { completeSuccess('live_apply_confirmed');",
+        ),
+        isTrue,
+        reason:
+            'the read-back arm must only complete while no disconnect '
+            'has been seen; after a reboot the readiness arm owns '
+            'completion so phase-2 hydration is not skipped',
+      );
+    });
+
+    test('the read-back is driven by a delayed LoRa config probe, not a '
+        'probe fired immediately after the write', () {
+      // Pre-2.8 firmware reboots DEFAULT_REBOOT_SECONDS (7s) after the
+      // write and would answer an immediate probe with the new region
+      // before going down. Completing on that answer clears the
+      // in-flight guard right as the device disconnects, which routes
+      // the user to the scanner mid-reboot. The initial delay must
+      // exceed that reboot window.
+      expect(
+        source.contains(
+          'static const _regionLiveProbeInitialDelay = Duration(seconds: 12);',
+        ),
+        isTrue,
+      );
+      expect(
+        source.contains('liveProbeTimer = Timer(_regionLiveProbeInitialDelay,'),
+        isTrue,
+      );
+      expect(source.contains('unawaited(protocol.getLoRaConfig());'), isTrue);
+      expect(
+        source.contains("'REGION_CONFIRMATION: live_probe target="),
+        isTrue,
+        reason: 'each probe must be visible in field logs',
+      );
+    });
+  });
+
   group('subscriptions are released cleanly', () {
-    test('both listeners are closed in finally', () {
+    test('all listeners and the probe timer are released in finally', () {
       expect(source.contains('connectionSub.close();'), isTrue);
       expect(source.contains('readinessSub.close();'), isTrue);
+      expect(source.contains('liveProbeTimer?.cancel();'), isTrue);
+      expect(source.contains('await regionSub.cancel();'), isTrue);
     });
   });
 

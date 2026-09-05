@@ -16,6 +16,7 @@ import '../../config/revenuecat_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/version_compare.dart';
 import '../../providers/age_eligibility_provider.dart';
 import '../../core/legal/age_group.dart';
 import '../../providers/auth_providers.dart';
@@ -160,6 +161,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         onTap: () => showOfflineStorageSettingsSheet(context),
       ),
     ];
+  }
+
+  /// Firmware from which the Range Test module no longer exists. Offering
+  /// its settings to a radio that cannot run it produces a screen whose
+  /// every write is silently dropped, so the entry is hidden instead.
+  static final SemanticVersion _rangeTestRemovedFrom = SemanticVersion(2, 8, 0);
+
+  /// Whether the connected radio still ships the Range Test module.
+  /// Unknown or unparseable firmware keeps the entry visible: hiding a
+  /// module on a guess is worse than showing it to a radio that lacks it.
+  bool _rangeTestAvailable(WidgetRef ref) {
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    if (myNodeNum == null) return true;
+    final raw = ref.watch(nodesProvider)[myNodeNum]?.firmwareVersion;
+    if (raw == null || raw.isEmpty) return true;
+    // Firmware reports "major.minor.patch.<hash>"; the parser wants at
+    // most three numeric components.
+    final version = SemanticVersion.tryParse(raw.split('.').take(3).join('.'));
+    if (version == null) return true;
+    return !version.isAtLeast(_rangeTestRemovedFrom);
   }
 
   List<_SearchableSettingItem> _getSearchableSettings(
@@ -1379,17 +1400,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             MaterialPageRoute(builder: (_) => const MqttConfigScreen()),
           ),
         ),
-        _SearchableSettingItem(
-          icon: Icons.radar,
-          title: context.l10n.settingsTileRangeTestTitle,
-          subtitle: context.l10n.settingsTileRangeTestSubtitle,
-          keywords: ['range', 'test', 'signal', 'distance'],
-          section: context.l10n.settingsSectionModules,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const RangeTestScreen()),
+        if (_rangeTestAvailable(ref))
+          _SearchableSettingItem(
+            icon: Icons.radar,
+            title: context.l10n.settingsTileRangeTestTitle,
+            subtitle: context.l10n.settingsTileRangeTestSubtitle,
+            keywords: ['range', 'test', 'signal', 'distance'],
+            section: context.l10n.settingsSectionModules,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RangeTestScreen()),
+            ),
           ),
-        ),
         _SearchableSettingItem(
           icon: Icons.storage,
           title: context.l10n.settingsTileStoreForwardTitle,
@@ -3500,18 +3522,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
-                            icon: Icons.radar,
-                            title: context.l10n.settingsTileRangeTestTitle,
-                            subtitle:
-                                context.l10n.settingsTileRangeTestSubtitle,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const RangeTestScreen(),
+                          if (_rangeTestAvailable(ref))
+                            _SettingsTile(
+                              icon: Icons.radar,
+                              title: context.l10n.settingsTileRangeTestTitle,
+                              subtitle:
+                                  context.l10n.settingsTileRangeTestSubtitle,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RangeTestScreen(),
+                                ),
                               ),
                             ),
-                          ),
                           _SettingsTile(
                             icon: Icons.storage,
                             title: context.l10n.settingsTileStoreForwardTitle,

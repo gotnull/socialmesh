@@ -122,8 +122,14 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// tie between the banner and the user's action.
   static const _tracerouteCompletionWindow = Duration(minutes: 2);
 
-  /// Standard traceroute cooldown duration matching Meshtastic iOS.
-  static const tracerouteCooldownSeconds = 30;
+  /// Traceroute cooldown. The firmware refuses a second traceroute within
+  /// 30 seconds of the one it received, timed from the radio's own clock;
+  /// this countdown starts when the app sends, which is earlier by the
+  /// transport latency plus timer granularity. Counting down the bare 30
+  /// let the button re-enable a moment before the radio's window closed,
+  /// and a prompt tap earned a firmware rejection and a second full wait.
+  /// The two extra seconds cover that gap.
+  static const tracerouteCooldownSeconds = 32;
 
   /// Expected device reboot cycle duration (BLE disconnect + firmware
   /// boot + auto-reconnect). Most devices complete within 15-25 seconds.

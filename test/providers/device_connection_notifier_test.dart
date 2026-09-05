@@ -5,7 +5,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart' hide DisconnectReason;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/providers/app_providers.dart';
@@ -107,14 +107,18 @@ void main() {
     final settings = await container.read(settingsServiceProvider.future);
     expect(settings.lastDeviceId, 'device-alpha');
 
-    expect(await notifier.reportMissingSavedDevice(), isFalse);
-    expect(await notifier.reportMissingSavedDevice(), isFalse);
-    expect(await notifier.reportMissingSavedDevice(), isTrue);
+    // Repeated scan misses are an unreachable radio (off, out of range),
+    // never a lost pairing: the saved device must survive every miss and
+    // the state must stay a plain disconnected/deviceNotFound so the next
+    // reconnect trigger simply tries again.
+    for (var i = 0; i < 5; i++) {
+      expect(await notifier.reportMissingSavedDevice(), isFalse);
+    }
 
-    expect(notifier.state.state, DevicePairingState.pairedDeviceInvalidated);
-    expect(settings.lastDeviceId, isNull);
-    expect(settings.lastDeviceName, isNull);
-    expect(settings.lastDeviceType, isNull);
+    expect(notifier.state.state, DevicePairingState.disconnected);
+    expect(notifier.state.reason, DisconnectReason.deviceNotFound);
+    expect(settings.lastDeviceId, 'device-alpha');
+    expect(settings.lastDeviceName, isNotNull);
   });
 
   test(
