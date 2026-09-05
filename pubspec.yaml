@@ -104,7 +104,7 @@ dependencies:
   flutter_map_marker_cluster: ^8.2.2
   firebase_crashlytics: ^5.2.4
   firebase_core: ^4.8.0
-  firebase_analytics: ^12.4.2
+  firebase_analytics: ^12.5.0
   firebase_auth: ^6.5.4
   firebase_storage: ^13.4.5
   firebase_messaging: ^16.4.1
