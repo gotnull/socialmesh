@@ -1636,6 +1636,24 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // initialize()) while the scanner has already established a live
     // connection.
     if (state.isConnected) {
+      // A live transport with a degraded protocol session is the one
+      // connected state where a retry must do something: the handshake
+      // failed (radio rebooting mid-config, phase 2 timeout) and nothing
+      // else will re-run it. Re-drive the session on the existing link
+      // through the coordinator so generation, single-flight and
+      // user-disconnect guards still apply. A healthy or mid-handshake
+      // session is left alone as before.
+      final readiness = ref.read(protocolServiceProvider).readiness;
+      if (readiness == OperationalReadiness.degraded) {
+        AppLogging.connection(
+          '🔌 startBackgroundConnection: transport connected but session '
+          'degraded - restoring session on the live link',
+        );
+        await _restoreCoordinator.restoreSession(
+          reason: 'retry_degraded_session',
+        );
+        return;
+      }
       AppLogging.connection(
         '🔌 startBackgroundConnection: BLOCKED - device already connected',
       );

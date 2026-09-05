@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The modem preset picker honours the region-to-preset legality map a 2.8 radio sends when it connects: only presets legal for the selected region are offered, choosing a region where the current preset is illegal moves to the radio's default for that region and says so, and amateur bands carry a licensed-operators-only notice (#308). Radios on older firmware send no map and see no change
 - Firmware update targets refreshed against the upstream hardware table: 18 new boards, and the three hardware IDs firmware 2.8 reassigned (Makerfabs Tracker, Makerfabs reserved, MeshPager X2) report "update not supported" until their chipset is confirmed rather than inheriting the previous board's update path
 
+### Fixed (recovering banner)
+
+- Retry on the "Connection is still recovering" banner now does something. That banner means the link to the radio is up but the configuration handshake failed, typically after the radio rebooted a few times mid-setup. Retry used to hand off to the reconnect path, which declined to act because the device already counted as connected, so the button was inert exactly when it was needed. It now re-runs the handshake on the existing link. Tapping the banner body in that state does the same instead of flashing the Devices screen and bouncing back
+
+### Fixed (region picker after a re-flash)
+
+- A radio that comes back with no region set, after a re-flash or factory reset, now gets the region picker again. Once a region had been applied to a device in the running app, that "applied" state kept suppressing the picker for every later reconnect to the same device, so a wiped radio sat on region UNSET with no way to set it short of restarting the app. The suppression now only covers the three minutes around the apply's own reboot and reconnect
+
 ### Fixed (region setup on firmware 2.8)
 
 - Choosing a region on a radio running firmware 2.8.0 or newer no longer ends in "Timed out waiting for device to reconnect after region change" a minute and a half later, with the region silently applied all along. Firmware 2.8 reprograms the radio in place instead of rebooting, so the app was waiting for a disconnect and reconnect that never came. The app now also reads the LoRa configuration back a few seconds after the write and accepts the region the moment the radio reports it, while radios that still reboot are handled exactly as before. Reproduced against the 2.8.0 simulator radio

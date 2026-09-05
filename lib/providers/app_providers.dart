@@ -7410,6 +7410,26 @@ final deviceRegionProvider =
 
 enum RegionApplyStatus { idle, applying, applied, failed }
 
+/// How long a completed region apply keeps suppressing the region picker
+/// across reconnects of the same device. Long enough to cover the reboot
+/// and reconnect cycle the apply triggers (including slow radios), short
+/// enough that a later re-flash or factory reset, which brings the same
+/// device back with region UNSET, is treated as the real setup need it is.
+const Duration kRegionAppliedCarryOver = Duration(minutes: 3);
+
+/// True when [state] records a region apply that completed recently enough
+/// to still be part of its own reboot and reconnect cycle.
+bool regionAppliedWithinCarryOver(
+  RegionConfigState state, {
+  DateTime Function() now = DateTime.now,
+}) {
+  if (state.applyStatus != RegionApplyStatus.applied) return false;
+  final attemptedAt = state.lastAttemptAtMs;
+  if (attemptedAt == null) return false;
+  final age = now().millisecondsSinceEpoch - attemptedAt;
+  return age >= 0 && age <= kRegionAppliedCarryOver.inMilliseconds;
+}
+
 class RegionConfigState {
   final config_pbenum.Config_LoRaConfig_RegionCode? regionChoice;
   final RegionApplyStatus applyStatus;
@@ -7474,9 +7494,14 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         // IMPORTANT: During region apply, the device reboots and reconnects with a NEW session.
         // If we're currently applying OR just applied a region to the SAME device,
         // don't reset state - preserve across the expected reboot/reconnect cycle.
+        //
+        // "Just applied" is bounded in time. An apply that finished long ago
+        // must not keep suppressing the region picker: a radio that is later
+        // re-flashed or factory reset comes back on the same device id with
+        // region UNSET, and a stale "applied" here hid the picker for it.
         if (isSameDevice &&
             (state.applyStatus == RegionApplyStatus.applying ||
-                state.applyStatus == RegionApplyStatus.applied)) {
+                regionAppliedWithinCarryOver(state))) {
           AppLogging.connection(
             '🌍 REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} '
             'new_session=${next.connectionSessionId} status=${state.applyStatus.name} reason=session_change_same_device',
@@ -7984,14 +8009,17 @@ final needsRegionSetupProvider = Provider<bool>((ref) {
   if (!isUnset) return false;
 
   // If we're applying or just applied region to THIS device, don't show setup
-  // This prevents showing region selection during the reboot/reconnect cycle
+  // This prevents showing region selection during the reboot/reconnect cycle.
+  // "Just applied" is time-bounded (see [regionAppliedWithinCarryOver]): a
+  // radio that reports UNSET again long after an apply has genuinely lost
+  // its region (re-flash, factory reset) and needs the picker.
   final isSameDevice =
       regionState.targetDeviceId != null &&
       currentDeviceId != null &&
       regionState.targetDeviceId == currentDeviceId;
   if (isSameDevice &&
       (regionState.applyStatus == RegionApplyStatus.applying ||
-          regionState.applyStatus == RegionApplyStatus.applied)) {
+          regionAppliedWithinCarryOver(regionState))) {
     return false;
   }
 

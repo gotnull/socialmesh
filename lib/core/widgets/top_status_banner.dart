@@ -447,8 +447,11 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
               : 'Disconnected'); // lint-allow: hardcoded-string
     // Don't show retry for auth failures — retrying background connect
     // hits the same PIN/auth issue. The user needs Scanner to manually
-    // re-pair (which triggers the system PIN dialog).
-    final showRetryButton = isFailed && !isTerminalInvalidated && !isAuthFailed;
+    // re-pair (which triggers the system PIN dialog). A degraded session
+    // always gets Retry: the link is up and the retry re-runs the
+    // handshake on it, which is the only way out of that state.
+    final showRetryButton =
+        (isFailed || isDegraded) && !isTerminalInvalidated && !isAuthFailed;
 
     // Connect button is tappable whenever we're NOT actively reconnecting,
     // OR when reconnecting (tapping cancel + navigates to scanner).
@@ -495,6 +498,16 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                 child: InkWell(
                   onTap: connectTappable
                       ? () {
+                          if (isDegraded) {
+                            // The link is up and only the protocol session
+                            // is wedged. Routing to the scanner here just
+                            // flashes it and bounces straight back because
+                            // the device is connected; re-running the
+                            // handshake is the useful action.
+                            _cancelDismissTimer();
+                            widget.onRetry();
+                            return;
+                          }
                           if (isReconnecting) {
                             // User tapped during reconnecting — run the
                             // authoritative cancel (stops timers, sets
