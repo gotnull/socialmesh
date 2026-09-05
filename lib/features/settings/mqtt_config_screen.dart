@@ -1392,7 +1392,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                 trackHeight: 4,
               ),
               child: Slider(
-                value: _mapPublishIntervalSecs.toDouble(),
+                value: _mapPublishIntervalSecs.clamp(300, 14400).toDouble(),
                 min: 300,
                 max: 14400,
                 divisions: 28,
@@ -1430,7 +1430,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                 trackHeight: 4,
               ),
               child: Slider(
-                value: _mapPositionPrecision,
+                value: _mapPositionPrecision.clamp(12.0, 15.0).toDouble(),
                 min: 12,
                 max: 15,
                 divisions: 3,

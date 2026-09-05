@@ -165,8 +165,19 @@ class HamburgerMenuButton extends ConsumerWidget {
     // MainShell's Scaffold, which may not even be built while the shell is
     // in set-up mode, so on a pushed screen the menu icon would either open
     // a drawer behind the current screen or do nothing at all.
+    //
+    // "Pushed above the shell" is judged against the shell's own route,
+    // not against being first on the navigator: the shell itself can sit
+    // above another route (onboarding, a re-entered `/app`), and its tabs
+    // must still get the hamburger in that case. When the shell's Scaffold
+    // is not built at all, any poppable route counts as pushed.
     final route = ModalRoute.of(context);
-    final isPushedAboveShell = route != null && !route.isFirst;
+    final shellContext = scaffoldKey?.currentContext;
+    final shellRoute = shellContext != null
+        ? ModalRoute.of(shellContext)
+        : null;
+    final isPushedAboveShell =
+        route != null && route != shellRoute && Navigator.of(context).canPop();
     if (isPushedAboveShell) {
       return IconButton(
         icon: Icon(

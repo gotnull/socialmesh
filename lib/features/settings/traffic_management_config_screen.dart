@@ -287,8 +287,13 @@ class _TrafficManagementConfigScreenState
         thumbColor: context.accentColor,
         overlayColor: context.accentColor.withAlpha(30),
       ),
+      // The radio may hold a value outside the slider's range (firmware
+      // 2.8 defaults the position window to 18000s against a 600s slider).
+      // Show the slider pinned at its nearest end while the label keeps
+      // the radio's real value; the stored value only changes when the
+      // user moves the slider.
       child: Slider(
-        value: value.toDouble(),
+        value: value.clamp(min, max).toDouble(),
         min: min.toDouble(),
         max: max.toDouble(),
         divisions: max - min,

@@ -261,7 +261,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
               overlayColor: context.accentColor.withAlpha(30),
             ),
             child: Slider(
-              value: _screenOnSecs.toDouble(),
+              value: _screenOnSecs.clamp(0, 300).toDouble(),
               min: 0,
               max: 300,
               divisions: 30,
@@ -303,7 +303,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
               overlayColor: context.accentColor.withAlpha(30),
             ),
             child: Slider(
-              value: _autoCarouselSecs.toDouble(),
+              value: _autoCarouselSecs.clamp(0, 60).toDouble(),
               min: 0,
               max: 60,
               divisions: 12,

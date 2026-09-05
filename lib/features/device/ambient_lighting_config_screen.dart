@@ -433,7 +433,7 @@ class _AmbientLightingConfigScreenState
                         trackHeight: 4,
                       ),
                       child: Slider(
-                        value: _current.toDouble(),
+                        value: _current.clamp(1, 31).toDouble(),
                         min: 1,
                         max: 31,
                         divisions: 30,
@@ -500,7 +500,7 @@ class _ColorSlider extends StatelessWidget {
                 thumbColor: color,
               ),
               child: Slider(
-                value: value.toDouble(),
+                value: value.clamp(0, 255).toDouble(),
                 min: 0,
                 max: 255,
                 onChanged: (v) => onChanged(v.round()),

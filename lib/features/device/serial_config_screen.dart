@@ -478,7 +478,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
                         ),
                       ),
                       child: Slider(
-                        value: _timeout.toDouble(),
+                        value: _timeout.clamp(1, 60).toDouble(),
                         min: 1,
                         max: 60,
                         divisions: 59,

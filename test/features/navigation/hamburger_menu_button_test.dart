@@ -25,6 +25,41 @@ class _NoNewPeers extends NewMeshPeerCountNotifier {
   int build() => 0;
 }
 
+/// Publishes a fixed shell scaffold key, the way MainShell registers its own.
+class _FixedShellKey extends MainShellScaffoldKeyNotifier {
+  _FixedShellKey(this.key);
+  final GlobalKey<ScaffoldState> key;
+
+  @override
+  GlobalKey<ScaffoldState>? build() => key;
+}
+
+/// A shell-like host that is itself pushed above another route. Its tabs
+/// must still show the hamburger: the test for "pushed above the shell" is
+/// the shell's route, not being first on the navigator.
+class _ShellAboveBase extends StatelessWidget {
+  const _ShellAboveBase({required this.shellKey, required this.openCounter});
+
+  final GlobalKey<ScaffoldState> shellKey;
+  final _DrawerOpenCounter openCounter;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: shellKey,
+      onDrawerChanged: (isOpen) {
+        if (isOpen) openCounter.count += 1;
+      },
+      drawer: const Drawer(child: Center(child: Text('shell-drawer-content'))),
+      appBar: AppBar(
+        leading: const HamburgerMenuButton(),
+        title: const Text('Shell'),
+      ),
+      body: const Center(child: Text('shell-body')),
+    );
+  }
+}
+
 class _DrawerOpenCounter {
   int count = 0;
 }
@@ -143,6 +178,64 @@ void main() {
     );
 
     expect(find.byIcon(Icons.menu), findsOneWidget);
+  });
+
+  testWidgets('a shell that is not the first route still gets the hamburger', (
+    tester,
+  ) async {
+    final counter = _DrawerOpenCounter();
+    final shellKey = GlobalKey<ScaffoldState>();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          newMeshPeerCountProvider.overrideWith(_NoNewPeers.new),
+          whatsNewHasUnseenProvider.overrideWithValue(false),
+          mainShellScaffoldKeyProvider.overrideWith(
+            () => _FixedShellKey(shellKey),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => _ShellAboveBase(
+                          shellKey: shellKey,
+                          openCounter: counter,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('enter-shell'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('enter-shell'));
+    await tester.pumpAndSettle();
+    expect(find.text('shell-body'), findsOneWidget);
+
+    // The shell can pop (a base route sits below it) yet it hosts the
+    // drawer, so its button is the hamburger, not a back arrow.
+    expect(find.byIcon(Icons.menu), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_back), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    expect(counter.count, equals(1));
+    expect(find.text('shell-drawer-content'), findsOneWidget);
   });
 
   testWidgets('back arrow tooltip differs from the menu tooltip', (

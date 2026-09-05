@@ -481,7 +481,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                               trackHeight: 4,
                             ),
                             child: Slider(
-                              value: _hopLimit.toDouble(),
+                              value: _hopLimit.clamp(0, 7).toDouble(),
                               min: 0,
                               max: 7,
                               divisions: 7,
@@ -546,7 +546,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                               trackHeight: 4,
                             ),
                             child: Slider(
-                              value: _txPower.toDouble(),
+                              value: _txPower.clamp(0, 30).toDouble(),
                               min: 0,
                               max: 30,
                               divisions: 30,
