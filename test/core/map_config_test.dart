@@ -140,7 +140,8 @@ void main() {
       expect(MapConfig.defaultZoom, 13.0);
       expect(MapConfig.minZoom, 3.0);
       expect(MapConfig.maxZoom, 18.0);
-      expect(MapConfig.liveMapMaxZoom, 20.0);
+      expect(MapConfig.verifiedNativeZoomCap, 18);
+      expect(MapConfig.liveMapMaxZoom, 21.0);
     });
 
     test('live camera range encloses the offline download window', () {
@@ -307,9 +308,12 @@ void main() {
         );
       });
 
-      test('maxNativeZoomForStyle returns the raw native cap', () {
+      test('maxNativeZoomForStyle caps fallback tile requests', () {
         for (final style in MapTileStyle.values) {
-          expect(MapConfig.maxNativeZoomForStyle(style), style.maxNativeZoom);
+          expect(
+            MapConfig.maxNativeZoomForStyle(style),
+            style.maxNativeZoom.clamp(0, MapConfig.verifiedNativeZoomCap),
+          );
         }
       });
 
@@ -415,7 +419,7 @@ void main() {
         expect(url, endsWith('{r}.png?key=abc123'));
       });
 
-      test('keyed dark / light keep subdomains, retina and native zoom', () {
+      test('keyed dark / light keep subdomains, retina and capped zoom', () {
         dotenv.loadFromString(envString: 'CARTO_API_KEY=abc123');
         expect(MapConfig.subdomainsForStyle(MapTileStyle.dark), [
           'a',
@@ -432,7 +436,7 @@ void main() {
         );
         expect(
           MapConfig.maxNativeZoomForStyle(MapTileStyle.light),
-          MapTileStyle.light.maxNativeZoom,
+          MapConfig.verifiedNativeZoomCap,
         );
       });
 
@@ -525,10 +529,11 @@ void main() {
         expect(MapConfig.satelliteReferenceLabelsAttribution, '© Esri');
       });
 
-      test('factory builds a TileLayer with the overlay url', () {
+      test('factory builds a TileLayer capped at the verified native zoom', () {
         final overlay = MapConfig.satelliteReferenceLabelsTileLayer();
         expect(overlay, isNotNull);
         expect(overlay.urlTemplate, MapConfig.satelliteReferenceLabelsUrl);
+        expect(overlay.maxNativeZoom, MapConfig.verifiedNativeZoomCap);
       });
     });
   });
