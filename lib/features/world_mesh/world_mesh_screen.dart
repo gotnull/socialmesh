@@ -750,7 +750,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               initialCenter: const LatLng(25, 0),
               initialZoom: 3.0,
               minZoom: 2.0,
-              maxZoom: 18.0,
+              maxZoom: MapConfig.liveMapMaxZoom,
               backgroundColor: context.background,
               interactionOptions: const InteractionOptions(
                 // North-locked: drop the rotate flag so a pinch-zoom can't
@@ -1009,7 +1009,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           initialZoom: _currentZoom,
           mapRotation: _mapRotationNotifier,
           minZoom: 2.0,
-          maxZoom: 18.0,
+          maxZoom: MapConfig.liveMapMaxZoom,
           animatedMove: _animatedMove,
           onResetNorth: () => _animatedMove(
             _mapController.camera.center,

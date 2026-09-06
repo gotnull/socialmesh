@@ -120,7 +120,7 @@ class MeshMapWidget extends StatefulWidget {
     required this.initialCenter,
     this.initialZoom = 13.0,
     this.minZoom = 3.0,
-    this.maxZoom = 18.0,
+    this.maxZoom = MapConfig.liveMapMaxZoom,
     this.interactive = true,
     this.disableRotation = true,
     this.onPositionChanged,
@@ -265,7 +265,11 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
                   alignment: Alignment.center,
                   rotate: true,
                   padding: EdgeInsets.zero,
-                  disableClusteringAtZoom: widget.disableClusteringAtZoom ?? 20,
+                  // Must be at or above the camera max, or the cluster
+                  // package asserts when zooming onto co-located markers.
+                  disableClusteringAtZoom:
+                      widget.disableClusteringAtZoom ??
+                      MapConfig.clusterDisableZoom(widget.mapStyle),
                   zoomToBoundsOnClick: false,
                   animationsOptions: const AnimationsOptions(
                     zoom: Duration.zero,

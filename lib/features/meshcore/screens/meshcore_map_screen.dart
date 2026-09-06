@@ -480,7 +480,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                     initialCenter: center,
                     initialZoom: initialZoom,
                     minZoom: 2.0,
-                    maxZoom: 18.0,
+                    maxZoom: MapConfig.liveMapMaxZoom,
                     // Enable the full interaction set so the new
                     // North-locked, mirroring the Meshtastic map: the rotate
                     // flag is dropped so a pinch-zoom can't accidentally rotate
@@ -893,11 +893,17 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                   currentZoom: _currentZoom,
                   mapRotation: _mapRotation,
                   onZoomIn: () {
-                    final next = (_currentZoom + 1.0).clamp(2.0, 18.0);
+                    final next = (_currentZoom + 1.0).clamp(
+                      2.0,
+                      MapConfig.liveMapMaxZoom,
+                    );
                     _mapController.safeMove(_mapController.camera.center, next);
                   },
                   onZoomOut: () {
-                    final next = (_currentZoom - 1.0).clamp(2.0, 18.0);
+                    final next = (_currentZoom - 1.0).clamp(
+                      2.0,
+                      MapConfig.liveMapMaxZoom,
+                    );
                     _mapController.safeMove(_mapController.camera.center, next);
                   },
                   onFitAll: contactsWithLocation.isEmpty && selfPosition == null

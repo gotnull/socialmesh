@@ -1324,17 +1324,23 @@ class _PositionMapViewState extends State<_PositionMapView> {
               MapZoomControls(
                 currentZoom: _currentZoom,
                 minZoom: 3.0,
-                maxZoom: 18.0,
+                maxZoom: MapConfig.liveMapMaxZoom,
                 showFitAll: true,
                 onZoomIn: () {
-                  final newZoom = (_currentZoom + 1).clamp(3.0, 18.0);
+                  final newZoom = (_currentZoom + 1).clamp(
+                    3.0,
+                    MapConfig.liveMapMaxZoom,
+                  );
                   _mapController.safeMove(
                     _mapController.camera.center,
                     newZoom,
                   );
                 },
                 onZoomOut: () {
-                  final newZoom = (_currentZoom - 1).clamp(3.0, 18.0);
+                  final newZoom = (_currentZoom - 1).clamp(
+                    3.0,
+                    MapConfig.liveMapMaxZoom,
+                  );
                   _mapController.safeMove(
                     _mapController.camera.center,
                     newZoom,

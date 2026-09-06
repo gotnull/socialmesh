@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed (Mesh Map zoom)
 
-- The Mesh Map now zooms in to level 21 instead of 18 (#315, #316, thanks Lynxie), close enough to place a nearby tracker on a single building or yard. Past each tile source's real limit the last real tiles are enlarged rather than left blank. Dark, Light and Satellite are requested no deeper than level 18, because CARTO and Esri hand back placeholder or empty tiles at their advertised deeper levels outside city centres; MapTiler terrain serves to 20 and OpenTopoMap to 17. Offline region downloads keep their existing detail presets, so this does not change how many tiles a region fetches
+- The Mesh Map now zooms in to level 21 instead of 18 (#315, #316, thanks Lynxie), close enough to place a nearby tracker on a single building or yard. Past each tile source's real limit the last real tiles are enlarged rather than left blank. Dark, Light and Satellite are requested no deeper than level 18, because CARTO and Esri hand back placeholder or empty tiles at their advertised deeper levels outside city centres; MapTiler terrain serves to 20 and OpenTopoMap to 17. Offline region downloads keep their existing detail presets, so this does not change how many tiles a region fetches. The MeshCore map, World Mesh, the geofence picker and the position history map zoom to the same level
 - The map's zoom-in button no longer stays greyed out after zooming out again. It read the zoom level only when something else redrew the screen, so hitting the maximum with the button and then pinching out left it disabled. The controls now follow the camera directly
 
 ### Fixed (Terrain map when MapTiler refuses the key)
