@@ -29,13 +29,16 @@ class MapConfig {
   static const double minZoom = 3.0;
   static const double maxZoom = 18.0;
 
+  /// Deepest tile level verified to return real imagery everywhere tested.
+  static const int verifiedNativeZoomCap = 18;
+
   /// Maximum interactive zoom for the live mesh map. Deep enough to place a
   /// tracker on a single building or yard, which z18 cannot. Tile sources
-  /// that stop short of this (see [MapTileStyle.maxNativeZoom]) overzoom
-  /// their last real tiles rather than requesting ones the server does not
-  /// have. Deliberately separate from [maxZoom] so the offline downloader's
-  /// tile budget does not grow with the camera ceiling.
-  static const double liveMapMaxZoom = 20.0;
+  /// that stop short of this overzoom their last real tiles rather than
+  /// requesting provider placeholders; fallback sources are capped at
+  /// [verifiedNativeZoomCap]. Deliberately separate from [maxZoom] so the
+  /// offline downloader's tile budget does not grow with the camera ceiling.
+  static const double liveMapMaxZoom = 21.0;
 
   /// Minimum interactive zoom for the live mesh map. Kept low enough that
   /// "fit all" can zoom out to frame globally-distributed nodes: a radio with
@@ -168,6 +171,7 @@ class MapConfig {
     return TileLayer(
       urlTemplate: satelliteReferenceLabelsUrl,
       userAgentPackageName: userAgentPackageName,
+      maxNativeZoom: verifiedNativeZoomCap,
       // Reference layer has no @2x assets; matching base satellite retina off.
       retinaMode: false,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
@@ -310,13 +314,13 @@ class MapConfig {
   }) =>
       urlForStyle(style, satelliteLabelsOn: satelliteLabelsOn).contains('{r}');
 
-  /// Highest zoom the resolved source actually serves. Mapbox styles serve
-  /// deeper than the interaction cap; MapTiler Outdoor serves to z22 so its
-  /// terrain no longer overzooms at the old z17 native cap.
+  /// Highest zoom requested from the resolved source. Fallback sources stop at
+  /// the deepest globally verified level and overzoom beyond it; keyed
+  /// MapTiler Outdoor terrain has been verified through z20.
   static int maxNativeZoomForStyle(MapTileStyle style) {
-    if (isMapboxActive) return 18;
+    if (isMapboxActive) return verifiedNativeZoomCap;
     if (style == MapTileStyle.terrain && isMaptilerActive) return 20;
-    return style.maxNativeZoom;
+    return style.maxNativeZoom.clamp(0, verifiedNativeZoomCap);
   }
 
   /// Attribution label for the resolved source.

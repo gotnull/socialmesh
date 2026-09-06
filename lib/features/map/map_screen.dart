@@ -298,7 +298,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
-  double _currentZoom = 14.0;
+  final ValueNotifier<double> _mapZoomNotifier = ValueNotifier<double>(14.0);
+  double get _currentZoom => _mapZoomNotifier.value;
+  set _currentZoom(double value) {
+    if (value.isFinite && value != _mapZoomNotifier.value) {
+      _mapZoomNotifier.value = value;
+    }
+  }
+
   bool _showNodeList = false;
   bool _showFilters = false;
   bool _measureMode = false;
@@ -422,6 +429,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _searchController.dispose();
     _takSearchController.dispose();
     _mapRotationNotifier.dispose();
+    _mapZoomNotifier.dispose();
     _elevationService = null;
     super.dispose();
   }
@@ -1982,6 +1990,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           position.center,
                           position.zoom,
                         )) {
+                          _currentZoom = position.zoom;
                           _lastFiniteCenter = position.center;
                           _lastFiniteZoom = position.zoom;
                           // Remember the pose for the app session so returning
@@ -2020,12 +2029,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               );
                             }
                           }
-                          // No setState: rotation flows through the notifier
-                          // (compass-only rebuild) and zoom is read on the
-                          // next data/selection-triggered build. Avoiding a
-                          // per-frame screen rebuild during pan/rotate.
+                          // No setState: rotation and zoom flow through their
+                          // controls-only notifiers, avoiding a per-frame
+                          // screen rebuild during pan/rotate.
                           _mapRotation = position.rotation;
-                          _currentZoom = position.zoom;
                         }
                       },
                       onTap: (tapPos, point) {
@@ -2864,61 +2871,69 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         ),
                       ),
                     ),
-                  // Map controls — wrapped in ValueListenableBuilder so the
-                  // compass needle redraws on rotation changes without
-                  // rebuilding the whole screen.
+                  // Zoom and rotation redraw only the controls subtree,
+                  // without rebuilding the whole map screen.
                   ValueListenableBuilder<double>(
-                    valueListenable: _mapRotationNotifier,
-                    builder: (context, rotation, _) {
-                      return MapControlsOverlay(
-                        currentZoom: _currentZoom,
-                        minZoom: MapConfig.liveMapMinZoom,
-                        maxZoom: MapConfig.liveMapMaxZoom,
-                        mapRotation: rotation,
-                        isHeadingUp: _headingUpMode,
-                        compassMode: _compassMode,
-                        onZoomIn: () {
-                          final newZoom = (_currentZoom + 1).clamp(
-                            MapConfig.liveMapMinZoom,
-                            MapConfig.liveMapMaxZoom,
-                          );
-                          _animatedMove(_mapController.camera.center, newZoom);
-                          HapticFeedback.selectionClick();
-                        },
-                        onZoomOut: () {
-                          final newZoom = (_currentZoom - 1).clamp(
-                            MapConfig.liveMapMinZoom,
-                            MapConfig.liveMapMaxZoom,
-                          );
-                          _animatedMove(_mapController.camera.center, newZoom);
-                          HapticFeedback.selectionClick();
-                        },
-                        onFitAll: () => _fitAllNodes(nodesWithPosition),
-                        onCenterOnMe: () =>
-                            _centerOnMyNode(nodesWithPosition, myNodeNum),
-                        onResetNorth: _onCompassTap,
-                        hasMyLocation: nodesWithPosition.any(
-                          (n) => n.node.nodeNum == myNodeNum,
-                        ),
-                        onLocationUnavailable: () {
-                          final navigator = Navigator.of(context);
-                          showActionSnackBar(
-                            context,
-                            'No position available. Enable GPS on your device or turn on "Provide phone location" in Settings.', // lint-allow: hardcoded-string
-                            actionLabel: context.l10n.actionView,
-                            onAction: () => navigator.push(
-                              MaterialPageRoute(
-                                builder: (_) => const SettingsScreen(
-                                  initialSearchQuery: 'phone location',
+                    valueListenable: _mapZoomNotifier,
+                    builder: (context, currentZoom, _) {
+                      return ValueListenableBuilder<double>(
+                        valueListenable: _mapRotationNotifier,
+                        builder: (context, rotation, _) => MapControlsOverlay(
+                          currentZoom: currentZoom,
+                          minZoom: MapConfig.liveMapMinZoom,
+                          maxZoom: MapConfig.liveMapMaxZoom,
+                          mapRotation: rotation,
+                          isHeadingUp: _headingUpMode,
+                          compassMode: _compassMode,
+                          onZoomIn: () {
+                            final newZoom = (currentZoom + 1).clamp(
+                              MapConfig.liveMapMinZoom,
+                              MapConfig.liveMapMaxZoom,
+                            );
+                            _animatedMove(
+                              _mapController.camera.center,
+                              newZoom,
+                            );
+                            HapticFeedback.selectionClick();
+                          },
+                          onZoomOut: () {
+                            final newZoom = (currentZoom - 1).clamp(
+                              MapConfig.liveMapMinZoom,
+                              MapConfig.liveMapMaxZoom,
+                            );
+                            _animatedMove(
+                              _mapController.camera.center,
+                              newZoom,
+                            );
+                            HapticFeedback.selectionClick();
+                          },
+                          onFitAll: () => _fitAllNodes(nodesWithPosition),
+                          onCenterOnMe: () =>
+                              _centerOnMyNode(nodesWithPosition, myNodeNum),
+                          onResetNorth: _onCompassTap,
+                          hasMyLocation: nodesWithPosition.any(
+                            (n) => n.node.nodeNum == myNodeNum,
+                          ),
+                          onLocationUnavailable: () {
+                            final navigator = Navigator.of(context);
+                            showActionSnackBar(
+                              context,
+                              'No position available. Enable GPS on your device or turn on "Provide phone location" in Settings.', // lint-allow: hardcoded-string
+                              actionLabel: context.l10n.actionView,
+                              onAction: () => navigator.push(
+                                MaterialPageRoute(
+                                  builder: (_) => const SettingsScreen(
+                                    initialSearchQuery: 'phone location',
+                                  ),
                                 ),
                               ),
-                            ),
-                            type: SnackBarType.warning,
-                          );
-                        },
-                        showFitAll: true,
-                        showNavigation: true,
-                        showCompass: true,
+                              type: SnackBarType.warning,
+                            );
+                          },
+                          showFitAll: true,
+                          showNavigation: true,
+                          showCompass: true,
+                        ),
                       );
                     },
                   ),
