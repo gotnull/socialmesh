@@ -20,6 +20,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/units/geo_distance.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
+import '../../core/widgets/map_tile_layer.dart';
 import '../../core/routing/conversation_routes.dart';
 import '../../core/safe_lat_lng.dart';
 import '../../core/widgets/linkified_text.dart';
@@ -2053,45 +2054,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       // Mapbox's raster Static Tiles API and the Esri labels
                       // overlay below is skipped — Mapbox bakes labels into
                       // satellite-streets-v12 directly.
-                      TileLayer(
-                        tileUpdateTransformer:
-                            finiteCameraTileUpdateTransformer,
-                        // Key off the resolved tile source so switching style
-                        // (Dark / Satellite / Terrain / Light) rebuilds the
-                        // layer and loads the new tiles immediately, instead of
-                        // showing blue until the user pans or pinches.
-                        key: ValueKey(
-                          MapConfig.urlForStyle(
-                            _mapStyle,
-                            satelliteLabelsOn: _showSatelliteLabels,
-                          ),
-                        ),
-                        urlTemplate: MapConfig.urlForStyle(
-                          _mapStyle,
-                          satelliteLabelsOn: _showSatelliteLabels,
-                        ),
-                        subdomains: MapConfig.subdomainsForStyle(_mapStyle),
-                        // Overzoom past the source's native cap (e.g. raw
-                        // OpenTopoMap terrain tops out at z17) by upscaling the
-                        // last real tiles instead of requesting a non-existent
-                        // tile. Mapbox / MapTiler serve deeper, so they keep a
-                        // higher cap when active.
-                        maxNativeZoom: MapConfig.maxNativeZoomForStyle(
-                          _mapStyle,
-                        ),
-                        userAgentPackageName: MapConfig.userAgentPackageName,
-                        // Retina only for sources that serve real @2x tiles
-                        // (resolved URL has {r}). Simulated retina shifts
-                        // requested tile coords and would desync the offline
-                        // cache, so it is never used.
-                        retinaMode: MapConfig.resolvedRetinaMode(
-                          _mapStyle,
-                          satelliteLabelsOn: _showSatelliteLabels,
-                        ),
-                        evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-                        // No tileBuilder — AnimatedOpacity at constant 1.0
-                        // created unnecessary animation controllers per tile,
-                        // causing visible lag on initial map load.
+                      // No tileBuilder: AnimatedOpacity at constant 1.0
+                      // created unnecessary animation controllers per tile,
+                      // causing visible lag on initial map load.
+                      StyledTileLayer(
+                        style: _mapStyle,
+                        satelliteLabelsOn: _showSatelliteLabels,
                       ),
                       // Transparent place-name + boundary overlay above
                       // satellite imagery. Sits below mesh / node overlays.
@@ -2412,37 +2380,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       Positioned(
                         left: 8,
                         bottom: 8,
-                        child: GestureDetector(
-                          onTap: () => launchUrl(
-                            Uri.parse(
-                              MapConfig.attributionUrl(
-                                _mapStyle,
-                                satelliteLabelsOn: _showSatelliteLabels,
-                              ),
-                            ),
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius4,
-                              ),
-                            ),
-                            child: Text(
-                              MapConfig.attributionLabel(
-                                _mapStyle,
-                                satelliteLabelsOn: _showSatelliteLabels,
-                              ),
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 9,
-                              ),
-                            ),
-                          ),
+                        child: MapAttributionChip(
+                          style: _mapStyle,
+                          satelliteLabelsOn: _showSatelliteLabels,
                         ),
                       ),
                     ],

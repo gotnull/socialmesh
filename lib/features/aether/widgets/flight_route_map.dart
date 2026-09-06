@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/map_config.dart';
+import '../../../core/widgets/map_tile_layer.dart';
 import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
 import '../data/airports.dart';
@@ -98,25 +99,9 @@ class FlightRouteMap extends StatelessWidget {
               // Dark tile layer (same as mesh map), resolved through MapConfig
               // so it follows the same provider chain as every other map
               // surface: Mapbox when active, else CARTO with its API key.
-              TileLayer(
-                urlTemplate: MapConfig.urlForStyle(
-                  MapTileStyle.dark,
-                  satelliteLabelsOn: false,
-                ),
-                subdomains: MapConfig.subdomainsForStyle(MapTileStyle.dark),
-                // Cap requests at the source's native zoom so any deeper
-                // interaction zoom upscales the last real tiles instead of
-                // requesting a non-existent tile.
-                maxNativeZoom: MapConfig.maxNativeZoomForStyle(
-                  MapTileStyle.dark,
-                ),
-                userAgentPackageName: MapConfig.userAgentPackageName,
-                retinaMode: MapConfig.resolvedRetinaMode(
-                  MapTileStyle.dark,
-                  satelliteLabelsOn: false,
-                ),
-                evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-                tileUpdateTransformer: finiteCameraTileUpdateTransformer,
+              const StyledTileLayer(
+                style: MapTileStyle.dark,
+                satelliteLabelsOn: false,
               ),
 
               // Route arc line

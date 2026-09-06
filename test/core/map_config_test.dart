@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'package:flutter/painting.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,120 @@ void main() {
 
     test('has user agent package name', () {
       expect(MapConfig.userAgentPackageName, 'com.socialmesh.app');
+    });
+
+    group('terrain fallback', () {
+      setUp(MapConfig.resetTerrainFallback);
+      tearDown(MapConfig.resetTerrainFallback);
+
+      final maptilerTile = Uri.parse(
+        'https://api.maptiler.com/maps/outdoor-v2/256/10/900/600.png?key=x',
+      );
+      final openTopoTile = Uri.parse(
+        'https://a.tile.opentopomap.org/10/900/600.png',
+      );
+
+      test('recognises only a 403 from the MapTiler host as a key refusal', () {
+        expect(
+          MapConfig.isMaptilerKeyRefusal(
+            NetworkImageLoadException(statusCode: 403, uri: maptilerTile),
+          ),
+          isTrue,
+        );
+        expect(
+          MapConfig.isMaptilerKeyRefusal(
+            NetworkImageLoadException(statusCode: 500, uri: maptilerTile),
+          ),
+          isFalse,
+          reason: 'a server error is transient, not a refused key',
+        );
+        expect(
+          MapConfig.isMaptilerKeyRefusal(
+            NetworkImageLoadException(statusCode: 403, uri: openTopoTile),
+          ),
+          isFalse,
+          reason: 'another host refusing a request must not move terrain',
+        );
+        expect(
+          MapConfig.isMaptilerKeyRefusal(const FormatException('bad png')),
+          isFalse,
+        );
+      });
+
+      test('starts inactive and arms once', () {
+        expect(MapConfig.terrainFallbackActive.value, isFalse);
+        var notifications = 0;
+        void count() => notifications++;
+        MapConfig.terrainFallbackActive.addListener(count);
+        addTearDown(
+          () => MapConfig.terrainFallbackActive.removeListener(count),
+        );
+
+        MapConfig.activateTerrainFallback();
+        MapConfig.activateTerrainFallback();
+
+        expect(MapConfig.terrainFallbackActive.value, isTrue);
+        expect(notifications, 1, reason: 'a repeat refusal must not re-notify');
+      });
+
+      test('moves terrain onto OpenTopoMap while active', () {
+        dotenv.loadFromString(envString: 'MAPTILER_TOKEN=test-key');
+        addTearDown(dotenv.clean);
+
+        expect(MapConfig.isMaptilerActive, isTrue);
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.terrain, satelliteLabelsOn: false),
+          contains(MapConfig.maptilerHost),
+        );
+        expect(MapConfig.maxNativeZoomForStyle(MapTileStyle.terrain), 20);
+
+        MapConfig.activateTerrainFallback();
+
+        expect(MapConfig.isMaptilerActive, isFalse);
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.terrain, satelliteLabelsOn: false),
+          MapTileStyle.terrain.url,
+        );
+        expect(
+          MapConfig.subdomainsForStyle(MapTileStyle.terrain),
+          MapTileStyle.terrain.subdomains,
+        );
+        expect(
+          MapConfig.maxNativeZoomForStyle(MapTileStyle.terrain),
+          MapTileStyle.terrain.maxNativeZoom,
+        );
+        expect(
+          MapConfig.attributionLabel(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+          ),
+          '© OpenTopoMap © OSM',
+        );
+        expect(
+          MapConfig.attributionUrl(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+          ),
+          'https://opentopomap.org',
+        );
+        // Other styles are untouched by a MapTiler refusal.
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.dark, satelliteLabelsOn: false),
+          isNot(contains(MapConfig.maptilerHost)),
+        );
+      });
+
+      test('tile provider does not decode HTTP error bodies', () {
+        final provider = MapConfig.networkTileProvider();
+        expect(provider, isA<NetworkTileProvider>());
+        expect(
+          (provider as NetworkTileProvider).attemptDecodeOfHttpErrorResponses,
+          isFalse,
+          reason:
+              'a decoded 403 placeholder would render as a tile and never '
+              'reach the error callback that arms the fallback',
+        );
+      });
     });
 
     test('has default location (Sydney)', () {

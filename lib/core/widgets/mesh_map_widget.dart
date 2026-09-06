@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'map_tile_layer.dart';
 import '../l10n/l10n_extension.dart';
 import '../map_config.dart';
 import '../node_color.dart';
@@ -223,26 +223,9 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
         ),
         children: [
           // Map tiles. Routes to Mapbox when its flag + token are set.
-          TileLayer(
-            urlTemplate: MapConfig.urlForStyle(
-              widget.mapStyle,
-              satelliteLabelsOn: widget.showSatelliteLabels,
-            ),
-            subdomains: MapConfig.subdomainsForStyle(widget.mapStyle),
-            // Overzoom past the source's native cap (e.g. raw OpenTopoMap
-            // terrain tops out at z17) instead of requesting a non-existent
-            // tile. Mapbox / MapTiler serve deeper, so they keep a higher cap
-            // when active.
-            maxNativeZoom: MapConfig.maxNativeZoomForStyle(widget.mapStyle),
-            userAgentPackageName: MapConfig.userAgentPackageName,
-            // Retina only for sources serving real @2x tiles (resolved URL has
-            // {r}); simulated retina would desync the offline tile cache.
-            retinaMode: MapConfig.resolvedRetinaMode(
-              widget.mapStyle,
-              satelliteLabelsOn: widget.showSatelliteLabels,
-            ),
-            evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-            tileUpdateTransformer: finiteCameraTileUpdateTransformer,
+          StyledTileLayer(
+            style: widget.mapStyle,
+            satelliteLabelsOn: widget.showSatelliteLabels,
             // Disable tile animation for better performance
             tileBuilder: widget.animateTiles
                 ? (context, tileWidget, tile) {
@@ -308,35 +291,9 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
               right: 0,
               bottom: 8 + MediaQuery.of(context).padding.bottom,
               child: Center(
-                child: GestureDetector(
-                  onTap: () => launchUrl(
-                    Uri.parse(
-                      MapConfig.attributionUrl(
-                        widget.mapStyle,
-                        satelliteLabelsOn: widget.showSatelliteLabels,
-                      ),
-                    ),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(AppTheme.radius4),
-                    ),
-                    child: Text(
-                      MapConfig.attributionLabel(
-                        widget.mapStyle,
-                        satelliteLabelsOn: widget.showSatelliteLabels,
-                      ),
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 9,
-                      ),
-                    ),
-                  ),
+                child: MapAttributionChip(
+                  style: widget.mapStyle,
+                  satelliteLabelsOn: widget.showSatelliteLabels,
                 ),
               ),
             ),

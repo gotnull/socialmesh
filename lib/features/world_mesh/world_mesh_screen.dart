@@ -18,6 +18,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../core/los_analysis.dart';
 import '../../core/map_config.dart';
+import '../../core/widgets/map_tile_layer.dart';
 import '../../core/safe_lat_lng.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -796,24 +797,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             ),
             children: [
               // Tile layer. Routes to Mapbox when its flag + token are set.
-              TileLayer(
-                urlTemplate: MapConfig.urlForStyle(
-                  _mapStyle,
-                  satelliteLabelsOn: _showSatelliteLabels,
-                ),
-                subdomains: MapConfig.subdomainsForStyle(_mapStyle),
-                // Overzoom past the source's native cap (e.g. raw OpenTopoMap
-                // terrain tops out at z17) by upscaling the last real tiles
-                // instead of requesting a non-existent tile that returns a
-                // server placeholder image. Mapbox / MapTiler serve deeper.
-                maxNativeZoom: MapConfig.maxNativeZoomForStyle(_mapStyle),
-                userAgentPackageName: MapConfig.userAgentPackageName,
-                retinaMode: MapConfig.resolvedRetinaMode(
-                  _mapStyle,
-                  satelliteLabelsOn: _showSatelliteLabels,
-                ),
-                evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-                tileUpdateTransformer: finiteCameraTileUpdateTransformer,
+              StyledTileLayer(
+                style: _mapStyle,
+                satelliteLabelsOn: _showSatelliteLabels,
               ),
               // Transparent place-name + boundary overlay above satellite
               // imagery. Sits below all mesh / node overlays. Skipped on the
@@ -1195,14 +1181,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     int visibleCount,
     bool hasFilters,
   ) {
-    final attributionUrl = MapConfig.attributionUrl(
-      _mapStyle,
-      satelliteLabelsOn: _showSatelliteLabels,
-    );
-    final attributionLabel = MapConfig.attributionLabel(
-      _mapStyle,
-      satelliteLabelsOn: _showSatelliteLabels,
-    );
     final accentColor = theme.colorScheme.primary;
     final filterColor = hasFilters
         ? AppTheme.primaryMagenta
@@ -1276,18 +1254,33 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     ],
                   ),
                   const SizedBox(height: AppTheme.spacing6),
-                  GestureDetector(
-                    onTap: () => launchUrl(Uri.parse(attributionUrl)),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        attributionLabel,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.35,
+                  // Follows the terrain fallback so the credit line names
+                  // the provider whose tiles are on screen.
+                  ValueListenableBuilder<bool>(
+                    valueListenable: MapConfig.terrainFallbackActive,
+                    builder: (context, _, _) => GestureDetector(
+                      onTap: () => launchUrl(
+                        Uri.parse(
+                          MapConfig.attributionUrl(
+                            _mapStyle,
+                            satelliteLabelsOn: _showSatelliteLabels,
                           ),
-                          fontSize: 9,
-                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          MapConfig.attributionLabel(
+                            _mapStyle,
+                            satelliteLabelsOn: _showSatelliteLabels,
+                          ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.35,
+                            ),
+                            fontSize: 9,
+                            letterSpacing: 0.4,
+                          ),
                         ),
                       ),
                     ),

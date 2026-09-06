@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 import 'constants.dart';
@@ -69,14 +71,55 @@ class MapConfig {
   // Short-form attribution; matches base imagery so the strip stays compact.
   static const String satelliteReferenceLabelsAttribution = '© Esri';
 
-  /// Error tile callback for logging tile load failures
-  static void _onTileError(
+  /// Host that serves MapTiler raster tiles. Used to recognise a refused
+  /// MapTiler request in [onTileError].
+  static const String maptilerHost = 'api.maptiler.com';
+
+  /// True once MapTiler has refused a tile this session, which moves the
+  /// terrain style onto OpenTopoMap for the rest of the session. MapTiler's
+  /// free plan invalidates the account's keys for the remainder of the
+  /// billing month once the monthly request cap is hit, and every terrain
+  /// tile then comes back as an "invalid key" placeholder. The flag is not
+  /// persisted: each launch tries MapTiler first, so the app returns to it
+  /// on its own once the key is reactivated. Map surfaces listen to this and
+  /// rebuild their tile layer and attribution when it flips.
+  static final ValueNotifier<bool> terrainFallbackActive = ValueNotifier<bool>(
+    false,
+  );
+
+  /// Whether [error] is MapTiler refusing the key. MapTiler answers a
+  /// disabled or invalid key with HTTP 403; any other host or status is a
+  /// transient failure and must not trigger the fallback.
+  static bool isMaptilerKeyRefusal(Object error) =>
+      error is NetworkImageLoadException &&
+      error.statusCode == 403 &&
+      error.uri.host == maptilerHost;
+
+  /// Switches the terrain style to OpenTopoMap for the rest of the session.
+  static void activateTerrainFallback() {
+    if (terrainFallbackActive.value) return;
+    AppLogging.map(
+      'MapTiler refused the key; terrain falls back to OpenTopoMap for '
+      'this session',
+    );
+    terrainFallbackActive.value = true;
+  }
+
+  /// Returns terrain to MapTiler. Only tests need this; a running app
+  /// re-tries MapTiler on its next launch.
+  @visibleForTesting
+  static void resetTerrainFallback() => terrainFallbackActive.value = false;
+
+  /// Error tile callback shared by every tile layer. Logs the failure and
+  /// arms the terrain fallback when MapTiler refuses the key.
+  static void onTileError(
     TileImage tile,
     Object error,
     StackTrace? stackTrace,
   ) {
     // Log at debug level to avoid spamming logs during network issues
     AppLogging.map('Tile load failed: ${tile.coordinates} - $error');
+    if (isMaptilerKeyRefusal(error)) activateTerrainFallback();
   }
 
   /// Whether a style serves true `@2x` retina tiles (URL carries the `{r}`
@@ -87,6 +130,15 @@ class MapConfig {
   /// retina is gated strictly on real server support.
   static bool styleSupportsRetina(MapTileStyle style) =>
       style.url.contains('{r}');
+
+  /// Network tile provider for every base layer. flutter_map's default
+  /// decodes HTTP error bodies as images, and MapTiler answers a refused key
+  /// with a 403 whose body is a placeholder image, so the default would
+  /// paint the placeholder as a normal tile and never reach [onTileError].
+  /// Decoding is off so the refusal surfaces as an error and arms the
+  /// terrain fallback.
+  static TileProvider networkTileProvider() =>
+      NetworkTileProvider(attemptDecodeOfHttpErrorResponses: false);
 
   /// Create a TileLayer with the default dark style, resolved through the
   /// same provider chain as the live map widgets.
@@ -102,9 +154,10 @@ class MapConfig {
       subdomains: subdomainsForStyle(style),
       maxNativeZoom: maxNativeZoomForStyle(style),
       retinaMode: resolvedRetinaMode(style, satelliteLabelsOn: false),
+      tileProvider: networkTileProvider(),
       userAgentPackageName: userAgentPackageName,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-      errorTileCallback: _onTileError,
+      errorTileCallback: onTileError,
       tileUpdateTransformer: finiteCameraTileUpdateTransformer,
     );
   }
@@ -118,7 +171,7 @@ class MapConfig {
       // Reference layer has no @2x assets; matching base satellite retina off.
       retinaMode: false,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-      errorTileCallback: _onTileError,
+      errorTileCallback: onTileError,
       tileUpdateTransformer: finiteCameraTileUpdateTransformer,
     );
   }
@@ -170,10 +223,12 @@ class MapConfig {
   static const String mapboxAttributionUrl =
       'https://www.mapbox.com/about/maps/';
 
-  /// True when a MapTiler key is present. Gates the terrain basemap onto
-  /// MapTiler Outdoor (real `@2x` tiles) instead of OpenTopoMap (1x only).
-  /// No feature flag — presence of the key is the switch.
-  static bool get isMaptilerActive => AppUrls.maptilerToken.isNotEmpty;
+  /// True when a MapTiler key is present and MapTiler has not refused it
+  /// this session (see [terrainFallbackActive]). Gates the terrain basemap
+  /// onto MapTiler Outdoor (real `@2x` tiles) instead of OpenTopoMap (1x
+  /// only). No feature flag — presence of the key is the switch.
+  static bool get isMaptilerActive =>
+      AppUrls.maptilerToken.isNotEmpty && !terrainFallbackActive.value;
 
   /// MapTiler Outdoor raster URL for the terrain style, or null when no key is
   /// configured. The `{r}` placeholder makes flutter_map request true `@2x`

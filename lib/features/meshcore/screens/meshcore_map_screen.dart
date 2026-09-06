@@ -17,6 +17,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/logging.dart';
 import '../../../core/los_analysis.dart';
 import '../../../core/map_config.dart';
+import '../../../core/widgets/map_tile_layer.dart';
 import '../../../core/routing/conversation_routes.dart';
 import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
@@ -533,26 +534,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                     // active Mapbox style applies when available; falls
                     // back to the OpenStreetMap-style URL for the
                     // selected MapTileStyle otherwise.
-                    TileLayer(
-                      urlTemplate: MapConfig.urlForStyle(
-                        _mapStyle,
-                        satelliteLabelsOn: false,
-                      ),
-                      subdomains: MapConfig.subdomainsForStyle(_mapStyle),
-                      // Overzoom past the source's native cap (e.g. raw
-                      // OpenTopoMap terrain tops out at z17) by upscaling the
-                      // last real tiles instead of requesting a non-existent
-                      // tile that returns a server placeholder image.
-                      // Mapbox / MapTiler serve deeper.
-                      maxNativeZoom: MapConfig.maxNativeZoomForStyle(_mapStyle),
-                      userAgentPackageName: MapConfig.userAgentPackageName,
-                      retinaMode: MapConfig.resolvedRetinaMode(
-                        _mapStyle,
-                        satelliteLabelsOn: false,
-                      ),
-                      evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-                      tileUpdateTransformer: finiteCameraTileUpdateTransformer,
-                    ),
+                    StyledTileLayer(style: _mapStyle, satelliteLabelsOn: false),
                     // Range circles: 5km radius around each contact
                     // (and self). Visualises a rough LoRa coverage
                     // estimate so the user can eyeball gaps. Mirrors
