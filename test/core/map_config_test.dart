@@ -25,6 +25,15 @@ void main() {
       expect(MapConfig.defaultZoom, 13.0);
       expect(MapConfig.minZoom, 3.0);
       expect(MapConfig.maxZoom, 18.0);
+      expect(MapConfig.liveMapMaxZoom, 20.0);
+    });
+
+    test('live camera range encloses the offline download window', () {
+      // The camera may zoom deeper than the downloader pre-seeds (overzoom
+      // covers the gap), but the downloader must never be asked for a zoom
+      // the camera cannot reach.
+      expect(MapConfig.liveMapMinZoom, lessThanOrEqualTo(MapConfig.minZoom));
+      expect(MapConfig.liveMapMaxZoom, greaterThanOrEqualTo(MapConfig.maxZoom));
     });
 
     test('minZoom is less than defaultZoom', () {
@@ -41,20 +50,20 @@ void main() {
         // asserts no cluster node deeper than disableClusteringAtZoom is
         // traversed. Co-located nodes cluster at every level, so a value below
         // the camera ceiling crashes when zooming onto a stacked marker. Every
-        // style must therefore disable at or above MapConfig.maxZoom.
+        // style must therefore disable at or above MapConfig.liveMapMaxZoom.
         for (final style in MapTileStyle.values) {
           expect(
             MapConfig.clusterDisableZoom(style),
-            greaterThanOrEqualTo(MapConfig.maxZoom.floor()),
+            greaterThanOrEqualTo(MapConfig.liveMapMaxZoom.floor()),
           );
         }
       });
 
-      test('matches the camera max zoom regardless of style', () {
+      test('matches the live camera max zoom regardless of style', () {
         for (final style in MapTileStyle.values) {
           expect(
             MapConfig.clusterDisableZoom(style),
-            MapConfig.maxZoom.floor(),
+            MapConfig.liveMapMaxZoom.floor(),
           );
         }
       });

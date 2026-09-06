@@ -1728,6 +1728,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ],
                     ),
                   ),
+                  // Distance labels annotate the connection lines, so the
+                  // toggle lives with them and disappears when they are off.
+                  PopupMenuItem(
+                    value: 'distance_labels',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _showDistanceLabels
+                              ? Icons.straighten
+                              : Icons.straighten_outlined,
+                          size: 18,
+                          color: _showDistanceLabels
+                              ? context.accentColor
+                              : context.textSecondary,
+                        ),
+                        SizedBox(width: AppTheme.spacing8),
+                        Text(
+                          _showDistanceLabels
+                              ? context.l10n.mapHideDistanceLabels
+                              : context.l10n.mapShowDistanceLabels,
+                        ),
+                      ],
+                    ),
+                  ),
                   const PopupMenuDivider(),
                 ],
                 PopupMenuItem(
@@ -1746,28 +1770,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         _showRangeCircles
                             ? context.l10n.mapHideRangeCircles
                             : context.l10n.mapShowRangeCircles,
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'distance_labels',
-                  child: Row(
-                    children: [
-                      Icon(
-                        _showDistanceLabels
-                            ? Icons.straighten
-                            : Icons.straighten_outlined,
-                        size: 18,
-                        color: _showDistanceLabels
-                            ? context.accentColor
-                            : context.textSecondary,
-                      ),
-                      SizedBox(width: AppTheme.spacing8),
-                      Text(
-                        _showDistanceLabels
-                            ? context.l10n.mapHideDistanceLabels
-                            : context.l10n.mapShowDistanceLabels,
                       ),
                     ],
                   ),
@@ -1961,7 +1963,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       initialCenter: center,
                       initialZoom: zoom,
                       minZoom: MapConfig.liveMapMinZoom,
-                      maxZoom: 18,
+                      maxZoom: MapConfig.liveMapMaxZoom,
                       backgroundColor: context.background,
                       interactionOptions: InteractionOptions(
                         flags: _interactionFlags,
@@ -2386,22 +2388,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                           ]),
                         ),
-                      // Labels describe visible connection lines, so hide the
-                      // layer whenever those lines are disabled.
-                      if (!widget.locationOnlyMode && _showDistanceLabels)
-                        if (_showConnectionLines)
-                          MarkerLayer(
-                            rotate: true,
-                            markers: finiteMarkers(
-                              _distanceLabelsFor(
-                                nodesWithPosition,
-                                geomSig,
-                                myNodeNum,
-                                accentColor,
-                                themeBrightness,
-                              ),
+                      // Labels describe visible connection lines, so the
+                      // layer is hidden whenever those lines are off.
+                      if (!widget.locationOnlyMode &&
+                          _showDistanceLabels &&
+                          _showConnectionLines)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: finiteMarkers(
+                            _distanceLabelsFor(
+                              nodesWithPosition,
+                              geomSig,
+                              myNodeNum,
+                              accentColor,
+                              themeBrightness,
                             ),
                           ),
+                        ),
                       // Map attribution (matches world mesh style). Mapbox
                       // TOS requires the © Mapbox + © OpenStreetMap line and
                       // a tap-through to about/maps when their tiles are
@@ -2930,14 +2933,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       return MapControlsOverlay(
                         currentZoom: _currentZoom,
                         minZoom: MapConfig.liveMapMinZoom,
-                        maxZoom: 18,
+                        maxZoom: MapConfig.liveMapMaxZoom,
                         mapRotation: rotation,
                         isHeadingUp: _headingUpMode,
                         compassMode: _compassMode,
                         onZoomIn: () {
                           final newZoom = (_currentZoom + 1).clamp(
                             MapConfig.liveMapMinZoom,
-                            18.0,
+                            MapConfig.liveMapMaxZoom,
                           );
                           _animatedMove(_mapController.camera.center, newZoom);
                           HapticFeedback.selectionClick();
@@ -2945,7 +2948,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         onZoomOut: () {
                           final newZoom = (_currentZoom - 1).clamp(
                             MapConfig.liveMapMinZoom,
-                            18.0,
+                            MapConfig.liveMapMaxZoom,
                           );
                           _animatedMove(_mapController.camera.center, newZoom);
                           HapticFeedback.selectionClick();

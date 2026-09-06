@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.62.0] - 2026-09-06
+
+### Changed (Mesh Map zoom)
+
+- The Mesh Map now zooms in to level 20 instead of 18 (#315), close enough to place a nearby tracker on a single building or yard. Dark and Light tiles are served at that depth; Satellite stops at 19 and Terrain at 17, and past their limit the last real tiles are enlarged rather than left blank. Offline region downloads keep their existing detail presets, so this does not change how many tiles a region fetches
+
+### Fixed (Mesh Map distance labels)
+
+- The distance pills drawn between your node and nearby nodes on the Mesh Map no longer read "0 m" for anything under half a kilometre (#313, #314, thanks Lynxie). The 1.61.0 rounding fix reached the measure tool and the Nodes list but missed the label layer, which was still rounding to whole kilometres. The labels also now follow the connection-distance limit picked in the map menu rather than a fixed 15 km, and only show while connection lines are on. The default limit is 10 km, which the menu offers; 15 km never was a preset, so a fresh install showed no ticked option
+
 ## [1.61.0] - 2026-09-05
 
 ### Changed (Meshtastic protobufs 2.8.0)

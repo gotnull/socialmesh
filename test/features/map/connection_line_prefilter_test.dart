@@ -11,11 +11,13 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:socialmesh/core/units/geo_distance.dart';
 import 'package:socialmesh/core/widgets/map_overlay_layers.dart';
 
-// Mirrors _MapScreenState._calculateDistance exactly: latlong2's
-// Distance() ROUNDS to whole kilometers by default, and that rounded
-// value is what production compares against the threshold.
+// Mirrors the map's pairwise decision function exactly: the unrounded
+// Vincenty distance from geo_distance.dart, compared against the threshold.
+// The prefilter keeps a half-kilometre of headroom on top, which is now pure
+// conservatism rather than rounding compensation.
 double _productionDecisionKm(
   double lat1,
   double lng1,
@@ -23,31 +25,7 @@ double _productionDecisionKm(
   double lng2,
 ) {
   if (lat1 == lat2 && lng1 == lng2) return 0.0;
-  try {
-    return const Distance().as(
-      LengthUnit.Kilometer,
-      LatLng(lat1, lng1),
-      LatLng(lat2, lng2),
-    );
-  } catch (_) {
-    return 0.0;
-  }
-}
-
-double _unroundedVincentyKm(
-  double lat1,
-  double lng1,
-  double lat2,
-  double lng2,
-) {
-  if (lat1 == lat2 && lng1 == lng2) return 0.0;
-  try {
-    return const Distance(
-      roundResult: false,
-    ).as(LengthUnit.Kilometer, LatLng(lat1, lng1), LatLng(lat2, lng2));
-  } catch (_) {
-    return 0.0;
-  }
+  return distanceKmBetween(LatLng(lat1, lng1), LatLng(lat2, lng2));
 }
 
 void main() {
@@ -134,7 +112,7 @@ void main() {
       final lat2 = (lat1 + (random.nextDouble() - 0.5) * 2).clamp(-89.9, 89.9);
       final lng2 = lng1 + (random.nextDouble() - 0.5) * 2;
       final h = haversineKm(lat1, lng1, lat2, lng2.toDouble());
-      final v = _unroundedVincentyKm(lat1, lng1, lat2, lng2.toDouble());
+      final v = _productionDecisionKm(lat1, lng1, lat2, lng2.toDouble());
       if (v < 0.1) continue;
       expect(
         (h - v).abs() / v,

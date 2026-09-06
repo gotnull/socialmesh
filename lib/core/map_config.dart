@@ -20,10 +20,20 @@ class MapConfig {
   static const double defaultLat = -33.8688;
   static const double defaultLon = 151.2093;
 
-  /// Default zoom levels
+  /// Default zoom levels. [minZoom] and [maxZoom] bound the offline-tile
+  /// download window (see `clampZoomRange`); the interactive camera range on
+  /// the live map is [liveMapMinZoom] to [liveMapMaxZoom].
   static const double defaultZoom = 13.0;
   static const double minZoom = 3.0;
   static const double maxZoom = 18.0;
+
+  /// Maximum interactive zoom for the live mesh map. Deep enough to place a
+  /// tracker on a single building or yard, which z18 cannot. Tile sources
+  /// that stop short of this (see [MapTileStyle.maxNativeZoom]) overzoom
+  /// their last real tiles rather than requesting ones the server does not
+  /// have. Deliberately separate from [maxZoom] so the offline downloader's
+  /// tile budget does not grow with the camera ceiling.
+  static const double liveMapMaxZoom = 20.0;
 
   /// Minimum interactive zoom for the live mesh map. Kept low enough that
   /// "fit all" can zoom out to frame globally-distributed nodes: a radio with
@@ -39,14 +49,15 @@ class MapConfig {
   ///
   /// flutter_map_marker_cluster builds its cluster tree down to the camera's
   /// max zoom and asserts that no cluster node deeper than this value is ever
-  /// traversed — so this MUST be at least the camera's max zoom. (Its own
-  /// defaults encode the same contract: disableClusteringAtZoom 20 vs maxZoom
-  /// 17.) Co-located nodes share identical coordinates and therefore cluster at
-  /// every level up to the max, so any value below the camera ceiling crashes
-  /// the moment the user zooms past it onto a stacked marker. Returning the
-  /// camera max keeps clusters intact for genuinely co-located nodes while
-  /// markers that exceed `maxClusterRadius` still separate naturally.
-  static int clusterDisableZoom(MapTileStyle style) => maxZoom.floor();
+  /// traversed — so this MUST be at least the deepest camera max zoom any map
+  /// surface uses, which is [liveMapMaxZoom]. (Its own defaults encode the
+  /// same contract: disableClusteringAtZoom 20 vs maxZoom 17.) Co-located
+  /// nodes share identical coordinates and therefore cluster at every level
+  /// up to the max, so any value below the camera ceiling crashes the moment
+  /// the user zooms past it onto a stacked marker. Returning the camera max
+  /// keeps clusters intact for genuinely co-located nodes while markers that
+  /// exceed `maxClusterRadius` still separate naturally.
+  static int clusterDisableZoom(MapTileStyle style) => liveMapMaxZoom.floor();
 
   // Esri's transparent reference tile service that publishes country / state /
   // province boundaries and populated-place labels (cities, towns, villages)
