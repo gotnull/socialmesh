@@ -358,8 +358,15 @@ Future<void> main() async {
 
     // Remote env-flag overrides: apply cached overrides immediately,
     // then subscribe to Firestore in the background. Never blocks
-    // startup on the network.
-    unawaited(RemoteFlagOverridesService.instance.initialise());
+    // startup on the network. Demo mode keeps the bundled flags as
+    // they are: a backend override must not reshape a sample-data build.
+    if (DemoConfig.isEnabled) {
+      AppLogging.app(
+        '${DemoConfig.modeLabel} Remote flag overrides skipped in demo mode',
+      );
+    } else {
+      unawaited(RemoteFlagOverridesService.instance.initialise());
+    }
 
     // Gate telemetry — disabled by default until consent is verified in
     // _initializeFirebaseServices(). This ensures zero collection between
@@ -472,6 +479,15 @@ Future<void> main() async {
 ///   tighten the backend before this client change has rolled out, or
 ///   older clients break.
 Future<void> _ensureAnonymousAuth() async {
+  // Demo mode has no backend: never mint an anonymous identity in the
+  // live Firebase project for a build that runs on sample data. Every
+  // cloud path already treats a missing user as "no access".
+  if (DemoConfig.isEnabled) {
+    AppLogging.auth(
+      '${DemoConfig.modeLabel} Anonymous sign-in skipped in demo mode',
+    );
+    return;
+  }
   try {
     final current = FirebaseAuth.instance.currentUser;
     if (current != null) {
@@ -1368,7 +1384,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // without any credentials.
     if (DemoConfig.isEnabled) {
       AppLogging.subscriptions(
-        '💰 ${DemoConfig.modeLabel} Purchases and cloud entitlement skipped',
+        '${DemoConfig.modeLabel} Purchases and cloud entitlement skipped',
       );
       return;
     }
@@ -2183,6 +2199,15 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     if (!mounted) return;
     final extendedPresenceService = ref.read(extendedPresenceServiceProvider);
     await extendedPresenceService.init();
+
+    // Demo mode publishes nothing: no online presence is written for a
+    // sample-data build, even when a signed-in user is cached on device.
+    if (DemoConfig.isEnabled) {
+      AppLogging.app(
+        '${DemoConfig.modeLabel} Online presence skipped in demo mode',
+      );
+      return;
+    }
 
     // Wait for Firebase to be ready
     final isFirebaseReady = await firebaseReady.timeout(

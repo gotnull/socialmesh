@@ -146,7 +146,7 @@ class CloudSyncEntitlementService {
   Future<bool> _revenueCatAvailable() async {
     if (DemoConfig.isEnabled) {
       AppLogging.subscriptions(
-        '☁️ ${DemoConfig.modeLabel} RevenueCat disabled in demo mode',
+        '${DemoConfig.modeLabel} RevenueCat disabled in demo mode',
       );
       return false;
     }
@@ -154,12 +154,12 @@ class CloudSyncEntitlementService {
       final configured = await _isPurchasesConfigured();
       if (!configured) {
         AppLogging.subscriptions(
-          '☁️ RevenueCat not configured; skipping subscription lookup',
+          'RevenueCat not configured; skipping subscription lookup',
         );
       }
       return configured;
     } catch (e) {
-      AppLogging.subscriptions('☁️ RevenueCat availability check failed: $e');
+      AppLogging.subscriptions('RevenueCat availability check failed: $e');
       return false;
     }
   }

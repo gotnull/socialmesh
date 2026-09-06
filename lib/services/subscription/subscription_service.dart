@@ -128,7 +128,7 @@ class PurchaseService {
     // `_isInitialized`), so paywalls show no products and nothing is sold.
     if (DemoConfig.isEnabled) {
       AppLogging.subscriptions(
-        '💰 ${DemoConfig.modeLabel} RevenueCat disabled in demo mode',
+        '${DemoConfig.modeLabel} RevenueCat disabled in demo mode',
       );
       return;
     }

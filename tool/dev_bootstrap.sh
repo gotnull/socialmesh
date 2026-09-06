@@ -147,9 +147,9 @@ flutter pub get
 
 check_pass "Dependencies installed"
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Client env asset
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # .env.client is a declared Flutter asset generated from .env through the
 # client allowlist. Without it every build fails on the missing asset, so
 # generate it here from whatever .env exists (the .env.example copy is
