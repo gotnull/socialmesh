@@ -284,7 +284,7 @@ cd socialmesh
 flutter run --dart-define=SOCIALMESH_DEMO=1
 ```
 
-Demo mode provides sample nodes and messages so you can explore the UI immediately.
+Demo mode provides sample nodes and messages so you can explore the UI immediately. Purchases (RevenueCat) and cloud sync entitlement are switched off in demo mode, so paywalls list no products and nothing can be bought. Outside demo mode, leaving the RevenueCat keys in `.env` empty is also safe: the SDK is never configured and every purchase surface shows its empty state.
 
 ### Production Build
 

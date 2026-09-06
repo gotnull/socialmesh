@@ -38,6 +38,7 @@ import 'core/platform/platform_capabilities.dart';
 import 'core/platform/platform_capabilities_provider.dart';
 import 'core/platform/sqflite_init.dart';
 import 'core/radio_scope.dart';
+import 'dev/demo/demo_config.dart';
 import 'services/config/remote_flag_overrides_service.dart';
 import 'services/protocol/protocol_service.dart' show OperationalReadiness;
 
@@ -1362,6 +1363,15 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   }
 
   Future<void> _initializePurchases() async {
+    // Demo mode has no backend: no RevenueCat, no cloud entitlement. Both
+    // services stay in their empty state so the app runs on sample data
+    // without any credentials.
+    if (DemoConfig.isEnabled) {
+      AppLogging.subscriptions(
+        '💰 ${DemoConfig.modeLabel} Purchases and cloud entitlement skipped',
+      );
+      return;
+    }
     try {
       final service = await ref.read(subscriptionServiceProvider.future);
       AppLogging.subscriptions('💰 RevenueCat initialized');

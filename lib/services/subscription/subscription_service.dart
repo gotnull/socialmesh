@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/revenuecat_config.dart';
+import '../../dev/demo/demo_config.dart';
 import '../../models/subscription_models.dart';
 
 /// Result of a purchase attempt
@@ -119,6 +120,16 @@ class PurchaseService {
 
     if (_isInitialized) {
       AppLogging.subscriptions('💰 ⚠️ Already initialized, skipping');
+      return;
+    }
+
+    // Demo mode runs with no backend at all. Leaving the SDK unconfigured
+    // keeps every public method on its empty-state path (guarded on
+    // `_isInitialized`), so paywalls show no products and nothing is sold.
+    if (DemoConfig.isEnabled) {
+      AppLogging.subscriptions(
+        '💰 ${DemoConfig.modeLabel} RevenueCat disabled in demo mode',
+      );
       return;
     }
 

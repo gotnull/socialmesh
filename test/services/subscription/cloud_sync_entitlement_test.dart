@@ -1,10 +1,45 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/services/subscription/cloud_sync_entitlement_service.dart';
 
+/// Signed-in user with a uid and nothing else.
+class _FakeUser implements User {
+  @override
+  String get uid => 'demo-user-0123456789';
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Auth that reports a signed-in user and never emits state changes.
+class _FakeSignedInAuth implements FirebaseAuth {
+  final User _user = _FakeUser();
+
+  @override
+  User? get currentUser => _user;
+
+  @override
+  Stream<User?> authStateChanges() => const Stream<User?>.empty();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// Firestore with no backend: every access throws, which is what a build
+/// without credentials sees when the admin / grandfather lookups run.
+class _UnreachableFirestore implements FirebaseFirestore {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('CloudSyncEntitlement', () {
     test('none entitlement has no access', () {
       const entitlement = CloudSyncEntitlement.none;
@@ -362,6 +397,87 @@ void main() {
           reason: 'mirrorStatus=$status must not be applied by the listener',
         );
       }
+    });
+  });
+
+  group('RevenueCat gate (build without credentials)', () {
+    const channel = MethodChannel('purchases_flutter');
+    late List<String> nativeCalls;
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      nativeCalls = [];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            nativeCalls.add(call.method);
+            return null;
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
+
+    CloudSyncEntitlementService buildService({
+      required Future<bool> Function() isPurchasesConfigured,
+    }) => CloudSyncEntitlementService(
+      firestore: _UnreachableFirestore(),
+      auth: _FakeSignedInAuth(),
+      isPurchasesConfigured: isPurchasesConfigured,
+    );
+
+    test('signed-in user with unconfigured SDK resolves to none without '
+        'touching the native SDK', () async {
+      var gateCalls = 0;
+      final service = buildService(
+        isPurchasesConfigured: () async {
+          gateCalls++;
+          return false;
+        },
+      );
+
+      final entitlement = await service.refreshEntitlement();
+
+      expect(entitlement, CloudSyncEntitlement.none);
+      expect(gateCalls, 1);
+      expect(nativeCalls, isEmpty);
+      service.dispose();
+    });
+
+    test('a failing availability check counts as unconfigured', () async {
+      final service = buildService(
+        isPurchasesConfigured: () async =>
+            throw MissingPluginException('purchases_flutter'),
+      );
+
+      final entitlement = await service.refreshEntitlement();
+
+      expect(entitlement.state, CloudSyncEntitlementState.none);
+      expect(nativeCalls, isEmpty);
+      service.dispose();
+    });
+
+    test('initialize and dispose complete without the SDK', () async {
+      final service = buildService(isPurchasesConfigured: () async => false);
+
+      await service.initialize();
+
+      expect(service.currentEntitlement.state, CloudSyncEntitlementState.none);
+      expect(nativeCalls, isEmpty);
+      service.dispose();
+    });
+
+    test('configured SDK still queries customer info', () async {
+      final service = buildService(isPurchasesConfigured: () async => true);
+
+      // The mock channel answers getCustomerInfo with null, which the
+      // plugin cannot parse; the service catches that and keeps its
+      // cached value. The point is that the call was made.
+      await service.refreshEntitlement();
+
+      expect(nativeCalls, contains('getCustomerInfo'));
+      service.dispose();
     });
   });
 }

@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The Terrain style no longer fills the map with "invalid key" placeholder tiles when MapTiler disables the app's key (#317). MapTiler's free plan pulls the key for the rest of the month once its monthly request cap is hit, which happened in late July and again from 16th August, and every terrain tile came back as the placeholder for the rest of that month. The app now notices the refusal on the first tile and moves Terrain onto OpenTopoMap for the rest of the session, on every map surface, with the credit line updated to match. Each launch tries MapTiler again, so the sharper MapTiler terrain returns on its own once the key is back. Dark, Light and Satellite are not affected
 
+### Fixed (Builds without backend credentials)
+
+- A simulator or contributor build with no RevenueCat API key no longer crashes shortly after launch (#318, thanks Lynxie). The cloud sync entitlement service asked the RevenueCat SDK for customer info as soon as an anonymous Firebase sign-in completed, and the native SDK aborts when it is used before being configured. Every RevenueCat call in that service is now gated on the SDK reporting itself configured, so a build with an empty key resolves to "no cloud sync" instead of dying. Demo mode (`--dart-define=SOCIALMESH_DEMO=1`) now skips purchases and cloud entitlement entirely, so paywalls show no products and nothing is sold while the app runs on sample data
+
 ### Fixed (Mesh Map distance labels)
 
 - The distance pills drawn between your node and nearby nodes on the Mesh Map no longer read "0 m" for anything under half a kilometre (#313, #314, thanks Lynxie). The 1.61.0 rounding fix reached the measure tool and the Nodes list but missed the label layer, which was still rounding to whole kilometres. The labels also now follow the connection-distance limit picked in the map menu rather than a fixed 15 km, and only show while connection lines are on. The default limit is 10 km, which the menu offers; 15 km never was a preset, so a fresh install showed no ticked option

@@ -9,6 +9,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
+import '../../dev/demo/demo_config.dart';
 
 /// Entitlement states for cloud sync feature
 enum CloudSyncEntitlementState {
@@ -105,6 +106,16 @@ class CloudSyncEntitlementService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
+  /// Reports whether the RevenueCat SDK has been configured. Every
+  /// `Purchases.*` call in this service is gated on it: the native SDK
+  /// aborts the process when its singleton is used before `configure()`,
+  /// which is the normal state of a build with no RevenueCat API key.
+  final Future<bool> Function() _isPurchasesConfigured;
+
+  /// True once the RevenueCat listener has been attached, so dispose only
+  /// detaches what initialize attached.
+  bool _customerInfoListenerAttached = false;
+
   CloudSyncEntitlement _cachedEntitlement = CloudSyncEntitlement.none;
   StreamSubscription<DocumentSnapshot>? _firestoreSubscription;
   StreamSubscription<User?>? _authSubscription;
@@ -122,8 +133,36 @@ class CloudSyncEntitlementService {
   CloudSyncEntitlementService({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
+    Future<bool> Function()? isPurchasesConfigured,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _auth = auth ?? FirebaseAuth.instance;
+       _auth = auth ?? FirebaseAuth.instance,
+       _isPurchasesConfigured =
+           isPurchasesConfigured ?? (() => Purchases.isConfigured);
+
+  /// Whether RevenueCat may be queried at all. False in demo mode and
+  /// whenever the SDK was never configured (no API key, or the platform
+  /// channel is unavailable). A false answer means the subscription part
+  /// of the entitlement resolves to [CloudSyncEntitlement.none].
+  Future<bool> _revenueCatAvailable() async {
+    if (DemoConfig.isEnabled) {
+      AppLogging.subscriptions(
+        '☁️ ${DemoConfig.modeLabel} RevenueCat disabled in demo mode',
+      );
+      return false;
+    }
+    try {
+      final configured = await _isPurchasesConfigured();
+      if (!configured) {
+        AppLogging.subscriptions(
+          '☁️ RevenueCat not configured; skipping subscription lookup',
+        );
+      }
+      return configured;
+    } catch (e) {
+      AppLogging.subscriptions('☁️ RevenueCat availability check failed: $e');
+      return false;
+    }
+  }
 
   /// Initialize the service and start listening for changes
   Future<void> initialize() async {
@@ -132,8 +171,12 @@ class CloudSyncEntitlementService {
     // Load cached entitlement first for instant UI
     await _loadCachedEntitlement();
 
-    // Listen to RevenueCat customer info changes
-    Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdate);
+    // Listen to RevenueCat customer info changes. Only attached when the
+    // SDK is configured so a credential-less build never touches it.
+    if (await _revenueCatAvailable()) {
+      Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdate);
+      _customerInfoListenerAttached = true;
+    }
 
     // Listen to Firebase Auth changes
     await _authSubscription?.cancel();
@@ -190,7 +233,12 @@ class CloudSyncEntitlementService {
         return _cachedEntitlement;
       }
 
-      // Check RevenueCat subscription
+      // Check RevenueCat subscription. Without a configured SDK there is
+      // no subscription to read, so the user has no cloud sync access.
+      if (!await _revenueCatAvailable()) {
+        _updateEntitlement(CloudSyncEntitlement.none);
+        return _cachedEntitlement;
+      }
       final customerInfo = await Purchases.getCustomerInfo();
       final entitlement = _resolveEntitlementFromCustomerInfo(customerInfo);
 
@@ -628,7 +676,10 @@ class CloudSyncEntitlementService {
 
   /// Dispose resources
   void dispose() {
-    Purchases.removeCustomerInfoUpdateListener(_onCustomerInfoUpdate);
+    if (_customerInfoListenerAttached) {
+      Purchases.removeCustomerInfoUpdateListener(_onCustomerInfoUpdate);
+      _customerInfoListenerAttached = false;
+    }
     _authSubscription?.cancel();
     _firestoreSubscription?.cancel();
     _entitlementController.close();
