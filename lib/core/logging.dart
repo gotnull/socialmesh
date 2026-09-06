@@ -443,6 +443,25 @@ class AppLogging {
     if (protocolLoggingEnabled) debugPrint('Protocol: $message');
   }
 
+  /// Boot timeline lines. Always forwarded to the in-app log so a slow
+  /// launch can be read from an exported App Log on a store build, where
+  /// every `*_LOGGING_ENABLED` flag ships off and the per-area loggers
+  /// never reach the ring buffer. Console output follows the connection
+  /// flag so debug consoles keep their existing shape.
+  static void boot(String message) {
+    if (connectionLoggingEnabled) debugPrint('Connection: $message');
+    _appLogSink?.call(1, 'boot', message); // lint-allow: hardcoded-string
+  }
+
+  /// Sparse session diagnostics: readiness transitions and config-handshake
+  /// retries. Always forwarded to the in-app log for the same reason as
+  /// [boot]; console output follows the protocol flag. Keep this to a
+  /// handful of lines per connection, the ring buffer holds 1000 entries.
+  static void session(String message) {
+    if (protocolLoggingEnabled) debugPrint('Protocol: $message');
+    _appLogSink?.call(1, 'session', message); // lint-allow: hardcoded-string
+  }
+
   static void liveActivity(String message) {
     if (liveActivityLoggingEnabled) debugPrint('LiveActivity: $message');
   }

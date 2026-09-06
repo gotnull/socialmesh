@@ -431,7 +431,7 @@ Future<void> main() async {
 
   // One line per launch with every awaited pre-runApp step timed, so a
   // long native launch screen can be attributed from an app log.
-  AppLogging.connection(BootTimeline.instance.summary('runApp'));
+  AppLogging.boot(BootTimeline.instance.summary('runApp'));
 
   runApp(
     ProviderScope(

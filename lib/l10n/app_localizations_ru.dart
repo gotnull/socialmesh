@@ -28446,6 +28446,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get positionConfigIntervalDefault => 'По умолчанию';
 
   @override
+  String get positionConfigIntervalContinuous => 'Непрерывно (5 с)';
+
+  @override
+  String get positionConfigGpsContinuousNote =>
+      'При интервале меньше 10 секунд прошивка Meshtastic держит GPS постоянно включённым вместо перехода в сон между определениями позиции. Ожидайте значительно более высокий расход батареи.';
+
+  @override
   String get positionConfigIntervalOnBoot => 'Только при запуске';
 
   @override

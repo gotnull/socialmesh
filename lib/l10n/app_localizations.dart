@@ -49119,6 +49119,18 @@ abstract class AppLocalizations {
   /// **'Default'**
   String get positionConfigIntervalDefault;
 
+  /// Chip label for a GPS update interval below 10 seconds, which keeps the GPS powered continuously
+  ///
+  /// In en, this message translates to:
+  /// **'Continuous (5s)'**
+  String get positionConfigIntervalContinuous;
+
+  /// Caution shown under the GPS update interval chips when a continuous (<10 s) interval is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Below 10 seconds the Meshtastic firmware keeps the GPS powered all the time instead of sleeping between fixes. Expect much higher battery drain.'**
+  String get positionConfigGpsContinuousNote;
+
   /// Text displayed in position / GPS
   ///
   /// In en, this message translates to:

@@ -1719,7 +1719,7 @@ class ProtocolService {
     if (_readiness == next) return;
     final old = _readiness;
     _readiness = next;
-    AppLogging.protocol(
+    AppLogging.session(
       'READINESS: $old -> $next ($reason) gen=$_sessionGeneration',
     );
     if (!_readinessController.isClosed) {
@@ -1943,14 +1943,14 @@ class ProtocolService {
           final isDirectEndpoint =
               _transport.reconnectMode == TransportReconnectMode.directEndpoint;
           if (!isDirectEndpoint && _configFramesSinceHandshake > 0) {
-            AppLogging.protocol(
+            AppLogging.session(
               'HANDSHAKE: phase-1 slow but flowing '
               '($_configFramesSinceHandshake config frames) - '
               'skipping early re-send',
             );
             return;
           }
-          AppLogging.protocol(
+          AppLogging.session(
             'HANDSHAKE: phase-1 not observed within '
             '${earlyConfigRetryWindow.inSeconds}s on '
             '${_transport.type.name} - resending wantConfigId once '
@@ -1965,7 +1965,7 @@ class ProtocolService {
             }
             await _requestConfiguration();
           } catch (e) {
-            AppLogging.protocol(
+            AppLogging.session(
               'HANDSHAKE: early phase-1 retry send failed - $e',
             );
           }
@@ -2668,7 +2668,7 @@ class ProtocolService {
           _myNodeNum != null) {
         _setReadiness(OperationalReadiness.ready, reason: 'phase2_complete');
       } else {
-        AppLogging.protocol(
+        AppLogging.session(
           'READINESS: phase2 complete but predicate failed '
           '(configurationComplete=$_configurationComplete, '
           'dataSub=${_dataSubscription != null}, myNodeNum=$_myNodeNum)',

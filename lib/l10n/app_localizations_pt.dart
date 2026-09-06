@@ -28411,6 +28411,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get positionConfigIntervalDefault => 'Padrão';
 
   @override
+  String get positionConfigIntervalContinuous => 'Contínuo (5 s)';
+
+  @override
+  String get positionConfigGpsContinuousNote =>
+      'Abaixo de 10 segundos, o firmware Meshtastic mantém o GPS ligado o tempo todo em vez de dormir entre as fixações. Espere um consumo de bateria muito maior.';
+
+  @override
   String get positionConfigIntervalOnBoot => 'Apenas na inicialização';
 
   @override

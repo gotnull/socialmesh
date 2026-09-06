@@ -20840,6 +20840,12 @@
   "@positionConfigIntervalDefault": {
     "description": "Text displayed in position / GPS"
   },
+  "@positionConfigIntervalContinuous": {
+    "description": "Chip label for a GPS update interval below 10 seconds, which keeps the GPS powered continuously"
+  },
+  "@positionConfigGpsContinuousNote": {
+    "description": "Caution shown under the GPS update interval chips when a continuous (<10 s) interval is selected"
+  },
   "@positionConfigIntervalNever": {
     "description": "Text displayed in position / GPS"
   },
@@ -39546,6 +39552,8 @@
   "positionConfigGpsUpdateInterval": "Intervallo aggiornamento GPS",
   "positionConfigGpsUpdateIntervalSubtitle": "Frequenza di controllo posizione del GPS del dispositivo",
   "positionConfigIntervalDefault": "Predefinito",
+  "positionConfigIntervalContinuous": "Continuo (5 s)",
+  "positionConfigGpsContinuousNote": "Sotto i 10 secondi il firmware Meshtastic mantiene il GPS sempre acceso invece di metterlo a riposo tra una posizione e l'altra. Aspettati un consumo della batteria molto più alto.",
   "positionConfigIntervalNever": "Mai",
   "positionConfigIntervalOnBoot": "Solo all'avvio",
   "positionConfigLatitude": "Latitudine",

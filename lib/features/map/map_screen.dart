@@ -3823,7 +3823,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
           });
         },
         child: _applyOverlayOpacity(
-          isMyNode: isMyNode,
           child: widget.nodedexMode
               ? NodeDexSigilMarker(
                   pin: pin!,
@@ -3841,11 +3840,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  /// Fades peer node markers per the user's transparency setting so the map
-  /// underneath stays visible. The own node is always rendered fully opaque so
-  /// it can never be lost on the map.
-  Widget _applyOverlayOpacity({required bool isMyNode, required Widget child}) {
-    if (isMyNode || _nodeOverlayOpacity >= 1.0) return child;
+  /// Fades node markers per the user's transparency setting so the map
+  /// underneath stays visible. The own node is faded like every other marker:
+  /// users set this to see the map through the markers, and an always-opaque
+  /// own node read as the setting silently not applying. Its larger marker
+  /// keeps it findable at any opacity the setting allows.
+  Widget _applyOverlayOpacity({required Widget child}) {
+    if (_nodeOverlayOpacity >= 1.0) return child;
     return Opacity(opacity: _nodeOverlayOpacity, child: child);
   }
 

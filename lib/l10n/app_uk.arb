@@ -8002,6 +8002,8 @@
   "positionConfigGpsUpdateInterval": "Інтервал оновлення GPS",
   "positionConfigGpsUpdateIntervalSubtitle": "Як часто пристрій GPS перевіряє позицію",
   "positionConfigIntervalDefault": "За замовчуванням",
+  "positionConfigIntervalContinuous": "Безперервно (5 с)",
+  "positionConfigGpsContinuousNote": "При інтервалі менше 10 секунд прошивка Meshtastic тримає GPS постійно увімкненим замість переходу в сон між визначеннями позиції. Очікуйте значно вищого споживання батареї.",
   "positionConfigIntervalNever": "Ніколи",
   "positionConfigIntervalOnBoot": "Лише під час завантаження",
   "positionConfigLatitude": "Широта",

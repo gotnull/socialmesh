@@ -8002,6 +8002,8 @@
   "positionConfigGpsUpdateInterval": "Intervalle de mise à jour GPS",
   "positionConfigGpsUpdateIntervalSubtitle": "La fréquence à laquelle le GPS de l'appareil vérifie la position",
   "positionConfigIntervalDefault": "Par défaut",
+  "positionConfigIntervalContinuous": "Continu (5 s)",
+  "positionConfigGpsContinuousNote": "En dessous de 10 secondes, le firmware Meshtastic garde le GPS allumé en permanence au lieu de le mettre en veille entre deux positions. Attendez-vous à une consommation de batterie bien plus élevée.",
   "positionConfigIntervalNever": "Jamais",
   "positionConfigIntervalOnBoot": "Au démarrage uniquement",
   "positionConfigLatitude": "Latitude",

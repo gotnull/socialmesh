@@ -243,7 +243,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
         if (settings.autoReconnect) {
           // Auto-reconnect enabled - go to main UI, connection happens in background
           _transition(AppInitState.ready, 'initialize:paired+autoReconnect');
-          AppLogging.connection(BootTimeline.instance.summary('appInit_ready'));
+          AppLogging.boot(BootTimeline.instance.summary('appInit_ready'));
         } else {
           // Auto-reconnect disabled - go to scanner so user can manually connect
           // This respects the user's choice to not auto-connect
@@ -294,7 +294,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
       AppLogging.notifications('AppInit: notification setup failed: $e');
     }
     BootTimeline.instance.mark('appInit_notifications');
-    AppLogging.connection(
+    AppLogging.boot(
       BootTimeline.instance.summary('appInit_notifications_done'),
     );
   }

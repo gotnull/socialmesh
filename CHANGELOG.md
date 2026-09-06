@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.62.0] - 2026-09-06
 
+### Added (Continuous GPS)
+
+- The GPS Update Interval in Position settings gains a "Continuous (5s)" option (#319, thanks lnx13). Meshtastic firmware never powers the GPS down between fixes when the interval is under 10 seconds, so this is the setting for a tracker that needs a live fix at all times. A caution under the chips spells out the battery cost while it is selected. A radio already set below 10 seconds from the CLI used to be shown, and on save silently rewritten, as "Default"; it now shows as continuous and keeps that on save. Meshtastic only; MeshCore has no equivalent setting
+
+### Fixed (own node ignored the map transparency setting)
+
+- The Mesh Map's node transparency setting now applies to your own node marker as well (#311, thanks markusgritsch). 1.61.0 claimed this fix but applied it only to the shared map widget used by the dashboard, geofence and position-history maps; the Mesh Map tab draws its markers itself and kept its own always-opaque rule for the connected node, so the setting still looked ignored where it was reported. Your marker stays easy to find because it is drawn larger than the others
+
+### Fixed (App Log empty on store builds)
+
+- Settings > Tools > App Log no longer shows "0 entries" on App Store and Play builds (#298, thanks markusgritsch). Store builds ship with every console logging flag off, and the in-app log was only fed from those same flags, so the boot timeline, session readiness and handshake retry lines that 1.61.0 added for launch and connection triage could never be exported from a phone. Those lines now always reach the in-app log. Console output is unchanged
 ### Changed (Mesh Map zoom)
 
 - The Mesh Map now zooms in to level 21 instead of 18 (#315, #316, thanks Lynxie), close enough to place a nearby tracker on a single building or yard. Past each tile source's real limit the last real tiles are enlarged rather than left blank. Dark, Light and Satellite are requested no deeper than level 18, because CARTO and Esri hand back placeholder or empty tiles at their advertised deeper levels outside city centres; MapTiler terrain serves to 20 and OpenTopoMap to 17. Offline region downloads keep their existing detail presets, so this does not change how many tiles a region fetches. The MeshCore map, World Mesh, the geofence picker and the position history map zoom to the same level

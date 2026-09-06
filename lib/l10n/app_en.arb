@@ -38049,8 +38049,16 @@
     "description": "Text displayed in position / GPS"
   },
   "positionConfigIntervalDefault": "Default",
+  "positionConfigIntervalContinuous": "Continuous (5s)",
+  "positionConfigGpsContinuousNote": "Below 10 seconds the Meshtastic firmware keeps the GPS powered all the time instead of sleeping between fixes. Expect much higher battery drain.",
   "@positionConfigIntervalDefault": {
     "description": "Text displayed in position / GPS"
+  },
+  "@positionConfigIntervalContinuous": {
+    "description": "Chip label for a GPS update interval below 10 seconds, which keeps the GPS powered continuously"
+  },
+  "@positionConfigGpsContinuousNote": {
+    "description": "Caution shown under the GPS update interval chips when a continuous (<10 s) interval is selected"
   },
   "positionConfigIntervalOnBoot": "On Boot Only",
   "@positionConfigIntervalOnBoot": {

@@ -9,6 +9,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/settings_primitives.dart';
+import '../../core/widgets/status_banner.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -51,9 +52,15 @@ const _kBroadcastIntervals = <int>[
   2147483647, // never
 ];
 
-/// Discrete GPS update intervals matching the official iOS app.
+/// Below this many seconds the Meshtastic firmware never powers the GPS
+/// down between fixes (GPS_UPDATE_ALWAYS_ON_THRESHOLD_MS in the firmware).
+const _kGpsContinuousThresholdSecs = 10;
+
+/// Discrete GPS update intervals matching the official iOS app, plus a
+/// continuous option below the firmware's always-on threshold.
 const _kGpsUpdateIntervals = <int>[
   0, // firmware default (30s)
+  5, // continuous: the firmware keeps the GPS powered below 10s
   30, // 30s
   60, // 1m
   120, // 2m
@@ -553,6 +560,17 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             onChanged: (v) =>
                                 setState(() => _gpsUpdateInterval = v),
                           ),
+                          if (_gpsUpdateInterval > 0 &&
+                              _gpsUpdateInterval < _kGpsContinuousThresholdSecs)
+                            StatusBanner(
+                              type: StatusBannerType.warning,
+                              icon: Icons.battery_alert,
+                              title:
+                                  context.l10n.positionConfigGpsContinuousNote,
+                              margin: const EdgeInsets.only(
+                                top: AppTheme.spacing12,
+                              ),
+                            ),
                         ],
                       ],
                     ),
@@ -1393,6 +1411,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
 
   String _formatGpsInterval(int seconds) {
     if (seconds == 0) return context.l10n.positionConfigIntervalDefault;
+    if (seconds < _kGpsContinuousThresholdSecs) {
+      return context.l10n.positionConfigIntervalContinuous;
+    }
     if (seconds >= 2147483647) return context.l10n.positionConfigIntervalOnBoot;
     return _formatDuration(seconds);
   }
