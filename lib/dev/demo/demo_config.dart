@@ -12,11 +12,22 @@ import 'package:flutter/foundation.dart';
 class DemoConfig {
   DemoConfig._();
 
+  /// Raw value of the SOCIALMESH_DEMO dart-define, empty when unset.
+  static const String _rawFlag = String.fromEnvironment('SOCIALMESH_DEMO');
+
   /// Whether demo mode is enabled via dart-define flag.
-  /// Only evaluates to true in debug builds with SOCIALMESH_DEMO=1.
+  /// Only evaluates to true in debug builds with SOCIALMESH_DEMO=1 (or
+  /// SOCIALMESH_DEMO=true). Parsed from the raw string because
+  /// `bool.fromEnvironment` accepts only the literal "true", which would
+  /// leave the documented `=1` form permanently off.
   static const bool isEnabled =
-      kDebugMode &&
-      bool.fromEnvironment('SOCIALMESH_DEMO', defaultValue: false);
+      kDebugMode && (_rawFlag == '1' || _rawFlag == 'true');
+
+  /// The same rule as [isEnabled] applies to the raw define, exposed so a
+  /// test can pin the accepted spellings. Kept in step with the const
+  /// expression above, which cannot call a method.
+  @visibleForTesting
+  static bool parseFlag(String raw) => raw == '1' || raw == 'true';
 
   /// Demo mode identifier for logging.
   static const String modeLabel = isEnabled ? '[DEMO]' : '';
