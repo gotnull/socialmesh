@@ -392,6 +392,8 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
               // This screen previews and browses downloaded regions, so it
               // draws from the offline source even when online.
               useOfflineTileSource: true,
+              // Lift the credit line clear of the pairing button below.
+              attributionBottomInset: AppTheme.spacing80,
               initialCenter: const LatLng(
                 MapConfig.defaultLat,
                 MapConfig.defaultLon,

@@ -118,6 +118,11 @@ class MeshMapWidget extends StatefulWidget {
   /// screen sets this so it shows exactly what was downloaded.
   final bool useOfflineTileSource;
 
+  /// Extra distance between the attribution chip and the bottom safe-area
+  /// edge, for screens that stack their own bar or button along the bottom.
+  /// The credit line is a licence requirement and must never be covered.
+  final double attributionBottomInset;
+
   const MeshMapWidget({
     super.key,
     this.mapController,
@@ -149,6 +154,7 @@ class MeshMapWidget extends StatefulWidget {
     this.attributions,
     this.showSatelliteLabels = true,
     this.useOfflineTileSource = false,
+    this.attributionBottomInset = 0,
   });
 
   @override
@@ -300,7 +306,10 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 8 + MediaQuery.of(context).padding.bottom,
+              bottom:
+                  8 +
+                  MediaQuery.of(context).padding.bottom +
+                  widget.attributionBottomInset,
               child: Center(
                 child: MapAttributionChip(
                   style: widget.mapStyle,
