@@ -248,6 +248,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Color? _distLabelsSigAccent;
   Brightness? _distLabelsSigBrightness;
   bool? _distLabelsSigZoomedIn;
+  double? _distLabelsSigMaxKm;
   List<Marker>? _distanceLabelsCache;
 
   static List<_GeomSig> _geometrySignatureOf(List<_NodeWithPosition> nodes) {
@@ -290,7 +291,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       _connectionLinesCache = null;
       _connLinesSigNodes = null;
     }
-    if (!_showDistanceLabels) {
+    if (!_showDistanceLabels || !_showConnectionLines) {
       _distanceLabelsCache = null;
       _distLabelsSigNodes = null;
     }
@@ -316,7 +317,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   int? _trackNodeNum;
   bool _showTakLayer = true;
   double _connectionMaxDistance =
-      15.0; // km - max distance for connection lines
+      15.0; // km - max distance for connection lines and labels
   String _searchQuery = '';
 
   // TAK entity state
@@ -2385,20 +2386,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                           ]),
                         ),
-                      // Distance labels layer - hide in location only mode
+                      // Labels describe visible connection lines, so hide the
+                      // layer whenever those lines are disabled.
                       if (!widget.locationOnlyMode && _showDistanceLabels)
-                        MarkerLayer(
-                          rotate: true,
-                          markers: finiteMarkers(
-                            _distanceLabelsFor(
-                              nodesWithPosition,
-                              geomSig,
-                              myNodeNum,
-                              accentColor,
-                              themeBrightness,
+                        if (_showConnectionLines)
+                          MarkerLayer(
+                            rotate: true,
+                            markers: finiteMarkers(
+                              _distanceLabelsFor(
+                                nodesWithPosition,
+                                geomSig,
+                                myNodeNum,
+                                accentColor,
+                                themeBrightness,
+                              ),
                             ),
                           ),
-                        ),
                       // Map attribution (matches world mesh style). Mapbox
                       // TOS requires the © Mapbox + © OpenStreetMap line and
                       // a tap-through to about/maps when their tiles are
@@ -4033,6 +4036,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final zoomedIn = _currentZoom >= 10;
     final cached = _distanceLabelsCache;
     if (cached != null &&
+        _distLabelsSigMaxKm == _connectionMaxDistance &&
         _distLabelsSigMyNodeNum == myNodeNum &&
         _distLabelsSigAccent == accent &&
         _distLabelsSigBrightness == brightness &&
@@ -4045,6 +4049,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       () => _buildDistanceLabels(nodes, myNodeNum),
     );
     _distLabelsSigNodes = geomSig;
+    _distLabelsSigMaxKm = _connectionMaxDistance;
     _distLabelsSigMyNodeNum = myNodeNum;
     _distLabelsSigAccent = accent;
     _distLabelsSigBrightness = brightness;
@@ -4458,6 +4463,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       context,
       nodes: nodes.map(_toMarkerData).toList(growable: false),
       myNodeNum: myNodeNum,
+      maxDistanceKm: _connectionMaxDistance,
       zoomedIn: _currentZoom >= 10,
       formatDistance: _formatDistance,
     );

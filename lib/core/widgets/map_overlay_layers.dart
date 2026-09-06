@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../node_color.dart';
 import '../theme.dart';
+import '../units/geo_distance.dart';
 import '../../models/telemetry_log.dart';
 import 'mesh_map_widget.dart';
 
@@ -42,11 +43,10 @@ double haversineKm(double lat1, double lng1, double lat2, double lng2) {
 /// Cheap conservative screen for the connection-lines pair loop.
 ///
 /// Returns false ONLY when the production decision function provably rejects
-/// the pair. That decision is `Distance().as(Kilometer, ...)`, which ROUNDS to
-/// whole kilometers, so a pair up to maxDistanceKm + 0.5 of true distance still
-/// renders a line. The screen therefore widens the threshold by the rounding
-/// half-step plus a 1% margin for the haversine-vs-Vincenty (Earth flattening)
-/// difference; the latitude screen uses the same widened bound (one degree of
+/// the pair. The final decision uses unrounded Vincenty distance. The existing
+/// half-kilometre headroom keeps this screen deliberately conservative, and a
+/// 1% margin accounts for the haversine-vs-Vincenty (Earth flattening)
+/// difference. The latitude screen uses the same widened bound (one degree of
 /// latitude is never less than ~110.567 km).
 bool connectionPrefilterMayBeWithin(
   double lat1,
@@ -61,23 +61,11 @@ bool connectionPrefilterMayBeWithin(
   return haversineKm(lat1, lng1, lat2, lng2) <= screenKm;
 }
 
-// Vincenty distance in km, matching the map's pairwise decision function.
-// latlong2's Distance() rounds to whole kilometers, which is the value the
-// connection-line threshold compares against. Throws on identical /
-// near-antipodal points, so guard both.
+// Vincenty distance in km, matching the map's pairwise decision function and
+// preserving the fractional value used by the distance-label layer.
 double _distanceKm(double lat1, double lng1, double lat2, double lng2) {
   if (lat1 == lat2 && lng1 == lng2) return 0.0;
-  try {
-    // lint-allow: no-rounded-distance — threshold decision, never displayed;
-    // the prefilter above is calibrated to this rounding.
-    return const Distance().as(
-      LengthUnit.Kilometer,
-      LatLng(lat1, lng1),
-      LatLng(lat2, lng2),
-    );
-  } catch (_) {
-    return 0.0;
-  }
+  return distanceKmBetween(LatLng(lat1, lng1), LatLng(lat2, lng2));
 }
 
 // Reduce a list of points to at most [maxPoints] by evenly sampling, always
@@ -182,13 +170,14 @@ List<Polyline> connectionLinePolylines(
 }
 
 /// Distance-label pills at the midpoint between the own node and each peer
-/// within 15km. Empty unless the own node is present and the map is zoomed in
-/// ([zoomedIn], the `currentZoom >= 10` gate). [formatDistance] supplies the
-/// caller's unit-aware text so this stays free of units / l10n.
+/// within [maxDistanceKm]. Empty unless the own node is present and the map is
+/// zoomed in ([zoomedIn], the `currentZoom >= 10` gate). [formatDistance]
+/// supplies the caller's unit-aware text so this stays free of units / l10n.
 List<Marker> distanceLabelMarkers(
   BuildContext context, {
   required List<MeshNodeMarkerData> nodes,
   int? myNodeNum,
+  required double maxDistanceKm,
   required bool zoomedIn,
   required String Function(double km) formatDistance,
 }) {
@@ -200,7 +189,6 @@ List<Marker> distanceLabelMarkers(
   final accent = context.accentColor;
   final cardColor = context.card;
   final labels = <Marker>[];
-  const maxDistanceKm = 15.0;
 
   for (final node in nodes) {
     if (node.node.nodeNum == myNodeNum) continue;
