@@ -389,6 +389,9 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
             MeshMapWidget(
               mapController: _mapController,
               mapStyle: _style,
+              // This screen previews and browses downloaded regions, so it
+              // draws from the offline source even when online.
+              useOfflineTileSource: true,
               initialCenter: const LatLng(
                 MapConfig.defaultLat,
                 MapConfig.defaultLon,

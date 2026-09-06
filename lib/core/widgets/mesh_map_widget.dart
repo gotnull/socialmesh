@@ -113,6 +113,11 @@ class MeshMapWidget extends StatefulWidget {
   /// no effect when [mapStyle] is not [MapTileStyle.satellite].
   final bool showSatelliteLabels;
 
+  /// Always draw tiles from the offline source the region downloader uses
+  /// (never a keyed provider), regardless of connectivity. The offline-regions
+  /// screen sets this so it shows exactly what was downloaded.
+  final bool useOfflineTileSource;
+
   const MeshMapWidget({
     super.key,
     this.mapController,
@@ -143,6 +148,7 @@ class MeshMapWidget extends StatefulWidget {
     this.showAttribution = true,
     this.attributions,
     this.showSatelliteLabels = true,
+    this.useOfflineTileSource = false,
   });
 
   @override
@@ -226,6 +232,7 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
           StyledTileLayer(
             style: widget.mapStyle,
             satelliteLabelsOn: widget.showSatelliteLabels,
+            offlineSource: widget.useOfflineTileSource,
             // Disable tile animation for better performance
             tileBuilder: widget.animateTiles
                 ? (context, tileWidget, tile) {
@@ -298,6 +305,7 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
                 child: MapAttributionChip(
                   style: widget.mapStyle,
                   satelliteLabelsOn: widget.showSatelliteLabels,
+                  offlineSource: widget.useOfflineTileSource,
                 ),
               ),
             ),

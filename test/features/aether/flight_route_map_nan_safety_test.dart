@@ -12,15 +12,23 @@
 // suppressed earlier (and logged) via `_isFiniteFlightPosition`.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/features/aether/models/aether_flight.dart';
 import 'package:socialmesh/features/aether/widgets/flight_route_map.dart';
+import 'package:socialmesh/providers/connectivity_providers.dart';
 
+// The base tile layer reads connectivity to pick its tile source, so the map
+// needs a ProviderScope; pin it online so the test never touches the
+// connectivity plugin.
 Widget _wrap(Widget child) {
-  return MaterialApp(
-    theme: AppTheme.darkTheme(AccentColors.magenta),
-    home: Scaffold(body: child),
+  return ProviderScope(
+    overrides: [isOnlineProvider.overrideWithValue(true)],
+    child: MaterialApp(
+      theme: AppTheme.darkTheme(AccentColors.magenta),
+      home: Scaffold(body: child),
+    ),
   );
 }
 

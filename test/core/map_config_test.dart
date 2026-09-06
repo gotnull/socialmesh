@@ -118,6 +118,108 @@ void main() {
         );
       });
 
+      test('offline source never resolves to MapTiler', () {
+        // MapTiler Cloud terms prohibit bulk download, so the region
+        // downloader (and the live map while offline) must resolve terrain
+        // to OpenTopoMap even with a key configured and MapTiler serving.
+        dotenv.loadFromString(envString: 'MAPTILER_TOKEN=test-key');
+        addTearDown(dotenv.clean);
+        expect(MapConfig.isMaptilerActive, isTrue);
+
+        expect(
+          MapConfig.urlForStyle(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+            offlineSource: true,
+          ),
+          MapTileStyle.terrain.url,
+        );
+        expect(
+          MapConfig.subdomainsForStyle(
+            MapTileStyle.terrain,
+            offlineSource: true,
+          ),
+          MapTileStyle.terrain.subdomains,
+        );
+        expect(
+          MapConfig.resolvedRetinaMode(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+            offlineSource: true,
+          ),
+          isFalse,
+        );
+        expect(
+          MapConfig.maxNativeZoomForStyle(
+            MapTileStyle.terrain,
+            offlineSource: true,
+          ),
+          MapTileStyle.terrain.maxNativeZoom,
+        );
+        expect(
+          MapConfig.attributionLabel(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+            offlineSource: true,
+          ),
+          '© OpenTopoMap © OSM',
+        );
+        expect(
+          MapConfig.attributionUrl(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+            offlineSource: true,
+          ),
+          'https://opentopomap.org',
+        );
+        // The live (online) resolution is unchanged by the offline flag.
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.terrain, satelliteLabelsOn: false),
+          contains(MapConfig.maptilerHost),
+        );
+      });
+
+      test('offline source never resolves to Mapbox', () {
+        dotenv.loadFromString(
+          envString: 'MAPBOX_ENABLED=true\nMAPBOX_TOKEN=pk.test',
+        );
+        addTearDown(dotenv.clean);
+        expect(MapConfig.isMapboxActive, isTrue);
+
+        for (final style in MapTileStyle.values) {
+          final url = MapConfig.urlForStyle(
+            style,
+            satelliteLabelsOn: false,
+            offlineSource: true,
+          );
+          expect(url, isNot(contains('api.mapbox.com')), reason: '$style');
+          expect(
+            MapConfig.attributionLabel(
+              style,
+              satelliteLabelsOn: false,
+              offlineSource: true,
+            ),
+            isNot(MapConfig.mapboxAttributionLabel),
+            reason: '$style',
+          );
+        }
+      });
+
+      test('offline source keeps the keyed CARTO dark / light tiles', () {
+        // CARTO permits on-device caching, so regions keep the keyed URL and
+        // the live map reads them back with the same cache key.
+        dotenv.loadFromString(envString: 'CARTO_API_KEY=abc123');
+        addTearDown(dotenv.clean);
+        expect(
+          MapConfig.urlForStyle(
+            MapTileStyle.dark,
+            satelliteLabelsOn: false,
+            offlineSource: true,
+          ),
+          MapConfig.urlForStyle(MapTileStyle.dark, satelliteLabelsOn: false),
+        );
+      });
+
       test('tile provider does not decode HTTP error bodies', () {
         final provider = MapConfig.networkTileProvider();
         expect(provider, isA<NetworkTileProvider>());

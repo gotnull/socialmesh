@@ -277,16 +277,25 @@ class MapConfig {
   /// terrain when active, else CARTO with its API key for dark / light when a
   /// key is configured, else the style's own template. Single source of truth
   /// so map widgets stop hand-writing `mapboxUrlForStyle(...) ?? style.url`.
+  ///
+  /// [offlineSource] resolves to the source the offline downloader is allowed
+  /// to bulk-fetch, which is never a keyed provider (see [_mapboxServes]).
+  /// The downloader always passes true; the live map passes true while the
+  /// device is offline so it reads the tiles the downloader wrote, and the
+  /// offline-regions screen passes true so it shows what was downloaded.
   static String urlForStyle(
     MapTileStyle style, {
     required bool satelliteLabelsOn,
+    bool offlineSource = false,
   }) {
-    final mapbox = mapboxUrlForStyle(
-      style,
-      satelliteLabelsOn: satelliteLabelsOn,
-    );
-    if (mapbox != null) return mapbox;
-    if (style == MapTileStyle.terrain) {
+    if (_mapboxServes(offlineSource)) {
+      final mapbox = mapboxUrlForStyle(
+        style,
+        satelliteLabelsOn: satelliteLabelsOn,
+      );
+      if (mapbox != null) return mapbox;
+    }
+    if (_maptilerServes(style, offlineSource)) {
       final maptiler = maptilerTerrainUrl();
       if (maptiler != null) return maptiler;
     }
@@ -295,13 +304,25 @@ class MapConfig {
     return style.url;
   }
 
+  // The keyed providers are excluded from the offline source: Mapbox and
+  // MapTiler Cloud terms both prohibit bulk download of tiles, so a region
+  // download must never be filled from them, and the live map must read the
+  // same URLs the downloader wrote when it is offline. CARTO permits on-device
+  // caching and OpenTopoMap tolerates careful bulk fetches, so those remain.
+  static bool _mapboxServes(bool offlineSource) =>
+      isMapboxActive && !offlineSource;
+
+  static bool _maptilerServes(MapTileStyle style, bool offlineSource) =>
+      style == MapTileStyle.terrain && isMaptilerActive && !offlineSource;
+
   /// Subdomains for the resolved URL. Mapbox and MapTiler URLs carry no `{s}`
   /// placeholder, so they must be served subdomain-less.
-  static List<String> subdomainsForStyle(MapTileStyle style) {
-    if (isMapboxActive) return const <String>[];
-    if (style == MapTileStyle.terrain && isMaptilerActive) {
-      return const <String>[];
-    }
+  static List<String> subdomainsForStyle(
+    MapTileStyle style, {
+    bool offlineSource = false,
+  }) {
+    if (_mapboxServes(offlineSource)) return const <String>[];
+    if (_maptilerServes(style, offlineSource)) return const <String>[];
     return style.subdomains;
   }
 
@@ -311,15 +332,22 @@ class MapConfig {
   static bool resolvedRetinaMode(
     MapTileStyle style, {
     required bool satelliteLabelsOn,
-  }) =>
-      urlForStyle(style, satelliteLabelsOn: satelliteLabelsOn).contains('{r}');
+    bool offlineSource = false,
+  }) => urlForStyle(
+    style,
+    satelliteLabelsOn: satelliteLabelsOn,
+    offlineSource: offlineSource,
+  ).contains('{r}');
 
   /// Highest zoom requested from the resolved source. Fallback sources stop at
   /// the deepest globally verified level and overzoom beyond it; keyed
   /// MapTiler Outdoor terrain has been verified through z20.
-  static int maxNativeZoomForStyle(MapTileStyle style) {
-    if (isMapboxActive) return verifiedNativeZoomCap;
-    if (style == MapTileStyle.terrain && isMaptilerActive) return 20;
+  static int maxNativeZoomForStyle(
+    MapTileStyle style, {
+    bool offlineSource = false,
+  }) {
+    if (_mapboxServes(offlineSource)) return verifiedNativeZoomCap;
+    if (_maptilerServes(style, offlineSource)) return 20;
     return style.maxNativeZoom.clamp(0, verifiedNativeZoomCap);
   }
 
@@ -327,13 +355,14 @@ class MapConfig {
   static String attributionLabel(
     MapTileStyle style, {
     required bool satelliteLabelsOn,
+    bool offlineSource = false,
   }) {
-    if (isMapboxActive) return mapboxAttributionLabel;
+    if (_mapboxServes(offlineSource)) return mapboxAttributionLabel;
     switch (style) {
       case MapTileStyle.satellite:
         return '© Esri';
       case MapTileStyle.terrain:
-        return isMaptilerActive
+        return _maptilerServes(style, offlineSource)
             ? maptilerAttributionLabel
             : '© OpenTopoMap © OSM';
       case MapTileStyle.dark:
@@ -346,13 +375,14 @@ class MapConfig {
   static String attributionUrl(
     MapTileStyle style, {
     required bool satelliteLabelsOn,
+    bool offlineSource = false,
   }) {
-    if (isMapboxActive) return mapboxAttributionUrl;
+    if (_mapboxServes(offlineSource)) return mapboxAttributionUrl;
     switch (style) {
       case MapTileStyle.satellite:
         return 'https://www.esri.com';
       case MapTileStyle.terrain:
-        return isMaptilerActive
+        return _maptilerServes(style, offlineSource)
             ? maptilerAttributionUrl
             : 'https://opentopomap.org';
       case MapTileStyle.dark:

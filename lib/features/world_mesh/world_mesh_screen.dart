@@ -33,6 +33,7 @@ import '../../models/presence_confidence.dart';
 import '../../core/units/temperature_format.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/connectivity_providers.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/number_format.dart';
 import '../../utils/snackbar.dart';
@@ -1264,6 +1265,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                           MapConfig.attributionUrl(
                             _mapStyle,
                             satelliteLabelsOn: _showSatelliteLabels,
+                            offlineSource: !ref.watch(isOnlineProvider),
                           ),
                         ),
                       ),
@@ -1273,6 +1275,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                           MapConfig.attributionLabel(
                             _mapStyle,
                             satelliteLabelsOn: _showSatelliteLabels,
+                            offlineSource: !ref.watch(isOnlineProvider),
                           ),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface.withValues(
