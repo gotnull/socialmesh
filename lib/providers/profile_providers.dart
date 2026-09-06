@@ -99,7 +99,14 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     // Watch auth state - this ensures we rebuild when user signs in/out
     final authState = ref.watch(authStateProvider);
 
-    AppLogging.auth('║ 📡 authState: $authState');
+    // Log only the identity summary. Interpolating the User object prints
+    // its refresh token, which is a live credential in any log capture.
+    final authUser = authState.whenOrNull(data: (u) => u);
+    AppLogging.auth(
+      authUser == null
+          ? 'authState: signed-out'
+          : 'authState: uid=${authUser.uid} anonymous=${authUser.isAnonymous}',
+    );
     AppLogging.auth('║ 📡 authState.isLoading: ${authState.isLoading}');
     AppLogging.auth('║ 📡 authState.hasValue: ${authState.hasValue}');
 

@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo mode now actually switches on. Dart reads a `SOCIALMESH_DEMO=1` define as off, because its boolean parser accepts only the literal "true", so the documented flag had never enabled demo mode at all. Both `=1` and `=true` now work
 - A fresh clone can now build. The `.env.example` template was caught by the `.env.*` ignore rule and never reached the repository, so the bootstrap script had nothing to copy and the `.env.client` asset the app bundles was never generated, which fails every build before demo mode is reached. The template is tracked, and the bootstrap script now generates `.env.client` after installing dependencies; the README explains the two files
 - Demo mode no longer touches the backend at all: it skips the anonymous Firebase sign-in, the remote flag overrides and the online presence write, so a sample-data build leaves nothing in the live project. Log lines added for the demo and no-key paths are plain text
+- The auth channel no longer prints the whole Firebase user, refresh token included, when the profile provider rebuilds. It logs the uid and whether the account is anonymous. The channel is off in store builds, but a debug capture or App Log export with it on carried a live credential
 
 ### Fixed (Mesh Map distance labels)
 
