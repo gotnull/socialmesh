@@ -317,7 +317,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   int? _trackNodeNum;
   bool _showTakLayer = true;
   double _connectionMaxDistance =
-      15.0; // km - max distance for connection lines and labels
+      10.0; // km - max distance for connection lines and labels
   String _searchQuery = '';
 
   // TAK entity state

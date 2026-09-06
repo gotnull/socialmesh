@@ -800,7 +800,7 @@ class SettingsService {
   }
 
   double get mapConnectionMaxDistance =>
-      _preferences.getDouble('map_connection_max_distance') ?? 15.0;
+      _preferences.getDouble('map_connection_max_distance') ?? 10.0;
 
   // Node list view mode (0 = cards, 1 = compact)
   Future<void> setNodeViewModeIndex(int index) async {
