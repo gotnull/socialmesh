@@ -284,6 +284,12 @@ cd socialmesh
 flutter run --dart-define=SOCIALMESH_DEMO=1
 ```
 
+The bootstrap script copies `.env.example` to `.env` when no `.env` exists and generates `.env.client` from it. `.env.client` is the file the app bundles and reads at startup; it is a declared asset, so a build without it fails. If you edit `.env` later, regenerate it:
+
+```bash
+dart run tool/generate_client_env.dart
+```
+
 Demo mode provides sample nodes and messages so you can explore the UI immediately. Purchases (RevenueCat) and cloud sync entitlement are switched off in demo mode, so paywalls list no products and nothing can be bought. Outside demo mode, leaving the RevenueCat keys in `.env` empty is also safe: the SDK is never configured and every purchase surface shows its empty state.
 
 ### Production Build

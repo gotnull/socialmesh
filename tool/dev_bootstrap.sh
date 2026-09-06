@@ -148,6 +148,26 @@ flutter pub get
 check_pass "Dependencies installed"
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Client env asset
+# ─────────────────────────────────────────────────────────────────────────────
+# .env.client is a declared Flutter asset generated from .env through the
+# client allowlist. Without it every build fails on the missing asset, so
+# generate it here from whatever .env exists (the .env.example copy is
+# enough: empty values leave each feature on its default).
+section "Generating client env asset"
+
+if [ -f ".env" ]; then
+    echo "  Running dart run tool/generate_client_env.dart..."
+    if dart run tool/generate_client_env.dart; then
+        check_pass "Client env asset: .env.client"
+    else
+        check_warn "Could not generate .env.client (run: dart run tool/generate_client_env.dart)"
+    fi
+else
+    check_warn "No .env file, skipping .env.client (builds need it; copy .env.example to .env first)"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # iOS Pod Install (macOS only)
 # ─────────────────────────────────────────────────────────────────────────────
 if [[ "$OSTYPE" == "darwin"* ]] && command -v pod &> /dev/null; then

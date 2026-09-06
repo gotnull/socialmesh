@@ -59,6 +59,7 @@ AGENTS.md
 .env
 .env.*
 !.env.ci
+!.env.example
 .env.local
 
 # Signing keys and certificates

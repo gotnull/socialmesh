@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A simulator or contributor build with no RevenueCat API key no longer crashes shortly after launch (#318, thanks Lynxie). The cloud sync entitlement service asked the RevenueCat SDK for customer info as soon as an anonymous Firebase sign-in completed, and the native SDK aborts when it is used before being configured. Every RevenueCat call in that service is now gated on the SDK reporting itself configured, so a build with an empty key resolves to "no cloud sync" instead of dying. Demo mode (`--dart-define=SOCIALMESH_DEMO=1`) now skips purchases and cloud entitlement entirely, so paywalls show no products and nothing is sold while the app runs on sample data
 - Demo mode now actually switches on. Dart reads a `SOCIALMESH_DEMO=1` define as off, because its boolean parser accepts only the literal "true", so the documented flag had never enabled demo mode at all. Both `=1` and `=true` now work
+- A fresh clone can now build. The `.env.example` template was caught by the `.env.*` ignore rule and never reached the repository, so the bootstrap script had nothing to copy and the `.env.client` asset the app bundles was never generated, which fails every build before demo mode is reached. The template is tracked, and the bootstrap script now generates `.env.client` after installing dependencies; the README explains the two files
 
 ### Fixed (Mesh Map distance labels)
 
