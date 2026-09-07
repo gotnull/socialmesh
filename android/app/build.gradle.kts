@@ -11,6 +11,12 @@ plugins {
 
 import java.util.Properties
 import java.io.FileInputStream
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
+
+// The FlutterFire plugins pin the Firebase Android SDK through the BoM version
+// declared by firebase_core. Reading the same property keeps this module's
+// Firebase artifacts on that BoM instead of carrying a second version pin.
+val firebaseSdkVersion = project(":firebase_core").properties["FirebaseSDKVersion"] as String
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -77,8 +83,20 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // Native (raster thread, Impeller, JNI) crashes only reach
+            // Crashlytics with the NDK integration, and only symbolicate when
+            // the unstripped libraries are uploaded after the build.
+            configure<CrashlyticsExtension> {
+                nativeSymbolUploadEnabled = true
+            }
         }
     }
+}
+
+// The Crashlytics plugin does not run the symbol upload on its own; chain it
+// to every release build so `flutter build appbundle --release` ships symbols.
+tasks.matching { it.name == "bundleRelease" || it.name == "assembleRelease" }.configureEach {
+    finalizedBy("uploadCrashlyticsSymbolFileRelease")
 }
 
 flutter {
@@ -87,6 +105,10 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation(platform("com.google.firebase:firebase-bom:$firebaseSdkVersion"))
+    // Native crash capture (SIGSEGV / SIGABRT in libflutter, JNI). The Dart
+    // plugin alone only reports Dart and Java exceptions.
+    implementation("com.google.firebase:firebase-crashlytics-ndk")
     // Firebase Messaging for custom FCM service
     implementation("com.google.firebase:firebase-messaging:23.4.0")
     // Edge-to-edge support (Android 15 / SDK 35 requirement)

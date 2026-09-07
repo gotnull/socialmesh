@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.63.0] - 2026-09-07
 
+### Fixed (crash at launch on Pixel 10 and Pixel 11)
+
+- The app no longer crashes within seconds of launch, or while swiping through onboarding, on Pixel 10 and Pixel 11 phones (thanks sparcegamer for the tombstones and the working local build). Their Tensor G5 and G6 chips use a PowerVR GPU whose Vulkan driver runs out of fixed-rate texture compression under a few layered effects, and the renderer in Flutter 3.44 treated that refusal as fatal on the drawing thread instead of retrying without compression. This build moves the app to Flutter 3.47.2, which carries the upstream fix. The same fault could hit any screen that draws a blur, a fade or a gradient mask, so it was never specific to onboarding
+
+### Added (native crash reporting on Android)
+
+- Crashes inside the renderer or other native code on Android now reach Crashlytics with their stack. Until now only Dart and Java exceptions were reported, so the Pixel 11 crash above was invisible in crash reports and could only be diagnosed from tombstones a user pulled by hand
+
 ### Fixed (Live Activity disappearing while connected)
 
 - The iOS Live Activity no longer stays gone after the system ends it while the radio is still connected (#320, thanks lnx13). iOS can end a Live Activity on its own, and the app only ever created one on connect, so once it was gone the only way back was to disconnect and reconnect the radio. The app now checks the activity's real state whenever it returns to the foreground and every 30 seconds while it is in front and connected, and recreates the activity if it has ended. The Dynamic Island and Lock Screen switch is still respected, an activity that is merely stale is left alone, and a momentary failure to query the system does not replace a healthy activity. Recovery while the app is suspended is not guaranteed

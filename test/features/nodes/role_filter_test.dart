@@ -55,7 +55,6 @@ void main() {
       expect(counts['ROUTER'], 1);
       // Role-less nodes are not bucketed by role.
       expect(counts.containsKey(''), false);
-      expect(counts.containsKey(null), false);
     });
 
     test('empty input yields a zero all-bucket and no role buckets', () {

@@ -26,6 +26,12 @@ analyzer:
     - mesh-observer/**
     - sigil-api/**
     - tool/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
   errors:
     # Suppress deprecation warnings from generated protobuf files
     # These are maintained upstream by the Meshtastic protobufs project

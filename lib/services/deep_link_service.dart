@@ -161,7 +161,7 @@ class DeepLinkService {
 
       switch (type) {
         case 'node':
-          return _parseNodeLink(data, uri.queryParameters);
+          return await _parseNodeLink(data, uri.queryParameters);
 
         case 'channel':
           if (data != null) {

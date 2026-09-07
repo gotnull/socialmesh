@@ -121,7 +121,7 @@ class OperationsRepository {
   Future<List<Map<String, Object?>>> recentEvents({int limit = 100}) async {
     try {
       final db = await _db;
-      return db.query(
+      return await db.query(
         OperationsTables.eventLog,
         orderBy: '${OperationsTables.colEventTsMs} DESC',
         limit: limit,
