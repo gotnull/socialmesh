@@ -9,6 +9,21 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String meshBeaconNoticeTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nouvelles offres Mesh Beacon',
+      one: 'Nouvelle offre Mesh Beacon',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshBeaconNoticeSubtitle =>
+      'Appuyez pour consulter les réseaux mesh à proximité dans les paramètres Mesh Beacon.';
+
+  @override
   String get adminProductsVendorUnverifiedSubtitle =>
       'Marquer lorsque le vendeur confirme que toutes les spécifications sont exactes';
 

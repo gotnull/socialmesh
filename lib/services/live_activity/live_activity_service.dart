@@ -4,14 +4,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:live_activities/live_activities.dart';
 import 'package:live_activities/models/activity_update.dart';
+import 'package:live_activities/models/live_activity_state.dart';
 import '../../core/logging.dart';
 
 /// Service for managing iOS Live Activities
 /// Shows device connection status on Lock Screen and Dynamic Island
 class LiveActivityService {
-  static final LiveActivityService _instance = LiveActivityService._internal();
-  factory LiveActivityService() => _instance;
-  LiveActivityService._internal();
+  LiveActivityService();
 
   final _liveActivitiesPlugin = LiveActivities();
   static const String _activityId = 'mesh_device_activity';
@@ -24,6 +23,29 @@ class LiveActivityService {
 
   /// Whether a Live Activity is currently running
   bool get isActive => _currentActivityId != null;
+
+  /// Reconcile the cached ID with ActivityKit after suspension or expiry.
+  /// Activity events can be missed while Flutter is suspended.
+  Future<bool> hasRunningActivity() async {
+    final activityId = _currentActivityId;
+    if (!isSupported || activityId == null) return false;
+    try {
+      final activityState = await _liveActivitiesPlugin.getActivityState(
+        activityId,
+      );
+      if (_currentActivityId != activityId) return isActive;
+      if (activityState == LiveActivityState.active ||
+          activityState == LiveActivityState.stale) {
+        return true;
+      }
+      _currentActivityId = null;
+      return false;
+    } catch (e) {
+      // A bridge failure is not evidence that the activity ended.
+      AppLogging.liveActivity('Failed to reconcile Live Activity: $e');
+      return isActive;
+    }
+  }
 
   /// Initialize the Live Activity service
   Future<void> initialize() async {
@@ -419,6 +441,8 @@ class LiveActivityService {
   /// Dispose resources
   void dispose() {
     _activityUpdateSubscription?.cancel();
+    _activityUpdateSubscription = null;
+    _initialized = false;
     endActivity();
   }
 }

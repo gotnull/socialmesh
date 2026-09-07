@@ -119,6 +119,7 @@ import 'features/map/map_screen.dart';
 import 'features/waypoints/waypoint_form_screen.dart';
 import 'core/safe_lat_lng.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/settings/mesh_beacon_config_screen.dart';
 import 'features/settings/account_subscriptions_screen.dart';
 import 'features/device/device_config_screen.dart';
 import 'features/settings/device_management_screen.dart';
@@ -2499,6 +2500,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           '/qr-scanner': (context) => const UniversalQrScannerScreen(),
           '/map': (context) => const MapScreen(),
           '/settings': (context) => const SettingsScreen(),
+          '/mesh-beacon': (context) => const MeshBeaconConfigScreen(),
           '/account': (context) => const AccountSubscriptionsScreen(),
           '/device-config': (context) => _buildProtectedRoute(
             context,

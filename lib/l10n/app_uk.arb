@@ -1,4 +1,6 @@
 {
+  "meshBeaconNoticeTitle": "{count, plural, one{{count} нова пропозиція Mesh Beacon} few{{count} нові пропозиції Mesh Beacon} many{{count} нових пропозицій Mesh Beacon} other{{count} нової пропозиції Mesh Beacon}}",
+  "meshBeaconNoticeSubtitle": "Торкніться, щоб переглянути mesh-мережі поблизу в налаштуваннях Mesh Beacon.",
   "@@locale": "uk",
   "messageContextMenuRelayNode": "Ретранслятор: {name}",
   "messageContextMenuTransport": "Транспорт: {label}",

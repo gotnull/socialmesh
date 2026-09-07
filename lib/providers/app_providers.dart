@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'radio_scope_providers.dart';
+import 'app_lifecycle_provider.dart';
 import '../config/admin_config.dart';
 
 import '../core/ble_system_devices.dart';
@@ -4104,6 +4105,9 @@ final liveActivityServiceProvider = Provider<LiveActivityService>((ref) {
 
 // Live Activity manager - monitors connection and updates Live Activity
 class LiveActivityManagerNotifier extends Notifier<bool> {
+  Timer? _recoveryTimer;
+  bool _recovering = false;
+  int _sessionGeneration = 0;
   StreamSubscription<double>? _channelUtilSubscription;
   StreamSubscription<int>? _rssiSubscription;
   StreamSubscription<double>? _snrSubscription;
@@ -4152,6 +4156,8 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
 
     // Set up disposal
     ref.onDispose(() {
+      _sessionGeneration++;
+      _recoveryTimer?.cancel();
       _channelUtilSubscription?.cancel();
       _rssiSubscription?.cancel();
       _snrSubscription?.cancel();
@@ -4165,6 +4171,15 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   }
 
   void _init() {
+    if (_liveActivityService.isSupported) {
+      // Also catches ActivityKit expiry when the radio emits no new data.
+      _recoveryTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        _recoverLiveActivity();
+      });
+      ref.listen<bool>(appLifecycleProvider, (previous, foreground) {
+        if (foreground) _recoverLiveActivity();
+      });
+    }
     // Listen for connection state changes
     // NOTE: This listener is for Meshtastic transport only.
     // MeshCore devices don't support Live Activities via this path.
@@ -4172,27 +4187,11 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       previous,
       current,
     ) {
-      current.whenData((connectionState) async {
-        try {
-          // Skip for MeshCore devices - they use ConnectionCoordinator state
-          final settings = await ref.read(settingsServiceProvider.future);
-          if (!ref.mounted) return;
-          if (settings.lastDeviceProtocol == 'meshcore') {
-            return;
-          }
-
-          if (connectionState == DeviceConnectionState.connected && !state) {
-            _startLiveActivity();
-          } else if (connectionState == DeviceConnectionState.disconnected &&
-              state) {
-            _endLiveActivity();
-          }
-        } catch (e) {
-          // Provider may have been disposed during the async gap —
-          // swallow the error to prevent ProviderElement._notifyListeners crash.
-          AppLogging.debug(
-            'LiveActivityManager: ignoring error in listener: $e',
-          );
+      current.whenData((connectionState) {
+        if (connectionState == DeviceConnectionState.connected) {
+          _recoverLiveActivity();
+        } else if (connectionState == DeviceConnectionState.disconnected) {
+          _endLiveActivity();
         }
       });
     }, fireImmediately: true);
@@ -4209,9 +4208,40 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     });
   }
 
-  Future<void> _startLiveActivity() async {
+  bool _canRecover(int generation) =>
+      ref.mounted &&
+      generation == _sessionGeneration &&
+      ref.read(appLifecycleProvider) &&
+      ref.read(connectionStateProvider).value ==
+          DeviceConnectionState.connected;
+
+  Future<void> _recoverLiveActivity() async {
+    if (_recovering || !_liveActivityService.isSupported) return;
+    final generation = _sessionGeneration;
+    if (!_canRecover(generation)) return;
+    _recovering = true;
+    try {
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (!_canRecover(generation) ||
+          settings.lastDeviceProtocol == 'meshcore') {
+        return;
+      }
+      final running = await _liveActivityService.hasRunningActivity();
+      if (!_canRecover(generation)) return;
+      if (running) return;
+      state = false;
+      await _startLiveActivity(generation);
+    } catch (e) {
+      AppLogging.liveActivity('Live Activity recovery failed: $e');
+    } finally {
+      _recovering = false;
+    }
+  }
+
+  Future<void> _startLiveActivity(int generation) async {
     // Respect the user's in-app Live Activity preference.
     final prefs = await SharedPreferences.getInstance();
+    if (!_canRecover(generation)) return;
     final enabled = prefs.getBool(kLiveActivityEnabled) ?? true;
     if (!enabled) {
       AppLogging.debug(
@@ -4301,6 +4331,12 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       linkStatus: _linkStatusFromAge(destination.lastHeardSec),
       signalHistory: List<int>.unmodifiable(_signalHistory),
     );
+
+    if (!ref.mounted || generation != _sessionGeneration) {
+      // Disconnect, disabling the preference, or disposal may race creation.
+      await _liveActivityService.endActivity();
+      return;
+    }
 
     if (success) {
       state = true;
@@ -4606,6 +4642,8 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   Future<void> endLiveActivity() => _endLiveActivity();
 
   Future<void> _endLiveActivity() async {
+    _sessionGeneration++;
+    state = false;
     _channelUtilSubscription?.cancel();
     _channelUtilSubscription = null;
     _rssiSubscription?.cancel();
@@ -4621,7 +4659,6 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     _lastSnr = null;
     _signalHistory.clear();
     await _liveActivityService.endActivity();
-    state = false;
     AppLogging.debug('📱 Ended Live Activity - device disconnected');
   }
 }

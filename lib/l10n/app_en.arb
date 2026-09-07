@@ -1,4 +1,17 @@
 {
+  "meshBeaconNoticeTitle": "{count, plural, =1{New Mesh Beacon offer} other{{count} new Mesh Beacon offers}}",
+  "@meshBeaconNoticeTitle": {
+    "description": "Channels notice for distinct unreviewed Mesh Beacon offers",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "meshBeaconNoticeSubtitle": "Tap to review nearby meshes in Mesh Beacon settings.",
+  "@meshBeaconNoticeSubtitle": {
+    "description": "Tap instruction for the Mesh Beacon notice"
+  },
   "@nodedexIdentityChangePubkeyFromUnknown": {
     "placeholders": {
       "newKey": {

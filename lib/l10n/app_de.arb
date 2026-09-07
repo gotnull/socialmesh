@@ -1,4 +1,6 @@
 {
+  "meshBeaconNoticeTitle": "{count, plural, =1{Neues Mesh-Beacon-Angebot} other{{count} neue Mesh-Beacon-Angebote}}",
+  "meshBeaconNoticeSubtitle": "Tippe, um nahegelegene Mesh-Netze in den Mesh-Beacon-Einstellungen anzusehen.",
   "@@locale": "de",
   "messageContextMenuRelayNode": "Relais: {name}",
   "messageContextMenuTransport": "Transport: {label}",

@@ -110,6 +110,18 @@ abstract class AppLocalizations {
     Locale('uk'),
   ];
 
+  /// Channels notice for distinct unreviewed Mesh Beacon offers
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{New Mesh Beacon offer} other{{count} new Mesh Beacon offers}}'**
+  String meshBeaconNoticeTitle(int count);
+
+  /// Tap instruction for the Mesh Beacon notice
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to review nearby meshes in Mesh Beacon settings.'**
+  String get meshBeaconNoticeSubtitle;
+
   /// Subtitle in admin panel
   ///
   /// In en, this message translates to:

@@ -25,6 +25,7 @@ import '../navigation/main_shell.dart';
 import 'channel_options_sheet.dart';
 import 'channel_reorder_sheet.dart';
 import 'channel_wizard_screen.dart';
+import 'widgets/mesh_beacon_notice.dart';
 
 class ChannelsScreen extends ConsumerStatefulWidget {
   /// When true, shows only the body content without AppBar/Scaffold
@@ -148,6 +149,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
           : null,
       primary: !widget.embedded,
       slivers: [
+        const SliverToBoxAdapter(child: MeshBeaconNotice()),
         SliverPersistentHeader(
           pinned: true,
           delegate: SearchFilterHeaderDelegate(
