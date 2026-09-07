@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.63.0] - 2026-09-07
+
+### Fixed (Live Activity disappearing while connected)
+
+- The iOS Live Activity no longer stays gone after the system ends it while the radio is still connected (#320, thanks lnx13). iOS can end a Live Activity on its own, and the app only ever created one on connect, so once it was gone the only way back was to disconnect and reconnect the radio. The app now checks the activity's real state whenever it returns to the foreground and every 30 seconds while it is in front and connected, and recreates the activity if it has ended. The Dynamic Island and Lock Screen switch is still respected, an activity that is merely stale is left alone, and a momentary failure to query the system does not replace a healthy activity. Recovery while the app is suspended is not guaranteed
+
+### Added (Mesh Beacon notice on Channels)
+
+- A compact notice at the top of the Channels screen announces new Mesh Beacon offers as they arrive (#321, thanks Nullvoid3771). Tapping it opens the Mesh Beacon screen and marks the offers it showed as reviewed; the close button does the same without leaving Channels. Only the offers on screen at that moment are acknowledged, so a beacon that arrives later still surfaces, a beacon repeating the same offer on its interval does not, and an offer whose channel, region or preset has changed counts as new. Reviewed offers are remembered per radio across restarts. Channel offers and radio-setting offers both qualify; a beacon carrying only a message does not
+
 ## [1.62.0] - 2026-09-06
 
 ### Added (Continuous GPS)
