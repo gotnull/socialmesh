@@ -598,55 +598,51 @@ void main() {
       timeout: const Timeout(Duration(seconds: 30)),
     );
 
-    test(
-      'BLE handshake with config frames flowing does NOT re-send',
-      () async {
-        await _withTempDirectory((dir) async {
-          final transport = _FakeTransport();
-          final protocol = await _freshProtocol(dir, transport);
-          try {
-            protocol.earlyConfigRetryWindow = shortWindow;
-            final startFuture = protocol.start();
-            // Feed a config-carrying frame as soon as the initial
-            // wantConfigId is on the wire, then wait past the retry
-            // window: the dump is flowing, so no re-send may fire.
-            while (_sentWantConfigNonces(transport).isEmpty) {
-              await Future<void>.delayed(const Duration(milliseconds: 20));
-            }
-            await protocol.handleIncomingPacket(nodeInfoFrame(0xB2));
-            await Future<void>.delayed(const Duration(milliseconds: 500));
-
-            expect(
-              _sentWantConfigNonces(
-                transport,
-              ).where((n) => n == _nonceInitialConfig).length,
-              1,
-              reason:
-                  'A slow-but-flowing config dump must not trigger the '
-                  'early re-send: a duplicate wantConfigId restarts the '
-                  'dump from scratch',
-            );
-            expect(protocol.configFramesSinceHandshake, greaterThan(0));
-            expect(protocol.handshakePhaseName, 'awaitingInitialConfig');
-            expect(protocol.handshakeStartedAt, isNotNull);
-
-            await protocol.handleIncomingPacket(
-              _configCompleteFrame(_nonceInitialConfig),
-            );
-            await startFuture;
-            // Wait past the phase-2 heartbeat pause and ack the drain so
-            // stop() does not race the drain completer's await gap.
-            await Future<void>.delayed(const Duration(milliseconds: 250));
-            await protocol.handleIncomingPacket(
-              _configCompleteFrame(_nonceQueueDrain),
-            );
-          } finally {
-            protocol.stop();
+    test('BLE handshake with config frames flowing does NOT re-send', () async {
+      await _withTempDirectory((dir) async {
+        final transport = _FakeTransport();
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          protocol.earlyConfigRetryWindow = shortWindow;
+          final startFuture = protocol.start();
+          // Feed a config-carrying frame as soon as the initial
+          // wantConfigId is on the wire, then wait past the retry
+          // window: the dump is flowing, so no re-send may fire.
+          while (_sentWantConfigNonces(transport).isEmpty) {
+            await Future<void>.delayed(const Duration(milliseconds: 20));
           }
-        });
-      },
-      timeout: const Timeout(Duration(seconds: 30)),
-    );
+          await protocol.handleIncomingPacket(nodeInfoFrame(0xB2));
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+
+          expect(
+            _sentWantConfigNonces(
+              transport,
+            ).where((n) => n == _nonceInitialConfig).length,
+            1,
+            reason:
+                'A slow-but-flowing config dump must not trigger the '
+                'early re-send: a duplicate wantConfigId restarts the '
+                'dump from scratch',
+          );
+          expect(protocol.configFramesSinceHandshake, greaterThan(0));
+          expect(protocol.handshakePhaseName, 'awaitingInitialConfig');
+          expect(protocol.handshakeStartedAt, isNotNull);
+
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceInitialConfig),
+          );
+          await startFuture;
+          // Wait past the phase-2 heartbeat pause and ack the drain so
+          // stop() does not race the drain completer's await gap.
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceQueueDrain),
+          );
+        } finally {
+          protocol.stop();
+        }
+      });
+    }, timeout: const Timeout(Duration(seconds: 30)));
 
     test(
       'completed handshake before the window fires means no re-send',
@@ -747,53 +743,49 @@ void main() {
       transport,
     ).where((n) => n == _nonceQueueDrain).length;
 
-    test(
-      'exhaustion surfaces degraded readiness and stops sending',
-      () async {
-        await _withTempDirectory((dir) async {
-          final transport = _FakeTransport();
-          final protocol = await _freshProtocol(dir, transport);
-          try {
-            protocol.debugSetQueueDrainTimingsForTesting(
-              timeoutPerAttempt: shortTimeout,
-              extendedSchedule: shortSchedule,
-            );
-            await protocol.sendInitialConfigRequestForTest();
-            await protocol.handleIncomingPacket(
-              _configCompleteFrame(_nonceInitialConfig),
-            );
+    test('exhaustion surfaces degraded readiness and stops sending', () async {
+      await _withTempDirectory((dir) async {
+        final transport = _FakeTransport();
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          protocol.debugSetQueueDrainTimingsForTesting(
+            timeoutPerAttempt: shortTimeout,
+            extendedSchedule: shortSchedule,
+          );
+          await protocol.sendInitialConfigRequestForTest();
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceInitialConfig),
+          );
 
-            // 3 fast + 2 extended attempts at ~150ms each plus the
-            // schedule delays: comfortably done inside 1.5s.
-            await Future<void>.delayed(const Duration(milliseconds: 1500));
+          // 3 fast + 2 extended attempts at ~150ms each plus the
+          // schedule delays: comfortably done inside 1.5s.
+          await Future<void>.delayed(const Duration(milliseconds: 1500));
 
-            expect(
-              protocol.readiness,
-              OperationalReadiness.degraded,
-              reason:
-                  'Phase-2 exhaustion must surface degraded so the '
-                  'recovery pipeline gets a terminal signal - the silent '
-                  'give-up is the #249 wedge',
-            );
-            expect(
-              drainSendCount(transport),
-              3 + shortSchedule.length,
-              reason:
-                  'Every fast and extended attempt sends exactly one '
-                  'drain wantConfigId',
-            );
+          expect(
+            protocol.readiness,
+            OperationalReadiness.degraded,
+            reason:
+                'Phase-2 exhaustion must surface degraded so the '
+                'recovery pipeline gets a terminal signal - the silent '
+                'give-up is the #249 wedge',
+          );
+          expect(
+            drainSendCount(transport),
+            3 + shortSchedule.length,
+            reason:
+                'Every fast and extended attempt sends exactly one '
+                'drain wantConfigId',
+          );
 
-            // No zombie retries after exhaustion.
-            final countAtExhaustion = drainSendCount(transport);
-            await Future<void>.delayed(const Duration(milliseconds: 400));
-            expect(drainSendCount(transport), countAtExhaustion);
-          } finally {
-            protocol.stop();
-          }
-        });
-      },
-      timeout: const Timeout(Duration(seconds: 30)),
-    );
+          // No zombie retries after exhaustion.
+          final countAtExhaustion = drainSendCount(transport);
+          await Future<void>.delayed(const Duration(milliseconds: 400));
+          expect(drainSendCount(transport), countAtExhaustion);
+        } finally {
+          protocol.stop();
+        }
+      });
+    }, timeout: const Timeout(Duration(seconds: 30)));
 
     test(
       'late phase-2 ack after exhaustion recovers degraded -> ready',
@@ -888,52 +880,48 @@ void main() {
       timeout: const Timeout(Duration(seconds: 30)),
     );
 
-    test(
-      'transport drop mid-extended-loop aborts silently',
-      () async {
-        await _withTempDirectory((dir) async {
-          final transport = _FakeTransport();
-          final protocol = await _freshProtocol(dir, transport);
-          try {
-            protocol.debugSetQueueDrainTimingsForTesting(
-              timeoutPerAttempt: shortTimeout,
-              extendedSchedule: const [
-                Duration(milliseconds: 400),
-                Duration(milliseconds: 400),
-              ],
-            );
-            await protocol.sendInitialConfigRequestForTest();
-            await protocol.handleIncomingPacket(
-              _configCompleteFrame(_nonceInitialConfig),
-            );
+    test('transport drop mid-extended-loop aborts silently', () async {
+      await _withTempDirectory((dir) async {
+        final transport = _FakeTransport();
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          protocol.debugSetQueueDrainTimingsForTesting(
+            timeoutPerAttempt: shortTimeout,
+            extendedSchedule: const [
+              Duration(milliseconds: 400),
+              Duration(milliseconds: 400),
+            ],
+          );
+          await protocol.sendInitialConfigRequestForTest();
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceInitialConfig),
+          );
 
-            // Drop the link while the loop sleeps before the first
-            // extended attempt.
-            await Future<void>.delayed(const Duration(milliseconds: 550));
-            transport.connected = false;
-            final countAtDrop = drainSendCount(transport);
+          // Drop the link while the loop sleeps before the first
+          // extended attempt.
+          await Future<void>.delayed(const Duration(milliseconds: 550));
+          transport.connected = false;
+          final countAtDrop = drainSendCount(transport);
 
-            await Future<void>.delayed(const Duration(milliseconds: 1200));
-            expect(
-              drainSendCount(transport),
-              countAtDrop,
-              reason: 'No drain sends after the transport dropped',
-            );
-            expect(
-              protocol.readiness,
-              isNot(OperationalReadiness.degraded),
-              reason:
-                  'The exhaustion transition belongs to the still-'
-                  'connected wedge; disconnects flow through the '
-                  'transport-state path instead',
-            );
-          } finally {
-            protocol.stop();
-          }
-        });
-      },
-      timeout: const Timeout(Duration(seconds: 30)),
-    );
+          await Future<void>.delayed(const Duration(milliseconds: 1200));
+          expect(
+            drainSendCount(transport),
+            countAtDrop,
+            reason: 'No drain sends after the transport dropped',
+          );
+          expect(
+            protocol.readiness,
+            isNot(OperationalReadiness.degraded),
+            reason:
+                'The exhaustion transition belongs to the still-'
+                'connected wedge; disconnects flow through the '
+                'transport-state path instead',
+          );
+        } finally {
+          protocol.stop();
+        }
+      });
+    }, timeout: const Timeout(Duration(seconds: 30)));
 
     test(
       'kill switch off pins the pre-fix behavior (3 sends, silent)',

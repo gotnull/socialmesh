@@ -167,40 +167,36 @@ void main() {
     });
   }, timeout: const Timeout(Duration(seconds: 5)));
 
-  test(
-    'five concurrent start() calls only attach one listener',
-    () async {
-      await _withTempDirectory((dir) async {
-        final dedupeStore = MeshPacketDedupeStore(
-          dbPathOverride: p.join(dir, 'dedupe.db'),
-        );
-        await dedupeStore.init();
-        final transport = _ManualTransport();
-        final protocol = ProtocolService(transport, dedupeStore: dedupeStore);
+  test('five concurrent start() calls only attach one listener', () async {
+    await _withTempDirectory((dir) async {
+      final dedupeStore = MeshPacketDedupeStore(
+        dbPathOverride: p.join(dir, 'dedupe.db'),
+      );
+      await dedupeStore.init();
+      final transport = _ManualTransport();
+      final protocol = ProtocolService(transport, dedupeStore: dedupeStore);
 
-        for (var i = 0; i < 5; i++) {
-          _fireStartAndForget(protocol);
-        }
+      for (var i = 0; i < 5; i++) {
+        _fireStartAndForget(protocol);
+      }
 
-        // Wait long enough for the in-flight start() to reach its
-        // `_configCompleter.future.timeout(...)` await (past the 200 ms
-        // post-enableNotifications delay AND the 100 ms heartbeat
-        // post-send delay). Without this, `stop()` fires
-        // `completeError` on a future with no listener, raising an
-        // unhandled async error that the test framework reports.
-        await Future<void>.delayed(const Duration(milliseconds: 500));
+      // Wait long enough for the in-flight start() to reach its
+      // `_configCompleter.future.timeout(...)` await (past the 200 ms
+      // post-enableNotifications delay AND the 100 ms heartbeat
+      // post-send delay). Without this, `stop()` fires
+      // `completeError` on a future with no listener, raising an
+      // unhandled async error that the test framework reports.
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
-        expect(transport.dataStreamListenCount, 1);
-        expect(transport.enableNotificationsCallCount, 1);
+      expect(transport.dataStreamListenCount, 1);
+      expect(transport.enableNotificationsCallCount, 1);
 
-        protocol.stop();
-        await Future<void>.delayed(const Duration(milliseconds: 300));
-        await transport.dispose();
-        await dedupeStore.dispose();
-      });
-    },
-    timeout: const Timeout(Duration(seconds: 10)),
-  );
+      protocol.stop();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await transport.dispose();
+      await dedupeStore.dispose();
+    });
+  }, timeout: const Timeout(Duration(seconds: 10)));
 
   test(
     'stop() resets `_isStarted` so a fresh start() runs the body again',

@@ -179,19 +179,13 @@ class _BoardContentState extends ConsumerState<_BoardContent>
       final displayName =
           myNode?.displayName ?? myNode?.shortName ?? widget.board.sysopName;
 
-      await notifier.createThread(
-        widget.slug,
-        widget.board.id,
-        section.id,
-        {
-          'sectionId': section.id,
-          'title': result.title,
-          'body': result.body,
-          'authorDisplayName': displayName,
-          if (myHexId != null) 'authorNodeId': myHexId,
-        },
-        ownerNodeId: widget.board.ownerNodeId,
-      );
+      await notifier.createThread(widget.slug, widget.board.id, section.id, {
+        'sectionId': section.id,
+        'title': result.title,
+        'body': result.body,
+        'authorDisplayName': displayName,
+        if (myHexId != null) 'authorNodeId': myHexId,
+      }, ownerNodeId: widget.board.ownerNodeId);
       if (!mounted) return;
       AppLogging.nodeBoard('UI: thread posted');
       HapticFeedback.lightImpact();

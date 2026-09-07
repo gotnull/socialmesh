@@ -120,11 +120,9 @@ void main() {
           orgId: 'acme-eng-team',
         ),
       ]);
-      expect(
-        cache.activeProductIds(),
-        {'theme_pack'},
-        reason: 'org-owned rows must not appear in the gate-feeding set',
-      );
+      expect(cache.activeProductIds(), {
+        'theme_pack',
+      }, reason: 'org-owned rows must not appear in the gate-feeding set');
     });
 
     test('org-owned rows still round-trip through read/write', () async {

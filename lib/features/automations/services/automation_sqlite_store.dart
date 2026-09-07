@@ -207,16 +207,12 @@ class AutomationSqliteStore {
           final dataJson = jsonEncode(automation.toJson());
           _cache![automation.id] = automation;
 
-          await txn.insert(
-            AutomationTables.automations,
-            {
-              AutomationTables.colId: automation.id,
-              AutomationTables.colDataJson: dataJson,
-              AutomationTables.colUpdatedAtMs: now,
-              AutomationTables.colDeleted: 0,
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+          await txn.insert(AutomationTables.automations, {
+            AutomationTables.colId: automation.id,
+            AutomationTables.colDataJson: dataJson,
+            AutomationTables.colUpdatedAtMs: now,
+            AutomationTables.colDeleted: 0,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       });
 
@@ -286,16 +282,12 @@ class AutomationSqliteStore {
           _cache![remote.id] = remote;
 
           final dataJson = jsonEncode(remote.toJson());
-          await txn.insert(
-            AutomationTables.automations,
-            {
-              AutomationTables.colId: remote.id,
-              AutomationTables.colDataJson: dataJson,
-              AutomationTables.colUpdatedAtMs: now,
-              AutomationTables.colDeleted: 0,
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+          await txn.insert(AutomationTables.automations, {
+            AutomationTables.colId: remote.id,
+            AutomationTables.colDataJson: dataJson,
+            AutomationTables.colUpdatedAtMs: now,
+            AutomationTables.colDeleted: 0,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
           appliedCount++;
         }
       });

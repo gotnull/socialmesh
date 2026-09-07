@@ -46,81 +46,73 @@ void main() {
   );
 
   group('MqttClientProxyService against local EMQX', () {
-    test(
-      'confirmed-publish counter advances only on a real PUBACK',
-      () async {
-        final service = MqttClientProxyService();
-        addTearDown(service.dispose);
+    test('confirmed-publish counter advances only on a real PUBACK', () async {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
 
-        await connect(service);
-        expect(
-          service.phase,
-          MqttProxyConnectionPhase.connected,
-          reason: 'should connect to the local broker at $address',
-        );
-        expect(service.diagnostics.messagesPublished, 0);
+      await connect(service);
+      expect(
+        service.phase,
+        MqttProxyConnectionPhase.connected,
+        reason: 'should connect to the local broker at $address',
+      );
+      expect(service.diagnostics.messagesPublished, 0);
 
-        service.handleDevicePublish(topic: topic, data: [1, 2, 3]);
+      service.handleDevicePublish(topic: topic, data: [1, 2, 3]);
 
-        // The count must advance only when the QoS1 PUBACK completes the publish
-        // protocol on client.published — the behaviour mocks cannot prove.
-        await _pollUntil(() => service.diagnostics.messagesPublished == 1);
-        expect(
-          service.diagnostics.messagesPublished,
-          1,
-          reason: 'the broker PUBACK should have advanced the confirmed count',
-        );
-      },
-      timeout: const Timeout(Duration(seconds: 40)),
-    );
+      // The count must advance only when the QoS1 PUBACK completes the publish
+      // protocol on client.published — the behaviour mocks cannot prove.
+      await _pollUntil(() => service.diagnostics.messagesPublished == 1);
+      expect(
+        service.diagnostics.messagesPublished,
+        1,
+        reason: 'the broker PUBACK should have advanced the confirmed count',
+      );
+    }, timeout: const Timeout(Duration(seconds: 40)));
 
-    test(
-      'watchdog force-reconnects a frozen (half-open) broker',
-      () async {
-        final service = MqttClientProxyService();
-        addTearDown(service.dispose);
-        // Safety net: unpause if the test bailed out while frozen. Tolerant of
-        // "already unpaused" since the happy path unpauses in-body.
-        addTearDown(() => _unpauseQuietly(container));
+    test('watchdog force-reconnects a frozen (half-open) broker', () async {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+      // Safety net: unpause if the test bailed out while frozen. Tolerant of
+      // "already unpaused" since the happy path unpauses in-body.
+      addTearDown(() => _unpauseQuietly(container));
 
-        // Wire the reconnect handler the way the provider does.
-        var reconnectRequests = 0;
-        service.setOnReconnectNeeded(() {
-          reconnectRequests++;
-          unawaited(connect(service));
-        });
+      // Wire the reconnect handler the way the provider does.
+      var reconnectRequests = 0;
+      service.setOnReconnectNeeded(() {
+        reconnectRequests++;
+        unawaited(connect(service));
+      });
 
-        await connect(service);
-        expect(service.phase, MqttProxyConnectionPhase.connected);
+      await connect(service);
+      expect(service.phase, MqttProxyConnectionPhase.connected);
 
-        // Freeze the broker: the TCP socket stays open with no FIN, so the
-        // package's own keep-alive/auto-reconnect stays blind to the drop.
-        await _docker(['pause', container]);
+      // Freeze the broker: the TCP socket stays open with no FIN, so the
+      // package's own keep-alive/auto-reconnect stays blind to the drop.
+      await _docker(['pause', container]);
 
-        // Represent the stale threshold elapsing, then run one watchdog tick.
-        service.debugSetProofOfLifeStale();
-        service.debugTickLivenessWatchdog();
+      // Represent the stale threshold elapsing, then run one watchdog tick.
+      service.debugSetProofOfLifeStale();
+      service.debugTickLivenessWatchdog();
 
-        expect(
-          reconnectRequests,
-          1,
-          reason: 'the watchdog should force a reconnect on the frozen socket',
-        );
-        expect(service.phase, MqttProxyConnectionPhase.connecting);
+      expect(
+        reconnectRequests,
+        1,
+        reason: 'the watchdog should force a reconnect on the frozen socket',
+      );
+      expect(service.phase, MqttProxyConnectionPhase.connecting);
 
-        // Thaw the broker so the forced reconnect can complete.
-        await _docker(['unpause', container]);
-        await _pollUntil(
-          () => service.phase == MqttProxyConnectionPhase.connected,
-        );
-        expect(
-          service.phase,
-          MqttProxyConnectionPhase.connected,
-          reason: 'the proxy should recover once the broker thaws',
-        );
-      },
-      timeout: const Timeout(Duration(seconds: 60)),
-    );
+      // Thaw the broker so the forced reconnect can complete.
+      await _docker(['unpause', container]);
+      await _pollUntil(
+        () => service.phase == MqttProxyConnectionPhase.connected,
+      );
+      expect(
+        service.phase,
+        MqttProxyConnectionPhase.connected,
+        reason: 'the proxy should recover once the broker thaws',
+      );
+    }, timeout: const Timeout(Duration(seconds: 60)));
   }, skip: skip);
 }
 
