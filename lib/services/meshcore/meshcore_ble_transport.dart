@@ -269,6 +269,31 @@ class MeshCoreBleTransport implements MeshTransport {
       );
     }
 
+    // Negotiate the MTU before enabling notifications: the decoder maps
+    // one notification to one frame, so a frame fragmented at the
+    // 23-byte default is lost and SELF_INFO never satisfies identify.
+    await negotiateMeshBleMtu(
+      requestMtu: _device!.requestMtu,
+      isConnected: () => _device!.isConnected,
+    );
+    final mtu = _device!.mtuNow;
+    final maxNotification = mtu - 3;
+    final fragments = maxNotification < MeshCoreFramingConstants.maxFrameSize;
+    AppLogging.ble(
+      'MeshCore: MTU $mtu (notification payload $maxNotification)',
+    );
+    AppLogging.meshcore('event=ble.mtu value=$mtu fragments=$fragments');
+    MeshCoreBleDebugLogStore.instance.append(
+      severity: fragments
+          ? MeshCoreBleDebugLogSeverity.warn
+          : MeshCoreBleDebugLogSeverity.info,
+      category: MeshCoreBleDebugLogCategory.discover,
+      // lint-allow: hardcoded-string
+      message: fragments
+          ? 'MTU $mtu: frames over $maxNotification bytes will fragment'
+          : 'MTU $mtu',
+    );
+
     // Subscribe to notifications
     AppLogging.ble('MeshCore: Subscribing to RX notifications...');
     await _notifyCharacteristic!.setNotifyValue(true);

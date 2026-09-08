@@ -733,31 +733,13 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       // Discover services FIRST - gives connection more time to stabilize
       await _discoverServices();
 
-      // Now request MTU after connection is proven stable
-      // Request MTU size 512 per Meshtastic docs with retry logic
-      // iOS handles MTU negotiation automatically via CoreBluetooth —
-      // calling requestMtu on iOS always fails with fbp-code: 2.
-      if (defaultTargetPlatform != TargetPlatform.iOS) {
-        for (var attempt = 1; attempt <= 3; attempt++) {
-          try {
-            await _device!.requestMtu(512);
-            AppLogging.ble('✓ MTU request successful');
-            break;
-          } catch (e) {
-            AppLogging.ble('⚠️ MTU request attempt $attempt/3 failed: $e');
-            if (attempt == 3) {
-              // After 3 attempts, continue anyway - some devices don't support MTU negotiation
-              AppLogging.ble('⚠️ Proceeding without MTU negotiation');
-            } else {
-              // Wait before retrying, check if still connected
-              await Future.delayed(const Duration(milliseconds: 300));
-              if (!_device!.isConnected) {
-                throw Exception('Device disconnected during MTU negotiation');
-              }
-            }
-          }
-        }
-      }
+      // Request the MTU only after service discovery has proven the link
+      // stable; some radios drop a connection hit with an MTU request
+      // straight after the GATT connect.
+      await negotiateMeshBleMtu(
+        requestMtu: _device!.requestMtu,
+        isConnected: () => _device!.isConnected,
+      );
 
       // Set up listener for disconnection events. The subscription
       // survives unexpected drops (only `disconnect()` cancels it), so it

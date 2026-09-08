@@ -13,9 +13,61 @@
 // through [meshSystemDevices] instead of calling
 // FlutterBluePlus.systemDevices directly.
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import 'logging.dart';
 import 'meshcore_constants.dart';
+
+/// ATT MTU requested on every mesh radio link. 512 is the ATT ceiling; the
+/// peripheral answers with what it supports.
+const int kMeshBleRequestedMtu = 512;
+
+/// Negotiate the ATT MTU on a freshly connected mesh radio link.
+///
+/// Android keeps the 23-byte default until the central asks, and every
+/// supported radio firmware fragments a notification at MTU - 3, so a
+/// frame longer than 20 bytes reaches a notification-per-frame decoder in
+/// pieces it cannot reassemble. iOS negotiates the MTU itself during
+/// connection and rejects explicit requests, so the request is
+/// Android-only.
+///
+/// [requestMtu] and [isConnected] are the device's own calls, passed in so
+/// the retry policy is testable without a GATT stack. Returns the
+/// negotiated MTU, or null when the platform negotiates on its own or
+/// every attempt failed and the caller proceeds on the default. Throws
+/// when the link drops between attempts; callers treat that as a failed
+/// connect.
+Future<int?> negotiateMeshBleMtu({
+  required Future<int> Function(int desiredMtu) requestMtu,
+  required bool Function() isConnected,
+  TargetPlatform? platform,
+  int attempts = 3,
+  Duration retryDelay = const Duration(milliseconds: 300),
+}) async {
+  if ((platform ?? defaultTargetPlatform) != TargetPlatform.android) {
+    return null;
+  }
+  for (var attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      final mtu = await requestMtu(kMeshBleRequestedMtu);
+      AppLogging.ble('MTU negotiated: $mtu (attempt $attempt/$attempts)');
+      return mtu;
+    } catch (e) {
+      AppLogging.ble('MTU request attempt $attempt/$attempts failed: $e');
+      if (attempt == attempts) {
+        AppLogging.ble('Proceeding without MTU negotiation');
+        return null;
+      }
+      await Future.delayed(retryDelay);
+      if (!isConnected()) {
+        throw Exception('Device disconnected during MTU negotiation');
+      }
+    }
+  }
+  return null;
+}
 
 /// Meshtastic BLE service UUIDs.
 ///
