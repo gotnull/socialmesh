@@ -7239,9 +7239,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreActions => 'Дії';
 
   @override
-  String get meshcoreFeedbackSection => 'Зворотний зв\'язок';
-
-  @override
   String get meshcoreActiveLabel => 'Активний';
 
   @override
@@ -18553,7 +18550,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsSectionAbout => 'ПРО ПРОГРАМУ';
 
   @override
-  String get settingsSectionAccount => 'ОБЛІКОВИЙ ЗАПИС';
+  String get settingsSectionAccount => 'Обліковий запис';
 
   @override
   String get settingsSectionAnimations => 'АНІМАЦІЇ';
@@ -18571,7 +18568,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsSectionDevice => 'ПРИСТРІЙ';
 
   @override
-  String get settingsSectionFeedback => 'ЗВОРОТНИЙ ЗВ\'ЯЗОК';
+  String get settingsSectionFeedback => 'Зворотний зв\'язок';
 
   @override
   String get settingsSectionHapticFeedback => 'ТАКТИЛЬНИЙ ВІДГУК';
@@ -18586,7 +18583,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsSectionNotifications => 'СПОВІЩЕННЯ';
 
   @override
-  String get settingsSectionPremium => 'ПРЕМІУМ';
+  String get settingsSectionPremium => 'Преміум';
 
   @override
   String get settingsSectionRemoteAdmin => 'ВІДДАЛЕНЕ АДМІНІСТРУВАННЯ';

@@ -7220,9 +7220,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreActions => 'Azioni';
 
   @override
-  String get meshcoreFeedbackSection => 'Feedback';
-
-  @override
   String get meshcoreActiveLabel => 'Attivo';
 
   @override
@@ -18536,7 +18533,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSectionAbout => 'INFO';
 
   @override
-  String get settingsSectionAccount => 'ACCOUNT';
+  String get settingsSectionAccount => 'Account';
 
   @override
   String get settingsSectionAnimations => 'ANIMAZIONI';
@@ -18554,7 +18551,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSectionDevice => 'DISPOSITIVO';
 
   @override
-  String get settingsSectionFeedback => 'FEEDBACK';
+  String get settingsSectionFeedback => 'Feedback';
 
   @override
   String get settingsSectionHapticFeedback => 'FEEDBACK APTICO';
@@ -18569,7 +18566,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsSectionNotifications => 'NOTIFICHE';
 
   @override
-  String get settingsSectionPremium => 'PREMIUM';
+  String get settingsSectionPremium => 'Premium';
 
   @override
   String get settingsSectionRemoteAdmin => 'AMMINISTRAZIONE REMOTA';

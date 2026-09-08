@@ -12501,12 +12501,6 @@ abstract class AppLocalizations {
   /// **'Actions'**
   String get meshcoreActions;
 
-  /// MeshCore Settings section header above shake to report, bug reports and support; title case to match the neighbouring headers
-  ///
-  /// In en, this message translates to:
-  /// **'Feedback'**
-  String get meshcoreFeedbackSection;
-
   /// Info row label for capture active status
   ///
   /// In en, this message translates to:
@@ -31667,7 +31661,7 @@ abstract class AppLocalizations {
   /// Section header label for the Account section in settings.
   ///
   /// In en, this message translates to:
-  /// **'ACCOUNT'**
+  /// **'Account'**
   String get settingsSectionAccount;
 
   /// Section header label for the Animations section in settings.
@@ -31703,7 +31697,7 @@ abstract class AppLocalizations {
   /// Section header label for the Feedback section in settings.
   ///
   /// In en, this message translates to:
-  /// **'FEEDBACK'**
+  /// **'Feedback'**
   String get settingsSectionFeedback;
 
   /// Section header label for the Haptic Feedback section in settings.
@@ -31733,7 +31727,7 @@ abstract class AppLocalizations {
   /// Section header label for the Premium section in settings.
   ///
   /// In en, this message translates to:
-  /// **'PREMIUM'**
+  /// **'Premium'**
   String get settingsSectionPremium;
 
   /// Section header label for the Remote Administration section in settings.

@@ -4324,8 +4324,11 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
+      // Upper-casing is this widget's job so the section strings stay
+      // title case in the ARB files and can be shared with screens whose
+      // headers render as written (MeshCore Settings).
       child: Text(
-        title,
+        title.toUpperCase(),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
