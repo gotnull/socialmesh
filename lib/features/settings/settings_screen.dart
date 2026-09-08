@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: scaffold — InAppWebView browser, glass blur would obscure web content
-import '../feedback/bug_report_repository.dart';
+import '../feedback/my_bug_reports_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -2621,88 +2621,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               },
                             ),
                           ),
-                          if (ref.watch(currentUserProvider) != null)
-                            _SettingsTile(
-                              icon: Icons.forum_outlined,
-                              title: context.l10n.settingsTileMyBugReportsTitle,
-                              subtitle:
-                                  context.l10n.settingsTileMyBugReportsSubtitle,
-                              trailing: Consumer(
-                                builder: (context, ref, _) {
-                                  final countAsync = ref.watch(
-                                    bugReportUnreadCountProvider,
-                                  );
-                                  final count = countAsync.when(
-                                    data: (c) => c,
-                                    loading: () => 0,
-                                    error: (_, _) => 0,
-                                  );
-                                  return Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (count > 0)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          margin: const EdgeInsets.only(
-                                            right: 8,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: context.accentColor,
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            '$count',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                      Icon(
-                                        Icons.chevron_right,
-                                        color: context.textTertiary,
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                Navigator.pushNamed(context, '/my-bug-reports');
-                              },
-                            )
-                          else
-                            Opacity(
-                              opacity: 0.5,
-                              child: _SettingsTile(
-                                icon: Icons.forum_outlined,
-                                title:
-                                    context.l10n.settingsTileMyBugReportsTitle,
-                                subtitle: context
-                                    .l10n
-                                    .settingsTileMyBugReportsNotSignedIn,
-                                trailing: Icon(
-                                  Icons.chevron_right,
-                                  color: context.textTertiary,
-                                ),
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const AccountSubscriptionsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+                          const MyBugReportsTile(),
 
                           const SizedBox(height: AppTheme.spacing16),
 

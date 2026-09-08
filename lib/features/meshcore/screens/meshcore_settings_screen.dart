@@ -15,6 +15,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/legal_document_sheet.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/chip_selector.dart';
@@ -32,6 +33,7 @@ import '../../../services/meshcore/storage/meshcore_chat_text_scale_store.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../services/meshcore/storage/meshcore_node_name_store.dart';
 import '../../../utils/snackbar.dart';
+import '../../feedback/my_bug_reports_tile.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_radio_settings_sheet.dart';
 import '../../../providers/meshcore_ringtone_preferences.dart';
@@ -271,6 +273,44 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                     trailing: _chevron(context),
                     onTap: () => _confirmReboot(context),
                   ),
+                ),
+                SizedBox(height: AppTheme.spacing16),
+                // Feedback and support live here as well as on the
+                // Meshtastic settings screen: a MeshCore-only user has no
+                // other route to their bug report threads.
+                SettingsSectionHeader(
+                  title: context.l10n.settingsSectionFeedback,
+                ),
+                SettingsTile(
+                  icon: Icons.bug_report_outlined,
+                  title: context.l10n.settingsTileShakeToReportTitle,
+                  subtitle: context.l10n.settingsTileShakeToReportSubtitle,
+                  trailing: ThemedSwitch(
+                    value:
+                        ref
+                            .watch(settingsServiceProvider)
+                            .value
+                            ?.shakeToReportEnabled ??
+                        false,
+                    onChanged: (value) async {
+                      HapticFeedback.selectionClick();
+                      await ref
+                          .read(bugReportServiceProvider)
+                          .setEnabled(value);
+                      safeSetState(() {});
+                    },
+                  ),
+                ),
+                const MyBugReportsTile(),
+                SettingsTile(
+                  icon: Icons.help_outline,
+                  title: context.l10n.settingsTileHelpSupportTitle,
+                  subtitle: context.l10n.settingsTileHelpSupportSubtitle,
+                  trailing: _chevron(context),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    LegalDocumentSheet.showSupport(context);
+                  },
                 ),
                 SizedBox(height: AppTheme.spacing16),
                 // D29 cleanup: the legacy "Protocol Capture" stats sheet

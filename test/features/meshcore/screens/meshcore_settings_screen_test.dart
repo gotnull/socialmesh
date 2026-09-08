@@ -55,17 +55,23 @@ void main() {
     // D29 removed the standalone Debug section. D47-A added the
     // "Contact auto-add" section; D48-A1 added the "Auto-route
     // rotation" section; D-Q2 added the "Chat appearance" section.
-    // Row 11.b added the "Notifications" section.
-    // Seven section headers now: Node Settings / Contact auto-add /
+    // Row 11.b added the "Notifications" section. The "Feedback" section
+    // (shake to report, My bug reports, Help & Support) mirrors the
+    // Meshtastic settings screen so a MeshCore-only user can reach their
+    // report threads.
+    // Eight section headers now: Node Settings / Contact auto-add /
     // Auto-route rotation / Notifications / Chat appearance / Actions
-    // / About.
-    expect(find.byType(SettingsSectionHeader), findsNWidgets(7));
+    // / Feedback / About.
+    expect(find.byType(SettingsSectionHeader), findsNWidgets(8));
     expect(find.text(_l10n.meshcoreNodeSettings), findsOneWidget);
     expect(find.text(_l10n.meshcoreAutoAddSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreAutoRouteSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreNotifications), findsOneWidget);
     expect(find.text(_l10n.meshcoreChatAppearanceSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreActions), findsOneWidget);
+    expect(find.text(_l10n.settingsSectionFeedback), findsOneWidget);
+    expect(find.text(_l10n.settingsTileMyBugReportsTitle), findsOneWidget);
+    expect(find.text(_l10n.settingsTileHelpSupportTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreAbout), findsOneWidget);
   });
 
