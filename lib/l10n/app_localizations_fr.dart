@@ -7283,6 +7283,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreActions => 'Actions';
 
   @override
+  String get meshcoreFeedbackSection => 'Retour';
+
+  @override
   String get meshcoreActiveLabel => 'Actif';
 
   @override

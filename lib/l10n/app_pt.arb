@@ -36238,6 +36238,7 @@
   "meshcoreAboutDescription": "SocialMesh é um app companion para rádio mesh que suporta dispositivos Meshtastic e MeshCore.",
   "meshcoreAboutSocialMesh": "Sobre o SocialMesh",
   "meshcoreActions": "Ações",
+  "meshcoreFeedbackSection": "Feedback",
   "meshcoreChatAppearanceSectionTitle": "Aparência do chat",
   "meshcoreChatTextScaleLabel": "Tamanho do texto",
   "meshcoreChatTextScaleHelper": "Escala todo o texto nos chats MeshCore (balões, timestamps, separadores, entrada). Não afeta o Meshtastic.",

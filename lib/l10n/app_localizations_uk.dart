@@ -7239,6 +7239,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreActions => 'Дії';
 
   @override
+  String get meshcoreFeedbackSection => 'Зворотний зв\'язок';
+
+  @override
   String get meshcoreActiveLabel => 'Активний';
 
   @override

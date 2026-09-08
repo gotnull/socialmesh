@@ -69,7 +69,7 @@ void main() {
     expect(find.text(_l10n.meshcoreNotifications), findsOneWidget);
     expect(find.text(_l10n.meshcoreChatAppearanceSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreActions), findsOneWidget);
-    expect(find.text(_l10n.settingsSectionFeedback), findsOneWidget);
+    expect(find.text(_l10n.meshcoreFeedbackSection), findsOneWidget);
     expect(find.text(_l10n.settingsTileMyBugReportsTitle), findsOneWidget);
     expect(find.text(_l10n.settingsTileHelpSupportTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreAbout), findsOneWidget);

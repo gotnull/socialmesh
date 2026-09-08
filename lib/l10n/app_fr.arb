@@ -5021,6 +5021,7 @@
   "meshcoreAboutDescription": "SocialMesh est une application compagnon pour radios mesh compatible avec les appareils Meshtastic et MeshCore.",
   "meshcoreAboutSocialMesh": "À propos de SocialMesh",
   "meshcoreActions": "Actions",
+  "meshcoreFeedbackSection": "Retour",
   "meshcoreActiveLabel": "Actif",
   "meshcoreAdd": "Ajouter",
   "meshcoreAddContact": "Ajouter un contact",

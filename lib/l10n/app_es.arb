@@ -5021,6 +5021,7 @@
   "meshcoreAboutDescription": "SocialMesh es una app complementaria para radios en malla compatible con dispositivos Meshtastic y MeshCore.",
   "meshcoreAboutSocialMesh": "Acerca de SocialMesh",
   "meshcoreActions": "Acciones",
+  "meshcoreFeedbackSection": "Comentarios",
   "meshcoreActiveLabel": "Activo",
   "meshcoreAdd": "Agregar",
   "meshcoreAddContact": "Agregar contacto",

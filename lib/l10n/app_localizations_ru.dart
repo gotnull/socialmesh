@@ -7224,6 +7224,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreActions => 'Действия';
 
   @override
+  String get meshcoreFeedbackSection => 'Обратная связь';
+
+  @override
   String get meshcoreActiveLabel => 'Активен';
 
   @override

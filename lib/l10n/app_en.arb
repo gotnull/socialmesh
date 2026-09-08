@@ -9628,6 +9628,10 @@
   "@meshcoreActions": {
     "description": "Actions card header"
   },
+  "meshcoreFeedbackSection": "Feedback",
+  "@meshcoreFeedbackSection": {
+    "description": "MeshCore Settings section header above shake to report, bug reports and support; title case to match the neighbouring headers"
+  },
   "meshcoreActiveLabel": "Active",
   "@meshcoreActiveLabel": {
     "description": "Info row label for capture active status"

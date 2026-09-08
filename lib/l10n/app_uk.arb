@@ -5021,6 +5021,7 @@
   "meshcoreAboutDescription": "SocialMesh - це супутній застосунок для mesh-радіо, що підтримує пристрої Meshtastic і MeshCore.",
   "meshcoreAboutSocialMesh": "Про SocialMesh",
   "meshcoreActions": "Дії",
+  "meshcoreFeedbackSection": "Зворотний зв'язок",
   "meshcoreActiveLabel": "Активний",
   "meshcoreAdd": "Додати",
   "meshcoreAddContact": "Додати контакт",

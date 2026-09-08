@@ -5057,6 +5057,7 @@
   "meshcoreAboutDescription": "SocialMesh - компаньон-приложение для меш-радио, поддерживающее устройства Meshtastic и MeshCore.",
   "meshcoreAboutSocialMesh": "О SocialMesh",
   "meshcoreActions": "Действия",
+  "meshcoreFeedbackSection": "Обратная связь",
   "meshcoreChatAppearanceSectionTitle": "Внешний вид чата",
   "meshcoreChatTextScaleLabel": "Размер текста",
   "meshcoreChatTextScaleHelper": "Масштабирует весь текст в чатах MeshCore (пузыри, время, разделители, ввод). Не влияет на Meshtastic.",

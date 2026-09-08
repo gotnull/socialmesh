@@ -12501,6 +12501,12 @@ abstract class AppLocalizations {
   /// **'Actions'**
   String get meshcoreActions;
 
+  /// MeshCore Settings section header above shake to report, bug reports and support; title case to match the neighbouring headers
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback'**
+  String get meshcoreFeedbackSection;
+
   /// Info row label for capture active status
   ///
   /// In en, this message translates to:

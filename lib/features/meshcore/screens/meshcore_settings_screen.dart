@@ -279,7 +279,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 // Meshtastic settings screen: a MeshCore-only user has no
                 // other route to their bug report threads.
                 SettingsSectionHeader(
-                  title: context.l10n.settingsSectionFeedback,
+                  title: context.l10n.meshcoreFeedbackSection,
                 ),
                 SettingsTile(
                   icon: Icons.bug_report_outlined,
