@@ -35,6 +35,7 @@ import 'widgets/drawer_menu_tile.dart';
 import 'widgets/drawer_sticky_header.dart';
 import '../settings/ifttt_config_screen.dart';
 import '../settings/ringtone_screen.dart';
+import '../settings/subscription_screen.dart';
 import '../settings/theme_settings_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../meshcore/widgets/meshcore_drawer_node_header.dart';
@@ -302,6 +303,41 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       default:
         return const MeshCoreMessagesContainerScreen();
     }
+  }
+
+  // Premium drawer rows follow the Meshtastic drawer's gating: owned or
+  // upsell-enabled features open their screen, everything else opens the
+  // paywall. Without this a MeshCore-only user had no route to purchase.
+  Widget _premiumDrawerTile({
+    required IconData icon,
+    required String label,
+    required PremiumFeature feature,
+    required Color iconColor,
+    required Widget screen,
+  }) {
+    final hasAccess = ref.watch(hasFeatureProvider(feature));
+    final upsellEnabled = ref.watch(premiumFeatureGateProvider(feature.name));
+    final allowNavigation = hasAccess || upsellEnabled;
+    return DrawerMenuTile(
+      icon: icon,
+      label: label,
+      isSelected: false,
+      isPremium: hasAccess,
+      isLocked: !allowNavigation,
+      showTryIt: !hasAccess && upsellEnabled,
+      iconColor: iconColor,
+      onTap: () {
+        ref.haptics.tabChange();
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) =>
+                allowNavigation ? screen : const SubscriptionScreen(),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -690,105 +726,40 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     dividerAlpha: dividerAlpha,
                     isLastSection: true,
                     tiles: [
-                      DrawerMenuTile(
+                      _premiumDrawerTile(
                         icon: Icons.palette_outlined,
                         label: l10n.navigationThemePack,
-                        isSelected: false,
-                        isPremium: true,
-                        isLocked: !ref.watch(
-                          hasFeatureProvider(PremiumFeature.premiumThemes),
-                        ),
+                        feature: PremiumFeature.premiumThemes,
                         iconColor: AccentColors.purple,
-                        onTap: () {
-                          ref.haptics.tabChange();
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => const ThemeSettingsScreen(),
-                            ),
-                          );
-                        },
+                        screen: const ThemeSettingsScreen(),
                       ),
-                      DrawerMenuTile(
+                      _premiumDrawerTile(
                         icon: Icons.music_note_outlined,
                         label: l10n.navigationRingtonePack,
-                        isSelected: false,
-                        isPremium: true,
-                        isLocked: !ref.watch(
-                          hasFeatureProvider(PremiumFeature.customRingtones),
-                        ),
+                        feature: PremiumFeature.customRingtones,
                         iconColor: AccentColors.pink,
-                        onTap: () {
-                          ref.haptics.tabChange();
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => const RingtoneScreen(),
-                            ),
-                          );
-                        },
+                        screen: const RingtoneScreen(),
                       ),
-                      DrawerMenuTile(
+                      _premiumDrawerTile(
                         icon: Icons.widgets_outlined,
                         label: l10n.navigationWidgets,
-                        isSelected: false,
-                        isPremium: true,
-                        isLocked: !ref.watch(
-                          hasFeatureProvider(PremiumFeature.homeWidgets),
-                        ),
+                        feature: PremiumFeature.homeWidgets,
                         iconColor: AccentColors.coral,
-                        onTap: () {
-                          ref.haptics.tabChange();
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => const WidgetBuilderScreen(),
-                            ),
-                          );
-                        },
+                        screen: const WidgetBuilderScreen(),
                       ),
-                      DrawerMenuTile(
+                      _premiumDrawerTile(
                         icon: Icons.auto_awesome,
                         label: l10n.navigationAutomations,
-                        isSelected: false,
-                        isPremium: true,
-                        isLocked: !ref.watch(
-                          hasFeatureProvider(PremiumFeature.automations),
-                        ),
+                        feature: PremiumFeature.automations,
                         iconColor: AccentColors.yellow,
-                        onTap: () {
-                          ref.haptics.tabChange();
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => const AutomationsScreen(),
-                            ),
-                          );
-                        },
+                        screen: const AutomationsScreen(),
                       ),
-                      DrawerMenuTile(
+                      _premiumDrawerTile(
                         icon: Icons.webhook_outlined,
                         label: l10n.navigationIftttIntegration,
-                        isSelected: false,
-                        isPremium: true,
-                        isLocked: !ref.watch(
-                          hasFeatureProvider(PremiumFeature.iftttIntegration),
-                        ),
+                        feature: PremiumFeature.iftttIntegration,
                         iconColor: AccentColors.sky,
-                        onTap: () {
-                          ref.haptics.tabChange();
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (_) => const IftttConfigScreen(),
-                            ),
-                          );
-                        },
+                        screen: const IftttConfigScreen(),
                       ),
                     ],
                   ),

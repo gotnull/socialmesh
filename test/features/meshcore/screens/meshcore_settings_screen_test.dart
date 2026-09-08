@@ -59,18 +59,26 @@ void main() {
     // (shake to report, My bug reports, Help & Support) mirrors the
     // Meshtastic settings screen so a MeshCore-only user can reach their
     // report threads.
-    // Eight section headers now: Node Settings / Contact auto-add /
+    // Account and Premium give a MeshCore-only user a route to sign in
+    // and purchase, which previously existed only on the Meshtastic
+    // settings screen.
+    // Ten section headers now: Node Settings / Contact auto-add /
     // Auto-route rotation / Notifications / Chat appearance / Actions
-    // / Feedback / About.
-    expect(find.byType(SettingsSectionHeader), findsNWidgets(8));
+    // / Account / Premium / Feedback / About.
+    expect(find.byType(SettingsSectionHeader), findsNWidgets(10));
+    expect(find.text(_l10n.settingsSectionAccount), findsOneWidget);
+    expect(find.text(_l10n.settingsProfileTitle), findsOneWidget);
+    expect(find.text(_l10n.settingsSectionPremium), findsOneWidget);
+    expect(find.text(_l10n.settingsPremiumUnlockFeaturesTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreNodeSettings), findsOneWidget);
     expect(find.text(_l10n.meshcoreAutoAddSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreAutoRouteSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreNotifications), findsOneWidget);
     expect(find.text(_l10n.meshcoreChatAppearanceSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreActions), findsOneWidget);
-    expect(find.text(_l10n.meshcoreFeedbackSection), findsOneWidget);
+    expect(find.text(_l10n.settingsSectionFeedback), findsOneWidget);
     expect(find.text(_l10n.settingsTileMyBugReportsTitle), findsOneWidget);
+    expect(find.text(_l10n.settingsTileHelpCenterTitle), findsOneWidget);
     expect(find.text(_l10n.settingsTileHelpSupportTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreAbout), findsOneWidget);
   });

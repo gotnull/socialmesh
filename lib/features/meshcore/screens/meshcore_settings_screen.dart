@@ -38,6 +38,7 @@ import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_radio_settings_sheet.dart';
 import '../../../providers/meshcore_ringtone_preferences.dart';
 import '../../settings/ringtone_screen.dart';
+import '../../settings/subscription_screen.dart';
 
 /// MeshCore Settings screen.
 ///
@@ -275,11 +276,45 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   ),
                 ),
                 SizedBox(height: AppTheme.spacing16),
-                // Feedback and support live here as well as on the
-                // Meshtastic settings screen: a MeshCore-only user has no
-                // other route to their bug report threads.
+                // Account, premium, feedback and support live here as well
+                // as on the Meshtastic settings screen: a MeshCore-only user
+                // has no other route to sign in, purchase, or read their bug
+                // report threads.
                 SettingsSectionHeader(
-                  title: context.l10n.meshcoreFeedbackSection,
+                  title: context.l10n.settingsSectionAccount,
+                ),
+                SettingsTile(
+                  icon: Icons.person_outline,
+                  title: context.l10n.settingsProfileTitle,
+                  subtitle: context.l10n.settingsProfileSubtitle,
+                  trailing: _chevron(context),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.pushNamed(context, '/account');
+                  },
+                ),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: context.l10n.settingsSectionPremium,
+                ),
+                SettingsTile(
+                  icon: Icons.workspace_premium_outlined,
+                  title: context.l10n.settingsPremiumUnlockFeaturesTitle,
+                  subtitle: context.l10n.settingsSearchPremiumSubtitle,
+                  trailing: _chevron(context),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SubscriptionScreen(),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: context.l10n.settingsSectionFeedback,
                 ),
                 SettingsTile(
                   icon: Icons.bug_report_outlined,
@@ -302,6 +337,16 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   ),
                 ),
                 const MyBugReportsTile(),
+                SettingsTile(
+                  icon: Icons.help,
+                  title: context.l10n.settingsTileHelpCenterTitle,
+                  subtitle: context.l10n.settingsTileHelpCenterSubtitle,
+                  trailing: _chevron(context),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.pushNamed(context, '/help-center');
+                  },
+                ),
                 SettingsTile(
                   icon: Icons.help_outline,
                   title: context.l10n.settingsTileHelpSupportTitle,
