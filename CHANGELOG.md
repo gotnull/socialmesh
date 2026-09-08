@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.64.0] - 2026-09-08
+
+### Fixed (MeshCore over Bluetooth on Android)
+
+- A MeshCore radio now connects over Bluetooth on Android instead of failing with "Device info request timed out" (thanks kraxeln for the reports and screenshots from a T1000-E). The app never asked Android for a larger Bluetooth packet size, so the link stayed at the 23-byte default and the radio's first reply, which is around 60 bytes, arrived as three fragments the app could not reassemble. iOS negotiates that size on its own, which is why the same radio worked on an iPhone. The app now requests the larger size on Android before it starts listening, the same way it already did for Meshtastic radios, and the MeshCore Bluetooth log records the size that was granted so a future report shows it
+
+### Added (Feedback and support on MeshCore Settings)
+
+- MeshCore Settings gains a Feedback section with shake to report, your bug report threads and Help & Support (thanks megskywalker). Those rows only existed on the Meshtastic settings screen, so a MeshCore-only user could file a report by shaking the phone but had no way to read the reply. The bug report row shows the unread reply count, and works with no radio connected
+
 ## [1.63.0] - 2026-09-07
 
 ### Fixed (crash at launch on Pixel 10 and Pixel 11)
