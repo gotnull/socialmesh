@@ -59,6 +59,14 @@ post_install do |installer|
         '$(inherited)',
         'PERMISSION_MICROPHONE=1',
       ]
+
+      # Every pod builds for the Podfile platform. Flutter's podhelper
+      # clears the deployment target on pods whose minimum is below
+      # Flutter's, so they inherit 16.0, while pods at or above it keep
+      # their own (FirebaseSessions stays 15.0). Swift then refuses the
+      # 15.0 module's import of the 16.0 Promises module. One value for
+      # all targets removes the mismatch.
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
     end
 
 
