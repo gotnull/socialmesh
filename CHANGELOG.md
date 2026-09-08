@@ -13,7 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (Feedback and support on MeshCore Settings)
 
-- MeshCore Settings gains a Feedback section with shake to report, your bug report threads and Help & Support (thanks megskywalker). Those rows only existed on the Meshtastic settings screen, so a MeshCore-only user could file a report by shaking the phone but had no way to read the reply. The bug report row shows the unread reply count, and works with no radio connected
+- MeshCore Settings gains a Feedback section with shake to report, your bug report threads, the Help Center and Help & Support (thanks megskywalker). Those rows only existed on the Meshtastic settings screen, so a MeshCore-only user could file a report by shaking the phone but had no way to read the reply. The bug report row shows the unread reply count, and works with no radio connected
+
+### Added (Account and Premium on MeshCore Settings)
+
+- MeshCore Settings also gains an Account section, with the Profile row that opens sign-in and account management, and a Premium section with the Unlock Features row that opens the purchase screen. Neither existed anywhere in the MeshCore side of the app, so a MeshCore-only user had no way to sign in or buy a pack. The Theme Pack, Ringtone Pack, Widgets, Automations and IFTTT rows in the MeshCore drawer now behave like their Meshtastic counterparts: owned features open, and locked ones open the purchase screen instead of a gated page
 
 ## [1.63.0] - 2026-09-07
 
