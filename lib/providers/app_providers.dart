@@ -3017,11 +3017,24 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
           .setState(AutoReconnectState.idle);
       return;
     }
-    if (transport.state == DeviceConnectionState.connected ||
-        transport.state == DeviceConnectionState.connecting) {
+    if (transport.state == DeviceConnectionState.connected) {
+      // The caller latched autoReconnectState to scanning before
+      // dispatching. Nothing here will move it on, and the manager's
+      // connected guard only fires on a transport state change that
+      // has already happened, so the banner would sit on "Searching
+      // for device..." over a live link. Settle it back to idle.
       AppLogging.connection(
-        'NET RECONNECT: abandoned — transport already '
-        '${transport.state.name}',
+        'NET RECONNECT: abandoned — transport already connected, '
+        'settling autoReconnectState to idle',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
+    if (transport.state == DeviceConnectionState.connecting) {
+      AppLogging.connection(
+        'NET RECONNECT: abandoned — transport already connecting',
       );
       return;
     }

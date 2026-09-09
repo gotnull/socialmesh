@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.65.0] - 2026-09-09
 
+### Fixed (Banner stuck on "Searching for device..." over a live link)
+
+- The top banner no longer stays on "Searching for device..." after a radio has reconnected over Wi-Fi or TCP. At launch several parts of the app ask for a reconnect within a second of each other, and when a later request found the link already up it returned without clearing the searching state the request had just set. That request now settles the state, so the banner slides away once the radio is connected
+
 ### Fixed (No way to stop reconnecting to an out-of-range radio)
 
 - When your radio goes out of range and the app keeps searching for it, you can now stop the search and pick another radio (thanks markusgritsch). The radio sheet gains a Cancel reconnect button while the search runs, and the top banner offers Cancel instead of Retry while the link is down. Before this the banner read "Connection is still recovering" with only a Retry, and the radio sheet hid every button while reconnecting, so the search ran until it gave up on its own
