@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.64.0] - 2026-09-08
 
+### Fixed (MeshCore Bluetooth drop reported as an error)
+
+- A MeshCore Bluetooth link dropping while the radio statistics cards are on screen no longer files a "Not connected" error report every second until the app notices the disconnect. The once-a-second statistics poll kept sending after the link went away, and the Bluetooth transport raised a different error type from the TCP transport, so the poll treated a routine link loss as a failure instead of a stale reading. Both transports now report a lost link the same way and the cards simply grey their values
+
 ### Fixed (MeshCore over Bluetooth on Android)
 
 - A MeshCore radio now connects over Bluetooth on Android instead of failing with "Device info request timed out" (thanks kraxeln for the reports and screenshots from a T1000-E). The app never asked Android for a larger Bluetooth packet size, so the link stayed at the 23-byte default and the radio's first reply, which is around 60 bytes, arrived as three fragments the app could not reassemble. iOS negotiates that size on its own, which is why the same radio worked on an iPhone. The app now requests the larger size on Android before it starts listening, the same way it already did for Meshtastic radios, and the MeshCore Bluetooth log records the size that was granted so a future report shows it

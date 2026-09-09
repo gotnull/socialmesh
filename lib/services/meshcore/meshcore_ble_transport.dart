@@ -328,8 +328,12 @@ class MeshCoreBleTransport implements MeshTransport {
 
   @override
   Future<void> sendBytes(List<int> data) async {
+    // StateError is the not-connected contract shared with the TCP
+    // transport: MeshCoreSession.sendAndWait converts it into a null
+    // response so periodic pollers see a transient miss rather than an
+    // unhandled async error when the link drops mid-poll.
     if (_writeCharacteristic == null || !isConnected) {
-      throw Exception('MeshCore: Not connected');
+      throw StateError('MeshCore: Not connected');
     }
 
     AppLogging.ble('MeshCore: Sending ${data.length} bytes');

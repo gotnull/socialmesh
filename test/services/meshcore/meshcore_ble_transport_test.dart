@@ -109,6 +109,18 @@ void main() {
 
         expect(transport.dataStream, isA<Stream<List<int>>>());
       });
+
+      // Pinned: the session's sendAndWait only absorbs StateError as a
+      // transient null. A plain Exception here escapes the 1 Hz stats
+      // pollers as an unhandled async error once the link drops.
+      test('sendBytes throws StateError while disconnected', () async {
+        final transport = MeshCoreBleTransport();
+
+        await expectLater(
+          transport.sendBytes([0x01]),
+          throwsA(isA<StateError>()),
+        );
+      });
     });
 
     group('Service Discovery Requirements', () {
