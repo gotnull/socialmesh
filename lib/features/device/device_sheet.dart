@@ -437,15 +437,10 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
   Future<void> _disconnect(BuildContext context) async {
     AppLogging.connection('🔌 DISCONNECT: User tapped disconnect button');
 
-    // Capture providers BEFORE any async operations to avoid disposed ref access
-    final userDisconnectedNotifier = ref.read(
-      userDisconnectedProvider.notifier,
-    );
-    final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
+    // Capture the notifier BEFORE any async operations to avoid disposed ref access
     final deviceConnectionNotifier = ref.read(
       deviceConnectionProvider.notifier,
     );
-    final protocol = ref.read(protocolServiceProvider);
 
     final confirmed = await AppBottomSheet.showConfirm(
       context: context,
@@ -462,31 +457,18 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
       // Immediately disable UI and show disconnecting state
       safeSetState(() => _disconnecting = true);
 
-      // CRITICAL: Set userDisconnected flag FIRST to prevent ALL
-      // auto-reconnect logic.
-      AppLogging.connection('🔌 DISCONNECT: Setting userDisconnected=true');
-      userDisconnectedNotifier.setUserDisconnected(true);
-
-      AppLogging.connection(
-        '🔌 DISCONNECT: Setting autoReconnectState to idle (user disconnect)',
-      );
-      autoReconnectNotifier.setState(AutoReconnectState.idle);
-
-      // ROUTE-FIRST policy: replace the route stack with the fresh
-      // `_AppRouter` (which renders Scanner via `needsScanner` state)
-      // BEFORE awaiting the async transport disconnect. This closes
-      // the visible window where the device sheet would otherwise
-      // remain mounted while teardown is async, briefly exposing the
-      // "Scan for devices" button as a tappable transient. The
-      // transport disconnect proceeds in the background; userDisconnected
-      // and autoReconnectState are already set above, so the Scanner
-      // sees the right state when it mounts.
-      // setNeedsScanner drives the existing home `_AppRouter` to
-      // render Scanner via `appShellProvider`. Pop screens stacked on
-      // top instead of pushNamedAndRemoveUntil('/app'), which would
-      // create a SECOND AppRouter on top of the persistent home
-      // route - the two would then diverge as state changes.
-      ref.read(appInitProvider.notifier).setNeedsScanner();
+      // ROUTE-FIRST policy: the notifier latches userDisconnected, idles
+      // auto-reconnect and drives the home `_AppRouter` to the Scanner
+      // synchronously, then tears the transport down asynchronously.
+      // Popping the stacked routes here, before awaiting the teardown,
+      // closes the visible window where the device sheet would
+      // otherwise remain mounted while teardown is async, briefly
+      // exposing the "Scan for devices" button as a tappable transient.
+      // Pop screens stacked on top instead of
+      // pushNamedAndRemoveUntil('/app'), which would create a SECOND
+      // AppRouter on top of the persistent home route - the two would
+      // then diverge as state changes.
+      final teardown = deviceConnectionNotifier.userDisconnectToScanner();
       final nav = navigatorKey.currentState;
       if (nav != null) {
         AppLogging.connection(
@@ -501,14 +483,8 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         );
       }
 
-      // Now do the actual teardown. UI has already moved to Scanner.
-      AppLogging.connection(
-        '🔌 DISCONNECT: Calling DeviceConnectionNotifier.disconnect()',
-      );
-      await deviceConnectionNotifier.disconnect();
-
-      AppLogging.connection('🔌 DISCONNECT: Stopping protocol service');
-      protocol.stop();
+      // UI has already moved to Scanner; wait for the teardown to finish.
+      await teardown;
 
       AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
     } else {

@@ -2949,6 +2949,27 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     AppLogging.connection('🔌 disconnect(): Manual disconnect complete');
   }
 
+  /// User-tapped Disconnect from a shell surface (device sheet, Nodes
+  /// long-press menu). Every such surface must run this same sequence:
+  /// latch `userDisconnected` and idle auto-reconnect before routing, so
+  /// the Scanner mounts with the right state and no re-arm path fires;
+  /// route the home `_AppRouter` to the Scanner; then tear down the
+  /// transport and stop the protocol service.
+  ///
+  /// The latch, idle and route steps complete synchronously before the
+  /// first await, so a caller that pops routes stacked on the home route
+  /// may do so right after invoking this without awaiting it.
+  Future<void> userDisconnectToScanner() async {
+    final protocol = ref.read(protocolServiceProvider);
+    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
+    ref.read(appInitProvider.notifier).setNeedsScanner();
+    await disconnect();
+    protocol.stop();
+  }
+
   /// Clear the user disconnected flag - call when user explicitly wants to reconnect
   void clearUserDisconnected() {
     AppLogging.connection(

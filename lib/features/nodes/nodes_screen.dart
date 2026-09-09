@@ -25,6 +25,7 @@ import '../../core/widgets/skeleton_config.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/connection_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../core/units/distance_format.dart';
 import '../../providers/help_providers.dart';
@@ -1144,13 +1145,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     );
   }
 
-  Future<void> _disconnectDevice() async {
-    final transport = ref.read(transportProvider);
-    final connectedDevice = ref.read(connectedDeviceProvider.notifier);
-    await transport.disconnect();
-    if (!mounted) return;
-    connectedDevice.setState(null);
-  }
+  // Must run the same user-disconnect sequence as the device sheet. A
+  // bare transport disconnect leaves the userDisconnected latch clear,
+  // so auto-reconnect brings the radio straight back.
+  Future<void> _disconnectDevice() =>
+      ref.read(deviceConnectionProvider.notifier).userDisconnectToScanner();
 }
 
 /// Filter options for the nodes list

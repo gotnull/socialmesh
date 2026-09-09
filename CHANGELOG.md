@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.64.0] - 2026-09-08
 
+### Fixed (Disconnect from the Nodes list reconnected straight away)
+
+- Long-pressing your own radio in the Nodes list and choosing "Disconnect device" now stays disconnected and returns to the scanner, the same as Disconnect from the radio icon (thanks markusgritsch). That menu entry only dropped the Bluetooth link and never recorded that you asked for it, so automatic reconnect treated the drop as a fault and brought the radio straight back. Both Disconnect entries now run the same sequence
+
 ### Fixed (MeshCore Bluetooth drop reported as an error)
 
 - A MeshCore Bluetooth link dropping while the radio statistics cards are on screen no longer files a "Not connected" error report every second until the app notices the disconnect. The once-a-second statistics poll kept sending after the link went away, and the Bluetooth transport raised a different error type from the TCP transport, so the poll treated a routine link loss as a failure instead of a stale reading. Both transports now report a lost link the same way and the cards simply grey their values

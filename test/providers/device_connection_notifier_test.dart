@@ -321,6 +321,92 @@ void main() {
     );
   });
 
+  // Both shell Disconnect surfaces (device sheet, Nodes long-press menu)
+  // run this one sequence. A bare transport disconnect leaves the
+  // userDisconnected latch clear and auto-reconnect brings the radio
+  // straight back.
+  test(
+    'userDisconnectToScanner latches, idles, routes to Scanner, tears down',
+    () async {
+      final s = SettingsService();
+      await s.init();
+
+      final testTransport = _TestTransport();
+
+      final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
+      await messageStorage.init();
+      final nodeStorage = NodeStorageService();
+      await nodeStorage.init();
+      final telemetryStorage = TelemetryDatabase(
+        testDbPath: _uniqueTelemDbPath(),
+      );
+      await telemetryStorage.init();
+      final routeStorage = RouteStorageService(
+        testDbPath: inMemoryDatabasePath,
+      );
+      await routeStorage.init();
+
+      final container = ProviderContainer(
+        overrides: [
+          transportProvider.overrideWithValue(testTransport),
+          meshPacketDedupeStoreProvider.overrideWithValue(
+            MeshPacketDedupeStore(dbPathOverride: ':memory:'),
+          ),
+          settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+          messageStorageProvider.overrideWithValue(
+            AsyncValue.data(messageStorage),
+          ),
+          nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
+          telemetryStorageProvider.overrideWithValue(
+            AsyncValue.data(telemetryStorage),
+          ),
+          routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(appInitProvider.notifier).setReady();
+      final notifier = container.read(deviceConnectionProvider.notifier);
+      final deviceInfo = DeviceInfo(
+        id: 'ble:alpha',
+        name: 'Alpha Unit',
+        type: TransportType.ble,
+      );
+      await testTransport.connect(deviceInfo);
+      notifier.markAsPaired(deviceInfo, 0xA1B2C3D4);
+      expect(container.read(userDisconnectedProvider), isFalse);
+      expect(container.read(appInitProvider), AppInitState.ready);
+
+      final teardown = notifier.userDisconnectToScanner();
+
+      // The latch, idle and route steps complete before the first await
+      // so a caller may pop stacked routes without awaiting the teardown.
+      expect(container.read(userDisconnectedProvider), isTrue);
+      expect(
+        container.read(autoReconnectStateProvider),
+        AutoReconnectState.idle,
+      );
+      expect(container.read(appInitProvider), AppInitState.needsScanner);
+
+      await teardown;
+
+      expect(testTransport.isConnected, isFalse);
+      expect(container.read(connectedDeviceProvider), isNull);
+      expect(
+        container.read(deviceConnectionProvider).state,
+        DevicePairingState.disconnected,
+      );
+      expect(
+        container.read(deviceConnectionProvider).reason,
+        DisconnectReason.userDisconnected,
+      );
+
+      // Let the transport-state listener settle before the container is
+      // disposed so teardown does not race the disconnect handler.
+      await Future.delayed(const Duration(milliseconds: 50));
+    },
+  );
+
   test('pairing invalidation detection matches apple peer reset errors', () {
     expect(
       isPairingInvalidationError(
