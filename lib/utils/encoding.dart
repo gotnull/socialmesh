@@ -204,7 +204,7 @@ class ChannelKeyUtils {
       case 0:
         return '';
       case 1:
-        return '1 byte · Default PSK'; // lint-allow: hardcoded-string
+        return '1 byte · Simple PSK'; // lint-allow: hardcoded-string
       case 16:
         return '16 bytes · AES-128'; // lint-allow: hardcoded-string
       case 32:

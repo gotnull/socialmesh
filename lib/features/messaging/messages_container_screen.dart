@@ -11,6 +11,7 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
+import '../channels/channel_form_screen.dart';
 import '../channels/channel_wizard_screen.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../channels/channels_screen.dart';
@@ -60,19 +61,24 @@ class _MessagesContainerScreenState
       return;
     }
 
-    final channels = ref.read(channelsProvider);
-    final usedIndices = channels.map((c) => c.index).toSet();
-    int nextIndex = 1;
-    for (int i = 1; i <= 7; i++) {
-      if (!usedIndices.contains(i)) {
-        nextIndex = i;
-        break;
-      }
-    }
-
+    final nextIndex = nextFreeChannelIndex(ref.read(channelsProvider));
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ChannelWizardScreen(channelIndex: nextIndex),
+      ),
+    );
+  }
+
+  void _showEnterChannelKeyScreen(bool isConnected) {
+    if (!isConnected) {
+      showErrorSnackBar(context, context.l10n.messagesAddChannelNotConnected);
+      return;
+    }
+
+    final nextIndex = nextFreeChannelIndex(ref.read(channelsProvider));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChannelFormScreen(channelIndex: nextIndex),
       ),
     );
   }
@@ -193,6 +199,7 @@ class _MessagesContainerScreenState
           MessagingPopupMenu(
             isConnected: isConnected,
             onAddChannel: () => _showAddChannelScreen(isConnected),
+            onEnterChannelKey: () => _showEnterChannelKeyScreen(isConnected),
             onScanChannel: () => _openChannelScanner(isConnected),
             channelsTabActive: () => _tabController.index == 1,
           ),

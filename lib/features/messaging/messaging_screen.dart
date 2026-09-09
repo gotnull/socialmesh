@@ -4471,12 +4471,14 @@ class MessagingPopupMenu extends ConsumerWidget {
   const MessagingPopupMenu({
     super.key,
     this.onAddChannel,
+    this.onEnterChannelKey,
     this.onScanChannel,
     this.isConnected = false,
     this.channelsTabActive,
   });
 
   final VoidCallback? onAddChannel;
+  final VoidCallback? onEnterChannelKey;
   final VoidCallback? onScanChannel;
   final bool isConnected;
 
@@ -4495,6 +4497,9 @@ class MessagingPopupMenu extends ConsumerWidget {
         switch (value) {
           case 'add_channel':
             if (onAddChannel != null) onAddChannel!();
+            break;
+          case 'enter_channel_key':
+            if (onEnterChannelKey != null) onEnterChannelKey!();
             break;
           case 'scan_channel':
             if (onScanChannel != null) onScanChannel!();
@@ -4560,6 +4565,27 @@ class MessagingPopupMenu extends ConsumerWidget {
                   const SizedBox(width: AppTheme.spacing12),
                   Text(
                     context.l10n.messagingAddChannel,
+                    style: TextStyle(color: context.textPrimary),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        if (onEnterChannelKey != null) {
+          items.add(
+            PopupMenuItem(
+              value: 'enter_channel_key',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.vpn_key_outlined,
+                    color: context.textSecondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Text(
+                    context.l10n.channelsMenuEnterKey,
                     style: TextStyle(color: context.textPrimary),
                   ),
                 ],

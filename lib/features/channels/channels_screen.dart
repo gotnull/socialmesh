@@ -28,6 +28,16 @@ import 'channel_reorder_sheet.dart';
 import 'channel_wizard_screen.dart';
 import 'widgets/mesh_beacon_notice.dart';
 
+/// Lowest secondary slot (1-7) not held by a channel in [channels].
+/// Slot 0 is the primary channel and is never offered.
+int nextFreeChannelIndex(List<ChannelConfig> channels) {
+  final usedIndices = channels.map((c) => c.index).toSet();
+  for (int i = 1; i <= 7; i++) {
+    if (!usedIndices.contains(i)) return i;
+  }
+  return 1;
+}
+
 class ChannelsScreen extends ConsumerStatefulWidget {
   /// When true, shows only the body content without AppBar/Scaffold
   /// Used when embedded in tabs
@@ -100,15 +110,6 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
       case ChannelFilter.mqtt:
         return channels.where((c) => c.uplink || c.downlink).toList();
     }
-  }
-
-  // Slot 0 is the primary channel; secondary channels occupy 1-7.
-  int _nextFreeChannelIndex(List<ChannelConfig> channels) {
-    final usedIndices = channels.map((c) => c.index).toSet();
-    for (int i = 1; i <= 7; i++) {
-      if (!usedIndices.contains(i)) return i;
-    }
-    return 1;
   }
 
   @override
@@ -336,7 +337,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
               onSelected: (value) {
                 switch (value) {
                   case 'add':
-                    final nextIndex = _nextFreeChannelIndex(channels);
+                    final nextIndex = nextFreeChannelIndex(channels);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -348,7 +349,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                     // Pre-existing channels (a community's published name
                     // and key) skip the wizard: the form takes the key
                     // directly and accepts 1, 16, and 32 byte sizes.
-                    final nextIndex = _nextFreeChannelIndex(channels);
+                    final nextIndex = nextFreeChannelIndex(channels);
                     Navigator.push(
                       context,
                       MaterialPageRoute(

@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -249,7 +250,6 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   bool _isEncryptionKeyValid() {
     if (!_keyFieldVisible) return true;
     final expected = _privacyLevel.keySize.bytes;
-    if (expected <= 1) return true;
     final decoded = ChannelKeyUtils.base64ToKey(_keyController.text.trim());
     return decoded != null && decoded.length == expected;
   }
@@ -308,9 +308,8 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   /// when the controller text is not valid base64 for the current
   /// privacy level — callers must block navigation in that case.
   ///
-  /// Steps that don't render a key field (Open, Shared, or any
-  /// privacy level whose key size is < 16 bytes) commit a fixed value
-  /// derived from the privacy level itself and always succeed.
+  /// Open renders no key field and commits an empty key; every other
+  /// level validates the typed base64 against its byte size.
   bool _commitEncryptionKeyFromController() {
     final expectedBytes = _privacyLevel.keySize.bytes;
     if (expectedBytes == 0) {
@@ -319,15 +318,6 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
       _keyCommitError = null;
       AppLogging.channels(
         'wizard key commit: source=none expectedBytes=0 valid=true',
-      );
-      return true;
-    }
-    if (expectedBytes == 1) {
-      _generatedKey = [1];
-      _keyController.text = 'AQ==';
-      _keyCommitError = null;
-      AppLogging.channels(
-        'wizard key commit: source=default expectedBytes=1 valid=true',
       );
       return true;
     }
@@ -394,9 +384,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
     }
   }
 
-  bool get _keyFieldVisible =>
-      _privacyLevel == PrivacyLevel.private ||
-      _privacyLevel == PrivacyLevel.maximum;
+  // Shared shows the field too: community channels publish one-byte
+  // keys other than the 0x01 default, and those must be enterable here.
+  bool get _keyFieldVisible => _privacyLevel.keySize.bytes >= 1;
 
   void _proceedToNextStep() {
     // Regenerate key when privacy level changes (entering options step)
@@ -951,11 +941,13 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                 children: [
                   Row(
                     children: [
-                      Text(
-                        level.title(context.l10n),
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: context.textPrimary,
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          level.title(context.l10n),
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: context.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: AppTheme.spacing8),
@@ -1407,13 +1399,13 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                   context.l10n.channelWizardReviewKeySize,
                   _privacyLevel.keySize.bytes == 0
                       ? context.l10n.channelWizardNoKey
-                      : _privacyLevel.keySize.bytes == 1
+                      : listEquals(_generatedKey, const [1])
                       ? context.l10n.channelWizardDefaultKey
                       : context.l10n.channelWizardKeyBits(
                           _privacyLevel.keySize.bytes * 8,
                         ),
                 ),
-                if (_privacyLevel.keySize.bytes > 1) ...[
+                if (_privacyLevel.keySize.bytes > 0) ...[
                   Divider(color: context.border.withAlpha(128)),
                   _buildKeyRow(theme),
                 ],
@@ -1484,11 +1476,15 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
               color: context.textSecondary,
             ),
           ),
-          Text(
-            value.isEmpty ? '-' : value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: context.textPrimary,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: AppTheme.spacing8),
+          Flexible(
+            child: Text(
+              value.isEmpty ? '-' : value,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: context.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -1516,9 +1512,11 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
           const Spacer(),
           Flexible(
             child: Text(
-              keyBase64.isNotEmpty
-                  ? '${keyBase64.substring(0, keyBase64.length.clamp(0, 8))}…'
-                  : '-',
+              keyBase64.isEmpty
+                  ? '-'
+                  : keyBase64.length > 8
+                  ? '${keyBase64.substring(0, 8)}…'
+                  : keyBase64,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: context.textPrimary,
                 fontWeight: FontWeight.w600,
