@@ -3143,6 +3143,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelsMenuAddChannel => 'Добавить канал';
 
   @override
+  String get channelsMenuEnterKey => 'Ввести имя и ключ';
+
+  @override
   String get channelsMenuReorder => 'Изменить порядок каналов';
 
   @override
@@ -16978,6 +16981,13 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get qrScannerSupportsHint =>
       'Поддержка узлов, каналов, автоматизаций и многого другого';
+
+  @override
+  String get qrScannerPasteLink => 'Вставить ссылку';
+
+  @override
+  String get qrScannerClipboardEmpty =>
+      'В буфере обмена нет текста для импорта';
 
   @override
   String get qrScannerTitle => 'Сканировать QR-код';

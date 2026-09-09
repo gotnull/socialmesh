@@ -3107,6 +3107,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelsMenuAddChannel => 'Add Channel';
 
   @override
+  String get channelsMenuEnterKey => 'Enter Name and Key';
+
+  @override
   String get channelsMenuReorder => 'Reorder channels';
 
   @override
@@ -16797,6 +16800,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get qrScannerSupportsHint =>
       'Supports nodes, channels, automations, and more';
+
+  @override
+  String get qrScannerPasteLink => 'Paste link';
+
+  @override
+  String get qrScannerClipboardEmpty => 'The clipboard has no text to import';
 
   @override
   String get qrScannerTitle => 'Scan QR Code';

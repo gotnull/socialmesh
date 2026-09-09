@@ -3147,6 +3147,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get channelsMenuAddChannel => 'Aggiungi canale';
 
   @override
+  String get channelsMenuEnterKey => 'Inserisci nome e chiave';
+
+  @override
   String get channelsMenuReorder => 'Riordina canali';
 
   @override
@@ -16978,6 +16981,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get qrScannerSupportsHint =>
       'Supporta nodi, canali, automazioni e altro';
+
+  @override
+  String get qrScannerPasteLink => 'Incolla link';
+
+  @override
+  String get qrScannerClipboardEmpty =>
+      'Gli appunti non contengono testo da importare';
 
   @override
   String get qrScannerTitle => 'Scansiona codice QR';

@@ -4158,6 +4158,10 @@
   "@channelsMenuAddChannel": {
     "description": "Text displayed in channel configuration"
   },
+  "channelsMenuEnterKey": "Enter Name and Key",
+  "@channelsMenuEnterKey": {
+    "description": "Channels overflow menu item that opens the channel form directly so a published channel name and pre-shared key can be typed or pasted without the wizard."
+  },
   "channelsMenuReorder": "Reorder channels",
   "@channelsMenuReorder": {
     "description": "Action in the channel options sheet and Channels overflow menu that opens the drag-to-reorder sheet for the list's display order."
@@ -22889,6 +22893,14 @@
   "qrScannerSupportsHint": "Supports nodes, channels, automations, and more",
   "@qrScannerSupportsHint": {
     "description": "Subtitle hint text"
+  },
+  "qrScannerPasteLink": "Paste link",
+  "@qrScannerPasteLink": {
+    "description": "Tooltip of the QR scanner app bar button that imports a share link from the clipboard instead of the camera."
+  },
+  "qrScannerClipboardEmpty": "The clipboard has no text to import",
+  "@qrScannerClipboardEmpty": {
+    "description": "Info snackbar shown when the paste-link button is tapped and the clipboard holds no text."
   },
   "qrScannerTitle": "Scan QR Code",
   "@qrScannerTitle": {

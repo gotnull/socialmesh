@@ -3,6 +3,7 @@
 // lint-allow: scaffold — camera feed, glass blur would obscure scanner
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../core/l10n/l10n_extension.dart';
@@ -17,6 +18,7 @@ import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../services/deep_link/deep_link.dart';
+import '../../services/haptic_service.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/text_sanitizer.dart';
@@ -106,6 +108,26 @@ class _UniversalQrScannerScreenState
 
     safeSetState(() => _isProcessing = true);
     _processQrCode(code);
+  }
+
+  // Share links arrive by message as often as by camera. A pasted link
+  // takes the same parse and routing path as a scanned code.
+  Future<void> _importFromClipboard() async {
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted) return;
+    final code = data?.text?.trim() ?? '';
+    if (code.isEmpty) {
+      showInfoSnackBar(context, context.l10n.qrScannerClipboardEmpty);
+      return;
+    }
+    if (_isProcessing) return;
+    AppLogging.qr(
+      'Universal QR Scanner: importing pasted text, length=${code.length}',
+    );
+    _lastProcessedCode = code;
+    setState(() => _isProcessing = true);
+    await _processQrCode(code);
   }
 
   Future<void> _processQrCode(String code) async {
@@ -1081,6 +1103,11 @@ class _UniversalQrScannerScreenState
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.content_paste, color: Colors.white70),
+            tooltip: context.l10n.qrScannerPasteLink,
+            onPressed: _importFromClipboard,
+          ),
           IconButton(
             icon: Icon(
               _controller.torchEnabled ? Icons.flash_on : Icons.flash_off,

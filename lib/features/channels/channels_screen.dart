@@ -22,6 +22,7 @@ import '../../core/widgets/status_filter_chip.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
+import 'channel_form_screen.dart';
 import 'channel_options_sheet.dart';
 import 'channel_reorder_sheet.dart';
 import 'channel_wizard_screen.dart';
@@ -99,6 +100,15 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
       case ChannelFilter.mqtt:
         return channels.where((c) => c.uplink || c.downlink).toList();
     }
+  }
+
+  // Slot 0 is the primary channel; secondary channels occupy 1-7.
+  int _nextFreeChannelIndex(List<ChannelConfig> channels) {
+    final usedIndices = channels.map((c) => c.index).toSet();
+    for (int i = 1; i <= 7; i++) {
+      if (!usedIndices.contains(i)) return i;
+    }
+    return 1;
   }
 
   @override
@@ -326,20 +336,24 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
               onSelected: (value) {
                 switch (value) {
                   case 'add':
-                    // Find next available channel index (1-7, 0 is Primary)
-                    final usedIndices = channels.map((c) => c.index).toSet();
-                    int nextIndex = 1;
-                    for (int i = 1; i <= 7; i++) {
-                      if (!usedIndices.contains(i)) {
-                        nextIndex = i;
-                        break;
-                      }
-                    }
+                    final nextIndex = _nextFreeChannelIndex(channels);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
                             ChannelWizardScreen(channelIndex: nextIndex),
+                      ),
+                    );
+                  case 'manual':
+                    // Pre-existing channels (a community's published name
+                    // and key) skip the wizard: the form takes the key
+                    // directly and accepts 1, 16, and 32 byte sizes.
+                    final nextIndex = _nextFreeChannelIndex(channels);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ChannelFormScreen(channelIndex: nextIndex),
                       ),
                     );
                   case 'scan':
@@ -360,6 +374,15 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                   child: ListTile(
                     leading: Icon(Icons.add),
                     title: Text(context.l10n.channelsMenuAddChannel),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'manual',
+                  child: ListTile(
+                    leading: Icon(Icons.vpn_key_outlined),
+                    title: Text(context.l10n.channelsMenuEnterKey),
                     contentPadding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),

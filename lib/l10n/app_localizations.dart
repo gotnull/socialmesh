@@ -5460,6 +5460,12 @@ abstract class AppLocalizations {
   /// **'Add Channel'**
   String get channelsMenuAddChannel;
 
+  /// Channels overflow menu item that opens the channel form directly so a published channel name and pre-shared key can be typed or pasted without the wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Name and Key'**
+  String get channelsMenuEnterKey;
+
   /// Action in the channel options sheet and Channels overflow menu that opens the drag-to-reorder sheet for the list's display order.
   ///
   /// In en, this message translates to:
@@ -28939,6 +28945,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Supports nodes, channels, automations, and more'**
   String get qrScannerSupportsHint;
+
+  /// Tooltip of the QR scanner app bar button that imports a share link from the clipboard instead of the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste link'**
+  String get qrScannerPasteLink;
+
+  /// Info snackbar shown when the paste-link button is tapped and the clipboard holds no text.
+  ///
+  /// In en, this message translates to:
+  /// **'The clipboard has no text to import'**
+  String get qrScannerClipboardEmpty;
 
   /// Screen title
   ///

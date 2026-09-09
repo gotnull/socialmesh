@@ -3137,6 +3137,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get channelsMenuAddChannel => 'Adicionar canal';
 
   @override
+  String get channelsMenuEnterKey => 'Inserir nome e chave';
+
+  @override
   String get channelsMenuReorder => 'Reordenar canais';
 
   @override
@@ -16965,6 +16968,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get qrScannerSupportsHint => 'Suporta nós, canais, automações e mais';
+
+  @override
+  String get qrScannerPasteLink => 'Colar link';
+
+  @override
+  String get qrScannerClipboardEmpty =>
+      'A área de transferência não contém texto para importar';
 
   @override
   String get qrScannerTitle => 'Escanear código QR';
