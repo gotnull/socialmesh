@@ -575,6 +575,9 @@ class MeshNode {
   // Connectivity
   final bool hasWifi; // Whether device has WiFi
   final bool hasBluetooth; // Whether device has Bluetooth
+  // Read-only firmware capability from DeviceMetadata: the build verifies
+  // XEdDSA packet signatures, so the packet signature policy applies.
+  final bool hasXeddsa;
 
   // RF Metadata
   final int? hopCount; // Hops away from this node (0 = direct neighbor)
@@ -685,6 +688,7 @@ class MeshNode {
     // Connectivity
     this.hasWifi = false,
     this.hasBluetooth = false,
+    this.hasXeddsa = false,
     // RF Metadata
     this.hopCount,
     this.viaMqtt = false,
@@ -800,6 +804,7 @@ class MeshNode {
     // Connectivity
     bool? hasWifi,
     bool? hasBluetooth,
+    bool? hasXeddsa,
     // RF Metadata
     int? hopCount,
     bool? viaMqtt,
@@ -914,6 +919,7 @@ class MeshNode {
       // Connectivity
       hasWifi: hasWifi ?? this.hasWifi,
       hasBluetooth: hasBluetooth ?? this.hasBluetooth,
+      hasXeddsa: hasXeddsa ?? this.hasXeddsa,
       // RF Metadata
       hopCount: hopCount ?? this.hopCount,
       viaMqtt: viaMqtt ?? this.viaMqtt,

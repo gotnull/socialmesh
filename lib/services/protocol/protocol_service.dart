@@ -4111,6 +4111,7 @@ class ProtocolService {
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
+            hasXeddsa: metadata.hasXeddsa,
             hardwareModel: hwModelName ?? existingNode.hardwareModel,
             hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
                 ? metadata.hwModel.value
@@ -4138,6 +4139,7 @@ class ProtocolService {
                 : null,
             hasWifi: metadata.hasWifi,
             hasBluetooth: metadata.hasBluetooth,
+            hasXeddsa: metadata.hasXeddsa,
             hardwareModel: hwModelName ?? remoteNode.hardwareModel,
             hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
                 ? metadata.hwModel.value
@@ -4377,6 +4379,7 @@ class ProtocolService {
             : null,
         hasWifi: metadata.hasWifi,
         hasBluetooth: metadata.hasBluetooth,
+        hasXeddsa: metadata.hasXeddsa,
         hardwareModel: hwModelName ?? existingNode.hardwareModel,
         hwModelId: metadata.hwModel != pb.HardwareModel.UNSET
             ? metadata.hwModel.value
@@ -10664,6 +10667,11 @@ class ProtocolService {
     required bool serialEnabled,
     required bool debugLogEnabled,
     required bool adminChannelEnabled,
+    // Always echoed back: setConfig replaces the whole security config and
+    // proto3 has no presence for enums, so an omitted policy silently
+    // resets a 2.8 radio to COMPATIBLE on every save.
+    required config_pbenum.Config_SecurityConfig_PacketSignaturePolicy
+    packetSignaturePolicy,
     List<int> privateKey = const [],
     List<List<int>> adminKeys = const [],
     AdminTarget? target,
@@ -10674,7 +10682,8 @@ class ProtocolService {
       ..isManaged = isManaged
       ..serialEnabled = serialEnabled
       ..debugLogApiEnabled = debugLogEnabled
-      ..adminChannelEnabled = adminChannelEnabled;
+      ..adminChannelEnabled = adminChannelEnabled
+      ..packetSignaturePolicy = packetSignaturePolicy;
 
     // Set private key if provided
     if (privateKey.isNotEmpty) {

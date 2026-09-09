@@ -299,6 +299,9 @@ void main() {
         serialEnabled: true,
         debugLogEnabled: false,
         adminChannelEnabled: false,
+        packetSignaturePolicy: config_pbenum
+            .Config_SecurityConfig_PacketSignaturePolicy
+            .PACKET_SIGNATURE_POLICY_COMPATIBLE,
         privateKey: [],
         adminKeys: [],
         target: const AdminTarget.remote(_remoteNodeNum),
@@ -307,6 +310,30 @@ void main() {
       final packet = transport.lastPacket;
       expect(packet.to, _remoteNodeNum);
       expect(packet.wantAck, isTrue);
+    });
+
+    // setConfig replaces the whole security config and proto3 enums have
+    // no presence, so the policy must travel on every save or a 2.8
+    // radio silently drops back to COMPATIBLE.
+    test('carries the packet signature policy on the wire', () async {
+      await protocol.setSecurityConfig(
+        isManaged: false,
+        serialEnabled: true,
+        debugLogEnabled: false,
+        adminChannelEnabled: false,
+        packetSignaturePolicy: config_pbenum
+            .Config_SecurityConfig_PacketSignaturePolicy
+            .PACKET_SIGNATURE_POLICY_STRICT,
+        target: const AdminTarget.remote(_remoteNodeNum),
+      );
+
+      final security = transport.lastAdminMessage.setConfig.security;
+      expect(
+        security.packetSignaturePolicy,
+        config_pbenum
+            .Config_SecurityConfig_PacketSignaturePolicy
+            .PACKET_SIGNATURE_POLICY_STRICT,
+      );
     });
   });
 

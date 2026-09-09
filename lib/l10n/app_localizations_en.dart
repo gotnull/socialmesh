@@ -30569,6 +30569,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allow remote admin via admin channel';
 
   @override
+  String get securityConfigPacketAuth => 'Packet Authentication';
+
+  @override
+  String get securityConfigPacketAuthCompatible => 'Compatible';
+
+  @override
+  String get securityConfigPacketAuthBalanced => 'Balanced';
+
+  @override
+  String get securityConfigPacketAuthStrict => 'Strict';
+
+  @override
+  String get securityConfigPacketAuthCompatibleDesc =>
+      'Authenticate packets when possible, but accept unsigned traffic for maximum compatibility.';
+
+  @override
+  String get securityConfigPacketAuthBalancedDesc =>
+      'Recommended. Reject unsigned downgrade attempts from nodes known to sign.';
+
+  @override
+  String get securityConfigPacketAuthStrictDesc =>
+      'Only show and process cryptographically authenticated mesh packets. Older nodes and oversized packets may disappear.';
+
+  @override
+  String get securityConfigPacketAuthUnknownDesc =>
+      'This radio reported a packet authentication policy this app version does not recognise.';
+
+  @override
   String get securityConfigWarning =>
       'Disabling serial console or enabling managed mode may make it difficult to recover the device. Make sure you understand the implications before making changes.';
 

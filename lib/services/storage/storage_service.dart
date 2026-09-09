@@ -1702,6 +1702,7 @@ class NodeStorageService {
       // Connectivity
       'hasWifi': node.hasWifi,
       'hasBluetooth': node.hasBluetooth,
+      'hasXeddsa': node.hasXeddsa,
     };
   }
 
@@ -1834,6 +1835,7 @@ class NodeStorageService {
       // Connectivity
       hasWifi: json['hasWifi'] as bool? ?? false,
       hasBluetooth: json['hasBluetooth'] as bool? ?? false,
+      hasXeddsa: json['hasXeddsa'] as bool? ?? false,
     );
   }
 }

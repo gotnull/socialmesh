@@ -30958,6 +30958,34 @@ class AppLocalizationsUk extends AppLocalizations {
       'Дозволити віддалене адміністрування через канал адміністратора';
 
   @override
+  String get securityConfigPacketAuth => 'Автентифікація пакетів';
+
+  @override
+  String get securityConfigPacketAuthCompatible => 'Сумісний';
+
+  @override
+  String get securityConfigPacketAuthBalanced => 'Збалансований';
+
+  @override
+  String get securityConfigPacketAuthStrict => 'Суворий';
+
+  @override
+  String get securityConfigPacketAuthCompatibleDesc =>
+      'Автентифікує пакети, коли це можливо, але приймає непідписаний трафік для максимальної сумісності.';
+
+  @override
+  String get securityConfigPacketAuthBalancedDesc =>
+      'Рекомендовано. Відхиляє непідписані спроби зниження від вузлів, які, як відомо, підписують пакети.';
+
+  @override
+  String get securityConfigPacketAuthStrictDesc =>
+      'Показує та обробляє лише криптографічно автентифіковані пакети mesh-мережі. Старі вузли та завеликі пакети можуть зникнути.';
+
+  @override
+  String get securityConfigPacketAuthUnknownDesc =>
+      'Це радіо повідомило про політику автентифікації пакетів, яку ця версія застосунку не розпізнає.';
+
+  @override
   String get securityConfigWarning =>
       'Вимкнення послідовної консолі або увімкнення керованого режиму може ускладнити відновлення пристрою. Переконайтеся, що ви розумієте наслідки перед внесенням змін.';
 

@@ -30951,6 +30951,34 @@ class AppLocalizationsRu extends AppLocalizations {
       'Разрешить удаленное администрирование через канал администратора';
 
   @override
+  String get securityConfigPacketAuth => 'Аутентификация пакетов';
+
+  @override
+  String get securityConfigPacketAuthCompatible => 'Совместимый';
+
+  @override
+  String get securityConfigPacketAuthBalanced => 'Сбалансированный';
+
+  @override
+  String get securityConfigPacketAuthStrict => 'Строгий';
+
+  @override
+  String get securityConfigPacketAuthCompatibleDesc =>
+      'Аутентифицирует пакеты, когда это возможно, но принимает неподписанный трафик для максимальной совместимости.';
+
+  @override
+  String get securityConfigPacketAuthBalancedDesc =>
+      'Рекомендуется. Отклоняет неподписанные попытки понижения от узлов, которые, как известно, подписывают пакеты.';
+
+  @override
+  String get securityConfigPacketAuthStrictDesc =>
+      'Показывает и обрабатывает только криптографически аутентифицированные пакеты mesh-сети. Старые узлы и слишком большие пакеты могут исчезнуть.';
+
+  @override
+  String get securityConfigPacketAuthUnknownDesc =>
+      'Это радио сообщило о политике аутентификации пакетов, которую данная версия приложения не распознаёт.';
+
+  @override
   String get securityConfigWarning =>
       'Отключение последовательной консоли или включение управляемого режима может затруднить восстановление устройства. Убедитесь, что понимаете последствия, прежде чем вносить изменения.';
 

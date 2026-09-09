@@ -30938,6 +30938,34 @@ class AppLocalizationsIt extends AppLocalizations {
       'Consenti amministrazione remota tramite canale admin';
 
   @override
+  String get securityConfigPacketAuth => 'Autenticazione dei pacchetti';
+
+  @override
+  String get securityConfigPacketAuthCompatible => 'Compatibile';
+
+  @override
+  String get securityConfigPacketAuthBalanced => 'Bilanciato';
+
+  @override
+  String get securityConfigPacketAuthStrict => 'Rigoroso';
+
+  @override
+  String get securityConfigPacketAuthCompatibleDesc =>
+      'Autentica i pacchetti quando possibile, ma accetta il traffico non firmato per la massima compatibilità.';
+
+  @override
+  String get securityConfigPacketAuthBalancedDesc =>
+      'Consigliato. Rifiuta i tentativi di downgrade non firmati da nodi noti per firmare.';
+
+  @override
+  String get securityConfigPacketAuthStrictDesc =>
+      'Mostra ed elabora solo i pacchetti mesh autenticati crittograficamente. I nodi più vecchi e i pacchetti troppo grandi potrebbero scomparire.';
+
+  @override
+  String get securityConfigPacketAuthUnknownDesc =>
+      'Questa radio ha segnalato una politica di autenticazione dei pacchetti che questa versione dell\'app non riconosce.';
+
+  @override
   String get securityConfigWarning =>
       'Disabilitare la console seriale o abilitare la modalità gestita potrebbe rendere difficile il recupero del dispositivo. Assicurati di comprendere le implicazioni prima di apportare modifiche.';
 

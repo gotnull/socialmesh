@@ -53455,6 +53455,54 @@ abstract class AppLocalizations {
   /// **'Allow remote admin via admin channel'**
   String get securityConfigAdminChannelSubtitle;
 
+  /// Security config block title for the firmware packet signature policy (how the radio treats packets it cannot authenticate); shown only for firmware that verifies XEdDSA signatures
+  ///
+  /// In en, this message translates to:
+  /// **'Packet Authentication'**
+  String get securityConfigPacketAuth;
+
+  /// Packet authentication policy chip: accept unsigned packets
+  ///
+  /// In en, this message translates to:
+  /// **'Compatible'**
+  String get securityConfigPacketAuthCompatible;
+
+  /// Packet authentication policy chip: prefer authenticated packets
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get securityConfigPacketAuthBalanced;
+
+  /// Packet authentication policy chip: require authentication
+  ///
+  /// In en, this message translates to:
+  /// **'Strict'**
+  String get securityConfigPacketAuthStrict;
+
+  /// Description shown while the Compatible packet authentication policy is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate packets when possible, but accept unsigned traffic for maximum compatibility.'**
+  String get securityConfigPacketAuthCompatibleDesc;
+
+  /// Description shown while the Balanced packet authentication policy is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended. Reject unsigned downgrade attempts from nodes known to sign.'**
+  String get securityConfigPacketAuthBalancedDesc;
+
+  /// Description shown while the Strict packet authentication policy is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Only show and process cryptographically authenticated mesh packets. Older nodes and oversized packets may disappear.'**
+  String get securityConfigPacketAuthStrictDesc;
+
+  /// Description shown when the radio reports a packet authentication policy newer than this app knows
+  ///
+  /// In en, this message translates to:
+  /// **'This radio reported a packet authentication policy this app version does not recognise.'**
+  String get securityConfigPacketAuthUnknownDesc;
+
   /// UI text: security config warning
   ///
   /// In en, this message translates to:

@@ -30913,6 +30913,34 @@ class AppLocalizationsPt extends AppLocalizations {
       'Permitir administração remota via canal admin';
 
   @override
+  String get securityConfigPacketAuth => 'Autenticação de pacotes';
+
+  @override
+  String get securityConfigPacketAuthCompatible => 'Compatível';
+
+  @override
+  String get securityConfigPacketAuthBalanced => 'Equilibrado';
+
+  @override
+  String get securityConfigPacketAuthStrict => 'Rigoroso';
+
+  @override
+  String get securityConfigPacketAuthCompatibleDesc =>
+      'Autentica os pacotes quando possível, mas aceita tráfego não assinado para máxima compatibilidade.';
+
+  @override
+  String get securityConfigPacketAuthBalancedDesc =>
+      'Recomendado. Rejeita tentativas de downgrade não assinadas de nós que sabidamente assinam.';
+
+  @override
+  String get securityConfigPacketAuthStrictDesc =>
+      'Mostra e processa apenas pacotes mesh autenticados criptograficamente. Nós antigos e pacotes grandes demais podem desaparecer.';
+
+  @override
+  String get securityConfigPacketAuthUnknownDesc =>
+      'Este rádio informou uma política de autenticação de pacotes que esta versão do app não reconhece.';
+
+  @override
   String get securityConfigWarning =>
       'Desabilitar o console serial ou ativar o modo gerenciado pode dificultar a recuperação do dispositivo. Certifique-se de entender as implicações antes de fazer alterações.';
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.65.0] - 2026-09-09
 
+### Added (Packet authentication policy on firmware 2.8)
+
+- Security settings gain a Packet Authentication block on radios whose firmware verifies packet signatures, with the same Compatible, Balanced and Strict choices and wording as the official app (thanks p.asproulis). The block only appears when the radio reports the capability, and it follows the remote admin target when one is selected. Saving the security screen also now sends the radio's current policy back with the rest of the security config. Before this it was left out of every save, which quietly reset a 2.8 radio to Compatible each time any other security setting was changed
+
 ### Fixed (Radio sheet said Connected while sending was still blocked)
 
 - The radio sheet no longer reads "Connected" while the app is still finishing the Meshtastic handshake or restoring a dropped session, so it no longer contradicts the "Still configuring SocialMesh" message a traceroute gets in that window (thanks markusgritsch). The sheet header and its Status row now read "Configuring..." during the handshake and "Recovering connection..." while a session is being restored, in the same amber the reconnect states use, and switch to "Connected" only once the radio will accept sends

@@ -31083,6 +31083,34 @@ class AppLocalizationsEs extends AppLocalizations {
       'Permitir administración remota a través del canal de administración';
 
   @override
+  String get securityConfigPacketAuth => 'Autenticación de paquetes';
+
+  @override
+  String get securityConfigPacketAuthCompatible => 'Compatible';
+
+  @override
+  String get securityConfigPacketAuthBalanced => 'Equilibrado';
+
+  @override
+  String get securityConfigPacketAuthStrict => 'Estricto';
+
+  @override
+  String get securityConfigPacketAuthCompatibleDesc =>
+      'Autentica los paquetes cuando es posible, pero acepta tráfico sin firmar para máxima compatibilidad.';
+
+  @override
+  String get securityConfigPacketAuthBalancedDesc =>
+      'Recomendado. Rechaza los intentos de degradación sin firmar de nodos que se sabe que firman.';
+
+  @override
+  String get securityConfigPacketAuthStrictDesc =>
+      'Solo muestra y procesa paquetes de malla autenticados criptográficamente. Los nodos antiguos y los paquetes demasiado grandes pueden desaparecer.';
+
+  @override
+  String get securityConfigPacketAuthUnknownDesc =>
+      'Esta radio informó de una política de autenticación de paquetes que esta versión de la app no reconoce.';
+
+  @override
   String get securityConfigWarning =>
       'Desactivar la consola serie o activar el modo administrado puede dificultar la recuperación del dispositivo. Asegúrese de comprender las implicaciones antes de realizar cambios.';
 

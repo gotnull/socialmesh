@@ -31025,6 +31025,34 @@ class AppLocalizationsDe extends AppLocalizations {
       'Fernverwaltung über Admin-Kanal erlauben';
 
   @override
+  String get securityConfigPacketAuth => 'Paketauthentifizierung';
+
+  @override
+  String get securityConfigPacketAuthCompatible => 'Kompatibel';
+
+  @override
+  String get securityConfigPacketAuthBalanced => 'Ausgewogen';
+
+  @override
+  String get securityConfigPacketAuthStrict => 'Strikt';
+
+  @override
+  String get securityConfigPacketAuthCompatibleDesc =>
+      'Pakete werden nach Möglichkeit authentifiziert, unsignierter Verkehr wird aber für maximale Kompatibilität akzeptiert.';
+
+  @override
+  String get securityConfigPacketAuthBalancedDesc =>
+      'Empfohlen. Unsignierte Downgrade-Versuche von Knoten, die bekanntermaßen signieren, werden abgelehnt.';
+
+  @override
+  String get securityConfigPacketAuthStrictDesc =>
+      'Nur kryptografisch authentifizierte Mesh-Pakete werden angezeigt und verarbeitet. Ältere Knoten und übergroße Pakete können verschwinden.';
+
+  @override
+  String get securityConfigPacketAuthUnknownDesc =>
+      'Dieses Funkgerät hat eine Paketauthentifizierungsrichtlinie gemeldet, die diese App-Version nicht kennt.';
+
+  @override
   String get securityConfigWarning =>
       'Das Deaktivieren der seriellen Konsole oder das Aktivieren des verwalteten Modus kann die Wiederherstellung des Geräts erschweren. Stellen Sie sicher, dass Sie die Auswirkungen verstehen, bevor Sie Änderungen vornehmen.';
 

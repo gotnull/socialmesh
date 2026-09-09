@@ -19,7 +19,9 @@ import '../../providers/countdown_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../core/widgets/chip_selector.dart';
 import '../../services/protocol/admin_target.dart';
 import 'package:cryptography/cryptography.dart';
 import '../../core/l10n/l10n_extension.dart';
@@ -44,6 +46,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
   bool _serialEnabled = true;
   bool _debugLogEnabled = false;
   bool _adminChannelEnabled = false;
+  config_pbenum.Config_SecurityConfig_PacketSignaturePolicy
+  _packetSignaturePolicy = config_pbenum
+      .Config_SecurityConfig_PacketSignaturePolicy
+      .PACKET_SIGNATURE_POLICY_COMPATIBLE;
   bool _saving = false;
   bool _loading = false;
   bool _isKeyOperating = false;
@@ -98,6 +104,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
       _serialEnabled = config.serialEnabled;
       _debugLogEnabled = config.debugLogApiEnabled;
       _adminChannelEnabled = config.adminChannelEnabled;
+      _packetSignaturePolicy = config.packetSignaturePolicy;
 
       // PKI Keys
       if (config.publicKey.isNotEmpty) {
@@ -267,6 +274,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
         serialEnabled: _serialEnabled,
         debugLogEnabled: _debugLogEnabled,
         adminChannelEnabled: _adminChannelEnabled,
+        packetSignaturePolicy: _packetSignaturePolicy,
         privateKey: privateKeyBytes,
         adminKeys: adminKeys,
         target: target,
@@ -436,6 +444,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
                       },
                     ),
                   ),
+                  // Only a firmware build that verifies XEdDSA signatures
+                  // honours the policy; older radios never report the
+                  // capability and the row would be a no-op.
+                  if (_targetHasXeddsa) _buildPacketAuthSection(),
                   SizedBox(height: AppTheme.spacing16),
 
                   // Warning card
@@ -819,6 +831,103 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
     } finally {
       safeSetState(() => _isKeyOperating = false);
     }
+  }
+
+  // Capability of the radio the save will target: the remote admin target
+  // when one is selected, otherwise the connected radio.
+  bool get _targetHasXeddsa {
+    final nodes = ref.watch(nodesProvider);
+    final remoteTarget = ref.watch(remoteAdminTargetProvider);
+    if (remoteTarget != null) {
+      return nodes[remoteTarget]?.hasXeddsa ?? false;
+    }
+    final myNodeNum = ref.watch(myNodeNumProvider);
+    return nodes[myNodeNum]?.hasXeddsa ?? false;
+  }
+
+  String _packetAuthDescription(BuildContext context) {
+    switch (_packetSignaturePolicy) {
+      case config_pbenum
+          .Config_SecurityConfig_PacketSignaturePolicy
+          .PACKET_SIGNATURE_POLICY_COMPATIBLE:
+        return context.l10n.securityConfigPacketAuthCompatibleDesc;
+      case config_pbenum
+          .Config_SecurityConfig_PacketSignaturePolicy
+          .PACKET_SIGNATURE_POLICY_BALANCED:
+        return context.l10n.securityConfigPacketAuthBalancedDesc;
+      case config_pbenum
+          .Config_SecurityConfig_PacketSignaturePolicy
+          .PACKET_SIGNATURE_POLICY_STRICT:
+        return context.l10n.securityConfigPacketAuthStrictDesc;
+    }
+    // A policy added by newer firmware than this build knows. It is kept
+    // as loaded and echoed back unchanged on save.
+    return context.l10n.securityConfigPacketAuthUnknownDesc;
+  }
+
+  Widget _buildPacketAuthSection() {
+    final l10n = context.l10n;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.securityConfigPacketAuth,
+            style: TextStyle(
+              color: context.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: AppTheme.spacing4),
+          Text(
+            _packetAuthDescription(context),
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
+          ),
+          SizedBox(height: AppTheme.spacing8),
+          ChipSelector<
+            config_pbenum.Config_SecurityConfig_PacketSignaturePolicy
+          >(
+            value: _packetSignaturePolicy,
+            options: [
+              ChipOption(
+                value: config_pbenum
+                    .Config_SecurityConfig_PacketSignaturePolicy
+                    .PACKET_SIGNATURE_POLICY_COMPATIBLE,
+                label: l10n.securityConfigPacketAuthCompatible,
+                icon: Icons.lock_open,
+                color: context.accentColor,
+              ),
+              ChipOption(
+                value: config_pbenum
+                    .Config_SecurityConfig_PacketSignaturePolicy
+                    .PACKET_SIGNATURE_POLICY_BALANCED,
+                label: l10n.securityConfigPacketAuthBalanced,
+                icon: Icons.verified_user,
+                color: context.accentColor,
+              ),
+              ChipOption(
+                value: config_pbenum
+                    .Config_SecurityConfig_PacketSignaturePolicy
+                    .PACKET_SIGNATURE_POLICY_STRICT,
+                label: l10n.securityConfigPacketAuthStrict,
+                icon: Icons.lock,
+                color: context.accentColor,
+              ),
+            ],
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() => _packetSignaturePolicy = value);
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildAdminKeysSection() {

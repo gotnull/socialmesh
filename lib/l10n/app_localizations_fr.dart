@@ -31174,6 +31174,34 @@ class AppLocalizationsFr extends AppLocalizations {
       'Autoriser l\'administration à distance via le canal d\'administration';
 
   @override
+  String get securityConfigPacketAuth => 'Authentification des paquets';
+
+  @override
+  String get securityConfigPacketAuthCompatible => 'Compatible';
+
+  @override
+  String get securityConfigPacketAuthBalanced => 'Équilibré';
+
+  @override
+  String get securityConfigPacketAuthStrict => 'Strict';
+
+  @override
+  String get securityConfigPacketAuthCompatibleDesc =>
+      'Authentifie les paquets lorsque c\'est possible, mais accepte le trafic non signé pour une compatibilité maximale.';
+
+  @override
+  String get securityConfigPacketAuthBalancedDesc =>
+      'Recommandé. Rejette les tentatives de rétrogradation non signées provenant de nœuds connus pour signer.';
+
+  @override
+  String get securityConfigPacketAuthStrictDesc =>
+      'N\'affiche et ne traite que les paquets mesh authentifiés cryptographiquement. Les nœuds anciens et les paquets trop volumineux peuvent disparaître.';
+
+  @override
+  String get securityConfigPacketAuthUnknownDesc =>
+      'Cette radio a signalé une politique d\'authentification des paquets que cette version de l\'application ne reconnaît pas.';
+
+  @override
   String get securityConfigWarning =>
       'Désactiver la console série ou activer le mode géré peut rendre difficile la récupération de l\'appareil. Assurez-vous de comprendre les implications avant d\'effectuer des modifications.';
 

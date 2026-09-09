@@ -6508,6 +6508,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           firmwareVersion: node.firmwareVersion ?? existing.firmwareVersion,
           hasWifi: node.hasWifi || existing.hasWifi,
           hasBluetooth: node.hasBluetooth || existing.hasBluetooth,
+          hasXeddsa: node.hasXeddsa || existing.hasXeddsa,
           positionTimestamp:
               node.positionTimestamp ?? existing.positionTimestamp,
           firstHeard: existing.firstHeard ?? node.firstHeard,

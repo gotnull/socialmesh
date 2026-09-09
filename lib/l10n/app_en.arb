@@ -41179,6 +41179,38 @@
   "@securityConfigAdminChannelSubtitle": {
     "description": "Subtitle or secondary text"
   },
+  "securityConfigPacketAuth": "Packet Authentication",
+  "@securityConfigPacketAuth": {
+    "description": "Security config block title for the firmware packet signature policy (how the radio treats packets it cannot authenticate); shown only for firmware that verifies XEdDSA signatures"
+  },
+  "securityConfigPacketAuthCompatible": "Compatible",
+  "@securityConfigPacketAuthCompatible": {
+    "description": "Packet authentication policy chip: accept unsigned packets"
+  },
+  "securityConfigPacketAuthBalanced": "Balanced",
+  "@securityConfigPacketAuthBalanced": {
+    "description": "Packet authentication policy chip: prefer authenticated packets"
+  },
+  "securityConfigPacketAuthStrict": "Strict",
+  "@securityConfigPacketAuthStrict": {
+    "description": "Packet authentication policy chip: require authentication"
+  },
+  "securityConfigPacketAuthCompatibleDesc": "Authenticate packets when possible, but accept unsigned traffic for maximum compatibility.",
+  "@securityConfigPacketAuthCompatibleDesc": {
+    "description": "Description shown while the Compatible packet authentication policy is selected"
+  },
+  "securityConfigPacketAuthBalancedDesc": "Recommended. Reject unsigned downgrade attempts from nodes known to sign.",
+  "@securityConfigPacketAuthBalancedDesc": {
+    "description": "Description shown while the Balanced packet authentication policy is selected"
+  },
+  "securityConfigPacketAuthStrictDesc": "Only show and process cryptographically authenticated mesh packets. Older nodes and oversized packets may disappear.",
+  "@securityConfigPacketAuthStrictDesc": {
+    "description": "Description shown while the Strict packet authentication policy is selected"
+  },
+  "securityConfigPacketAuthUnknownDesc": "This radio reported a packet authentication policy this app version does not recognise.",
+  "@securityConfigPacketAuthUnknownDesc": {
+    "description": "Description shown when the radio reports a packet authentication policy newer than this app knows"
+  },
   "securityConfigWarning": "Disabling serial console or enabling managed mode may make it difficult to recover the device. Make sure you understand the implications before making changes.",
   "@securityConfigWarning": {
     "description": "UI text: security config warning"
