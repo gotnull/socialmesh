@@ -4347,6 +4347,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deviceSheetScanForDevices => 'Buscar dispositivos';
 
   @override
+  String get deviceSheetCancelReconnect => 'Cancelar reconexión';
+
+  @override
   String get deviceSheetSectionConnectionDetails => 'Detalles de conexión';
 
   @override

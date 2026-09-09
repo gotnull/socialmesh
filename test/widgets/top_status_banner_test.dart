@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/widgets/top_status_banner.dart';
+import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
 
@@ -192,5 +193,91 @@ void main() {
 
     expect(find.text('Reconnecting...'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
+  });
+
+  // Readiness reports `degraded` when the transport drops out of range
+  // while auto-reconnect is scanning. The handshake-retry presentation
+  // must not win in that case: the user needs Cancel to reach the
+  // Scanner and pick another radio.
+  testWidgets('degraded readiness with the link down shows Cancel, not Retry', (
+    tester,
+  ) async {
+    var wentToScanner = false;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          meshtasticBannerStateProvider.overrideWithValue(
+            MeshtasticBannerState.recovering,
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: TopStatusBanner(
+            autoReconnectState: AutoReconnectState.scanning,
+            autoReconnectEnabled: true,
+            onRetry: () => fail('Retry must not run while the link is down'),
+            onGoToScanner: () => wentToScanner = true,
+            deviceState: const DeviceConnectionState2(
+              state: DevicePairingState.disconnected,
+              reason: DisconnectReason.none,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Searching for device...'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.text('Retry'), findsNothing);
+    expect(find.text('Connection is still recovering'), findsNothing);
+
+    await tester.tap(find.byType(InkWell));
+    expect(wentToScanner, isTrue);
+  });
+
+  testWidgets('degraded readiness with the link up keeps Retry', (
+    tester,
+  ) async {
+    var retryTapped = false;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          meshtasticBannerStateProvider.overrideWithValue(
+            MeshtasticBannerState.recovering,
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: TopStatusBanner(
+            autoReconnectState: AutoReconnectState.idle,
+            autoReconnectEnabled: true,
+            onRetry: () => retryTapped = true,
+            onGoToScanner: () =>
+                fail('A wedged handshake on a live link retries in place'),
+            deviceState: const DeviceConnectionState2(
+              state: DevicePairingState.connected,
+              reason: DisconnectReason.none,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Connection is still recovering'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Cancel'), findsNothing);
+
+    // The Retry TextButton carries its own InkWell; the banner body is
+    // the outer one.
+    await tester.tap(find.byType(InkWell).first);
+    expect(retryTapped, isTrue);
   });
 }

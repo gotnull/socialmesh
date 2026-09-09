@@ -2526,6 +2526,7 @@
   "deviceSheetResetNodeDbError": "Échec de la réinitialisation de la base de données des noeuds : {error}",
   "deviceSheetResetNodeDbSuccess": "Base de données des noeuds réinitialisée avec succès",
   "deviceSheetScanForDevices": "Rechercher des appareils",
+  "deviceSheetCancelReconnect": "Annuler la reconnexion",
   "deviceSheetSectionConnectionDetails": "Détails de connexion",
   "deviceSheetSectionDeveloperTools": "Outils de développement",
   "deviceSheetSectionQuickActions": "Actions rapides",

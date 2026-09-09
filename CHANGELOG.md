@@ -5,11 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.64.0] - 2026-09-08
+## [1.65.0] - 2026-09-09
+
+### Fixed (No way to stop reconnecting to an out-of-range radio)
+
+- When your radio goes out of range and the app keeps searching for it, you can now stop the search and pick another radio (thanks markusgritsch). The radio sheet gains a Cancel reconnect button while the search runs, and the top banner offers Cancel instead of Retry while the link is down. Before this the banner read "Connection is still recovering" with only a Retry, and the radio sheet hid every button while reconnecting, so the search ran until it gave up on its own
 
 ### Fixed (Disconnect from the Nodes list reconnected straight away)
 
 - Long-pressing your own radio in the Nodes list and choosing "Disconnect device" now stays disconnected and returns to the scanner, the same as Disconnect from the radio icon (thanks markusgritsch). That menu entry only dropped the Bluetooth link and never recorded that you asked for it, so automatic reconnect treated the drop as a fault and brought the radio straight back. Both Disconnect entries now run the same sequence
+
+## [1.64.0] - 2026-09-08
 
 ### Fixed (MeshCore Bluetooth drop reported as an error)
 

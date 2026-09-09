@@ -4325,6 +4325,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deviceSheetScanForDevices => 'Поиск устройств';
 
   @override
+  String get deviceSheetCancelReconnect => 'Отменить переподключение';
+
+  @override
   String get deviceSheetSectionConnectionDetails => 'Сведения о подключении';
 
   @override

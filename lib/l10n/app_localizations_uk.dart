@@ -4335,6 +4335,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get deviceSheetScanForDevices => 'Сканувати пристрої';
 
   @override
+  String get deviceSheetCancelReconnect => 'Скасувати перепідключення';
+
+  @override
   String get deviceSheetSectionConnectionDetails => 'Деталі з\'єднання';
 
   @override

@@ -5653,6 +5653,10 @@
   "@deviceSheetScanForDevices": {
     "description": "Text displayed in developer tools"
   },
+  "deviceSheetCancelReconnect": "Cancel reconnect",
+  "@deviceSheetCancelReconnect": {
+    "description": "Device sheet button shown while auto-reconnect is searching for an out-of-range radio; stops the reconnect and opens the scanner"
+  },
   "deviceSheetSectionConnectionDetails": "Connection Details",
   "@deviceSheetSectionConnectionDetails": {
     "description": "Text displayed in developer tools"

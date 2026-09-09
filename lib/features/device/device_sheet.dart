@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -264,7 +266,11 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         // can show a tappable "Scan for Devices" button — the user can
         // tap it before `pushNamedAndRemoveUntil('/app', …)` lands,
         // pushing Scanner onto a dead device-sheet stack.
-        if (!_disconnecting && (isConnected || !isReconnecting)) ...[
+        // While auto-reconnect is searching for a radio that is out of
+        // range, the sheet must still offer a way out: the CTA becomes
+        // Cancel reconnect, which stops the cycle before routing to the
+        // Scanner so another radio can be chosen.
+        if (!_disconnecting) ...[
           Divider(color: context.border.withValues(alpha: 0.2), height: 1),
           Padding(
             padding: EdgeInsets.fromLTRB(
@@ -275,7 +281,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
             ),
             child: isConnected
                 ? _buildDisconnectButton(context)
-                : _buildScanButton(context),
+                : _buildScanButton(context, cancelReconnect: isReconnecting),
           ),
         ],
       ],
@@ -363,13 +369,30 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
     );
   }
 
-  Widget _buildScanButton(BuildContext context) {
+  Widget _buildScanButton(
+    BuildContext context, {
+    required bool cancelReconnect,
+  }) {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 52),
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () {
+            if (cancelReconnect) {
+              // Authoritative cancel: latches userDisconnected, idles the
+              // reconnect state and tears down any in-flight link. Its
+              // synchronous prefix runs before the routing below, so the
+              // Scanner mounts with re-arm already blocked. Not awaited:
+              // the user should not sit on this sheet while the
+              // transport disconnect completes.
+              AppLogging.connection('DEVICE_SHEET_CANCEL_RECONNECT_TAPPED');
+              unawaited(
+                ref
+                    .read(deviceConnectionProvider.notifier)
+                    .userCancelAutoReconnect(),
+              );
+            }
             AppLogging.connection('DEVICE_SHEET_SCAN_TAPPED');
             // Nav guard: if a Scanner is already mounted (e.g. the user
             // double-tapped, or the post-disconnect router is mid-swap)
@@ -420,8 +443,15 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
               Navigator.of(context).popUntil((route) => route.isFirst);
             }
           },
-          icon: Icon(Icons.bluetooth_searching, size: 20),
-          label: Text(context.l10n.deviceSheetScanForDevices),
+          icon: Icon(
+            cancelReconnect ? Icons.close_rounded : Icons.bluetooth_searching,
+            size: 20,
+          ),
+          label: Text(
+            cancelReconnect
+                ? context.l10n.deviceSheetCancelReconnect
+                : context.l10n.deviceSheetScanForDevices,
+          ),
           style: ElevatedButton.styleFrom(
             backgroundColor: context.accentColor,
             foregroundColor: Colors.white,

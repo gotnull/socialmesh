@@ -354,12 +354,20 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     // remains the single source of truth for that protocol.
     final bannerState = ref.watch(meshtasticBannerStateProvider);
     final isConfiguring = bannerState == MeshtasticBannerState.configuring;
-    final isDegraded = bannerState == MeshtasticBannerState.recovering;
 
     // Use frozen props during exit animation so content doesn't flash.
     final effectiveReconnectState =
         _frozenReconnectState ?? widget.autoReconnectState;
     final effectiveDeviceState = _frozenDeviceState ?? widget.deviceState;
+
+    // Readiness reports `degraded` for a dropped transport as well as for
+    // a wedged handshake. The handshake-retry treatment below only makes
+    // sense while the link is still up; with the link down the reconnect
+    // presentation (and its Cancel) must win so the user can leave for
+    // the Scanner instead of being offered a retry that cannot succeed.
+    final isDegraded =
+        bannerState == MeshtasticBannerState.recovering &&
+        effectiveDeviceState.isConnected;
 
     final isScanning = effectiveReconnectState == AutoReconnectState.scanning;
     final isConnecting =

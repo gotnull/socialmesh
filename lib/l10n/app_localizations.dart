@@ -7488,6 +7488,12 @@ abstract class AppLocalizations {
   /// **'Scan for Devices'**
   String get deviceSheetScanForDevices;
 
+  /// Device sheet button shown while auto-reconnect is searching for an out-of-range radio; stops the reconnect and opens the scanner
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel reconnect'**
+  String get deviceSheetCancelReconnect;
+
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:
