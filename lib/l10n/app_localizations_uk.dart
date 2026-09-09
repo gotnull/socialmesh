@@ -4335,6 +4335,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get deviceSheetScanForDevices => 'Сканувати пристрої';
 
   @override
+  String get deviceSheetConfiguring => 'Налаштування...';
+
+  @override
+  String get deviceSheetRecovering => 'Відновлення з\'єднання...';
+
+  @override
   String get deviceSheetCancelReconnect => 'Скасувати перепідключення';
 
   @override

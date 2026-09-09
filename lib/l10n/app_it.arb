@@ -33741,6 +33741,8 @@
   "deviceSheetResetNodeDbError": "Reimpostazione database nodi non riuscita: {error}",
   "deviceSheetResetNodeDbSuccess": "Database nodi reimpostato con successo",
   "deviceSheetScanForDevices": "Cerca Dispositivi",
+  "deviceSheetConfiguring": "Configurazione in corso...",
+  "deviceSheetRecovering": "Ripristino della connessione...",
   "deviceSheetCancelReconnect": "Annulla riconnessione",
   "deviceSheetSectionConnectionDetails": "Dettagli Connessione",
   "deviceSheetSectionDeveloperTools": "Strumenti Sviluppatore",

@@ -4315,6 +4315,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get deviceSheetScanForDevices => 'Cerca Dispositivi';
 
   @override
+  String get deviceSheetConfiguring => 'Configurazione in corso...';
+
+  @override
+  String get deviceSheetRecovering => 'Ripristino della connessione...';
+
+  @override
   String get deviceSheetCancelReconnect => 'Annulla riconnessione';
 
   @override

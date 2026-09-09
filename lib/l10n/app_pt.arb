@@ -33741,6 +33741,8 @@
   "deviceSheetResetNodeDbError": "Falha ao redefinir banco de nós: {error}",
   "deviceSheetResetNodeDbSuccess": "Banco de nós redefinido com sucesso",
   "deviceSheetScanForDevices": "Buscar Dispositivos",
+  "deviceSheetConfiguring": "Configurando...",
+  "deviceSheetRecovering": "Recuperando a conexão...",
   "deviceSheetCancelReconnect": "Cancelar reconexão",
   "deviceSheetSectionConnectionDetails": "Detalhes da Conexão",
   "deviceSheetSectionDeveloperTools": "Ferramentas do Desenvolvedor",

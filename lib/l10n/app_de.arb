@@ -2526,6 +2526,8 @@
   "deviceSheetResetNodeDbError": "Zurücksetzen der Knotendatenbank fehlgeschlagen: {error}",
   "deviceSheetResetNodeDbSuccess": "Knotendatenbank erfolgreich zurückgesetzt",
   "deviceSheetScanForDevices": "Nach Geräten suchen",
+  "deviceSheetConfiguring": "Wird konfiguriert...",
+  "deviceSheetRecovering": "Verbindung wird wiederhergestellt...",
   "deviceSheetCancelReconnect": "Verbindungsversuch abbrechen",
   "deviceSheetSectionConnectionDetails": "Verbindungsdetails",
   "deviceSheetSectionDeveloperTools": "Entwicklerwerkzeuge",

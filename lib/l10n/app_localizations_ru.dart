@@ -4325,6 +4325,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deviceSheetScanForDevices => 'Поиск устройств';
 
   @override
+  String get deviceSheetConfiguring => 'Настройка...';
+
+  @override
+  String get deviceSheetRecovering => 'Восстановление соединения...';
+
+  @override
   String get deviceSheetCancelReconnect => 'Отменить переподключение';
 
   @override

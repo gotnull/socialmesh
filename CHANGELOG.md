@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.65.0] - 2026-09-09
 
+### Fixed (Radio sheet said Connected while sending was still blocked)
+
+- The radio sheet no longer reads "Connected" while the app is still finishing the Meshtastic handshake or restoring a dropped session, so it no longer contradicts the "Still configuring SocialMesh" message a traceroute gets in that window (thanks markusgritsch). The sheet header and its Status row now read "Configuring..." during the handshake and "Recovering connection..." while a session is being restored, in the same amber the reconnect states use, and switch to "Connected" only once the radio will accept sends
+
 ### Fixed (Banner stuck on "Searching for device..." over a live link)
 
 - The top banner no longer stays on "Searching for device..." after a radio has reconnected over Wi-Fi or TCP. At launch several parts of the app ask for a reconnect within a second of each other, and when a later request found the link already up it returned without clearing the searching state the request had just set. That request now settles the state, so the banner slides away once the radio is connected

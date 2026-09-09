@@ -4305,6 +4305,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deviceSheetScanForDevices => 'Buscar Dispositivos';
 
   @override
+  String get deviceSheetConfiguring => 'Configurando...';
+
+  @override
+  String get deviceSheetRecovering => 'Recuperando a conexão...';
+
+  @override
   String get deviceSheetCancelReconnect => 'Cancelar reconexão';
 
   @override

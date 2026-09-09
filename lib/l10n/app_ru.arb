@@ -2560,6 +2560,8 @@
   "deviceSheetResetNodeDbError": "Ошибка сброса базы данных узлов: {error}",
   "deviceSheetResetNodeDbSuccess": "База данных узлов успешно сброшена",
   "deviceSheetScanForDevices": "Поиск устройств",
+  "deviceSheetConfiguring": "Настройка...",
+  "deviceSheetRecovering": "Восстановление соединения...",
   "deviceSheetCancelReconnect": "Отменить переподключение",
   "deviceSheetSectionConnectionDetails": "Сведения о подключении",
   "deviceSheetSectionDeveloperTools": "Инструменты разработчика",

@@ -86,6 +86,37 @@ void main() {
     expect(container.read(appInitProvider), AppInitState.needsScanner);
   });
 
+  // The link being up is not the session being usable. While readiness
+  // is still configuring, the sheet must not say "Connected" next to a
+  // "Still configuring" refusal on send.
+  testWidgets('reads Configuring while the link is up but not ready', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: [
+        transportProvider.overrideWithValue(_FakeTransport()),
+        connectionStateProvider.overrideWith(
+          (ref) => Stream.value(DeviceConnectionState.connected),
+        ),
+        currentRssiProvider.overrideWith((ref) => const Stream<int>.empty()),
+        meshtasticBannerStateProvider.overrideWithValue(
+          MeshtasticBannerState.configuring,
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.read(appInitProvider.notifier).setReady();
+
+    await pumpSheet(tester, container);
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Header and Status row both carry the readiness label.
+    expect(find.text('Configuring...'), findsNWidgets(2));
+    expect(find.text('Connected'), findsNothing);
+  });
+
   testWidgets('offers Scan for Devices when idle and disconnected', (
     tester,
   ) async {

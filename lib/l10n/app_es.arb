@@ -2526,6 +2526,8 @@
   "deviceSheetResetNodeDbError": "Error al restablecer la base de datos de nodos: {error}",
   "deviceSheetResetNodeDbSuccess": "Base de datos de nodos restablecida correctamente",
   "deviceSheetScanForDevices": "Buscar dispositivos",
+  "deviceSheetConfiguring": "Configurando...",
+  "deviceSheetRecovering": "Recuperando la conexión...",
   "deviceSheetCancelReconnect": "Cancelar reconexión",
   "deviceSheetSectionConnectionDetails": "Detalles de conexión",
   "deviceSheetSectionDeveloperTools": "Herramientas de desarrollador",

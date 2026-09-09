@@ -2526,6 +2526,8 @@
   "deviceSheetResetNodeDbError": "Помилка скидання бази даних вузлів: {error}",
   "deviceSheetResetNodeDbSuccess": "Базу даних вузлів успішно скинуто",
   "deviceSheetScanForDevices": "Сканувати пристрої",
+  "deviceSheetConfiguring": "Налаштування...",
+  "deviceSheetRecovering": "Відновлення з'єднання...",
   "deviceSheetCancelReconnect": "Скасувати перепідключення",
   "deviceSheetSectionConnectionDetails": "Деталі з'єднання",
   "deviceSheetSectionDeveloperTools": "Інструменти розробника",

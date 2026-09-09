@@ -24,6 +24,23 @@ import 'package:socialmesh/core/navigation.dart';
 
 import 'widgets/meshcore_console.dart';
 
+// Status label for a live link whose Meshtastic session is not yet usable.
+// Null once readiness is `ready` (or the session is MeshCore), so callers
+// fall back to their own "Connected" wording.
+String? _sessionStatusText(
+  BuildContext context,
+  MeshtasticBannerState bannerState,
+) {
+  switch (bannerState) {
+    case MeshtasticBannerState.configuring:
+      return context.l10n.deviceSheetConfiguring;
+    case MeshtasticBannerState.recovering:
+      return context.l10n.deviceSheetRecovering;
+    case MeshtasticBannerState.passthrough:
+      return null;
+  }
+}
+
 /// Shows the device sheet as a modal bottom sheet
 void showDeviceSheet(BuildContext context) {
   AppBottomSheet.showScrollable(
@@ -73,6 +90,19 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
     final isReconnecting =
         autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting;
+
+    // The link being up is not the same as the session being usable:
+    // sends are blocked until the Meshtastic handshake reaches `ready`,
+    // and a degraded session is being restored. The label must say so,
+    // otherwise "Connected" sits next to a "Still configuring" refusal.
+    final bannerState = ref.watch(meshtasticBannerStateProvider);
+    final sessionSettling =
+        isConnected && bannerState != MeshtasticBannerState.passthrough;
+    final statusColor = isConnected && !sessionSettling
+        ? context.accentColor
+        : (isReconnecting || sessionSettling)
+        ? AppTheme.warningYellow
+        : context.textTertiary;
 
     // Disable connection-required actions when disconnecting
     final actionsEnabled = !_disconnecting;
@@ -127,11 +157,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: isConnected
-                                ? context.accentColor
-                                : isReconnecting
-                                ? AppTheme.warningYellow
-                                : context.textTertiary,
+                            color: statusColor,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -141,15 +167,9 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
                             context,
                             connectionState,
                             autoReconnectState,
+                            bannerState,
                           ),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isConnected
-                                ? context.accentColor
-                                : isReconnecting
-                                ? AppTheme.warningYellow
-                                : context.textTertiary,
-                          ),
+                          style: TextStyle(fontSize: 14, color: statusColor),
                         ),
                       ],
                     ),
@@ -305,6 +325,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
     BuildContext context,
     transport.DeviceConnectionState state,
     AutoReconnectState autoReconnectState,
+    MeshtasticBannerState bannerState,
   ) {
     if (autoReconnectState == AutoReconnectState.scanning) {
       return context.l10n.deviceSheetReconnecting;
@@ -314,7 +335,8 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
     }
     switch (state) {
       case transport.DeviceConnectionState.connected:
-        return context.l10n.deviceSheetConnected;
+        return _sessionStatusText(context, bannerState) ??
+            context.l10n.deviceSheetConnected;
       case transport.DeviceConnectionState.connecting:
         return context.l10n.deviceSheetConnecting;
       case transport.DeviceConnectionState.disconnecting:
@@ -582,8 +604,15 @@ class _DeviceInfoCard extends ConsumerWidget {
     final isConnected =
         connectionState == transport.DeviceConnectionState.connected;
 
-    final statusColor = isConnected
+    // Same readiness read as the sheet header: "Connected" only once the
+    // Meshtastic session is usable.
+    final bannerState = ref.watch(meshtasticBannerStateProvider);
+    final sessionSettling =
+        isConnected && bannerState != MeshtasticBannerState.passthrough;
+    final statusColor = isConnected && !sessionSettling
         ? context.accentColor
+        : sessionSettling
+        ? AppTheme.warningYellow
         : context.textTertiary;
 
     // Use live BLE RSSI from the protocol service's polling timer (updated
@@ -669,7 +698,11 @@ class _DeviceInfoCard extends ConsumerWidget {
             ),
           InfoTableRow(
             label: context.l10n.deviceSheetStatus,
-            value: _getConnectionStateText(context, connectionState),
+            value: _getConnectionStateText(
+              context,
+              connectionState,
+              bannerState,
+            ),
             icon: Icons.circle,
             iconColor: statusColor,
           ),
@@ -724,12 +757,14 @@ class _DeviceInfoCard extends ConsumerWidget {
   String _getConnectionStateText(
     BuildContext context,
     transport.DeviceConnectionState state,
+    MeshtasticBannerState bannerState,
   ) {
     switch (state) {
       case transport.DeviceConnectionState.connecting:
         return context.l10n.deviceSheetInfoCardConnecting;
       case transport.DeviceConnectionState.connected:
-        return context.l10n.deviceSheetInfoCardConnected;
+        return _sessionStatusText(context, bannerState) ??
+            context.l10n.deviceSheetInfoCardConnected;
       case transport.DeviceConnectionState.disconnecting:
         return context.l10n.deviceSheetInfoCardDisconnecting;
       case transport.DeviceConnectionState.error:

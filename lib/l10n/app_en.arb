@@ -5653,6 +5653,14 @@
   "@deviceSheetScanForDevices": {
     "description": "Text displayed in developer tools"
   },
+  "deviceSheetConfiguring": "Configuring...",
+  "@deviceSheetConfiguring": {
+    "description": "Device sheet status while the link is up but the Meshtastic protocol handshake has not finished; sending is blocked until it does"
+  },
+  "deviceSheetRecovering": "Recovering connection...",
+  "@deviceSheetRecovering": {
+    "description": "Device sheet status while the link is up but the Meshtastic session is degraded and being restored"
+  },
   "deviceSheetCancelReconnect": "Cancel reconnect",
   "@deviceSheetCancelReconnect": {
     "description": "Device sheet button shown while auto-reconnect is searching for an out-of-range radio; stops the reconnect and opens the scanner"

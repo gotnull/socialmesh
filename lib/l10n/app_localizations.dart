@@ -7488,6 +7488,18 @@ abstract class AppLocalizations {
   /// **'Scan for Devices'**
   String get deviceSheetScanForDevices;
 
+  /// Device sheet status while the link is up but the Meshtastic protocol handshake has not finished; sending is blocked until it does
+  ///
+  /// In en, this message translates to:
+  /// **'Configuring...'**
+  String get deviceSheetConfiguring;
+
+  /// Device sheet status while the link is up but the Meshtastic session is degraded and being restored
+  ///
+  /// In en, this message translates to:
+  /// **'Recovering connection...'**
+  String get deviceSheetRecovering;
+
   /// Device sheet button shown while auto-reconnect is searching for an out-of-range radio; stops the reconnect and opens the scanner
   ///
   /// In en, this message translates to:
