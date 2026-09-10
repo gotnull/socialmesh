@@ -92,14 +92,18 @@ void main() {
     });
 
     test('distance labels MarkerLayer is gated on _showDistanceLabels', () {
+      final guard = RegExp(
+        r'if \(!widget\.locationOnlyMode &&\s*_showDistanceLabels &&\s*'
+        r'_showConnectionLines\)\s*MarkerLayer\(',
+      );
       expect(
-        source.contains('if (!widget.locationOnlyMode && _showDistanceLabels)'),
+        guard.hasMatch(source),
         true,
         reason:
             'The MarkerLayer that renders _buildDistanceLabels must check the '
-            'toggle in addition to the existing locationOnlyMode guard. '
-            'Without this pin, a refactor could quietly drop the toggle and '
-            'the layer would render unconditionally again.',
+            'toggle in addition to the locationOnlyMode and connection-lines '
+            'guards. Without this pin, a refactor could quietly drop the '
+            'toggle and the layer would render unconditionally again.',
       );
     });
   });
