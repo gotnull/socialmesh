@@ -97,7 +97,7 @@ post_install do |installer|
       project_changed = false
 
       # ----------------------------------------------------------------
-      # Phase 1: native-assets cache platform check (runs FIRST, before
+      # Phase 1: native-assets cache platform check (runs before
       # flutter assemble). Auto-purges a wrong-platform
       # `objective_c.framework` from the build cache so the iPhone
       # never ends up shipping a sim-arch dylib (and vice versa).
@@ -110,32 +110,32 @@ post_install do |installer|
       check_script_body = <<~SH
         "${PROJECT_DIR}/Scripts/check_native_assets_platform.sh"
       SH
-      existing_check = runner_target.shell_script_build_phases.find { |p| p.name == check_phase_name }
-      if existing_check
-        if existing_check.shell_script != check_script_body
-          existing_check.shell_script = check_script_body
+      check_phase = runner_target.shell_script_build_phases.find { |p| p.name == check_phase_name }
+      if check_phase
+        if check_phase.shell_script != check_script_body
+          check_phase.shell_script = check_script_body
           project_changed = true
         end
       else
         check_phase = runner_target.new_shell_script_build_phase(check_phase_name)
         check_phase.shell_script = check_script_body
-        # Move to the very front of build_phases so it runs before
-        # flutter assemble (which lives inside the Flutter "Run Build
-        # Phase" script). new_shell_script_build_phase appends; we
-        # relocate it to position 0.
-        runner_target.build_phases.delete(check_phase)
-        runner_target.build_phases.unshift(check_phase)
         project_changed = true
       end
-      # Idempotency: even if the phase already existed, ensure it is
-      # at index 0. A merge or manual reorder may have moved it.
-      if existing_check
-        idx = runner_target.build_phases.index(existing_check)
-        if idx && idx != 0
-          runner_target.build_phases.delete(existing_check)
-          runner_target.build_phases.unshift(existing_check)
-          project_changed = true
-        end
+      # Placement: the check must run before the Flutter "Run Script"
+      # phase (flutter assemble regenerates the framework) and therefore
+      # before "[CP] Embed Pods Frameworks". Index 0 is not a stable
+      # target: CocoaPods moves its own "[CP] Check Pods Manifest.lock"
+      # phase to the front during project integration, which runs after
+      # this hook. Only the relative order matters, so the phase is
+      # placed directly ahead of the Flutter phase and left alone if it
+      # is already somewhere before it.
+      flutter_phase = runner_target.shell_script_build_phases.find { |p| p.name == 'Run Script' }
+      flutter_idx = flutter_phase ? runner_target.build_phases.index(flutter_phase) : 0
+      check_idx = runner_target.build_phases.index(check_phase)
+      if check_idx > flutter_idx
+        runner_target.build_phases.delete(check_phase)
+        runner_target.build_phases.insert(flutter_idx, check_phase)
+        project_changed = true
       end
 
       # ----------------------------------------------------------------
