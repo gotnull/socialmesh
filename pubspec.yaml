@@ -68,7 +68,7 @@ dependencies:
   sticker_view: ^0.0.4
 
   # Utilities
-  archive: ^4.0.9
+  archive: ^4.2.0
   clock: ^1.1.1
   logger: ^2.7.0
   uuid: ^4.6.0
