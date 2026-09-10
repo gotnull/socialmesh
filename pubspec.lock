@@ -794,10 +794,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_blue_plus
-      sha256: "8b2e2f5870539e2d2a8a6473557455b990b87bc0cd86e7224bb3e20ee2eb00df"
+      sha256: "5389f2b85305d0e03b025de7a92ec86137440b5108744f1017645ff67c5f2dcc"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.10"
+    version: "2.3.12"
   flutter_blue_plus_android:
     dependency: transitive
     description:
@@ -810,10 +810,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_blue_plus_darwin
-      sha256: bf41a4a07978b4c86a344c0c6e7388ff69f2b442a8d943b8da6d7f01a5c435bc
+      sha256: ce55b40e751da0d9a74bf14db3924d2553b7e67ca0270ea9260f2d46a44ead3a
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.3"
+    version: "9.0.4"
   flutter_blue_plus_linux:
     dependency: transitive
     description:
