@@ -129,6 +129,9 @@ class _DiagnosticsFakeTransport extends DeviceTransport
   void noteDisconnectCause(String cause) {
     notedCauses.add(cause);
   }
+
+  @override
+  TransportReadStats takeReadStats() => TransportReadStats.empty;
 }
 
 Future<ProviderContainer> _buildContainer(

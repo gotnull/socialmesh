@@ -97,6 +97,30 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   @override
   int get refreshNotificationsFailureCount => _refreshNotificationsFailureCount;
 
+  // Window of fromRadio read timings since the last takeReadStats().
+  TransportReadStats _readStats = TransportReadStats.empty;
+
+  @override
+  TransportReadStats takeReadStats() {
+    final window = _readStats;
+    _readStats = TransportReadStats.empty;
+    return window;
+  }
+
+  // Every fromRadio read passes through here so the handshake stats can
+  // state how many round trips each frame cost and how long each took.
+  Future<List<int>> _readFromRadio({required bool viaPoll}) async {
+    final stopwatch = Stopwatch()..start();
+    final data = await _rxCharacteristic!.read();
+    stopwatch.stop();
+    _readStats = _readStats.recordRead(
+      byteCount: data.length,
+      latencyMs: stopwatch.elapsedMilliseconds,
+      viaPoll: viaPoll,
+    );
+    return data;
+  }
+
   /// Concurrency guard for `refreshNotifications()`. Prevents two
   /// concurrent refresh attempts from racing into a double-`listen()`
   /// on the fromNum characteristic.
@@ -1028,7 +1052,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         // Perform initial read from fromRadio to wake up the device
         if (_rxCharacteristic != null) {
           try {
-            final initialData = await _rxCharacteristic!.read();
+            final initialData = await _readFromRadio(viaPoll: true);
             if (initialData.isNotEmpty) {
               _dataController.add(initialData);
             }
@@ -1160,7 +1184,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             try {
               // Read from fromRadio until empty
               while (true) {
-                final data = await _rxCharacteristic!.read();
+                final data = await _readFromRadio(viaPoll: false);
                 if (data.isEmpty) break;
                 _rxBytesReadCount++;
                 AppLogging.ble(
@@ -1285,7 +1309,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
               AppLogging.ble('fromNum notified, reading fromRadio');
               try {
                 while (true) {
-                  final data = await _rxCharacteristic!.read();
+                  final data = await _readFromRadio(viaPoll: false);
                   if (data.isEmpty) break;
                   _rxBytesReadCount++;
                   AppLogging.ble(
@@ -1338,7 +1362,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       if (_rxCharacteristic != null) {
         try {
           while (true) {
-            final data = await _rxCharacteristic!.read();
+            final data = await _readFromRadio(viaPoll: true);
             if (data.isEmpty) break;
             _lastNotificationAt = DateTime.now();
             _rxBytesReadCount++;
@@ -1376,7 +1400,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       }
 
       try {
-        final value = await _rxCharacteristic!.read();
+        final value = await _readFromRadio(viaPoll: true);
         if (value.isNotEmpty) {
           AppLogging.ble('Polled ${value.length} bytes');
           _dataController.add(value);
@@ -1440,7 +1464,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     }
 
     try {
-      final value = await _rxCharacteristic!.read();
+      final value = await _readFromRadio(viaPoll: true);
       _consecutiveAuthErrors = 0; // Reset on success
       if (value.isNotEmpty) {
         AppLogging.ble('Polled ${value.length} bytes');

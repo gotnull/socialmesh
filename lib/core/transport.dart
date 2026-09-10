@@ -234,6 +234,76 @@ abstract class ReceiveDiagnosticsSupport {
   /// `disconnect()` runs; without a pending cause an app-requested
   /// teardown is recorded as unspecified.
   void noteDisconnectCause(String cause);
+
+  /// Returns the `fromRadio` read statistics accumulated since the
+  /// previous call and starts a new window. The handshake logs one
+  /// window per phase so a slow handshake can be read as either too
+  /// many reads per frame or too many milliseconds per read.
+  TransportReadStats takeReadStats();
+}
+
+/// Read round-trip statistics for one window of `fromRadio` reads.
+///
+/// Immutable; [recordRead] returns the window with one more read folded
+/// in. A read that returns no bytes counts as empty: on a radio that is
+/// mid-handshake every empty read is a wasted round trip.
+class TransportReadStats {
+  const TransportReadStats({
+    this.reads = 0,
+    this.dataReads = 0,
+    this.bytes = 0,
+    this.pollReads = 0,
+    this.latencyTotalMs = 0,
+    this.latencyMinMs = 0,
+    this.latencyMaxMs = 0,
+  });
+
+  static const TransportReadStats empty = TransportReadStats();
+
+  /// Reads issued, whether or not they returned bytes.
+  final int reads;
+
+  /// Reads that returned at least one byte.
+  final int dataReads;
+
+  /// Total bytes returned across [dataReads].
+  final int bytes;
+
+  /// Reads issued by a poll loop rather than by a notification.
+  final int pollReads;
+
+  final int latencyTotalMs;
+  final int latencyMinMs;
+  final int latencyMaxMs;
+
+  int get emptyReads => reads - dataReads;
+  int get notifyReads => reads - pollReads;
+  int get latencyAvgMs => reads == 0 ? 0 : latencyTotalMs ~/ reads;
+
+  TransportReadStats recordRead({
+    required int byteCount,
+    required int latencyMs,
+    required bool viaPoll,
+  }) {
+    return TransportReadStats(
+      reads: reads + 1,
+      dataReads: dataReads + (byteCount > 0 ? 1 : 0),
+      bytes: bytes + byteCount,
+      pollReads: pollReads + (viaPoll ? 1 : 0),
+      latencyTotalMs: latencyTotalMs + latencyMs,
+      latencyMinMs: reads == 0
+          ? latencyMs
+          : (latencyMs < latencyMinMs ? latencyMs : latencyMinMs),
+      latencyMaxMs: latencyMs > latencyMaxMs ? latencyMs : latencyMaxMs,
+    );
+  }
+
+  /// Key=value form used by the handshake session log line.
+  String describe() {
+    return 'reads=$reads dataReads=$dataReads emptyReads=$emptyReads '
+        'bytes=$bytes notifyReads=$notifyReads pollReads=$pollReads '
+        'readLatencyMs=min:$latencyMinMs avg:$latencyAvgMs max:$latencyMaxMs';
+  }
 }
 
 /// Diagnostic snapshot of one BLE link teardown.

@@ -143,6 +143,9 @@ class _StallFakeTransport extends DeviceTransport
   }
 
   @override
+  TransportReadStats takeReadStats() => TransportReadStats.empty;
+
+  @override
   Future<void> dispose() async {
     await _dataController.close();
     await _stateController.close();

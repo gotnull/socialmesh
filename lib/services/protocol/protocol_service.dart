@@ -586,6 +586,12 @@ class ProtocolService {
   // completes. Surfaced in bug-report payloads and disconnect logs so a
   // stalled handshake can be distinguished from a slow config dump.
   DateTime? _handshakeStartedAt;
+
+  // Per-phase handshake stats, reset at each phase start and reported
+  // through the always-on session log at each phase completion.
+  DateTime? _phaseStartedAt;
+  int _phaseFramesDecoded = 0;
+  int _phaseNotificationsBaseline = 0;
   int _configFramesSinceHandshake = 0;
 
   /// Completes when the phase-2 `configCompleteId(69421)` arrives. The
@@ -2271,6 +2277,34 @@ class ProtocolService {
   /// T1000-E / Heltec firmware on iOS. The poll loop now continues until
   /// the full handshake reports `complete` (or we hit the poll budget,
   /// whichever first), matching the iOS reference behavior.
+  void _beginHandshakePhaseStats() {
+    _phaseStartedAt = DateTime.now();
+    _phaseFramesDecoded = 0;
+    final diagnostics = _diagnosticsSupport;
+    _phaseNotificationsBaseline = diagnostics?.fromNumNotificationCount ?? 0;
+    diagnostics?.takeReadStats();
+  }
+
+  // Always-on session line. On BLE it pairs the frame count with the read
+  // round trips that delivered it, which is the one ratio an exported app
+  // log needs to separate an over-reading app from a slow link.
+  void _logHandshakePhaseStats(int phase) {
+    final startedAt = _phaseStartedAt;
+    final elapsedMs = startedAt == null
+        ? 0
+        : DateTime.now().difference(startedAt).inMilliseconds;
+    final diagnostics = _diagnosticsSupport;
+    final readStats = diagnostics == null
+        ? 'reads=n/a'
+        : '${diagnostics.takeReadStats().describe()} '
+              'notifications='
+              '${diagnostics.fromNumNotificationCount - _phaseNotificationsBaseline}';
+    AppLogging.session(
+      'HANDSHAKE_STATS: phase=$phase transport=${_transport.type.name} '
+      'elapsed=${elapsedMs}ms frames=$_phaseFramesDecoded $readStats',
+    );
+  }
+
   void _pollForConfigurationAsync() {
     if (_pollingConfig) {
       AppLogging.protocol('Config poll already running, skipping');
@@ -2500,6 +2534,7 @@ class ProtocolService {
 
       final fromRadio = pb.FromRadio.fromBuffer(packet);
       _lastSuccessfulDecodeAt = DateTime.now();
+      _phaseFramesDecoded++;
       // A decode that lands clears the run. Without this the counter is
       // cumulative for the lifetime of the service, so ten undecodable
       // frames spread over hours of healthy traffic force a disconnect,
@@ -2616,6 +2651,7 @@ class ProtocolService {
 
       _configurationComplete = true;
       AppLogging.protocol('ADMIN_DRAIN: phase1 complete myNodeNum=$_myNodeNum');
+      _logHandshakePhaseStats(1);
       _setReadiness(
         OperationalReadiness.handshakePhase2,
         reason: 'phase1_complete',
@@ -2651,6 +2687,7 @@ class ProtocolService {
         );
       }
       _handshakePhase = _HandshakePhase.complete;
+      _logHandshakePhaseStats(2);
       AppLogging.protocol(
         'Handshake: queue drain complete — phoneQueue replay done',
       );
@@ -6054,6 +6091,7 @@ class ProtocolService {
       if (_handshakePhase != _HandshakePhase.awaitingInitialConfig) {
         _handshakeStartedAt = DateTime.now();
         _configFramesSinceHandshake = 0;
+        _beginHandshakePhaseStats();
         // A fresh handshake re-sends the map on 2.8+; on older firmware it
         // never arrives, so a stale map from a previous radio must not
         // constrain this one.
@@ -6104,6 +6142,7 @@ class ProtocolService {
     Duration timeoutPerAttempt = const Duration(seconds: 3),
   }) async {
     _handshakePhase = _HandshakePhase.awaitingQueueDrain;
+    _beginHandshakePhaseStats();
     final generation = _sessionGeneration;
     final attemptTimeout = _queueDrainTimeoutOverride ?? timeoutPerAttempt;
 
