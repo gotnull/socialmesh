@@ -98,7 +98,7 @@ dependencies:
 
   # Animations
   skeletonizer: ^3.0.0
-  lottie: ^3.5.1
+  lottie: ^3.6.1
   scrollable_positioned_list: ^0.3.8
   flutter_map_marker_cluster: ^8.2.2
   firebase_crashlytics: ^5.2.4
