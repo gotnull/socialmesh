@@ -25,7 +25,7 @@ dependencies:
   usb_serial: ^0.5.2
 
   # Protobuf
-  protobuf: ^6.0.0
+  protobuf: ^6.1.0
   fixnum: ^1.1.0
 
   # MQTT Client (for device client proxy mode)
