@@ -148,7 +148,7 @@ dependencies:
   emoji_picker_flutter: ^4.5.4
   ffi: ^2.2.0
   flutter_image_compress: ^2.5.1
-  bonsoir: ^7.1.4
+  bonsoir: ^7.1.5
 
 dev_dependencies:
   flutter_test:
