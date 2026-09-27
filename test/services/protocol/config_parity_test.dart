@@ -9,6 +9,7 @@
 /// - getCannedMessages / getRingtone routing
 /// - Admin message response parsing for text payloads
 /// - Cache isolation: remote admin responses must not overwrite local cache
+/// - Module configs from the initial config download populate the local cache
 library;
 
 import 'dart:async';
@@ -561,6 +562,49 @@ void main() {
 
       // Cache must remain null
       expect(protocol.currentLoraConfig, isNull);
+    });
+  });
+
+  // Module configs from the initial config download.
+  group('FromRadio module config', () {
+    Future<void> injectModuleConfig(module_pb.ModuleConfig moduleConfig) async {
+      final fromRadio = pb.FromRadio()..moduleConfig = moduleConfig;
+      await protocol.handleIncomingPacket(fromRadio.writeToBuffer());
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    test('caches MQTT config and emits it on mqttConfigStream', () async {
+      final emitted = Completer<module_pb.ModuleConfig_MQTTConfig>();
+      final sub = protocol.mqttConfigStream.listen((config) {
+        if (!emitted.isCompleted) emitted.complete(config);
+      });
+      addTearDown(sub.cancel);
+      expect(protocol.currentMqttConfig, isNull);
+
+      await injectModuleConfig(
+        module_pb.ModuleConfig()
+          ..mqtt = (module_pb.ModuleConfig_MQTTConfig()
+            ..enabled = true
+            ..proxyToClientEnabled = true
+            ..address = 'broker.example'),
+      );
+
+      expect(protocol.currentMqttConfig, isNotNull);
+      expect(protocol.currentMqttConfig!.proxyToClientEnabled, isTrue);
+      expect(protocol.currentMqttConfig!.address, 'broker.example');
+      final result = await emitted.future.timeout(const Duration(seconds: 2));
+      expect(result.proxyToClientEnabled, isTrue);
+    });
+
+    test('each frame caches only its own module', () async {
+      await injectModuleConfig(
+        module_pb.ModuleConfig()
+          ..telemetry = (module_pb.ModuleConfig_TelemetryConfig()
+            ..deviceUpdateInterval = 1800),
+      );
+
+      expect(protocol.currentTelemetryConfig!.deviceUpdateInterval, 1800);
+      expect(protocol.currentMqttConfig, isNull);
     });
   });
 }

@@ -1774,6 +1774,9 @@ class ProtocolService {
   ///   a serious lifecycle violation (`PROTOCOL_DATA_SUBSCRIPTION_REPLACED`)
   ///   rather than crash; production behaviour favours recovery over
   ///   process restart.
+  /// - A start that [stop] supersedes while it is still cancelling that
+  ///   subscription defers to the newer start (or fails, when there is
+  ///   none) instead of attaching a second listener.
   Future<void> start() async {
     if (_startInFlight) {
       AppLogging.protocol(
@@ -1829,6 +1832,21 @@ class ProtocolService {
 
       // Cancel any existing subscriptions to prevent duplicates
       await _dataSubscription?.cancel();
+      // A stop(), usually followed by a fresh start(), can run while the
+      // cancel above is pending. Carrying on would attach a data listener
+      // beside the newer start's, and whichever one is not held in
+      // `_dataSubscription` is never cancelled: every inbound frame is then
+      // handled twice, and once more per reconnect. Defer to the newer start,
+      // or fail the way a start interrupted by stop() already does.
+      if (!identical(_startCompleter, localCompleter)) {
+        AppLogging.protocol('PROTOCOL_START_SUPERSEDED instance=$hashCode');
+        final newer = _startCompleter;
+        if (newer != null) {
+          localCompleter.complete(newer.future);
+          return await newer.future;
+        }
+        throw Exception('Protocol start superseded by stop()');
+      }
       _dataSubscription = null;
       _transportStateSubscription?.cancel();
       _transportStateSubscription = null;
@@ -2020,7 +2038,10 @@ class ProtocolService {
       AppLogging.protocol('PROTOCOL_START_FAILED instance=$hashCode error=$e');
       rethrow;
     } finally {
-      _startInFlight = false;
+      // Only the current start owns the flag. A body superseded by stop()
+      // must not clear it while a newer start is still in flight, or the
+      // in-flight guard lets a third start through.
+      if (identical(_startCompleter, localCompleter)) _startInFlight = false;
       // Leave _startCompleter pointing at the completed completer so any
       // late awaiter can still observe the final state. Cleared on stop().
     }
@@ -2374,9 +2395,9 @@ class ProtocolService {
     _handshakePhase = _HandshakePhase.idle;
     // Lifecycle reset — a subsequent start() must be allowed to run as a
     // fresh start (no skip on `_isStarted` or `_startInFlight`). Any
-    // in-flight body still mid-execution will see its `_configCompleter`
-    // errored above and unwind via its catch/finally. Its eventual
-    // `_startInFlight = false` write in `finally` is a no-op.
+    // in-flight body still mid-execution either sees its `_configCompleter`
+    // errored above or finds itself superseded, and unwinds; its `finally`
+    // leaves `_startInFlight` to whichever start is current.
     _isStarted = false;
     _startInFlight = false;
     _startCompleter = null;
@@ -2567,6 +2588,16 @@ class ProtocolService {
       } else if (fromRadio.hasConfig()) {
         // Handle config sent during initial boot - this includes LoRa config with region!
         _handleFromRadioConfig(fromRadio.config);
+      } else if (fromRadio.hasModuleConfig()) {
+        // The initial config download carries every module config, one per
+        // frame. Caching them here lets consumers that act on connect (the
+        // MQTT client proxy) see the radio's settings without first opening
+        // the matching settings screen, which is otherwise the only request.
+        final moduleConfig = fromRadio.moduleConfig;
+        AppLogging.protocol(
+          'FromRadio module config: ${moduleConfig.whichPayloadVariant().name}',
+        );
+        _cacheLocalModuleConfig(moduleConfig);
       } else if (fromRadio.hasMetadata()) {
         _handleFromRadioMetadata(fromRadio.metadata);
       } else if (fromRadio.hasRegionPresets()) {
@@ -10851,7 +10882,7 @@ class ProtocolService {
     // Optimistically update the local cache (same rationale as setConfig --
     // the device reboots before it can send back a config response).
     if (!isRemote) {
-      _applySavedModuleConfigToCache(moduleConfig);
+      _cacheLocalModuleConfig(moduleConfig);
 
       // Module config writes also trigger device reboot.
       AppLogging.protocol(
@@ -10861,8 +10892,10 @@ class ProtocolService {
     }
   }
 
-  /// Applies a just-saved module config to the local cache and emits to streams.
-  void _applySavedModuleConfigToCache(module_pb.ModuleConfig moduleConfig) {
+  // Caches a module config belonging to the connected radio and emits it to
+  // the matching stream: configs from the initial download, and configs just
+  // saved to the radio.
+  void _cacheLocalModuleConfig(module_pb.ModuleConfig moduleConfig) {
     if (moduleConfig.hasMqtt()) {
       _currentMqttConfig = moduleConfig.mqtt;
       _mqttConfigController.add(moduleConfig.mqtt);

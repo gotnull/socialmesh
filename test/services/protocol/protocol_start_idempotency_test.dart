@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:socialmesh/core/transport.dart';
+import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
 import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
@@ -97,6 +98,9 @@ class _ManualTransport extends DeviceTransport {
     if (!_data.isClosed) await _data.close();
     if (!_stateController.isClosed) await _stateController.close();
   }
+
+  /// Delivers [bytes] to every live `dataStream` listener, as the radio would.
+  void emit(List<int> bytes) => _data.add(bytes);
 }
 
 Future<void> _withTempDirectory(Future<void> Function(String path) body) async {
@@ -240,4 +244,88 @@ void main() {
     },
     timeout: const Timeout(Duration(seconds: 10)),
   );
+
+  test('stop() and a fresh start() while an earlier start() is at its first '
+      'await leave one live listener', () async {
+    await _withTempDirectory((dir) async {
+      final dedupeStore = MeshPacketDedupeStore(
+        dbPathOverride: p.join(dir, 'dedupe.db'),
+      );
+      await dedupeStore.init();
+      final transport = _ManualTransport();
+      final protocol = ProtocolService(transport, dedupeStore: dedupeStore);
+      final forwarded = <pb.MqttClientProxyMessage>[];
+      final sub = protocol.mqttClientProxyMessageStream.listen(forwarded.add);
+
+      // The reconnect path: a start() triggered by the transport coming
+      // back is still cancelling the previous session's listener when the
+      // reconnect coordinator stops the service and starts it again.
+      _fireStartAndForget(protocol);
+      protocol.stop();
+      _fireStartAndForget(protocol);
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+
+      transport.emit(
+        (pb.FromRadio()
+              ..mqttClientProxyMessage = (pb.MqttClientProxyMessage()
+                ..topic = 'msh/2/e/LongFast/!00aa0004'
+                ..data = [1, 2, 3]))
+            .writeToBuffer(),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(
+        forwarded,
+        hasLength(1),
+        reason:
+            'One frame from the radio must be handled once. A second '
+            'live listener doubles every frame, including MQTT uplink.',
+      );
+      expect(transport.enableNotificationsCallCount, 1);
+
+      await sub.cancel();
+      protocol.stop();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await transport.dispose();
+      await dedupeStore.dispose();
+    });
+  }, timeout: const Timeout(Duration(seconds: 10)));
+
+  test('a start() failed by stop() does not clear the in-flight flag of the '
+      'start() that replaced it', () async {
+    await _withTempDirectory((dir) async {
+      final dedupeStore = MeshPacketDedupeStore(
+        dbPathOverride: p.join(dir, 'dedupe.db'),
+      );
+      await dedupeStore.init();
+      final transport = _ManualTransport();
+      final protocol = ProtocolService(transport, dedupeStore: dedupeStore);
+
+      // The first start reaches its config wait, then the reconnect path
+      // stops the service and starts it again. The first start unwinds with
+      // "Service stopped" after the second has claimed the flag.
+      _fireStartAndForget(protocol);
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      protocol.stop();
+      _fireStartAndForget(protocol);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(transport.enableNotificationsCallCount, 2);
+
+      // The second start is still in flight, so a third is held back.
+      _fireStartAndForget(protocol);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(
+        transport.enableNotificationsCallCount,
+        2,
+        reason:
+            'The failed first start must leave the in-flight flag to the '
+            'start that replaced it.',
+      );
+
+      protocol.stop();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await transport.dispose();
+      await dedupeStore.dispose();
+    });
+  }, timeout: const Timeout(Duration(seconds: 10)));
 }
