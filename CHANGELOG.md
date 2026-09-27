@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.70.0] - 2026-09-27
+
+### Fixed (MQTT client proxy refused by Aedes-based brokers)
+
+- The MQTT client proxy now connects to brokers built on Aedes, such as the one in MeshMonitor, which refused it with "identifier rejected" (#364, thanks Poag). The app was speaking MQTT 3.1, the default of the MQTT library it uses, and 3.1 caps the client id at 23 characters while the proxy's id ran to 66; Aedes enforces that cap on 3.1 connections only, which is why the radio's own firmware, connecting as 3.1.1, had no trouble with the same broker. The proxy now connects as MQTT 3.1.1, as the firmware does, with a client id of at most 23 letters and digits, the one form every 3.1.1 broker has to accept. Reproduced and verified against a local Aedes broker in the simulator
+
+### Fixed (MQTT client proxy idle until MQTT settings were opened)
+
+- With Client Proxy turned on, the proxy now connects to the broker as soon as the app connects to the radio. It used to wait until Settings > MQTT was opened. The radio sends the settings of every module during the initial config download, but the app threw them away, so the proxy had no MQTT settings to act on until that screen asked the radio for them again. Those settings are now kept
+
+### Fixed (Each reconnect made the app handle every radio frame once more)
+
+- Reconnecting to a radio no longer adds another copy of every frame the app handles from it. When a reconnect stopped and restarted the connection while the previous start was still tearing down its link to the radio, both starts attached a listener and only one was ever removed, so the copies grew by one with each reconnect. The deduplication store hid most of this for mesh packets. Proxy uplinks had no guard. A single MQTT message reached the broker up to ten times. Found while verifying the proxy fixes above, reproduced over TCP in the simulator, verified there with nine reconnects in a row that each left one copy, and confirmed over Bluetooth on a phone
+
+### Fixed (Web build threw during startup)
+
+- The web build no longer throws while it starts. Several startup checks asked Dart's `Platform` whether the app was running on iOS or Android, and `Platform` throws in a browser tab: the Apple Watch and App Intents setup, the Live Activity support check, and the two Android background service checks. Each now rules out the web first. The background service checks read the platform capability list instead
+
 ## [1.69.0] - 2026-09-25
 
 ### Fixed (Radio Data kept the previous radio under In Use)
