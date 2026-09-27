@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -1038,15 +1039,19 @@ void main() {
   });
 
   group('MqttClientProxyService client id', () {
+    // The only ids MQTT 3.1.1 obliges every broker to accept (MQTT-3.1.3-5).
+    final guaranteedClientId = RegExp(r'^[0-9a-zA-Z]{1,23}$');
+
     test('carries the node id and a unique per-connection suffix', () {
       final a = MqttClientProxyService.debugBuildClientId('!a6960864');
       final b = MqttClientProxyService.debugBuildClientId('!a6960864');
 
       // Prefix + node id are stable so the broker/logs stay recognisable.
-      expect(a, startsWith('SocialMeshMqttProxy-!a6960864-'));
-      expect(b, startsWith('SocialMeshMqttProxy-!a6960864-'));
-      // The suffix differs each build so a reconnect never reuses the id of a
-      // lingering session (which the broker would reject as a duplicate).
+      expect(a, startsWith('smproxya6960864'));
+      expect(b, startsWith('smproxya6960864'));
+      expect(a, matches(guaranteedClientId));
+      // The suffix differs each build, so a new connection never takes over
+      // the broker session of another proxy for the same node.
       expect(a, isNot(b));
     });
 
@@ -1054,8 +1059,60 @@ void main() {
       final a = MqttClientProxyService.debugBuildClientId(null);
       final b = MqttClientProxyService.debugBuildClientId(null);
 
-      expect(a, startsWith('SocialMeshMqttProxy-'));
+      expect(a, startsWith('smproxy'));
+      expect(a, matches(guaranteedClientId));
       expect(a, isNot(b));
+    });
+
+    test('CONNECT goes out as MQTT 3.1.1 carrying the built id', () async {
+      final connectBytes = Completer<List<int>>();
+      final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((socket) {
+        socket.listen((data) {
+          if (!connectBytes.isCompleted) connectBytes.complete(data);
+          // Refuse with identifierRejected so connect() settles promptly.
+          socket.add([0x20, 0x02, 0x00, 0x02]);
+        });
+      });
+      addTearDown(() => server.close());
+
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+      await service.connect(
+        address: '127.0.0.1:${server.port}',
+        tlsEnabled: false,
+        username: '',
+        password: '',
+        topicPrefix: 'msh/2/e',
+        nodeUserId: '!a6960864',
+        shouldSubscribe: false,
+      );
+
+      final bytes = await connectBytes.future;
+      expect(bytes.first, 0x10, reason: 'first packet is CONNECT');
+      // Skip the variable-length "remaining length" field.
+      var i = 1;
+      while (bytes[i] & 0x80 != 0) {
+        i++;
+      }
+      i++;
+      final nameLength = (bytes[i] << 8) | bytes[i + 1];
+      final protocolName = String.fromCharCodes(
+        bytes.sublist(i + 2, i + 2 + nameLength),
+      );
+      i += 2 + nameLength;
+      final protocolLevel = bytes[i];
+      i += 4; // protocol level, connect flags, keep alive (2 bytes)
+      final idLength = (bytes[i] << 8) | bytes[i + 1];
+      final clientId = String.fromCharCodes(
+        bytes.sublist(i + 2, i + 2 + idLength),
+      );
+
+      expect(protocolName, 'MQTT');
+      expect(protocolLevel, 4);
+      expect(clientId, startsWith('smproxya6960864'));
+      expect(clientId, matches(guaranteedClientId));
+      expect(service.failureReason, MqttProxyFailureReason.protocolRejected);
     });
   });
 }

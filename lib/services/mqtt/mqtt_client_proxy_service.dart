@@ -552,15 +552,22 @@ class MqttClientProxyService {
   @visibleForTesting
   void debugConfirmPublish() => _recordConfirmedPublish();
 
-  /// Builds the MQTT client identifier. A per-connection UUID suffix keeps the
-  /// id unique across reconnects. A deterministic (node-scoped) id collides
-  /// with a lingering broker session on reconnect: the broker rejects the
-  /// duplicate (`identifierRejected`) rather than taking it over, so a fast
-  /// reconnect can be refused. The connection always uses a clean session, so
-  /// a changing id discards no state.
+  // Builds the MQTT client identifier: "smproxy", the node number in hex, and
+  // 8 random hex characters. MQTT 3.1.1 only obliges a broker to accept ids of
+  // 1 to 23 characters from [0-9a-zA-Z] (MQTT-3.1.3-5); longer ids or other
+  // characters are at the broker's discretion, so the id stays inside that set
+  // (23 characters at most).
+  //
+  // The random part makes every connect() a distinct client. A broker that
+  // already holds a connection under an id drops it when a new connection
+  // arrives with the same id (MQTT-3.1.4-2), so with a fixed id a second proxy
+  // for the same node, such as another copy of the app on the same radio,
+  // would knock this one off and be knocked off in turn. The connection always
+  // uses a clean session, so a changing id discards no state.
   static String _buildClientId(String? nodeUserId) {
-    final base = nodeUserId ?? DateTime.now().millisecondsSinceEpoch.toString();
-    return 'SocialMeshMqttProxy-$base-${const Uuid().v4()}'; // lint-allow: hardcoded-string
+    final node = nodeUserId?.replaceFirst('!', '') ?? '';
+    final random = const Uuid().v4().substring(0, 8);
+    return 'smproxy$node$random'; // lint-allow: hardcoded-string
   }
 
   /// Test-only: exposes [_buildClientId] to verify per-connection uniqueness.
@@ -759,6 +766,13 @@ class MqttClientProxyService {
     // Create MQTT client
     final clientId = _buildClientId(nodeUserId);
     final client = MqttServerClient.withPort(host, clientId, port);
+    // mqtt_client defaults to MQTT 3.1 (MQIsdp, level 3), whose spec caps the
+    // client id at 23 characters, and a broker may refuse a longer id on a 3.1
+    // connect that it would accept on 3.1.1. The firmware's own MQTT client
+    // speaks 3.1.1, and so does this one.
+    // Called before the connect message is built, which copies the protocol
+    // name at construction.
+    client.setProtocolV311();
 
     client.keepAlivePeriod = 60;
     client.connectTimeoutPeriod = 15000;
