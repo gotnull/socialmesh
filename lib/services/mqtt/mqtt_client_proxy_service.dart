@@ -552,6 +552,13 @@ class MqttClientProxyService {
   @visibleForTesting
   void debugConfirmPublish() => _recordConfirmedPublish();
 
+  /// Test-only: feeds broker messages through the inbound filter without a
+  /// live client, so the forwarding rules can be asserted directly.
+  @visibleForTesting
+  void debugHandleInboundMessage(
+    List<MqttReceivedMessage<MqttMessage>> messages,
+  ) => _handleInboundMessage(messages);
+
   // Builds the MQTT client identifier: "smproxy", the node number in hex, and
   // 8 random hex characters. MQTT 3.1.1 only obliges a broker to accept ids of
   // 1 to 23 characters from [0-9a-zA-Z] (MQTT-3.1.3-5); longer ids or other
@@ -1386,6 +1393,20 @@ class MqttClientProxyService {
       if (topic.contains('/stat/')) {
         AppLogging.mqttProxy(
           'Skipped broker stat topic: $topic (${payload.length} bytes)',
+        );
+        continue;
+      }
+
+      // A retained message is the broker's stored last value for the
+      // topic, handed to every new subscriber; it is not live traffic.
+      // The radio ignores the proxy message's retained flag, treats the
+      // frame as a fresh receive (stamping it with the current time and
+      // logging its telemetry as new), and on a downlink channel
+      // re-transmits it over the air. Forwarding it replays a stale
+      // packet into the mesh on every connect.
+      if (retained) {
+        AppLogging.mqttProxy(
+          'Skipped retained broker message: $topic (${payload.length} bytes)',
         );
         continue;
       }

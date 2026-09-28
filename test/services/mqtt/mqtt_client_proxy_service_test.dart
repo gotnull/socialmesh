@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'package:socialmesh/services/mqtt/mqtt_client_proxy_service.dart';
 
 void main() {
@@ -1113,6 +1114,60 @@ void main() {
       expect(clientId, startsWith('smproxya6960864'));
       expect(clientId, matches(guaranteedClientId));
       expect(service.failureReason, MqttProxyFailureReason.protocolRejected);
+    });
+  });
+
+  group('MqttClientProxyService inbound filter', () {
+    late MqttClientProxyService service;
+    late List<String> forwarded;
+
+    setUp(() {
+      service = MqttClientProxyService();
+      forwarded = [];
+      service.setOnBrokerMessage((topic, data, retained) async {
+        forwarded.add(topic);
+      });
+    });
+
+    tearDown(() {
+      service.dispose();
+    });
+
+    MqttReceivedMessage<MqttMessage> broker(
+      String topic, {
+      required bool retained,
+    }) {
+      final publish = MqttPublishMessage().toTopic(topic);
+      publish.header!.retain = retained;
+      return MqttReceivedMessage<MqttMessage>(topic, publish);
+    }
+
+    test('live broker messages are forwarded to the radio', () {
+      service.debugHandleInboundMessage([
+        broker('msh/EU_868/2/e/LongFast/!f5d0918d', retained: false),
+      ]);
+      expect(forwarded, ['msh/EU_868/2/e/LongFast/!f5d0918d']);
+      expect(service.diagnostics.messagesRelayed, 1);
+    });
+
+    test('retained broker messages are dropped, not forwarded', () {
+      // A broker replays its retained message on every new subscribe,
+      // which happens on every phone connect. The radio would treat it
+      // as a fresh packet and re-log (and re-transmit) stale telemetry.
+      service.debugHandleInboundMessage([
+        broker('msh/EU_868/2/e/LongFast/!f5d0918d', retained: true),
+        broker('msh/EU_868/2/e/LongFast/!4d39f3ef', retained: false),
+      ]);
+      expect(forwarded, ['msh/EU_868/2/e/LongFast/!4d39f3ef']);
+      expect(service.diagnostics.messagesRelayed, 1);
+    });
+
+    test('broker stat topics are dropped', () {
+      service.debugHandleInboundMessage([
+        broker('msh/EU_868/2/stat/!f5d0918d', retained: false),
+      ]);
+      expect(forwarded, isEmpty);
+      expect(service.diagnostics.messagesRelayed, 0);
     });
   });
 }
