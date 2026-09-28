@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.70.0] - 2026-09-27
 
+### Fixed (Old telemetry readings charted at the reconnect time)
+
+- Device Metrics no longer shows a reading from days ago as a fresh sample taken at the moment the phone connected (#365, thanks markusgritsch). Every telemetry sample is now filed at the time the radio received the packet (its `rxTime`), not at the wall clock when the app decoded it, so a packet the radio buffered while no phone was attached lands on the chart where it belongs. A history row is written only for a record that came from a telemetry packet decoded in the current session; a record that reached the logger any other way, whether a NodeDB replay or a merge from stored data, no longer produces one. The same sample handed over twice is stored once. Environment, air quality and power history follow the same rule
+
+### Fixed (Overlapping x-axis labels on multi-day charts)
+
+- Chart date and time labels on spans over a day no longer run into each other (#365). A one-line "Sep 26, 14:00" at five labels across a phone-width plot overlapped its neighbours; the label now puts the date on one line and the time below it, with the axis reserving room for the second line. The voltage axis on Device Metrics also no longer dips below zero, which printed a wider label that wrapped inside the axis column
+
+### Fixed (MQTT client proxy replayed retained broker messages into the mesh)
+
+- The client proxy no longer forwards retained broker messages to the radio. A retained message is the broker's stored last value for a topic, handed to every new subscriber, which with the proxy means every phone connect; the radio ignores the retained flag on a proxied frame, treats it as a fresh receive, logs its telemetry at the current time and, on a channel with downlink enabled, re-transmits it over the air. Retained messages are dropped at the proxy the way broker stat topics already were
+
 ### Fixed (MQTT client proxy refused by Aedes-based brokers)
 
 - The MQTT client proxy now connects to brokers built on Aedes, such as the one in MeshMonitor, which refused it with "identifier rejected" (#364, thanks Poag). The app was speaking MQTT 3.1, the default of the MQTT library it uses, and 3.1 caps the client id at 23 characters while the proxy's id ran to 66; Aedes enforces that cap on 3.1 connections only, which is why the radio's own firmware, connecting as 3.1.1, had no trouble with the same broker. The proxy now connects as MQTT 3.1.1, as the firmware does, with a client id of at most 23 letters and digits, the one form every 3.1.1 broker has to accept. Reproduced and verified against a local Aedes broker in the simulator
