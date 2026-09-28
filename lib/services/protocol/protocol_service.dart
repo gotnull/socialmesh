@@ -4723,6 +4723,11 @@ class ProtocolService {
       final variant = telem.whichVariant();
       AppLogging.protocol('Telemetry variant: $variant from ${packet.from}');
 
+      // The sample's own time: the radio's rxTime, not the wall clock.
+      // Packets heard while no phone was attached are replayed on connect
+      // with their original rxTime, and history rows must land there.
+      final sampleTime = _plausibleTimestamp(packet);
+
       int? batteryLevel;
       double? voltage;
       double? channelUtil;
@@ -4765,6 +4770,7 @@ class ProtocolService {
               airUtilTx: airUtilTx,
               uptimeSeconds: uptimeSeconds,
               deviceMetricsFromNodeDb: false,
+              metricsTimestamp: sampleTime,
               lastHeard: _resolvePacketLastHeard(
                 packet,
                 existing: existingDeviceNode.lastHeard,
@@ -4853,6 +4859,7 @@ class ProtocolService {
               envVoltage: envMetrics.hasVoltage()
                   ? _finiteOrNull(envMetrics.voltage.toDouble())
                   : null,
+              metricsTimestamp: sampleTime,
               lastHeard: _resolvePacketLastHeard(
                 packet,
                 existing: existingEnvNode.lastHeard,
@@ -4913,6 +4920,7 @@ class ProtocolService {
                   ? aqMetrics.particles100um
                   : null,
               co2: aqMetrics.hasCo2() ? aqMetrics.co2 : null,
+              metricsTimestamp: sampleTime,
               lastHeard: _resolvePacketLastHeard(
                 packet,
                 existing: existingAqNode.lastHeard,
@@ -4955,6 +4963,7 @@ class ProtocolService {
               ch3Current: pwrMetrics.hasCh3Current()
                   ? _finiteOrNull(pwrMetrics.ch3Current.toDouble())
                   : null,
+              metricsTimestamp: sampleTime,
               lastHeard: _resolvePacketLastHeard(
                 packet,
                 existing: existingPwrNode.lastHeard,
@@ -5008,6 +5017,7 @@ class ProtocolService {
                   : null,
               numTxDropped: stats.hasNumTxDropped() ? stats.numTxDropped : null,
               noiseFloor: stats.hasNoiseFloor() ? stats.noiseFloor : null,
+              metricsTimestamp: sampleTime,
               lastHeard: _resolvePacketLastHeard(
                 packet,
                 existing: existingStatsNode.lastHeard,
@@ -5109,6 +5119,7 @@ class ProtocolService {
           channelUtilization: channelUtil,
           airUtilTx: airUtilTx,
           uptimeSeconds: uptimeSeconds,
+          metricsTimestamp: sampleTime,
           lastHeard: telemetryLastHeard,
           firstHeard: telemetryLastHeard,
           rssi: _directRxRssi(packet),

@@ -50,19 +50,64 @@ void main() {
     });
 
     test('addDeviceMetrics stores multiple entries', () async {
+      // Distinct sample times: entries sharing a timestamp are one sample.
+      final first = DateTime(2026, 9, 25, 22, 0);
       await db.addDeviceMetrics(
-        DeviceMetricsLog(nodeNum: 12345, batteryLevel: 85),
+        DeviceMetricsLog(nodeNum: 12345, timestamp: first, batteryLevel: 85),
       );
       await db.addDeviceMetrics(
-        DeviceMetricsLog(nodeNum: 12345, batteryLevel: 80),
+        DeviceMetricsLog(
+          nodeNum: 12345,
+          timestamp: first.add(const Duration(minutes: 30)),
+          batteryLevel: 80,
+        ),
       );
       await db.addDeviceMetrics(
-        DeviceMetricsLog(nodeNum: 12345, batteryLevel: 75),
+        DeviceMetricsLog(
+          nodeNum: 12345,
+          timestamp: first.add(const Duration(hours: 1)),
+          batteryLevel: 75,
+        ),
       );
 
       final metrics = await db.getDeviceMetrics(12345);
       expect(metrics.length, 3);
     });
+
+    test(
+      'a second entry with the same node and timestamp is ignored',
+      () async {
+        final sampleTime = DateTime(2026, 9, 25, 22, 10);
+        await db.addDeviceMetrics(
+          DeviceMetricsLog(
+            nodeNum: 12345,
+            timestamp: sampleTime,
+            batteryLevel: 64,
+          ),
+        );
+        // Same sample handed over again (radio replay) - not a new reading.
+        await db.addDeviceMetrics(
+          DeviceMetricsLog(
+            nodeNum: 12345,
+            timestamp: sampleTime,
+            batteryLevel: 64,
+          ),
+        );
+        // A different node at the same instant is its own sample.
+        await db.addDeviceMetrics(
+          DeviceMetricsLog(
+            nodeNum: 999,
+            timestamp: sampleTime,
+            batteryLevel: 40,
+          ),
+        );
+
+        final metrics = await db.getDeviceMetrics(12345);
+        expect(metrics.length, 1);
+        expect(metrics.single.batteryLevel, 64);
+        expect(await db.getDeviceMetrics(999), hasLength(1));
+      },
+    );
 
     test('metrics are isolated by nodeNum', () async {
       await db.addDeviceMetrics(

@@ -48,6 +48,14 @@ abstract final class TimeSeriesAxis {
   /// Gap between the plot area and a bottom-axis label.
   static const double _labelTopPadding = 6;
 
+  /// Label font size assumed when the caller's [TextStyle] sets none;
+  /// matches the [topHeadroom] default.
+  static const double _defaultLabelFontSize = 11;
+
+  /// Line-height multiple of the label font, used to reserve room for the
+  /// second line of a [TimeSeriesLabelStyle.dateTime] label.
+  static const double _labelLineHeight = 1.4;
+
   /// "Nice" label steps, smallest first. fl_chart aligns interior labels to
   /// multiples of the interval relative to the Unix epoch, so these steps
   /// land labels on round wall-clock times.
@@ -123,6 +131,11 @@ abstract final class TimeSeriesAxis {
 
   /// Formats the epoch-ms axis value [xMs] per [style], honouring the
   /// user's 12/24-hour and date-format preferences via [AppTimeFormat].
+  ///
+  /// A [TimeSeriesLabelStyle.dateTime] label puts the date and the time on
+  /// separate lines: a multi-day span places up to [targetLabelCount]
+  /// labels across a phone-width plot, and a one-line "Sep 26, 14:00" at
+  /// that density overlaps its neighbours.
   static String formatLabel(
     BuildContext context,
     double xMs,
@@ -133,9 +146,9 @@ abstract final class TimeSeriesAxis {
       TimeSeriesLabelStyle.time => AppTimeFormat.timeOnly(
         context,
       ).format(timestamp),
-      TimeSeriesLabelStyle.dateTime => AppTimeFormat.dateAndTimeCompact(
-        context,
-      ).format(timestamp),
+      TimeSeriesLabelStyle.dateTime =>
+        '${AppTimeFormat.monthDay(context).format(timestamp)}\n'
+            '${AppTimeFormat.timeOnly(context).format(timestamp)}',
       TimeSeriesLabelStyle.date => AppTimeFormat.monthDay(
         context,
       ).format(timestamp),
@@ -163,6 +176,23 @@ abstract final class TimeSeriesAxis {
     );
   }
 
+  /// Reserved height for bottom-axis labels rendered in [labelStyle].
+  ///
+  /// [bottomReservedSize] fits a single line; a two-line
+  /// [TimeSeriesLabelStyle.dateTime] label adds one line of [style]'s font
+  /// (or [_defaultLabelFontSize]), scaled with the user's text size.
+  static double bottomReservedSizeFor(
+    BuildContext context,
+    TimeSeriesLabelStyle labelStyle, {
+    required TextStyle? style,
+  }) {
+    if (labelStyle != TimeSeriesLabelStyle.dateTime) return bottomReservedSize;
+    final fontSize = style?.fontSize ?? _defaultLabelFontSize;
+    final lineHeight =
+        MediaQuery.textScalerOf(context).scale(fontSize) * _labelLineHeight;
+    return bottomReservedSize + lineHeight;
+  }
+
   /// Ready-made bottom-axis titles for a time-proportional chart.
   ///
   /// Interior labels are epoch-aligned to [labelIntervalMs]; the domain
@@ -178,13 +208,17 @@ abstract final class TimeSeriesAxis {
     final labelStyle = labelStyleFor(minX, maxX);
     return SideTitles(
       showTitles: true,
-      reservedSize: bottomReservedSize,
+      reservedSize: bottomReservedSizeFor(context, labelStyle, style: style),
       interval: labelIntervalMs(minX, maxX),
       minIncluded: false,
       maxIncluded: false,
       getTitlesWidget: (value, meta) => Padding(
         padding: const EdgeInsets.only(top: _labelTopPadding),
-        child: Text(formatLabel(context, value, labelStyle), style: style),
+        child: Text(
+          formatLabel(context, value, labelStyle),
+          style: style,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

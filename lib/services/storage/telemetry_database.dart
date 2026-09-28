@@ -274,6 +274,19 @@ class TelemetryDatabase {
       );
       return;
     }
+    // One row per sample. Rows are stamped with the radio's receive time,
+    // and the radio can hand the same buffered packet over again on a later
+    // connect, so a matching type + node + timestamp is the same sample,
+    // not a new reading.
+    final existing = await _database.query(
+      _tableName,
+      columns: const ['id'],
+      where: 'type = ? AND node_num = ? AND timestamp = ?',
+      whereArgs: [type, entry.nodeNum, entry.timestamp.millisecondsSinceEpoch],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) return;
+
     final json = entry.toJson();
     // Strip columns that live in dedicated fields
     final data = Map<String, dynamic>.from(json)

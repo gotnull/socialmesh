@@ -169,5 +169,69 @@ void main() {
       );
       expect(label, '14:30');
     });
+
+    testWidgets('formatLabel stacks date over time for multi-day spans', (
+      tester,
+    ) async {
+      late String label;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(alwaysUse24HourFormat: true),
+            child: Builder(
+              builder: (context) {
+                label = TimeSeriesAxis.formatLabel(
+                  context,
+                  TimeSeriesAxis.xOf(DateTime(2026, 6, 10, 14, 30)),
+                  TimeSeriesLabelStyle.dateTime,
+                );
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+      );
+      // Two lines keep each label as narrow as a time-only one, so up to
+      // five of them fit across a phone-width plot without overlapping.
+      final lines = label.split('\n');
+      expect(lines, hasLength(2));
+      expect(lines.first, contains('10'));
+      expect(lines.last, '14:30');
+    });
+
+    testWidgets('multi-day spans reserve room for the second label line', (
+      tester,
+    ) async {
+      late SideTitles titles;
+      late double expected;
+      const style = TextStyle(fontSize: 10);
+      final minX = TimeSeriesAxis.xOf(base);
+      final maxX = TimeSeriesAxis.xOf(base.add(const Duration(hours: 30)));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              titles = TimeSeriesAxis.bottomTitles(
+                context,
+                minX: minX,
+                maxX: maxX,
+                style: style,
+              );
+              expected = TimeSeriesAxis.bottomReservedSizeFor(
+                context,
+                TimeSeriesLabelStyle.dateTime,
+                style: style,
+              );
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      expect(titles.reservedSize, expected);
+      expect(
+        titles.reservedSize,
+        greaterThan(TimeSeriesAxis.bottomReservedSize),
+      );
+    });
   });
 }

@@ -589,6 +589,14 @@ class MeshNode {
   final int? precisionBits; // Position precision bits
   final DateTime? positionTimestamp; // Last position update time
 
+  // Receive time (packet rxTime) of the telemetry packet that last updated
+  // any metric on this node: device, environment, air quality, power or
+  // local stats. The radio buffers packets heard while no phone is attached
+  // and replays them on connect with their original rxTime, so history rows
+  // stamped from this field land at the sample's true time rather than at
+  // the reconnect. Null until a telemetry packet has been decoded.
+  final DateTime? metricsTimestamp;
+
   // Connectivity
   final bool hasWifi; // Whether device has WiFi
   final bool hasBluetooth; // Whether device has Bluetooth
@@ -702,6 +710,7 @@ class MeshNode {
     this.groundTrack,
     this.precisionBits,
     this.positionTimestamp,
+    this.metricsTimestamp,
     // Connectivity
     this.hasWifi = false,
     this.hasBluetooth = false,
@@ -818,6 +827,7 @@ class MeshNode {
     double? groundTrack,
     int? precisionBits,
     DateTime? positionTimestamp,
+    DateTime? metricsTimestamp,
     // Connectivity
     bool? hasWifi,
     bool? hasBluetooth,
@@ -933,6 +943,7 @@ class MeshNode {
       groundTrack: groundTrack ?? this.groundTrack,
       precisionBits: precisionBits ?? this.precisionBits,
       positionTimestamp: positionTimestamp ?? this.positionTimestamp,
+      metricsTimestamp: metricsTimestamp ?? this.metricsTimestamp,
       // Connectivity
       hasWifi: hasWifi ?? this.hasWifi,
       hasBluetooth: hasBluetooth ?? this.hasBluetooth,

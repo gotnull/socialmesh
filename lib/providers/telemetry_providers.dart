@@ -758,9 +758,14 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               airUtilTx: node.airUtilTx,
               uptimeSeconds: node.uptimeSeconds,
             );
+            // Rows carry the packet's own receive time. The radio replays
+            // packets it heard while no phone was attached, so a sample
+            // stamped at the wall clock would chart a days-old reading at
+            // the reconnect instant.
             await storage.addDeviceMetrics(
               DeviceMetricsLog(
                 nodeNum: id,
+                timestamp: node.metricsTimestamp,
                 batteryLevel: node.batteryLevel,
                 voltage: node.voltage,
                 channelUtilization: node.channelUtilization,
@@ -801,6 +806,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
             await storage.addEnvironmentMetrics(
               EnvironmentMetricsLog(
                 nodeNum: id,
+                timestamp: node.metricsTimestamp,
                 temperature: node.temperature,
                 humidity: node.humidity,
                 barometricPressure: node.barometricPressure,
@@ -840,6 +846,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
             await storage.addPowerMetrics(
               PowerMetricsLog(
                 nodeNum: id,
+                timestamp: node.metricsTimestamp,
                 ch1Voltage: node.ch1Voltage,
                 ch1Current: node.ch1Current,
                 ch2Voltage: node.ch2Voltage,
@@ -879,6 +886,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
             await storage.addAirQualityMetrics(
               AirQualityMetricsLog(
                 nodeNum: id,
+                timestamp: node.metricsTimestamp,
                 pm10Standard: node.pm10Standard,
                 pm25Standard: node.pm25Standard,
                 pm100Standard: node.pm100Standard,

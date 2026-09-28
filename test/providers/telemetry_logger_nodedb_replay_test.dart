@@ -157,4 +157,75 @@ void main() {
     rows = await storage.getDeviceMetrics(42);
     expect(rows, hasLength(1));
   });
+
+  test('replayed live packets are filed at their rxTime, once', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final storage = TelemetryDatabase(testDbPath: inMemoryDatabasePath);
+    await storage.init();
+    addTearDown(storage.close);
+
+    final protocol = _TestProtocolService();
+    final container = ProviderContainer(
+      overrides: [
+        telemetryStorageProvider.overrideWith((ref) async => storage),
+        protocolServiceProvider.overrideWithValue(protocol),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(protocol.nodeController.close);
+
+    final subscription = container.listen(telemetryLoggerProvider, (_, _) {});
+    addTearDown(subscription.close);
+    await container.read(telemetryStorageProvider.future);
+    await _settle();
+    expect(container.read(telemetryLoggerProvider), isTrue);
+
+    // The radio hands over a packet it heard the day before, which the
+    // protocol layer has stamped from the packet's rxTime. The history row
+    // must carry that time, not the moment the phone connected.
+    // Whole seconds, like a packet rxTime; the row stores milliseconds.
+    final heardAt = DateTime.fromMillisecondsSinceEpoch(
+      DateTime.now()
+              .subtract(const Duration(days: 1, hours: 16))
+              .millisecondsSinceEpoch ~/
+          1000 *
+          1000,
+    );
+    final replayed = MeshNode(
+      nodeNum: 43,
+      batteryLevel: 64,
+      voltage: 3.84,
+      uptimeSeconds: 6199200,
+      metricsTimestamp: heardAt,
+    );
+    protocol.emit(replayed);
+    await _settle();
+    var rows = await storage.getDeviceMetrics(43);
+    expect(rows, hasLength(1));
+    expect(rows.single.timestamp, heardAt);
+    expect(rows.single.voltage, closeTo(3.84, 0.0001));
+
+    // A live sample after it logs normally at its own time.
+    final liveAt = DateTime.now();
+    protocol.emit(
+      MeshNode(
+        nodeNum: 43,
+        batteryLevel: 91,
+        voltage: 4.07,
+        uptimeSeconds: 6343200,
+        metricsTimestamp: liveAt,
+      ),
+    );
+    await _settle();
+    rows = await storage.getDeviceMetrics(43);
+    expect(rows, hasLength(2));
+
+    // The same buffered packet delivered again on a later connect differs
+    // from the last logged fingerprint but is the same sample: no new row.
+    protocol.emit(replayed);
+    await _settle();
+    rows = await storage.getDeviceMetrics(43);
+    expect(rows, hasLength(2));
+  });
 }
