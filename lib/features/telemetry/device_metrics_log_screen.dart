@@ -589,7 +589,9 @@ class _DeviceMetricsChart extends StatelessWidget {
 
     // Voltage axis padding
     final vPad = hasRightAxis ? ((vMax - vMin) * 0.15).clamp(0.1, 1.0) : 0.0;
-    final vAxisMin = hasRightAxis ? vMin - vPad : 0.0;
+    // A voltage reading is never negative, so the axis floor is not either;
+    // a negative label is one character wider and wraps in the axis column.
+    final vAxisMin = hasRightAxis ? math.max(0.0, vMin - vPad) : 0.0;
     final vAxisMax = hasRightAxis ? vMax + vPad : 5.0;
 
     // Normalise voltage spots into 0–100 range to share the same Y space.
