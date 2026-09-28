@@ -740,6 +740,13 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
       try {
         final id = node.nodeNum;
 
+        // Every metric path that decodes a telemetry packet stamps the
+        // node's metricsTimestamp; a node carrying metric values with no
+        // sample time got them from somewhere else (a NodeDB replay, a
+        // record merged from storage) and is not a live sample. Nothing
+        // below writes a history row for it, whatever carried it.
+        final hasSample = node.metricsTimestamp != null;
+
         // Log device metrics only when values actually change, and only
         // when they came from a live telemetry packet. A NodeDB NodeInfo
         // replay (connect/reconnect config dump) carries the radio's
@@ -747,7 +754,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         // value at the current wall clock as a spurious flat step. The
         // fingerprint is left untouched so the next live sample still
         // logs normally.
-        if (!node.deviceMetricsFromNodeDb &&
+        if (hasSample &&
+            !node.deviceMetricsFromNodeDb &&
             (node.batteryLevel != null || node.voltage != null)) {
           final cached = _lastDevice[id];
           if (cached == null || !cached.matches(node)) {
@@ -781,9 +789,10 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         // Log environment metrics only when values actually change.
         // Gas resistance is part of the trigger: a gas-only sensor
         // (BME680/688 without temp/humidity) would otherwise never log.
-        if (node.temperature != null ||
-            node.humidity != null ||
-            node.gasResistance != null) {
+        if (hasSample &&
+            (node.temperature != null ||
+                node.humidity != null ||
+                node.gasResistance != null)) {
           final cached = _lastEnv[id];
           if (cached == null || !cached.matches(node)) {
             _lastEnv[id] = _EnvMetricsFingerprint(
@@ -830,9 +839,10 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         }
 
         // Log power metrics only when values actually change
-        if (node.ch1Voltage != null ||
-            node.ch2Voltage != null ||
-            node.ch3Voltage != null) {
+        if (hasSample &&
+            (node.ch1Voltage != null ||
+                node.ch2Voltage != null ||
+                node.ch3Voltage != null)) {
           final cached = _lastPower[id];
           if (cached == null || !cached.matches(node)) {
             _lastPower[id] = _PowerMetricsFingerprint(
@@ -861,10 +871,11 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         }
 
         // Log air quality only when values actually change
-        if (node.pm10Standard != null ||
-            node.pm25Standard != null ||
-            node.co2 != null ||
-            node.iaq != null) {
+        if (hasSample &&
+            (node.pm10Standard != null ||
+                node.pm25Standard != null ||
+                node.co2 != null ||
+                node.iaq != null)) {
           final cached = _lastAirQuality[id];
           if (cached == null || !cached.matches(node)) {
             _lastAirQuality[id] = _AirQualityFingerprint(

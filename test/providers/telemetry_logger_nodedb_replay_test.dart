@@ -130,10 +130,26 @@ void main() {
     await _settle();
     expect(await storage.getDeviceMetrics(42), isEmpty);
 
+    // Metric values with no sample time did not come from a decoded
+    // telemetry packet (a record merged from storage, for instance) and
+    // must not create a history row either.
+    protocol.emit(
+      MeshNode(nodeNum: 42, batteryLevel: 64, voltage: 3.84, uptimeSeconds: 9),
+    );
+    await _settle();
+    expect(await storage.getDeviceMetrics(42), isEmpty);
+
     // A live device-telemetry packet logs normally, even with the same
     // battery value the replay carried.
+    final liveAt = DateTime.now();
     protocol.emit(
-      MeshNode(nodeNum: 42, batteryLevel: 80, voltage: 4.1, uptimeSeconds: 60),
+      MeshNode(
+        nodeNum: 42,
+        batteryLevel: 80,
+        voltage: 4.1,
+        uptimeSeconds: 60,
+        metricsTimestamp: liveAt,
+      ),
     );
     await _settle();
     var rows = await storage.getDeviceMetrics(42);
@@ -142,7 +158,13 @@ void main() {
 
     // Unchanged live values stay fingerprint-deduped.
     protocol.emit(
-      MeshNode(nodeNum: 42, batteryLevel: 80, voltage: 4.1, uptimeSeconds: 60),
+      MeshNode(
+        nodeNum: 42,
+        batteryLevel: 80,
+        voltage: 4.1,
+        uptimeSeconds: 60,
+        metricsTimestamp: liveAt,
+      ),
     );
     await _settle();
     expect(await storage.getDeviceMetrics(42), hasLength(1));
