@@ -348,15 +348,21 @@ class _SearchFilterContent extends StatelessWidget {
             SearchFilterLayout.horizontalPadding,
             0,
           ),
+          // The slot is fixed so the header extent stays predictable; the
+          // field keeps its own height inside it. Forcing the field to the
+          // slot height left it taller than its painted border at larger
+          // text sizes, and the card colour behind it showed through as a
+          // strip under the border.
           child: SizedBox(
             height: fieldHeight,
-            child: _SearchField(
-              controller: searchController,
-              query: searchQuery,
-              onChanged: onSearchChanged,
-              hintText: hintText,
-              focusNode: focusNode,
-              height: fieldHeight,
+            child: Center(
+              child: _SearchField(
+                controller: searchController,
+                query: searchQuery,
+                onChanged: onSearchChanged,
+                hintText: hintText,
+                focusNode: focusNode,
+              ),
             ),
           ),
         ),
@@ -440,7 +446,6 @@ class _SearchField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final String hintText;
   final FocusNode? focusNode;
-  final double height;
 
   const _SearchField({
     required this.controller,
@@ -448,46 +453,45 @@ class _SearchField extends StatelessWidget {
     required this.onChanged,
     required this.hintText,
     required this.focusNode,
-    required this.height,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(
-          SearchFilterLayout.searchFieldRadius,
-        ),
-      ),
-      child: TextField(
-        maxLength: 100,
-        controller: controller,
-        focusNode: focusNode,
-        onChanged: onChanged,
-        style: TextStyle(color: context.textPrimary),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(color: context.textTertiary),
-          counterText: '',
-          prefixIcon: Icon(Icons.search, color: context.textTertiary),
-          suffixIcon: query.isNotEmpty
-              ? IconButton(
-                  icon: Icon(Icons.clear, color: context.textTertiary),
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                  tooltip: context.l10n.commonClearSearch,
-                )
-              : null,
-          border: InputBorder.none,
-          isDense: true,
-          constraints: BoxConstraints.tightFor(height: height),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: SearchFilterLayout.horizontalPadding,
-            vertical: 12,
+    // The card colour is the decoration's own fill, so it is painted
+    // exactly where the border is and nowhere else.
+    return TextField(
+      maxLength: 100,
+      controller: controller,
+      focusNode: focusNode,
+      onChanged: onChanged,
+      style: TextStyle(color: context.textPrimary),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: TextStyle(color: context.textTertiary),
+        counterText: '',
+        prefixIcon: Icon(Icons.search, color: context.textTertiary),
+        suffixIcon: query.isNotEmpty
+            ? IconButton(
+                icon: Icon(Icons.clear, color: context.textTertiary),
+                onPressed: () {
+                  controller.clear();
+                  onChanged('');
+                },
+                tooltip: context.l10n.commonClearSearch,
+              )
+            : null,
+        filled: true,
+        fillColor: context.card,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(
+            SearchFilterLayout.searchFieldRadius,
           ),
+          borderSide: BorderSide.none,
+        ),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: SearchFilterLayout.horizontalPadding,
+          vertical: 12,
         ),
       ),
     );
