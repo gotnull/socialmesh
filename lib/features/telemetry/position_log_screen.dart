@@ -455,7 +455,6 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
         topicId: 'position_overview',
         stepKeys: const {},
         child: GlassScaffold(
-          resizeToAvoidBottomInset: false,
           title: context.l10n.telemetryPositionTitle,
           actions: [
             // Map / list toggle

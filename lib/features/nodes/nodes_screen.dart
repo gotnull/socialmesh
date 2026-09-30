@@ -260,7 +260,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
         topicId: 'nodes_overview',
         stepKeys: const {},
         child: GlassScaffold(
-          resizeToAvoidBottomInset: false,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           titleWidget: Text(

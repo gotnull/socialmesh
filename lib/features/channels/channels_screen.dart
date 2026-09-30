@@ -327,7 +327,6 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
         topicId: 'channels_overview',
         stepKeys: const {},
         child: GlassScaffold(
-          resizeToAvoidBottomInset: false,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           title: context.l10n.channelsScreenTitle(channels.length),

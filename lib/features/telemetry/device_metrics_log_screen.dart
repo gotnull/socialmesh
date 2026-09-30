@@ -224,7 +224,6 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: GlassScaffold(
-        resizeToAvoidBottomInset: false,
         title: context.l10n.telemetryDeviceMetricsTitle,
         actions: [
           if (_hasDateFilter)

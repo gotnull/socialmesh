@@ -342,7 +342,6 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen>
     final filters = ref.watch(deviceLogFilterProvider);
 
     return GlassScaffold(
-      resizeToAvoidBottomInset: false,
       titleWidget: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

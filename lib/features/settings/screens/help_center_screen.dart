@@ -132,7 +132,6 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
     final isFiltered = _selectedCategory != null;
 
     return GlassScaffold(
-      resizeToAvoidBottomInset: false,
       title: context.l10n.helpCenterTitle,
       slivers: [
         // Ico mascot + progress header (pinned, collapses on scroll)

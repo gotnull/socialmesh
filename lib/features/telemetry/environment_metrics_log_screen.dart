@@ -267,7 +267,6 @@ class _EnvironmentMetricsLogScreenState
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: GlassScaffold(
-        resizeToAvoidBottomInset: false,
         title: context.l10n.telemetryEnvironmentTitle,
         actions: [
           if (_hasDateFilter)

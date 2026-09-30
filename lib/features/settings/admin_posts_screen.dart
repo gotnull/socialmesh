@@ -49,7 +49,6 @@ class _AdminPostsScreenState extends State<AdminPostsScreen>
         .snapshots();
 
     return GlassScaffold(
-      resizeToAvoidBottomInset: false,
       title: context.l10n.adminPostsTitle,
       actions: [
         IconButton(

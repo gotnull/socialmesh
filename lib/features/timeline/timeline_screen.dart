@@ -395,7 +395,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         topicId: 'timeline_overview',
         stepKeys: const {},
         child: GlassScaffold(
-          resizeToAvoidBottomInset: false,
           title: context.l10n.timelineTitle,
           centerTitle: true,
           actions: [IcoHelpAppBarButton(topicId: 'timeline_overview')],

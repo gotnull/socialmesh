@@ -196,7 +196,6 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         topicId: 'presence_overview',
         stepKeys: const {},
         child: GlassScaffold(
-          resizeToAvoidBottomInset: false,
           title: context.l10n.presenceTitle,
           actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
           slivers: [

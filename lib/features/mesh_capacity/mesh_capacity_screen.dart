@@ -180,7 +180,6 @@ class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: GlassScaffold(
-        resizeToAvoidBottomInset: false,
         title: l10n.meshCapacityScreenTitle,
         actions: [
           IconButton(

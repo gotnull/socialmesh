@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (Settings could not scroll above the keyboard)
 
-- With the keyboard open, the Settings list now shrinks above it so the entries at the bottom can be reached and tapped (#367, thanks markusgritsch). The screen had keyboard resizing turned off, which left the lower part of the list behind the keyboard
+- With the keyboard open, the Settings list now shrinks above it so the entries at the bottom can be reached and tapped (#367, thanks markusgritsch). The screen had keyboard resizing turned off, which left the lower part of the list behind the keyboard. The same switch was off on the other twenty screens that carry a search field above a list (Nodes, Channels, Messages, NodeDex, Presence, Timeline, the telemetry logs, the debug logs and the rest), so it is on everywhere now
 
 ### Fixed (Old telemetry readings charted at the reconnect time)
 

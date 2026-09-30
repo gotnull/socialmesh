@@ -376,7 +376,6 @@ class _AetherScreenState extends ConsumerState<AetherScreen>
       child: GestureDetector(
         onTap: _dismissKeyboard,
         child: GlassScaffold(
-          resizeToAvoidBottomInset: false,
           leading: const BackButton(),
           centerTitle: true,
           title: context.l10n.aetherScreenTitle,

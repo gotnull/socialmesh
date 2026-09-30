@@ -100,7 +100,6 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold.body(
         hasScrollBody: true,
-        resizeToAvoidBottomInset: false,
         leading: const MeshCoreHamburgerMenuButton(),
         title: context.l10n.nodesScreenTitle(allContacts.length),
         actions: [

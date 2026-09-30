@@ -228,7 +228,6 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
     final reportsAsync = ref.watch(myBugReportsProvider);
 
     return GlassScaffold(
-      resizeToAvoidBottomInset: false,
       title: context.l10n.feedbackBugReportsTitle,
       slivers: [
         ...reportsAsync.when(

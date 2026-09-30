@@ -157,7 +157,6 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       child: GestureDetector(
         onTap: _dismissKeyboard,
         child: GlassScaffold(
-          resizeToAvoidBottomInset: false,
           title: context.l10n.nodedexTitle,
           actions: [
             IconButton(

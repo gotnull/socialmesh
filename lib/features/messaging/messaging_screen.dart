@@ -507,7 +507,6 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
         topicId: 'message_routing',
         stepKeys: const {},
         child: GlassScaffold(
-          resizeToAvoidBottomInset: false,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           titleWidget: Text(

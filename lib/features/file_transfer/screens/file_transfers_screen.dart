@@ -170,7 +170,6 @@ class _FileTransfersScreenState extends ConsumerState<FileTransfersScreen>
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: GlassScaffold(
-        resizeToAvoidBottomInset: false,
         title: context.l10n.fileTransferTitle,
         actions: [
           AppBarOverflowMenu<String>(
