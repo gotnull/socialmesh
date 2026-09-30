@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.70.0] - 2026-09-27
 
+### Fixed (White strip under the search field)
+
+- The Find and Search fields on Settings, Nodes, Channels, Contacts and every other screen built on the shared search header no longer show a strip of card colour under the field (#366, thanks markusgritsch). The field was forced to the header's slot height while its painted border kept its own intrinsic height, so at larger text sizes the card-coloured container behind it showed through below the border. The card colour is now the field's own fill, painted only where the border is, and the field sits centred in its slot
+
+### Fixed (Settings could not scroll above the keyboard)
+
+- With the keyboard open, the Settings list now shrinks above it so the entries at the bottom can be reached and tapped (#367, thanks markusgritsch). The screen had keyboard resizing turned off, which left the lower part of the list behind the keyboard
+
 ### Fixed (Old telemetry readings charted at the reconnect time)
 
 - Device Metrics no longer shows a reading from days ago as a fresh sample taken at the moment the phone connected (#365, thanks markusgritsch). Every telemetry sample is now filed at the time the radio received the packet (its `rxTime`), not at the wall clock when the app decoded it, so a packet the radio buffered while no phone was attached lands on the chart where it belongs. A history row is written only for a record that came from a telemetry packet decoded in the current session; a record that reached the logger any other way, whether a NodeDB replay or a merge from stored data, no longer produces one. The same sample handed over twice is stored once. Environment, air quality and power history follow the same rule
