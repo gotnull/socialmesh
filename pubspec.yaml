@@ -35,7 +35,7 @@ dependencies:
   # Storage
   flutter_secure_storage: ^11.2.0
   shared_preferences: ^2.5.5
-  sqflite: ^2.3.3
+  sqflite: ^2.4.4
   sqflite_common_ffi: ^2.4.3
   # SQLCipher-backed sqflite for at-rest encryption of sensitive databases
   # (messages, signals, routes, waypoints, peer_safety, nodedex). Coexists
