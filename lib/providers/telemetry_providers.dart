@@ -679,6 +679,17 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
   final _lastAirQuality = <int, _AirQualityFingerprint>{};
   final _lastPosition = <int, _PositionFingerprint>{};
 
+  /// Per-node boot instant implied by the newest accepted device-metrics
+  /// sample (sample time minus uptime), and that sample's time. Keyed by
+  /// nodeNum.
+  final _lastBootAt = <int, DateTime>{};
+  final _lastSampleAt = <int, DateTime>{};
+
+  /// Slack for the boot-instant comparison: rxTime is whole seconds and
+  /// uptime is counted on the radio, so two live samples from the same
+  /// boot disagree by seconds, never by more than this.
+  static const _bootInstantTolerance = Duration(minutes: 10);
+
   @override
   bool build() {
     ref.onDispose(() {
@@ -756,7 +767,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         // logs normally.
         if (hasSample &&
             !node.deviceMetricsFromNodeDb &&
-            (node.batteryLevel != null || node.voltage != null)) {
+            (node.batteryLevel != null || node.voltage != null) &&
+            !await _isUptimeReplay(storage, id, node)) {
           final cached = _lastDevice[id];
           if (cached == null || !cached.matches(node)) {
             _lastDevice[id] = _DeviceMetricsFingerprint(
@@ -1018,6 +1030,68 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
   /// every later emission hits the warm `_lastPosition` entry. Without this,
   /// the cold cache after each reconnect / app launch treats an unchanged
   /// position as new and appends a duplicate row.
+  // A radio can hand the phone a copy of an old telemetry packet as fresh
+  // traffic, stamped with the current receive time, so neither rxTime nor
+  // the NodeDB flag exposes it. Its uptime does. Every sample implies a
+  // boot instant (sample time minus uptime). While a node stays up that
+  // instant holds still, and a reboot moves it to after the last sample
+  // that showed the node up. A sample whose implied boot sits between the
+  // two, later than the known boot yet earlier than the last accepted
+  // sample, describes a node that booted while it was already running:
+  // it is a replay of an older sample, not a reading. The references are
+  // seeded from the newest stored row on a cold cache so an app launch
+  // cannot slip a replay through.
+  Future<bool> _isUptimeReplay(
+    TelemetryDatabase storage,
+    int id,
+    MeshNode node,
+  ) async {
+    final uptime = node.uptimeSeconds;
+    final sampledAt = node.metricsTimestamp;
+    if (uptime == null || sampledAt == null) return false;
+    final bootAt = sampledAt.subtract(Duration(seconds: uptime));
+    if (!_lastBootAt.containsKey(id)) await _seedBootReference(storage, id);
+    final knownBoot = _lastBootAt[id];
+    final lastSample = _lastSampleAt[id];
+    if (knownBoot != null && lastSample != null) {
+      final sameBoot =
+          bootAt.difference(knownBoot).abs() <= _bootInstantTolerance;
+      final rebooted = bootAt.isAfter(
+        lastSample.subtract(_bootInstantTolerance),
+      );
+      if (!sameBoot && !rebooted) {
+        AppLogging.storage(
+          'TelemetryLogger: dropped replayed device metrics for node '
+          '!${id.toRadixString(16)}: uptime ${uptime}s implies a boot at '
+          '${bootAt.toIso8601String()}, after the known boot at '
+          '${knownBoot.toIso8601String()} but before the node was last '
+          'seen up at ${lastSample.toIso8601String()}',
+        );
+        return true;
+      }
+      if (sameBoot && !bootAt.isAfter(knownBoot)) {
+        _lastSampleAt[id] = sampledAt;
+        return false;
+      }
+    }
+    _lastBootAt[id] = bootAt;
+    _lastSampleAt[id] = sampledAt;
+    return false;
+  }
+
+  Future<void> _seedBootReference(TelemetryDatabase storage, int id) async {
+    final stored = await storage.getDeviceMetrics(id);
+    // getDeviceMetrics returns timestamp ASC, so the newest row is last;
+    // the newest row carrying an uptime anchors both references.
+    for (final row in stored.reversed) {
+      final uptime = row.uptimeSeconds;
+      if (uptime == null) continue;
+      _lastBootAt[id] = row.timestamp.subtract(Duration(seconds: uptime));
+      _lastSampleAt[id] = row.timestamp;
+      return;
+    }
+  }
+
   Future<_PositionFingerprint?> _seedPositionFingerprint(
     TelemetryDatabase storage,
     int id,

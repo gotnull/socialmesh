@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/models/mesh_models.dart';
+import 'package:socialmesh/models/telemetry_log.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/telemetry_providers.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
@@ -249,5 +250,145 @@ void main() {
     await _settle();
     rows = await storage.getDeviceMetrics(43);
     expect(rows, hasLength(2));
+  });
+
+  test('a sample whose uptime runs backwards is a replay', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final storage = TelemetryDatabase(testDbPath: inMemoryDatabasePath);
+    await storage.init();
+    addTearDown(storage.close);
+
+    final protocol = _TestProtocolService();
+    final container = ProviderContainer(
+      overrides: [
+        telemetryStorageProvider.overrideWith((ref) async => storage),
+        protocolServiceProvider.overrideWithValue(protocol),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(protocol.nodeController.close);
+
+    final subscription = container.listen(telemetryLoggerProvider, (_, _) {});
+    addTearDown(subscription.close);
+    await container.read(telemetryStorageProvider.future);
+    await _settle();
+
+    final now = DateTime.fromMillisecondsSinceEpoch(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000 * 1000,
+    );
+    const day = Duration(days: 1);
+
+    // Live sample: the radio has been up 76 days.
+    protocol.emit(
+      MeshNode(
+        nodeNum: 44,
+        batteryLevel: 95,
+        voltage: 4.13,
+        uptimeSeconds: 76 * day.inSeconds,
+        metricsTimestamp: now,
+      ),
+    );
+    await _settle();
+    expect(await storage.getDeviceMetrics(44), hasLength(1));
+
+    // The radio hands over a copy of a packet from five days into the
+    // past, stamped with the current receive time. The uptime it carries
+    // is 71 days, which implies a boot five days after the one the live
+    // sample implied yet before that live sample was taken: a node cannot
+    // boot while it is already up, so it is a replay and not a reading.
+    protocol.emit(
+      MeshNode(
+        nodeNum: 44,
+        batteryLevel: 64,
+        voltage: 3.84,
+        uptimeSeconds: 71 * day.inSeconds,
+        metricsTimestamp: now.add(const Duration(minutes: 4)),
+      ),
+    );
+    await _settle();
+    expect(await storage.getDeviceMetrics(44), hasLength(1));
+
+    // A real reboot: the uptime collapses to seconds, which implies a
+    // later boot. That is a new reference and the sample is logged.
+    protocol.emit(
+      MeshNode(
+        nodeNum: 44,
+        batteryLevel: 96,
+        voltage: 4.14,
+        uptimeSeconds: 90,
+        metricsTimestamp: now.add(const Duration(minutes: 6)),
+      ),
+    );
+    await _settle();
+    expect(await storage.getDeviceMetrics(44), hasLength(2));
+
+    // A replay of the pre-reboot sample after the reboot is still caught
+    // against the new reference.
+    protocol.emit(
+      MeshNode(
+        nodeNum: 44,
+        batteryLevel: 64,
+        voltage: 3.84,
+        uptimeSeconds: 71 * day.inSeconds,
+        metricsTimestamp: now.add(const Duration(minutes: 8)),
+      ),
+    );
+    await _settle();
+    expect(await storage.getDeviceMetrics(44), hasLength(2));
+  });
+
+  test('the boot reference is seeded from stored history', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final storage = TelemetryDatabase(testDbPath: inMemoryDatabasePath);
+    await storage.init();
+    addTearDown(storage.close);
+
+    final now = DateTime.fromMillisecondsSinceEpoch(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000 * 1000,
+    );
+    const day = Duration(days: 1);
+    // History from a previous app run: a live sample at 76 days uptime.
+    await storage.addDeviceMetrics(
+      DeviceMetricsLog(
+        nodeNum: 45,
+        timestamp: now.subtract(const Duration(minutes: 30)),
+        batteryLevel: 95,
+        voltage: 4.13,
+        uptimeSeconds: 76 * day.inSeconds,
+      ),
+    );
+
+    final protocol = _TestProtocolService();
+    final container = ProviderContainer(
+      overrides: [
+        telemetryStorageProvider.overrideWith((ref) async => storage),
+        protocolServiceProvider.overrideWithValue(protocol),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(protocol.nodeController.close);
+
+    final subscription = container.listen(telemetryLoggerProvider, (_, _) {});
+    addTearDown(subscription.close);
+    await container.read(telemetryStorageProvider.future);
+    await _settle();
+
+    // First sample this run is the replay: the cold cache must not let
+    // it through.
+    protocol.emit(
+      MeshNode(
+        nodeNum: 45,
+        batteryLevel: 64,
+        voltage: 3.84,
+        uptimeSeconds: 71 * day.inSeconds,
+        metricsTimestamp: now,
+      ),
+    );
+    await _settle();
+    final rows = await storage.getDeviceMetrics(45);
+    expect(rows, hasLength(1));
+    expect(rows.single.batteryLevel, 95);
   });
 }
