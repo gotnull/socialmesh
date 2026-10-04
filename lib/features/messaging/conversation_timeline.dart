@@ -258,6 +258,8 @@ class ConversationTimelineController
         beforeTimestamp: beforeTimestamp,
         beforeMessageId: beforeMessageId,
         limit: olderPageMessageCount,
+        peerNodeNum: query.peerNodeNum,
+        myNodeNum: query.myNodeNum,
       );
       if (olderPage.isEmpty) {
         _setQueryState(
@@ -416,7 +418,11 @@ class ConversationTimelineController
     }
 
     final totalMessageCount = query.hasStableConversationKey
-        ? await storage.countConversationMessages(query.stableConversationKey!)
+        ? await storage.countConversationMessages(
+            query.stableConversationKey!,
+            peerNodeNum: query.peerNodeNum,
+            myNodeNum: query.myNodeNum,
+          )
         : 0;
 
     List<Message> rawMessages;
@@ -429,17 +435,23 @@ class ConversationTimelineController
           query.stableConversationKey!,
           fromTimestamp: session.oldestLoadedTimestamp!,
           fromMessageId: session.oldestLoadedMessageId!,
+          peerNodeNum: query.peerNodeNum,
+          myNodeNum: query.myNodeNum,
         );
         if (rawMessages.isEmpty && totalMessageCount > 0) {
           rawMessages = await storage.loadConversationNewestWindow(
             query.stableConversationKey!,
             limit: initialWindowMessageCount,
+            peerNodeNum: query.peerNodeNum,
+            myNodeNum: query.myNodeNum,
           );
         }
       } else {
         rawMessages = await storage.loadConversationNewestWindow(
           query.stableConversationKey!,
           limit: initialWindowMessageCount,
+          peerNodeNum: query.peerNodeNum,
+          myNodeNum: query.myNodeNum,
         );
       }
     }
@@ -470,7 +482,13 @@ class ConversationTimelineController
   ) async {
     if (query.peerNodeNum == null) return const [];
     final messages = await storage.loadMessagesForNode(query.peerNodeNum!);
-    return messages.where((message) => message.isDirect).toList();
+    return messages
+        .where(
+          (message) =>
+              message.isDirect &&
+              message.dmPeerFor(query.myNodeNum) == query.peerNodeNum,
+        )
+        .toList();
   }
 
   Future<bool> _ensureMessageMatching(

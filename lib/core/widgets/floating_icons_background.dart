@@ -11,7 +11,7 @@ class FloatingIconsBackground extends StatefulWidget {
   /// Optional page offset for parallax scrolling effect (0.0 = no offset)
   final double pageOffset;
 
-  /// Accent color for the gradient (defaults to primaryMagenta)
+  /// Accent colour for the gradient (defaults to the active theme accent).
   final Color? accentColor;
 
   const FloatingIconsBackground({
@@ -186,7 +186,7 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = widget.accentColor ?? AppTheme.primaryMagenta;
+    final accentColor = widget.accentColor ?? context.accentColor;
     final size = MediaQuery.sizeOf(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 

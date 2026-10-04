@@ -476,10 +476,15 @@ class MessageDatabase {
   }
 
   /// Count stored messages for a specific conversation.
-  Future<int> countConversationMessages(String convKey) async {
+  Future<int> countConversationMessages(
+    String convKey, {
+    int? peerNodeNum,
+    int? myNodeNum,
+  }) async {
+    final filter = _conversationFilter(convKey, peerNodeNum, myNodeNum);
     final result = await _database.rawQuery(
-      'SELECT COUNT(*) AS cnt FROM $_tableName WHERE conversation_key = ?', // lint-allow: hardcoded-string
-      [convKey],
+      'SELECT COUNT(*) AS cnt FROM $_tableName WHERE ${filter.where}', // lint-allow: hardcoded-string
+      filter.args,
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
@@ -488,20 +493,23 @@ class MessageDatabase {
   Future<List<Message>> loadConversationNewestWindow(
     String convKey, {
     required int limit,
+    int? peerNodeNum,
+    int? myNodeNum,
   }) async {
     if (limit <= 0) return const [];
+    final filter = _conversationFilter(convKey, peerNodeNum, myNodeNum);
 
     final rows = await _database.rawQuery(
       '''
       SELECT * FROM (
         SELECT * FROM $_tableName
-        WHERE conversation_key = ?
+        WHERE ${filter.where}
         ORDER BY timestamp DESC, id DESC
         LIMIT ?
       )
       ORDER BY timestamp ASC, id ASC
       ''',
-      [convKey, limit],
+      [...filter.args, limit],
     );
     return rows.map(_messageFromRow).toList();
   }
@@ -512,14 +520,17 @@ class MessageDatabase {
     required DateTime beforeTimestamp,
     required String beforeMessageId,
     required int limit,
+    int? peerNodeNum,
+    int? myNodeNum,
   }) async {
     if (limit <= 0) return const [];
+    final filter = _conversationFilter(convKey, peerNodeNum, myNodeNum);
 
     final rows = await _database.rawQuery(
       '''
       SELECT * FROM (
         SELECT * FROM $_tableName
-        WHERE conversation_key = ?
+        WHERE ${filter.where}
           AND (
             timestamp < ?
             OR (timestamp = ? AND id < ?)
@@ -530,7 +541,7 @@ class MessageDatabase {
       ORDER BY timestamp ASC, id ASC
       ''',
       [
-        convKey,
+        ...filter.args,
         beforeTimestamp.millisecondsSinceEpoch,
         beforeTimestamp.millisecondsSinceEpoch,
         beforeMessageId,
@@ -545,13 +556,16 @@ class MessageDatabase {
     String convKey, {
     required DateTime fromTimestamp,
     required String fromMessageId,
+    int? peerNodeNum,
+    int? myNodeNum,
   }) async {
+    final filter = _conversationFilter(convKey, peerNodeNum, myNodeNum);
     final rows = await _database.query(
       _tableName,
       where:
-          'conversation_key = ? AND (timestamp > ? OR (timestamp = ? AND id >= ?))',
+          '${filter.where} AND (timestamp > ? OR (timestamp = ? AND id >= ?))',
       whereArgs: [
-        convKey,
+        ...filter.args,
         fromTimestamp.millisecondsSinceEpoch,
         fromTimestamp.millisecondsSinceEpoch,
         fromMessageId,
@@ -560,6 +574,28 @@ class MessageDatabase {
     );
     return rows.map(_messageFromRow).toList();
   }
+
+  // A shared dataset holds DMs sent and received by every radio that used
+  // it. A peer query selects the rows whose other party, as
+  // [Message.dmPeerFor] derives it for the connected radio, is that peer,
+  // so it matches the contact list and never pulls in a DM between another
+  // of the user's radios and a third node. Stored keys and per-radio
+  // reading positions retain their existing format.
+  ({String where, List<Object?> args}) _conversationFilter(
+    String convKey,
+    int? peerNodeNum,
+    int? myNodeNum,
+  ) => peerNodeNum == null
+      ? (where: 'conversation_key = ?', args: [convKey])
+      : (
+          // Transcribes [Message.isFromOwnRadio] and [Message.dmPeerFor];
+          // IS keeps a null myNodeNum comparing as the Dart code does.
+          where:
+              'to_node != ? AND CASE '
+              'WHEN from_node IS ? OR (sent = 1 AND to_node IS NOT ?) '
+              'THEN to_node ELSE from_node END = ?',
+          args: [0xFFFFFFFF, myNodeNum, myNodeNum, peerNodeNum],
+        );
 
   Future<void> saveConversationReadPosition(
     ConversationReadPosition position,

@@ -18,7 +18,7 @@ dependencies:
   riverpod_annotation: ^4.0.7
 
   # BLE Communication
-  flutter_blue_plus: ^2.3.12
+  flutter_blue_plus: ^2.3.13
   nordic_dfu: ^8.1.0
 
   # USB Serial Communication
@@ -35,7 +35,7 @@ dependencies:
   # Storage
   flutter_secure_storage: ^11.2.0
   shared_preferences: ^2.5.5
-  sqflite: ^2.3.3
+  sqflite: ^2.4.4
   sqflite_common_ffi: ^2.4.3
   # SQLCipher-backed sqflite for at-rest encryption of sensitive databases
   # (messages, signals, routes, waypoints, peer_safety, nodedex). Coexists
@@ -43,12 +43,12 @@ dependencies:
   sqflite_sqlcipher: ^3.4.1
   path_provider: ^2.1.6
   path: ^1.9.0
-  file_picker: ^12.0.0-beta.7
+  file_picker: ^13.1.0
   image_picker: ^1.2.3
   photo_manager: ^3.12.0
 
   # QR Code
-  mobile_scanner: ^7.4.0
+  mobile_scanner: ^7.4.2
 
   # Markdown rendering (Help Center knowledge base articles)
   flutter_markdown: ^0.7.6
@@ -61,7 +61,7 @@ dependencies:
   latlong2: ^0.9.1
   intl: ^0.20.2
   collection: ^1.18.0
-  geolocator: ^14.0.3
+  geolocator: ^14.1.1
   geocoding: ^5.0.0
   share_plus: ^13.3.0
   social_media_buttons: ^1.0.0
@@ -94,7 +94,7 @@ dependencies:
   device_info_plus: ^13.2.0
 
   # In-App Purchases (RevenueCat)
-  purchases_flutter: ^10.12.0
+  purchases_flutter: ^10.13.2
 
   # Animations
   skeletonizer: ^3.0.0
@@ -102,18 +102,18 @@ dependencies:
   scrollable_positioned_list: ^0.3.8
   flutter_map_marker_cluster: ^8.2.2
   firebase_crashlytics: ^5.4.0
-  firebase_core: ^4.14.0
+  firebase_core: ^4.15.0
   firebase_analytics: ^12.5.0
   firebase_auth: ^6.7.0
   firebase_storage: ^13.6.0
-  firebase_messaging: ^16.6.0
+  firebase_messaging: ^16.7.0
   characters: ^1.4.0
   cloud_firestore: ^6.7.1
   cloud_functions: ^6.5.0
   # Stripe SDK - native Payment Sheet for the external (off-store)
   # purchase path. Publishable key + merchantIdentifier configured
   # at app startup from .env.
-  flutter_stripe: ^14.0.0
+  flutter_stripe: ^14.1.0
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^8.2.0
   crypto: ^3.0.6
@@ -161,7 +161,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
 
   # Code generation (3.x to match riverpod 3.x)
-  build_runner: ^2.15.1
+  build_runner: ^2.16.1
   riverpod_generator: ^4.0.9
   json_serializable: ^6.14.1
 

@@ -97,33 +97,24 @@ Future<void> startNodeDexImport({
 }) async {
   // Capture before async.
   final navigator = Navigator.of(context);
+  final notifier = ref.read(nodeDexProvider.notifier);
 
   try {
-    final result = await FilePicker.pickFiles(
+    final file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['json'],
-      withData: true,
     );
 
-    if (result == null || result.files.isEmpty) return;
+    if (file == null) return;
+    final jsonString = utf8.decode(await file.readAsBytes());
 
-    final file = result.files.first;
-    String? jsonString;
-
-    if (file.bytes != null) {
-      jsonString = utf8.decode(file.bytes!);
-    } else if (file.path != null) {
-      jsonString = await File(file.path!).readAsString();
-    }
-
-    if (jsonString == null || jsonString.isEmpty) {
+    if (jsonString.isEmpty) {
       if (!context.mounted) return;
       showErrorSnackBar(context, context.l10n.nodedexImportFailedToReadFile);
       return;
     }
 
     // Parse the JSON.
-    final notifier = ref.read(nodeDexProvider.notifier);
     final entries = notifier.parseImportJson(jsonString);
 
     if (entries.isEmpty) {

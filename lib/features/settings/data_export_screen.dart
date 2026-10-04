@@ -630,23 +630,16 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
       return;
     }
 
-    final pickResult = await FilePicker.pickFiles(
+    final picked = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['json'],
-      withData: true,
     );
-    if (pickResult == null || pickResult.files.isEmpty) return;
+    if (picked == null) return;
     if (!mounted) return;
-
-    final picked = pickResult.files.first;
-    final bytes = picked.bytes;
-    if (bytes == null) {
-      showErrorSnackBar(context, l10n.dataExportDeviceConfigRestoreInvalidFile);
-      return;
-    }
 
     DeviceConfigBundle bundle;
     try {
+      final bytes = await picked.readAsBytes();
       bundle = DeviceConfigBundle.decode(utf8.decode(bytes));
     } catch (_) {
       if (!mounted) return;
@@ -654,6 +647,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
       return;
     }
 
+    if (!mounted) return;
     if (bundle.isEmpty) {
       showInfoSnackBar(context, l10n.dataExportDeviceConfigRestoreEmpty);
       return;

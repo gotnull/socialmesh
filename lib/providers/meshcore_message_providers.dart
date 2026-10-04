@@ -581,6 +581,7 @@ class MeshCoreConversationsNotifier
   }
 
   void _onHeartbeatTick() {
+    if (_disposed) return;
     // Skip silently when session went stale between ticks.
     final s = ref.read(meshCoreSessionProvider);
     if (s == null || !s.isActive) {
@@ -680,6 +681,7 @@ class MeshCoreConversationsNotifier
   /// `MeshCoreDrainOutcome.skipped(reason)` immediately without
   /// sending anything.
   Future<MeshCoreDrainOutcome> drainOnce(MeshCoreDrainSource source) async {
+    if (_disposed) return MeshCoreDrainOutcome.skipped('disposed');
     if (_activeDrain != null) {
       final reason = 'already_draining_${_activeDrain!.name}';
       // Source-specific skip log so the field log makes attribution

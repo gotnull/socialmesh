@@ -45,17 +45,13 @@ class _ReticulumCaptureLibraryScreenState
     final notifier = ref.read(reticulumCaptureListProvider.notifier);
     safeSetState(() => _importing = true);
     try {
-      final picked = await FilePicker.pickFiles(
-        type: FileType.any,
-        withData: false,
-        allowMultiple: false,
-      );
-      if (picked == null || picked.files.isEmpty) return;
-      final path = picked.files.single.path;
+      final picked = await FilePicker.pickFile(type: FileType.any);
+      if (picked == null) return;
+      final path = picked.path;
       if (path == null) return;
       final result = await notifier.importFromFile(path);
       if (!mounted) return;
-      _surfaceImportResult(result, picked.files.single.name);
+      _surfaceImportResult(result, picked.name);
     } finally {
       if (mounted) safeSetState(() => _importing = false);
     }

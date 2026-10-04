@@ -166,13 +166,15 @@ void main() {
     });
 
     test('low-precision node does not affect high-precision node', () async {
-      // High-precision node builds up trail
+      // High-precision node builds up trail. Distinct timestamps: the
+      // database treats a matching node and timestamp as the same sample.
       await db.addPositionLog(
         PositionLog(
           nodeNum: 1,
           latitude: 10.0,
           longitude: 20.0,
           precisionBits: 32,
+          timestamp: DateTime(2026, 6, 1, 10),
         ),
       );
       await db.addPositionLog(
@@ -181,6 +183,7 @@ void main() {
           latitude: 11.0,
           longitude: 21.0,
           precisionBits: 32,
+          timestamp: DateTime(2026, 6, 1, 10, 1),
         ),
       );
 

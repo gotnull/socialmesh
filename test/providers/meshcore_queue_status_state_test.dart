@@ -176,6 +176,24 @@ void main() {
       final state = c.read(meshCoreConversationsProvider);
       expect(state.heartbeatActive, isFalse);
     });
+
+    test('a queued drain skips after the container is disposed', () async {
+      final transport = _FakeTransport();
+      addTearDown(transport.dispose);
+      final session = MeshCoreSession(transport);
+      final container = _container(session: session);
+      final notifier = container.read(meshCoreConversationsProvider.notifier);
+      final queuedDrain = Future.microtask(
+        () => notifier.drainOnce(MeshCoreDrainSource.heartbeat),
+      );
+      container.dispose();
+
+      final outcome = await queuedDrain;
+      expect(outcome.kind, MeshCoreDrainOutcomeKind.skipped);
+      expect(outcome.skipReason, 'disposed');
+      expect(transport.sent, isEmpty);
+      expect(notifier.debugIsHeartbeatActive, isFalse);
+    });
   });
 }
 

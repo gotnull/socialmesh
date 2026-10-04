@@ -171,17 +171,31 @@ class _InMemoryMessageDatabase extends MessageDatabase {
   }
 
   @override
-  Future<int> countConversationMessages(String convKey) async {
-    return _conversationMessages(convKey).length;
+  Future<int> countConversationMessages(
+    String convKey, {
+    int? peerNodeNum,
+    int? myNodeNum,
+  }) async {
+    return _conversationMessages(
+      convKey,
+      peerNodeNum: peerNodeNum,
+      myNodeNum: myNodeNum,
+    ).length;
   }
 
   @override
   Future<List<Message>> loadConversationNewestWindow(
     String convKey, {
     required int limit,
+    int? peerNodeNum,
+    int? myNodeNum,
   }) async {
     if (limit <= 0) return const [];
-    final messages = _conversationMessages(convKey);
+    final messages = _conversationMessages(
+      convKey,
+      peerNodeNum: peerNodeNum,
+      myNodeNum: myNodeNum,
+    );
     if (messages.length <= limit) {
       return messages;
     }
@@ -194,19 +208,26 @@ class _InMemoryMessageDatabase extends MessageDatabase {
     required DateTime beforeTimestamp,
     required String beforeMessageId,
     required int limit,
+    int? peerNodeNum,
+    int? myNodeNum,
   }) async {
     if (limit <= 0) return const [];
-    final older = _conversationMessages(convKey)
-        .where((message) {
-          final timestampComparison = message.timestamp.compareTo(
-            beforeTimestamp,
-          );
-          if (timestampComparison != 0) {
-            return timestampComparison < 0;
-          }
-          return message.id.compareTo(beforeMessageId) < 0;
-        })
-        .toList(growable: false);
+    final older =
+        _conversationMessages(
+              convKey,
+              peerNodeNum: peerNodeNum,
+              myNodeNum: myNodeNum,
+            )
+            .where((message) {
+              final timestampComparison = message.timestamp.compareTo(
+                beforeTimestamp,
+              );
+              if (timestampComparison != 0) {
+                return timestampComparison < 0;
+              }
+              return message.id.compareTo(beforeMessageId) < 0;
+            })
+            .toList(growable: false);
     if (older.length <= limit) {
       return older;
     }
@@ -218,8 +239,14 @@ class _InMemoryMessageDatabase extends MessageDatabase {
     String convKey, {
     required DateTime fromTimestamp,
     required String fromMessageId,
+    int? peerNodeNum,
+    int? myNodeNum,
   }) async {
-    return _conversationMessages(convKey)
+    return _conversationMessages(
+          convKey,
+          peerNodeNum: peerNodeNum,
+          myNodeNum: myNodeNum,
+        )
         .where((message) {
           final timestampComparison = message.timestamp.compareTo(
             fromTimestamp,
@@ -272,9 +299,17 @@ class _InMemoryMessageDatabase extends MessageDatabase {
     _messages.sort(_compareMessages);
   }
 
-  List<Message> _conversationMessages(String convKey) {
+  List<Message> _conversationMessages(
+    String convKey, {
+    int? peerNodeNum,
+    int? myNodeNum,
+  }) {
     return _messages
-        .where((message) => MessageDatabase.conversationKey(message) == convKey)
+        .where(
+          (message) => peerNodeNum == null
+              ? MessageDatabase.conversationKey(message) == convKey
+              : message.isDirect && message.dmPeerFor(myNodeNum) == peerNodeNum,
+        )
         .toList(growable: false)
       ..sort(_compareMessages);
   }
@@ -429,6 +464,88 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
+
+  testWidgets(
+    'latest message stays above composer as keyboard opens and closes',
+    (tester) async {
+      final storage = _InMemoryMessageDatabase();
+      await _seedDmConversation(storage, startIndex: 0, count: 60);
+      final container = await _createContainer(storage);
+      addTearDown(tester.view.resetViewInsets);
+      try {
+        await _pumpChat(tester, container);
+        await _pumpFor(tester, const Duration(milliseconds: 700));
+        for (final inset in [100.0, 200.0, 300.0, 0.0]) {
+          tester.view.viewInsets = FakeViewPadding(bottom: inset);
+          await _pumpFor(tester, const Duration(milliseconds: 350));
+          final latest = find.byKey(const ValueKey('message-059'));
+          expect(latest, findsOneWidget);
+          final bubble = tester.getRect(latest);
+          final composer = tester.getRect(find.byType(ChatComposer));
+          expect(bubble.bottom, lessThanOrEqualTo(composer.top + 0.5));
+          expect(bubble.top, greaterThanOrEqualTo(0));
+        }
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        container.dispose();
+      }
+    },
+  );
+
+  testWidgets(
+    'closing the keyboard after scrolling into history keeps the reading place',
+    (tester) async {
+      final storage = _InMemoryMessageDatabase();
+      await _seedDmConversation(storage, startIndex: 0, count: 60);
+      final container = await _createContainer(storage);
+      addTearDown(tester.view.resetViewInsets);
+      try {
+        await _pumpChat(tester, container);
+        await _pumpFor(tester, const Duration(milliseconds: 700));
+        tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+        await _pumpFor(tester, const Duration(milliseconds: 500));
+        await tester.drag(
+          find.byType(ScrollablePositionedList),
+          const Offset(0, 900),
+        );
+        await _pumpFor(tester, const Duration(milliseconds: 500));
+        expect(find.byKey(const ValueKey('message-059')), findsNothing);
+        tester.view.viewInsets = const FakeViewPadding();
+        await _pumpFor(tester, const Duration(milliseconds: 500));
+        expect(find.byKey(const ValueKey('message-059')), findsNothing);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        container.dispose();
+      }
+    },
+  );
+
+  testWidgets(
+    'opening the keyboard while reading history preserves the anchor',
+    (tester) async {
+      final storage = _InMemoryMessageDatabase();
+      await _seedDmConversation(storage, startIndex: 0, count: 60);
+      await storage.saveConversationReadPosition(
+        _savedReadPositionForIndex(30),
+      );
+      final container = await _createContainer(storage);
+      addTearDown(tester.view.resetViewInsets);
+      try {
+        await _pumpChat(tester, container);
+        await _pumpFor(tester, const Duration(milliseconds: 700));
+        tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+        await _pumpFor(tester, const Duration(milliseconds: 500));
+        expect(find.byKey(const ValueKey('message-059')), findsNothing);
+        expect(find.byKey(const ValueKey('message-030')), findsOneWidget);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        container.dispose();
+      }
+    },
+  );
 
   testWidgets(
     'chat saves a read anchor, restores into history after restart, and jumps to latest',

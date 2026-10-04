@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.71.0] - 2026-10-04
+
+### Fixed
+
+- Direct-message timelines include messages sent and received through other radios sharing the current dataset, matching the Contacts preview, without pulling in another radio's direct messages with third nodes (#383).
+- Contacts not yet rediscovered after a node list reset show the peer's own name, not the name of the radio that last messaged them (#384).
+- Chats stay at the latest message while the keyboard opens or closes, while a reader browsing older messages keeps their place (#382).
+- Device Metrics voltage labels use equal intervals in whole tenths of a volt (#381). Chart tooltips are translucent so the selected indicator remains visible beneath them (#380).
+- The title-screen background follows the selected accent colour (#369).
+- The iOS viewport accounts for the visible status-bar frame when UIKit drops the top safe-area inset after rotation (#368).
+- Queued MeshCore message drains stop when their provider has been disposed.
+
+### Changed
+
+- Updated the ten pending dependency bumps, including migration of file imports, transfers and profile image pickers to the file_picker 13 API.
+
 ## [1.70.0] - 2026-09-27
 
 ### Fixed (White strip under the search field)

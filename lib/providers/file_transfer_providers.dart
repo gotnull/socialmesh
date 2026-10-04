@@ -805,30 +805,14 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     int? targetNodeNum,
     FileTransportMode transportMode = FileTransportMode.auto,
   }) async {
-    final result = await FilePicker.pickFiles(
-      type: FileType.any,
-      withData: true,
-    );
-
-    if (result == null || result.files.isEmpty) return null;
-    final file = result.files.first;
-    if (file.bytes == null) {
-      // Read from path if bytes not available.
-      if (file.path == null) return null;
-      final bytes = await File(file.path!).readAsBytes();
-      return sendFile(
-        filename: file.name,
-        mimeType: _guessMimeType(file.name),
-        fileBytes: bytes,
-        targetNodeNum: targetNodeNum,
-        transportMode: transportMode,
-      );
-    }
+    final file = await FilePicker.pickFile(type: FileType.any);
+    if (file == null) return null;
+    final bytes = await file.readAsBytes();
 
     return sendFile(
       filename: file.name,
       mimeType: _guessMimeType(file.name),
-      fileBytes: Uint8List.fromList(file.bytes!),
+      fileBytes: bytes,
       targetNodeNum: targetNodeNum,
       transportMode: transportMode,
     );

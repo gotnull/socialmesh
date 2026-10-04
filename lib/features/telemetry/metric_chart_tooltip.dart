@@ -24,7 +24,7 @@ LineTouchTooltipData metricTouchTooltipData(
     maxContentWidth: 180,
     fitInsideHorizontally: true,
     fitInsideVertically: true,
-    getTooltipColor: (_) => context.card,
+    getTooltipColor: (_) => context.card.withValues(alpha: 0.75),
     getTooltipItems: (spots) => [
       for (final (i, spot) in spots.indexed)
         LineTooltipItem(

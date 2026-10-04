@@ -1950,12 +1950,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
     // Capture notifier before any async operation
     final notifier = ref.read(userProfileProvider.notifier);
 
-    FilePickerResult? result;
+    PlatformFile? result;
     try {
-      result = await FilePicker.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
+      result = await FilePicker.pickFile(type: FileType.image);
     } catch (e) {
       // PlatformException thrown when the picker cannot load the selected file
       // (e.g. iCloud image not yet downloaded, corrupt asset, unsupported UTType).
@@ -1966,8 +1963,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
       return;
     }
 
-    if (result != null && result.files.isNotEmpty) {
-      final path = result.files.first.path;
+    if (result != null) {
+      final path = result.path;
       if (path == null) {
         safeShowSnackBar(
           'Could not access the selected image. Try saving it to your device first.', // lint-allow: hardcoded-string
@@ -2051,12 +2048,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
     // Capture notifier before async operation
     final notifier = ref.read(userProfileProvider.notifier);
 
-    FilePickerResult? result;
+    PlatformFile? result;
     try {
-      result = await FilePicker.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
+      result = await FilePicker.pickFile(type: FileType.image);
     } catch (e) {
       // PlatformException thrown when the picker cannot load the selected file
       // (e.g. iCloud image not yet downloaded, corrupt asset, unsupported UTType).
@@ -2067,8 +2061,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
       return;
     }
 
-    if (result != null && result.files.isNotEmpty) {
-      final path = result.files.first.path;
+    if (result != null) {
+      final path = result.path;
       if (path == null) {
         safeShowSnackBar(
           'Could not access the selected image. Try saving it to your device first.', // lint-allow: hardcoded-string

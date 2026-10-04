@@ -1062,6 +1062,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   bool _isApplyingInitialRestore = false;
   bool _showJumpToLatest = false;
   bool _olderLoadInFlight = false;
+  bool _keepLatestDuringKeyboardResize = false;
+  double _keyboardInset = 0;
 
   /// Tracks the currently highlighted message (for quote-tap scroll).
   String? _highlightedMessageId;
@@ -1245,6 +1247,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     _messageFocusNode.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (!mounted) return;
+    final inset = View.of(context).viewInsets.bottom;
+    if (inset == _keyboardInset) return;
+    if (_keyboardInset == 0) {
+      _keepLatestDuringKeyboardResize =
+          _hasAppliedInitialRestore &&
+          !_isSearching &&
+          _isNearLatest(_currentDisplayRows);
+    } else if (inset < _keyboardInset && !_isNearLatest(_currentDisplayRows)) {
+      _keepLatestDuringKeyboardResize = false;
+    }
+    _keyboardInset = inset;
+    final query = _activeTimelineQuery;
+    if (!_keepLatestDuringKeyboardResize || query == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _activeTimelineQuery != query) return;
+      unawaited(_scrollToLatest(query, animate: false));
+      if (_keyboardInset == 0) {
+        _keepLatestDuringKeyboardResize = false;
+      }
+    });
   }
 
   @override
@@ -2491,7 +2518,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           .where(
             (m) =>
                 m.isDirect &&
-                (m.from == widget.nodeNum || m.to == widget.nodeNum) &&
+                m.dmPeerFor(myNodeNum) == widget.nodeNum &&
                 !m.isCanonicalTapback,
           )
           .toList();

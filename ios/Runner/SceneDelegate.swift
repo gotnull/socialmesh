@@ -32,7 +32,7 @@ class SceneDelegate: FlutterSceneDelegate {
             return
         }
 
-        let controller = FlutterViewController(
+        let controller = PhoneFlutterViewController(
             engine: engine,
             nibName: nil,
             bundle: nil
@@ -130,6 +130,26 @@ class SceneDelegate: FlutterSceneDelegate {
             } else {
                 result(FlutterMethodNotImplemented)
             }
+        }
+    }
+}
+
+// UIKit can lose the top safe-area inset after rotation on phones with a
+// physical home button. Keep Flutter's viewport clear of the visible status
+// bar using its current frame, without imposing a fixed portrait inset.
+class PhoneFlutterViewController: FlutterViewController {
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let statusBar = view.window?.windowScene?.statusBarManager else {
+            return
+        }
+        let statusBarBottom = statusBar.isStatusBarHidden
+            ? view.bounds.minY
+            : view.convert(statusBar.statusBarFrame, from: nil).maxY
+        let nativeTop = view.safeAreaInsets.top - additionalSafeAreaInsets.top
+        let requiredTop = max(0, statusBarBottom - view.bounds.minY - nativeTop)
+        if additionalSafeAreaInsets.top != requiredTop {
+            additionalSafeAreaInsets.top = requiredTop
         }
     }
 }

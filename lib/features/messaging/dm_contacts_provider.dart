@@ -36,12 +36,15 @@ class DmContactInfo {
 ///
 /// Newest message wins the preview; unread counts accumulate for
 /// received-and-unread messages from the peer. Tapback reactions are
-/// metadata, not messages, and are skipped.
+/// metadata, not messages, and are skipped. Identity hints come from the
+/// newest message the peer sent: an outgoing message carries the sending
+/// radio's own name, which is not the peer's.
 Map<int, DmContactInfo> computeDmContactInfo(
   List<Message> messages,
   int? myNodeNum,
 ) {
   final dmInfoByNode = <int, DmContactInfo>{};
+  final identityByNode = <int, Message>{};
   for (final message in messages) {
     if (message.isCanonicalTapback) continue;
     if (!message.isDirect) continue;
@@ -49,38 +52,25 @@ Map<int, DmContactInfo> computeDmContactInfo(
     final existing = dmInfoByNode[otherNode];
     final isUnread =
         message.received && message.from == otherNode && !message.read;
-
-    if (existing == null) {
-      dmInfoByNode[otherNode] = DmContactInfo(
-        lastMessage: message.text,
-        lastMessageTime: message.timestamp,
-        unreadCount: isUnread ? 1 : 0,
-        senderDisplayName: message.senderDisplayName,
-        senderShortName: message.senderShortName,
-        senderAvatarColor: message.senderAvatarColor,
-      );
-    } else {
-      // Update if this message is newer
-      if (message.timestamp.isAfter(existing.lastMessageTime)) {
-        dmInfoByNode[otherNode] = DmContactInfo(
-          lastMessage: message.text,
-          lastMessageTime: message.timestamp,
-          unreadCount: existing.unreadCount + (isUnread ? 1 : 0),
-          senderDisplayName: message.senderDisplayName,
-          senderShortName: message.senderShortName,
-          senderAvatarColor: message.senderAvatarColor,
-        );
-      } else if (isUnread) {
-        dmInfoByNode[otherNode] = DmContactInfo(
-          lastMessage: existing.lastMessage,
-          lastMessageTime: existing.lastMessageTime,
-          unreadCount: existing.unreadCount + 1,
-          senderDisplayName: existing.senderDisplayName,
-          senderShortName: existing.senderShortName,
-          senderAvatarColor: existing.senderAvatarColor,
-        );
-      }
+    final knownIdentity = identityByNode[otherNode];
+    if (message.from == otherNode &&
+        (knownIdentity == null ||
+            message.timestamp.isAfter(knownIdentity.timestamp))) {
+      identityByNode[otherNode] = message;
     }
+    final identity = identityByNode[otherNode];
+
+    final isNewer =
+        existing == null || message.timestamp.isAfter(existing.lastMessageTime);
+    if (!isNewer && !isUnread && identity == knownIdentity) continue;
+    dmInfoByNode[otherNode] = DmContactInfo(
+      lastMessage: isNewer ? message.text : existing.lastMessage,
+      lastMessageTime: isNewer ? message.timestamp : existing.lastMessageTime,
+      unreadCount: (existing?.unreadCount ?? 0) + (isUnread ? 1 : 0),
+      senderDisplayName: identity?.senderDisplayName,
+      senderShortName: identity?.senderShortName,
+      senderAvatarColor: identity?.senderAvatarColor,
+    );
   }
   return dmInfoByNode;
 }

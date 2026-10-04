@@ -162,6 +162,167 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
+  test(
+    'shared-radio DM history paginates and restores across both node pairs',
+    () async {
+      final h = await _createHarness(myNodeNum: 11);
+      addTearDown(h.container.dispose);
+      addTearDown(h.storage.close);
+      final base = DateTime(2026, 4, 12, 8);
+      await h.storage.saveMessages([
+        for (var index = 0; index < 140; index++)
+          Message(
+            id: 'shared-$index',
+            from: index.isEven ? 10 : 20,
+            to: index.isEven ? 20 : 11,
+            sent: index.isEven,
+            received: index.isOdd,
+            text: 'shared-$index',
+            timestamp: base.add(Duration(minutes: index)),
+          ),
+        Message(
+          id: 'broadcast',
+          from: 20,
+          to: 0xFFFFFFFF,
+          text: 'channel',
+          timestamp: base,
+        ),
+        Message(
+          id: 'other-peer',
+          from: 10,
+          to: 30,
+          sent: true,
+          text: 'other',
+          timestamp: base,
+        ),
+      ]);
+      const query = ConversationTimelineQuery.direct(
+        peerNodeNum: 20,
+        myNodeNum: 11,
+      );
+      final controller = h.container.read(
+        conversationTimelineControllerProvider.notifier,
+      );
+      await controller.ensureInitialized(query);
+      var timeline = h.container
+          .read(conversationTimelineStateProvider(query))!
+          .requireValue;
+      expect(timeline.totalMessageCount, 140);
+      expect(timeline.rawMessages, hasLength(80));
+      expect(timeline.rawMessages.last.id, 'shared-139');
+      await controller.loadOlder(query);
+      timeline = h.container
+          .read(conversationTimelineStateProvider(query))!
+          .requireValue;
+      expect(timeline.rawMessages, hasLength(140));
+      expect(timeline.hasMoreOlder, isFalse);
+      expect(timeline.containsMessageId('shared-0'), isTrue);
+      expect(timeline.containsMessageId('broadcast'), isFalse);
+      expect(timeline.containsMessageId('other-peer'), isFalse);
+      await controller.saveReadPosition(
+        query,
+        ConversationReadPosition(
+          conversationKey: query.stableConversationKey!,
+          anchorMessageId: 'shared-0',
+          anchorTimestamp: base,
+          anchorAlignment: 0.8,
+          wasNearLatest: false,
+          updatedAt: base,
+        ),
+      );
+      expect(
+        (await h.storage.loadConversationReadPosition(
+          query.stableConversationKey!,
+        ))!.anchorMessageId,
+        'shared-0',
+      );
+      final restored = await controller.resolveInitialRestoreTarget(query);
+      expect(restored.messageId, 'shared-0');
+    },
+  );
+
+  test(
+    'shared-radio DM thread with another own radio holds only their DMs',
+    () async {
+      // Radios 10 and 11 share one dataset; 11 is connected; 20 is a
+      // third node both radios have messaged.
+      final h = await _createHarness(myNodeNum: 11);
+      addTearDown(h.container.dispose);
+      addTearDown(h.storage.close);
+      final base = DateTime(2026, 4, 12, 8);
+      Message dm(String id, int from, int to, {required bool sent}) => Message(
+        id: id,
+        from: from,
+        to: to,
+        sent: sent,
+        received: !sent,
+        text: id,
+        timestamp: base.add(Duration(minutes: id.hashCode % 50)),
+      );
+      final messages = [
+        dm('radio10-to-20', 10, 20, sent: true),
+        dm('20-to-radio10', 20, 10, sent: false),
+        dm('radio11-to-20', 11, 20, sent: true),
+        dm('20-to-radio11', 20, 11, sent: false),
+        dm('radio11-to-radio10', 11, 10, sent: true),
+        dm('radio10-to-radio11-sent', 10, 11, sent: true),
+        dm('radio10-to-radio11-rx', 10, 11, sent: false),
+      ];
+      await h.storage.saveMessages(messages);
+      final controller = h.container.read(
+        conversationTimelineControllerProvider.notifier,
+      );
+
+      Future<Set<String>> threadIds(int peer) async {
+        final query = ConversationTimelineQuery.direct(
+          peerNodeNum: peer,
+          myNodeNum: 11,
+        );
+        await controller.ensureInitialized(query);
+        final timeline = h.container
+            .read(conversationTimelineStateProvider(query))!
+            .requireValue;
+        expect(timeline.totalMessageCount, timeline.rawMessages.length);
+        return timeline.rawMessages.map((m) => m.id).toSet();
+      }
+
+      Set<String> contactGrouping(int peer, int? myNodeNum) => messages
+          .where((m) => m.dmPeerFor(myNodeNum) == peer)
+          .map((m) => m.id)
+          .toSet();
+
+      expect(await threadIds(10), {
+        'radio11-to-radio10',
+        'radio10-to-radio11-sent',
+        'radio10-to-radio11-rx',
+      });
+      expect(await threadIds(20), {
+        'radio10-to-20',
+        '20-to-radio10',
+        'radio11-to-20',
+        '20-to-radio11',
+      });
+
+      // The storage filter and the contact list agree on every peer,
+      // including before the connected radio's node number is known.
+      for (final myNodeNum in <int?>[11, null]) {
+        for (final peer in [10, 11, 20]) {
+          final rows = await h.storage.loadConversationNewestWindow(
+            'unused',
+            limit: 100,
+            peerNodeNum: peer,
+            myNodeNum: myNodeNum,
+          );
+          expect(
+            rows.map((m) => m.id).toSet(),
+            contactGrouping(peer, myNodeNum),
+            reason: 'peer $peer, myNodeNum $myNodeNum',
+          );
+        }
+      }
+    },
+  );
+
   test('restore chooses latest when saved state says near latest', () async {
     final h = await _createHarness();
     addTearDown(h.container.dispose);

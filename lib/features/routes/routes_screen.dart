@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/logging.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -233,25 +234,21 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen>
     final routesNotifier = ref.read(routesProvider.notifier);
 
     try {
-      final result = await FilePicker.pickFiles(
+      final file = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['gpx'],
-        withData: true,
       );
 
-      if (result == null || result.files.isEmpty) return;
-
-      final file = result.files.first;
-      if (file.bytes == null) {
-        if (mounted) {
-          showErrorSnackBar(context, l10n.routesFileReadFailed);
-        }
+      if (file == null) return;
+      final Uint8List bytes;
+      try {
+        bytes = await file.readAsBytes();
+      } catch (e) {
+        AppLogging.storage('Route import: could not read the picked file: $e');
+        if (mounted) showErrorSnackBar(context, l10n.routesFileReadFailed);
         return;
       }
-
-      final gpxContent = sanitizeExternalText(
-        String.fromCharCodes(file.bytes!),
-      );
+      final gpxContent = sanitizeExternalText(String.fromCharCodes(bytes));
       final storage = storageAsync.value;
       if (storage == null) return;
 

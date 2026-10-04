@@ -156,6 +156,63 @@ void main() {
     expect(info[_peer]!.senderDisplayName, 'Departed Node');
   });
 
+  test('identity hints come from the peer, not a newer outgoing message', () {
+    // A shared dataset after a reflash: the node list is empty, the newest
+    // DM to the peer went out through another of my radios and carries
+    // that radio's name, and the peer's name lives only on its own reply.
+    const otherRadio = 0x3000;
+    final info = computeDmContactInfo([
+      _dm(
+        from: _peer,
+        to: otherRadio,
+        text: 'from the peer',
+        timestamp: DateTime(2026, 6, 1, 10),
+        received: true,
+        read: true,
+        senderLongName: 'Kappa',
+      ),
+      _dm(
+        from: otherRadio,
+        to: _peer,
+        text: 'Ok?',
+        timestamp: DateTime(2026, 6, 1, 11),
+        sent: true,
+        senderLongName: 'Rooftop Radio',
+      ),
+      _dm(
+        from: _me,
+        to: _peer,
+        text: 'from the connected radio',
+        timestamp: DateTime(2026, 6, 1, 9),
+        sent: true,
+        senderLongName: 'Connected Radio',
+      ),
+    ], _me);
+
+    final peer = info[_peer]!;
+    expect(peer.lastMessage, 'Ok?');
+    expect(peer.senderDisplayName, 'Kappa');
+  });
+
+  test('a peer only ever messaged carries no identity hints', () {
+    final info = computeDmContactInfo([
+      _dm(
+        from: _me,
+        to: _peer,
+        text: 'hello?',
+        timestamp: DateTime(2026, 6, 1, 12),
+        sent: true,
+        senderLongName: 'Connected Radio',
+      ),
+    ], _me);
+
+    final peer = info[_peer]!;
+    expect(peer.lastMessage, 'hello?');
+    expect(peer.senderDisplayName, isNull);
+    expect(peer.senderShortName, isNull);
+    expect(peer.senderAvatarColor, isNull);
+  });
+
   test('messages sent through another of my radios list the peer, not '
       'the radio', () {
     // The dataset is shared with a second radio. Its outgoing messages
