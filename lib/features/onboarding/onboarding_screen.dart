@@ -30,6 +30,10 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     with TickerProviderStateMixin, LifecycleSafeMixin {
+  // Page heights below this (iPhone SE class screens) use the compact
+  // advisor size and spacing.
+  static const double _compactPageHeight = 520;
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
   double _pageOffset = 0.0;
@@ -461,9 +465,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ..setTranslationRaw(translateX, 0, 0)
               ..scaleByDouble(scaleValue, scaleValue, 1.0, 1.0),
             alignment: Alignment.center,
-            // Short screens (iPhone SE, larger text sizes) cannot fit the
-            // advisor, showcase and copy at once; the page scrolls instead
-            // of overflowing, and stays centred whenever it fits.
+            // Short screens (iPhone SE, larger text sizes) get a compact
+            // layout so the advisor, showcase and copy fit; anything that
+            // still does not fit scrolls instead of overflowing.
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
                 child: ConstrainedBox(
@@ -474,6 +478,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     hasShowcase,
                     accentColor,
                     meshConfig,
+                    compact: constraints.maxHeight < _compactPageHeight,
                   ),
                 ),
               ),
@@ -489,19 +494,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     _OnboardingPage page,
     bool hasShowcase,
     Color accentColor,
-    SplashMeshConfig meshConfig,
-  ) {
+    SplashMeshConfig meshConfig, {
+    required bool compact,
+  }) {
     return Column(
       mainAxisAlignment: hasShowcase
           ? MainAxisAlignment.start
           : MainAxisAlignment.center,
       children: [
         // Extra top spacing for non-showcase pages to push content down
-        if (!hasShowcase) const SizedBox(height: AppTheme.spacing20),
+        if (!hasShowcase)
+          SizedBox(height: compact ? AppTheme.spacing8 : AppTheme.spacing20),
 
         // Mesh Brain Advisor - uses global config for line/node sizes
         MeshNodeBrain(
-          size: hasShowcase ? 80 : 100,
+          size: switch ((hasShowcase, compact)) {
+            (true, true) => 56,
+            (true, false) => 80,
+            (false, true) => 72,
+            (false, false) => 100,
+          },
           mood: _brainMood,
           colors: [
             accentColor,
@@ -539,7 +551,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         _buildTitleSection(page),
 
         // Extra bottom spacing for non-showcase pages
-        if (!hasShowcase) const SizedBox(height: AppTheme.spacing40),
+        if (!hasShowcase)
+          SizedBox(height: compact ? AppTheme.spacing16 : AppTheme.spacing40),
       ],
     );
   }
