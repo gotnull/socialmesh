@@ -5696,6 +5696,10 @@ class ProtocolService {
     // from a prior session) and otherwise leave it null so the UI can
     // hide the row / show "Unknown".
     final DateTime? deviceLastHeard;
+    // True when the radio's NodeDB entry predates what is already known
+    // about the node. Its cached metrics then describe an older moment
+    // and must not replace a newer battery reading.
+    var nodeDbOlderThanKnown = false;
     if (nodeInfo.hasLastHeard() && nodeInfo.lastHeard > 0) {
       final lastHeardEpoch = nodeInfo.lastHeard;
       final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -5710,6 +5714,8 @@ class ProtocolService {
         final fromDevice = DateTime.fromMillisecondsSinceEpoch(
           lastHeardEpoch * 1000,
         );
+        nodeDbOlderThanKnown =
+            existingNode?.lastHeard?.isAfter(fromDevice) ?? false;
         deviceLastHeard = _monotonicLastHeard(
           existingNode?.lastHeard,
           fromDevice,
@@ -5866,13 +5872,14 @@ class ProtocolService {
             ? nodeInfo.snr.toInt()
             : existingNode.snr,
         clearSnr: nodeInfo.hasSnr() && !_isDirectNodeInfo(nodeInfo),
-        batteryLevel: nodeInfo.hasDeviceMetrics()
+        batteryLevel: nodeInfo.hasDeviceMetrics() && !nodeDbOlderThanKnown
             ? nodeInfo.deviceMetrics.batteryLevel
             : existingNode.batteryLevel,
         // NodeDB metrics are the radio's cached copy, not a fresh sample.
         // History loggers key off this to avoid re-charting a stale
         // battery reading at the current wall clock.
-        deviceMetricsFromNodeDb: nodeInfo.hasDeviceMetrics()
+        deviceMetricsFromNodeDb:
+            nodeInfo.hasDeviceMetrics() && !nodeDbOlderThanKnown
             ? true
             : existingNode.deviceMetricsFromNodeDb,
         lastHeard: deviceLastHeard,

@@ -461,60 +461,86 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ..setTranslationRaw(translateX, 0, 0)
               ..scaleByDouble(scaleValue, scaleValue, 1.0, 1.0),
             alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: hasShowcase
-                  ? MainAxisAlignment.start
-                  : MainAxisAlignment.center,
-              children: [
-                // Extra top spacing for non-showcase pages to push content down
-                if (!hasShowcase) const SizedBox(height: AppTheme.spacing20),
-
-                // Mesh Brain Advisor - uses global config for line/node sizes
-                MeshNodeBrain(
-                  size: hasShowcase ? 80 : 100,
-                  mood: _brainMood,
-                  colors: [
+            // Short screens (iPhone SE, larger text sizes) cannot fit the
+            // advisor, showcase and copy at once; the page scrolls instead
+            // of overflowing, and stays centred whenever it fits.
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: _buildPageContent(
+                    index,
+                    page,
+                    hasShowcase,
                     accentColor,
-                    Color.lerp(accentColor, AppTheme.primaryMagenta, 0.5)!,
-                    Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
-                  ],
-                  glowIntensity: meshConfig.glowIntensity,
-                  lineThickness: meshConfig.lineThickness,
-                  nodeSize: meshConfig.nodeSize,
-                  onTap: _onBrainTap,
-                ),
-
-                // Advisor speech bubble
-                AdvisorSpeechBubble(
-                  key: ValueKey('speech_$index'),
-                  text: page.advisorText,
-                  accentColor: accentColor,
-                  typewriterEffect: index == _currentPage,
-                  typingSpeed: 25,
-                  onTypingComplete: _onSpeechComplete,
-                ),
-
-                SizedBox(height: hasShowcase ? 12 : 24),
-
-                // Showcase section
-                if (page.showcaseType != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildShowcase(page),
+                    meshConfig,
                   ),
-                  const SizedBox(height: AppTheme.spacing12),
-                ],
-
-                // Title and description
-                _buildTitleSection(page),
-
-                // Extra bottom spacing for non-showcase pages
-                if (!hasShowcase) const SizedBox(height: AppTheme.spacing40),
-              ],
+                ),
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPageContent(
+    int index,
+    _OnboardingPage page,
+    bool hasShowcase,
+    Color accentColor,
+    SplashMeshConfig meshConfig,
+  ) {
+    return Column(
+      mainAxisAlignment: hasShowcase
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.center,
+      children: [
+        // Extra top spacing for non-showcase pages to push content down
+        if (!hasShowcase) const SizedBox(height: AppTheme.spacing20),
+
+        // Mesh Brain Advisor - uses global config for line/node sizes
+        MeshNodeBrain(
+          size: hasShowcase ? 80 : 100,
+          mood: _brainMood,
+          colors: [
+            accentColor,
+            Color.lerp(accentColor, AppTheme.primaryMagenta, 0.5)!,
+            Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
+          ],
+          glowIntensity: meshConfig.glowIntensity,
+          lineThickness: meshConfig.lineThickness,
+          nodeSize: meshConfig.nodeSize,
+          onTap: _onBrainTap,
+        ),
+
+        // Advisor speech bubble
+        AdvisorSpeechBubble(
+          key: ValueKey('speech_$index'),
+          text: page.advisorText,
+          accentColor: accentColor,
+          typewriterEffect: index == _currentPage,
+          typingSpeed: 25,
+          onTypingComplete: _onSpeechComplete,
+        ),
+
+        SizedBox(height: hasShowcase ? 12 : 24),
+
+        // Showcase section
+        if (page.showcaseType != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildShowcase(page),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+        ],
+
+        // Title and description
+        _buildTitleSection(page),
+
+        // Extra bottom spacing for non-showcase pages
+        if (!hasShowcase) const SizedBox(height: AppTheme.spacing40),
+      ],
     );
   }
 
@@ -644,23 +670,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ),
               elevation: 0,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  isLastPage
-                      ? context.l10n.onboardingConnectDeviceButton
-                      : context.l10n.onboardingContinueButton,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
+            // Button labels stay on one line; at large text sizes on a
+            // narrow screen the label scales down rather than wrapping.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isLastPage
+                        ? context.l10n.onboardingConnectDeviceButton
+                        : context.l10n.onboardingContinueButton,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                if (isLastPage) ...[
-                  const SizedBox(width: AppTheme.spacing8),
-                  const Icon(Icons.bluetooth, size: 20),
+                  if (isLastPage) ...[
+                    const SizedBox(width: AppTheme.spacing8),
+                    const Icon(Icons.bluetooth, size: 20),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -675,7 +707,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         final glowIntensity = 0.25 + (_pulseController.value * 0.2);
 
         return SizedBox(
-          height: 150,
+          // Horizontal card lists need a bounded height; scale it with
+          // the text size so larger text grows the cards instead of
+          // overflowing them.
+          height: MediaQuery.textScalerOf(context).scale(150),
           child: ShaderMask(
             shaderCallback: (Rect bounds) {
               return LinearGradient(
@@ -879,7 +914,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         final glowIntensity = 0.2 + (_pulseController.value * 0.15);
 
         return SizedBox(
-          height: 180,
+          // Horizontal card lists need a bounded height; scale it with
+          // the text size so larger text grows the cards instead of
+          // overflowing them.
+          height: MediaQuery.textScalerOf(context).scale(180),
           child: ShaderMask(
             shaderCallback: (Rect bounds) {
               return LinearGradient(
@@ -1094,7 +1132,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         final glowIntensity = 0.2 + (_pulseController.value * 0.15);
 
         return SizedBox(
-          height: 180,
+          // Horizontal card lists need a bounded height; scale it with
+          // the text size so larger text grows the cards instead of
+          // overflowing them.
+          height: MediaQuery.textScalerOf(context).scale(190),
           child: ShaderMask(
             shaderCallback: (Rect bounds) {
               return LinearGradient(
@@ -1313,9 +1354,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 children: [
                   Icon(Icons.location_on, color: AccentColors.green, size: 14),
                   const SizedBox(width: AppTheme.spacing4),
-                  Text(
-                    context.l10n.onboardingSignalLocationShared,
-                    style: TextStyle(color: AccentColors.green, fontSize: 11),
+                  Flexible(
+                    child: Text(
+                      context.l10n.onboardingSignalLocationShared,
+                      style: TextStyle(color: AccentColors.green, fontSize: 11),
+                    ),
                   ),
                 ],
               ),
@@ -1339,13 +1382,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       : context.textTertiary,
                 ),
                 const SizedBox(width: AppTheme.spacing4),
-                Text(
-                  context.l10n.onboardingSignalTtlRemaining(ttlMinutes),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: ttlMinutes < 10
-                        ? AppTheme.errorRed
-                        : context.textTertiary,
+                Flexible(
+                  child: Text(
+                    context.l10n.onboardingSignalTtlRemaining(ttlMinutes),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: ttlMinutes < 10
+                          ? AppTheme.errorRed
+                          : context.textTertiary,
+                    ),
                   ),
                 ),
               ],
@@ -1534,7 +1579,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         final glowIntensity = 0.2 + (_pulseController.value * 0.15);
 
         return Container(
-          height: 140,
+          // Minimum, not fixed: on narrow screens a tile label wraps to
+          // a second line and the tiles grow instead of overflowing.
+          constraints: const BoxConstraints(minHeight: 140),
           padding: const EdgeInsets.all(AppTheme.spacing12),
           decoration: BoxDecoration(
             color: context.card,
@@ -1605,8 +1652,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ),
               const SizedBox(height: AppTheme.spacing12),
               // Widget grid
-              Expanded(
+              IntrinsicHeight(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
                       child: _buildDashboardWidget(

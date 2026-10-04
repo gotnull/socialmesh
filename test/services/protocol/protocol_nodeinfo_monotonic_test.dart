@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
+import 'package:socialmesh/generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
 class _FakeTransport implements DeviceTransport {
@@ -80,7 +81,11 @@ Future<void> _deliver(ProtocolService protocol, pb.FromRadio fromRadio) async {
   await Future<void>.delayed(Duration.zero);
 }
 
-pb.FromRadio _nodeInfoAt({required int nodeNum, required DateTime lastHeard}) {
+pb.FromRadio _nodeInfoAt({
+  required int nodeNum,
+  required DateTime lastHeard,
+  int? batteryLevel,
+}) {
   return pb.FromRadio(
     nodeInfo: pb.NodeInfo(
       num: nodeNum,
@@ -88,6 +93,9 @@ pb.FromRadio _nodeInfoAt({required int nodeNum, required DateTime lastHeard}) {
       user: pb.User()
         ..longName = 'Andre Heyer - Brake'
         ..shortName = 'AH',
+      deviceMetrics: batteryLevel == null
+          ? null
+          : (telemetry.DeviceMetrics()..batteryLevel = batteryLevel),
     ),
   );
 }
@@ -133,6 +141,48 @@ void main() {
 
     await _deliver(protocol, _nodeInfoAt(nodeNum: nodeNum, lastHeard: fresh));
     expect(protocol.nodes[nodeNum]?.lastHeard, fresh);
+
+    await protocol.dispose();
+  });
+
+  test(
+    'an older NodeDB entry cannot replace a newer battery reading',
+    () async {
+      // A radio sharing another radio's dataset hands over its own NodeDB
+      // copy on connect. When that copy predates what is already known,
+      // its cached battery describes an older moment.
+      final protocol = ProtocolService(_FakeTransport());
+
+      await _deliver(
+        protocol,
+        _nodeInfoAt(nodeNum: nodeNum, lastHeard: fresh, batteryLevel: 74),
+      );
+      await _deliver(
+        protocol,
+        _nodeInfoAt(nodeNum: nodeNum, lastHeard: stale, batteryLevel: 80),
+      );
+
+      expect(protocol.nodes[nodeNum]?.batteryLevel, 74);
+      expect(protocol.nodes[nodeNum]?.lastHeard, fresh);
+
+      await protocol.dispose();
+    },
+  );
+
+  test('a newer NodeDB entry still updates the battery reading', () async {
+    final protocol = ProtocolService(_FakeTransport());
+
+    await _deliver(
+      protocol,
+      _nodeInfoAt(nodeNum: nodeNum, lastHeard: stale, batteryLevel: 80),
+    );
+    await _deliver(
+      protocol,
+      _nodeInfoAt(nodeNum: nodeNum, lastHeard: fresh, batteryLevel: 74),
+    );
+
+    expect(protocol.nodes[nodeNum]?.batteryLevel, 74);
+    expect(protocol.nodes[nodeNum]?.deviceMetricsFromNodeDb, isTrue);
 
     await protocol.dispose();
   });

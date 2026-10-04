@@ -81,10 +81,12 @@ class PrivacyChoiceSheet {
 
     AppLogging.privacy('prompt shown');
 
-    final result = await AppBottomSheet.show<_PrivacyChoiceResult>(
+    final result = await AppBottomSheet.showScrollable<_PrivacyChoiceResult>(
       context: context,
-      isDismissible: true,
-      child: const _PrivacyChoicePanel(),
+      initialChildSize: 0.9,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (controller) => _PrivacyChoicePanel(controller: controller),
     );
 
     if (result == null) {
@@ -120,15 +122,22 @@ enum _PrivacyChoiceResult {
 }
 
 class _PrivacyChoicePanel extends StatelessWidget {
-  const _PrivacyChoicePanel();
+  const _PrivacyChoicePanel({required this.controller});
+
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Builder(
-      builder: (sheetContext) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      builder: (sheetContext) => ListView(
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing24,
+          0,
+          AppTheme.spacing24,
+          AppTheme.spacing24,
+        ),
         children: [
           Center(
             child: Container(
