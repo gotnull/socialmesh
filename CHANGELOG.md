@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The title-screen background follows the selected accent colour, and a cold start opens in the saved accent colour and light or dark theme instead of flashing the defaults first (#369).
 - The iOS viewport accounts for the visible status-bar frame when UIKit drops the top safe-area inset after rotation (#368).
 - Queued MeshCore message drains stop when their provider has been disposed.
-- Sender names in channel and direct-message bubbles are lightened or darkened as needed to stay readable against the bubble in both dark and light themes (#385).
+- Sender names in channel message bubbles are lightened or darkened as needed to stay readable against the bubble in both dark and light themes (#385).
 - A battery level from the radio's node database no longer replaces a newer reading already received from that node (#365).
 - Onboarding pages and the privacy choice sheet scroll instead of overflowing on short screens such as the iPhone SE, and on larger text sizes.
 - Retry on a degraded connection reconnects when the radio link has dropped, instead of doing nothing.
