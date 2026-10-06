@@ -34,6 +34,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   // advisor size and spacing.
   static const double _compactPageHeight = 520;
 
+  // Screens shorter than this (iPhone SE class) tighten the page
+  // indicator and action button spacing.
+  static const double _shortScreenHeight = 700;
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
   double _pageOffset = 0.0;
@@ -314,6 +318,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   Widget build(BuildContext context) {
     final accentColor = _getInterpolatedAccentColor();
     final meshConfigAsync = ref.watch(splashMeshConfigProvider);
+    final shortScreen = MediaQuery.sizeOf(context).height < _shortScreenHeight;
     final meshConfig = meshConfigAsync.when(
       data: (config) => config,
       loading: () => SplashMeshConfig.defaultConfig,
@@ -379,11 +384,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   Align(
                     alignment: Alignment.topRight,
                     child: Padding(
-                      padding: const EdgeInsets.only(right: 16, top: 8),
+                      padding: EdgeInsets.only(
+                        right: AppTheme.spacing16,
+                        top: shortScreen ? 0 : AppTheme.spacing8,
+                      ),
                       child: AnimatedOpacity(
                         duration: const Duration(milliseconds: 200),
                         opacity: _currentPage < _pages.length - 1 ? 1.0 : 0.0,
                         child: TextButton(
+                          // Short screens keep the 44pt minimum tap target
+                          // but drop Material's 48pt padded default.
+                          style: shortScreen
+                              ? TextButton.styleFrom(
+                                  minimumSize: const Size(64, 44),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                )
+                              : null,
                           onPressed: _currentPage < _pages.length - 1
                               ? _skip
                               : null,
@@ -414,17 +431,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
                   // Page indicators
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                      vertical: shortScreen
+                          ? AppTheme.spacing8
+                          : AppTheme.spacing16,
+                    ),
                     child: _buildPageIndicators(accentColor),
                   ),
 
                   // Action button
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       AppTheme.spacing24,
                       0,
-                      24,
-                      32,
+                      AppTheme.spacing24,
+                      shortScreen ? AppTheme.spacing16 : AppTheme.spacing32,
                     ),
                     child: _buildActionButton(accentColor),
                   ),
@@ -506,25 +527,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         if (!hasShowcase)
           SizedBox(height: compact ? AppTheme.spacing8 : AppTheme.spacing20),
 
-        // Mesh Brain Advisor - uses global config for line/node sizes
-        MeshNodeBrain(
-          size: switch ((hasShowcase, compact)) {
-            (true, true) => 56,
-            (true, false) => 80,
-            (false, true) => 72,
-            (false, false) => 100,
-          },
-          mood: _brainMood,
-          colors: [
-            accentColor,
-            Color.lerp(accentColor, AppTheme.primaryMagenta, 0.5)!,
-            Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
-          ],
-          glowIntensity: meshConfig.glowIntensity,
-          lineThickness: meshConfig.lineThickness,
-          nodeSize: meshConfig.nodeSize,
-          onTap: _onBrainTap,
-        ),
+        // Mesh Brain Advisor - uses global config for line/node sizes.
+        // Compact showcase pages leave it out: the speech bubble already
+        // carries the advisor's name, and the showcase needs the height.
+        if (!(hasShowcase && compact))
+          MeshNodeBrain(
+            size: hasShowcase ? 80 : (compact ? 72 : 100),
+            mood: _brainMood,
+            colors: [
+              accentColor,
+              Color.lerp(accentColor, AppTheme.primaryMagenta, 0.5)!,
+              Color.lerp(accentColor, AppTheme.graphBlue, 0.5)!,
+            ],
+            glowIntensity: meshConfig.glowIntensity,
+            lineThickness: meshConfig.lineThickness,
+            nodeSize: meshConfig.nodeSize,
+            onTap: _onBrainTap,
+          ),
 
         // Advisor speech bubble
         AdvisorSpeechBubble(
@@ -536,19 +555,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           onTypingComplete: _onSpeechComplete,
         ),
 
-        SizedBox(height: hasShowcase ? 12 : 24),
+        SizedBox(
+          height: hasShowcase
+              ? (compact ? AppTheme.spacing8 : AppTheme.spacing12)
+              : AppTheme.spacing24,
+        ),
 
         // Showcase section
         if (page.showcaseType != null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildShowcase(page),
+            child: _buildShowcase(page, compact: compact),
           ),
-          const SizedBox(height: AppTheme.spacing12),
+          SizedBox(height: compact ? AppTheme.spacing8 : AppTheme.spacing12),
         ],
 
         // Title and description
-        _buildTitleSection(page),
+        _buildTitleSection(page, compact: compact),
 
         // Extra bottom spacing for non-showcase pages
         if (!hasShowcase)
@@ -557,7 +580,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildTitleSection(_OnboardingPage page) {
+  Widget _buildTitleSection(_OnboardingPage page, {required bool compact}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
@@ -574,7 +597,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             child: Text(
               page.title,
               style: TextStyle(
-                fontSize: 26,
+                fontSize: compact ? 22 : 26,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: -0.5,
@@ -582,13 +605,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing12),
+          SizedBox(height: compact ? AppTheme.spacing8 : AppTheme.spacing12),
 
           // Description
           Text(
             page.description,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: compact ? 14 : 15,
               color: context.textSecondary,
               height: 1.4,
             ),
@@ -905,14 +928,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildShowcase(_OnboardingPage page) {
+  Widget _buildShowcase(_OnboardingPage page, {required bool compact}) {
     switch (page.showcaseType!) {
       case ShowcaseType.devices:
         return _buildDeviceShowcase(page);
       case ShowcaseType.signals:
-        return _buildSignalsShowcase(page);
+        return _buildSignalsShowcase(page, compact: compact);
       case ShowcaseType.nodedex:
-        return _buildNodeDexShowcase(page);
+        return _buildNodeDexShowcase(page, compact: compact);
       case ShowcaseType.automations:
         return _buildAutomationsShowcase(page);
       case ShowcaseType.widgets:
@@ -920,7 +943,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     }
   }
 
-  Widget _buildNodeDexShowcase(_OnboardingPage page) {
+  Widget _buildNodeDexShowcase(_OnboardingPage page, {required bool compact}) {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
@@ -930,7 +953,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           // Horizontal card lists need a bounded height; scale it with
           // the text size so larger text grows the cards instead of
           // overflowing them.
-          height: MediaQuery.textScalerOf(context).scale(180),
+          height: MediaQuery.textScalerOf(context).scale(compact ? 150 : 180),
           child: ShaderMask(
             shaderCallback: (Rect bounds) {
               return LinearGradient(
@@ -962,6 +985,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   borderWidth: 3.0,
                   hasGlow: true,
+                  compact: compact,
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 _buildNodeDexCard(
@@ -975,6 +999,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   borderWidth: 2.0,
                   hasGlow: false,
+                  compact: compact,
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 _buildNodeDexCard(
@@ -988,6 +1013,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   borderWidth: 2.5,
                   hasGlow: true,
+                  compact: compact,
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 _buildNodeDexCard(
@@ -1001,6 +1027,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   glowIntensity: glowIntensity,
                   borderWidth: 1.5,
                   hasGlow: false,
+                  compact: compact,
                 ),
               ],
             ),
@@ -1021,7 +1048,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     required double glowIntensity,
     required double borderWidth,
     required bool hasGlow,
+    required bool compact,
   }) {
+    final sigilSize = compact ? 40.0 : 48.0;
     return Container(
       width: 150,
       decoration: BoxDecoration(
@@ -1044,11 +1073,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: AppTheme.spacing14),
+          SizedBox(height: compact ? AppTheme.spacing8 : AppTheme.spacing14),
           // Sigil placeholder — hexagon icon
           Container(
-            width: 48,
-            height: 48,
+            width: sigilSize,
+            height: sigilSize,
             decoration: BoxDecoration(
               color: rarityColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
@@ -1138,7 +1167,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildSignalsShowcase(_OnboardingPage page) {
+  Widget _buildSignalsShowcase(_OnboardingPage page, {required bool compact}) {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
@@ -1148,7 +1177,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           // Horizontal card lists need a bounded height; scale it with
           // the text size so larger text grows the cards instead of
           // overflowing them.
-          height: MediaQuery.textScalerOf(context).scale(190),
+          height: MediaQuery.textScalerOf(context).scale(compact ? 185 : 190),
           child: ShaderMask(
             shaderCallback: (Rect bounds) {
               return LinearGradient(

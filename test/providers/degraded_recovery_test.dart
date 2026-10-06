@@ -55,8 +55,10 @@ class _DiagnosticsFakeTransport extends DeviceTransport
   @override
   bool get requiresWakeSequence => false;
 
+  TransportReconnectMode reconnectModeValue = TransportReconnectMode.scanBased;
+
   @override
-  TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
+  TransportReconnectMode get reconnectMode => reconnectModeValue;
 
   @override
   DeviceConnectionState get state => connected
@@ -269,4 +271,33 @@ void main() {
       expect(transport.notedCauses, everyElement('phase2_degraded_teardown'));
     },
   );
+
+  test('Retry on a degraded session whose link dropped reconnects', () async {
+    // The radio rebooted: the session went degraded and the link dropped
+    // before the connection state caught up. There is no live link to
+    // restore the session on, so Retry must start a reconnect rather
+    // than leave the app on "still recovering".
+    final transport = _DiagnosticsFakeTransport()
+      ..reconnectModeValue = TransportReconnectMode.directEndpoint;
+    final container = await _buildContainer(transport);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(deviceConnectionProvider.notifier);
+    notifier.setTestState(
+      const DeviceConnectionState2(state: DevicePairingState.connected),
+    );
+    transport.connected = false;
+    container
+        .read(protocolServiceProvider)
+        .debugForceReadinessForTesting(OperationalReadiness.degraded);
+    await _pump();
+
+    unawaited(notifier.startBackgroundConnection());
+    await _pump();
+
+    expect(
+      container.read(deviceConnectionProvider).state,
+      DevicePairingState.connecting,
+    );
+  });
 }

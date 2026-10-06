@@ -438,6 +438,10 @@ Future<void> main() async {
   await tileCacheReady;
   BootTimeline.instance.mark('tile_cache_joined');
 
+  // Preferences are already loaded by RadioScope.init, so this is a cache
+  // read; it lets the first frame use the saved accent.
+  await AccentColorNotifier.preloadLaunchColor();
+
   // One line per launch with every awaited pre-runApp step timed, so a
   // long native launch screen can be attributed from an app log.
   AppLogging.boot(BootTimeline.instance.summary('runApp'));
@@ -2404,8 +2408,10 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         .watch(accentColorProvider)
         .when(
           data: (color) => color,
-          loading: () => AccentColors.magenta,
-          error: (e, st) => AccentColors.magenta,
+          loading: () =>
+              AccentColorNotifier.launchColor ?? AccentColors.magenta,
+          error: (e, st) =>
+              AccentColorNotifier.launchColor ?? AccentColors.magenta,
         );
 
     // Watch theme mode for dark/light switching

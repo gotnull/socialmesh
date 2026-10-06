@@ -4741,6 +4741,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
   StreamSubscription<ContentRefreshEvent>? _pushSubscription;
   bool _storageLoaded = false;
 
+  // The store the current state was loaded from. Switching radio scope
+  // reopens the message store as a new instance, whose messages must be
+  // loaded even though a load already happened in this provider's life.
+  MessageDatabase? _loadedStorage;
+
   /// Completer for the initial storage load. Tests can await this to ensure
   /// _loadFromStorage() has finished before adding messages.
   final Completer<void> _storageLoadCompleter = Completer<void>();
@@ -4849,10 +4854,10 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   /// Load messages from persistent storage into state.
-  /// Only runs once per provider lifetime; subsequent protocol changes
-  /// do not reload (messages remain in memory).
+  /// Runs once per store instance: protocol changes do not reload
+  /// (messages remain in memory), a radio scope switch does.
   Future<void> _loadFromStorage() async {
-    if (_storageLoaded) {
+    if (_storageLoaded && identical(_loadedStorage, _storage)) {
       if (!_storageLoadCompleter.isCompleted) {
         _storageLoadCompleter.complete();
       }
@@ -4885,6 +4890,8 @@ class MessagesNotifier extends Notifier<List<Message>> {
         }
         state = DemoData.sampleMessages;
         _storageLoaded = true;
+    _loadedStorage = _storage;
+        _loadedStorage = _storage;
         if (!_storageLoadCompleter.isCompleted) {
           _storageLoadCompleter.complete();
         }
@@ -4900,6 +4907,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
     _storageLoaded = true;
+    _loadedStorage = _storage;
 
     if (savedMessages.isNotEmpty) {
       // Keep canonical tapbacks in SQLite as raw messages, but exclude them

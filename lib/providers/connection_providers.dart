@@ -1645,7 +1645,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // user-disconnect guards still apply. A healthy or mid-handshake
       // session is left alone as before.
       final readiness = ref.read(protocolServiceProvider).readiness;
-      if (readiness == OperationalReadiness.degraded) {
+      final linkUp = ref.read(transportProvider).isConnected;
+      if (readiness == OperationalReadiness.degraded && linkUp) {
         AppLogging.connection(
           '🔌 startBackgroundConnection: transport connected but session '
           'degraded - restoring session on the live link',
@@ -1655,10 +1656,19 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         );
         return;
       }
+      if (readiness != OperationalReadiness.degraded) {
+        AppLogging.connection(
+          'startBackgroundConnection: BLOCKED - device already connected',
+        );
+        return;
+      }
+      // Degraded session on a link that has already dropped (the radio
+      // rebooted): there is no live link to restore the session on, so
+      // fall through to a full reconnect instead of doing nothing.
       AppLogging.connection(
-        '🔌 startBackgroundConnection: BLOCKED - device already connected',
+        'startBackgroundConnection: session degraded and transport '
+        'down - reconnecting',
       );
-      return;
     }
 
     // Also skip if we're in the middle of configuring (protocol handshake)

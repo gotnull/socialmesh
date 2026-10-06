@@ -418,6 +418,21 @@ const appTaglines = [
 
 /// Notifier for accent color - loads from SharedPreferences on startup
 class AccentColorNotifier extends AsyncNotifier<Color> {
+  /// Saved accent read before the first frame, used while [build] is still
+  /// loading so the title screen does not flash the default accent.
+  static Color? launchColor;
+
+  /// Reads the saved accent ahead of `runApp`; see [launchColor].
+  static Future<void> preloadLaunchColor() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedColorValue = prefs.getInt('accent_color');
+      if (savedColorValue != null) launchColor = Color(savedColorValue);
+    } catch (e) {
+      AppLogging.settings('Failed to preload accent color: $e');
+    }
+  }
+
   @override
   Future<Color> build() async {
     try {
