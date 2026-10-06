@@ -93,6 +93,7 @@ class DeviceHardwareCatalog {
     104: DeviceArchitecture.esp32s3, // M5STACK_RESERVED
     126: DeviceArchitecture.esp32s3, // TDISPLAY_S3_PRO
     132: DeviceArchitecture.esp32s3, // HELTEC_V4_R8 (proto comment)
+    147: DeviceArchitecture.esp32s3, // T_CONNECT_PRO (firmware variant)
     // esp32c6
     87: DeviceArchitecture.esp32c6, // MESHLINK
     // rp2040
@@ -121,6 +122,10 @@ class DeviceHardwareCatalog {
     // JSON nor a firmware variant lists it yet, so the MCU is unconfirmed.
     // Mapped to unknown until verified rather than guessing a DFU path.
     146: DeviceArchitecture.unknown, // MESHPAGER_X2
+    // Protobuf 2.8.1 adds these two with no upstream JSON entry and no
+    // firmware variant, so the MCU is unconfirmed.
+    149: DeviceArchitecture.unknown, // MAKERFABS_NOMAD_TERMINAL
+    150: DeviceArchitecture.unknown, // THINKNODE_MX
     255: DeviceArchitecture.unknown, // PRIVATE_HW
   };
 

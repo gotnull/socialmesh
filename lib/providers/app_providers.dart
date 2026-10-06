@@ -4890,7 +4890,6 @@ class MessagesNotifier extends Notifier<List<Message>> {
         }
         state = DemoData.sampleMessages;
         _storageLoaded = true;
-    _loadedStorage = _storage;
         _loadedStorage = _storage;
         if (!_storageLoadCompleter.isCompleted) {
           _storageLoadCompleter.complete();

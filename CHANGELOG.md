@@ -13,13 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contacts not yet rediscovered after a node list reset show the peer's own name, not the name of the radio that last messaged them (#384).
 - Chats stay at the latest message while the keyboard opens or closes, while a reader browsing older messages keeps their place (#382).
 - Device Metrics voltage labels use equal intervals in whole tenths of a volt (#381). Chart tooltips are translucent so the selected indicator remains visible beneath them (#380).
-- The title-screen background follows the selected accent colour (#369).
+- The title-screen background follows the selected accent colour, and a cold start opens in the saved accent colour and light or dark theme instead of flashing the defaults first (#369).
 - The iOS viewport accounts for the visible status-bar frame when UIKit drops the top safe-area inset after rotation (#368).
 - Queued MeshCore message drains stop when their provider has been disposed.
+- Sender names in channel and direct-message bubbles are lightened or darkened as needed to stay readable against the bubble in both dark and light themes (#385).
+- A battery level from the radio's node database no longer replaces a newer reading already received from that node (#365).
+- Onboarding pages and the privacy choice sheet scroll instead of overflowing on short screens such as the iPhone SE, and on larger text sizes.
+- Retry on a degraded connection reconnects when the radio link has dropped, instead of doing nothing.
+- Messages reload when the app switches to a different radio's dataset.
+- The World Map node cache is stored in its own file rather than in app preferences, which it had grown to several megabytes.
 
 ### Changed
 
 - Updated the ten pending dependency bumps, including migration of file imports, transfers and profile image pickers to the file_picker 13 API.
+- Meshtastic protobufs updated to v2.8.1. The app recognises the new T-Connect Pro, Axiometa Genesis Mini, Makerfabs Nomad Terminal and ThinkNode MX models; in-app firmware updates for the last two wait until the firmware project publishes builds for them (#386).
 
 ## [1.70.0] - 2026-09-27
 

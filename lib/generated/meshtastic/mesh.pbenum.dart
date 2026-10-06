@@ -773,6 +773,26 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(146, _omitEnumNames ? '' : 'MESHPAGER_X2');
 
   ///
+  ///  Lilygo T-CONNECT PRO
+  static const HardwareModel T_CONNECT_PRO =
+      HardwareModel._(147, _omitEnumNames ? '' : 'T_CONNECT_PRO');
+
+  ///
+  ///  Axiometa Axiometa Genesis Mini
+  static const HardwareModel AXIOMETA_GENESIS_MINI =
+      HardwareModel._(148, _omitEnumNames ? '' : 'AXIOMETA_GENESIS_MINI');
+
+  ///
+  ///  MakerFabs Nomad Terminal
+  static const HardwareModel MAKERFABS_NOMAD_TERMINAL =
+      HardwareModel._(149, _omitEnumNames ? '' : 'MAKERFABS_NOMAD_TERMINAL');
+
+  ///
+  ///  Elecrow ThinkNode MX
+  static const HardwareModel THINKNODE_MX =
+      HardwareModel._(150, _omitEnumNames ? '' : 'THINKNODE_MX');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -927,6 +947,10 @@ class HardwareModel extends $pb.ProtobufEnum {
     SEEED_WIO_TRACKER_L1_PRO_1W,
     MESHNOLOGY_W12,
     MESHPAGER_X2,
+    T_CONNECT_PRO,
+    AXIOMETA_GENESIS_MINI,
+    MAKERFABS_NOMAD_TERMINAL,
+    THINKNODE_MX,
     PRIVATE_HW,
   ];
 
@@ -1231,6 +1255,26 @@ class ExcludedModules extends $pb.ProtobufEnum {
   static const ExcludedModules NETWORK_CONFIG =
       ExcludedModules._(16384, _omitEnumNames ? '' : 'NETWORK_CONFIG');
 
+  ///
+  ///  Status Message module
+  static const ExcludedModules STATUSMESSAGE_CONFIG =
+      ExcludedModules._(32768, _omitEnumNames ? '' : 'STATUSMESSAGE_CONFIG');
+
+  ///
+  ///  Traffic Management module
+  static const ExcludedModules TRAFFICMANAGEMENT_CONFIG = ExcludedModules._(
+      65536, _omitEnumNames ? '' : 'TRAFFICMANAGEMENT_CONFIG');
+
+  ///
+  ///  TAK module
+  static const ExcludedModules TAK_CONFIG =
+      ExcludedModules._(131072, _omitEnumNames ? '' : 'TAK_CONFIG');
+
+  ///
+  ///  Mesh Beacon module
+  static const ExcludedModules MESHBEACON_CONFIG =
+      ExcludedModules._(262144, _omitEnumNames ? '' : 'MESHBEACON_CONFIG');
+
   static const $core.List<ExcludedModules> values = <ExcludedModules>[
     EXCLUDED_NONE,
     MQTT_CONFIG,
@@ -1248,6 +1292,10 @@ class ExcludedModules extends $pb.ProtobufEnum {
     PAXCOUNTER_CONFIG,
     BLUETOOTH_CONFIG,
     NETWORK_CONFIG,
+    STATUSMESSAGE_CONFIG,
+    TRAFFICMANAGEMENT_CONFIG,
+    TAK_CONFIG,
+    MESHBEACON_CONFIG,
   ];
 
   static final $core.Map<$core.int, ExcludedModules> _byValue =
@@ -1781,6 +1829,108 @@ class MeshPacket_TransportMechanism extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const MeshPacket_TransportMechanism._(super.value, super.name);
+}
+
+///
+///  Outcome of checking Routing.ack_proof on a received ack or nak.
+///
+///  Reported, never enforced: an ack without a usable proof is acted on exactly as it was before
+///  proofs existed. The value exists so a client can tell a proven delivery receipt from an
+///  unproven one, and can tell "nobody proved this" from "somebody tried and failed".
+class MeshPacket_AckProofStatus extends $pb.ProtobufEnum {
+  ///
+  ///  No verdict. The default, and what every ack from firmware predating Routing.ack_proof looks
+  ///  like, so an absent field and an absent proof read the same.
+  ///
+  ///  Also reported when a proof was carried but not checked: the ack came from a node other than
+  ///  the one the packet was addressed to (a nak from an intermediate, for example), the packet was
+  ///  no longer awaiting an ack, or the proof was malformed. A build without PKI never checks one.
+  ///  A proof is only checked while the packet it acknowledges is still pending, so on a multi-hop
+  ///  path an overheard relay can settle the packet first and leave a genuine receipt reading ABSENT.
+  static const MeshPacket_AckProofStatus ACK_PROOF_ABSENT =
+      MeshPacket_AckProofStatus._(0, _omitEnumNames ? '' : 'ACK_PROOF_ABSENT');
+
+  ///
+  ///  A proof was carried and verified against the public key of the node the acknowledged packet
+  ///  was addressed to. The only value that means "the recipient received it".
+  ///
+  ///  Verifying against the key of whoever the ack claims to be from is NOT sufficient: the proof
+  ///  only shows its author holds a pairwise secret with us, and every keyed peer holds one, so
+  ///  any of them could otherwise mint a receipt for a packet addressed to someone else.
+  static const MeshPacket_AckProofStatus ACK_PROOF_VALID =
+      MeshPacket_AckProofStatus._(1, _omitEnumNames ? '' : 'ACK_PROOF_VALID');
+
+  ///
+  ///  A proof was carried and did not verify. Someone produced an ack for an outstanding packet
+  ///  without holding the pairwise secret, so this is an attempted forgery rather than a quiet
+  ///  absence, and is worth surfacing differently from ACK_PROOF_ABSENT.
+  static const MeshPacket_AckProofStatus ACK_PROOF_INVALID =
+      MeshPacket_AckProofStatus._(2, _omitEnumNames ? '' : 'ACK_PROOF_INVALID');
+
+  ///
+  ///  A proof was carried but no authoritative public key was available to check it against, so
+  ///  the ack is neither proven nor disproven.
+  static const MeshPacket_AckProofStatus ACK_PROOF_NO_KEY =
+      MeshPacket_AckProofStatus._(3, _omitEnumNames ? '' : 'ACK_PROOF_NO_KEY');
+
+  static const $core.List<MeshPacket_AckProofStatus> values =
+      <MeshPacket_AckProofStatus>[
+    ACK_PROOF_ABSENT,
+    ACK_PROOF_VALID,
+    ACK_PROOF_INVALID,
+    ACK_PROOF_NO_KEY,
+  ];
+
+  static final $core.List<MeshPacket_AckProofStatus?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static MeshPacket_AckProofStatus? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const MeshPacket_AckProofStatus._(super.value, super.name);
+}
+
+///
+///  Which slots of the CSMA backoff grid a transmission may draw from.
+///
+///  Never sent over the radio links. Like priority, it steers how the local node schedules the
+///  packet: a module sets it on a packet it is queueing, and the radio driver reads it when it
+///  draws the backoff for that packet.
+///
+///  A node normally draws any slot of the contention window, counted from the moment it draws.
+///  A packet that asks for a parity instead has its slots counted from the end of the last frame
+///  this node sent or heard, and only slots of that parity are taken, so two senders on opposite
+///  parities that redraw after the same frame never land on the same slot, and so are always at
+///  least a slot apart. Useful for a pair of nodes exchanging a stream, where the two ends
+///  otherwise collide with each other far more often than with the rest of the mesh.
+class MeshPacket_SlotParity extends $pb.ProtobufEnum {
+  ///
+  ///  No parity asked for: the ordinary backoff draw over the whole contention window.
+  static const MeshPacket_SlotParity SLOT_PARITY_UNSET =
+      MeshPacket_SlotParity._(0, _omitEnumNames ? '' : 'SLOT_PARITY_UNSET');
+
+  ///
+  ///  Only even-numbered slots, counted from the end of the last frame on air.
+  static const MeshPacket_SlotParity SLOT_PARITY_EVEN =
+      MeshPacket_SlotParity._(1, _omitEnumNames ? '' : 'SLOT_PARITY_EVEN');
+
+  ///
+  ///  Only odd-numbered slots, counted from the end of the last frame on air.
+  static const MeshPacket_SlotParity SLOT_PARITY_ODD =
+      MeshPacket_SlotParity._(2, _omitEnumNames ? '' : 'SLOT_PARITY_ODD');
+
+  static const $core.List<MeshPacket_SlotParity> values =
+      <MeshPacket_SlotParity>[
+    SLOT_PARITY_UNSET,
+    SLOT_PARITY_EVEN,
+    SLOT_PARITY_ODD,
+  ];
+
+  static final $core.List<MeshPacket_SlotParity?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static MeshPacket_SlotParity? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const MeshPacket_SlotParity._(super.value, super.name);
 }
 
 ///

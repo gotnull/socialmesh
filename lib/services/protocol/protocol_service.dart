@@ -5040,6 +5040,12 @@ class ProtocolService {
           }
           return;
 
+        case telemetry.Telemetry_Variant.soilWaterMetrics:
+          if (ProtocolDebugFlags.logTelemetry) {
+            AppLogging.protocol('SoilWaterMetrics from ${packet.from}');
+          }
+          return;
+
         case telemetry.Telemetry_Variant.trafficManagementStats:
           final stats = telem.trafficManagementStats;
           if (ProtocolDebugFlags.logTelemetry) {

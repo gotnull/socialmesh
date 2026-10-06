@@ -168,6 +168,16 @@ class Language extends $pb.ProtobufEnum {
   static const Language DANISH = Language._(19, _omitEnumNames ? '' : 'DANISH');
 
   ///
+  ///  Hungarian
+  static const Language HUNGARIAN =
+      Language._(20, _omitEnumNames ? '' : 'HUNGARIAN');
+
+  ///
+  ///  Azerbaijani
+  static const Language AZERBAIJANI =
+      Language._(21, _omitEnumNames ? '' : 'AZERBAIJANI');
+
+  ///
   ///  Simplified Chinese (experimental)
   static const Language SIMPLIFIED_CHINESE =
       Language._(30, _omitEnumNames ? '' : 'SIMPLIFIED_CHINESE');
@@ -198,13 +208,16 @@ class Language extends $pb.ProtobufEnum {
     BULGARIAN,
     CZECH,
     DANISH,
+    HUNGARIAN,
+    AZERBAIJANI,
     SIMPLIFIED_CHINESE,
     TRADITIONAL_CHINESE,
   ];
 
-  static final $core.Map<$core.int, Language> _byValue =
-      $pb.ProtobufEnum.initByValue(values);
-  static Language? valueOf($core.int value) => _byValue[value];
+  static final $core.List<Language?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 31);
+  static Language? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const Language._(super.value, super.name);
 }

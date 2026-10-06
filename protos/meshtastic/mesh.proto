@@ -964,6 +964,26 @@ enum HardwareModel {
   MESHPAGER_X2 = 146;
 
   /*
+   * Lilygo T-CONNECT PRO
+   */
+  T_CONNECT_PRO = 147;
+
+  /*
+   * Axiometa Axiometa Genesis Mini
+   */
+  AXIOMETA_GENESIS_MINI = 148;
+
+  /*
+   * MakerFabs Nomad Terminal
+   */
+  MAKERFABS_NOMAD_TERMINAL = 149;
+
+  /*
+   * Elecrow ThinkNode MX
+   */
+  THINKNODE_MX = 150;
+
+  /*
    * ------------------------------------------------------------------------------------------------------------------------------------------
    * Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
    * ------------------------------------------------------------------------------------------------------------------------------------------
@@ -1201,6 +1221,34 @@ message Routing {
      */
     Error error_reason = 3;
   }
+
+  /*
+   * Optional proof that this ack/nak was produced by the node that actually received the packet
+   * identified by Data.request_id, rather than by anyone holding the channel key.
+   *
+   * Explicit acks are usually sent on the channel, and channel traffic is encrypted but not
+   * authenticated, so such an ack can be forged by any listener holding the PSK. When the
+   * acknowledged packet WAS PKI encrypted, the two endpoints already share a Curve25519 secret, so
+   * the receiver can prove receipt cheaply rather than signing the ack:
+   *
+   *   ack_proof = HMAC-SHA256(shared_key,
+   *                           "ack" | LE32(from) | LE32(to) | LE32(request_id) | routing)[0..8)
+   *
+   * where shared_key is the same SHA256(X25519(sender_private, receiver_public)) used for PKI
+   * packet encryption, and `routing` is this encoded Routing message without the ack_proof field.
+   *
+   * Each input is load-bearing. request_id stops a captured proof being replayed against a
+   * different outstanding packet. The Routing bytes stop a bit-flip turning a proven success into a
+   * failure: an ack and a nak for one packet otherwise share every other input, and channel
+   * encryption is CTR with no integrity check. Integers are little-endian so the value is a
+   * property of the protocol rather than of the host that computed it.
+   *
+   * Unset when no pairwise key is available, including the PKI_UNKNOWN_PUBKEY and NO_CHANNEL naks,
+   * which are emitted precisely because the packet could not be decrypted. Receivers that do not
+   * understand this field ignore it. It does not replace xeddsa_signature, which remains the only
+   * option for traffic with no pairwise key and the only proof a third party can check.
+   */
+  bytes ack_proof = 4;
 }
 
 /*
@@ -1760,6 +1808,81 @@ message MeshPacket {
   }
 
   /*
+   * Outcome of checking Routing.ack_proof on a received ack or nak.
+   *
+   * Reported, never enforced: an ack without a usable proof is acted on exactly as it was before
+   * proofs existed. The value exists so a client can tell a proven delivery receipt from an
+   * unproven one, and can tell "nobody proved this" from "somebody tried and failed".
+   */
+  enum AckProofStatus {
+    /*
+     * No verdict. The default, and what every ack from firmware predating Routing.ack_proof looks
+     * like, so an absent field and an absent proof read the same.
+     *
+     * Also reported when a proof was carried but not checked: the ack came from a node other than
+     * the one the packet was addressed to (a nak from an intermediate, for example), the packet was
+     * no longer awaiting an ack, or the proof was malformed. A build without PKI never checks one.
+     * A proof is only checked while the packet it acknowledges is still pending, so on a multi-hop
+     * path an overheard relay can settle the packet first and leave a genuine receipt reading ABSENT.
+     */
+    ACK_PROOF_ABSENT = 0;
+
+    /*
+     * A proof was carried and verified against the public key of the node the acknowledged packet
+     * was addressed to. The only value that means "the recipient received it".
+     *
+     * Verifying against the key of whoever the ack claims to be from is NOT sufficient: the proof
+     * only shows its author holds a pairwise secret with us, and every keyed peer holds one, so
+     * any of them could otherwise mint a receipt for a packet addressed to someone else.
+     */
+    ACK_PROOF_VALID = 1;
+
+    /*
+     * A proof was carried and did not verify. Someone produced an ack for an outstanding packet
+     * without holding the pairwise secret, so this is an attempted forgery rather than a quiet
+     * absence, and is worth surfacing differently from ACK_PROOF_ABSENT.
+     */
+    ACK_PROOF_INVALID = 2;
+
+    /*
+     * A proof was carried but no authoritative public key was available to check it against, so
+     * the ack is neither proven nor disproven.
+     */
+    ACK_PROOF_NO_KEY = 3;
+  }
+
+  /*
+   * Which slots of the CSMA backoff grid a transmission may draw from.
+   *
+   * Never sent over the radio links. Like priority, it steers how the local node schedules the
+   * packet: a module sets it on a packet it is queueing, and the radio driver reads it when it
+   * draws the backoff for that packet.
+   *
+   * A node normally draws any slot of the contention window, counted from the moment it draws.
+   * A packet that asks for a parity instead has its slots counted from the end of the last frame
+   * this node sent or heard, and only slots of that parity are taken, so two senders on opposite
+   * parities that redraw after the same frame never land on the same slot, and so are always at
+   * least a slot apart. Useful for a pair of nodes exchanging a stream, where the two ends
+   * otherwise collide with each other far more often than with the rest of the mesh.
+   */
+  enum SlotParity {
+    /*
+     * No parity asked for: the ordinary backoff draw over the whole contention window.
+     */
+    SLOT_PARITY_UNSET = 0;
+
+    /*
+     * Only even-numbered slots, counted from the end of the last frame on air.
+     */
+    SLOT_PARITY_EVEN = 1;
+
+    /*
+     * Only odd-numbered slots, counted from the end of the last frame on air.
+     */
+    SLOT_PARITY_ODD = 2;
+  }
+
+  /*
    * The sending node number.
    * Note: Our crypto implementation uses this field as well.
    * See [crypto](/docs/overview/encryption) for details.
@@ -1933,6 +2056,26 @@ message MeshPacket {
    * Indicates whether the packet has a valid signature
    */
   bool xeddsa_signed = 22;
+
+  /*
+   * *Never* sent over the radio links.
+   * Set by the firmware on a received ack or nak, reporting whether its Routing.ack_proof proved
+   * that the node we addressed is the one acknowledging. Clients are not supposed to set this, and
+   * the firmware clears whatever arrives here before evaluating a packet - an inbound value is
+   * attacker-controlled, since MQTT and the client API both carry whole MeshPacket protobufs.
+   *
+   * Distinct from xeddsa_signed, which is an identity signature any holder of the sender's public
+   * key can check. This is a pairwise MAC that only the original sender can check, and it attests
+   * to delivery rather than to authorship.
+   */
+  AckProofStatus ack_proof_status = 23;
+
+  /*
+   * Never sent over the radio links.
+   * Which parity of the CSMA backoff slot grid this packet may be sent in; see SlotParity.
+   * Set by whoever queues the packet, and read by the radio driver when it draws the backoff.
+   */
+  SlotParity slot_parity = 24;
 }
 
 /*
@@ -2076,6 +2219,24 @@ message NodeInfo {
    * LSB 1 of the bitfield
    */
   bool has_xeddsa_signed = 14;
+
+  /*
+   * True if we have heard this node over RF on the LoRa configuration the
+   * radio is using right now. Derived on the device rather than stored: each
+   * node records the frequency slot it was last heard on, and this reports
+   * whether that slot matches the one the radio is currently committed to.
+   * The slot covers the region, modem preset (or the custom bandwidth/spread
+   * factor/coding rate when use_preset is false), override_frequency,
+   * channel_num and the primary channel name.
+   * Because it is derived, leaving a configuration and returning to it
+   * restores the previous answers, so a client sweeping through presets to
+   * listen for traffic does not disturb them.
+   * Not set for nodes heard only over MQTT, which reach us over the internet
+   * rather than over our own radio - see via_mqtt - nor for nodes added as a
+   * shared contact, which have never been heard over RF at all.
+   * Derived from LSB 11 and bits 12..23 of NodeInfoLite.bitfield.
+   */
+  bool heard_on_current_lora = 15;
 }
 
 /*
@@ -2523,15 +2684,15 @@ message LockdownStatus {
 
   /*
    * For LOCKED: machine-readable reason. Known values:
-   *   "needs_auth"        — storage already unlocked, client must auth
-   *   "token_missing"     — no boot token on flash
-   *   "token_expired"     — boot token wall-clock TTL elapsed
-   *   "token_boots_zero"  — boot token boot-count TTL exhausted
-   *   "token_hmac_fail"   — token tampered or wrong device
-   *   "token_dek_fail"    — token DEK decrypt failed
-   *   "token_wrong_size"  — token file corrupted
-   *   "token_bad_magic"   — token file corrupted
-   *   "not_provisioned"   — should generally use NEEDS_PROVISION state instead
+   *   "needs_auth"        - storage already unlocked, client must auth
+   *   "token_missing"     - no boot token on flash
+   *   "token_expired"     - boot token wall-clock TTL elapsed
+   *   "token_boots_zero"  - boot token boot-count TTL exhausted
+   *   "token_hmac_fail"   - token tampered or wrong device
+   *   "token_dek_fail"    - token DEK decrypt failed
+   *   "token_wrong_size"  - token file corrupted
+   *   "token_bad_magic"   - token file corrupted
+   *   "not_provisioned"   - should generally use NEEDS_PROVISION state instead
    * Other values may be added; clients should treat unknown values as
    * "locked, ask for passphrase".
    */
@@ -2966,6 +3127,26 @@ enum ExcludedModules {
    * Network config (not technically a module, but used to indicate network capabilities)
    */
   NETWORK_CONFIG = 0x4000;
+
+  /*
+   * Status Message module
+   */
+  STATUSMESSAGE_CONFIG = 0x8000;
+
+  /*
+   * Traffic Management module
+   */
+  TRAFFICMANAGEMENT_CONFIG = 0x10000;
+
+  /*
+   * TAK module
+   */
+  TAK_CONFIG = 0x20000;
+
+  /*
+   * Mesh Beacon module
+   */
+  MESHBEACON_CONFIG = 0x40000;
 }
 
 /*

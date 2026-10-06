@@ -793,6 +793,272 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
 }
 
 ///
+///  Soil and water probe metrics.
+///
+///  Chemistry reported by soil probes (RS-485/SDI-12 NPK probes) and by
+///  water-quality sondes. Split out of EnvironmentMetrics so that message stays
+///  within the mesh payload budget.
+class SoilWaterMetrics extends $pb.GeneratedMessage {
+  factory SoilWaterMetrics({
+    $core.double? soilPh,
+    $core.double? ph,
+    $core.double? electricalConductivity,
+    $core.double? salinity,
+    $core.double? nitrogen,
+    $core.double? phosphorus,
+    $core.double? potassium,
+    $core.double? dissolvedOxygen,
+    $core.double? orp,
+    $core.double? chemicalOxygenDemand,
+    $core.double? turbidity,
+    $core.double? nitrate,
+    $core.double? ammonium,
+    $core.double? biochemicalOxygenDemand,
+    $core.double? solarIrradiance,
+  }) {
+    final result = create();
+    if (soilPh != null) result.soilPh = soilPh;
+    if (ph != null) result.ph = ph;
+    if (electricalConductivity != null)
+      result.electricalConductivity = electricalConductivity;
+    if (salinity != null) result.salinity = salinity;
+    if (nitrogen != null) result.nitrogen = nitrogen;
+    if (phosphorus != null) result.phosphorus = phosphorus;
+    if (potassium != null) result.potassium = potassium;
+    if (dissolvedOxygen != null) result.dissolvedOxygen = dissolvedOxygen;
+    if (orp != null) result.orp = orp;
+    if (chemicalOxygenDemand != null)
+      result.chemicalOxygenDemand = chemicalOxygenDemand;
+    if (turbidity != null) result.turbidity = turbidity;
+    if (nitrate != null) result.nitrate = nitrate;
+    if (ammonium != null) result.ammonium = ammonium;
+    if (biochemicalOxygenDemand != null)
+      result.biochemicalOxygenDemand = biochemicalOxygenDemand;
+    if (solarIrradiance != null) result.solarIrradiance = solarIrradiance;
+    return result;
+  }
+
+  SoilWaterMetrics._();
+
+  factory SoilWaterMetrics.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SoilWaterMetrics.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SoilWaterMetrics',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aD(1, _omitFieldNames ? '' : 'soilPh', fieldType: $pb.PbFieldType.OF)
+    ..aD(2, _omitFieldNames ? '' : 'ph', fieldType: $pb.PbFieldType.OF)
+    ..aD(3, _omitFieldNames ? '' : 'electricalConductivity',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(4, _omitFieldNames ? '' : 'salinity', fieldType: $pb.PbFieldType.OF)
+    ..aD(5, _omitFieldNames ? '' : 'nitrogen', fieldType: $pb.PbFieldType.OF)
+    ..aD(6, _omitFieldNames ? '' : 'phosphorus', fieldType: $pb.PbFieldType.OF)
+    ..aD(7, _omitFieldNames ? '' : 'potassium', fieldType: $pb.PbFieldType.OF)
+    ..aD(8, _omitFieldNames ? '' : 'dissolvedOxygen',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(9, _omitFieldNames ? '' : 'orp', fieldType: $pb.PbFieldType.OF)
+    ..aD(10, _omitFieldNames ? '' : 'chemicalOxygenDemand',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(11, _omitFieldNames ? '' : 'turbidity', fieldType: $pb.PbFieldType.OF)
+    ..aD(12, _omitFieldNames ? '' : 'nitrate', fieldType: $pb.PbFieldType.OF)
+    ..aD(13, _omitFieldNames ? '' : 'ammonium', fieldType: $pb.PbFieldType.OF)
+    ..aD(14, _omitFieldNames ? '' : 'biochemicalOxygenDemand',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(15, _omitFieldNames ? '' : 'solarIrradiance',
+        fieldType: $pb.PbFieldType.OF)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SoilWaterMetrics clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SoilWaterMetrics copyWith(void Function(SoilWaterMetrics) updates) =>
+      super.copyWith((message) => updates(message as SoilWaterMetrics))
+          as SoilWaterMetrics;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SoilWaterMetrics create() => SoilWaterMetrics._();
+  @$core.override
+  SoilWaterMetrics createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SoilWaterMetrics getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SoilWaterMetrics>(create);
+  static SoilWaterMetrics? _defaultInstance;
+
+  ///
+  ///  Soil pH, 0-14
+  @$pb.TagNumber(1)
+  $core.double get soilPh => $_getN(0);
+  @$pb.TagNumber(1)
+  set soilPh($core.double value) => $_setFloat(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSoilPh() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSoilPh() => $_clearField(1);
+
+  ///
+  ///  pH of water or other solution, 0-14
+  @$pb.TagNumber(2)
+  $core.double get ph => $_getN(1);
+  @$pb.TagNumber(2)
+  set ph($core.double value) => $_setFloat(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPh() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPh() => $_clearField(2);
+
+  ///
+  ///  Electrical conductivity in mS/cm
+  @$pb.TagNumber(3)
+  $core.double get electricalConductivity => $_getN(2);
+  @$pb.TagNumber(3)
+  set electricalConductivity($core.double value) => $_setFloat(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasElectricalConductivity() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearElectricalConductivity() => $_clearField(3);
+
+  ///
+  ///  Salinity in mg/l
+  @$pb.TagNumber(4)
+  $core.double get salinity => $_getN(3);
+  @$pb.TagNumber(4)
+  set salinity($core.double value) => $_setFloat(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSalinity() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSalinity() => $_clearField(4);
+
+  ///
+  ///  Nitrogen concentration in mg/kg
+  @$pb.TagNumber(5)
+  $core.double get nitrogen => $_getN(4);
+  @$pb.TagNumber(5)
+  set nitrogen($core.double value) => $_setFloat(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasNitrogen() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearNitrogen() => $_clearField(5);
+
+  ///
+  ///  Phosphorus concentration in mg/kg
+  @$pb.TagNumber(6)
+  $core.double get phosphorus => $_getN(5);
+  @$pb.TagNumber(6)
+  set phosphorus($core.double value) => $_setFloat(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasPhosphorus() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearPhosphorus() => $_clearField(6);
+
+  ///
+  ///  Potassium concentration in mg/kg
+  @$pb.TagNumber(7)
+  $core.double get potassium => $_getN(6);
+  @$pb.TagNumber(7)
+  set potassium($core.double value) => $_setFloat(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasPotassium() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearPotassium() => $_clearField(7);
+
+  ///
+  ///  Dissolved oxygen in mg/l
+  @$pb.TagNumber(8)
+  $core.double get dissolvedOxygen => $_getN(7);
+  @$pb.TagNumber(8)
+  set dissolvedOxygen($core.double value) => $_setFloat(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasDissolvedOxygen() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearDissolvedOxygen() => $_clearField(8);
+
+  ///
+  ///  Oxidation-reduction potential (ORP) in mV
+  @$pb.TagNumber(9)
+  $core.double get orp => $_getN(8);
+  @$pb.TagNumber(9)
+  set orp($core.double value) => $_setFloat(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasOrp() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearOrp() => $_clearField(9);
+
+  ///
+  ///  Chemical oxygen demand in mg/l
+  @$pb.TagNumber(10)
+  $core.double get chemicalOxygenDemand => $_getN(9);
+  @$pb.TagNumber(10)
+  set chemicalOxygenDemand($core.double value) => $_setFloat(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasChemicalOxygenDemand() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearChemicalOxygenDemand() => $_clearField(10);
+
+  ///
+  ///  Turbidity in NTU
+  @$pb.TagNumber(11)
+  $core.double get turbidity => $_getN(10);
+  @$pb.TagNumber(11)
+  set turbidity($core.double value) => $_setFloat(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasTurbidity() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearTurbidity() => $_clearField(11);
+
+  ///
+  ///  Nitrate concentration in ppm
+  @$pb.TagNumber(12)
+  $core.double get nitrate => $_getN(11);
+  @$pb.TagNumber(12)
+  set nitrate($core.double value) => $_setFloat(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasNitrate() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearNitrate() => $_clearField(12);
+
+  ///
+  ///  Ammonium concentration in ppm
+  @$pb.TagNumber(13)
+  $core.double get ammonium => $_getN(12);
+  @$pb.TagNumber(13)
+  set ammonium($core.double value) => $_setFloat(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasAmmonium() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearAmmonium() => $_clearField(13);
+
+  ///
+  ///  Biochemical oxygen demand in mg/l
+  @$pb.TagNumber(14)
+  $core.double get biochemicalOxygenDemand => $_getN(13);
+  @$pb.TagNumber(14)
+  set biochemicalOxygenDemand($core.double value) => $_setFloat(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasBiochemicalOxygenDemand() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearBiochemicalOxygenDemand() => $_clearField(14);
+
+  ///
+  ///  Solar irradiance in W/m^2 (distinct from the radiation field's uR/h)
+  @$pb.TagNumber(15)
+  $core.double get solarIrradiance => $_getN(14);
+  @$pb.TagNumber(15)
+  set solarIrradiance($core.double value) => $_setFloat(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasSolarIrradiance() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearSolarIrradiance() => $_clearField(15);
+}
+
+///
 ///  Power Metrics (voltage / current / etc)
 class PowerMetrics extends $pb.GeneratedMessage {
   factory PowerMetrics({
@@ -2233,6 +2499,7 @@ enum Telemetry_Variant {
   healthMetrics,
   hostMetrics,
   trafficManagementStats,
+  soilWaterMetrics,
   notSet
 }
 
@@ -2249,6 +2516,7 @@ class Telemetry extends $pb.GeneratedMessage {
     HealthMetrics? healthMetrics,
     HostMetrics? hostMetrics,
     TrafficManagementStats? trafficManagementStats,
+    SoilWaterMetrics? soilWaterMetrics,
   }) {
     final result = create();
     if (time != null) result.time = time;
@@ -2262,6 +2530,7 @@ class Telemetry extends $pb.GeneratedMessage {
     if (hostMetrics != null) result.hostMetrics = hostMetrics;
     if (trafficManagementStats != null)
       result.trafficManagementStats = trafficManagementStats;
+    if (soilWaterMetrics != null) result.soilWaterMetrics = soilWaterMetrics;
     return result;
   }
 
@@ -2284,13 +2553,14 @@ class Telemetry extends $pb.GeneratedMessage {
     7: Telemetry_Variant.healthMetrics,
     8: Telemetry_Variant.hostMetrics,
     9: Telemetry_Variant.trafficManagementStats,
+    11: Telemetry_Variant.soilWaterMetrics,
     0: Telemetry_Variant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'Telemetry',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9])
+    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 11])
     ..aI(1, _omitFieldNames ? '' : 'time', fieldType: $pb.PbFieldType.OF3)
     ..aOM<DeviceMetrics>(2, _omitFieldNames ? '' : 'deviceMetrics',
         subBuilder: DeviceMetrics.create)
@@ -2309,6 +2579,8 @@ class Telemetry extends $pb.GeneratedMessage {
     ..aOM<TrafficManagementStats>(
         9, _omitFieldNames ? '' : 'trafficManagementStats',
         subBuilder: TrafficManagementStats.create)
+    ..aOM<SoilWaterMetrics>(11, _omitFieldNames ? '' : 'soilWaterMetrics',
+        subBuilder: SoilWaterMetrics.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2337,6 +2609,7 @@ class Telemetry extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
+  @$pb.TagNumber(11)
   Telemetry_Variant whichVariant() => _Telemetry_VariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
@@ -2346,6 +2619,7 @@ class Telemetry extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
+  @$pb.TagNumber(11)
   void clearVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -2463,6 +2737,19 @@ class Telemetry extends $pb.GeneratedMessage {
   void clearTrafficManagementStats() => $_clearField(9);
   @$pb.TagNumber(9)
   TrafficManagementStats ensureTrafficManagementStats() => $_ensure(8);
+
+  ///
+  ///  Soil and water probe metrics
+  @$pb.TagNumber(11)
+  SoilWaterMetrics get soilWaterMetrics => $_getN(9);
+  @$pb.TagNumber(11)
+  set soilWaterMetrics(SoilWaterMetrics value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasSoilWaterMetrics() => $_has(9);
+  @$pb.TagNumber(11)
+  void clearSoilWaterMetrics() => $_clearField(11);
+  @$pb.TagNumber(11)
+  SoilWaterMetrics ensureSoilWaterMetrics() => $_ensure(9);
 }
 
 ///
@@ -2539,9 +2826,9 @@ class Nau7802Config extends $pb.GeneratedMessage {
 }
 
 ///
-///  AS3935 lightning sensor configuration, for saving to flash
-class AS3935Config extends $pb.GeneratedMessage {
-  factory AS3935Config({
+///  AS3935 lightning sensor state, for saving to flash
+class AS3935State extends $pb.GeneratedMessage {
+  factory AS3935State({
     $core.int? tuningCapPf,
   }) {
     final result = create();
@@ -2549,17 +2836,17 @@ class AS3935Config extends $pb.GeneratedMessage {
     return result;
   }
 
-  AS3935Config._();
+  AS3935State._();
 
-  factory AS3935Config.fromBuffer($core.List<$core.int> data,
+  factory AS3935State.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory AS3935Config.fromJson($core.String json,
+  factory AS3935State.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'AS3935Config',
+      _omitMessageNames ? '' : 'AS3935State',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'tuningCapPf',
@@ -2567,23 +2854,23 @@ class AS3935Config extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AS3935Config clone() => deepCopy();
+  AS3935State clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AS3935Config copyWith(void Function(AS3935Config) updates) =>
-      super.copyWith((message) => updates(message as AS3935Config))
-          as AS3935Config;
+  AS3935State copyWith(void Function(AS3935State) updates) =>
+      super.copyWith((message) => updates(message as AS3935State))
+          as AS3935State;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static AS3935Config create() => AS3935Config._();
+  static AS3935State create() => AS3935State._();
   @$core.override
-  AS3935Config createEmptyInstance() => create();
+  AS3935State createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static AS3935Config getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<AS3935Config>(create);
-  static AS3935Config? _defaultInstance;
+  static AS3935State getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AS3935State>(create);
+  static AS3935State? _defaultInstance;
 
   ///
   ///  Antenna tuning capacitance in pF, 0 to 120 in steps of 8. The chip does not retain

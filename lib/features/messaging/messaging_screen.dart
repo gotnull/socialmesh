@@ -3955,7 +3955,10 @@ class _MessageBubble extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: _getAvatarColor(),
+                                color: nodeColorForText(
+                                  _getAvatarColor(),
+                                  context.card,
+                                ),
                               ),
                             ),
                           ),

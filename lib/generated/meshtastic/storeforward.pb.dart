@@ -371,6 +371,7 @@ class StoreAndForward extends $pb.GeneratedMessage {
     StoreAndForward_History? history,
     StoreAndForward_Heartbeat? heartbeat,
     $core.List<$core.int>? text,
+    $core.int? originalId,
   }) {
     final result = create();
     if (rr != null) result.rr = rr;
@@ -378,6 +379,7 @@ class StoreAndForward extends $pb.GeneratedMessage {
     if (history != null) result.history = history;
     if (heartbeat != null) result.heartbeat = heartbeat;
     if (text != null) result.text = text;
+    if (originalId != null) result.originalId = originalId;
     return result;
   }
 
@@ -413,6 +415,7 @@ class StoreAndForward extends $pb.GeneratedMessage {
         subBuilder: StoreAndForward_Heartbeat.create)
     ..a<$core.List<$core.int>>(
         5, _omitFieldNames ? '' : 'text', $pb.PbFieldType.OY)
+    ..aI(6, _omitFieldNames ? '' : 'originalId', fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -506,6 +509,17 @@ class StoreAndForward extends $pb.GeneratedMessage {
   $core.bool hasText() => $_has(4);
   @$pb.TagNumber(5)
   void clearText() => $_clearField(5);
+
+  ///
+  ///  Contains the original ID of the contained message.
+  @$pb.TagNumber(6)
+  $core.int get originalId => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set originalId($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasOriginalId() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearOriginalId() => $_clearField(6);
 }
 
 const $core.bool _omitFieldNames =

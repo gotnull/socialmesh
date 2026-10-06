@@ -287,7 +287,7 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
       TelemetrySensorType._(52, _omitEnumNames ? '' : 'MMC5983MA');
 
   ///
-  ///  ICM-42607-P 6‑Axis IMU
+  ///  ICM-42607-P 6-Axis IMU
   static const TelemetrySensorType ICM42607P =
       TelemetrySensorType._(53, _omitEnumNames ? '' : 'ICM42607P');
 

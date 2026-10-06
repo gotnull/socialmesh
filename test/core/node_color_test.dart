@@ -67,4 +67,41 @@ void main() {
       expect(isLightNodeColor(const Color(0xFFF0F0F0)), isTrue);
     });
   });
+
+  group('nodeColorForText', () {
+    // The chat bubble surfaces from the issue report.
+    const darkCard = Color(0xFF29303D);
+    const lightCard = Color(0xFFFFFFFF);
+
+    test('a near-black name is lifted to readable on a dark card', () {
+      const elmar = Color(0xFF2A0A2E);
+      final adjusted = nodeColorForText(elmar, darkCard);
+      expect(contrastRatio(adjusted, darkCard), greaterThanOrEqualTo(4.5));
+      // Same hue family: lightened, not replaced with grey.
+      expect(
+        HSLColor.fromColor(adjusted).hue,
+        closeTo(HSLColor.fromColor(elmar).hue, 1),
+      );
+    });
+
+    test('a dark blue name is lifted on a dark card', () {
+      const kappa = Color(0xFF2233EE);
+      expect(
+        contrastRatio(nodeColorForText(kappa, darkCard), darkCard),
+        greaterThanOrEqualTo(4.5),
+      );
+    });
+
+    test('a yellow name is darkened on a light card', () {
+      const yellow = Color(0xFFF5E663);
+      final adjusted = nodeColorForText(yellow, lightCard);
+      expect(contrastRatio(adjusted, lightCard), greaterThanOrEqualTo(4.5));
+      expect(adjusted.computeLuminance(), lessThan(yellow.computeLuminance()));
+    });
+
+    test('a colour that already contrasts is left alone', () {
+      const orange = Color(0xFFE07040);
+      expect(nodeColorForText(orange, const Color(0xFF000000)), orange);
+    });
+  });
 }

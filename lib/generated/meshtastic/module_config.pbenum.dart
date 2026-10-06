@@ -123,12 +123,30 @@ class ModuleConfig_AudioConfig_Audio_Baud extends $pb.ProtobufEnum {
   static const ModuleConfig_AudioConfig_Audio_Baud CODEC2_1200 =
       ModuleConfig_AudioConfig_Audio_Baud._(
           6, _omitEnumNames ? '' : 'CODEC2_1200');
+
+  ///
+  ///  Removed from libcodec2 upstream. A device configured to one of these
+  ///  falls back to CODEC2_700C.
+  @$core.Deprecated('This enum value is deprecated')
   static const ModuleConfig_AudioConfig_Audio_Baud CODEC2_700 =
       ModuleConfig_AudioConfig_Audio_Baud._(
           7, _omitEnumNames ? '' : 'CODEC2_700');
+  @$core.Deprecated('This enum value is deprecated')
   static const ModuleConfig_AudioConfig_Audio_Baud CODEC2_700B =
       ModuleConfig_AudioConfig_Audio_Baud._(
           8, _omitEnumNames ? '' : 'CODEC2_700B');
+
+  ///
+  ///  Replaces CODEC2_700. Default for new configurations.
+  static const ModuleConfig_AudioConfig_Audio_Baud CODEC2_700C =
+      ModuleConfig_AudioConfig_Audio_Baud._(
+          9, _omitEnumNames ? '' : 'CODEC2_700C');
+
+  ///
+  ///  Lowest rate, and the only one usable on slower modem presets.
+  static const ModuleConfig_AudioConfig_Audio_Baud CODEC2_450 =
+      ModuleConfig_AudioConfig_Audio_Baud._(
+          10, _omitEnumNames ? '' : 'CODEC2_450');
 
   static const $core.List<ModuleConfig_AudioConfig_Audio_Baud> values =
       <ModuleConfig_AudioConfig_Audio_Baud>[
@@ -141,10 +159,12 @@ class ModuleConfig_AudioConfig_Audio_Baud extends $pb.ProtobufEnum {
     CODEC2_1200,
     CODEC2_700,
     CODEC2_700B,
+    CODEC2_700C,
+    CODEC2_450,
   ];
 
   static final $core.List<ModuleConfig_AudioConfig_Audio_Baud?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 8);
+      $pb.ProtobufEnum.$_initByValueList(values, 10);
   static ModuleConfig_AudioConfig_Audio_Baud? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

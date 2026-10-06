@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
 import '../models/mesh_models.dart';
@@ -41,6 +43,37 @@ bool isLightNodeColor(Color color) {
 /// dark-glass UI.
 Color nodeContrastColor(Color color) =>
     isLightNodeColor(color) ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
+
+/// WCAG contrast ratio between two colours (1.0 to 21.0).
+double contrastRatio(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+}
+
+/// [color] with its lightness moved, keeping hue and saturation, until it
+/// reaches [minContrast] against [background], for text drawn in a node
+/// colour. Node colours come from node numbers or the owner's choice, so a
+/// name in one can be near black on a dark surface or yellow on a light
+/// one. The default is the WCAG AA ratio for normal text.
+Color nodeColorForText(
+  Color color,
+  Color background, {
+  double minContrast = 4.5,
+}) {
+  if (contrastRatio(color, background) >= minContrast) return color;
+  final lighten = background.computeLuminance() < 0.5;
+  var hsl = HSLColor.fromColor(color);
+  while (true) {
+    final next = (hsl.lightness + (lighten ? 0.05 : -0.05)).clamp(0.0, 1.0);
+    hsl = hsl.withLightness(next);
+    final candidate = hsl.toColor();
+    if (contrastRatio(candidate, background) >= minContrast) return candidate;
+    if (next == 0.0 || next == 1.0) {
+      return lighten ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
+    }
+  }
+}
 
 /// The short label rendered inside a node's map marker.
 ///

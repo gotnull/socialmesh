@@ -23,19 +23,22 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 ///  Payload for MESH_BEACON_APP packets.
 ///  Periodically broadcast by nodes in beacon mode.
 ///  Listeners deliver the text message to the local inbox and cache any offered
-///  channel/preset for the client app to act on — the firmware never auto-applies them.
+///  channel/preset for the client app to act on - the firmware never auto-applies them.
 class MeshBeacon extends $pb.GeneratedMessage {
   factory MeshBeacon({
     $core.String? message,
     $0.ChannelSettings? offerChannel,
     $1.Config_LoRaConfig_RegionCode? offerRegion,
     $1.Config_LoRaConfig_ModemPreset? offerPreset,
+    $core.int? offerFrequencySlot,
   }) {
     final result = create();
     if (message != null) result.message = message;
     if (offerChannel != null) result.offerChannel = offerChannel;
     if (offerRegion != null) result.offerRegion = offerRegion;
     if (offerPreset != null) result.offerPreset = offerPreset;
+    if (offerFrequencySlot != null)
+      result.offerFrequencySlot = offerFrequencySlot;
     return result;
   }
 
@@ -61,6 +64,8 @@ class MeshBeacon extends $pb.GeneratedMessage {
     ..aE<$1.Config_LoRaConfig_ModemPreset>(
         4, _omitFieldNames ? '' : 'offerPreset',
         enumValues: $1.Config_LoRaConfig_ModemPreset.values)
+    ..aI(5, _omitFieldNames ? '' : 'offerFrequencySlot',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -130,6 +135,23 @@ class MeshBeacon extends $pb.GeneratedMessage {
   $core.bool hasOfferPreset() => $_has(3);
   @$pb.TagNumber(4)
   void clearOfferPreset() => $_clearField(4);
+
+  ///
+  ///  Frequency slot this mesh uses, 1-based, matching Config.LoRaConfig.channel_num.
+  ///  OMITTED when a receiver can derive the slot itself from offer_region, offer_channel's
+  ///  name and offer_preset - an unset offer_preset means the region's default preset. That
+  ///  covers both a region with a mandated slot and a mesh on the default name hash.
+  ///  PRESENT means this mesh deliberately deviates from what derivation would produce; a
+  ///  client should still validate the result against its own region before offering to join.
+  ///  Do not send 0 - it is the same as omitting the field.
+  @$pb.TagNumber(5)
+  $core.int get offerFrequencySlot => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set offerFrequencySlot($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasOfferFrequencySlot() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearOfferFrequencySlot() => $_clearField(5);
 }
 
 const $core.bool _omitFieldNames =

@@ -435,7 +435,8 @@ class Config_NetworkConfig_ProtocolFlags extends $pb.ProtobufEnum {
 }
 
 ///
-///  Deprecated in 2.7.4: Unused
+///  Unused. Kept so the deprecated gps_format field still has a type; when
+///  firmware stopped reading that field is recorded on the field itself.
 class Config_DisplayConfig_DeprecatedGpsCoordinateFormat
     extends $pb.ProtobufEnum {
   static const Config_DisplayConfig_DeprecatedGpsCoordinateFormat UNUSED =

@@ -806,7 +806,7 @@ class CotType extends $pb.ProtobufEnum {
   ///  y-: TAKTALK room/membership broadcast. Payload carried via the
   ///  TakTalkRoomData typed variant (sender_callsign, room_id, room_name,
   ///  participants). The CoT type literally has a trailing dash and no
-  ///  second atom — not a typo.
+  ///  second atom - not a typo.
   static const CotType CotType_y =
       CotType._(126, _omitEnumNames ? '' : 'CotType_y');
 
@@ -1061,7 +1061,7 @@ class DrawnShape_Kind extends $pb.ProtobufEnum {
 
   ///
   ///  u-d-c-e: Ellipse with distinct major/minor axes (same storage as
-  ///  Kind_Circle — uses major_cm/minor_cm/angle_deg — but receivers
+  ///  Kind_Circle - uses major_cm/minor_cm/angle_deg - but receivers
   ///  render it as a non-circular ellipse rather than a round circle).
   static const DrawnShape_Kind Kind_Ellipse =
       DrawnShape_Kind._(8, _omitEnumNames ? '' : 'Kind_Ellipse');
@@ -1111,7 +1111,7 @@ class DrawnShape_Kind extends $pb.ProtobufEnum {
 ///  <fillColor> to emit in the reconstructed XML.
 class DrawnShape_StyleMode extends $pb.ProtobufEnum {
   ///
-  ///  Unspecified — receiver infers from which color fields are non-zero.
+  ///  Unspecified - receiver infers from which color fields are non-zero.
   static const DrawnShape_StyleMode StyleMode_Unspecified =
       DrawnShape_StyleMode._(0, _omitEnumNames ? '' : 'StyleMode_Unspecified');
 
@@ -1155,7 +1155,7 @@ class DrawnShape_StyleMode extends $pb.ProtobufEnum {
 ///  depending on the iconset path).
 class Marker_Kind extends $pb.ProtobufEnum {
   ///
-  ///  Unspecified — fall back to TAKPacketV2.cot_type_id
+  ///  Unspecified - fall back to TAKPacketV2.cot_type_id
   static const Marker_Kind Kind_Unspecified =
       Marker_Kind._(0, _omitEnumNames ? '' : 'Kind_Unspecified');
 

@@ -866,10 +866,10 @@ class AircraftTrack extends $pb.GeneratedMessage {
 ///  hundred meters of the anchor has per-vertex deltas in the ±10^4 range.
 ///  Under sint32+zigzag those encode as 2 bytes each (tag+varint), versus the
 ///  4 bytes that sfixed32 would always require. At 32 vertices that is ~128
-///  bytes of savings — the difference between fitting under the LoRa MTU or
+///  bytes of savings - the difference between fitting under the LoRa MTU or
 ///  not. Absolute coordinates (values ~10^9) would cost sint32 varint 5 bytes
 ///  per field, which is why TAKPacketV2's top-level latitude_i / longitude_i
-///  stay sfixed32 — only small values win with sint32.
+///  stay sfixed32 - only small values win with sint32.
 class CotGeoPoint extends $pb.GeneratedMessage {
   factory CotGeoPoint({
     $core.int? latDeltaI,
@@ -1428,7 +1428,7 @@ class Marker extends $pb.GeneratedMessage {
 ///
 ///  Covers CoT type u-rb-a. The anchor position is on
 ///  TAKPacketV2.latitude_i/longitude_i; the target endpoint is carried as a
-///  CotGeoPoint — same delta-from-anchor encoding used by DrawnShape.vertices
+///  CotGeoPoint - same delta-from-anchor encoding used by DrawnShape.vertices
 ///  so a self-anchored RAB (common case) encodes in zero bytes.
 class RangeAndBearing extends $pb.GeneratedMessage {
   factory RangeAndBearing({
@@ -2158,7 +2158,7 @@ class CasevacReport extends $pb.GeneratedMessage {
   void clearTitle() => $_clearField(16);
 
   ///
-  ///  Primary medline free-text — the single most clinically important line
+  ///  Primary medline free-text - the single most clinically important line
   ///  on a MEDLINE form (e.g. "2 urgent litter patients, smoke on approach").
   ///  MUST be preserved under MTU pressure as long as any casevac is sent.
   @$pb.TagNumber(17)
@@ -2172,7 +2172,7 @@ class CasevacReport extends $pb.GeneratedMessage {
 
   ///
   ///  Line 3 (newer ATAK format): patient counts by precedence level.
-  ///  Coexists with the enum-style `precedence` field (tag 1) — older ATAK
+  ///  Coexists with the enum-style `precedence` field (tag 1) - older ATAK
   ///  emits a single enum, newer ATAK emits these counts, and both can be
   ///  set simultaneously. Senders populate whichever style(s) the source
   ///  XML had; receivers prefer counts when non-zero.
@@ -2345,7 +2345,7 @@ class CasevacReport extends $pb.GeneratedMessage {
 
   ///
   ///  Per-patient clinical records. Each entry is one patient's ZMIST card
-  ///  (Zap number / Mechanism / Injuries / Signs / Treatment). Repeatable —
+  ///  (Zap number / Mechanism / Injuries / Signs / Treatment). Repeatable -
   ///  a mass-casualty event can carry 1-6 entries in practice, limited by
   ///  the 237 B LoRa MTU.
   @$pb.TagNumber(33)
@@ -2353,7 +2353,7 @@ class CasevacReport extends $pb.GeneratedMessage {
 }
 
 ///
-///  Per-patient clinical summary record — one entry per patient in a CASEVAC.
+///  Per-patient clinical summary record - one entry per patient in a CASEVAC.
 ///  Maps directly to ATAK's <zMist> child element inside <zMistsMap>.
 ///  All fields are optional free-text; senders populate what they have.
 class ZMistEntry extends $pb.GeneratedMessage {
@@ -2426,7 +2426,7 @@ class ZMistEntry extends $pb.GeneratedMessage {
   void clearTitle() => $_clearField(1);
 
   ///
-  ///  Zap number — unique patient tracking ID (often a terse code like
+  ///  Zap number - unique patient tracking ID (often a terse code like
   ///  "Gunshot" or a serial).
   @$pb.TagNumber(2)
   $core.String get z => $_getSZ(1);
@@ -2587,7 +2587,7 @@ class EmergencyAlert extends $pb.GeneratedMessage {
 ///  creation time; the fields below carry structured metadata the raw-detail
 ///  fallback currently loses.
 ///
-///  Fields are deliberately lean — this variant is closer to the MTU ceiling
+///  Fields are deliberately lean - this variant is closer to the MTU ceiling
 ///  than the others, so every string is capped in options.
 class TaskRequest extends $pb.GeneratedMessage {
   factory TaskRequest({
@@ -2719,7 +2719,7 @@ class TaskRequest extends $pb.GeneratedMessage {
 ///
 ///  Weather annotation from <environment> CoT detail element.
 ///
-///  Attaches to any TAKPacketV2 regardless of payload_variant — an Aircraft,
+///  Attaches to any TAKPacketV2 regardless of payload_variant - an Aircraft,
 ///  PLI, or Marker can all carry observed conditions at the emitting station.
 ///  ATAK-CIV ships an XSD for <environment> but no dedicated handler, so the
 ///  element round-trips through the generic detail pipeline; this message
@@ -2728,7 +2728,7 @@ class TaskRequest extends $pb.GeneratedMessage {
 ///  Target wire cost: ~6-8 bytes compressed with a fully populated instance.
 ///
 ///  Named `TAKEnvironment` (not just `Environment`) because the bare name
-///  collides with `SwiftUI.Environment` — every SwiftUI view in a consuming
+///  collides with `SwiftUI.Environment` - every SwiftUI view in a consuming
 ///  iOS app uses the `@Environment` property wrapper, and importing the
 ///  generated proto module would make `Environment` ambiguous in every one
 ///  of those files. The `TAK` prefix matches the convention used by the
@@ -2836,7 +2836,7 @@ class TAKEnvironment extends $pb.GeneratedMessage {
 ///  The receiving ATAK client restores those from its own defaults, same as
 ///  every other CoT carried over Meshtastic today.
 ///
-///  Attaches to any TAKPacketV2 — a PLI with a sensor on the operator's head,
+///  Attaches to any TAKPacketV2 - a PLI with a sensor on the operator's head,
 ///  an Aircraft with a FLIR turret, a Marker dropped on a UAV.
 ///  Target wire cost: ~7-14 bytes compressed (dominated by model string).
 class SensorFov extends $pb.GeneratedMessage {
@@ -2931,7 +2931,7 @@ class SensorFov extends $pb.GeneratedMessage {
 
   ///
   ///  Maximum range of the cone in meters.
-  ///  Optional — if unset, receivers should use the ATAK-CIV default of 100m.
+  ///  Optional - if unset, receivers should use the ATAK-CIV default of 100m.
   @$pb.TagNumber(3)
   $core.int get rangeM => $_getIZ(2);
   @$pb.TagNumber(3)
@@ -2955,7 +2955,7 @@ class SensorFov extends $pb.GeneratedMessage {
 
   ///
   ///  Vertical field of view in whole degrees. ATAK-CIV default is 45°.
-  ///  Optional — a value of 0 means "not set / use horizontal FOV".
+  ///  Optional - a value of 0 means "not set / use horizontal FOV".
   @$pb.TagNumber(5)
   $core.int get fovVerticalDeg => $_getIZ(4);
   @$pb.TagNumber(5)
@@ -2979,7 +2979,7 @@ class SensorFov extends $pb.GeneratedMessage {
 
   ///
   ///  Roll (camera tilt) in whole degrees, -180 to +180.
-  ///  Optional — use 0 if the sensor doesn't track roll.
+  ///  Optional - use 0 if the sensor doesn't track roll.
   @$pb.TagNumber(7)
   $core.int get rollDeg => $_getIZ(6);
   @$pb.TagNumber(7)
@@ -2991,7 +2991,7 @@ class SensorFov extends $pb.GeneratedMessage {
 
   ///
   ///  Free-form device model identifier, e.g. "FLIR-Boson-640", "SEEK".
-  ///  Optional — empty string means "unknown model" (ATAK-CIV default).
+  ///  Optional - empty string means "unknown model" (ATAK-CIV default).
   @$pb.TagNumber(8)
   $core.String get model => $_getSZ(7);
   @$pb.TagNumber(8)
@@ -3006,7 +3006,7 @@ class SensorFov extends $pb.GeneratedMessage {
 ///  TAKTALK chat message payload (CoT type m-t-t).
 ///
 ///  TAKTALK is an ATAK plugin for voice + text team messaging. The voice
-///  audio stream goes over UDP/RTP and is NOT carried by the mesh — only
+///  audio stream goes over UDP/RTP and is NOT carried by the mesh - only
 ///  the text envelope (this message) is. `from_voice` marks messages sent
 ///  via push-to-talk speech-to-text so receivers can render a mic icon
 ///  next to the text.
@@ -3128,7 +3128,7 @@ class TakTalkMessage extends $pb.GeneratedMessage {
 ///  Announces a TAKTALK chatroom's friendly name and roster so peers can
 ///  resolve room UUIDs (used in TakTalkMessage.chatroom_id and
 ///  GeoChat.room_id) to a display name and participant list. Not a chat
-///  message itself — these events are emitted by TAKTALK when rooms are
+///  message itself - these events are emitted by TAKTALK when rooms are
 ///  created or memberships change.
 class TakTalkRoomData extends $pb.GeneratedMessage {
   factory TakTalkRoomData({
@@ -3296,7 +3296,7 @@ class Marti extends $pb.GeneratedMessage {
   ///  primary-vs-cc distinction the same way ATAK does.
   ///
   ///  If dest_callsign is [TAKPacketV2.callsign] (self-addressed, unusual but
-  ///  legal — e.g. ATAK echoing back to its own room), the builder still emits
+  ///  legal - e.g. ATAK echoing back to its own room), the builder still emits
   ///  the element so loopback shapes round-trip cleanly.
   @$pb.TagNumber(1)
   $pb.PbList<$core.String> get destCallsign => $_getList(0);

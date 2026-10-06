@@ -438,9 +438,10 @@ Future<void> main() async {
   await tileCacheReady;
   BootTimeline.instance.mark('tile_cache_joined');
 
-  // Preferences are already loaded by RadioScope.init, so this is a cache
-  // read; it lets the first frame use the saved accent.
+  // Preferences are already loaded by RadioScope.init, so these are cache
+  // reads; they let the first frame use the saved accent and theme mode.
   await AccentColorNotifier.preloadLaunchColor();
+  await ThemeModeNotifier.preloadLaunchMode();
 
   // One line per launch with every awaited pre-runApp step timed, so a
   // long native launch screen can be attributed from an app log.

@@ -785,7 +785,7 @@ class ModuleConfig_AudioConfig extends $pb.GeneratedMessage {
   void clearPttPin() => $_clearField(2);
 
   ///
-  ///  The audio sample rate to use for codec2
+  ///  The codec2 bitrate to encode at. Sample rate is always 8 kHz.
   @$pb.TagNumber(3)
   ModuleConfig_AudioConfig_Audio_Baud get bitrate => $_getN(2);
   @$pb.TagNumber(3)
@@ -946,7 +946,10 @@ class ModuleConfig_PaxcounterConfig extends $pb.GeneratedMessage {
 
 ///
 ///  Config for the Traffic Management module.
-///  Provides packet inspection and traffic shaping to help reduce channel utilization
+///  Provides packet inspection and traffic shaping to help reduce channel utilization.
+///  Every field uses the proto3 zero value to mean "disabled"; there is no
+///  "use the firmware default" sentinel. Firmware installs its own defaults when it
+///  first creates this config, and a client that writes 0 turns that feature off.
 class ModuleConfig_TrafficManagementConfig extends $pb.GeneratedMessage {
   factory ModuleConfig_TrafficManagementConfig({
     $core.int? positionMinIntervalSecs,
@@ -1021,6 +1024,7 @@ class ModuleConfig_TrafficManagementConfig extends $pb.GeneratedMessage {
   ///
   ///  Minimum interval in seconds between position updates from the same node.
   ///  A non-zero value implicitly enables the suppression window; 0 disables it.
+  ///  Firmware default: 21600 (6 hours), installed when this config is first created.
   @$pb.TagNumber(4)
   $core.int get positionMinIntervalSecs => $_getIZ(0);
   @$pb.TagNumber(4)
@@ -2471,11 +2475,13 @@ class ModuleConfig_MeshBeaconConfig_BroadcastTarget
     $1.Config_LoRaConfig_ModemPreset? preset,
     $1.Config_LoRaConfig_RegionCode? region,
     $core.int? channelIndex,
+    $core.int? frequencySlot,
   }) {
     final result = create();
     if (preset != null) result.preset = preset;
     if (region != null) result.region = region;
     if (channelIndex != null) result.channelIndex = channelIndex;
+    if (frequencySlot != null) result.frequencySlot = frequencySlot;
     return result;
   }
 
@@ -2499,6 +2505,8 @@ class ModuleConfig_MeshBeaconConfig_BroadcastTarget
     ..aE<$1.Config_LoRaConfig_RegionCode>(2, _omitFieldNames ? '' : 'region',
         enumValues: $1.Config_LoRaConfig_RegionCode.values)
     ..aI(4, _omitFieldNames ? '' : 'channelIndex',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'frequencySlot',
         fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
@@ -2563,6 +2571,20 @@ class ModuleConfig_MeshBeaconConfig_BroadcastTarget
   $core.bool hasChannelIndex() => $_has(2);
   @$pb.TagNumber(4)
   void clearChannelIndex() => $_clearField(4);
+
+  ///
+  ///  Frequency slot to transmit this target's beacon on, 1-based, matching
+  ///  Config.LoRaConfig.channel_num. Unset means derive it the way any node on this
+  ///  channel would: the region's override slot if it has one, otherwise the hash of the
+  ///  target channel's name. Do not send 0 - it is the same as unset.
+  @$pb.TagNumber(5)
+  $core.int get frequencySlot => $_getIZ(3);
+  @$pb.TagNumber(5)
+  set frequencySlot($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(5)
+  $core.bool hasFrequencySlot() => $_has(3);
+  @$pb.TagNumber(5)
+  void clearFrequencySlot() => $_clearField(5);
 }
 
 ///
@@ -2570,6 +2592,7 @@ class ModuleConfig_MeshBeaconConfig_BroadcastTarget
 class ModuleConfig_MeshBeaconConfig extends $pb.GeneratedMessage {
   factory ModuleConfig_MeshBeaconConfig({
     $core.int? flags,
+    $core.int? broadcastOfferFrequencySlot,
     $core.String? broadcastMessage,
     $0.ChannelSettings? broadcastOfferChannel,
     $1.Config_LoRaConfig_RegionCode? broadcastOfferRegion,
@@ -2580,6 +2603,8 @@ class ModuleConfig_MeshBeaconConfig extends $pb.GeneratedMessage {
   }) {
     final result = create();
     if (flags != null) result.flags = flags;
+    if (broadcastOfferFrequencySlot != null)
+      result.broadcastOfferFrequencySlot = broadcastOfferFrequencySlot;
     if (broadcastMessage != null) result.broadcastMessage = broadcastMessage;
     if (broadcastOfferChannel != null)
       result.broadcastOfferChannel = broadcastOfferChannel;
@@ -2608,6 +2633,8 @@ class ModuleConfig_MeshBeaconConfig extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'flags', fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'broadcastOfferFrequencySlot',
+        fieldType: $pb.PbFieldType.OU3)
     ..aOS(4, _omitFieldNames ? '' : 'broadcastMessage')
     ..aOM<$0.ChannelSettings>(5, _omitFieldNames ? '' : 'broadcastOfferChannel',
         subBuilder: $0.ChannelSettings.create)
@@ -2658,61 +2685,80 @@ class ModuleConfig_MeshBeaconConfig extends $pb.GeneratedMessage {
   void clearFlags() => $_clearField(1);
 
   ///
-  ///  Message to include in each beacon broadcast. Max 100 bytes enforced by firmware.
+  ///  Frequency slot to advertise, 1-based, matching Config.LoRaConfig.channel_num.
+  ///  Unset means the receiver derives it from the advertised region, channel name and
+  ///  preset, which covers a region that mandates a slot and a mesh on the default hash.
+  ///  Set it only where the mesh deliberately pins a non-default slot. Do not send 0.
+  @$pb.TagNumber(2)
+  $core.int get broadcastOfferFrequencySlot => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set broadcastOfferFrequencySlot($core.int value) =>
+      $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasBroadcastOfferFrequencySlot() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearBroadcastOfferFrequencySlot() => $_clearField(2);
+
+  ///
+  ///  Message to include in each beacon broadcast.
+  ///  Every beacon copy carries this on the air, so it is the largest single cost in both
+  ///  this config and the packet it produces. Held to 60 bytes for that reason. The nanopb
+  ///  max_size is 61 because it counts the terminator, which is what leaves a client a
+  ///  round 60.
   @$pb.TagNumber(4)
-  $core.String get broadcastMessage => $_getSZ(1);
+  $core.String get broadcastMessage => $_getSZ(2);
   @$pb.TagNumber(4)
-  set broadcastMessage($core.String value) => $_setString(1, value);
+  set broadcastMessage($core.String value) => $_setString(2, value);
   @$pb.TagNumber(4)
-  $core.bool hasBroadcastMessage() => $_has(1);
+  $core.bool hasBroadcastMessage() => $_has(2);
   @$pb.TagNumber(4)
   void clearBroadcastMessage() => $_clearField(4);
 
   ///
   ///  Optional channel (name + PSK) to advertise in the MeshBeacon offer_channel field.
   @$pb.TagNumber(5)
-  $0.ChannelSettings get broadcastOfferChannel => $_getN(2);
+  $0.ChannelSettings get broadcastOfferChannel => $_getN(3);
   @$pb.TagNumber(5)
   set broadcastOfferChannel($0.ChannelSettings value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasBroadcastOfferChannel() => $_has(2);
+  $core.bool hasBroadcastOfferChannel() => $_has(3);
   @$pb.TagNumber(5)
   void clearBroadcastOfferChannel() => $_clearField(5);
   @$pb.TagNumber(5)
-  $0.ChannelSettings ensureBroadcastOfferChannel() => $_ensure(2);
+  $0.ChannelSettings ensureBroadcastOfferChannel() => $_ensure(3);
 
   ///
   ///  Optional region to advertise in the MeshBeacon offer_region field.
   @$pb.TagNumber(6)
-  $1.Config_LoRaConfig_RegionCode get broadcastOfferRegion => $_getN(3);
+  $1.Config_LoRaConfig_RegionCode get broadcastOfferRegion => $_getN(4);
   @$pb.TagNumber(6)
   set broadcastOfferRegion($1.Config_LoRaConfig_RegionCode value) =>
       $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasBroadcastOfferRegion() => $_has(3);
+  $core.bool hasBroadcastOfferRegion() => $_has(4);
   @$pb.TagNumber(6)
   void clearBroadcastOfferRegion() => $_clearField(6);
 
   ///
   ///  Optional modem preset to advertise in the MeshBeacon offer_preset field.
   @$pb.TagNumber(7)
-  $1.Config_LoRaConfig_ModemPreset get broadcastOfferPreset => $_getN(4);
+  $1.Config_LoRaConfig_ModemPreset get broadcastOfferPreset => $_getN(5);
   @$pb.TagNumber(7)
   set broadcastOfferPreset($1.Config_LoRaConfig_ModemPreset value) =>
       $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasBroadcastOfferPreset() => $_has(4);
+  $core.bool hasBroadcastOfferPreset() => $_has(5);
   @$pb.TagNumber(7)
   void clearBroadcastOfferPreset() => $_clearField(7);
 
   ///
   ///  How often to broadcast, in seconds. Min 3600 (1 h), default 3600.
   @$pb.TagNumber(11)
-  $core.int get broadcastIntervalSecs => $_getIZ(5);
+  $core.int get broadcastIntervalSecs => $_getIZ(6);
   @$pb.TagNumber(11)
-  set broadcastIntervalSecs($core.int value) => $_setUnsignedInt32(5, value);
+  set broadcastIntervalSecs($core.int value) => $_setUnsignedInt32(6, value);
   @$pb.TagNumber(11)
-  $core.bool hasBroadcastIntervalSecs() => $_has(5);
+  $core.bool hasBroadcastIntervalSecs() => $_has(6);
   @$pb.TagNumber(11)
   void clearBroadcastIntervalSecs() => $_clearField(11);
 
@@ -2726,7 +2772,7 @@ class ModuleConfig_MeshBeaconConfig extends $pb.GeneratedMessage {
   ///  a duplicate entry does not produce a second transmission.
   @$pb.TagNumber(13)
   $pb.PbList<ModuleConfig_MeshBeaconConfig_BroadcastTarget>
-      get broadcastTargets => $_getList(6);
+      get broadcastTargets => $_getList(7);
 }
 
 ///

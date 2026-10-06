@@ -166,6 +166,10 @@ const HardwareModel$json = {
     {'1': 'SEEED_WIO_TRACKER_L1_PRO_1W', '2': 144},
     {'1': 'MESHNOLOGY_W12', '2': 145},
     {'1': 'MESHPAGER_X2', '2': 146},
+    {'1': 'T_CONNECT_PRO', '2': 147},
+    {'1': 'AXIOMETA_GENESIS_MINI', '2': 148},
+    {'1': 'MAKERFABS_NOMAD_TERMINAL', '2': 149},
+    {'1': 'THINKNODE_MX', '2': 150},
     {'1': 'PRIVATE_HW', '2': 255},
   ],
 };
@@ -223,7 +227,9 @@ final $typed_data.Uint8List hardwareModelDescriptor = $convert.base64Decode(
     'X1A0EIoBEhkKFEhFTFRFQ19NRVNIX1RPV0VSX1YyEIsBEhMKDk1FU0hOT0xPR1lfVzEwEIwBEh'
     'AKC0hFTFRFQ19SQzMyEI0BEhAKC0hFTFRFQ19SQzUyEI4BEhAKC0hFTFRFQ19SQ0M2EI8BEiAK'
     'G1NFRUVEX1dJT19UUkFDS0VSX0wxX1BST18xVxCQARITCg5NRVNITk9MT0dZX1cxMhCRARIRCg'
-    'xNRVNIUEFHRVJfWDIQkgESDwoKUFJJVkFURV9IVxD/AQ==');
+    'xNRVNIUEFHRVJfWDIQkgESEgoNVF9DT05ORUNUX1BSTxCTARIaChVBWElPTUVUQV9HRU5FU0lT'
+    'X01JTkkQlAESHQoYTUFLRVJGQUJTX05PTUFEX1RFUk1JTkFMEJUBEhEKDFRISU5LTk9ERV9NWB'
+    'CWARIPCgpQUklWQVRFX0hXEP8B');
 
 @$core.Deprecated('Use constantsDescriptor instead')
 const Constants$json = {
@@ -311,6 +317,10 @@ const ExcludedModules$json = {
     {'1': 'PAXCOUNTER_CONFIG', '2': 4096},
     {'1': 'BLUETOOTH_CONFIG', '2': 8192},
     {'1': 'NETWORK_CONFIG', '2': 16384},
+    {'1': 'STATUSMESSAGE_CONFIG', '2': 32768},
+    {'1': 'TRAFFICMANAGEMENT_CONFIG', '2': 65536},
+    {'1': 'TAK_CONFIG', '2': 131072},
+    {'1': 'MESHBEACON_CONFIG', '2': 262144},
   ],
 };
 
@@ -322,7 +332,9 @@ final $typed_data.Uint8List excludedModulesDescriptor = $convert.base64Decode(
     'NBTk5FRE1TR19DT05GSUcQQBIRCgxBVURJT19DT05GSUcQgAESGgoVUkVNT1RFSEFSRFdBUkVf'
     'Q09ORklHEIACEhgKE05FSUdIQk9SSU5GT19DT05GSUcQgAQSGwoWQU1CSUVOVExJR0hUSU5HX0'
     'NPTkZJRxCACBIbChZERVRFQ1RJT05TRU5TT1JfQ09ORklHEIAQEhYKEVBBWENPVU5URVJfQ09O'
-    'RklHEIAgEhUKEEJMVUVUT09USF9DT05GSUcQgEASFAoOTkVUV09SS19DT05GSUcQgIAB');
+    'RklHEIAgEhUKEEJMVUVUT09USF9DT05GSUcQgEASFAoOTkVUV09SS19DT05GSUcQgIABEhoKFF'
+    'NUQVRVU01FU1NBR0VfQ09ORklHEICAAhIeChhUUkFGRklDTUFOQUdFTUVOVF9DT05GSUcQgIAE'
+    'EhAKClRBS19DT05GSUcQgIAIEhcKEU1FU0hCRUFDT05fQ09ORklHEICAEA==');
 
 @$core.Deprecated('Use positionDescriptor instead')
 const Position$json = {
@@ -594,6 +606,7 @@ const Routing$json = {
       '9': 0,
       '10': 'errorReason'
     },
+    {'1': 'ack_proof', '3': 4, '4': 1, '5': 12, '10': 'ackProof'},
   ],
   '4': [Routing_Error$json],
   '8': [
@@ -631,14 +644,14 @@ final $typed_data.Uint8List routingDescriptor = $convert.base64Decode(
     'CgdSb3V0aW5nEkEKDXJvdXRlX3JlcXVlc3QYASABKAsyGi5tZXNodGFzdGljLlJvdXRlRGlzY2'
     '92ZXJ5SABSDHJvdXRlUmVxdWVzdBI9Cgtyb3V0ZV9yZXBseRgCIAEoCzIaLm1lc2h0YXN0aWMu'
     'Um91dGVEaXNjb3ZlcnlIAFIKcm91dGVSZXBseRI+CgxlcnJvcl9yZWFzb24YAyABKA4yGS5tZX'
-    'NodGFzdGljLlJvdXRpbmcuRXJyb3JIAFILZXJyb3JSZWFzb24i5wIKBUVycm9yEggKBE5PTkUQ'
-    'ABIMCghOT19ST1VURRABEgsKB0dPVF9OQUsQAhILCgdUSU1FT1VUEAMSEAoMTk9fSU5URVJGQU'
-    'NFEAQSEgoOTUFYX1JFVFJBTlNNSVQQBRIOCgpOT19DSEFOTkVMEAYSDQoJVE9PX0xBUkdFEAcS'
-    'DwoLTk9fUkVTUE9OU0UQCBIUChBEVVRZX0NZQ0xFX0xJTUlUEAkSDwoLQkFEX1JFUVVFU1QQIB'
-    'ISCg5OT1RfQVVUSE9SSVpFRBAhEg4KClBLSV9GQUlMRUQQIhIWChJQS0lfVU5LTk9XTl9QVUJL'
-    'RVkQIxIZChVBRE1JTl9CQURfU0VTU0lPTl9LRVkQJBIhCh1BRE1JTl9QVUJMSUNfS0VZX1VOQV'
-    'VUSE9SSVpFRBAlEhcKE1JBVEVfTElNSVRfRVhDRUVERUQQJhIcChhQS0lfU0VORF9GQUlMX1BV'
-    'QkxJQ19LRVkQJ0IJCgd2YXJpYW50');
+    'NodGFzdGljLlJvdXRpbmcuRXJyb3JIAFILZXJyb3JSZWFzb24SGwoJYWNrX3Byb29mGAQgASgM'
+    'UghhY2tQcm9vZiLnAgoFRXJyb3ISCAoETk9ORRAAEgwKCE5PX1JPVVRFEAESCwoHR09UX05BSx'
+    'ACEgsKB1RJTUVPVVQQAxIQCgxOT19JTlRFUkZBQ0UQBBISCg5NQVhfUkVUUkFOU01JVBAFEg4K'
+    'Ck5PX0NIQU5ORUwQBhINCglUT09fTEFSR0UQBxIPCgtOT19SRVNQT05TRRAIEhQKEERVVFlfQ1'
+    'lDTEVfTElNSVQQCRIPCgtCQURfUkVRVUVTVBAgEhIKDk5PVF9BVVRIT1JJWkVEECESDgoKUEtJ'
+    'X0ZBSUxFRBAiEhYKElBLSV9VTktOT1dOX1BVQktFWRAjEhkKFUFETUlOX0JBRF9TRVNTSU9OX0'
+    'tFWRAkEiEKHUFETUlOX1BVQkxJQ19LRVlfVU5BVVRIT1JJWkVEECUSFwoTUkFURV9MSU1JVF9F'
+    'WENFRURFRBAmEhwKGFBLSV9TRU5EX0ZBSUxfUFVCTElDX0tFWRAnQgkKB3ZhcmlhbnQ=');
 
 @$core.Deprecated('Use dataDescriptor instead')
 const Data$json = {
@@ -1015,11 +1028,29 @@ const MeshPacket$json = {
       '10': 'transportMechanism'
     },
     {'1': 'xeddsa_signed', '3': 22, '4': 1, '5': 8, '10': 'xeddsaSigned'},
+    {
+      '1': 'ack_proof_status',
+      '3': 23,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.MeshPacket.AckProofStatus',
+      '10': 'ackProofStatus'
+    },
+    {
+      '1': 'slot_parity',
+      '3': 24,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.MeshPacket.SlotParity',
+      '10': 'slotParity'
+    },
   ],
   '4': [
     MeshPacket_Priority$json,
     MeshPacket_Delayed$json,
-    MeshPacket_TransportMechanism$json
+    MeshPacket_TransportMechanism$json,
+    MeshPacket_AckProofStatus$json,
+    MeshPacket_SlotParity$json
   ],
   '8': [
     {'1': 'payload_variant'},
@@ -1071,6 +1102,27 @@ const MeshPacket_TransportMechanism$json = {
   ],
 };
 
+@$core.Deprecated('Use meshPacketDescriptor instead')
+const MeshPacket_AckProofStatus$json = {
+  '1': 'AckProofStatus',
+  '2': [
+    {'1': 'ACK_PROOF_ABSENT', '2': 0},
+    {'1': 'ACK_PROOF_VALID', '2': 1},
+    {'1': 'ACK_PROOF_INVALID', '2': 2},
+    {'1': 'ACK_PROOF_NO_KEY', '2': 3},
+  ],
+};
+
+@$core.Deprecated('Use meshPacketDescriptor instead')
+const MeshPacket_SlotParity$json = {
+  '1': 'SlotParity',
+  '2': [
+    {'1': 'SLOT_PARITY_UNSET', '2': 0},
+    {'1': 'SLOT_PARITY_EVEN', '2': 1},
+    {'1': 'SLOT_PARITY_ODD', '2': 2},
+  ],
+};
+
 /// Descriptor for `MeshPacket`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List meshPacketDescriptor = $convert.base64Decode(
     'CgpNZXNoUGFja2V0EhIKBGZyb20YASABKAdSBGZyb20SDgoCdG8YAiABKAdSAnRvEhgKB2NoYW'
@@ -1086,16 +1138,22 @@ final $typed_data.Uint8List meshPacketDescriptor = $convert.base64Decode(
     'GQoIbmV4dF9ob3AYEiABKA1SB25leHRIb3ASHQoKcmVsYXlfbm9kZRgTIAEoDVIJcmVsYXlOb2'
     'RlEhkKCHR4X2FmdGVyGBQgASgNUgd0eEFmdGVyEloKE3RyYW5zcG9ydF9tZWNoYW5pc20YFSAB'
     'KA4yKS5tZXNodGFzdGljLk1lc2hQYWNrZXQuVHJhbnNwb3J0TWVjaGFuaXNtUhJ0cmFuc3Bvcn'
-    'RNZWNoYW5pc20SIwoNeGVkZHNhX3NpZ25lZBgWIAEoCFIMeGVkZHNhU2lnbmVkIn4KCFByaW9y'
-    'aXR5EgkKBVVOU0VUEAASBwoDTUlOEAESDgoKQkFDS0dST1VORBAKEgsKB0RFRkFVTFQQQBIMCg'
-    'hSRUxJQUJMRRBGEgwKCFJFU1BPTlNFEFASCAoESElHSBBkEgkKBUFMRVJUEG4SBwoDQUNLEHgS'
-    'BwoDTUFYEH8iQgoHRGVsYXllZBIMCghOT19ERUxBWRAAEhUKEURFTEFZRURfQlJPQURDQVNUEA'
-    'ESEgoOREVMQVlFRF9ESVJFQ1QQAiLqAQoSVHJhbnNwb3J0TWVjaGFuaXNtEhYKElRSQU5TUE9S'
-    'VF9JTlRFUk5BTBAAEhIKDlRSQU5TUE9SVF9MT1JBEAESFwoTVFJBTlNQT1JUX0xPUkFfQUxUMR'
-    'ACEhcKE1RSQU5TUE9SVF9MT1JBX0FMVDIQAxIXChNUUkFOU1BPUlRfTE9SQV9BTFQzEAQSEgoO'
-    'VFJBTlNQT1JUX01RVFQQBRIbChdUUkFOU1BPUlRfTVVMVElDQVNUX1VEUBAGEhEKDVRSQU5TUE'
-    '9SVF9BUEkQBxIZChVUUkFOU1BPUlRfVU5JQ0FTVF9VRFAQCEIRCg9wYXlsb2FkX3ZhcmlhbnRC'
-    'CgoIX3J4X3RpbWVCCgoIX3J4X3Jzc2k=');
+    'RNZWNoYW5pc20SIwoNeGVkZHNhX3NpZ25lZBgWIAEoCFIMeGVkZHNhU2lnbmVkEk8KEGFja19w'
+    'cm9vZl9zdGF0dXMYFyABKA4yJS5tZXNodGFzdGljLk1lc2hQYWNrZXQuQWNrUHJvb2ZTdGF0dX'
+    'NSDmFja1Byb29mU3RhdHVzEkIKC3Nsb3RfcGFyaXR5GBggASgOMiEubWVzaHRhc3RpYy5NZXNo'
+    'UGFja2V0LlNsb3RQYXJpdHlSCnNsb3RQYXJpdHkifgoIUHJpb3JpdHkSCQoFVU5TRVQQABIHCg'
+    'NNSU4QARIOCgpCQUNLR1JPVU5EEAoSCwoHREVGQVVMVBBAEgwKCFJFTElBQkxFEEYSDAoIUkVT'
+    'UE9OU0UQUBIICgRISUdIEGQSCQoFQUxFUlQQbhIHCgNBQ0sQeBIHCgNNQVgQfyJCCgdEZWxheW'
+    'VkEgwKCE5PX0RFTEFZEAASFQoRREVMQVlFRF9CUk9BRENBU1QQARISCg5ERUxBWUVEX0RJUkVD'
+    'VBACIuoBChJUcmFuc3BvcnRNZWNoYW5pc20SFgoSVFJBTlNQT1JUX0lOVEVSTkFMEAASEgoOVF'
+    'JBTlNQT1JUX0xPUkEQARIXChNUUkFOU1BPUlRfTE9SQV9BTFQxEAISFwoTVFJBTlNQT1JUX0xP'
+    'UkFfQUxUMhADEhcKE1RSQU5TUE9SVF9MT1JBX0FMVDMQBBISCg5UUkFOU1BPUlRfTVFUVBAFEh'
+    'sKF1RSQU5TUE9SVF9NVUxUSUNBU1RfVURQEAYSEQoNVFJBTlNQT1JUX0FQSRAHEhkKFVRSQU5T'
+    'UE9SVF9VTklDQVNUX1VEUBAIImgKDkFja1Byb29mU3RhdHVzEhQKEEFDS19QUk9PRl9BQlNFTl'
+    'QQABITCg9BQ0tfUFJPT0ZfVkFMSUQQARIVChFBQ0tfUFJPT0ZfSU5WQUxJRBACEhQKEEFDS19Q'
+    'Uk9PRl9OT19LRVkQAyJOCgpTbG90UGFyaXR5EhUKEVNMT1RfUEFSSVRZX1VOU0VUEAASFAoQU0'
+    'xPVF9QQVJJVFlfRVZFThABEhMKD1NMT1RfUEFSSVRZX09ERBACQhEKD3BheWxvYWRfdmFyaWFu'
+    'dEIKCghfcnhfdGltZUIKCghfcnhfcnNzaQ==');
 
 @$core.Deprecated('Use nodeInfoDescriptor instead')
 const NodeInfo$json = {
@@ -1156,6 +1214,13 @@ const NodeInfo$json = {
       '5': 8,
       '10': 'hasXeddsaSigned'
     },
+    {
+      '1': 'heard_on_current_lora',
+      '3': 15,
+      '4': 1,
+      '5': 8,
+      '10': 'heardOnCurrentLora'
+    },
   ],
   '8': [
     {'1': '_hops_away'},
@@ -1173,7 +1238,8 @@ final $typed_data.Uint8List nodeInfoDescriptor = $convert.base64Decode(
     'GAogASgIUgppc0Zhdm9yaXRlEh0KCmlzX2lnbm9yZWQYCyABKAhSCWlzSWdub3JlZBI3Chhpc1'
     '9rZXlfbWFudWFsbHlfdmVyaWZpZWQYDCABKAhSFWlzS2V5TWFudWFsbHlWZXJpZmllZBIZCghp'
     'c19tdXRlZBgNIAEoCFIHaXNNdXRlZBIqChFoYXNfeGVkZHNhX3NpZ25lZBgOIAEoCFIPaGFzWG'
-    'VkZHNhU2lnbmVkQgwKCl9ob3BzX2F3YXk=');
+    'VkZHNhU2lnbmVkEjEKFWhlYXJkX29uX2N1cnJlbnRfbG9yYRgPIAEoCFISaGVhcmRPbkN1cnJl'
+    'bnRMb3JhQgwKCl9ob3BzX2F3YXk=');
 
 @$core.Deprecated('Use myNodeInfoDescriptor instead')
 const MyNodeInfo$json = {

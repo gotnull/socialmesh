@@ -726,11 +726,13 @@ class Routing extends $pb.GeneratedMessage {
     RouteDiscovery? routeRequest,
     RouteDiscovery? routeReply,
     Routing_Error? errorReason,
+    $core.List<$core.int>? ackProof,
   }) {
     final result = create();
     if (routeRequest != null) result.routeRequest = routeRequest;
     if (routeReply != null) result.routeReply = routeReply;
     if (errorReason != null) result.errorReason = errorReason;
+    if (ackProof != null) result.ackProof = ackProof;
     return result;
   }
 
@@ -760,6 +762,8 @@ class Routing extends $pb.GeneratedMessage {
         subBuilder: RouteDiscovery.create)
     ..aE<Routing_Error>(3, _omitFieldNames ? '' : 'errorReason',
         enumValues: Routing_Error.values)
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'ackProof', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -826,6 +830,40 @@ class Routing extends $pb.GeneratedMessage {
   $core.bool hasErrorReason() => $_has(2);
   @$pb.TagNumber(3)
   void clearErrorReason() => $_clearField(3);
+
+  ///
+  ///  Optional proof that this ack/nak was produced by the node that actually received the packet
+  ///  identified by Data.request_id, rather than by anyone holding the channel key.
+  ///
+  ///  Explicit acks are usually sent on the channel, and channel traffic is encrypted but not
+  ///  authenticated, so such an ack can be forged by any listener holding the PSK. When the
+  ///  acknowledged packet WAS PKI encrypted, the two endpoints already share a Curve25519 secret, so
+  ///  the receiver can prove receipt cheaply rather than signing the ack:
+  ///
+  ///    ack_proof = HMAC-SHA256(shared_key,
+  ///                            "ack" | LE32(from) | LE32(to) | LE32(request_id) | routing)[0..8)
+  ///
+  ///  where shared_key is the same SHA256(X25519(sender_private, receiver_public)) used for PKI
+  ///  packet encryption, and `routing` is this encoded Routing message without the ack_proof field.
+  ///
+  ///  Each input is load-bearing. request_id stops a captured proof being replayed against a
+  ///  different outstanding packet. The Routing bytes stop a bit-flip turning a proven success into a
+  ///  failure: an ack and a nak for one packet otherwise share every other input, and channel
+  ///  encryption is CTR with no integrity check. Integers are little-endian so the value is a
+  ///  property of the protocol rather than of the host that computed it.
+  ///
+  ///  Unset when no pairwise key is available, including the PKI_UNKNOWN_PUBKEY and NO_CHANNEL naks,
+  ///  which are emitted precisely because the packet could not be decrypted. Receivers that do not
+  ///  understand this field ignore it. It does not replace xeddsa_signature, which remains the only
+  ///  option for traffic with no pairwise key and the only proof a third party can check.
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get ackProof => $_getN(3);
+  @$pb.TagNumber(4)
+  set ackProof($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAckProof() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAckProof() => $_clearField(4);
 }
 
 ///
@@ -2053,6 +2091,8 @@ class MeshPacket extends $pb.GeneratedMessage {
     $core.int? txAfter,
     MeshPacket_TransportMechanism? transportMechanism,
     $core.bool? xeddsaSigned,
+    MeshPacket_AckProofStatus? ackProofStatus,
+    MeshPacket_SlotParity? slotParity,
   }) {
     final result = create();
     if (from != null) result.from = from;
@@ -2078,6 +2118,8 @@ class MeshPacket extends $pb.GeneratedMessage {
     if (transportMechanism != null)
       result.transportMechanism = transportMechanism;
     if (xeddsaSigned != null) result.xeddsaSigned = xeddsaSigned;
+    if (ackProofStatus != null) result.ackProofStatus = ackProofStatus;
+    if (slotParity != null) result.slotParity = slotParity;
     return result;
   }
 
@@ -2129,6 +2171,10 @@ class MeshPacket extends $pb.GeneratedMessage {
         21, _omitFieldNames ? '' : 'transportMechanism',
         enumValues: MeshPacket_TransportMechanism.values)
     ..aOB(22, _omitFieldNames ? '' : 'xeddsaSigned')
+    ..aE<MeshPacket_AckProofStatus>(23, _omitFieldNames ? '' : 'ackProofStatus',
+        enumValues: MeshPacket_AckProofStatus.values)
+    ..aE<MeshPacket_SlotParity>(24, _omitFieldNames ? '' : 'slotParity',
+        enumValues: MeshPacket_SlotParity.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2459,6 +2505,38 @@ class MeshPacket extends $pb.GeneratedMessage {
   $core.bool hasXeddsaSigned() => $_has(21);
   @$pb.TagNumber(22)
   void clearXeddsaSigned() => $_clearField(22);
+
+  ///
+  ///  *Never* sent over the radio links.
+  ///  Set by the firmware on a received ack or nak, reporting whether its Routing.ack_proof proved
+  ///  that the node we addressed is the one acknowledging. Clients are not supposed to set this, and
+  ///  the firmware clears whatever arrives here before evaluating a packet - an inbound value is
+  ///  attacker-controlled, since MQTT and the client API both carry whole MeshPacket protobufs.
+  ///
+  ///  Distinct from xeddsa_signed, which is an identity signature any holder of the sender's public
+  ///  key can check. This is a pairwise MAC that only the original sender can check, and it attests
+  ///  to delivery rather than to authorship.
+  @$pb.TagNumber(23)
+  MeshPacket_AckProofStatus get ackProofStatus => $_getN(22);
+  @$pb.TagNumber(23)
+  set ackProofStatus(MeshPacket_AckProofStatus value) => $_setField(23, value);
+  @$pb.TagNumber(23)
+  $core.bool hasAckProofStatus() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearAckProofStatus() => $_clearField(23);
+
+  ///
+  ///  Never sent over the radio links.
+  ///  Which parity of the CSMA backoff slot grid this packet may be sent in; see SlotParity.
+  ///  Set by whoever queues the packet, and read by the radio driver when it draws the backoff.
+  @$pb.TagNumber(24)
+  MeshPacket_SlotParity get slotParity => $_getN(23);
+  @$pb.TagNumber(24)
+  set slotParity(MeshPacket_SlotParity value) => $_setField(24, value);
+  @$pb.TagNumber(24)
+  $core.bool hasSlotParity() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearSlotParity() => $_clearField(24);
 }
 
 ///
@@ -2494,6 +2572,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     $core.bool? isKeyManuallyVerified,
     $core.bool? isMuted,
     $core.bool? hasXeddsaSigned,
+    $core.bool? heardOnCurrentLora,
   }) {
     final result = create();
     if (num != null) result.num = num;
@@ -2511,6 +2590,8 @@ class NodeInfo extends $pb.GeneratedMessage {
       result.isKeyManuallyVerified = isKeyManuallyVerified;
     if (isMuted != null) result.isMuted = isMuted;
     if (hasXeddsaSigned != null) result.hasXeddsaSigned = hasXeddsaSigned;
+    if (heardOnCurrentLora != null)
+      result.heardOnCurrentLora = heardOnCurrentLora;
     return result;
   }
 
@@ -2543,6 +2624,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     ..aOB(12, _omitFieldNames ? '' : 'isKeyManuallyVerified')
     ..aOB(13, _omitFieldNames ? '' : 'isMuted')
     ..aOB(14, _omitFieldNames ? '' : 'hasXeddsaSigned')
+    ..aOB(15, _omitFieldNames ? '' : 'heardOnCurrentLora')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2731,6 +2813,30 @@ class NodeInfo extends $pb.GeneratedMessage {
   $core.bool hasHasXeddsaSigned() => $_has(13);
   @$pb.TagNumber(14)
   void clearHasXeddsaSigned() => $_clearField(14);
+
+  ///
+  ///  True if we have heard this node over RF on the LoRa configuration the
+  ///  radio is using right now. Derived on the device rather than stored: each
+  ///  node records the frequency slot it was last heard on, and this reports
+  ///  whether that slot matches the one the radio is currently committed to.
+  ///  The slot covers the region, modem preset (or the custom bandwidth/spread
+  ///  factor/coding rate when use_preset is false), override_frequency,
+  ///  channel_num and the primary channel name.
+  ///  Because it is derived, leaving a configuration and returning to it
+  ///  restores the previous answers, so a client sweeping through presets to
+  ///  listen for traffic does not disturb them.
+  ///  Not set for nodes heard only over MQTT, which reach us over the internet
+  ///  rather than over our own radio - see via_mqtt - nor for nodes added as a
+  ///  shared contact, which have never been heard over RF at all.
+  ///  Derived from LSB 11 and bits 12..23 of NodeInfoLite.bitfield.
+  @$pb.TagNumber(15)
+  $core.bool get heardOnCurrentLora => $_getBF(14);
+  @$pb.TagNumber(15)
+  set heardOnCurrentLora($core.bool value) => $_setBool(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasHeardOnCurrentLora() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearHeardOnCurrentLora() => $_clearField(15);
 }
 
 ///
@@ -3629,15 +3735,15 @@ class LockdownStatus extends $pb.GeneratedMessage {
 
   ///
   ///  For LOCKED: machine-readable reason. Known values:
-  ///    "needs_auth"        — storage already unlocked, client must auth
-  ///    "token_missing"     — no boot token on flash
-  ///    "token_expired"     — boot token wall-clock TTL elapsed
-  ///    "token_boots_zero"  — boot token boot-count TTL exhausted
-  ///    "token_hmac_fail"   — token tampered or wrong device
-  ///    "token_dek_fail"    — token DEK decrypt failed
-  ///    "token_wrong_size"  — token file corrupted
-  ///    "token_bad_magic"   — token file corrupted
-  ///    "not_provisioned"   — should generally use NEEDS_PROVISION state instead
+  ///    "needs_auth"        - storage already unlocked, client must auth
+  ///    "token_missing"     - no boot token on flash
+  ///    "token_expired"     - boot token wall-clock TTL elapsed
+  ///    "token_boots_zero"  - boot token boot-count TTL exhausted
+  ///    "token_hmac_fail"   - token tampered or wrong device
+  ///    "token_dek_fail"    - token DEK decrypt failed
+  ///    "token_wrong_size"  - token file corrupted
+  ///    "token_bad_magic"   - token file corrupted
+  ///    "not_provisioned"   - should generally use NEEDS_PROVISION state instead
   ///  Other values may be added; clients should treat unknown values as
   ///  "locked, ask for passphrase".
   @$pb.TagNumber(2)

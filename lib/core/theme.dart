@@ -470,8 +470,25 @@ final accentColorProvider = AsyncNotifierProvider<AccentColorNotifier, Color>(
 
 /// Notifier for theme mode (dark/light/system)
 class ThemeModeNotifier extends Notifier<ThemeMode> {
+  /// Saved theme mode read before the first frame, so a light theme user
+  /// does not see the dark default on a cold start.
+  static ThemeMode? launchMode;
+
+  /// Reads the saved theme mode ahead of `runApp`; see [launchMode].
+  static Future<void> preloadLaunchMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final index = prefs.getInt('theme_mode');
+      if (index != null && index >= 0 && index < ThemeMode.values.length) {
+        launchMode = ThemeMode.values[index];
+      }
+    } catch (e) {
+      AppLogging.settings('Failed to preload theme mode: $e');
+    }
+  }
+
   @override
-  ThemeMode build() => ThemeMode.dark;
+  ThemeMode build() => launchMode ?? ThemeMode.dark;
 
   void setThemeMode(ThemeMode mode) => state = mode;
 }

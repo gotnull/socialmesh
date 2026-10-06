@@ -46,9 +46,19 @@ const MeshBeacon$json = {
       '10': 'offerPreset',
       '17': true
     },
+    {
+      '1': 'offer_frequency_slot',
+      '3': 5,
+      '4': 1,
+      '5': 13,
+      '9': 1,
+      '10': 'offerFrequencySlot',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_offer_preset'},
+    {'1': '_offer_frequency_slot'},
   ],
 };
 
@@ -58,5 +68,6 @@ final $typed_data.Uint8List meshBeaconDescriptor = $convert.base64Decode(
     'gCIAEoCzIbLm1lc2h0YXN0aWMuQ2hhbm5lbFNldHRpbmdzUgxvZmZlckNoYW5uZWwSSwoMb2Zm'
     'ZXJfcmVnaW9uGAMgASgOMigubWVzaHRhc3RpYy5Db25maWcuTG9SYUNvbmZpZy5SZWdpb25Db2'
     'RlUgtvZmZlclJlZ2lvbhJRCgxvZmZlcl9wcmVzZXQYBCABKA4yKS5tZXNodGFzdGljLkNvbmZp'
-    'Zy5Mb1JhQ29uZmlnLk1vZGVtUHJlc2V0SABSC29mZmVyUHJlc2V0iAEBQg8KDV9vZmZlcl9wcm'
-    'VzZXQ=');
+    'Zy5Mb1JhQ29uZmlnLk1vZGVtUHJlc2V0SABSC29mZmVyUHJlc2V0iAEBEjUKFG9mZmVyX2ZyZX'
+    'F1ZW5jeV9zbG90GAUgASgNSAFSEm9mZmVyRnJlcXVlbmN5U2xvdIgBAUIPCg1fb2ZmZXJfcHJl'
+    'c2V0QhcKFV9vZmZlcl9mcmVxdWVuY3lfc2xvdA==');

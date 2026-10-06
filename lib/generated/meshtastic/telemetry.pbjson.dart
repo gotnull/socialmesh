@@ -581,6 +581,26 @@ const EnvironmentMetrics$json = {
     {'1': '_lightning_strike_count_1h'},
     {'1': '_lightning_distance_km'},
   ],
+  '9': [
+    {'1': 42, '2': 57},
+  ],
+  '10': [
+    'soil_ph',
+    'ph',
+    'electrical_conductivity',
+    'salinity',
+    'nitrogen',
+    'phosphorus',
+    'potassium',
+    'dissolved_oxygen',
+    'orp',
+    'chemical_oxygen_demand',
+    'turbidity',
+    'nitrate',
+    'ammonium',
+    'biochemical_oxygen_demand',
+    'solar_irradiance'
+  ],
 };
 
 /// Descriptor for `EnvironmentMetrics`. Decode as a `google.protobuf.DescriptorProto`.
@@ -632,7 +652,173 @@ final $typed_data.Uint8List environmentMetricsDescriptor = $convert.base64Decode
     'cGVyYXR1cmVfY2gzQhsKGV9vbmVfd2lyZV90ZW1wZXJhdHVyZV9jaDRCGwoZX29uZV93aXJlX3'
     'RlbXBlcmF0dXJlX2NoNUIbChlfb25lX3dpcmVfdGVtcGVyYXR1cmVfY2g2QhsKGV9vbmVfd2ly'
     'ZV90ZW1wZXJhdHVyZV9jaDdCHAoaX2xpZ2h0bmluZ19zdHJpa2VfY291bnRfMWhCGAoWX2xpZ2'
-    'h0bmluZ19kaXN0YW5jZV9rbQ==');
+    'h0bmluZ19kaXN0YW5jZV9rbUoECCoQOVIHc29pbF9waFICcGhSF2VsZWN0cmljYWxfY29uZHVj'
+    'dGl2aXR5UghzYWxpbml0eVIIbml0cm9nZW5SCnBob3NwaG9ydXNSCXBvdGFzc2l1bVIQZGlzc2'
+    '9sdmVkX294eWdlblIDb3JwUhZjaGVtaWNhbF9veHlnZW5fZGVtYW5kUgl0dXJiaWRpdHlSB25p'
+    'dHJhdGVSCGFtbW9uaXVtUhliaW9jaGVtaWNhbF9veHlnZW5fZGVtYW5kUhBzb2xhcl9pcnJhZG'
+    'lhbmNl');
+
+@$core.Deprecated('Use soilWaterMetricsDescriptor instead')
+const SoilWaterMetrics$json = {
+  '1': 'SoilWaterMetrics',
+  '2': [
+    {
+      '1': 'soil_ph',
+      '3': 1,
+      '4': 1,
+      '5': 2,
+      '9': 0,
+      '10': 'soilPh',
+      '17': true
+    },
+    {'1': 'ph', '3': 2, '4': 1, '5': 2, '9': 1, '10': 'ph', '17': true},
+    {
+      '1': 'electrical_conductivity',
+      '3': 3,
+      '4': 1,
+      '5': 2,
+      '9': 2,
+      '10': 'electricalConductivity',
+      '17': true
+    },
+    {
+      '1': 'salinity',
+      '3': 4,
+      '4': 1,
+      '5': 2,
+      '9': 3,
+      '10': 'salinity',
+      '17': true
+    },
+    {
+      '1': 'nitrogen',
+      '3': 5,
+      '4': 1,
+      '5': 2,
+      '9': 4,
+      '10': 'nitrogen',
+      '17': true
+    },
+    {
+      '1': 'phosphorus',
+      '3': 6,
+      '4': 1,
+      '5': 2,
+      '9': 5,
+      '10': 'phosphorus',
+      '17': true
+    },
+    {
+      '1': 'potassium',
+      '3': 7,
+      '4': 1,
+      '5': 2,
+      '9': 6,
+      '10': 'potassium',
+      '17': true
+    },
+    {
+      '1': 'dissolved_oxygen',
+      '3': 8,
+      '4': 1,
+      '5': 2,
+      '9': 7,
+      '10': 'dissolvedOxygen',
+      '17': true
+    },
+    {'1': 'orp', '3': 9, '4': 1, '5': 2, '9': 8, '10': 'orp', '17': true},
+    {
+      '1': 'chemical_oxygen_demand',
+      '3': 10,
+      '4': 1,
+      '5': 2,
+      '9': 9,
+      '10': 'chemicalOxygenDemand',
+      '17': true
+    },
+    {
+      '1': 'turbidity',
+      '3': 11,
+      '4': 1,
+      '5': 2,
+      '9': 10,
+      '10': 'turbidity',
+      '17': true
+    },
+    {
+      '1': 'nitrate',
+      '3': 12,
+      '4': 1,
+      '5': 2,
+      '9': 11,
+      '10': 'nitrate',
+      '17': true
+    },
+    {
+      '1': 'ammonium',
+      '3': 13,
+      '4': 1,
+      '5': 2,
+      '9': 12,
+      '10': 'ammonium',
+      '17': true
+    },
+    {
+      '1': 'biochemical_oxygen_demand',
+      '3': 14,
+      '4': 1,
+      '5': 2,
+      '9': 13,
+      '10': 'biochemicalOxygenDemand',
+      '17': true
+    },
+    {
+      '1': 'solar_irradiance',
+      '3': 15,
+      '4': 1,
+      '5': 2,
+      '9': 14,
+      '10': 'solarIrradiance',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_soil_ph'},
+    {'1': '_ph'},
+    {'1': '_electrical_conductivity'},
+    {'1': '_salinity'},
+    {'1': '_nitrogen'},
+    {'1': '_phosphorus'},
+    {'1': '_potassium'},
+    {'1': '_dissolved_oxygen'},
+    {'1': '_orp'},
+    {'1': '_chemical_oxygen_demand'},
+    {'1': '_turbidity'},
+    {'1': '_nitrate'},
+    {'1': '_ammonium'},
+    {'1': '_biochemical_oxygen_demand'},
+    {'1': '_solar_irradiance'},
+  ],
+};
+
+/// Descriptor for `SoilWaterMetrics`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List soilWaterMetricsDescriptor = $convert.base64Decode(
+    'ChBTb2lsV2F0ZXJNZXRyaWNzEhwKB3NvaWxfcGgYASABKAJIAFIGc29pbFBoiAEBEhMKAnBoGA'
+    'IgASgCSAFSAnBoiAEBEjwKF2VsZWN0cmljYWxfY29uZHVjdGl2aXR5GAMgASgCSAJSFmVsZWN0'
+    'cmljYWxDb25kdWN0aXZpdHmIAQESHwoIc2FsaW5pdHkYBCABKAJIA1IIc2FsaW5pdHmIAQESHw'
+    'oIbml0cm9nZW4YBSABKAJIBFIIbml0cm9nZW6IAQESIwoKcGhvc3Bob3J1cxgGIAEoAkgFUgpw'
+    'aG9zcGhvcnVziAEBEiEKCXBvdGFzc2l1bRgHIAEoAkgGUglwb3Rhc3NpdW2IAQESLgoQZGlzc2'
+    '9sdmVkX294eWdlbhgIIAEoAkgHUg9kaXNzb2x2ZWRPeHlnZW6IAQESFQoDb3JwGAkgASgCSAhS'
+    'A29ycIgBARI5ChZjaGVtaWNhbF9veHlnZW5fZGVtYW5kGAogASgCSAlSFGNoZW1pY2FsT3h5Z2'
+    'VuRGVtYW5kiAEBEiEKCXR1cmJpZGl0eRgLIAEoAkgKUgl0dXJiaWRpdHmIAQESHQoHbml0cmF0'
+    'ZRgMIAEoAkgLUgduaXRyYXRliAEBEh8KCGFtbW9uaXVtGA0gASgCSAxSCGFtbW9uaXVtiAEBEj'
+    '8KGWJpb2NoZW1pY2FsX294eWdlbl9kZW1hbmQYDiABKAJIDVIXYmlvY2hlbWljYWxPeHlnZW5E'
+    'ZW1hbmSIAQESLgoQc29sYXJfaXJyYWRpYW5jZRgPIAEoAkgOUg9zb2xhcklycmFkaWFuY2WIAQ'
+    'FCCgoIX3NvaWxfcGhCBQoDX3BoQhoKGF9lbGVjdHJpY2FsX2NvbmR1Y3Rpdml0eUILCglfc2Fs'
+    'aW5pdHlCCwoJX25pdHJvZ2VuQg0KC19waG9zcGhvcnVzQgwKCl9wb3Rhc3NpdW1CEwoRX2Rpc3'
+    'NvbHZlZF9veHlnZW5CBgoEX29ycEIZChdfY2hlbWljYWxfb3h5Z2VuX2RlbWFuZEIMCgpfdHVy'
+    'YmlkaXR5QgoKCF9uaXRyYXRlQgsKCV9hbW1vbml1bUIcChpfYmlvY2hlbWljYWxfb3h5Z2VuX2'
+    'RlbWFuZEITChFfc29sYXJfaXJyYWRpYW5jZQ==');
 
 @$core.Deprecated('Use powerMetricsDescriptor instead')
 const PowerMetrics$json = {
@@ -1410,6 +1596,15 @@ const Telemetry$json = {
       '9': 0,
       '10': 'trafficManagementStats'
     },
+    {
+      '1': 'soil_water_metrics',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.SoilWaterMetrics',
+      '9': 0,
+      '10': 'soilWaterMetrics'
+    },
   ],
   '8': [
     {'1': 'variant'},
@@ -1429,7 +1624,8 @@ final $typed_data.Uint8List telemetryDescriptor = $convert.base64Decode(
     'YWx0aE1ldHJpY3MSPAoMaG9zdF9tZXRyaWNzGAggASgLMhcubWVzaHRhc3RpYy5Ib3N0TWV0cm'
     'ljc0gAUgtob3N0TWV0cmljcxJeChh0cmFmZmljX21hbmFnZW1lbnRfc3RhdHMYCSABKAsyIi5t'
     'ZXNodGFzdGljLlRyYWZmaWNNYW5hZ2VtZW50U3RhdHNIAFIWdHJhZmZpY01hbmFnZW1lbnRTdG'
-    'F0c0IJCgd2YXJpYW50');
+    'F0cxJMChJzb2lsX3dhdGVyX21ldHJpY3MYCyABKAsyHC5tZXNodGFzdGljLlNvaWxXYXRlck1l'
+    'dHJpY3NIAFIQc29pbFdhdGVyTWV0cmljc0IJCgd2YXJpYW50');
 
 @$core.Deprecated('Use nau7802ConfigDescriptor instead')
 const Nau7802Config$json = {
@@ -1451,17 +1647,17 @@ final $typed_data.Uint8List nau7802ConfigDescriptor = $convert.base64Decode(
     'Cg1OYXU3ODAyQ29uZmlnEh4KCnplcm9PZmZzZXQYASABKAVSCnplcm9PZmZzZXQSLAoRY2FsaW'
     'JyYXRpb25GYWN0b3IYAiABKAJSEWNhbGlicmF0aW9uRmFjdG9y');
 
-@$core.Deprecated('Use aS3935ConfigDescriptor instead')
-const AS3935Config$json = {
-  '1': 'AS3935Config',
+@$core.Deprecated('Use aS3935StateDescriptor instead')
+const AS3935State$json = {
+  '1': 'AS3935State',
   '2': [
     {'1': 'tuning_cap_pf', '3': 1, '4': 1, '5': 13, '10': 'tuningCapPf'},
   ],
 };
 
-/// Descriptor for `AS3935Config`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List aS3935ConfigDescriptor = $convert.base64Decode(
-    'CgxBUzM5MzVDb25maWcSIgoNdHVuaW5nX2NhcF9wZhgBIAEoDVILdHVuaW5nQ2FwUGY=');
+/// Descriptor for `AS3935State`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List aS3935StateDescriptor = $convert.base64Decode(
+    'CgtBUzM5MzVTdGF0ZRIiCg10dW5pbmdfY2FwX3BmGAEgASgNUgt0dW5pbmdDYXBQZg==');
 
 @$core.Deprecated('Use sEN5XStateDescriptor instead')
 const SEN5XState$json = {

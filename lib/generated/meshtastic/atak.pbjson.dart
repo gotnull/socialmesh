@@ -19,52 +19,58 @@ import 'dart:typed_data' as $typed_data;
 const Team$json = {
   '1': 'Team',
   '2': [
-    {'1': 'Unspecifed_Color', '2': 0},
-    {'1': 'White', '2': 1},
-    {'1': 'Yellow', '2': 2},
-    {'1': 'Orange', '2': 3},
-    {'1': 'Magenta', '2': 4},
-    {'1': 'Red', '2': 5},
-    {'1': 'Maroon', '2': 6},
-    {'1': 'Purple', '2': 7},
-    {'1': 'Dark_Blue', '2': 8},
-    {'1': 'Blue', '2': 9},
-    {'1': 'Cyan', '2': 10},
-    {'1': 'Teal', '2': 11},
-    {'1': 'Green', '2': 12},
-    {'1': 'Dark_Green', '2': 13},
-    {'1': 'Brown', '2': 14},
+    {'1': 'Unspecifed_Color', '2': 0, '3': {}},
+    {'1': 'White', '2': 1, '3': {}},
+    {'1': 'Yellow', '2': 2, '3': {}},
+    {'1': 'Orange', '2': 3, '3': {}},
+    {'1': 'Magenta', '2': 4, '3': {}},
+    {'1': 'Red', '2': 5, '3': {}},
+    {'1': 'Maroon', '2': 6, '3': {}},
+    {'1': 'Purple', '2': 7, '3': {}},
+    {'1': 'Dark_Blue', '2': 8, '3': {}},
+    {'1': 'Blue', '2': 9, '3': {}},
+    {'1': 'Cyan', '2': 10, '3': {}},
+    {'1': 'Teal', '2': 11, '3': {}},
+    {'1': 'Green', '2': 12, '3': {}},
+    {'1': 'Dark_Green', '2': 13, '3': {}},
+    {'1': 'Brown', '2': 14, '3': {}},
   ],
 };
 
 /// Descriptor for `Team`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List teamDescriptor = $convert.base64Decode(
-    'CgRUZWFtEhQKEFVuc3BlY2lmZWRfQ29sb3IQABIJCgVXaGl0ZRABEgoKBlllbGxvdxACEgoKBk'
-    '9yYW5nZRADEgsKB01hZ2VudGEQBBIHCgNSZWQQBRIKCgZNYXJvb24QBhIKCgZQdXJwbGUQBxIN'
-    'CglEYXJrX0JsdWUQCBIICgRCbHVlEAkSCAoEQ3lhbhAKEggKBFRlYWwQCxIJCgVHcmVlbhAMEg'
-    '4KCkRhcmtfR3JlZW4QDRIJCgVCcm93bhAO');
+    'CgRUZWFtEioKEFVuc3BlY2lmZWRfQ29sb3IQABoUyvMYEDoORGVmYXVsdCAoQ3lhbikSFgoFV2'
+    'hpdGUQARoLyvMYBzoFV2hpdGUSGAoGWWVsbG93EAIaDMrzGAg6BlllbGxvdxIYCgZPcmFuZ2UQ'
+    'AxoMyvMYCDoGT3JhbmdlEhoKB01hZ2VudGEQBBoNyvMYCToHTWFnZW50YRISCgNSZWQQBRoJyv'
+    'MYBToDUmVkEhgKBk1hcm9vbhAGGgzK8xgIOgZNYXJvb24SGAoGUHVycGxlEAcaDMrzGAg6BlB1'
+    'cnBsZRIeCglEYXJrX0JsdWUQCBoPyvMYCzoJRGFyayBCbHVlEhQKBEJsdWUQCRoKyvMYBjoEQm'
+    'x1ZRIUCgRDeWFuEAoaCsrzGAY6BEN5YW4SFAoEVGVhbBALGgrK8xgGOgRUZWFsEhYKBUdyZWVu'
+    'EAwaC8rzGAc6BUdyZWVuEiAKCkRhcmtfR3JlZW4QDRoQyvMYDDoKRGFyayBHcmVlbhIWCgVCcm'
+    '93bhAOGgvK8xgHOgVCcm93bg==');
 
 @$core.Deprecated('Use memberRoleDescriptor instead')
 const MemberRole$json = {
   '1': 'MemberRole',
   '2': [
-    {'1': 'Unspecifed', '2': 0},
-    {'1': 'TeamMember', '2': 1},
-    {'1': 'TeamLead', '2': 2},
-    {'1': 'HQ', '2': 3},
-    {'1': 'Sniper', '2': 4},
-    {'1': 'Medic', '2': 5},
-    {'1': 'ForwardObserver', '2': 6},
-    {'1': 'RTO', '2': 7},
-    {'1': 'K9', '2': 8},
+    {'1': 'Unspecifed', '2': 0, '3': {}},
+    {'1': 'TeamMember', '2': 1, '3': {}},
+    {'1': 'TeamLead', '2': 2, '3': {}},
+    {'1': 'HQ', '2': 3, '3': {}},
+    {'1': 'Sniper', '2': 4, '3': {}},
+    {'1': 'Medic', '2': 5, '3': {}},
+    {'1': 'ForwardObserver', '2': 6, '3': {}},
+    {'1': 'RTO', '2': 7, '3': {}},
+    {'1': 'K9', '2': 8, '3': {}},
   ],
 };
 
 /// Descriptor for `MemberRole`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List memberRoleDescriptor = $convert.base64Decode(
-    'CgpNZW1iZXJSb2xlEg4KClVuc3BlY2lmZWQQABIOCgpUZWFtTWVtYmVyEAESDAoIVGVhbUxlYW'
-    'QQAhIGCgJIURADEgoKBlNuaXBlchAEEgkKBU1lZGljEAUSEwoPRm9yd2FyZE9ic2VydmVyEAYS'
-    'BwoDUlRPEAcSBgoCSzkQCA==');
+    'CgpNZW1iZXJSb2xlEisKClVuc3BlY2lmZWQQABobyvMYFzoVRGVmYXVsdCAoVGVhbSBNZW1iZX'
+    'IpEiEKClRlYW1NZW1iZXIQARoRyvMYDToLVGVhbSBNZW1iZXISHQoIVGVhbUxlYWQQAhoPyvMY'
+    'CzoJVGVhbSBMZWFkEhAKAkhREAMaCMrzGAQ6AkhREhgKBlNuaXBlchAEGgzK8xgIOgZTbmlwZX'
+    'ISFgoFTWVkaWMQBRoLyvMYBzoFTWVkaWMSKwoPRm9yd2FyZE9ic2VydmVyEAYaFsrzGBI6EEZv'
+    'cndhcmQgT2JzZXJ2ZXISEgoDUlRPEAcaCcrzGAU6A1JUTxIQCgJLORAIGgjK8xgEOgJLOQ==');
 
 @$core.Deprecated('Use cotHowDescriptor instead')
 const CotHow$json = {

@@ -45,6 +45,7 @@ class ChannelSettings extends $pb.GeneratedMessage {
     $core.bool? uplinkEnabled,
     $core.bool? downlinkEnabled,
     ModuleSettings? moduleSettings,
+    $core.bool? useAead,
   }) {
     final result = create();
     if (channelNum != null) result.channelNum = channelNum;
@@ -54,6 +55,7 @@ class ChannelSettings extends $pb.GeneratedMessage {
     if (uplinkEnabled != null) result.uplinkEnabled = uplinkEnabled;
     if (downlinkEnabled != null) result.downlinkEnabled = downlinkEnabled;
     if (moduleSettings != null) result.moduleSettings = moduleSettings;
+    if (useAead != null) result.useAead = useAead;
     return result;
   }
 
@@ -79,6 +81,7 @@ class ChannelSettings extends $pb.GeneratedMessage {
     ..aOB(6, _omitFieldNames ? '' : 'downlinkEnabled')
     ..aOM<ModuleSettings>(7, _omitFieldNames ? '' : 'moduleSettings',
         subBuilder: ModuleSettings.create)
+    ..aOB(8, _omitFieldNames ? '' : 'useAead')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -208,6 +211,21 @@ class ChannelSettings extends $pb.GeneratedMessage {
   void clearModuleSettings() => $_clearField(7);
   @$pb.TagNumber(7)
   ModuleSettings ensureModuleSettings() => $_ensure(6);
+
+  ///
+  ///  Enable authenticated encryption (AES-CCM) for this channel.
+  ///  When true, messages include a 12-byte authentication tag that prevents
+  ///  forgery and bit-flipping attacks. All nodes on the channel must have
+  ///  this enabled - unauthenticated (AES-CTR) packets are rejected.
+  ///  Experimental. Default: false (standard AES-CTR encryption).
+  @$pb.TagNumber(8)
+  $core.bool get useAead => $_getBF(7);
+  @$pb.TagNumber(8)
+  set useAead($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasUseAead() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearUseAead() => $_clearField(8);
 }
 
 ///

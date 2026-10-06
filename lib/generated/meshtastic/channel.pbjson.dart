@@ -40,6 +40,7 @@ const ChannelSettings$json = {
       '6': '.meshtastic.ModuleSettings',
       '10': 'moduleSettings'
     },
+    {'1': 'use_aead', '3': 8, '4': 1, '5': 8, '10': 'useAead'},
   ],
 };
 
@@ -49,7 +50,8 @@ final $typed_data.Uint8List channelSettingsDescriptor = $convert.base64Decode(
     'AKA3BzaxgCIAEoDFIDcHNrEhIKBG5hbWUYAyABKAlSBG5hbWUSDgoCaWQYBCABKAdSAmlkEiUK'
     'DnVwbGlua19lbmFibGVkGAUgASgIUg11cGxpbmtFbmFibGVkEikKEGRvd25saW5rX2VuYWJsZW'
     'QYBiABKAhSD2Rvd25saW5rRW5hYmxlZBJDCg9tb2R1bGVfc2V0dGluZ3MYByABKAsyGi5tZXNo'
-    'dGFzdGljLk1vZHVsZVNldHRpbmdzUg5tb2R1bGVTZXR0aW5ncw==');
+    'dGFzdGljLk1vZHVsZVNldHRpbmdzUg5tb2R1bGVTZXR0aW5ncxIZCgh1c2VfYWVhZBgIIAEoCF'
+    'IHdXNlQWVhZA==');
 
 @$core.Deprecated('Use moduleSettingsDescriptor instead')
 const ModuleSettings$json = {
