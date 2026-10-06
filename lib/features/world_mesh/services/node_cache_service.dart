@@ -31,11 +31,16 @@ class NodeCacheService {
   Future<File> _cacheFile() async =>
       File(p.join((await _cacheDirectory()).path, _cacheFileName));
 
-  Future<void> _dropLegacyCache(SharedPreferences prefs) async {
+  static Future<void> _dropLegacyCache(SharedPreferences prefs) async {
     if (prefs.containsKey(_legacyCacheKey)) {
       await prefs.remove(_legacyCacheKey);
     }
   }
+
+  /// Removes the node list an earlier build stored in preferences. Run at
+  /// launch so the store shrinks even if the World Map is never reopened.
+  static Future<void> dropLegacyPrefsCache() async =>
+      _dropLegacyCache(await SharedPreferences.getInstance());
 
   /// Checks if the cache is still valid (not expired)
   Future<bool> isCacheValid() async {

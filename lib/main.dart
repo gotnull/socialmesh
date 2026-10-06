@@ -153,6 +153,7 @@ import 'features/aether/screens/aether_flight_detail_screen.dart';
 import 'features/aether/providers/aether_providers.dart';
 import 'features/aether/models/aether_flight.dart';
 import 'features/onboarding/app_shell_provider.dart';
+import 'features/world_mesh/services/node_cache_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 import 'core/navigation.dart';
@@ -442,6 +443,11 @@ Future<void> main() async {
   // reads; they let the first frame use the saved accent and theme mode.
   await AccentColorNotifier.preloadLaunchColor();
   await ThemeModeNotifier.preloadLaunchMode();
+  unawaited(
+    NodeCacheService.dropLegacyPrefsCache().catchError((Object e) {
+      AppLogging.maps('Legacy World Map cache removal failed: $e');
+    }),
+  );
 
   // One line per launch with every awaited pre-runApp step timed, so a
   // long native launch screen can be attributed from an app log.

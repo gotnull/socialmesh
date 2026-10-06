@@ -67,6 +67,22 @@ void main() {
     expect(prefs.containsKey('cached_mesh_nodes'), isFalse);
   });
 
+  test(
+    'the launch cleanup drops the legacy list without a cache read',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'cached_mesh_nodes': '[]',
+        'cached_mesh_nodes_timestamp': '2026-10-06T00:00:00.000',
+      });
+
+      await NodeCacheService.dropLegacyPrefsCache();
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('cached_mesh_nodes'), isFalse);
+      expect(prefs.containsKey('cached_mesh_nodes_timestamp'), isTrue);
+    },
+  );
+
   test('clearing removes the file and the timestamp', () async {
     await service.cacheNodes([_node(1)]);
     await service.clearCache();
