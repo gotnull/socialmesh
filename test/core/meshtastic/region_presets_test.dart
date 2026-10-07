@@ -86,4 +86,78 @@ void main() {
       expect(decodeRegionPresetMap(LoRaRegionPresetMap()), isEmpty);
     });
   });
+
+  group('presetForRegionChoice', () {
+    const usWithTurbo = RegionPresetInfo(
+      presets: [
+        Config_LoRaConfig_ModemPreset.LONG_FAST,
+        Config_LoRaConfig_ModemPreset.LONG_TURBO,
+      ],
+      defaultPreset: Config_LoRaConfig_ModemPreset.LONG_FAST,
+      licensedOnly: false,
+    );
+    const usWithoutTurbo = RegionPresetInfo(
+      presets: [Config_LoRaConfig_ModemPreset.LONG_FAST],
+      defaultPreset: Config_LoRaConfig_ModemPreset.LONG_FAST,
+      licensedOnly: false,
+    );
+
+    test('fresh US setup with LONG_TURBO legal picks LONG_TURBO', () {
+      expect(
+        presetForRegionChoice(
+          from: Config_LoRaConfig_RegionCode.UNSET,
+          to: Config_LoRaConfig_RegionCode.US,
+          toInfo: usWithTurbo,
+        ),
+        Config_LoRaConfig_ModemPreset.LONG_TURBO,
+      );
+    });
+
+    test('fresh US setup without a map keeps LONG_FAST', () {
+      expect(
+        presetForRegionChoice(
+          from: Config_LoRaConfig_RegionCode.UNSET,
+          to: Config_LoRaConfig_RegionCode.US,
+          toInfo: null,
+        ),
+        Config_LoRaConfig_ModemPreset.LONG_FAST,
+      );
+    });
+
+    test('fresh US setup where the map omits LONG_TURBO keeps LONG_FAST', () {
+      expect(
+        presetForRegionChoice(
+          from: Config_LoRaConfig_RegionCode.UNSET,
+          to: Config_LoRaConfig_RegionCode.US,
+          toInfo: usWithoutTurbo,
+        ),
+        Config_LoRaConfig_ModemPreset.LONG_FAST,
+      );
+    });
+
+    test('changing to US from a set region keeps LONG_FAST', () {
+      for (final from in [Config_LoRaConfig_RegionCode.ANZ, null]) {
+        expect(
+          presetForRegionChoice(
+            from: from,
+            to: Config_LoRaConfig_RegionCode.US,
+            toInfo: usWithTurbo,
+          ),
+          Config_LoRaConfig_ModemPreset.LONG_FAST,
+          reason: '$from',
+        );
+      }
+    });
+
+    test('fresh setup in another region keeps LONG_FAST', () {
+      expect(
+        presetForRegionChoice(
+          from: Config_LoRaConfig_RegionCode.UNSET,
+          to: Config_LoRaConfig_RegionCode.EU_868,
+          toInfo: usWithTurbo,
+        ),
+        Config_LoRaConfig_ModemPreset.LONG_FAST,
+      );
+    });
+  });
 }

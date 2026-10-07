@@ -660,6 +660,81 @@ void main() {
     });
   });
 
+  group('setRegion preset choice', () {
+    Future<void> feed(pb.FromRadio fromRadio) async {
+      await protocol.handleIncomingPacket(fromRadio.writeToBuffer());
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    Future<void> primeRegion(config_pbenum.Config_LoRaConfig_RegionCode r) =>
+        feed(
+          pb.FromRadio()
+            ..config = (config_pb.Config()
+              ..lora = (config_pb.Config_LoRaConfig()..region = r)),
+        );
+
+    Future<void> primeUsMapWithTurbo() => feed(
+      pb.FromRadio()
+        ..regionPresets = (pb.LoRaRegionPresetMap()
+          ..groups.add(
+            pb.LoRaPresetGroup()
+              ..presets.addAll([
+                config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
+                config_pbenum.Config_LoRaConfig_ModemPreset.LONG_TURBO,
+              ])
+              ..defaultPreset =
+                  config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
+          )
+          ..regionGroups.add(
+            pb.LoRaRegionPresets()
+              ..region = config_pbenum.Config_LoRaConfig_RegionCode.US
+              ..groupIndex = 0,
+          )),
+    );
+
+    config_pbenum.Config_LoRaConfig_ModemPreset sentPreset() =>
+        transport.lastAdminMessage.setConfig.lora.modemPreset;
+
+    test('fresh US setup on a 2.8 radio writes LONG_TURBO', () async {
+      await primeRegion(config_pbenum.Config_LoRaConfig_RegionCode.UNSET);
+      await primeUsMapWithTurbo();
+
+      await protocol.setRegion(config_pbenum.Config_LoRaConfig_RegionCode.US);
+
+      expect(
+        sentPreset(),
+        config_pbenum.Config_LoRaConfig_ModemPreset.LONG_TURBO,
+      );
+      expect(transport.lastAdminMessage.setConfig.lora.usePreset, isTrue);
+    });
+
+    test(
+      'fresh US setup without a region preset map writes LONG_FAST',
+      () async {
+        await primeRegion(config_pbenum.Config_LoRaConfig_RegionCode.UNSET);
+
+        await protocol.setRegion(config_pbenum.Config_LoRaConfig_RegionCode.US);
+
+        expect(
+          sentPreset(),
+          config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
+        );
+      },
+    );
+
+    test('changing an already set region to US writes LONG_FAST', () async {
+      await primeRegion(config_pbenum.Config_LoRaConfig_RegionCode.ANZ);
+      await primeUsMapWithTurbo();
+
+      await protocol.setRegion(config_pbenum.Config_LoRaConfig_RegionCode.US);
+
+      expect(
+        sentPreset(),
+        config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
+      );
+    });
+  });
+
   group('Local-only guard: removeNode', () {
     test('always sends to local device', () async {
       await protocol.removeNode(0x11111111);

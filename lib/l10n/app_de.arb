@@ -8416,6 +8416,8 @@
   "radioConfigPresetMediumTurboDesc": "Mittlere Reichweite mit 500 kHz, nicht in jeder Region zulässig",
   "radioConfigLicensedOnlyBand": "Nur für lizenzierte Funker. Diese Region ist ein Amateurfunkband, daher werden nur die Presets angeboten, die das Funkgerät als zulässig meldet.",
   "radioConfigPresetChangedForRegion": "Preset auf {preset} geändert, die Vorgabe des Funkgeräts für diese Region. Das vorherige Preset ist hier nicht zulässig.",
+  "radioConfigUsBandwidthNoticeTitle": "US-Funkkonfiguration",
+  "radioConfigUsBandwidthNoticeBody": "Diese Konfiguration nutzt weniger als 500 kHz Bandbreite. FCC Part 15.247 schreibt für digital modulierte Systeme im Band 902-928 MHz eine 6-dB-Bandbreite von mindestens 500 kHz vor. Meshtastic 2.8 und neuer richtet neue US-Knoten mit {preset} (500 kHz) ein. Was gilt, hängt von der Zulassung Ihres Geräts und seiner Konfiguration ab.",
   "radioConfigPresetShortFast": "Kurz Schnell",
   "radioConfigPresetShortFastDesc": "Kurze Reichweite, schnellste",
   "radioConfigPresetShortSlow": "Kurz Langsam",

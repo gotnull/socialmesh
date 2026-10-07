@@ -48489,6 +48489,18 @@ abstract class AppLocalizations {
   /// **'Preset changed to {preset}, the radio\'s default for this region. The previous preset is not legal here.'**
   String radioConfigPresetChangedForRegion(String preset);
 
+  /// Title of the warning banner on the LoRa config screen when the region is US and the preset or custom bandwidth is below 500 kHz
+  ///
+  /// In en, this message translates to:
+  /// **'US radio configuration'**
+  String get radioConfigUsBandwidthNoticeTitle;
+
+  /// Body of the US sub-500 kHz bandwidth banner on the LoRa config screen. States the Part 15.247 digital modulation minimum without calling the configuration illegal; other US rule paths exist. FCC Part 15.247 and Meshtastic stay verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'This configuration uses less than 500 kHz bandwidth. FCC Part 15.247 sets a minimum 6 dB bandwidth of 500 kHz for digital modulation systems in the 902-928 MHz band. Meshtastic 2.8 and later sets up new US nodes on {preset} (500 kHz). What applies depends on your device\'s authorisation and how it is configured.'**
+  String radioConfigUsBandwidthNoticeBody(String preset);
+
   /// UI text: radio config preset must match
   ///
   /// In en, this message translates to:

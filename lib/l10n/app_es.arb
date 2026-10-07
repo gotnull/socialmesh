@@ -8416,6 +8416,8 @@
   "radioConfigPresetMediumTurboDesc": "Alcance medio a 500 kHz, no es legal en todas las regiones",
   "radioConfigLicensedOnlyBand": "Solo operadores con licencia. Esta región es una banda de radioaficionados, por lo que los preajustes ofrecidos se limitan a los que la radio indica como legales.",
   "radioConfigPresetChangedForRegion": "Preajuste cambiado a {preset}, el predeterminado de la radio para esta región. El anterior no es legal aquí.",
+  "radioConfigUsBandwidthNoticeTitle": "Configuración de radio en EE. UU.",
+  "radioConfigUsBandwidthNoticeBody": "Esta configuración usa menos de 500 kHz de ancho de banda. La norma FCC Part 15.247 fija un ancho de banda mínimo de 500 kHz a 6 dB para los sistemas de modulación digital en la banda de 902-928 MHz. Meshtastic 2.8 y posteriores configuran los nodos nuevos de EE. UU. con {preset} (500 kHz). Lo que corresponde depende de la autorización de su dispositivo y de su configuración.",
   "radioConfigPresetShortFast": "Corto Rápido",
   "radioConfigPresetShortFastDesc": "Alcance corto, el más rápido",
   "radioConfigPresetShortSlow": "Corto Lento",

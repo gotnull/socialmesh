@@ -8,6 +8,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
+import '../../core/meshtastic/region_presets.dart';
 import '../../core/safe_lat_lng.dart';
 import '../../core/safety/error_handler.dart';
 import '../../core/transport.dart';
@@ -9357,7 +9358,8 @@ class ProtocolService {
   /// Local-only: region/frequency is a radio hardware setting on the
   /// directly-connected device.
   ///
-  /// Also sets usePreset=true and hopLimit=3 to match Meshtastic defaults.
+  /// Also sets usePreset=true, hopLimit=3 and the preset from
+  /// [presetForRegionChoice] to match Meshtastic defaults.
   /// Called during onboarding only. This method intentionally uses
   /// [MeshPacketBuilder.localAdmin].
   Future<void> setRegion(
@@ -9372,13 +9374,23 @@ class ProtocolService {
     }
 
     try {
-      AppLogging.protocol('Setting region: ${region.name}');
+      final presetMap = _regionPresets;
+      final preset = presetForRegionChoice(
+        from: _currentRegion,
+        to: region,
+        toInfo: presetMap == null
+            ? null
+            : decodeRegionPresetMap(presetMap)[region],
+      );
+      AppLogging.protocol(
+        'Setting region: ${region.name} preset=${preset.name} '
+        'from=${_currentRegion?.name}',
+      );
 
-      // Set Meshtastic defaults: usePreset=true, LONG_FAST preset, hopLimit=3
       final loraConfig = config_pb.Config_LoRaConfig()
         ..usePreset = true
         ..region = region
-        ..modemPreset = config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST
+        ..modemPreset = preset
         ..hopLimit = 3;
 
       final config = config_pb.Config()..lora = loraConfig;

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.72.0] - 2026-10-07
+
+### Added
+
+- The LoRa settings screen shows a notice when a US node runs below 500 kHz bandwidth, whether through a preset such as Long Fast or a custom setting. It explains the FCC Part 15.247 minimum for digital modulation systems and notes that Meshtastic 2.8 and later sets up new US nodes on Long Turbo; it does not call the existing configuration illegal.
+
+### Changed
+
+- Choosing United States for a radio with no region set now selects Long Turbo (500 kHz) when the radio runs firmware 2.8 or later and lists Long Turbo as available there, matching how the firmware sets up a new US node from its own screen. Older firmware and every other region change keep Long Fast.
+- The Radio Regulations and Radio Parameters help pages describe the US 500 kHz rule for digital modulation systems, the Long Turbo default for new US nodes, and that firmware region limits help with, but do not settle, which settings are permitted.
+
 ## [1.71.0] - 2026-10-04
 
 ### Fixed
@@ -18,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Queued MeshCore message drains stop when their provider has been disposed.
 - Sender names in channel message bubbles are lightened or darkened as needed to stay readable against the bubble in both dark and light themes (#385).
 - A battery level from the radio's node database no longer replaces a newer reading already received from that node (#365).
+- Device Metrics no longer charts an old telemetry packet that a radio hands over again as fresh traffic. A reading whose uptime implies a reboot while the node was already known to be running is dropped (#365).
 - Onboarding pages and the privacy choice sheet scroll instead of overflowing on short screens such as the iPhone SE, and on larger text sizes.
 - Retry on a degraded connection reconnects when the radio link has dropped, instead of doing nothing.
 - Messages reload when the app switches to a different radio's dataset.

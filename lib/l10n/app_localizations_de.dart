@@ -28163,6 +28163,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get radioConfigUsBandwidthNoticeTitle => 'US-Funkkonfiguration';
+
+  @override
+  String radioConfigUsBandwidthNoticeBody(String preset) {
+    return 'Diese Konfiguration nutzt weniger als 500 kHz Bandbreite. FCC Part 15.247 schreibt für digital modulierte Systeme im Band 902-928 MHz eine 6-dB-Bandbreite von mindestens 500 kHz vor. Meshtastic 2.8 und neuer richtet neue US-Knoten mit $preset (500 kHz) ein. Was gilt, hängt von der Zulassung Ihres Geräts und seiner Konfiguration ab.';
+  }
+
+  @override
   String get radioConfigPresetMustMatch =>
       'Alle Geräte im Mesh müssen dasselbe Preset verwenden';
 

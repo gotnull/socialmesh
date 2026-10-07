@@ -37612,6 +37612,20 @@
       }
     }
   },
+  "radioConfigUsBandwidthNoticeTitle": "US radio configuration",
+  "@radioConfigUsBandwidthNoticeTitle": {
+    "description": "Title of the warning banner on the LoRa config screen when the region is US and the preset or custom bandwidth is below 500 kHz"
+  },
+  "radioConfigUsBandwidthNoticeBody": "This configuration uses less than 500 kHz bandwidth. FCC Part 15.247 sets a minimum 6 dB bandwidth of 500 kHz for digital modulation systems in the 902-928 MHz band. Meshtastic 2.8 and later sets up new US nodes on {preset} (500 kHz). What applies depends on your device's authorisation and how it is configured.",
+  "@radioConfigUsBandwidthNoticeBody": {
+    "description": "Body of the US sub-500 kHz bandwidth banner on the LoRa config screen. States the Part 15.247 digital modulation minimum without calling the configuration illegal; other US rule paths exist. FCC Part 15.247 and Meshtastic stay verbatim.",
+    "placeholders": {
+      "preset": {
+        "type": "String",
+        "example": "Long Turbo"
+      }
+    }
+  },
   "radioConfigPresetMustMatch": "All devices in the mesh must use the same preset",
   "@radioConfigPresetMustMatch": {
     "description": "UI text: radio config preset must match"

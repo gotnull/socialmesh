@@ -28085,6 +28085,14 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get radioConfigUsBandwidthNoticeTitle => 'Configurazione radio USA';
+
+  @override
+  String radioConfigUsBandwidthNoticeBody(String preset) {
+    return 'Questa configurazione usa una larghezza di banda inferiore a 500 kHz. La norma FCC Part 15.247 fissa una larghezza di banda minima a 6 dB di 500 kHz per i sistemi a modulazione digitale nella banda 902-928 MHz. Meshtastic 2.8 e successivi configurano i nuovi nodi USA su $preset (500 kHz). Cosa si applica dipende dall\'autorizzazione del tuo dispositivo e da come è configurato.';
+  }
+
+  @override
   String get radioConfigPresetMustMatch =>
       'Tutti i dispositivi nella rete mesh devono usare lo stesso preset';
 

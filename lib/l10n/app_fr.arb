@@ -8416,6 +8416,8 @@
   "radioConfigPresetMediumTurboDesc": "Moyenne portée à 500 kHz, illégal dans certaines régions",
   "radioConfigLicensedOnlyBand": "Opérateurs licenciés uniquement. Cette région est une bande radioamateur : seuls les préréglages que la radio signale comme légaux sont proposés.",
   "radioConfigPresetChangedForRegion": "Préréglage remplacé par {preset}, la valeur par défaut de la radio pour cette région. Le préréglage précédent n'est pas légal ici.",
+  "radioConfigUsBandwidthNoticeTitle": "Configuration radio aux États-Unis",
+  "radioConfigUsBandwidthNoticeBody": "Cette configuration utilise une bande passante inférieure à 500 kHz. La règle FCC Part 15.247 fixe une bande passante minimale de 500 kHz à 6 dB pour les systèmes à modulation numérique dans la bande 902-928 MHz. Meshtastic 2.8 et versions ultérieures configurent les nouveaux nœuds américains en {preset} (500 kHz). Ce qui s'applique dépend de l'autorisation de votre appareil et de sa configuration.",
   "radioConfigPresetShortFast": "Courte portée rapide",
   "radioConfigPresetShortFastDesc": "Courte portée, plus rapide",
   "radioConfigPresetShortSlow": "Courte portée lente",

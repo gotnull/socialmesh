@@ -37,14 +37,15 @@ Rather than configuring these individually, Meshtastic offers **presets** that b
 - **Short Slow** — short range, better reliability.
 - **Medium Fast** — balanced range and speed.
 - **Medium Slow** — balanced but favouring range.
-- **Long Fast** — long range, moderate speed. The **default** and most commonly used preset.
+- **Long Fast** - long range, moderate speed, 250 kHz bandwidth. The **default** in most regions and the most commonly used preset.
+- **Long Turbo** - long range at 500 kHz bandwidth, faster than Long Fast. Meshtastic 2.8 and later sets up new US nodes on it.
 - **Long Moderate** — long range, slower but more reliable.
 - **Long Slow** — maximum range, very slow. Best for extreme distances.
 - **Very Long Slow** — absolute maximum range. Very high airtime usage.
 
 ## Which Preset Should I Use?
 
-**Long Fast** is the default for good reason — it works well for most Meshtastic networks. Only change it if you have a specific need:
+Start with your region's default, which suits most Meshtastic networks: **Long Fast** in most places, **Long Turbo** for new US nodes. Only change it if you have a specific need:
 
 - In a dense urban mesh with many nodes close together → consider **Short Fast** to reduce airtime.
 - Trying to reach a distant node at the edge of range → try **Long Slow**, but be aware that every message takes much longer to transmit.

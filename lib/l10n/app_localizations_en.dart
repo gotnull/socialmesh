@@ -27756,6 +27756,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get radioConfigUsBandwidthNoticeTitle => 'US radio configuration';
+
+  @override
+  String radioConfigUsBandwidthNoticeBody(String preset) {
+    return 'This configuration uses less than 500 kHz bandwidth. FCC Part 15.247 sets a minimum 6 dB bandwidth of 500 kHz for digital modulation systems in the 902-928 MHz band. Meshtastic 2.8 and later sets up new US nodes on $preset (500 kHz). What applies depends on your device\'s authorisation and how it is configured.';
+  }
+
+  @override
   String get radioConfigPresetMustMatch =>
       'All devices in the mesh must use the same preset';
 

@@ -28202,6 +28202,15 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get radioConfigUsBandwidthNoticeTitle =>
+      'Configuración de radio en EE. UU.';
+
+  @override
+  String radioConfigUsBandwidthNoticeBody(String preset) {
+    return 'Esta configuración usa menos de 500 kHz de ancho de banda. La norma FCC Part 15.247 fija un ancho de banda mínimo de 500 kHz a 6 dB para los sistemas de modulación digital en la banda de 902-928 MHz. Meshtastic 2.8 y posteriores configuran los nodos nuevos de EE. UU. con $preset (500 kHz). Lo que corresponde depende de la autorización de su dispositivo y de su configuración.';
+  }
+
+  @override
   String get radioConfigPresetMustMatch =>
       'Todos los dispositivos de la malla deben usar el mismo preset';
 

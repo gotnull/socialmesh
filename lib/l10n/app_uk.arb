@@ -8416,6 +8416,8 @@
   "radioConfigPresetMediumTurboDesc": "Середня дальність на 500 кГц, не дозволений у всіх регіонах",
   "radioConfigLicensedOnlyBand": "Лише для ліцензованих операторів. Цей регіон є аматорським діапазоном, тому пропонуються лише пресети, які радіо вважає дозволеними.",
   "radioConfigPresetChangedForRegion": "Пресет змінено на {preset}, значення радіо за замовчуванням для цього регіону. Попередній пресет тут не дозволений.",
+  "radioConfigUsBandwidthNoticeTitle": "Налаштування радіо для США",
+  "radioConfigUsBandwidthNoticeBody": "Ця конфігурація використовує смугу менше 500 кГц. Правила FCC Part 15.247 встановлюють для систем із цифровою модуляцією в діапазоні 902-928 МГц мінімальну ширину смуги за рівнем 6 дБ у 500 кГц. Meshtastic 2.8 і новіші налаштовують нові вузли в США на {preset} (500 кГц). Що застосовується, залежить від сертифікації вашого пристрою та його налаштування.",
   "radioConfigPresetShortFast": "Short Fast",
   "radioConfigPresetShortFastDesc": "Мала дальність, найшвидший",
   "radioConfigPresetShortSlow": "Short Slow",

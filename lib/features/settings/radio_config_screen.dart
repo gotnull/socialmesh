@@ -1142,6 +1142,20 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
             SizedBox(height: AppTheme.spacing12),
             StatusBanner.warning(title: l.radioConfigLicensedOnlyBand),
           ],
+          if (isUsBelow500KhzBandwidth(
+            region: _selectedRegion,
+            usePreset: _usePreset,
+            preset: _selectedModemPreset,
+            customBandwidthCode: _bandwidth,
+          )) ...[
+            SizedBox(height: AppTheme.spacing12),
+            StatusBanner.warning(
+              title: l.radioConfigUsBandwidthNoticeTitle,
+              subtitle: l.radioConfigUsBandwidthNoticeBody(
+                l.radioConfigPresetLongTurbo,
+              ),
+            ),
+          ],
           SizedBox(height: AppTheme.spacing16),
           ...presets.map((p) {
             final isSelected = _selectedModemPreset == p.preset;

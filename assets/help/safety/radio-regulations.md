@@ -14,9 +14,12 @@ Meshtastic operates in the **ISM (Industrial, Scientific, and Medical)** bands. 
 
 ### United States (FCC)
 
-- **Band:** 902–928 MHz
+- **Band:** 902-928 MHz
 - **Power:** Up to 1W conducted power (before antenna gain)
-- **Duty cycle:** No explicit limit, but must use spread spectrum or frequency hopping
+- **Bandwidth:** Digital modulation systems operating under FCC Part 15.247 need a 6 dB bandwidth of at least 500 kHz. Frequency hopping systems and other rule paths have different requirements.
+- **Meshtastic default:** Meshtastic 2.8 and later sets up new US nodes on Long Turbo (500 kHz). A node configured earlier keeps its preset, which may be an older one such as Long Fast (250 kHz). SocialMesh shows a notice on the LoRa settings screen when a US node runs below 500 kHz.
+
+What applies to you depends on how your device is authorised and how it is configured. Use settings that suit your equipment and location.
 
 ### European Union (ETSI)
 
@@ -33,7 +36,7 @@ Meshtastic operates in the **ISM (Industrial, Scientific, and Medical)** bands. 
 
 ### Other Regions
 
-Each country has its own regulations. Meshtastic's region presets are designed to keep you within the legal limits for your location. Always use the correct region setting.
+Each country has its own regulations. Meshtastic's region setting applies the band and power limits the firmware holds for your location. Always use the correct region setting.
 
 ## Why This Matters
 
@@ -45,6 +48,6 @@ Violating radio regulations can:
 
 ## Meshtastic Helps
 
-The good news is that Meshtastic's firmware automatically applies the correct power and duty cycle limits when you set your region. You don't need to calculate these yourself — just make sure your region is set correctly.
+When you set your region, Meshtastic applies region-specific defaults and radio limits such as the band, maximum power and duty cycle. Firmware version, modem preset, your device's authorisation and local rules can still affect which settings are permitted.
 
 However, some settings (like increasing transmit power or hop limits) can push you closer to regulatory limits. Be mindful of airtime usage, especially in EU regions with strict duty cycle rules.

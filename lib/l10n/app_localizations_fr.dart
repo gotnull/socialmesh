@@ -28280,6 +28280,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get radioConfigUsBandwidthNoticeTitle =>
+      'Configuration radio aux États-Unis';
+
+  @override
+  String radioConfigUsBandwidthNoticeBody(String preset) {
+    return 'Cette configuration utilise une bande passante inférieure à 500 kHz. La règle FCC Part 15.247 fixe une bande passante minimale de 500 kHz à 6 dB pour les systèmes à modulation numérique dans la bande 902-928 MHz. Meshtastic 2.8 et versions ultérieures configurent les nouveaux nœuds américains en $preset (500 kHz). Ce qui s\'applique dépend de l\'autorisation de votre appareil et de sa configuration.';
+  }
+
+  @override
   String get radioConfigPresetMustMatch =>
       'Tous les appareils du maillage doivent utiliser le même préréglage';
 

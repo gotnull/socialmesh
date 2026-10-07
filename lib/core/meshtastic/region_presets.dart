@@ -33,6 +33,26 @@ class RegionPresetInfo {
       presets.contains(preset);
 }
 
+/// The modem preset the region picker writes alongside [to].
+///
+/// A first setup (region [from] UNSET) to US gets LONG_TURBO (500 kHz)
+/// when the radio's map ([toInfo], the decoded entry for [to]) lists it as
+/// legal there, matching the setup chooser in 2.8 firmware. Every other
+/// choice gets LONG_FAST, including every radio without a map (pre-2.8
+/// firmware).
+config_pbenum.Config_LoRaConfig_ModemPreset presetForRegionChoice({
+  required config_pbenum.Config_LoRaConfig_RegionCode? from,
+  required config_pbenum.Config_LoRaConfig_RegionCode to,
+  required RegionPresetInfo? toInfo,
+}) {
+  const turbo = config_pbenum.Config_LoRaConfig_ModemPreset.LONG_TURBO;
+  final isFreshUsSetup =
+      from == config_pbenum.Config_LoRaConfig_RegionCode.UNSET &&
+      to == config_pbenum.Config_LoRaConfig_RegionCode.US;
+  if (isFreshUsSetup && toInfo != null && toInfo.allows(turbo)) return turbo;
+  return config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST;
+}
+
 /// Inverts [map] into a region -> info lookup.
 ///
 /// Region entries pointing at a group index outside `groups`, and groups

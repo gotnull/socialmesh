@@ -28112,6 +28112,14 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get radioConfigUsBandwidthNoticeTitle => 'Налаштування радіо для США';
+
+  @override
+  String radioConfigUsBandwidthNoticeBody(String preset) {
+    return 'Ця конфігурація використовує смугу менше 500 кГц. Правила FCC Part 15.247 встановлюють для систем із цифровою модуляцією в діапазоні 902-928 МГц мінімальну ширину смуги за рівнем 6 дБ у 500 кГц. Meshtastic 2.8 і новіші налаштовують нові вузли в США на $preset (500 кГц). Що застосовується, залежить від сертифікації вашого пристрою та його налаштування.';
+  }
+
+  @override
   String get radioConfigPresetMustMatch =>
       'Усі пристрої в мережі повинні використовувати однаковий пресет';
 
