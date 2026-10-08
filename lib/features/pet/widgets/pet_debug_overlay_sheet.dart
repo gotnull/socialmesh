@@ -70,28 +70,29 @@ class PetDebugOverlaySheet extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing16),
         _EnumChipRow<PetStage>(
-          title: 'Stage',
+          title: 'Stage', // lint-allow: hardcoded-string - kDebugMode only
           values: PetStage.values,
           selected: overrides.stage,
           label: _stageLabel,
           onChanged: notifier.setStage,
         ),
         _EnumChipRow<PetBranch>(
-          title: 'Branch',
+          title: 'Branch', // lint-allow: hardcoded-string - kDebugMode only
           values: PetBranch.values,
           selected: overrides.branch,
           label: _branchLabel,
           onChanged: notifier.setBranch,
         ),
         _EnumChipRow<PetMood>(
-          title: 'Mood',
+          title: 'Mood', // lint-allow: hardcoded-string - kDebugMode only
           values: PetMood.values,
           selected: overrides.mood,
           label: _moodLabel,
           onChanged: notifier.setMood,
         ),
         _EnumChipRow<CallReason>(
-          title: 'Call reason',
+          title:
+              'Call reason', // lint-allow: hardcoded-string - kDebugMode only
           values: CallReason.values,
           selected: overrides.callReason,
           label: _callReasonLabel,
@@ -99,17 +100,18 @@ class PetDebugOverlaySheet extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing8),
         _TriStateRow(
-          title: 'Sleeping',
+          title: 'Sleeping', // lint-allow: hardcoded-string - kDebugMode only
           value: overrides.isAsleep,
           onChanged: notifier.setIsAsleep,
         ),
         _TriStateRow(
-          title: 'Sick',
+          title: 'Sick', // lint-allow: hardcoded-string - kDebugMode only
           value: overrides.isSick,
           onChanged: notifier.setIsSick,
         ),
         _TriStateRow(
-          title: 'Face forward (preferFrontFace)',
+          title:
+              'Face forward (preferFrontFace)', // lint-allow: hardcoded-string - kDebugMode only
           value: overrides.preferFrontFace,
           onChanged: notifier.setPreferFrontFace,
         ),
@@ -158,7 +160,7 @@ class _EnumChipRow<T> extends StatelessWidget {
             runSpacing: AppTheme.spacing6,
             children: [
               _Chip(
-                label: 'Real',
+                label: 'Real', // lint-allow: hardcoded-string - kDebugMode only
                 selected: selected == null,
                 onTap: () => onChanged(null),
               ),
@@ -204,19 +206,19 @@ class _TriStateRow extends StatelessWidget {
             ),
           ),
           _Chip(
-            label: 'Real',
+            label: 'Real', // lint-allow: hardcoded-string - kDebugMode only
             selected: value == null,
             onTap: () => onChanged(null),
           ),
           const SizedBox(width: AppTheme.spacing6),
           _Chip(
-            label: 'On',
+            label: 'On', // lint-allow: hardcoded-string - kDebugMode only
             selected: value == true,
             onTap: () => onChanged(true),
           ),
           const SizedBox(width: AppTheme.spacing6),
           _Chip(
-            label: 'Off',
+            label: 'Off', // lint-allow: hardcoded-string - kDebugMode only
             selected: value == false,
             onTap: () => onChanged(false),
           ),

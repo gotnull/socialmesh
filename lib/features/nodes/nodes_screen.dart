@@ -2136,7 +2136,7 @@ class _CompactHopIndicator extends StatelessWidget {
         };
         return _hopDot(
           context,
-          label: '${i + 1}',
+          label: '${i + 1}', // lint-allow: hardcoded-string - hop number
           filled: true,
           color: color,
         ); // lint-allow: hardcoded-string

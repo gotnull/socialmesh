@@ -431,6 +431,7 @@ class _TranslationSettingsScreenState
         AppLogging.app('TestByoKey: calling translate("hello" → es)...');
         final result = await adapter
             .translate(
+              // lint-allow: hardcoded-string - API key probe payload
               const TranslationRequest(text: 'hello', targetLanguage: 'es'),
             )
             .timeout(const Duration(seconds: 10));

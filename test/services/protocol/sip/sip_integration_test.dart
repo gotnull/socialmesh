@@ -4,6 +4,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/l10n/app_localizations_en.dart';
 import 'package:socialmesh/services/protocol/sip/sip_codec.dart';
 import 'package:socialmesh/services/protocol/sip/sip_constants.dart';
 import 'package:socialmesh/services/protocol/sip/sip_counters.dart';
@@ -760,7 +761,7 @@ void main() {
       counters.recordIdentityVerified();
       counters.recordBudgetThrottle();
 
-      final entries = counters.toDisplayEntries();
+      final entries = counters.toDisplayEntries(AppLocalizationsEn());
       expect(entries, isNotEmpty);
 
       // Verify at least the key counters appear.

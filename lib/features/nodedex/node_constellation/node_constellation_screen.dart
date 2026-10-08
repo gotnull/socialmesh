@@ -437,7 +437,8 @@ class _NodeConstellationScreenState
     final tiles = <Widget>[];
 
     if (encounter != null) {
-      final total = _firstDetailValue(encounter, 'Total') ?? '—';
+      final total =
+          _firstDetailValue(encounter, NodeDexGraphDetailKind.total) ?? '—';
       tiles.add(
         NodeConstellationStatTile(
           value: total,
@@ -449,7 +450,7 @@ class _NodeConstellationScreenState
     }
 
     if (centre != null) {
-      final lastSeen = _firstDetailValue(centre, 'Last seen');
+      final lastSeen = _lastSeenString(centre);
       if (lastSeen != null) {
         tiles.add(
           NodeConstellationStatTile(
@@ -463,7 +464,7 @@ class _NodeConstellationScreenState
     }
 
     if (message != null) {
-      final total = message.subtitle?.split(' ').first ?? '—';
+      final total = message.count?.toString() ?? '—';
       tiles.add(
         NodeConstellationStatTile(
           value: total,
@@ -477,15 +478,18 @@ class _NodeConstellationScreenState
     return tiles;
   }
 
-  String? _firstDetailValue(NodeDexGraphNode node, String label) {
+  String? _firstDetailValue(
+    NodeDexGraphNode node,
+    NodeDexGraphDetailKind kind,
+  ) {
     for (final d in node.details) {
-      if (d.label == label) return d.value;
+      if (d.kind == kind) return d.value;
     }
     return null;
   }
 
   String? _lastSeenString(NodeDexGraphNode node) {
-    return _firstDetailValue(node, 'Last seen');
+    return _firstDetailValue(node, NodeDexGraphDetailKind.lastSeen);
   }
 
   String _hexFor(int nodeNum) {

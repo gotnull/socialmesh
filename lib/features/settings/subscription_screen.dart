@@ -1060,7 +1060,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
       context: context,
       ref: ref,
       productId: bundleId,
-      productName: 'Complete Pack',
+      productName: context.l10n.subscriptionCompletePack,
       priceUsd: OneTimePurchases.bundlePrice,
       appStorePriceDisplay: appStorePriceDisplay,
       stripePriceDisplay: stripePriceDisplay,

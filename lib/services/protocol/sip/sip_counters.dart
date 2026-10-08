@@ -10,6 +10,7 @@
 library;
 
 import '../../../core/logging.dart';
+import '../../../l10n/app_localizations.dart';
 import 'sip_types.dart';
 
 /// In-memory counter store for SIP operations.
@@ -263,8 +264,10 @@ class SipCounters {
     };
   }
 
-  /// Export counters as a human-readable summary for display.
-  List<SipCounterEntry> toDisplayEntries() {
+  /// Export counters as a human-readable summary for display. Message
+  /// type names (CAP_BEACON, HS_HELLO, ...) are wire identifiers and stay
+  /// untranslated inside the localised labels.
+  List<SipCounterEntry> toDisplayEntries(AppLocalizations l10n) {
     final entries = <SipCounterEntry>[];
 
     // Per-type TX
@@ -272,7 +275,10 @@ class SipCounters {
       final count = _txCount[type.name] ?? 0;
       if (count > 0) {
         entries.add(
-          SipCounterEntry(label: '${_friendlyName(type)} sent', value: count),
+          SipCounterEntry(
+            label: l10n.sipCounterTypeSent(_friendlyName(type)),
+            value: count,
+          ),
         );
       }
     }
@@ -283,7 +289,7 @@ class SipCounters {
       if (count > 0) {
         entries.add(
           SipCounterEntry(
-            label: '${_friendlyName(type)} received',
+            label: l10n.sipCounterTypeReceived(_friendlyName(type)),
             value: count,
           ),
         );
@@ -292,30 +298,60 @@ class SipCounters {
 
     // Aggregates
     entries.addAll([
-      SipCounterEntry(label: 'Total bytes sent', value: _txBytes),
-      SipCounterEntry(label: 'Total bytes received', value: _rxBytes),
+      SipCounterEntry(label: l10n.sipCounterTotalBytesSent, value: _txBytes),
       SipCounterEntry(
-        label: 'Handshakes initiated',
+        label: l10n.sipCounterTotalBytesReceived,
+        value: _rxBytes,
+      ),
+      SipCounterEntry(
+        label: l10n.sipCounterHandshakesInitiated,
         value: _handshakeInitiated,
       ),
       SipCounterEntry(
-        label: 'Handshakes completed',
+        label: l10n.sipCounterHandshakesCompleted,
         value: _handshakeCompleted,
       ),
-      SipCounterEntry(label: 'Handshakes failed', value: _handshakeFailed),
-      SipCounterEntry(label: 'Identities verified', value: _identityVerified),
       SipCounterEntry(
-        label: 'Identity changed-key',
+        label: l10n.sipCounterHandshakesFailed,
+        value: _handshakeFailed,
+      ),
+      SipCounterEntry(
+        label: l10n.sipCounterIdentitiesVerified,
+        value: _identityVerified,
+      ),
+      SipCounterEntry(
+        label: l10n.sipCounterIdentityKeyChanged,
         value: _identityChangedKey,
       ),
-      SipCounterEntry(label: 'Budget throttles', value: _budgetThrottles),
-      SipCounterEntry(label: 'Congestion pauses', value: _congestionPauses),
-      SipCounterEntry(label: 'Replay rejects', value: _replayRejects),
-      SipCounterEntry(label: 'Signature failures', value: _signatureFailures),
-      SipCounterEntry(label: 'Signature successes', value: _signatureSuccesses),
-      SipCounterEntry(label: 'Retransmissions', value: _retransmissions),
-      SipCounterEntry(label: 'NACKs sent', value: _nacksSent),
-      SipCounterEntry(label: 'NACKs received', value: _nacksReceived),
+      SipCounterEntry(
+        label: l10n.sipCounterBudgetThrottles,
+        value: _budgetThrottles,
+      ),
+      SipCounterEntry(
+        label: l10n.sipCounterCongestionPauses,
+        value: _congestionPauses,
+      ),
+      SipCounterEntry(
+        label: l10n.sipCounterReplayRejects,
+        value: _replayRejects,
+      ),
+      SipCounterEntry(
+        label: l10n.sipCounterSignatureFailures,
+        value: _signatureFailures,
+      ),
+      SipCounterEntry(
+        label: l10n.sipCounterSignatureSuccesses,
+        value: _signatureSuccesses,
+      ),
+      SipCounterEntry(
+        label: l10n.sipCounterRetransmissions,
+        value: _retransmissions,
+      ),
+      SipCounterEntry(label: l10n.sipCounterNacksSent, value: _nacksSent),
+      SipCounterEntry(
+        label: l10n.sipCounterNacksReceived,
+        value: _nacksReceived,
+      ),
     ]);
 
     return entries;

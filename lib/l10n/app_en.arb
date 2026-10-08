@@ -12201,6 +12201,14 @@
   "@meshcoreRadioSettingsHint": {
     "description": "Subtitle hint under the radio settings title"
   },
+  "meshcoreRadioSettingsUsBandwidthNoticeTitle": "US radio configuration",
+  "@meshcoreRadioSettingsUsBandwidthNoticeTitle": {
+    "description": "Title of the warning banner in the MeshCore radio settings sheet when a US preset is active with bandwidth below 500 kHz"
+  },
+  "meshcoreRadioSettingsUsBandwidthNoticeBody": "This configuration uses less than 500 kHz bandwidth. FCC Part 15.247 sets a minimum 6 dB bandwidth of 500 kHz for digital modulation systems in the 902-928 MHz band. What applies depends on your device's authorisation and how it is configured. Radios on different bandwidths cannot hear each other, so agree any change with your local mesh.",
+  "@meshcoreRadioSettingsUsBandwidthNoticeBody": {
+    "description": "Body of the MeshCore US sub-500 kHz banner. States the Part 15.247 digital modulation minimum without calling the configuration illegal; other US rule paths exist. FCC Part 15.247 stays verbatim."
+  },
   "meshcoreRadioSettingsRegionSectionHeader": "REGION",
   "@meshcoreRadioSettingsRegionSectionHeader": {
     "description": "D26 — Section header for region preset row at top of MeshCore radio settings sheet"
@@ -16816,6 +16824,10 @@
   "navigationSectionMesh": "MESH",
   "@navigationSectionMesh": {
     "description": "Drawer section header for mesh features."
+  },
+  "liveActivityDestinationWholeNetwork": "Whole network",
+  "@liveActivityDestinationWholeNetwork": {
+    "description": "Live Activity destination name when messages go to the whole mesh rather than one node."
   },
   "navigationSectionPremium": "PREMIUM",
   "@navigationSectionPremium": {
@@ -48643,6 +48655,86 @@
   "@sipCountersTitle": {
     "description": "Title for the SIP debug counters screen."
   },
+  "sipCounterTypeSent": "{type} sent",
+  "@sipCounterTypeSent": {
+    "description": "SIP debug counter row: frames of one message type sent. {type} is a wire identifier such as CAP_BEACON and stays untranslated.",
+    "placeholders": {
+      "type": {
+        "type": "String",
+        "example": "CAP_BEACON"
+      }
+    }
+  },
+  "sipCounterTypeReceived": "{type} received",
+  "@sipCounterTypeReceived": {
+    "description": "SIP debug counter row: frames of one message type received. {type} is a wire identifier such as HS_HELLO and stays untranslated.",
+    "placeholders": {
+      "type": {
+        "type": "String",
+        "example": "HS_HELLO"
+      }
+    }
+  },
+  "sipCounterTotalBytesSent": "Total bytes sent",
+  "@sipCounterTotalBytesSent": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterTotalBytesReceived": "Total bytes received",
+  "@sipCounterTotalBytesReceived": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterHandshakesInitiated": "Handshakes initiated",
+  "@sipCounterHandshakesInitiated": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterHandshakesCompleted": "Handshakes completed",
+  "@sipCounterHandshakesCompleted": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterHandshakesFailed": "Handshakes failed",
+  "@sipCounterHandshakesFailed": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterIdentitiesVerified": "Identities verified",
+  "@sipCounterIdentitiesVerified": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterIdentityKeyChanged": "Identity key changes",
+  "@sipCounterIdentityKeyChanged": {
+    "description": "SIP debug counter row label: times a known peer presented a different identity key."
+  },
+  "sipCounterBudgetThrottles": "Budget throttles",
+  "@sipCounterBudgetThrottles": {
+    "description": "SIP debug counter row label: sends held back by the airtime budget."
+  },
+  "sipCounterCongestionPauses": "Congestion pauses",
+  "@sipCounterCongestionPauses": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterReplayRejects": "Replay rejects",
+  "@sipCounterReplayRejects": {
+    "description": "SIP debug counter row label: frames dropped as replays."
+  },
+  "sipCounterSignatureFailures": "Signature failures",
+  "@sipCounterSignatureFailures": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterSignatureSuccesses": "Signature successes",
+  "@sipCounterSignatureSuccesses": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterRetransmissions": "Retransmissions",
+  "@sipCounterRetransmissions": {
+    "description": "SIP debug counter row label."
+  },
+  "sipCounterNacksSent": "NACKs sent",
+  "@sipCounterNacksSent": {
+    "description": "SIP debug counter row label. NACK is a protocol term (negative acknowledgement)."
+  },
+  "sipCounterNacksReceived": "NACKs received",
+  "@sipCounterNacksReceived": {
+    "description": "SIP debug counter row label. NACK is a protocol term (negative acknowledgement)."
+  },
   "sipHubTitle": "Handshake",
   "@sipHubTitle": {
     "description": "Title for the SIP Hub screen."
@@ -56495,6 +56587,132 @@
   "nodedexConstellationActionDetails": "Inspect details",
   "@nodedexConstellationActionDetails": {
     "description": "Action card label that opens the node's NodeDex detail screen."
+  },
+  "nodedexConstellationDetailId": "ID",
+  "@nodedexConstellationDetailId": {
+    "description": "Constellation card detail row label: node ID."
+  },
+  "nodedexConstellationDetailShortName": "Short name",
+  "@nodedexConstellationDetailShortName": {
+    "description": "Constellation card detail row label: the node's short name."
+  },
+  "nodedexConstellationDetailLastSeen": "Last seen",
+  "@nodedexConstellationDetailLastSeen": {
+    "description": "Constellation card detail row label."
+  },
+  "nodedexConstellationDetailTag": "Tag",
+  "@nodedexConstellationDetailTag": {
+    "description": "Constellation card detail row label: the node's social tag."
+  },
+  "nodedexConstellationDetailTotal": "Total",
+  "@nodedexConstellationDetailTotal": {
+    "description": "Constellation encounter card detail row label: total encounter count."
+  },
+  "nodedexConstellationDetailBestSnr": "Best SNR",
+  "@nodedexConstellationDetailBestSnr": {
+    "description": "Constellation encounter card detail row label. SNR stays as the acronym."
+  },
+  "nodedexConstellationDetailTransport": "Transport",
+  "@nodedexConstellationDetailTransport": {
+    "description": "Constellation route card detail row label; the value is RF or MQTT."
+  },
+  "nodedexConstellationDetailHops": "Hops",
+  "@nodedexConstellationDetailHops": {
+    "description": "Constellation route card detail row label."
+  },
+  "nodedexConstellationDetailIndex": "Index",
+  "@nodedexConstellationDetailIndex": {
+    "description": "Constellation channel card detail row label: channel slot index."
+  },
+  "nodedexConstellationDetailRole": "Role",
+  "@nodedexConstellationDetailRole": {
+    "description": "Constellation channel card detail row label: channel role."
+  },
+  "nodedexConstellationDetailBattery": "Battery",
+  "@nodedexConstellationDetailBattery": {
+    "description": "Constellation telemetry card detail row label."
+  },
+  "nodedexConstellationDetailVoltage": "Voltage",
+  "@nodedexConstellationDetailVoltage": {
+    "description": "Constellation telemetry card detail row label."
+  },
+  "nodedexConstellationDetailChannelUtil": "Channel utilisation",
+  "@nodedexConstellationDetailChannelUtil": {
+    "description": "Constellation telemetry card detail row label."
+  },
+  "nodedexConstellationDetailAirUtilTx": "TX airtime",
+  "@nodedexConstellationDetailAirUtilTx": {
+    "description": "Constellation telemetry card detail row label: share of airtime spent transmitting."
+  },
+  "nodedexConstellationDetailTemperature": "Temperature",
+  "@nodedexConstellationDetailTemperature": {
+    "description": "Constellation telemetry card detail row label."
+  },
+  "nodedexConstellationDetailHumidity": "Humidity",
+  "@nodedexConstellationDetailHumidity": {
+    "description": "Constellation telemetry card detail row label."
+  },
+  "nodedexConstellationHopsUnknown": "Unknown",
+  "@nodedexConstellationHopsUnknown": {
+    "description": "Constellation route card hop value when the hop count is not known."
+  },
+  "nodedexConstellationHopsDirect": "Direct",
+  "@nodedexConstellationHopsDirect": {
+    "description": "Constellation route card hop value when the node is heard directly (zero hops)."
+  },
+  "nodedexConstellationHopsCount": "{count, plural, =1{1 hop} other{{count} hops}}",
+  "@nodedexConstellationHopsCount": {
+    "description": "Constellation route card hop value.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nodedexConstellationChannelFallback": "Channel {index}",
+  "@nodedexConstellationChannelFallback": {
+    "description": "Constellation channel card title when the channel has no name.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "nodedexConstellationEncounterTotal": "{count} total",
+  "@nodedexConstellationEncounterTotal": {
+    "description": "Constellation encounter card subtitle: total encounters.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nodedexConstellationMessagesExchanged": "{count} exchanged",
+  "@nodedexConstellationMessagesExchanged": {
+    "description": "Constellation messages card subtitle: number of messages exchanged with the node.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nodedexConstellationMonthsAgo": "{count}mo ago",
+  "@nodedexConstellationMonthsAgo": {
+    "description": "Compact relative time in Constellation cards, months.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nodedexConstellationYearsAgo": "{count}y ago",
+  "@nodedexConstellationYearsAgo": {
+    "description": "Compact relative time in Constellation cards, years.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "statusConfiguring": "Configuring SocialMesh…",
   "@statusConfiguring": {

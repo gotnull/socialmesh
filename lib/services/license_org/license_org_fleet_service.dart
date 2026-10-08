@@ -223,7 +223,8 @@ class LicenseOrgFleetService {
       );
       return const FleetMutationFailure(
         reason: FleetMutationReason.unavailable,
-        message: 'fleet mutation could not be completed',
+        message:
+            'fleet mutation could not be completed', // lint-allow: hardcoded-string - UI maps reason
       );
     }
   }

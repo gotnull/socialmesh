@@ -1021,6 +1021,7 @@ class _EncounterRow extends StatelessWidget {
             Text(encounter.encounterSummary, style: tertiaryStyle),
           ],
         ),
+        // lint-allow: hardcoded-string - separator around relationshipAgeText
         Text('· ${encounter.relationshipAgeText(now)}', style: tertiaryStyle),
       ],
     );

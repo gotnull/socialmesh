@@ -2553,8 +2553,10 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
             final token = args?['token'] as String?;
             if (token == null || token.isEmpty) {
               return MaterialPageRoute(
-                builder: (_) => const Scaffold(
-                  body: Center(child: Text('Invalid invite link')),
+                builder: (context) => Scaffold(
+                  body: Center(
+                    child: Text(context.l10n.deepLinkInvalidInviteLink),
+                  ),
                 ),
               );
             }

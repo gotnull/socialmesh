@@ -35,7 +35,8 @@ class TerminalOutputLineWidget extends StatelessWidget {
         children: [
           if (line.index != null)
             TextSpan(
-              text: '[${line.index}] ',
+              text:
+                  '[${line.index}] ', // lint-allow: hardcoded-string - index prefix
               style: baseStyle.copyWith(
                 color: context.accentColor,
                 fontWeight: FontWeight.w700,

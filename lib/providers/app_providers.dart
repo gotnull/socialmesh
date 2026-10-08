@@ -4568,9 +4568,10 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     final lastHeardSec = mostRecent == null
         ? -1
         : DateTime.now().difference(mostRecent).inSeconds;
+    final l10n = safeL10n();
     return _DestinationData(
-      label: 'MESH',
-      longName: 'Whole network',
+      label: l10n.navigationSectionMesh,
+      longName: l10n.liveActivityDestinationWholeNetwork,
       lastHeardSec: lastHeardSec,
       nextEventSec: 0,
     );

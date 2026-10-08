@@ -174,7 +174,8 @@ class CarPlayIntentService {
       default:
         throw PlatformException(
           code: 'UNSUPPORTED',
-          message: 'CarPlay method ${call.method} not supported',
+          message:
+              'CarPlay method ${call.method} not supported', // lint-allow: hardcoded-string - native channel error
         );
     }
   }

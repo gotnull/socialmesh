@@ -94,7 +94,8 @@ class LicenseOrgSettingsService {
     if (trimmed.isEmpty) {
       return UpdateLicenseOrgNameFailure(
         reason: UpdateLicenseOrgNameReason.invalidArgument,
-        message: 'name is required',
+        message:
+            'name is required', // lint-allow: hardcoded-string - UI maps reason
       );
     }
     // Match the backend's JS-side `.length` (UTF-16 code units), not
@@ -104,7 +105,8 @@ class LicenseOrgSettingsService {
     if (trimmed.length > licenseOrgNameMaxLength) {
       return UpdateLicenseOrgNameFailure(
         reason: UpdateLicenseOrgNameReason.invalidArgument,
-        message: 'name is too long',
+        message:
+            'name is too long', // lint-allow: hardcoded-string - UI maps reason
       );
     }
 

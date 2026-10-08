@@ -32,6 +32,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/settings_primitives.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../services/meshcore/storage/meshcore_radio_params_store.dart';
@@ -597,6 +598,18 @@ class _MeshCoreRadioSettingsSheetState
             trailing: Icon(Icons.chevron_right, color: context.textTertiary),
             onTap: _saving ? null : () => _openPresetPicker(l10n),
           ),
+          if (isMeshCoreUsBelow500Khz(
+            presetId: _selectedPresetId,
+            bandwidthKhz: _bandwidthKhz,
+          ))
+            StatusBanner.warning(
+              title: l10n.meshcoreRadioSettingsUsBandwidthNoticeTitle,
+              subtitle: l10n.meshcoreRadioSettingsUsBandwidthNoticeBody,
+              margin: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing16,
+                vertical: AppTheme.spacing8,
+              ),
+            ),
 
           SettingsSectionHeader(
             title: l10n.meshcoreRadioSettingsFreqSectionHeader,

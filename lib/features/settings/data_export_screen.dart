@@ -1228,7 +1228,7 @@ String _csv(Object? value) {
       s.contains(',') ||
       s.contains('\n') ||
       s.contains('\r')) {
-    return '"${s.replaceAll('"', '""')}"';
+    return '"${s.replaceAll('"', '""')}"'; // lint-allow: hardcoded-string - CSV quoting
   }
   return s;
 }
@@ -1239,5 +1239,5 @@ String _filename(String stem, String ext) {
   final stamp =
       '${now.year}${two(now.month)}${two(now.day)}'
       '${two(now.hour)}${two(now.minute)}';
-  return 'socialmesh-$stem-$stamp.$ext';
+  return 'socialmesh-$stem-$stamp.$ext'; // lint-allow: hardcoded-string - file name
 }

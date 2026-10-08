@@ -1142,7 +1142,7 @@ class _SensorReading extends StatelessWidget {
             children: [
               if (unit != null && unit!.isNotEmpty)
                 TextSpan(
-                  text: ' $unit',
+                  text: ' $unit', // lint-allow: hardcoded-string - unit spacer
                   style: context.titleSmallStyle?.copyWith(
                     color: context.textSecondary,
                     fontWeight: FontWeight.w600,

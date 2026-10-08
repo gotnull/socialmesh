@@ -23,8 +23,11 @@ import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/units/temperature_format.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n_utils.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/locale_provider.dart';
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
 import 'node_constellation_models.dart';
@@ -74,6 +77,8 @@ final nodeDexNodeConstellationProvider =
       final entry = ref.watch(nodeDexEntryProvider(centerNodeNum));
       final nodes = ref.watch(nodesProvider);
       final channels = ref.watch(channelsProvider);
+      // Labels are built here, so a language change must rebuild them.
+      ref.watch(localeProvider);
       final node = nodes[centerNodeNum];
       final now = clock.now();
 
@@ -94,6 +99,7 @@ final nodeDexNodeConstellationProvider =
         channels: channels,
         filter: filter,
         now: now,
+        l10n: safeL10n(),
         units: ref.watch(measurementUnitsProvider),
       );
     });
@@ -109,6 +115,7 @@ NodeDexConstellation buildNodeDexConstellation({
   required List<ChannelConfig> channels,
   required NodeDexConstellationFilter filter,
   required DateTime now,
+  required AppLocalizations l10n,
   MeasurementUnits units = MeasurementUnits.metric,
 }) {
   if (entry == null && node == null) {
@@ -128,6 +135,7 @@ NodeDexConstellation buildNodeDexConstellation({
     channels: channels,
     filter: filter,
     now: now,
+    l10n: l10n,
     units: units,
   );
 
@@ -157,6 +165,7 @@ class _ConstellationBuilder {
   final List<ChannelConfig> channels;
   final NodeDexConstellationFilter filter;
   final DateTime now;
+  final AppLocalizations l10n;
   final MeasurementUnits units;
 
   final List<NodeDexGraphNode> _nodes = [];
@@ -190,6 +199,7 @@ class _ConstellationBuilder {
     required this.channels,
     required this.filter,
     required this.now,
+    required this.l10n,
     required this.units,
   });
 
@@ -212,21 +222,35 @@ class _ConstellationBuilder {
     final node = this.node;
     final lastSeen = node?.lastHeard ?? entry?.lastSeen;
     final details = <NodeDexGraphDetailRow>[
-      NodeDexGraphDetailRow(label: 'ID', value: _hexId(centerNodeNum)),
+      NodeDexGraphDetailRow(
+        kind: NodeDexGraphDetailKind.nodeId,
+        label: l10n.nodedexConstellationDetailId,
+        value: _hexId(centerNodeNum),
+      ),
       if (node?.shortName != null && node!.shortName!.trim().isNotEmpty)
-        NodeDexGraphDetailRow(label: 'Short', value: node.shortName!.trim()),
+        NodeDexGraphDetailRow(
+          kind: NodeDexGraphDetailKind.shortName,
+          label: l10n.nodedexConstellationDetailShortName,
+          value: node.shortName!.trim(),
+        ),
       if (entry?.encounterCount != null)
         NodeDexGraphDetailRow(
-          label: 'Encounters',
+          kind: NodeDexGraphDetailKind.encounters,
+          label: l10n.nodedexConstellationCardEncounters,
           value: entry!.encounterCount.toString(),
         ),
       if (lastSeen != null)
         NodeDexGraphDetailRow(
-          label: 'Last seen',
-          value: _formatRelative(lastSeen, now),
+          kind: NodeDexGraphDetailKind.lastSeen,
+          label: l10n.nodedexConstellationDetailLastSeen,
+          value: _formatRelative(lastSeen),
         ),
       if (entry?.socialTag != null)
-        NodeDexGraphDetailRow(label: 'Tag', value: entry!.socialTag!.name),
+        NodeDexGraphDetailRow(
+          kind: NodeDexGraphDetailKind.tag,
+          label: l10n.nodedexConstellationDetailTag,
+          value: entry!.socialTag!.name,
+        ),
     ];
     _nodes.add(
       NodeDexGraphNode(
@@ -251,19 +275,26 @@ class _ConstellationBuilder {
 
     final details = <NodeDexGraphDetailRow>[
       NodeDexGraphDetailRow(
-        label: 'Total',
+        kind: NodeDexGraphDetailKind.total,
+        label: l10n.nodedexConstellationDetailTotal,
         value: entry.encounterCount.toString(),
       ),
       NodeDexGraphDetailRow(
-        label: 'First seen',
-        value: _formatRelative(entry.firstSeen, now),
+        kind: NodeDexGraphDetailKind.firstSeen,
+        label: l10n.nodeAnalyticsFirstSeen,
+        value: _formatRelative(entry.firstSeen),
       ),
       NodeDexGraphDetailRow(
-        label: 'Last seen',
-        value: _formatRelative(entry.lastSeen, now),
+        kind: NodeDexGraphDetailKind.lastSeen,
+        label: l10n.nodedexConstellationDetailLastSeen,
+        value: _formatRelative(entry.lastSeen),
       ),
       if (entry.bestSnr != null)
-        NodeDexGraphDetailRow(label: 'Best SNR', value: '${entry.bestSnr} dB'),
+        NodeDexGraphDetailRow(
+          kind: NodeDexGraphDetailKind.bestSnr,
+          label: l10n.nodedexConstellationDetailBestSnr,
+          value: '${entry.bestSnr} dB',
+        ),
     ];
 
     final encounterId = 'enc:$centerNodeNum';
@@ -277,8 +308,8 @@ class _ConstellationBuilder {
       NodeDexGraphNode(
         id: encounterId,
         type: NodeDexGraphNodeType.encounter,
-        label: 'Encounters',
-        subtitle: '${entry.encounterCount} total',
+        label: l10n.nodedexConstellationCardEncounters,
+        subtitle: l10n.nodedexConstellationEncounterTotal(entry.encounterCount),
         confidence: confidence,
         timestamp: entry.lastSeen,
         details: details,
@@ -304,18 +335,37 @@ class _ConstellationBuilder {
     if (filter.rfOnly && viaMqtt) return;
 
     final hopCount = node.hopCount;
-    final transport = viaMqtt ? 'MQTT' : 'RF';
+    // Transport names are protocol identifiers and stay untranslated.
+    final transport = viaMqtt ? 'MQTT' : 'RF'; // lint-allow: hardcoded-string
     final hopText = hopCount == null
-        ? 'unknown'
-        : (hopCount == 0 ? 'direct' : '$hopCount hops');
+        ? l10n.nodedexConstellationHopsUnknown
+        : (hopCount == 0
+              ? l10n.nodedexConstellationHopsDirect
+              : l10n.nodedexConstellationHopsCount(hopCount));
 
     final details = <NodeDexGraphDetailRow>[
-      NodeDexGraphDetailRow(label: 'Transport', value: transport),
-      NodeDexGraphDetailRow(label: 'Hops', value: hopText),
+      NodeDexGraphDetailRow(
+        kind: NodeDexGraphDetailKind.transport,
+        label: l10n.nodedexConstellationDetailTransport,
+        value: transport,
+      ),
+      NodeDexGraphDetailRow(
+        kind: NodeDexGraphDetailKind.hops,
+        label: l10n.nodedexConstellationDetailHops,
+        value: hopText,
+      ),
       if (node.snr != null)
-        NodeDexGraphDetailRow(label: 'SNR', value: '${node.snr} dB'),
+        NodeDexGraphDetailRow(
+          kind: NodeDexGraphDetailKind.snr,
+          label: l10n.nodeDetailLabelSnr,
+          value: '${node.snr} dB',
+        ),
       if (node.rssi != null)
-        NodeDexGraphDetailRow(label: 'RSSI', value: '${node.rssi} dBm'),
+        NodeDexGraphDetailRow(
+          kind: NodeDexGraphDetailKind.rssi,
+          label: l10n.nodeDetailLabelRssi,
+          value: '${node.rssi} dBm',
+        ),
     ];
 
     final routeId = 'rt:$centerNodeNum';
@@ -327,7 +377,9 @@ class _ConstellationBuilder {
       NodeDexGraphNode(
         id: routeId,
         type: NodeDexGraphNodeType.routeEvidence,
-        label: viaMqtt ? 'MQTT path' : 'RF path',
+        label: viaMqtt
+            ? l10n.nodedexConstellationCardRouteMqtt
+            : l10n.nodedexConstellationCardRouteRf,
         subtitle: hopText,
         confidence: confidence,
         timestamp: node.lastHeard,
@@ -374,13 +426,21 @@ class _ConstellationBuilder {
     final ChannelConfig? channel = _findChannel(idx);
     final label = channel?.name.isNotEmpty == true
         ? channel!.name
-        : 'Channel $idx';
+        : l10n.nodedexConstellationChannelFallback(idx);
     final channelId = 'ch:$centerNodeNum:$idx';
 
     final details = <NodeDexGraphDetailRow>[
-      NodeDexGraphDetailRow(label: 'Index', value: idx.toString()),
+      NodeDexGraphDetailRow(
+        kind: NodeDexGraphDetailKind.channelIndex,
+        label: l10n.nodedexConstellationDetailIndex,
+        value: idx.toString(),
+      ),
       if (channel != null)
-        NodeDexGraphDetailRow(label: 'Role', value: channel.role),
+        NodeDexGraphDetailRow(
+          kind: NodeDexGraphDetailKind.channelRole,
+          label: l10n.nodedexConstellationDetailRole,
+          value: channel.role,
+        ),
     ];
 
     _nodes.add(
@@ -388,7 +448,7 @@ class _ConstellationBuilder {
         id: channelId,
         type: NodeDexGraphNodeType.channel,
         label: label,
-        subtitle: 'Last heard',
+        subtitle: l10n.nodedexLastHeard,
         confidence: NodeDexGraphConfidence.medium,
         timestamp: node.lastHeard,
         details: details,
@@ -425,30 +485,39 @@ class _ConstellationBuilder {
 
     final details = <NodeDexGraphDetailRow>[
       if (node.batteryLevel != null)
-        NodeDexGraphDetailRow(label: 'Battery', value: '${node.batteryLevel}%'),
+        NodeDexGraphDetailRow(
+          kind: NodeDexGraphDetailKind.battery,
+          label: l10n.nodedexConstellationDetailBattery,
+          value: '${node.batteryLevel}%',
+        ),
       if (node.voltage != null)
         NodeDexGraphDetailRow(
-          label: 'Voltage',
+          kind: NodeDexGraphDetailKind.voltage,
+          label: l10n.nodedexConstellationDetailVoltage,
           value: '${node.voltage!.toStringAsFixed(2)} V',
         ),
       if (node.channelUtilization != null)
         NodeDexGraphDetailRow(
-          label: 'Ch util',
+          kind: NodeDexGraphDetailKind.channelUtilization,
+          label: l10n.nodedexConstellationDetailChannelUtil,
           value: '${node.channelUtilization!.toStringAsFixed(1)}%',
         ),
       if (node.airUtilTx != null)
         NodeDexGraphDetailRow(
-          label: 'Tx air',
+          kind: NodeDexGraphDetailKind.airUtilTx,
+          label: l10n.nodedexConstellationDetailAirUtilTx,
           value: '${node.airUtilTx!.toStringAsFixed(1)}%',
         ),
       if (node.temperature != null)
         NodeDexGraphDetailRow(
-          label: 'Temp',
+          kind: NodeDexGraphDetailKind.temperature,
+          label: l10n.nodedexConstellationDetailTemperature,
           value: formatTemperatureCelsiusAscii(node.temperature!, units),
         ),
       if (node.humidity != null)
         NodeDexGraphDetailRow(
-          label: 'Humidity',
+          kind: NodeDexGraphDetailKind.humidity,
+          label: l10n.nodedexConstellationDetailHumidity,
           value: '${node.humidity!.toStringAsFixed(0)}%',
         ),
     ];
@@ -458,7 +527,7 @@ class _ConstellationBuilder {
       NodeDexGraphNode(
         id: telemetryId,
         type: NodeDexGraphNodeType.telemetry,
-        label: 'Telemetry',
+        label: l10n.nodedexConstellationCardTelemetry,
         subtitle: details.isNotEmpty ? details.first.value : null,
         confidence: NodeDexGraphConfidence.medium,
         timestamp: node.lastHeard,
@@ -492,8 +561,9 @@ class _ConstellationBuilder {
       NodeDexGraphNode(
         id: messageId,
         type: NodeDexGraphNodeType.message,
-        label: 'Messages',
-        subtitle: '$messageCount exchanged',
+        label: l10n.nodedexConstellationCardMessages,
+        subtitle: l10n.nodedexConstellationMessagesExchanged(messageCount),
+        count: messageCount,
         confidence: NodeDexGraphConfidence.medium,
         timestamp: entry?.lastSeen,
         details: const [],
@@ -544,17 +614,29 @@ class _ConstellationBuilder {
     }
   }
 
-  static String _actionLabel(NodeDexGraphAction action) {
+  String _actionLabel(NodeDexGraphAction action) {
     switch (action) {
       case NodeDexGraphAction.message:
-        return 'Message';
+        return l10n.nodedexConstellationActionMessage;
       case NodeDexGraphAction.toggleFavourite:
-        return 'Favourite';
+        return l10n.nodedexConstellationActionFavourite;
       case NodeDexGraphAction.viewOnMap:
-        return 'View on map';
+        return l10n.nodedexConstellationActionMap;
       case NodeDexGraphAction.inspectDetails:
-        return 'Inspect details';
+        return l10n.nodedexConstellationActionDetails;
     }
+  }
+
+  String _formatRelative(DateTime ts) {
+    final diff = now.difference(ts);
+    if (diff.inSeconds < 60) return l10n.commonJustNow;
+    if (diff.inMinutes < 60) return l10n.commonMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.commonHoursAgo(diff.inHours);
+    if (diff.inDays < 30) return l10n.commonDaysAgo(diff.inDays);
+    if (diff.inDays < 365) {
+      return l10n.nodedexConstellationMonthsAgo((diff.inDays / 30).floor());
+    }
+    return l10n.nodedexConstellationYearsAgo((diff.inDays / 365).floor());
   }
 
   ChannelConfig? _findChannel(int index) {
@@ -622,14 +704,4 @@ class _ConstellationBuilder {
       emptyReason: emptyReason,
     );
   }
-}
-
-String _formatRelative(DateTime ts, DateTime now) {
-  final diff = now.difference(ts);
-  if (diff.inSeconds < 60) return 'just now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-  if (diff.inHours < 24) return '${diff.inHours}h ago';
-  if (diff.inDays < 30) return '${diff.inDays}d ago';
-  if (diff.inDays < 365) return '${(diff.inDays / 30).floor()}mo ago';
-  return '${(diff.inDays / 365).floor()}y ago';
 }

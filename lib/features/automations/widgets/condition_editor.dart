@@ -230,7 +230,8 @@ class ConditionEditor extends StatelessWidget {
               min: 5,
               max: 95,
               divisions: 18,
-              label: '$threshold%',
+              label:
+                  '$threshold%', // lint-allow: hardcoded-string - number format
               onChanged: (value) {
                 onChanged(
                   AutomationCondition(

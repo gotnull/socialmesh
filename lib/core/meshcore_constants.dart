@@ -589,6 +589,9 @@ class MeshCoreRegionPreset {
   /// in EU jurisdictions.
   final int txPowerDbm;
 
+  /// True for presets meant for US operation, where FCC Part 15 applies.
+  final bool isUnitedStates;
+
   const MeshCoreRegionPreset({
     required this.id,
     required this.label,
@@ -597,6 +600,7 @@ class MeshCoreRegionPreset {
     required this.spreadingFactor,
     required this.codingRate,
     required this.txPowerDbm,
+    this.isUnitedStates = false,
   });
 }
 
@@ -735,6 +739,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
     spreadingFactor: 10,
     codingRate: 5,
     txPowerDbm: 20,
+    isUnitedStates: true,
   ),
   MeshCoreRegionPreset(
     id: 'us_canada',
@@ -744,6 +749,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
     spreadingFactor: 7,
     codingRate: 5,
     txPowerDbm: 20,
+    isUnitedStates: true,
   ),
   MeshCoreRegionPreset(
     id: 'vn',
@@ -812,6 +818,23 @@ MeshCoreRegionPreset? meshCoreRegionPresetMatching({
     return p;
   }
   return null;
+}
+
+/// True when [presetId] names a US preset and [bandwidthKhz] is narrower
+/// than the 500 kHz minimum 6 dB bandwidth FCC Part 15.247 sets for
+/// digital modulation in 902-928 MHz. Other US rule paths do not carry
+/// that minimum, so this marks a configuration for review; it does not
+/// judge it. Custom configs are never flagged: MeshCore carries no region,
+/// and 902-928 MHz overlaps other countries' bands.
+bool isMeshCoreUsBelow500Khz({
+  required String presetId,
+  required double bandwidthKhz,
+}) {
+  if (bandwidthKhz >= 500) return false;
+  for (final p in kMeshCoreRegionPresets) {
+    if (p.id == presetId) return p.isUnitedStates;
+  }
+  return false;
 }
 
 /// MeshCore code classification utilities.

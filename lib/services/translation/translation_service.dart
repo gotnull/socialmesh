@@ -59,7 +59,8 @@ class TranslationService {
     if (!isOnline()) {
       throw const TranslationError(
         type: TranslationErrorType.offline,
-        message: 'No internet connection',
+        message:
+            'No internet connection', // lint-allow: hardcoded-string - logged only; UI maps type
       );
     }
 

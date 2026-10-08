@@ -9184,6 +9184,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Muss mit jedem anderen Funkgerät in Ihrem Mesh übereinstimmen.';
 
   @override
+  String get meshcoreRadioSettingsUsBandwidthNoticeTitle =>
+      'US-Funkkonfiguration';
+
+  @override
+  String get meshcoreRadioSettingsUsBandwidthNoticeBody =>
+      'Diese Konfiguration nutzt weniger als 500 kHz Bandbreite. FCC Part 15.247 schreibt für digital modulierte Systeme im Band 902-928 MHz eine 6-dB-Bandbreite von mindestens 500 kHz vor. Was gilt, hängt von der Zulassung Ihres Geräts und seiner Konfiguration ab. Funkgeräte mit unterschiedlicher Bandbreite hören einander nicht, stimmen Sie eine Änderung daher mit Ihrem lokalen Mesh ab.';
+
+  @override
   String get meshcoreRadioSettingsRegionSectionHeader => 'REGION';
 
   @override
@@ -12706,6 +12714,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get navigationSectionMesh => 'MESH';
+
+  @override
+  String get liveActivityDestinationWholeNetwork => 'Gesamtes Netz';
 
   @override
   String get navigationSectionPremium => 'PREMIUM';
@@ -36928,6 +36939,61 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sipCountersTitle => 'SIP-Debug-Zähler';
 
   @override
+  String sipCounterTypeSent(String type) {
+    return '$type gesendet';
+  }
+
+  @override
+  String sipCounterTypeReceived(String type) {
+    return '$type empfangen';
+  }
+
+  @override
+  String get sipCounterTotalBytesSent => 'Bytes gesendet gesamt';
+
+  @override
+  String get sipCounterTotalBytesReceived => 'Bytes empfangen gesamt';
+
+  @override
+  String get sipCounterHandshakesInitiated => 'Handshakes gestartet';
+
+  @override
+  String get sipCounterHandshakesCompleted => 'Handshakes abgeschlossen';
+
+  @override
+  String get sipCounterHandshakesFailed => 'Handshakes fehlgeschlagen';
+
+  @override
+  String get sipCounterIdentitiesVerified => 'Identitäten verifiziert';
+
+  @override
+  String get sipCounterIdentityKeyChanged => 'Identitätsschlüssel geändert';
+
+  @override
+  String get sipCounterBudgetThrottles => 'Budget-Drosselungen';
+
+  @override
+  String get sipCounterCongestionPauses => 'Überlastungspausen';
+
+  @override
+  String get sipCounterReplayRejects => 'Abgewiesene Wiederholungen';
+
+  @override
+  String get sipCounterSignatureFailures => 'Signaturfehler';
+
+  @override
+  String get sipCounterSignatureSuccesses => 'Gültige Signaturen';
+
+  @override
+  String get sipCounterRetransmissions => 'Neuübertragungen';
+
+  @override
+  String get sipCounterNacksSent => 'NACKs gesendet';
+
+  @override
+  String get sipCounterNacksReceived => 'NACKs empfangen';
+
+  @override
   String get sipHubTitle => 'Handshake';
 
   @override
@@ -42964,6 +43030,96 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nodedexConstellationActionDetails => 'Details anzeigen';
+
+  @override
+  String get nodedexConstellationDetailId => 'ID';
+
+  @override
+  String get nodedexConstellationDetailShortName => 'Kurzname';
+
+  @override
+  String get nodedexConstellationDetailLastSeen => 'Zuletzt gesehen';
+
+  @override
+  String get nodedexConstellationDetailTag => 'Tag';
+
+  @override
+  String get nodedexConstellationDetailTotal => 'Gesamt';
+
+  @override
+  String get nodedexConstellationDetailBestSnr => 'Bester SNR';
+
+  @override
+  String get nodedexConstellationDetailTransport => 'Übertragung';
+
+  @override
+  String get nodedexConstellationDetailHops => 'Hops';
+
+  @override
+  String get nodedexConstellationDetailIndex => 'Index';
+
+  @override
+  String get nodedexConstellationDetailRole => 'Rolle';
+
+  @override
+  String get nodedexConstellationDetailBattery => 'Akku';
+
+  @override
+  String get nodedexConstellationDetailVoltage => 'Spannung';
+
+  @override
+  String get nodedexConstellationDetailChannelUtil => 'Kanalauslastung';
+
+  @override
+  String get nodedexConstellationDetailAirUtilTx => 'TX-Sendezeit';
+
+  @override
+  String get nodedexConstellationDetailTemperature => 'Temperatur';
+
+  @override
+  String get nodedexConstellationDetailHumidity => 'Luftfeuchtigkeit';
+
+  @override
+  String get nodedexConstellationHopsUnknown => 'Unbekannt';
+
+  @override
+  String get nodedexConstellationHopsDirect => 'Direkt';
+
+  @override
+  String nodedexConstellationHopsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Hops',
+      one: '1 Hop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodedexConstellationChannelFallback(int index) {
+    return 'Kanal $index';
+  }
+
+  @override
+  String nodedexConstellationEncounterTotal(int count) {
+    return '$count gesamt';
+  }
+
+  @override
+  String nodedexConstellationMessagesExchanged(int count) {
+    return '$count ausgetauscht';
+  }
+
+  @override
+  String nodedexConstellationMonthsAgo(int count) {
+    return 'vor $count Mon.';
+  }
+
+  @override
+  String nodedexConstellationYearsAgo(int count) {
+    return 'vor $count J.';
+  }
 
   @override
   String get statusConfiguring => 'SocialMesh wird konfiguriert...';

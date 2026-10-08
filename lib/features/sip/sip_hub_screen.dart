@@ -1864,7 +1864,7 @@ class _SipCountersSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final counters = ref.watch(sipCountersProvider);
-    final entries = counters.toDisplayEntries();
+    final entries = counters.toDisplayEntries(l10n);
     final nonZero = entries.where((e) => e.value > 0).toList();
 
     return Container(

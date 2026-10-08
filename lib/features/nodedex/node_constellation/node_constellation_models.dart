@@ -64,19 +64,51 @@ enum NodeDexConstellationTimeWindow {
 /// readable.
 @immutable
 class NodeDexGraphDetailRow {
+  /// Stable identity of the row. Lookups use it, never the localised
+  /// [label].
+  final NodeDexGraphDetailKind kind;
   final String label;
   final String value;
 
-  const NodeDexGraphDetailRow({required this.label, required this.value});
+  const NodeDexGraphDetailRow({
+    required this.kind,
+    required this.label,
+    required this.value,
+  });
 
   @override
   bool operator ==(Object other) =>
       other is NodeDexGraphDetailRow &&
+      other.kind == kind &&
       other.label == label &&
       other.value == value;
 
   @override
-  int get hashCode => Object.hash(label, value);
+  int get hashCode => Object.hash(kind, label, value);
+}
+
+/// What a [NodeDexGraphDetailRow] describes.
+enum NodeDexGraphDetailKind {
+  nodeId,
+  shortName,
+  encounters,
+  lastSeen,
+  tag,
+  total,
+  firstSeen,
+  bestSnr,
+  transport,
+  hops,
+  snr,
+  rssi,
+  channelIndex,
+  channelRole,
+  battery,
+  voltage,
+  channelUtilization,
+  airUtilTx,
+  temperature,
+  humidity,
 }
 
 /// One node in the Constellation. The id is a deterministic, stable
@@ -120,6 +152,11 @@ class NodeDexGraphNode {
   /// node in a [NodeDexConstellation] has this set to `true`.
   final bool centered;
 
+  /// Headline count for nodes that summarise one, such as the message
+  /// node; null elsewhere. Kept apart from the localised [subtitle] so
+  /// readers never parse display text.
+  final int? count;
+
   const NodeDexGraphNode({
     required this.id,
     required this.type,
@@ -132,6 +169,7 @@ class NodeDexGraphNode {
     this.targetNodeNum,
     this.viaMqtt = false,
     this.centered = false,
+    this.count,
   });
 
   @override
@@ -147,7 +185,8 @@ class NodeDexGraphNode {
       other.action == action &&
       other.targetNodeNum == targetNodeNum &&
       other.viaMqtt == viaMqtt &&
-      other.centered == centered;
+      other.centered == centered &&
+      other.count == count;
 
   @override
   int get hashCode => Object.hashAll([
@@ -161,6 +200,7 @@ class NodeDexGraphNode {
     action,
     targetNodeNum,
     viaMqtt,
+    count,
     centered,
   ]);
 }

@@ -11,6 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/nodedex/models/nodedex_entry.dart';
 import 'package:socialmesh/features/nodedex/node_constellation/node_constellation_models.dart';
 import 'package:socialmesh/features/nodedex/node_constellation/node_constellation_provider.dart';
+import 'package:socialmesh/l10n/app_localizations.dart';
+import 'package:socialmesh/l10n/app_localizations_de.dart';
+import 'package:socialmesh/l10n/app_localizations_en.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 
 NodeDexEntry _makeEntry({
@@ -68,6 +71,7 @@ NodeDexConstellation _build({
   NodeDexConstellationFilter filter = const NodeDexConstellationFilter(
     timeWindow: _now,
   ),
+  AppLocalizations? l10n,
 }) {
   return buildNodeDexConstellation(
     centerNodeNum: centerNodeNum,
@@ -76,6 +80,7 @@ NodeDexConstellation _build({
     channels: channels,
     filter: filter,
     now: _testNow,
+    l10n: l10n ?? AppLocalizationsEn(),
   );
 }
 
@@ -313,10 +318,52 @@ void main() {
       // Subtitle conveys count only, not body. Label is generic.
       expect(m.label.toLowerCase(), 'messages');
       expect(m.subtitle, contains('5'));
+      expect(m.count, 5);
       // Details must not contain message text.
       for (final d in m.details) {
         expect(d.value, isNot(contains('hello')));
       }
+    });
+  });
+
+  group('localisation', () {
+    test('labels follow the supplied locale; kinds stay stable', () {
+      final entry = _makeEntry(
+        encounterCount: 3,
+        lastSeen: _testNow.subtract(const Duration(hours: 2)),
+      );
+      final en = _build(centerNodeNum: entry.nodeNum, entry: entry);
+      final de = _build(
+        centerNodeNum: entry.nodeNum,
+        entry: entry,
+        l10n: AppLocalizationsDe(),
+      );
+
+      NodeDexGraphDetailRow row(
+        NodeDexConstellation c,
+        NodeDexGraphDetailKind kind,
+      ) => c.nodes.expand((n) => n.details).firstWhere((d) => d.kind == kind);
+
+      final enTotal = row(en, NodeDexGraphDetailKind.total);
+      final deTotal = row(de, NodeDexGraphDetailKind.total);
+      expect(
+        enTotal.label,
+        AppLocalizationsEn().nodedexConstellationDetailTotal,
+      );
+      expect(
+        deTotal.label,
+        AppLocalizationsDe().nodedexConstellationDetailTotal,
+      );
+      expect(deTotal.value, enTotal.value);
+
+      expect(
+        row(en, NodeDexGraphDetailKind.lastSeen).value,
+        AppLocalizationsEn().commonHoursAgo(2),
+      );
+      expect(
+        row(de, NodeDexGraphDetailKind.lastSeen).value,
+        AppLocalizationsDe().commonHoursAgo(2),
+      );
     });
   });
 }

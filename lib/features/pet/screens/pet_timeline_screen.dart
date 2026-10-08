@@ -1084,7 +1084,9 @@ class _GroupedContent extends StatelessWidget {
                 ),
                 children: [
                   TextSpan(text: label),
-                  const TextSpan(text: '  '),
+                  const TextSpan(
+                    text: '  ',
+                  ), // lint-allow: hardcoded-string - spacer
                   TextSpan(
                     text: l10n.petTimelineGroupedCount(entry.count),
                     style: TextStyle(

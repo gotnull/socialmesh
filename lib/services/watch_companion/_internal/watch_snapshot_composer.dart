@@ -40,7 +40,7 @@ import 'watch_readiness_facade.dart';
 final watchSnapshotComposerProvider = Provider<WatchCompanionSnapshot>((ref) {
   final connection = _readSlice<WatchCompanionConnectionState>(
     () => ref.watch(watchReadinessFacadeProvider),
-    label: 'readiness',
+    label: 'readiness', // lint-allow: hardcoded-string - log label
     fallback: () => const WatchCompanionConnectionState(
       status: WatchCompanionConnectionStatus.unsupported,
       readinessReason: 'readiness_facade_unavailable',
@@ -49,7 +49,7 @@ final watchSnapshotComposerProvider = Provider<WatchCompanionSnapshot>((ref) {
 
   final inbox = _readSlice<WatchCompanionInboxPreview>(
     () => ref.watch(watchInboxFacadeProvider),
-    label: 'inbox',
+    label: 'inbox', // lint-allow: hardcoded-string - log label
     fallback: () => const WatchCompanionInboxPreview(
       unreadCount: 0,
       previews: <WatchCompanionInboxMessage>[],
@@ -58,13 +58,13 @@ final watchSnapshotComposerProvider = Provider<WatchCompanionSnapshot>((ref) {
 
   final nodes = _readSlice<List<WatchCompanionNodePreview>>(
     () => ref.watch(watchNodePreviewProvider),
-    label: 'nodes',
+    label: 'nodes', // lint-allow: hardcoded-string - log label
     fallback: () => const <WatchCompanionNodePreview>[],
   );
 
   final channels = _readSlice<List<WatchCompanionChannelPreview>>(
     () => ref.watch(watchChannelsFacadeProvider),
-    label: 'channels',
+    label: 'channels', // lint-allow: hardcoded-string - log label
     fallback: () => const <WatchCompanionChannelPreview>[],
   );
 

@@ -840,7 +840,10 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
         final prefix = t.isPinned ? '📌 ' : '';
         lines.add(
           TerminalOutputLine.tappable(
-            text: '$prefix${t.title}  (${t.replyCount} replies)',
+            // Terminal mode copy is English throughout (nodeboard_voice.dart)
+            // and is localised as one unit, not line by line.
+            text:
+                '$prefix${t.title}  (${t.replyCount} replies)', // lint-allow: hardcoded-string
             index: i + 1,
             tapCommand: 'OPEN ${i + 1}',
           ),
@@ -1077,44 +1080,46 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
   // --------------------------------------------------------------------
   // Context-aware chip generation
   // --------------------------------------------------------------------
+  // Chip labels are the BBS command words the parser matches, so they
+  // stay untranslated: a label must equal what the user can type.
 
   static const _chipHelp = TerminalChipAction(
-    label: 'HELP',
+    label: 'HELP', // lint-allow: hardcoded-string - BBS command
     command: 'HELP',
     icon: Icons.help_outline,
   );
   static const _chipBack = TerminalChipAction(
-    label: 'BACK',
+    label: 'BACK', // lint-allow: hardcoded-string - BBS command
     command: 'BACK',
     icon: Icons.arrow_back,
   );
   static const _chipSections = TerminalChipAction(
-    label: 'SECTIONS',
+    label: 'SECTIONS', // lint-allow: hardcoded-string - BBS command
     command: 'SECTIONS',
     icon: Icons.view_list_outlined,
   );
   static const _chipAbout = TerminalChipAction(
-    label: 'ABOUT',
+    label: 'ABOUT', // lint-allow: hardcoded-string - BBS command
     command: 'ABOUT',
     icon: Icons.info_outline,
   );
   static const _chipGuestbook = TerminalChipAction(
-    label: 'GUESTBOOK',
+    label: 'GUESTBOOK', // lint-allow: hardcoded-string - BBS command
     command: 'GUESTBOOK',
     icon: Icons.edit_note,
   );
   static const _chipPost = TerminalChipAction(
-    label: 'POST',
+    label: 'POST', // lint-allow: hardcoded-string - BBS command
     command: 'POST',
     icon: Icons.add_comment_outlined,
   );
   static const _chipReply = TerminalChipAction(
-    label: 'REPLY',
+    label: 'REPLY', // lint-allow: hardcoded-string - BBS command
     command: 'REPLY',
     icon: Icons.reply_outlined,
   );
   static const _chipQuit = TerminalChipAction(
-    label: 'QUIT',
+    label: 'QUIT', // lint-allow: hardcoded-string - BBS command
     command: 'QUIT',
     icon: Icons.close,
   );
@@ -1142,7 +1147,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
     for (var i = 1; i <= count && i <= 6; i++) {
       chips.add(
         TerminalChipAction(
-          label: '[$i]',
+          label: '[$i]', // lint-allow: hardcoded-string - index chip
           command: 'OPEN $i',
           icon: Icons.chevron_right,
         ),
@@ -1157,7 +1162,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
     for (var i = 1; i <= count && i <= 6; i++) {
       chips.add(
         TerminalChipAction(
-          label: '[$i]',
+          label: '[$i]', // lint-allow: hardcoded-string - index chip
           command: 'OPEN $i',
           icon: Icons.chevron_right,
         ),

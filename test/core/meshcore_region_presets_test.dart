@@ -192,4 +192,41 @@ void main() {
       expect(kMeshCoreMaxNodeNameBytes, equals(31));
     });
   });
+
+  group('isMeshCoreUsBelow500Khz', () {
+    test('only the two US presets are marked United States', () {
+      expect(
+        kMeshCoreRegionPresets.where((p) => p.isUnitedStates).map((p) => p.id),
+        unorderedEquals(['us_arizona', 'us_canada']),
+      );
+    });
+
+    test('a US preset below 500 kHz is flagged', () {
+      expect(
+        isMeshCoreUsBelow500Khz(presetId: 'us_canada', bandwidthKhz: 62.5),
+        isTrue,
+      );
+      expect(
+        isMeshCoreUsBelow500Khz(presetId: 'us_arizona', bandwidthKhz: 250),
+        isTrue,
+      );
+    });
+
+    test('a US preset at 500 kHz is not flagged', () {
+      expect(
+        isMeshCoreUsBelow500Khz(presetId: 'us_canada', bandwidthKhz: 500),
+        isFalse,
+      );
+    });
+
+    test('non-US presets and custom configs are never flagged', () {
+      for (final id in ['au_default', 'offgrid_918', kMeshCoreCustomPresetId]) {
+        expect(
+          isMeshCoreUsBelow500Khz(presetId: id, bandwidthKhz: 62.5),
+          isFalse,
+          reason: id,
+        );
+      }
+    });
+  });
 }

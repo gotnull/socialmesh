@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/l10n/app_localizations_en.dart';
 import 'package:socialmesh/services/protocol/sip/sip_counters.dart';
 import 'package:socialmesh/services/protocol/sip/sip_types.dart';
 
@@ -165,7 +166,7 @@ void main() {
       counters.recordHandshakeInitiated();
       counters.recordBudgetThrottle();
 
-      final entries = counters.toDisplayEntries();
+      final entries = counters.toDisplayEntries(AppLocalizationsEn());
       expect(entries, isNotEmpty);
 
       final labels = entries.map((e) => e.label).toList();
@@ -180,7 +181,7 @@ void main() {
       counters.recordTx(SipMessageType.dmMsg, 27);
       counters.recordTx(SipMessageType.dmMsg, 30);
 
-      final entries = counters.toDisplayEntries();
+      final entries = counters.toDisplayEntries(AppLocalizationsEn());
       final dmEntry = entries.firstWhere((e) => e.label == 'DM_MSG sent');
       expect(dmEntry.value, equals(2));
     });

@@ -9185,6 +9185,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Має збігатися з кожним іншим радіо у вашій mesh-мережі.';
 
   @override
+  String get meshcoreRadioSettingsUsBandwidthNoticeTitle =>
+      'Налаштування радіо для США';
+
+  @override
+  String get meshcoreRadioSettingsUsBandwidthNoticeBody =>
+      'Ця конфігурація використовує смугу менше 500 кГц. Правила FCC Part 15.247 встановлюють для систем із цифровою модуляцією в діапазоні 902-928 МГц мінімальну ширину смуги за рівнем 6 дБ у 500 кГц. Що застосовується, залежить від сертифікації вашого пристрою та його налаштування. Радіо з різною шириною смуги не чують одне одного, тому погоджуйте будь-які зміни з вашою місцевою mesh-мережею.';
+
+  @override
   String get meshcoreRadioSettingsRegionSectionHeader => 'РЕГІОН';
 
   @override
@@ -12699,6 +12707,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get navigationSectionMesh => 'MESH';
+
+  @override
+  String get liveActivityDestinationWholeNetwork => 'Уся мережа';
 
   @override
   String get navigationSectionPremium => 'ПРЕМІУМ';
@@ -36858,6 +36869,61 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sipCountersTitle => 'Лічильники налагодження SIP';
 
   @override
+  String sipCounterTypeSent(String type) {
+    return '$type надіслано';
+  }
+
+  @override
+  String sipCounterTypeReceived(String type) {
+    return '$type отримано';
+  }
+
+  @override
+  String get sipCounterTotalBytesSent => 'Усього байтів надіслано';
+
+  @override
+  String get sipCounterTotalBytesReceived => 'Усього байтів отримано';
+
+  @override
+  String get sipCounterHandshakesInitiated => 'Рукостискань розпочато';
+
+  @override
+  String get sipCounterHandshakesCompleted => 'Рукостискань завершено';
+
+  @override
+  String get sipCounterHandshakesFailed => 'Невдалих рукостискань';
+
+  @override
+  String get sipCounterIdentitiesVerified => 'Особистостей перевірено';
+
+  @override
+  String get sipCounterIdentityKeyChanged => 'Змін ключа особистості';
+
+  @override
+  String get sipCounterBudgetThrottles => 'Обмежень через бюджет';
+
+  @override
+  String get sipCounterCongestionPauses => 'Пауз через перевантаження';
+
+  @override
+  String get sipCounterReplayRejects => 'Відхилених повторів';
+
+  @override
+  String get sipCounterSignatureFailures => 'Недійсних підписів';
+
+  @override
+  String get sipCounterSignatureSuccesses => 'Дійсних підписів';
+
+  @override
+  String get sipCounterRetransmissions => 'Повторних передач';
+
+  @override
+  String get sipCounterNacksSent => 'NACK надіслано';
+
+  @override
+  String get sipCounterNacksReceived => 'NACK отримано';
+
+  @override
   String get sipHubTitle => 'Рукостискання';
 
   @override
@@ -42871,6 +42937,98 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodedexConstellationActionDetails => 'Переглянути деталі';
+
+  @override
+  String get nodedexConstellationDetailId => 'ID';
+
+  @override
+  String get nodedexConstellationDetailShortName => 'Коротке ім\'я';
+
+  @override
+  String get nodedexConstellationDetailLastSeen => 'Востаннє';
+
+  @override
+  String get nodedexConstellationDetailTag => 'Мітка';
+
+  @override
+  String get nodedexConstellationDetailTotal => 'Усього';
+
+  @override
+  String get nodedexConstellationDetailBestSnr => 'Найкращий SNR';
+
+  @override
+  String get nodedexConstellationDetailTransport => 'Транспорт';
+
+  @override
+  String get nodedexConstellationDetailHops => 'Стрибки';
+
+  @override
+  String get nodedexConstellationDetailIndex => 'Індекс';
+
+  @override
+  String get nodedexConstellationDetailRole => 'Роль';
+
+  @override
+  String get nodedexConstellationDetailBattery => 'Батарея';
+
+  @override
+  String get nodedexConstellationDetailVoltage => 'Напруга';
+
+  @override
+  String get nodedexConstellationDetailChannelUtil => 'Завантаження каналу';
+
+  @override
+  String get nodedexConstellationDetailAirUtilTx => 'Час передавання TX';
+
+  @override
+  String get nodedexConstellationDetailTemperature => 'Температура';
+
+  @override
+  String get nodedexConstellationDetailHumidity => 'Вологість';
+
+  @override
+  String get nodedexConstellationHopsUnknown => 'Невідомо';
+
+  @override
+  String get nodedexConstellationHopsDirect => 'Напряму';
+
+  @override
+  String nodedexConstellationHopsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count стрибка',
+      many: '$count стрибків',
+      few: '$count стрибки',
+      one: '$count стрибок',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodedexConstellationChannelFallback(int index) {
+    return 'Канал $index';
+  }
+
+  @override
+  String nodedexConstellationEncounterTotal(int count) {
+    return 'Усього: $count';
+  }
+
+  @override
+  String nodedexConstellationMessagesExchanged(int count) {
+    return 'Обмін: $count';
+  }
+
+  @override
+  String nodedexConstellationMonthsAgo(int count) {
+    return '$count міс. тому';
+  }
+
+  @override
+  String nodedexConstellationYearsAgo(int count) {
+    return '$count р. тому';
+  }
 
   @override
   String get statusConfiguring => 'Налаштування SocialMesh…';

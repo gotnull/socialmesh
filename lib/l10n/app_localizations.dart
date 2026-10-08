@@ -15756,6 +15756,18 @@ abstract class AppLocalizations {
   /// **'Must match every other radio in your mesh.'**
   String get meshcoreRadioSettingsHint;
 
+  /// Title of the warning banner in the MeshCore radio settings sheet when a US preset is active with bandwidth below 500 kHz
+  ///
+  /// In en, this message translates to:
+  /// **'US radio configuration'**
+  String get meshcoreRadioSettingsUsBandwidthNoticeTitle;
+
+  /// Body of the MeshCore US sub-500 kHz banner. States the Part 15.247 digital modulation minimum without calling the configuration illegal; other US rule paths exist. FCC Part 15.247 stays verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'This configuration uses less than 500 kHz bandwidth. FCC Part 15.247 sets a minimum 6 dB bandwidth of 500 kHz for digital modulation systems in the 902-928 MHz band. What applies depends on your device\'s authorisation and how it is configured. Radios on different bandwidths cannot hear each other, so agree any change with your local mesh.'**
+  String get meshcoreRadioSettingsUsBandwidthNoticeBody;
+
   /// D26 — Section header for region preset row at top of MeshCore radio settings sheet
   ///
   /// In en, this message translates to:
@@ -21681,6 +21693,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MESH'**
   String get navigationSectionMesh;
+
+  /// Live Activity destination name when messages go to the whole mesh rather than one node.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole network'**
+  String get liveActivityDestinationWholeNetwork;
 
   /// Drawer section header for premium features.
   ///
@@ -63410,6 +63428,108 @@ abstract class AppLocalizations {
   /// **'SIP Debug Counters'**
   String get sipCountersTitle;
 
+  /// SIP debug counter row: frames of one message type sent. {type} is a wire identifier such as CAP_BEACON and stays untranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} sent'**
+  String sipCounterTypeSent(String type);
+
+  /// SIP debug counter row: frames of one message type received. {type} is a wire identifier such as HS_HELLO and stays untranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} received'**
+  String sipCounterTypeReceived(String type);
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Total bytes sent'**
+  String get sipCounterTotalBytesSent;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Total bytes received'**
+  String get sipCounterTotalBytesReceived;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshakes initiated'**
+  String get sipCounterHandshakesInitiated;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshakes completed'**
+  String get sipCounterHandshakesCompleted;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Handshakes failed'**
+  String get sipCounterHandshakesFailed;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Identities verified'**
+  String get sipCounterIdentitiesVerified;
+
+  /// SIP debug counter row label: times a known peer presented a different identity key.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity key changes'**
+  String get sipCounterIdentityKeyChanged;
+
+  /// SIP debug counter row label: sends held back by the airtime budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget throttles'**
+  String get sipCounterBudgetThrottles;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Congestion pauses'**
+  String get sipCounterCongestionPauses;
+
+  /// SIP debug counter row label: frames dropped as replays.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay rejects'**
+  String get sipCounterReplayRejects;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature failures'**
+  String get sipCounterSignatureFailures;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature successes'**
+  String get sipCounterSignatureSuccesses;
+
+  /// SIP debug counter row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Retransmissions'**
+  String get sipCounterRetransmissions;
+
+  /// SIP debug counter row label. NACK is a protocol term (negative acknowledgement).
+  ///
+  /// In en, this message translates to:
+  /// **'NACKs sent'**
+  String get sipCounterNacksSent;
+
+  /// SIP debug counter row label. NACK is a protocol term (negative acknowledgement).
+  ///
+  /// In en, this message translates to:
+  /// **'NACKs received'**
+  String get sipCounterNacksReceived;
+
   /// Title for the SIP Hub screen.
   ///
   /// In en, this message translates to:
@@ -73861,6 +73981,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inspect details'**
   String get nodedexConstellationActionDetails;
+
+  /// Constellation card detail row label: node ID.
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get nodedexConstellationDetailId;
+
+  /// Constellation card detail row label: the node's short name.
+  ///
+  /// In en, this message translates to:
+  /// **'Short name'**
+  String get nodedexConstellationDetailShortName;
+
+  /// Constellation card detail row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get nodedexConstellationDetailLastSeen;
+
+  /// Constellation card detail row label: the node's social tag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag'**
+  String get nodedexConstellationDetailTag;
+
+  /// Constellation encounter card detail row label: total encounter count.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get nodedexConstellationDetailTotal;
+
+  /// Constellation encounter card detail row label. SNR stays as the acronym.
+  ///
+  /// In en, this message translates to:
+  /// **'Best SNR'**
+  String get nodedexConstellationDetailBestSnr;
+
+  /// Constellation route card detail row label; the value is RF or MQTT.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get nodedexConstellationDetailTransport;
+
+  /// Constellation route card detail row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Hops'**
+  String get nodedexConstellationDetailHops;
+
+  /// Constellation channel card detail row label: channel slot index.
+  ///
+  /// In en, this message translates to:
+  /// **'Index'**
+  String get nodedexConstellationDetailIndex;
+
+  /// Constellation channel card detail row label: channel role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get nodedexConstellationDetailRole;
+
+  /// Constellation telemetry card detail row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get nodedexConstellationDetailBattery;
+
+  /// Constellation telemetry card detail row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Voltage'**
+  String get nodedexConstellationDetailVoltage;
+
+  /// Constellation telemetry card detail row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel utilisation'**
+  String get nodedexConstellationDetailChannelUtil;
+
+  /// Constellation telemetry card detail row label: share of airtime spent transmitting.
+  ///
+  /// In en, this message translates to:
+  /// **'TX airtime'**
+  String get nodedexConstellationDetailAirUtilTx;
+
+  /// Constellation telemetry card detail row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get nodedexConstellationDetailTemperature;
+
+  /// Constellation telemetry card detail row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Humidity'**
+  String get nodedexConstellationDetailHumidity;
+
+  /// Constellation route card hop value when the hop count is not known.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get nodedexConstellationHopsUnknown;
+
+  /// Constellation route card hop value when the node is heard directly (zero hops).
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get nodedexConstellationHopsDirect;
+
+  /// Constellation route card hop value.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
+  String nodedexConstellationHopsCount(int count);
+
+  /// Constellation channel card title when the channel has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {index}'**
+  String nodedexConstellationChannelFallback(int index);
+
+  /// Constellation encounter card subtitle: total encounters.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} total'**
+  String nodedexConstellationEncounterTotal(int count);
+
+  /// Constellation messages card subtitle: number of messages exchanged with the node.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} exchanged'**
+  String nodedexConstellationMessagesExchanged(int count);
+
+  /// Compact relative time in Constellation cards, months.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}mo ago'**
+  String nodedexConstellationMonthsAgo(int count);
+
+  /// Compact relative time in Constellation cards, years.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}y ago'**
+  String nodedexConstellationYearsAgo(int count);
 
   /// Top status banner shown while the BLE link is up but the Meshtastic protocol has not finished its two-phase handshake (linkConnected, handshakePhase1, or handshakePhase2). Brand casing: SocialMesh.
   ///

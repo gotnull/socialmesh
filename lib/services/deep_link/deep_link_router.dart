@@ -295,7 +295,9 @@ class DeepLinkRouter {
     if (!link.hasPurchaseSessionId) {
       return DeepLinkRouteResult(
         routeName: '/main',
-        fallbackMessage: 'Missing purchase session id',
+        // Never surfaced: purchase returns are handled before routing.
+        fallbackMessage:
+            'Missing purchase session id', // lint-allow: hardcoded-string
       );
     }
     return DeepLinkRouteResult(
@@ -315,7 +317,7 @@ class DeepLinkRouter {
     if (token == null || token.isEmpty) {
       return DeepLinkRouteResult(
         routeName: '/main',
-        fallbackMessage: 'Missing invite token',
+        fallbackMessage: _l10n.deepLinkInvalidInviteLink,
       );
     }
     return DeepLinkRouteResult(
