@@ -21,10 +21,10 @@ packages:
     dependency: "direct main"
     description:
       name: align_positioned
-      sha256: bd62104c70777d86456079f86871677350aa43d607718a698e132e1cce48c30d
+      sha256: "753a66dc7577def79e14b1d10d514097035c61a8d6f896601f3dfc3aa32b9977"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.1"
+    version: "5.1.0"
   analyzer:
     dependency: transitive
     description:

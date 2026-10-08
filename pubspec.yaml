@@ -132,7 +132,7 @@ dependencies:
   # Deep linking
   app_links: ^7.2.1
   timeago: ^3.7.1
-  align_positioned: ^5.0.1
+  align_positioned: ^5.1.0
 
   # Background scheduling
   workmanager: ^0.10.10
