@@ -77,7 +77,7 @@ dependencies:
   image: ^4.9.1
   sensors_plus: ^7.1.0
   fl_chart: ^1.2.0
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.3
   open_mail_launcher: 0.3.1
   connectivity_plus: ^7.3.1
   http: ^1.2.2
