@@ -90,7 +90,7 @@ dependencies:
   flutter_tts: ^4.2.3
   record: ^7.1.1
   live_activities: ^2.5.1
-  package_info_plus: ^10.2.1
+  package_info_plus: ^10.2.2
   device_info_plus: ^13.2.0
 
   # In-App Purchases (RevenueCat)
