@@ -54,7 +54,7 @@ dependencies:
   flutter_markdown: ^0.7.6
 
   # UI/UX
-  cupertino_icons: ^1.0.9
+  cupertino_icons: ^2.0.0
   flutter_compass: ^0.8.1
   flutter_map: ^8.3.2
   infinite_calendar_view: ^2.12.0
