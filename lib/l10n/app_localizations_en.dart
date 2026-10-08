@@ -42810,6 +42810,56 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String presenceEncounterSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Seen $count times',
+      one: 'First encounter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get presenceFirstSeenToday => 'First seen today';
+
+  @override
+  String get presenceFirstSeenYesterday => 'First seen yesterday';
+
+  @override
+  String presenceFirstSeenDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'First seen $count days ago',
+      one: 'First seen 1 day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String presenceFirstSeenWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'First seen $count weeks ago',
+      one: 'First seen 1 week ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String presenceFirstSeenMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'First seen $count months ago',
+      one: 'First seen 1 month ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presenceInferenceTooltip =>
       'LoRa mesh has no offline signal. Status is inferred.';
 

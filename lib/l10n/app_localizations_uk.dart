@@ -43318,6 +43318,63 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String presenceEncounterSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Помічено $count разів',
+      few: 'Помічено $count рази',
+      one: 'Помічено $count раз',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get presenceFirstSeenToday => 'Уперше помічено сьогодні';
+
+  @override
+  String get presenceFirstSeenYesterday => 'Уперше помічено вчора';
+
+  @override
+  String presenceFirstSeenDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Уперше помічено $count дня тому',
+      many: 'Уперше помічено $count днів тому',
+      few: 'Уперше помічено $count дні тому',
+      one: 'Уперше помічено $count день тому',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String presenceFirstSeenWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Уперше помічено $count тижня тому',
+      many: 'Уперше помічено $count тижнів тому',
+      few: 'Уперше помічено $count тижні тому',
+      one: 'Уперше помічено $count тиждень тому',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String presenceFirstSeenMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Уперше помічено $count місяця тому',
+      many: 'Уперше помічено $count місяців тому',
+      few: 'Уперше помічено $count місяці тому',
+      one: 'Уперше помічено $count місяць тому',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presenceInferenceTooltip =>
       'Меш LoRa не має сигналу офлайн. Статус визначається приблизно.';
 

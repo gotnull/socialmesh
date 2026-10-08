@@ -43273,6 +43273,56 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String presenceEncounterSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Visto $count vezes',
+      one: 'Primeiro encontro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get presenceFirstSeenToday => 'Visto pela primeira vez hoje';
+
+  @override
+  String get presenceFirstSeenYesterday => 'Visto pela primeira vez ontem';
+
+  @override
+  String presenceFirstSeenDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Visto pela primeira vez há $count dias',
+      one: 'Visto pela primeira vez há 1 dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String presenceFirstSeenWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Visto pela primeira vez há $count semanas',
+      one: 'Visto pela primeira vez há 1 semana',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String presenceFirstSeenMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Visto pela primeira vez há $count meses',
+      one: 'Visto pela primeira vez há 1 mês',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presenceInferenceTooltip =>
       'A rede LoRa não tem sinal offline. O estado é inferido.';
 

@@ -19,6 +19,7 @@ import '../../models/node_encounter.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
+import 'presence_encounter_labels.dart';
 import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/providers/nodedex_providers.dart';
 import '../nodedex/services/trust_score.dart';
@@ -1018,11 +1019,17 @@ class _EncounterRow extends StatelessWidget {
               color: context.textTertiary,
             ),
             const SizedBox(width: AppTheme.spacing4),
-            Text(encounter.encounterSummary, style: tertiaryStyle),
+            Text(
+              encounterSummaryLabel(context.l10n, encounter.encounterCount),
+              style: tertiaryStyle,
+            ),
           ],
         ),
-        // lint-allow: hardcoded-string - separator around relationshipAgeText
-        Text('· ${encounter.relationshipAgeText(now)}', style: tertiaryStyle),
+        Text(
+          // lint-allow: hardcoded-string - separator before a localised label
+          '· ${relationshipAgeLabel(context.l10n, encounter.relationshipAgeDays(now))}',
+          style: tertiaryStyle,
+        ),
       ],
     );
   }

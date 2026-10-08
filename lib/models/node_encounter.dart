@@ -47,36 +47,6 @@ class NodeEncounter {
   /// How many days since we first saw this node.
   int relationshipAgeDays(DateTime now) => now.difference(firstSeen).inDays;
 
-  /// Human-friendly encounter summary.
-  String get encounterSummary {
-    if (encounterCount == 1) {
-      return 'First encounter'; // lint-allow: hardcoded-string
-    }
-    return 'Seen $encounterCount times'; // lint-allow: hardcoded-string
-  }
-
-  /// Human-friendly relationship age text.
-  String relationshipAgeText(DateTime now) {
-    final days = relationshipAgeDays(now);
-    if (days == 0) return 'First seen today'; // lint-allow: hardcoded-string
-    if (days == 1) {
-      return 'First seen yesterday'; // lint-allow: hardcoded-string
-    }
-    if (days < 7) {
-      return 'First seen $days days ago'; // lint-allow: hardcoded-string
-    }
-    if (days < 14) {
-      return 'First seen 1 week ago'; // lint-allow: hardcoded-string
-    }
-    if (days < 30) {
-      return 'First seen ${days ~/ 7} weeks ago'; // lint-allow: hardcoded-string
-    }
-    if (days < 60) {
-      return 'First seen 1 month ago'; // lint-allow: hardcoded-string
-    }
-    return 'First seen ${days ~/ 30} months ago'; // lint-allow: hardcoded-string
-  }
-
   /// Record a new encounter, updating counts appropriately.
   NodeEncounter recordEncounter(DateTime now) {
     final isNewDay = !_isSameDay(lastSeen, now);

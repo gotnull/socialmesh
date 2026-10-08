@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The SIP debug counters, the NodeDex Constellation cards, the Live Activity's whole-network destination, the Complete Pack name in the payment sheet and the invalid invite link screen now follow the app language instead of always showing English.
+- Presence cards show the encounter count and "first seen" age in the app language, with correct plural forms.
 
 ## [1.71.0] - 2026-10-04
 

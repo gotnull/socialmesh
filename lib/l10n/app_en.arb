@@ -57070,6 +57070,50 @@
       }
     }
   },
+  "presenceEncounterSummary": "{count, plural, =1{First encounter} other{Seen {count} times}}",
+  "@presenceEncounterSummary": {
+    "description": "Presence card encounter count for a node.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "presenceFirstSeenToday": "First seen today",
+  "@presenceFirstSeenToday": {
+    "description": "Presence card: the node was first seen today."
+  },
+  "presenceFirstSeenYesterday": "First seen yesterday",
+  "@presenceFirstSeenYesterday": {
+    "description": "Presence card: the node was first seen yesterday."
+  },
+  "presenceFirstSeenDaysAgo": "{count, plural, =1{First seen 1 day ago} other{First seen {count} days ago}}",
+  "@presenceFirstSeenDaysAgo": {
+    "description": "Presence card: days since the node was first seen (2 to 6).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "presenceFirstSeenWeeksAgo": "{count, plural, =1{First seen 1 week ago} other{First seen {count} weeks ago}}",
+  "@presenceFirstSeenWeeksAgo": {
+    "description": "Presence card: weeks since the node was first seen.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "presenceFirstSeenMonthsAgo": "{count, plural, =1{First seen 1 month ago} other{First seen {count} months ago}}",
+  "@presenceFirstSeenMonthsAgo": {
+    "description": "Presence card: months since the node was first seen.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "presenceInferenceTooltip": "LoRa mesh has no offline signal. Status is inferred.",
   "@presenceInferenceTooltip": {
     "description": "Tooltip shown next to inferred presence badges to explain why status is approximate."

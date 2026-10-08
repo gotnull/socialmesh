@@ -43304,6 +43304,63 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String presenceEncounterSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Встречен $count раз',
+      few: 'Встречен $count раза',
+      one: 'Первая встреча',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get presenceFirstSeenToday => 'Впервые замечен сегодня';
+
+  @override
+  String get presenceFirstSeenYesterday => 'Впервые замечен вчера';
+
+  @override
+  String presenceFirstSeenDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Впервые замечен $count дня назад',
+      many: 'Впервые замечен $count дней назад',
+      few: 'Впервые замечен $count дня назад',
+      one: 'Впервые замечен $count день назад',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String presenceFirstSeenWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Впервые замечен $count недели назад',
+      many: 'Впервые замечен $count недель назад',
+      few: 'Впервые замечен $count недели назад',
+      one: 'Впервые замечен $count неделю назад',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String presenceFirstSeenMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Впервые замечен $count месяца назад',
+      many: 'Впервые замечен $count месяцев назад',
+      few: 'Впервые замечен $count месяца назад',
+      one: 'Впервые замечен $count месяц назад',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presenceInferenceTooltip =>
       'В LoRa-сети нет офлайн-сигнала. Статус определяется по последней активности.';
 

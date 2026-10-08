@@ -8,6 +8,11 @@
 // service so a board feels like a place, not a settings screen. Phrase
 // choice is deterministic per board so repeat visits feel consistent,
 // but different boards speak with different voices based on their tone.
+//
+// Terminal-mode copy is English by design and does not go through the
+// ARB files: it is a BBS persona, and the command parser matches English
+// command words (HELP, POST, QUIT), so translated prompts would point at
+// commands the parser does not accept.
 
 import '../../../core/logging.dart';
 

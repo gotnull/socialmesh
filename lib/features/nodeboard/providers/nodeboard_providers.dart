@@ -840,8 +840,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
         final prefix = t.isPinned ? '📌 ' : '';
         lines.add(
           TerminalOutputLine.tappable(
-            // Terminal mode copy is English throughout (nodeboard_voice.dart)
-            // and is localised as one unit, not line by line.
+            // Terminal mode copy is English by design (see nodeboard_voice.dart).
             text:
                 '$prefix${t.title}  (${t.replyCount} replies)', // lint-allow: hardcoded-string
             index: i + 1,

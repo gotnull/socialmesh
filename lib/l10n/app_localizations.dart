@@ -74630,6 +74630,42 @@ abstract class AppLocalizations {
   /// **'Seen {ago} ago'**
   String presenceSeenAgo(String ago);
 
+  /// Presence card encounter count for a node.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{First encounter} other{Seen {count} times}}'**
+  String presenceEncounterSummary(int count);
+
+  /// Presence card: the node was first seen today.
+  ///
+  /// In en, this message translates to:
+  /// **'First seen today'**
+  String get presenceFirstSeenToday;
+
+  /// Presence card: the node was first seen yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'First seen yesterday'**
+  String get presenceFirstSeenYesterday;
+
+  /// Presence card: days since the node was first seen (2 to 6).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{First seen 1 day ago} other{First seen {count} days ago}}'**
+  String presenceFirstSeenDaysAgo(int count);
+
+  /// Presence card: weeks since the node was first seen.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{First seen 1 week ago} other{First seen {count} weeks ago}}'**
+  String presenceFirstSeenWeeksAgo(int count);
+
+  /// Presence card: months since the node was first seen.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{First seen 1 month ago} other{First seen {count} months ago}}'**
+  String presenceFirstSeenMonthsAgo(int count);
+
   /// Tooltip shown next to inferred presence badges to explain why status is approximate.
   ///
   /// In en, this message translates to:
