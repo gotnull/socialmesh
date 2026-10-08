@@ -127,7 +127,7 @@ dependencies:
   camera: ^0.12.1
 
   # Video streaming (HLS playback)
-  video_player: ^2.14.0
+  video_player: ^2.14.1
 
   # Deep linking
   app_links: ^7.2.1
