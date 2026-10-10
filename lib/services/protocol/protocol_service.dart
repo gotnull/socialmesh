@@ -7,6 +7,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../core/logging.dart';
 import '../../core/meshtastic/region_presets.dart';
 import '../../core/safe_lat_lng.dart';
@@ -7497,9 +7498,8 @@ class ProtocolService {
       );
       return true;
     }
-    final targetNodeId = ByteData.sublistView(
-      frame.payload,
-    ).getUint32(0, Endian.little);
+    final targetNodeId = ByteData.sublistView(frame.payload)
+        .getUint32(0, Endian.little);
     final myNodeNum = _myNodeNum;
     if (myNodeNum == null || targetNodeId != myNodeNum) {
       AppLogging.sip(
@@ -10471,6 +10471,7 @@ class ProtocolService {
     int spreadFactor = 0,
     int codingRate = 0,
     bool sx126xRxBoostedGain = false,
+    config_pbenum.Config_LoRaConfig_FEM_LNA_Mode? femLnaMode,
     double overrideFrequency = 0.0,
     bool ignoreMqtt = false,
     bool configOkToMqtt = false,
@@ -10515,6 +10516,11 @@ class ProtocolService {
       ..overrideFrequency = overrideFrequency
       ..ignoreMqtt = ignoreMqtt
       ..configOkToMqtt = configOkToMqtt;
+
+    // Omitted controls preserve the cached value, including field absence.
+    if (femLnaMode != null) {
+      loraConfig.femLnaMode = femLnaMode;
+    }
 
     final config = config_pb.Config()..lora = loraConfig;
     await setConfig(config, target: target);

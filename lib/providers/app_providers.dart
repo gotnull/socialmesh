@@ -10,6 +10,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'radio_scope_providers.dart';
 import 'app_lifecycle_provider.dart';
 import '../config/admin_config.dart';
@@ -7400,6 +7401,10 @@ class NodeDiscoveryCooldownNotifier
 
   @override
   NodeDiscoveryCooldownState build() {
+    ref.onDispose(() {
+      _cooldownTimer?.cancel();
+      _cooldownTimer = null;
+    });
     // Start cooldown timer when connection is established
     ref.listen(connectionStateProvider, (previous, next) {
       if (next == AsyncData(DeviceConnectionState.connected)) {

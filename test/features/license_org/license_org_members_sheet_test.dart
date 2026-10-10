@@ -390,9 +390,8 @@ void main() {
   group('revoke action — source-text guards', () {
     late String src;
     setUpAll(() {
-      src = io.File(
-        'lib/features/license_org/license_org_members_sheet.dart',
-      ).readAsStringSync();
+      src = io.File('lib/features/license_org/license_org_members_sheet.dart')
+          .readAsStringSync();
     });
 
     test('hides revoke action for the current user (no self-revoke)', () {
@@ -436,9 +435,8 @@ void main() {
   group('revoked history — source-text guards', () {
     late String src;
     setUpAll(() {
-      src = io.File(
-        'lib/features/license_org/license_org_members_sheet.dart',
-      ).readAsStringSync();
+      src = io.File('lib/features/license_org/license_org_members_sheet.dart')
+          .readAsStringSync();
     });
 
     test('watches licenseOrgRevokedSeatsProvider for the current orgId', () {
@@ -598,9 +596,9 @@ void main() {
 
       // Single Active tile with the uid label.
       expect(find.text('#UID-RO'), findsOneWidget);
-      // No REVOKED section heading (the event was filtered out).
+      // The historical revoke tile is filtered out after reinstatement.
       expect(
-        find.text(_l10n.licenseOrgMembersSectionRevoked.toUpperCase()),
+        find.text(_l10n.licenseOrgMembersRevokedTileTitle('#UID-RO')),
         findsNothing,
       );
     });

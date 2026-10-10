@@ -107,10 +107,7 @@ void main() {
     'English: regionSelection pairing copy no longer blames the phone',
     () async {
       final l = await _load(const Locale('en'));
-      for (final s in <String>[
-        l.regionSelectionPairingHintMessage,
-        l.regionSelectionPairingInvalidation,
-      ]) {
+      for (final s in <String>[l.regionSelectionPairingHintMessage]) {
         expect(
           s,
           isNot(matches(RegExp(_bannedPhrases.join('|')))),
@@ -138,7 +135,6 @@ void main() {
         l.scannerPairingRefreshScanAgain,
         l.scannerPairingInvalidatedError,
         l.regionSelectionPairingHintMessage,
-        l.regionSelectionPairingInvalidation,
       ];
       for (final s in all) {
         expect(

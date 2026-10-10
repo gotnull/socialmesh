@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../utils/time_format.dart';
+
 import 'package:fl_chart/fl_chart.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -586,24 +590,26 @@ class _DeviceMetricsChart extends StatelessWidget {
 
     if (!hasLeftAxis && !hasRightAxis) return const SizedBox.shrink();
 
-    // Voltage axis padding
-    final vPad = hasRightAxis ? ((vMax - vMin) * 0.15).clamp(0.1, 1.0) : 0.0;
-    // A voltage reading is never negative, so the axis floor is not either;
-    // a negative label is one character wider and wraps in the axis column.
-    // Four equal tick intervals are whole tenths of a volt, so rounding
-    // the labels cannot make an evenly spaced axis appear uneven.
-    final vAxisMin = hasRightAxis
-        ? (math.max(0.0, vMin - vPad) * 10).floor() / 10
-        : 0.0;
-    final vTick = hasRightAxis
-        ? ((vMax + vPad - vAxisMin) * 10 / 4).ceil() / 10
-        : 1.25;
+    // Four equal intervals use the smallest whole-tenth step that contains
+    // the readings. Tiny protobuf float errors at a tick boundary must not
+    // double the step. Spare ticks provide headroom without extra padding
+    // forcing a wider axis on a narrow battery-voltage range.
+    final vLowerTenths = hasRightAxis
+        ? math.max(0, (vMin * 10 + 0.00001).floor())
+        : 0;
+    final vUpperTenths = hasRightAxis ? (vMax * 10 - 0.00001).ceil() : 0;
+    final vStepTenths = math.max(1, ((vUpperTenths - vLowerTenths) / 4).ceil());
+    final spareTenths = vStepTenths * 4 - (vUpperTenths - vLowerTenths);
+    final vAxisMin = math.max(0, vLowerTenths - (spareTenths / 2).ceil()) / 10;
+    final vTick = vStepTenths / 10;
     final vAxisMax = vAxisMin + vTick * 4;
 
     // Normalise voltage spots into 0–100 range to share the same Y space.
     final vRange = vAxisMax - vAxisMin;
     final normVoltageSpots = voltageSpots
-        .map((s) => FlSpot(s.x, ((s.y - vAxisMin) / vRange) * 100))
+        .map(
+          (s) => FlSpot(s.x, (((s.y - vAxisMin) / vRange) * 100).clamp(0, 100)),
+        )
         .toList();
 
     // Collect line bar data. Single-point series still render (as a
@@ -674,9 +680,7 @@ class _DeviceMetricsChart extends StatelessWidget {
                                   '${actual.toStringAsFixed(1)}V',
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: AppTheme.warningYellow.withValues(
-                                      alpha: 0.7,
-                                    ),
+                                    color: AppTheme.warningYellow,
                                   ),
                                 ),
                               );
@@ -813,9 +817,8 @@ class _DeviceMetricsCard extends StatelessWidget {
                 ),
                 Text(
                   '${dateFormat.format(log.timestamp)} ${timeFormat.format(log.timestamp)}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

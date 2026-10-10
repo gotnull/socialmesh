@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.73.0] - 2026-10-10
+
+### Added
+
+- LoRa settings expose external FEM LNA control separately from SX126x RX boosted gain, with disabled controls when firmware cannot report support or the radio has no controllable FEM.
+
+### Fixed
+
+- Nodes consume the keyboard inset once inside the main shell, avoiding the extra empty space above the keyboard on small screens.
+- Narrow battery-voltage charts use 0.1 V tick intervals where the range permits, tolerate protobuf rounding at interval boundaries, and show voltage labels at full opacity.
+- The node discovery cooldown timer is cancelled when its provider is disposed.
+- The Ukrainian encounter summary no longer contains a duplicate plural branch that the localisation generator discarded.
+
+### Changed
+
+- Updated cloud_firestore, video_player, sensors_plus, cupertino_icons, share_plus, align_positioned, device_info_plus, package_info_plus, xml and url_launcher. XML 7.1 requires Dart 3.13; the minimum SDK now reflects that requirement.
+- Removed 1,577 unused localisation messages and their metadata from all eight locales, regenerated their accessors, and updated tests that referenced retired copy.
+
 ## [1.72.0] - 2026-10-08
 
 ### Added

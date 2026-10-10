@@ -25,6 +25,8 @@ void main() {
 
   for (final voltages in [
     [3.91, 4.12],
+    [3.84, 4.12],
+    [3.8, 4.200000190734863],
     [3.84],
     [0.01, 0.02],
     [12.01, 14.08],
@@ -74,13 +76,22 @@ void main() {
       expect(labels.first, greaterThanOrEqualTo(0));
       expect(
         labels.first,
-        lessThanOrEqualTo(voltages.reduce((a, b) => a < b ? a : b)),
+        lessThanOrEqualTo(voltages.reduce((a, b) => a < b ? a : b) + 0.000001),
       );
       expect(
         labels.last,
-        greaterThanOrEqualTo(voltages.reduce((a, b) => a > b ? a : b)),
+        greaterThanOrEqualTo(
+          voltages.reduce((a, b) => a > b ? a : b) - 0.000001,
+        ),
       );
       final interval = labels[1] - labels[0];
+      if (voltages.last <= 4.200001 && voltages.first >= 3.8) {
+        expect(interval, closeTo(0.1, 0.0001));
+      }
+      final axisLabel = tester.widget<Text>(
+        find.text('${labels.first.toStringAsFixed(1)}V'),
+      );
+      expect(axisLabel.style?.color, AppTheme.warningYellow);
       for (var i = 2; i < labels.length; i++) {
         expect(labels[i] - labels[i - 1], closeTo(interval, 0.0001));
       }

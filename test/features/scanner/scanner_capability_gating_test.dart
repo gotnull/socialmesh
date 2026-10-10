@@ -32,9 +32,6 @@ void main() {
 
     expect(l10n.scannerUnsupportedBleTitle.isNotEmpty, isTrue);
     expect(l10n.scannerUnsupportedBleDescription.isNotEmpty, isTrue);
-    expect(l10n.scannerUnsupportedBleAction.isNotEmpty, isTrue);
-    expect(l10n.scannerUnsupportedSerialTitle.isNotEmpty, isTrue);
-    expect(l10n.scannerUnsupportedSerialDescription.isNotEmpty, isTrue);
     expect(l10n.scannerWebDashboardTitle.isNotEmpty, isTrue);
     expect(l10n.scannerWebDashboardDescription.isNotEmpty, isTrue);
   });

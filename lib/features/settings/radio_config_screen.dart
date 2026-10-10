@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/meshtastic/modem_preset_metadata.dart';
 import '../../core/meshtastic/region_metadata.dart';
@@ -9,17 +11,21 @@ import '../../core/meshtastic/region_presets.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/ico_help_system.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../services/protocol/admin_target.dart';
+import '../../services/haptic_service.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/number_format.dart';
+import '../../utils/version_compare.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
@@ -53,6 +59,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   int _spreadFactor = 0;
   int _codingRate = 0;
   bool _rxBoostedGain = false;
+  config_pbenum.Config_LoRaConfig_FEM_LNA_Mode? _femLnaMode;
   double _overrideFrequency = 0.0;
   bool _ignoreMqtt = false;
   bool _okToMqtt = false;
@@ -120,6 +127,19 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   }
 
   void _applyConfig(config_pb.Config_LoRaConfig config) {
+    final protocol = ref.read(protocolServiceProvider);
+    final targetNode =
+        ref.read(remoteAdminTargetProvider) ?? protocol.myNodeNum;
+    final firmware = protocol.nodes[targetNode]?.firmwareVersion;
+    final firmwareRelease = RegExp(r'^\d+\.\d+\.\d+')
+        .firstMatch(firmware ?? '')
+        ?.group(0);
+    // Proto3 omits DISABLED (zero). New firmware reports NOT_PRESENT for
+    // hardware without FEM, so an omitted value is disabled on that firmware.
+    final reportsFem =
+        config.hasFemLnaMode() ||
+        (firmwareRelease != null &&
+            isVersionAtLeast(firmwareRelease, '2.7.20'));
     safeSetState(() {
       _selectedRegion = config.region;
       _selectedModemPreset = config.modemPreset;
@@ -133,6 +153,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
       _spreadFactor = config.spreadFactor;
       _codingRate = config.codingRate;
       _rxBoostedGain = config.sx126xRxBoostedGain;
+      _femLnaMode = reportsFem ? config.femLnaMode : null;
       _overrideFrequency = config.overrideFrequency;
       _ignoreMqtt = config.ignoreMqtt;
       _okToMqtt = config.configOkToMqtt;
@@ -313,6 +334,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
         spreadFactor: _spreadFactor,
         codingRate: _codingRate,
         sx126xRxBoostedGain: _rxBoostedGain,
+        femLnaMode: _femLnaMode,
         overrideFrequency: _overrideFrequency,
         ignoreMqtt: _ignoreMqtt,
         configOkToMqtt: _okToMqtt,
@@ -563,6 +585,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                       title: context.l10n.radioConfigSectionAdvanced,
                     ),
                     _buildAdvancedSettings(),
+                    _buildFemLnaSetting(),
                     const SizedBox(height: AppTheme.spacing16),
                     _buildInfoCard(),
                     const SizedBox(height: AppTheme.spacing32),
@@ -1014,6 +1037,37 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFemLnaSetting() {
+    final mode = _femLnaMode;
+    final supported =
+        mode == config_pbenum.Config_LoRaConfig_FEM_LNA_Mode.ENABLED ||
+        mode == config_pbenum.Config_LoRaConfig_FEM_LNA_Mode.DISABLED;
+    final l10n = context.l10n;
+    return SettingsTile(
+      icon: Icons.settings_input_antenna,
+      title: l10n.radioConfigFemLna,
+      subtitle: mode == null
+          ? l10n.radioConfigFemLnaUnknown
+          : supported
+          ? l10n.radioConfigFemLnaSubtitle
+          : l10n.radioConfigFemLnaNotPresent,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      trailing: ThemedSwitch(
+        value: mode == config_pbenum.Config_LoRaConfig_FEM_LNA_Mode.ENABLED,
+        onChanged: supported
+            ? (value) {
+                ref.read(hapticServiceProvider).trigger(HapticType.selection);
+                setState(() {
+                  _femLnaMode = value
+                      ? config_pbenum.Config_LoRaConfig_FEM_LNA_Mode.ENABLED
+                      : config_pbenum.Config_LoRaConfig_FEM_LNA_Mode.DISABLED;
+                });
+              }
+            : null,
       ),
     );
   }

@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -7,6 +8,21 @@ import 'app_localizations.dart';
 /// The translations for Spanish Castilian (`es`).
 class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
+
+  @override
+  String get radioConfigFemLna => 'FEM LNA';
+
+  @override
+  String get radioConfigFemLnaSubtitle =>
+      'Activar el amplificador externo de bajo ruido independientemente de la ganancia RX amplificada.';
+
+  @override
+  String get radioConfigFemLnaUnknown =>
+      'Este firmware no informa de la compatibilidad con FEM.';
+
+  @override
+  String get radioConfigFemLnaNotPresent =>
+      'Esta radio no tiene un FEM LNA controlable.';
 
   @override
   String meshBeaconNoticeTitle(int count) {
@@ -22,10 +38,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meshBeaconNoticeSubtitle =>
       'Toca para revisar las redes mesh cercanas en los ajustes de Mesh Beacon.';
-
-  @override
-  String get adminProductsVendorUnverifiedSubtitle =>
-      'Marcar cuando el proveedor confirme que todas las especificaciones son precisas';
 
   @override
   String get aetherDetailAltitude => 'Altitud';
@@ -1362,13 +1374,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get automationActionGotIt => 'Entendido';
 
   @override
-  String get automationActionIftttEventName => 'Nombre del evento IFTTT';
-
-  @override
-  String get automationActionIftttHelp =>
-      'Utiliza su clave de webhook IFTTT en Configuración';
-
-  @override
   String get automationActionIftttHint => 'p. ej., meshtastic_alert';
 
   @override
@@ -1668,9 +1673,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Sin condiciones - siempre se ejecuta';
 
   @override
-  String get automationEditorRemoveElse => 'Eliminar SINO';
-
-  @override
   String get automationEditorSelectConditionType =>
       'Seleccionar tipo de condición';
 
@@ -1713,9 +1715,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get automationCardBranchThen => 'ENTONCES';
-
-  @override
   String get automationCardBranchElse => 'SINO';
 
   @override
@@ -1727,21 +1726,6 @@ class AppLocalizationsEs extends AppLocalizations {
       one: '1 condición',
     );
     return '$_temp0';
-  }
-
-  @override
-  String automationConditionConfigBatteryThreshold(int threshold) {
-    return 'Umbral de batería: $threshold%';
-  }
-
-  @override
-  String automationConditionConfigDays(String days) {
-    return 'Días: $days';
-  }
-
-  @override
-  String automationConditionConfigTimeRange(String start, String end) {
-    return '$start - $end';
   }
 
   @override
@@ -1826,10 +1810,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get automationEditorUpdated => 'Automatización actualizada';
-
-  @override
-  String get automationEditorValidateActions =>
-      'Por favor, agregue al menos una acción';
 
   @override
   String get automationEditorValidateName =>
@@ -1919,11 +1899,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get automationFlowWarnings => 'Advertencias';
-
-  @override
-  String automationImportActionsCount(int count) {
-    return 'Acciones ($count)';
-  }
 
   @override
   String get automationImportButton => 'Importar';
@@ -2072,9 +2047,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get automationScreenNewTooltip => 'Nueva automatización';
-
-  @override
-  String get automationScreenNoExecutions => 'Aún no hay ejecuciones';
 
   @override
   String get automationScreenQuickStartSubtitle =>
@@ -3254,9 +3226,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonNever => 'Nunca';
 
   @override
-  String get commonNo => 'No';
-
-  @override
   String get commonJustNow => 'Ahora mismo';
 
   @override
@@ -3549,9 +3518,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get commonSave => 'Guardar';
-
-  @override
-  String get commonYes => 'Sí';
 
   @override
   String get debugScreenAppLogTitle => 'Registro de aplicación';
@@ -4412,12 +4378,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get discoveryUnknownNode => 'Nodo desconocido';
 
   @override
-  String get drawerAdminDashboard => 'Panel de administración';
-
-  @override
-  String get drawerAdminSectionHeader => 'ADMINISTRACIÓN';
-
-  @override
   String get drawerBadgeNew => 'NUEVO';
 
   @override
@@ -5011,20 +4971,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get fileTransferContainerPurged => 'Transferencias vencidas depuradas';
 
   @override
-  String get fileTransferContainerSendFile => 'Enviar archivo';
-
-  @override
-  String get fileTransferContainerSendImage => 'Enviar imagen';
-
-  @override
-  String get fileTransferContainerSendToNode => 'Enviar al nodo';
-
-  @override
-  String fileTransferContainerStarted(String filename) {
-    return 'Transferencia iniciada: $filename';
-  }
-
-  @override
   String get fileTransferContainerTitle => 'Transferencias de archivos';
 
   @override
@@ -5039,15 +4985,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get fileTransferCouldNotRead => 'No se pudo leer el archivo.';
-
-  @override
   String get fileTransferCouldNotSaveForSharing =>
       'No se pudo guardar el archivo para compartir';
-
-  @override
-  String get fileTransferCouldNotStart =>
-      'No se pudo iniciar la transferencia. Compruebe que haya un nodo conectado y vuelva a intentarlo.';
 
   @override
   String get fileTransferDeleteConfirm => 'Eliminar';
@@ -5192,18 +5131,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get fileTransferExpiredPurged => 'Transferencias vencidas depuradas';
 
   @override
-  String get fileTransferFileEmpty => 'El archivo seleccionado está vacío.';
-
-  @override
-  String fileTransferFileTooLarge(
-    String filename,
-    String fileSize,
-    String limit,
-  ) {
-    return '$filename pesa $fileSize KB - el límite de transferencia por malla es $limit KB.';
-  }
-
-  @override
   String get fileTransferFilterActive => 'Activas';
 
   @override
@@ -5223,40 +5150,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get fileTransferImageDecodeError => 'No se pudo decodificar la imagen';
-
-  @override
-  String get fileTransferImagePickerTitle => 'Enviar imagen';
-
-  @override
-  String get fileTransferImagePickerCamera => 'Tomar foto';
-
-  @override
-  String get fileTransferImagePickerCameraSubtitle =>
-      'Use la cámara para tomar una foto';
-
-  @override
-  String get fileTransferImagePickerGallery => 'Elegir de la galería';
-
-  @override
-  String get fileTransferImagePickerGallerySubtitle =>
-      'Seleccione una foto de su biblioteca';
-
-  @override
-  String get fileTransferImagePickerCancel => 'Cancelar';
-
-  @override
-  String get fileTransferImageCompressing =>
-      'Comprimiendo imagen para transferencia por malla...';
-
-  @override
-  String fileTransferImageTooLargeAfterCompression(String limit) {
-    return 'La imagen no pudo comprimirse para ajustarse al límite de $limit KB de la malla.';
-  }
-
-  @override
-  String fileTransferImageCompressed(String size, String width, String height) {
-    return 'Imagen comprimida a $size bytes (${width}x$height)';
-  }
 
   @override
   String get fileTransferInfoChunkSize => 'Tamaño de fragmento';
@@ -5650,10 +5543,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String firmwareDfuSpeed(String speed) {
     return '$speed KB/s';
   }
-
-  @override
-  String get firmwareDfuNoFirmwareFound =>
-      'No se encontró archivo de firmware para este modelo de dispositivo.';
 
   @override
   String get firmwareArchitectureNrf52 => 'nRF52840';
@@ -6671,36 +6560,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mapDistanceAll => 'Todos';
 
   @override
-  String mapDistanceKilometers(String km) {
-    return '$km km';
-  }
-
-  @override
-  String mapDistanceKilometersFormal(String km) {
-    return '$km km';
-  }
-
-  @override
-  String mapDistanceKilometersPrecise(String km) {
-    return '$km km';
-  }
-
-  @override
-  String mapDistanceKilometersRound(String km) {
-    return '$km km';
-  }
-
-  @override
-  String mapDistanceMeters(String meters) {
-    return '$meters m';
-  }
-
-  @override
-  String mapDistanceMetersFormal(String meters) {
-    return '$meters m';
-  }
-
-  @override
   String get mapDropWaypoint => 'Soltar punto de referencia';
 
   @override
@@ -6811,9 +6670,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get mapLosAnalysisSubtitle =>
       'Verificación de curvatura terrestre y zona de Fresnel';
-
-  @override
-  String get mapLosFetchingTerrain => 'Obteniendo datos del terreno…';
 
   @override
   String get mapLosLegendClear => 'Libre';
@@ -7084,9 +6940,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mapShowTakEntities => 'Mostrar entidades TAK';
 
   @override
-  String get mapStyleTooltip => 'Estilo del mapa';
-
-  @override
   String get mapSwapAB => 'Intercambiar A ↔ B';
 
   @override
@@ -7265,9 +7118,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreActions => 'Acciones';
 
   @override
-  String get meshcoreActiveLabel => 'Activo';
-
-  @override
   String get meshcoreAdd => 'Agregar';
 
   @override
@@ -7278,10 +7128,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreAutoAddSectionTitle => 'Auto-agregar contactos';
-
-  @override
-  String get meshcoreAutoAddSectionSubtitle =>
-      'Importa automáticamente los contactos que escuche la radio';
 
   @override
   String get meshcoreAutoAddChat => 'Agregar contactos de chat automáticamente';
@@ -7407,10 +7253,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meshcoreRepeaterAdminLoginFailed =>
       'Inicio de sesión fallido; revisa la contraseña e inténtalo de nuevo';
-
-  @override
-  String get meshcoreRepeaterAdminLoginTimeout =>
-      'El inicio de sesión expiró; el repetidor no respondió';
 
   @override
   String get meshcoreRepeaterAdminLoginEmptyPassword =>
@@ -7820,10 +7662,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreRepeaterAdminSettingsRefreshAll => 'Refrescar todo';
 
   @override
-  String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip =>
-      'Refrescar desde la radio';
-
-  @override
   String get meshcoreRepeaterAdminSettingsSaveButton => 'Guardar cambios';
 
   @override
@@ -8092,9 +7930,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get meshcoreAdvertisementSent => 'Anuncio enviado';
-
-  @override
   String get meshcoreTransportStatusTitle => 'Transporte';
 
   @override
@@ -8162,12 +7997,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreAdvertisementSentTools => 'Anuncio enviado';
 
   @override
-  String get meshcoreAnalysis => 'Análisis';
-
-  @override
-  String get meshcoreBandwidthLabel => 'Ancho de banda';
-
-  @override
   String get meshcoreBasedOnLiPoVoltage =>
       'Basado en el rango de voltaje LiPo (3,0 V - 4,2 V)';
 
@@ -8225,9 +8054,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Transmita su presencia a la malla';
 
   @override
-  String get meshcoreBroadcastYourPresence => 'Transmita su presencia';
-
-  @override
   String get meshcoreCancel => 'Cancelar';
 
   @override
@@ -8237,9 +8063,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String meshcoreChannelAlreadyExists(String channelName) {
     return '$channelName ya está en sus canales';
   }
-
-  @override
-  String get meshcoreChannelCodeCopied => 'Código de canal copiado';
 
   @override
   String meshcoreChannelCreated(String channelName) {
@@ -8531,9 +8354,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreChatInfoPath => 'Ruta';
 
   @override
-  String get meshcoreChatInfoType => 'Tipo';
-
-  @override
   String get meshcoreChatUnreadDividerLabel => 'Mensajes nuevos';
 
   @override
@@ -8560,9 +8380,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreChatNode => 'Nodo de chat';
 
   @override
-  String get meshcoreClear => 'Borrar';
-
-  @override
   String get meshcoreClose => 'Cerrar';
 
   @override
@@ -8570,11 +8387,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreConnected => 'Conectado';
-
-  @override
-  String meshcoreConnectedTo(String deviceName) {
-    return 'Conectado a $deviceName';
-  }
 
   @override
   String get meshcoreConsoleCaptureCleared => 'Captura borrada';
@@ -8983,10 +8795,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
     return 'No se pudo guardar la ruta para $contactName';
   }
-
-  @override
-  String get meshcoreResetPathSubtitle =>
-      'Permite que MeshCore redescubra la mejor ruta.';
 
   @override
   String meshcoreResetPathSuccess(String contactName) {
@@ -9401,9 +9209,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreContactsLabel => 'Contactos';
 
   @override
-  String get meshcoreContactsTitle => 'Contactos';
-
-  @override
   String get meshcoreControlAdvertVisibility =>
       'Controlar visibilidad de anuncios';
 
@@ -9445,9 +9250,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreCreateChannelDialogTitle => 'Crear canal';
-
-  @override
-  String get meshcoreDebug => 'Depuración';
 
   @override
   String get meshcoreDeviceInfo => 'Información del dispositivo';
@@ -9563,9 +9365,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreFailedToSendAdTools => 'Error al enviar el anuncio';
 
   @override
-  String get meshcoreFailedToSendAdvertisement => 'Error al enviar el anuncio';
-
-  @override
   String get meshcoreFailedToSendMessage => 'Error al enviar el mensaje';
 
   @override
@@ -9596,12 +9395,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreFilterTooltip => 'Filtrar';
 
   @override
-  String get meshcoreFramesLabel => 'Tramas';
-
-  @override
-  String get meshcoreFrequencyLabel => 'Frecuencia';
-
-  @override
   String get meshcoreInvalidChannelCodeFormat =>
       'Formato de código de canal inválido (esperado: nombre:pskHex)';
 
@@ -9613,9 +9406,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreJoin => 'Unirse';
-
-  @override
-  String get meshcoreJoinButton => 'Unirse';
 
   @override
   String get meshcoreJoinHashtagChannel => 'Unirse al canal de hashtag';
@@ -9681,9 +9471,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreFilterHidden => 'Ocultos';
-
-  @override
-  String get meshcoreNoHiddenChannels => 'Sin canales ocultos';
 
   @override
   String get meshcoreChannelDragHandleA11yLabel => 'Reordenar canal';
@@ -10090,11 +9877,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreTelemetryRowTemperatureLabel => 'Temperatura';
 
   @override
-  String meshcoreTelemetryRowTemperatureValue(String celsius) {
-    return '$celsius °C';
-  }
-
-  @override
   String get meshcoreTelemetryRowHumidityLabel => 'Humedad';
 
   @override
@@ -10155,10 +9937,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreLoadingMessages => 'Cargando mensajes...';
-
-  @override
-  String get meshcoreLocationComingSoon =>
-      'Configuración de ubicación próximamente.\n\nEsto le permitirá establecer manualmente la posición de su nodo o usar GPS.';
 
   @override
   String get meshcoreLocationInfoLabel => 'Ubicación';
@@ -10292,24 +10070,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreNewMeasurement => 'Nueva medición';
 
   @override
-  String get meshcoreNoChannels => 'Sin canales';
-
-  @override
-  String get meshcoreNoChannelsDescription =>
-      'Los canales son espacios compartidos para la comunicación grupal.\n\nCree un canal nuevo o únase a uno existente.';
-
-  @override
-  String get meshcoreNoContacts => 'Sin contactos';
-
-  @override
-  String get meshcoreNoContactsDescription =>
-      'Los contactos aparecerán aquí cuando se descubran mediante anuncios.\n\nTambién puede agregar contactos manualmente usando su código de contacto.';
-
-  @override
-  String get meshcoreNoContactsForTrace =>
-      'Sin contactos disponibles para rastrear';
-
-  @override
   String get meshcoreMapEmptyTitlePrefix => 'Sin';
 
   @override
@@ -10391,9 +10151,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'No es un código QR de contacto MeshCore válido';
 
   @override
-  String get meshcoreNotYetImplemented => 'Aún no implementado';
-
-  @override
   String get meshcoreOpenChannel => 'Abrir canal';
 
   @override
@@ -10441,26 +10198,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Apunte su cámara hacia un código QR de contacto MeshCore';
 
   @override
-  String get meshcorePrivacyComingSoon =>
-      'Configuración de privacidad próximamente.\n\nEsto controlará si su nodo transmite anuncios.';
-
-  @override
   String get meshcorePrivacyMode => 'Modo privacidad';
-
-  @override
-  String get meshcorePrivacyModeDialogTitle => 'Modo privacidad';
 
   @override
   String get meshcorePrivate => 'Privado';
 
   @override
   String get meshcorePrivateChannel => 'Canal privado';
-
-  @override
-  String get meshcoreProtocolCapture => 'Captura de protocolo';
-
-  @override
-  String get meshcoreProtocolCaptureDialogTitle => 'Captura de protocolo';
 
   @override
   String get meshcorePublic => 'Público';
@@ -10478,25 +10222,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcorePublicKeySettingsLabel => 'Clave pública';
 
   @override
-  String get meshcoreRadioConfiguredOnFirmware =>
-      'La configuración de radio está configurada en el firmware del dispositivo.';
-
-  @override
   String get meshcoreRadioSettings => 'Configuración de radio';
-
-  @override
-  String get meshcoreRadioSettingsDialogTitle => 'Configuración de radio';
-
-  @override
-  String get meshcoreRadioSettingsNotAvailable =>
-      'Configuración de radio no disponible';
 
   @override
   String get meshcoreRadioSettingsSubtitle =>
       'Frecuencia, potencia TX, ancho de banda';
-
-  @override
-  String get meshcoreRadioSettingsTool => 'Configuración de radio';
 
   @override
   String get meshcoreReboot => 'Reiniciar';
@@ -10513,12 +10243,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreRebootDeviceTitle => 'Reiniciar dispositivo';
-
-  @override
-  String get meshcoreRefresh => 'Actualizar';
-
-  @override
-  String get meshcoreRefreshButton => 'Actualizar';
 
   @override
   String get meshcoreRefreshContacts => 'Actualizar contactos';
@@ -10587,10 +10311,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreScanQrCode => 'Escanear código QR';
 
   @override
-  String get meshcoreScanQrToJoinChannel =>
-      'Escanee este código QR para unirse al canal';
-
-  @override
   String get meshcoreScanToAddMeSubtitle =>
       'Escanee este código para agregarme como contacto';
 
@@ -10598,14 +10318,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreSearchContactsHint => 'Buscar contactos...';
 
   @override
-  String get meshcoreSelectContactToTrace =>
-      'Seleccione un contacto para trazar la ruta a través de la malla.';
-
-  @override
   String get meshcoreSelfInfoNotAvailable => 'Información propia no disponible';
-
-  @override
-  String get meshcoreSendAdvertisement => 'Enviar anuncio';
 
   @override
   String get meshcoreSendAdvertisementTool => 'Enviar anuncio';
@@ -10614,17 +10327,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreSendMessage => 'Enviar mensaje';
 
   @override
-  String get meshcoreSendMessageToStart =>
-      'Envíe un mensaje para iniciar la conversación';
-
-  @override
-  String get meshcoreSending => 'Enviando...';
-
-  @override
   String get meshcoreSessionNotActive => 'La sesión de MeshCore no está activa';
-
-  @override
-  String get meshcoreSetLocation => 'Establecer ubicación';
 
   @override
   String get meshcoreSetNodePosition => 'Establecer posición del nodo';
@@ -10634,9 +10337,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreSfCrLabel => 'SF/CR';
-
-  @override
-  String get meshcoreShare => 'Compartir';
 
   @override
   String get meshcoreShareChannel => 'Compartir canal';
@@ -10677,9 +10377,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String meshcoreContactUnblockSuccess(String name) {
     return 'Notificaciones restauradas para $name.';
   }
-
-  @override
-  String get meshcoreContactBlockedBadge => 'Silenciado';
 
   @override
   String get meshcoreShareContact => 'Compartir contacto';
@@ -10754,14 +10451,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Comparta su código de contacto para que otros puedan enviarle mensajes';
 
   @override
-  String get meshcoreShellAddChannelHint =>
-      'Use el menú para crear o unirse a un canal';
-
-  @override
-  String get meshcoreShellAddContactHint =>
-      'Use el botón + para agregar un contacto';
-
-  @override
   String get meshcoreShellAddContactSubtitle =>
       'Escanee QR o ingrese el código de contacto';
 
@@ -10779,11 +10468,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meshcoreShellAppSettingsSubtitle =>
       'Notificaciones, tema, preferencias';
-
-  @override
-  String meshcoreShellConnectedTo(String deviceName) {
-    return 'Conectado a $deviceName';
-  }
 
   @override
   String get meshcoreShellDefaultDeviceName => 'MeshCore';
@@ -10830,9 +10514,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreShellDrawerAddContact => 'Agregar contacto';
 
   @override
-  String get meshcoreShellDrawerDisconnect => 'Desconectar';
-
-  @override
   String get meshcoreShellDrawerDiscoverContacts => 'Descubrir contactos';
 
   @override
@@ -10840,9 +10521,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreShellDrawerSectionHeader => 'MESHCORE';
-
-  @override
-  String get meshcoreShellDrawerSettings => 'Configuración';
 
   @override
   String get meshcoreShellInfoNodeId => 'ID de nodo';
@@ -10866,10 +10544,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreShellJoinChannel => 'Unirse al canal';
 
   @override
-  String get meshcoreShellJoinChannelHint =>
-      'Use el menú para unirse a un canal';
-
-  @override
   String get meshcoreShellJoinChannelSubtitle =>
       'Escanee QR o ingrese el código del canal';
 
@@ -10877,39 +10551,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreShellMenuTooltip => 'Menú';
 
   @override
-  String get meshcoreShellNavChannels => 'Canales';
-
-  @override
-  String get meshcoreShellNavContacts => 'Contactos';
-
-  @override
   String get meshcoreShellNavDashboard => 'Panel';
 
   @override
   String get meshcoreDashboardTitle => 'Panel';
-
-  @override
-  String get meshcoreDashboardEmptyTitlePrefix => 'Tu';
-
-  @override
-  String get meshcoreDashboardEmptyTitleKeyword => 'Panel';
-
-  @override
-  String get meshcoreDashboardEmptyTitleMid => 'está';
-
-  @override
-  String get meshcoreDashboardEmptyTitleKeyword2 => 'Vacío';
-
-  @override
-  String get meshcoreDashboardEmptyTitleSuffix => '';
-
-  @override
-  String get meshcoreDashboardEmptyTagline1 =>
-      'Agrega widgets para ver la actividad de tu mesh de un vistazo';
-
-  @override
-  String get meshcoreDashboardEmptyTagline2 =>
-      'Reúne tus métricas favoritas en una sola vista';
 
   @override
   String get meshcoreWidgetNetworkOverviewName => 'Resumen de red';
@@ -10920,9 +10565,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreWidgetTotalContacts => 'Contactos';
-
-  @override
-  String get meshcoreWidgetOnline => 'En línea';
 
   @override
   String get meshcoreWidgetChannels => 'Canales';
@@ -11108,16 +10750,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreShellReconnectButton => 'Reconectar';
 
   @override
-  String meshcoreShellReconnectFailed(String error) {
-    return 'Error al reconectar: $error';
-  }
-
-  @override
-  String meshcoreShellReconnecting(String deviceName) {
-    return 'Reconectando a $deviceName...';
-  }
-
-  @override
   String meshcoreShellSearchingFor(String deviceName) {
     return 'Buscando $deviceName...';
   }
@@ -11239,11 +10871,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreTracePath => 'Rastrear ruta';
 
   @override
-  String meshcoreTracePathInitiated(String name) {
-    return 'Rastreo de ruta a $name iniciado';
-  }
-
-  @override
   String get meshcoreFrameLogTool => 'Registro de tramas';
 
   @override
@@ -11357,11 +10984,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String meshcoreTracePathHopRow(int index) {
-    return 'Salto $index';
-  }
-
-  @override
   String get meshcoreTracePathTimeout => 'Tiempo de espera del rastreo agotado';
 
   @override
@@ -11402,12 +11024,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meshcoreViewDeviceInfo =>
       'Ver información detallada del dispositivo';
-
-  @override
-  String get meshcoreViewFrameLogs => 'Ver registros de tramas de MeshCore';
-
-  @override
-  String get meshcoreViewLoRaConfig => 'Ver configuración de radio LoRa';
 
   @override
   String get messageContextMenuCopy => 'Copiar';
@@ -11540,9 +11156,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get messagingFailedToSend => 'Error al enviar';
 
   @override
-  String get messagingFilterActive => 'Activo';
-
-  @override
   String get messagingFilterOnline => 'En línea';
 
   @override
@@ -11665,16 +11278,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get messagingRetryMessage => 'Reintentar mensaje';
 
   @override
-  String get messagingStatusAwaitingConfirmation => 'Esperando confirmación';
-
-  @override
   String get messagingStatusUnconfirmed => 'Sin confirmar';
 
   @override
   String get messagingStatusRetrying => 'Reintentando';
-
-  @override
-  String get messagingStatusConfirmed => 'Confirmado';
 
   @override
   String get messagingStatusSentToRadio => 'Enviado a la radio';
@@ -11696,10 +11303,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get messagingAutoRetryStop => 'Dejar de reintentar';
-
-  @override
-  String get messagingAutoRetryWarning =>
-      'Puede aumentar el tiempo en aire y el consumo de batería';
 
   @override
   String messagingRetryProgress(int count, int max) {
@@ -11937,14 +11540,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String timelineOverflowParticipants(int count) {
-    return '+$count';
-  }
-
-  @override
-  String get navigationActivity => 'Actividad';
-
-  @override
   String get navigationAether => 'Aether';
 
   @override
@@ -12019,10 +11614,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshCanvasPlaceholderTitle => 'MeshCanvas';
-
-  @override
-  String get meshCanvasPlaceholderSubtitle =>
-      'Próximamente: lienzo de píxeles colaborativo sobre la malla';
 
   @override
   String get meshCanvasHelpTitle => 'Acerca de MeshCanvas';
@@ -12330,10 +11921,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshCanvasOverviewNeverPainted => 'Inactivo';
 
   @override
-  String get meshCanvasOverviewLocalIdleHint =>
-      'Inactivo · Permanece en el dispositivo';
-
-  @override
   String meshCanvasOverviewCellCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -12368,9 +11955,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meshCanvasOverviewChannelDormantHint =>
       'Dormido · Siembra el primer píxel';
-
-  @override
-  String get meshCanvasOverviewMeshSectionHeader => 'LIENZOS DE CANAL';
 
   @override
   String get meshCanvasOverviewPrimaryCommonsSectionHeader => 'COMUNES PRIMARY';
@@ -12421,18 +12005,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshCanvasViewerEmptyLocalSubtitle => 'Queda en este dispositivo';
-
-  @override
-  String get meshCanvasViewerGestureTap => 'toca · pinta';
-
-  @override
-  String get meshCanvasViewerGestureDrag => 'arrastra · mueve';
-
-  @override
-  String get meshCanvasViewerGesturePinch => 'pellizca · zoom';
-
-  @override
-  String get meshCanvasViewerGestureHold => 'mantén · inspecciona';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {
@@ -12519,66 +12091,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodeboardCreateBoard => 'Crear tablero';
 
   @override
-  String get nodeboardEmptyMyBoards => 'Aún no ha creado ningún tablero';
-
-  @override
   String get nodeboardEmptyMyBoardsDescription =>
       'Cree su primer BBS personal y compártalo con la malla';
 
   @override
-  String get nodeboardEmptyDiscover => 'No se encontraron tableros públicos';
-
-  @override
   String get nodeboardEmptyDiscoverDescription =>
       'Sea el primero en crear un tablero';
-
-  @override
-  String get nodeboardEmptyThreads => 'Aún no hay hilos';
-
-  @override
-  String get nodeboardEmptyThreadsDescription => 'Inicie la conversación';
-
-  @override
-  String get nodeboardWizardTitle => 'Crear NodeBoard';
-
-  @override
-  String get nodeboardWizardStepName => 'Nombre e identidad';
-
-  @override
-  String get nodeboardWizardStepTagline => 'Lema y descripción';
-
-  @override
-  String get nodeboardWizardStepSections => 'Secciones';
-
-  @override
-  String get nodeboardWizardStepTheme => 'Tema';
-
-  @override
-  String get nodeboardWizardStepWelcome => 'Bienvenida y splash';
-
-  @override
-  String get nodeboardWizardStepReview => 'Revisión';
-
-  @override
-  String get nodeboardBoardTitle => 'Título del tablero';
-
-  @override
-  String get nodeboardSysopName => 'Nombre del SysOp';
-
-  @override
-  String get nodeboardSlug => 'Slug de URL del tablero';
-
-  @override
-  String get nodeboardTagline => 'Lema';
-
-  @override
-  String get nodeboardDescription => 'Descripción';
-
-  @override
-  String get nodeboardWelcomeText => 'Texto de bienvenida';
-
-  @override
-  String get nodeboardAnsiSplash => 'Splash ASCII/ANSI';
 
   @override
   String get nodeboardVisibilityPublic => 'Público';
@@ -12606,28 +12124,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodeboardTerminalMode => 'Modo terminal';
 
   @override
-  String get nodeboardNativeMode => 'Modo nativo';
-
-  @override
-  String get nodeboardReplyHint => 'Escribir una respuesta...';
-
-  @override
-  String get nodeboardThreadLocked => 'Este hilo está bloqueado';
-
-  @override
   String get nodeboardPinned => 'Fijado';
 
   @override
   String get nodeboardLocked => 'Bloqueado';
-
-  @override
-  String get nodeboardNext => 'Siguiente';
-
-  @override
-  String get nodeboardBack => 'Atrás';
-
-  @override
-  String get nodeboardCreateBoardAction => 'Crear tablero';
 
   @override
   String get nodeboardLoadError => 'Error al cargar';
@@ -12673,9 +12173,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get nodeboardShareCopied =>
       'Enlace para compartir copiado al portapapeles';
-
-  @override
-  String get nodeboardComposerComingSoon => 'Compositor de hilos próximamente';
 
   @override
   String get nodeboardJustNow => 'ahora mismo';
@@ -12736,9 +12233,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navigationSectionDiscover => 'DESCUBRIR';
 
   @override
-  String get navigationSectionIdentity => 'IDENTIDAD';
-
-  @override
   String get navigationSectionMesh => 'MALLA';
 
   @override
@@ -12748,16 +12242,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navigationSectionPremium => 'PREMIUM';
 
   @override
-  String get navigationSectionSocial => 'SOCIAL';
-
-  @override
   String get navigationSectionTools => 'HERRAMIENTAS';
-
-  @override
-  String get navigationSignals => 'Señales';
-
-  @override
-  String get navigationSocial => 'Social';
 
   @override
   String get navigationSyncError => 'Error de sincronización';
@@ -13220,16 +12705,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String nodeDetailDistanceKilometers(String km) {
-    return '$km km';
-  }
-
-  @override
-  String nodeDetailDistanceMeters(String meters) {
-    return '$meters m';
-  }
-
-  @override
   String get nodeDetailFavoriteBadge => 'Favorito';
 
   @override
@@ -13403,11 +12878,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodeDetailMessageButton => 'Mensaje';
 
   @override
-  String nodeDetailMuteError(String error) {
-    return 'Error al actualizar el estado de silencio: $error';
-  }
-
-  @override
   String get nodeDetailMuteNotConnected =>
       'No se puede cambiar el estado de silencio: dispositivo no conectado';
 
@@ -13424,9 +12894,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nodeDetailNoPkiBadge => 'Sin PKI';
-
-  @override
-  String get nodeDetailNoPositionData => 'El nodo no tiene datos de posición';
 
   @override
   String get nodeDetailPkiBadge => 'PKI';
@@ -14761,11 +14228,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String nodedexLastObservedOnPreset(String preset) {
-    return 'Último avistamiento en $preset';
-  }
-
-  @override
   String get nodedexFilterRadioPreset => 'Preset de radio';
 
   @override
@@ -15067,16 +14529,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodedexLegendWeak => 'Débil';
 
   @override
-  String nodedexLinkCountPlural(int count) {
-    return '$count enlaces';
-  }
-
-  @override
-  String nodedexLinkCountSingular(int count) {
-    return '$count enlace';
-  }
-
-  @override
   String get nodedexLinkStrengthLabel => 'Intensidad del enlace';
 
   @override
@@ -15094,9 +14546,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nodedexMaxRangeLabel => 'Alcance máximo';
-
-  @override
-  String get nodedexMapTooltip => 'Mapa NodeDex';
 
   @override
   String get nodedexMapTitle => 'Mapa NodeDex';
@@ -15122,18 +14571,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodedexNicknameHint => 'Apodo';
 
   @override
-  String get nodedexNoClassification =>
-      'Sin clasificación asignada. Toque \"Clasificar\" para agregar una.';
-
-  @override
   String get nodedexNoEncountersOnDate => 'Sin encuentros en esta fecha';
 
   @override
   String get nodedexNoEncountersRecorded => 'Sin encuentros registrados';
-
-  @override
-  String get nodedexNoNoteYet =>
-      'Sin nota aún. Toque \"Agregar nota\" para escribir una.';
 
   @override
   String get nodedexNoRelationshipDataDescription =>
@@ -15321,9 +14762,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nodedexRegionsCompactLabel => 'Regiones';
-
-  @override
-  String get nodedexRegionsLabel => 'Regiones';
 
   @override
   String get nodedexBroadcastRegionsLabel => 'Regiones de emisión';
@@ -15743,11 +15181,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodedexTitle => 'NodeDex';
 
   @override
-  String nodedexTotalCount(int count) {
-    return '$count en total';
-  }
-
-  @override
   String get nodedexTraitAnchor => 'Ancla';
 
   @override
@@ -15873,9 +15306,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nodesScreenConnectedDevice => 'Dispositivo conectado';
-
-  @override
-  String get nodesScreenDisconnect => 'Desconectar';
 
   @override
   String get roleFilterAll => 'Todos los roles';
@@ -16012,16 +15442,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quickActionDisconnect => 'Desconectar dispositivo';
-
-  @override
-  String nodesScreenDistanceKilometers(String km) {
-    return 'a $km km';
-  }
-
-  @override
-  String nodesScreenDistanceMeters(String meters) {
-    return 'a $meters m';
-  }
 
   @override
   String nodesScreenDistanceAway(String distance) {
@@ -17202,14 +16622,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Es necesario actualizar el emparejamiento. Es posible que la radio haya borrado su identidad Bluetooth tras el cambio de región. Olvide el dispositivo en la configuración de Bluetooth y emparéjelo de nuevo.';
 
   @override
-  String get regionSelectionPairingInvalidation =>
-      'Es necesario actualizar el emparejamiento. La identidad Bluetooth de la radio ha cambiado.\nOlvide el dispositivo en Ajustes > Bluetooth y emparéjelo de nuevo.';
-
-  @override
-  String get regionSelectionReconnectTimeout =>
-      'Se agotó el tiempo de reconexión. Inténtelo de nuevo.';
-
-  @override
   String get regionSelectionRegionAnz => 'Australia/NZ';
 
   @override
@@ -17573,81 +16985,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get regionSelectionViewScanner => 'Ver escáner';
 
   @override
-  String get reviewModerationAllCaughtUp => '¡Todo al día!';
-
-  @override
-  String get reviewModerationAllReviews => 'Todas las reseñas';
-
-  @override
-  String get reviewModerationAnonymous => 'Anónimo';
-
-  @override
-  String get reviewModerationApprove => 'Aprobar';
-
-  @override
-  String get reviewModerationApproved => 'Reseña aprobada';
-
-  @override
-  String get reviewModerationCancel => 'Cancelar';
-
-  @override
-  String get reviewModerationDelete => 'Eliminar';
-
-  @override
-  String get reviewModerationDeleteMessage =>
-      '¿Está seguro de que desea eliminar permanentemente esta reseña?';
-
-  @override
-  String get reviewModerationDeleteTitle => 'Eliminar reseña';
-
-  @override
-  String get reviewModerationDeleted => 'Reseña eliminada';
-
-  @override
-  String get reviewModerationErrorLoading => 'Error al cargar las reseñas';
-
-  @override
-  String get reviewModerationLegacy => 'Heredado (sin estado)';
-
-  @override
-  String get reviewModerationNoDatabase => 'No hay reseñas en la base de datos';
-
-  @override
-  String get reviewModerationNoPending =>
-      'No hay reseñas pendientes de moderación';
-
-  @override
-  String get reviewModerationNoReviews => 'Aún no hay reseñas';
-
-  @override
-  String get reviewModerationPending => 'Pendiente';
-
-  @override
-  String get reviewModerationReject => 'Rechazar';
-
-  @override
-  String get reviewModerationRejectReasonHint =>
-      'p. ej., Contenido inapropiado, spam, etc.';
-
-  @override
-  String get reviewModerationRejectReasonLabel => 'Motivo del rechazo';
-
-  @override
-  String get reviewModerationRejectTitle => 'Rechazar reseña';
-
-  @override
-  String get reviewModerationRejected => 'Reseña rechazada';
-
-  @override
-  String get reviewModerationTitle => 'Gestión de reseñas';
-
-  @override
-  String get reviewModerationVerified => 'Verificado';
-
-  @override
-  String get routeDetailCenterOnNodeTooltip => 'Centrar en el nodo';
-
-  @override
   String routeDetailDistanceKilometers(String km) {
     return '$km km';
   }
@@ -17690,9 +17027,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get routeDetailNoData => '--';
 
   @override
-  String get routeDetailNoGpsPoints => 'Sin puntos GPS';
-
-  @override
   String get routeDetailPointsLabel => 'Puntos';
 
   @override
@@ -17705,9 +17039,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get routeDetailStorageUnavailable => 'Almacenamiento no disponible';
-
-  @override
-  String get routeDetailYouBadge => 'Usted';
 
   @override
   String get routesCancel => 'Cancelar';
@@ -17887,9 +17218,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get scannerProtocolGroupOther => 'Otros dispositivos';
-
-  @override
-  String get scannerBluetoothSettings => 'Ajustes de Bluetooth';
 
   @override
   String get scannerBluetoothSettingsOpenFailed =>
@@ -18077,27 +17405,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta versión se ejecuta en una plataforma sin radio Bluetooth. Conecta un dispositivo compatible con SocialMesh por la red.';
 
   @override
-  String get scannerUnsupportedBleAction => 'Usar conexión de red';
-
-  @override
-  String get scannerUnsupportedSerialTitle => 'Serie USB no disponible';
-
-  @override
-  String get scannerUnsupportedSerialDescription =>
-      'Esta versión no puede acceder a dispositivos serie USB. Usa Bluetooth o una conexión de red.';
-
-  @override
   String get scannerWebDashboardTitle => 'Modo panel';
 
   @override
   String get scannerWebDashboardDescription =>
       'SocialMesh en la web funciona en modo panel: muestra la actividad de la malla sincronizada desde tu dispositivo móvil emparejado, pero no puede conectarse a una radio directamente. Abre SocialMesh en tu teléfono para emparejar un dispositivo.';
-
-  @override
-  String get sellerProfileFoundedStat => 'Fundada';
-
-  @override
-  String get sellerProfileSalesStat => 'Ventas';
 
   @override
   String get serialConfigBaudRate => 'Tasa de baudios';
@@ -18368,11 +17680,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsPremiumBadgeTry => 'PRUÉBALO';
-
-  @override
-  String settingsPremiumPartiallyUnlocked(int owned, int total) {
-    return '$owned de $total desbloqueados';
-  }
 
   @override
   String get settingsPremiumUnlockFeaturesTitle => 'Desbloquear funciones';
@@ -19296,2255 +18603,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sigilStageSeed => 'Semilla';
 
   @override
-  String get signalAcquiringDeviceLocation =>
-      'Obteniendo ubicación del dispositivo...';
-
-  @override
-  String signalActiveCount(int count) {
-    return '$count activos';
-  }
-
-  @override
-  String signalActiveDays(int days) {
-    return 'Activo ${days}d';
-  }
-
-  @override
-  String signalActiveHours(int hours) {
-    return 'Activo ${hours}h';
-  }
-
-  @override
-  String signalActiveMinutes(int minutes) {
-    return 'Activo ${minutes}m';
-  }
-
-  @override
-  String get signalActiveNow => 'Activo ahora';
-
-  @override
-  String get signalAddLocation => 'Agregar ubicación';
-
-  @override
-  String get signalAddPhotos => 'Agregar fotos';
-
-  @override
-  String get signalAnonAuthor => 'Anón';
-
-  @override
-  String get signalAnonymous => 'Anónimo';
-
-  @override
-  String get signalAnonymousFeed => 'Anónimo';
-
-  @override
-  String signalApproxArea(int radiusMeters) {
-    return 'Área aprox. (~${radiusMeters}m)';
-  }
-
-  @override
-  String get signalAttachFile => 'Adjuntar archivo';
-
-  @override
-  String get signalBackNearby => 'Volver a cercanos';
-
-  @override
-  String get signalBeFirstToRespond =>
-      'Sea el primero en responder a esta señal';
-
-  @override
-  String get signalBleNoMeshTrafficIos =>
-      'Conectado a BLE pero no se detectó tráfico de malla. En iOS, el Modo Avión puede bloquear el tráfico BLE incluso cuando está conectado. Desactive el Modo Avión o active y desactive Bluetooth.';
-
-  @override
-  String get signalBroadcastYourSignal => 'Transmitir su señal';
-
-  @override
-  String get signalBroadcastingOverMesh => 'Transmitiendo por malla...';
-
-  @override
-  String get signalCancel => 'Cancelar';
-
-  @override
-  String get signalChooseFromGallery => 'Elegir de la galería';
-
-  @override
-  String get signalCloudBadge => 'Nube';
-
-  @override
-  String get signalCloudFeaturesUnavailable =>
-      'Funciones de nube no disponibles.';
-
-  @override
-  String signalCommentCount(int count) {
-    return '$count comentarios';
-  }
-
-  @override
-  String get signalCommentReported => 'Comentario reportado. Gracias.';
-
-  @override
-  String get signalConnectToAddLocation =>
-      'Conecte un dispositivo para agregar ubicación a su señal.';
-
-  @override
-  String get signalConnectToGoActive => 'Conecte un dispositivo para activarse';
-
-  @override
-  String get signalConnectToSend =>
-      'Conecte un dispositivo para enviar señales';
-
-  @override
-  String get signalConversation => 'Conversación';
-
-  @override
-  String get signalCreateFailed => 'Error al crear la señal';
-
-  @override
-  String get signalCurrentLocation => 'Ubicación actual';
-
-  @override
-  String get signalDelete => 'Eliminar';
-
-  @override
-  String get signalDeleteMessage => 'Esta señal desaparecerá de inmediato.';
-
-  @override
-  String get signalDeleteTitle => '¿Eliminar señal?';
-
-  @override
-  String get signalDetailTitle => 'Señal';
-
-  @override
   String get signalDeviceNotConnected => 'Dispositivo no conectado';
-
-  @override
-  String get signalDiscardConfirm => 'Descartar';
-
-  @override
-  String get signalDiscardMessage => 'Su borrador se perderá.';
-
-  @override
-  String get signalDiscardTitle => '¿Descartar señal?';
-
-  @override
-  String get signalDuration => 'Duración de la señal';
-
-  @override
-  String get signalDurationSubtitle =>
-      'Tiempo hasta que su señal se desvanezca';
-
-  @override
-  String get signalEmptyTagline1 =>
-      'Nada activo aquí por ahora.\nLas señales aparecen cuando alguien cercano se activa.';
-
-  @override
-  String get signalEmptyTagline2 =>
-      'Las señales son de malla primero y efímeras.\nSe disuelven cuando su temporizador termina.';
-
-  @override
-  String get signalEmptyTagline3 =>
-      'Comparta un estado rápido o una foto.\nLos nodos cercanos lo verán en tiempo real.';
-
-  @override
-  String get signalEmptyTagline4 =>
-      'Actívese para transmitir su presencia.\nSin conexión, de dispositivo a dispositivo.';
-
-  @override
-  String get signalEmptyTitleKeyword => 'señales';
-
-  @override
-  String get signalEmptyTitlePrefix => 'Sin ';
-
-  @override
-  String get signalEmptyTitleSuffix => ' activas cerca';
-
-  @override
-  String get signalEnableGpsOrFixedPosition =>
-      'El dispositivo aún no tiene ubicación. Active GPS o configure una posición fija.';
-
-  @override
-  String get signalExpiredBadge => 'Expirada';
-
-  @override
-  String get signalFaded => 'Desvanecida';
-
-  @override
-  String get signalFadesIn => 'Se desvanece en';
-
-  @override
-  String signalFadesInDays(int days) {
-    return 'Se desvanece en ${days}d';
-  }
-
-  @override
-  String signalFadesInHours(int hours) {
-    return 'Se desvanece en ${hours}h';
-  }
-
-  @override
-  String signalFadesInMinutes(int minutes) {
-    return 'Se desvanece en ${minutes}m';
-  }
-
-  @override
-  String signalFadesInMinutesSeconds(int minutes, int seconds) {
-    return 'Se desvanece en ${minutes}m ${seconds}s';
-  }
-
-  @override
-  String signalFadesInSeconds(int seconds) {
-    return 'Se desvanece en ${seconds}s';
-  }
-
-  @override
-  String get signalFallbackContent => 'Señal';
-
-  @override
-  String signalFileTooLarge(int size) {
-    return 'Archivo demasiado grande. La transferencia por malla está limitada a $size KB.';
-  }
-
-  @override
-  String get signalFileTransferFailed =>
-      'Error al iniciar la transferencia de archivo';
-
-  @override
-  String get signalFileTransfers => 'Transferencias de archivos';
-
-  @override
-  String get signalFilterAll => 'Todas';
-
-  @override
-  String get signalFilterExpiring => 'Por expirar';
-
-  @override
-  String get signalFilterHidden => 'Ocultas';
-
-  @override
-  String get signalFilterLocation => 'Ubicación';
-
-  @override
-  String get signalFilterMedia => 'Multimedia';
-
-  @override
-  String get signalFilterMesh => 'Malla';
-
-  @override
-  String get signalFilterNearby => 'Cercanas';
-
-  @override
-  String get signalFilterReplies => 'Respuestas';
-
-  @override
-  String get signalFilterSaved => 'Guardadas';
-
-  @override
-  String get signalFitAllSignals => 'Ajustar todas las señales';
-
-  @override
-  String get signalGetLocationFailed => 'Error al obtener la ubicación';
-
-  @override
-  String get signalGoActive => 'Activarse';
-
-  @override
-  String get signalGoActiveAction => 'Activarse';
-
-  @override
-  String get signalHasFaded => 'Esta señal se ha desvanecido';
-
-  @override
-  String get signalHelp => 'Ayuda';
-
-  @override
-  String get signalHidden => 'Señal oculta';
-
-  @override
-  String get signalHide => 'Ocultar';
-
-  @override
-  String signalHopSingular(int count) {
-    return '$count salto';
-  }
-
-  @override
-  String signalHopsBadge(int count) {
-    return '$count saltos';
-  }
-
-  @override
-  String signalHopsPlural(int count) {
-    return '$count saltos';
-  }
-
-  @override
-  String get signalImageBlockedSingular =>
-      'La imagen infringe las normas de contenido y fue bloqueada';
-
-  @override
-  String signalImagesAddedCount(int passedCount) {
-    return '$passedCount imágenes agregadas';
-  }
-
-  @override
-  String signalImagesBlockedAndAdded(int failedCount, int passedCount) {
-    return '$failedCount imagen(es) bloqueada(s), $passedCount agregadas';
-  }
-
-  @override
-  String signalImagesBlockedPlural(int failedCount) {
-    return '$failedCount imágenes bloqueadas por las normas de contenido';
-  }
-
-  @override
-  String get signalImagesHiddenOffline =>
-      'Imágenes ocultas sin conexión. Volverán cuando recupere la conexión.';
-
-  @override
-  String get signalImagesRequireInternet =>
-      'Las imágenes requieren internet. Imágenes eliminadas.';
-
-  @override
-  String get signalImagesRestored => '¡Imágenes restauradas!';
-
-  @override
-  String get signalIntentLabel => 'Intención';
-
-  @override
-  String get signalIosAirplaneModeWarning =>
-      'El Modo Avión de iOS puede pausar el tráfico de malla BLE incluso cuando está conectado. Si las señales se detienen, desactive el Modo Avión o active y desactive Bluetooth.';
-
-  @override
-  String get signalKeepEditing => 'Seguir editando';
-
-  @override
-  String get signalLegendFiveMin => '< 5 min';
-
-  @override
-  String get signalLegendOverTwoHrs => '> 2 h';
-
-  @override
-  String get signalLegendThirtyMin => '< 30 min';
-
-  @override
-  String get signalLegendTwoHrs => '< 2 h';
-
-  @override
-  String get signalLetOthersKnowIntent => 'Indique a otros por qué está activo';
-
-  @override
-  String get signalLoadingComments => 'Cargando comentarios...';
-
-  @override
-  String get signalLocal => 'Local';
-
-  @override
-  String get signalLocalBadge => 'Local';
-
-  @override
-  String get signalLocalBadgeGallery => 'Local';
-
-  @override
-  String get signalLocationBadge => 'Ubicación';
-
-  @override
-  String signalLocationPrivacyNote(int radiusMeters) {
-    return 'La ubicación de la señal usa la posición del dispositivo de malla, redondeada a ~${radiusMeters}m.';
-  }
-
-  @override
-  String get signalLocationInvalid => 'Ubicación no disponible';
-
-  @override
-  String get signalLocationUnavailableSent =>
-      'Ubicación no disponible, enviada sin ubicación.';
-
-  @override
-  String signalMaxFileSize(int size) {
-    return 'Máx. $size KB';
-  }
-
-  @override
-  String signalMaxImagesAllowed(int maxImages) {
-    return 'Se permiten máximo $maxImages imágenes';
-  }
-
-  @override
-  String get signalMeshOnlyDebugBanner =>
-      'Modo de depuración solo malla activado. Las señales usan DB local y malla solamente.';
-
-  @override
-  String get signalMeshOnlyDebugCloudDisabled =>
-      'Modo de depuración solo malla activado. Funciones de nube desactivadas.';
-
-  @override
-  String get signalNoCommentsYet => 'Sin comentarios aún';
-
-  @override
-  String get signalNoDeviceConnectedTooltip => 'Sin dispositivo conectado';
-
-  @override
-  String get signalNoDeviceLocation =>
-      'No hay ubicación de dispositivo conectado disponible';
-
-  @override
-  String get signalNoFilterMatch => 'Ninguna señal coincide con este filtro';
-
-  @override
-  String get signalNoIntent => 'Sin intención';
-
-  @override
-  String get signalNoLocationDescription =>
-      'Las señales aparecerán aquí cuando incluyan coordenadas GPS';
-
-  @override
-  String get signalNoLocationTitle => 'Sin señales con ubicación';
-
-  @override
-  String get signalNoSignals => 'Sin señales';
-
-  @override
-  String get signalOfflineCloudUnavailable =>
-      'Sin conexión: imágenes y funciones de nube no disponibles.';
-
-  @override
-  String signalOnMapCount(int count) {
-    return '$count en el mapa';
-  }
-
-  @override
-  String get signalOriginCloud => 'Nube';
-
-  @override
-  String get signalOriginMesh => 'Malla';
-
-  @override
-  String signalPeopleActiveCount(int count) {
-    return '$count personas activas';
-  }
-
-  @override
-  String get signalProcessingImage => 'Procesando imagen...';
-
-  @override
-  String get signalProfile => 'Perfil';
-
-  @override
-  String get signalRemoveLocation => 'Quitar ubicación';
-
-  @override
-  String get signalRemoveVoteFailed => 'Error al quitar el voto';
-
-  @override
-  String get signalRemovedFromSaved => 'Eliminada de guardadas';
-
-  @override
-  String get signalReplyAction => 'Responder';
-
-  @override
-  String signalReplyWithCount(int count) {
-    return 'Responder ($count)';
-  }
-
-  @override
-  String signalReplyingTo(String author) {
-    return 'Respondiendo a $author';
-  }
-
-  @override
-  String get signalReport => 'Reportar';
-
-  @override
-  String get signalReportCopyright => 'Infracción de derechos de autor';
-
-  @override
-  String signalReportFailed(String error) {
-    return 'Error al reportar: $error';
-  }
-
-  @override
-  String get signalReportHarassment => 'Acoso o intimidación';
-
-  @override
-  String get signalReportNudity => 'Desnudez o contenido sexual';
-
-  @override
-  String get signalReportOther => 'Otro';
-
-  @override
-  String get signalReportSpam => 'Spam o contenido engañoso';
-
-  @override
-  String get signalReportSubmitted => 'Reporte enviado. Gracias.';
-
-  @override
-  String get signalReportViolence => 'Violencia o contenido peligroso';
-
-  @override
-  String get signalRespondToSignalHint => 'Responda a esta señal...';
-
-  @override
-  String get signalRestore => 'Restaurar';
 
   @override
   String get signalRestored => 'Señal restaurada';
 
   @override
-  String get signalRetrievingDeviceLocation =>
-      'Recuperando ubicación del dispositivo...';
-
-  @override
-  String get signalSaved => 'Señal guardada';
-
-  @override
-  String get signalSavedBadge => 'Guardada';
-
-  @override
-  String get signalSearchHint => 'Buscar señales';
-
-  @override
-  String signalSeenCount(String formattedCount) {
-    return 'Vista $formattedCount';
-  }
-
-  @override
-  String get signalSelectUpToFourPhotos => 'Seleccione hasta 4 fotos';
-
-  @override
-  String get signalSendASignal => 'Enviar una señal...';
-
-  @override
-  String get signalSendButton => 'Enviar señal';
-
-  @override
-  String get signalSendResponseFailed => 'Error al enviar la respuesta';
-
-  @override
-  String get signalSendSignal => 'Enviar señal';
-
-  @override
-  String get signalSending => 'Enviando...';
-
-  @override
-  String get signalSendingLabel => 'Enviando...';
-
-  @override
-  String get signalSent => 'Señal enviada';
-
-  @override
-  String get signalSettings => 'Configuración';
-
-  @override
-  String get signalShortStatusHint =>
-      'p. ej. \"En el sendero cerca de la cima\"';
-
-  @override
-  String get signalShortStatusOptional => 'Estado breve (opcional)';
-
-  @override
-  String get signalShowAll => 'Mostrar todas las señales';
-
-  @override
-  String get signalSignIn => 'Iniciar sesión';
-
-  @override
-  String get signalSignInForCloudFeatures =>
-      'Inicie sesión para activar imágenes y funciones de nube.';
-
-  @override
-  String get signalSignInForImagesAndComments =>
-      'Inicie sesión para imágenes y comentarios';
-
-  @override
-  String get signalSignInRequiredToComment =>
-      'Inicia sesión para comentar con tu perfil';
-
-  @override
-  String get signalSignInToViewMedia =>
-      'Inicie sesión para ver los medios adjuntos';
-
-  @override
-  String get signalSignInToVote =>
-      'Vota con tu perfil - inicia sesión para activarlo';
-
-  @override
-  String signalSignalsNearbyCount(int count) {
-    return '$count señales cercanas';
-  }
-
-  @override
-  String get signalSomeone => 'Alguien';
-
-  @override
-  String get signalSortByProximity => 'Por proximidad';
-
-  @override
-  String get signalSortClosest => 'Más cercano';
-
-  @override
-  String get signalSortExpiring => 'Por expirar';
-
-  @override
-  String get signalSortExpiringSoon => 'Próximas a expirar';
-
-  @override
-  String get signalSortMostRecent => 'Más reciente';
-
-  @override
-  String get signalSortNewest => 'Más nueva';
-
-  @override
-  String get signalSwipeSave => 'Guardar';
-
-  @override
-  String get signalSwipeUnsave => 'Quitar de guardadas';
-
-  @override
-  String get signalSyncingMedia => 'Sincronizando multimedia';
-
-  @override
-  String get signalMediaUnavailable => 'Multimedia no disponible';
-
-  @override
-  String get signalTakePhoto => 'Tomar foto';
-
-  @override
-  String get signalTapToSet => 'Toque para configurar';
-
-  @override
-  String get signalTapToView => 'Toque para ver';
-
-  @override
-  String get signalTemporaryBanner =>
-      'Las señales son temporales. Se desvanecen automáticamente y existen solo mientras están activas.';
-
-  @override
-  String signalTimeDaysAgo(int days) {
-    return 'hace ${days}d';
-  }
-
-  @override
-  String signalTimeHoursAgo(int hours) {
-    return 'hace ${hours}h';
-  }
-
-  @override
-  String get signalTimeJustNow => 'Justo ahora';
-
-  @override
-  String signalTimeMinutesAgo(int minutes) {
-    return 'hace ${minutes}m';
-  }
-
-  @override
-  String get signalTimeNowCompact => 'ahora';
-
-  @override
-  String signalTimeWeeksAgo(int weeks) {
-    return 'hace ${weeks}sem';
-  }
-
-  @override
-  String signalTtlDaysLeft(int days) {
-    return '${days}d restantes';
-  }
-
-  @override
-  String get signalTtlExpired => 'Expirada';
-
-  @override
-  String signalTtlHoursLeft(int hours) {
-    return '${hours}h restantes';
-  }
-
-  @override
-  String signalTtlMinutesLeft(int minutes) {
-    return '${minutes}m restantes';
-  }
-
-  @override
-  String signalTtlSecondsLeft(int seconds) {
-    return '${seconds}s restantes';
-  }
-
-  @override
-  String get signalUnknownAuthor => 'Desconocido';
-
-  @override
-  String get signalUseCamera => 'Usar cámara';
-
-  @override
-  String get signalValidateImagesFailed => 'Error al validar las imágenes';
-
-  @override
-  String signalValidatingImages(int count) {
-    return 'Validando $count imágenes...';
-  }
-
-  @override
-  String get signalViewButton => 'Ver';
-
-  @override
-  String get signalViewGallery => 'Ver galería';
-
-  @override
-  String get signalViewGrid => 'Vista de cuadrícula';
-
-  @override
-  String get signalViewList => 'Vista de lista';
-
-  @override
-  String get signalViewLocation => 'Ver ubicación';
-
-  @override
-  String get signalViewMap => 'Vista de mapa';
-
-  @override
-  String get signalVoteFailed => 'Error al enviar el voto';
-
-  @override
-  String get signalWhatAreYouSignaling => '¿Qué está señalando?';
-
-  @override
-  String get signalWhyReportComment =>
-      '¿Por qué está reportando este comentario?';
-
-  @override
-  String get signalWhyReportSignal => '¿Por qué está reportando esta señal?';
-
-  @override
-  String get signalWriteReplyHint => 'Escriba una respuesta...';
-
-  @override
-  String get signalYouBadge => 'usted';
-
-  @override
-  String get signalYourIntent => 'Su intención';
-
-  @override
-  String get signalYourResponsibility => 'Su responsabilidad';
-
-  @override
-  String get signalsFadeAutomatically =>
-      'Los Signals se desvanecen automáticamente. Solo se puede ver lo que sigue activo.';
-
-  @override
-  String get signalsFeedTitle => 'Signals';
-
-  @override
-  String get signalsPanelTitle => 'Signals';
-
-  @override
-  String get socialAboutSensitiveContent => 'Acerca del contenido sensible';
-
-  @override
-  String get socialAccountGoodStanding => 'Cuenta al día';
-
-  @override
-  String get socialAccountGoodStandingDesc =>
-      'No tiene advertencias ni infracciones activas.';
-
-  @override
-  String get socialAccountGoodStandingLabel => 'Al día';
-
-  @override
-  String get socialAccountMaxStrikes => 'Máximo de infracciones';
-
-  @override
-  String get socialAccountRecentActivity => 'Actividad reciente';
-
-  @override
-  String get socialAccountStatusActive => 'Activo';
-
-  @override
-  String socialAccountStatusError(String error) {
-    return 'Error al cargar el estado: $error';
-  }
-
-  @override
-  String get socialAccountStatusLabel => 'Estado de la cuenta';
-
-  @override
-  String get socialAccountStatusTitle => 'Estado de la cuenta';
-
-  @override
-  String get socialAccountStrikeMeter => 'Medidor de infracciones';
-
-  @override
-  String get socialAccountStrikes => 'Infracciones';
-
-  @override
-  String get socialAccountSuspended => 'Suspendida';
-
-  @override
-  String get socialAccountSuspendedTitle => 'Cuenta suspendida';
-
-  @override
-  String get socialAccountSuspendedMessage =>
-      'Su cuenta está suspendida en este momento. No puede publicar ni comentar hasta que se levante la suspensión.';
-
-  @override
-  String get socialAccountWarningStrikesActive =>
-      'Advertencia: infracciones activas';
-
-  @override
-  String get socialAccountWarnings => 'Advertencias';
-
-  @override
-  String get socialAccountWarningsActive => 'Advertencias activas';
-
-  @override
-  String get socialActiveStrikes => 'Infracciones activas';
-
-  @override
-  String get socialActiveWarnings => 'Advertencias activas';
-
-  @override
-  String get socialActivityClearAll => 'Borrar todo';
-
-  @override
-  String get socialActivityClearConfirmLabel => 'Borrar';
-
-  @override
-  String get socialActivityClearConfirmMessage =>
-      'Se eliminarán todos los elementos de actividad. Esta acción no se puede deshacer.';
-
-  @override
-  String get socialActivityClearConfirmTitle => '¿Borrar toda la actividad?';
-
-  @override
-  String get socialActivityCommentedSignal => ' comentó en su señal';
-
-  @override
-  String get socialActivityErrorLoading => 'Error al cargar la actividad';
-
-  @override
-  String get socialActivityGroupEarlier => 'Antes';
-
-  @override
-  String get socialActivityGroupThisMonth => 'Este mes';
-
-  @override
-  String get socialActivityGroupThisWeek => 'Esta semana';
-
-  @override
-  String get socialActivityGroupToday => 'Hoy';
-
-  @override
-  String get socialActivityGroupYesterday => 'Ayer';
-
-  @override
-  String get socialActivityInteracted => ' interactuó con su contenido';
-
-  @override
-  String get socialActivityLikedSignal => ' le dio me gusta a su señal';
-
-  @override
-  String get socialActivityLoadingSignal => 'Cargando señal...';
-
-  @override
-  String get socialActivityMarkAllRead => 'Marcar todo como leído';
-
-  @override
-  String get socialActivityRepliedComment => ' respondió a su comentario';
-
-  @override
-  String get socialActivitySignalNotFound => 'Señal no encontrada';
-
-  @override
-  String get socialActivityTagline1 =>
-      'Aún no hay actividad.\nLas interacciones con sus publicaciones aparecerán aquí.';
-
-  @override
-  String get socialActivityTagline2 =>
-      'Me gusta, comentarios, seguidos: todo en un lugar.\nPublique algo para comenzar.';
-
-  @override
-  String get socialActivityTagline3 =>
-      'Su pulso social comienza aquí.\nConéctese con otros para ver actividad.';
-
-  @override
-  String get socialActivityTagline4 =>
-      'Nada aún. La actividad aparece cuando otros\ninteractúan con su contenido.';
-
-  @override
-  String get socialActivityTitle => 'Actividad';
-
-  @override
-  String get socialActivityTitleKeyword => 'actividad';
-
-  @override
-  String get socialActivityTitlePrefix => 'Sin ';
-
-  @override
-  String get socialActivityTitleSuffix => ' aún';
-
-  @override
-  String get socialAdd => 'Agregar';
-
-  @override
-  String get socialAddBanner => 'Agregar banner';
-
-  @override
-  String get socialAlbumAll => 'Todos los álbumes';
-
-  @override
-  String get socialAlbumFavorites => 'Favoritos';
-
-  @override
-  String get socialAlbumRecents => 'Recientes';
-
-  @override
-  String get socialAlbumVideos => 'Videos';
-
-  @override
-  String get socialAppealDecision => 'Apelar decisión';
-
-  @override
-  String get socialBanReasonHarassment => 'Acoso / Intimidación';
-
-  @override
-  String get socialBanReasonHateSpeech => 'Discurso de odio / Discriminación';
-
-  @override
-  String get socialBanReasonIllegal => 'Actividad ilegal';
-
-  @override
-  String get socialBanReasonImpersonation => 'Suplantación de identidad';
-
-  @override
-  String get socialBanReasonOther => 'Otra infracción';
-
-  @override
-  String get socialBanReasonPornography => 'Pornografía / Contenido sexual';
-
-  @override
-  String get socialBanReasonSpam => 'Spam / Estafa';
-
-  @override
-  String get socialBanReasonViolence => 'Violencia / Amenazas';
-
-  @override
-  String get socialBanUserAndDelete => 'Suspender usuario y eliminar';
-
-  @override
-  String get socialBanUserButton => 'Suspender usuario';
-
-  @override
-  String socialBanUserFailed(String error) {
-    return 'Error al suspender el usuario: $error';
-  }
-
-  @override
-  String socialBannerRemoveFailed(String error) {
-    return 'Error al eliminar el banner: $error';
-  }
-
-  @override
-  String get socialBannerRemoved => 'Banner eliminado';
-
-  @override
-  String get socialBannerUpdated => 'Banner actualizado';
-
-  @override
-  String socialBannerUploadFailed(String error) {
-    return 'Error al subir el banner: $error';
-  }
-
-  @override
-  String get socialBlock => 'Bloquear';
-
-  @override
-  String get socialBlockUser => 'Bloquear usuario';
-
-  @override
-  String get socialBlockUserConfirm =>
-      'Ya no verá publicaciones de este usuario.';
-
-  @override
-  String get socialBlurSensitiveDesc =>
-      'Desenfoca imágenes y videos potencialmente sensibles hasta que los toque para revelarlos';
-
-  @override
-  String get socialBlurSensitiveMedia => 'Desenfocar contenido sensible';
-
-  @override
-  String get socialCancel => 'Cancelar';
-
-  @override
-  String get socialCannotIdentifyUser =>
-      'No se puede identificar al usuario para suspender';
-
-  @override
-  String get socialChangeBanner => 'Cambiar banner';
-
-  @override
-  String get socialClose => 'Cerrar';
-
-  @override
-  String socialCommentActionFailed(String error) {
-    return 'Error: $error';
-  }
-
-  @override
-  String get socialCommentDeleteConfirm =>
-      '¿Está seguro de que desea eliminar este comentario?';
-
-  @override
-  String socialCommentDeleteFailed(String error) {
-    return 'Error al eliminar: $error';
-  }
-
-  @override
-  String get socialCommentDeleteTitle => 'Eliminar comentario';
-
-  @override
-  String get socialCommentHintAdd => 'Agregar un comentario...';
-
-  @override
-  String get socialCommentHintReply => 'Escribe una respuesta...';
-
-  @override
-  String get socialCommentReply => 'Responder';
-
-  @override
-  String get socialCommentReported => 'Comentario reportado';
-
-  @override
-  String get socialCommentUnknown => 'Desconocido';
-
-  @override
-  String get socialComments => 'Comentarios';
-
-  @override
-  String get socialCommunityGuidelines => 'Normas de la comunidad';
-
-  @override
-  String get socialConfirm => 'Confirmar';
-
-  @override
-  String get socialConnectionsTitle => 'Conexiones';
-
-  @override
-  String get socialContactSupport => '¿Preguntas? Contactar soporte';
-
-  @override
-  String get socialContactSupportButton => 'Contactar soporte';
-
-  @override
-  String get socialContentApproved => 'Contenido aprobado';
-
-  @override
-  String get socialContentIdNotFound => 'ID de contenido no encontrado';
-
-  @override
-  String get socialContentRemoved => 'Contenido eliminado';
-
-  @override
-  String get socialContentType => 'Tipo de contenido';
-
-  @override
-  String get socialCreatePostAction => 'Crear publicación';
-
-  @override
-  String get socialCreatePostAddImage => 'Agregar imagen';
-
-  @override
-  String get socialCreatePostAddLocation => 'Agregar ubicación';
-
-  @override
-  String get socialCreatePostButton => 'Publicar';
-
-  @override
-  String get socialCreatePostCreated => '¡Publicación creada!';
-
-  @override
-  String get socialCreatePostCurrentDesc => 'Comparte tus coordenadas GPS';
-
-  @override
-  String get socialCreatePostCurrentLocation => 'Ubicación actual';
-
-  @override
-  String get socialCreatePostDiscardMsgDraft => 'Su borrador se perderá.';
-
-  @override
-  String get socialCreatePostDiscardMsgImages =>
-      'Sus imágenes subidas serán eliminadas.';
-
-  @override
-  String get socialCreatePostDiscardTitle => '¿Descartar publicación?';
-
-  @override
-  String get socialCreatePostEnterLocation => 'Ingresar ubicación';
-
-  @override
-  String get socialCreatePostEnterManually => 'Ingresar ubicación manualmente';
-
-  @override
-  String socialCreatePostFailed(String error) {
-    return 'Error al crear la publicación: $error';
-  }
-
-  @override
-  String get socialCreatePostHint => '¿Qué está pasando en la malla?';
-
-  @override
-  String socialCreatePostImageCount(int count, int max) {
-    return '$count/$max imágenes';
-  }
-
-  @override
-  String get socialCreatePostImageViolation =>
-      'Una o más imágenes infringen la política de contenido.';
-
-  @override
-  String get socialCreatePostLocationDenied => 'Permiso de ubicación denegado';
-
-  @override
-  String get socialCreatePostLocationHint => 'p. ej., Buenos Aires, AR';
-
-  @override
-  String get socialCreatePostLocationLabel => 'Ubicación';
-
-  @override
-  String get socialCreatePostLocationSheetTitle => 'Agregar ubicación';
-
-  @override
-  String get socialCreatePostManualDesc => 'Escribe el nombre de un lugar';
-
-  @override
-  String socialCreatePostMaxImages(int max) {
-    return 'Máximo de $max imágenes permitidas';
-  }
-
-  @override
-  String get socialCreatePostNoNodes =>
-      'No hay nodos disponibles. Conéctese a una malla primero.';
-
-  @override
-  String socialCreatePostNodeLabel(String nodeId) {
-    return 'Nodo $nodeId';
-  }
-
-  @override
-  String get socialCreatePostSignIn => 'Inicie sesión para crear publicaciones';
-
-  @override
-  String get socialCreatePostTagNode => 'Etiquetar nodo';
-
-  @override
-  String get socialCreatePostTagNodeTitle => 'Etiquetar un nodo';
-
-  @override
-  String get socialCreatePostTitle => 'Crear publicación';
-
-  @override
-  String get socialCreatePostUseCurrent => 'Usar ubicación actual';
-
-  @override
-  String get socialCreateStoryCamera => 'Cámara';
-
-  @override
-  String get socialCreateStoryCloseFriends => 'Amigos cercanos';
-
-  @override
-  String get socialCreateStoryDelete => 'Eliminar';
-
-  @override
-  String get socialCreateStoryDragInstructions =>
-      'Arrastre para mover • Pellizque para cambiar tamaño • Mantenga presionado para eliminar';
-
-  @override
-  String get socialCreateStoryEdit => 'Editar';
-
-  @override
-  String get socialCreateStoryFailed => 'Error al crear la historia';
-
-  @override
-  String get socialCreateStoryFollowers => 'Seguidores';
-
-  @override
-  String socialCreateStoryItemsCount(int count) {
-    return '$count elementos';
-  }
-
-  @override
-  String get socialCreateStoryLinkNode => 'Vincular a nodo';
-
-  @override
-  String get socialCreateStoryLocationFailed =>
-      'No se pudo obtener la ubicación';
-
-  @override
-  String get socialCreateStoryLocationRequired =>
-      'Se requiere permiso de ubicación';
-
-  @override
-  String get socialCreateStoryPublic => 'Público';
-
-  @override
-  String get socialCreateStoryShared => '¡Historia compartida!';
-
-  @override
-  String get socialCreateStorySignIn => 'Inicie sesión para crear historias';
-
-  @override
-  String get socialCreateStoryTitle => 'Agregar a historia';
-
-  @override
-  String get socialCreateStoryTypeSomething => 'Escribe algo...';
-
-  @override
-  String get socialCreateStoryUntitledAlbum => 'Álbum sin título';
-
-  @override
-  String get socialDate => 'Fecha';
-
-  @override
-  String get socialDefault => 'Predeterminado';
-
-  @override
-  String get socialDelete => 'Eliminar';
-
-  @override
-  String get socialDeleteComment => 'Eliminar comentario';
-
-  @override
-  String get socialDeleteCommentConfirm =>
-      '¿Está seguro de que desea eliminar este comentario?';
-
-  @override
-  String get socialDeletePost => 'Eliminar publicación';
-
-  @override
-  String get socialDeletePostConfirm =>
-      '¿Está seguro de que desea eliminar esta publicación?';
-
-  @override
-  String get socialDeleteStory => 'Eliminar historia';
-
-  @override
-  String get socialDeleteStoryConfirm =>
-      'Esta historia se eliminará permanentemente.';
-
-  @override
-  String socialDeleteType(String type) {
-    return 'Eliminar $type';
-  }
-
-  @override
-  String socialDeleteTypeConfirm(String type) {
-    return 'Esto eliminará permanentemente el/la $type reportado/a. ¿Continuar?';
-  }
-
-  @override
-  String get socialDiscard => 'Descartar';
-
-  @override
-  String socialDiscordCopied(String username) {
-    return 'Nombre de usuario de Discord copiado: $username';
-  }
-
-  @override
-  String get socialDismiss => 'Ignorar';
-
-  @override
-  String get socialDisplayOptions => 'Opciones de visualización';
-
-  @override
-  String get socialDone => 'Listo';
-
-  @override
-  String get socialEditProfile => 'Editar perfil';
-
-  @override
-  String get socialEmailCopied => 'Correo electrónico copiado al portapapeles';
-
-  @override
-  String get socialEmptyPostsTagline1 =>
-      'Comparte fotos e historias sobre tus aventuras en la malla.';
-
-  @override
-  String get socialEmptyPostsTagline2 =>
-      'Publica sobre tu configuración de nodos, pruebas de alcance y descubrimientos.';
-
-  @override
-  String get socialEmptyPostsTagline3 =>
-      'Tu comunidad de malla está esperando ver lo que construyes.';
-
-  @override
-  String get socialEmptyPostsTagline4 =>
-      'Documenta tus aventuras y compártelas con la malla.';
-
-  @override
-  String get socialErrorLoadingReports => 'Error al cargar los reportes';
-
-  @override
-  String get socialErrorLoadingViewers => 'Error al cargar los espectadores';
-
-  @override
-  String socialErrorWithDetails(String error) {
-    return 'Error: $error';
-  }
-
-  @override
-  String get socialExpires => 'Vence';
-
-  @override
-  String socialFailedToBlock(String error) {
-    return 'Error al bloquear el usuario: $error';
-  }
-
-  @override
-  String socialFailedToDelete(String error) {
-    return 'Error al eliminar: $error';
-  }
-
-  @override
-  String socialFailedToGetLocation(String error) {
-    return 'Error al obtener la ubicación: $error';
-  }
-
-  @override
-  String socialFailedToReport(String error) {
-    return 'Error al reportar: $error';
-  }
-
-  @override
-  String socialFailedToReportStory(String error) {
-    return 'Error al reportar la historia: $error';
-  }
-
-  @override
-  String get socialFailedToUpdateLike => 'Error al actualizar el me gusta';
-
-  @override
-  String socialFailedToUploadImage(String error) {
-    return 'Error al subir la imagen: $error';
-  }
-
-  @override
-  String get socialFeedLocationFallback => 'Ubicación';
-
-  @override
-  String get socialFilterLevelLess => 'Menos';
-
-  @override
-  String get socialFilterLevelLessDesc =>
-      'Es posible que vea contenido que puede ser perturbador u ofensivo. Esta configuración prefiere mostrar más contenido.';
-
-  @override
-  String get socialFilterLevelStandard => 'Estándar';
-
-  @override
-  String get socialFilterLevelStandardDesc =>
-      'Se filtra el contenido que puede ser perturbador u ofensivo. Es posible que aún vea algún contenido límite.';
-
-  @override
-  String get socialFollow => 'Seguir';
-
-  @override
-  String socialFollowActionFailed(String error) {
-    return 'Error: $error';
-  }
-
-  @override
-  String socialFollowFailed(String error) {
-    return 'Error al actualizar el seguimiento: $error';
-  }
-
-  @override
-  String get socialFollowRequestAcceptFailed => 'Error al aceptar la solicitud';
-
-  @override
-  String socialFollowRequestAccepted(String name) {
-    return 'Se aceptó la solicitud de $name';
-  }
-
-  @override
-  String get socialFollowRequestDeclineFailed =>
-      'Error al rechazar la solicitud';
-
-  @override
-  String socialFollowRequestDeclined(String name) {
-    return 'Se rechazó la solicitud de $name';
-  }
-
-  @override
-  String get socialFollowRequestsEmpty => 'No hay solicitudes pendientes';
-
-  @override
-  String get socialFollowRequestsEmptyDesc =>
-      'Cuando alguien solicite seguirle, aparecerá aquí.';
-
-  @override
-  String socialFollowRequestsError(String error) {
-    return 'Error al cargar: $error';
-  }
-
-  @override
-  String get socialFollowRequestsTitle => 'Solicitudes de seguimiento';
-
-  @override
-  String socialFollowersError(String error) {
-    return 'Error al cargar: $error';
-  }
-
-  @override
-  String get socialFollowing => 'Siguiendo';
-
-  @override
-  String get socialGuidelineNoExplicit =>
-      'Sin contenido explícito o para adultos';
-
-  @override
-  String get socialGuidelineNoHarassment =>
-      'Sin acoso, amenazas ni discurso de odio';
-
-  @override
-  String get socialGuidelineNoSpam => 'Sin spam, estafas ni contenido engañoso';
-
-  @override
-  String get socialGuidelinesWarning => 'Advertencia de normas de la comunidad';
-
-  @override
-  String get socialHubSignIn => 'Inicie sesión para acceder a Social';
-
-  @override
-  String get socialHubSignInDesc =>
-      'Cree publicaciones, siga usuarios y conéctese con la comunidad de la malla.';
-
-  @override
-  String get socialHubTitle => 'Social';
-
-  @override
-  String get socialIUnderstand => 'Entiendo';
-
-  @override
-  String get socialImageBlockedByModeration =>
-      'Imagen bloqueada por moderación';
-
-  @override
-  String get socialInvalidNodeId => 'ID de nodo no válido';
-
-  @override
-  String socialJoined(String date) {
-    return 'Se unió el $date';
-  }
-
-  @override
   String get socialLike => 'Me gusta';
-
-  @override
-  String get socialLiked => 'Le dio me gusta';
-
-  @override
-  String get socialLikePlural => 'me gusta';
-
-  @override
-  String get socialLikeSingular => 'me gusta';
-
-  @override
-  String get socialLinkNodeHint =>
-      'Vincula un nodo de la malla a tu próxima publicación';
-
-  @override
-  String get socialLocationFallback => 'Ubicación';
-
-  @override
-  String get socialModerationAdditionalNotes => 'Notas adicionales (opcional)';
-
-  @override
-  String get socialModerationApprove => 'Aprobar';
-
-  @override
-  String get socialModerationApproved => 'Contenido aprobado';
-
-  @override
-  String get socialModerationErrorLoading => 'Error al cargar la cola';
-
-  @override
-  String get socialModerationNoPending =>
-      'No hay elementos pendientes de revisión';
-
-  @override
-  String socialModerationNoStatus(String status) {
-    return 'No hay elementos $status';
-  }
-
-  @override
-  String get socialModerationQueueTitle => 'Cola de moderación';
-
-  @override
-  String get socialModerationReasonHarassment => 'Acoso o intimidación';
-
-  @override
-  String get socialModerationReasonHateSpeech =>
-      'Discurso de odio o discriminación';
-
-  @override
-  String get socialModerationReasonIP => 'Infracción de propiedad intelectual';
-
-  @override
-  String get socialModerationReasonNudity => 'Desnudez o contenido sexual';
-
-  @override
-  String get socialModerationReasonOther => 'Otra infracción de política';
-
-  @override
-  String get socialModerationReasonSpam => 'Spam o contenido engañoso';
-
-  @override
-  String get socialModerationReasonViolence =>
-      'Violencia o contenido peligroso';
-
-  @override
-  String get socialModerationReject => 'Rechazar';
-
-  @override
-  String get socialModerationRejected => 'Contenido rechazado';
-
-  @override
-  String get socialModerationRejectionReason => 'Motivo de rechazo';
-
-  @override
-  String socialModerationReviewedBy(String reviewedBy) {
-    return 'Revisado por $reviewedBy';
-  }
-
-  @override
-  String get socialModerationTabApproved => 'Aprobados';
-
-  @override
-  String get socialModerationTabPending => 'Pendientes';
-
-  @override
-  String get socialModerationTabRejected => 'Rechazados';
-
-  @override
-  String socialModerationUserLabel(String userId) {
-    return 'Usuario: $userId';
-  }
-
-  @override
-  String get socialNext => 'Siguiente';
-
-  @override
-  String get socialNoAlbumsFound => 'No se encontraron álbumes';
-
-  @override
-  String get socialNoCommentsYet => 'Aún no hay comentarios. ¡Sé el primero!';
-
-  @override
-  String get socialNoContent => 'Sin contenido';
-
-  @override
-  String get socialNoFollowersYet => 'Aún no hay seguidores';
-
-  @override
-  String get socialNoLocationPosts => 'No hay publicaciones con ubicación';
-
-  @override
-  String get socialNoNodePosts => 'No hay publicaciones de nodos';
-
-  @override
-  String socialNoPendingFilterReports(String filter) {
-    return 'No hay reportes $filter pendientes';
-  }
-
-  @override
-  String get socialNoPendingReports => 'No hay reportes pendientes';
-
-  @override
-  String get socialNoPhotoPosts => 'No hay publicaciones con fotos';
-
-  @override
-  String get socialNoPosts => 'No hay publicaciones';
-
-  @override
-  String get socialNoPostsYet => 'Aún no hay publicaciones';
-
-  @override
-  String get socialNoRecentActivity => 'Sin actividad reciente';
-
-  @override
-  String get socialNoSuggestions => 'No hay sugerencias disponibles';
-
-  @override
-  String get socialNoUsersFound => 'No se encontraron usuarios';
-
-  @override
-  String get socialNoViewsYet => 'Aún no hay vistas';
-
-  @override
-  String socialNodeLabel(String nodeId) {
-    return 'Nodo $nodeId';
-  }
-
-  @override
-  String get socialNotFollowingAnyone => 'Aún no sigue a nadie';
-
-  @override
-  String socialNoticesCount(int current, int total) {
-    return '$current de $total avisos';
-  }
-
-  @override
-  String get socialOK => 'OK';
-
-  @override
-  String get socialOnline => 'En línea';
-
-  @override
-  String get socialOpenSettings => 'Abrir configuración';
-
-  @override
-  String get socialPermanentlyBanned => 'Suspendido permanentemente';
-
-  @override
-  String get socialPhotoAccessDesc =>
-      'Para crear historias, necesitamos acceso a su biblioteca de fotos.';
-
-  @override
-  String get socialPhotoAccessTitle => 'Permitir acceso a sus fotos';
-
-  @override
-  String get socialPostCardLocationFallback => 'Ubicación';
-
-  @override
-  String socialPostCardNodeLabel(String nodeId) {
-    return 'Nodo $nodeId';
-  }
-
-  @override
-  String get socialPostCardUnknownUser => 'Usuario desconocido';
-
-  @override
-  String get socialPostDeleted => 'Publicación eliminada';
-
-  @override
-  String get socialPostDetailTitle => 'Publicación';
-
-  @override
-  String get socialPostNotFound => 'Publicación no encontrada';
-
-  @override
-  String get socialPostNotFoundForComment =>
-      'Publicación no encontrada para este comentario';
-
-  @override
-  String get socialPrivateAccount => 'Esta cuenta es privada';
-
-  @override
-  String socialPrivateAccountDesc(String name) {
-    return 'Siga a $name para ver sus publicaciones y dispositivos vinculados.';
-  }
-
-  @override
-  String get socialProfileBlockLabel => 'Bloquear';
-
-  @override
-  String get socialProfileLoadFailed => 'Error al cargar el perfil';
-
-  @override
-  String get socialProfileNotFound => 'Perfil no encontrado';
-
-  @override
-  String get socialProfileNotFoundDesc =>
-      'Es posible que este perfil haya sido eliminado o no esté disponible temporalmente.';
-
-  @override
-  String get socialProfileReportLabel => 'Reportar';
-
-  @override
-  String get socialProfileShareLabel => 'Compartir perfil';
-
-  @override
-  String get socialReason => 'Motivo';
-
-  @override
-  String get socialRecentFailed => 'Error al cargar usuarios recientes';
-
-  @override
-  String get socialRecentlyActive => 'Activo recientemente';
-
-  @override
-  String get socialRejectDelete => 'Rechazar y eliminar';
-
-  @override
-  String socialRejectDeleteMsg(String contentType) {
-    return 'Esto eliminará el/la $contentType y enviará una advertencia al usuario.';
-  }
-
-  @override
-  String get socialRemoveBanner => 'Eliminar banner';
-
-  @override
-  String get socialReply => 'Responder';
-
-  @override
-  String socialReplyingTo(String name) {
-    return 'Respondiendo a $name';
-  }
-
-  @override
-  String get socialRepeatedViolationsWarning =>
-      'Las infracciones repetidas pueden resultar en la suspensión de la cuenta.';
-
-  @override
-  String get socialReport => 'Reportar';
-
-  @override
-  String get socialReportComment => 'Reportar comentario';
-
-  @override
-  String get socialReportCommentWhy =>
-      '¿Por qué está reportando este comentario?';
-
-  @override
-  String get socialReportDescribeIssue => 'Describe el problema...';
-
-  @override
-  String get socialReportDismissed => 'Reporte ignorado';
-
-  @override
-  String get socialReportPost => 'Reportar publicación';
-
-  @override
-  String get socialReportPostWhy =>
-      '¿Por qué está reportando esta publicación?';
-
-  @override
-  String get socialReportProfileSubmitted => 'Reporte enviado';
-
-  @override
-  String get socialReportReasonFalseInfo => 'Información falsa';
-
-  @override
-  String get socialReportReasonHarassment => 'Acoso o intimidación';
-
-  @override
-  String get socialReportReasonHateSpeech => 'Discurso de odio';
-
-  @override
-  String get socialReportReasonNudity => 'Desnudez o contenido sexual';
-
-  @override
-  String get socialReportReasonOther => 'Otro';
-
-  @override
-  String get socialReportReasonSpam => 'Spam';
-
-  @override
-  String get socialReportReasonViolence => 'Violencia o amenazas';
-
-  @override
-  String get socialReportStory => 'Reportar historia';
-
-  @override
-  String get socialReportStoryReasonCopyright =>
-      'Infracción de derechos de autor';
-
-  @override
-  String get socialReportStoryReasonHarassment => 'Acoso o intimidación';
-
-  @override
-  String get socialReportStoryReasonNudity => 'Desnudez o contenido sexual';
-
-  @override
-  String get socialReportStoryReasonOther => 'Otro';
-
-  @override
-  String get socialReportStoryReasonSpam => 'Spam o contenido engañoso';
-
-  @override
-  String get socialReportStoryReasonViolence =>
-      'Violencia o contenido peligroso';
-
-  @override
-  String get socialReportStoryWhy => '¿Por qué está reportando esta historia?';
-
-  @override
-  String get socialReportSubmitted => 'Reporte enviado. Gracias.';
-
-  @override
-  String get socialReportedContentRejected =>
-      'Contenido rechazado y usuario advertido';
-
-  @override
-  String get socialReportedContentTitle => 'Contenido reportado';
-
-  @override
-  String get socialReportedErrorLoading =>
-      'Error al cargar la cola de moderación';
-
-  @override
-  String get socialReportedNoFlagged => 'Sin contenido marcado';
-
-  @override
-  String get socialReportedNoFlaggedDesc =>
-      'La moderación automática no ha marcado ningún contenido';
-
-  @override
-  String get socialReportedTabAll => 'Todos';
-
-  @override
-  String get socialReportedTabAuto => 'Auto';
-
-  @override
-  String get socialReportedTabComments => 'Comentarios';
-
-  @override
-  String get socialReportedTabPosts => 'Publicaciones';
-
-  @override
-  String get socialReportedTabSigComments => 'Com. de señales';
-
-  @override
-  String get socialReportedTabSignals => 'Señales';
-
-  @override
-  String get socialRequested => 'Solicitado';
-
-  @override
-  String get socialRetry => 'Reintentar';
-
-  @override
-  String socialSearchFailed(String error) {
-    return 'Error en la búsqueda: $error';
-  }
-
-  @override
-  String get socialSearchHint => 'Buscar usuarios...';
-
-  @override
-  String get socialSearchTitle => 'Buscar';
-
-  @override
-  String get socialSearchTooltip => 'Buscar';
-
-  @override
-  String get socialSendMessage => 'Enviar mensaje';
-
-  @override
-  String get socialSensitiveContentControl => 'Control de contenido sensible';
-
-  @override
-  String get socialSensitiveContentDescription =>
-      'SocialMesh utiliza sistemas automatizados para detectar contenido potencialmente sensible. Puede ajustar cómo se muestra este contenido.';
-
-  @override
-  String get socialSensitiveContentExplanation =>
-      'Controle qué tipo de contenido ve en su feed. Esto afecta el filtrado de contenido moderado por IA en publicaciones, señales e historias.';
-
-  @override
-  String get socialSensitiveContentTitle => 'Contenido sensible';
-
-  @override
-  String get socialSettingsTooltip => 'Configuración';
-
-  @override
-  String get socialShare => 'Compartir';
-
-  @override
-  String get socialShareFirstPostKeyword => 'publicación';
-
-  @override
-  String get socialShareFirstPostPrefix => 'Comparte tu primera ';
-
-  @override
-  String get socialSharePhotoHint =>
-      'Comparte una publicación con foto para verla aquí';
-
-  @override
-  String get socialSignIn => 'Iniciar sesión';
-
-  @override
-  String get socialSignInToLikePosts =>
-      'Inicie sesión para dar me gusta a publicaciones';
-
-  @override
-  String get socialSignInToUploadImages => 'Inicie sesión para subir imágenes';
-
-  @override
-  String get socialSignInSubscriptions =>
-      'Inicie sesión para administrar suscripciones';
-
-  @override
-  String get socialStatFollower => 'Seguidor';
-
-  @override
-  String get socialStatFollowers => 'Seguidores';
-
-  @override
-  String get socialStatFollowing => 'Siguiendo';
-
-  @override
-  String get socialStatPost => 'Publicación';
-
-  @override
-  String get socialStatPosts => 'Publicaciones';
-
-  @override
-  String get socialStatsBarFollowers => 'Seguidores';
-
-  @override
-  String get socialStatsBarFollowing => 'Siguiendo';
-
-  @override
-  String get socialStatsBarPosts => 'Publicaciones';
-
-  @override
-  String get socialStatusFlagged => 'MARCADO';
-
-  @override
-  String get socialStatusPending => 'PENDIENTE';
-
-  @override
-  String get socialStatusRejected => 'RECHAZADO';
-
-  @override
-  String get socialStatusStrike => 'INFRACCIÓN';
-
-  @override
-  String get socialStatusSuspended => 'SUSPENDIDO';
-
-  @override
-  String get socialStoryBarAdd => 'Agregar';
-
-  @override
-  String get socialStoryContentUnavailable => 'Contenido no disponible';
-
-  @override
-  String socialStoryDeleteFailed(String error) {
-    return 'Error al eliminar la historia: $error';
-  }
-
-  @override
-  String get socialStoryDeleted => 'Historia eliminada';
-
-  @override
-  String get socialStoryMayBeRemoved =>
-      'Es posible que esta historia haya sido eliminada';
-
-  @override
-  String get socialStoryReported =>
-      'Historia reportada. La revisaremos pronto.';
-
-  @override
-  String get socialStoryUserFallback => 'Usuario';
-
-  @override
-  String get socialStrike3Suspension =>
-      '3 infracciones resultan en la suspensión de la cuenta';
-
-  @override
-  String get socialStrikeAcknowledge => 'Entiendo';
-
-  @override
-  String get socialStrikeAgainstAccount => 'Infracción en su cuenta';
-
-  @override
-  String socialStrikeContentLabel(String type) {
-    return 'Contenido: $type';
-  }
-
-  @override
-  String socialStrikeContentTitle(String typeDisplayName) {
-    return 'Contenido $typeDisplayName';
-  }
-
-  @override
-  String socialStrikeError(String error) {
-    return 'Error: $error';
-  }
-
-  @override
-  String get socialStrikeNext => 'Siguiente';
-
-  @override
-  String socialStrikeOfTotal(int current, int total) {
-    return '$current de $total';
-  }
-
-  @override
-  String get socialStrikeReasonLabel => 'Motivo';
-
-  @override
-  String get socialStrikeReceivedStrike =>
-      'Ha recibido una infracción en su cuenta por una violación de las normas de la comunidad.';
-
-  @override
-  String get socialStrikeReceivedWarning =>
-      'Ha recibido una advertencia. Revise nuestras normas de la comunidad.';
-
-  @override
-  String socialStrikeTapReview(int count) {
-    return 'Tiene $count infracción(es): toque para revisar';
-  }
-
-  @override
-  String get socialStrikesExpireInfo =>
-      'Las infracciones vencen a los 90 días sin violaciones.';
-
-  @override
-  String socialStrikesOnAccount(int count) {
-    return '$count infracción(es) activa(s) en su cuenta';
-  }
-
-  @override
-  String get socialSubscribe => 'Suscribirse';
-
-  @override
-  String get socialSubscribed => 'Suscrito';
-
-  @override
-  String socialSubscriptionFailed(String error) {
-    return 'Error al actualizar la suscripción: $error';
-  }
-
-  @override
-  String get socialSuggestedForYou => 'Sugerido para usted';
-
-  @override
-  String get socialSuggestionsFailed => 'Error al cargar sugerencias';
-
-  @override
-  String get socialSuspendedAppealBody =>
-      'Hola,\n\nMe gustaría apelar la suspensión de mi cuenta.\n\nPor favor, revise mi caso.\n\nGracias.';
-
-  @override
-  String get socialSuspendedAppealSubject =>
-      'Apelación de suspensión de cuenta';
-
-  @override
-  String get socialSuspendedContactSupport =>
-      'Contacte soporte para apelar esta decisión';
-
-  @override
-  String socialSuspendedDaysPlural(int n) {
-    return '$n días';
-  }
-
-  @override
-  String socialSuspendedDaysSingular(int n) {
-    return '$n día';
-  }
-
-  @override
-  String get socialSuspendedDefaultReason =>
-      'Su cuenta ha sido suspendida por infracciones repetidas a nuestras normas de la comunidad.';
-
-  @override
-  String get socialSuspendedGoBack => 'Atrás';
-
-  @override
-  String socialSuspendedHoursPlural(int n) {
-    return '$n horas';
-  }
-
-  @override
-  String socialSuspendedHoursSingular(int n) {
-    return '$n hora';
-  }
-
-  @override
-  String get socialSuspendedIndefinite => 'Suspensión indefinida';
-
-  @override
-  String get socialSuspendedIndefinitely => 'indefinidamente';
-
-  @override
-  String get socialSuspendedLabel => 'Suspendida';
-
-  @override
-  String socialSuspendedMinutesPlural(int n) {
-    return '$n minutos';
-  }
-
-  @override
-  String socialSuspendedMinutesSingular(int n) {
-    return '$n minuto';
-  }
-
-  @override
-  String get socialSuspendedPermanent => 'Cuenta suspendida';
-
-  @override
-  String socialSuspendedRemaining(String duration) {
-    return 'Tiempo restante: $duration';
-  }
-
-  @override
-  String get socialSuspendedReviewGuidelines =>
-      'Revise nuestras normas de la comunidad';
-
-  @override
-  String get socialSuspendedShortly => 'pronto';
-
-  @override
-  String socialSuspendedStrikesCount(int count) {
-    return '$count infracción(es) en su cuenta';
-  }
-
-  @override
-  String get socialSuspendedTemporary => 'Publicación suspendida temporalmente';
-
-  @override
-  String get socialSuspendedWaitAppeal => 'Espere a que se revise su apelación';
-
-  @override
-  String get socialSuspendedWaitPeriod =>
-      'Espere a que termine el período de suspensión';
-
-  @override
-  String get socialSuspendedWhatCanIDo => '¿Qué puedo hacer?';
-
-  @override
-  String get socialSuspendedWhyTitle => '¿Por qué veo esto?';
-
-  @override
-  String get socialSuspensionEnds => 'Fin de la suspensión';
-
-  @override
-  String get socialTabFollowers => 'Seguidores';
-
-  @override
-  String get socialTabFollowing => 'Siguiendo';
-
-  @override
-  String get socialTagLocationHint =>
-      'Etiqueta una ubicación en tu próxima publicación';
-
-  @override
-  String socialTimeDaysAgo(int n) {
-    return 'hace ${n}d';
-  }
-
-  @override
-  String socialTimeHoursAgo(int n) {
-    return 'hace ${n}h';
-  }
-
-  @override
-  String get socialTimeJustNow => 'Ahora mismo';
-
-  @override
-  String socialTimeMinutesAgo(int n) {
-    return 'hace ${n}m';
-  }
-
-  @override
-  String get socialTryDifferentFilter =>
-      'Intente seleccionar un filtro diferente';
-
-  @override
-  String get socialTryDifferentSearch =>
-      'Intente un término de búsqueda diferente';
-
-  @override
-  String socialTypeDeleted(String type) {
-    return '$type eliminado';
-  }
-
-  @override
-  String get socialUnfollow => 'Dejar de seguir';
-
-  @override
-  String get socialUnknownUser => 'Usuario desconocido';
-
-  @override
-  String get socialUnsubscribed => 'Suscripción cancelada';
-
-  @override
-  String get socialUnsuspend => 'Levantar suspensión';
-
-  @override
-  String socialUnsuspendConfirm(String displayName) {
-    return '¿Está seguro de que desea levantar la suspensión de $displayName?';
-  }
-
-  @override
-  String get socialUnsuspendUser => 'Levantar suspensión al usuario';
-
-  @override
-  String socialUserBannedAndDeleted(String type) {
-    return 'Usuario suspendido y $type eliminado';
-  }
-
-  @override
-  String get socialUserBlocked => 'Usuario bloqueado';
-
-  @override
-  String socialUserBlockedName(String name) {
-    return '$name bloqueado';
-  }
-
-  @override
-  String get socialUserFallback => 'Usuario';
-
-  @override
-  String get socialUserUnsuspended =>
-      'Suspensión del usuario levantada correctamente';
-
-  @override
-  String get socialView => 'Ver';
-
-  @override
-  String get socialViewLabel => 'vista';
-
-  @override
-  String get socialViewLocation => 'Ver ubicación';
-
-  @override
-  String get socialViewOnMap => 'Ver en el mapa';
-
-  @override
-  String get socialViewersTitle => 'Espectadores';
-
-  @override
-  String get socialViewsLabel => 'vistas';
-
-  @override
-  String get socialViolationsDetected => 'Infracciones detectadas';
-
-  @override
-  String get socialVisibilityFollowers => 'Seguidores';
-
-  @override
-  String get socialVisibilityFollowersDesc =>
-      'Solo sus seguidores pueden ver esto';
-
-  @override
-  String get socialVisibilityOnlyMe => 'Solo yo';
-
-  @override
-  String get socialVisibilityOnlyMeDesc =>
-      'Solo usted puede ver esta publicación';
-
-  @override
-  String get socialVisibilityPublic => 'Público';
-
-  @override
-  String get socialVisibilityPublicDesc =>
-      'Cualquier persona puede ver esta publicación';
-
-  @override
-  String get socialVisibilityWhoCanSee => '¿Quién puede ver esto?';
-
-  @override
-  String socialWarningsOnAccount(int count) {
-    return '$count advertencia(s) activa(s) en su cuenta';
-  }
-
-  @override
-  String socialWarningsTapReview(int count) {
-    return 'Tiene $count advertencia(s): toque para revisar';
-  }
-
-  @override
-  String get socialYourStory => 'Tu historia';
 
   @override
   String get takAffiliationAssumedFriend => 'Amigo asumido';
@@ -22150,9 +19215,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get tapbackReact => 'Reaccionar';
-
-  @override
   String taskErrorCompleteTaskDenied(String roleName) {
     return 'completeTask denegado para el rol $roleName';
   }
@@ -22506,11 +19568,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String telemetryEnvPressureValue(String value) {
     return '$value hPa';
-  }
-
-  @override
-  String telemetryEnvTemperatureValue(String value) {
-    return '$value°C';
   }
 
   @override
@@ -23086,11 +20143,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get widgetBuilderAllNodes => 'Todos los nodos';
-
-  @override
-  String widgetBuilderApprovedSuccess(String name) {
-    return '$name aprobado';
-  }
 
   @override
   String get widgetBuilderBindingActiveMeshNodes => 'Nodos de malla en línea';
@@ -23683,18 +20735,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get widgetBuilderEnterWidgetName => 'Ingrese el nombre del widget';
 
   @override
-  String widgetBuilderFailedToApprove(String error) {
-    return 'Error al aprobar: $error';
-  }
-
-  @override
   String widgetBuilderFailedToImport(String error) {
     return 'Error al importar: $error';
-  }
-
-  @override
-  String widgetBuilderFailedToReject(String error) {
-    return 'Error al rechazar: $error';
   }
 
   @override
@@ -24095,11 +21137,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get widgetBuilderQuickStartTemplates => 'Plantillas de inicio rápido';
-
-  @override
-  String widgetBuilderRejectedSuccess(String name) {
-    return '$name rechazado';
-  }
 
   @override
   String get widgetBuilderRemoveExtraRows =>
@@ -24751,17 +21788,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get deepLinkLoadingSignal => 'Cargando señal';
-
-  @override
-  String deepLinkErrorLoadingSignal(String error) {
-    return 'Error al cargar la señal: $error';
-  }
-
-  @override
-  String get deepLinkSignalNotFound => 'Señal no encontrada';
-
-  @override
   String get deepLinkLoadingFlight => 'Cargando vuelo';
 
   @override
@@ -24819,65 +21845,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deepLinkFailedToJoinChannel => 'Error al unirse al canal';
 
   @override
-  String deepLinkProfileTitle(String displayName) {
-    return '@$displayName';
-  }
-
-  @override
-  String get deepLinkCloudServicesNotAvailable =>
-      'Los servicios de nube aún no están disponibles';
-
-  @override
-  String deepLinkErrorLookingUpUser(String error) {
-    return 'Error al buscar el usuario: $error';
-  }
-
-  @override
-  String deepLinkUserNotFound(String displayName) {
-    return 'Usuario \"@$displayName\" no encontrado';
-  }
-
-  @override
-  String get blockedRouteDeviceRequired => 'Se requiere dispositivo';
-
-  @override
-  String get blockedRouteConnectDevice =>
-      'Conecte un dispositivo para acceder a esta pantalla';
-
-  @override
-  String get blockedRouteDeviceReset => 'Restablecimiento de dispositivo';
-
-  @override
-  String get blockedRouteDeviceNotConnected => 'Dispositivo no conectado';
-
-  @override
-  String get blockedRouteDeviceResetDescription =>
-      'Su dispositivo fue restablecido de fábrica o reemplazado.\n\nVaya a Configuración > Bluetooth, olvide el dispositivo Meshtastic y luego escanee de nuevo.';
-
-  @override
-  String get blockedRouteScanForDevices => 'Buscar dispositivos';
-
-  @override
-  String get blockedRouteConnectDeviceButton => 'Conectar dispositivo';
-
-  @override
   String get deepLinkAlreadyHaveChannel => 'Ya tiene este canal';
-
-  @override
-  String get transformableTextDeleteTitle => '¿Eliminar texto?';
-
-  @override
-  String get transformableTextDeleteMessage =>
-      'Esto eliminará la superposición de texto.';
-
-  @override
-  String get transformableTextDeleteConfirm => 'Eliminar';
-
-  @override
-  String get transformableTextDone => 'Listo';
-
-  @override
-  String get transformableTextHint => 'Escriba algo...';
 
   @override
   String get qrSharePreparingLink => 'Preparando enlace para compartir...';
@@ -24956,9 +21924,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get channelKeyGenerate => 'Generar';
-
-  @override
-  String get channelKeyNewGenerated => 'Nueva clave generada';
 
   @override
   String get channelKeyCopy => 'Copiar';
@@ -25436,14 +22401,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get alternativePayment => 'Pago alternativo';
-
-  @override
-  String get alternativePaymentSubtitle =>
-      'Compre a través de Buy Me a Coffee en lugar de la tienda';
-
-  @override
-  String get googlePlayUnavailable =>
-      'Google Play no está disponible en este dispositivo. Intente con un método de pago alternativo.';
 
   @override
   String get buyMeACoffeeHandoffTitle => 'Pagar a través de Buy Me a Coffee';
@@ -26437,10 +23394,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Conéctese con más de 700 aplicaciones y servicios';
 
   @override
-  String get subscriptionTranslateMessages =>
-      'Traducción de mensajes con un toque';
-
-  @override
   String get subscriptionNewAddon => 'Nuevo complemento';
 
   @override
@@ -27219,17 +24172,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Mayor visibilidad para texto y elementos de la interfaz';
 
   @override
-  String get appearanceElementalAtmosphere => 'Atmósfera elemental';
-
-  @override
-  String get appearanceElementalDisabled =>
-      'Desactivado mientras la reducción de movimiento está activa';
-
-  @override
-  String get appearanceElementalDesc =>
-      'Efectos de partículas ambientales impulsados por la actividad de la malla';
-
-  @override
   String get appearanceReduceMotion => 'Reducir movimiento';
 
   @override
@@ -27376,146 +24318,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Hay un problema con su pago. Actualice su método de pago.';
 
   @override
-  String get signalSettingsTitle => 'Señales';
-
-  @override
-  String get signalSettingsPrivacy => 'PRIVACIDAD DE SEÑAL';
-
-  @override
-  String get signalSettingsLocationRadius => 'Radio de ubicación de señal';
-
-  @override
-  String get signalSettingsRadiusDescription =>
-      'Las señales se redondean a este radio, no a una dirección exacta';
-
-  @override
-  String get signalSettingsContent => 'CONTENIDO DE SEÑAL';
-
-  @override
-  String get signalSettingsMaxImages => 'Máx. de imágenes por señal';
-
-  @override
-  String get signalSettingsImageLimit => 'Límite: 1-4 imágenes';
-
-  @override
-  String get signalSettingsNotifications => 'NOTIFICACIONES DE SEÑAL';
-
-  @override
-  String get signalSettingsNotifySignals => 'Señales';
-
-  @override
-  String get signalSettingsNotifySignalsSubtitle =>
-      'Notificar cuando alguien publique una señal';
-
-  @override
-  String get signalSettingsNotifyVotes => 'Votos';
-
-  @override
-  String get signalSettingsNotifyVotesSubtitle =>
-      'Cuando alguien vote por sus comentarios de señal';
-
-  @override
-  String get adminFollowTitle => 'Administración social';
-
-  @override
-  String get adminFollowTabRequests => 'Solicitudes de seguimiento';
-
-  @override
-  String get adminFollowTabSeedData => 'Poblar datos';
-
-  @override
-  String get adminFollowErrorLoading => 'Error al cargar solicitudes';
-
-  @override
-  String get adminFollowNoPending => 'No hay solicitudes pendientes';
-
-  @override
-  String get adminFollowApproved => 'Solicitud aprobada';
-
-  @override
-  String adminFollowApproveFailed(String error) {
-    return 'Error al aprobar: $error';
-  }
-
-  @override
-  String get adminFollowDeclined => 'Solicitud rechazada';
-
-  @override
-  String adminFollowDeclineFailed(String error) {
-    return 'Error al rechazar: $error';
-  }
-
-  @override
-  String adminFollowRequestedTime(String time) {
-    return 'Solicitado $time';
-  }
-
-  @override
-  String get adminFollowDecline => 'Rechazar';
-
-  @override
-  String get adminFollowAccept => 'Aceptar';
-
-  @override
-  String get adminFollowJustNow => 'ahora mismo';
-
-  @override
-  String adminFollowMinutesAgo(int minutes) {
-    return 'hace ${minutes}m';
-  }
-
-  @override
-  String adminFollowHoursAgo(int hours) {
-    return 'hace ${hours}h';
-  }
-
-  @override
-  String adminFollowDaysAgo(int days) {
-    return 'hace ${days}d';
-  }
-
-  @override
-  String get adminFollowTestData => 'Datos de prueba';
-
-  @override
-  String get adminFollowProfiles => 'Perfiles';
-
-  @override
-  String get adminFollowPosts => 'Publicaciones';
-
-  @override
-  String get adminFollowStories => 'Historias';
-
-  @override
-  String get adminFollowComments => 'Comentarios';
-
-  @override
-  String get adminFollowDummyUsers => 'Usuarios de prueba';
-
-  @override
-  String get adminFollowLog => 'Registro';
-
-  @override
-  String get adminFollowResetAndSeed => 'Restablecer y poblar';
-
-  @override
-  String get adminFollowSeedData => 'Poblar datos';
-
-  @override
-  String get adminFollowSeedDescription =>
-      'Restablecer y poblar: borra todos los datos de prueba primero y luego inserta datos nuevos.\nPoblar datos: agrega a los datos existentes (puede crear duplicados).';
-
-  @override
-  String adminFollowSeededSummary(
-    int users,
-    int posts,
-    int stories,
-    int comments,
-  ) {
-    return 'Insertados $users usuarios, $posts publicaciones, $stories historias, $comments comentarios';
-  }
-
-  @override
   String get adminPostsTitle => 'Signals';
 
   @override
@@ -27618,30 +24420,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get bgConnToggleSubtitle =>
       'Mantener la radio de malla conectada cuando la app está en segundo plano';
-
-  @override
-  String get bgConnSectionNotifications => 'NOTIFICACIONES EN SEGUNDO PLANO';
-
-  @override
-  String get bgConnDirectMessages => 'Mensajes directos';
-
-  @override
-  String get bgConnDirectMessagesSubtitle =>
-      'Notificar mensajes directos recibidos mientras la app está en segundo plano';
-
-  @override
-  String get bgConnChannelMessages => 'Mensajes de canal';
-
-  @override
-  String get bgConnChannelMessagesSubtitle =>
-      'Notificar mensajes de canal mientras la app está en segundo plano';
-
-  @override
-  String get bgConnNodeDiscovery => 'Descubrimiento de nodos';
-
-  @override
-  String get bgConnNodeDiscoverySubtitle =>
-      'Notificar cuando se detecten nuevos nodos';
 
   @override
   String get bgConnSectionPersistentNotification => 'NOTIFICACIÓN PERSISTENTE';
@@ -29615,17 +26393,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dataExportAllDataCleared => 'Todos los datos eliminados';
 
   @override
-  String get dataExportNoRoutesToExport => 'No hay rutas para exportar';
-
-  @override
-  String get dataExportNoAutomationsToExport =>
-      'No hay automatizaciones para exportar';
-
-  @override
-  String get dataExportNoAutomationLogEntries =>
-      'Sin entradas en el registro de automatización';
-
-  @override
   String get dataExportClearAllMessages => 'todos los mensajes';
 
   @override
@@ -29747,9 +26514,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dataExportDeviceConfigFormatJson => 'JSON';
 
   @override
-  String get dataExportDeviceConfigFormatImport => 'IMPORTAR';
-
-  @override
   String get dataExportDeviceConfigBackupWarningTitle =>
       'Guarde su copia de seguridad de forma segura';
 
@@ -29863,10 +26627,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
     return 'Se aplicaron $appliedString de $totalString. $failedString fallaron.';
   }
-
-  @override
-  String get dataExportDeviceConfigRestoreNoSelection =>
-      'Seleccione al menos una sección para restaurar.';
 
   @override
   String dataExportDeviceConfigRestoreFromMetadata(String metadata) {
@@ -30848,12 +27608,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mqttProxyStatusLabel => 'Estado';
 
   @override
-  String get mqttProxyStatusConnected => 'Conectado';
-
-  @override
-  String get mqttProxyStatusDisconnected => 'Desconectado';
-
-  @override
   String get mqttProxyBroker => 'Broker';
 
   @override
@@ -31235,9 +27989,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get trafficMgmtSave => 'Guardar';
 
   @override
-  String get trafficMgmtSectionGeneral => 'GENERAL';
-
-  @override
   String get trafficMgmtSectionPositionDedup => 'DEDUPLICACIÓN DE POSICIÓN';
 
   @override
@@ -31251,35 +28002,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get trafficMgmtSectionUnknownPackets => 'PAQUETES DESCONOCIDOS';
 
   @override
-  String get trafficMgmtSectionHopMgmt => 'GESTIÓN DE SALTOS';
-
-  @override
-  String get trafficMgmtEnable => 'Activar gestión de tráfico';
-
-  @override
-  String get trafficMgmtEnableSubtitle =>
-      'Interruptor maestro para todas las funciones de gestión de tráfico';
-
-  @override
   String get trafficMgmtPositionDedup => 'Deduplicación de posición';
 
   @override
   String get trafficMgmtPositionDedupSubtitle =>
       'Descartar paquetes de posición duplicados';
-
-  @override
-  String trafficMgmtPrecisionBits(int value) {
-    return 'Bits de precisión: $value';
-  }
-
-  @override
-  String get trafficMgmtPrecisionBitsDesc =>
-      'Los valores más bajos implican una deduplicación más agresiva';
-
-  @override
-  String trafficMgmtPrecisionBitsLabel(int value) {
-    return '$value bits';
-  }
 
   @override
   String trafficMgmtMinInterval(int seconds) {
@@ -31346,27 +28073,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get trafficMgmtThresholdDesc =>
       'Número de paquetes desconocidos antes de descartar';
-
-  @override
-  String get trafficMgmtExhaustHopTelemetry => 'Agotar saltos en telemetría';
-
-  @override
-  String get trafficMgmtExhaustHopTelemetrySub =>
-      'Establecer límite de saltos en 0 para telemetría retransmitida';
-
-  @override
-  String get trafficMgmtExhaustHopPosition => 'Agotar saltos en posición';
-
-  @override
-  String get trafficMgmtExhaustHopPositionSub =>
-      'Establecer límite de saltos en 0 para posiciones retransmitidas';
-
-  @override
-  String get trafficMgmtPreserveRouterHops => 'Preservar saltos del enrutador';
-
-  @override
-  String get trafficMgmtPreserveRouterHopsSub =>
-      'Preservar el conteo de saltos para nodos enrutadores';
 
   @override
   String get trafficMgmtSaved => 'Configuración de gestión de tráfico guardada';
@@ -31506,1193 +28212,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String meshBeaconSaveFailed(String error) {
     return 'Error al guardar: $error';
   }
-
-  @override
-  String get adminPanelTitle => 'Administrador';
-
-  @override
-  String get adminPanelSectionModeration => 'MODERACIÓN DE CONTENIDO';
-
-  @override
-  String get adminPanelBugReports => 'Reportes de errores';
-
-  @override
-  String get adminPanelBugReportsSub =>
-      'Ver y responder reportes de errores de usuarios';
-
-  @override
-  String get adminPanelReviewMod => 'Moderación de reseñas';
-
-  @override
-  String get adminPanelReviewModSub => 'Aprobar o rechazar reseñas de usuarios';
-
-  @override
-  String get adminPanelReportedContent => 'Contenido reportado';
-
-  @override
-  String get adminPanelReportedContentSub =>
-      'Revisar publicaciones y comentarios marcados';
-
-  @override
-  String get adminPanelWidgetReviewSub =>
-      'Aprobar envíos de widgets pendientes';
-
-  @override
-  String get adminPanelSectionUsers => 'GESTIÓN DE USUARIOS';
-
-  @override
-  String get adminPanelSocialSeeding => 'Población social';
-
-  @override
-  String get adminPanelSocialSeedingSub =>
-      'Gestionar solicitudes de seguimiento y conexiones';
-
-  @override
-  String get adminPanelUserPurchases => 'Compras de usuarios';
-
-  @override
-  String get adminPanelUserPurchasesSub =>
-      'Ver y gestionar transacciones de usuarios';
-
-  @override
-  String get adminPanelSectionConfig => 'CONFIGURACIÓN DE LA APP';
-
-  @override
-  String get adminPanelBroadcast => 'Notificación de difusión';
-
-  @override
-  String get adminPanelBroadcastSub =>
-      'Enviar notificación push a todos los usuarios';
-
-  @override
-  String get adminPanelQrStyles => 'Estilos de código QR';
-
-  @override
-  String get adminPanelQrStylesSub =>
-      'Previsualizar diseños de código QR con marca';
-
-  @override
-  String get adminPanelSectionDiag => 'DIAGNÓSTICOS DEL DISPOSITIVO';
-
-  @override
-  String get adminPanelDiagHarness => 'Marco de diagnósticos';
-
-  @override
-  String get adminPanelDiagHarnessSub =>
-      'Ejecutar sondeos de protocolo y exportar paquete de depuración';
-
-  @override
-  String get adminPanelConformance => 'Marco de conformidad';
-
-  @override
-  String get adminPanelConformanceSub =>
-      'Pruebas de conformidad y estrés del dispositivo vinculadas al proveedor';
-
-  @override
-  String get adminPanelStorageHealth => 'Estado del almacenamiento';
-
-  @override
-  String get adminPanelStorageHealthSub =>
-      'Verificar que el modo WAL esté activo en todas las bases de datos SQLite';
-
-  @override
-  String get adminPanelMeshMorph => 'Vista previa de Mesh Morph';
-
-  @override
-  String get adminPanelMeshMorphSub =>
-      'Prueba presets, formas y tiempos de mesh-morph';
-
-  @override
-  String get adminMeshMorphTitle => 'Mesh Morph';
-
-  @override
-  String get adminMeshMorphPresetSection => 'PREAJUSTE';
-
-  @override
-  String get adminMeshMorphRotationSection => 'ROTACIÓN';
-
-  @override
-  String get adminMeshMorphTuningSection => 'AJUSTE';
-
-  @override
-  String get adminMeshMorphAnimate => 'Animar';
-
-  @override
-  String get adminMeshMorphAnimateSub =>
-      'Pausa para inspeccionar la forma actual';
-
-  @override
-  String adminMeshMorphPointCountLabel(int count) {
-    return 'Cantidad de puntos: $count';
-  }
-
-  @override
-  String adminMeshMorphCurrentShape(String shape) {
-    return 'Forma actual: $shape';
-  }
-
-  @override
-  String get adminMeshMorphPresetIcosahedronJourney => 'Viaje del icosaedro';
-
-  @override
-  String get adminMeshMorphPresetVectorballTour => 'Tour de Vectorball';
-
-  @override
-  String get adminMeshMorphPresetPlatonicCircuit => 'Circuito platónico';
-
-  @override
-  String get adminMeshMorphPresetSurfaceFlow => 'Flujo de superficie';
-
-  @override
-  String get adminMeshMorphPresetWireframeMarch => 'Marcha de Wireframe';
-
-  @override
-  String get adminMeshMorphRotationNone => 'Ninguna';
-
-  @override
-  String get adminMeshMorphRotationSpin => 'Giro';
-
-  @override
-  String get adminMeshMorphRotationTumble => 'Volteo';
-
-  @override
-  String get adminMeshMorphRotationShowcase => 'Vitrina';
-
-  @override
-  String get adminStorageHealthTitle => 'Estado del almacenamiento';
-
-  @override
-  String get adminStorageHealthRefresh => 'Actualizar';
-
-  @override
-  String get adminStorageHealthChecking => 'Verificando bases de datos...';
-
-  @override
-  String get adminStorageHealthAllPass =>
-      'Todas las bases de datos en modo WAL';
-
-  @override
-  String get adminStorageHealthSomeFail =>
-      'Algunas bases de datos no están en modo WAL';
-
-  @override
-  String adminStorageHealthSummary(int pass, int fail, int total) {
-    return '$pass correctas · $fail fallidas · $total total';
-  }
-
-  @override
-  String get adminStorageStatusWal => 'WAL';
-
-  @override
-  String get adminStorageStatusUnknown => 'DESCONOCIDO';
-
-  @override
-  String get adminStorageStatusMissing => 'NO ABIERTO';
-
-  @override
-  String get adminStorageStatusError => 'ERROR';
-
-  @override
-  String get adminStorageWalPresent => '-wal presente';
-
-  @override
-  String get adminStorageWalAbsent => '-wal ausente';
-
-  @override
-  String get adminStorageShmPresent => '-shm presente';
-
-  @override
-  String get adminStorageShmAbsent => '-shm ausente';
-
-  @override
-  String get adminStoragePathCopied => 'Ruta copiada al portapapeles';
-
-  @override
-  String get adminPanelBadgeOverflow => '99+';
-
-  @override
-  String get adminBroadcastTitle => 'Notificación de difusión';
-
-  @override
-  String get adminBroadcastSignInRequired =>
-      'Debe iniciar sesión para enviar notificaciones';
-
-  @override
-  String get adminBroadcastTestSentTitle => 'Prueba enviada';
-
-  @override
-  String get adminBroadcastSentTitle => 'Difusión enviada';
-
-  @override
-  String get adminBroadcastTestSentBody =>
-      'Su notificación de prueba ha sido enviada a todos los administradores.';
-
-  @override
-  String get adminBroadcastSentBody =>
-      'Su notificación ha sido enviada a todos los usuarios de SocialMesh.';
-
-  @override
-  String get adminBroadcastDone => 'Listo';
-
-  @override
-  String adminBroadcastFailedDetailed(String code, String message) {
-    return 'Error al enviar: $code - $message';
-  }
-
-  @override
-  String adminBroadcastFailed(String error) {
-    return 'Error al enviar: $error';
-  }
-
-  @override
-  String get adminBroadcastSelectDeepLink => 'Seleccionar enlace profundo';
-
-  @override
-  String get adminBroadcastSelectIcon => 'Seleccionar ícono';
-
-  @override
-  String get adminBroadcastPreviewTitlePlaceholder =>
-      'Título de la notificación';
-
-  @override
-  String get adminBroadcastPreviewBodyPlaceholder =>
-      'El mensaje de notificación aparecerá aquí...';
-
-  @override
-  String get adminBroadcastWarning =>
-      'Esto enviará una notificación push a todos los usuarios de SocialMesh. Úselo con moderación, solo para anuncios importantes.';
-
-  @override
-  String get adminBroadcastPlatformLabel => 'Plataforma de destino';
-
-  @override
-  String get adminBroadcastPlatformHelper =>
-      'Elija qué plataforma recibirá esta notificación.';
-
-  @override
-  String get adminBroadcastPlatformAll => 'Todas';
-
-  @override
-  String get adminBroadcastPlatformAndroid => 'Android';
-
-  @override
-  String get adminBroadcastPlatformIos => 'iOS';
-
-  @override
-  String get adminBroadcastIconLabel => 'Ícono';
-
-  @override
-  String get adminBroadcastClear => 'Borrar';
-
-  @override
-  String get adminBroadcastFieldTitle => 'Título';
-
-  @override
-  String get adminBroadcastTitleHint => 'Título de la notificación...';
-
-  @override
-  String get adminBroadcastTitleRequired => 'El título es obligatorio';
-
-  @override
-  String get adminBroadcastFieldMessage => 'Mensaje';
-
-  @override
-  String get adminBroadcastMessageHint => 'Mensaje de notificación...';
-
-  @override
-  String get adminBroadcastMessageRequired => 'El mensaje es obligatorio';
-
-  @override
-  String get adminBroadcastDeepLinkLabel => 'Enlace profundo (opcional)';
-
-  @override
-  String get adminBroadcastDeepLinkHelper =>
-      'Pantalla que se abrirá al tocar la notificación.';
-
-  @override
-  String get adminBroadcastDeepLinkNone => 'Ninguno';
-
-  @override
-  String get adminBroadcastSendingTest => 'Enviando prueba...';
-
-  @override
-  String get adminBroadcastTestButton => 'Probar solo con administradores';
-
-  @override
-  String get adminBroadcastTestHint =>
-      'Envíe una notificación de prueba a los administradores antes de difundir a todos los usuarios.';
-
-  @override
-  String adminBroadcastCountdownCancel(int seconds) {
-    return 'Cancelar - enviando en $seconds...';
-  }
-
-  @override
-  String get adminBroadcastSending => 'Enviando...';
-
-  @override
-  String get adminBroadcastSendAll => 'Enviar a todos';
-
-  @override
-  String adminBroadcastSendHint(int seconds) {
-    return 'Envía una notificación push a todos los usuarios de SocialMesh. Una cuenta regresiva de ${seconds}s le da tiempo para cancelar.';
-  }
-
-  @override
-  String get adminBroadcastPreviewLabel => 'VISTA PREVIA';
-
-  @override
-  String get adminBroadcastPreviewAppName => 'SOCIALMESH';
-
-  @override
-  String get adminBroadcastPreviewNow => 'ahora';
-
-  @override
-  String get adminBroadcastIconCatGeneral => 'GENERAL';
-
-  @override
-  String get adminBroadcastIconCatSocial => 'SOCIAL';
-
-  @override
-  String get adminBroadcastIconCatPremium => 'PREMIUM';
-
-  @override
-  String get adminBroadcastIconAnnouncement => 'Anuncio';
-
-  @override
-  String get adminBroadcastIconUpdate => 'Actualización de la app';
-
-  @override
-  String get adminBroadcastIconFeature => 'Nueva función';
-
-  @override
-  String get adminBroadcastIconMaintenance => 'Mantenimiento';
-
-  @override
-  String get adminBroadcastIconAlert => 'Alerta';
-
-  @override
-  String get adminBroadcastIconCelebration => 'Celebración';
-
-  @override
-  String get adminBroadcastIconTip => 'Consejo';
-
-  @override
-  String get adminBroadcastIconSignals => 'Signals';
-
-  @override
-  String get adminBroadcastIconNodedex => 'NodeDex';
-
-  @override
-  String get adminBroadcastIconAether => 'Aether';
-
-  @override
-  String get adminBroadcastIconActivity => 'Actividad';
-
-  @override
-  String get adminBroadcastIconPresence => 'Presencia';
-
-  @override
-  String get adminBroadcastIconCommunity => 'Comunidad';
-
-  @override
-  String get adminBroadcastIconWorldMap => 'Mapa mundial';
-
-  @override
-  String get adminBroadcastIconThemes => 'Paquete de temas';
-
-  @override
-  String get adminBroadcastIconRingtones => 'Paquete de tonos';
-
-  @override
-  String get adminBroadcastIconWidgets => 'Widgets';
-
-  @override
-  String get adminBroadcastIconAutomations => 'Automatizaciones';
-
-  @override
-  String get adminBroadcastIconIfttt => 'Integración con IFTTT';
-
-  @override
-  String get adminBroadcastDefTitleAnnouncement => 'Anuncio';
-
-  @override
-  String get adminBroadcastDefTitleUpdate => 'Actualización disponible';
-
-  @override
-  String get adminBroadcastDefTitleFeature => 'Nueva función';
-
-  @override
-  String get adminBroadcastDefTitleMaintenance => 'Mantenimiento programado';
-
-  @override
-  String get adminBroadcastDefTitleAlert => 'Alerta importante';
-
-  @override
-  String get adminBroadcastDefTitleCelebration => 'Celebración';
-
-  @override
-  String get adminBroadcastDefTitleTip => 'Consejo profesional';
-
-  @override
-  String get adminBroadcastDefTitleSignals => 'Actualización de Signals';
-
-  @override
-  String get adminBroadcastDefTitleNodedex => 'Actualización de NodeDex';
-
-  @override
-  String get adminBroadcastDefTitleAether => 'Actualización de Aether';
-
-  @override
-  String get adminBroadcastDefTitleActivity => 'Actualización de actividad';
-
-  @override
-  String get adminBroadcastDefTitlePresence => 'Actualización de presencia';
-
-  @override
-  String get adminBroadcastDefTitleCommunity => 'Actualización de la comunidad';
-
-  @override
-  String get adminBroadcastDefTitleWorldMap => 'Actualización del mapa mundial';
-
-  @override
-  String get adminBroadcastDefTitleThemes => 'Nuevo paquete de temas';
-
-  @override
-  String get adminBroadcastDefTitleRingtones => 'Nuevo paquete de tonos';
-
-  @override
-  String get adminBroadcastDefTitleWidgets => 'Nuevos widgets';
-
-  @override
-  String get adminBroadcastDefTitleAutomations =>
-      'Actualización de automatizaciones';
-
-  @override
-  String get adminBroadcastDefTitleIfttt => 'Integración con IFTTT';
-
-  @override
-  String get adminBroadcastDefBodyAnnouncement =>
-      'Tenemos un anuncio importante para la comunidad de SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyUpdate =>
-      'Una nueva versión de SocialMesh está disponible con mejoras y correcciones de errores.';
-
-  @override
-  String get adminBroadcastDefBodyFeature =>
-      'Acabamos de lanzar una nueva función en SocialMesh. ¡Descúbrala!';
-
-  @override
-  String get adminBroadcastDefBodyMaintenance =>
-      'Los servicios de SocialMesh estarán brevemente no disponibles por mantenimiento programado.';
-
-  @override
-  String get adminBroadcastDefBodyAlert =>
-      'Tenga en cuenta un problema importante que afecta a SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyCelebration =>
-      '¡Tenemos algo emocionante que celebrar con la comunidad de SocialMesh!';
-
-  @override
-  String get adminBroadcastDefBodyTip =>
-      'Aquí tiene un consejo útil para sacar el máximo provecho de SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodySignals =>
-      'Descubra las novedades en Signals, su feed de presencia en la malla.';
-
-  @override
-  String get adminBroadcastDefBodyNodedex =>
-      'NodeDex tiene nuevas funciones para descubrir y rastrear nodos de la malla.';
-
-  @override
-  String get adminBroadcastDefBodyAether =>
-      'Las nuevas mejoras para compartir vuelos en Aether ya están disponibles.';
-
-  @override
-  String get adminBroadcastDefBodyActivity =>
-      'Vea lo que ocurre en su feed de actividad.';
-
-  @override
-  String get adminBroadcastDefBodyPresence =>
-      'La detección de presencia ha mejorado para una mejor conciencia de la malla.';
-
-  @override
-  String get adminBroadcastDefBodyCommunity =>
-      'Únase a las últimas iniciativas de la comunidad de SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyWorldMap =>
-      'El mapa mundial de malla tiene nuevas funciones para explorar la cobertura global.';
-
-  @override
-  String get adminBroadcastDefBodyThemes =>
-      'Un nuevo paquete de temas ya está disponible en la tienda de SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyRingtones =>
-      'Un nuevo paquete de tonos de llamada ya está disponible para sus notificaciones de malla.';
-
-  @override
-  String get adminBroadcastDefBodyWidgets =>
-      'Nuevos widgets para la pantalla de inicio ya están disponibles en SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyAutomations =>
-      'Nuevos disparadores y acciones de automatización ya están disponibles.';
-
-  @override
-  String get adminBroadcastDefBodyIfttt =>
-      'Conecte SocialMesh con sus servicios favoritos mediante IFTTT.';
-
-  @override
-  String get adminBroadcastDeepLinkCatCore => 'CORE';
-
-  @override
-  String get adminBroadcastDeepLinkCatSocial => 'SOCIAL';
-
-  @override
-  String get adminBroadcastDeepLinkCatMesh => 'MESH';
-
-  @override
-  String get adminBroadcastDeepLinkCatPremium => 'PREMIUM';
-
-  @override
-  String get adminBroadcastLinkSettings => 'Ajustes';
-
-  @override
-  String get adminBroadcastLinkAccount => 'Cuenta y suscripciones';
-
-  @override
-  String get adminBroadcastLinkScanner => 'Escáner';
-
-  @override
-  String get adminBroadcastLinkMessages => 'Mensajes';
-
-  @override
-  String get adminBroadcastLinkChannels => 'Canales';
-
-  @override
-  String get adminBroadcastLinkNodes => 'Nodos';
-
-  @override
-  String get adminBroadcastLinkMap => 'Mapa';
-
-  @override
-  String get adminBroadcastLinkSignals => 'Signals';
-
-  @override
-  String get adminBroadcastLinkNodedex => 'NodeDex';
-
-  @override
-  String get adminBroadcastLinkAether => 'Aether';
-
-  @override
-  String get adminBroadcastLinkActivity => 'Actividad';
-
-  @override
-  String get adminBroadcastLinkPresence => 'Presencia';
-
-  @override
-  String get adminBroadcastLinkTimeline => 'Cronología';
-
-  @override
-  String get adminBroadcastLinkWorldMap => 'Mapa mundial';
-
-  @override
-  String get adminBroadcastLinkReachability => 'Alcanzabilidad';
-
-  @override
-  String get adminBroadcastLinkThemes => 'Paquete de temas';
-
-  @override
-  String get adminBroadcastLinkRingtones => 'Paquete de tonos';
-
-  @override
-  String get adminBroadcastLinkWidgets => 'Widgets';
-
-  @override
-  String get adminBroadcastLinkAutomations => 'Automatizaciones';
-
-  @override
-  String get adminBroadcastLinkIfttt => 'Integración con IFTTT';
-
-  @override
-  String get adminDiagTitle => 'Diagnósticos de administrador';
-
-  @override
-  String get adminDiagTargetLocal => 'Dispositivo local';
-
-  @override
-  String adminDiagTargetRemote(String hexId) {
-    return 'Remoto: $hexId';
-  }
-
-  @override
-  String get adminDiagDescription =>
-      'Ejecute sondeos de diagnóstico en su dispositivo conectado y exporte un paquete detallado para depurar problemas de protocolo/transporte.';
-
-  @override
-  String get adminDiagTargetLabel => 'Destino';
-
-  @override
-  String get adminDiagMyNodeLabel => 'Mi nodo';
-
-  @override
-  String get adminDiagStressToggle => 'Incluir pruebas de estrés';
-
-  @override
-  String get adminDiagStressToggleSub =>
-      'Lecturas en ráfagas y correlación fuera de orden';
-
-  @override
-  String get adminDiagWriteToggle =>
-      'Incluir pruebas de escritura (reversibles)';
-
-  @override
-  String get adminDiagWriteToggleSub =>
-      'Escrituras sin efecto con verificación de lectura de retorno';
-
-  @override
-  String get adminDiagRunButton => 'Ejecutar diagnósticos';
-
-  @override
-  String get adminDiagNoDevice => 'Ningún dispositivo conectado';
-
-  @override
-  String adminDiagProbeProgress(int completed, int total) {
-    return '$completed / $total sondeos';
-  }
-
-  @override
-  String get adminDiagCancel => 'Cancelar';
-
-  @override
-  String adminDiagResultSummary(int passed, int failed) {
-    return '$passed aprobados, $failed fallidos';
-  }
-
-  @override
-  String get adminDiagExportBundle => 'Exportar paquete';
-
-  @override
-  String get adminDiagCopySummary => 'Copiar resumen al portapapeles';
-
-  @override
-  String get adminDiagRunAgain => 'Ejecutar de nuevo';
-
-  @override
-  String get adminDiagWriteTestsDialogTitle => '¿Activar pruebas de escritura?';
-
-  @override
-  String get adminDiagWriteTestsDialogBody =>
-      'Las pruebas de escritura realizan escrituras sin efecto (mismo valor) para verificar el comportamiento de ida y vuelta. No modifican el estado del dispositivo, pero sí envían comandos SET al dispositivo.\n\n¿Está seguro de que desea incluir pruebas de escritura?';
-
-  @override
-  String get adminDiagWriteTestsCancel => 'Cancelar';
-
-  @override
-  String get adminDiagWriteTestsEnable => 'Activar';
-
-  @override
-  String adminDiagExportFailed(String error) {
-    return 'Error al exportar: $error';
-  }
-
-  @override
-  String get adminDiagCopiedToClipboard => 'Resumen copiado al portapapeles';
-
-  @override
-  String get adminPurchasesTitle => 'Compras de usuarios';
-
-  @override
-  String get adminPurchasesLabelTotal => ' TOTAL · ';
-
-  @override
-  String get adminPurchasesLabelPaying => ' DE PAGO · ';
-
-  @override
-  String get adminPurchasesLabelFree => ' GRATUITO · ';
-
-  @override
-  String get adminPurchasesLabelRevenue => ' INGRESOS';
-
-  @override
-  String get adminPurchasesLabelExcluded => ' EXCLUIDO';
-
-  @override
-  String get adminPurchasesStatTotalUsers => 'Total de usuarios';
-
-  @override
-  String get adminPurchasesStatPaying => 'De pago';
-
-  @override
-  String adminPurchasesStatExcludedCount(int count) {
-    return '$count excluidos';
-  }
-
-  @override
-  String get adminPurchasesStatFree => 'Gratuitos';
-
-  @override
-  String get adminPurchasesStatConversion => 'Conversión';
-
-  @override
-  String get adminPurchasesStatArpu => 'ARPU';
-
-  @override
-  String get adminPurchasesStatArpuTooltip => 'Ingreso promedio por usuario';
-
-  @override
-  String get adminPurchasesStatGross => 'Ingresos brutos';
-
-  @override
-  String get adminPurchasesStatExcluded => 'Excluidos';
-
-  @override
-  String get adminPurchasesStatNet => 'Ingresos netos';
-
-  @override
-  String get adminPurchasesStatNewUsers24h => 'Nuevos usuarios (24h)';
-
-  @override
-  String get adminPurchasesStatPurchases24h => 'Compras (24h)';
-
-  @override
-  String get adminPurchasesStatRevenue24h => 'Ingresos (24h)';
-
-  @override
-  String get adminPurchasesSearchHint => 'Buscar usuarios...';
-
-  @override
-  String get adminPurchasesFilterAll => 'Todos';
-
-  @override
-  String get adminPurchasesFilterPaying => 'De pago';
-
-  @override
-  String get adminPurchasesFilterFree => 'Gratuitos';
-
-  @override
-  String get adminPurchasesFilterExcluded => 'Excluidos';
-
-  @override
-  String get adminPurchasesFilterAnonymous => 'Anónimos';
-
-  @override
-  String get adminPurchasesFilterDeleted => 'Eliminados';
-
-  @override
-  String get adminPurchasesBannerTitle =>
-      'Muestra las compras sincronizadas mediante inicio de sesión en la app o webhooks de RevenueCat.';
-
-  @override
-  String get adminPurchasesBannerSubtitle =>
-      'Los usuarios deben abrir la app con sesión iniciada para que sus compras aparezcan aquí.';
-
-  @override
-  String get adminPurchasesErrorLoading => 'Error al cargar usuarios';
-
-  @override
-  String get adminPurchasesRetry => 'Reintentar';
-
-  @override
-  String get adminPurchasesNoSearchResults =>
-      'Ningún usuario coincide con su búsqueda';
-
-  @override
-  String get adminPurchasesNoUsers => 'No se encontraron usuarios';
-
-  @override
-  String get adminPurchasesUnknownUser => 'Usuario desconocido';
-
-  @override
-  String get adminPurchasesAnonymousTag => 'Anónimo';
-
-  @override
-  String get adminPurchasesDeletedTag => 'Eliminado';
-
-  @override
-  String get adminPurchasesAnonRcUser => 'Usuario anónimo de RevenueCat';
-
-  @override
-  String get adminPurchasesFallbackCloudSync => 'Sincronización en la nube';
-
-  @override
-  String get adminPurchasesSectionIds => 'Identificadores';
-
-  @override
-  String get adminPurchasesFirebaseUid => 'UID de Firebase';
-
-  @override
-  String get adminPurchasesRevenueCatId => 'ID de RevenueCat';
-
-  @override
-  String get adminPurchasesMemberSince => 'Miembro desde';
-
-  @override
-  String get adminPurchasesSectionRegionPricing => 'Región y precios';
-
-  @override
-  String get adminPurchasesCountry => 'País';
-
-  @override
-  String get adminPurchasesCurrency => 'Moneda';
-
-  @override
-  String get adminPurchasesPriceLocal => 'Precio (local)';
-
-  @override
-  String get adminPurchasesPriceUsd => 'Precio (USD)';
-
-  @override
-  String adminPurchasesUsdValue(String amount) {
-    return 'US\$ $amount';
-  }
-
-  @override
-  String get adminPurchasesTax => 'Impuesto';
-
-  @override
-  String get adminPurchasesStoreCommission => 'Comisión de la tienda';
-
-  @override
-  String get adminPurchasesOfferCode => 'Código de oferta';
-
-  @override
-  String get adminPurchasesFamilyShare => 'Compartir en familia';
-
-  @override
-  String get adminPurchasesYes => 'Sí';
-
-  @override
-  String get adminPurchasesSectionPurchases => 'Compras';
-
-  @override
-  String adminPurchasesItemCount(int count) {
-    return '$count artículos';
-  }
-
-  @override
-  String get adminPurchasesNoPurchases => 'Sin compras';
-
-  @override
-  String get adminPurchasesCopied => 'Copiado al portapapeles';
-
-  @override
-  String get adminPurchasesCopyTooltip => 'Copiar';
-
-  @override
-  String get adminQrStyleTitle => 'Estilos de código QR';
-
-  @override
-  String get adminQrStyleHeading => 'Estilos de código QR con marca';
-
-  @override
-  String get adminQrStyleDescription =>
-      'Previsualice diferentes estilos de código QR con el logotipo de SocialMesh. Todos los estilos usan corrección de errores de nivel H para un escaneo confiable.';
-
-  @override
-  String get adminQrStyleSmooth => 'Suave';
-
-  @override
-  String get adminQrStyleSmoothDesc =>
-      'Módulos modernos y redondeados con apariencia líquida. Sensación premium.';
-
-  @override
-  String get adminQrStyleDots => 'Puntos';
-
-  @override
-  String get adminQrStyleDotsDesc =>
-      'Módulos de puntos circulares. Aspecto limpio y minimalista.';
-
-  @override
-  String get adminQrStyleSquares => 'Cuadrados';
-
-  @override
-  String get adminQrStyleSquaresDesc =>
-      'Estilo QR clásico en bloques. Máxima compatibilidad.';
-
-  @override
-  String get adminQrStyleElevatedHeader => 'ESTILOS ELEVADOS';
-
-  @override
-  String adminQrStyleElevatedSub(String styleName) {
-    return 'Tratamientos de color premium usando el patrón $styleName';
-  }
-
-  @override
-  String get adminQrStyleNeonGlow => 'Resplandor neón';
-
-  @override
-  String get adminQrStyleFrostedGlass => 'Vidrio esmerilado';
-
-  @override
-  String get adminQrStyleInverted => 'Invertido';
-
-  @override
-  String get adminQrStyleHolographic => 'Holográfico';
-
-  @override
-  String get adminQrStyleAccentBranded => 'Acento con marca';
-
-  @override
-  String get adminQrStyleMinimal => 'Minimalista';
-
-  @override
-  String get adminQrStyleCyberpunk => 'Cyberpunk';
-
-  @override
-  String get adminQrStyleAccentGlow => 'Acento luminoso';
-
-  @override
-  String get adminQrStyleOcean => 'Océano';
-
-  @override
-  String get adminQrStyleLuxury => 'Lujo';
-
-  @override
-  String adminQrStyleSelected(String styleName) {
-    return 'Seleccionado: $styleName';
-  }
-
-  @override
-  String get adminQrStyleScanToVerify => 'Escanear para verificar';
-
-  @override
-  String get adminBugReportsTitle => 'Reportes de errores';
-
-  @override
-  String get adminBugReportsSearchHint => 'Buscar reportes';
-
-  @override
-  String get adminBugReportsLoadError => 'Error al cargar los reportes';
-
-  @override
-  String get adminBugReportsMessageTooLong =>
-      'El mensaje supera los 2.000 caracteres.';
-
-  @override
-  String get adminBugReportsReplySent => 'Respuesta enviada.';
-
-  @override
-  String adminBugReportsReplyFailed(String error) {
-    return 'Error al enviar: $error';
-  }
-
-  @override
-  String get adminBugReportsResolved => 'Reporte resuelto.';
-
-  @override
-  String get adminBugReportsReopened => 'Reporte reabierto.';
-
-  @override
-  String adminBugReportsStatusFailed(String error) {
-    return 'Error al actualizar el estado: $error';
-  }
-
-  @override
-  String get adminBugReportsStatusOpen => 'ABIERTO';
-
-  @override
-  String get adminBugReportsStatusUserReplied => 'USUARIO RESPONDIÓ';
-
-  @override
-  String get adminBugReportsStatusResponded => 'RESPONDIDO';
-
-  @override
-  String get adminBugReportsStatusResolved => 'RESUELTO';
-
-  @override
-  String get adminBugReportsTimeJustNow => 'ahora mismo';
-
-  @override
-  String adminBugReportsTimeMinutes(int minutes) {
-    return 'hace ${minutes}m';
-  }
-
-  @override
-  String adminBugReportsTimeHours(int hours) {
-    return 'hace ${hours}h';
-  }
-
-  @override
-  String adminBugReportsTimeDays(int days) {
-    return 'hace ${days}d';
-  }
-
-  @override
-  String get adminBugReportsSectionDesc => 'DESCRIPCIÓN';
-
-  @override
-  String get adminBugReportsSectionScreenshot => 'CAPTURA DE PANTALLA';
-
-  @override
-  String get adminBugReportsSectionDetails => 'DETALLES';
-
-  @override
-  String get adminBugReportsDetailReportId => 'ID del reporte';
-
-  @override
-  String get adminBugReportsDetailUserId => 'ID de usuario';
-
-  @override
-  String get adminBugReportsAnonymousValue => 'anónimo';
-
-  @override
-  String get adminBugReportsDetailEmail => 'Correo electrónico';
-
-  @override
-  String get adminBugReportsDetailDevice => 'Dispositivo';
-
-  @override
-  String get adminBugReportsDetailOs => 'Versión del SO';
-
-  @override
-  String get adminBugReportsDetailAppVer => 'Versión de la app';
-
-  @override
-  String get adminBugReportsSectionConversation => 'CONVERSACIÓN';
-
-  @override
-  String get adminBugReportsThreadYou => 'Usted';
-
-  @override
-  String get adminBugReportsThreadUser => 'Usuario';
-
-  @override
-  String get adminBugReportsReplyHint => 'Escriba una respuesta...';
-
-  @override
-  String get adminBugReportsReopen => 'Reabrir';
-
-  @override
-  String get adminBugReportsResolve => 'Resolver';
-
-  @override
-  String adminBugReportsCountdownCancel(int seconds) {
-    return 'Cancelar · $seconds';
-  }
-
-  @override
-  String get adminBugReportsSend => 'Enviar';
-
-  @override
-  String get adminBugReportsAnonNotice =>
-      'Reporte anónimo - no es posible entregar respuestas.';
-
-  @override
-  String get adminBugReportsEmptyFilter =>
-      'Ningún reporte coincide con su filtro.';
-
-  @override
-  String get adminBugReportsEmptyAll => 'Aún no hay reportes de errores.';
-
-  @override
-  String get adminConformanceTitle => 'Marco de conformidad';
-
-  @override
-  String get adminConformanceDescription =>
-      'Pruebas de conformidad del dispositivo vinculadas al proveedor. Todas las mutaciones fluyen a través de los mismos puntos de entrada del proveedor que usan las pantallas reales.';
-
-  @override
-  String get adminConformanceTargetDevice => 'Dispositivo de destino';
-
-  @override
-  String adminConformanceTargetRemote(String target) {
-    return 'Remoto: $target';
-  }
-
-  @override
-  String get adminConformanceTargetLocal => 'Dispositivo local';
-
-  @override
-  String adminConformanceNodesAvailable(int count) {
-    return '$count nodo(s) remoto(s) disponible(s)';
-  }
-
-  @override
-  String get adminConformanceOtaPki => 'Administración en el aire vía PKI';
-
-  @override
-  String get adminConformanceNoNodes =>
-      'No hay nodos remotos con capacidad PKI';
-
-  @override
-  String get adminConformanceSwitchLocal => 'Cambiar a local';
-
-  @override
-  String get adminConformanceTestOptions => 'Opciones de prueba';
-
-  @override
-  String get adminConformanceDestructive => 'Pruebas destructivas';
-
-  @override
-  String get adminConformanceDestructiveSub =>
-      'Mutaciones aleatorias, estrés en ráfagas, restablecimiento de la BD de nodos. Puede cambiar temporalmente la configuración del dispositivo.';
-
-  @override
-  String get adminConformanceRunRemoteDestructive =>
-      'Ejecutar conformidad remota (destructiva)';
-
-  @override
-  String get adminConformanceRunRemoteSafe =>
-      'Ejecutar conformidad remota (segura)';
-
-  @override
-  String get adminConformanceRunLocalDestructive =>
-      'Ejecutar conformidad (destructiva)';
-
-  @override
-  String get adminConformanceRunLocalSafe => 'Ejecutar conformidad (segura)';
-
-  @override
-  String adminConformanceProgress(
-    int completed,
-    int total,
-    int pass,
-    int fail,
-  ) {
-    return '$completed / $total  (aprobadas: $pass, fallidas: $fail)';
-  }
-
-  @override
-  String get adminConformanceCancel => 'Cancelar';
-
-  @override
-  String get adminConformanceAllPassed => 'Todas las pruebas aprobadas';
-
-  @override
-  String get adminConformanceSomeFailed => 'Algunas pruebas fallaron';
-
-  @override
-  String get adminConformanceLabelPassed => 'Aprobada';
-
-  @override
-  String get adminConformanceLabelFailed => 'Fallida';
-
-  @override
-  String get adminConformanceLabelSkipped => 'Omitida';
-
-  @override
-  String get adminConformanceLabelTimeouts => 'Tiempos de espera agotados';
-
-  @override
-  String get adminConformanceAnomalies => 'Anomalías:';
-
-  @override
-  String get adminConformanceTestResults => 'Resultados de pruebas';
-
-  @override
-  String get adminConformanceExportBundle => 'Exportar paquete';
-
-  @override
-  String get adminConformanceRunAgain => 'Ejecutar de nuevo';
-
-  @override
-  String get adminConformanceInitializing => 'Inicializando';
 
   @override
   String get globalLayerDiagnosticsTitle => 'Diagnósticos';
@@ -32932,16 +28451,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String globalLayerDateFormat(int day, int month, int year) {
-    return '$day/$month/$year';
-  }
-
-  @override
-  String globalLayerShortDateFormat(int month, int day) {
-    return '$day/$month';
-  }
-
-  @override
   String get globalLayerHealthHeader => 'Estado';
 
   @override
@@ -33113,12 +28622,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get globalLayerTemplateAdded => 'Agregado';
-
-  @override
-  String get adminFollowRequestFrom => 'DE';
-
-  @override
-  String get adminFollowRequestTo => 'PARA';
 
   @override
   String adminPostsFilteredCount(int count) {
@@ -33359,9 +28862,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get discoveryFilterAllSources => 'Todas las fuentes';
-
-  @override
-  String get draggableTextHint => 'Escribe algo...';
 
   @override
   String get globalLayerAdvanced => 'AVANZADO';
@@ -34906,16 +30406,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los ajustes de TAK permiten configurar la URL de la puerta de enlace, activar o desactivar la conexión automática al abrir la pantalla y establecer la duración del tiempo de espera de obsolescencia. Todos los ajustes persisten localmente entre sesiones de la app.';
 
   @override
-  String get accessRestrictedTitle => 'Acceso restringido';
-
-  @override
   String get goBack => 'Volver';
 
   @override
   String get deviceNotConnected => 'Dispositivo no conectado';
-
-  @override
-  String get connectDevice => 'Conectar dispositivo';
 
   @override
   String get connectDeviceToUseFeature =>
@@ -34929,11 +30423,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String failedGeneric(String error) {
     return 'Error: $error';
-  }
-
-  @override
-  String failedToUpdateSignalLocationRadius(String error) {
-    return 'Error al actualizar el radio de ubicación de señal: $error';
   }
 
   @override
@@ -35113,9 +30602,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get waypointUpdated => 'Punto de ruta actualizado';
 
   @override
-  String get waypointDeleted => 'Punto de ruta eliminado';
-
-  @override
   String get waypointDeleteForMe => 'Eliminar para mí';
 
   @override
@@ -35130,11 +30616,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String waypointSheetFrom(String senderName) {
     return 'De $senderName';
-  }
-
-  @override
-  String waypointSheetExpires(String time) {
-    return 'Caduca $time';
   }
 
   @override
@@ -35271,13 +30752,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Resúmenes periódicos cuando llegan varios eventos MeshCore en poco tiempo';
 
   @override
-  String get meshcoreRingtonesTitle => 'Tonos de notificación';
-
-  @override
-  String get meshcoreRingtonesSubtitle =>
-      'Elige un sonido para cada canal de notificación MeshCore';
-
-  @override
   String get meshcoreRingtoneChannelAdverts => 'Notificaciones de anuncio';
 
   @override
@@ -35294,30 +30768,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreRingtoneChannelCustom => 'RTTTL personalizado';
-
-  @override
-  String get meshcoreRingtonesChannelSectionTitle => 'Canal';
-
-  @override
-  String get meshcoreRingtonesPresetsSectionTitle => 'Preajustes';
-
-  @override
-  String get meshcoreRingtonesUseDefault => 'Usar predeterminado del sistema';
-
-  @override
-  String get meshcoreRingtonesPreviewTooltip => 'Vista previa';
-
-  @override
-  String get meshcoreRingtonesStopTooltip => 'Detener';
-
-  @override
-  String get meshcoreRingtonesSelectedBadge => 'Seleccionado';
-
-  @override
-  String get meshcoreRingtonesSavedToast => 'Guardado';
-
-  @override
-  String get meshcoreRingtonesClearedToast => 'Restablecido al predeterminado';
 
   @override
   String get flowNodeEvent => 'Evento';
@@ -35505,13 +30955,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get profileBannerRemoved => 'Banner eliminado';
 
   @override
-  String get commonOpenSettings => 'Abrir configuración';
-
-  @override
-  String get socialGuidelineNoViolentImagery =>
-      'Sin imágenes violentas o gráficas';
-
-  @override
   String get globalLayerConnectionTestLabel => 'PRUEBA DE CONEXIÓN';
 
   @override
@@ -35637,21 +31080,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Toque para ejecutar la automatización programada';
 
   @override
-  String automationLogNode(String nodeName) {
-    return 'Nodo: $nodeName';
-  }
-
-  @override
-  String automationLogBattery(int level) {
-    return 'Batería: $level%';
-  }
-
-  @override
-  String automationLogMessage(String text) {
-    return 'Mensaje: $text';
-  }
-
-  @override
   String get automationHistoryOutcomeThen => 'Se ejecutó la rama ENTONCES';
 
   @override
@@ -35705,14 +31133,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get automationHistoryEmpty => 'Aún no hay actividad de automatización';
-
-  @override
-  String get automationHistoryActionSuccess => 'Exitosa';
-
-  @override
-  String automationHistoryActionFailed(String error) {
-    return 'Fallida: $error';
-  }
 
   @override
   String automationHistoryActionCount(int success, int total) {
@@ -35902,19 +31322,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get connectionCancelled => 'La conexión fue cancelada';
-
-  @override
-  String get adminConformanceBundleTitle =>
-      'Paquete de conformidad de SocialMesh';
-
-  @override
-  String get adminDiagnosticBundleText =>
-      'Paquete de diagnóstico de administrador de SocialMesh';
-
-  @override
-  String adminDiagnosticBundleSubject(String runId) {
-    return 'Diagnóstico SocialMesh $runId';
-  }
 
   @override
   String get onboardingSignalAuthorSarah => 'Sarah';
@@ -36377,66 +31784,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sipBadgeLabel => 'Handshake';
 
   @override
-  String get sipIdentityStateUnverified => 'Sin verificar';
-
-  @override
-  String get sipIdentityStateVerifiedTofu => 'Verificado (TOFU)';
-
-  @override
-  String get sipIdentityStatePinned => 'Fijado';
-
-  @override
-  String get sipIdentityStateChangedKey => 'Clave cambiada';
-
-  @override
-  String get sipIdentityStateStale => 'Vencido';
-
-  @override
-  String get sipChangedKeyWarning =>
-      'La clave de identidad de este par ha cambiado. Verifíquela antes de confiar.';
-
-  @override
-  String get sipDisplayNameLabel => 'Nombre SIP';
-
-  @override
-  String get sipPersonaIdLabel => 'ID de persona';
-
-  @override
-  String get sipDiscoveryTitle => 'Encontrar personas cercanas';
-
-  @override
-  String sipDiscoveryPeersNearby(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'personas',
-      one: 'persona',
-    );
-    return '$count $_temp0 cerca';
-  }
-
-  @override
-  String get sipDiscoveryNoPeers => 'Nadie cerca todavía';
-
-  @override
-  String get sipDiscoveryNoPeersDescription =>
-      'Las personas que usen Handshake aparecerán aquí cuando estén al alcance.';
-
-  @override
   String get sipDiscoveryScanButton => 'Buscar personas';
-
-  @override
-  String sipDiscoveryScanCooldown(int seconds) {
-    return 'Escaneo disponible en ${seconds}s';
-  }
-
-  @override
-  String get sipDiscoveryPeerAnonymous => 'Usuario de la malla';
-
-  @override
-  String sipDiscoveryDeviceClass(String deviceClass) {
-    return '$deviceClass';
-  }
 
   @override
   String get sipHandshakeAction => 'Conectar';
@@ -36457,12 +31805,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String sipHandshakeCooldown(String time) {
     return 'Espere $time';
   }
-
-  @override
-  String get sipRequestIdentity => 'Solicitar identidad';
-
-  @override
-  String get sipShareIdentity => 'Compartir identidad';
 
   @override
   String get sipDmTitle => 'Mensaje de malla';
@@ -36571,9 +31913,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Sesión segura restablecida - el próximo mensaje renegociará las claves';
 
   @override
-  String get sipPlayComposerLabel => 'Jugar';
-
-  @override
   String get sipPlayPanelCardSending => 'Enviando oferta…';
 
   @override
@@ -36592,9 +31931,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sipPlayLifecycleDeclined => 'Oferta rechazada';
-
-  @override
-  String get sipPlayLifecycleExpired => 'Oferta vencida';
 
   @override
   String get sipPlayPanelTitle => 'Jugar una partida';
@@ -36640,9 +31976,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sipDmOverflowSectionData => 'DATOS';
 
   @override
-  String get sipPlayPickerTitle => 'Elija un juego';
-
-  @override
   String get sipPlayPickerSubtitle =>
       'Toque un juego para enviar una oferta a esta conversación. Ambos lados deben aceptar antes de que comience la partida.';
 
@@ -36650,15 +31983,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sipPlayGameTicTacToe => 'Tres en raya';
 
   @override
-  String get sipPlayGameTicTacToeDescription =>
-      'El clásico 3x3. Coloca X si ofreció, O si aceptó.';
-
-  @override
   String get sipPlayGameConnectFour => 'Conecta Cuatro';
-
-  @override
-  String get sipPlayGameConnectFourDescription =>
-      'Cuadrícula de 6x7. Suelte fichas en una columna. Gana el primero en alinear cuatro.';
 
   @override
   String get sipPlayUnsupportedGame => 'Juego no compatible';
@@ -36730,9 +32055,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sipPlayStatusTheyDeclined => 'Rechazaron la oferta';
 
   @override
-  String get sipDmComposerModeText => 'Texto';
-
-  @override
   String get sipDmComposerModeSketch => 'Boceto';
 
   @override
@@ -36793,12 +32115,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sipSignalReplay => 'Reproducir de nuevo';
-
-  @override
-  String get sipSignalToneSizeBadge => 'Señal pequeña • ~20-32 bytes';
-
-  @override
-  String get sipSignalMorseSizeBadge => 'Morse pequeño • ~20-60 bytes';
 
   @override
   String sipSignalSizeBytes(int bytes) {
@@ -36932,15 +32248,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get sipInkBlocked =>
       'El boceto no cabe en la malla; simplifique sus trazos.';
-
-  @override
-  String get sipDmOpenAction => 'Abrir DM';
-
-  @override
-  String get sipPeerDetailTitle => 'Acerca de esta persona';
-
-  @override
-  String get sipPeerDetailNodeId => 'ID de nodo';
 
   @override
   String get sipPeerDetailDeviceClass => 'Tipo de dispositivo';
@@ -37137,11 +32444,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String sipHubIncomingRequestFrom(String peerName) {
-    return '$peerName quiere conectarse';
-  }
-
-  @override
   String get sipHubIncomingRequestWantsToConnect => 'quiere conectarse';
 
   @override
@@ -37175,9 +32477,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshCapacityScreenTitle => 'Capacidad';
-
-  @override
-  String get meshCapacityDrawerLabel => 'Capacidad de la malla';
 
   @override
   String get meshCapacityHeroNodesUnit => 'activos por RF (15 min)';
@@ -37431,8 +32730,7 @@ class AppLocalizationsEs extends AppLocalizations {
       locale: localeName,
       other:
           '$countString nodos cercanos están activos por RF en los últimos 15 minutos. Los ajustes de largo alcance sacrifican capacidad por cobertura.',
-      one:
-          '1 nodo cercano está activo por RF en los últimos 15 minutos. Los ajustes de largo alcance sacrifican capacidad por cobertura.',
+      one: '1 nodo cercano está activo por RF en los últimos 15 minutos. Los ajustes de largo alcance sacrifican capacidad por cobertura.',
     );
     return '$_temp0';
   }
@@ -37452,8 +32750,7 @@ class AppLocalizationsEs extends AppLocalizations {
       locale: localeName,
       other:
           '$countString nodos cercanos están activos por RF. Este ajuste puede estar limitando la capacidad de la red local.',
-      one:
-          '1 nodo cercano está activo por RF. Este ajuste puede estar limitando la capacidad de la red local.',
+      one: '1 nodo cercano está activo por RF. Este ajuste puede estar limitando la capacidad de la red local.',
     );
     return '$_temp0';
   }
@@ -37474,8 +32771,7 @@ class AppLocalizationsEs extends AppLocalizations {
       locale: localeName,
       other:
           '$countString nodos cercanos están activos por RF. El tiempo en el aire probablemente está saturado. Toque para ver qué ajuste podría ayudar.',
-      one:
-          '1 nodo cercano está activo por RF. El tiempo en el aire probablemente está saturado. Toque para ver qué ajuste podría ayudar.',
+      one: '1 nodo cercano está activo por RF. El tiempo en el aire probablemente está saturado. Toque para ver qué ajuste podría ayudar.',
     );
     return '$_temp0';
   }
@@ -37568,13 +32864,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta es su primera conversación con este nodo. Acepte solo mensajes de personas en las que confíe en la malla. Toque para cerrar.';
 
   @override
-  String get sipHubEmptyTitle => 'Buscando vecinos';
-
-  @override
-  String get sipHubEmptyDescription =>
-      'Toque Buscar personas para enviar una llamada de lista a otros usuarios de Handshake en su malla. Cualquiera al alcance con la app abierta responderá en unos segundos.';
-
-  @override
   String get sipHubScanningTitlePrefix => 'Buscando ';
 
   @override
@@ -37626,11 +32915,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todo el descubrimiento es **anónimo por defecto**. Los pares solo revelan un ID ambiental rotativo de 4 bytes hasta que aceptan mutuamente un handshake.';
 
   @override
-  String sipHubLastSeen(String time) {
-    return 'Visto $time';
-  }
-
-  @override
   String get sipHubHandshaking => 'Conectando…';
 
   @override
@@ -37640,22 +32924,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sipHubConnected => 'Conectado';
 
   @override
-  String sipHubMessagePreview(String name, String message) {
-    return '$name: $message';
-  }
-
-  @override
-  String sipHubSessionExpiry(String time) {
-    return 'Vence en $time';
-  }
-
-  @override
   String get sipHubNoMessages => 'Sin mensajes todavía';
-
-  @override
-  String sipDmPeerName(String hexId) {
-    return 'Par $hexId';
-  }
 
   @override
   String get sipAutoScanEnabled => 'Detección automática activada';
@@ -37673,13 +32942,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sipScanningIndicator => 'Escaneando…';
 
   @override
-  String get sipConnecting => 'Conectando…';
-
-  @override
   String get sipDmReplyingTo => 'Respondiendo a';
-
-  @override
-  String get sipDmSwipeToReply => 'Deslice para responder';
 
   @override
   String get sipDmActionReply => 'Responder';
@@ -37763,12 +33026,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mrrpHarnessRadioDisconnected => 'Desconectado';
 
   @override
-  String get mrrpHarnessChannel => 'Canal';
-
-  @override
-  String get mrrpHarnessChannelNone => 'Sin canal';
-
-  @override
   String get mrrpHarnessSipPeers => 'Pares SIP';
 
   @override
@@ -37815,11 +33072,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String mrrpHarnessPeerLastAdvert(String time) {
-    return 'Último anuncio: $time';
-  }
-
-  @override
   String get mrrpHarnessRefreshDirectory => 'Actualizar directorio';
 
   @override
@@ -37828,11 +33080,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String mrrpHarnessServiceVersion(int major, int minor) {
     return 'v$major.$minor';
-  }
-
-  @override
-  String mrrpHarnessServiceFlags(String flags) {
-    return 'Indicadores: $flags';
   }
 
   @override
@@ -37849,9 +33096,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get mrrpHarnessSelectAction => 'Seleccionar acción';
-
-  @override
-  String get mrrpHarnessPayloadPreset => 'Preset de carga útil';
 
   @override
   String get mrrpHarnessPayloadRawHex => 'Carga útil hexadecimal sin procesar';
@@ -37888,12 +33132,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get mrrpHarnessResponseDuplicate => 'Respuesta duplicada';
-
-  @override
-  String get mrrpHarnessResponseCached => 'Respuesta en caché';
-
-  @override
   String get mrrpHarnessSimLabTitle => 'Laboratorio de pares simulados';
 
   @override
@@ -37927,9 +33165,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mrrpHarnessSimMaxPeers => 'Máximo 4 pares simulados';
 
   @override
-  String get mrrpHarnessSimDeleteConfirm => '¿Eliminar par simulado?';
-
-  @override
   String get mrrpHarnessSimServices => 'Servicios';
 
   @override
@@ -37947,15 +33182,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get mrrpHarnessTrafficEmptyDescription =>
       'Los eventos MRRP aparecerán aquí a medida que fluya el tráfico.';
-
-  @override
-  String get mrrpHarnessTrafficFilterPeer => 'Filtrar por par';
-
-  @override
-  String get mrrpHarnessTrafficFilterType => 'Filtrar por tipo';
-
-  @override
-  String get mrrpHarnessTrafficFilterService => 'Filtrar por servicio';
 
   @override
   String get mrrpHarnessTrafficFilterAll => 'Todos';
@@ -38012,9 +33238,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mrrpHarnessTrafficCopy => 'Copiar evento';
 
   @override
-  String get mrrpHarnessTrafficExport => 'Exportar eventos';
-
-  @override
   String mrrpHarnessTrafficDirection(String direction) {
     return '$direction';
   }
@@ -38023,16 +33246,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mrrpHarnessBudgetTitle => 'Presupuesto y tiempos';
 
   @override
-  String get mrrpHarnessBudgetRemaining => 'Presupuesto restante';
-
-  @override
   String get mrrpHarnessBudgetBlocked => 'Envíos bloqueados';
-
-  @override
-  String get mrrpHarnessBudgetDedupHits => 'Coincidencias de deduplicación';
-
-  @override
-  String get mrrpHarnessBudgetTimeouts => 'Tiempos de espera agotados';
 
   @override
   String get mrrpHarnessBudgetAdvertCadence => 'Cadencia de anuncio';
@@ -38114,9 +33328,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mrrpHarnessFixtureNotRejected => 'No rechazado (inesperado)';
 
   @override
-  String get mrrpHarnessFixtureEmpty => 'No hay fixtures disponibles';
-
-  @override
   String get mrrpHarnessOpenQaRunner => 'Escenarios de QA';
 
   @override
@@ -38157,16 +33368,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get mrrpHarnessQaEmpty => 'No hay escenarios definidos';
-
-  @override
-  String get mrrpHarnessQaRunning => 'Ejecutando...';
-
-  @override
   String get mrrpHarnessQaExpected => 'Esperado';
-
-  @override
-  String get mrrpHarnessQaActual => 'Real';
 
   @override
   String get mrrpHarnessCountersSectionTraffic => 'Contadores de tráfico';
@@ -38250,43 +33452,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshExplorerDrawerLabel => 'Mesh Explorer';
 
   @override
-  String get meshExplorerHeroConnected => 'Conectado a la malla';
-
-  @override
   String get meshExplorerHeroDisconnected => 'Sin radio conectada';
-
-  @override
-  String meshExplorerHeroPeersCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count pares cercanos',
-      one: '1 par cercano',
-      zero: 'Sin pares cercanos',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String meshExplorerHeroServicesCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count servicios',
-      one: '1 servicio',
-      zero: 'Sin servicios',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get meshExplorerSectionNearby => 'Cercanos';
-
-  @override
-  String get meshExplorerSectionServices => 'Servicios';
-
-  @override
-  String get meshExplorerSectionBoard => 'Actividad del tablón';
 
   @override
   String get meshExplorerScanningTitlePrefix => 'Sin pares ';
@@ -38396,27 +33562,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationChannelSipDiscovery => 'Descubrimiento de pares';
 
   @override
-  String get meshExplorerEmptyNearbyTitle => 'No hay pares cercanos';
-
-  @override
-  String get meshExplorerEmptyNearbyBody =>
-      'Los pares aparecerán cuando haya dispositivos de malla en rango';
-
-  @override
-  String get meshExplorerEmptyServicesTitle => 'No se encontraron servicios';
-
-  @override
-  String get meshExplorerEmptyServicesBody =>
-      'Los pares cercanos anunciarán sus servicios aquí';
-
-  @override
-  String get meshExplorerEmptyBoardTitle => 'Sin actividad en el tablón';
-
-  @override
-  String get meshExplorerEmptyBoardBody =>
-      'Las publicaciones del tablón de pares cercanos aparecerán aquí';
-
-  @override
   String get meshExplorerNotConnectedTitle => 'Radio no conectada';
 
   @override
@@ -38453,18 +33598,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshExplorerHopCountUnknown => 'Cercano';
 
   @override
-  String meshExplorerServiceCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count servicios',
-      one: '1 servicio',
-      zero: 'Sin servicios',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get meshExplorerActionHandshake => 'Handshake';
 
   @override
@@ -38472,9 +33605,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshExplorerActionRequestIdentity => 'Solicitar identidad';
-
-  @override
-  String get meshExplorerActionOpenNodeDex => 'Abrir en NodeDex';
 
   @override
   String get meshExplorerActionBlock => 'Bloquear';
@@ -38486,62 +33616,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshExplorerActionUnpin => 'Desfijar par';
 
   @override
-  String get meshExplorerPeerDetail => 'Detalle del par';
-
-  @override
-  String get meshExplorerPeerDetailIdentity => 'Identidad';
-
-  @override
   String get meshExplorerPeerDetailServices => 'Servicios disponibles';
 
   @override
   String get meshExplorerPeerDetailActions => 'Acciones';
-
-  @override
-  String get meshExplorerServiceBulletinBoard => 'Tablón de anuncios';
-
-  @override
-  String get meshExplorerServiceBulletinBoardSub =>
-      'Publicaciones de la malla local';
-
-  @override
-  String get meshExplorerServicePeerProfile => 'Perfil del par';
-
-  @override
-  String get meshExplorerServicePeerProfileSub =>
-      'Información de identidad compartida';
-
-  @override
-  String get meshExplorerServiceGeneric => 'Servicio';
-
-  @override
-  String get meshExplorerServiceGenericSub => 'Disponible cerca';
-
-  @override
-  String get meshExplorerServiceOpenBoard => 'Abrir tablón';
-
-  @override
-  String get meshExplorerServiceViewProfile => 'Ver perfil';
-
-  @override
-  String get meshExplorerServiceDetails => 'Detalles';
-
-  @override
-  String get meshExplorerServiceRequiresHandshake => 'Requiere handshake';
-
-  @override
-  String get meshExplorerServiceRequiresIdentity => 'Requiere identidad';
-
-  @override
-  String meshExplorerServicePeerCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count pares',
-      one: '1 par',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get meshExplorerPrivacyTitle => 'Privacidad de la malla';
@@ -38590,12 +33668,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshExplorerScanAction => 'Escanear';
 
   @override
-  String get meshExplorerRefreshAction => 'Actualizar';
-
-  @override
-  String get meshExplorerChangedKey => 'Clave cambiada';
-
-  @override
   String get meshExplorerScanSent => 'Buscando pares cercanos...';
 
   @override
@@ -38620,9 +33692,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshExplorerHandshakeReceived => 'Solicitud de handshake recibida';
-
-  @override
-  String get meshExplorerStatusConnected => 'Conectado a la malla';
 
   @override
   String meshExplorerStatusPeersAndServices(int peers, int services) {
@@ -38665,32 +33734,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshExplorerEmptyAction => 'Compartir algo';
 
   @override
-  String get meshExplorerCreateLabel => 'Crear';
-
-  @override
   String get meshExplorerNotConnectedAction => 'Conectar una radio';
 
   @override
-  String get meshServicesDrawerLabel => 'Mis recursos';
-
-  @override
-  String get meshServicesTitle => 'Mis recursos';
-
-  @override
-  String get meshServicesEmpty => 'Aún no hay nada compartido';
-
-  @override
-  String get meshServicesEmptyDescription =>
-      'Comparta una actualización, pregunta, lista de verificación, alerta o lectura con personas cercanas en la malla.';
-
-  @override
-  String get meshServicesCreateAction => 'Compartir algo';
-
-  @override
   String get meshServicesCreateTitle => 'Compartir con la malla';
-
-  @override
-  String get meshServicesCreateSubtitle => 'Elija qué quiere compartir cerca';
 
   @override
   String get meshServicesTypeFeed => 'Actualizaciones';
@@ -38785,20 +33832,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meshServicesTemplateBoardDescription =>
       'Comparta publicaciones cortas con pares cercanos';
-
-  @override
-  String get meshServicesTemplateSignal => 'Baliza de señal';
-
-  @override
-  String get meshServicesTemplateSignalDescription =>
-      'Transmita una señal a los pares cercanos';
-
-  @override
-  String get meshServicesTemplatePoll => 'Encuesta rápida';
-
-  @override
-  String get meshServicesTemplatePollDescription =>
-      'Haga una pregunta con respuestas de opción múltiple';
 
   @override
   String get meshServicesTemplateChecklist =>
@@ -38927,9 +33960,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este par no está alojando ningún servicio activo en este momento.';
 
   @override
-  String get serviceDetailInstanceDescription => 'Descripción';
-
-  @override
   String serviceDetailInstanceExpires(String time) {
     return 'Finaliza en $time';
   }
@@ -38974,17 +34004,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshServicesFieldAddItem => 'Agregar elemento';
 
   @override
-  String get meshServicesPreviewTitle => 'Vista previa';
-
-  @override
   String get meshServicesPreviewSubtitle =>
       'Las personas cercanas verán primero el titular y luego abrirán los detalles completos.';
 
   @override
   String get meshServicesPublishAction => 'Compartir ahora';
-
-  @override
-  String get meshServicesPublishSuccess => 'Servicio publicado';
 
   @override
   String get meshServicesCreatedHeadline => 'Su recurso está activo';
@@ -39030,14 +34054,6 @@ class AppLocalizationsEs extends AppLocalizations {
       '¿Eliminar este servicio? Esta acción no se puede deshacer.';
 
   @override
-  String get meshServicesDetailTitle => 'Detalles del servicio';
-
-  @override
-  String meshServicesRemainingTime(String duration) {
-    return '$duration restante';
-  }
-
-  @override
   String meshServicesDurationMinutes(int count) {
     return '$count min';
   }
@@ -39049,9 +34065,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshGamesTitle => 'Juegos en la malla';
-
-  @override
-  String get meshGamesTabLabel => 'Partidas';
 
   @override
   String get meshGamesEmptyTitle => 'Aún no hay partidas';
@@ -39107,20 +34120,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshGamesStatusStale => 'Sincronizando...';
 
   @override
-  String get meshGamesStatusActive => 'Activa';
-
-  @override
   String get meshGamesActionResync => 'Resincronizar';
-
-  @override
-  String get meshGamesActionAbandon => 'Abandonar';
-
-  @override
-  String get meshGamesAbandonConfirmTitle => '¿Abandonar esta partida?';
-
-  @override
-  String get meshGamesAbandonConfirmMessage =>
-      'El otro jugador será notificado.';
 
   @override
   String get meshGamesOpponentLabel => 'Oponente';
@@ -39188,24 +34188,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshServicesCancelAction => 'Cancelar';
-
-  @override
-  String get meshServicesSearchHint => 'Buscar mis recursos';
-
-  @override
-  String get meshServicesFilterAll => 'Todos';
-
-  @override
-  String get meshServicesFilterActive => 'Activo';
-
-  @override
-  String get meshServicesFilterExpired => 'Vencido';
-
-  @override
-  String get meshServicesFilterStopped => 'Detenido';
-
-  @override
-  String get meshServicesNoResults => 'Sin recursos coincidentes';
 
   @override
   String get mapTerrainProfile => 'Perfil de terreno';
@@ -39501,12 +34483,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get servicePresentationFallbackAction => 'Detalles';
 
   @override
-  String get voiceMessageSendButton => 'Voz';
-
-  @override
-  String get voiceMessageRecording => 'Grabando…';
-
-  @override
   String get voiceMessageRecordingHint => 'Mantenga presionado para grabar';
 
   @override
@@ -39545,12 +34521,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Se alcanzó la duración máxima de grabación';
 
   @override
-  String get voiceRecordingTapToStop => 'Toque para detener la grabación';
-
-  @override
-  String get voiceRecordingStopButton => 'Detener';
-
-  @override
   String get voiceRecordingLive => 'REC';
 
   @override
@@ -39572,9 +34542,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get voiceRecordingRetakeButton => 'Volver a grabar';
-
-  @override
-  String get voiceRecordingSendButton => 'Enviar';
 
   @override
   String get voiceRecordingReadyToSend => 'Listo para enviar';
@@ -39615,16 +34582,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get voiceAttachmentCardTitle => 'Mensaje de voz';
 
   @override
-  String get voiceAttachmentAnalysing => 'Analizando…';
-
-  @override
   String get voiceAttachmentPlaybackFailed => 'Error en la reproducción';
 
   @override
   String get voiceAttachmentMono => 'Mono';
-
-  @override
-  String get voiceAttachmentPause => 'Pausar';
 
   @override
   String get fileTransferContactsSendVoice => 'Voz';
@@ -39637,12 +34598,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Firmar transferencias salientes con su clave de identidad';
 
   @override
-  String get stlSignatureValid => 'Firma verificada';
-
-  @override
-  String get stlSignatureInvalid => 'Firma no válida';
-
-  @override
   String get tracerouteShowOnMap => 'Mostrar en el mapa';
 
   @override
@@ -39653,9 +34608,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tracerouteShowAllNodes => 'Mostrar todos los nodos';
-
-  @override
-  String get mapControlsHeadingUp => 'Orientación hacia arriba';
 
   @override
   String get mapCompassUnavailable =>
@@ -39818,9 +34770,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ejecutar un servidor TAK en el dispositivo para conexiones directas de ATAK/iTAK a través de la malla';
 
   @override
-  String get takBridgeServerPort => 'Puerto del servidor';
-
-  @override
   String get takBridgeStatusRunning => 'En ejecución';
 
   @override
@@ -39849,14 +34798,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get takBridgeClientsTitle => 'Clientes conectados';
-
-  @override
-  String get takBridgeNoClients => 'No hay clientes TAK conectados';
-
-  @override
-  String takBridgeClientDuration(String duration) {
-    return 'Conectado $duration';
-  }
 
   @override
   String get takIdentityRegistryTitle => 'Registro de identidades';
@@ -39906,9 +34847,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get takVideoStopStream => 'Detener transmisión';
 
   @override
-  String get takVideoEndStream => 'Finalizar transmisión';
-
-  @override
   String get takVideoPreparing => 'Preparando cámara...';
 
   @override
@@ -39927,17 +34865,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get takVideoEnded => 'Transmisión finalizada';
 
   @override
-  String get takVideoIdle => 'Listo para transmitir';
-
-  @override
   String get takVideoEmptyTitle => 'Sin transmisiones en vivo';
 
   @override
   String get takVideoEmptyDescription =>
       'No hay transmisiones de video activas en este momento.';
-
-  @override
-  String get takVideoRefresh => 'Actualizar';
 
   @override
   String get takVideoLoading => 'Cargando transmisiones...';
@@ -39954,23 +34886,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get takVideoWatchStream => 'Ver transmisión';
-
-  @override
-  String get takVideoPlayerTitle => 'Transmisión en vivo';
-
-  @override
   String get takVideoPlayerLoading => 'Cargando transmisión...';
 
   @override
-  String get takVideoPlayerEnded => 'La transmisión ha finalizado';
-
-  @override
   String get takVideoPlayerError => 'Error de reproducción';
-
-  @override
-  String get takVideoPermissionRequired =>
-      'Se requieren permisos de cámara y micrófono para transmitir.';
 
   @override
   String get takVideoAuthRequired =>
@@ -39989,9 +34908,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deviceSheetNetwork => 'Red (TCP)';
-
-  @override
-  String get networkSectionTitle => 'Red';
 
   @override
   String get networkSavedEndpoints => 'Puntos finales guardados';
@@ -40020,11 +34936,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get networkEndpointNameHint => 'Ej.: Nodo sala de estar';
-
-  @override
-  String networkConnecting(String address) {
-    return 'Conectando a $address...';
-  }
 
   @override
   String networkConnectionFailed(String address) {
@@ -40061,12 +34972,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get scannerTabBluetooth => 'Bluetooth';
-
-  @override
-  String get scannerTabNetwork => 'Red';
-
-  @override
   String get mdnsDiscoveredRadios => 'Radios Wi-Fi';
 
   @override
@@ -40075,9 +34980,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get mdnsNoDevicesDescription =>
       'Los dispositivos Meshtastic con Wi-Fi activado aparecerán aquí automáticamente.';
-
-  @override
-  String get mdnsConnecting => 'Conectando…';
 
   @override
   String get mdnsTransportTcp => 'TCP';
@@ -40115,10 +35017,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshIncidentEmptyTitle => 'Sin incidentes en la malla';
-
-  @override
-  String get meshIncidentEmptyDescription =>
-      'Los informes de incidentes de la red de malla aparecerán aquí. Toque el botón para crear un nuevo informe.';
 
   @override
   String get meshIncidentEmptyTagline1 =>
@@ -40265,9 +35163,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshIncidentCorrectReport => 'Corregir informe';
 
   @override
-  String get meshIncidentHandoffTitle => 'Resumen de traspaso';
-
-  @override
   String get meshIncidentLocationCoarse => 'Ubicación aproximada';
 
   @override
@@ -40362,16 +35257,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get translateContentIneligible => 'Este contenido no puede traducirse';
 
   @override
-  String get subscriptionFeaturedTranslationSubtitleRefactored =>
-      'Traducción a demanda con caché inteligente, controles de privacidad y soporte BYO';
-
-  @override
   String get subscriptionTranslationWithAllowance =>
       'Traducción de mensajes instantánea';
-
-  @override
-  String get subscriptionCompletePackSubtitleWithTranslation =>
-      'Todas las funciones, un precio - incluida la traducción';
 
   @override
   String get translationSettingsTitle => 'Traducción';
@@ -40517,11 +35404,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String avatarStackNodeTooltip(String name) {
-    return '$name';
-  }
-
-  @override
   String avatarStackOverflowLabel(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -40548,151 +35430,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nodedexCoSeenCardViewAll => 'Ver enlaces recientes';
-
-  @override
-  String get nearbyTitle => 'Cerca';
-
-  @override
-  String get nearbySubtitle => 'Personas y dispositivos en la malla';
-
-  @override
-  String get nearbyScanButton => 'Buscar personas';
-
-  @override
-  String get nearbyScanningLabel => 'Buscando personas cercanas...';
-
-  @override
-  String nearbyScanCooldownLabel(int seconds) {
-    return 'Escanear de nuevo en ${seconds}s';
-  }
-
-  @override
-  String get nearbyPersonAnonymous => 'Usuario de malla';
-
-  @override
-  String get nearbyStatusNow => 'Cerca ahora';
-
-  @override
-  String nearbyStatusMinutesAgo(int count) {
-    return 'Visto hace $count min';
-  }
-
-  @override
-  String nearbyStatusHoursAgo(int count) {
-    return 'Visto hace ${count}h';
-  }
-
-  @override
-  String get nearbyEmptyTitle => 'Aún no hay nadie cerca';
-
-  @override
-  String get nearbyEmptyDescription =>
-      'Toque \"Buscar personas\" para encontrar otros usuarios de SocialMesh en la malla';
-
-  @override
-  String get nearbyEmptyTagline1 => 'Escuchando usuarios cercanos...';
-
-  @override
-  String get nearbyEmptyTagline2 =>
-      'Toque Buscar personas para enviar una señal...';
-
-  @override
-  String get nearbyEmptyTagline3 =>
-      'Otros aparecerán aquí cuando se encuentren...';
-
-  @override
-  String get nearbyEmptyTagline4 =>
-      'Mantenga la app abierta para descubrir más...';
-
-  @override
-  String get nearbyDevicePhone => 'Teléfono';
-
-  @override
-  String get nearbyDeviceTablet => 'Tableta';
-
-  @override
-  String get nearbyDeviceDesktop => 'Escritorio';
-
-  @override
-  String get nearbyDeviceUnknown => 'Dispositivo';
-
-  @override
-  String get nearbySectionPeople => 'Personas';
-
-  @override
-  String get nearbySectionConversations => 'Conversaciones';
-
-  @override
-  String get nearbySectionRequests => 'Solicitudes de conexión';
-
-  @override
-  String get connectionRequestConnect => 'Conectar';
-
-  @override
-  String get connectionStateConnecting => 'Conectando...';
-
-  @override
-  String get connectionStateConnected => 'Conectado';
-
-  @override
-  String get connectionStatePending => 'Solicitud enviada';
-
-  @override
-  String get connectionStateDeclined => 'Rechazado';
-
-  @override
-  String get connectionStateFailed => 'No se pudo conectar';
-
-  @override
-  String get connectionStateTimedOut => 'Sin respuesta';
-
-  @override
-  String connectionIncomingTitle(String name) {
-    return '$name quiere conectarse';
-  }
-
-  @override
-  String get connectionAcceptButton => 'Aceptar';
-
-  @override
-  String get connectionDeclineButton => 'Rechazar';
-
-  @override
-  String get contactExchangeTitle => 'Compartir tarjeta de contacto';
-
-  @override
-  String get contactExchangeDescription =>
-      'Intercambie su identidad con una persona cercana para poder enviarse mensajes';
-
-  @override
-  String get contactExchangeShareButton => 'Compartir mi contacto';
-
-  @override
-  String get contactExchangeShared => 'Contacto compartido';
-
-  @override
-  String get meshConversationTitle => 'Mensaje de malla';
-
-  @override
-  String meshConversationExpiry(String time) {
-    return 'Vence en $time';
-  }
-
-  @override
-  String get meshConversationPinned => 'Fijado';
-
-  @override
-  String get meshConversationInputHint => 'Mensaje...';
-
-  @override
-  String get meshConversationBudgetExhausted =>
-      'Envío en pausa: se alcanzó el límite de ancho de banda de la malla. Inténtelo de nuevo en breve.';
-
-  @override
-  String get meshConversationClosed => 'Esta conversación ha finalizado.';
-
-  @override
-  String get meshConversationReadyToChat => 'Listo para chatear';
 
   @override
   String get deliveryPhasePreparing => 'Preparando';
@@ -40781,16 +35518,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get deliverySafeToClose =>
-      'Seguro para cerrar: la entrega continúa en segundo plano';
-
-  @override
   String get deliverySafeToLeave => 'Puede salir: la transferencia continuará';
-
-  @override
-  String deliveryProgressParts(int current, int total) {
-    return '$current de $total partes';
-  }
 
   @override
   String get deliveryExpertToggle => 'Mostrar detalles de entrega';
@@ -40802,16 +35530,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get guidedFlowBack => 'Atrás';
 
   @override
-  String get guidedFlowDone => 'Listo';
-
-  @override
-  String get guidedFlowCreate => 'Crear';
-
-  @override
   String get guidedFlowContinue => 'Escríbelo';
-
-  @override
-  String get guidedFlowCancel => 'Cancelar';
 
   @override
   String get serviceWizardTitle => 'Compartir con la malla';
@@ -40821,12 +35540,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get serviceWizardStepPreset => 'Plantilla';
-
-  @override
-  String get serviceWizardStepWho => 'Quién';
-
-  @override
-  String get serviceWizardStepDetails => 'Detalles';
 
   @override
   String get serviceWizardStepReview => 'Vista previa';
@@ -40853,27 +35566,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Use el diseño básico y personalícelo usted mismo.';
 
   @override
-  String get serviceWizardWhoTitle => '¿Quién puede verlo?';
-
-  @override
-  String get serviceWizardWhoSubtitle =>
-      'Elija quién podrá descubrir y usar su servicio';
-
-  @override
-  String get serviceWizardAudienceAnyone => 'Cualquier persona cercana';
-
-  @override
-  String get serviceWizardAudienceAnyoneDesc =>
-      'Cualquier persona en la malla puede descubrir y usar esto';
-
-  @override
-  String get serviceWizardAudienceContacts => 'Solo contactos aprobados';
-
-  @override
-  String get serviceWizardAudienceContactsDesc =>
-      'Solo personas con quienes ha intercambiado contactos';
-
-  @override
   String get serviceWizardReviewTitle => 'Antes de escribir';
 
   @override
@@ -40885,9 +35577,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get serviceWizardReviewPreset => 'Punto de partida';
-
-  @override
-  String get serviceWizardReviewAudience => 'Audiencia';
 
   @override
   String get serviceWizardReviewMeshHint =>
@@ -41080,63 +35769,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get serviceWizardCompletionHeadline => 'Su servicio está activo';
-
-  @override
-  String get serviceWizardCompletionDescription =>
-      'Otros usuarios de la malla ya pueden descubrir su servicio e interactuar con él. Puede administrarlo desde Mis servicios.';
-
-  @override
-  String get serviceWizardCompletionViewServices => 'Ver mis servicios';
-
-  @override
-  String get serviceWizardCompletionCreateAnother => 'Crear otro';
-
-  @override
-  String get peerDetailLastSeenJustNow => 'Ahora mismo';
-
-  @override
-  String get peerDetailCapabilities => 'Lo que admite';
-
-  @override
-  String get peerDetailCapIdentity => 'Identidad y conexión segura';
-
-  @override
-  String get peerDetailCapExchange => 'Intercambio de contactos';
-
-  @override
-  String get peerDetailDeviceType => 'Tipo de dispositivo';
-
-  @override
-  String get nearbyAutoScanEnabled => 'Descubrimiento automático activado';
-
-  @override
-  String get nearbyAutoScanDisabled => 'Descubrimiento automático desactivado';
-
-  @override
-  String get disclosureBasic => 'Vista simple';
-
-  @override
-  String get disclosureCurious => 'Más detalle';
-
-  @override
-  String get disclosureExpert => 'Diagnóstico completo';
-
-  @override
   String get messagingWeekView => 'Vista semanal';
 
   @override
   String get messageTimelineTitle => 'Actividad de mensajes';
-
-  @override
-  String get messageTimelineEmpty => 'Sin actividad de mensajes esta semana';
-
-  @override
-  String get messageTimelineEmptyDescription =>
-      'Los mensajes y la actividad de canales aparecerán aquí a medida que ocurran';
-
-  @override
-  String get messageTimelineShowAll => 'Mostrar toda la actividad';
 
   @override
   String get messageTimelineFilterDm => 'Directos';
@@ -41156,16 +35792,6 @@ class AppLocalizationsEs extends AppLocalizations {
       one: '1 mensaje',
     );
     return '$_temp0';
-  }
-
-  @override
-  String messageTimelineChannelPrefix(String name) {
-    return 'Canal: $name';
-  }
-
-  @override
-  String messageTimelineDmWith(String name) {
-    return 'MD con $name';
   }
 
   @override
@@ -41214,15 +35840,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Compra única · Acceso de por vida · Sin suscripción';
 
   @override
-  String get subscriptionStarterPack => 'Paquete inicial';
-
-  @override
-  String get subscriptionStarterPackSubtitle => 'Temas + Widgets';
-
-  @override
-  String get subscriptionStarterComingSoon => 'Próximamente';
-
-  @override
   String get subscriptionPopularBadge => 'MÁS POPULAR';
 
   @override
@@ -41231,11 +35848,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String tapbackDetailSenderCount(int count) {
     return '$count reacciones';
-  }
-
-  @override
-  String tapbackGroupOthers(int count) {
-    return '+$count';
   }
 
   @override
@@ -41396,13 +36008,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshFeedDrawerLabel => 'Mesh Feed';
-
-  @override
-  String get meshFeedEmptyTitle => 'Aún no hay publicaciones';
-
-  @override
-  String get meshFeedEmptyDescription =>
-      'Las publicaciones de los pares cercanos de la malla aparecerán aquí. Cree la primera publicación para iniciar la conversación.';
 
   @override
   String get meshFeedEmptyAction => 'Crear publicación';
@@ -42386,11 +36991,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los fragmentos se decodifican pero nunca se reensamblan en esta compilación.';
 
   @override
-  String reticulumDiagSourceFragments(int count) {
-    return '$count fragmentos';
-  }
-
-  @override
   String get reticulumReplayTitle => 'Reproducir captura';
 
   @override
@@ -42598,9 +37198,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get reticulumDetailSectionProvenance => 'PROCEDENCIA';
 
   @override
-  String get reticulumDetailSource => 'Fuente';
-
-  @override
   String get reticulumDetailSourceLocal => 'Local';
 
   @override
@@ -42672,9 +37269,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get reticulumDetailFalse => 'No';
-
-  @override
-  String get reticulumDetailNoneSet => 'No definido';
 
   @override
   String get reticulumDiagSectionReassembly => 'REENSAMBLADO';
@@ -42907,10 +37501,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rnsCompanionEmptyTitle => 'Sin servicios';
 
   @override
-  String get rnsCompanionEmptyHint =>
-      'El companion es accesible pero aún no tiene servicios.';
-
-  @override
   String get rnsCompanionEmptyTagline1 => 'explorar';
 
   @override
@@ -42992,9 +37582,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rnsCompanionStatusChecking => 'Verificando...';
 
   @override
-  String get rnsCompanionStatusConnected => 'Conectado';
-
-  @override
   String rnsCompanionStatusConnectedWithVersion(String version) {
     return 'Conectado · v$version';
   }
@@ -43033,9 +37620,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nodedexConstellationTitle => 'Constelación';
-
-  @override
-  String get nodedexConstellationOpen => 'Constelación';
 
   @override
   String get nodedexConstellationOpenTooltip => 'Abrir gráfico de Constelación';
@@ -43096,9 +37680,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nodedexConstellationActionFavourite => 'Favorito';
-
-  @override
-  String get nodedexConstellationActionUnfavourite => 'Quitar de favoritos';
 
   @override
   String get nodedexConstellationActionMap => 'Ver en mapa';
@@ -43564,11 +38145,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Preseleccionado al enviar mensajes predefinidos desde tu Apple Watch. Aún puedes elegir un canal diferente cada vez en la Watch.';
 
   @override
-  String watchSettingsChannelChipLabel(int n) {
-    return 'Canal $n';
-  }
-
-  @override
   String get watchSettingsAboutTitle => 'Acerca de';
 
   @override
@@ -43618,12 +38194,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get licenseOrgMembersSectionAll => 'Miembros';
-
-  @override
-  String get licenseOrgMembersSectionActive => 'Miembros activos';
-
-  @override
-  String get licenseOrgMembersSectionRevoked => 'Revocados';
 
   @override
   String licenseOrgMembersRevokedTileTitle(String member) {
@@ -43857,9 +38427,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo aceptar la invitación. Inténtalo de nuevo.';
 
   @override
-  String get licenseOrgInviteAcceptInviterNoteLabel => 'Del que invita';
-
-  @override
   String get licenseOrgInviteMintAction => 'Invitar miembro';
 
   @override
@@ -43898,9 +38465,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get licenseOrgInviteRegenerateSuccess =>
       'Nuevo enlace generado · el anterior ya no es válido';
-
-  @override
-  String get licenseOrgInviteMintProductLabel => 'Producto del asiento';
 
   @override
   String get licenseOrgInviteMintSubmit => 'Generar enlace compartible';
@@ -44079,9 +38643,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get licenseOrgAuditFilterAll => 'Todos';
-
-  @override
   String get licenseOrgAuditLogLoadMore => 'Cargar más';
 
   @override
@@ -44200,11 +38761,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get licenseOrgOverviewCapacityLabel => 'Capacidad';
-
-  @override
-  String licenseOrgOverviewCapacityValue(int count) {
-    return '$count puestos';
-  }
 
   @override
   String licenseOrgOverviewCapacityValueUsed(int used, int capacity) {
@@ -44522,9 +39078,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get helpModeNeedHelp => 'Pedir ayuda';
 
   @override
-  String get helpModeAffordanceTooltip => 'Pedir ayuda a peers de confianza';
-
-  @override
   String get helpModeCreateTitle => 'Pedir ayuda';
 
   @override
@@ -44533,10 +39086,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get helpModeCreateStatusLabel => '¿Cómo estás? (opcional)';
-
-  @override
-  String get helpModeLocationDisclosure =>
-      'Tu ubicación se compartirá con los respondedores mientras esta solicitud esté activa.';
 
   @override
   String get helpModeSend => 'Enviar solicitud de ayuda';
@@ -44797,9 +39346,6 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get helpModeBannerTapToRespond => 'Toca para responder';
 
   @override
   String get helpModeInboxTitle => 'Solicitudes de ayuda';
@@ -45105,9 +39651,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Añade una radio para empezar a saber quién tiene qué.';
 
   @override
-  String get fleetRetiredEmpty => 'No hay radios retiradas.';
-
-  @override
   String get fleetAddAction => 'Añadir radio';
 
   @override
@@ -45144,12 +39687,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get fleetCandidateLocalDevice => 'Este dispositivo';
-
-  @override
-  String get fleetAddConfirm => 'Añadir a la Fleet';
-
-  @override
-  String get fleetLabelName => 'Nombre';
 
   @override
   String get fleetLabelTransport => 'Transporte';

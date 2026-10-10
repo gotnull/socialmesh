@@ -148,6 +148,67 @@ void main() {
   });
 
   group('setLoRaConfig read-modify-write (remote admin)', () {
+    for (final target in [
+      const AdminTarget.local(),
+      const AdminTarget.remote(_remoteNodeNum),
+    ]) {
+      for (final mode in config_pbenum.Config_LoRaConfig_FEM_LNA_Mode.values) {
+        test(
+          'FEM $mode round trip for $target preserves RX independence',
+          () async {
+            await _injectLoraResponse(
+              protocol,
+              target.isLocal ? _myNodeNum : _remoteNodeNum,
+              config_pb.Config_LoRaConfig()
+                ..region = config_pbenum.Config_LoRaConfig_RegionCode.ANZ
+                ..paFanDisabled = true
+                ..femLnaMode = mode,
+            );
+            await protocol.setLoRaConfig(
+              region: config_pbenum.Config_LoRaConfig_RegionCode.ANZ,
+              modemPreset:
+                  config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
+              hopLimit: 3,
+              txEnabled: true,
+              txPower: 0,
+              sx126xRxBoostedGain: true,
+              femLnaMode: mode,
+              target: target,
+            );
+            final sent = transport.lastSentLora;
+            expect(sent.femLnaMode, mode);
+            expect(sent.sx126xRxBoostedGain, isTrue);
+            expect(sent.paFanDisabled, isTrue);
+            final cached = target.isLocal
+                ? protocol.currentLoraConfig
+                : protocol.remoteLoraConfig(_remoteNodeNum);
+            expect(cached?.femLnaMode, mode);
+          },
+        );
+      }
+
+      test(
+        'omitted FEM control preserves older firmware for $target',
+        () async {
+          await _injectLoraResponse(
+            protocol,
+            target.isLocal ? _myNodeNum : _remoteNodeNum,
+            config_pb.Config_LoRaConfig()
+              ..region = config_pbenum.Config_LoRaConfig_RegionCode.ANZ,
+          );
+          await protocol.setLoRaConfig(
+            region: config_pbenum.Config_LoRaConfig_RegionCode.ANZ,
+            modemPreset: config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
+            hopLimit: 3,
+            txEnabled: true,
+            txPower: 0,
+            target: target,
+          );
+          expect(transport.lastSentLora.hasFemLnaMode(), isFalse);
+        },
+      );
+    }
+
     test('remote LoRa response populates the per-node cache', () async {
       await _injectLoraResponse(
         protocol,

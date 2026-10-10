@@ -110,6 +110,30 @@ abstract class AppLocalizations {
     Locale('uk'),
   ];
 
+  /// External front-end low-noise amplifier setting
+  ///
+  /// In en, this message translates to:
+  /// **'FEM LNA'**
+  String get radioConfigFemLna;
+
+  /// Description distinguishing external FEM gain from SX126x gain
+  ///
+  /// In en, this message translates to:
+  /// **'Enable the external low-noise amplifier independently of RX boosted gain.'**
+  String get radioConfigFemLnaSubtitle;
+
+  /// Unavailable FEM capability on older or unidentified firmware
+  ///
+  /// In en, this message translates to:
+  /// **'This firmware does not report FEM support.'**
+  String get radioConfigFemLnaUnknown;
+
+  /// Unavailable control when firmware reports no external FEM amplifier
+  ///
+  /// In en, this message translates to:
+  /// **'This radio has no controllable FEM LNA.'**
+  String get radioConfigFemLnaNotPresent;
+
   /// Channels notice for distinct unreviewed Mesh Beacon offers
   ///
   /// In en, this message translates to:
@@ -121,12 +145,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to review nearby meshes in Mesh Beacon settings.'**
   String get meshBeaconNoticeSubtitle;
-
-  /// Subtitle in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Mark when vendor confirms all specs are accurate'**
-  String get adminProductsVendorUnverifiedSubtitle;
 
   /// Label for the altitude row in the live position card
   ///
@@ -2376,18 +2394,6 @@ abstract class AppLocalizations {
   /// **'Got it'**
   String get automationActionGotIt;
 
-  /// Label for the IFTTT webhook event name input
-  ///
-  /// In en, this message translates to:
-  /// **'IFTTT Event Name'**
-  String get automationActionIftttEventName;
-
-  /// Help text below the IFTTT event name field
-  ///
-  /// In en, this message translates to:
-  /// **'Uses your IFTTT Webhook key from Settings'**
-  String get automationActionIftttHelp;
-
   /// Hint text for the IFTTT event name input
   ///
   /// In en, this message translates to:
@@ -2910,12 +2916,6 @@ abstract class AppLocalizations {
   /// **'No conditions - always runs'**
   String get automationEditorNoConditions;
 
-  /// Button label for removing the ELSE branch
-  ///
-  /// In en, this message translates to:
-  /// **'Remove ELSE'**
-  String get automationEditorRemoveElse;
-
   /// Title for the condition type selection bottom sheet
   ///
   /// In en, this message translates to:
@@ -2970,12 +2970,6 @@ abstract class AppLocalizations {
   /// **'When {trigger}'**
   String automationSummaryWhen(String trigger);
 
-  /// Branch indicator label for THEN in automation card
-  ///
-  /// In en, this message translates to:
-  /// **'THEN'**
-  String get automationCardBranchThen;
-
   /// Branch indicator label for ELSE in automation card
   ///
   /// In en, this message translates to:
@@ -2987,24 +2981,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 condition} other{{count} conditions}}'**
   String automationCardConditionCount(int count);
-
-  /// Battery threshold display in condition editor
-  ///
-  /// In en, this message translates to:
-  /// **'Battery threshold: {threshold}%'**
-  String automationConditionConfigBatteryThreshold(int threshold);
-
-  /// Days of week display in condition editor
-  ///
-  /// In en, this message translates to:
-  /// **'Days: {days}'**
-  String automationConditionConfigDays(String days);
-
-  /// Time range display in condition editor
-  ///
-  /// In en, this message translates to:
-  /// **'{start} – {end}'**
-  String automationConditionConfigTimeRange(String start, String end);
 
   /// Button label and sheet title for adding a new action
   ///
@@ -3149,12 +3125,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automation updated'**
   String get automationEditorUpdated;
-
-  /// Warning shown when trying to save with no actions
-  ///
-  /// In en, this message translates to:
-  /// **'Please add at least one action'**
-  String get automationEditorValidateActions;
 
   /// Warning shown when trying to save without a name
   ///
@@ -3317,12 +3287,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Warnings'**
   String get automationFlowWarnings;
-
-  /// Section label showing actions count in import preview; {count} is the number
-  ///
-  /// In en, this message translates to:
-  /// **'Actions ({count})'**
-  String automationImportActionsCount(int count);
 
   /// Button label to import the automation
   ///
@@ -3557,12 +3521,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Automation'**
   String get automationScreenNewTooltip;
-
-  /// Empty state text in the execution log sheet
-  ///
-  /// In en, this message translates to:
-  /// **'No executions yet'**
-  String get automationScreenNoExecutions;
 
   /// Section subtitle for template cards
   ///
@@ -5622,12 +5580,6 @@ abstract class AppLocalizations {
   /// **'Never'**
   String get commonNever;
 
-  /// Generic short label for a negative or absent state (e.g. an Active row showing No).
-  ///
-  /// In en, this message translates to:
-  /// **'No'**
-  String get commonNo;
-
   /// Relative time label for less than a minute ago.
   ///
   /// In en, this message translates to:
@@ -6095,12 +6047,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get commonSave;
-
-  /// Generic short label for a positive or present state (e.g. an Active row showing Yes).
-  ///
-  /// In en, this message translates to:
-  /// **'Yes'**
-  String get commonYes;
 
   /// Screen title
   ///
@@ -7608,18 +7554,6 @@ abstract class AppLocalizations {
   /// **'Unknown Node'**
   String get discoveryUnknownNode;
 
-  /// Label for the Admin Dashboard menu tile in the navigation drawer.
-  ///
-  /// In en, this message translates to:
-  /// **'Admin Dashboard'**
-  String get drawerAdminDashboard;
-
-  /// Section header for the admin area in the navigation drawer.
-  ///
-  /// In en, this message translates to:
-  /// **'ADMIN'**
-  String get drawerAdminSectionHeader;
-
   /// Badge label for newly added drawer menu items.
   ///
   /// In en, this message translates to:
@@ -8634,30 +8568,6 @@ abstract class AppLocalizations {
   /// **'Expired transfers purged'**
   String get fileTransferContainerPurged;
 
-  /// Overflow menu item
-  ///
-  /// In en, this message translates to:
-  /// **'Send File'**
-  String get fileTransferContainerSendFile;
-
-  /// Overflow menu item for sending an image
-  ///
-  /// In en, this message translates to:
-  /// **'Send Image'**
-  String get fileTransferContainerSendImage;
-
-  /// Node picker dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Send to Node'**
-  String get fileTransferContainerSendToNode;
-
-  /// Success snackbar (interpolated)
-  ///
-  /// In en, this message translates to:
-  /// **'Transfer started: {filename}'**
-  String fileTransferContainerStarted(String filename);
-
   /// Container screen title
   ///
   /// In en, this message translates to:
@@ -8682,23 +8592,11 @@ abstract class AppLocalizations {
   /// **'Could not read file: {error}'**
   String fileTransferCouldNotReadFile(String error);
 
-  /// Error snackbar when file cannot be read
-  ///
-  /// In en, this message translates to:
-  /// **'Could not read file.'**
-  String get fileTransferCouldNotRead;
-
   /// Error snackbar when share fails
   ///
   /// In en, this message translates to:
   /// **'Could not save file for sharing'**
   String get fileTransferCouldNotSaveForSharing;
-
-  /// Error snackbar when transfer fails to start
-  ///
-  /// In en, this message translates to:
-  /// **'Could not start transfer. Check that a node is connected and try again.'**
-  String get fileTransferCouldNotStart;
 
   /// Confirmation dialog confirm button
   ///
@@ -8922,22 +8820,6 @@ abstract class AppLocalizations {
   /// **'Expired transfers purged'**
   String get fileTransferExpiredPurged;
 
-  /// Warning snackbar for empty files
-  ///
-  /// In en, this message translates to:
-  /// **'The selected file is empty.'**
-  String get fileTransferFileEmpty;
-
-  /// Error snackbar for oversized files (interpolated)
-  ///
-  /// In en, this message translates to:
-  /// **'{filename} is {fileSize} KB - mesh transfer limit is {limit} KB.'**
-  String fileTransferFileTooLarge(
-    String filename,
-    String fileSize,
-    String limit,
-  );
-
   /// Filter chip label
   ///
   /// In en, this message translates to:
@@ -8979,60 +8861,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not decode image'**
   String get fileTransferImageDecodeError;
-
-  /// Title for image picker bottom sheet
-  ///
-  /// In en, this message translates to:
-  /// **'Send Image'**
-  String get fileTransferImagePickerTitle;
-
-  /// Camera option in image picker sheet
-  ///
-  /// In en, this message translates to:
-  /// **'Take Photo'**
-  String get fileTransferImagePickerCamera;
-
-  /// Camera option subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Use camera to take a photo'**
-  String get fileTransferImagePickerCameraSubtitle;
-
-  /// Gallery option in image picker sheet
-  ///
-  /// In en, this message translates to:
-  /// **'Choose from Gallery'**
-  String get fileTransferImagePickerGallery;
-
-  /// Gallery option subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Select a photo from your library'**
-  String get fileTransferImagePickerGallerySubtitle;
-
-  /// Cancel button in image picker sheet
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get fileTransferImagePickerCancel;
-
-  /// Snackbar shown while compressing image
-  ///
-  /// In en, this message translates to:
-  /// **'Compressing image for mesh transfer...'**
-  String get fileTransferImageCompressing;
-
-  /// Error when image cannot be compressed enough
-  ///
-  /// In en, this message translates to:
-  /// **'Image could not be compressed to fit within {limit} KB mesh limit.'**
-  String fileTransferImageTooLargeAfterCompression(String limit);
-
-  /// Info snackbar after successful compression
-  ///
-  /// In en, this message translates to:
-  /// **'Image compressed to {size} bytes ({width}x{height})'**
-  String fileTransferImageCompressed(String size, String width, String height);
 
   /// Info sheet row label
   ///
@@ -9693,12 +9521,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{speed} KB/s'**
   String firmwareDfuSpeed(String speed);
-
-  /// Error when firmware zip doesnt contain a file for the device
-  ///
-  /// In en, this message translates to:
-  /// **'No firmware file found for this device model.'**
-  String get firmwareDfuNoFirmwareFound;
 
   /// Chipset name for Nordic nRF52840 devices
   ///
@@ -11488,42 +11310,6 @@ abstract class AppLocalizations {
   /// **'All'**
   String get mapDistanceAll;
 
-  /// Text in map view Parameters: {km}.
-  ///
-  /// In en, this message translates to:
-  /// **'{km}km'**
-  String mapDistanceKilometers(String km);
-
-  /// Text in map view Parameters: {km}.
-  ///
-  /// In en, this message translates to:
-  /// **'{km} km'**
-  String mapDistanceKilometersFormal(String km);
-
-  /// Text in map view Parameters: {km}.
-  ///
-  /// In en, this message translates to:
-  /// **'{km} km'**
-  String mapDistanceKilometersPrecise(String km);
-
-  /// Text in map view Parameters: {km}.
-  ///
-  /// In en, this message translates to:
-  /// **'{km}km'**
-  String mapDistanceKilometersRound(String km);
-
-  /// Text in map view Parameters: {meters}.
-  ///
-  /// In en, this message translates to:
-  /// **'{meters}m'**
-  String mapDistanceMeters(String meters);
-
-  /// Text in map view Parameters: {meters}.
-  ///
-  /// In en, this message translates to:
-  /// **'{meters} m'**
-  String mapDistanceMetersFormal(String meters);
-
   /// Text displayed in map view
   ///
   /// In en, this message translates to:
@@ -11733,12 +11519,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Earth curvature + Fresnel zone check'**
   String get mapLosAnalysisSubtitle;
-
-  /// Shown on measurement line while terrain elevation data is loading
-  ///
-  /// In en, this message translates to:
-  /// **'Fetching terrain…'**
-  String get mapLosFetchingTerrain;
 
   /// LOS legend label for green (clear path)
   ///
@@ -12195,12 +11975,6 @@ abstract class AppLocalizations {
   /// **'Show TAK entities'**
   String get mapShowTakEntities;
 
-  /// Tooltip in map view
-  ///
-  /// In en, this message translates to:
-  /// **'Map style'**
-  String get mapStyleTooltip;
-
   /// Text displayed in map view
   ///
   /// In en, this message translates to:
@@ -12525,12 +12299,6 @@ abstract class AppLocalizations {
   /// **'Actions'**
   String get meshcoreActions;
 
-  /// Info row label for capture active status
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get meshcoreActiveLabel;
-
   /// Button label to add a contact from code
   ///
   /// In en, this message translates to:
@@ -12554,12 +12322,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contact auto-add'**
   String get meshcoreAutoAddSectionTitle;
-
-  /// D47-A - settings-screen section subtitle explaining auto-add behaviour
-  ///
-  /// In en, this message translates to:
-  /// **'Automatically import contacts the radio hears'**
-  String get meshcoreAutoAddSectionSubtitle;
 
   /// D47-A - toggle label for the chat-contact auto-add flag (0x02)
   ///
@@ -12764,12 +12526,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Login failed; check the password and try again'**
   String get meshcoreRepeaterAdminLoginFailed;
-
-  /// D49-A - error shown when neither 0x85 nor 0x86 arrived within the timeout
-  ///
-  /// In en, this message translates to:
-  /// **'Login timed out; the repeater did not respond'**
-  String get meshcoreRepeaterAdminLoginTimeout;
 
   /// D49-A - validation banner when the user taps Login with an empty password field
   ///
@@ -13425,12 +13181,6 @@ abstract class AppLocalizations {
   /// **'Refresh all'**
   String get meshcoreRepeaterAdminSettingsRefreshAll;
 
-  /// D49-C - per-field refresh icon tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh from radio'**
-  String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip;
-
   /// D49-C - bottom gradient save button label
   ///
   /// In en, this message translates to:
@@ -13866,12 +13616,6 @@ abstract class AppLocalizations {
   /// **'{value}'**
   String meshcoreAutoRouteSliderValue(String value);
 
-  /// Success snackbar after sending advertisement
-  ///
-  /// In en, this message translates to:
-  /// **'Advertisement sent'**
-  String get meshcoreAdvertisementSent;
-
   /// Row 50 transport status screen title
   ///
   /// In en, this message translates to:
@@ -14004,18 +13748,6 @@ abstract class AppLocalizations {
   /// **'Advertisement sent'**
   String get meshcoreAdvertisementSentTools;
 
-  /// Section header for analysis tools
-  ///
-  /// In en, this message translates to:
-  /// **'Analysis'**
-  String get meshcoreAnalysis;
-
-  /// Info row label for bandwidth
-  ///
-  /// In en, this message translates to:
-  /// **'Bandwidth'**
-  String get meshcoreBandwidthLabel;
-
   /// Info text explaining battery percentage calculation
   ///
   /// In en, this message translates to:
@@ -14118,12 +13850,6 @@ abstract class AppLocalizations {
   /// **'Broadcast your presence to the mesh'**
   String get meshcoreBroadcastPresenceToMesh;
 
-  /// Settings tile subtitle for sending advertisement
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcast your presence'**
-  String get meshcoreBroadcastYourPresence;
-
   /// Cancel button label
   ///
   /// In en, this message translates to:
@@ -14141,12 +13867,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{channelName} is already in your channels'**
   String meshcoreChannelAlreadyExists(String channelName);
-
-  /// D29 - clipboard-copy confirmation for channel share.
-  ///
-  /// In en, this message translates to:
-  /// **'Channel code copied'**
-  String get meshcoreChannelCodeCopied;
 
   /// Success snackbar after creating a channel
   ///
@@ -14646,12 +14366,6 @@ abstract class AppLocalizations {
   /// **'Path'**
   String get meshcoreChatInfoPath;
 
-  /// Contact info row label for the contact's advertisement type (chat/repeater/room/sensor)
-  ///
-  /// In en, this message translates to:
-  /// **'Type'**
-  String get meshcoreChatInfoType;
-
   /// D-Q1 - label on the in-chat divider that marks the read/unread boundary captured at chat-open time
   ///
   /// In en, this message translates to:
@@ -14700,12 +14414,6 @@ abstract class AppLocalizations {
   /// **'Chat Node'**
   String get meshcoreChatNode;
 
-  /// Button label to clear protocol capture
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get meshcoreClear;
-
   /// Close button label
   ///
   /// In en, this message translates to:
@@ -14723,12 +14431,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connected'**
   String get meshcoreConnected;
-
-  /// Status indicator showing connected device name
-  ///
-  /// In en, this message translates to:
-  /// **'Connected to {deviceName}'**
-  String meshcoreConnectedTo(String deviceName);
 
   /// Text displayed in MeshCore protocol
   ///
@@ -15420,12 +15122,6 @@ abstract class AppLocalizations {
   /// **'Could not save path for {contactName}'**
   String meshcoreTracePathSaveAsContactPathFailed(String contactName);
 
-  /// D29 - subtitle/help copy for the Reset Path action.
-  ///
-  /// In en, this message translates to:
-  /// **'Let MeshCore rediscover the best route.'**
-  String get meshcoreResetPathSubtitle;
-
   /// D29 - success snackbar after CMD_RESET_PATH (0x0D) ACK.
   ///
   /// In en, this message translates to:
@@ -16104,12 +15800,6 @@ abstract class AppLocalizations {
   /// **'Contacts'**
   String get meshcoreContactsLabel;
 
-  /// Contacts screen title (with optional count suffix)
-  ///
-  /// In en, this message translates to:
-  /// **'Contacts'**
-  String get meshcoreContactsTitle;
-
   /// Settings tile subtitle for privacy mode
   ///
   /// In en, this message translates to:
@@ -16187,12 +15877,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create Channel'**
   String get meshcoreCreateChannelDialogTitle;
-
-  /// Debug card header
-  ///
-  /// In en, this message translates to:
-  /// **'Debug'**
-  String get meshcoreDebug;
 
   /// Device info card header
   ///
@@ -16398,12 +16082,6 @@ abstract class AppLocalizations {
   /// **'Failed to send advertisement'**
   String get meshcoreFailedToSendAdTools;
 
-  /// Error snackbar when advertisement send fails
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to send advertisement'**
-  String get meshcoreFailedToSendAdvertisement;
-
   /// Error snackbar when message send fails
   ///
   /// In en, this message translates to:
@@ -16464,18 +16142,6 @@ abstract class AppLocalizations {
   /// **'Filter'**
   String get meshcoreFilterTooltip;
 
-  /// Info row label for frame count
-  ///
-  /// In en, this message translates to:
-  /// **'Frames'**
-  String get meshcoreFramesLabel;
-
-  /// Info row label for radio frequency
-  ///
-  /// In en, this message translates to:
-  /// **'Frequency'**
-  String get meshcoreFrequencyLabel;
-
   /// Error snackbar for invalid channel code format
   ///
   /// In en, this message translates to:
@@ -16499,12 +16165,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join'**
   String get meshcoreJoin;
-
-  /// Button label to join a channel
-  ///
-  /// In en, this message translates to:
-  /// **'Join'**
-  String get meshcoreJoinButton;
 
   /// Join option title for hashtag channels
   ///
@@ -16607,12 +16267,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hidden'**
   String get meshcoreFilterHidden;
-
-  /// Placeholder shown when the Hidden filter is active but no channels are hidden (also surfaces in a brief frame before the auto-fallback to All takes effect)
-  ///
-  /// In en, this message translates to:
-  /// **'No hidden channels'**
-  String get meshcoreNoHiddenChannels;
 
   /// Accessibility label for the drag-handle icon used to reorder MeshCore channels in the channels list
   ///
@@ -17220,12 +16874,6 @@ abstract class AppLocalizations {
   /// **'Temperature'**
   String get meshcoreTelemetryRowTemperatureLabel;
 
-  /// D41-A - temperature reading row value
-  ///
-  /// In en, this message translates to:
-  /// **'{celsius} °C'**
-  String meshcoreTelemetryRowTemperatureValue(String celsius);
-
   /// D41-A - humidity reading row label
   ///
   /// In en, this message translates to:
@@ -17325,12 +16973,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading messages...'**
   String get meshcoreLoadingMessages;
-
-  /// Placeholder text for unimplemented location settings
-  ///
-  /// In en, this message translates to:
-  /// **'Location settings coming soon.\n\nThis will allow you to manually set your node position or use GPS.'**
-  String get meshcoreLocationComingSoon;
 
   /// Info row label for location on map contact sheet
   ///
@@ -17566,36 +17208,6 @@ abstract class AppLocalizations {
   /// **'New measurement'**
   String get meshcoreNewMeasurement;
 
-  /// Empty state title when no channels exist
-  ///
-  /// In en, this message translates to:
-  /// **'No Channels'**
-  String get meshcoreNoChannels;
-
-  /// Empty state description when no channels exist
-  ///
-  /// In en, this message translates to:
-  /// **'Channels are shared spaces for group communication.\n\nCreate a new channel or join an existing one.'**
-  String get meshcoreNoChannelsDescription;
-
-  /// Empty state title when no contacts exist
-  ///
-  /// In en, this message translates to:
-  /// **'No Contacts'**
-  String get meshcoreNoContacts;
-
-  /// Empty state description when no contacts exist
-  ///
-  /// In en, this message translates to:
-  /// **'Contacts will appear here when discovered via advertisements.\n\nYou can also add contacts manually using their contact code.'**
-  String get meshcoreNoContactsDescription;
-
-  /// Info snackbar when no contacts exist for trace
-  ///
-  /// In en, this message translates to:
-  /// **'No contacts available for trace'**
-  String get meshcoreNoContactsForTrace;
-
   /// Map empty-state title prefix (plain text before the first gradient keyword)
   ///
   /// In en, this message translates to:
@@ -17734,12 +17346,6 @@ abstract class AppLocalizations {
   /// **'Not a valid MeshCore contact QR code'**
   String get meshcoreNotValidContactQr;
 
-  /// Placeholder value for unimplemented features
-  ///
-  /// In en, this message translates to:
-  /// **'Not yet implemented'**
-  String get meshcoreNotYetImplemented;
-
   /// Channel options action label
   ///
   /// In en, this message translates to:
@@ -17818,23 +17424,11 @@ abstract class AppLocalizations {
   /// **'Point your camera at a MeshCore contact QR code'**
   String get meshcorePointCameraAtContactQr;
 
-  /// Placeholder text for unimplemented privacy settings
-  ///
-  /// In en, this message translates to:
-  /// **'Privacy settings coming soon.\n\nThis will control whether your node broadcasts advertisements.'**
-  String get meshcorePrivacyComingSoon;
-
   /// Settings tile title for privacy mode
   ///
   /// In en, this message translates to:
   /// **'Privacy Mode'**
   String get meshcorePrivacyMode;
-
-  /// Dialog title for privacy mode settings
-  ///
-  /// In en, this message translates to:
-  /// **'Privacy Mode'**
-  String get meshcorePrivacyModeDialogTitle;
 
   /// Channel card type label for private channel
   ///
@@ -17847,18 +17441,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Private Channel'**
   String get meshcorePrivateChannel;
-
-  /// Settings tile title for protocol capture
-  ///
-  /// In en, this message translates to:
-  /// **'Protocol Capture'**
-  String get meshcoreProtocolCapture;
-
-  /// Dialog title for protocol capture
-  ///
-  /// In en, this message translates to:
-  /// **'Protocol Capture'**
-  String get meshcoreProtocolCaptureDialogTitle;
 
   /// Channel card type label for public channel
   ///
@@ -17890,41 +17472,17 @@ abstract class AppLocalizations {
   /// **'Public Key'**
   String get meshcorePublicKeySettingsLabel;
 
-  /// Info text about radio settings source
-  ///
-  /// In en, this message translates to:
-  /// **'Radio settings are configured on the device firmware.'**
-  String get meshcoreRadioConfiguredOnFirmware;
-
   /// Settings tile title for radio settings
   ///
   /// In en, this message translates to:
   /// **'Radio Settings'**
   String get meshcoreRadioSettings;
 
-  /// Dialog title for radio settings
-  ///
-  /// In en, this message translates to:
-  /// **'Radio Settings'**
-  String get meshcoreRadioSettingsDialogTitle;
-
-  /// Error snackbar when radio settings are unavailable
-  ///
-  /// In en, this message translates to:
-  /// **'Radio settings not available'**
-  String get meshcoreRadioSettingsNotAvailable;
-
   /// Settings tile subtitle for radio settings
   ///
   /// In en, this message translates to:
   /// **'Frequency, TX power, bandwidth'**
   String get meshcoreRadioSettingsSubtitle;
-
-  /// Tool card title for radio settings
-  ///
-  /// In en, this message translates to:
-  /// **'Radio Settings'**
-  String get meshcoreRadioSettingsTool;
 
   /// Confirm button label for rebooting device
   ///
@@ -17955,18 +17513,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reboot Device'**
   String get meshcoreRebootDeviceTitle;
-
-  /// Button label to refresh protocol capture
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh'**
-  String get meshcoreRefresh;
-
-  /// Button label to refresh contacts
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh'**
-  String get meshcoreRefreshButton;
 
   /// Overflow menu item to refresh contacts
   ///
@@ -18088,12 +17634,6 @@ abstract class AppLocalizations {
   /// **'Scan QR Code'**
   String get meshcoreScanQrCode;
 
-  /// QR share sheet info text for channel sharing
-  ///
-  /// In en, this message translates to:
-  /// **'Scan this QR code to join the channel'**
-  String get meshcoreScanQrToJoinChannel;
-
   /// QR share sheet subtitle for own contact code
   ///
   /// In en, this message translates to:
@@ -18106,23 +17646,11 @@ abstract class AppLocalizations {
   /// **'Search contacts...'**
   String get meshcoreSearchContactsHint;
 
-  /// Description text in trace path dialog
-  ///
-  /// In en, this message translates to:
-  /// **'Select a contact to trace the route through the mesh.'**
-  String get meshcoreSelectContactToTrace;
-
   /// Info snackbar when self info is not loaded yet
   ///
   /// In en, this message translates to:
   /// **'Self info not available'**
   String get meshcoreSelfInfoNotAvailable;
-
-  /// Settings tile title for sending advertisement
-  ///
-  /// In en, this message translates to:
-  /// **'Send Advertisement'**
-  String get meshcoreSendAdvertisement;
 
   /// Tool card title for sending advertisement
   ///
@@ -18136,29 +17664,11 @@ abstract class AppLocalizations {
   /// **'Send Message'**
   String get meshcoreSendMessage;
 
-  /// Empty state description for chat
-  ///
-  /// In en, this message translates to:
-  /// **'Send a message to start the conversation'**
-  String get meshcoreSendMessageToStart;
-
-  /// Subtitle while sending advertisement
-  ///
-  /// In en, this message translates to:
-  /// **'Sending...'**
-  String get meshcoreSending;
-
   /// Error snackbar when session is not active
   ///
   /// In en, this message translates to:
   /// **'MeshCore session not active'**
   String get meshcoreSessionNotActive;
-
-  /// Dialog title for setting location
-  ///
-  /// In en, this message translates to:
-  /// **'Set Location'**
-  String get meshcoreSetLocation;
 
   /// Settings tile subtitle for location
   ///
@@ -18177,12 +17687,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SF/CR'**
   String get meshcoreSfCrLabel;
-
-  /// Button label to share a contact
-  ///
-  /// In en, this message translates to:
-  /// **'Share'**
-  String get meshcoreShare;
 
   /// Channel options action label
   ///
@@ -18243,12 +17747,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications restored for {name}.'**
   String meshcoreContactUnblockSuccess(String name);
-
-  /// D-Q8 - small badge on a contact row when notifications are muted
-  ///
-  /// In en, this message translates to:
-  /// **'Muted'**
-  String get meshcoreContactBlockedBadge;
 
   /// Contact options action label
   ///
@@ -18382,18 +17880,6 @@ abstract class AppLocalizations {
   /// **'Share your contact code so others can message you'**
   String get meshcoreShareContactCodeInfo;
 
-  /// Info snackbar hint after navigating to channels tab.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the menu to create or join a channel'**
-  String get meshcoreShellAddChannelHint;
-
-  /// Info snackbar hint after navigating to contacts tab.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the + button to add a contact'**
-  String get meshcoreShellAddContactHint;
-
   /// Subtitle for the Add Contact action tile in the MeshCore device sheet.
   ///
   /// In en, this message translates to:
@@ -18423,12 +17909,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications, theme, preferences'**
   String get meshcoreShellAppSettingsSubtitle;
-
-  /// Success snackbar after reconnecting to a MeshCore device.
-  ///
-  /// In en, this message translates to:
-  /// **'Connected to {deviceName}'**
-  String meshcoreShellConnectedTo(String deviceName);
 
   /// Fallback short device name for MeshCore when no name is saved.
   ///
@@ -18508,12 +17988,6 @@ abstract class AppLocalizations {
   /// **'Add Contact'**
   String get meshcoreShellDrawerAddContact;
 
-  /// Drawer disconnect button label.
-  ///
-  /// In en, this message translates to:
-  /// **'Disconnect'**
-  String get meshcoreShellDrawerDisconnect;
-
   /// Drawer menu item label for discovering nearby MeshCore contacts.
   ///
   /// In en, this message translates to:
@@ -18531,12 +18005,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MESHCORE'**
   String get meshcoreShellDrawerSectionHeader;
-
-  /// Drawer menu item label for MeshCore settings.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get meshcoreShellDrawerSettings;
 
   /// Info table label for the node ID row.
   ///
@@ -18580,12 +18048,6 @@ abstract class AppLocalizations {
   /// **'Join Channel'**
   String get meshcoreShellJoinChannel;
 
-  /// Info snackbar hint after navigating to channels tab from device sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the menu to join a channel'**
-  String get meshcoreShellJoinChannelHint;
-
   /// Subtitle for the Join Channel action tile in the MeshCore device sheet.
   ///
   /// In en, this message translates to:
@@ -18598,18 +18060,6 @@ abstract class AppLocalizations {
   /// **'Menu'**
   String get meshcoreShellMenuTooltip;
 
-  /// Bottom navigation label for the Channels tab in MeshCore.
-  ///
-  /// In en, this message translates to:
-  /// **'Channels'**
-  String get meshcoreShellNavChannels;
-
-  /// Bottom navigation label for the Contacts tab in MeshCore.
-  ///
-  /// In en, this message translates to:
-  /// **'Contacts'**
-  String get meshcoreShellNavContacts;
-
   /// MeshCore bottom-nav label for the Dashboard tab (1:1 with the Meshtastic main shell's Dashboard tab)
   ///
   /// In en, this message translates to:
@@ -18621,48 +18071,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dashboard'**
   String get meshcoreDashboardTitle;
-
-  /// MeshCore dashboard empty-state title prefix (before the gradient keyword)
-  ///
-  /// In en, this message translates to:
-  /// **'Your'**
-  String get meshcoreDashboardEmptyTitlePrefix;
-
-  /// MeshCore dashboard empty-state gradient keyword
-  ///
-  /// In en, this message translates to:
-  /// **'Dashboard'**
-  String get meshcoreDashboardEmptyTitleKeyword;
-
-  /// MeshCore dashboard empty-state mid word between gradient keywords
-  ///
-  /// In en, this message translates to:
-  /// **'is'**
-  String get meshcoreDashboardEmptyTitleMid;
-
-  /// MeshCore dashboard empty-state second gradient keyword
-  ///
-  /// In en, this message translates to:
-  /// **'Empty'**
-  String get meshcoreDashboardEmptyTitleKeyword2;
-
-  /// MeshCore dashboard empty-state title suffix (intentionally empty)
-  ///
-  /// In en, this message translates to:
-  /// **''**
-  String get meshcoreDashboardEmptyTitleSuffix;
-
-  /// MeshCore dashboard empty-state tagline 1
-  ///
-  /// In en, this message translates to:
-  /// **'Add widgets to see your mesh activity at a glance'**
-  String get meshcoreDashboardEmptyTagline1;
-
-  /// MeshCore dashboard empty-state tagline 2
-  ///
-  /// In en, this message translates to:
-  /// **'Pinch your favourite metrics into one view'**
-  String get meshcoreDashboardEmptyTagline2;
 
   /// MeshCore Network Overview widget display name
   ///
@@ -18681,12 +18089,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total contacts'**
   String get meshcoreWidgetTotalContacts;
-
-  /// Label for online contact count metric (heard within last 24h)
-  ///
-  /// In en, this message translates to:
-  /// **'Online'**
-  String get meshcoreWidgetOnline;
 
   /// Label for channel count metric
   ///
@@ -19012,18 +18414,6 @@ abstract class AppLocalizations {
   /// **'Reconnect'**
   String get meshcoreShellReconnectButton;
 
-  /// Error snackbar when MeshCore reconnection fails.
-  ///
-  /// In en, this message translates to:
-  /// **'Reconnect failed: {error}'**
-  String meshcoreShellReconnectFailed(String error);
-
-  /// Loading snackbar shown during MeshCore reconnection.
-  ///
-  /// In en, this message translates to:
-  /// **'Reconnecting to {deviceName}...'**
-  String meshcoreShellReconnecting(String deviceName);
-
   /// D27 - Reconnecting banner title in the MeshCore shell while the auto-reconnect manager is in the scanning state.
   ///
   /// In en, this message translates to:
@@ -19228,12 +18618,6 @@ abstract class AppLocalizations {
   /// **'Trace Path'**
   String get meshcoreTracePath;
 
-  /// Info snackbar after initiating trace path
-  ///
-  /// In en, this message translates to:
-  /// **'Trace path to {name} initiated'**
-  String meshcoreTracePathInitiated(String name);
-
   /// D28 - Tools tile title for the MeshCore Frame Log viewer.
   ///
   /// In en, this message translates to:
@@ -19414,12 +18798,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
   String meshcoreTracePathHops(int count);
 
-  /// D28 - Per-hop row label.
-  ///
-  /// In en, this message translates to:
-  /// **'Hop {index}'**
-  String meshcoreTracePathHopRow(int index);
-
   /// D28 - Error toast when no 0x89 push arrives within the firmware-supplied timeout.
   ///
   /// In en, this message translates to:
@@ -19497,18 +18875,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View detailed device information'**
   String get meshcoreViewDeviceInfo;
-
-  /// Settings tile subtitle for protocol capture
-  ///
-  /// In en, this message translates to:
-  /// **'View MeshCore frame logs'**
-  String get meshcoreViewFrameLogs;
-
-  /// Tool card subtitle for radio settings
-  ///
-  /// In en, this message translates to:
-  /// **'View LoRa radio configuration'**
-  String get meshcoreViewLoRaConfig;
 
   /// Label for the Copy action in the message context menu.
   ///
@@ -19732,12 +19098,6 @@ abstract class AppLocalizations {
   /// **'Failed to send'**
   String get messagingFailedToSend;
 
-  /// Label for the Active filter chip in the contacts list.
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get messagingFilterActive;
-
   /// Label for the Online filter chip in the contacts list (heard within 2 hours).
   ///
   /// In en, this message translates to:
@@ -19936,12 +19296,6 @@ abstract class AppLocalizations {
   /// **'Retry Message'**
   String get messagingRetryMessage;
 
-  /// Delivery status label shown on a DM that has been sent to the radio but no ACK has been received yet.
-  ///
-  /// In en, this message translates to:
-  /// **'Awaiting confirmation'**
-  String get messagingStatusAwaitingConfirmation;
-
   /// Delivery status label shown on a DM that timed out without receiving an ACK.
   ///
   /// In en, this message translates to:
@@ -19953,12 +19307,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retrying'**
   String get messagingStatusRetrying;
-
-  /// Delivery status label shown when a DM has been confirmed by the mesh network.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirmed'**
-  String get messagingStatusConfirmed;
 
   /// Delivery status label shown immediately after a message has been handed to the radio.
   ///
@@ -20001,12 +19349,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop retrying'**
   String get messagingAutoRetryStop;
-
-  /// Warning subtitle shown alongside the auto-retry option.
-  ///
-  /// In en, this message translates to:
-  /// **'May increase airtime and battery usage'**
-  String get messagingAutoRetryWarning;
 
   /// Shows current retry attempt count vs maximum.
   ///
@@ -20380,18 +19722,6 @@ abstract class AppLocalizations {
   /// **'{minutes}m'**
   String timelineDurationMinutesOnly(String minutes);
 
-  /// Overflow label for participant avatar stack.
-  ///
-  /// In en, this message translates to:
-  /// **'+{count}'**
-  String timelineOverflowParticipants(int count);
-
-  /// Label for the Activity drawer item.
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get navigationActivity;
-
   /// Label for the Aether drawer item.
   ///
   /// In en, this message translates to:
@@ -20529,12 +19859,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MeshCanvas'**
   String get meshCanvasPlaceholderTitle;
-
-  /// Body line under the MeshCanvas placeholder screen title.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming soon: collaborative pixel canvas over mesh'**
-  String get meshCanvasPlaceholderSubtitle;
 
   /// Title of the MeshCanvas help sheet that explains the feature in a retro packet-radio tone.
   ///
@@ -21016,12 +20340,6 @@ abstract class AppLocalizations {
   /// **'Idle'**
   String get meshCanvasOverviewNeverPainted;
 
-  /// Activity-row value on the Local card when no paint has landed. Atmospheric reminder that the sandbox is private. Middle-dot separator.
-  ///
-  /// In en, this message translates to:
-  /// **'Idle · Stays on device'**
-  String get meshCanvasOverviewLocalIdleHint;
-
   /// Painted-cell count fragment on a canvas card. Renders inside a middle-dot metadata cluster ('17 painted · 2h ago'). Excludes default-color cells.
   ///
   /// In en, this message translates to:
@@ -21069,12 +20387,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dormant · Seed first pixel'**
   String get meshCanvasOverviewChannelDormantHint;
-
-  /// Small uppercase section header above the list of channel canvas cards in the Mesh tab. Communicates the typed surface: every row below is a channel canvas. Atmospheric / packet-radio register; keep short.
-  ///
-  /// In en, this message translates to:
-  /// **'CHANNEL CANVASES'**
-  String get meshCanvasOverviewMeshSectionHeader;
 
   /// Section header above the dominant Primary channel card on the MeshCanvas overview Mesh tab. Treats channel 0 / Primary as the shared commons for this mesh.
   ///
@@ -21159,30 +20471,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stays on this device'**
   String get meshCanvasViewerEmptyLocalSubtitle;
-
-  /// Compact gesture-hint chip shown inside the canvas frame. Tells the user that a single tap on a cell paints it with the active color.
-  ///
-  /// In en, this message translates to:
-  /// **'tap · paint'**
-  String get meshCanvasViewerGestureTap;
-
-  /// Compact gesture-hint chip shown inside the canvas frame. Tells the user that a single-finger drag pans the canvas surface.
-  ///
-  /// In en, this message translates to:
-  /// **'drag · pan'**
-  String get meshCanvasViewerGestureDrag;
-
-  /// Compact gesture-hint chip shown inside the canvas frame. Tells the user that a two-finger pinch zooms in and out of the canvas surface.
-  ///
-  /// In en, this message translates to:
-  /// **'pinch · zoom'**
-  String get meshCanvasViewerGesturePinch;
-
-  /// Compact gesture-hint chip shown inside the canvas frame. Tells the user that long-pressing a cell opens the tile inspector with last painter and history.
-  ///
-  /// In en, this message translates to:
-  /// **'hold · inspect'**
-  String get meshCanvasViewerGestureHold;
 
   /// Status chip in the Mesh tab hero stats card showing how many Meshtastic channels are configured / surfaced as latent canvases.
   ///
@@ -21286,125 +20574,17 @@ abstract class AppLocalizations {
   /// **'Create Board'**
   String get nodeboardCreateBoard;
 
-  /// Empty state message when user has no boards.
-  ///
-  /// In en, this message translates to:
-  /// **'You haven\'t created any boards yet'**
-  String get nodeboardEmptyMyBoards;
-
   /// Empty state description when user has no boards.
   ///
   /// In en, this message translates to:
   /// **'Create your first personal BBS and share it with the mesh'**
   String get nodeboardEmptyMyBoardsDescription;
 
-  /// Empty state message when no public boards exist.
-  ///
-  /// In en, this message translates to:
-  /// **'No public boards found'**
-  String get nodeboardEmptyDiscover;
-
   /// Empty state description when no public boards exist.
   ///
   /// In en, this message translates to:
   /// **'Be the first to create a board'**
   String get nodeboardEmptyDiscoverDescription;
-
-  /// Empty state when a section has no threads.
-  ///
-  /// In en, this message translates to:
-  /// **'No threads yet'**
-  String get nodeboardEmptyThreads;
-
-  /// Empty state description for a section with no threads.
-  ///
-  /// In en, this message translates to:
-  /// **'Start the conversation'**
-  String get nodeboardEmptyThreadsDescription;
-
-  /// Title for the board creation wizard.
-  ///
-  /// In en, this message translates to:
-  /// **'Create NodeBoard'**
-  String get nodeboardWizardTitle;
-
-  /// Wizard step label for board name.
-  ///
-  /// In en, this message translates to:
-  /// **'Name & Identity'**
-  String get nodeboardWizardStepName;
-
-  /// Wizard step label for tagline.
-  ///
-  /// In en, this message translates to:
-  /// **'Tagline & Description'**
-  String get nodeboardWizardStepTagline;
-
-  /// Wizard step label for sections.
-  ///
-  /// In en, this message translates to:
-  /// **'Sections'**
-  String get nodeboardWizardStepSections;
-
-  /// Wizard step label for theme selection.
-  ///
-  /// In en, this message translates to:
-  /// **'Theme'**
-  String get nodeboardWizardStepTheme;
-
-  /// Wizard step label for welcome text.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome & Splash'**
-  String get nodeboardWizardStepWelcome;
-
-  /// Wizard step label for review.
-  ///
-  /// In en, this message translates to:
-  /// **'Review'**
-  String get nodeboardWizardStepReview;
-
-  /// Label for the board title field.
-  ///
-  /// In en, this message translates to:
-  /// **'Board Title'**
-  String get nodeboardBoardTitle;
-
-  /// Label for the sysop name field.
-  ///
-  /// In en, this message translates to:
-  /// **'Sysop Name'**
-  String get nodeboardSysopName;
-
-  /// Label for the board slug field.
-  ///
-  /// In en, this message translates to:
-  /// **'Board URL Slug'**
-  String get nodeboardSlug;
-
-  /// Label for the tagline field.
-  ///
-  /// In en, this message translates to:
-  /// **'Tagline'**
-  String get nodeboardTagline;
-
-  /// Label for the description field.
-  ///
-  /// In en, this message translates to:
-  /// **'Description'**
-  String get nodeboardDescription;
-
-  /// Label for the welcome text field.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome Text'**
-  String get nodeboardWelcomeText;
-
-  /// Label for the ANSI splash field.
-  ///
-  /// In en, this message translates to:
-  /// **'ASCII/ANSI Splash'**
-  String get nodeboardAnsiSplash;
 
   /// Visibility option: public.
   ///
@@ -21448,24 +20628,6 @@ abstract class AppLocalizations {
   /// **'Terminal Mode'**
   String get nodeboardTerminalMode;
 
-  /// Label for native mode toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Native Mode'**
-  String get nodeboardNativeMode;
-
-  /// Hint text for the reply composer.
-  ///
-  /// In en, this message translates to:
-  /// **'Write a reply...'**
-  String get nodeboardReplyHint;
-
-  /// Message when a thread is locked.
-  ///
-  /// In en, this message translates to:
-  /// **'This thread is locked'**
-  String get nodeboardThreadLocked;
-
   /// Badge label for pinned threads.
   ///
   /// In en, this message translates to:
@@ -21477,24 +20639,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Locked'**
   String get nodeboardLocked;
-
-  /// Next button in wizard.
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get nodeboardNext;
-
-  /// Back button in wizard.
-  ///
-  /// In en, this message translates to:
-  /// **'Back'**
-  String get nodeboardBack;
-
-  /// Create board action button.
-  ///
-  /// In en, this message translates to:
-  /// **'Create Board'**
-  String get nodeboardCreateBoardAction;
 
   /// Generic load error message.
   ///
@@ -21579,12 +20723,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share link copied to clipboard'**
   String get nodeboardShareCopied;
-
-  /// Placeholder message shown when the thread composer is tapped.
-  ///
-  /// In en, this message translates to:
-  /// **'Thread composer coming soon'**
-  String get nodeboardComposerComingSoon;
 
   /// Time-ago label for events in the last minute.
   ///
@@ -21682,12 +20820,6 @@ abstract class AppLocalizations {
   /// **'DISCOVER'**
   String get navigationSectionDiscover;
 
-  /// Drawer section header for social identity features.
-  ///
-  /// In en, this message translates to:
-  /// **'IDENTITY'**
-  String get navigationSectionIdentity;
-
   /// Drawer section header for mesh features.
   ///
   /// In en, this message translates to:
@@ -21706,29 +20838,11 @@ abstract class AppLocalizations {
   /// **'PREMIUM'**
   String get navigationSectionPremium;
 
-  /// Drawer section header for social features.
-  ///
-  /// In en, this message translates to:
-  /// **'SOCIAL'**
-  String get navigationSectionSocial;
-
   /// Drawer section header for operational tools like File Transfers, Aether, and TAK.
   ///
   /// In en, this message translates to:
   /// **'TOOLS'**
   String get navigationSectionTools;
-
-  /// Label for the Signals feature in drawer and bottom nav.
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get navigationSignals;
-
-  /// Label for the Social Hub drawer item.
-  ///
-  /// In en, this message translates to:
-  /// **'Social'**
-  String get navigationSocial;
 
   /// Sync status text when sync failed.
   ///
@@ -22522,18 +21636,6 @@ abstract class AppLocalizations {
   /// **'{value} mi'**
   String unitDistanceMiles(String value);
 
-  /// Distance display in kilometers.
-  ///
-  /// In en, this message translates to:
-  /// **'{km} km'**
-  String nodeDetailDistanceKilometers(String km);
-
-  /// Distance display in meters.
-  ///
-  /// In en, this message translates to:
-  /// **'{meters} m'**
-  String nodeDetailDistanceMeters(String meters);
-
   /// Badge for favorite nodes.
   ///
   /// In en, this message translates to:
@@ -22846,12 +21948,6 @@ abstract class AppLocalizations {
   /// **'Message'**
   String get nodeDetailMessageButton;
 
-  /// Error snackbar when mute toggle fails.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update mute status: {error}'**
-  String nodeDetailMuteError(String error);
-
   /// Error when trying to mute while disconnected.
   ///
   /// In en, this message translates to:
@@ -22881,12 +21977,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No PKI'**
   String get nodeDetailNoPkiBadge;
-
-  /// Error when node has no GPS position for fixed position.
-  ///
-  /// In en, this message translates to:
-  /// **'Node has no position data'**
-  String get nodeDetailNoPositionData;
 
   /// Badge for nodes with PKI encryption.
   ///
@@ -24958,12 +24048,6 @@ abstract class AppLocalizations {
   /// **'Observed on: {preset}'**
   String nodedexObservedOnPreset(String preset);
 
-  /// Label showing the last radio preset a node was observed on
-  ///
-  /// In en, this message translates to:
-  /// **'Last observed on {preset}'**
-  String nodedexLastObservedOnPreset(String preset);
-
   /// Filter chip label for filtering nodes by radio preset
   ///
   /// In en, this message translates to:
@@ -25480,18 +24564,6 @@ abstract class AppLocalizations {
   /// **'Weak'**
   String get nodedexLegendWeak;
 
-  /// Text in node management Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} links'**
-  String nodedexLinkCountPlural(int count);
-
-  /// Text in node management Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} link'**
-  String nodedexLinkCountSingular(int count);
-
   /// Label in node management
   ///
   /// In en, this message translates to:
@@ -25521,12 +24593,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Max Range'**
   String get nodedexMaxRangeLabel;
-
-  /// Tooltip for the Map button in the NodeDex header
-  ///
-  /// In en, this message translates to:
-  /// **'NodeDex Map'**
-  String get nodedexMapTooltip;
 
   /// App bar title shown when MapScreen runs in nodedexMode (drawer NodeDex → Map child + in-NodeDex overflow menu Map item)
   ///
@@ -25573,12 +24639,6 @@ abstract class AppLocalizations {
   /// Text displayed in node management
   ///
   /// In en, this message translates to:
-  /// **'No classification assigned. Tap \"Classify\" to add one.'**
-  String get nodedexNoClassification;
-
-  /// Text displayed in node management
-  ///
-  /// In en, this message translates to:
   /// **'No encounters on this date'**
   String get nodedexNoEncountersOnDate;
 
@@ -25587,12 +24647,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No encounters recorded'**
   String get nodedexNoEncountersRecorded;
-
-  /// Text displayed in node management
-  ///
-  /// In en, this message translates to:
-  /// **'No note yet. Tap \"Add Note\" to write one.'**
-  String get nodedexNoNoteYet;
 
   /// Description text in node management
   ///
@@ -25929,12 +24983,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Regions'**
   String get nodedexRegionsCompactLabel;
-
-  /// Label in node management
-  ///
-  /// In en, this message translates to:
-  /// **'Regions'**
-  String get nodedexRegionsLabel;
 
   /// Discovery row label and card title: count of distinct regions where the remote node has broadcast its own position from.
   ///
@@ -26618,12 +25666,6 @@ abstract class AppLocalizations {
   /// **'NodeDex'**
   String get nodedexTitle;
 
-  /// Text in node management Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} total'**
-  String nodedexTotalCount(int count);
-
   /// Display label for the Anchor node trait.
   ///
   /// In en, this message translates to:
@@ -26845,12 +25887,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connected Device'**
   String get nodesScreenConnectedDevice;
-
-  /// Long-press menu action to disconnect.
-  ///
-  /// In en, this message translates to:
-  /// **'Disconnect'**
-  String get nodesScreenDisconnect;
 
   /// Role filter chip that disables the role-based filter (shows every role).
   ///
@@ -27097,18 +26133,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disconnect device'**
   String get quickActionDisconnect;
-
-  /// Distance label in kilometers on node card.
-  ///
-  /// In en, this message translates to:
-  /// **'{km} km away'**
-  String nodesScreenDistanceKilometers(String km);
-
-  /// Distance label in meters on node card.
-  ///
-  /// In en, this message translates to:
-  /// **'{meters} m away'**
-  String nodesScreenDistanceMeters(String meters);
 
   /// Distance-from-me label on a node card; wraps a formatted distance (e.g. '1.2 km' or '0.8 mi').
   ///
@@ -29210,18 +28234,6 @@ abstract class AppLocalizations {
   /// **'Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change - forget the device in Bluetooth Settings and pair again.'**
   String get regionSelectionPairingHintMessage;
 
-  /// Reset-aware pairing-invalidation message shown during region setup. Frames the cause as a radio-side identity reset, not a phone-side failure.
-  ///
-  /// In en, this message translates to:
-  /// **'Pairing needs to be refreshed. The radio\'s Bluetooth identity has changed.\nForget the device in Settings > Bluetooth and pair again.'**
-  String get regionSelectionPairingInvalidation;
-
-  /// UI text: region selection reconnect timeout
-  ///
-  /// In en, this message translates to:
-  /// **'Reconnect timed out. Please try again.'**
-  String get regionSelectionReconnectTimeout;
-
   /// UI text: region selection region anz
   ///
   /// In en, this message translates to:
@@ -29924,150 +28936,6 @@ abstract class AppLocalizations {
   /// **'View Scanner'**
   String get regionSelectionViewScanner;
 
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'All caught up!'**
-  String get reviewModerationAllCaughtUp;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'All Reviews'**
-  String get reviewModerationAllReviews;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Anonymous'**
-  String get reviewModerationAnonymous;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Approve'**
-  String get reviewModerationApprove;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Review approved'**
-  String get reviewModerationApproved;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get reviewModerationCancel;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get reviewModerationDelete;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to permanently delete this review?'**
-  String get reviewModerationDeleteMessage;
-
-  /// Title for the app review screen
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Review'**
-  String get reviewModerationDeleteTitle;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Review deleted'**
-  String get reviewModerationDeleted;
-
-  /// Error message in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading reviews'**
-  String get reviewModerationErrorLoading;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Legacy (no status)'**
-  String get reviewModerationLegacy;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'No reviews in database'**
-  String get reviewModerationNoDatabase;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'No pending reviews to moderate'**
-  String get reviewModerationNoPending;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'No reviews yet'**
-  String get reviewModerationNoReviews;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get reviewModerationPending;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Reject'**
-  String get reviewModerationReject;
-
-  /// Hint text for an input field in app review
-  ///
-  /// In en, this message translates to:
-  /// **'e.g., Inappropriate content, spam, etc.'**
-  String get reviewModerationRejectReasonHint;
-
-  /// Label in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Reason for rejection'**
-  String get reviewModerationRejectReasonLabel;
-
-  /// Title for the app review screen
-  ///
-  /// In en, this message translates to:
-  /// **'Reject Review'**
-  String get reviewModerationRejectTitle;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Review rejected'**
-  String get reviewModerationRejected;
-
-  /// Title for the app review screen
-  ///
-  /// In en, this message translates to:
-  /// **'Review Management'**
-  String get reviewModerationTitle;
-
-  /// Text displayed in app review
-  ///
-  /// In en, this message translates to:
-  /// **'Verified'**
-  String get reviewModerationVerified;
-
-  /// Tooltip in routes
-  ///
-  /// In en, this message translates to:
-  /// **'Center on node'**
-  String get routeDetailCenterOnNodeTooltip;
-
   /// Text in routes Parameters: {km}.
   ///
   /// In en, this message translates to:
@@ -30128,12 +28996,6 @@ abstract class AppLocalizations {
   /// **'--'**
   String get routeDetailNoData;
 
-  /// Text displayed in routes
-  ///
-  /// In en, this message translates to:
-  /// **'No GPS Points'**
-  String get routeDetailNoGpsPoints;
-
   /// Label in routes
   ///
   /// In en, this message translates to:
@@ -30157,12 +29019,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Storage not available'**
   String get routeDetailStorageUnavailable;
-
-  /// Text displayed in routes
-  ///
-  /// In en, this message translates to:
-  /// **'You'**
-  String get routeDetailYouBadge;
 
   /// Text displayed in routes
   ///
@@ -30445,12 +29301,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other Devices'**
   String get scannerProtocolGroupOther;
-
-  /// Label for the button that opens the OS Bluetooth settings.
-  ///
-  /// In en, this message translates to:
-  /// **'Bluetooth Settings'**
-  String get scannerBluetoothSettings;
 
   /// Error snackbar when the OS deep link to Bluetooth settings fails.
   ///
@@ -30758,24 +29608,6 @@ abstract class AppLocalizations {
   /// **'This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.'**
   String get scannerUnsupportedBleDescription;
 
-  /// Primary action label that switches the scanner to the network connection workflow when BLE is unavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Use network connection'**
-  String get scannerUnsupportedBleAction;
-
-  /// Title shown on the scanner screen when USB serial transport is unsupported on the current host platform.
-  ///
-  /// In en, this message translates to:
-  /// **'USB serial not available'**
-  String get scannerUnsupportedSerialTitle;
-
-  /// Description shown on the scanner screen explaining why USB serial transport is unavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'This build cannot access USB serial devices. Use Bluetooth or a network connection instead.'**
-  String get scannerUnsupportedSerialDescription;
-
   /// Title shown to web users explaining that direct radio access is not possible from the browser build.
   ///
   /// In en, this message translates to:
@@ -30787,18 +29619,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.'**
   String get scannerWebDashboardDescription;
-
-  /// UI text: seller profile founded stat
-  ///
-  /// In en, this message translates to:
-  /// **'Founded'**
-  String get sellerProfileFoundedStat;
-
-  /// UI text: seller profile sales stat
-  ///
-  /// In en, this message translates to:
-  /// **'Sales'**
-  String get sellerProfileSalesStat;
 
   /// UI text: serial config baud rate
   ///
@@ -31267,12 +30087,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'TRY IT'**
   String get settingsPremiumBadgeTry;
-
-  /// Subtitle in the premium card showing how many features are unlocked.
-  ///
-  /// In en, this message translates to:
-  /// **'{owned} of {total} unlocked'**
-  String settingsPremiumPartiallyUnlocked(int owned, int total);
 
   /// Heading in the premium card when some features are locked.
   ///
@@ -32867,836 +31681,8 @@ abstract class AppLocalizations {
   /// Text displayed in signals
   ///
   /// In en, this message translates to:
-  /// **'Acquiring device location...'**
-  String get signalAcquiringDeviceLocation;
-
-  /// Count of active signals
-  ///
-  /// In en, this message translates to:
-  /// **'{count} active'**
-  String signalActiveCount(int count);
-
-  /// Text in signals Parameters: {days} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Active {days}d'**
-  String signalActiveDays(int days);
-
-  /// Text in signals Parameters: {hours} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Active {hours}h'**
-  String signalActiveHours(int hours);
-
-  /// Text in signals Parameters: {minutes} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Active {minutes}m'**
-  String signalActiveMinutes(int minutes);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Active now'**
-  String get signalActiveNow;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Add location'**
-  String get signalAddLocation;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Add Photos'**
-  String get signalAddPhotos;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Anon'**
-  String get signalAnonAuthor;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Anonymous'**
-  String get signalAnonymous;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Anonymous'**
-  String get signalAnonymousFeed;
-
-  /// Text in signals Parameters: {radiusMeters}.
-  ///
-  /// In en, this message translates to:
-  /// **'Approx. area (~{radiusMeters}m)'**
-  String signalApproxArea(int radiusMeters);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Attach file'**
-  String get signalAttachFile;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Back nearby'**
-  String get signalBackNearby;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Be the first to respond to this signal'**
-  String get signalBeFirstToRespond;
-
-  /// BLE = Bluetooth Low Energy. Mesh traffic = radio data packets. iOS Airplane Mode can interrupt BLE communication.
-  ///
-  /// In en, this message translates to:
-  /// **'Connected to BLE but no mesh traffic detected. On iOS, Airplane Mode can block BLE traffic even when connected. Turn off Airplane Mode or toggle Bluetooth.'**
-  String get signalBleNoMeshTrafficIos;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcast your signal'**
-  String get signalBroadcastYourSignal;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcasting over mesh...'**
-  String get signalBroadcastingOverMesh;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get signalCancel;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Choose from Gallery'**
-  String get signalChooseFromGallery;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud'**
-  String get signalCloudBadge;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud features unavailable.'**
-  String get signalCloudFeaturesUnavailable;
-
-  /// Count of comments on a signal
-  ///
-  /// In en, this message translates to:
-  /// **'{count} comments'**
-  String signalCommentCount(int count);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Comment reported. Thank you.'**
-  String get signalCommentReported;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Connect a device to add location to your signal.'**
-  String get signalConnectToAddLocation;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to a device to go active'**
-  String get signalConnectToGoActive;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to a device to send signals'**
-  String get signalConnectToSend;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Conversation'**
-  String get signalConversation;
-
-  /// Error message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to create signal'**
-  String get signalCreateFailed;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Current location'**
-  String get signalCurrentLocation;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get signalDelete;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'This signal will fade immediately.'**
-  String get signalDeleteMessage;
-
-  /// Title for the signals screen
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Signal?'**
-  String get signalDeleteTitle;
-
-  /// Title for the signals screen
-  ///
-  /// In en, this message translates to:
-  /// **'Signal'**
-  String get signalDetailTitle;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
   /// **'Device not connected'**
   String get signalDeviceNotConnected;
-
-  /// Confirmation prompt in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Discard'**
-  String get signalDiscardConfirm;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Your draft will be lost.'**
-  String get signalDiscardMessage;
-
-  /// Title for the signals screen
-  ///
-  /// In en, this message translates to:
-  /// **'Discard signal?'**
-  String get signalDiscardTitle;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signal Duration'**
-  String get signalDuration;
-
-  /// Subtitle in signals
-  ///
-  /// In en, this message translates to:
-  /// **'How long until your signal fades'**
-  String get signalDurationSubtitle;
-
-  /// Empty state message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing active here right now.\nSignals appear when someone nearby goes active.'**
-  String get signalEmptyTagline1;
-
-  /// Empty state message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signals are mesh-first and ephemeral.\nThey dissolve when their timer ends.'**
-  String get signalEmptyTagline2;
-
-  /// Empty state message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Share a quick status or photo.\nNearby nodes will see it in real time.'**
-  String get signalEmptyTagline3;
-
-  /// Empty state message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Go active to broadcast your presence.\nOff-grid, device to device.'**
-  String get signalEmptyTagline4;
-
-  /// Empty state message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'signals'**
-  String get signalEmptyTitleKeyword;
-
-  /// Empty state message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'No active '**
-  String get signalEmptyTitlePrefix;
-
-  /// Empty state message in signals
-  ///
-  /// In en, this message translates to:
-  /// **' nearby'**
-  String get signalEmptyTitleSuffix;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Device has no location yet. Enable GPS or set a fixed position.'**
-  String get signalEnableGpsOrFixedPosition;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Expired'**
-  String get signalExpiredBadge;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Faded'**
-  String get signalFaded;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Fades in'**
-  String get signalFadesIn;
-
-  /// Text in signals Parameters: {days} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Fades in {days}d'**
-  String signalFadesInDays(int days);
-
-  /// Text in signals Parameters: {hours} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Fades in {hours}h'**
-  String signalFadesInHours(int hours);
-
-  /// Text in signals Parameters: {minutes} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Fades in {minutes}m'**
-  String signalFadesInMinutes(int minutes);
-
-  /// Text in signals Parameters: {minutes} = time duration, {seconds} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Fades in {minutes}m {seconds}s'**
-  String signalFadesInMinutesSeconds(int minutes, int seconds);
-
-  /// Text in signals Parameters: {seconds} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Fades in {seconds}s'**
-  String signalFadesInSeconds(int seconds);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signal'**
-  String get signalFallbackContent;
-
-  /// Text in signals Parameters: {size} = numeric value.
-  ///
-  /// In en, this message translates to:
-  /// **'File too large. Mesh transfer is limited to {size} KB.'**
-  String signalFileTooLarge(int size);
-
-  /// Error message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'File transfer failed to start'**
-  String get signalFileTransferFailed;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'File Transfers'**
-  String get signalFileTransfers;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get signalFilterAll;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Expiring'**
-  String get signalFilterExpiring;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Hidden'**
-  String get signalFilterHidden;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Location'**
-  String get signalFilterLocation;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Media'**
-  String get signalFilterMedia;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh'**
-  String get signalFilterMesh;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Nearby'**
-  String get signalFilterNearby;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Replies'**
-  String get signalFilterReplies;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Saved'**
-  String get signalFilterSaved;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Fit all signals'**
-  String get signalFitAllSignals;
-
-  /// Error message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to get location'**
-  String get signalGetLocationFailed;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Go Active'**
-  String get signalGoActive;
-
-  /// Button label in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Go Active'**
-  String get signalGoActiveAction;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'This signal has faded'**
-  String get signalHasFaded;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Help'**
-  String get signalHelp;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signal hidden'**
-  String get signalHidden;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Hide'**
-  String get signalHide;
-
-  /// Text in signals Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} hop'**
-  String signalHopSingular(int count);
-
-  /// Badge showing number of mesh hops for a signal
-  ///
-  /// In en, this message translates to:
-  /// **'{count} hops'**
-  String signalHopsBadge(int count);
-
-  /// Text in signals Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} hops'**
-  String signalHopsPlural(int count);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Image violates content guidelines and was blocked'**
-  String get signalImageBlockedSingular;
-
-  /// Text in signals Parameters: {passedCount}.
-  ///
-  /// In en, this message translates to:
-  /// **'{passedCount} images added'**
-  String signalImagesAddedCount(int passedCount);
-
-  /// Text in signals Parameters: {failedCount}, {passedCount}.
-  ///
-  /// In en, this message translates to:
-  /// **'{failedCount} image(s) blocked, {passedCount} added'**
-  String signalImagesBlockedAndAdded(int failedCount, int passedCount);
-
-  /// Text in signals Parameters: {failedCount}.
-  ///
-  /// In en, this message translates to:
-  /// **'{failedCount} images blocked by content guidelines'**
-  String signalImagesBlockedPlural(int failedCount);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Images hidden while offline. They will return when back online.'**
-  String get signalImagesHiddenOffline;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Images require internet. Images removed.'**
-  String get signalImagesRequireInternet;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Images restored!'**
-  String get signalImagesRestored;
-
-  /// Label in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Intent'**
-  String get signalIntentLabel;
-
-  /// BLE = Bluetooth Low Energy connection to the mesh device. iOS Airplane Mode can pause BLE even when connected.
-  ///
-  /// In en, this message translates to:
-  /// **'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.'**
-  String get signalIosAirplaneModeWarning;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Keep editing'**
-  String get signalKeepEditing;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'< 5 min'**
-  String get signalLegendFiveMin;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'> 2 hrs'**
-  String get signalLegendOverTwoHrs;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'< 30 min'**
-  String get signalLegendThirtyMin;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'< 2 hrs'**
-  String get signalLegendTwoHrs;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Let others know why you\'re active'**
-  String get signalLetOthersKnowIntent;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Loading comments...'**
-  String get signalLoadingComments;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Local'**
-  String get signalLocal;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Local'**
-  String get signalLocalBadge;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Local'**
-  String get signalLocalBadgeGallery;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Location'**
-  String get signalLocationBadge;
-
-  /// Text in signals Parameters: {radiusMeters}.
-  ///
-  /// In en, this message translates to:
-  /// **'Signal location uses mesh device position, rounded to ~{radiusMeters}m.'**
-  String signalLocationPrivacyNote(int radiusMeters);
-
-  /// Toast shown when a signal's stored coordinates are non-finite or out of range and we cannot open the map for it.
-  ///
-  /// In en, this message translates to:
-  /// **'Location unavailable'**
-  String get signalLocationInvalid;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Location unavailable, sent without location.'**
-  String get signalLocationUnavailableSent;
-
-  /// Text in signals Parameters: {size} = numeric value.
-  ///
-  /// In en, this message translates to:
-  /// **'Max {size} KB'**
-  String signalMaxFileSize(int size);
-
-  /// Text in signals Parameters: {maxImages}.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum of {maxImages} images allowed'**
-  String signalMaxImagesAllowed(int maxImages);
-
-  /// Mesh-only debug mode bypasses cloud features and uses only local database and mesh radio for testing.
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh-only debug mode enabled. Signals use local DB + mesh only.'**
-  String get signalMeshOnlyDebugBanner;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh-only debug mode enabled. Cloud features disabled.'**
-  String get signalMeshOnlyDebugCloudDisabled;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'No comments yet'**
-  String get signalNoCommentsYet;
-
-  /// Tooltip in signals
-  ///
-  /// In en, this message translates to:
-  /// **'No device connected'**
-  String get signalNoDeviceConnectedTooltip;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'No connected device location available'**
-  String get signalNoDeviceLocation;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'No signals match this filter'**
-  String get signalNoFilterMatch;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'No intent'**
-  String get signalNoIntent;
-
-  /// Description text in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signals will appear here when they include GPS coordinates'**
-  String get signalNoLocationDescription;
-
-  /// Title for the signals screen
-  ///
-  /// In en, this message translates to:
-  /// **'No signals with location'**
-  String get signalNoLocationTitle;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'No signals'**
-  String get signalNoSignals;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Offline: images and cloud features unavailable.'**
-  String get signalOfflineCloudUnavailable;
-
-  /// Text in signals Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} on map'**
-  String signalOnMapCount(int count);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud'**
-  String get signalOriginCloud;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh'**
-  String get signalOriginMesh;
-
-  /// Count of active people nearby
-  ///
-  /// In en, this message translates to:
-  /// **'{count} people active'**
-  String signalPeopleActiveCount(int count);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Processing image...'**
-  String get signalProcessingImage;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Profile'**
-  String get signalProfile;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Remove location'**
-  String get signalRemoveLocation;
-
-  /// Error message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to remove vote'**
-  String get signalRemoveVoteFailed;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Removed from saved'**
-  String get signalRemovedFromSaved;
-
-  /// Button label in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Reply'**
-  String get signalReplyAction;
-
-  /// Text in signals Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'Reply ({count})'**
-  String signalReplyWithCount(int count);
-
-  /// Text in signals Parameters: {author}.
-  ///
-  /// In en, this message translates to:
-  /// **'Replying to {author}'**
-  String signalReplyingTo(String author);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Report'**
-  String get signalReport;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Copyright violation'**
-  String get signalReportCopyright;
-
-  /// Error message in signals Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to report: {error}'**
-  String signalReportFailed(String error);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Harassment or bullying'**
-  String get signalReportHarassment;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Nudity or sexual content'**
-  String get signalReportNudity;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get signalReportOther;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Spam or misleading'**
-  String get signalReportSpam;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Report submitted. Thank you.'**
-  String get signalReportSubmitted;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Violence or dangerous content'**
-  String get signalReportViolence;
-
-  /// Hint text for an input field in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Respond to this signal...'**
-  String get signalRespondToSignalHint;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Restore'**
-  String get signalRestore;
 
   /// Text displayed in signals
   ///
@@ -33704,3053 +31690,11 @@ abstract class AppLocalizations {
   /// **'Signal restored'**
   String get signalRestored;
 
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Retrieving device location...'**
-  String get signalRetrievingDeviceLocation;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signal saved'**
-  String get signalSaved;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Saved'**
-  String get signalSavedBadge;
-
-  /// Hint text for an input field in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Search signals'**
-  String get signalSearchHint;
-
-  /// Text in signals Parameters: {formattedCount}.
-  ///
-  /// In en, this message translates to:
-  /// **'Seen {formattedCount}'**
-  String signalSeenCount(String formattedCount);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Select up to 4 photos'**
-  String get signalSelectUpToFourPhotos;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Send a signal...'**
-  String get signalSendASignal;
-
-  /// Button label in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Send Signal'**
-  String get signalSendButton;
-
-  /// Error message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to send response'**
-  String get signalSendResponseFailed;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Send signal'**
-  String get signalSendSignal;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Sending...'**
-  String get signalSending;
-
-  /// Label in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Sending...'**
-  String get signalSendingLabel;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signal sent'**
-  String get signalSent;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get signalSettings;
-
-  /// Hint text for an input field in signals
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. \"On the trail near summit\"'**
-  String get signalShortStatusHint;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Short Status (optional)'**
-  String get signalShortStatusOptional;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Show all signals'**
-  String get signalShowAll;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in'**
-  String get signalSignIn;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to enable images and cloud features.'**
-  String get signalSignInForCloudFeatures;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in for images and comments'**
-  String get signalSignInForImagesAndComments;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to comment with your profile'**
-  String get signalSignInRequiredToComment;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to view attached media'**
-  String get signalSignInToViewMedia;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Vote with your profile - sign in to enable'**
-  String get signalSignInToVote;
-
-  /// Count of nearby mesh signals
-  ///
-  /// In en, this message translates to:
-  /// **'{count} signals nearby'**
-  String signalSignalsNearbyCount(int count);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Someone'**
-  String get signalSomeone;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'By Proximity'**
-  String get signalSortByProximity;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Closest'**
-  String get signalSortClosest;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Expiring'**
-  String get signalSortExpiring;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Expiring Soon'**
-  String get signalSortExpiringSoon;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Most Recent'**
-  String get signalSortMostRecent;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Newest'**
-  String get signalSortNewest;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get signalSwipeSave;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Unsave'**
-  String get signalSwipeUnsave;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Syncing media'**
-  String get signalSyncingMedia;
-
-  /// Shown on a signal whose image never finished syncing from its sender
-  ///
-  /// In en, this message translates to:
-  /// **'Media unavailable'**
-  String get signalMediaUnavailable;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Take Photo'**
-  String get signalTakePhoto;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to set'**
-  String get signalTapToSet;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to view'**
-  String get signalTapToView;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signals are temporary. They fade automatically and exist only while active.'**
-  String get signalTemporaryBanner;
-
-  /// Text in signals Parameters: {days} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{days}d ago'**
-  String signalTimeDaysAgo(int days);
-
-  /// Text in signals Parameters: {hours} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{hours}h ago'**
-  String signalTimeHoursAgo(int hours);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Just now'**
-  String get signalTimeJustNow;
-
-  /// Text in signals Parameters: {minutes} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{minutes}m ago'**
-  String signalTimeMinutesAgo(int minutes);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'now'**
-  String get signalTimeNowCompact;
-
-  /// Text in signals Parameters: {weeks}.
-  ///
-  /// In en, this message translates to:
-  /// **'{weeks}w ago'**
-  String signalTimeWeeksAgo(int weeks);
-
-  /// Text in signals Parameters: {days} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{days}d left'**
-  String signalTtlDaysLeft(int days);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Expired'**
-  String get signalTtlExpired;
-
-  /// Text in signals Parameters: {hours} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{hours}h left'**
-  String signalTtlHoursLeft(int hours);
-
-  /// Text in signals Parameters: {minutes} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{minutes}m left'**
-  String signalTtlMinutesLeft(int minutes);
-
-  /// Text in signals Parameters: {seconds} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{seconds}s left'**
-  String signalTtlSecondsLeft(int seconds);
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown'**
-  String get signalUnknownAuthor;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Use camera'**
-  String get signalUseCamera;
-
-  /// Error message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to validate images'**
-  String get signalValidateImagesFailed;
-
-  /// Text in signals Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'Validating {count} images...'**
-  String signalValidatingImages(int count);
-
-  /// Button label in signals
-  ///
-  /// In en, this message translates to:
-  /// **'View'**
-  String get signalViewButton;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'View gallery'**
-  String get signalViewGallery;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Grid view'**
-  String get signalViewGrid;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'List view'**
-  String get signalViewList;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'View Location'**
-  String get signalViewLocation;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Map view'**
-  String get signalViewMap;
-
-  /// Error message in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to submit vote'**
-  String get signalVoteFailed;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'What are you signaling?'**
-  String get signalWhatAreYouSignaling;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Why are you reporting this comment?'**
-  String get signalWhyReportComment;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Why are you reporting this signal?'**
-  String get signalWhyReportSignal;
-
-  /// Hint text for an input field in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Write a reply...'**
-  String get signalWriteReplyHint;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'you'**
-  String get signalYouBadge;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Your Intent'**
-  String get signalYourIntent;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Your Responsibility'**
-  String get signalYourResponsibility;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signals fade automatically. Only what\'s still active can be seen.'**
-  String get signalsFadeAutomatically;
-
-  /// Title for the signals screen
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get signalsFeedTitle;
-
-  /// Title for the signals screen
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get signalsPanelTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'About Sensitive Content'**
-  String get socialAboutSensitiveContent;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Account in Good Standing'**
-  String get socialAccountGoodStanding;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'You have no active warnings or strikes.'**
-  String get socialAccountGoodStandingDesc;
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Good Standing'**
-  String get socialAccountGoodStandingLabel;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Max Strikes'**
-  String get socialAccountMaxStrikes;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Recent Activity'**
-  String get socialAccountRecentActivity;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get socialAccountStatusActive;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading status: {error}'**
-  String socialAccountStatusError(String error);
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Account Status'**
-  String get socialAccountStatusLabel;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Account Status'**
-  String get socialAccountStatusTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Strike Meter'**
-  String get socialAccountStrikeMeter;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Strikes'**
-  String get socialAccountStrikes;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Suspended'**
-  String get socialAccountSuspended;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Account Suspended'**
-  String get socialAccountSuspendedTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Your account is currently suspended. You cannot post or comment until the suspension is lifted.'**
-  String get socialAccountSuspendedMessage;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Warning: Strikes Active'**
-  String get socialAccountWarningStrikesActive;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Warnings'**
-  String get socialAccountWarnings;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Warnings Active'**
-  String get socialAccountWarningsActive;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Active Strikes'**
-  String get socialActiveStrikes;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Active Warnings'**
-  String get socialActiveWarnings;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Clear all'**
-  String get socialActivityClearAll;
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get socialActivityClearConfirmLabel;
-
-  /// Confirmation prompt in social features
-  ///
-  /// In en, this message translates to:
-  /// **'This will remove all activity items. This cannot be undone.'**
-  String get socialActivityClearConfirmMessage;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Clear all activity?'**
-  String get socialActivityClearConfirmTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **' commented on your signal'**
-  String get socialActivityCommentedSignal;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load activity'**
-  String get socialActivityErrorLoading;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Earlier'**
-  String get socialActivityGroupEarlier;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'This Month'**
-  String get socialActivityGroupThisMonth;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'This Week'**
-  String get socialActivityGroupThisWeek;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Today'**
-  String get socialActivityGroupToday;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Yesterday'**
-  String get socialActivityGroupYesterday;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **' interacted with your content'**
-  String get socialActivityInteracted;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **' liked your signal'**
-  String get socialActivityLikedSignal;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Loading Signal...'**
-  String get socialActivityLoadingSignal;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Mark all as read'**
-  String get socialActivityMarkAllRead;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **' replied to your comment'**
-  String get socialActivityRepliedComment;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Signal not found'**
-  String get socialActivitySignalNotFound;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No activity yet.\nInteractions with your posts appear here.'**
-  String get socialActivityTagline1;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Likes, comments, follows - all in one place.\nPost something to get started.'**
-  String get socialActivityTagline2;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Your social pulse starts here.\nConnect with others to see activity.'**
-  String get socialActivityTagline3;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing yet. Activity appears as others\ninteract with your content.'**
-  String get socialActivityTagline4;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get socialActivityTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'activity'**
-  String get socialActivityTitleKeyword;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No '**
-  String get socialActivityTitlePrefix;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **' yet'**
-  String get socialActivityTitleSuffix;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get socialAdd;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Add banner'**
-  String get socialAddBanner;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'All Albums'**
-  String get socialAlbumAll;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Favorites'**
-  String get socialAlbumFavorites;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Recents'**
-  String get socialAlbumRecents;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Videos'**
-  String get socialAlbumVideos;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Appeal Decision'**
-  String get socialAppealDecision;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Harassment / Bullying'**
-  String get socialBanReasonHarassment;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Hate speech / Discrimination'**
-  String get socialBanReasonHateSpeech;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Illegal activity'**
-  String get socialBanReasonIllegal;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Impersonation'**
-  String get socialBanReasonImpersonation;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Other violation'**
-  String get socialBanReasonOther;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Pornography / Sexual content'**
-  String get socialBanReasonPornography;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Spam / Scam'**
-  String get socialBanReasonSpam;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Violence / Threats'**
-  String get socialBanReasonViolence;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Ban User & Delete'**
-  String get socialBanUserAndDelete;
-
-  /// Button label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Ban User'**
-  String get socialBanUserButton;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to ban user: {error}'**
-  String socialBanUserFailed(String error);
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to remove banner: {error}'**
-  String socialBannerRemoveFailed(String error);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Banner removed'**
-  String get socialBannerRemoved;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Banner updated'**
-  String get socialBannerUpdated;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to upload banner: {error}'**
-  String socialBannerUploadFailed(String error);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Block'**
-  String get socialBlock;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Block User'**
-  String get socialBlockUser;
-
-  /// Confirmation prompt in social features
-  ///
-  /// In en, this message translates to:
-  /// **'You will no longer see posts from this user.'**
-  String get socialBlockUserConfirm;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Blur potentially sensitive images and videos until you tap to reveal'**
-  String get socialBlurSensitiveDesc;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Blur Sensitive Media'**
-  String get socialBlurSensitiveMedia;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get socialCancel;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Cannot identify user to ban'**
-  String get socialCannotIdentifyUser;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Change banner'**
-  String get socialChangeBanner;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Close'**
-  String get socialClose;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed: {error}'**
-  String socialCommentActionFailed(String error);
-
-  /// Confirmation prompt in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this comment?'**
-  String get socialCommentDeleteConfirm;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to delete: {error}'**
-  String socialCommentDeleteFailed(String error);
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Comment'**
-  String get socialCommentDeleteTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Add a comment...'**
-  String get socialCommentHintAdd;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Write a reply...'**
-  String get socialCommentHintReply;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Reply'**
-  String get socialCommentReply;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Comment reported'**
-  String get socialCommentReported;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown'**
-  String get socialCommentUnknown;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Comments'**
-  String get socialComments;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Community Guidelines'**
-  String get socialCommunityGuidelines;
-
-  /// Confirmation prompt in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm'**
-  String get socialConfirm;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Connections'**
-  String get socialConnectionsTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Questions? Contact Support'**
-  String get socialContactSupport;
-
-  /// Button label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Contact Support'**
-  String get socialContactSupportButton;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content approved'**
-  String get socialContentApproved;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content ID not found'**
-  String get socialContentIdNotFound;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content Removed'**
-  String get socialContentRemoved;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content Type'**
-  String get socialContentType;
-
-  /// Button label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Create Post'**
-  String get socialCreatePostAction;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Add image'**
-  String get socialCreatePostAddImage;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Add location'**
-  String get socialCreatePostAddLocation;
-
-  /// Button label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Post'**
-  String get socialCreatePostButton;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Post created!'**
-  String get socialCreatePostCreated;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Share your GPS coordinates'**
-  String get socialCreatePostCurrentDesc;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Current Location'**
-  String get socialCreatePostCurrentLocation;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Your draft will be lost.'**
-  String get socialCreatePostDiscardMsgDraft;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Your uploaded images will be deleted.'**
-  String get socialCreatePostDiscardMsgImages;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Discard post?'**
-  String get socialCreatePostDiscardTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Enter Location'**
-  String get socialCreatePostEnterLocation;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Enter Location Manually'**
-  String get socialCreatePostEnterManually;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to create post: {error}'**
-  String socialCreatePostFailed(String error);
-
-  /// Hint text for an input field in social features
-  ///
-  /// In en, this message translates to:
-  /// **'What\'s happening on the mesh?'**
-  String get socialCreatePostHint;
-
-  /// Text in social features Parameters: {count} = numeric count, {max}.
-  ///
-  /// In en, this message translates to:
-  /// **'{count}/{max} images'**
-  String socialCreatePostImageCount(int count, int max);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'One or more images violated content policy.'**
-  String get socialCreatePostImageViolation;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Location permission denied'**
-  String get socialCreatePostLocationDenied;
-
-  /// Hint text for an input field in social features
-  ///
-  /// In en, this message translates to:
-  /// **'e.g., San Francisco, CA'**
-  String get socialCreatePostLocationHint;
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Location'**
-  String get socialCreatePostLocationLabel;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Add Location'**
-  String get socialCreatePostLocationSheetTitle;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Type in a place name'**
-  String get socialCreatePostManualDesc;
-
-  /// Text in social features Parameters: {max}.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum {max} images allowed'**
-  String socialCreatePostMaxImages(int max);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No nodes available. Connect to a mesh first.'**
-  String get socialCreatePostNoNodes;
-
-  /// Label in social features Parameters: {nodeId}.
-  ///
-  /// In en, this message translates to:
-  /// **'Node {nodeId}'**
-  String socialCreatePostNodeLabel(String nodeId);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to create posts'**
-  String get socialCreatePostSignIn;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Tag node'**
-  String get socialCreatePostTagNode;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Tag a Node'**
-  String get socialCreatePostTagNodeTitle;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Create Post'**
-  String get socialCreatePostTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Use Current Location'**
-  String get socialCreatePostUseCurrent;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Camera'**
-  String get socialCreateStoryCamera;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Close Friends'**
-  String get socialCreateStoryCloseFriends;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get socialCreateStoryDelete;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Drag to move • Pinch to resize • Long press to delete'**
-  String get socialCreateStoryDragInstructions;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Edit'**
-  String get socialCreateStoryEdit;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to create story'**
-  String get socialCreateStoryFailed;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Followers'**
-  String get socialCreateStoryFollowers;
-
-  /// Text in social features Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items'**
-  String socialCreateStoryItemsCount(int count);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Link to Node'**
-  String get socialCreateStoryLinkNode;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Could not get location'**
-  String get socialCreateStoryLocationFailed;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Location permission required'**
-  String get socialCreateStoryLocationRequired;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Public'**
-  String get socialCreateStoryPublic;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Story shared!'**
-  String get socialCreateStoryShared;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to create stories'**
-  String get socialCreateStorySignIn;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Add to Story'**
-  String get socialCreateStoryTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Type something...'**
-  String get socialCreateStoryTypeSomething;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Untitled Album'**
-  String get socialCreateStoryUntitledAlbum;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Date'**
-  String get socialDate;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Default'**
-  String get socialDefault;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get socialDelete;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Comment'**
-  String get socialDeleteComment;
-
-  /// Confirmation prompt in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this comment?'**
-  String get socialDeleteCommentConfirm;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Post'**
-  String get socialDeletePost;
-
-  /// Confirmation prompt in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this post?'**
-  String get socialDeletePostConfirm;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Delete story'**
-  String get socialDeleteStory;
-
-  /// Confirmation prompt in social features
-  ///
-  /// In en, this message translates to:
-  /// **'This story will be permanently deleted.'**
-  String get socialDeleteStoryConfirm;
-
-  /// Text in social features Parameters: {type}.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete {type}'**
-  String socialDeleteType(String type);
-
-  /// Confirmation in social features Parameters: {type}.
-  ///
-  /// In en, this message translates to:
-  /// **'This will permanently delete the reported {type}. Continue?'**
-  String socialDeleteTypeConfirm(String type);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Discard'**
-  String get socialDiscard;
-
-  /// Text in social features Parameters: {username} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Discord username copied: {username}'**
-  String socialDiscordCopied(String username);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Dismiss'**
-  String get socialDismiss;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Display Options'**
-  String get socialDisplayOptions;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get socialDone;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Edit profile'**
-  String get socialEditProfile;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Email copied to clipboard'**
-  String get socialEmailCopied;
-
-  /// Empty state message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Share photos and stories about your mesh adventures.'**
-  String get socialEmptyPostsTagline1;
-
-  /// Empty state message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Post about your node setups, range tests, and discoveries.'**
-  String get socialEmptyPostsTagline2;
-
-  /// Empty state message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Your mesh community is waiting to see what you build.'**
-  String get socialEmptyPostsTagline3;
-
-  /// Empty state message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Document your adventures and share them with the mesh.'**
-  String get socialEmptyPostsTagline4;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading reports'**
-  String get socialErrorLoadingReports;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading viewers'**
-  String get socialErrorLoadingViewers;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Error: {error}'**
-  String socialErrorWithDetails(String error);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Expires'**
-  String get socialExpires;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to block user: {error}'**
-  String socialFailedToBlock(String error);
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to delete: {error}'**
-  String socialFailedToDelete(String error);
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to get location: {error}'**
-  String socialFailedToGetLocation(String error);
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to report: {error}'**
-  String socialFailedToReport(String error);
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to report story: {error}'**
-  String socialFailedToReportStory(String error);
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update like'**
-  String get socialFailedToUpdateLike;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to upload image: {error}'**
-  String socialFailedToUploadImage(String error);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Location'**
-  String get socialFeedLocationFallback;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Less'**
-  String get socialFilterLevelLess;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'You may see some content that could be upsetting or offensive. This setting errs on the side of showing more content.'**
-  String get socialFilterLevelLessDesc;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Standard'**
-  String get socialFilterLevelStandard;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content that may be upsetting or offensive is filtered. You may still see some borderline content.'**
-  String get socialFilterLevelStandardDesc;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Follow'**
-  String get socialFollow;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed: {error}'**
-  String socialFollowActionFailed(String error);
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update follow: {error}'**
-  String socialFollowFailed(String error);
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to accept request'**
-  String get socialFollowRequestAcceptFailed;
-
-  /// Text in social features Parameters: {name} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Accepted {name}\'s request'**
-  String socialFollowRequestAccepted(String name);
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to decline request'**
-  String get socialFollowRequestDeclineFailed;
-
-  /// Text in social features Parameters: {name} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Declined {name}\'s request'**
-  String socialFollowRequestDeclined(String name);
-
-  /// Empty state message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No pending requests'**
-  String get socialFollowRequestsEmpty;
-
-  /// Empty state message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'When someone requests to follow you, it will appear here.'**
-  String get socialFollowRequestsEmptyDesc;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load: {error}'**
-  String socialFollowRequestsError(String error);
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Follow Requests'**
-  String get socialFollowRequestsTitle;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load: {error}'**
-  String socialFollowersError(String error);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Following'**
-  String get socialFollowing;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No explicit or adult content'**
-  String get socialGuidelineNoExplicit;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No harassment, threats, or hate speech'**
-  String get socialGuidelineNoHarassment;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No spam, scams, or misleading content'**
-  String get socialGuidelineNoSpam;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Community Guidelines Warning'**
-  String get socialGuidelinesWarning;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to access Social'**
-  String get socialHubSignIn;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Create posts, follow users, and connect with the mesh community.'**
-  String get socialHubSignInDesc;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Social'**
-  String get socialHubTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'I Understand'**
-  String get socialIUnderstand;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Image blocked by moderation'**
-  String get socialImageBlockedByModeration;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid node ID'**
-  String get socialInvalidNodeId;
-
-  /// Text in social features Parameters: {date} = formatted date/time.
-  ///
-  /// In en, this message translates to:
-  /// **'Joined {date}'**
-  String socialJoined(String date);
-
   /// Text displayed in social features
   ///
   /// In en, this message translates to:
   /// **'Like'**
   String get socialLike;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Liked'**
-  String get socialLiked;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'likes'**
-  String get socialLikePlural;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'like'**
-  String get socialLikeSingular;
-
-  /// Hint text for an input field in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Link a mesh node to your next post'**
-  String get socialLinkNodeHint;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Location'**
-  String get socialLocationFallback;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Additional notes (optional)'**
-  String get socialModerationAdditionalNotes;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Approve'**
-  String get socialModerationApprove;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content approved'**
-  String get socialModerationApproved;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading queue'**
-  String get socialModerationErrorLoading;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No items pending review'**
-  String get socialModerationNoPending;
-
-  /// Text in social features Parameters: {status}.
-  ///
-  /// In en, this message translates to:
-  /// **'No {status} items'**
-  String socialModerationNoStatus(String status);
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Moderation Queue'**
-  String get socialModerationQueueTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Harassment or bullying'**
-  String get socialModerationReasonHarassment;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Hate speech or discrimination'**
-  String get socialModerationReasonHateSpeech;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Intellectual property violation'**
-  String get socialModerationReasonIP;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Nudity or sexual content'**
-  String get socialModerationReasonNudity;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Other policy violation'**
-  String get socialModerationReasonOther;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Spam or misleading content'**
-  String get socialModerationReasonSpam;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Violence or dangerous content'**
-  String get socialModerationReasonViolence;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Reject'**
-  String get socialModerationReject;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content rejected'**
-  String get socialModerationRejected;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Rejection Reason'**
-  String get socialModerationRejectionReason;
-
-  /// Text in social features Parameters: {reviewedBy}.
-  ///
-  /// In en, this message translates to:
-  /// **'Reviewed by {reviewedBy}'**
-  String socialModerationReviewedBy(String reviewedBy);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Approved'**
-  String get socialModerationTabApproved;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get socialModerationTabPending;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Rejected'**
-  String get socialModerationTabRejected;
-
-  /// Label in social features Parameters: {userId}.
-  ///
-  /// In en, this message translates to:
-  /// **'User: {userId}'**
-  String socialModerationUserLabel(String userId);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get socialNext;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No albums found'**
-  String get socialNoAlbumsFound;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No comments yet. Be the first!'**
-  String get socialNoCommentsYet;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No content'**
-  String get socialNoContent;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No followers yet'**
-  String get socialNoFollowersYet;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No location posts'**
-  String get socialNoLocationPosts;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No node posts'**
-  String get socialNoNodePosts;
-
-  /// Text in social features Parameters: {filter}.
-  ///
-  /// In en, this message translates to:
-  /// **'No pending {filter} reports'**
-  String socialNoPendingFilterReports(String filter);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No pending reports'**
-  String get socialNoPendingReports;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No photo posts'**
-  String get socialNoPhotoPosts;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No posts'**
-  String get socialNoPosts;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No posts yet'**
-  String get socialNoPostsYet;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No recent activity'**
-  String get socialNoRecentActivity;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No suggestions available'**
-  String get socialNoSuggestions;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No users found'**
-  String get socialNoUsersFound;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No views yet'**
-  String get socialNoViewsYet;
-
-  /// Label in social features Parameters: {nodeId}.
-  ///
-  /// In en, this message translates to:
-  /// **'Node {nodeId}'**
-  String socialNodeLabel(String nodeId);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Not following anyone yet'**
-  String get socialNotFollowingAnyone;
-
-  /// Text in social features Parameters: {current}, {total} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{current} of {total} notices'**
-  String socialNoticesCount(int current, int total);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'OK'**
-  String get socialOK;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Online'**
-  String get socialOnline;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Open Settings'**
-  String get socialOpenSettings;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Permanently Banned'**
-  String get socialPermanentlyBanned;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'To create stories, we need access to your photo library.'**
-  String get socialPhotoAccessDesc;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Allow access to your photos'**
-  String get socialPhotoAccessTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Location'**
-  String get socialPostCardLocationFallback;
-
-  /// Label in social features Parameters: {nodeId}.
-  ///
-  /// In en, this message translates to:
-  /// **'Node {nodeId}'**
-  String socialPostCardNodeLabel(String nodeId);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown User'**
-  String get socialPostCardUnknownUser;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Post deleted'**
-  String get socialPostDeleted;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Post'**
-  String get socialPostDetailTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Post not found'**
-  String get socialPostNotFound;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Post not found for this comment'**
-  String get socialPostNotFoundForComment;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'This Account is Private'**
-  String get socialPrivateAccount;
-
-  /// Text in social features Parameters: {name} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Follow {name} to see their posts and linked devices.'**
-  String socialPrivateAccountDesc(String name);
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Block'**
-  String get socialProfileBlockLabel;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load profile'**
-  String get socialProfileLoadFailed;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Profile not found'**
-  String get socialProfileNotFound;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'This profile may have been removed or is temporarily unavailable.'**
-  String get socialProfileNotFoundDesc;
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Report'**
-  String get socialProfileReportLabel;
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Share Profile'**
-  String get socialProfileShareLabel;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Reason'**
-  String get socialReason;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load recent users'**
-  String get socialRecentFailed;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Recently active'**
-  String get socialRecentlyActive;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Reject & Delete'**
-  String get socialRejectDelete;
-
-  /// Text in social features Parameters: {contentType}.
-  ///
-  /// In en, this message translates to:
-  /// **'This will delete the {contentType} and warn the user.'**
-  String socialRejectDeleteMsg(String contentType);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Remove banner'**
-  String get socialRemoveBanner;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Reply'**
-  String get socialReply;
-
-  /// Text in social features Parameters: {name} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Replying to {name}'**
-  String socialReplyingTo(String name);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Repeated violations may result in account suspension.'**
-  String get socialRepeatedViolationsWarning;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Report'**
-  String get socialReport;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Report Comment'**
-  String get socialReportComment;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Why are you reporting this comment?'**
-  String get socialReportCommentWhy;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Describe the issue...'**
-  String get socialReportDescribeIssue;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Report dismissed'**
-  String get socialReportDismissed;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Report Post'**
-  String get socialReportPost;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Why are you reporting this post?'**
-  String get socialReportPostWhy;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Report submitted'**
-  String get socialReportProfileSubmitted;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'False information'**
-  String get socialReportReasonFalseInfo;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Harassment or bullying'**
-  String get socialReportReasonHarassment;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Hate speech'**
-  String get socialReportReasonHateSpeech;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Nudity or sexual content'**
-  String get socialReportReasonNudity;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get socialReportReasonOther;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Spam'**
-  String get socialReportReasonSpam;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Violence or threats'**
-  String get socialReportReasonViolence;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Report story'**
-  String get socialReportStory;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Copyright violation'**
-  String get socialReportStoryReasonCopyright;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Harassment or bullying'**
-  String get socialReportStoryReasonHarassment;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Nudity or sexual content'**
-  String get socialReportStoryReasonNudity;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get socialReportStoryReasonOther;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Spam or misleading'**
-  String get socialReportStoryReasonSpam;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Violence or dangerous content'**
-  String get socialReportStoryReasonViolence;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Why are you reporting this story?'**
-  String get socialReportStoryWhy;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Report submitted. Thank you.'**
-  String get socialReportSubmitted;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content rejected and user warned'**
-  String get socialReportedContentRejected;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Reported Content'**
-  String get socialReportedContentTitle;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading moderation queue'**
-  String get socialReportedErrorLoading;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No flagged content'**
-  String get socialReportedNoFlagged;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Auto-moderation has not flagged any content'**
-  String get socialReportedNoFlaggedDesc;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get socialReportedTabAll;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Auto'**
-  String get socialReportedTabAuto;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Comments'**
-  String get socialReportedTabComments;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Posts'**
-  String get socialReportedTabPosts;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sig. Comments'**
-  String get socialReportedTabSigComments;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get socialReportedTabSignals;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Requested'**
-  String get socialRequested;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get socialRetry;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Search failed: {error}'**
-  String socialSearchFailed(String error);
-
-  /// Hint text for an input field in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Search users...'**
-  String get socialSearchHint;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get socialSearchTitle;
-
-  /// Tooltip in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get socialSearchTooltip;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Send Message'**
-  String get socialSendMessage;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sensitive Content Control'**
-  String get socialSensitiveContentControl;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'SocialMesh uses automated systems to detect potentially sensitive content. You can adjust how this content is displayed.'**
-  String get socialSensitiveContentDescription;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Control what type of content you see in your feed. This affects AI-moderated content filtering across posts, signals, and stories.'**
-  String get socialSensitiveContentExplanation;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Sensitive Content'**
-  String get socialSensitiveContentTitle;
-
-  /// Tooltip in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get socialSettingsTooltip;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Share'**
-  String get socialShare;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'post'**
-  String get socialShareFirstPostKeyword;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Share your first '**
-  String get socialShareFirstPostPrefix;
-
-  /// Hint text for an input field in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Share a photo post to see it here'**
-  String get socialSharePhotoHint;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sign In'**
-  String get socialSignIn;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to like posts'**
-  String get socialSignInToLikePosts;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to upload images'**
-  String get socialSignInToUploadImages;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to manage subscriptions'**
-  String get socialSignInSubscriptions;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Follower'**
-  String get socialStatFollower;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Followers'**
-  String get socialStatFollowers;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Following'**
-  String get socialStatFollowing;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Post'**
-  String get socialStatPost;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Posts'**
-  String get socialStatPosts;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Followers'**
-  String get socialStatsBarFollowers;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Following'**
-  String get socialStatsBarFollowing;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Posts'**
-  String get socialStatsBarPosts;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'FLAGGED'**
-  String get socialStatusFlagged;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'PENDING'**
-  String get socialStatusPending;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'REJECTED'**
-  String get socialStatusRejected;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'STRIKE'**
-  String get socialStatusStrike;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'SUSPENDED'**
-  String get socialStatusSuspended;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get socialStoryBarAdd;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Content unavailable'**
-  String get socialStoryContentUnavailable;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to delete story: {error}'**
-  String socialStoryDeleteFailed(String error);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Story deleted'**
-  String get socialStoryDeleted;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'This story may have been removed'**
-  String get socialStoryMayBeRemoved;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Story reported. We\'ll review it soon.'**
-  String get socialStoryReported;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'User'**
-  String get socialStoryUserFallback;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'3 strikes result in account suspension'**
-  String get socialStrike3Suspension;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'I Understand'**
-  String get socialStrikeAcknowledge;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Strike Against Your Account'**
-  String get socialStrikeAgainstAccount;
-
-  /// Label in social features Parameters: {type}.
-  ///
-  /// In en, this message translates to:
-  /// **'Content: {type}'**
-  String socialStrikeContentLabel(String type);
-
-  /// Title for social features Parameters: {typeDisplayName} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Content {typeDisplayName}'**
-  String socialStrikeContentTitle(String typeDisplayName);
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Error: {error}'**
-  String socialStrikeError(String error);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get socialStrikeNext;
-
-  /// Text in social features Parameters: {current}, {total} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{current} of {total}'**
-  String socialStrikeOfTotal(int current, int total);
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Reason'**
-  String get socialStrikeReasonLabel;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'You have received a strike on your account due to a community guideline violation.'**
-  String get socialStrikeReceivedStrike;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'You have received a warning. Please review our community guidelines.'**
-  String get socialStrikeReceivedWarning;
-
-  /// Text in social features Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'You have {count} strike(s) - tap to review'**
-  String socialStrikeTapReview(int count);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Strikes expire after 90 days of no violations.'**
-  String get socialStrikesExpireInfo;
-
-  /// Text in social features Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} active strike(s) on your account'**
-  String socialStrikesOnAccount(int count);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribe'**
-  String get socialSubscribe;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribed'**
-  String get socialSubscribed;
-
-  /// Error message in social features Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update subscription: {error}'**
-  String socialSubscriptionFailed(String error);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Suggested for you'**
-  String get socialSuggestedForYou;
-
-  /// Error message in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load suggestions'**
-  String get socialSuggestionsFailed;
-
-  /// Default body of the email opened when a suspended user taps Contact Support to appeal.
-  ///
-  /// In en, this message translates to:
-  /// **'Hi,\n\nI would like to appeal my account suspension.\n\nPlease review my case.\n\nThank you.'**
-  String get socialSuspendedAppealBody;
-
-  /// Default subject of the email opened when a suspended user taps Contact Support to appeal.
-  ///
-  /// In en, this message translates to:
-  /// **'Account Suspension Appeal'**
-  String get socialSuspendedAppealSubject;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Contact support to appeal this decision'**
-  String get socialSuspendedContactSupport;
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} days'**
-  String socialSuspendedDaysPlural(int n);
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} day'**
-  String socialSuspendedDaysSingular(int n);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Your account has been suspended due to repeated violations of our community guidelines.'**
-  String get socialSuspendedDefaultReason;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Go back'**
-  String get socialSuspendedGoBack;
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} hours'**
-  String socialSuspendedHoursPlural(int n);
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} hour'**
-  String socialSuspendedHoursSingular(int n);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Indefinite suspension'**
-  String get socialSuspendedIndefinite;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'indefinitely'**
-  String get socialSuspendedIndefinitely;
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Suspended'**
-  String get socialSuspendedLabel;
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} minutes'**
-  String socialSuspendedMinutesPlural(int n);
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} minute'**
-  String socialSuspendedMinutesSingular(int n);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Account Suspended'**
-  String get socialSuspendedPermanent;
-
-  /// Text in social features Parameters: {duration}.
-  ///
-  /// In en, this message translates to:
-  /// **'Remaining: {duration}'**
-  String socialSuspendedRemaining(String duration);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Review our community guidelines'**
-  String get socialSuspendedReviewGuidelines;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'shortly'**
-  String get socialSuspendedShortly;
-
-  /// Text in social features Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} strike(s) on your account'**
-  String socialSuspendedStrikesCount(int count);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Posting Temporarily Suspended'**
-  String get socialSuspendedTemporary;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Wait for your appeal to be reviewed'**
-  String get socialSuspendedWaitAppeal;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Wait for the suspension period to end'**
-  String get socialSuspendedWaitPeriod;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'What can I do?'**
-  String get socialSuspendedWhatCanIDo;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Why am I seeing this?'**
-  String get socialSuspendedWhyTitle;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Suspension Ends'**
-  String get socialSuspensionEnds;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Followers'**
-  String get socialTabFollowers;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Following'**
-  String get socialTabFollowing;
-
-  /// Hint text for an input field in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Tag a location in your next post'**
-  String get socialTagLocationHint;
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n}d ago'**
-  String socialTimeDaysAgo(int n);
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n}h ago'**
-  String socialTimeHoursAgo(int n);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Just now'**
-  String get socialTimeJustNow;
-
-  /// Text in social features Parameters: {n}.
-  ///
-  /// In en, this message translates to:
-  /// **'{n}m ago'**
-  String socialTimeMinutesAgo(int n);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Try selecting a different filter'**
-  String get socialTryDifferentFilter;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Try a different search term'**
-  String get socialTryDifferentSearch;
-
-  /// Text in social features Parameters: {type}.
-  ///
-  /// In en, this message translates to:
-  /// **'{type} deleted'**
-  String socialTypeDeleted(String type);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Unfollow'**
-  String get socialUnfollow;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown User'**
-  String get socialUnknownUser;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Unsubscribed'**
-  String get socialUnsubscribed;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Unsuspend'**
-  String get socialUnsuspend;
-
-  /// Confirmation in social features Parameters: {displayName} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to lift the suspension on {displayName}?'**
-  String socialUnsuspendConfirm(String displayName);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Unsuspend User'**
-  String get socialUnsuspendUser;
-
-  /// Text in social features Parameters: {type}.
-  ///
-  /// In en, this message translates to:
-  /// **'User banned and {type} deleted'**
-  String socialUserBannedAndDeleted(String type);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'User blocked'**
-  String get socialUserBlocked;
-
-  /// Text in social features Parameters: {name} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} blocked'**
-  String socialUserBlockedName(String name);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'User'**
-  String get socialUserFallback;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'User unsuspended successfully'**
-  String get socialUserUnsuspended;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'View'**
-  String get socialView;
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'view'**
-  String get socialViewLabel;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'View location'**
-  String get socialViewLocation;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'View on Map'**
-  String get socialViewOnMap;
-
-  /// Title for the social features screen
-  ///
-  /// In en, this message translates to:
-  /// **'Viewers'**
-  String get socialViewersTitle;
-
-  /// Label in social features
-  ///
-  /// In en, this message translates to:
-  /// **'views'**
-  String get socialViewsLabel;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Violations Detected'**
-  String get socialViolationsDetected;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Followers'**
-  String get socialVisibilityFollowers;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Only your followers can see this'**
-  String get socialVisibilityFollowersDesc;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Only me'**
-  String get socialVisibilityOnlyMe;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Only you can see this post'**
-  String get socialVisibilityOnlyMeDesc;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Public'**
-  String get socialVisibilityPublic;
-
-  /// Description text in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Anyone can see this post'**
-  String get socialVisibilityPublicDesc;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Who can see this?'**
-  String get socialVisibilityWhoCanSee;
-
-  /// Text in social features Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} active warning(s) on your account'**
-  String socialWarningsOnAccount(int count);
-
-  /// Text in social features Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'You have {count} warning(s) - tap to review'**
-  String socialWarningsTapReview(int count);
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'Your story'**
-  String get socialYourStory;
 
   /// Standard affiliation label for assumed-friendly entities (lighter blue)
   ///
@@ -37820,12 +32764,6 @@ abstract class AppLocalizations {
   /// **'{seconds}s'**
   String takStatusCardUptimeSeconds(int seconds);
 
-  /// Header label in the tapback reaction picker.
-  ///
-  /// In en, this message translates to:
-  /// **'React'**
-  String get tapbackReact;
-
   /// Permission error when user lacks completeTask permission. Placeholder: roleName
   ///
   /// In en, this message translates to:
@@ -38437,12 +33375,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{value} hPa'**
   String telemetryEnvPressureValue(String value);
-
-  /// Metric chip label showing temperature value in degrees Celsius
-  ///
-  /// In en, this message translates to:
-  /// **'{value}°C'**
-  String telemetryEnvTemperatureValue(String value);
 
   /// Temperature in Celsius (metric units). {value} is the numeric portion.
   ///
@@ -39421,12 +34353,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All Nodes'**
   String get widgetBuilderAllNodes;
-
-  /// Success snackbar when widget approved
-  ///
-  /// In en, this message translates to:
-  /// **'{name} approved'**
-  String widgetBuilderApprovedSuccess(String name);
 
   /// Data binding label
   ///
@@ -40490,23 +35416,11 @@ abstract class AppLocalizations {
   /// **'Enter widget name'**
   String get widgetBuilderEnterWidgetName;
 
-  /// Error snackbar when approval fails
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to approve: {error}'**
-  String widgetBuilderFailedToApprove(String error);
-
   /// Error snackbar when widget import fails
   ///
   /// In en, this message translates to:
   /// **'Failed to import: {error}'**
   String widgetBuilderFailedToImport(String error);
-
-  /// Error snackbar when rejection fails
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to reject: {error}'**
-  String widgetBuilderFailedToReject(String error);
 
   /// Error snackbar when position request fails
   ///
@@ -41245,12 +36159,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quick Start Templates'**
   String get widgetBuilderQuickStartTemplates;
-
-  /// Success snackbar when widget rejected
-  ///
-  /// In en, this message translates to:
-  /// **'{name} rejected'**
-  String widgetBuilderRejectedSuccess(String name);
 
   /// Snackbar message when downsizing with too many rows
   ///
@@ -42421,24 +37329,6 @@ abstract class AppLocalizations {
   /// Text displayed in deep link handling
   ///
   /// In en, this message translates to:
-  /// **'Loading Signal'**
-  String get deepLinkLoadingSignal;
-
-  /// Error message in deep link handling Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading signal: {error}'**
-  String deepLinkErrorLoadingSignal(String error);
-
-  /// Text displayed in deep link handling
-  ///
-  /// In en, this message translates to:
-  /// **'Signal not found'**
-  String get deepLinkSignalNotFound;
-
-  /// Text displayed in deep link handling
-  ///
-  /// In en, this message translates to:
   /// **'Loading Flight'**
   String get deepLinkLoadingFlight;
 
@@ -42538,107 +37428,11 @@ abstract class AppLocalizations {
   /// **'Failed to join channel'**
   String get deepLinkFailedToJoinChannel;
 
-  /// Title for deep link handling Parameters: {displayName} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'@{displayName}'**
-  String deepLinkProfileTitle(String displayName);
-
-  /// Text displayed in deep link handling
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud services not available yet'**
-  String get deepLinkCloudServicesNotAvailable;
-
-  /// Error message in deep link handling Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Error looking up user: {error}'**
-  String deepLinkErrorLookingUpUser(String error);
-
-  /// Text in deep link handling Parameters: {displayName} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'User \"@{displayName}\" not found'**
-  String deepLinkUserNotFound(String displayName);
-
-  /// UI text: blocked route device required
-  ///
-  /// In en, this message translates to:
-  /// **'Device Required'**
-  String get blockedRouteDeviceRequired;
-
-  /// UI text: blocked route connect device
-  ///
-  /// In en, this message translates to:
-  /// **'Connect device to access this screen'**
-  String get blockedRouteConnectDevice;
-
-  /// UI text: blocked route device reset
-  ///
-  /// In en, this message translates to:
-  /// **'Device Reset'**
-  String get blockedRouteDeviceReset;
-
-  /// UI text: blocked route device not connected
-  ///
-  /// In en, this message translates to:
-  /// **'Device Not Connected'**
-  String get blockedRouteDeviceNotConnected;
-
-  /// Description text
-  ///
-  /// In en, this message translates to:
-  /// **'Your device was factory reset or replaced.\n\nGo to Settings → Bluetooth, forget the Meshtastic device, then scan again.'**
-  String get blockedRouteDeviceResetDescription;
-
-  /// UI text: blocked route scan for devices
-  ///
-  /// In en, this message translates to:
-  /// **'Scan for Devices'**
-  String get blockedRouteScanForDevices;
-
-  /// Button or action label
-  ///
-  /// In en, this message translates to:
-  /// **'Connect Device'**
-  String get blockedRouteConnectDeviceButton;
-
   /// Text displayed in deep link handling
   ///
   /// In en, this message translates to:
   /// **'You already have this channel'**
   String get deepLinkAlreadyHaveChannel;
-
-  /// Screen or section title
-  ///
-  /// In en, this message translates to:
-  /// **'Delete text?'**
-  String get transformableTextDeleteTitle;
-
-  /// UI text: transformable text delete message
-  ///
-  /// In en, this message translates to:
-  /// **'This will remove the text overlay.'**
-  String get transformableTextDeleteMessage;
-
-  /// Confirmation dialog text
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get transformableTextDeleteConfirm;
-
-  /// UI text: transformable text done
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get transformableTextDone;
-
-  /// Input field hint text
-  ///
-  /// In en, this message translates to:
-  /// **'Type something...'**
-  String get transformableTextHint;
 
   /// Text displayed in QR code scanner
   ///
@@ -42789,12 +37583,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generate'**
   String get channelKeyGenerate;
-
-  /// Text displayed in channel configuration
-  ///
-  /// In en, this message translates to:
-  /// **'New key generated'**
-  String get channelKeyNewGenerated;
 
   /// Text displayed in channel configuration
   ///
@@ -43641,18 +38429,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Alternative payment'**
   String get alternativePayment;
-
-  /// Subtitle under the Alternative payment row explaining the off-store path.
-  ///
-  /// In en, this message translates to:
-  /// **'Buy via Buy Me a Coffee instead of the store'**
-  String get alternativePaymentSubtitle;
-
-  /// Hint shown when Google Play billing fails to load on Android.
-  ///
-  /// In en, this message translates to:
-  /// **'Google Play unavailable on this device - try alternative payment.'**
-  String get googlePlayUnavailable;
 
   /// Title of the bottom sheet that hands the user off to Buy Me a Coffee with their reference code.
   ///
@@ -45340,12 +40116,6 @@ abstract class AppLocalizations {
   /// **'Connect to 700+ apps & services'**
   String get subscriptionAppIntegrations;
 
-  /// UI text: subscription translate messages feature description
-  ///
-  /// In en, this message translates to:
-  /// **'One-tap message translation'**
-  String get subscriptionTranslateMessages;
-
   /// Section label for new standalone add-on on subscription screen
   ///
   /// In en, this message translates to:
@@ -46753,24 +41523,6 @@ abstract class AppLocalizations {
   /// Text displayed in appearance settings
   ///
   /// In en, this message translates to:
-  /// **'Elemental Atmosphere'**
-  String get appearanceElementalAtmosphere;
-
-  /// Text displayed in appearance settings
-  ///
-  /// In en, this message translates to:
-  /// **'Disabled while Reduce Motion is active'**
-  String get appearanceElementalDisabled;
-
-  /// Description text in appearance settings
-  ///
-  /// In en, this message translates to:
-  /// **'Ambient particle effects driven by mesh activity'**
-  String get appearanceElementalDesc;
-
-  /// Text displayed in appearance settings
-  ///
-  /// In en, this message translates to:
   /// **'Reduce Motion'**
   String get appearanceReduceMotion;
 
@@ -47032,245 +41784,6 @@ abstract class AppLocalizations {
   /// **'There\'s an issue with your payment. Please update your payment method.'**
   String get cloudSyncPaymentIssue;
 
-  /// Title for the signals screen
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get signalSettingsTitle;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'SIGNAL PRIVACY'**
-  String get signalSettingsPrivacy;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signal location radius'**
-  String get signalSettingsLocationRadius;
-
-  /// Description text in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signals are rounded to this radius, not an exact address'**
-  String get signalSettingsRadiusDescription;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'SIGNAL CONTENT'**
-  String get signalSettingsContent;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Max Images per Signal'**
-  String get signalSettingsMaxImages;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Limit: 1-4 images'**
-  String get signalSettingsImageLimit;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'SIGNAL NOTIFICATIONS'**
-  String get signalSettingsNotifications;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get signalSettingsNotifySignals;
-
-  /// Subtitle in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Notify when someone posts a signal'**
-  String get signalSettingsNotifySignalsSubtitle;
-
-  /// Text displayed in signals
-  ///
-  /// In en, this message translates to:
-  /// **'Votes'**
-  String get signalSettingsNotifyVotes;
-
-  /// Subtitle in signals
-  ///
-  /// In en, this message translates to:
-  /// **'When someone upvotes your signal comments'**
-  String get signalSettingsNotifyVotesSubtitle;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Social Admin'**
-  String get adminFollowTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Follow Requests'**
-  String get adminFollowTabRequests;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Seed Data'**
-  String get adminFollowTabSeedData;
-
-  /// Error message in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading requests'**
-  String get adminFollowErrorLoading;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No pending requests'**
-  String get adminFollowNoPending;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Request approved'**
-  String get adminFollowApproved;
-
-  /// Error message in admin panel Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to approve: {error}'**
-  String adminFollowApproveFailed(String error);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Request declined'**
-  String get adminFollowDeclined;
-
-  /// Error message in admin panel Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to decline: {error}'**
-  String adminFollowDeclineFailed(String error);
-
-  /// Text in admin panel Parameters: {time} = formatted date/time.
-  ///
-  /// In en, this message translates to:
-  /// **'Requested {time}'**
-  String adminFollowRequestedTime(String time);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Decline'**
-  String get adminFollowDecline;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Accept'**
-  String get adminFollowAccept;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'just now'**
-  String get adminFollowJustNow;
-
-  /// Text in admin panel Parameters: {minutes} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{minutes}m ago'**
-  String adminFollowMinutesAgo(int minutes);
-
-  /// Text in admin panel Parameters: {hours} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{hours}h ago'**
-  String adminFollowHoursAgo(int hours);
-
-  /// Text in admin panel Parameters: {days} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{days}d ago'**
-  String adminFollowDaysAgo(int days);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Test Data'**
-  String get adminFollowTestData;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Profiles'**
-  String get adminFollowProfiles;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Posts'**
-  String get adminFollowPosts;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Stories'**
-  String get adminFollowStories;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Comments'**
-  String get adminFollowComments;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Dummy Users'**
-  String get adminFollowDummyUsers;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Log'**
-  String get adminFollowLog;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Reset & Seed'**
-  String get adminFollowResetAndSeed;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Seed Data'**
-  String get adminFollowSeedData;
-
-  /// Description text in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Reset & Seed: Clears all dummy data first, then seeds fresh.\nSeed Data: Adds to existing data (may create duplicates).'**
-  String get adminFollowSeedDescription;
-
-  /// Text in admin panel Parameters: {users}, {posts}, {stories}, {comments}.
-  ///
-  /// In en, this message translates to:
-  /// **'Seeded {users} users, {posts} posts, {stories} stories, {comments} comments'**
-  String adminFollowSeededSummary(
-    int users,
-    int posts,
-    int stories,
-    int comments,
-  );
-
   /// Title for the admin panel screen
   ///
   /// In en, this message translates to:
@@ -47450,48 +41963,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep mesh radio connected when the app is in the background'**
   String get bgConnToggleSubtitle;
-
-  /// UI text: bg conn section notifications
-  ///
-  /// In en, this message translates to:
-  /// **'BACKGROUND NOTIFICATIONS'**
-  String get bgConnSectionNotifications;
-
-  /// UI text: bg conn direct messages
-  ///
-  /// In en, this message translates to:
-  /// **'Direct messages'**
-  String get bgConnDirectMessages;
-
-  /// Subtitle or secondary text
-  ///
-  /// In en, this message translates to:
-  /// **'Notify for DMs received while backgrounded'**
-  String get bgConnDirectMessagesSubtitle;
-
-  /// UI text: bg conn channel messages
-  ///
-  /// In en, this message translates to:
-  /// **'Channel messages'**
-  String get bgConnChannelMessages;
-
-  /// Subtitle or secondary text
-  ///
-  /// In en, this message translates to:
-  /// **'Notify for channel messages while backgrounded'**
-  String get bgConnChannelMessagesSubtitle;
-
-  /// UI text: bg conn node discovery
-  ///
-  /// In en, this message translates to:
-  /// **'Node discovery'**
-  String get bgConnNodeDiscovery;
-
-  /// Subtitle or secondary text
-  ///
-  /// In en, this message translates to:
-  /// **'Notify when new nodes are heard'**
-  String get bgConnNodeDiscoverySubtitle;
 
   /// UI text: bg conn section persistent notification
   ///
@@ -50955,24 +45426,6 @@ abstract class AppLocalizations {
   /// **'All data cleared'**
   String get dataExportAllDataCleared;
 
-  /// UI text: data export no routes to export
-  ///
-  /// In en, this message translates to:
-  /// **'No routes to export'**
-  String get dataExportNoRoutesToExport;
-
-  /// UI text: data export no automations to export
-  ///
-  /// In en, this message translates to:
-  /// **'No automations to export'**
-  String get dataExportNoAutomationsToExport;
-
-  /// UI text: data export no automation log entries
-  ///
-  /// In en, this message translates to:
-  /// **'No automation log entries'**
-  String get dataExportNoAutomationLogEntries;
-
   /// UI text: data export clear all messages
   ///
   /// In en, this message translates to:
@@ -51177,12 +45630,6 @@ abstract class AppLocalizations {
   /// **'JSON'**
   String get dataExportDeviceConfigFormatJson;
 
-  /// Format pill on the device config restore tile
-  ///
-  /// In en, this message translates to:
-  /// **'IMPORT'**
-  String get dataExportDeviceConfigFormatImport;
-
   /// Title of the security warning shown before exporting a device config backup
   ///
   /// In en, this message translates to:
@@ -51312,12 +45759,6 @@ abstract class AppLocalizations {
     int total,
     int failed,
   );
-
-  /// Snackbar shown when the user taps Apply with no toggles enabled
-  ///
-  /// In en, this message translates to:
-  /// **'Select at least one section to restore.'**
-  String get dataExportDeviceConfigRestoreNoSelection;
 
   /// Restore sheet info row showing where the backup was taken
   ///
@@ -53005,18 +47446,6 @@ abstract class AppLocalizations {
   /// **'Status'**
   String get mqttProxyStatusLabel;
 
-  /// MQTT proxy connection status: connected to broker
-  ///
-  /// In en, this message translates to:
-  /// **'Connected'**
-  String get mqttProxyStatusConnected;
-
-  /// MQTT proxy connection status: not connected to broker
-  ///
-  /// In en, this message translates to:
-  /// **'Disconnected'**
-  String get mqttProxyStatusDisconnected;
-
   /// Label for the MQTT broker hostname in diagnostics. Port is shown in a separate row to avoid wrapping host:port onto two lines.
   ///
   /// In en, this message translates to:
@@ -53695,12 +48124,6 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get trafficMgmtSave;
 
-  /// UI text: traffic mgmt section general
-  ///
-  /// In en, this message translates to:
-  /// **'GENERAL'**
-  String get trafficMgmtSectionGeneral;
-
   /// UI text: traffic mgmt section position dedup
   ///
   /// In en, this message translates to:
@@ -53725,24 +48148,6 @@ abstract class AppLocalizations {
   /// **'UNKNOWN PACKETS'**
   String get trafficMgmtSectionUnknownPackets;
 
-  /// UI text: traffic mgmt section hop mgmt
-  ///
-  /// In en, this message translates to:
-  /// **'HOP MANAGEMENT'**
-  String get trafficMgmtSectionHopMgmt;
-
-  /// UI text: traffic mgmt enable
-  ///
-  /// In en, this message translates to:
-  /// **'Enable Traffic Management'**
-  String get trafficMgmtEnable;
-
-  /// Subtitle or secondary text
-  ///
-  /// In en, this message translates to:
-  /// **'Master toggle for all traffic management features'**
-  String get trafficMgmtEnableSubtitle;
-
   /// Deduplication = discarding duplicate position reports to reduce radio airtime usage.
   ///
   /// In en, this message translates to:
@@ -53754,24 +48159,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drop duplicate position packets'**
   String get trafficMgmtPositionDedupSubtitle;
-
-  /// UI text: traffic mgmt precision bits Parameters: {value} = numeric value.
-  ///
-  /// In en, this message translates to:
-  /// **'Precision Bits: {value}'**
-  String trafficMgmtPrecisionBits(int value);
-
-  /// Description text
-  ///
-  /// In en, this message translates to:
-  /// **'Lower values mean more aggressive deduplication'**
-  String get trafficMgmtPrecisionBitsDesc;
-
-  /// UI label Parameters: {value} = numeric value.
-  ///
-  /// In en, this message translates to:
-  /// **'{value} bits'**
-  String trafficMgmtPrecisionBitsLabel(int value);
 
   /// UI text: traffic mgmt min interval Parameters: {seconds} = time duration.
   ///
@@ -53868,42 +48255,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Number of unknown packets before dropping'**
   String get trafficMgmtThresholdDesc;
-
-  /// Exhaust hop = set hop limit to 0 so telemetry is not relayed further. Reduces mesh network congestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Exhaust Hop on Telemetry'**
-  String get trafficMgmtExhaustHopTelemetry;
-
-  /// Hop limit = max relay count. Setting to 0 prevents further forwarding of relayed telemetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Set hop limit to 0 for relayed telemetry'**
-  String get trafficMgmtExhaustHopTelemetrySub;
-
-  /// UI text: traffic mgmt exhaust hop position
-  ///
-  /// In en, this message translates to:
-  /// **'Exhaust Hop on Position'**
-  String get trafficMgmtExhaustHopPosition;
-
-  /// Hop limit = max relay count. Setting to 0 prevents further forwarding of relayed position packets.
-  ///
-  /// In en, this message translates to:
-  /// **'Set hop limit to 0 for relayed positions'**
-  String get trafficMgmtExhaustHopPositionSub;
-
-  /// UI text: traffic mgmt preserve router hops
-  ///
-  /// In en, this message translates to:
-  /// **'Preserve Router Hops'**
-  String get trafficMgmtPreserveRouterHops;
-
-  /// Hop count = number of times a packet has been relayed. Router nodes = dedicated relay infrastructure.
-  ///
-  /// In en, this message translates to:
-  /// **'Preserve hop count for router nodes'**
-  String get trafficMgmtPreserveRouterHopsSub;
 
   /// UI text: traffic mgmt saved
   ///
@@ -54120,2142 +48471,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to save: {error}'**
   String meshBeaconSaveFailed(String error);
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Admin'**
-  String get adminPanelTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'CONTENT MODERATION'**
-  String get adminPanelSectionModeration;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Bug Reports'**
-  String get adminPanelBugReports;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'View and respond to user bug reports'**
-  String get adminPanelBugReportsSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Review Moderation'**
-  String get adminPanelReviewMod;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Approve or reject user reviews'**
-  String get adminPanelReviewModSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Reported Content'**
-  String get adminPanelReportedContent;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Review flagged posts and comments'**
-  String get adminPanelReportedContentSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Approve pending widget submissions'**
-  String get adminPanelWidgetReviewSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'USER MANAGEMENT'**
-  String get adminPanelSectionUsers;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Social Seeding'**
-  String get adminPanelSocialSeeding;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Manage follow requests and connections'**
-  String get adminPanelSocialSeedingSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'User Purchases'**
-  String get adminPanelUserPurchases;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'View and manage user transactions'**
-  String get adminPanelUserPurchasesSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'APP CONFIGURATION'**
-  String get adminPanelSectionConfig;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcast Notification'**
-  String get adminPanelBroadcast;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Send push notification to all users'**
-  String get adminPanelBroadcastSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'QR Code Styles'**
-  String get adminPanelQrStyles;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Preview branded QR code designs'**
-  String get adminPanelQrStylesSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'DEVICE DIAGNOSTICS'**
-  String get adminPanelSectionDiag;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Diagnostic Harness'**
-  String get adminPanelDiagHarness;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run protocol probes and export debug bundle'**
-  String get adminPanelDiagHarnessSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Conformance Harness'**
-  String get adminPanelConformance;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Provider-bound device conformance & stress tests'**
-  String get adminPanelConformanceSub;
-
-  /// Admin panel tile label for the storage health screen
-  ///
-  /// In en, this message translates to:
-  /// **'Storage Health'**
-  String get adminPanelStorageHealth;
-
-  /// Admin panel tile subtitle for the storage health screen
-  ///
-  /// In en, this message translates to:
-  /// **'Verify WAL mode is active on all SQLite databases'**
-  String get adminPanelStorageHealthSub;
-
-  /// Admin panel tile label for the mesh-morph preview screen
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh Morph Preview'**
-  String get adminPanelMeshMorph;
-
-  /// Admin panel tile subtitle for the mesh-morph preview screen
-  ///
-  /// In en, this message translates to:
-  /// **'Test mesh-morph presets, shapes, and timing'**
-  String get adminPanelMeshMorphSub;
-
-  /// App bar title for the mesh-morph admin preview screen
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh Morph'**
-  String get adminMeshMorphTitle;
-
-  /// Section header for the mesh-morph preset picker
-  ///
-  /// In en, this message translates to:
-  /// **'PRESET'**
-  String get adminMeshMorphPresetSection;
-
-  /// Section header for the mesh-morph rotation-style picker
-  ///
-  /// In en, this message translates to:
-  /// **'ROTATION'**
-  String get adminMeshMorphRotationSection;
-
-  /// Section header for the mesh-morph tuning sliders
-  ///
-  /// In en, this message translates to:
-  /// **'TUNING'**
-  String get adminMeshMorphTuningSection;
-
-  /// Toggle row label for pausing or resuming the mesh-morph animation
-  ///
-  /// In en, this message translates to:
-  /// **'Animate'**
-  String get adminMeshMorphAnimate;
-
-  /// Subtitle for the animate toggle on the mesh-morph admin screen
-  ///
-  /// In en, this message translates to:
-  /// **'Pause to inspect the current shape'**
-  String get adminMeshMorphAnimateSub;
-
-  /// Slider label showing the current ball count rendered by the mesh-morph widget
-  ///
-  /// In en, this message translates to:
-  /// **'Point count: {count}'**
-  String adminMeshMorphPointCountLabel(int count);
-
-  /// Label showing which shape the mesh-morph widget is currently displaying
-  ///
-  /// In en, this message translates to:
-  /// **'Current shape: {shape}'**
-  String adminMeshMorphCurrentShape(String shape);
-
-  /// Mesh-morph preset name: the short icosahedron-arrival opener
-  ///
-  /// In en, this message translates to:
-  /// **'Icosahedron Journey'**
-  String get adminMeshMorphPresetIcosahedronJourney;
-
-  /// Mesh-morph preset name: full tour of every shape in the registry
-  ///
-  /// In en, this message translates to:
-  /// **'Vectorball Tour'**
-  String get adminMeshMorphPresetVectorballTour;
-
-  /// Mesh-morph preset name: only the regular polyhedra plus sphere
-  ///
-  /// In en, this message translates to:
-  /// **'Platonic Circuit'**
-  String get adminMeshMorphPresetPlatonicCircuit;
-
-  /// Mesh-morph preset name: soft surface shapes only, no wireframe edges
-  ///
-  /// In en, this message translates to:
-  /// **'Surface Flow'**
-  String get adminMeshMorphPresetSurfaceFlow;
-
-  /// Mesh-morph preset name: wireframe shapes only, edges drawn throughout
-  ///
-  /// In en, this message translates to:
-  /// **'Wireframe March'**
-  String get adminMeshMorphPresetWireframeMarch;
-
-  /// Mesh-morph rotation style: no rotation
-  ///
-  /// In en, this message translates to:
-  /// **'None'**
-  String get adminMeshMorphRotationNone;
-
-  /// Mesh-morph rotation style: slow continuous Y-axis spin
-  ///
-  /// In en, this message translates to:
-  /// **'Spin'**
-  String get adminMeshMorphRotationSpin;
-
-  /// Mesh-morph rotation style: multi-axis tumble matching the splash logo
-  ///
-  /// In en, this message translates to:
-  /// **'Tumble'**
-  String get adminMeshMorphRotationTumble;
-
-  /// Mesh-morph rotation style: faster Y spin with a slight X wobble
-  ///
-  /// In en, this message translates to:
-  /// **'Showcase'**
-  String get adminMeshMorphRotationShowcase;
-
-  /// App bar title for the admin storage health screen
-  ///
-  /// In en, this message translates to:
-  /// **'Storage Health'**
-  String get adminStorageHealthTitle;
-
-  /// Tooltip for the refresh button on the storage health screen
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh'**
-  String get adminStorageHealthRefresh;
-
-  /// Status text shown while WAL checks are running
-  ///
-  /// In en, this message translates to:
-  /// **'Checking databases…'**
-  String get adminStorageHealthChecking;
-
-  /// Summary header when every database passes the WAL check
-  ///
-  /// In en, this message translates to:
-  /// **'All databases in WAL mode'**
-  String get adminStorageHealthAllPass;
-
-  /// Summary header when one or more databases fail the WAL check
-  ///
-  /// In en, this message translates to:
-  /// **'Some databases not in WAL mode'**
-  String get adminStorageHealthSomeFail;
-
-  /// Summary line showing pass/fail/total counts
-  ///
-  /// In en, this message translates to:
-  /// **'{pass} passed · {fail} failed · {total} total'**
-  String adminStorageHealthSummary(int pass, int fail, int total);
-
-  /// Badge label when a database is confirmed in WAL mode
-  ///
-  /// In en, this message translates to:
-  /// **'WAL'**
-  String get adminStorageStatusWal;
-
-  /// Badge label when the journal mode could not be determined
-  ///
-  /// In en, this message translates to:
-  /// **'UNKNOWN'**
-  String get adminStorageStatusUnknown;
-
-  /// Badge label when a database file does not exist yet
-  ///
-  /// In en, this message translates to:
-  /// **'NOT OPENED'**
-  String get adminStorageStatusMissing;
-
-  /// Badge label when the WAL check threw an exception
-  ///
-  /// In en, this message translates to:
-  /// **'ERROR'**
-  String get adminStorageStatusError;
-
-  /// Chip label when the WAL sidecar file exists
-  ///
-  /// In en, this message translates to:
-  /// **'-wal present'**
-  String get adminStorageWalPresent;
-
-  /// Chip label when the WAL sidecar file does not exist
-  ///
-  /// In en, this message translates to:
-  /// **'-wal absent'**
-  String get adminStorageWalAbsent;
-
-  /// Chip label when the SHM sidecar file exists
-  ///
-  /// In en, this message translates to:
-  /// **'-shm present'**
-  String get adminStorageShmPresent;
-
-  /// Chip label when the SHM sidecar file does not exist
-  ///
-  /// In en, this message translates to:
-  /// **'-shm absent'**
-  String get adminStorageShmAbsent;
-
-  /// Snackbar message after long-pressing a database tile to copy its path
-  ///
-  /// In en, this message translates to:
-  /// **'Path copied to clipboard'**
-  String get adminStoragePathCopied;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'99+'**
-  String get adminPanelBadgeOverflow;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcast Notification'**
-  String get adminBroadcastTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'You must be signed in to send notifications'**
-  String get adminBroadcastSignInRequired;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Test Sent'**
-  String get adminBroadcastTestSentTitle;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcast Sent'**
-  String get adminBroadcastSentTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Your test notification has been sent to all admins.'**
-  String get adminBroadcastTestSentBody;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Your notification has been sent to all SocialMesh users.'**
-  String get adminBroadcastSentBody;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get adminBroadcastDone;
-
-  /// Error message in admin panel Parameters: {code}, {message} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to send: {code} - {message}'**
-  String adminBroadcastFailedDetailed(String code, String message);
-
-  /// Error message in admin panel Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to send: {error}'**
-  String adminBroadcastFailed(String error);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Select Deep Link'**
-  String get adminBroadcastSelectDeepLink;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Select Icon'**
-  String get adminBroadcastSelectIcon;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Notification Title'**
-  String get adminBroadcastPreviewTitlePlaceholder;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Notification message will appear here...'**
-  String get adminBroadcastPreviewBodyPlaceholder;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'This will send a push notification to every SocialMesh user. Use sparingly for important announcements only.'**
-  String get adminBroadcastWarning;
-
-  /// Label for platform target selector in admin broadcast panel
-  ///
-  /// In en, this message translates to:
-  /// **'Target Platform'**
-  String get adminBroadcastPlatformLabel;
-
-  /// Helper text for platform target selector in admin broadcast panel
-  ///
-  /// In en, this message translates to:
-  /// **'Choose which platform receives this notification.'**
-  String get adminBroadcastPlatformHelper;
-
-  /// Option to send to all platforms in admin broadcast panel
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get adminBroadcastPlatformAll;
-
-  /// Option to send to Android only in admin broadcast panel
-  ///
-  /// In en, this message translates to:
-  /// **'Android'**
-  String get adminBroadcastPlatformAndroid;
-
-  /// Option to send to iOS only in admin broadcast panel
-  ///
-  /// In en, this message translates to:
-  /// **'iOS'**
-  String get adminBroadcastPlatformIos;
-
-  /// Label in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Icon'**
-  String get adminBroadcastIconLabel;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get adminBroadcastClear;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Title'**
-  String get adminBroadcastFieldTitle;
-
-  /// Hint text for an input field in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Notification title...'**
-  String get adminBroadcastTitleHint;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Title is required'**
-  String get adminBroadcastTitleRequired;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Message'**
-  String get adminBroadcastFieldMessage;
-
-  /// Hint text for an input field in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Notification message...'**
-  String get adminBroadcastMessageHint;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Message is required'**
-  String get adminBroadcastMessageRequired;
-
-  /// Label in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Deep Link (Optional)'**
-  String get adminBroadcastDeepLinkLabel;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Screen to open when notification is tapped.'**
-  String get adminBroadcastDeepLinkHelper;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'None'**
-  String get adminBroadcastDeepLinkNone;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Sending Test...'**
-  String get adminBroadcastSendingTest;
-
-  /// Button label in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Test to Admins Only'**
-  String get adminBroadcastTestButton;
-
-  /// Hint text for an input field in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Send a test notification to admins before broadcasting to all users.'**
-  String get adminBroadcastTestHint;
-
-  /// Text in admin panel Parameters: {seconds} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel - sending in {seconds}...'**
-  String adminBroadcastCountdownCancel(int seconds);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Sending...'**
-  String get adminBroadcastSending;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Send to Everyone'**
-  String get adminBroadcastSendAll;
-
-  /// Hint text in admin panel Parameters: {seconds} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Sends a push notification to all SocialMesh users. A {seconds}s countdown gives you time to cancel.'**
-  String adminBroadcastSendHint(int seconds);
-
-  /// Label in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'PREVIEW'**
-  String get adminBroadcastPreviewLabel;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'SOCIALMESH'**
-  String get adminBroadcastPreviewAppName;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'now'**
-  String get adminBroadcastPreviewNow;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'GENERAL'**
-  String get adminBroadcastIconCatGeneral;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'SOCIAL'**
-  String get adminBroadcastIconCatSocial;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'PREMIUM'**
-  String get adminBroadcastIconCatPremium;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Announcement'**
-  String get adminBroadcastIconAnnouncement;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'App Update'**
-  String get adminBroadcastIconUpdate;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New Feature'**
-  String get adminBroadcastIconFeature;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Maintenance'**
-  String get adminBroadcastIconMaintenance;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Alert'**
-  String get adminBroadcastIconAlert;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Celebration'**
-  String get adminBroadcastIconCelebration;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Tip'**
-  String get adminBroadcastIconTip;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get adminBroadcastIconSignals;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'NodeDex'**
-  String get adminBroadcastIconNodedex;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Aether'**
-  String get adminBroadcastIconAether;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get adminBroadcastIconActivity;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Presence'**
-  String get adminBroadcastIconPresence;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Community'**
-  String get adminBroadcastIconCommunity;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'World Map'**
-  String get adminBroadcastIconWorldMap;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Theme Pack'**
-  String get adminBroadcastIconThemes;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Ringtone Pack'**
-  String get adminBroadcastIconRingtones;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Widgets'**
-  String get adminBroadcastIconWidgets;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Automations'**
-  String get adminBroadcastIconAutomations;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'IFTTT Integration'**
-  String get adminBroadcastIconIfttt;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Announcement'**
-  String get adminBroadcastDefTitleAnnouncement;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'App Update Available'**
-  String get adminBroadcastDefTitleUpdate;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New Feature'**
-  String get adminBroadcastDefTitleFeature;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Scheduled Maintenance'**
-  String get adminBroadcastDefTitleMaintenance;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Important Alert'**
-  String get adminBroadcastDefTitleAlert;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Celebration'**
-  String get adminBroadcastDefTitleCelebration;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Pro Tip'**
-  String get adminBroadcastDefTitleTip;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Signals Update'**
-  String get adminBroadcastDefTitleSignals;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'NodeDex Update'**
-  String get adminBroadcastDefTitleNodedex;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Aether Update'**
-  String get adminBroadcastDefTitleAether;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Activity Update'**
-  String get adminBroadcastDefTitleActivity;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Presence Update'**
-  String get adminBroadcastDefTitlePresence;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Community Update'**
-  String get adminBroadcastDefTitleCommunity;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'World Map Update'**
-  String get adminBroadcastDefTitleWorldMap;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New Theme Pack'**
-  String get adminBroadcastDefTitleThemes;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New Ringtone Pack'**
-  String get adminBroadcastDefTitleRingtones;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New Widgets'**
-  String get adminBroadcastDefTitleWidgets;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Automations Update'**
-  String get adminBroadcastDefTitleAutomations;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'IFTTT Integration'**
-  String get adminBroadcastDefTitleIfttt;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'We have an important announcement for the SocialMesh community.'**
-  String get adminBroadcastDefBodyAnnouncement;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'A new version of SocialMesh is available with improvements and bug fixes.'**
-  String get adminBroadcastDefBodyUpdate;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'We just launched a new feature in SocialMesh. Check it out!'**
-  String get adminBroadcastDefBodyFeature;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'SocialMesh services will be briefly unavailable for scheduled maintenance.'**
-  String get adminBroadcastDefBodyMaintenance;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Please be aware of an important issue affecting SocialMesh.'**
-  String get adminBroadcastDefBodyAlert;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'We have something exciting to celebrate with the SocialMesh community!'**
-  String get adminBroadcastDefBodyCelebration;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Here is a helpful tip to get the most out of SocialMesh.'**
-  String get adminBroadcastDefBodyTip;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Check out what is new in Signals, your mesh presence feed.'**
-  String get adminBroadcastDefBodySignals;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'NodeDex has new features for discovering and tracking mesh nodes.'**
-  String get adminBroadcastDefBodyNodedex;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New improvements to Aether flight sharing are now live.'**
-  String get adminBroadcastDefBodyAether;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'See what is happening in your Activity feed.'**
-  String get adminBroadcastDefBodyActivity;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Presence detection has been improved for better mesh awareness.'**
-  String get adminBroadcastDefBodyPresence;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Join the latest SocialMesh community initiatives.'**
-  String get adminBroadcastDefBodyCommunity;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'The World Mesh Map has new features for exploring global mesh coverage.'**
-  String get adminBroadcastDefBodyWorldMap;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'A new theme pack is now available in the SocialMesh store.'**
-  String get adminBroadcastDefBodyThemes;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'A new ringtone pack is now available for your mesh notifications.'**
-  String get adminBroadcastDefBodyRingtones;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New home screen widgets are now available for SocialMesh.'**
-  String get adminBroadcastDefBodyWidgets;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New automation triggers and actions are now available.'**
-  String get adminBroadcastDefBodyAutomations;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Connect SocialMesh with your favourite services via IFTTT.'**
-  String get adminBroadcastDefBodyIfttt;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'CORE'**
-  String get adminBroadcastDeepLinkCatCore;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'SOCIAL'**
-  String get adminBroadcastDeepLinkCatSocial;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'MESH'**
-  String get adminBroadcastDeepLinkCatMesh;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'PREMIUM'**
-  String get adminBroadcastDeepLinkCatPremium;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get adminBroadcastLinkSettings;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Account & Subscriptions'**
-  String get adminBroadcastLinkAccount;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Scanner'**
-  String get adminBroadcastLinkScanner;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Messages'**
-  String get adminBroadcastLinkMessages;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Channels'**
-  String get adminBroadcastLinkChannels;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Nodes'**
-  String get adminBroadcastLinkNodes;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Map'**
-  String get adminBroadcastLinkMap;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get adminBroadcastLinkSignals;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'NodeDex'**
-  String get adminBroadcastLinkNodedex;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Aether'**
-  String get adminBroadcastLinkAether;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get adminBroadcastLinkActivity;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Presence'**
-  String get adminBroadcastLinkPresence;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Timeline'**
-  String get adminBroadcastLinkTimeline;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'World Map'**
-  String get adminBroadcastLinkWorldMap;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Reachability'**
-  String get adminBroadcastLinkReachability;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Theme Pack'**
-  String get adminBroadcastLinkThemes;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Ringtone Pack'**
-  String get adminBroadcastLinkRingtones;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Widgets'**
-  String get adminBroadcastLinkWidgets;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Automations'**
-  String get adminBroadcastLinkAutomations;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'IFTTT Integration'**
-  String get adminBroadcastLinkIfttt;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Admin Diagnostics'**
-  String get adminDiagTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Local device'**
-  String get adminDiagTargetLocal;
-
-  /// Text in admin panel Parameters: {hexId}.
-  ///
-  /// In en, this message translates to:
-  /// **'Remote: {hexId}'**
-  String adminDiagTargetRemote(String hexId);
-
-  /// Description text in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run diagnostic probes against your connected device and export a detailed bundle for debugging protocol/transport issues.'**
-  String get adminDiagDescription;
-
-  /// Label in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Target'**
-  String get adminDiagTargetLabel;
-
-  /// Label in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'My Node'**
-  String get adminDiagMyNodeLabel;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Include stress tests'**
-  String get adminDiagStressToggle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Burst reads and out-of-order correlation'**
-  String get adminDiagStressToggleSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Include write tests (reversible)'**
-  String get adminDiagWriteToggle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No-op writes with read-back verification'**
-  String get adminDiagWriteToggleSub;
-
-  /// Button label in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run Diagnostics'**
-  String get adminDiagRunButton;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No device connected'**
-  String get adminDiagNoDevice;
-
-  /// Text in admin panel Parameters: {completed}, {total} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{completed} / {total} probes'**
-  String adminDiagProbeProgress(int completed, int total);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get adminDiagCancel;
-
-  /// Text in admin panel Parameters: {passed}, {failed}.
-  ///
-  /// In en, this message translates to:
-  /// **'{passed} passed, {failed} failed'**
-  String adminDiagResultSummary(int passed, int failed);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Export Bundle'**
-  String get adminDiagExportBundle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Copy Summary to Clipboard'**
-  String get adminDiagCopySummary;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run Again'**
-  String get adminDiagRunAgain;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Enable Write Tests?'**
-  String get adminDiagWriteTestsDialogTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Write tests perform no-op writes (same value) to verify round-trip behavior. They do not change device state, but they do send SET commands to the device.\n\nAre you sure you want to include write tests?'**
-  String get adminDiagWriteTestsDialogBody;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get adminDiagWriteTestsCancel;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Enable'**
-  String get adminDiagWriteTestsEnable;
-
-  /// Error message in admin panel Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Export failed: {error}'**
-  String adminDiagExportFailed(String error);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Summary copied to clipboard'**
-  String get adminDiagCopiedToClipboard;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'User Purchases'**
-  String get adminPurchasesTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **' TOTAL · '**
-  String get adminPurchasesLabelTotal;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **' PAYING · '**
-  String get adminPurchasesLabelPaying;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **' FREE · '**
-  String get adminPurchasesLabelFree;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **' REVENUE'**
-  String get adminPurchasesLabelRevenue;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **' EXCLUDED'**
-  String get adminPurchasesLabelExcluded;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Total Users'**
-  String get adminPurchasesStatTotalUsers;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Paying'**
-  String get adminPurchasesStatPaying;
-
-  /// Text in admin panel Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} excluded'**
-  String adminPurchasesStatExcludedCount(int count);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Free'**
-  String get adminPurchasesStatFree;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Conversion'**
-  String get adminPurchasesStatConversion;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'ARPU'**
-  String get adminPurchasesStatArpu;
-
-  /// Tooltip in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Average Revenue Per User'**
-  String get adminPurchasesStatArpuTooltip;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Gross Revenue'**
-  String get adminPurchasesStatGross;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Excluded'**
-  String get adminPurchasesStatExcluded;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Net Revenue'**
-  String get adminPurchasesStatNet;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'New Users (24h)'**
-  String get adminPurchasesStatNewUsers24h;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Purchases (24h)'**
-  String get adminPurchasesStatPurchases24h;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Revenue (24h)'**
-  String get adminPurchasesStatRevenue24h;
-
-  /// Hint text for an input field in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Search users...'**
-  String get adminPurchasesSearchHint;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get adminPurchasesFilterAll;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Paying'**
-  String get adminPurchasesFilterPaying;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Free'**
-  String get adminPurchasesFilterFree;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Excluded'**
-  String get adminPurchasesFilterExcluded;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Anonymous'**
-  String get adminPurchasesFilterAnonymous;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Deleted'**
-  String get adminPurchasesFilterDeleted;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Shows purchases synced via app login or RevenueCat webhooks.'**
-  String get adminPurchasesBannerTitle;
-
-  /// Subtitle in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Users must open the app while signed in for their purchases to appear here.'**
-  String get adminPurchasesBannerSubtitle;
-
-  /// Error message in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading users'**
-  String get adminPurchasesErrorLoading;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get adminPurchasesRetry;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No users match your search'**
-  String get adminPurchasesNoSearchResults;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No users found'**
-  String get adminPurchasesNoUsers;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown User'**
-  String get adminPurchasesUnknownUser;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Anonymous'**
-  String get adminPurchasesAnonymousTag;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Deleted'**
-  String get adminPurchasesDeletedTag;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Anonymous RevenueCat User'**
-  String get adminPurchasesAnonRcUser;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud Sync'**
-  String get adminPurchasesFallbackCloudSync;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Identifiers'**
-  String get adminPurchasesSectionIds;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Firebase UID'**
-  String get adminPurchasesFirebaseUid;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'RevenueCat ID'**
-  String get adminPurchasesRevenueCatId;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Member Since'**
-  String get adminPurchasesMemberSince;
-
-  /// Section header in the admin purchases detail view for regional pricing data
-  ///
-  /// In en, this message translates to:
-  /// **'Region & Pricing'**
-  String get adminPurchasesSectionRegionPricing;
-
-  /// Label for the country field in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Country'**
-  String get adminPurchasesCountry;
-
-  /// Label for the currency field in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Currency'**
-  String get adminPurchasesCurrency;
-
-  /// Label for the local currency price field in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Price (local)'**
-  String get adminPurchasesPriceLocal;
-
-  /// Label for the USD price field in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Price (USD)'**
-  String get adminPurchasesPriceUsd;
-
-  /// Formatted USD value in the admin purchases detail view. Parameters: {amount} = the numeric amount formatted with two decimals.
-  ///
-  /// In en, this message translates to:
-  /// **'US\$ {amount}'**
-  String adminPurchasesUsdValue(String amount);
-
-  /// Label for the tax field in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Tax'**
-  String get adminPurchasesTax;
-
-  /// Label for the app store commission field in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Store commission'**
-  String get adminPurchasesStoreCommission;
-
-  /// Label for the offer code field in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Offer code'**
-  String get adminPurchasesOfferCode;
-
-  /// Label for the family sharing field in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Family Share'**
-  String get adminPurchasesFamilyShare;
-
-  /// Affirmative value shown in the admin purchases detail view
-  ///
-  /// In en, this message translates to:
-  /// **'Yes'**
-  String get adminPurchasesYes;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Purchases'**
-  String get adminPurchasesSectionPurchases;
-
-  /// Text in admin panel Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items'**
-  String adminPurchasesItemCount(int count);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No purchases'**
-  String get adminPurchasesNoPurchases;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Copied to clipboard'**
-  String get adminPurchasesCopied;
-
-  /// Tooltip in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Copy'**
-  String get adminPurchasesCopyTooltip;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'QR Code Styles'**
-  String get adminQrStyleTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Branded QR Code Styles'**
-  String get adminQrStyleHeading;
-
-  /// Description text in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Preview different QR code styles with the SocialMesh logo. All styles use Level H error correction for reliable scanning.'**
-  String get adminQrStyleDescription;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Smooth'**
-  String get adminQrStyleSmooth;
-
-  /// Description text in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Modern, rounded liquid-like modules. Premium feel.'**
-  String get adminQrStyleSmoothDesc;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Dots'**
-  String get adminQrStyleDots;
-
-  /// Description text in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Circular dot modules. Clean and minimal look.'**
-  String get adminQrStyleDotsDesc;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Squares'**
-  String get adminQrStyleSquares;
-
-  /// Description text in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Classic blocky QR style. Maximum compatibility.'**
-  String get adminQrStyleSquaresDesc;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'ELEVATED STYLES'**
-  String get adminQrStyleElevatedHeader;
-
-  /// Text in admin panel Parameters: {styleName} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Premium color treatments using {styleName} pattern'**
-  String adminQrStyleElevatedSub(String styleName);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Neon Glow'**
-  String get adminQrStyleNeonGlow;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Frosted Glass'**
-  String get adminQrStyleFrostedGlass;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Inverted'**
-  String get adminQrStyleInverted;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Holographic'**
-  String get adminQrStyleHolographic;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Accent Branded'**
-  String get adminQrStyleAccentBranded;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Minimal'**
-  String get adminQrStyleMinimal;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Cyberpunk'**
-  String get adminQrStyleCyberpunk;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Accent Glow'**
-  String get adminQrStyleAccentGlow;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Ocean'**
-  String get adminQrStyleOcean;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Luxury'**
-  String get adminQrStyleLuxury;
-
-  /// Text in admin panel Parameters: {styleName} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected: {styleName}'**
-  String adminQrStyleSelected(String styleName);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Scan to verify'**
-  String get adminQrStyleScanToVerify;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Bug Reports'**
-  String get adminBugReportsTitle;
-
-  /// Hint text for an input field in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Search reports'**
-  String get adminBugReportsSearchHint;
-
-  /// Error message in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load reports'**
-  String get adminBugReportsLoadError;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Message exceeds 2,000 characters.'**
-  String get adminBugReportsMessageTooLong;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Response sent.'**
-  String get adminBugReportsReplySent;
-
-  /// Error message in admin panel Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to send: {error}'**
-  String adminBugReportsReplyFailed(String error);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Report resolved.'**
-  String get adminBugReportsResolved;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Report reopened.'**
-  String get adminBugReportsReopened;
-
-  /// Error message in admin panel Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update status: {error}'**
-  String adminBugReportsStatusFailed(String error);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'OPEN'**
-  String get adminBugReportsStatusOpen;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'USER REPLIED'**
-  String get adminBugReportsStatusUserReplied;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'RESPONDED'**
-  String get adminBugReportsStatusResponded;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'RESOLVED'**
-  String get adminBugReportsStatusResolved;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'just now'**
-  String get adminBugReportsTimeJustNow;
-
-  /// Text in admin panel Parameters: {minutes} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{minutes}m ago'**
-  String adminBugReportsTimeMinutes(int minutes);
-
-  /// Text in admin panel Parameters: {hours} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{hours}h ago'**
-  String adminBugReportsTimeHours(int hours);
-
-  /// Text in admin panel Parameters: {days} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'{days}d ago'**
-  String adminBugReportsTimeDays(int days);
-
-  /// Description text in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'DESCRIPTION'**
-  String get adminBugReportsSectionDesc;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'SCREENSHOT'**
-  String get adminBugReportsSectionScreenshot;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'DETAILS'**
-  String get adminBugReportsSectionDetails;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Report ID'**
-  String get adminBugReportsDetailReportId;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'User ID'**
-  String get adminBugReportsDetailUserId;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'anonymous'**
-  String get adminBugReportsAnonymousValue;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Email'**
-  String get adminBugReportsDetailEmail;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Device'**
-  String get adminBugReportsDetailDevice;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'OS Version'**
-  String get adminBugReportsDetailOs;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'App Version'**
-  String get adminBugReportsDetailAppVer;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'CONVERSATION'**
-  String get adminBugReportsSectionConversation;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'You'**
-  String get adminBugReportsThreadYou;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'User'**
-  String get adminBugReportsThreadUser;
-
-  /// Hint text for an input field in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Write a response...'**
-  String get adminBugReportsReplyHint;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Reopen'**
-  String get adminBugReportsReopen;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Resolve'**
-  String get adminBugReportsResolve;
-
-  /// Text in admin panel Parameters: {seconds} = time duration.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel · {seconds}'**
-  String adminBugReportsCountdownCancel(int seconds);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Send'**
-  String get adminBugReportsSend;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Anonymous report - replies cannot be delivered.'**
-  String get adminBugReportsAnonNotice;
-
-  /// Empty state message in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No reports match your filter.'**
-  String get adminBugReportsEmptyFilter;
-
-  /// Empty state message in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No bug reports yet.'**
-  String get adminBugReportsEmptyAll;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Conformance Harness'**
-  String get adminConformanceTitle;
-
-  /// Description text in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Provider-bound device conformance testing. All mutations flow through the same provider entrypoints used by the actual screens.'**
-  String get adminConformanceDescription;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Target Device'**
-  String get adminConformanceTargetDevice;
-
-  /// Text in admin panel Parameters: {target}.
-  ///
-  /// In en, this message translates to:
-  /// **'Remote: {target}'**
-  String adminConformanceTargetRemote(String target);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Local device'**
-  String get adminConformanceTargetLocal;
-
-  /// Text in admin panel Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} remote node(s) available'**
-  String adminConformanceNodesAvailable(int count);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Over-the-air admin via PKI'**
-  String get adminConformanceOtaPki;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No PKI-capable remote nodes'**
-  String get adminConformanceNoNodes;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to Local'**
-  String get adminConformanceSwitchLocal;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Test Options'**
-  String get adminConformanceTestOptions;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Destructive Tests'**
-  String get adminConformanceDestructive;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Randomized mutations, burst stress, node DB reset. May temporarily change device config.'**
-  String get adminConformanceDestructiveSub;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run Remote Conformance (Destructive)'**
-  String get adminConformanceRunRemoteDestructive;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run Remote Conformance (Safe)'**
-  String get adminConformanceRunRemoteSafe;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run Conformance (Destructive)'**
-  String get adminConformanceRunLocalDestructive;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run Conformance (Safe)'**
-  String get adminConformanceRunLocalSafe;
-
-  /// Text in admin panel Parameters: {completed}, {total} = numeric count, {pass}, {fail}.
-  ///
-  /// In en, this message translates to:
-  /// **'{completed} / {total}  (pass: {pass}, fail: {fail})'**
-  String adminConformanceProgress(int completed, int total, int pass, int fail);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get adminConformanceCancel;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'All Tests Passed'**
-  String get adminConformanceAllPassed;
-
-  /// Error message in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Some Tests Failed'**
-  String get adminConformanceSomeFailed;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Passed'**
-  String get adminConformanceLabelPassed;
-
-  /// Error message in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Failed'**
-  String get adminConformanceLabelFailed;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Skipped'**
-  String get adminConformanceLabelSkipped;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Timeouts'**
-  String get adminConformanceLabelTimeouts;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Anomalies:'**
-  String get adminConformanceAnomalies;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Test Results'**
-  String get adminConformanceTestResults;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Export Bundle'**
-  String get adminConformanceExportBundle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Run Again'**
-  String get adminConformanceRunAgain;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Initializing'**
-  String get adminConformanceInitializing;
 
   /// Title for the global layer / MQTT screen
   ///
@@ -56647,18 +48862,6 @@ abstract class AppLocalizations {
   /// **'{seconds}s ago'**
   String globalLayerSecondsAgo(int seconds);
 
-  /// Text in global layer / MQTT Parameters: {day}, {month}, {year}.
-  ///
-  /// In en, this message translates to:
-  /// **'{day}/{month}/{year}'**
-  String globalLayerDateFormat(int day, int month, int year);
-
-  /// Text in global layer / MQTT Parameters: {month}, {day}.
-  ///
-  /// In en, this message translates to:
-  /// **'{month}/{day}'**
-  String globalLayerShortDateFormat(int month, int day);
-
   /// Text displayed in global layer / MQTT
   ///
   /// In en, this message translates to:
@@ -56976,18 +49179,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added'**
   String get globalLayerTemplateAdded;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'FROM'**
-  String get adminFollowRequestFrom;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'TO'**
-  String get adminFollowRequestTo;
 
   /// Text in admin panel Parameters: {count} = numeric count.
   ///
@@ -57420,12 +49611,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All Sources'**
   String get discoveryFilterAllSources;
-
-  /// Input field hint text
-  ///
-  /// In en, this message translates to:
-  /// **'Type something...'**
-  String get draggableTextHint;
 
   /// Text displayed in global layer / MQTT
   ///
@@ -59875,12 +52060,6 @@ abstract class AppLocalizations {
   /// **'TAK Settings let you configure the gateway URL, toggle auto-connect on screen open, and set the stale timeout duration. All settings persist locally between app sessions.'**
   String get helpTakSectionSettings;
 
-  /// Title for blocked route screen
-  ///
-  /// In en, this message translates to:
-  /// **'Access Restricted'**
-  String get accessRestrictedTitle;
-
   /// Generic go back button label
   ///
   /// In en, this message translates to:
@@ -59892,12 +52071,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Device Not Connected'**
   String get deviceNotConnected;
-
-  /// Button label to connect device
-  ///
-  /// In en, this message translates to:
-  /// **'Connect Device'**
-  String get connectDevice;
 
   /// Message when trying to use feature without device
   ///
@@ -59916,12 +52089,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed: {error}'**
   String failedGeneric(String error);
-
-  /// Error when signal location radius update fails
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update signal location radius: {error}'**
-  String failedToUpdateSignalLocationRadius(String error);
 
   /// Error when saving global layer configuration fails
   ///
@@ -60217,12 +52384,6 @@ abstract class AppLocalizations {
   /// **'Waypoint updated'**
   String get waypointUpdated;
 
-  /// Confirmation shown after deleting a waypoint
-  ///
-  /// In en, this message translates to:
-  /// **'Waypoint deleted'**
-  String get waypointDeleted;
-
   /// Action that removes a waypoint locally only
   ///
   /// In en, this message translates to:
@@ -60252,12 +52413,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From {senderName}'**
   String waypointSheetFrom(String senderName);
-
-  /// Shows when a waypoint expires
-  ///
-  /// In en, this message translates to:
-  /// **'Expires {time}'**
-  String waypointSheetExpires(String time);
 
   /// Error shown when broadcasting a waypoint fails
   ///
@@ -60434,18 +52589,6 @@ abstract class AppLocalizations {
   /// **'Periodic summaries when multiple MeshCore events arrive in a short window'**
   String get meshcoreNotificationChannelBatchSummaryDescription;
 
-  /// MeshCore Settings tile + Ringtones screen title - per-channel notification sound picker
-  ///
-  /// In en, this message translates to:
-  /// **'Notification ringtones'**
-  String get meshcoreRingtonesTitle;
-
-  /// MeshCore Settings tile subtitle for the per-channel ringtone picker entry
-  ///
-  /// In en, this message translates to:
-  /// **'Pick a sound for each MeshCore notification channel'**
-  String get meshcoreRingtonesSubtitle;
-
   /// MeshCore Settings tile title for the Adverts notification channel ringtone
   ///
   /// In en, this message translates to:
@@ -60475,54 +52618,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom RTTTL'**
   String get meshcoreRingtoneChannelCustom;
-
-  /// Ringtones screen section header above the channel selector chip group
-  ///
-  /// In en, this message translates to:
-  /// **'Channel'**
-  String get meshcoreRingtonesChannelSectionTitle;
-
-  /// Ringtones screen section header above the preset list
-  ///
-  /// In en, this message translates to:
-  /// **'Presets'**
-  String get meshcoreRingtonesPresetsSectionTitle;
-
-  /// Ringtones screen action label - clears the user's selection so the channel falls back to the OS default sound
-  ///
-  /// In en, this message translates to:
-  /// **'Use system default'**
-  String get meshcoreRingtonesUseDefault;
-
-  /// Tooltip on the preview-play button next to a ringtone preset
-  ///
-  /// In en, this message translates to:
-  /// **'Preview'**
-  String get meshcoreRingtonesPreviewTooltip;
-
-  /// Tooltip on the preview-stop button while a preset is playing
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get meshcoreRingtonesStopTooltip;
-
-  /// Inline badge marking the currently-selected preset for the active channel
-  ///
-  /// In en, this message translates to:
-  /// **'Selected'**
-  String get meshcoreRingtonesSelectedBadge;
-
-  /// Snackbar confirming a ringtone selection has been saved
-  ///
-  /// In en, this message translates to:
-  /// **'Saved'**
-  String get meshcoreRingtonesSavedToast;
-
-  /// Snackbar confirming the channel's ringtone has been cleared back to the OS default
-  ///
-  /// In en, this message translates to:
-  /// **'Reset to default'**
-  String get meshcoreRingtonesClearedToast;
 
   /// Visual flow node title: Event
   ///
@@ -60884,18 +52979,6 @@ abstract class AppLocalizations {
   /// **'Banner removed'**
   String get profileBannerRemoved;
 
-  /// Text displayed in common UI
-  ///
-  /// In en, this message translates to:
-  /// **'Open Settings'**
-  String get commonOpenSettings;
-
-  /// Text displayed in social features
-  ///
-  /// In en, this message translates to:
-  /// **'No violent or graphic imagery'**
-  String get socialGuidelineNoViolentImagery;
-
   /// Label in global layer / MQTT
   ///
   /// In en, this message translates to:
@@ -61094,24 +53177,6 @@ abstract class AppLocalizations {
   /// **'Tap to run scheduled automation'**
   String get automationScheduledBody;
 
-  /// Label for node name in automation log entry details
-  ///
-  /// In en, this message translates to:
-  /// **'Node: {nodeName}'**
-  String automationLogNode(String nodeName);
-
-  /// Label for battery level in automation log entry details
-  ///
-  /// In en, this message translates to:
-  /// **'Battery: {level}%'**
-  String automationLogBattery(int level);
-
-  /// Label for message text in automation log entry details
-  ///
-  /// In en, this message translates to:
-  /// **'Message: {text}'**
-  String automationLogMessage(String text);
-
   /// History label when THEN branch was executed
   ///
   /// In en, this message translates to:
@@ -61213,18 +53278,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No automation activity yet'**
   String get automationHistoryEmpty;
-
-  /// Label for a successful action in history details
-  ///
-  /// In en, this message translates to:
-  /// **'Succeeded'**
-  String get automationHistoryActionSuccess;
-
-  /// Label for a failed action in history details
-  ///
-  /// In en, this message translates to:
-  /// **'Failed: {error}'**
-  String automationHistoryActionFailed(String error);
 
   /// Summary of action results in history
   ///
@@ -61507,24 +53560,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection was cancelled'**
   String get connectionCancelled;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'SocialMesh Conformance Bundle'**
-  String get adminConformanceBundleTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Admin diagnostic bundle from SocialMesh'**
-  String get adminDiagnosticBundleText;
-
-  /// Text in admin panel Parameters: {runId}.
-  ///
-  /// In en, this message translates to:
-  /// **'SocialMesh Diagnostic {runId}'**
-  String adminDiagnosticBundleSubject(String runId);
 
   /// Text displayed in onboarding
   ///
@@ -62324,101 +54359,11 @@ abstract class AppLocalizations {
   /// **'Handshake'**
   String get sipBadgeLabel;
 
-  /// SIP identity state label when no verified claim has been received.
-  ///
-  /// In en, this message translates to:
-  /// **'Unverified'**
-  String get sipIdentityStateUnverified;
-
-  /// SIP identity state label when the first identity claim was accepted on trust-on-first-use.
-  ///
-  /// In en, this message translates to:
-  /// **'Verified (TOFU)'**
-  String get sipIdentityStateVerifiedTofu;
-
-  /// SIP identity state label when the user has explicitly pinned this identity.
-  ///
-  /// In en, this message translates to:
-  /// **'Pinned'**
-  String get sipIdentityStatePinned;
-
-  /// SIP identity state label when the peer presented a different public key. Requires user action.
-  ///
-  /// In en, this message translates to:
-  /// **'Key Changed'**
-  String get sipIdentityStateChangedKey;
-
-  /// SIP identity state label when the identity claim TTL has expired.
-  ///
-  /// In en, this message translates to:
-  /// **'Expired'**
-  String get sipIdentityStateStale;
-
-  /// Warning message shown when a SIP peer's public key has changed unexpectedly.
-  ///
-  /// In en, this message translates to:
-  /// **'This peer\'s identity key has changed. Verify before trusting.'**
-  String get sipChangedKeyWarning;
-
-  /// Label for the SIP-advertised display name in NodeDex detail.
-  ///
-  /// In en, this message translates to:
-  /// **'SIP Name'**
-  String get sipDisplayNameLabel;
-
-  /// Label for the persona ID field in NodeDex detail for SIP peers.
-  ///
-  /// In en, this message translates to:
-  /// **'Persona ID'**
-  String get sipPersonaIdLabel;
-
-  /// Title for the SIP discovery bottom sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'Find people nearby'**
-  String get sipDiscoveryTitle;
-
-  /// Label showing how many SIP peers are nearby.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} {count, plural, =1{person} other{people}} nearby'**
-  String sipDiscoveryPeersNearby(int count);
-
-  /// Empty state text when no SocialMesh peers are found.
-  ///
-  /// In en, this message translates to:
-  /// **'No one nearby yet'**
-  String get sipDiscoveryNoPeers;
-
-  /// Description for the empty state in SocialMesh discovery.
-  ///
-  /// In en, this message translates to:
-  /// **'People using Handshake will appear here when they\'re in range.'**
-  String get sipDiscoveryNoPeersDescription;
-
   /// Button to trigger a SocialMesh rollcall scan.
   ///
   /// In en, this message translates to:
   /// **'Look for people'**
   String get sipDiscoveryScanButton;
-
-  /// Label shown when scan is on cooldown.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan available in {seconds}s'**
-  String sipDiscoveryScanCooldown(int seconds);
-
-  /// Fallback label for a SIP peer before identity exchange.
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh User'**
-  String get sipDiscoveryPeerAnonymous;
-
-  /// Device class label in peer detail.
-  ///
-  /// In en, this message translates to:
-  /// **'{deviceClass}'**
-  String sipDiscoveryDeviceClass(String deviceClass);
 
   /// Button label to initiate a SIP handshake with a peer.
   ///
@@ -62455,18 +54400,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wait {time}'**
   String sipHandshakeCooldown(String time);
-
-  /// Button label to request identity from a SIP peer.
-  ///
-  /// In en, this message translates to:
-  /// **'Request Identity'**
-  String get sipRequestIdentity;
-
-  /// Button label to share identity with a SIP peer.
-  ///
-  /// In en, this message translates to:
-  /// **'Share Identity'**
-  String get sipShareIdentity;
 
   /// Title for the SIP ephemeral DM screen.
   ///
@@ -62654,12 +54587,6 @@ abstract class AppLocalizations {
   /// **'Secure session reset - next message will renegotiate keys'**
   String get sipDmActionResetSnack;
 
-  /// Tab label inside the DM composer that opens the SIP Play game picker. Shown only when the peer advertises dmPlayV1.
-  ///
-  /// In en, this message translates to:
-  /// **'Play'**
-  String get sipPlayComposerLabel;
-
   /// Replaces the game title on the picker card while the offer envelope is in-flight; pairs with a spinner.
   ///
   /// In en, this message translates to:
@@ -62695,12 +54622,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offer declined'**
   String get sipPlayLifecycleDeclined;
-
-  /// Snackbar shown to the offerer when the peer doesn't respond within the offer timeout window.
-  ///
-  /// In en, this message translates to:
-  /// **'Offer expired'**
-  String get sipPlayLifecycleExpired;
 
   /// Header inside the Play composer panel — the panel shown when the user selects the Play tab.
   ///
@@ -62780,12 +54701,6 @@ abstract class AppLocalizations {
   /// **'DATA'**
   String get sipDmOverflowSectionData;
 
-  /// Title of the SIP Play picker bottom sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a game'**
-  String get sipPlayPickerTitle;
-
   /// Body copy beneath the picker title explaining the offer/accept flow.
   ///
   /// In en, this message translates to:
@@ -62798,23 +54713,11 @@ abstract class AppLocalizations {
   /// **'Tic-Tac-Toe'**
   String get sipPlayGameTicTacToe;
 
-  /// One-line description of Tic-Tac-Toe shown under its name in the picker.
-  ///
-  /// In en, this message translates to:
-  /// **'Classic 3x3. You place X if you offered, O if you accepted.'**
-  String get sipPlayGameTicTacToeDescription;
-
   /// Display name for the Connect Four game in the SIP Play picker and game bubbles.
   ///
   /// In en, this message translates to:
   /// **'Connect Four'**
   String get sipPlayGameConnectFour;
-
-  /// One-line description of Connect Four shown under its name in the picker.
-  ///
-  /// In en, this message translates to:
-  /// **'6x7 grid. Drop discs into a column. First to four-in-a-row wins.'**
-  String get sipPlayGameConnectFourDescription;
 
   /// Title shown on a SIP Play bubble whose gameType is not registered in this build. Renders a safe fallback so unknown games never crash the timeline.
   ///
@@ -62942,12 +54845,6 @@ abstract class AppLocalizations {
   /// **'They declined the offer'**
   String get sipPlayStatusTheyDeclined;
 
-  /// Label for the text composer mode in the SIP DM composer mode switcher.
-  ///
-  /// In en, this message translates to:
-  /// **'Text'**
-  String get sipDmComposerModeText;
-
   /// Sketch tab label in the DM composer mode switcher.
   ///
   /// In en, this message translates to:
@@ -63067,18 +54964,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replay'**
   String get sipSignalReplay;
-
-  /// Static payload-size hint retained for legacy callers. The composer footer now shows the live encoded size via sipSignalSizeBytes.
-  ///
-  /// In en, this message translates to:
-  /// **'Tiny signal • ~20–32 bytes'**
-  String get sipSignalToneSizeBadge;
-
-  /// Static payload-size hint retained for legacy callers. The composer footer now shows the live encoded size via sipSignalSizeBytes.
-  ///
-  /// In en, this message translates to:
-  /// **'Tiny Morse • ~20–60 bytes'**
-  String get sipSignalMorseSizeBadge;
 
   /// Live encoded-size readout in the composer footer. Updates per keystroke / pad tap.
   ///
@@ -63307,24 +55192,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sketch can\'t fit on the mesh - simplify your strokes.'**
   String get sipInkBlocked;
-
-  /// Button label to open an ephemeral DM with a peer.
-  ///
-  /// In en, this message translates to:
-  /// **'Open DM'**
-  String get sipDmOpenAction;
-
-  /// Title for the SIP peer detail bottom sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'About this person'**
-  String get sipPeerDetailTitle;
-
-  /// Label for the peer's mesh node identifier.
-  ///
-  /// In en, this message translates to:
-  /// **'Node ID'**
-  String get sipPeerDetailNodeId;
 
   /// Label for the peer's device class.
   ///
@@ -63656,12 +55523,6 @@ abstract class AppLocalizations {
   /// **'+{count}'**
   String sipHubPeerServiceMoreCount(int count);
 
-  /// Incoming handshake request label.
-  ///
-  /// In en, this message translates to:
-  /// **'{peerName} wants to connect'**
-  String sipHubIncomingRequestFrom(String peerName);
-
   /// Subtitle shown below the peer name and hex ID on the incoming handshake request card.
   ///
   /// In en, this message translates to:
@@ -63727,12 +55588,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Capacity'**
   String get meshCapacityScreenTitle;
-
-  /// Drawer entry label for the Mesh Capacity Advisor screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh Capacity'**
-  String get meshCapacityDrawerLabel;
 
   /// Unit label rendered next to the active-RF-node count in the Mesh Capacity hero card.
   ///
@@ -64310,18 +56165,6 @@ abstract class AppLocalizations {
   /// **'This is your first conversation with this node. Only accept messages from people you trust on the mesh. Tap to dismiss.'**
   String get sipDmFirstContactBannerBody;
 
-  /// Empty state title when no SIP peers have been discovered yet.
-  ///
-  /// In en, this message translates to:
-  /// **'Looking for neighbors'**
-  String get sipHubEmptyTitle;
-
-  /// Empty state description when no SIP peers have been discovered yet.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap Look for people to send a roll-call to other Handshake users on your mesh. Anyone in range with the app open will reply within a few seconds.'**
-  String get sipHubEmptyDescription;
-
   /// Prefix for the animated SIP Hub scanning empty state title (trailing space separates from keyword).
   ///
   /// In en, this message translates to:
@@ -64406,12 +56249,6 @@ abstract class AppLocalizations {
   /// **'All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.'**
   String get helpSipHubPrivacyBubble;
 
-  /// Last seen time label for a peer.
-  ///
-  /// In en, this message translates to:
-  /// **'Seen {time}'**
-  String sipHubLastSeen(String time);
-
   /// Status badge shown during a handshake.
   ///
   /// In en, this message translates to:
@@ -64430,29 +56267,11 @@ abstract class AppLocalizations {
   /// **'Connected'**
   String get sipHubConnected;
 
-  /// Last message preview in conversation tile.
-  ///
-  /// In en, this message translates to:
-  /// **'{name}: {message}'**
-  String sipHubMessagePreview(String name, String message);
-
-  /// Expiry countdown for a DM session.
-  ///
-  /// In en, this message translates to:
-  /// **'Expires in {time}'**
-  String sipHubSessionExpiry(String time);
-
   /// Subtitle for conversations with no messages.
   ///
   /// In en, this message translates to:
   /// **'No messages yet'**
   String get sipHubNoMessages;
-
-  /// Fallback peer name showing hex node ID.
-  ///
-  /// In en, this message translates to:
-  /// **'Peer {hexId}'**
-  String sipDmPeerName(String hexId);
 
   /// Snackbar confirmation when auto-scan is turned on.
   ///
@@ -64484,23 +56303,11 @@ abstract class AppLocalizations {
   /// **'Scanning…'**
   String get sipScanningIndicator;
 
-  /// Snackbar shown when tapping a peer to start handshake.
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting…'**
-  String get sipConnecting;
-
   /// Label shown above the input field when replying to a message.
   ///
   /// In en, this message translates to:
   /// **'Replying to'**
   String get sipDmReplyingTo;
-
-  /// Accessibility hint for swiping a message to reply.
-  ///
-  /// In en, this message translates to:
-  /// **'Swipe to reply'**
-  String get sipDmSwipeToReply;
 
   /// Label for the reply action in the message context menu.
   ///
@@ -64646,18 +56453,6 @@ abstract class AppLocalizations {
   /// **'Disconnected'**
   String get mrrpHarnessRadioDisconnected;
 
-  /// Label for current channel summary on harness home.
-  ///
-  /// In en, this message translates to:
-  /// **'Channel'**
-  String get mrrpHarnessChannel;
-
-  /// Shown when no channel is available.
-  ///
-  /// In en, this message translates to:
-  /// **'No channel'**
-  String get mrrpHarnessChannelNone;
-
   /// Label for active SIP peer count on harness home.
   ///
   /// In en, this message translates to:
@@ -64730,12 +56525,6 @@ abstract class AppLocalizations {
   /// **'{count} {count, plural, =1{service} other{services}}'**
   String mrrpHarnessPeerServices(int count);
 
-  /// Timestamp of last SERVICE_ADVERT from a peer.
-  ///
-  /// In en, this message translates to:
-  /// **'Last advert: {time}'**
-  String mrrpHarnessPeerLastAdvert(String time);
-
   /// Button to trigger SERVICE_DIR_REQ to refresh a peer's service directory.
   ///
   /// In en, this message translates to:
@@ -64753,12 +56542,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'v{major}.{minor}'**
   String mrrpHarnessServiceVersion(int major, int minor);
-
-  /// Decoded service flags for a service descriptor.
-  ///
-  /// In en, this message translates to:
-  /// **'Flags: {flags}'**
-  String mrrpHarnessServiceFlags(String flags);
 
   /// Label for expanding raw hex view of a descriptor.
   ///
@@ -64789,12 +56572,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select action'**
   String get mrrpHarnessSelectAction;
-
-  /// Label for payload preset selector.
-  ///
-  /// In en, this message translates to:
-  /// **'Payload preset'**
-  String get mrrpHarnessPayloadPreset;
 
   /// Label for raw hex payload editor.
   ///
@@ -64849,18 +56626,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Latency: {ms}ms'**
   String mrrpHarnessResponseLatency(int ms);
-
-  /// Marker when a response was deduplicated.
-  ///
-  /// In en, this message translates to:
-  /// **'Duplicate response'**
-  String get mrrpHarnessResponseDuplicate;
-
-  /// Marker when a response was from cache.
-  ///
-  /// In en, this message translates to:
-  /// **'Cached response'**
-  String get mrrpHarnessResponseCached;
 
   /// Title for the simulated peer lab screen.
   ///
@@ -64928,12 +56693,6 @@ abstract class AppLocalizations {
   /// **'Maximum 4 simulated peers'**
   String get mrrpHarnessSimMaxPeers;
 
-  /// Confirmation dialog for deleting a simulated peer.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete simulated peer?'**
-  String get mrrpHarnessSimDeleteConfirm;
-
   /// Label for service selection on simulated peer configuration.
   ///
   /// In en, this message translates to:
@@ -64969,24 +56728,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MRRP events will appear here as traffic flows.'**
   String get mrrpHarnessTrafficEmptyDescription;
-
-  /// Filter label for peer in traffic console.
-  ///
-  /// In en, this message translates to:
-  /// **'Filter by peer'**
-  String get mrrpHarnessTrafficFilterPeer;
-
-  /// Filter label for message type in traffic console.
-  ///
-  /// In en, this message translates to:
-  /// **'Filter by type'**
-  String get mrrpHarnessTrafficFilterType;
-
-  /// Filter label for service in traffic console.
-  ///
-  /// In en, this message translates to:
-  /// **'Filter by service'**
-  String get mrrpHarnessTrafficFilterService;
 
   /// Filter chip label showing all traffic events (no filter).
   ///
@@ -65090,12 +56831,6 @@ abstract class AppLocalizations {
   /// **'Copy event'**
   String get mrrpHarnessTrafficCopy;
 
-  /// Action to export all traffic events.
-  ///
-  /// In en, this message translates to:
-  /// **'Export events'**
-  String get mrrpHarnessTrafficExport;
-
   /// Direction indicator (TX or RX) on a traffic event.
   ///
   /// In en, this message translates to:
@@ -65108,29 +56843,11 @@ abstract class AppLocalizations {
   /// **'Budget & Timing'**
   String get mrrpHarnessBudgetTitle;
 
-  /// Label for remaining byte budget.
-  ///
-  /// In en, this message translates to:
-  /// **'Remaining budget'**
-  String get mrrpHarnessBudgetRemaining;
-
   /// Label for sends blocked by budget counter.
   ///
   /// In en, this message translates to:
   /// **'Sends blocked'**
   String get mrrpHarnessBudgetBlocked;
-
-  /// Label for duplicate suppression hits counter.
-  ///
-  /// In en, this message translates to:
-  /// **'Dedup hits'**
-  String get mrrpHarnessBudgetDedupHits;
-
-  /// Label for timeout counters.
-  ///
-  /// In en, this message translates to:
-  /// **'Timeouts'**
-  String get mrrpHarnessBudgetTimeouts;
 
   /// Label for SERVICE_ADVERT cadence timing.
   ///
@@ -65276,12 +56993,6 @@ abstract class AppLocalizations {
   /// **'Not rejected (unexpected)'**
   String get mrrpHarnessFixtureNotRejected;
 
-  /// Empty state when no fixture data is loaded.
-  ///
-  /// In en, this message translates to:
-  /// **'No fixtures available'**
-  String get mrrpHarnessFixtureEmpty;
-
   /// Button label to open the QA scenario runner.
   ///
   /// In en, this message translates to:
@@ -65354,29 +57065,11 @@ abstract class AppLocalizations {
   /// **'{passed}/{total} scenarios passed'**
   String mrrpHarnessQaSummary(int passed, int total);
 
-  /// Empty state when no QA scenarios are available.
-  ///
-  /// In en, this message translates to:
-  /// **'No scenarios defined'**
-  String get mrrpHarnessQaEmpty;
-
-  /// Label shown while a scenario is executing.
-  ///
-  /// In en, this message translates to:
-  /// **'Running...'**
-  String get mrrpHarnessQaRunning;
-
   /// Label for expected outcome in a QA step.
   ///
   /// In en, this message translates to:
   /// **'Expected'**
   String get mrrpHarnessQaExpected;
-
-  /// Label for actual outcome in a QA step.
-  ///
-  /// In en, this message translates to:
-  /// **'Actual'**
-  String get mrrpHarnessQaActual;
 
   /// Section header for traffic counters in budget panel.
   ///
@@ -65528,47 +57221,11 @@ abstract class AppLocalizations {
   /// **'Mesh Explorer'**
   String get meshExplorerDrawerLabel;
 
-  /// Hero status when radio is connected.
-  ///
-  /// In en, this message translates to:
-  /// **'Connected to mesh'**
-  String get meshExplorerHeroConnected;
-
   /// Hero status when no radio is connected.
   ///
   /// In en, this message translates to:
   /// **'No radio connected'**
   String get meshExplorerHeroDisconnected;
-
-  /// Peer count in the hero section.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No nearby peers} =1{1 nearby peer} other{{count} nearby peers}}'**
-  String meshExplorerHeroPeersCount(int count);
-
-  /// Service count in the hero section.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No services} =1{1 service} other{{count} services}}'**
-  String meshExplorerHeroServicesCount(int count);
-
-  /// Section header for nearby peers.
-  ///
-  /// In en, this message translates to:
-  /// **'Nearby'**
-  String get meshExplorerSectionNearby;
-
-  /// Section header for nearby services.
-  ///
-  /// In en, this message translates to:
-  /// **'Services'**
-  String get meshExplorerSectionServices;
-
-  /// Section header for board posts.
-  ///
-  /// In en, this message translates to:
-  /// **'Board Activity'**
-  String get meshExplorerSectionBoard;
 
   /// Prefix for the animated scanning empty state title (trailing space separates from keyword).
   ///
@@ -65750,42 +57407,6 @@ abstract class AppLocalizations {
   /// **'Peer Discovery'**
   String get notificationChannelSipDiscovery;
 
-  /// Empty state title when no peers are nearby.
-  ///
-  /// In en, this message translates to:
-  /// **'No nearby peers'**
-  String get meshExplorerEmptyNearbyTitle;
-
-  /// Empty state body when no peers are nearby.
-  ///
-  /// In en, this message translates to:
-  /// **'Peers will appear when mesh devices are in range'**
-  String get meshExplorerEmptyNearbyBody;
-
-  /// Empty state title when no services are nearby.
-  ///
-  /// In en, this message translates to:
-  /// **'No services found'**
-  String get meshExplorerEmptyServicesTitle;
-
-  /// Empty state body when no services are nearby.
-  ///
-  /// In en, this message translates to:
-  /// **'Nearby peers will advertise services here'**
-  String get meshExplorerEmptyServicesBody;
-
-  /// Empty state title when no board posts exist.
-  ///
-  /// In en, this message translates to:
-  /// **'No board activity'**
-  String get meshExplorerEmptyBoardTitle;
-
-  /// Empty state body when no board posts exist.
-  ///
-  /// In en, this message translates to:
-  /// **'Board posts from nearby peers will appear here'**
-  String get meshExplorerEmptyBoardBody;
-
   /// Empty state title when no radio is connected.
   ///
   /// In en, this message translates to:
@@ -65840,12 +57461,6 @@ abstract class AppLocalizations {
   /// **'Nearby'**
   String get meshExplorerHopCountUnknown;
 
-  /// Service count on peer tile.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No services} =1{1 service} other{{count} services}}'**
-  String meshExplorerServiceCount(int count);
-
   /// Action button to initiate SIP handshake.
   ///
   /// In en, this message translates to:
@@ -65863,12 +57478,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Request Identity'**
   String get meshExplorerActionRequestIdentity;
-
-  /// Action to open full NodeDex detail.
-  ///
-  /// In en, this message translates to:
-  /// **'Open in NodeDex'**
-  String get meshExplorerActionOpenNodeDex;
 
   /// Action to block a peer.
   ///
@@ -65888,18 +57497,6 @@ abstract class AppLocalizations {
   /// **'Unpin Peer'**
   String get meshExplorerActionUnpin;
 
-  /// Title for peer detail bottom sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'Peer Detail'**
-  String get meshExplorerPeerDetail;
-
-  /// Section in peer detail for identity info.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity'**
-  String get meshExplorerPeerDetailIdentity;
-
   /// Section in peer detail for services.
   ///
   /// In en, this message translates to:
@@ -65911,78 +57508,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Actions'**
   String get meshExplorerPeerDetailActions;
-
-  /// Public name for board.v1 service.
-  ///
-  /// In en, this message translates to:
-  /// **'Bulletin Board'**
-  String get meshExplorerServiceBulletinBoard;
-
-  /// Subtitle for board.v1 service.
-  ///
-  /// In en, this message translates to:
-  /// **'Local mesh posts'**
-  String get meshExplorerServiceBulletinBoardSub;
-
-  /// Public name for profile.v1 service.
-  ///
-  /// In en, this message translates to:
-  /// **'Peer Profile'**
-  String get meshExplorerServicePeerProfile;
-
-  /// Subtitle for profile.v1 service.
-  ///
-  /// In en, this message translates to:
-  /// **'Shared identity info'**
-  String get meshExplorerServicePeerProfileSub;
-
-  /// Fallback name for unknown MRRP services.
-  ///
-  /// In en, this message translates to:
-  /// **'Service'**
-  String get meshExplorerServiceGeneric;
-
-  /// Fallback subtitle for unknown services.
-  ///
-  /// In en, this message translates to:
-  /// **'Available nearby'**
-  String get meshExplorerServiceGenericSub;
-
-  /// Action label for board service.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Board'**
-  String get meshExplorerServiceOpenBoard;
-
-  /// Action label for profile service.
-  ///
-  /// In en, this message translates to:
-  /// **'View Profile'**
-  String get meshExplorerServiceViewProfile;
-
-  /// Generic action label for services.
-  ///
-  /// In en, this message translates to:
-  /// **'Details'**
-  String get meshExplorerServiceDetails;
-
-  /// Chip label when a service requires SIP handshake.
-  ///
-  /// In en, this message translates to:
-  /// **'Requires handshake'**
-  String get meshExplorerServiceRequiresHandshake;
-
-  /// Chip label when a service requires identity verification.
-  ///
-  /// In en, this message translates to:
-  /// **'Requires identity'**
-  String get meshExplorerServiceRequiresIdentity;
-
-  /// Peer count offering a service.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 peer} other{{count} peers}}'**
-  String meshExplorerServicePeerCount(int count);
 
   /// Title for mesh privacy settings screen.
   ///
@@ -66068,18 +57593,6 @@ abstract class AppLocalizations {
   /// **'Scan'**
   String get meshExplorerScanAction;
 
-  /// Action to refresh mesh data.
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh'**
-  String get meshExplorerRefreshAction;
-
-  /// Badge label for peer with changed identity key.
-  ///
-  /// In en, this message translates to:
-  /// **'Changed key'**
-  String get meshExplorerChangedKey;
-
   /// Snackbar message after rollcall request sent.
   ///
   /// In en, this message translates to:
@@ -66127,12 +57640,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Handshake request received'**
   String get meshExplorerHandshakeReceived;
-
-  /// Compact status strip text when radio is connected.
-  ///
-  /// In en, this message translates to:
-  /// **'Connected to mesh'**
-  String get meshExplorerStatusConnected;
 
   /// Compact status showing peer and service counts.
   ///
@@ -66200,59 +57707,17 @@ abstract class AppLocalizations {
   /// **'Share something'**
   String get meshExplorerEmptyAction;
 
-  /// Compact label for the create service action.
-  ///
-  /// In en, this message translates to:
-  /// **'Create'**
-  String get meshExplorerCreateLabel;
-
   /// Action button in not-connected empty state.
   ///
   /// In en, this message translates to:
   /// **'Connect a radio'**
   String get meshExplorerNotConnectedAction;
 
-  /// Drawer menu label for the Mesh Services screen.
-  ///
-  /// In en, this message translates to:
-  /// **'My shares'**
-  String get meshServicesDrawerLabel;
-
-  /// App bar title for the My Services management screen.
-  ///
-  /// In en, this message translates to:
-  /// **'My shares'**
-  String get meshServicesTitle;
-
-  /// Empty state headline when user has no service instances.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing shared yet'**
-  String get meshServicesEmpty;
-
-  /// Empty state description on My Services screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Share an update, question, checklist, alert, or reading with people nearby on the mesh.'**
-  String get meshServicesEmptyDescription;
-
-  /// Button label to create a new service instance.
-  ///
-  /// In en, this message translates to:
-  /// **'Share something'**
-  String get meshServicesCreateAction;
-
   /// App bar title for the template picker / create service screen.
   ///
   /// In en, this message translates to:
   /// **'Share with the mesh'**
   String get meshServicesCreateTitle;
-
-  /// Subtitle on the template picker screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose what you want to share nearby'**
-  String get meshServicesCreateSubtitle;
 
   /// Canonical mesh service type name for feed-style services.
   ///
@@ -66415,30 +57880,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share short posts with nearby peers'**
   String get meshServicesTemplateBoardDescription;
-
-  /// Template display name for signal beacon.
-  ///
-  /// In en, this message translates to:
-  /// **'Signal Beacon'**
-  String get meshServicesTemplateSignal;
-
-  /// Template description for signal beacon.
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcast a signal to nearby peers'**
-  String get meshServicesTemplateSignalDescription;
-
-  /// Template display name for quick poll.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick Poll'**
-  String get meshServicesTemplatePoll;
-
-  /// Template description for quick poll.
-  ///
-  /// In en, this message translates to:
-  /// **'Ask a question with multiple choice answers'**
-  String get meshServicesTemplatePollDescription;
 
   /// Template display name for shared checklist.
   ///
@@ -66632,12 +58073,6 @@ abstract class AppLocalizations {
   /// **'This peer is not hosting any active services right now.'**
   String get serviceDetailNoInstancesBody;
 
-  /// Label for the instance description field in the remote instance detail.
-  ///
-  /// In en, this message translates to:
-  /// **'Description'**
-  String get serviceDetailInstanceDescription;
-
   /// Expiry information for a remote service instance.
   ///
   /// In en, this message translates to:
@@ -66710,12 +58145,6 @@ abstract class AppLocalizations {
   /// **'Add Item'**
   String get meshServicesFieldAddItem;
 
-  /// App bar title for the service preview screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview'**
-  String get meshServicesPreviewTitle;
-
   /// Subtitle on the preview screen.
   ///
   /// In en, this message translates to:
@@ -66727,12 +58156,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share now'**
   String get meshServicesPublishAction;
-
-  /// Snackbar message after successfully creating a service.
-  ///
-  /// In en, this message translates to:
-  /// **'Service published'**
-  String get meshServicesPublishSuccess;
 
   /// Completion panel headline after a service has been published.
   ///
@@ -66812,18 +58235,6 @@ abstract class AppLocalizations {
   /// **'Delete this service? This cannot be undone.'**
   String get meshServicesDeleteConfirm;
 
-  /// App bar title for the service instance detail screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Service Details'**
-  String get meshServicesDetailTitle;
-
-  /// Shows remaining time before service expires.
-  ///
-  /// In en, this message translates to:
-  /// **'{duration} remaining'**
-  String meshServicesRemainingTime(String duration);
-
   /// Short duration label in minutes.
   ///
   /// In en, this message translates to:
@@ -66841,12 +58252,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mesh Games'**
   String get meshGamesTitle;
-
-  /// Filter chip label for the games tab on the services list.
-  ///
-  /// In en, this message translates to:
-  /// **'Games'**
-  String get meshGamesTabLabel;
 
   /// Empty state title for the games list.
   ///
@@ -66950,35 +58355,11 @@ abstract class AppLocalizations {
   /// **'Syncing…'**
   String get meshGamesStatusStale;
 
-  /// Generic status chip when a game is in progress.
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get meshGamesStatusActive;
-
   /// Action label that triggers a STATE_REQ to the peer.
   ///
   /// In en, this message translates to:
   /// **'Resync'**
   String get meshGamesActionResync;
-
-  /// Action label that abandons the current session.
-  ///
-  /// In en, this message translates to:
-  /// **'Abandon'**
-  String get meshGamesActionAbandon;
-
-  /// Confirmation title for abandoning a game.
-  ///
-  /// In en, this message translates to:
-  /// **'Abandon this game?'**
-  String get meshGamesAbandonConfirmTitle;
-
-  /// Confirmation body for abandoning a game.
-  ///
-  /// In en, this message translates to:
-  /// **'The other player will be notified.'**
-  String get meshGamesAbandonConfirmMessage;
 
   /// Label for the opponent field.
   ///
@@ -67105,42 +58486,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get meshServicesCancelAction;
-
-  /// Hint text for the search field on the My Services screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Search my shares'**
-  String get meshServicesSearchHint;
-
-  /// Filter chip label for all service instances.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get meshServicesFilterAll;
-
-  /// Filter chip label for active service instances.
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get meshServicesFilterActive;
-
-  /// Filter chip label for expired service instances.
-  ///
-  /// In en, this message translates to:
-  /// **'Expired'**
-  String get meshServicesFilterExpired;
-
-  /// Filter chip label for stopped service instances.
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped'**
-  String get meshServicesFilterStopped;
-
-  /// Empty state text when search or filter yields no results.
-  ///
-  /// In en, this message translates to:
-  /// **'No matching shares'**
-  String get meshServicesNoResults;
 
   /// Label for the terrain profile action in the measurement card actions sheet.
   ///
@@ -67634,18 +58979,6 @@ abstract class AppLocalizations {
   /// **'Details'**
   String get servicePresentationFallbackAction;
 
-  /// Label for the hold-to-record voice message button in the contacts detail sheet
-  ///
-  /// In en, this message translates to:
-  /// **'Voice'**
-  String get voiceMessageSendButton;
-
-  /// Status text shown while a voice message is being recorded
-  ///
-  /// In en, this message translates to:
-  /// **'Recording…'**
-  String get voiceMessageRecording;
-
   /// Hint text shown on the press-to-talk record button before recording starts
   ///
   /// In en, this message translates to:
@@ -67712,18 +59045,6 @@ abstract class AppLocalizations {
   /// **'Maximum recording length reached'**
   String get voiceMessageAutoStopped;
 
-  /// Hint text below the stop button in the voice recording overlay
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to stop recording'**
-  String get voiceRecordingTapToStop;
-
-  /// Label for the stop-recording button in the voice recording overlay
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get voiceRecordingStopButton;
-
   /// Live recording indicator label shown in the recording overlay
   ///
   /// In en, this message translates to:
@@ -67765,12 +59086,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retake'**
   String get voiceRecordingRetakeButton;
-
-  /// Send confirmation button in the voice recording review phase
-  ///
-  /// In en, this message translates to:
-  /// **'Send'**
-  String get voiceRecordingSendButton;
 
   /// Status shown after the user stops recording and before they confirm send
   ///
@@ -67844,12 +59159,6 @@ abstract class AppLocalizations {
   /// **'Voice message'**
   String get voiceAttachmentCardTitle;
 
-  /// Status label while waveform is being analysed in the voice attachment card
-  ///
-  /// In en, this message translates to:
-  /// **'Analysing…'**
-  String get voiceAttachmentAnalysing;
-
   /// Error label shown when voice message playback fails
   ///
   /// In en, this message translates to:
@@ -67861,12 +59170,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mono'**
   String get voiceAttachmentMono;
-
-  /// Tooltip for the pause button on the voice attachment card
-  ///
-  /// In en, this message translates to:
-  /// **'Pause'**
-  String get voiceAttachmentPause;
 
   /// Label for the Voice button in the contact detail sheet action row
   ///
@@ -67885,18 +59188,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign outbound transfers with your identity key'**
   String get stlSigningSubtitle;
-
-  /// Label shown when an inbound transfer has a valid STL signature
-  ///
-  /// In en, this message translates to:
-  /// **'Signature verified'**
-  String get stlSignatureValid;
-
-  /// Warning label shown when an inbound transfer has an invalid STL signature
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid signature'**
-  String get stlSignatureInvalid;
 
   /// Button label in the traceroute card to open the route on the map
   ///
@@ -67921,12 +59212,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show all nodes'**
   String get tracerouteShowAllNodes;
-
-  /// Tooltip for heading-up compass mode that rotates the map to match device orientation
-  ///
-  /// In en, this message translates to:
-  /// **'Heading up'**
-  String get mapControlsHeadingUp;
 
   /// Snackbar message when the device does not have a compass/magnetometer sensor
   ///
@@ -68198,12 +59483,6 @@ abstract class AppLocalizations {
   /// **'Run an on-device TAK server for direct ATAK/iTAK connections over mesh'**
   String get takBridgeEnableSubtitle;
 
-  /// Label for the TAK server port number field
-  ///
-  /// In en, this message translates to:
-  /// **'Server Port'**
-  String get takBridgeServerPort;
-
   /// Badge text when the TAK bridge server is running
   ///
   /// In en, this message translates to:
@@ -68257,18 +59536,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connected Clients'**
   String get takBridgeClientsTitle;
-
-  /// Empty state text when no TAK clients are connected to the bridge
-  ///
-  /// In en, this message translates to:
-  /// **'No TAK clients connected'**
-  String get takBridgeNoClients;
-
-  /// Shows how long a TAK client has been connected
-  ///
-  /// In en, this message translates to:
-  /// **'Connected {duration}'**
-  String takBridgeClientDuration(String duration);
 
   /// Title for the TAK identity registry viewer
   ///
@@ -68360,12 +59627,6 @@ abstract class AppLocalizations {
   /// **'Stop Streaming'**
   String get takVideoStopStream;
 
-  /// Button label to end and clean up a stream
-  ///
-  /// In en, this message translates to:
-  /// **'End Stream'**
-  String get takVideoEndStream;
-
   /// Status message when camera is being initialized
   ///
   /// In en, this message translates to:
@@ -68402,12 +59663,6 @@ abstract class AppLocalizations {
   /// **'Stream ended'**
   String get takVideoEnded;
 
-  /// Status message when publisher is idle and ready
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to stream'**
-  String get takVideoIdle;
-
   /// Title for empty state when no live streams are available
   ///
   /// In en, this message translates to:
@@ -68419,12 +59674,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'There are no active video streams at the moment.'**
   String get takVideoEmptyDescription;
-
-  /// Button label to refresh the stream list
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh'**
-  String get takVideoRefresh;
 
   /// Status message when stream list is being loaded
   ///
@@ -68438,41 +59687,17 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 live stream} other{{count} live streams}}'**
   String takVideoStreamCount(int count);
 
-  /// Button label to watch a live stream
-  ///
-  /// In en, this message translates to:
-  /// **'Watch Stream'**
-  String get takVideoWatchStream;
-
-  /// Title for the video player screen
-  ///
-  /// In en, this message translates to:
-  /// **'Live Stream'**
-  String get takVideoPlayerTitle;
-
   /// Status message when video player is loading
   ///
   /// In en, this message translates to:
   /// **'Loading stream...'**
   String get takVideoPlayerLoading;
 
-  /// Message when the stream being watched has ended
-  ///
-  /// In en, this message translates to:
-  /// **'Stream has ended'**
-  String get takVideoPlayerEnded;
-
   /// Message when video player encounters an error
   ///
   /// In en, this message translates to:
   /// **'Playback error'**
   String get takVideoPlayerError;
-
-  /// Message when camera/mic permissions are not granted
-  ///
-  /// In en, this message translates to:
-  /// **'Camera and microphone permissions are required to stream.'**
-  String get takVideoPermissionRequired;
 
   /// Message when user needs to sign in for video streaming
   ///
@@ -68503,12 +59728,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Network (TCP)'**
   String get deviceSheetNetwork;
-
-  /// Tab title for network transport in scanner screen
-  ///
-  /// In en, this message translates to:
-  /// **'Network'**
-  String get networkSectionTitle;
 
   /// Section header for saved network endpoints list
   ///
@@ -68564,12 +59783,6 @@ abstract class AppLocalizations {
   /// **'e.g. Living Room Node'**
   String get networkEndpointNameHint;
 
-  /// Status text while connecting to a network endpoint
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting to {address}...'**
-  String networkConnecting(String address);
-
   /// Error message when network connection fails
   ///
   /// In en, this message translates to:
@@ -68624,18 +59837,6 @@ abstract class AppLocalizations {
   /// **'Last used {time}'**
   String networkLastUsed(String time);
 
-  /// Tab label for Bluetooth transport in scanner
-  ///
-  /// In en, this message translates to:
-  /// **'Bluetooth'**
-  String get scannerTabBluetooth;
-
-  /// Tab label for Network transport in scanner
-  ///
-  /// In en, this message translates to:
-  /// **'Network'**
-  String get scannerTabNetwork;
-
   /// Section header for mDNS-discovered Meshtastic devices on the local network
   ///
   /// In en, this message translates to:
@@ -68653,12 +59854,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Meshtastic devices with WiFi enabled will appear here automatically.'**
   String get mdnsNoDevicesDescription;
-
-  /// Status text shown while connecting to a discovered mDNS device
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting…'**
-  String get mdnsConnecting;
 
   /// Transport type label for TCP connections
   ///
@@ -68731,12 +59926,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No Mesh Incidents'**
   String get meshIncidentEmptyTitle;
-
-  /// Empty state description for mesh incident list
-  ///
-  /// In en, this message translates to:
-  /// **'Incident reports from the mesh network will appear here. Tap the button to create a new report.'**
-  String get meshIncidentEmptyDescription;
 
   /// Empty state cycling tagline 1
   ///
@@ -69002,12 +60191,6 @@ abstract class AppLocalizations {
   /// **'Correct Report'**
   String get meshIncidentCorrectReport;
 
-  /// Title for handoff/export plain-language summary
-  ///
-  /// In en, this message translates to:
-  /// **'Handoff Summary'**
-  String get meshIncidentHandoffTitle;
-
   /// Label indicating coarse location data
   ///
   /// In en, this message translates to:
@@ -69164,23 +60347,11 @@ abstract class AppLocalizations {
   /// **'This content cannot be translated'**
   String get translateContentIneligible;
 
-  /// Updated subtitle for the featured Translation Pack card — no longer implies unlimited
-  ///
-  /// In en, this message translates to:
-  /// **'On-demand translation with smart caching, privacy controls, and BYO provider support'**
-  String get subscriptionFeaturedTranslationSubtitleRefactored;
-
   /// Outcome-driven benefit line for translation in bundle card
   ///
   /// In en, this message translates to:
   /// **'Instant message translation'**
   String get subscriptionTranslationWithAllowance;
-
-  /// Updated Complete Pack subtitle now that translation is included
-  ///
-  /// In en, this message translates to:
-  /// **'Every feature, one price - including translation'**
-  String get subscriptionCompletePackSubtitleWithTranslation;
 
   /// Title for the translation settings screen
   ///
@@ -69416,12 +60587,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 recent co-seen node} other{{count} recent co-seen nodes}}'**
   String avatarStackCoSeenLabel(int count);
 
-  /// Tooltip shown when hovering over a co-seen node avatar in the stack
-  ///
-  /// In en, this message translates to:
-  /// **'{name}'**
-  String avatarStackNodeTooltip(String name);
-
   /// Accessibility label for the overflow indicator circle in an avatar stack, e.g. '+3 more'
   ///
   /// In en, this message translates to:
@@ -69445,264 +60610,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View recent links'**
   String get nodedexCoSeenCardViewAll;
-
-  /// Title for the nearby people/discovery screen
-  ///
-  /// In en, this message translates to:
-  /// **'Nearby'**
-  String get nearbyTitle;
-
-  /// Subtitle explaining what the nearby screen shows
-  ///
-  /// In en, this message translates to:
-  /// **'People and devices on the mesh'**
-  String get nearbySubtitle;
-
-  /// Button to start scanning for nearby mesh users
-  ///
-  /// In en, this message translates to:
-  /// **'Look for people'**
-  String get nearbyScanButton;
-
-  /// Status text while scanning for nearby peers
-  ///
-  /// In en, this message translates to:
-  /// **'Looking for people nearby…'**
-  String get nearbyScanningLabel;
-
-  /// Scan cooldown timer
-  ///
-  /// In en, this message translates to:
-  /// **'Scan again in {seconds}s'**
-  String nearbyScanCooldownLabel(int seconds);
-
-  /// Fallback name for an unidentified nearby peer
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh User'**
-  String get nearbyPersonAnonymous;
-
-  /// Status when a peer was just seen
-  ///
-  /// In en, this message translates to:
-  /// **'Nearby now'**
-  String get nearbyStatusNow;
-
-  /// Status when peer was seen minutes ago
-  ///
-  /// In en, this message translates to:
-  /// **'Seen {count} min ago'**
-  String nearbyStatusMinutesAgo(int count);
-
-  /// Status when peer was seen hours ago
-  ///
-  /// In en, this message translates to:
-  /// **'Seen {count}h ago'**
-  String nearbyStatusHoursAgo(int count);
-
-  /// Empty state title when no nearby people found
-  ///
-  /// In en, this message translates to:
-  /// **'No one nearby yet'**
-  String get nearbyEmptyTitle;
-
-  /// Empty state description guiding the user to scan
-  ///
-  /// In en, this message translates to:
-  /// **'Tap “Look for people” to find other SocialMesh users on the mesh'**
-  String get nearbyEmptyDescription;
-
-  /// Animated tagline during empty scan state
-  ///
-  /// In en, this message translates to:
-  /// **'Listening for nearby users…'**
-  String get nearbyEmptyTagline1;
-
-  /// Animated tagline during empty scan state
-  ///
-  /// In en, this message translates to:
-  /// **'Tap Look for people to send a signal…'**
-  String get nearbyEmptyTagline2;
-
-  /// Animated tagline during empty scan state
-  ///
-  /// In en, this message translates to:
-  /// **'Others will appear here when found…'**
-  String get nearbyEmptyTagline3;
-
-  /// Animated tagline during empty scan state
-  ///
-  /// In en, this message translates to:
-  /// **'Keep the app open to discover more…'**
-  String get nearbyEmptyTagline4;
-
-  /// Device type label for a phone
-  ///
-  /// In en, this message translates to:
-  /// **'Phone'**
-  String get nearbyDevicePhone;
-
-  /// Device type label for a tablet
-  ///
-  /// In en, this message translates to:
-  /// **'Tablet'**
-  String get nearbyDeviceTablet;
-
-  /// Device type label for a desktop
-  ///
-  /// In en, this message translates to:
-  /// **'Desktop'**
-  String get nearbyDeviceDesktop;
-
-  /// Fallback device type label
-  ///
-  /// In en, this message translates to:
-  /// **'Device'**
-  String get nearbyDeviceUnknown;
-
-  /// Section header for discovered people
-  ///
-  /// In en, this message translates to:
-  /// **'People'**
-  String get nearbySectionPeople;
-
-  /// Section header for active mesh conversations
-  ///
-  /// In en, this message translates to:
-  /// **'Conversations'**
-  String get nearbySectionConversations;
-
-  /// Section header for pending incoming connection requests
-  ///
-  /// In en, this message translates to:
-  /// **'Connection requests'**
-  String get nearbySectionRequests;
-
-  /// Button label to request a connection with a nearby person
-  ///
-  /// In en, this message translates to:
-  /// **'Connect'**
-  String get connectionRequestConnect;
-
-  /// Ongoing connection request state
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting…'**
-  String get connectionStateConnecting;
-
-  /// Established secure connection state
-  ///
-  /// In en, this message translates to:
-  /// **'Connected'**
-  String get connectionStateConnected;
-
-  /// Connection request was sent and awaits response
-  ///
-  /// In en, this message translates to:
-  /// **'Request sent'**
-  String get connectionStatePending;
-
-  /// The other person declined the connection
-  ///
-  /// In en, this message translates to:
-  /// **'Declined'**
-  String get connectionStateDeclined;
-
-  /// Connection attempt failed
-  ///
-  /// In en, this message translates to:
-  /// **'Could not connect'**
-  String get connectionStateFailed;
-
-  /// Connection request timed out
-  ///
-  /// In en, this message translates to:
-  /// **'No response'**
-  String get connectionStateTimedOut;
-
-  /// Incoming connection request notification
-  ///
-  /// In en, this message translates to:
-  /// **'{name} wants to connect'**
-  String connectionIncomingTitle(String name);
-
-  /// Accept an incoming connection request
-  ///
-  /// In en, this message translates to:
-  /// **'Accept'**
-  String get connectionAcceptButton;
-
-  /// Decline an incoming connection request
-  ///
-  /// In en, this message translates to:
-  /// **'Decline'**
-  String get connectionDeclineButton;
-
-  /// Title for the contact/profile exchange flow
-  ///
-  /// In en, this message translates to:
-  /// **'Share contact card'**
-  String get contactExchangeTitle;
-
-  /// Description for contact exchange flow
-  ///
-  /// In en, this message translates to:
-  /// **'Exchange identity with a nearby person so you can message each other'**
-  String get contactExchangeDescription;
-
-  /// Button to share your contact card
-  ///
-  /// In en, this message translates to:
-  /// **'Share my contact'**
-  String get contactExchangeShareButton;
-
-  /// Confirmation when contact was shared
-  ///
-  /// In en, this message translates to:
-  /// **'Contact shared'**
-  String get contactExchangeShared;
-
-  /// Title for an ephemeral mesh DM screen
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh message'**
-  String get meshConversationTitle;
-
-  /// Time until the conversation expires
-  ///
-  /// In en, this message translates to:
-  /// **'Expires in {time}'**
-  String meshConversationExpiry(String time);
-
-  /// Badge for a pinned conversation
-  ///
-  /// In en, this message translates to:
-  /// **'Pinned'**
-  String get meshConversationPinned;
-
-  /// Placeholder text in the message input
-  ///
-  /// In en, this message translates to:
-  /// **'Message…'**
-  String get meshConversationInputHint;
-
-  /// Error when airtime budget is exhausted
-  ///
-  /// In en, this message translates to:
-  /// **'Sending paused - mesh bandwidth limit reached. Try again shortly.'**
-  String get meshConversationBudgetExhausted;
-
-  /// Message when a DM session is closed
-  ///
-  /// In en, this message translates to:
-  /// **'This conversation has ended.'**
-  String get meshConversationClosed;
-
-  /// Status when DM session is established
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to chat'**
-  String get meshConversationReadyToChat;
 
   /// Delivery phase: getting data ready to send
   ///
@@ -69854,23 +60761,11 @@ abstract class AppLocalizations {
   /// **'The request timed out after {attempts} attempts.'**
   String deliveryPhaseFailedDescRetried(int attempts);
 
-  /// Hint that the user can leave and delivery continues
-  ///
-  /// In en, this message translates to:
-  /// **'Safe to close - delivery continues in the background'**
-  String get deliverySafeToClose;
-
   /// Hint that user can navigate away
   ///
   /// In en, this message translates to:
   /// **'You can leave - transfer will continue'**
   String get deliverySafeToLeave;
-
-  /// Multi-part transfer progress
-  ///
-  /// In en, this message translates to:
-  /// **'{current} of {total} parts'**
-  String deliveryProgressParts(int current, int total);
 
   /// Toggle label for expert diagnostic section
   ///
@@ -69890,29 +60785,11 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get guidedFlowBack;
 
-  /// Finish button in wizard
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get guidedFlowDone;
-
-  /// Create/commit button in wizard
-  ///
-  /// In en, this message translates to:
-  /// **'Create'**
-  String get guidedFlowCreate;
-
   /// Continue to next screen button in wizard
   ///
   /// In en, this message translates to:
   /// **'Write it'**
   String get guidedFlowContinue;
-
-  /// Cancel button in wizard
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get guidedFlowCancel;
 
   /// Title for the service creation wizard
   ///
@@ -69931,18 +60808,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Template'**
   String get serviceWizardStepPreset;
-
-  /// Step indicator label: choose audience
-  ///
-  /// In en, this message translates to:
-  /// **'Who'**
-  String get serviceWizardStepWho;
-
-  /// Step indicator label: fill in details
-  ///
-  /// In en, this message translates to:
-  /// **'Details'**
-  String get serviceWizardStepDetails;
 
   /// Step indicator label: review before creating
   ///
@@ -69986,42 +60851,6 @@ abstract class AppLocalizations {
   /// **'Use the basic layout and shape it yourself.'**
   String get serviceWizardPresetGenericDescription;
 
-  /// Step 2 title: audience selection
-  ///
-  /// In en, this message translates to:
-  /// **'Who can see it?'**
-  String get serviceWizardWhoTitle;
-
-  /// Step 2 subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Choose who will be able to discover and use your service'**
-  String get serviceWizardWhoSubtitle;
-
-  /// Audience option: open to all
-  ///
-  /// In en, this message translates to:
-  /// **'Anyone nearby'**
-  String get serviceWizardAudienceAnyone;
-
-  /// Expanded description for the anyone-nearby audience
-  ///
-  /// In en, this message translates to:
-  /// **'Anyone on the mesh can discover and use this'**
-  String get serviceWizardAudienceAnyoneDesc;
-
-  /// Audience option: contacts
-  ///
-  /// In en, this message translates to:
-  /// **'Approved contacts only'**
-  String get serviceWizardAudienceContacts;
-
-  /// Description for contacts audience
-  ///
-  /// In en, this message translates to:
-  /// **'Only people you\'ve exchanged contacts with'**
-  String get serviceWizardAudienceContactsDesc;
-
   /// Review step title
   ///
   /// In en, this message translates to:
@@ -70045,12 +60874,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting point'**
   String get serviceWizardReviewPreset;
-
-  /// Summary row label: audience
-  ///
-  /// In en, this message translates to:
-  /// **'Audience'**
-  String get serviceWizardReviewAudience;
 
   /// Mesh behavior hint on review step
   ///
@@ -70370,90 +61193,6 @@ abstract class AppLocalizations {
   /// **'Updated {time}'**
   String meshServicesSensorUpdatedLabel(String time);
 
-  /// Headline after service creation
-  ///
-  /// In en, this message translates to:
-  /// **'Your service is live'**
-  String get serviceWizardCompletionHeadline;
-
-  /// Description after service creation
-  ///
-  /// In en, this message translates to:
-  /// **'Other mesh users can now discover and interact with your service. You can manage it from My Services.'**
-  String get serviceWizardCompletionDescription;
-
-  /// Primary action after creation
-  ///
-  /// In en, this message translates to:
-  /// **'View my services'**
-  String get serviceWizardCompletionViewServices;
-
-  /// Secondary action after creation
-  ///
-  /// In en, this message translates to:
-  /// **'Create another'**
-  String get serviceWizardCompletionCreateAnother;
-
-  /// Peer seen within the last minute
-  ///
-  /// In en, this message translates to:
-  /// **'Just now'**
-  String get peerDetailLastSeenJustNow;
-
-  /// Section header for peer capabilities (replacing technical 'Capabilities')
-  ///
-  /// In en, this message translates to:
-  /// **'What they support'**
-  String get peerDetailCapabilities;
-
-  /// Capability: supports identity exchange and secure handshake
-  ///
-  /// In en, this message translates to:
-  /// **'Identity & secure connection'**
-  String get peerDetailCapIdentity;
-
-  /// Capability: supports micro-exchange / contact sharing
-  ///
-  /// In en, this message translates to:
-  /// **'Contact exchange'**
-  String get peerDetailCapExchange;
-
-  /// Label for device type row (replacing 'Device Class')
-  ///
-  /// In en, this message translates to:
-  /// **'Device type'**
-  String get peerDetailDeviceType;
-
-  /// Status when auto-scan is enabled
-  ///
-  /// In en, this message translates to:
-  /// **'Auto-discovery on'**
-  String get nearbyAutoScanEnabled;
-
-  /// Status when auto-scan is disabled
-  ///
-  /// In en, this message translates to:
-  /// **'Auto-discovery off'**
-  String get nearbyAutoScanDisabled;
-
-  /// Label for basic disclosure level
-  ///
-  /// In en, this message translates to:
-  /// **'Simple view'**
-  String get disclosureBasic;
-
-  /// Label for curious/intermediate disclosure level
-  ///
-  /// In en, this message translates to:
-  /// **'More detail'**
-  String get disclosureCurious;
-
-  /// Label for expert disclosure level
-  ///
-  /// In en, this message translates to:
-  /// **'Full diagnostics'**
-  String get disclosureExpert;
-
   /// Overflow menu label to open the weekly timeline view from messages
   ///
   /// In en, this message translates to:
@@ -70465,24 +61204,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message Activity'**
   String get messageTimelineTitle;
-
-  /// Empty state headline when no messages appear on the weekly timeline
-  ///
-  /// In en, this message translates to:
-  /// **'No message activity this week'**
-  String get messageTimelineEmpty;
-
-  /// Empty state description for the weekly message timeline
-  ///
-  /// In en, this message translates to:
-  /// **'Messages and channel activity will appear here as they happen'**
-  String get messageTimelineEmptyDescription;
-
-  /// Button label to clear timeline filters and show all message activity
-  ///
-  /// In en, this message translates to:
-  /// **'Show all activity'**
-  String get messageTimelineShowAll;
 
   /// Filter chip label for direct messages on the message timeline
   ///
@@ -70507,18 +61228,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 message} other{{count} messages}}'**
   String messageTimelineSessionMessages(int count);
-
-  /// Subtitle prefix showing channel name on a timeline card
-  ///
-  /// In en, this message translates to:
-  /// **'Ch: {name}'**
-  String messageTimelineChannelPrefix(String name);
-
-  /// Title for a direct message session on the timeline
-  ///
-  /// In en, this message translates to:
-  /// **'DM with {name}'**
-  String messageTimelineDmWith(String name);
 
   /// Label for the type row in the timeline detail sheet
   ///
@@ -70604,24 +61313,6 @@ abstract class AppLocalizations {
   /// **'One-time purchase · Lifetime access · No subscription'**
   String get subscriptionLifetimeReinforcement;
 
-  /// Title for the anchor Starter Pack card on subscription screen
-  ///
-  /// In en, this message translates to:
-  /// **'Starter Pack'**
-  String get subscriptionStarterPack;
-
-  /// Subtitle for the Starter Pack anchor card
-  ///
-  /// In en, this message translates to:
-  /// **'Themes + Widgets'**
-  String get subscriptionStarterPackSubtitle;
-
-  /// Badge text for the Starter Pack placeholder card
-  ///
-  /// In en, this message translates to:
-  /// **'Coming Soon'**
-  String get subscriptionStarterComingSoon;
-
   /// Badge on the Complete Pack hero card to indicate popularity
   ///
   /// In en, this message translates to:
@@ -70639,12 +61330,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} reactions'**
   String tapbackDetailSenderCount(int count);
-
-  /// Label showing how many additional senders beyond displayed names, e.g. +3.
-  ///
-  /// In en, this message translates to:
-  /// **'+{count}'**
-  String tapbackGroupOthers(int count);
 
   /// Subtitle for the What's New popup for version 1.30.0.
   ///
@@ -70927,18 +61612,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mesh Feed'**
   String get meshFeedDrawerLabel;
-
-  /// Headline shown when the mesh feed has no posts.
-  ///
-  /// In en, this message translates to:
-  /// **'No posts yet'**
-  String get meshFeedEmptyTitle;
-
-  /// Description shown when the mesh feed is empty.
-  ///
-  /// In en, this message translates to:
-  /// **'Posts from nearby mesh peers will appear here. Create the first post to start the conversation.'**
-  String get meshFeedEmptyDescription;
 
   /// Button text on the empty feed state.
   ///
@@ -72656,12 +63329,6 @@ abstract class AppLocalizations {
   /// **'Fragments are decoded but never reassembled in this build.'**
   String get reticulumDiagEmptyTagline3;
 
-  /// Subtitle showing fragment count for a source node.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} fragments'**
-  String reticulumDiagSourceFragments(int count);
-
   /// Title for the Reticulum replay screen.
   ///
   /// In en, this message translates to:
@@ -73040,12 +63707,6 @@ abstract class AppLocalizations {
   /// **'PROVENANCE'**
   String get reticulumDetailSectionProvenance;
 
-  /// Field label for capture source/origin.
-  ///
-  /// In en, this message translates to:
-  /// **'Source'**
-  String get reticulumDetailSource;
-
   /// Source option for captures recorded on this device.
   ///
   /// In en, this message translates to:
@@ -73189,12 +63850,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No'**
   String get reticulumDetailFalse;
-
-  /// Placeholder shown when an editable field is empty.
-  ///
-  /// In en, this message translates to:
-  /// **'Not set'**
-  String get reticulumDetailNoneSet;
 
   /// Section header for Phase 2 reassembler counters.
   ///
@@ -73622,12 +64277,6 @@ abstract class AppLocalizations {
   /// **'No services'**
   String get rnsCompanionEmptyTitle;
 
-  /// Empty-state body explaining the companion has no services to show.
-  ///
-  /// In en, this message translates to:
-  /// **'The companion is reachable but has no services yet.'**
-  String get rnsCompanionEmptyHint;
-
   /// Empty-state animated tagline word 1.
   ///
   /// In en, this message translates to:
@@ -73778,12 +64427,6 @@ abstract class AppLocalizations {
   /// **'Checking…'**
   String get rnsCompanionStatusChecking;
 
-  /// Status-pill text when the companion responds to /health.
-  ///
-  /// In en, this message translates to:
-  /// **'Connected'**
-  String get rnsCompanionStatusConnected;
-
   /// Status-pill text including the companion's reported version.
   ///
   /// In en, this message translates to:
@@ -73843,12 +64486,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Constellation'**
   String get nodedexConstellationTitle;
-
-  /// App bar action label that opens the Constellation graph from a NodeDex detail screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Constellation'**
-  String get nodedexConstellationOpen;
 
   /// Tooltip for the Constellation entry button in the NodeDex detail app bar.
   ///
@@ -73963,12 +64600,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Favourite'**
   String get nodedexConstellationActionFavourite;
-
-  /// Action card label shown when the centre node is already a favourite.
-  ///
-  /// In en, this message translates to:
-  /// **'Unfavourite'**
-  String get nodedexConstellationActionUnfavourite;
 
   /// Action card label that opens the map centred on the node.
   ///
@@ -74726,12 +65357,6 @@ abstract class AppLocalizations {
   /// **'Pre-selected when sending canned messages from your Apple Watch. You can still pick a different channel each time on the Watch.'**
   String get watchSettingsDefaultChannelSubtitle;
 
-  /// Label for one chip in the default-channel picker. {n} is the channel index (0-7).
-  ///
-  /// In en, this message translates to:
-  /// **'Channel {n}'**
-  String watchSettingsChannelChipLabel(int n);
-
   /// Section header above the explanatory About paragraph at the bottom of the Apple Watch settings screen.
   ///
   /// In en, this message translates to:
@@ -74827,18 +65452,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Members'**
   String get licenseOrgMembersSectionAll;
-
-  /// Section title above the active-member list in the License Org Members sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'Active members'**
-  String get licenseOrgMembersSectionActive;
-
-  /// Section title above the revoked-seat history rows in the License Org Members sheet. Hidden when no revocations exist.
-  ///
-  /// In en, this message translates to:
-  /// **'Revoked'**
-  String get licenseOrgMembersSectionRevoked;
 
   /// Title row on a revoked-seat history tile in the License Org Members sheet. Placeholder is the opaque #ABCDEF label derived from the revoked member's uid.
   ///
@@ -75200,12 +65813,6 @@ abstract class AppLocalizations {
   /// **'Could not accept the invite. Please try again.'**
   String get licenseOrgInviteAcceptErrorGeneric;
 
-  /// Label above the inviter's free-form note on the InviteAcceptScreen. Only rendered when the invite carries a non-empty note.
-  ///
-  /// In en, this message translates to:
-  /// **'From the inviter'**
-  String get licenseOrgInviteAcceptInviterNoteLabel;
-
   /// Action button label on the License Org Overview per-org card that mints a new invite link. Visible to owner / admin role only.
   ///
   /// In en, this message translates to:
@@ -75271,12 +65878,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New link generated · old link is no longer valid'**
   String get licenseOrgInviteRegenerateSuccess;
-
-  /// Label for the product picker in the mint-invite sheet. Owner picks which seat the invitee gets allocated.
-  ///
-  /// In en, this message translates to:
-  /// **'Seat product'**
-  String get licenseOrgInviteMintProductLabel;
 
   /// Submit button label on the mint-invite sheet. Calls inviteLicenseOrgMember and renders the resulting URL.
   ///
@@ -75506,12 +66107,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 event loaded} other{{count} events loaded}}'**
   String licenseOrgAuditLogSubtitle(int count);
 
-  /// Filter chip label for the 'all outcomes' option on the Audit Log screen.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get licenseOrgAuditFilterAll;
-
   /// Label for the load-more pagination button at the bottom of the Audit Log list.
   ///
   /// In en, this message translates to:
@@ -75697,12 +66292,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Capacity'**
   String get licenseOrgOverviewCapacityLabel;
-
-  /// Value cell paired with licenseOrgOverviewCapacityLabel. Renders the total seat budget for a Community Pack (always > 1, so no plural form needed).
-  ///
-  /// In en, this message translates to:
-  /// **'{count} seats'**
-  String licenseOrgOverviewCapacityValue(int count);
 
   /// Value cell paired with licenseOrgOverviewCapacityLabel for owners. Renders the live used / total seat budget for a Community Pack (e.g. '3 of 10 seats used').
   ///
@@ -76244,12 +66833,6 @@ abstract class AppLocalizations {
   /// **'Need help'**
   String get helpModeNeedHelp;
 
-  /// Tooltip for the map Need Help button.
-  ///
-  /// In en, this message translates to:
-  /// **'Request help from trusted peers'**
-  String get helpModeAffordanceTooltip;
-
   /// Title of the help request creation sheet.
   ///
   /// In en, this message translates to:
@@ -76267,12 +66850,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'How are you? (optional)'**
   String get helpModeCreateStatusLabel;
-
-  /// Location sharing disclosure shown on creation and while active.
-  ///
-  /// In en, this message translates to:
-  /// **'Your location will be shared with responders while this request is active.'**
-  String get helpModeLocationDisclosure;
 
   /// Primary button to raise a help request.
   ///
@@ -76735,12 +67312,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 active help request} other{{count} active help requests}}'**
   String helpModeActiveCount(int count);
-
-  /// Global help banner subtitle prompting the user to open the responder flow.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to respond'**
-  String get helpModeBannerTapToRespond;
 
   /// Title of the responder inbox listing active trusted help requests.
   ///
@@ -77246,12 +67817,6 @@ abstract class AppLocalizations {
   /// **'Add a radio to start tracking who has what.'**
   String get fleetEmptyTagline;
 
-  /// Shown when the retired Fleet list is empty.
-  ///
-  /// In en, this message translates to:
-  /// **'No retired radios.'**
-  String get fleetRetiredEmpty;
-
   /// Action that opens the radio picker to enrol a radio.
   ///
   /// In en, this message translates to:
@@ -77317,18 +67882,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This device'**
   String get fleetCandidateLocalDevice;
-
-  /// Confirms enrolling the selected radio.
-  ///
-  /// In en, this message translates to:
-  /// **'Add to Fleet'**
-  String get fleetAddConfirm;
-
-  /// Fleet detail row: friendly name.
-  ///
-  /// In en, this message translates to:
-  /// **'Name'**
-  String get fleetLabelName;
 
   /// Fleet detail row: which mesh transport the radio uses.
   ///

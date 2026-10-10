@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -7,6 +8,21 @@ import 'app_localizations.dart';
 /// The translations for Ukrainian (`uk`).
 class AppLocalizationsUk extends AppLocalizations {
   AppLocalizationsUk([String locale = 'uk']) : super(locale);
+
+  @override
+  String get radioConfigFemLna => 'FEM LNA';
+
+  @override
+  String get radioConfigFemLnaSubtitle =>
+      'Увімкнути зовнішній малошумний підсилювач незалежно від підсилення прийому RX.';
+
+  @override
+  String get radioConfigFemLnaUnknown =>
+      'Ця прошивка не повідомляє про підтримку FEM.';
+
+  @override
+  String get radioConfigFemLnaNotPresent =>
+      'Цей пристрій не має керованого FEM LNA.';
 
   @override
   String meshBeaconNoticeTitle(int count) {
@@ -24,10 +40,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshBeaconNoticeSubtitle =>
       'Торкніться, щоб переглянути mesh-мережі поблизу в налаштуваннях Mesh Beacon.';
-
-  @override
-  String get adminProductsVendorUnverifiedSubtitle =>
-      'Позначте, коли постачальник підтвердить точність усіх характеристик';
 
   @override
   String get aetherDetailAltitude => 'Висота';
@@ -1355,13 +1367,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get automationActionGotIt => 'Зрозуміло';
 
   @override
-  String get automationActionIftttEventName => 'Назва події IFTTT';
-
-  @override
-  String get automationActionIftttHelp =>
-      'Використовує ваш ключ IFTTT Webhook з налаштувань';
-
-  @override
   String get automationActionIftttHint => 'напр., meshtastic_alert';
 
   @override
@@ -1658,9 +1663,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get automationEditorNoConditions => 'Без умов - виконується завжди';
 
   @override
-  String get automationEditorRemoveElse => 'Видалити ІНАКШЕ';
-
-  @override
   String get automationEditorSelectConditionType => 'Вибрати тип умови';
 
   @override
@@ -1702,9 +1704,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get automationCardBranchThen => 'ТОДІ';
-
-  @override
   String get automationCardBranchElse => 'ІНАКШЕ';
 
   @override
@@ -1716,21 +1715,6 @@ class AppLocalizationsUk extends AppLocalizations {
       one: '1 умова',
     );
     return '$_temp0';
-  }
-
-  @override
-  String automationConditionConfigBatteryThreshold(int threshold) {
-    return 'Порогове значення заряду: $threshold%';
-  }
-
-  @override
-  String automationConditionConfigDays(String days) {
-    return 'Дні: $days';
-  }
-
-  @override
-  String automationConditionConfigTimeRange(String start, String end) {
-    return '$start - $end';
   }
 
   @override
@@ -1813,10 +1797,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get automationEditorUpdated => 'Автоматизацію оновлено';
-
-  @override
-  String get automationEditorValidateActions =>
-      'Будь ласка, додайте принаймні одну дію';
 
   @override
   String get automationEditorValidateName =>
@@ -1906,11 +1886,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get automationFlowWarnings => 'Попередження';
-
-  @override
-  String automationImportActionsCount(int count) {
-    return 'Дії ($count)';
-  }
 
   @override
   String get automationImportButton => 'Імпортувати';
@@ -2057,9 +2032,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get automationScreenNewTooltip => 'Нова автоматизація';
-
-  @override
-  String get automationScreenNoExecutions => 'Виконань ще не було';
 
   @override
   String get automationScreenQuickStartSubtitle =>
@@ -3238,9 +3210,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get commonNever => 'Ніколи';
 
   @override
-  String get commonNo => 'Ні';
-
-  @override
   String get commonJustNow => 'Щойно';
 
   @override
@@ -3542,9 +3511,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get commonSave => 'Зберегти';
-
-  @override
-  String get commonYes => 'Так';
 
   @override
   String get debugScreenAppLogTitle => 'Журнал додатку';
@@ -4399,12 +4365,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get discoveryUnknownNode => 'Невідомий вузол';
 
   @override
-  String get drawerAdminDashboard => 'Панель адміністратора';
-
-  @override
-  String get drawerAdminSectionHeader => 'АДМІН';
-
-  @override
   String get drawerBadgeNew => 'НОВЕ';
 
   @override
@@ -4991,20 +4951,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get fileTransferContainerPurged => 'Прострочені передачі видалено';
 
   @override
-  String get fileTransferContainerSendFile => 'Надіслати файл';
-
-  @override
-  String get fileTransferContainerSendImage => 'Надіслати зображення';
-
-  @override
-  String get fileTransferContainerSendToNode => 'Надіслати на вузол';
-
-  @override
-  String fileTransferContainerStarted(String filename) {
-    return 'Передачу розпочато: $filename';
-  }
-
-  @override
   String get fileTransferContainerTitle => 'Передача файлів';
 
   @override
@@ -5019,15 +4965,8 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get fileTransferCouldNotRead => 'Не вдалося прочитати файл.';
-
-  @override
   String get fileTransferCouldNotSaveForSharing =>
       'Не вдалося зберегти файл для надсилання';
-
-  @override
-  String get fileTransferCouldNotStart =>
-      'Не вдалося розпочати передачу. Переконайтеся, що вузол підключено, і спробуйте знову.';
 
   @override
   String get fileTransferDeleteConfirm => 'Видалити';
@@ -5173,18 +5112,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get fileTransferExpiredPurged => 'Прострочені передачі видалено';
 
   @override
-  String get fileTransferFileEmpty => 'Вибраний файл порожній.';
-
-  @override
-  String fileTransferFileTooLarge(
-    String filename,
-    String fileSize,
-    String limit,
-  ) {
-    return '$filename має розмір $fileSize КБ - ліміт передачі через mesh становить $limit КБ.';
-  }
-
-  @override
   String get fileTransferFilterActive => 'Активні';
 
   @override
@@ -5204,40 +5131,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get fileTransferImageDecodeError => 'Не вдалося декодувати зображення';
-
-  @override
-  String get fileTransferImagePickerTitle => 'Надіслати зображення';
-
-  @override
-  String get fileTransferImagePickerCamera => 'Зробити фото';
-
-  @override
-  String get fileTransferImagePickerCameraSubtitle =>
-      'Використати камеру для фотографування';
-
-  @override
-  String get fileTransferImagePickerGallery => 'Вибрати з галереї';
-
-  @override
-  String get fileTransferImagePickerGallerySubtitle =>
-      'Вибрати фото з бібліотеки';
-
-  @override
-  String get fileTransferImagePickerCancel => 'Скасувати';
-
-  @override
-  String get fileTransferImageCompressing =>
-      'Стиснення зображення для передачі через mesh...';
-
-  @override
-  String fileTransferImageTooLargeAfterCompression(String limit) {
-    return 'Не вдалося стиснути зображення до $limit КБ - ліміту mesh.';
-  }
-
-  @override
-  String fileTransferImageCompressed(String size, String width, String height) {
-    return 'Зображення стиснуто до $size байтів (${width}x$height)';
-  }
 
   @override
   String get fileTransferInfoChunkSize => 'Розмір фрагмента';
@@ -5631,10 +5524,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String firmwareDfuSpeed(String speed) {
     return '$speed КБ/с';
   }
-
-  @override
-  String get firmwareDfuNoFirmwareFound =>
-      'Файл мікропрограми для цієї моделі пристрою не знайдено.';
 
   @override
   String get firmwareArchitectureNrf52 => 'nRF52840';
@@ -6655,36 +6544,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapDistanceAll => 'Усі';
 
   @override
-  String mapDistanceKilometers(String km) {
-    return '$kmкм';
-  }
-
-  @override
-  String mapDistanceKilometersFormal(String km) {
-    return '$km км';
-  }
-
-  @override
-  String mapDistanceKilometersPrecise(String km) {
-    return '$km км';
-  }
-
-  @override
-  String mapDistanceKilometersRound(String km) {
-    return '$kmкм';
-  }
-
-  @override
-  String mapDistanceMeters(String meters) {
-    return '$metersм';
-  }
-
-  @override
-  String mapDistanceMetersFormal(String meters) {
-    return '$meters м';
-  }
-
-  @override
   String get mapDropWaypoint => 'Додати точку маршруту';
 
   @override
@@ -6795,9 +6654,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get mapLosAnalysisSubtitle =>
       'Перевірка кривизни Землі та зони Френеля';
-
-  @override
-  String get mapLosFetchingTerrain => 'Завантаження рельєфу…';
 
   @override
   String get mapLosLegendClear => 'Вільно';
@@ -7070,9 +6926,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapShowTakEntities => 'Показати об\'єкти TAK';
 
   @override
-  String get mapStyleTooltip => 'Стиль карти';
-
-  @override
   String get mapSwapAB => 'Поміняти A ↔ B';
 
   @override
@@ -7251,9 +7104,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreActions => 'Дії';
 
   @override
-  String get meshcoreActiveLabel => 'Активний';
-
-  @override
   String get meshcoreAdd => 'Додати';
 
   @override
@@ -7264,10 +7114,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreAutoAddSectionTitle => 'Автододавання контактів';
-
-  @override
-  String get meshcoreAutoAddSectionSubtitle =>
-      'Автоматично імпортувати контакти, які чує радіо';
 
   @override
   String get meshcoreAutoAddChat => 'Автододавання контактів чату';
@@ -7389,10 +7235,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshcoreRepeaterAdminLoginFailed =>
       'Помилка входу; перевірте пароль і спробуйте знову';
-
-  @override
-  String get meshcoreRepeaterAdminLoginTimeout =>
-      'Час входу вичерпано; ретранслятор не відповів';
 
   @override
   String get meshcoreRepeaterAdminLoginEmptyPassword =>
@@ -7803,10 +7645,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreRepeaterAdminSettingsRefreshAll => 'Оновити все';
 
   @override
-  String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip =>
-      'Оновити з радіо';
-
-  @override
   String get meshcoreRepeaterAdminSettingsSaveButton => 'Зберегти зміни';
 
   @override
@@ -8071,9 +7909,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get meshcoreAdvertisementSent => 'Оголошення надіслано';
-
-  @override
   String get meshcoreTransportStatusTitle => 'Транспорт';
 
   @override
@@ -8141,12 +7976,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreAdvertisementSentTools => 'Оголошення надіслано';
 
   @override
-  String get meshcoreAnalysis => 'Аналіз';
-
-  @override
-  String get meshcoreBandwidthLabel => 'Пропускна здатність';
-
-  @override
   String get meshcoreBasedOnLiPoVoltage =>
       'На основі діапазону напруги LiPo (3,0 В - 4,2 В)';
 
@@ -8203,9 +8032,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Транслювати вашу присутність у mesh-мережу';
 
   @override
-  String get meshcoreBroadcastYourPresence => 'Транслювати вашу присутність';
-
-  @override
   String get meshcoreCancel => 'Скасувати';
 
   @override
@@ -8215,9 +8041,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String meshcoreChannelAlreadyExists(String channelName) {
     return '$channelName вже є у ваших каналах';
   }
-
-  @override
-  String get meshcoreChannelCodeCopied => 'Код каналу скопійовано';
 
   @override
   String meshcoreChannelCreated(String channelName) {
@@ -8509,9 +8332,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreChatInfoPath => 'Маршрут';
 
   @override
-  String get meshcoreChatInfoType => 'Тип';
-
-  @override
   String get meshcoreChatUnreadDividerLabel => 'Нові повідомлення';
 
   @override
@@ -8538,9 +8358,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreChatNode => 'Вузол чату';
 
   @override
-  String get meshcoreClear => 'Очистити';
-
-  @override
   String get meshcoreClose => 'Закрити';
 
   @override
@@ -8548,11 +8365,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreConnected => 'Підключено';
-
-  @override
-  String meshcoreConnectedTo(String deviceName) {
-    return 'Підключено до $deviceName';
-  }
 
   @override
   String get meshcoreConsoleCaptureCleared => 'Захоплення очищено';
@@ -8961,10 +8773,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
     return 'Не вдалося зберегти маршрут для $contactName';
   }
-
-  @override
-  String get meshcoreResetPathSubtitle =>
-      'Дозвольте MeshCore знову визначити найкращий маршрут.';
 
   @override
   String meshcoreResetPathSuccess(String contactName) {
@@ -9378,9 +9186,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreContactsLabel => 'Контакти';
 
   @override
-  String get meshcoreContactsTitle => 'Контакти';
-
-  @override
   String get meshcoreControlAdvertVisibility => 'Керувати видимістю оголошень';
 
   @override
@@ -9421,9 +9226,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreCreateChannelDialogTitle => 'Створити канал';
-
-  @override
-  String get meshcoreDebug => 'Відлагодження';
 
   @override
   String get meshcoreDeviceInfo => 'Інформація про пристрій';
@@ -9540,10 +9342,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreFailedToSendAdTools => 'Не вдалося надіслати оголошення';
 
   @override
-  String get meshcoreFailedToSendAdvertisement =>
-      'Не вдалося надіслати оголошення';
-
-  @override
   String get meshcoreFailedToSendMessage => 'Не вдалося надіслати повідомлення';
 
   @override
@@ -9574,12 +9372,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreFilterTooltip => 'Фільтр';
 
   @override
-  String get meshcoreFramesLabel => 'Кадри';
-
-  @override
-  String get meshcoreFrequencyLabel => 'Частота';
-
-  @override
   String get meshcoreInvalidChannelCodeFormat =>
       'Невірний формат коду каналу (очікується: name:pskHex)';
 
@@ -9591,9 +9383,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreJoin => 'Приєднатися';
-
-  @override
-  String get meshcoreJoinButton => 'Приєднатися';
 
   @override
   String get meshcoreJoinHashtagChannel => 'Приєднатися до хеш-тег каналу';
@@ -9658,9 +9447,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreFilterHidden => 'Приховані';
-
-  @override
-  String get meshcoreNoHiddenChannels => 'Немає прихованих каналів';
 
   @override
   String get meshcoreChannelDragHandleA11yLabel => 'Змінити порядок каналу';
@@ -10066,11 +9852,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreTelemetryRowTemperatureLabel => 'Температура';
 
   @override
-  String meshcoreTelemetryRowTemperatureValue(String celsius) {
-    return '$celsius °C';
-  }
-
-  @override
   String get meshcoreTelemetryRowHumidityLabel => 'Вологість';
 
   @override
@@ -10131,10 +9912,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreLoadingMessages => 'Завантаження повідомлень...';
-
-  @override
-  String get meshcoreLocationComingSoon =>
-      'Налаштування розташування незабаром.\n\nЦе дозволить вручну встановити позицію вузла або використовувати GPS.';
 
   @override
   String get meshcoreLocationInfoLabel => 'Розташування';
@@ -10268,23 +10045,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreNewMeasurement => 'Нове вимірювання';
 
   @override
-  String get meshcoreNoChannels => 'Немає каналів';
-
-  @override
-  String get meshcoreNoChannelsDescription =>
-      'Канали - це спільні простори для групового спілкування.\n\nСтворіть новий канал або приєднайтеся до існуючого.';
-
-  @override
-  String get meshcoreNoContacts => 'Немає контактів';
-
-  @override
-  String get meshcoreNoContactsDescription =>
-      'Контакти з\'являться тут після виявлення через оголошення.\n\nТакож можна додати контакти вручну, використовуючи їх код контакту.';
-
-  @override
-  String get meshcoreNoContactsForTrace => 'Немає контактів для трасування';
-
-  @override
   String get meshcoreMapEmptyTitlePrefix => 'Немає';
 
   @override
@@ -10364,9 +10124,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreNotValidContactQr => 'Недійсний QR-код контакту MeshCore';
 
   @override
-  String get meshcoreNotYetImplemented => 'Ще не реалізовано';
-
-  @override
   String get meshcoreOpenChannel => 'Відкрити канал';
 
   @override
@@ -10413,26 +10170,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Направте камеру на QR-код контакту MeshCore';
 
   @override
-  String get meshcorePrivacyComingSoon =>
-      'Налаштування конфіденційності незабаром.\n\nЦе дозволить контролювати трансляцію оголошень вашим вузлом.';
-
-  @override
   String get meshcorePrivacyMode => 'Режим конфіденційності';
-
-  @override
-  String get meshcorePrivacyModeDialogTitle => 'Режим конфіденційності';
 
   @override
   String get meshcorePrivate => 'Приватний';
 
   @override
   String get meshcorePrivateChannel => 'Приватний канал';
-
-  @override
-  String get meshcoreProtocolCapture => 'Захоплення протоколу';
-
-  @override
-  String get meshcoreProtocolCaptureDialogTitle => 'Захоплення протоколу';
 
   @override
   String get meshcorePublic => 'Публічний';
@@ -10450,25 +10194,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcorePublicKeySettingsLabel => 'Публічний ключ';
 
   @override
-  String get meshcoreRadioConfiguredOnFirmware =>
-      'Налаштування радіо конфігуруються у прошивці пристрою.';
-
-  @override
   String get meshcoreRadioSettings => 'Налаштування радіо';
-
-  @override
-  String get meshcoreRadioSettingsDialogTitle => 'Налаштування радіо';
-
-  @override
-  String get meshcoreRadioSettingsNotAvailable =>
-      'Налаштування радіо недоступні';
 
   @override
   String get meshcoreRadioSettingsSubtitle =>
       'Частота, потужність TX, пропускна здатність';
-
-  @override
-  String get meshcoreRadioSettingsTool => 'Налаштування радіо';
 
   @override
   String get meshcoreReboot => 'Перезавантаження';
@@ -10485,12 +10215,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreRebootDeviceTitle => 'Перезавантажити пристрій';
-
-  @override
-  String get meshcoreRefresh => 'Оновити';
-
-  @override
-  String get meshcoreRefreshButton => 'Оновити';
 
   @override
   String get meshcoreRefreshContacts => 'Оновити контакти';
@@ -10557,10 +10281,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreScanQrCode => 'Сканувати QR-код';
 
   @override
-  String get meshcoreScanQrToJoinChannel =>
-      'Скануйте цей QR-код, щоб приєднатися до каналу';
-
-  @override
   String get meshcoreScanToAddMeSubtitle =>
       'Скануйте цей код, щоб додати мене як контакт';
 
@@ -10568,14 +10288,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreSearchContactsHint => 'Пошук контактів...';
 
   @override
-  String get meshcoreSelectContactToTrace =>
-      'Оберіть контакт для трасування маршруту через меш.';
-
-  @override
   String get meshcoreSelfInfoNotAvailable => 'Власна інформація недоступна';
-
-  @override
-  String get meshcoreSendAdvertisement => 'Надіслати оголошення';
 
   @override
   String get meshcoreSendAdvertisementTool => 'Надіслати оголошення';
@@ -10584,17 +10297,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreSendMessage => 'Надіслати повідомлення';
 
   @override
-  String get meshcoreSendMessageToStart =>
-      'Надішліть повідомлення, щоб почати розмову';
-
-  @override
-  String get meshcoreSending => 'Надсилання...';
-
-  @override
   String get meshcoreSessionNotActive => 'Сесія MeshCore не активна';
-
-  @override
-  String get meshcoreSetLocation => 'Задати розташування';
 
   @override
   String get meshcoreSetNodePosition => 'Задати положення вузла';
@@ -10604,9 +10307,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreSfCrLabel => 'SF/CR';
-
-  @override
-  String get meshcoreShare => 'Поділитися';
 
   @override
   String get meshcoreShareChannel => 'Поділитися каналом';
@@ -10647,9 +10347,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String meshcoreContactUnblockSuccess(String name) {
     return 'Сповіщення для $name відновлено.';
   }
-
-  @override
-  String get meshcoreContactBlockedBadge => 'Без звуку';
 
   @override
   String get meshcoreShareContact => 'Поділитися контактом';
@@ -10723,14 +10420,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Поділіться своїм контактним кодом, щоб інші могли вам написати';
 
   @override
-  String get meshcoreShellAddChannelHint =>
-      'Скористайтеся меню для створення або приєднання до каналу';
-
-  @override
-  String get meshcoreShellAddContactHint =>
-      'Натисніть кнопку +, щоб додати контакт';
-
-  @override
   String get meshcoreShellAddContactSubtitle =>
       'Скануйте QR або введіть контактний код';
 
@@ -10747,11 +10436,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreShellAppSettingsSubtitle => 'Сповіщення, тема, параметри';
-
-  @override
-  String meshcoreShellConnectedTo(String deviceName) {
-    return 'Підключено до $deviceName';
-  }
 
   @override
   String get meshcoreShellDefaultDeviceName => 'MeshCore';
@@ -10798,9 +10482,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreShellDrawerAddContact => 'Додати контакт';
 
   @override
-  String get meshcoreShellDrawerDisconnect => 'Відключити';
-
-  @override
   String get meshcoreShellDrawerDiscoverContacts => 'Знайти контакти';
 
   @override
@@ -10808,9 +10489,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreShellDrawerSectionHeader => 'MESHCORE';
-
-  @override
-  String get meshcoreShellDrawerSettings => 'Налаштування';
 
   @override
   String get meshcoreShellInfoNodeId => 'ID вузла';
@@ -10834,10 +10512,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreShellJoinChannel => 'Приєднатися до каналу';
 
   @override
-  String get meshcoreShellJoinChannelHint =>
-      'Скористайтеся меню для приєднання до каналу';
-
-  @override
   String get meshcoreShellJoinChannelSubtitle =>
       'Скануйте QR або введіть код каналу';
 
@@ -10845,39 +10519,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreShellMenuTooltip => 'Меню';
 
   @override
-  String get meshcoreShellNavChannels => 'Канали';
-
-  @override
-  String get meshcoreShellNavContacts => 'Контакти';
-
-  @override
   String get meshcoreShellNavDashboard => 'Панель';
 
   @override
   String get meshcoreDashboardTitle => 'Панель';
-
-  @override
-  String get meshcoreDashboardEmptyTitlePrefix => 'Ваша';
-
-  @override
-  String get meshcoreDashboardEmptyTitleKeyword => 'Панель';
-
-  @override
-  String get meshcoreDashboardEmptyTitleMid => '';
-
-  @override
-  String get meshcoreDashboardEmptyTitleKeyword2 => 'Порожня';
-
-  @override
-  String get meshcoreDashboardEmptyTitleSuffix => '';
-
-  @override
-  String get meshcoreDashboardEmptyTagline1 =>
-      'Додайте віджети щоб бачити активність вашої мережi одним поглядом';
-
-  @override
-  String get meshcoreDashboardEmptyTagline2 =>
-      'Зберіть улюблені метрики в одному вигляді';
 
   @override
   String get meshcoreWidgetNetworkOverviewName => 'Огляд мережі';
@@ -10888,9 +10533,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreWidgetTotalContacts => 'Контакти';
-
-  @override
-  String get meshcoreWidgetOnline => 'Онлайн';
 
   @override
   String get meshcoreWidgetChannels => 'Канали';
@@ -11076,16 +10718,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreShellReconnectButton => 'Перепідключити';
 
   @override
-  String meshcoreShellReconnectFailed(String error) {
-    return 'Перепідключення не вдалося: $error';
-  }
-
-  @override
-  String meshcoreShellReconnecting(String deviceName) {
-    return 'Перепідключення до $deviceName...';
-  }
-
-  @override
   String meshcoreShellSearchingFor(String deviceName) {
     return 'Пошук $deviceName...';
   }
@@ -11206,11 +10838,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreTracePath => 'Трасувати маршрут';
 
   @override
-  String meshcoreTracePathInitiated(String name) {
-    return 'Трасування маршруту до $name розпочато';
-  }
-
-  @override
   String get meshcoreFrameLogTool => 'Журнал кадрів';
 
   @override
@@ -11322,11 +10949,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String meshcoreTracePathHopRow(int index) {
-    return 'Стрибок $index';
-  }
-
-  @override
   String get meshcoreTracePathTimeout => 'Час очікування трасування вичерпано';
 
   @override
@@ -11367,12 +10989,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshcoreViewDeviceInfo =>
       'Переглянути детальну інформацію про пристрій';
-
-  @override
-  String get meshcoreViewFrameLogs => 'Переглянути журнали кадрів MeshCore';
-
-  @override
-  String get meshcoreViewLoRaConfig => 'Переглянути конфігурацію радіо LoRa';
 
   @override
   String get messageContextMenuCopy => 'Копіювати';
@@ -11504,9 +11120,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messagingFailedToSend => 'Не вдалося надіслати';
 
   @override
-  String get messagingFilterActive => 'Активний';
-
-  @override
   String get messagingFilterOnline => 'Онлайн';
 
   @override
@@ -11628,16 +11241,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messagingRetryMessage => 'Повторити надсилання';
 
   @override
-  String get messagingStatusAwaitingConfirmation => 'Очікування підтвердження';
-
-  @override
   String get messagingStatusUnconfirmed => 'Непідтверджено';
 
   @override
   String get messagingStatusRetrying => 'Повторна спроба';
-
-  @override
-  String get messagingStatusConfirmed => 'Підтверджено';
 
   @override
   String get messagingStatusSentToRadio => 'Надіслано на радіо';
@@ -11660,10 +11267,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get messagingAutoRetryStop => 'Зупинити повтори';
-
-  @override
-  String get messagingAutoRetryWarning =>
-      'Може збільшити використання ефірного часу та акумулятора';
 
   @override
   String messagingRetryProgress(int count, int max) {
@@ -11895,14 +11498,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String timelineOverflowParticipants(int count) {
-    return '+$count';
-  }
-
-  @override
-  String get navigationActivity => 'Активність';
-
-  @override
   String get navigationAether => 'Aether';
 
   @override
@@ -11977,10 +11572,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshCanvasPlaceholderTitle => 'MeshCanvas';
-
-  @override
-  String get meshCanvasPlaceholderSubtitle =>
-      'Незабаром: спільне піксельне полотно через mesh-мережу';
 
   @override
   String get meshCanvasHelpTitle => 'Про MeshCanvas';
@@ -12294,10 +11885,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasOverviewNeverPainted => 'Спить';
 
   @override
-  String get meshCanvasOverviewLocalIdleHint =>
-      'Спить · Залишається на пристрої';
-
-  @override
   String meshCanvasOverviewCellCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -12335,9 +11922,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshCanvasOverviewChannelDormantHint =>
       'Спить · Посій перший піксель';
-
-  @override
-  String get meshCanvasOverviewMeshSectionHeader => 'ПОЛОТНА КАНАЛІВ';
 
   @override
   String get meshCanvasOverviewPrimaryCommonsSectionHeader => 'СПІЛЬНЕ PRIMARY';
@@ -12389,18 +11973,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshCanvasViewerEmptyLocalSubtitle =>
       'Залишається на цьому пристрої';
-
-  @override
-  String get meshCanvasViewerGestureTap => 'тап · малювати';
-
-  @override
-  String get meshCanvasViewerGestureDrag => 'потягни · переміщення';
-
-  @override
-  String get meshCanvasViewerGesturePinch => 'щипок · масштаб';
-
-  @override
-  String get meshCanvasViewerGestureHold => 'утримання · огляд';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {
@@ -12487,66 +12059,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeboardCreateBoard => 'Створити дошку';
 
   @override
-  String get nodeboardEmptyMyBoards => 'Ви ще не створили жодної дошки';
-
-  @override
   String get nodeboardEmptyMyBoardsDescription =>
       'Створіть свій перший особистий BBS і поділіться ним з mesh';
 
   @override
-  String get nodeboardEmptyDiscover => 'Публічних дошок не знайдено';
-
-  @override
   String get nodeboardEmptyDiscoverDescription =>
       'Станьте першим, хто створить дошку';
-
-  @override
-  String get nodeboardEmptyThreads => 'Тем ще немає';
-
-  @override
-  String get nodeboardEmptyThreadsDescription => 'Розпочніть розмову';
-
-  @override
-  String get nodeboardWizardTitle => 'Створення NodeBoard';
-
-  @override
-  String get nodeboardWizardStepName => 'Назва та ідентифікація';
-
-  @override
-  String get nodeboardWizardStepTagline => 'Гасло та опис';
-
-  @override
-  String get nodeboardWizardStepSections => 'Розділи';
-
-  @override
-  String get nodeboardWizardStepTheme => 'Тема оформлення';
-
-  @override
-  String get nodeboardWizardStepWelcome => 'Вітання та заставка';
-
-  @override
-  String get nodeboardWizardStepReview => 'Огляд';
-
-  @override
-  String get nodeboardBoardTitle => 'Назва дошки';
-
-  @override
-  String get nodeboardSysopName => 'Ім\'я SysOp';
-
-  @override
-  String get nodeboardSlug => 'URL-ідентифікатор дошки';
-
-  @override
-  String get nodeboardTagline => 'Гасло';
-
-  @override
-  String get nodeboardDescription => 'Опис';
-
-  @override
-  String get nodeboardWelcomeText => 'Текст вітання';
-
-  @override
-  String get nodeboardAnsiSplash => 'ASCII/ANSI заставка';
 
   @override
   String get nodeboardVisibilityPublic => 'Публічна';
@@ -12574,28 +12092,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeboardTerminalMode => 'Термінальний режим';
 
   @override
-  String get nodeboardNativeMode => 'Нативний режим';
-
-  @override
-  String get nodeboardReplyHint => 'Напишіть відповідь...';
-
-  @override
-  String get nodeboardThreadLocked => 'Цю тему заблоковано';
-
-  @override
   String get nodeboardPinned => 'Закріплено';
 
   @override
   String get nodeboardLocked => 'Заблоковано';
-
-  @override
-  String get nodeboardNext => 'Далі';
-
-  @override
-  String get nodeboardBack => 'Назад';
-
-  @override
-  String get nodeboardCreateBoardAction => 'Створити дошку';
 
   @override
   String get nodeboardLoadError => 'Не вдалося завантажити';
@@ -12640,9 +12140,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodeboardShareCopied => 'Посилання для поширення скопійовано';
-
-  @override
-  String get nodeboardComposerComingSoon => 'Редактор тем незабаром';
 
   @override
   String get nodeboardJustNow => 'щойно';
@@ -12703,9 +12200,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get navigationSectionDiscover => 'ВІДКРИТИ';
 
   @override
-  String get navigationSectionIdentity => 'ІДЕНТИЧНІСТЬ';
-
-  @override
   String get navigationSectionMesh => 'MESH';
 
   @override
@@ -12715,16 +12209,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get navigationSectionPremium => 'ПРЕМІУМ';
 
   @override
-  String get navigationSectionSocial => 'СОЦІАЛЬНЕ';
-
-  @override
   String get navigationSectionTools => 'ІНСТРУМЕНТИ';
-
-  @override
-  String get navigationSignals => 'Сигнали';
-
-  @override
-  String get navigationSocial => 'Соціальне';
 
   @override
   String get navigationSyncError => 'Помилка синхронізації';
@@ -13186,16 +12671,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String nodeDetailDistanceKilometers(String km) {
-    return '$km км';
-  }
-
-  @override
-  String nodeDetailDistanceMeters(String meters) {
-    return '$meters м';
-  }
-
-  @override
   String get nodeDetailFavoriteBadge => 'Обране';
 
   @override
@@ -13369,11 +12844,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeDetailMessageButton => 'Повідомлення';
 
   @override
-  String nodeDetailMuteError(String error) {
-    return 'Не вдалося оновити статус заглушення: $error';
-  }
-
-  @override
   String get nodeDetailMuteNotConnected =>
       'Неможливо змінити статус заглушення: пристрій не підключено';
 
@@ -13390,9 +12860,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodeDetailNoPkiBadge => 'Без PKI';
-
-  @override
-  String get nodeDetailNoPositionData => 'Вузол не має даних про позицію';
 
   @override
   String get nodeDetailPkiBadge => 'PKI';
@@ -14722,11 +14189,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String nodedexLastObservedOnPreset(String preset) {
-    return 'Востаннє спостерігався на $preset';
-  }
-
-  @override
   String get nodedexFilterRadioPreset => 'Пресет радіо';
 
   @override
@@ -15031,16 +14493,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodedexLegendWeak => 'Слабкий';
 
   @override
-  String nodedexLinkCountPlural(int count) {
-    return '$count зв\'язків';
-  }
-
-  @override
-  String nodedexLinkCountSingular(int count) {
-    return '$count зв\'язок';
-  }
-
-  @override
   String get nodedexLinkStrengthLabel => 'Сила зв\'язку';
 
   @override
@@ -15058,9 +14510,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodedexMaxRangeLabel => 'Максимальна відстань';
-
-  @override
-  String get nodedexMapTooltip => 'Карта NodeDex';
 
   @override
   String get nodedexMapTitle => 'Карта NodeDex';
@@ -15086,18 +14535,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodedexNicknameHint => 'Псевдонім';
 
   @override
-  String get nodedexNoClassification =>
-      'Класифікацію не призначено. Торкніться «Класифікувати», щоб додати.';
-
-  @override
   String get nodedexNoEncountersOnDate => 'Зустрічей у цей день немає';
 
   @override
   String get nodedexNoEncountersRecorded => 'Зустрічей не зафіксовано';
-
-  @override
-  String get nodedexNoNoteYet =>
-      'Замітки ще немає. Торкніться «Додати замітку», щоб написати.';
 
   @override
   String get nodedexNoRelationshipDataDescription =>
@@ -15283,9 +14724,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodedexRegionsCompactLabel => 'Регіони';
-
-  @override
-  String get nodedexRegionsLabel => 'Регіони';
 
   @override
   String get nodedexBroadcastRegionsLabel => 'Регіони мовлення';
@@ -15705,11 +15143,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodedexTitle => 'NodeDex';
 
   @override
-  String nodedexTotalCount(int count) {
-    return 'Усього: $count';
-  }
-
-  @override
   String get nodedexTraitAnchor => 'Якір';
 
   @override
@@ -15833,9 +15266,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodesScreenConnectedDevice => 'Підключений пристрій';
-
-  @override
-  String get nodesScreenDisconnect => 'Відключити';
 
   @override
   String get roleFilterAll => 'Усі ролі';
@@ -15972,16 +15402,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get quickActionDisconnect => 'Від\'єднати пристрій';
-
-  @override
-  String nodesScreenDistanceKilometers(String km) {
-    return '$km км';
-  }
-
-  @override
-  String nodesScreenDistanceMeters(String meters) {
-    return '$meters м';
-  }
 
   @override
   String nodesScreenDistanceAway(String distance) {
@@ -17154,14 +16574,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Необхідно оновити паруванн. Після зміни регіону радіо могло скинути свій Bluetooth-ідентифікатор - видаліть пристрій у налаштуваннях Bluetooth та виконайте паруванн знову.';
 
   @override
-  String get regionSelectionPairingInvalidation =>
-      'Необхідно оновити паруванн. Bluetooth-ідентифікатор радіо змінився.\nВидаліть пристрій у Налаштуваннях > Bluetooth та виконайте паруванн знову.';
-
-  @override
-  String get regionSelectionReconnectTimeout =>
-      'Час очікування підключення вичерпано. Спробуйте ще раз.';
-
-  @override
   String get regionSelectionRegionAnz => 'Австралія/НЗ';
 
   @override
@@ -17527,81 +16939,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get regionSelectionViewScanner => 'Переглянути сканер';
 
   @override
-  String get reviewModerationAllCaughtUp => 'Усе перевірено!';
-
-  @override
-  String get reviewModerationAllReviews => 'Усі відгуки';
-
-  @override
-  String get reviewModerationAnonymous => 'Анонімний';
-
-  @override
-  String get reviewModerationApprove => 'Схвалити';
-
-  @override
-  String get reviewModerationApproved => 'Відгук схвалено';
-
-  @override
-  String get reviewModerationCancel => 'Скасувати';
-
-  @override
-  String get reviewModerationDelete => 'Видалити';
-
-  @override
-  String get reviewModerationDeleteMessage =>
-      'Ви впевнені, що хочете назавжди видалити цей відгук?';
-
-  @override
-  String get reviewModerationDeleteTitle => 'Видалити відгук';
-
-  @override
-  String get reviewModerationDeleted => 'Відгук видалено';
-
-  @override
-  String get reviewModerationErrorLoading => 'Помилка завантаження відгуків';
-
-  @override
-  String get reviewModerationLegacy => 'Застарілий (без статусу)';
-
-  @override
-  String get reviewModerationNoDatabase => 'Немає відгуків у базі даних';
-
-  @override
-  String get reviewModerationNoPending =>
-      'Немає відгуків, що очікують на модерацію';
-
-  @override
-  String get reviewModerationNoReviews => 'Відгуків ще немає';
-
-  @override
-  String get reviewModerationPending => 'Очікує';
-
-  @override
-  String get reviewModerationReject => 'Відхилити';
-
-  @override
-  String get reviewModerationRejectReasonHint =>
-      'Наприклад: Неприйнятний вміст, спам тощо.';
-
-  @override
-  String get reviewModerationRejectReasonLabel => 'Причина відхилення';
-
-  @override
-  String get reviewModerationRejectTitle => 'Відхилити відгук';
-
-  @override
-  String get reviewModerationRejected => 'Відгук відхилено';
-
-  @override
-  String get reviewModerationTitle => 'Управління відгуками';
-
-  @override
-  String get reviewModerationVerified => 'Перевірено';
-
-  @override
-  String get routeDetailCenterOnNodeTooltip => 'Центрувати на вузлі';
-
-  @override
   String routeDetailDistanceKilometers(String km) {
     return '$km км';
   }
@@ -17644,9 +16981,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get routeDetailNoData => '--';
 
   @override
-  String get routeDetailNoGpsPoints => 'Немає GPS-точок';
-
-  @override
   String get routeDetailPointsLabel => 'Точки';
 
   @override
@@ -17659,9 +16993,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get routeDetailStorageUnavailable => 'Сховище недоступне';
-
-  @override
-  String get routeDetailYouBadge => 'Ви';
 
   @override
   String get routesCancel => 'Скасувати';
@@ -17840,9 +17171,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get scannerProtocolGroupOther => 'Інші пристрої';
-
-  @override
-  String get scannerBluetoothSettings => 'Налаштування Bluetooth';
 
   @override
   String get scannerBluetoothSettingsOpenFailed =>
@@ -18028,27 +17356,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ця збірка працює на платформі без Bluetooth-радіо. Підключіть сумісний з SocialMesh пристрій через мережу.';
 
   @override
-  String get scannerUnsupportedBleAction => 'Використати мережеве з\'єднання';
-
-  @override
-  String get scannerUnsupportedSerialTitle => 'USB Serial недоступний';
-
-  @override
-  String get scannerUnsupportedSerialDescription =>
-      'Ця збірка не може отримати доступ до USB-серійних пристроїв. Використайте Bluetooth або мережеве з\'єднання.';
-
-  @override
   String get scannerWebDashboardTitle => 'Режим панелі';
 
   @override
   String get scannerWebDashboardDescription =>
       'SocialMesh у вебі працює в режимі панелі: він переглядає mesh-активність, синхронізовану з парним мобільним пристроєм, але не може підключитися до радіо напряму. Відкрийте SocialMesh на телефоні, щоб під\'єднати пристрій.';
-
-  @override
-  String get sellerProfileFoundedStat => 'Засновано';
-
-  @override
-  String get sellerProfileSalesStat => 'Продажі';
 
   @override
   String get serialConfigBaudRate => 'Швидкість передачі';
@@ -18316,11 +17628,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsPremiumBadgeTry => 'СПРОБУВАТИ';
-
-  @override
-  String settingsPremiumPartiallyUnlocked(int owned, int total) {
-    return '$owned з $total розблоковано';
-  }
 
   @override
   String get settingsPremiumUnlockFeaturesTitle => 'Розблокувати функції';
@@ -19236,2250 +18543,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sigilStageSeed => 'Початковий';
 
   @override
-  String get signalAcquiringDeviceLocation =>
-      'Отримання місцезнаходження пристрою...';
-
-  @override
-  String signalActiveCount(int count) {
-    return '$count активних';
-  }
-
-  @override
-  String signalActiveDays(int days) {
-    return 'Активний $daysд';
-  }
-
-  @override
-  String signalActiveHours(int hours) {
-    return 'Активний $hoursг';
-  }
-
-  @override
-  String signalActiveMinutes(int minutes) {
-    return 'Активний $minutesхв';
-  }
-
-  @override
-  String get signalActiveNow => 'Зараз активний';
-
-  @override
-  String get signalAddLocation => 'Додати місцезнаходження';
-
-  @override
-  String get signalAddPhotos => 'Додати фото';
-
-  @override
-  String get signalAnonAuthor => 'Анон';
-
-  @override
-  String get signalAnonymous => 'Анонімно';
-
-  @override
-  String get signalAnonymousFeed => 'Анонімно';
-
-  @override
-  String signalApproxArea(int radiusMeters) {
-    return 'Приблизна область (~$radiusMetersм)';
-  }
-
-  @override
-  String get signalAttachFile => 'Прикріпити файл';
-
-  @override
-  String get signalBackNearby => 'Назад до поблизу';
-
-  @override
-  String get signalBeFirstToRespond =>
-      'Будьте першим, хто відповість на цей сигнал';
-
-  @override
-  String get signalBleNoMeshTrafficIos =>
-      'Підключено до BLE, але трафік меш не виявлено. На iOS режим польоту може блокувати BLE-трафік навіть при підключенні. Вимкніть режим польоту або перемкніть Bluetooth.';
-
-  @override
-  String get signalBroadcastYourSignal => 'Транслювати свій сигнал';
-
-  @override
-  String get signalBroadcastingOverMesh => 'Трансляція через меш...';
-
-  @override
-  String get signalCancel => 'Скасувати';
-
-  @override
-  String get signalChooseFromGallery => 'Вибрати з галереї';
-
-  @override
-  String get signalCloudBadge => 'Хмара';
-
-  @override
-  String get signalCloudFeaturesUnavailable => 'Хмарні функції недоступні.';
-
-  @override
-  String signalCommentCount(int count) {
-    return '$count коментарів';
-  }
-
-  @override
-  String get signalCommentReported => 'Коментар поскаржено. Дякуємо.';
-
-  @override
-  String get signalConnectToAddLocation =>
-      'Підключіть пристрій, щоб додати місцезнаходження до вашого сигналу.';
-
-  @override
-  String get signalConnectToGoActive =>
-      'Підключіть пристрій, щоб стати активним';
-
-  @override
-  String get signalConnectToSend =>
-      'Підключіть пристрій, щоб надсилати сигнали';
-
-  @override
-  String get signalConversation => 'Розмова';
-
-  @override
-  String get signalCreateFailed => 'Не вдалося створити сигнал';
-
-  @override
-  String get signalCurrentLocation => 'Поточне місцезнаходження';
-
-  @override
-  String get signalDelete => 'Видалити';
-
-  @override
-  String get signalDeleteMessage => 'Цей сигнал зникне негайно.';
-
-  @override
-  String get signalDeleteTitle => 'Видалити сигнал?';
-
-  @override
-  String get signalDetailTitle => 'Сигнал';
-
-  @override
   String get signalDeviceNotConnected => 'Пристрій не підключено';
-
-  @override
-  String get signalDiscardConfirm => 'Відкинути';
-
-  @override
-  String get signalDiscardMessage => 'Ваш чернетку буде втрачено.';
-
-  @override
-  String get signalDiscardTitle => 'Відкинути сигнал?';
-
-  @override
-  String get signalDuration => 'Тривалість сигналу';
-
-  @override
-  String get signalDurationSubtitle => 'Через який час сигнал зникне';
-
-  @override
-  String get signalEmptyTagline1 =>
-      'Тут зараз немає нічого активного.\nСигнали з\'являються, коли хтось поруч стає активним.';
-
-  @override
-  String get signalEmptyTagline2 =>
-      'Сигнали орієнтовані на меш і є тимчасовими.\nВони зникають після завершення таймера.';
-
-  @override
-  String get signalEmptyTagline3 =>
-      'Поділіться коротким статусом або фото.\nСусідні вузли побачать це в режимі реального часу.';
-
-  @override
-  String get signalEmptyTagline4 =>
-      'Станьте активним, щоб транслювати свою присутність.\nБез мережі, від пристрою до пристрою.';
-
-  @override
-  String get signalEmptyTitleKeyword => 'сигналів';
-
-  @override
-  String get signalEmptyTitlePrefix => 'Немає активних ';
-
-  @override
-  String get signalEmptyTitleSuffix => ' поруч';
-
-  @override
-  String get signalEnableGpsOrFixedPosition =>
-      'Пристрій ще не має місцезнаходження. Увімкніть GPS або встановіть фіксовану позицію.';
-
-  @override
-  String get signalExpiredBadge => 'Закінчився';
-
-  @override
-  String get signalFaded => 'Зник';
-
-  @override
-  String get signalFadesIn => 'Зникне через';
-
-  @override
-  String signalFadesInDays(int days) {
-    return 'Зникне через $daysд';
-  }
-
-  @override
-  String signalFadesInHours(int hours) {
-    return 'Зникне через $hoursг';
-  }
-
-  @override
-  String signalFadesInMinutes(int minutes) {
-    return 'Зникне через $minutesхв';
-  }
-
-  @override
-  String signalFadesInMinutesSeconds(int minutes, int seconds) {
-    return 'Зникне через $minutesхв $secondsс';
-  }
-
-  @override
-  String signalFadesInSeconds(int seconds) {
-    return 'Зникне через $secondsс';
-  }
-
-  @override
-  String get signalFallbackContent => 'Сигнал';
-
-  @override
-  String signalFileTooLarge(int size) {
-    return 'Файл завеликий. Передача через меш обмежена $size КБ.';
-  }
-
-  @override
-  String get signalFileTransferFailed => 'Не вдалося розпочати передачу файлу';
-
-  @override
-  String get signalFileTransfers => 'Передача файлів';
-
-  @override
-  String get signalFilterAll => 'Усі';
-
-  @override
-  String get signalFilterExpiring => 'Закінчуються';
-
-  @override
-  String get signalFilterHidden => 'Приховані';
-
-  @override
-  String get signalFilterLocation => 'Місцезнаходження';
-
-  @override
-  String get signalFilterMedia => 'Медіа';
-
-  @override
-  String get signalFilterMesh => 'Меш';
-
-  @override
-  String get signalFilterNearby => 'Поруч';
-
-  @override
-  String get signalFilterReplies => 'Відповіді';
-
-  @override
-  String get signalFilterSaved => 'Збережені';
-
-  @override
-  String get signalFitAllSignals => 'Показати всі сигнали';
-
-  @override
-  String get signalGetLocationFailed => 'Не вдалося отримати місцезнаходження';
-
-  @override
-  String get signalGoActive => 'Стати активним';
-
-  @override
-  String get signalGoActiveAction => 'Стати активним';
-
-  @override
-  String get signalHasFaded => 'Цей сигнал зник';
-
-  @override
-  String get signalHelp => 'Довідка';
-
-  @override
-  String get signalHidden => 'Сигнал приховано';
-
-  @override
-  String get signalHide => 'Приховати';
-
-  @override
-  String signalHopSingular(int count) {
-    return '$count крок';
-  }
-
-  @override
-  String signalHopsBadge(int count) {
-    return '$count кроків';
-  }
-
-  @override
-  String signalHopsPlural(int count) {
-    return '$count кроків';
-  }
-
-  @override
-  String get signalImageBlockedSingular =>
-      'Зображення порушує правила вмісту та було заблоковано';
-
-  @override
-  String signalImagesAddedCount(int passedCount) {
-    return '$passedCount зображень додано';
-  }
-
-  @override
-  String signalImagesBlockedAndAdded(int failedCount, int passedCount) {
-    return '$failedCount зображень заблоковано, $passedCount додано';
-  }
-
-  @override
-  String signalImagesBlockedPlural(int failedCount) {
-    return '$failedCount зображень заблоковано правилами вмісту';
-  }
-
-  @override
-  String get signalImagesHiddenOffline =>
-      'Зображення приховані в офлайні. Вони відновляться після підключення до мережі.';
-
-  @override
-  String get signalImagesRequireInternet =>
-      'Зображення потребують інтернету. Зображення видалено.';
-
-  @override
-  String get signalImagesRestored => 'Зображення відновлено!';
-
-  @override
-  String get signalIntentLabel => 'Намір';
-
-  @override
-  String get signalIosAirplaneModeWarning =>
-      'Режим польоту iOS може призупиняти BLE-трафік меш навіть при підключенні. Якщо сигнали зупиняються, вимкніть режим польоту або перемкніть Bluetooth.';
-
-  @override
-  String get signalKeepEditing => 'Продовжити редагування';
-
-  @override
-  String get signalLegendFiveMin => '< 5 хв';
-
-  @override
-  String get signalLegendOverTwoHrs => '> 2 год';
-
-  @override
-  String get signalLegendThirtyMin => '< 30 хв';
-
-  @override
-  String get signalLegendTwoHrs => '< 2 год';
-
-  @override
-  String get signalLetOthersKnowIntent => 'Повідомте інших, чому ви активні';
-
-  @override
-  String get signalLoadingComments => 'Завантаження коментарів...';
-
-  @override
-  String get signalLocal => 'Локальний';
-
-  @override
-  String get signalLocalBadge => 'Локальний';
-
-  @override
-  String get signalLocalBadgeGallery => 'Локальний';
-
-  @override
-  String get signalLocationBadge => 'Місцезнаходження';
-
-  @override
-  String signalLocationPrivacyNote(int radiusMeters) {
-    return 'Місцезнаходження сигналу використовує позицію меш-пристрою, заокруглену до ~$radiusMetersм.';
-  }
-
-  @override
-  String get signalLocationInvalid => 'Локація недоступна';
-
-  @override
-  String get signalLocationUnavailableSent =>
-      'Місцезнаходження недоступне, надіслано без місцезнаходження.';
-
-  @override
-  String signalMaxFileSize(int size) {
-    return 'Макс. $size КБ';
-  }
-
-  @override
-  String signalMaxImagesAllowed(int maxImages) {
-    return 'Дозволено максимум $maxImages зображень';
-  }
-
-  @override
-  String get signalMeshOnlyDebugBanner =>
-      'Увімкнено режим налагодження лише для меш. Сигнали використовують лише локальну БД і меш.';
-
-  @override
-  String get signalMeshOnlyDebugCloudDisabled =>
-      'Увімкнено режим налагодження лише для меш. Хмарні функції вимкнено.';
-
-  @override
-  String get signalNoCommentsYet => 'Коментарів ще немає';
-
-  @override
-  String get signalNoDeviceConnectedTooltip => 'Пристрій не підключено';
-
-  @override
-  String get signalNoDeviceLocation =>
-      'Місцезнаходження підключеного пристрою недоступне';
-
-  @override
-  String get signalNoFilterMatch =>
-      'Немає сигналів, що відповідають цьому фільтру';
-
-  @override
-  String get signalNoIntent => 'Без наміру';
-
-  @override
-  String get signalNoLocationDescription =>
-      'Сигнали з\'являться тут, коли вони містять GPS-координати';
-
-  @override
-  String get signalNoLocationTitle => 'Немає сигналів з місцезнаходженням';
-
-  @override
-  String get signalNoSignals => 'Немає сигналів';
-
-  @override
-  String get signalOfflineCloudUnavailable =>
-      'Офлайн: зображення та хмарні функції недоступні.';
-
-  @override
-  String signalOnMapCount(int count) {
-    return '$count на карті';
-  }
-
-  @override
-  String get signalOriginCloud => 'Хмара';
-
-  @override
-  String get signalOriginMesh => 'Меш';
-
-  @override
-  String signalPeopleActiveCount(int count) {
-    return '$count людей активні';
-  }
-
-  @override
-  String get signalProcessingImage => 'Обробка зображення...';
-
-  @override
-  String get signalProfile => 'Профіль';
-
-  @override
-  String get signalRemoveLocation => 'Видалити місцезнаходження';
-
-  @override
-  String get signalRemoveVoteFailed => 'Не вдалося видалити голос';
-
-  @override
-  String get signalRemovedFromSaved => 'Видалено зі збережених';
-
-  @override
-  String get signalReplyAction => 'Відповісти';
-
-  @override
-  String signalReplyWithCount(int count) {
-    return 'Відповісти ($count)';
-  }
-
-  @override
-  String signalReplyingTo(String author) {
-    return 'Відповідь для $author';
-  }
-
-  @override
-  String get signalReport => 'Поскаржитись';
-
-  @override
-  String get signalReportCopyright => 'Порушення авторських прав';
-
-  @override
-  String signalReportFailed(String error) {
-    return 'Не вдалося поскаржитись: $error';
-  }
-
-  @override
-  String get signalReportHarassment => 'Переслідування або булінг';
-
-  @override
-  String get signalReportNudity => 'Відверті або сексуальні матеріали';
-
-  @override
-  String get signalReportOther => 'Інше';
-
-  @override
-  String get signalReportSpam => 'Спам або оманливий вміст';
-
-  @override
-  String get signalReportSubmitted => 'Скаргу подано. Дякуємо.';
-
-  @override
-  String get signalReportViolence => 'Насильство або небезпечний вміст';
-
-  @override
-  String get signalRespondToSignalHint => 'Відповісти на цей сигнал...';
-
-  @override
-  String get signalRestore => 'Відновити';
 
   @override
   String get signalRestored => 'Сигнал відновлено';
 
   @override
-  String get signalRetrievingDeviceLocation =>
-      'Отримання місцезнаходження пристрою...';
-
-  @override
-  String get signalSaved => 'Сигнал збережено';
-
-  @override
-  String get signalSavedBadge => 'Збережений';
-
-  @override
-  String get signalSearchHint => 'Пошук сигналів';
-
-  @override
-  String signalSeenCount(String formattedCount) {
-    return 'Переглянуто $formattedCount';
-  }
-
-  @override
-  String get signalSelectUpToFourPhotos => 'Виберіть до 4 фото';
-
-  @override
-  String get signalSendASignal => 'Надіслати сигнал...';
-
-  @override
-  String get signalSendButton => 'Надіслати сигнал';
-
-  @override
-  String get signalSendResponseFailed => 'Не вдалося надіслати відповідь';
-
-  @override
-  String get signalSendSignal => 'Надіслати сигнал';
-
-  @override
-  String get signalSending => 'Надсилання...';
-
-  @override
-  String get signalSendingLabel => 'Надсилання...';
-
-  @override
-  String get signalSent => 'Сигнал надіслано';
-
-  @override
-  String get signalSettings => 'Налаштування';
-
-  @override
-  String get signalShortStatusHint => 'напр. \"На стежці біля вершини\"';
-
-  @override
-  String get signalShortStatusOptional => 'Короткий статус (необов\'язково)';
-
-  @override
-  String get signalShowAll => 'Показати всі сигнали';
-
-  @override
-  String get signalSignIn => 'Увійти';
-
-  @override
-  String get signalSignInForCloudFeatures =>
-      'Увійдіть, щоб увімкнути зображення та хмарні функції.';
-
-  @override
-  String get signalSignInForImagesAndComments =>
-      'Увійдіть для зображень і коментарів';
-
-  @override
-  String get signalSignInRequiredToComment =>
-      'Увійдіть, щоб коментувати зі свого профілю';
-
-  @override
-  String get signalSignInToViewMedia =>
-      'Увійдіть, щоб переглянути прикріплені медіа';
-
-  @override
-  String get signalSignInToVote =>
-      'Голосуйте зі свого профілю - увійдіть, щоб увімкнути';
-
-  @override
-  String signalSignalsNearbyCount(int count) {
-    return '$count сигналів поруч';
-  }
-
-  @override
-  String get signalSomeone => 'Хтось';
-
-  @override
-  String get signalSortByProximity => 'За відстанню';
-
-  @override
-  String get signalSortClosest => 'Найближчі';
-
-  @override
-  String get signalSortExpiring => 'Закінчуються';
-
-  @override
-  String get signalSortExpiringSoon => 'Незабаром закінчуються';
-
-  @override
-  String get signalSortMostRecent => 'Найновіші';
-
-  @override
-  String get signalSortNewest => 'Нові';
-
-  @override
-  String get signalSwipeSave => 'Зберегти';
-
-  @override
-  String get signalSwipeUnsave => 'Не зберігати';
-
-  @override
-  String get signalSyncingMedia => 'Синхронізація медіа';
-
-  @override
-  String get signalMediaUnavailable => 'Медіа недоступне';
-
-  @override
-  String get signalTakePhoto => 'Зробити фото';
-
-  @override
-  String get signalTapToSet => 'Натисніть, щоб встановити';
-
-  @override
-  String get signalTapToView => 'Натисніть, щоб переглянути';
-
-  @override
-  String get signalTemporaryBanner =>
-      'Сигнали є тимчасовими. Вони зникають автоматично і існують лише поки активні.';
-
-  @override
-  String signalTimeDaysAgo(int days) {
-    return '$daysд тому';
-  }
-
-  @override
-  String signalTimeHoursAgo(int hours) {
-    return '$hoursг тому';
-  }
-
-  @override
-  String get signalTimeJustNow => 'Щойно';
-
-  @override
-  String signalTimeMinutesAgo(int minutes) {
-    return '$minutesхв тому';
-  }
-
-  @override
-  String get signalTimeNowCompact => 'зараз';
-
-  @override
-  String signalTimeWeeksAgo(int weeks) {
-    return '$weeksтиж тому';
-  }
-
-  @override
-  String signalTtlDaysLeft(int days) {
-    return 'Залишилось $daysд';
-  }
-
-  @override
-  String get signalTtlExpired => 'Закінчився';
-
-  @override
-  String signalTtlHoursLeft(int hours) {
-    return 'Залишилось $hoursг';
-  }
-
-  @override
-  String signalTtlMinutesLeft(int minutes) {
-    return 'Залишилось $minutesхв';
-  }
-
-  @override
-  String signalTtlSecondsLeft(int seconds) {
-    return 'Залишилось $secondsс';
-  }
-
-  @override
-  String get signalUnknownAuthor => 'Невідомо';
-
-  @override
-  String get signalUseCamera => 'Використати камеру';
-
-  @override
-  String get signalValidateImagesFailed => 'Не вдалося перевірити зображення';
-
-  @override
-  String signalValidatingImages(int count) {
-    return 'Перевірка $count зображень...';
-  }
-
-  @override
-  String get signalViewButton => 'Переглянути';
-
-  @override
-  String get signalViewGallery => 'Переглянути галерею';
-
-  @override
-  String get signalViewGrid => 'Вигляд сіткою';
-
-  @override
-  String get signalViewList => 'Вигляд списком';
-
-  @override
-  String get signalViewLocation => 'Переглянути місцезнаходження';
-
-  @override
-  String get signalViewMap => 'Вигляд картою';
-
-  @override
-  String get signalVoteFailed => 'Не вдалося подати голос';
-
-  @override
-  String get signalWhatAreYouSignaling => 'Що ви сигналізуєте?';
-
-  @override
-  String get signalWhyReportComment => 'Чому ви скаржитесь на цей коментар?';
-
-  @override
-  String get signalWhyReportSignal => 'Чому ви скаржитесь на цей сигнал?';
-
-  @override
-  String get signalWriteReplyHint => 'Написати відповідь...';
-
-  @override
-  String get signalYouBadge => 'ви';
-
-  @override
-  String get signalYourIntent => 'Ваш намір';
-
-  @override
-  String get signalYourResponsibility => 'Ваша відповідальність';
-
-  @override
-  String get signalsFadeAutomatically =>
-      'Сигнали зникають автоматично. Видно лише ті, що ще активні.';
-
-  @override
-  String get signalsFeedTitle => 'Сигнали';
-
-  @override
-  String get signalsPanelTitle => 'Сигнали';
-
-  @override
-  String get socialAboutSensitiveContent => 'Про чутливий вміст';
-
-  @override
-  String get socialAccountGoodStanding => 'Обліковий запис у доброму стані';
-
-  @override
-  String get socialAccountGoodStandingDesc =>
-      'У вас немає активних попереджень або порушень.';
-
-  @override
-  String get socialAccountGoodStandingLabel => 'Добрий стан';
-
-  @override
-  String get socialAccountMaxStrikes => 'Максимум порушень';
-
-  @override
-  String get socialAccountRecentActivity => 'Остання активність';
-
-  @override
-  String get socialAccountStatusActive => 'Активний';
-
-  @override
-  String socialAccountStatusError(String error) {
-    return 'Помилка завантаження статусу: $error';
-  }
-
-  @override
-  String get socialAccountStatusLabel => 'Статус облікового запису';
-
-  @override
-  String get socialAccountStatusTitle => 'Статус облікового запису';
-
-  @override
-  String get socialAccountStrikeMeter => 'Лічильник порушень';
-
-  @override
-  String get socialAccountStrikes => 'Порушення';
-
-  @override
-  String get socialAccountSuspended => 'Заблокований';
-
-  @override
-  String get socialAccountSuspendedTitle => 'Обліковий запис заблоковано';
-
-  @override
-  String get socialAccountSuspendedMessage =>
-      'Ваш обліковий запис наразі заблоковано. Ви не можете публікувати або коментувати до зняття блокування.';
-
-  @override
-  String get socialAccountWarningStrikesActive =>
-      'Попередження: є активні порушення';
-
-  @override
-  String get socialAccountWarnings => 'Попередження';
-
-  @override
-  String get socialAccountWarningsActive => 'Активні попередження';
-
-  @override
-  String get socialActiveStrikes => 'Активні порушення';
-
-  @override
-  String get socialActiveWarnings => 'Активні попередження';
-
-  @override
-  String get socialActivityClearAll => 'Очистити все';
-
-  @override
-  String get socialActivityClearConfirmLabel => 'Очистити';
-
-  @override
-  String get socialActivityClearConfirmMessage =>
-      'Усі елементи активності буде видалено. Це не можна скасувати.';
-
-  @override
-  String get socialActivityClearConfirmTitle => 'Очистити всю активність?';
-
-  @override
-  String get socialActivityCommentedSignal => ' прокоментував(ла) ваш сигнал';
-
-  @override
-  String get socialActivityErrorLoading => 'Не вдалося завантажити активність';
-
-  @override
-  String get socialActivityGroupEarlier => 'Раніше';
-
-  @override
-  String get socialActivityGroupThisMonth => 'Цього місяця';
-
-  @override
-  String get socialActivityGroupThisWeek => 'Цього тижня';
-
-  @override
-  String get socialActivityGroupToday => 'Сьогодні';
-
-  @override
-  String get socialActivityGroupYesterday => 'Вчора';
-
-  @override
-  String get socialActivityInteracted => ' взаємодіяв(ла) з вашим вмістом';
-
-  @override
-  String get socialActivityLikedSignal => ' вподобав(ла) ваш сигнал';
-
-  @override
-  String get socialActivityLoadingSignal => 'Завантаження сигналу...';
-
-  @override
-  String get socialActivityMarkAllRead => 'Позначити все як прочитане';
-
-  @override
-  String get socialActivityRepliedComment => ' відповів(ла) на ваш коментар';
-
-  @override
-  String get socialActivitySignalNotFound => 'Сигнал не знайдено';
-
-  @override
-  String get socialActivityTagline1 =>
-      'Активності ще немає.\nВзаємодії з вашими публікаціями відображатимуться тут.';
-
-  @override
-  String get socialActivityTagline2 =>
-      'Вподобання, коментарі, підписки - все в одному місці.\nОпублікуйте щось, щоб розпочати.';
-
-  @override
-  String get socialActivityTagline3 =>
-      'Ваш соціальний пульс починається тут.\nПідключайтеся до інших, щоб бачити активність.';
-
-  @override
-  String get socialActivityTagline4 =>
-      'Поки нічого немає. Активність з\'явиться, коли інші\nвзаємодіятимуть з вашим вмістом.';
-
-  @override
-  String get socialActivityTitle => 'Активність';
-
-  @override
-  String get socialActivityTitleKeyword => 'активність';
-
-  @override
-  String get socialActivityTitlePrefix => 'Немає ';
-
-  @override
-  String get socialActivityTitleSuffix => ' ще';
-
-  @override
-  String get socialAdd => 'Додати';
-
-  @override
-  String get socialAddBanner => 'Додати банер';
-
-  @override
-  String get socialAlbumAll => 'Усі альбоми';
-
-  @override
-  String get socialAlbumFavorites => 'Вибране';
-
-  @override
-  String get socialAlbumRecents => 'Нещодавні';
-
-  @override
-  String get socialAlbumVideos => 'Відео';
-
-  @override
-  String get socialAppealDecision => 'Оскаржити рішення';
-
-  @override
-  String get socialBanReasonHarassment => 'Переслідування / цькування';
-
-  @override
-  String get socialBanReasonHateSpeech => 'Мова ненависті / дискримінація';
-
-  @override
-  String get socialBanReasonIllegal => 'Незаконна діяльність';
-
-  @override
-  String get socialBanReasonImpersonation => 'Видавання себе за іншу особу';
-
-  @override
-  String get socialBanReasonOther => 'Інше порушення';
-
-  @override
-  String get socialBanReasonPornography => 'Порнографія / сексуальний вміст';
-
-  @override
-  String get socialBanReasonSpam => 'Спам / шахрайство';
-
-  @override
-  String get socialBanReasonViolence => 'Насильство / погрози';
-
-  @override
-  String get socialBanUserAndDelete => 'Заблокувати користувача та видалити';
-
-  @override
-  String get socialBanUserButton => 'Заблокувати користувача';
-
-  @override
-  String socialBanUserFailed(String error) {
-    return 'Не вдалося заблокувати користувача: $error';
-  }
-
-  @override
-  String socialBannerRemoveFailed(String error) {
-    return 'Не вдалося видалити банер: $error';
-  }
-
-  @override
-  String get socialBannerRemoved => 'Банер видалено';
-
-  @override
-  String get socialBannerUpdated => 'Банер оновлено';
-
-  @override
-  String socialBannerUploadFailed(String error) {
-    return 'Не вдалося завантажити банер: $error';
-  }
-
-  @override
-  String get socialBlock => 'Заблокувати';
-
-  @override
-  String get socialBlockUser => 'Заблокувати користувача';
-
-  @override
-  String get socialBlockUserConfirm =>
-      'Ви більше не бачитимете публікації цього користувача.';
-
-  @override
-  String get socialBlurSensitiveDesc =>
-      'Розмивати потенційно чутливі зображення та відео, доки ви не торкнетеся їх';
-
-  @override
-  String get socialBlurSensitiveMedia => 'Розмивати чутливі медіа';
-
-  @override
-  String get socialCancel => 'Скасувати';
-
-  @override
-  String get socialCannotIdentifyUser =>
-      'Неможливо ідентифікувати користувача для блокування';
-
-  @override
-  String get socialChangeBanner => 'Змінити банер';
-
-  @override
-  String get socialClose => 'Закрити';
-
-  @override
-  String socialCommentActionFailed(String error) {
-    return 'Помилка: $error';
-  }
-
-  @override
-  String get socialCommentDeleteConfirm =>
-      'Ви справді хочете видалити цей коментар?';
-
-  @override
-  String socialCommentDeleteFailed(String error) {
-    return 'Не вдалося видалити: $error';
-  }
-
-  @override
-  String get socialCommentDeleteTitle => 'Видалити коментар';
-
-  @override
-  String get socialCommentHintAdd => 'Додати коментар...';
-
-  @override
-  String get socialCommentHintReply => 'Написати відповідь...';
-
-  @override
-  String get socialCommentReply => 'Відповісти';
-
-  @override
-  String get socialCommentReported => 'Коментар поскаржено';
-
-  @override
-  String get socialCommentUnknown => 'Невідомо';
-
-  @override
-  String get socialComments => 'Коментарі';
-
-  @override
-  String get socialCommunityGuidelines => 'Правила спільноти';
-
-  @override
-  String get socialConfirm => 'Підтвердити';
-
-  @override
-  String get socialConnectionsTitle => 'З\'єднання';
-
-  @override
-  String get socialContactSupport => 'Є питання? Зв\'яжіться з підтримкою';
-
-  @override
-  String get socialContactSupportButton => 'Зв\'язатися з підтримкою';
-
-  @override
-  String get socialContentApproved => 'Вміст схвалено';
-
-  @override
-  String get socialContentIdNotFound => 'Ідентифікатор вмісту не знайдено';
-
-  @override
-  String get socialContentRemoved => 'Вміст видалено';
-
-  @override
-  String get socialContentType => 'Тип вмісту';
-
-  @override
-  String get socialCreatePostAction => 'Створити публікацію';
-
-  @override
-  String get socialCreatePostAddImage => 'Додати зображення';
-
-  @override
-  String get socialCreatePostAddLocation => 'Додати місцезнаходження';
-
-  @override
-  String get socialCreatePostButton => 'Опублікувати';
-
-  @override
-  String get socialCreatePostCreated => 'Публікацію створено!';
-
-  @override
-  String get socialCreatePostCurrentDesc => 'Поділитися координатами GPS';
-
-  @override
-  String get socialCreatePostCurrentLocation => 'Поточне місцезнаходження';
-
-  @override
-  String get socialCreatePostDiscardMsgDraft => 'Ваш чернетку буде втрачено.';
-
-  @override
-  String get socialCreatePostDiscardMsgImages =>
-      'Завантажені зображення буде видалено.';
-
-  @override
-  String get socialCreatePostDiscardTitle => 'Відкинути публікацію?';
-
-  @override
-  String get socialCreatePostEnterLocation => 'Введіть місцезнаходження';
-
-  @override
-  String get socialCreatePostEnterManually => 'Ввести місцезнаходження вручну';
-
-  @override
-  String socialCreatePostFailed(String error) {
-    return 'Не вдалося створити публікацію: $error';
-  }
-
-  @override
-  String get socialCreatePostHint => 'Що відбувається в мережі?';
-
-  @override
-  String socialCreatePostImageCount(int count, int max) {
-    return '$count/$max зображень';
-  }
-
-  @override
-  String get socialCreatePostImageViolation =>
-      'Одне або кілька зображень порушують правила вмісту.';
-
-  @override
-  String get socialCreatePostLocationDenied =>
-      'Доступ до місцезнаходження відхилено';
-
-  @override
-  String get socialCreatePostLocationHint => 'напр., Київ, Україна';
-
-  @override
-  String get socialCreatePostLocationLabel => 'Місцезнаходження';
-
-  @override
-  String get socialCreatePostLocationSheetTitle => 'Додати місцезнаходження';
-
-  @override
-  String get socialCreatePostManualDesc => 'Введіть назву місця';
-
-  @override
-  String socialCreatePostMaxImages(int max) {
-    return 'Максимум $max зображень';
-  }
-
-  @override
-  String get socialCreatePostNoNodes =>
-      'Немає доступних вузлів. Спочатку підключіться до мережі.';
-
-  @override
-  String socialCreatePostNodeLabel(String nodeId) {
-    return 'Вузол $nodeId';
-  }
-
-  @override
-  String get socialCreatePostSignIn => 'Увійдіть, щоб створювати публікації';
-
-  @override
-  String get socialCreatePostTagNode => 'Позначити вузол';
-
-  @override
-  String get socialCreatePostTagNodeTitle => 'Позначити вузол';
-
-  @override
-  String get socialCreatePostTitle => 'Створити публікацію';
-
-  @override
-  String get socialCreatePostUseCurrent =>
-      'Використати поточне місцезнаходження';
-
-  @override
-  String get socialCreateStoryCamera => 'Камера';
-
-  @override
-  String get socialCreateStoryCloseFriends => 'Близькі друзі';
-
-  @override
-  String get socialCreateStoryDelete => 'Видалити';
-
-  @override
-  String get socialCreateStoryDragInstructions =>
-      'Перетягніть для переміщення • Зведіть пальці для зміни розміру • Утримуйте для видалення';
-
-  @override
-  String get socialCreateStoryEdit => 'Редагувати';
-
-  @override
-  String get socialCreateStoryFailed => 'Не вдалося створити історію';
-
-  @override
-  String get socialCreateStoryFollowers => 'Підписники';
-
-  @override
-  String socialCreateStoryItemsCount(int count) {
-    return '$count елементів';
-  }
-
-  @override
-  String get socialCreateStoryLinkNode => 'Прив\'язати до вузла';
-
-  @override
-  String get socialCreateStoryLocationFailed =>
-      'Не вдалося отримати місцезнаходження';
-
-  @override
-  String get socialCreateStoryLocationRequired =>
-      'Необхідний дозвіл на місцезнаходження';
-
-  @override
-  String get socialCreateStoryPublic => 'Публічна';
-
-  @override
-  String get socialCreateStoryShared => 'Історію опубліковано!';
-
-  @override
-  String get socialCreateStorySignIn => 'Увійдіть, щоб створювати історії';
-
-  @override
-  String get socialCreateStoryTitle => 'Додати до історії';
-
-  @override
-  String get socialCreateStoryTypeSomething => 'Введіть текст...';
-
-  @override
-  String get socialCreateStoryUntitledAlbum => 'Альбом без назви';
-
-  @override
-  String get socialDate => 'Дата';
-
-  @override
-  String get socialDefault => 'За замовчуванням';
-
-  @override
-  String get socialDelete => 'Видалити';
-
-  @override
-  String get socialDeleteComment => 'Видалити коментар';
-
-  @override
-  String get socialDeleteCommentConfirm =>
-      'Ви справді хочете видалити цей коментар?';
-
-  @override
-  String get socialDeletePost => 'Видалити публікацію';
-
-  @override
-  String get socialDeletePostConfirm =>
-      'Ви справді хочете видалити цю публікацію?';
-
-  @override
-  String get socialDeleteStory => 'Видалити історію';
-
-  @override
-  String get socialDeleteStoryConfirm => 'Цю історію буде остаточно видалено.';
-
-  @override
-  String socialDeleteType(String type) {
-    return 'Видалити $type';
-  }
-
-  @override
-  String socialDeleteTypeConfirm(String type) {
-    return 'Це остаточно видалить поскаржений $type. Продовжити?';
-  }
-
-  @override
-  String get socialDiscard => 'Відкинути';
-
-  @override
-  String socialDiscordCopied(String username) {
-    return 'Ім\'я користувача Discord скопійовано: $username';
-  }
-
-  @override
-  String get socialDismiss => 'Закрити';
-
-  @override
-  String get socialDisplayOptions => 'Параметри відображення';
-
-  @override
-  String get socialDone => 'Готово';
-
-  @override
-  String get socialEditProfile => 'Редагувати профіль';
-
-  @override
-  String get socialEmailCopied =>
-      'Електронну адресу скопійовано до буфера обміну';
-
-  @override
-  String get socialEmptyPostsTagline1 =>
-      'Діліться фото та історіями про свої пригоди в мережі.';
-
-  @override
-  String get socialEmptyPostsTagline2 =>
-      'Публікуйте про налаштування вузлів, тести дальності та відкриття.';
-
-  @override
-  String get socialEmptyPostsTagline3 =>
-      'Ваша mesh-спільнота чекає, щоб побачити, що ви створюєте.';
-
-  @override
-  String get socialEmptyPostsTagline4 =>
-      'Документуйте свої пригоди та діліться ними в мережі.';
-
-  @override
-  String get socialErrorLoadingReports => 'Помилка завантаження скарг';
-
-  @override
-  String get socialErrorLoadingViewers => 'Помилка завантаження глядачів';
-
-  @override
-  String socialErrorWithDetails(String error) {
-    return 'Помилка: $error';
-  }
-
-  @override
-  String get socialExpires => 'Термін дії';
-
-  @override
-  String socialFailedToBlock(String error) {
-    return 'Не вдалося заблокувати користувача: $error';
-  }
-
-  @override
-  String socialFailedToDelete(String error) {
-    return 'Не вдалося видалити: $error';
-  }
-
-  @override
-  String socialFailedToGetLocation(String error) {
-    return 'Не вдалося отримати місцезнаходження: $error';
-  }
-
-  @override
-  String socialFailedToReport(String error) {
-    return 'Не вдалося подати скаргу: $error';
-  }
-
-  @override
-  String socialFailedToReportStory(String error) {
-    return 'Не вдалося поскаржитися на історію: $error';
-  }
-
-  @override
-  String get socialFailedToUpdateLike => 'Не вдалося оновити вподобання';
-
-  @override
-  String socialFailedToUploadImage(String error) {
-    return 'Не вдалося завантажити зображення: $error';
-  }
-
-  @override
-  String get socialFeedLocationFallback => 'Місцезнаходження';
-
-  @override
-  String get socialFilterLevelLess => 'Менше';
-
-  @override
-  String get socialFilterLevelLessDesc =>
-      'Ви можете бачити вміст, який може бути неприємним або образливим. Це налаштування схиляється до показу більшого вмісту.';
-
-  @override
-  String get socialFilterLevelStandard => 'Стандартний';
-
-  @override
-  String get socialFilterLevelStandardDesc =>
-      'Вміст, який може бути неприємним або образливим, фільтрується. Деякий граничний вміст може все одно відображатися.';
-
-  @override
-  String get socialFollow => 'Підписатися';
-
-  @override
-  String socialFollowActionFailed(String error) {
-    return 'Помилка: $error';
-  }
-
-  @override
-  String socialFollowFailed(String error) {
-    return 'Не вдалося оновити підписку: $error';
-  }
-
-  @override
-  String get socialFollowRequestAcceptFailed => 'Не вдалося прийняти запит';
-
-  @override
-  String socialFollowRequestAccepted(String name) {
-    return 'Запит від $name прийнято';
-  }
-
-  @override
-  String get socialFollowRequestDeclineFailed => 'Не вдалося відхилити запит';
-
-  @override
-  String socialFollowRequestDeclined(String name) {
-    return 'Запит від $name відхилено';
-  }
-
-  @override
-  String get socialFollowRequestsEmpty => 'Немає очікуваних запитів';
-
-  @override
-  String get socialFollowRequestsEmptyDesc =>
-      'Коли хтось надішле запит на підписку, він з\'явиться тут.';
-
-  @override
-  String socialFollowRequestsError(String error) {
-    return 'Не вдалося завантажити: $error';
-  }
-
-  @override
-  String get socialFollowRequestsTitle => 'Запити на підписку';
-
-  @override
-  String socialFollowersError(String error) {
-    return 'Не вдалося завантажити: $error';
-  }
-
-  @override
-  String get socialFollowing => 'Підписки';
-
-  @override
-  String get socialGuidelineNoExplicit => 'Без відвертого або дорослого вмісту';
-
-  @override
-  String get socialGuidelineNoHarassment =>
-      'Без переслідування, погроз або мови ненависті';
-
-  @override
-  String get socialGuidelineNoSpam =>
-      'Без спаму, шахрайства або оманливого вмісту';
-
-  @override
-  String get socialGuidelinesWarning => 'Попередження про правила спільноти';
-
-  @override
-  String get socialHubSignIn =>
-      'Увійдіть, щоб отримати доступ до соціальних функцій';
-
-  @override
-  String get socialHubSignInDesc =>
-      'Створюйте публікації, підписуйтеся на користувачів та спілкуйтеся з mesh-спільнотою.';
-
-  @override
-  String get socialHubTitle => 'Соціальне';
-
-  @override
-  String get socialIUnderstand => 'Я розумію';
-
-  @override
-  String get socialImageBlockedByModeration =>
-      'Зображення заблоковано модерацією';
-
-  @override
-  String get socialInvalidNodeId => 'Недійсний ідентифікатор вузла';
-
-  @override
-  String socialJoined(String date) {
-    return 'Приєднався $date';
-  }
-
-  @override
   String get socialLike => 'Вподобати';
-
-  @override
-  String get socialLiked => 'Вподобано';
-
-  @override
-  String get socialLikePlural => 'вподобань';
-
-  @override
-  String get socialLikeSingular => 'вподобання';
-
-  @override
-  String get socialLinkNodeHint =>
-      'Прив\'язати mesh-вузол до наступної публікації';
-
-  @override
-  String get socialLocationFallback => 'Місцезнаходження';
-
-  @override
-  String get socialModerationAdditionalNotes =>
-      'Додаткові примітки (необов\'язково)';
-
-  @override
-  String get socialModerationApprove => 'Схвалити';
-
-  @override
-  String get socialModerationApproved => 'Вміст схвалено';
-
-  @override
-  String get socialModerationErrorLoading => 'Помилка завантаження черги';
-
-  @override
-  String get socialModerationNoPending => 'Немає елементів на розгляді';
-
-  @override
-  String socialModerationNoStatus(String status) {
-    return 'Немає елементів зі статусом $status';
-  }
-
-  @override
-  String get socialModerationQueueTitle => 'Черга модерації';
-
-  @override
-  String get socialModerationReasonHarassment => 'Переслідування або цькування';
-
-  @override
-  String get socialModerationReasonHateSpeech =>
-      'Мова ненависті або дискримінація';
-
-  @override
-  String get socialModerationReasonIP => 'Порушення інтелектуальної власності';
-
-  @override
-  String get socialModerationReasonNudity => 'Оголеність або сексуальний вміст';
-
-  @override
-  String get socialModerationReasonOther => 'Інше порушення правил';
-
-  @override
-  String get socialModerationReasonSpam => 'Спам або оманливий вміст';
-
-  @override
-  String get socialModerationReasonViolence =>
-      'Насильство або небезпечний вміст';
-
-  @override
-  String get socialModerationReject => 'Відхилити';
-
-  @override
-  String get socialModerationRejected => 'Вміст відхилено';
-
-  @override
-  String get socialModerationRejectionReason => 'Причина відхилення';
-
-  @override
-  String socialModerationReviewedBy(String reviewedBy) {
-    return 'Перевірено: $reviewedBy';
-  }
-
-  @override
-  String get socialModerationTabApproved => 'Схвалені';
-
-  @override
-  String get socialModerationTabPending => 'Очікують';
-
-  @override
-  String get socialModerationTabRejected => 'Відхилені';
-
-  @override
-  String socialModerationUserLabel(String userId) {
-    return 'Користувач: $userId';
-  }
-
-  @override
-  String get socialNext => 'Далі';
-
-  @override
-  String get socialNoAlbumsFound => 'Альбоми не знайдено';
-
-  @override
-  String get socialNoCommentsYet => 'Коментарів ще немає. Будьте першим!';
-
-  @override
-  String get socialNoContent => 'Немає вмісту';
-
-  @override
-  String get socialNoFollowersYet => 'Підписників ще немає';
-
-  @override
-  String get socialNoLocationPosts => 'Немає публікацій з місцезнаходженням';
-
-  @override
-  String get socialNoNodePosts => 'Немає публікацій вузлів';
-
-  @override
-  String socialNoPendingFilterReports(String filter) {
-    return 'Немає очікуваних скарг за фільтром $filter';
-  }
-
-  @override
-  String get socialNoPendingReports => 'Немає очікуваних скарг';
-
-  @override
-  String get socialNoPhotoPosts => 'Немає фотопублікацій';
-
-  @override
-  String get socialNoPosts => 'Немає публікацій';
-
-  @override
-  String get socialNoPostsYet => 'Публікацій ще немає';
-
-  @override
-  String get socialNoRecentActivity => 'Останньої активності немає';
-
-  @override
-  String get socialNoSuggestions => 'Немає доступних рекомендацій';
-
-  @override
-  String get socialNoUsersFound => 'Користувачів не знайдено';
-
-  @override
-  String get socialNoViewsYet => 'Переглядів ще немає';
-
-  @override
-  String socialNodeLabel(String nodeId) {
-    return 'Вузол $nodeId';
-  }
-
-  @override
-  String get socialNotFollowingAnyone => 'Ще ні на кого не підписані';
-
-  @override
-  String socialNoticesCount(int current, int total) {
-    return '$current з $total повідомлень';
-  }
-
-  @override
-  String get socialOK => 'OK';
-
-  @override
-  String get socialOnline => 'Онлайн';
-
-  @override
-  String get socialOpenSettings => 'Відкрити налаштування';
-
-  @override
-  String get socialPermanentlyBanned => 'Заблоковано назавжди';
-
-  @override
-  String get socialPhotoAccessDesc =>
-      'Щоб створювати історії, нам потрібен доступ до вашої фотобібліотеки.';
-
-  @override
-  String get socialPhotoAccessTitle => 'Дозволити доступ до ваших фото';
-
-  @override
-  String get socialPostCardLocationFallback => 'Місцезнаходження';
-
-  @override
-  String socialPostCardNodeLabel(String nodeId) {
-    return 'Вузол $nodeId';
-  }
-
-  @override
-  String get socialPostCardUnknownUser => 'Невідомий користувач';
-
-  @override
-  String get socialPostDeleted => 'Публікацію видалено';
-
-  @override
-  String get socialPostDetailTitle => 'Публікація';
-
-  @override
-  String get socialPostNotFound => 'Публікацію не знайдено';
-
-  @override
-  String get socialPostNotFoundForComment =>
-      'Публікацію для цього коментаря не знайдено';
-
-  @override
-  String get socialPrivateAccount => 'Цей обліковий запис приватний';
-
-  @override
-  String socialPrivateAccountDesc(String name) {
-    return 'Підпишіться на $name, щоб переглядати публікації та підключені пристрої.';
-  }
-
-  @override
-  String get socialProfileBlockLabel => 'Заблокувати';
-
-  @override
-  String get socialProfileLoadFailed => 'Не вдалося завантажити профіль';
-
-  @override
-  String get socialProfileNotFound => 'Профіль не знайдено';
-
-  @override
-  String get socialProfileNotFoundDesc =>
-      'Цей профіль може бути видалено або тимчасово недоступний.';
-
-  @override
-  String get socialProfileReportLabel => 'Поскаржитися';
-
-  @override
-  String get socialProfileShareLabel => 'Поділитися профілем';
-
-  @override
-  String get socialReason => 'Причина';
-
-  @override
-  String get socialRecentFailed =>
-      'Не вдалося завантажити нещодавніх користувачів';
-
-  @override
-  String get socialRecentlyActive => 'Нещодавно активний';
-
-  @override
-  String get socialRejectDelete => 'Відхилити та видалити';
-
-  @override
-  String socialRejectDeleteMsg(String contentType) {
-    return 'Це видалить $contentType і попередить користувача.';
-  }
-
-  @override
-  String get socialRemoveBanner => 'Видалити банер';
-
-  @override
-  String get socialReply => 'Відповісти';
-
-  @override
-  String socialReplyingTo(String name) {
-    return 'Відповідь для $name';
-  }
-
-  @override
-  String get socialRepeatedViolationsWarning =>
-      'Повторні порушення можуть призвести до блокування облікового запису.';
-
-  @override
-  String get socialReport => 'Поскаржитися';
-
-  @override
-  String get socialReportComment => 'Поскаржитися на коментар';
-
-  @override
-  String get socialReportCommentWhy => 'Чому ви скаржитеся на цей коментар?';
-
-  @override
-  String get socialReportDescribeIssue => 'Опишіть проблему...';
-
-  @override
-  String get socialReportDismissed => 'Скаргу відхилено';
-
-  @override
-  String get socialReportPost => 'Поскаржитися на публікацію';
-
-  @override
-  String get socialReportPostWhy => 'Чому ви скаржитеся на цю публікацію?';
-
-  @override
-  String get socialReportProfileSubmitted => 'Скаргу подано';
-
-  @override
-  String get socialReportReasonFalseInfo => 'Неправдива інформація';
-
-  @override
-  String get socialReportReasonHarassment => 'Переслідування або цькування';
-
-  @override
-  String get socialReportReasonHateSpeech => 'Мова ненависті';
-
-  @override
-  String get socialReportReasonNudity => 'Оголеність або сексуальний вміст';
-
-  @override
-  String get socialReportReasonOther => 'Інше';
-
-  @override
-  String get socialReportReasonSpam => 'Спам';
-
-  @override
-  String get socialReportReasonViolence => 'Насильство або погрози';
-
-  @override
-  String get socialReportStory => 'Поскаржитися на історію';
-
-  @override
-  String get socialReportStoryReasonCopyright => 'Порушення авторських прав';
-
-  @override
-  String get socialReportStoryReasonHarassment =>
-      'Переслідування або цькування';
-
-  @override
-  String get socialReportStoryReasonNudity =>
-      'Оголеність або сексуальний вміст';
-
-  @override
-  String get socialReportStoryReasonOther => 'Інше';
-
-  @override
-  String get socialReportStoryReasonSpam => 'Спам або оманливий вміст';
-
-  @override
-  String get socialReportStoryReasonViolence =>
-      'Насильство або небезпечний вміст';
-
-  @override
-  String get socialReportStoryWhy => 'Чому ви скаржитеся на цю історію?';
-
-  @override
-  String get socialReportSubmitted => 'Скаргу подано. Дякуємо.';
-
-  @override
-  String get socialReportedContentRejected =>
-      'Вміст відхилено та користувача попереджено';
-
-  @override
-  String get socialReportedContentTitle => 'Поскаржений вміст';
-
-  @override
-  String get socialReportedErrorLoading =>
-      'Помилка завантаження черги модерації';
-
-  @override
-  String get socialReportedNoFlagged => 'Немає позначеного вмісту';
-
-  @override
-  String get socialReportedNoFlaggedDesc =>
-      'Автоматична модерація не позначила жодного вмісту';
-
-  @override
-  String get socialReportedTabAll => 'Усі';
-
-  @override
-  String get socialReportedTabAuto => 'Авто';
-
-  @override
-  String get socialReportedTabComments => 'Коментарі';
-
-  @override
-  String get socialReportedTabPosts => 'Публікації';
-
-  @override
-  String get socialReportedTabSigComments => 'Коментарі до сигналів';
-
-  @override
-  String get socialReportedTabSignals => 'Сигнали';
-
-  @override
-  String get socialRequested => 'Запитано';
-
-  @override
-  String get socialRetry => 'Повторити';
-
-  @override
-  String socialSearchFailed(String error) {
-    return 'Помилка пошуку: $error';
-  }
-
-  @override
-  String get socialSearchHint => 'Пошук користувачів...';
-
-  @override
-  String get socialSearchTitle => 'Пошук';
-
-  @override
-  String get socialSearchTooltip => 'Пошук';
-
-  @override
-  String get socialSendMessage => 'Надіслати повідомлення';
-
-  @override
-  String get socialSensitiveContentControl => 'Керування чутливим вмістом';
-
-  @override
-  String get socialSensitiveContentDescription =>
-      'SocialMesh використовує автоматизовані системи для виявлення потенційно чутливого вмісту. Ви можете налаштувати відображення такого вмісту.';
-
-  @override
-  String get socialSensitiveContentExplanation =>
-      'Керуйте типом вмісту у вашій стрічці. Це впливає на фільтрацію вмісту, керованого ШІ, для публікацій, сигналів та історій.';
-
-  @override
-  String get socialSensitiveContentTitle => 'Чутливий вміст';
-
-  @override
-  String get socialSettingsTooltip => 'Налаштування';
-
-  @override
-  String get socialShare => 'Поділитися';
-
-  @override
-  String get socialShareFirstPostKeyword => 'публікацію';
-
-  @override
-  String get socialShareFirstPostPrefix => 'Поділіться своєю першою ';
-
-  @override
-  String get socialSharePhotoHint =>
-      'Поділіться фотопублікацією, щоб побачити її тут';
-
-  @override
-  String get socialSignIn => 'Увійти';
-
-  @override
-  String get socialSignInToLikePosts => 'Увійдіть, щоб вподобати публікації';
-
-  @override
-  String get socialSignInToUploadImages =>
-      'Увійдіть, щоб завантажувати зображення';
-
-  @override
-  String get socialSignInSubscriptions => 'Увійдіть, щоб керувати підписками';
-
-  @override
-  String get socialStatFollower => 'Підписник';
-
-  @override
-  String get socialStatFollowers => 'Підписники';
-
-  @override
-  String get socialStatFollowing => 'Підписки';
-
-  @override
-  String get socialStatPost => 'Публікація';
-
-  @override
-  String get socialStatPosts => 'Публікації';
-
-  @override
-  String get socialStatsBarFollowers => 'Підписники';
-
-  @override
-  String get socialStatsBarFollowing => 'Підписки';
-
-  @override
-  String get socialStatsBarPosts => 'Публікації';
-
-  @override
-  String get socialStatusFlagged => 'ПОЗНАЧЕНО';
-
-  @override
-  String get socialStatusPending => 'ОЧІКУЄ';
-
-  @override
-  String get socialStatusRejected => 'ВІДХИЛЕНО';
-
-  @override
-  String get socialStatusStrike => 'ПОРУШЕННЯ';
-
-  @override
-  String get socialStatusSuspended => 'ЗАБЛОКОВАНО';
-
-  @override
-  String get socialStoryBarAdd => 'Додати';
-
-  @override
-  String get socialStoryContentUnavailable => 'Вміст недоступний';
-
-  @override
-  String socialStoryDeleteFailed(String error) {
-    return 'Не вдалося видалити історію: $error';
-  }
-
-  @override
-  String get socialStoryDeleted => 'Історію видалено';
-
-  @override
-  String get socialStoryMayBeRemoved => 'Цю історію може бути видалено';
-
-  @override
-  String get socialStoryReported =>
-      'Скаргу на історію подано. Ми незабаром розглянемо її.';
-
-  @override
-  String get socialStoryUserFallback => 'Користувач';
-
-  @override
-  String get socialStrike3Suspension =>
-      '3 порушення призводять до блокування облікового запису';
-
-  @override
-  String get socialStrikeAcknowledge => 'Я розумію';
-
-  @override
-  String get socialStrikeAgainstAccount =>
-      'Порушення на вашому обліковому записі';
-
-  @override
-  String socialStrikeContentLabel(String type) {
-    return 'Вміст: $type';
-  }
-
-  @override
-  String socialStrikeContentTitle(String typeDisplayName) {
-    return 'Вміст $typeDisplayName';
-  }
-
-  @override
-  String socialStrikeError(String error) {
-    return 'Помилка: $error';
-  }
-
-  @override
-  String get socialStrikeNext => 'Далі';
-
-  @override
-  String socialStrikeOfTotal(int current, int total) {
-    return '$current з $total';
-  }
-
-  @override
-  String get socialStrikeReasonLabel => 'Причина';
-
-  @override
-  String get socialStrikeReceivedStrike =>
-      'Ви отримали порушення на вашому обліковому записі через недотримання правил спільноти.';
-
-  @override
-  String get socialStrikeReceivedWarning =>
-      'Ви отримали попередження. Будь ласка, ознайомтеся з правилами спільноти.';
-
-  @override
-  String socialStrikeTapReview(int count) {
-    return 'У вас $count порушення(нь) - торкніться для перегляду';
-  }
-
-  @override
-  String get socialStrikesExpireInfo =>
-      'Порушення анулюються після 90 днів без нових порушень.';
-
-  @override
-  String socialStrikesOnAccount(int count) {
-    return '$count активних порушення(нь) на вашому обліковому записі';
-  }
-
-  @override
-  String get socialSubscribe => 'Підписатися';
-
-  @override
-  String get socialSubscribed => 'Підписано';
-
-  @override
-  String socialSubscriptionFailed(String error) {
-    return 'Не вдалося оновити підписку: $error';
-  }
-
-  @override
-  String get socialSuggestedForYou => 'Рекомендовано для вас';
-
-  @override
-  String get socialSuggestionsFailed => 'Не вдалося завантажити рекомендації';
-
-  @override
-  String get socialSuspendedAppealBody =>
-      'Вітаю,\n\nЯ хотів(ла) б оскаржити блокування мого облікового запису.\n\nБудь ласка, розгляньте мій запит.\n\nДякую.';
-
-  @override
-  String get socialSuspendedAppealSubject =>
-      'Оскарження блокування облікового запису';
-
-  @override
-  String get socialSuspendedContactSupport =>
-      'Зверніться до підтримки, щоб оскаржити це рішення';
-
-  @override
-  String socialSuspendedDaysPlural(int n) {
-    return '$n днів';
-  }
-
-  @override
-  String socialSuspendedDaysSingular(int n) {
-    return '$n день';
-  }
-
-  @override
-  String get socialSuspendedDefaultReason =>
-      'Ваш обліковий запис заблоковано через повторні порушення правил спільноти.';
-
-  @override
-  String get socialSuspendedGoBack => 'Назад';
-
-  @override
-  String socialSuspendedHoursPlural(int n) {
-    return '$n годин';
-  }
-
-  @override
-  String socialSuspendedHoursSingular(int n) {
-    return '$n година';
-  }
-
-  @override
-  String get socialSuspendedIndefinite => 'Безстрокове блокування';
-
-  @override
-  String get socialSuspendedIndefinitely => 'безстроково';
-
-  @override
-  String get socialSuspendedLabel => 'Заблоковано';
-
-  @override
-  String socialSuspendedMinutesPlural(int n) {
-    return '$n хвилин';
-  }
-
-  @override
-  String socialSuspendedMinutesSingular(int n) {
-    return '$n хвилина';
-  }
-
-  @override
-  String get socialSuspendedPermanent => 'Обліковий запис заблоковано';
-
-  @override
-  String socialSuspendedRemaining(String duration) {
-    return 'Залишилось: $duration';
-  }
-
-  @override
-  String get socialSuspendedReviewGuidelines =>
-      'Ознайомтеся з правилами спільноти';
-
-  @override
-  String get socialSuspendedShortly => 'незабаром';
-
-  @override
-  String socialSuspendedStrikesCount(int count) {
-    return '$count порушення(нь) на вашому обліковому записі';
-  }
-
-  @override
-  String get socialSuspendedTemporary => 'Публікації тимчасово призупинено';
-
-  @override
-  String get socialSuspendedWaitAppeal =>
-      'Дочекайтеся розгляду вашого оскарження';
-
-  @override
-  String get socialSuspendedWaitPeriod =>
-      'Дочекайтеся закінчення терміну блокування';
-
-  @override
-  String get socialSuspendedWhatCanIDo => 'Що я можу зробити?';
-
-  @override
-  String get socialSuspendedWhyTitle => 'Чому я бачу це?';
-
-  @override
-  String get socialSuspensionEnds => 'Блокування закінчується';
-
-  @override
-  String get socialTabFollowers => 'Підписники';
-
-  @override
-  String get socialTabFollowing => 'Підписки';
-
-  @override
-  String get socialTagLocationHint =>
-      'Позначити місцезнаходження у наступній публікації';
-
-  @override
-  String socialTimeDaysAgo(int n) {
-    return '$nд тому';
-  }
-
-  @override
-  String socialTimeHoursAgo(int n) {
-    return '$nг тому';
-  }
-
-  @override
-  String get socialTimeJustNow => 'Щойно';
-
-  @override
-  String socialTimeMinutesAgo(int n) {
-    return '$nхв тому';
-  }
-
-  @override
-  String get socialTryDifferentFilter => 'Спробуйте вибрати інший фільтр';
-
-  @override
-  String get socialTryDifferentSearch => 'Спробуйте інший пошуковий запит';
-
-  @override
-  String socialTypeDeleted(String type) {
-    return '$type видалено';
-  }
-
-  @override
-  String get socialUnfollow => 'Відписатися';
-
-  @override
-  String get socialUnknownUser => 'Невідомий користувач';
-
-  @override
-  String get socialUnsubscribed => 'Підписку скасовано';
-
-  @override
-  String get socialUnsuspend => 'Розблокувати';
-
-  @override
-  String socialUnsuspendConfirm(String displayName) {
-    return 'Ви справді хочете зняти блокування з $displayName?';
-  }
-
-  @override
-  String get socialUnsuspendUser => 'Розблокувати користувача';
-
-  @override
-  String socialUserBannedAndDeleted(String type) {
-    return 'Користувача заблоковано і $type видалено';
-  }
-
-  @override
-  String get socialUserBlocked => 'Користувача заблоковано';
-
-  @override
-  String socialUserBlockedName(String name) {
-    return '$name заблоковано';
-  }
-
-  @override
-  String get socialUserFallback => 'Користувач';
-
-  @override
-  String get socialUserUnsuspended => 'Користувача успішно розблоковано';
-
-  @override
-  String get socialView => 'Переглянути';
-
-  @override
-  String get socialViewLabel => 'перегляд';
-
-  @override
-  String get socialViewLocation => 'Переглянути місцезнаходження';
-
-  @override
-  String get socialViewOnMap => 'Переглянути на карті';
-
-  @override
-  String get socialViewersTitle => 'Глядачі';
-
-  @override
-  String get socialViewsLabel => 'переглядів';
-
-  @override
-  String get socialViolationsDetected => 'Виявлено порушення';
-
-  @override
-  String get socialVisibilityFollowers => 'Підписники';
-
-  @override
-  String get socialVisibilityFollowersDesc =>
-      'Лише ваші підписники можуть це бачити';
-
-  @override
-  String get socialVisibilityOnlyMe => 'Лише я';
-
-  @override
-  String get socialVisibilityOnlyMeDesc =>
-      'Лише ви можете бачити цю публікацію';
-
-  @override
-  String get socialVisibilityPublic => 'Публічна';
-
-  @override
-  String get socialVisibilityPublicDesc => 'Будь-хто може бачити цю публікацію';
-
-  @override
-  String get socialVisibilityWhoCanSee => 'Хто може це бачити?';
-
-  @override
-  String socialWarningsOnAccount(int count) {
-    return '$count активних попередження(нь) на вашому обліковому записі';
-  }
-
-  @override
-  String socialWarningsTapReview(int count) {
-    return 'У вас $count попередження(нь) - торкніться для перегляду';
-  }
-
-  @override
-  String get socialYourStory => 'Ваша історія';
 
   @override
   String get takAffiliationAssumedFriend => 'Вважається дружнім';
@@ -22084,9 +19154,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get tapbackReact => 'Реагувати';
-
-  @override
   String taskErrorCompleteTaskDenied(String roleName) {
     return 'completeTask заборонено для ролі $roleName';
   }
@@ -22439,11 +19506,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String telemetryEnvPressureValue(String value) {
     return '$value гПа';
-  }
-
-  @override
-  String telemetryEnvTemperatureValue(String value) {
-    return '$value°C';
   }
 
   @override
@@ -23017,11 +20079,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get widgetBuilderAllNodes => 'Усі вузли';
-
-  @override
-  String widgetBuilderApprovedSuccess(String name) {
-    return '$name схвалено';
-  }
 
   @override
   String get widgetBuilderBindingActiveMeshNodes => 'Онлайн-вузли мережі';
@@ -23605,18 +20662,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get widgetBuilderEnterWidgetName => 'Введіть назву віджета';
 
   @override
-  String widgetBuilderFailedToApprove(String error) {
-    return 'Помилка схвалення: $error';
-  }
-
-  @override
   String widgetBuilderFailedToImport(String error) {
     return 'Помилка імпорту: $error';
-  }
-
-  @override
-  String widgetBuilderFailedToReject(String error) {
-    return 'Помилка відхилення: $error';
   }
 
   @override
@@ -24014,11 +21061,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get widgetBuilderQuickStartTemplates => 'Шаблони для швидкого старту';
-
-  @override
-  String widgetBuilderRejectedSuccess(String name) {
-    return '$name відхилено';
-  }
 
   @override
   String get widgetBuilderRemoveExtraRows =>
@@ -24672,17 +21714,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get deepLinkLoadingSignal => 'Завантаження сигналу';
-
-  @override
-  String deepLinkErrorLoadingSignal(String error) {
-    return 'Помилка завантаження сигналу: $error';
-  }
-
-  @override
-  String get deepLinkSignalNotFound => 'Сигнал не знайдено';
-
-  @override
   String get deepLinkLoadingFlight => 'Завантаження рейсу';
 
   @override
@@ -24740,64 +21771,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get deepLinkFailedToJoinChannel => 'Не вдалося приєднатися до каналу';
 
   @override
-  String deepLinkProfileTitle(String displayName) {
-    return '@$displayName';
-  }
-
-  @override
-  String get deepLinkCloudServicesNotAvailable =>
-      'Хмарні сервіси ще недоступні';
-
-  @override
-  String deepLinkErrorLookingUpUser(String error) {
-    return 'Помилка пошуку користувача: $error';
-  }
-
-  @override
-  String deepLinkUserNotFound(String displayName) {
-    return 'Користувача \"@$displayName\" не знайдено';
-  }
-
-  @override
-  String get blockedRouteDeviceRequired => 'Потрібен пристрій';
-
-  @override
-  String get blockedRouteConnectDevice =>
-      'Підключіть пристрій, щоб отримати доступ до цього екрана';
-
-  @override
-  String get blockedRouteDeviceReset => 'Пристрій скинуто';
-
-  @override
-  String get blockedRouteDeviceNotConnected => 'Пристрій не підключено';
-
-  @override
-  String get blockedRouteDeviceResetDescription =>
-      'Ваш пристрій було скинуто до заводських налаштувань або замінено.\n\nПерейдіть до Налаштувань → Bluetooth, забудьте пристрій Meshtastic і знову виконайте сканування.';
-
-  @override
-  String get blockedRouteScanForDevices => 'Сканувати пристрої';
-
-  @override
-  String get blockedRouteConnectDeviceButton => 'Підключити пристрій';
-
-  @override
   String get deepLinkAlreadyHaveChannel => 'Цей канал у вас вже є';
-
-  @override
-  String get transformableTextDeleteTitle => 'Видалити текст?';
-
-  @override
-  String get transformableTextDeleteMessage => 'Це видалить текстовий шар.';
-
-  @override
-  String get transformableTextDeleteConfirm => 'Видалити';
-
-  @override
-  String get transformableTextDone => 'Готово';
-
-  @override
-  String get transformableTextHint => 'Введіть щось...';
 
   @override
   String get qrSharePreparingLink => 'Підготовка посилання для ділення...';
@@ -24876,9 +21850,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get channelKeyGenerate => 'Згенерувати';
-
-  @override
-  String get channelKeyNewGenerated => 'Новий ключ згенеровано';
 
   @override
   String get channelKeyCopy => 'Копіювати';
@@ -25357,14 +22328,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get alternativePayment => 'Альтернативний спосіб оплати';
-
-  @override
-  String get alternativePaymentSubtitle =>
-      'Придбати через Buy Me a Coffee замість магазину';
-
-  @override
-  String get googlePlayUnavailable =>
-      'Google Play недоступний на цьому пристрої - спробуйте альтернативний спосіб оплати.';
 
   @override
   String get buyMeACoffeeHandoffTitle => 'Оплата через Buy Me a Coffee';
@@ -26356,10 +23319,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Підключення до 700+ застосунків і сервісів';
 
   @override
-  String get subscriptionTranslateMessages =>
-      'Переклад повідомлень одним дотиком';
-
-  @override
   String get subscriptionNewAddon => 'Новий додаток';
 
   @override
@@ -27133,17 +24092,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Покращена видимість тексту та елементів інтерфейсу';
 
   @override
-  String get appearanceElementalAtmosphere => 'Стихійна атмосфера';
-
-  @override
-  String get appearanceElementalDisabled =>
-      'Вимкнено, поки активний режим зменшення рухів';
-
-  @override
-  String get appearanceElementalDesc =>
-      'Фонові ефекти частинок, керовані активністю мережі';
-
-  @override
   String get appearanceReduceMotion => 'Зменшити рух';
 
   @override
@@ -27287,146 +24235,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Виникла проблема з оплатою. Будь ласка, оновіть спосіб оплати.';
 
   @override
-  String get signalSettingsTitle => 'Сигнали';
-
-  @override
-  String get signalSettingsPrivacy => 'КОНФІДЕНЦІЙНІСТЬ СИГНАЛУ';
-
-  @override
-  String get signalSettingsLocationRadius => 'Радіус місцезнаходження сигналу';
-
-  @override
-  String get signalSettingsRadiusDescription =>
-      'Сигнали округлюються до цього радіуса, а не до точної адреси';
-
-  @override
-  String get signalSettingsContent => 'ВМІСТ СИГНАЛУ';
-
-  @override
-  String get signalSettingsMaxImages => 'Макс. зображень на сигнал';
-
-  @override
-  String get signalSettingsImageLimit => 'Ліміт: 1-4 зображення';
-
-  @override
-  String get signalSettingsNotifications => 'СПОВІЩЕННЯ СИГНАЛІВ';
-
-  @override
-  String get signalSettingsNotifySignals => 'Сигнали';
-
-  @override
-  String get signalSettingsNotifySignalsSubtitle =>
-      'Сповіщати, коли хтось публікує сигнал';
-
-  @override
-  String get signalSettingsNotifyVotes => 'Голоси';
-
-  @override
-  String get signalSettingsNotifyVotesSubtitle =>
-      'Коли хтось голосує за ваші коментарі до сигналу';
-
-  @override
-  String get adminFollowTitle => 'Соціальне адміністрування';
-
-  @override
-  String get adminFollowTabRequests => 'Запити на підписку';
-
-  @override
-  String get adminFollowTabSeedData => 'Тестові дані';
-
-  @override
-  String get adminFollowErrorLoading => 'Помилка завантаження запитів';
-
-  @override
-  String get adminFollowNoPending => 'Немає очікуваних запитів';
-
-  @override
-  String get adminFollowApproved => 'Запит схвалено';
-
-  @override
-  String adminFollowApproveFailed(String error) {
-    return 'Не вдалося схвалити: $error';
-  }
-
-  @override
-  String get adminFollowDeclined => 'Запит відхилено';
-
-  @override
-  String adminFollowDeclineFailed(String error) {
-    return 'Не вдалося відхилити: $error';
-  }
-
-  @override
-  String adminFollowRequestedTime(String time) {
-    return 'Запитано $time';
-  }
-
-  @override
-  String get adminFollowDecline => 'Відхилити';
-
-  @override
-  String get adminFollowAccept => 'Прийняти';
-
-  @override
-  String get adminFollowJustNow => 'щойно';
-
-  @override
-  String adminFollowMinutesAgo(int minutes) {
-    return '$minutes хв тому';
-  }
-
-  @override
-  String adminFollowHoursAgo(int hours) {
-    return '$hours год тому';
-  }
-
-  @override
-  String adminFollowDaysAgo(int days) {
-    return '$days д тому';
-  }
-
-  @override
-  String get adminFollowTestData => 'Тестові дані';
-
-  @override
-  String get adminFollowProfiles => 'Профілі';
-
-  @override
-  String get adminFollowPosts => 'Публікації';
-
-  @override
-  String get adminFollowStories => 'Історії';
-
-  @override
-  String get adminFollowComments => 'Коментарі';
-
-  @override
-  String get adminFollowDummyUsers => 'Тестові користувачі';
-
-  @override
-  String get adminFollowLog => 'Журнал';
-
-  @override
-  String get adminFollowResetAndSeed => 'Скинути і заповнити';
-
-  @override
-  String get adminFollowSeedData => 'Заповнити даними';
-
-  @override
-  String get adminFollowSeedDescription =>
-      'Скинути і заповнити: спочатку очищує всі тестові дані, потім додає нові.\nЗаповнити даними: додає до наявних даних (можуть виникнути дублікати).';
-
-  @override
-  String adminFollowSeededSummary(
-    int users,
-    int posts,
-    int stories,
-    int comments,
-  ) {
-    return 'Додано $users користувачів, $posts публікацій, $stories історій, $comments коментарів';
-  }
-
-  @override
   String get adminPostsTitle => 'Сигнали';
 
   @override
@@ -27529,30 +24337,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get bgConnToggleSubtitle =>
       'Підтримувати підключення до мережі, коли застосунок у фоновому режимі';
-
-  @override
-  String get bgConnSectionNotifications => 'ФОНОВІ СПОВІЩЕННЯ';
-
-  @override
-  String get bgConnDirectMessages => 'Прямі повідомлення';
-
-  @override
-  String get bgConnDirectMessagesSubtitle =>
-      'Сповіщати про отримані прямі повідомлення у фоновому режимі';
-
-  @override
-  String get bgConnChannelMessages => 'Повідомлення каналу';
-
-  @override
-  String get bgConnChannelMessagesSubtitle =>
-      'Сповіщати про повідомлення каналу у фоновому режимі';
-
-  @override
-  String get bgConnNodeDiscovery => 'Виявлення вузлів';
-
-  @override
-  String get bgConnNodeDiscoverySubtitle =>
-      'Сповіщати, коли виявлено нові вузли';
 
   @override
   String get bgConnSectionPersistentNotification => 'ПОСТІЙНЕ СПОВІЩЕННЯ';
@@ -29502,17 +26286,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get dataExportAllDataCleared => 'Усі дані очищено';
 
   @override
-  String get dataExportNoRoutesToExport => 'Немає маршрутів для експорту';
-
-  @override
-  String get dataExportNoAutomationsToExport =>
-      'Немає автоматизацій для експорту';
-
-  @override
-  String get dataExportNoAutomationLogEntries =>
-      'Немає записів у журналі автоматизації';
-
-  @override
   String get dataExportClearAllMessages => 'всі повідомлення';
 
   @override
@@ -29630,9 +26403,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get dataExportDeviceConfigFormatJson => 'JSON';
 
   @override
-  String get dataExportDeviceConfigFormatImport => 'ІМПОРТ';
-
-  @override
   String get dataExportDeviceConfigBackupWarningTitle =>
       'Збережіть резервну копію у безпечне місце';
 
@@ -29745,10 +26515,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
     return 'Застосовано $appliedString з $totalString. $failedString не вдалося.';
   }
-
-  @override
-  String get dataExportDeviceConfigRestoreNoSelection =>
-      'Виберіть принаймні один розділ для відновлення.';
 
   @override
   String dataExportDeviceConfigRestoreFromMetadata(String metadata) {
@@ -30727,12 +27493,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mqttProxyStatusLabel => 'Статус';
 
   @override
-  String get mqttProxyStatusConnected => 'Підключено';
-
-  @override
-  String get mqttProxyStatusDisconnected => 'Відключено';
-
-  @override
   String get mqttProxyBroker => 'Брокер';
 
   @override
@@ -31109,9 +27869,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get trafficMgmtSave => 'Зберегти';
 
   @override
-  String get trafficMgmtSectionGeneral => 'ЗАГАЛЬНЕ';
-
-  @override
   String get trafficMgmtSectionPositionDedup => 'ДЕДУБЛІКАЦІЯ ПОЗИЦІЙ';
 
   @override
@@ -31124,35 +27881,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get trafficMgmtSectionUnknownPackets => 'НЕВІДОМІ ПАКЕТИ';
 
   @override
-  String get trafficMgmtSectionHopMgmt => 'КЕРУВАННЯ СТРИБКАМИ';
-
-  @override
-  String get trafficMgmtEnable => 'Увімкнути керування трафіком';
-
-  @override
-  String get trafficMgmtEnableSubtitle =>
-      'Головний перемикач для всіх функцій керування трафіком';
-
-  @override
   String get trafficMgmtPositionDedup => 'Дедублікація позицій';
 
   @override
   String get trafficMgmtPositionDedupSubtitle =>
       'Відкидати дублікати пакетів позицій';
-
-  @override
-  String trafficMgmtPrecisionBits(int value) {
-    return 'Бітів точності: $value';
-  }
-
-  @override
-  String get trafficMgmtPrecisionBitsDesc =>
-      'Менші значення означають агресивнішу дедублікацію';
-
-  @override
-  String trafficMgmtPrecisionBitsLabel(int value) {
-    return '$value біт';
-  }
 
   @override
   String trafficMgmtMinInterval(int seconds) {
@@ -31219,29 +27952,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get trafficMgmtThresholdDesc =>
       'Кількість невідомих пакетів перед відкиданням';
-
-  @override
-  String get trafficMgmtExhaustHopTelemetry =>
-      'Вичерпати стрибки для телеметрії';
-
-  @override
-  String get trafficMgmtExhaustHopTelemetrySub =>
-      'Встановити ліміт стрибків 0 для ретрансльованої телеметрії';
-
-  @override
-  String get trafficMgmtExhaustHopPosition => 'Вичерпати стрибки для позиції';
-
-  @override
-  String get trafficMgmtExhaustHopPositionSub =>
-      'Встановити ліміт стрибків 0 для ретрансльованих позицій';
-
-  @override
-  String get trafficMgmtPreserveRouterHops =>
-      'Зберігати стрибки маршрутизатора';
-
-  @override
-  String get trafficMgmtPreserveRouterHopsSub =>
-      'Зберігати кількість стрибків для вузлів-маршрутизаторів';
 
   @override
   String get trafficMgmtSaved => 'Конфігурацію керування трафіком збережено';
@@ -31383,1193 +28093,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String meshBeaconSaveFailed(String error) {
     return 'Не вдалося зберегти: $error';
   }
-
-  @override
-  String get adminPanelTitle => 'Адмінпанель';
-
-  @override
-  String get adminPanelSectionModeration => 'МОДЕРАЦІЯ КОНТЕНТУ';
-
-  @override
-  String get adminPanelBugReports => 'Звіти про помилки';
-
-  @override
-  String get adminPanelBugReportsSub =>
-      'Переглядати та відповідати на звіти користувачів';
-
-  @override
-  String get adminPanelReviewMod => 'Модерація відгуків';
-
-  @override
-  String get adminPanelReviewModSub =>
-      'Схвалення або відхилення відгуків користувачів';
-
-  @override
-  String get adminPanelReportedContent => 'Скарги на контент';
-
-  @override
-  String get adminPanelReportedContentSub =>
-      'Перевірка позначених публікацій і коментарів';
-
-  @override
-  String get adminPanelWidgetReviewSub =>
-      'Схвалення очікуваних заявок на víджети';
-
-  @override
-  String get adminPanelSectionUsers => 'УПРАВЛІННЯ КОРИСТУВАЧАМИ';
-
-  @override
-  String get adminPanelSocialSeeding => 'Соціальне заповнення';
-
-  @override
-  String get adminPanelSocialSeedingSub =>
-      'Керування запитами на підписку та зв\'язками';
-
-  @override
-  String get adminPanelUserPurchases => 'Покупки користувачів';
-
-  @override
-  String get adminPanelUserPurchasesSub =>
-      'Перегляд та управління транзакціями користувачів';
-
-  @override
-  String get adminPanelSectionConfig => 'КОНФІГУРАЦІЯ ЗАСТОСУНКУ';
-
-  @override
-  String get adminPanelBroadcast => 'Розсилка сповіщень';
-
-  @override
-  String get adminPanelBroadcastSub =>
-      'Надіслати push-сповіщення всім користувачам';
-
-  @override
-  String get adminPanelQrStyles => 'Стилі QR-коду';
-
-  @override
-  String get adminPanelQrStylesSub =>
-      'Попередній перегляд фірмових дизайнів QR-коду';
-
-  @override
-  String get adminPanelSectionDiag => 'ДІАГНОСТИКА ПРИСТРОЮ';
-
-  @override
-  String get adminPanelDiagHarness => 'Інструмент діагностики';
-
-  @override
-  String get adminPanelDiagHarnessSub =>
-      'Запуск протокольних зондів та експорт пакета налагодження';
-
-  @override
-  String get adminPanelConformance => 'Інструмент тестування відповідності';
-
-  @override
-  String get adminPanelConformanceSub =>
-      'Тести відповідності пристрою на основі провайдерів і навантажувальні тести';
-
-  @override
-  String get adminPanelStorageHealth => 'Стан сховища';
-
-  @override
-  String get adminPanelStorageHealthSub =>
-      'Перевірка активності режиму WAL у всіх базах даних SQLite';
-
-  @override
-  String get adminPanelMeshMorph => 'Перегляд Mesh Morph';
-
-  @override
-  String get adminPanelMeshMorphSub =>
-      'Перевірте пресети, форми та таймінг mesh-morph';
-
-  @override
-  String get adminMeshMorphTitle => 'Mesh Morph';
-
-  @override
-  String get adminMeshMorphPresetSection => 'ПРЕСЕТ';
-
-  @override
-  String get adminMeshMorphRotationSection => 'ОБЕРТАННЯ';
-
-  @override
-  String get adminMeshMorphTuningSection => 'НАЛАШТУВАННЯ';
-
-  @override
-  String get adminMeshMorphAnimate => 'Анімувати';
-
-  @override
-  String get adminMeshMorphAnimateSub =>
-      'Призупиніть, щоб роздивитися поточну форму';
-
-  @override
-  String adminMeshMorphPointCountLabel(int count) {
-    return 'Кількість точок: $count';
-  }
-
-  @override
-  String adminMeshMorphCurrentShape(String shape) {
-    return 'Поточна форма: $shape';
-  }
-
-  @override
-  String get adminMeshMorphPresetIcosahedronJourney => 'Подорож ікосаедра';
-
-  @override
-  String get adminMeshMorphPresetVectorballTour => 'Тур векторною кулею';
-
-  @override
-  String get adminMeshMorphPresetPlatonicCircuit => 'Платонівський контур';
-
-  @override
-  String get adminMeshMorphPresetSurfaceFlow => 'Потік поверхні';
-
-  @override
-  String get adminMeshMorphPresetWireframeMarch => 'Марш каркасу';
-
-  @override
-  String get adminMeshMorphRotationNone => 'Немає';
-
-  @override
-  String get adminMeshMorphRotationSpin => 'Обертання';
-
-  @override
-  String get adminMeshMorphRotationTumble => 'Перекидання';
-
-  @override
-  String get adminMeshMorphRotationShowcase => 'Показ';
-
-  @override
-  String get adminStorageHealthTitle => 'Стан сховища';
-
-  @override
-  String get adminStorageHealthRefresh => 'Оновити';
-
-  @override
-  String get adminStorageHealthChecking => 'Перевірка баз даних...';
-
-  @override
-  String get adminStorageHealthAllPass => 'Всі бази даних у режимі WAL';
-
-  @override
-  String get adminStorageHealthSomeFail => 'Деякі бази даних не в режимі WAL';
-
-  @override
-  String adminStorageHealthSummary(int pass, int fail, int total) {
-    return '$pass пройдено · $fail не пройдено · $total всього';
-  }
-
-  @override
-  String get adminStorageStatusWal => 'WAL';
-
-  @override
-  String get adminStorageStatusUnknown => 'НЕВІДОМО';
-
-  @override
-  String get adminStorageStatusMissing => 'НЕ ВІДКРИТО';
-
-  @override
-  String get adminStorageStatusError => 'ПОМИЛКА';
-
-  @override
-  String get adminStorageWalPresent => '-wal присутній';
-
-  @override
-  String get adminStorageWalAbsent => '-wal відсутній';
-
-  @override
-  String get adminStorageShmPresent => '-shm присутній';
-
-  @override
-  String get adminStorageShmAbsent => '-shm відсутній';
-
-  @override
-  String get adminStoragePathCopied => 'Шлях скопійовано до буфера обміну';
-
-  @override
-  String get adminPanelBadgeOverflow => '99+';
-
-  @override
-  String get adminBroadcastTitle => 'Розсилка сповіщень';
-
-  @override
-  String get adminBroadcastSignInRequired =>
-      'Для надсилання сповіщень необхідно увійти в систему';
-
-  @override
-  String get adminBroadcastTestSentTitle => 'Тест надіслано';
-
-  @override
-  String get adminBroadcastSentTitle => 'Розсилку надіслано';
-
-  @override
-  String get adminBroadcastTestSentBody =>
-      'Ваше тестове сповіщення надіслано всім адміністраторам.';
-
-  @override
-  String get adminBroadcastSentBody =>
-      'Ваше сповіщення надіслано всім користувачам SocialMesh.';
-
-  @override
-  String get adminBroadcastDone => 'Готово';
-
-  @override
-  String adminBroadcastFailedDetailed(String code, String message) {
-    return 'Не вдалося надіслати: $code - $message';
-  }
-
-  @override
-  String adminBroadcastFailed(String error) {
-    return 'Не вдалося надіслати: $error';
-  }
-
-  @override
-  String get adminBroadcastSelectDeepLink => 'Вибрати глибоке посилання';
-
-  @override
-  String get adminBroadcastSelectIcon => 'Вибрати іконку';
-
-  @override
-  String get adminBroadcastPreviewTitlePlaceholder => 'Заголовок сповіщення';
-
-  @override
-  String get adminBroadcastPreviewBodyPlaceholder =>
-      'Тут з\'явиться текст сповіщення...';
-
-  @override
-  String get adminBroadcastWarning =>
-      'Це надішле push-сповіщення кожному користувачу SocialMesh. Використовуйте рідко, лише для важливих оголошень.';
-
-  @override
-  String get adminBroadcastPlatformLabel => 'Цільова платформа';
-
-  @override
-  String get adminBroadcastPlatformHelper =>
-      'Виберіть платформу, яка отримає це сповіщення.';
-
-  @override
-  String get adminBroadcastPlatformAll => 'Всі';
-
-  @override
-  String get adminBroadcastPlatformAndroid => 'Android';
-
-  @override
-  String get adminBroadcastPlatformIos => 'iOS';
-
-  @override
-  String get adminBroadcastIconLabel => 'Іконка';
-
-  @override
-  String get adminBroadcastClear => 'Очистити';
-
-  @override
-  String get adminBroadcastFieldTitle => 'Заголовок';
-
-  @override
-  String get adminBroadcastTitleHint => 'Заголовок сповіщення...';
-
-  @override
-  String get adminBroadcastTitleRequired => 'Заголовок є обов\'язковим';
-
-  @override
-  String get adminBroadcastFieldMessage => 'Повідомлення';
-
-  @override
-  String get adminBroadcastMessageHint => 'Текст сповіщення...';
-
-  @override
-  String get adminBroadcastMessageRequired => 'Повідомлення є обов\'язковим';
-
-  @override
-  String get adminBroadcastDeepLinkLabel =>
-      'Глибоке посилання (необов\'язково)';
-
-  @override
-  String get adminBroadcastDeepLinkHelper =>
-      'Екран, що відкривається при натисканні на сповіщення.';
-
-  @override
-  String get adminBroadcastDeepLinkNone => 'Немає';
-
-  @override
-  String get adminBroadcastSendingTest => 'Надсилання тесту...';
-
-  @override
-  String get adminBroadcastTestButton => 'Тест лише для адміністраторів';
-
-  @override
-  String get adminBroadcastTestHint =>
-      'Надішліть тестове сповіщення адміністраторам перед розсилкою всім користувачам.';
-
-  @override
-  String adminBroadcastCountdownCancel(int seconds) {
-    return 'Скасувати - відправка через $seconds...';
-  }
-
-  @override
-  String get adminBroadcastSending => 'Надсилання...';
-
-  @override
-  String get adminBroadcastSendAll => 'Надіслати всім';
-
-  @override
-  String adminBroadcastSendHint(int seconds) {
-    return 'Надсилає push-сповіщення всім користувачам SocialMesh. Відлік $seconds с дає час на скасування.';
-  }
-
-  @override
-  String get adminBroadcastPreviewLabel => 'ПЕРЕГЛЯД';
-
-  @override
-  String get adminBroadcastPreviewAppName => 'SOCIALMESH';
-
-  @override
-  String get adminBroadcastPreviewNow => 'зараз';
-
-  @override
-  String get adminBroadcastIconCatGeneral => 'ЗАГАЛЬНЕ';
-
-  @override
-  String get adminBroadcastIconCatSocial => 'СОЦІАЛЬНЕ';
-
-  @override
-  String get adminBroadcastIconCatPremium => 'ПРЕМІУМ';
-
-  @override
-  String get adminBroadcastIconAnnouncement => 'Оголошення';
-
-  @override
-  String get adminBroadcastIconUpdate => 'Оновлення застосунку';
-
-  @override
-  String get adminBroadcastIconFeature => 'Нова функція';
-
-  @override
-  String get adminBroadcastIconMaintenance => 'Обслуговування';
-
-  @override
-  String get adminBroadcastIconAlert => 'Попередження';
-
-  @override
-  String get adminBroadcastIconCelebration => 'Свято';
-
-  @override
-  String get adminBroadcastIconTip => 'Порада';
-
-  @override
-  String get adminBroadcastIconSignals => 'Signals';
-
-  @override
-  String get adminBroadcastIconNodedex => 'NodeDex';
-
-  @override
-  String get adminBroadcastIconAether => 'Aether';
-
-  @override
-  String get adminBroadcastIconActivity => 'Активність';
-
-  @override
-  String get adminBroadcastIconPresence => 'Присутність';
-
-  @override
-  String get adminBroadcastIconCommunity => 'Спільнота';
-
-  @override
-  String get adminBroadcastIconWorldMap => 'Карта світу';
-
-  @override
-  String get adminBroadcastIconThemes => 'Пакет тем';
-
-  @override
-  String get adminBroadcastIconRingtones => 'Пакет рингтонів';
-
-  @override
-  String get adminBroadcastIconWidgets => 'Віджети';
-
-  @override
-  String get adminBroadcastIconAutomations => 'Автоматизації';
-
-  @override
-  String get adminBroadcastIconIfttt => 'Інтеграція IFTTT';
-
-  @override
-  String get adminBroadcastDefTitleAnnouncement => 'Оголошення';
-
-  @override
-  String get adminBroadcastDefTitleUpdate => 'Доступне оновлення застосунку';
-
-  @override
-  String get adminBroadcastDefTitleFeature => 'Нова функція';
-
-  @override
-  String get adminBroadcastDefTitleMaintenance => 'Планове обслуговування';
-
-  @override
-  String get adminBroadcastDefTitleAlert => 'Важливе попередження';
-
-  @override
-  String get adminBroadcastDefTitleCelebration => 'Свято';
-
-  @override
-  String get adminBroadcastDefTitleTip => 'Порада експерта';
-
-  @override
-  String get adminBroadcastDefTitleSignals => 'Оновлення Signals';
-
-  @override
-  String get adminBroadcastDefTitleNodedex => 'Оновлення NodeDex';
-
-  @override
-  String get adminBroadcastDefTitleAether => 'Оновлення Aether';
-
-  @override
-  String get adminBroadcastDefTitleActivity => 'Оновлення активності';
-
-  @override
-  String get adminBroadcastDefTitlePresence => 'Оновлення присутності';
-
-  @override
-  String get adminBroadcastDefTitleCommunity => 'Оновлення спільноти';
-
-  @override
-  String get adminBroadcastDefTitleWorldMap => 'Оновлення карти світу';
-
-  @override
-  String get adminBroadcastDefTitleThemes => 'Новий пакет тем';
-
-  @override
-  String get adminBroadcastDefTitleRingtones => 'Новий пакет рингтонів';
-
-  @override
-  String get adminBroadcastDefTitleWidgets => 'Нові віджети';
-
-  @override
-  String get adminBroadcastDefTitleAutomations => 'Оновлення автоматизацій';
-
-  @override
-  String get adminBroadcastDefTitleIfttt => 'Інтеграція IFTTT';
-
-  @override
-  String get adminBroadcastDefBodyAnnouncement =>
-      'Маємо важливе оголошення для спільноти SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyUpdate =>
-      'Нова версія SocialMesh доступна з покращеннями та виправленнями помилок.';
-
-  @override
-  String get adminBroadcastDefBodyFeature =>
-      'Ми щойно запустили нову функцію в SocialMesh. Перевірте!';
-
-  @override
-  String get adminBroadcastDefBodyMaintenance =>
-      'Сервіси SocialMesh будуть тимчасово недоступні через планове технічне обслуговування.';
-
-  @override
-  String get adminBroadcastDefBodyAlert =>
-      'Зверніть увагу на важливу проблему, що стосується SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyCelebration =>
-      'Маємо що відсвяткувати разом зі спільнотою SocialMesh!';
-
-  @override
-  String get adminBroadcastDefBodyTip =>
-      'Ось корисна порада, щоб отримати максимум від SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodySignals =>
-      'Дізнайтесь, що нового в Signals - вашій стрічці присутності в мережі.';
-
-  @override
-  String get adminBroadcastDefBodyNodedex =>
-      'NodeDex має нові функції для виявлення та відстеження вузлів мережі.';
-
-  @override
-  String get adminBroadcastDefBodyAether =>
-      'Нові покращення функції спільного використання польотів Aether тепер доступні.';
-
-  @override
-  String get adminBroadcastDefBodyActivity =>
-      'Дивіться, що відбувається у вашій стрічці активності.';
-
-  @override
-  String get adminBroadcastDefBodyPresence =>
-      'Виявлення присутності покращено для кращого усвідомлення стану мережі.';
-
-  @override
-  String get adminBroadcastDefBodyCommunity =>
-      'Долучайтесь до найновіших ініціатив спільноти SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyWorldMap =>
-      'Карта світової мережі має нові функції для дослідження глобального покриття.';
-
-  @override
-  String get adminBroadcastDefBodyThemes =>
-      'Новий пакет тем тепер доступний у крамниці SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyRingtones =>
-      'Новий пакет рингтонів тепер доступний для сповіщень мережі.';
-
-  @override
-  String get adminBroadcastDefBodyWidgets =>
-      'Нові віджети головного екрана тепер доступні для SocialMesh.';
-
-  @override
-  String get adminBroadcastDefBodyAutomations =>
-      'Нові тригери та дії автоматизації тепер доступні.';
-
-  @override
-  String get adminBroadcastDefBodyIfttt =>
-      'Підключіть SocialMesh до улюблених сервісів через IFTTT.';
-
-  @override
-  String get adminBroadcastDeepLinkCatCore => 'ОСНОВНЕ';
-
-  @override
-  String get adminBroadcastDeepLinkCatSocial => 'СОЦІАЛЬНЕ';
-
-  @override
-  String get adminBroadcastDeepLinkCatMesh => 'MESH';
-
-  @override
-  String get adminBroadcastDeepLinkCatPremium => 'ПРЕМІУМ';
-
-  @override
-  String get adminBroadcastLinkSettings => 'Налаштування';
-
-  @override
-  String get adminBroadcastLinkAccount => 'Обліковий запис і підписки';
-
-  @override
-  String get adminBroadcastLinkScanner => 'Сканер';
-
-  @override
-  String get adminBroadcastLinkMessages => 'Повідомлення';
-
-  @override
-  String get adminBroadcastLinkChannels => 'Канали';
-
-  @override
-  String get adminBroadcastLinkNodes => 'Вузли';
-
-  @override
-  String get adminBroadcastLinkMap => 'Карта';
-
-  @override
-  String get adminBroadcastLinkSignals => 'Signals';
-
-  @override
-  String get adminBroadcastLinkNodedex => 'NodeDex';
-
-  @override
-  String get adminBroadcastLinkAether => 'Aether';
-
-  @override
-  String get adminBroadcastLinkActivity => 'Активність';
-
-  @override
-  String get adminBroadcastLinkPresence => 'Присутність';
-
-  @override
-  String get adminBroadcastLinkTimeline => 'Хронологія';
-
-  @override
-  String get adminBroadcastLinkWorldMap => 'Карта світу';
-
-  @override
-  String get adminBroadcastLinkReachability => 'Доступність';
-
-  @override
-  String get adminBroadcastLinkThemes => 'Пакет тем';
-
-  @override
-  String get adminBroadcastLinkRingtones => 'Пакет рингтонів';
-
-  @override
-  String get adminBroadcastLinkWidgets => 'Віджети';
-
-  @override
-  String get adminBroadcastLinkAutomations => 'Автоматизації';
-
-  @override
-  String get adminBroadcastLinkIfttt => 'Інтеграція IFTTT';
-
-  @override
-  String get adminDiagTitle => 'Адміністративна діагностика';
-
-  @override
-  String get adminDiagTargetLocal => 'Локальний пристрій';
-
-  @override
-  String adminDiagTargetRemote(String hexId) {
-    return 'Віддалений: $hexId';
-  }
-
-  @override
-  String get adminDiagDescription =>
-      'Запустіть діагностичні зонди для підключеного пристрою та експортуйте докладний пакет для налагодження проблем протоколу/транспорту.';
-
-  @override
-  String get adminDiagTargetLabel => 'Ціль';
-
-  @override
-  String get adminDiagMyNodeLabel => 'Мій вузол';
-
-  @override
-  String get adminDiagStressToggle => 'Включити навантажувальні тести';
-
-  @override
-  String get adminDiagStressToggleSub =>
-      'Серійні читання та кореляція не за порядком';
-
-  @override
-  String get adminDiagWriteToggle => 'Включити тести запису (оборотні)';
-
-  @override
-  String get adminDiagWriteToggleSub =>
-      'Холості записи з перевіркою зворотного читання';
-
-  @override
-  String get adminDiagRunButton => 'Запустити діагностику';
-
-  @override
-  String get adminDiagNoDevice => 'Пристрій не підключено';
-
-  @override
-  String adminDiagProbeProgress(int completed, int total) {
-    return '$completed / $total зондів';
-  }
-
-  @override
-  String get adminDiagCancel => 'Скасувати';
-
-  @override
-  String adminDiagResultSummary(int passed, int failed) {
-    return '$passed пройдено, $failed не пройдено';
-  }
-
-  @override
-  String get adminDiagExportBundle => 'Експортувати пакет';
-
-  @override
-  String get adminDiagCopySummary => 'Скопіювати зведення до буфера обміну';
-
-  @override
-  String get adminDiagRunAgain => 'Запустити знову';
-
-  @override
-  String get adminDiagWriteTestsDialogTitle => 'Увімкнути тести запису?';
-
-  @override
-  String get adminDiagWriteTestsDialogBody =>
-      'Тести запису виконують холості записи (те саме значення) для перевірки поведінки повного циклу. Вони не змінюють стан пристрою, але надсилають команди SET на пристрій.\n\nВи впевнені, що хочете включити тести запису?';
-
-  @override
-  String get adminDiagWriteTestsCancel => 'Скасувати';
-
-  @override
-  String get adminDiagWriteTestsEnable => 'Увімкнути';
-
-  @override
-  String adminDiagExportFailed(String error) {
-    return 'Експорт не вдався: $error';
-  }
-
-  @override
-  String get adminDiagCopiedToClipboard =>
-      'Зведення скопійовано до буфера обміну';
-
-  @override
-  String get adminPurchasesTitle => 'Покупки користувачів';
-
-  @override
-  String get adminPurchasesLabelTotal => ' РАЗОМ · ';
-
-  @override
-  String get adminPurchasesLabelPaying => ' ПЛАТНИЙ · ';
-
-  @override
-  String get adminPurchasesLabelFree => ' БЕЗПЛАТНО · ';
-
-  @override
-  String get adminPurchasesLabelRevenue => ' ДОХІД';
-
-  @override
-  String get adminPurchasesLabelExcluded => ' ВИКЛЮЧЕНО';
-
-  @override
-  String get adminPurchasesStatTotalUsers => 'Всього користувачів';
-
-  @override
-  String get adminPurchasesStatPaying => 'Платні';
-
-  @override
-  String adminPurchasesStatExcludedCount(int count) {
-    return '$count виключено';
-  }
-
-  @override
-  String get adminPurchasesStatFree => 'Безплатні';
-
-  @override
-  String get adminPurchasesStatConversion => 'Конверсія';
-
-  @override
-  String get adminPurchasesStatArpu => 'ARPU';
-
-  @override
-  String get adminPurchasesStatArpuTooltip => 'Середній дохід на користувача';
-
-  @override
-  String get adminPurchasesStatGross => 'Валовий дохід';
-
-  @override
-  String get adminPurchasesStatExcluded => 'Виключено';
-
-  @override
-  String get adminPurchasesStatNet => 'Чистий дохід';
-
-  @override
-  String get adminPurchasesStatNewUsers24h => 'Нові користувачі (24 год)';
-
-  @override
-  String get adminPurchasesStatPurchases24h => 'Покупки (24 год)';
-
-  @override
-  String get adminPurchasesStatRevenue24h => 'Дохід (24 год)';
-
-  @override
-  String get adminPurchasesSearchHint => 'Пошук користувачів...';
-
-  @override
-  String get adminPurchasesFilterAll => 'Всі';
-
-  @override
-  String get adminPurchasesFilterPaying => 'Платні';
-
-  @override
-  String get adminPurchasesFilterFree => 'Безплатні';
-
-  @override
-  String get adminPurchasesFilterExcluded => 'Виключені';
-
-  @override
-  String get adminPurchasesFilterAnonymous => 'Анонімні';
-
-  @override
-  String get adminPurchasesFilterDeleted => 'Видалені';
-
-  @override
-  String get adminPurchasesBannerTitle =>
-      'Показує покупки, синхронізовані через вхід у застосунок або вебхуки RevenueCat.';
-
-  @override
-  String get adminPurchasesBannerSubtitle =>
-      'Користувачі повинні відкрити застосунок у стані входу, щоб їхні покупки з\'явились тут.';
-
-  @override
-  String get adminPurchasesErrorLoading => 'Помилка завантаження користувачів';
-
-  @override
-  String get adminPurchasesRetry => 'Повторити';
-
-  @override
-  String get adminPurchasesNoSearchResults =>
-      'Жоден користувач не відповідає вашому пошуку';
-
-  @override
-  String get adminPurchasesNoUsers => 'Користувачів не знайдено';
-
-  @override
-  String get adminPurchasesUnknownUser => 'Невідомий користувач';
-
-  @override
-  String get adminPurchasesAnonymousTag => 'Анонімний';
-
-  @override
-  String get adminPurchasesDeletedTag => 'Видалено';
-
-  @override
-  String get adminPurchasesAnonRcUser => 'Анонімний користувач RevenueCat';
-
-  @override
-  String get adminPurchasesFallbackCloudSync => 'Хмарна синхронізація';
-
-  @override
-  String get adminPurchasesSectionIds => 'Ідентифікатори';
-
-  @override
-  String get adminPurchasesFirebaseUid => 'Firebase UID';
-
-  @override
-  String get adminPurchasesRevenueCatId => 'RevenueCat ID';
-
-  @override
-  String get adminPurchasesMemberSince => 'Учасник з';
-
-  @override
-  String get adminPurchasesSectionRegionPricing => 'Регіон і ціноутворення';
-
-  @override
-  String get adminPurchasesCountry => 'Країна';
-
-  @override
-  String get adminPurchasesCurrency => 'Валюта';
-
-  @override
-  String get adminPurchasesPriceLocal => 'Ціна (місцева)';
-
-  @override
-  String get adminPurchasesPriceUsd => 'Ціна (USD)';
-
-  @override
-  String adminPurchasesUsdValue(String amount) {
-    return 'US\$ $amount';
-  }
-
-  @override
-  String get adminPurchasesTax => 'Податок';
-
-  @override
-  String get adminPurchasesStoreCommission => 'Комісія крамниці';
-
-  @override
-  String get adminPurchasesOfferCode => 'Промокод';
-
-  @override
-  String get adminPurchasesFamilyShare => 'Сімейний доступ';
-
-  @override
-  String get adminPurchasesYes => 'Так';
-
-  @override
-  String get adminPurchasesSectionPurchases => 'Покупки';
-
-  @override
-  String adminPurchasesItemCount(int count) {
-    return '$count елементів';
-  }
-
-  @override
-  String get adminPurchasesNoPurchases => 'Немає покупок';
-
-  @override
-  String get adminPurchasesCopied => 'Скопійовано до буфера обміну';
-
-  @override
-  String get adminPurchasesCopyTooltip => 'Копіювати';
-
-  @override
-  String get adminQrStyleTitle => 'Стилі QR-коду';
-
-  @override
-  String get adminQrStyleHeading => 'Фірмові стилі QR-коду';
-
-  @override
-  String get adminQrStyleDescription =>
-      'Попередній перегляд різних стилів QR-коду з логотипом SocialMesh. Всі стилі використовують корекцію помилок рівня H для надійного сканування.';
-
-  @override
-  String get adminQrStyleSmooth => 'Плавний';
-
-  @override
-  String get adminQrStyleSmoothDesc =>
-      'Сучасні округлі рідкоподібні модулі. Преміальне відчуття.';
-
-  @override
-  String get adminQrStyleDots => 'Точки';
-
-  @override
-  String get adminQrStyleDotsDesc =>
-      'Круглі точкові модулі. Чистий і мінімалістичний вигляд.';
-
-  @override
-  String get adminQrStyleSquares => 'Квадрати';
-
-  @override
-  String get adminQrStyleSquaresDesc =>
-      'Класичний блоковий стиль QR. Максимальна сумісність.';
-
-  @override
-  String get adminQrStyleElevatedHeader => 'ПІДВИЩЕНІ СТИЛІ';
-
-  @override
-  String adminQrStyleElevatedSub(String styleName) {
-    return 'Преміальне кольорове оформлення за шаблоном $styleName';
-  }
-
-  @override
-  String get adminQrStyleNeonGlow => 'Неонове сяйво';
-
-  @override
-  String get adminQrStyleFrostedGlass => 'Матове скло';
-
-  @override
-  String get adminQrStyleInverted => 'Інвертований';
-
-  @override
-  String get adminQrStyleHolographic => 'Голографічний';
-
-  @override
-  String get adminQrStyleAccentBranded => 'Фірмовий акцент';
-
-  @override
-  String get adminQrStyleMinimal => 'Мінімальний';
-
-  @override
-  String get adminQrStyleCyberpunk => 'Кіберпанк';
-
-  @override
-  String get adminQrStyleAccentGlow => 'Акцент із сяйвом';
-
-  @override
-  String get adminQrStyleOcean => 'Океан';
-
-  @override
-  String get adminQrStyleLuxury => 'Розкіш';
-
-  @override
-  String adminQrStyleSelected(String styleName) {
-    return 'Вибрано: $styleName';
-  }
-
-  @override
-  String get adminQrStyleScanToVerify => 'Скануйте для перевірки';
-
-  @override
-  String get adminBugReportsTitle => 'Звіти про помилки';
-
-  @override
-  String get adminBugReportsSearchHint => 'Пошук звітів';
-
-  @override
-  String get adminBugReportsLoadError => 'Не вдалося завантажити звіти';
-
-  @override
-  String get adminBugReportsMessageTooLong =>
-      'Повідомлення перевищує 2000 символів.';
-
-  @override
-  String get adminBugReportsReplySent => 'Відповідь надіслано.';
-
-  @override
-  String adminBugReportsReplyFailed(String error) {
-    return 'Не вдалося надіслати: $error';
-  }
-
-  @override
-  String get adminBugReportsResolved => 'Звіт вирішено.';
-
-  @override
-  String get adminBugReportsReopened => 'Звіт відкрито знову.';
-
-  @override
-  String adminBugReportsStatusFailed(String error) {
-    return 'Не вдалося оновити статус: $error';
-  }
-
-  @override
-  String get adminBugReportsStatusOpen => 'ВІДКРИТО';
-
-  @override
-  String get adminBugReportsStatusUserReplied => 'КОРИСТУВАЧ ВІДПОВІВ';
-
-  @override
-  String get adminBugReportsStatusResponded => 'ВІДПОВІДЬ НАДІСЛАНО';
-
-  @override
-  String get adminBugReportsStatusResolved => 'ВИРІШЕНО';
-
-  @override
-  String get adminBugReportsTimeJustNow => 'щойно';
-
-  @override
-  String adminBugReportsTimeMinutes(int minutes) {
-    return '$minutes хв тому';
-  }
-
-  @override
-  String adminBugReportsTimeHours(int hours) {
-    return '$hours год тому';
-  }
-
-  @override
-  String adminBugReportsTimeDays(int days) {
-    return '$days д тому';
-  }
-
-  @override
-  String get adminBugReportsSectionDesc => 'ОПИС';
-
-  @override
-  String get adminBugReportsSectionScreenshot => 'ЗНІМОК ЕКРАНА';
-
-  @override
-  String get adminBugReportsSectionDetails => 'ДЕТАЛІ';
-
-  @override
-  String get adminBugReportsDetailReportId => 'ID звіту';
-
-  @override
-  String get adminBugReportsDetailUserId => 'ID користувача';
-
-  @override
-  String get adminBugReportsAnonymousValue => 'анонімний';
-
-  @override
-  String get adminBugReportsDetailEmail => 'Електронна пошта';
-
-  @override
-  String get adminBugReportsDetailDevice => 'Пристрій';
-
-  @override
-  String get adminBugReportsDetailOs => 'Версія ОС';
-
-  @override
-  String get adminBugReportsDetailAppVer => 'Версія застосунку';
-
-  @override
-  String get adminBugReportsSectionConversation => 'РОЗМОВА';
-
-  @override
-  String get adminBugReportsThreadYou => 'Ви';
-
-  @override
-  String get adminBugReportsThreadUser => 'Користувач';
-
-  @override
-  String get adminBugReportsReplyHint => 'Написати відповідь...';
-
-  @override
-  String get adminBugReportsReopen => 'Відкрити знову';
-
-  @override
-  String get adminBugReportsResolve => 'Вирішити';
-
-  @override
-  String adminBugReportsCountdownCancel(int seconds) {
-    return 'Скасувати · $seconds';
-  }
-
-  @override
-  String get adminBugReportsSend => 'Надіслати';
-
-  @override
-  String get adminBugReportsAnonNotice =>
-      'Анонімний звіт - відповіді не можуть бути доставлені.';
-
-  @override
-  String get adminBugReportsEmptyFilter =>
-      'Жоден звіт не відповідає вашому фільтру.';
-
-  @override
-  String get adminBugReportsEmptyAll => 'Звітів про помилки ще немає.';
-
-  @override
-  String get adminConformanceTitle => 'Інструмент тестування відповідності';
-
-  @override
-  String get adminConformanceDescription =>
-      'Тестування відповідності пристрою на основі провайдерів. Всі мутації проходять через ті самі точки входу провайдера, що використовуються реальними екранами.';
-
-  @override
-  String get adminConformanceTargetDevice => 'Цільовий пристрій';
-
-  @override
-  String adminConformanceTargetRemote(String target) {
-    return 'Віддалений: $target';
-  }
-
-  @override
-  String get adminConformanceTargetLocal => 'Локальний пристрій';
-
-  @override
-  String adminConformanceNodesAvailable(int count) {
-    return '$count віддалений(х) вузол(ів) доступно';
-  }
-
-  @override
-  String get adminConformanceOtaPki =>
-      'Адміністрування через повітря за допомогою PKI';
-
-  @override
-  String get adminConformanceNoNodes =>
-      'Немає віддалених вузлів з підтримкою PKI';
-
-  @override
-  String get adminConformanceSwitchLocal => 'Перемкнути на локальний';
-
-  @override
-  String get adminConformanceTestOptions => 'Параметри тестів';
-
-  @override
-  String get adminConformanceDestructive => 'Деструктивні тести';
-
-  @override
-  String get adminConformanceDestructiveSub =>
-      'Рандомізовані мутації, навантажувальний тест, скидання бази вузлів. Може тимчасово змінити конфігурацію пристрою.';
-
-  @override
-  String get adminConformanceRunRemoteDestructive =>
-      'Запустити віддалене тестування відповідності (деструктивне)';
-
-  @override
-  String get adminConformanceRunRemoteSafe =>
-      'Запустити віддалене тестування відповідності (безпечне)';
-
-  @override
-  String get adminConformanceRunLocalDestructive =>
-      'Запустити тестування відповідності (деструктивне)';
-
-  @override
-  String get adminConformanceRunLocalSafe =>
-      'Запустити тестування відповідності (безпечне)';
-
-  @override
-  String adminConformanceProgress(
-    int completed,
-    int total,
-    int pass,
-    int fail,
-  ) {
-    return '$completed / $total  (пройдено: $pass, не пройдено: $fail)';
-  }
-
-  @override
-  String get adminConformanceCancel => 'Скасувати';
-
-  @override
-  String get adminConformanceAllPassed => 'Всі тести пройдено';
-
-  @override
-  String get adminConformanceSomeFailed => 'Деякі тести не пройдено';
-
-  @override
-  String get adminConformanceLabelPassed => 'Пройдено';
-
-  @override
-  String get adminConformanceLabelFailed => 'Не пройдено';
-
-  @override
-  String get adminConformanceLabelSkipped => 'Пропущено';
-
-  @override
-  String get adminConformanceLabelTimeouts => 'Перевищення часу';
-
-  @override
-  String get adminConformanceAnomalies => 'Аномалії:';
-
-  @override
-  String get adminConformanceTestResults => 'Результати тестів';
-
-  @override
-  String get adminConformanceExportBundle => 'Експортувати пакет';
-
-  @override
-  String get adminConformanceRunAgain => 'Запустити знову';
-
-  @override
-  String get adminConformanceInitializing => 'Ініціалізація';
 
   @override
   String get globalLayerDiagnosticsTitle => 'Діагностика';
@@ -32808,16 +28331,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String globalLayerDateFormat(int day, int month, int year) {
-    return '$day/$month/$year';
-  }
-
-  @override
-  String globalLayerShortDateFormat(int month, int day) {
-    return '$month/$day';
-  }
-
-  @override
   String get globalLayerHealthHeader => 'Стан';
 
   @override
@@ -32989,12 +28502,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get globalLayerTemplateAdded => 'Додано';
-
-  @override
-  String get adminFollowRequestFrom => 'ВІД';
-
-  @override
-  String get adminFollowRequestTo => 'ДО';
 
   @override
   String adminPostsFilteredCount(int count) {
@@ -33231,9 +28738,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get discoveryFilterAllSources => 'Усі джерела';
-
-  @override
-  String get draggableTextHint => 'Введіть щось...';
 
   @override
   String get globalLayerAdvanced => 'РОЗШИРЕНО';
@@ -34777,16 +30281,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Налаштування TAK дають змогу налаштувати URL шлюзу, перемикати автопідключення при відкритті екрана та встановлювати тривалість часу очікування застарівання. Всі налаштування зберігаються локально між сесіями застосунку.';
 
   @override
-  String get accessRestrictedTitle => 'Доступ обмежено';
-
-  @override
   String get goBack => 'Назад';
 
   @override
   String get deviceNotConnected => 'Пристрій не підключено';
-
-  @override
-  String get connectDevice => 'Підключити пристрій';
 
   @override
   String get connectDeviceToUseFeature =>
@@ -34800,11 +30298,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String failedGeneric(String error) {
     return 'Помилка: $error';
-  }
-
-  @override
-  String failedToUpdateSignalLocationRadius(String error) {
-    return 'Не вдалося оновити радіус місцезнаходження сигналу: $error';
   }
 
   @override
@@ -34983,9 +30476,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get waypointUpdated => 'Точку маршруту оновлено';
 
   @override
-  String get waypointDeleted => 'Точку маршруту видалено';
-
-  @override
   String get waypointDeleteForMe => 'Видалити в мене';
 
   @override
@@ -35000,11 +30490,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String waypointSheetFrom(String senderName) {
     return 'Від $senderName';
-  }
-
-  @override
-  String waypointSheetExpires(String time) {
-    return 'Термін дії $time';
   }
 
   @override
@@ -35141,13 +30626,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Періодичні зведення, коли кілька подій MeshCore надходять за короткий проміжок часу';
 
   @override
-  String get meshcoreRingtonesTitle => 'Мелодії сповіщень';
-
-  @override
-  String get meshcoreRingtonesSubtitle =>
-      'Виберіть звук для кожного каналу сповіщень MeshCore';
-
-  @override
   String get meshcoreRingtoneChannelAdverts => 'Сповіщення про оголошення';
 
   @override
@@ -35163,30 +30641,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreRingtoneChannelCustom => 'Користувацький RTTTL';
-
-  @override
-  String get meshcoreRingtonesChannelSectionTitle => 'Канал';
-
-  @override
-  String get meshcoreRingtonesPresetsSectionTitle => 'Пресети';
-
-  @override
-  String get meshcoreRingtonesUseDefault => 'Системний за замовчуванням';
-
-  @override
-  String get meshcoreRingtonesPreviewTooltip => 'Прослуховування';
-
-  @override
-  String get meshcoreRingtonesStopTooltip => 'Зупинити';
-
-  @override
-  String get meshcoreRingtonesSelectedBadge => 'Вибрано';
-
-  @override
-  String get meshcoreRingtonesSavedToast => 'Збережено';
-
-  @override
-  String get meshcoreRingtonesClearedToast => 'Скинуто до системного';
 
   @override
   String get flowNodeEvent => 'Подія';
@@ -35375,13 +30829,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get profileBannerRemoved => 'Банер видалено';
 
   @override
-  String get commonOpenSettings => 'Відкрити налаштування';
-
-  @override
-  String get socialGuidelineNoViolentImagery =>
-      'Без жорстоких або графічних зображень';
-
-  @override
   String get globalLayerConnectionTestLabel => 'ТЕСТ З\'ЄДНАННЯ';
 
   @override
@@ -35504,21 +30951,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Торкніться, щоб запустити заплановану автоматизацію';
 
   @override
-  String automationLogNode(String nodeName) {
-    return 'Вузол: $nodeName';
-  }
-
-  @override
-  String automationLogBattery(int level) {
-    return 'Акумулятор: $level%';
-  }
-
-  @override
-  String automationLogMessage(String text) {
-    return 'Повідомлення: $text';
-  }
-
-  @override
   String get automationHistoryOutcomeThen => 'Виконано гілку ТОДІ';
 
   @override
@@ -35572,14 +31004,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get automationHistoryEmpty => 'Ще немає активності автоматизацій';
-
-  @override
-  String get automationHistoryActionSuccess => 'Виконано успішно';
-
-  @override
-  String automationHistoryActionFailed(String error) {
-    return 'Не вдалося: $error';
-  }
 
   @override
   String automationHistoryActionCount(int success, int total) {
@@ -35763,18 +31187,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get connectionCancelled => 'З\'єднання скасовано';
-
-  @override
-  String get adminConformanceBundleTitle => 'Пакет відповідності SocialMesh';
-
-  @override
-  String get adminDiagnosticBundleText =>
-      'Пакет адміністративної діагностики від SocialMesh';
-
-  @override
-  String adminDiagnosticBundleSubject(String runId) {
-    return 'Діагностика SocialMesh $runId';
-  }
 
   @override
   String get onboardingSignalAuthorSarah => 'Sarah';
@@ -36235,66 +31647,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sipBadgeLabel => 'Рукостискання';
 
   @override
-  String get sipIdentityStateUnverified => 'Неперевірено';
-
-  @override
-  String get sipIdentityStateVerifiedTofu => 'Перевірено (TOFU)';
-
-  @override
-  String get sipIdentityStatePinned => 'Закріплено';
-
-  @override
-  String get sipIdentityStateChangedKey => 'Ключ змінено';
-
-  @override
-  String get sipIdentityStateStale => 'Застарілий';
-
-  @override
-  String get sipChangedKeyWarning =>
-      'Ідентифікаційний ключ цього учасника змінився. Перевірте його перед тим, як довіряти.';
-
-  @override
-  String get sipDisplayNameLabel => 'Ім\'я SIP';
-
-  @override
-  String get sipPersonaIdLabel => 'ID персони';
-
-  @override
-  String get sipDiscoveryTitle => 'Знайти людей поблизу';
-
-  @override
-  String sipDiscoveryPeersNearby(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'осіб',
-      one: 'особа',
-    );
-    return '$count $_temp0 поблизу';
-  }
-
-  @override
-  String get sipDiscoveryNoPeers => 'Поблизу ще нікого немає';
-
-  @override
-  String get sipDiscoveryNoPeersDescription =>
-      'Користувачі функції «Рукостискання» з\'являться тут, коли опиняться в зоні досяжності.';
-
-  @override
   String get sipDiscoveryScanButton => 'Шукати людей';
-
-  @override
-  String sipDiscoveryScanCooldown(int seconds) {
-    return 'Сканування доступне через $secondsс';
-  }
-
-  @override
-  String get sipDiscoveryPeerAnonymous => 'Користувач меша';
-
-  @override
-  String sipDiscoveryDeviceClass(String deviceClass) {
-    return '$deviceClass';
-  }
 
   @override
   String get sipHandshakeAction => 'Підключитися';
@@ -36315,12 +31668,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String sipHandshakeCooldown(String time) {
     return 'Зачекайте $time';
   }
-
-  @override
-  String get sipRequestIdentity => 'Запросити ідентифікатор';
-
-  @override
-  String get sipShareIdentity => 'Поділитися ідентифікатором';
 
   @override
   String get sipDmTitle => 'Повідомлення меша';
@@ -36428,9 +31775,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Захищений сеанс скинуто - під час наступного повідомлення ключі буде повторно узгоджено';
 
   @override
-  String get sipPlayComposerLabel => 'Гра';
-
-  @override
   String get sipPlayPanelCardSending => 'Надсилання пропозиції…';
 
   @override
@@ -36448,9 +31792,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get sipPlayLifecycleDeclined => 'Пропозицію відхилено';
-
-  @override
-  String get sipPlayLifecycleExpired => 'Пропозиція прострочена';
 
   @override
   String get sipPlayPanelTitle => 'Зіграти в гру';
@@ -36496,9 +31837,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sipDmOverflowSectionData => 'ДАНІ';
 
   @override
-  String get sipPlayPickerTitle => 'Оберіть гру';
-
-  @override
   String get sipPlayPickerSubtitle =>
       'Торкніться гри, щоб надіслати пропозицію в цю розмову. Обидві сторони мають прийняти її перед початком гри.';
 
@@ -36506,15 +31844,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sipPlayGameTicTacToe => 'Хрестики-нулики';
 
   @override
-  String get sipPlayGameTicTacToeDescription =>
-      'Класичне поле 3x3. Ви ставите X, якщо запропонували гру, або O, якщо прийняли.';
-
-  @override
   String get sipPlayGameConnectFour => 'Чотири в ряд';
-
-  @override
-  String get sipPlayGameConnectFourDescription =>
-      'Сітка 6x7. Кидайте фішки в колонку. Перший, хто зберe чотири в ряд, перемагає.';
 
   @override
   String get sipPlayUnsupportedGame => 'Непідтримувана гра';
@@ -36586,9 +31916,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sipPlayStatusTheyDeclined => 'Суперник відхилив пропозицію';
 
   @override
-  String get sipDmComposerModeText => 'Текст';
-
-  @override
   String get sipDmComposerModeSketch => 'Малюнок';
 
   @override
@@ -36649,12 +31976,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get sipSignalReplay => 'Відтворити знову';
-
-  @override
-  String get sipSignalToneSizeBadge => 'Мінімальний сигнал • ~20-32 байти';
-
-  @override
-  String get sipSignalMorseSizeBadge => 'Мінімальний Морзе • ~20-60 байт';
 
   @override
   String sipSignalSizeBytes(int bytes) {
@@ -36788,15 +32109,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get sipInkBlocked =>
       'Малюнок не вміщається в меші - спростіть штрихи.';
-
-  @override
-  String get sipDmOpenAction => 'Відкрити ПП';
-
-  @override
-  String get sipPeerDetailTitle => 'Про цю особу';
-
-  @override
-  String get sipPeerDetailNodeId => 'ID вузла';
 
   @override
   String get sipPeerDetailDeviceClass => 'Тип пристрою';
@@ -36993,11 +32305,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String sipHubIncomingRequestFrom(String peerName) {
-    return '$peerName хоче підключитися';
-  }
-
-  @override
   String get sipHubIncomingRequestWantsToConnect => 'хоче підключитися';
 
   @override
@@ -37031,9 +32338,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshCapacityScreenTitle => 'Ємність';
-
-  @override
-  String get meshCapacityDrawerLabel => 'Ємність мешу';
 
   @override
   String get meshCapacityHeroNodesUnit => 'активних по RF (15 хв)';
@@ -37282,8 +32586,7 @@ class AppLocalizationsUk extends AppLocalizations {
       locale: localeName,
       other:
           '$countString сусідніх вузлів активні по RF за останні 15 хвилин. Далекодіючі пресети обмінюють ємність на дальність.',
-      one:
-          '1 сусідній вузол активний по RF за останні 15 хвилин. Далекодіючі пресети обмінюють ємність на дальність.',
+      one: '1 сусідній вузол активний по RF за останні 15 хвилин. Далекодіючі пресети обмінюють ємність на дальність.',
     );
     return '$_temp0';
   }
@@ -37303,8 +32606,7 @@ class AppLocalizationsUk extends AppLocalizations {
       locale: localeName,
       other:
           '$countString сусідніх вузлів активні по RF. Цей пресет може обмежувати ємність локальної мережі.',
-      one:
-          '1 сусідній вузол активний по RF. Цей пресет може обмежувати ємність локальної мережі.',
+      one: '1 сусідній вузол активний по RF. Цей пресет може обмежувати ємність локальної мережі.',
     );
     return '$_temp0';
   }
@@ -37325,8 +32627,7 @@ class AppLocalizationsUk extends AppLocalizations {
       locale: localeName,
       other:
           '$countString сусідніх вузлів активні по RF. Ефірний час, ймовірно, перевантажений. Торкніться, щоб дізнатися, який пресет допоможе.',
-      one:
-          '1 сусідній вузол активний по RF. Ефірний час, ймовірно, перевантажений. Торкніться, щоб дізнатися, який пресет допоможе.',
+      one: '1 сусідній вузол активний по RF. Ефірний час, ймовірно, перевантажений. Торкніться, щоб дізнатися, який пресет допоможе.',
     );
     return '$_temp0';
   }
@@ -37419,13 +32720,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Це ваша перша розмова з цим вузлом. Приймайте повідомлення лише від людей, яким ви довіряєте в меші. Торкніться, щоб закрити.';
 
   @override
-  String get sipHubEmptyTitle => 'Шукаємо сусідів';
-
-  @override
-  String get sipHubEmptyDescription =>
-      'Торкніться «Шукати людей», щоб надіслати перекличку іншим користувачам Рукостискання у вашому меші. Будь-хто в зоні досяжності з відкритим застосунком відповість протягом кількох секунд.';
-
-  @override
   String get sipHubScanningTitlePrefix => 'Шукаємо ';
 
   @override
@@ -37477,11 +32771,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Все виявлення є **анонімним за замовчуванням**. Вузли розкривають лише ротаційний 4-байтовий навколишній ідентифікатор до взаємної згоди на рукостискання.';
 
   @override
-  String sipHubLastSeen(String time) {
-    return 'Бачили $time';
-  }
-
-  @override
   String get sipHubHandshaking => 'Підключення…';
 
   @override
@@ -37491,22 +32780,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sipHubConnected => 'Підключено';
 
   @override
-  String sipHubMessagePreview(String name, String message) {
-    return '$name: $message';
-  }
-
-  @override
-  String sipHubSessionExpiry(String time) {
-    return 'Закінчується через $time';
-  }
-
-  @override
   String get sipHubNoMessages => 'Повідомлень ще немає';
-
-  @override
-  String sipDmPeerName(String hexId) {
-    return 'Учасник $hexId';
-  }
 
   @override
   String get sipAutoScanEnabled => 'Автовиявлення увімкнено';
@@ -37524,13 +32798,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sipScanningIndicator => 'Сканування…';
 
   @override
-  String get sipConnecting => 'Підключення…';
-
-  @override
   String get sipDmReplyingTo => 'Відповідь на';
-
-  @override
-  String get sipDmSwipeToReply => 'Проведіть, щоб відповісти';
 
   @override
   String get sipDmActionReply => 'Відповісти';
@@ -37614,12 +32882,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mrrpHarnessRadioDisconnected => 'Відключено';
 
   @override
-  String get mrrpHarnessChannel => 'Канал';
-
-  @override
-  String get mrrpHarnessChannelNone => 'Без каналу';
-
-  @override
   String get mrrpHarnessSipPeers => 'Вузли SIP';
 
   @override
@@ -37667,11 +32929,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String mrrpHarnessPeerLastAdvert(String time) {
-    return 'Останнє оголошення: $time';
-  }
-
-  @override
   String get mrrpHarnessRefreshDirectory => 'Оновити каталог';
 
   @override
@@ -37680,11 +32937,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String mrrpHarnessServiceVersion(int major, int minor) {
     return 'v$major.$minor';
-  }
-
-  @override
-  String mrrpHarnessServiceFlags(String flags) {
-    return 'Прапори: $flags';
   }
 
   @override
@@ -37701,9 +32953,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get mrrpHarnessSelectAction => 'Оберіть дію';
-
-  @override
-  String get mrrpHarnessPayloadPreset => 'Пресет корисного навантаження';
 
   @override
   String get mrrpHarnessPayloadRawHex => 'Корисне навантаження у raw hex';
@@ -37739,12 +32988,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get mrrpHarnessResponseDuplicate => 'Дублікат відповіді';
-
-  @override
-  String get mrrpHarnessResponseCached => 'Кешована відповідь';
-
-  @override
   String get mrrpHarnessSimLabTitle => 'Лабораторія змодельованих вузлів';
 
   @override
@@ -37778,9 +33021,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mrrpHarnessSimMaxPeers => 'Максимум 4 змодельованих вузли';
 
   @override
-  String get mrrpHarnessSimDeleteConfirm => 'Видалити змодельований вузол?';
-
-  @override
   String get mrrpHarnessSimServices => 'Сервіси';
 
   @override
@@ -37798,15 +33038,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get mrrpHarnessTrafficEmptyDescription =>
       'Події MRRP з\'являться тут у міру надходження трафіку.';
-
-  @override
-  String get mrrpHarnessTrafficFilterPeer => 'Фільтрувати за вузлом';
-
-  @override
-  String get mrrpHarnessTrafficFilterType => 'Фільтрувати за типом';
-
-  @override
-  String get mrrpHarnessTrafficFilterService => 'Фільтрувати за сервісом';
 
   @override
   String get mrrpHarnessTrafficFilterAll => 'Усі';
@@ -37863,9 +33094,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mrrpHarnessTrafficCopy => 'Копіювати подію';
 
   @override
-  String get mrrpHarnessTrafficExport => 'Експортувати події';
-
-  @override
   String mrrpHarnessTrafficDirection(String direction) {
     return '$direction';
   }
@@ -37874,16 +33102,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mrrpHarnessBudgetTitle => 'Бюджет і тайминг';
 
   @override
-  String get mrrpHarnessBudgetRemaining => 'Залишок бюджету';
-
-  @override
   String get mrrpHarnessBudgetBlocked => 'Відправлення заблоковано';
-
-  @override
-  String get mrrpHarnessBudgetDedupHits => 'Збіги дедублікації';
-
-  @override
-  String get mrrpHarnessBudgetTimeouts => 'Таймаути';
 
   @override
   String get mrrpHarnessBudgetAdvertCadence => 'Частота оголошень';
@@ -37965,9 +33184,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mrrpHarnessFixtureNotRejected => 'Не відхилено (неочікувано)';
 
   @override
-  String get mrrpHarnessFixtureEmpty => 'Немає доступних фікстур';
-
-  @override
   String get mrrpHarnessOpenQaRunner => 'QA-сценарії';
 
   @override
@@ -38008,16 +33224,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get mrrpHarnessQaEmpty => 'Сценарії не визначено';
-
-  @override
-  String get mrrpHarnessQaRunning => 'Виконується...';
-
-  @override
   String get mrrpHarnessQaExpected => 'Очікується';
-
-  @override
-  String get mrrpHarnessQaActual => 'Фактично';
 
   @override
   String get mrrpHarnessCountersSectionTraffic => 'Лічильники трафіку';
@@ -38097,43 +33304,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshExplorerDrawerLabel => 'Mesh Explorer';
 
   @override
-  String get meshExplorerHeroConnected => 'Підключено до мешу';
-
-  @override
   String get meshExplorerHeroDisconnected => 'Радіо не підключено';
-
-  @override
-  String meshExplorerHeroPeersCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count сусідніх піра',
-      one: '1 сусідній пір',
-      zero: 'Немає сусідніх пірів',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String meshExplorerHeroServicesCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count сервіси',
-      one: '1 сервіс',
-      zero: 'Немає сервісів',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get meshExplorerSectionNearby => 'Поруч';
-
-  @override
-  String get meshExplorerSectionServices => 'Сервіси';
-
-  @override
-  String get meshExplorerSectionBoard => 'Активність дошки';
 
   @override
   String get meshExplorerScanningTitlePrefix => 'Немає пірів ';
@@ -38243,27 +33414,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notificationChannelSipDiscovery => 'Виявлення пірів';
 
   @override
-  String get meshExplorerEmptyNearbyTitle => 'Немає сусідніх пірів';
-
-  @override
-  String get meshExplorerEmptyNearbyBody =>
-      'Піри з\'являться, коли пристрої мешу будуть у зоні дії';
-
-  @override
-  String get meshExplorerEmptyServicesTitle => 'Сервіси не знайдено';
-
-  @override
-  String get meshExplorerEmptyServicesBody =>
-      'Сусідні піри будуть рекламувати сервіси тут';
-
-  @override
-  String get meshExplorerEmptyBoardTitle => 'Немає активності на дошці';
-
-  @override
-  String get meshExplorerEmptyBoardBody =>
-      'Публікації дошки від сусідніх піра з\'являться тут';
-
-  @override
   String get meshExplorerNotConnectedTitle => 'Радіо не підключено';
 
   @override
@@ -38300,18 +33450,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshExplorerHopCountUnknown => 'Поруч';
 
   @override
-  String meshExplorerServiceCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count сервіси',
-      one: '1 сервіс',
-      zero: 'Немає сервісів',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get meshExplorerActionHandshake => 'Рукостискання';
 
   @override
@@ -38319,9 +33457,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshExplorerActionRequestIdentity => 'Запросити ідентичність';
-
-  @override
-  String get meshExplorerActionOpenNodeDex => 'Відкрити у NodeDex';
 
   @override
   String get meshExplorerActionBlock => 'Заблокувати';
@@ -38333,61 +33468,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshExplorerActionUnpin => 'Відкріпити піра';
 
   @override
-  String get meshExplorerPeerDetail => 'Деталі піра';
-
-  @override
-  String get meshExplorerPeerDetailIdentity => 'Ідентичність';
-
-  @override
   String get meshExplorerPeerDetailServices => 'Доступні сервіси';
 
   @override
   String get meshExplorerPeerDetailActions => 'Дії';
-
-  @override
-  String get meshExplorerServiceBulletinBoard => 'Дошка оголошень';
-
-  @override
-  String get meshExplorerServiceBulletinBoardSub => 'Локальні публікації мешу';
-
-  @override
-  String get meshExplorerServicePeerProfile => 'Профіль піра';
-
-  @override
-  String get meshExplorerServicePeerProfileSub =>
-      'Спільна інформація ідентичності';
-
-  @override
-  String get meshExplorerServiceGeneric => 'Сервіс';
-
-  @override
-  String get meshExplorerServiceGenericSub => 'Доступний поруч';
-
-  @override
-  String get meshExplorerServiceOpenBoard => 'Відкрити дошку';
-
-  @override
-  String get meshExplorerServiceViewProfile => 'Переглянути профіль';
-
-  @override
-  String get meshExplorerServiceDetails => 'Деталі';
-
-  @override
-  String get meshExplorerServiceRequiresHandshake => 'Потрібне рукостискання';
-
-  @override
-  String get meshExplorerServiceRequiresIdentity => 'Потрібна ідентичність';
-
-  @override
-  String meshExplorerServicePeerCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count піра',
-      one: '1 пір',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get meshExplorerPrivacyTitle => 'Конфіденційність мешу';
@@ -38437,12 +33521,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshExplorerScanAction => 'Сканувати';
 
   @override
-  String get meshExplorerRefreshAction => 'Оновити';
-
-  @override
-  String get meshExplorerChangedKey => 'Ключ змінено';
-
-  @override
   String get meshExplorerScanSent => 'Пошук сусідніх пірів…';
 
   @override
@@ -38467,9 +33545,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshExplorerHandshakeReceived => 'Отримано запит рукостискання';
-
-  @override
-  String get meshExplorerStatusConnected => 'Підключено до мешу';
 
   @override
   String meshExplorerStatusPeersAndServices(int peers, int services) {
@@ -38512,33 +33587,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshExplorerEmptyAction => 'Поділитися чимось';
 
   @override
-  String get meshExplorerCreateLabel => 'Створити';
-
-  @override
   String get meshExplorerNotConnectedAction => 'Підключити радіо';
 
   @override
-  String get meshServicesDrawerLabel => 'Мої ресурси';
-
-  @override
-  String get meshServicesTitle => 'Мої ресурси';
-
-  @override
-  String get meshServicesEmpty => 'Нічого не опубліковано';
-
-  @override
-  String get meshServicesEmptyDescription =>
-      'Поділіться оновленням, запитанням, контрольним списком, сповіщенням або показником з людьми поруч у меші.';
-
-  @override
-  String get meshServicesCreateAction => 'Поділитися чимось';
-
-  @override
   String get meshServicesCreateTitle => 'Поділитися з мешем';
-
-  @override
-  String get meshServicesCreateSubtitle =>
-      'Оберіть, чим хочете поділитися поруч';
 
   @override
   String get meshServicesTypeFeed => 'Оновлення';
@@ -38633,20 +33685,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshServicesTemplateBoardDescription =>
       'Діліться короткими публікаціями з сусідніми пірами';
-
-  @override
-  String get meshServicesTemplateSignal => 'Маяк сигналу';
-
-  @override
-  String get meshServicesTemplateSignalDescription =>
-      'Транслюйте сигнал сусіднім пірам';
-
-  @override
-  String get meshServicesTemplatePoll => 'Швидке опитування';
-
-  @override
-  String get meshServicesTemplatePollDescription =>
-      'Поставте запитання з кількома варіантами відповіді';
 
   @override
   String get meshServicesTemplateChecklist => 'Спільний контрольний список';
@@ -38772,9 +33810,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей пристрій наразі не розміщує жодних активних сервісів.';
 
   @override
-  String get serviceDetailInstanceDescription => 'Опис';
-
-  @override
   String serviceDetailInstanceExpires(String time) {
     return 'Закінчується через $time';
   }
@@ -38818,17 +33853,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshServicesFieldAddItem => 'Додати елемент';
 
   @override
-  String get meshServicesPreviewTitle => 'Попередній перегляд';
-
-  @override
   String get meshServicesPreviewSubtitle =>
       'Сусідні користувачі спочатку побачать заголовок, а потім зможуть відкрити повні деталі.';
 
   @override
   String get meshServicesPublishAction => 'Опублікувати зараз';
-
-  @override
-  String get meshServicesPublishSuccess => 'Сервіс опубліковано';
 
   @override
   String get meshServicesCreatedHeadline => 'Ваш ресурс активний';
@@ -38874,14 +33903,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Видалити цей сервіс? Це незворотна дія.';
 
   @override
-  String get meshServicesDetailTitle => 'Деталі сервісу';
-
-  @override
-  String meshServicesRemainingTime(String duration) {
-    return 'залишилось $duration';
-  }
-
-  @override
   String meshServicesDurationMinutes(int count) {
     return '$count хв';
   }
@@ -38893,9 +33914,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshGamesTitle => 'Ігри мешу';
-
-  @override
-  String get meshGamesTabLabel => 'Ігри';
 
   @override
   String get meshGamesEmptyTitle => 'Ігор ще немає';
@@ -38951,19 +33969,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshGamesStatusStale => 'Синхронізація…';
 
   @override
-  String get meshGamesStatusActive => 'Активний';
-
-  @override
   String get meshGamesActionResync => 'Ресинхронізувати';
-
-  @override
-  String get meshGamesActionAbandon => 'Покинути';
-
-  @override
-  String get meshGamesAbandonConfirmTitle => 'Покинути цю гру?';
-
-  @override
-  String get meshGamesAbandonConfirmMessage => 'Інший гравець буде сповіщений.';
 
   @override
   String get meshGamesOpponentLabel => 'Суперник';
@@ -39032,24 +34038,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshServicesCancelAction => 'Скасувати';
-
-  @override
-  String get meshServicesSearchHint => 'Пошук моїх ресурсів';
-
-  @override
-  String get meshServicesFilterAll => 'Усі';
-
-  @override
-  String get meshServicesFilterActive => 'Активні';
-
-  @override
-  String get meshServicesFilterExpired => 'Прострочені';
-
-  @override
-  String get meshServicesFilterStopped => 'Зупинені';
-
-  @override
-  String get meshServicesNoResults => 'Відповідних ресурсів не знайдено';
 
   @override
   String get mapTerrainProfile => 'Профіль рельєфу';
@@ -39340,12 +34328,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get servicePresentationFallbackAction => 'Деталі';
 
   @override
-  String get voiceMessageSendButton => 'Голос';
-
-  @override
-  String get voiceMessageRecording => 'Запис…';
-
-  @override
   String get voiceMessageRecordingHint => 'Утримуйте для запису';
 
   @override
@@ -39383,12 +34365,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Досягнуто максимальної тривалості запису';
 
   @override
-  String get voiceRecordingTapToStop => 'Натисніть, щоб зупинити запис';
-
-  @override
-  String get voiceRecordingStopButton => 'Зупинити';
-
-  @override
   String get voiceRecordingLive => 'ЗАПИС';
 
   @override
@@ -39410,9 +34386,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voiceRecordingRetakeButton => 'Перезаписати';
-
-  @override
-  String get voiceRecordingSendButton => 'Надіслати';
 
   @override
   String get voiceRecordingReadyToSend => 'Готово до відправки';
@@ -39454,16 +34427,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voiceAttachmentCardTitle => 'Голосове повідомлення';
 
   @override
-  String get voiceAttachmentAnalysing => 'Аналіз…';
-
-  @override
   String get voiceAttachmentPlaybackFailed => 'Відтворення не вдалося';
 
   @override
   String get voiceAttachmentMono => 'Моно';
-
-  @override
-  String get voiceAttachmentPause => 'Пауза';
 
   @override
   String get fileTransferContactsSendVoice => 'Голос';
@@ -39476,12 +34443,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Підписуйте вихідні передачі своїм ключем ідентичності';
 
   @override
-  String get stlSignatureValid => 'Підпис перевірено';
-
-  @override
-  String get stlSignatureInvalid => 'Недійсний підпис';
-
-  @override
   String get tracerouteShowOnMap => 'Показати на карті';
 
   @override
@@ -39492,9 +34453,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get tracerouteShowAllNodes => 'Показати всі вузли';
-
-  @override
-  String get mapControlsHeadingUp => 'За напрямком руху';
 
   @override
   String get mapCompassUnavailable =>
@@ -39655,9 +34613,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Запустити TAK-сервер на пристрої для прямих підключень ATAK/iTAK через mesh';
 
   @override
-  String get takBridgeServerPort => 'Порт сервера';
-
-  @override
   String get takBridgeStatusRunning => 'Працює';
 
   @override
@@ -39686,14 +34641,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get takBridgeClientsTitle => 'Підключені клієнти';
-
-  @override
-  String get takBridgeNoClients => 'TAK-клієнти не підключені';
-
-  @override
-  String takBridgeClientDuration(String duration) {
-    return 'Підключено $duration';
-  }
 
   @override
   String get takIdentityRegistryTitle => 'Реєстр ідентифікацій';
@@ -39742,9 +34689,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get takVideoStopStream => 'Зупинити трансляцію';
 
   @override
-  String get takVideoEndStream => 'Завершити трансляцію';
-
-  @override
   String get takVideoPreparing => 'Підготовка камери...';
 
   @override
@@ -39763,17 +34707,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get takVideoEnded => 'Трансляцію завершено';
 
   @override
-  String get takVideoIdle => 'Готово до трансляції';
-
-  @override
   String get takVideoEmptyTitle => 'Трансляцій немає';
 
   @override
   String get takVideoEmptyDescription =>
       'Наразі активних відеотрансляцій немає.';
-
-  @override
-  String get takVideoRefresh => 'Оновити';
 
   @override
   String get takVideoLoading => 'Завантаження трансляцій...';
@@ -39790,23 +34728,10 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get takVideoWatchStream => 'Дивитися трансляцію';
-
-  @override
-  String get takVideoPlayerTitle => 'Пряма трансляція';
-
-  @override
   String get takVideoPlayerLoading => 'Завантаження трансляції...';
 
   @override
-  String get takVideoPlayerEnded => 'Трансляцію завершено';
-
-  @override
   String get takVideoPlayerError => 'Помилка відтворення';
-
-  @override
-  String get takVideoPermissionRequired =>
-      'Для трансляції необхідний доступ до камери та мікрофона.';
 
   @override
   String get takVideoAuthRequired =>
@@ -39825,9 +34750,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get deviceSheetNetwork => 'Мережа (TCP)';
-
-  @override
-  String get networkSectionTitle => 'Мережа';
 
   @override
   String get networkSavedEndpoints => 'Збережені кінцеві точки';
@@ -39856,11 +34778,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get networkEndpointNameHint => 'напр. Вузол у вітальні';
-
-  @override
-  String networkConnecting(String address) {
-    return 'Підключення до $address...';
-  }
 
   @override
   String networkConnectionFailed(String address) {
@@ -39896,12 +34813,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get scannerTabBluetooth => 'Bluetooth';
-
-  @override
-  String get scannerTabNetwork => 'Мережа';
-
-  @override
   String get mdnsDiscoveredRadios => 'Wi-Fi рації';
 
   @override
@@ -39910,9 +34821,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get mdnsNoDevicesDescription =>
       'Пристрої Meshtastic з увімкненим WiFi з\'являться тут автоматично.';
-
-  @override
-  String get mdnsConnecting => 'Підключення…';
 
   @override
   String get mdnsTransportTcp => 'TCP';
@@ -39950,10 +34858,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshIncidentEmptyTitle => 'Немає інцидентів у меші';
-
-  @override
-  String get meshIncidentEmptyDescription =>
-      'Тут з\'являтимуться звіти про інциденти з мережі меш. Торкніться кнопки, щоб створити новий звіт.';
 
   @override
   String get meshIncidentEmptyTagline1 =>
@@ -40101,9 +35005,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshIncidentCorrectReport => 'Виправити звіт';
 
   @override
-  String get meshIncidentHandoffTitle => 'Зведення передачі';
-
-  @override
   String get meshIncidentLocationCoarse => 'Приблизне місцезнаходження';
 
   @override
@@ -40196,16 +35097,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get translateContentIneligible => 'Цей вміст неможливо перекласти';
 
   @override
-  String get subscriptionFeaturedTranslationSubtitleRefactored =>
-      'Переклад на вимогу з інтелектуальним кешуванням, засобами захисту конфіденційності та підтримкою власного провайдера';
-
-  @override
   String get subscriptionTranslationWithAllowance =>
       'Миттєвий переклад повідомлень';
-
-  @override
-  String get subscriptionCompletePackSubtitleWithTranslation =>
-      'Кожна функція, одна ціна - включно з перекладом';
 
   @override
   String get translationSettingsTitle => 'Переклад';
@@ -40348,11 +35241,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String avatarStackNodeTooltip(String name) {
-    return '$name';
-  }
-
-  @override
   String avatarStackOverflowLabel(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -40379,150 +35267,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodedexCoSeenCardViewAll => 'Переглянути нещодавні зв\'язки';
-
-  @override
-  String get nearbyTitle => 'Поблизу';
-
-  @override
-  String get nearbySubtitle => 'Люди та пристрої в мережі';
-
-  @override
-  String get nearbyScanButton => 'Шукати людей';
-
-  @override
-  String get nearbyScanningLabel => 'Пошук людей поблизу...';
-
-  @override
-  String nearbyScanCooldownLabel(int seconds) {
-    return 'Повторний пошук через $secondsс';
-  }
-
-  @override
-  String get nearbyPersonAnonymous => 'Користувач мережі';
-
-  @override
-  String get nearbyStatusNow => 'Поблизу зараз';
-
-  @override
-  String nearbyStatusMinutesAgo(int count) {
-    return 'Бачено $count хв тому';
-  }
-
-  @override
-  String nearbyStatusHoursAgo(int count) {
-    return 'Бачено $countг тому';
-  }
-
-  @override
-  String get nearbyEmptyTitle => 'Поблизу нікого немає';
-
-  @override
-  String get nearbyEmptyDescription =>
-      'Торкніться «Шукати людей», щоб знайти інших користувачів SocialMesh у мережі';
-
-  @override
-  String get nearbyEmptyTagline1 => 'Прослуховування поблизу...';
-
-  @override
-  String get nearbyEmptyTagline2 =>
-      'Торкніться «Шукати людей», щоб надіслати сигнал...';
-
-  @override
-  String get nearbyEmptyTagline3 => 'Інші з\'являться тут після виявлення...';
-
-  @override
-  String get nearbyEmptyTagline4 =>
-      'Тримайте застосунок відкритим, щоб знайти більше...';
-
-  @override
-  String get nearbyDevicePhone => 'Телефон';
-
-  @override
-  String get nearbyDeviceTablet => 'Планшет';
-
-  @override
-  String get nearbyDeviceDesktop => 'Комп\'ютер';
-
-  @override
-  String get nearbyDeviceUnknown => 'Пристрій';
-
-  @override
-  String get nearbySectionPeople => 'Люди';
-
-  @override
-  String get nearbySectionConversations => 'Розмови';
-
-  @override
-  String get nearbySectionRequests => 'Запити на з\'єднання';
-
-  @override
-  String get connectionRequestConnect => 'Підключитися';
-
-  @override
-  String get connectionStateConnecting => 'Підключення...';
-
-  @override
-  String get connectionStateConnected => 'Підключено';
-
-  @override
-  String get connectionStatePending => 'Запит надіслано';
-
-  @override
-  String get connectionStateDeclined => 'Відхилено';
-
-  @override
-  String get connectionStateFailed => 'Не вдалося підключитися';
-
-  @override
-  String get connectionStateTimedOut => 'Немає відповіді';
-
-  @override
-  String connectionIncomingTitle(String name) {
-    return '$name хоче підключитися';
-  }
-
-  @override
-  String get connectionAcceptButton => 'Прийняти';
-
-  @override
-  String get connectionDeclineButton => 'Відхилити';
-
-  @override
-  String get contactExchangeTitle => 'Поділитися контактною карткою';
-
-  @override
-  String get contactExchangeDescription =>
-      'Обміняйтесь ідентичністю з людиною поруч, щоб мати можливість надсилати одне одному повідомлення';
-
-  @override
-  String get contactExchangeShareButton => 'Поділитися моїм контактом';
-
-  @override
-  String get contactExchangeShared => 'Контактом поділились';
-
-  @override
-  String get meshConversationTitle => 'Повідомлення мешу';
-
-  @override
-  String meshConversationExpiry(String time) {
-    return 'Закінчується через $time';
-  }
-
-  @override
-  String get meshConversationPinned => 'Закріплено';
-
-  @override
-  String get meshConversationInputHint => 'Повідомлення…';
-
-  @override
-  String get meshConversationBudgetExhausted =>
-      'Надсилання призупинено - досягнуто ліміт пропускної здатності мешу. Спробуйте незабаром.';
-
-  @override
-  String get meshConversationClosed => 'Цю розмову завершено.';
-
-  @override
-  String get meshConversationReadyToChat => 'Готово до спілкування';
 
   @override
   String get deliveryPhasePreparing => 'Підготовка';
@@ -40609,16 +35353,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get deliverySafeToClose =>
-      'Можна закрити - доставка продовжується у фоновому режимі';
-
-  @override
   String get deliverySafeToLeave => 'Можна вийти - передача продовжиться';
-
-  @override
-  String deliveryProgressParts(int current, int total) {
-    return '$current з $total частин';
-  }
 
   @override
   String get deliveryExpertToggle => 'Показати деталі доставки';
@@ -40630,16 +35365,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get guidedFlowBack => 'Назад';
 
   @override
-  String get guidedFlowDone => 'Готово';
-
-  @override
-  String get guidedFlowCreate => 'Створити';
-
-  @override
   String get guidedFlowContinue => 'Записати';
-
-  @override
-  String get guidedFlowCancel => 'Скасувати';
 
   @override
   String get serviceWizardTitle => 'Поділитися з мережею';
@@ -40649,12 +35375,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get serviceWizardStepPreset => 'Шаблон';
-
-  @override
-  String get serviceWizardStepWho => 'Хто';
-
-  @override
-  String get serviceWizardStepDetails => 'Деталі';
 
   @override
   String get serviceWizardStepReview => 'Попередній перегляд';
@@ -40681,27 +35401,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Використовуйте базовий макет і налаштуйте його самостійно.';
 
   @override
-  String get serviceWizardWhoTitle => 'Хто може це бачити?';
-
-  @override
-  String get serviceWizardWhoSubtitle =>
-      'Виберіть, хто зможе виявляти та використовувати ваш сервіс';
-
-  @override
-  String get serviceWizardAudienceAnyone => 'Будь-хто поблизу';
-
-  @override
-  String get serviceWizardAudienceAnyoneDesc =>
-      'Будь-хто в мережі може виявити та використати це';
-
-  @override
-  String get serviceWizardAudienceContacts => 'Лише схвалені контакти';
-
-  @override
-  String get serviceWizardAudienceContactsDesc =>
-      'Лише люди, з якими ви обмінялися контактами';
-
-  @override
   String get serviceWizardReviewTitle => 'Перед написанням';
 
   @override
@@ -40713,9 +35412,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get serviceWizardReviewPreset => 'Відправна точка';
-
-  @override
-  String get serviceWizardReviewAudience => 'Аудиторія';
 
   @override
   String get serviceWizardReviewMeshHint =>
@@ -40908,63 +35604,10 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get serviceWizardCompletionHeadline => 'Ваш сервіс активний';
-
-  @override
-  String get serviceWizardCompletionDescription =>
-      'Інші користувачі мережі тепер можуть виявляти ваш сервіс та взаємодіяти з ним. Ви можете керувати ним у розділі \"Мої сервіси\".';
-
-  @override
-  String get serviceWizardCompletionViewServices => 'Переглянути мої сервіси';
-
-  @override
-  String get serviceWizardCompletionCreateAnother => 'Створити ще один';
-
-  @override
-  String get peerDetailLastSeenJustNow => 'Щойно';
-
-  @override
-  String get peerDetailCapabilities => 'Що підтримується';
-
-  @override
-  String get peerDetailCapIdentity => 'Ідентичність та безпечне з\'єднання';
-
-  @override
-  String get peerDetailCapExchange => 'Обмін контактами';
-
-  @override
-  String get peerDetailDeviceType => 'Тип пристрою';
-
-  @override
-  String get nearbyAutoScanEnabled => 'Авторозпізнавання увімкнено';
-
-  @override
-  String get nearbyAutoScanDisabled => 'Авторозпізнавання вимкнено';
-
-  @override
-  String get disclosureBasic => 'Простий вигляд';
-
-  @override
-  String get disclosureCurious => 'Більше деталей';
-
-  @override
-  String get disclosureExpert => 'Повна діагностика';
-
-  @override
   String get messagingWeekView => 'Тижневий вигляд';
 
   @override
   String get messageTimelineTitle => 'Активність повідомлень';
-
-  @override
-  String get messageTimelineEmpty => 'Цього тижня активності повідомлень немає';
-
-  @override
-  String get messageTimelineEmptyDescription =>
-      'Повідомлення та активність каналів з\'являтимуться тут у реальному часі';
-
-  @override
-  String get messageTimelineShowAll => 'Показати всю активність';
 
   @override
   String get messageTimelineFilterDm => 'Прямі';
@@ -40984,16 +35627,6 @@ class AppLocalizationsUk extends AppLocalizations {
       one: '1 повідомлення',
     );
     return '$_temp0';
-  }
-
-  @override
-  String messageTimelineChannelPrefix(String name) {
-    return 'Кан.: $name';
-  }
-
-  @override
-  String messageTimelineDmWith(String name) {
-    return 'ПП з $name';
   }
 
   @override
@@ -41042,15 +35675,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Одноразова покупка · Довічний доступ · Без підписки';
 
   @override
-  String get subscriptionStarterPack => 'Стартовий пакет';
-
-  @override
-  String get subscriptionStarterPackSubtitle => 'Теми + Віджети';
-
-  @override
-  String get subscriptionStarterComingSoon => 'Скоро';
-
-  @override
   String get subscriptionPopularBadge => 'НАЙПОПУЛЯРНІШИЙ';
 
   @override
@@ -41059,11 +35683,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String tapbackDetailSenderCount(int count) {
     return '$count реакцій';
-  }
-
-  @override
-  String tapbackGroupOthers(int count) {
-    return '+$count';
   }
 
   @override
@@ -41226,13 +35845,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshFeedDrawerLabel => 'Стрічка мешу';
-
-  @override
-  String get meshFeedEmptyTitle => 'Публікацій ще немає';
-
-  @override
-  String get meshFeedEmptyDescription =>
-      'Тут з\'являтимуться публікації від сусідніх пірів мешу. Створіть першу публікацію, щоб розпочати розмову.';
 
   @override
   String get meshFeedEmptyAction => 'Створити публікацію';
@@ -42220,11 +36832,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Фрагменти декодуються, але не збираються в цій збірці.';
 
   @override
-  String reticulumDiagSourceFragments(int count) {
-    return '$count фрагментів';
-  }
-
-  @override
   String get reticulumReplayTitle => 'Відтворення захоплення';
 
   @override
@@ -42432,9 +37039,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get reticulumDetailSectionProvenance => 'ПОХОДЖЕННЯ';
 
   @override
-  String get reticulumDetailSource => 'Джерело';
-
-  @override
   String get reticulumDetailSourceLocal => 'Локальне';
 
   @override
@@ -42506,9 +37110,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get reticulumDetailFalse => 'Ні';
-
-  @override
-  String get reticulumDetailNoneSet => 'Не задано';
 
   @override
   String get reticulumDiagSectionReassembly => 'ЗБИРАННЯ';
@@ -42741,10 +37342,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get rnsCompanionEmptyTitle => 'Немає сервісів';
 
   @override
-  String get rnsCompanionEmptyHint =>
-      'Супутник доступний, але ще не має сервісів.';
-
-  @override
   String get rnsCompanionEmptyTagline1 => 'переглядати';
 
   @override
@@ -42825,9 +37422,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get rnsCompanionStatusChecking => 'Перевірка...';
 
   @override
-  String get rnsCompanionStatusConnected => 'Підключено';
-
-  @override
   String rnsCompanionStatusConnectedWithVersion(String version) {
     return 'Підключено - v$version';
   }
@@ -42866,9 +37460,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodedexConstellationTitle => 'Сузір\'я';
-
-  @override
-  String get nodedexConstellationOpen => 'Сузір\'я';
 
   @override
   String get nodedexConstellationOpenTooltip => 'Відкрити граф Сузір\'я';
@@ -42928,9 +37519,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodedexConstellationActionFavourite => 'Додати до улюблених';
-
-  @override
-  String get nodedexConstellationActionUnfavourite => 'Видалити з улюблених';
 
   @override
   String get nodedexConstellationActionMap => 'Переглянути на карті';
@@ -43408,11 +37996,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Попередньо обрано під час надсилання готових повідомлень з вашого Apple Watch. На Watch ви все одно можете щоразу обрати інший канал.';
 
   @override
-  String watchSettingsChannelChipLabel(int n) {
-    return 'Канал $n';
-  }
-
-  @override
   String get watchSettingsAboutTitle => 'Про компаньйона';
 
   @override
@@ -43462,12 +38045,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgMembersSectionAll => 'Учасники';
-
-  @override
-  String get licenseOrgMembersSectionActive => 'Активні учасники';
-
-  @override
-  String get licenseOrgMembersSectionRevoked => 'Відкликані';
 
   @override
   String licenseOrgMembersRevokedTileTitle(String member) {
@@ -43697,9 +38274,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося прийняти запрошення. Спробуйте знову.';
 
   @override
-  String get licenseOrgInviteAcceptInviterNoteLabel => 'Від запрошувача';
-
-  @override
   String get licenseOrgInviteMintAction => 'Запросити учасника';
 
   @override
@@ -43738,9 +38312,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get licenseOrgInviteRegenerateSuccess =>
       'Створено нове посилання · попереднє більше не дійсне';
-
-  @override
-  String get licenseOrgInviteMintProductLabel => 'Продукт місця';
 
   @override
   String get licenseOrgInviteMintSubmit => 'Створити посилання';
@@ -43925,9 +38496,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get licenseOrgAuditFilterAll => 'Усі';
-
-  @override
   String get licenseOrgAuditLogLoadMore => 'Завантажити ще';
 
   @override
@@ -44048,11 +38616,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgOverviewCapacityLabel => 'Місткість';
-
-  @override
-  String licenseOrgOverviewCapacityValue(int count) {
-    return '$count місць';
-  }
 
   @override
   String licenseOrgOverviewCapacityValueUsed(int used, int capacity) {
@@ -44368,10 +38931,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get helpModeNeedHelp => 'Потрібна допомога';
 
   @override
-  String get helpModeAffordanceTooltip =>
-      'Запросити допомогу в довірених вузлів';
-
-  @override
   String get helpModeCreateTitle => 'Запросити допомогу';
 
   @override
@@ -44380,10 +38939,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get helpModeCreateStatusLabel => 'Як ви? (необов\'язково)';
-
-  @override
-  String get helpModeLocationDisclosure =>
-      'Ваше місцезнаходження буде передане помічникам, поки запит активний.';
 
   @override
   String get helpModeSend => 'Надіслати запит про допомогу';
@@ -44646,9 +39201,6 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get helpModeBannerTapToRespond => 'Натисніть, щоб відгукнутися';
 
   @override
   String get helpModeInboxTitle => 'Запити про допомогу';
@@ -44949,9 +39501,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get fleetEmptyTagline => 'Додайте рацію, щоб бачити, у кого що є.';
 
   @override
-  String get fleetRetiredEmpty => 'Немає виведених рацій.';
-
-  @override
   String get fleetAddAction => 'Додати рацію';
 
   @override
@@ -44987,12 +39536,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get fleetCandidateLocalDevice => 'Цей пристрій';
-
-  @override
-  String get fleetAddConfirm => 'Додати до Fleet';
-
-  @override
-  String get fleetLabelName => 'Назва';
 
   @override
   String get fleetLabelTransport => 'Транспорт';

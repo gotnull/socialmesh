@@ -8,9 +8,11 @@ import '../incidents/providers/mesh_incident_providers.dart';
 import '../incidents/widgets/help_mode/incident_help_banner.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../l10n/app_localizations.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -815,11 +817,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                     ? 0.0
                     : MediaQuery.of(context).padding.top,
               ),
-              child: MediaQuery.removePadding(
-                context: context,
+              child: MediaQuery(
                 // Always strip the framework-level top inset — we
                 // manage it ourselves via the AnimatedPadding above.
-                removeTop: true,
+                // The shell Scaffold already consumed the keyboard inset.
+                // Do not restore it from the context above that Scaffold.
+                data: MediaQuery.of(context)
+                    .removePadding(removeTop: true)
+                    .removeViewInsets(removeBottom: true),
                 child: Stack(
                   children: [
                     AnimatedSwitcher(
@@ -2055,8 +2060,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
     }
 
     return Material(
-      color: Colors
-          .transparent, // lint-allow: no-hardcoded-color — transparent is not a color literal
+      color: Colors.transparent, // lint-allow: no-hardcoded-color — transparent is not a color literal
       child: InkWell(
         onTap: () {
           ref.haptics.tabChange();

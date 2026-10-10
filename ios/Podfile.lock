@@ -1218,7 +1218,7 @@ PODS:
   - BoringSSL-GRPC/Interface (0.0.37)
   - camera_avfoundation (0.0.1):
     - Flutter
-  - cloud_firestore (6.9.0):
+  - cloud_firestore (6.10.0):
     - Firebase/Firestore (= 12.19.0)
     - firebase_core
     - Flutter
@@ -1985,7 +1985,7 @@ SPEC CHECKSUMS:
   bonsoir_darwin: 14bd7429acb51db6a8e51f6574ac3b1ea0037a87
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   camera_avfoundation: 968a9a5323c79a99c166ad9d7866bfd2047b5a9b
-  cloud_firestore: c3592a2ab7eab4f4f02232628180048d6a08de01
+  cloud_firestore: 4102ac8059de4e35f2c6d950ed59526fbd4f81f5
   cloud_functions: 905f2759ad7872bf4fc6b8a633ec63670e36484f
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
@@ -2064,7 +2064,7 @@ SPEC CHECKSUMS:
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
   sensors_plus: b70a93b69dafdabd26ce4ac3f4d0529ab9acc4ca
-  share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
+  share_plus: eccd7beb7cea61271aeed1800e8ccb2b952c0c7f
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sign_in_with_apple: 5e34677a4e74c5f42760f41b3bbe05343e84d171
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
