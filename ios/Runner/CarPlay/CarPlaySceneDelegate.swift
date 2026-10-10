@@ -13,6 +13,7 @@
 //
 
 import CarPlay
+import Intents
 
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     private var interfaceController: CPInterfaceController?
@@ -34,6 +35,13 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
         let tabBar = CPTabBarTemplate(templates: [channels, dms])
         interfaceController.setRootTemplate(tabBar, animated: false, completion: nil)
+
+        // Read-back and voice compose from these lists go through the SiriKit
+        // intents, which need Siri authorisation. Asked on first use of
+        // CarPlay rather than at app launch; the system does not prompt again
+        // once the user has decided, and Siri itself offers the prompt if an
+        // intent is used before this has run.
+        INPreferences.requestSiriAuthorization { _ in }
 
         refresh()
     }

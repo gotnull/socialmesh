@@ -29,6 +29,7 @@ import '../../generated/meshtastic/mesh_beacon.pb.dart' as mesh_beacon_pb;
 import '../../core/constants.dart';
 import 'admin_ack_tracker.dart';
 import 'admin_target.dart';
+import 'firmware_satellite_replay.dart';
 import 'mesh_packet_builder.dart';
 import 'mesh_packet_rx_metadata.dart';
 import 'reticulum/reticulum_fragment_event.dart';
@@ -2914,30 +2915,52 @@ class ProtocolService {
       );
     }
 
-    // Emit per-packet telemetry for mesh health analysis
-    _emitPacketTelemetry(packet);
+    // A firmware NodeDB replay is the radio's cached record, not a
+    // reception: it carries no RF metadata of its own and must not count
+    // toward mesh health or rewrite the node's link metrics. Only a usable
+    // rxTime (the radio's last_heard) may advance lastHeard.
+    if (isFirmwareSatelliteReplay(packet)) {
+      if (_replayHeardAt(packet) case final heardAt?) {
+        final node = _nodes[packet.from];
+        if (node != null) {
+          final updatedNode = node.copyWith(
+            lastHeard: _monotonicLastHeard(
+              node.lastHeard,
+              heardAt,
+              nodeNum: packet.from,
+              source: 'nodedb_replay',
+            ),
+          );
+          _nodes[packet.from] = updatedNode;
+          _nodeController.add(updatedNode);
+        }
+      }
+    } else {
+      // Emit per-packet telemetry for mesh health analysis
+      _emitPacketTelemetry(packet);
 
-    // Update lastHeard (and RF metadata) for the sender node.
-    // rxRssi/rxSnr are per-packet RF metrics that tell us how strong
-    // the signal was when our radio received it — but only describe the
-    // link to the immediate transmitter. They are attributed to the sender
-    // node only on a direct (0-hop, non-MQTT) reception (isDirectRf); on a
-    // relayed/MQTT packet they belong to the next hop and are cleared, so
-    // the UI never shows a meaningless signal for a node heard via a hop.
-    // hopCount and viaMqtt are also refreshed so the "hops away" and
-    // MQTT badge stay current as mesh topology changes.
-    _updateNodeLastHeard(
-      packet.from,
-      lastHeard: _resolvePacketLastHeard(
-        packet,
-        existing: _nodes[packet.from]?.lastHeard,
-      ),
-      rxRssi: packet.hasRxRssi() ? packet.rxRssi : null,
-      rxSnr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
-      hopCount: _computeHopCount(packet),
-      viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : null,
-      isDirectRf: _isDirectRfReception(packet),
-    );
+      // Update lastHeard (and RF metadata) for the sender node.
+      // rxRssi/rxSnr are per-packet RF metrics that tell us how strong
+      // the signal was when our radio received it, but only describe the
+      // link to the immediate transmitter. They are attributed to the sender
+      // node only on a direct (0-hop, non-MQTT) reception (isDirectRf); on a
+      // relayed/MQTT packet they belong to the next hop and are cleared, so
+      // the UI never shows a meaningless signal for a node heard via a hop.
+      // hopCount and viaMqtt are also refreshed so the "hops away" and
+      // MQTT badge stay current as mesh topology changes.
+      _updateNodeLastHeard(
+        packet.from,
+        lastHeard: _resolvePacketLastHeard(
+          packet,
+          existing: _nodes[packet.from]?.lastHeard,
+        ),
+        rxRssi: packet.hasRxRssi() ? packet.rxRssi : null,
+        rxSnr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+        hopCount: _computeHopCount(packet),
+        viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : null,
+        isDirectRf: _isDirectRfReception(packet),
+      );
+    }
 
     // Mirror meshtastic-ios `UpdateCoreData.swift:413-415`: every inbound
     // MeshPacket may carry the sender's curve25519 public key in its
@@ -4735,9 +4758,14 @@ class ProtocolService {
       double? channelUtil;
       double? airUtilTx;
       int? uptimeSeconds;
+      var isDeviceMetricsReplay = false;
 
       switch (variant) {
         case telemetry.Telemetry_Variant.deviceMetrics:
+          isDeviceMetricsReplay = isFirmwareReplayOfKind(
+            packet,
+            firmwareReplayKindDeviceMetrics,
+          );
           final deviceMetrics = telem.deviceMetrics;
           batteryLevel = deviceMetrics.hasBatteryLevel()
               ? deviceMetrics.batteryLevel
@@ -4765,25 +4793,70 @@ class ProtocolService {
           // Update node with device metrics
           final existingDeviceNode = _nodes[packet.from];
           if (existingDeviceNode != null) {
-            final updatedDeviceNode = existingDeviceNode.copyWith(
-              batteryLevel: batteryLevel,
-              voltage: voltage,
-              channelUtilization: channelUtil,
-              airUtilTx: airUtilTx,
-              uptimeSeconds: uptimeSeconds,
-              deviceMetricsFromNodeDb: false,
-              metricsTimestamp: sampleTime,
-              lastHeard: _resolvePacketLastHeard(
-                packet,
-                existing: existingDeviceNode.lastHeard,
-              ),
+            final lastHeard = _resolvePacketLastHeard(
+              packet,
+              existing: existingDeviceNode.lastHeard,
             );
+            final MeshNode updatedDeviceNode;
+            if (isDeviceMetricsReplay) {
+              // The radio's cached copy, of unknown age: the same standing
+              // as NodeInfo device metrics. It fills a gap but never
+              // replaces a reading at least as recent, and carries no
+              // sample time, so the history loggers never chart it.
+              final keepKnown = _knowsNewerDeviceMetrics(
+                existingDeviceNode,
+                packet,
+              );
+              AppLogging.protocol(
+                'Telemetry: firmware NodeDB replay of device metrics for '
+                '!${packet.from.toRadixString(16)} '
+                '(rxTime=${packet.rxTime}) '
+                '${keepKnown ? 'ignored, newer metrics known' : 'applied as cached'}',
+              );
+              updatedDeviceNode = keepKnown
+                  ? existingDeviceNode.copyWith(lastHeard: lastHeard)
+                  : existingDeviceNode.copyWith(
+                      batteryLevel: batteryLevel,
+                      voltage: voltage,
+                      channelUtilization: channelUtil,
+                      airUtilTx: airUtilTx,
+                      uptimeSeconds: uptimeSeconds,
+                      deviceMetricsFromNodeDb: true,
+                      lastHeard: lastHeard,
+                    );
+            } else {
+              updatedDeviceNode = existingDeviceNode.copyWith(
+                batteryLevel: batteryLevel,
+                voltage: voltage,
+                channelUtilization: channelUtil,
+                airUtilTx: airUtilTx,
+                uptimeSeconds: uptimeSeconds,
+                deviceMetricsFromNodeDb: false,
+                metricsTimestamp: sampleTime,
+                lastHeard: lastHeard,
+              );
+            }
             _nodes[packet.from] = updatedDeviceNode;
             _nodeController.add(updatedDeviceNode);
           }
           break;
 
         case telemetry.Telemetry_Variant.environmentMetrics:
+          // A replayed record's values are of unknown age and every
+          // environment update is stamped as a sample, so applying one
+          // would chart it at the node's last_heard. Older firmware never
+          // supplied environment metrics from NodeDB either.
+          if (isFirmwareReplayOfKind(
+            packet,
+            firmwareReplayKindEnvironmentMetrics,
+          )) {
+            AppLogging.protocol(
+              'Telemetry: firmware NodeDB replay of environment metrics for '
+              '!${packet.from.toRadixString(16)} '
+              '(rxTime=${packet.rxTime}) ignored',
+            );
+            return;
+          }
           final envMetrics = telem.environmentMetrics;
           if (ProtocolDebugFlags.logTelemetry) {
             AppLogging.protocol(
@@ -5112,8 +5185,11 @@ class ProtocolService {
       }
 
       // Device metrics are now handled in the switch case above
-      // This block is only for creating new nodes if they don't exist
+      // This block is only for creating new nodes if they don't exist.
+      // A NodeDB replay for a node the app does not know is a cached record
+      // the radio kept without its node entry; it is no sighting.
       if (_nodes[packet.from] == null &&
+          !isDeviceMetricsReplay &&
           batteryLevel != null &&
           batteryLevel > 0) {
         AppLogging.protocol(
@@ -5506,6 +5582,41 @@ class ProtocolService {
     }
   }
 
+  // A firmware NodeDB replay's rxTime is the radio's last_heard for the
+  // node, or a boot-relative count when the radio had no clock. Only a
+  // plausible epoch says when the node was heard; there is no "now"
+  // fallback, since the replay is not a reception.
+  static DateTime? _replayHeardAt(pb.MeshPacket packet) {
+    final rxEpoch = packet.rxTime;
+    final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    if (rxEpoch < _minPlausibleEpoch || rxEpoch > nowEpoch + _maxFutureSlack) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(rxEpoch * 1000);
+  }
+
+  // Whether [existing] already holds device metrics at least as recent as
+  // the radio's cached record replayed in [packet]. If the app heard the
+  // node after the radio last did, the radio's record cannot be newer than
+  // what the app has; the NodeInfo path applies the same rule
+  // (nodeDbOlderThanKnown). A replay with no usable time never displaces
+  // known metrics.
+  static bool _knowsNewerDeviceMetrics(
+    MeshNode existing,
+    pb.MeshPacket packet,
+  ) {
+    final hasMetrics =
+        existing.batteryLevel != null ||
+        existing.voltage != null ||
+        existing.channelUtilization != null ||
+        existing.airUtilTx != null ||
+        existing.uptimeSeconds != null;
+    if (!hasMetrics) return false;
+    final heardAt = _replayHeardAt(packet);
+    if (heardAt == null) return true;
+    return existing.lastHeard?.isAfter(heardAt) ?? false;
+  }
+
   /// Resolve the lastHeard timestamp for an inbound mesh packet, applying
   /// the firmware's `rxTime` plus a monotonic guard against [existing].
   ///
@@ -5514,8 +5625,15 @@ class ProtocolService {
   /// (`rxTime == 0` or implausible drift). When a stale buffered packet
   /// reports an rxTime older than the existing lastHeard, the existing
   /// value is preserved so reconnect replay cannot rewind a node's age.
+  /// A firmware NodeDB replay is not a reception, so it never takes the
+  /// `DateTime.now()` fallback: without a usable rxTime it keeps
+  /// [existing], or the 2020 sentinel when nothing is known.
   DateTime _resolvePacketLastHeard(pb.MeshPacket packet, {DateTime? existing}) {
-    final fromPacket = _plausibleTimestamp(packet);
+    final fromPacket = isFirmwareSatelliteReplay(packet)
+        ? _replayHeardAt(packet) ??
+              existing ??
+              DateTime.fromMillisecondsSinceEpoch(_minPlausibleEpoch * 1000)
+        : _plausibleTimestamp(packet);
     return _monotonicLastHeard(
       existing,
       fromPacket,

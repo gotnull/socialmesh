@@ -42,10 +42,6 @@ import os
       UNUserNotificationCenter.current().delegate = self
     }
 
-    // Request Siri authorization so the CarPlay communication SiriKit intents
-    // (send/search/mark-read) can be invoked. No-op if already decided.
-    INPreferences.requestSiriAuthorization { _ in }
-
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
