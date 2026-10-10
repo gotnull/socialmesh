@@ -5,38 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.73.0] - 2026-10-10
-
-### Added
-
-- LoRa settings expose external FEM LNA control separately from SX126x RX boosted gain, with disabled controls when firmware cannot report support or the radio has no controllable FEM.
-
-### Fixed
-
-- Nodes consume the keyboard inset once inside the main shell, avoiding the extra empty space above the keyboard on small screens.
-- Narrow battery-voltage charts use 0.1 V tick intervals where the range permits, tolerate protobuf rounding at interval boundaries, and show voltage labels at full opacity.
-- The node discovery cooldown timer is cancelled when its provider is disposed.
-- The Ukrainian encounter summary no longer contains a duplicate plural branch that the localisation generator discarded.
-
-### Changed
-
-- Updated cloud_firestore, video_player, sensors_plus, cupertino_icons, share_plus, align_positioned, device_info_plus, package_info_plus, xml and url_launcher. XML 7.1 requires Dart 3.13; the minimum SDK now reflects that requirement.
-- Removed 1,577 unused localisation messages and their metadata from all eight locales, regenerated their accessors, and updated tests that referenced retired copy.
-
 ## [1.72.0] - 2026-10-08
 
 ### Added
 
+- LoRa settings expose external FEM LNA control separately from SX126x RX boosted gain, with disabled controls when firmware cannot report support or the radio has no controllable FEM.
 - The LoRa settings screen shows a notice when a US node runs below 500 kHz bandwidth, whether through a preset such as Long Fast or a custom setting. It explains the FCC Part 15.247 minimum for digital modulation systems and notes that Meshtastic 2.8 and later sets up new US nodes on Long Turbo; it does not call the existing configuration illegal.
 - MeshCore radio settings show the same kind of notice when the USA/Canada or USA Arizona preset is active below 500 kHz, and note that radios on different bandwidths cannot hear each other. Custom configurations are not flagged, since MeshCore does not report a region.
 
 ### Changed
 
+- Updated cloud_firestore, video_player, sensors_plus, cupertino_icons, share_plus, align_positioned, device_info_plus, package_info_plus, xml and url_launcher. XML 7.1 requires Dart 3.13; the minimum SDK now reflects that requirement.
+- Removed 1,577 unused localisation messages and their metadata from all eight locales, regenerated their accessors, and updated tests that referenced retired copy.
 - Choosing United States for a radio with no region set now selects Long Turbo (500 kHz) when the radio runs firmware 2.8 or later and lists Long Turbo as available there, matching how the firmware sets up a new US node from its own screen. Older firmware and every other region change keep Long Fast.
 - The Radio Regulations and Radio Parameters help pages describe the US 500 kHz rule for digital modulation systems, the Long Turbo default for new US nodes, and that firmware region limits help with, but do not settle, which settings are permitted.
 
 ### Fixed
 
+- The iOS widget and notification extensions use the app's generated version and build number in every build configuration.
+- Nodes consume the keyboard inset once inside the main shell, avoiding the extra empty space above the keyboard on small screens.
+- Narrow battery-voltage charts use 0.1 V tick intervals where the range permits, tolerate protobuf rounding at interval boundaries, and show voltage labels at full opacity.
+- The node discovery cooldown timer is cancelled when its provider is disposed.
+- The Ukrainian encounter summary no longer contains a duplicate plural branch that the localisation generator discarded.
 - The SIP debug counters, the NodeDex Constellation cards, the Live Activity's whole-network destination, the Complete Pack name in the payment sheet and the invalid invite link screen now follow the app language instead of always showing English.
 - Presence cards show the encounter count and "first seen" age in the app language, with correct plural forms.
 

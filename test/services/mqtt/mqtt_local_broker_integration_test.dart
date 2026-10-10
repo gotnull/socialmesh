@@ -14,7 +14,7 @@
 //     flutter test test/services/mqtt/mqtt_local_broker_integration_test.dart
 //
 // The watchdog test controls the broker with `docker pause` / `docker unpause`
-// on the `socialmesh-emqx` container.
+// on the `socialmesh-emqx` container, or the MQTT_IT_CONTAINER override.
 
 import 'dart:async';
 import 'dart:io';
@@ -31,7 +31,8 @@ void main() {
   const address = 'localhost:1883';
   const topicPrefix = 'msh/2/e';
   const topic = 'msh/2/e/LongFast/!c1a0de01';
-  const container = 'socialmesh-emqx';
+  final container =
+      Platform.environment['MQTT_IT_CONTAINER'] ?? 'socialmesh-emqx';
   final user = Platform.environment['MQTT_IT_USER'] ?? 'gotnull';
   final pass = Platform.environment['MQTT_IT_PASS'] ?? '';
 
