@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/safety/lifecycle_mixin.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/meshtastic/region_metadata.dart';
@@ -89,14 +91,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   bool _applying = false;
 
   /// Listener that closes the screen when the onboarding-flow
-  /// coordinator reaches a terminal state. Required for the
-  /// OnboardingScreen path: that flow pushes RegionSelectionScreen
-  /// via `Navigator.push` and awaits the pop to continue. When the
-  /// coordinator owns the flow, RegionSelection stops self-popping
-  /// inside `_saveRegion` (the coordinator is the only owner of
-  /// completion); without this listener the pushed route would
-  /// strand on screen forever after the coordinator reaches
-  /// `OnboardingReady` / `OnboardingFailed` / etc.
+  /// coordinator reaches a terminal state. The OnboardingScreen path
+  /// pushes RegionSelectionScreen via `Navigator.push`, awaits the pop
+  /// to continue, and blocks back navigation. A successful apply pops
+  /// from `_persistAndDismiss`; this listener is the exit when the flow
+  /// ends some other way (`OnboardingFailed`, pairing invalidated)
+  /// while the Apply button is disabled by a dropped link.
   ///
   /// When RegionSelectionScreen is rendered inline by
   /// `_AppRouter`/`appShellProvider` (no Navigator.push above it),
@@ -253,51 +253,23 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       'region=$_selectedRegion, isInitialSetup=$isInitialSetup',
     );
 
-    if (isInitialSetup) {
-      // The coordinator owns this flow: region writes / reboot /
-      // reconnect / readiness all happen via state-machine listeners.
-      // The screen stays mounted while the coordinator transitions
-      // through writingRegion / awaitingReboot / awaitingReconnect /
-      // awaitingReadiness, and is unmounted by `_AppRouter` when the
-      // coordinator reaches OnboardingReady. No self-pop, no inline
-      // applyRegion, no settings refresh dance.
-      AppLogging.connection(
-        '🌍 RegionSelection: dispatching '
-        'selectRegion(${_selectedRegion!.name}) to coordinator',
-      );
-      ref
-          .read(meshtasticOnboardingFlowProvider.notifier)
-          .selectRegion(_selectedRegion!);
-      // Stay on screen — appShellProvider will route us out when
-      // the coordinator reaches OnboardingReady. _applying remains
-      // true so the overlay keeps showing.
-      return;
-    } else {
-      // ── NON-INITIAL FLOW (MainShell inline OR Settings push) ──
-      // Persist regionConfigured FIRST so MainShell's inline guard
-      // (needsRegionSetup && !regionConfigured) stops re-showing this
-      // screen. Then pop if this was a pushed route (Settings), or do
-      // nothing if inline (MainShell will rebuild). Fire applyRegion
-      // in the background — the notifier manages the full reboot cycle.
-      await _persistAndDismiss(
-        settings: settings,
-        settingsRefresh: settingsRefresh,
-        regionNotifier: regionNotifier,
-        navigator: navigator,
-      );
-    }
+    // Every entry point (onboarding push, MainShell inline, Settings push)
+    // applies through `RegionConfigNotifier.applyRegion`, which owns the
+    // write -> reboot -> reconnect cycle. The onboarding coordinator has
+    // no region phase, so the picker must apply and dismiss itself.
+    await _persistAndDismiss(
+      settings: settings,
+      settingsRefresh: settingsRefresh,
+      regionNotifier: regionNotifier,
+      navigator: navigator,
+    );
   }
 
-  /// Non-initial path: persist setting, fire apply, STAY MOUNTED with
-  /// the Applying overlay until the apply actually completes, then
-  /// dismiss. Previously this path popped synchronously and fired
-  /// applyRegion in the background, which caused the screen to vanish
-  /// the instant the user tapped Save - giving zero feedback that the
-  /// region was actually being written + the device was rebooting.
-  /// The initial-setup path (driven by the onboarding coordinator)
-  /// already stays mounted through the writingRegion / awaitingReboot /
-  /// awaitingReconnect / awaitingReadiness phases; this brings the
-  /// non-initial path in line.
+  /// Persist the setting, apply, and STAY MOUNTED with the Applying
+  /// overlay until the apply actually completes, then dismiss. Popping
+  /// before the apply finished made the screen vanish the instant the
+  /// user tapped Save, with no feedback that the region was being
+  /// written and the device rebooted.
   Future<void> _persistAndDismiss({
     required SettingsService settings,
     required SettingsRefreshNotifier settingsRefresh,

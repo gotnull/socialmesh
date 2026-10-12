@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -212,6 +213,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   /// This fills the gap left by ScannerScreen's isOnboarding early-return
   /// which skips region detection.
   Future<void> _checkAndHandleRegion(NavigatorState navigator) async {
+    // The region picker writes a Meshtastic LoRa config. A MeshCore radio
+    // never emits one, so the check would time out to a null region and
+    // strand the user on a picker that cannot apply anything.
+    if (ref.read(activeProtocolProvider) == ActiveProtocol.meshcore) {
+      AppLogging.app('Onboarding: skipping region check - MeshCore link');
+      return;
+    }
     final protocol = ref.read(protocolServiceProvider);
     var region = protocol.currentRegion;
 

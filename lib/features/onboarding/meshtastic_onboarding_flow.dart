@@ -183,26 +183,6 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
     _transitionTo(OnboardingConnecting(device), reason: 'connect');
   }
 
-  /// Deprecated: this entry point is no longer reachable from
-  /// production code. The region picker on MainShell now writes the
-  /// region directly via `regionConfigProvider.applyRegion()`, which
-  /// owns its own write/reboot/reconnect state machine independently
-  /// of this flow. Kept for binary back-compat with any cached
-  /// imports; transitions the flow to Failed if anyone still calls
-  /// it.
-  @Deprecated(
-    'Region selection is owned by RegionConfigNotifier.applyRegion, '
-    'not by the onboarding flow. This method is dead-end.',
-  )
-  Future<void> selectRegion(
-    config_pbenum.Config_LoRaConfig_RegionCode region,
-  ) async {
-    AppLogging.connection(
-      'ONBOARDING_FLOW: select_region called on deprecated path '
-      'region=${region.name} - no-op',
-    );
-  }
-
   /// User backed out of the region picker (back gesture / cancel).
   /// Transitions to [OnboardingCancelled] which the appShell mapper
   /// routes back to the scanner.
