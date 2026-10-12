@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.73.0] - 2026-10-12
+
+### Changed
+
+- CarPlay asks for Siri permission the first time it is used, rather than at app launch. Read-back and voice replies from the CarPlay lists need it, and people who never use CarPlay are no longer asked at all.
+
+### Fixed
+
+- First-time setup with a MeshCore radio no longer stops on the Meshtastic region picker. MeshCore radios have no Meshtastic region, so setup waited for one, gave up and showed a picker that could not apply anything to the radio, then sat on "Applying..." with back navigation blocked and no way into the app. They skip it now.
+- Choosing a region during first-time setup of a Meshtastic radio with no region set now writes it to the radio, waits for the radio to confirm it, and continues setup. Before, nothing was sent.
+- With Meshtastic 2.8 and later, the telemetry a radio replays from its node database after connecting is treated as a cached record rather than a new reception. It no longer counts toward mesh health, replaces a node's signal readings or a more recent reading, appears in history charts at the time the radio last heard the node, or adds a node the app has not seen.
+
 ## [1.72.0] - 2026-10-08
 
 ### Added
