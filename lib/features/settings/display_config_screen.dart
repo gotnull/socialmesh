@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/settings_primitives.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
@@ -168,13 +173,14 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GlassScaffold(
-      title: context.l10n.displayConfigTitle,
+      title: l10n.displayConfigTitle,
       actions: [
         TextButton(
           onPressed: _isLoading ? null : _saveConfig,
           child: Text(
-            context.l10n.displayConfigSave,
+            l10n.displayConfigSave,
             style: TextStyle(
               color: _isLoading ? SemanticColors.disabled : context.accentColor,
               fontWeight: FontWeight.w600,
@@ -187,61 +193,49 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else
           SliverPadding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _SectionHeader(title: context.l10n.displayConfigSectionScreen),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildScreenSettings(),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(
-                  title: context.l10n.displayConfigSectionTimeCompass,
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+            sliver: SliverList.list(
+              children: [
+                SettingsSectionHeader(title: l10n.displayConfigSectionScreen),
+                _buildScreenTimingCard(),
+                ..._buildScreenToggles(),
+                const SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: l10n.displayConfigSectionTimeCompass,
                 ),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildTimeAndCompassSettings(),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(
-                  title: context.l10n.displayConfigSectionOledType,
-                ),
-                const SizedBox(height: AppTheme.spacing8),
+                ..._buildTimeAndCompassSettings(),
+                const SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(title: l10n.displayConfigSectionOledType),
                 _buildOledTypeSelector(),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(
-                  title: context.l10n.displayConfigSectionUnitsFormat,
+                const SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: l10n.displayConfigSectionUnitsFormat,
                 ),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildUnitsSettings(),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(
-                  title: context.l10n.displayConfigSectionDisplayMode,
+                ..._buildUnitsSettings(),
+                const SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: l10n.displayConfigSectionDisplayMode,
                 ),
-                const SizedBox(height: AppTheme.spacing8),
                 _buildDisplayModeSelector(),
                 const SizedBox(height: AppTheme.spacing32),
-              ]),
+              ],
             ),
           ),
       ],
     );
   }
 
-  Widget _buildScreenSettings() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+  Widget _buildScreenTimingCard() {
+    final l10n = context.l10n;
+    return FieldGroupCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.l10n.displayConfigScreenTimeoutLabel(
+            l10n.displayConfigScreenTimeoutLabel(
               _screenOnSecs == 0
-                  ? context.l10n.displayConfigScreenTimeoutAlwaysOn
-                  : context.l10n.displayConfigScreenTimeoutSeconds(
-                      _screenOnSecs,
-                    ),
+                  ? l10n.displayConfigScreenTimeoutAlwaysOn
+                  : l10n.displayConfigScreenTimeoutSeconds(_screenOnSecs),
             ),
             style: TextStyle(
               color: context.textPrimary,
@@ -249,9 +243,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
               fontWeight: FontWeight.w500,
             ),
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
-            context.l10n.displayConfigScreenTimeoutDesc,
+            l10n.displayConfigScreenTimeoutDesc,
             style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
           SliderTheme(
@@ -266,24 +260,20 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
               max: 300,
               divisions: 30,
               label: _screenOnSecs == 0
-                  ? context.l10n.displayConfigScreenTimeoutAlwaysOn
-                  : context.l10n.displayConfigScreenTimeoutSeconds(
-                      _screenOnSecs,
-                    ),
+                  ? l10n.displayConfigScreenTimeoutAlwaysOn
+                  : l10n.displayConfigScreenTimeoutSeconds(_screenOnSecs),
               onChanged: (value) {
                 setState(() => _screenOnSecs = value.toInt());
               },
             ),
           ),
           Divider(color: context.border),
-          SizedBox(height: AppTheme.spacing8),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
-            context.l10n.displayConfigAutoCarouselLabel(
+            l10n.displayConfigAutoCarouselLabel(
               _autoCarouselSecs == 0
-                  ? context.l10n.displayConfigAutoCarouselDisabled
-                  : context.l10n.displayConfigScreenTimeoutSeconds(
-                      _autoCarouselSecs,
-                    ),
+                  ? l10n.displayConfigAutoCarouselDisabled
+                  : l10n.displayConfigScreenTimeoutSeconds(_autoCarouselSecs),
             ),
             style: TextStyle(
               color: context.textPrimary,
@@ -291,9 +281,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
               fontWeight: FontWeight.w500,
             ),
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
-            context.l10n.displayConfigAutoCarouselDesc,
+            l10n.displayConfigAutoCarouselDesc,
             style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
           SliderTheme(
@@ -308,430 +298,397 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
               max: 60,
               divisions: 12,
               label: _autoCarouselSecs == 0
-                  ? context.l10n.displayConfigAutoCarouselOff
-                  : context.l10n.displayConfigScreenTimeoutSeconds(
-                      _autoCarouselSecs,
-                    ),
+                  ? l10n.displayConfigAutoCarouselOff
+                  : l10n.displayConfigScreenTimeoutSeconds(_autoCarouselSecs),
               onChanged: (value) {
                 setState(() => _autoCarouselSecs = value.toInt());
               },
             ),
           ),
-          Divider(color: context.border),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.screen_rotation,
-            title: context.l10n.displayConfigFlipScreen,
-            subtitle: context.l10n.displayConfigFlipScreenSubtitle,
-            trailing: ThemedSwitch(
-              value: _flipScreen,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _flipScreen = value);
-              },
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.touch_app,
-            title: context.l10n.displayConfigWakeOnTap,
-            subtitle: context.l10n.displayConfigWakeOnTapSubtitle,
-            trailing: ThemedSwitch(
-              value: _wakeOnTapOrMotion,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _wakeOnTapOrMotion = value);
-              },
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.badge,
-            title: context.l10n.displayConfigLongNodeNames,
-            subtitle: context.l10n.displayConfigLongNodeNamesSubtitle,
-            trailing: ThemedSwitch(
-              value: _useLongNodeName,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _useLongNodeName = value);
-              },
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.chat_bubble_outline,
-            title: context.l10n.displayConfigMessageBubbles,
-            subtitle: context.l10n.displayConfigMessageBubblesSubtitle,
-            trailing: ThemedSwitch(
-              value: _enableMessageBubbles,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _enableMessageBubbles = value);
-              },
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildTimeAndCompassSettings() {
+  List<Widget> _buildScreenToggles() {
+    final l10n = context.l10n;
+    return [
+      _buildToggleTile(
+        icon: Icons.screen_rotation,
+        title: l10n.displayConfigFlipScreen,
+        subtitle: l10n.displayConfigFlipScreenSubtitle,
+        value: _flipScreen,
+        onChanged: (value) => _flipScreen = value,
+      ),
+      _buildToggleTile(
+        icon: Icons.touch_app,
+        title: l10n.displayConfigWakeOnTap,
+        subtitle: l10n.displayConfigWakeOnTapSubtitle,
+        value: _wakeOnTapOrMotion,
+        onChanged: (value) => _wakeOnTapOrMotion = value,
+      ),
+      _buildToggleTile(
+        icon: Icons.badge,
+        title: l10n.displayConfigLongNodeNames,
+        subtitle: l10n.displayConfigLongNodeNamesSubtitle,
+        value: _useLongNodeName,
+        onChanged: (value) => _useLongNodeName = value,
+      ),
+      _buildToggleTile(
+        icon: Icons.chat_bubble_outline,
+        title: l10n.displayConfigMessageBubbles,
+        subtitle: l10n.displayConfigMessageBubblesSubtitle,
+        value: _enableMessageBubbles,
+        onChanged: (value) => _enableMessageBubbles = value,
+      ),
+    ];
+  }
+
+  List<Widget> _buildTimeAndCompassSettings() {
+    final l10n = context.l10n;
     final compassOrientations = [
       (
         config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_0,
-        context.l10n.displayConfigDeg0,
+        l10n.displayConfigDeg0,
       ),
       (
         config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_90,
-        context.l10n.displayConfigDeg90,
+        l10n.displayConfigDeg90,
       ),
       (
         config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_180,
-        context.l10n.displayConfigDeg180,
+        l10n.displayConfigDeg180,
       ),
       (
         config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_270,
-        context.l10n.displayConfigDeg270,
+        l10n.displayConfigDeg270,
       ),
       (
         config_pbenum
             .Config_DisplayConfig_CompassOrientation
             .DEGREES_0_INVERTED,
-        context.l10n.displayConfigDeg0Inv,
+        l10n.displayConfigDeg0Inv,
       ),
       (
         config_pbenum
             .Config_DisplayConfig_CompassOrientation
             .DEGREES_90_INVERTED,
-        context.l10n.displayConfigDeg90Inv,
+        l10n.displayConfigDeg90Inv,
       ),
       (
         config_pbenum
             .Config_DisplayConfig_CompassOrientation
             .DEGREES_180_INVERTED,
-        context.l10n.displayConfigDeg180Inv,
+        l10n.displayConfigDeg180Inv,
       ),
       (
         config_pbenum
             .Config_DisplayConfig_CompassOrientation
             .DEGREES_270_INVERTED,
-        context.l10n.displayConfigDeg270Inv,
+        l10n.displayConfigDeg270Inv,
       ),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
+    return [
+      _buildToggleTile(
+        icon: Icons.access_time,
+        title: l10n.displayConfig12hClock,
+        subtitle: l10n.displayConfig12hClockSubtitle,
+        value: _use12hClock,
+        onChanged: (value) => _use12hClock = value,
       ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SettingsTile(
-            icon: Icons.access_time,
-            title: context.l10n.displayConfig12hClock,
-            subtitle: context.l10n.displayConfig12hClockSubtitle,
-            trailing: ThemedSwitch(
-              value: _use12hClock,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _use12hClock = value);
-              },
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          _SettingsTile(
-            icon: Icons.explore,
-            title: context.l10n.displayConfigCompassNorth,
-            subtitle: context.l10n.displayConfigCompassNorthSubtitle,
-            trailing: ThemedSwitch(
-              value: _compassNorthTop,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _compassNorthTop = value);
-              },
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          Divider(color: context.border),
-          SizedBox(height: AppTheme.spacing16),
-          Text(
-            context.l10n.displayConfigCompassOrientation,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            context.l10n.displayConfigCompassOrientationDesc,
-            style: TextStyle(color: context.textSecondary, fontSize: 12),
-          ),
-          SizedBox(height: AppTheme.spacing12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: context.background,
-              borderRadius: BorderRadius.circular(AppTheme.radius8),
-              border: Border.all(color: context.border),
-            ),
-            child:
-                DropdownButton<
-                  config_pbenum.Config_DisplayConfig_CompassOrientation
-                >(
-                  value:
-                      _compassOrientation ??
-                      config_pbenum
-                          .Config_DisplayConfig_CompassOrientation
-                          .DEGREES_0,
-                  isExpanded: true,
-                  underline: SizedBox(),
-                  dropdownColor: context.card,
-                  style: TextStyle(color: context.textPrimary, fontSize: 14),
-                  items: compassOrientations.map((item) {
-                    return DropdownMenuItem(
-                      value: item.$1,
-                      child: Text(item.$2),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    HapticFeedback.selectionClick();
-                    setState(() => _compassOrientation = value);
-                  },
-                ),
-          ),
-        ],
+      _buildToggleTile(
+        icon: Icons.explore,
+        title: l10n.displayConfigCompassNorth,
+        subtitle: l10n.displayConfigCompassNorthSubtitle,
+        value: _compassNorthTop,
+        onChanged: (value) => _compassNorthTop = value,
       ),
-    );
+      FieldGroupCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.displayConfigCompassOrientation,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              l10n.displayConfigCompassOrientationDesc,
+              style: TextStyle(color: context.textSecondary, fontSize: 12),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: context.background,
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                border: Border.all(color: context.border),
+              ),
+              child:
+                  DropdownButton<
+                    config_pbenum.Config_DisplayConfig_CompassOrientation
+                  >(
+                    value:
+                        _compassOrientation ??
+                        config_pbenum
+                            .Config_DisplayConfig_CompassOrientation
+                            .DEGREES_0,
+                    isExpanded: true,
+                    underline: SizedBox(),
+                    dropdownColor: context.card,
+                    style: TextStyle(color: context.textPrimary, fontSize: 14),
+                    items: compassOrientations.map((item) {
+                      return DropdownMenuItem(
+                        value: item.$1,
+                        child: Text(item.$2),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _compassOrientation = value);
+                    },
+                  ),
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 
   Widget _buildOledTypeSelector() {
-    final oledTypes = [
-      (
-        config_pbenum.Config_DisplayConfig_OledType.OLED_AUTO,
-        context.l10n.displayConfigOledAuto,
-        context.l10n.displayConfigOledAutoDesc,
+    final l10n = context.l10n;
+    return _buildOptionGroup<config_pbenum.Config_DisplayConfig_OledType>(
+      title: l10n.displayConfigOledTypeTitle,
+      description: l10n.displayConfigOledTypeDesc,
+      selected:
+          _oledType ?? config_pbenum.Config_DisplayConfig_OledType.OLED_AUTO,
+      onSelected: (value) => _oledType = value,
+      options: [
+        (
+          config_pbenum.Config_DisplayConfig_OledType.OLED_AUTO,
+          l10n.displayConfigOledAuto,
+          l10n.displayConfigOledAutoDesc,
+          null,
+        ),
+        (
+          config_pbenum.Config_DisplayConfig_OledType.OLED_SSD1306,
+          'SSD1306',
+          l10n.displayConfigOledSsd1306Desc,
+          null,
+        ),
+        (
+          config_pbenum.Config_DisplayConfig_OledType.OLED_SH1106,
+          'SH1106',
+          l10n.displayConfigOledSh1106Desc,
+          null,
+        ),
+        (
+          config_pbenum.Config_DisplayConfig_OledType.OLED_SH1107,
+          'SH1107',
+          l10n.displayConfigOledSh1107Desc,
+          null,
+        ),
+        (
+          config_pbenum.Config_DisplayConfig_OledType.OLED_SH1107_128_128,
+          'SH1107 128x128', // lint-allow: hardcoded-string
+          l10n.displayConfigOledSh1107_128Desc,
+          null,
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildUnitsSettings() {
+    final l10n = context.l10n;
+    return [
+      _buildOptionGroup<config_pbenum.Config_DisplayConfig_DisplayUnits>(
+        title: l10n.displayConfigMeasurementUnits,
+        selected:
+            _units ?? config_pbenum.Config_DisplayConfig_DisplayUnits.METRIC,
+        onSelected: (value) => _units = value,
+        options: [
+          (
+            config_pbenum.Config_DisplayConfig_DisplayUnits.METRIC,
+            l10n.displayConfigMetric,
+            l10n.displayConfigMetricDesc,
+            Icons.straighten,
+          ),
+          (
+            config_pbenum.Config_DisplayConfig_DisplayUnits.IMPERIAL,
+            l10n.displayConfigImperial,
+            l10n.displayConfigImperialDesc,
+            Icons.square_foot,
+          ),
+        ],
       ),
-      (
-        config_pbenum.Config_DisplayConfig_OledType.OLED_SSD1306,
-        'SSD1306',
-        context.l10n.displayConfigOledSsd1306Desc,
-      ),
-      (
-        config_pbenum.Config_DisplayConfig_OledType.OLED_SH1106,
-        'SH1106',
-        context.l10n.displayConfigOledSh1106Desc,
-      ),
-      (
-        config_pbenum.Config_DisplayConfig_OledType.OLED_SH1107,
-        'SH1107',
-        context.l10n.displayConfigOledSh1107Desc,
-      ),
-      (
-        config_pbenum.Config_DisplayConfig_OledType.OLED_SH1107_128_128,
-        'SH1107 128x128', // lint-allow: hardcoded-string
-        context.l10n.displayConfigOledSh1107_128Desc,
+      _buildToggleTile(
+        icon: Icons.format_bold,
+        title: l10n.displayConfigBoldHeadings,
+        subtitle: l10n.displayConfigBoldHeadingsSubtitle,
+        value: _headingBold,
+        onChanged: (value) => _headingBold = value,
       ),
     ];
+  }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.displayConfigOledTypeTitle,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing4),
-          Text(
-            context.l10n.displayConfigOledTypeDesc,
-            style: TextStyle(color: context.textSecondary, fontSize: 12),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          ...oledTypes.map((item) {
-            final isSelected =
-                (_oledType ??
-                    config_pbenum.Config_DisplayConfig_OledType.OLED_AUTO) ==
-                item.$1;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _oledType = item.$1);
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    border: Border.all(
-                      color: isSelected ? context.accentColor : context.border,
-                      width: isSelected ? 2 : 1,
-                    ),
-                    color: isSelected
-                        ? context.accentColor.withAlpha(20)
-                        : context.background,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_unchecked,
-                        color: isSelected
-                            ? context.accentColor
-                            : SemanticColors.disabled,
-                      ),
-                      SizedBox(width: AppTheme.spacing12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.$2,
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              item.$3,
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (isSelected)
-                        Icon(Icons.check_circle, color: context.accentColor),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
+  Widget _buildDisplayModeSelector() {
+    final l10n = context.l10n;
+    return _buildOptionGroup<config_pbenum.Config_DisplayConfig_DisplayMode>(
+      title: l10n.displayConfigDisplayModeTitle,
+      description: l10n.displayConfigDisplayModeDesc,
+      selected:
+          _displayMode ??
+          config_pbenum.Config_DisplayConfig_DisplayMode.DEFAULT,
+      onSelected: (value) => _displayMode = value,
+      options: [
+        (
+          config_pbenum.Config_DisplayConfig_DisplayMode.DEFAULT,
+          l10n.displayConfigModeDefault,
+          l10n.displayConfigModeDefaultDesc,
+          Icons.smartphone,
+        ),
+        (
+          config_pbenum.Config_DisplayConfig_DisplayMode.TWOCOLOR,
+          l10n.displayConfigModeTwoColor,
+          l10n.displayConfigModeTwoColorDesc,
+          Icons.contrast,
+        ),
+        (
+          config_pbenum.Config_DisplayConfig_DisplayMode.INVERTED,
+          l10n.displayConfigModeInverted,
+          l10n.displayConfigModeInvertedDesc,
+          Icons.invert_colors,
+        ),
+        (
+          config_pbenum.Config_DisplayConfig_DisplayMode.COLOR,
+          l10n.displayConfigModeColor,
+          l10n.displayConfigModeColorDesc,
+          Icons.palette,
+        ),
+      ],
     );
   }
 
-  Widget _buildUnitsSettings() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.displayConfigMeasurementUnits,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          _buildUnitOption(
-            icon: Icons.straighten,
-            title: context.l10n.displayConfigMetric,
-            subtitle: context.l10n.displayConfigMetricDesc,
-            isSelected:
-                _units ==
-                config_pbenum.Config_DisplayConfig_DisplayUnits.METRIC,
-            onTap: () => setState(
-              () => _units =
-                  config_pbenum.Config_DisplayConfig_DisplayUnits.METRIC,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          _buildUnitOption(
-            icon: Icons.square_foot,
-            title: context.l10n.displayConfigImperial,
-            subtitle: context.l10n.displayConfigImperialDesc,
-            isSelected:
-                _units ==
-                config_pbenum.Config_DisplayConfig_DisplayUnits.IMPERIAL,
-            onTap: () => setState(
-              () => _units =
-                  config_pbenum.Config_DisplayConfig_DisplayUnits.IMPERIAL,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          Divider(color: context.border),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.format_bold,
-            title: context.l10n.displayConfigBoldHeadings,
-            subtitle: context.l10n.displayConfigBoldHeadingsSubtitle,
-            trailing: ThemedSwitch(
-              value: _headingBold,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _headingBold = value);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUnitOption({
+  Widget _buildToggleTile({
     required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SettingsTile(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      trailing: ThemedSwitch(
+        value: value,
+        onChanged: (next) {
+          HapticFeedback.selectionClick();
+          setState(() => onChanged(next));
+        },
+      ),
+    );
+  }
+
+  /// One grouped card holding a single-select list: a title block, then one
+  /// row per option separated by dividers. Each option is
+  /// `(value, title, subtitle, leading icon or null)`.
+  Widget _buildOptionGroup<T>({
+    required String title,
+    String? description,
+    required T selected,
+    required ValueChanged<T> onSelected,
+    required List<(T, String, String, IconData?)> options,
+  }) {
+    return FieldGroupCard(
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                AppTheme.spacing16,
+                AppTheme.spacing16,
+                AppTheme.spacing12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (description != null) ...[
+                    const SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            for (final option in options) ...[
+              Divider(height: 1, color: context.border),
+              _buildOptionRow(
+                icon: option.$4,
+                title: option.$2,
+                subtitle: option.$3,
+                isSelected: option.$1 == selected,
+                onTap: () => setState(() => onSelected(option.$1)),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionRow({
+    required IconData? icon,
     required String title,
     required String subtitle,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
-      child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacing12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(
-            color: isSelected ? context.accentColor : context.border,
-            width: isSelected ? 2 : 1,
-          ),
-          color: isSelected
-              ? context.accentColor.withAlpha(20)
-              : context.background,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing16,
+          vertical: AppTheme.spacing12,
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              color: isSelected ? context.accentColor : SemanticColors.disabled,
-            ),
-            SizedBox(width: AppTheme.spacing12),
-            Icon(
-              icon,
-              color: isSelected ? context.accentColor : context.textSecondary,
-            ),
-            SizedBox(width: AppTheme.spacing12),
+            if (icon != null) ...[
+              Icon(
+                icon,
+                color: isSelected ? context.accentColor : context.textSecondary,
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -755,191 +712,14 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDisplayModeSelector() {
-    final modes = [
-      (
-        config_pbenum.Config_DisplayConfig_DisplayMode.DEFAULT,
-        context.l10n.displayConfigModeDefault,
-        context.l10n.displayConfigModeDefaultDesc,
-        Icons.smartphone,
-      ),
-      (
-        config_pbenum.Config_DisplayConfig_DisplayMode.TWOCOLOR,
-        context.l10n.displayConfigModeTwoColor,
-        context.l10n.displayConfigModeTwoColorDesc,
-        Icons.contrast,
-      ),
-      (
-        config_pbenum.Config_DisplayConfig_DisplayMode.INVERTED,
-        context.l10n.displayConfigModeInverted,
-        context.l10n.displayConfigModeInvertedDesc,
-        Icons.invert_colors,
-      ),
-      (
-        config_pbenum.Config_DisplayConfig_DisplayMode.COLOR,
-        context.l10n.displayConfigModeColor,
-        context.l10n.displayConfigModeColorDesc,
-        Icons.palette,
-      ),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.displayConfigDisplayModeTitle,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            const SizedBox(width: AppTheme.spacing12),
+            Icon(
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: isSelected ? context.accentColor : SemanticColors.disabled,
             ),
-          ),
-          SizedBox(height: AppTheme.spacing4),
-          Text(
-            context.l10n.displayConfigDisplayModeDesc,
-            style: TextStyle(color: context.textSecondary, fontSize: 12),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          ...modes.map((m) {
-            final isSelected = _displayMode == m.$1;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _displayMode = m.$1);
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    border: Border.all(
-                      color: isSelected ? context.accentColor : context.border,
-                      width: isSelected ? 2 : 1,
-                    ),
-                    color: isSelected
-                        ? context.accentColor.withAlpha(20)
-                        : context.background,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        m.$4,
-                        color: isSelected
-                            ? context.accentColor
-                            : context.textSecondary,
-                      ),
-                      SizedBox(width: AppTheme.spacing12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              m.$2,
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              m.$3,
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (isSelected)
-                        Icon(Icons.check_circle, color: context.accentColor),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: context.textSecondary, size: 22),
-        SizedBox(width: AppTheme.spacing12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (subtitle != null)
-                Text(
-                  subtitle!,
-                  style: TextStyle(color: context.textSecondary, fontSize: 12),
-                ),
-            ],
-          ),
-        ),
-        if (trailing != null) trailing!,
-      ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: context.textTertiary,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
+          ],
         ),
       ),
     );
