@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
+
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/edge_fade.dart';
@@ -299,17 +301,15 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
           const SizedBox(height: AppTheme.spacing16),
           Text(
             context.l10n.widgetBuilderCustomDashboardWidgets,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
             context.l10n.widgetBuilderHeroDescription,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.textSecondary),
           ),
         ],
       ),
@@ -388,9 +388,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               const SizedBox(width: AppTheme.spacing6),
               Text(
                 context.l10n.widgetBuilderQuickStartTemplates,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -400,9 +399,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
           padding: const EdgeInsets.only(left: 4),
           child: Text(
             context.l10n.widgetBuilderPrebuiltWidgets,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textTertiary),
           ),
         ),
         const SizedBox(height: AppTheme.spacing12),
@@ -490,9 +488,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               const SizedBox(width: AppTheme.spacing6),
               Text(
                 context.l10n.widgetBuilderWidgetTypes,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -502,9 +499,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
           padding: const EdgeInsets.only(left: 4),
           child: Text(
             context.l10n.widgetBuilderChooseStyle,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textTertiary),
           ),
         ),
         const SizedBox(height: AppTheme.spacing16),
@@ -728,7 +724,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               '[WidgetBuilder] onSave callback - saving new widget: ${schema.id}',
             );
             AppLogging.sync(
-              '[WidgetBuilder] onSave NEW widget — id=${schema.id}, '
+              '[WidgetBuilder] onSave NEW widget - id=${schema.id}, '
               'name=${schema.name}',
             );
             final storage = ref
@@ -813,7 +809,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               '[WidgetBuilder] onSave callback - saving widget: ${updated.id}',
             );
             AppLogging.sync(
-              '[WidgetBuilder] onSave EDIT widget — id=${updated.id}, '
+              '[WidgetBuilder] onSave EDIT widget - id=${updated.id}, '
               'name=${updated.name}',
             );
             final storage = ref
@@ -878,7 +874,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
               '[WidgetBuilder] onSave callback - saving template copy: ${schema.id}',
             );
             AppLogging.sync(
-              '[WidgetBuilder] onSave TEMPLATE COPY — id=${schema.id}, '
+              '[WidgetBuilder] onSave TEMPLATE COPY - id=${schema.id}, '
               'name=${schema.name}',
             );
             final storage = ref
@@ -1080,7 +1076,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
                     // Delete from local storage
                     AppLogging.sync(
-                      '[WidgetBuilder] DELETE widget — id=$schemaId, name=$schemaName',
+                      '[WidgetBuilder] DELETE widget - id=$schemaId, name=$schemaName',
                     );
                     await delStorage?.deleteWidget(schemaId);
                     AppLogging.widgets(

@@ -123,7 +123,7 @@ class OpenSkyService {
     int limit = 30,
   }) async {
     AppLogging.aether(
-      '[OpenSky] searchActiveFlights() via Aether API — query="$query" limit=$limit',
+      '[OpenSky] searchActiveFlights() via Aether API - query="$query" limit=$limit',
     );
     if (query.trim().length < 2) {
       return [];
@@ -182,7 +182,7 @@ class OpenSkyService {
     String callsign,
   ) async {
     AppLogging.aether(
-      '[OpenSky] validateFlightByCallsign() via Aether API — '
+      '[OpenSky] validateFlightByCallsign() via Aether API - '
       'callsign="$callsign"',
     );
 
@@ -304,7 +304,7 @@ class OpenSkyService {
     required DateTime end,
   }) async {
     AppLogging.aether(
-      '[OpenSky] getFlightsDeparting() — airport=$airport '
+      '[OpenSky] getFlightsDeparting() - airport=$airport '
       'begin=${begin.toIso8601String()} end=${end.toIso8601String()}',
     );
     final beginTs = begin.millisecondsSinceEpoch ~/ 1000;
@@ -342,7 +342,7 @@ class OpenSkyService {
   /// — OpenSky batch-processes route data with some delay).
   Future<OpenSkyFlight?> lookupAircraftRoute(String icao24) async {
     AppLogging.aether(
-      '[OpenSky] lookupAircraftRoute() via Aether API — icao24=$icao24',
+      '[OpenSky] lookupAircraftRoute() via Aether API - icao24=$icao24',
     );
 
     final baseUrl = AppUrls.aetherApiUrl;
@@ -407,7 +407,7 @@ class OpenSkyService {
     required DateTime scheduledDeparture,
   }) async {
     AppLogging.aether(
-      '[OpenSky] validateScheduledFlight() — $flightNumber from $departureAirport '
+      '[OpenSky] validateScheduledFlight() - $flightNumber from $departureAirport '
       'at ${scheduledDeparture.toIso8601String()}',
     );
     // First, try to check if it's currently active
@@ -667,7 +667,7 @@ class OpenSkyService {
   Future<FlightPositionData?> getFlightPosition(String callsign) async {
     final cleanCallsign = _normalizeCallsign(callsign);
     AppLogging.aether(
-      '[OpenSky] getFlightPosition() — callsign="$cleanCallsign"',
+      '[OpenSky] getFlightPosition() - callsign="$cleanCallsign"',
     );
 
     final response = await _authenticatedGet(

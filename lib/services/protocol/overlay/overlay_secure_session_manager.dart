@@ -185,7 +185,7 @@ class OverlaySecureSessionManager {
       AppLogging.overlay(
         'SECURE session reset by user linkId=0x'
         '${linkId.toRadixString(16)} '
-        '— next outbound will negotiate fresh keys',
+        '- next outbound will negotiate fresh keys',
       );
     }
     return removed;
@@ -318,7 +318,7 @@ class OverlaySecureSessionManager {
       // and return false so the caller falls back per policy.
       AppLogging.overlay(
         'SECURE seq exhausted linkId=0x${linkId.toRadixString(16)} '
-        '— dropping session; next outbound renegotiates fresh keys',
+        '- dropping session; next outbound renegotiates fresh keys',
       );
       _sessions.remove(linkId);
       return false;

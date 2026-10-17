@@ -30,7 +30,7 @@ class ProfileService {
     _prefs = await SharedPreferences.getInstance();
     await _initAvatarDirectory();
     await _initBannerDirectory();
-    AppLogging.auth('ProfileService: initialize() - ✅ COMPLETE');
+    AppLogging.auth('ProfileService: initialize() - COMPLETE');
   }
 
   Future<void> _initAvatarDirectory() async {
@@ -89,7 +89,7 @@ class ProfileService {
     final json = _preferences.getString(_profileKey);
     if (json == null) {
       AppLogging.auth(
-        'ProfileService: getProfile() - ❌ NO PROFILE FOUND (key missing)',
+        'ProfileService: getProfile() - NO PROFILE FOUND (key missing)',
       );
       return null;
     }
@@ -97,12 +97,12 @@ class ProfileService {
     try {
       final profile = UserProfile.fromJsonString(json);
       AppLogging.auth(
-        'ProfileService: getProfile() - ✅ Found profile: id=${profile.id}, displayName=${profile.displayName}',
+        'ProfileService: getProfile() - Found profile: id=${profile.id}, displayName=${profile.displayName}',
       );
       return profile;
     } catch (e) {
       AppLogging.auth(
-        'ProfileService: getProfile() - ❌ ERROR parsing profile: $e',
+        'ProfileService: getProfile() - ERROR parsing profile: $e',
       );
       return null;
     }
@@ -114,7 +114,7 @@ class ProfileService {
       'ProfileService: saveProfile() - Saving: id=${profile.id}, displayName=${profile.displayName}, isSynced=${profile.isSynced}',
     );
     await _preferences.setString(_profileKey, profile.toJsonString());
-    AppLogging.auth('ProfileService: saveProfile() - ✅ SAVED');
+    AppLogging.auth('ProfileService: saveProfile() - SAVED');
   }
 
   /// Delete the user profile
@@ -123,7 +123,7 @@ class ProfileService {
     await _preferences.remove(_profileKey);
     await _clearAvatarImages();
     await _clearBannerImages();
-    AppLogging.auth('ProfileService: deleteProfile() - ✅ DELETED');
+    AppLogging.auth('ProfileService: deleteProfile() - DELETED');
   }
 
   /// Check if a profile exists
@@ -141,14 +141,14 @@ class ProfileService {
       // Migrate legacy "meshuser" name to "Guest" for unsigned-out users
       if (existing.displayName == 'meshuser' && !existing.isSynced) {
         AppLogging.auth(
-          'ProfileService: getOrCreateProfile() - 🔄 Migrating legacy meshuser to Guest',
+          'ProfileService: getOrCreateProfile() - Migrating legacy meshuser to Guest',
         );
         final migrated = existing.copyWith(displayName: 'Guest');
         await saveProfile(migrated);
         return migrated;
       }
       AppLogging.auth(
-        'ProfileService: getOrCreateProfile() - ✅ Returning existing: ${existing.displayName}',
+        'ProfileService: getOrCreateProfile() - Returning existing: ${existing.displayName}',
       );
       return existing;
     }
@@ -159,7 +159,7 @@ class ProfileService {
     final guest = UserProfile.guest();
     await saveProfile(guest);
     AppLogging.auth(
-      'ProfileService: getOrCreateProfile() - ✅ Created guest: id=${guest.id}',
+      'ProfileService: getOrCreateProfile() - Created guest: id=${guest.id}',
     );
     return guest;
   }

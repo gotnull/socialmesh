@@ -87,24 +87,22 @@ final remotePresenceUpdatesProvider =
 
 /// Provider for a specific node's extended presence info.
 /// Rebuilds reactively when remote presence updates arrive.
-final nodeExtendedPresenceProvider = Provider.family<ExtendedPresenceInfo?, int>((
-  ref,
-  nodeNum,
-) {
-  // Ensure service is initialized by depending on init provider
-  ref.watch(extendedPresenceInitProvider);
-  // Watch updates stream for live reactivity - rebuild when any update arrives
-  // Only trigger rebuild for THIS node's updates
-  ref.listen(remotePresenceUpdatesProvider, (_, next) {
-    next.whenData((update) {
-      if (update.$1 == nodeNum) {
-        ref.invalidateSelf();
-      }
+final nodeExtendedPresenceProvider =
+    Provider.family<ExtendedPresenceInfo?, int>((ref, nodeNum) {
+      // Ensure service is initialized by depending on init provider
+      ref.watch(extendedPresenceInitProvider);
+      // Watch updates stream for live reactivity - rebuild when any update arrives
+      // Only trigger rebuild for THIS node's updates
+      ref.listen(remotePresenceUpdatesProvider, (_, next) {
+        next.whenData((update) {
+          if (update.$1 == nodeNum) {
+            ref.invalidateSelf();
+          }
+        });
+      });
+      final service = ref.watch(extendedPresenceServiceProvider);
+      return service.getRemotePresence(nodeNum);
     });
-  });
-  final service = ref.watch(extendedPresenceServiceProvider);
-  return service.getRemotePresence(nodeNum);
-});
 
 @immutable
 class NodePresence {
@@ -250,14 +248,10 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
         _startTimer();
         // Recompute immediately so the UI has fresh presence on resume.
         _recompute();
-        AppLogging.debug(
-          '🔋 Presence: periodic timer resumed (app foregrounded)',
-        );
+        AppLogging.debug('Presence: periodic timer resumed (app foregrounded)');
       } else {
         _stopTimer();
-        AppLogging.debug(
-          '🔋 Presence: periodic timer paused (app backgrounded)',
-        );
+        AppLogging.debug('Presence: periodic timer paused (app backgrounded)');
       }
     });
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -296,7 +297,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
 
   Future<void> _sendTapback(String emoji) async {
     AppLogging.messages(
-      '🏷️ _sendTapback START: emoji=$emoji, '
+      '_sendTapback START: emoji=$emoji, '
       'messageId=${widget.message.id}, packetId=${widget.message.packetId}',
     );
 
@@ -307,20 +308,18 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
     final navigator = Navigator.of(context);
 
     if (myNodeNum == null) {
-      AppLogging.messages('🏷️ _sendTapback ABORT: myNodeNum is null');
+      AppLogging.messages('_sendTapback ABORT: myNodeNum is null');
       return;
     }
 
     AppLogging.messages(
-      '🏷️ _sendTapback: myNodeNum=$myNodeNum, '
+      '_sendTapback: myNodeNum=$myNodeNum, '
       'replyPacketId=${widget.message.packetId}',
     );
 
     final replyPacketId = widget.message.packetId;
     if (replyPacketId == null) {
-      AppLogging.messages(
-        '🏷️ _sendTapback ABORT: parent message has no packetId',
-      );
+      AppLogging.messages('_sendTapback ABORT: parent message has no packetId');
       navigator.pop();
       showErrorSnackBar(context, context.l10n.messageContextMenuTapbackFailed);
       return;
@@ -338,7 +337,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
       // be false to avoid the message being stuck in pending status forever.
       final isBroadcast = toNode == 0xFFFFFFFF;
       AppLogging.messages(
-        '🏷️ _sendTapback: sending over mesh — to=$toNode, '
+        '_sendTapback: sending over mesh - to=$toNode, '
         'channel=${widget.channelIndex ?? 0}, isBroadcast=$isBroadcast, '
         'replyId=$replyPacketId',
       );
@@ -352,7 +351,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
         source: MessageSource.tapback,
       );
 
-      AppLogging.messages('🏷️ _sendTapback: mesh send SUCCESS');
+      AppLogging.messages('_sendTapback: mesh send SUCCESS');
 
       // Check mounted after await before any UI operations
       if (!mounted) return;
@@ -361,7 +360,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
       navigator.pop();
       showSuccessSnackBar(context, context.l10n.messageContextMenuTapbackSent);
     } catch (e) {
-      AppLogging.messages('🏷️ _sendTapback: mesh send FAILED: $e');
+      AppLogging.messages('_sendTapback: mesh send FAILED: $e');
       if (!mounted) return;
 
       navigator.pop();
@@ -482,9 +481,8 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
                   Expanded(
                     child: Text(
                       context.l10n.messageContextMenuTransport(
-                        classifyTransport(
-                          widget.message.viaMqtt,
-                        ).localizedLabel(context.l10n),
+                        classifyTransport(widget.message.viaMqtt)
+                            .localizedLabel(context.l10n),
                       ),
                       style: TextStyle(
                         fontSize: 14,
@@ -518,8 +516,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
                   if (widget.message.rxRssi != null)
                     _DetailChip(
                       icon: Icons.cell_tower,
-                      label:
-                          'RSSI ${widget.message.rxRssi} dBm', // lint-allow: hardcoded-string
+                      label: 'RSSI ${widget.message.rxRssi} dBm', // lint-allow: hardcoded-string
                     ),
                 ],
               ),

@@ -154,8 +154,7 @@ QaScenario _discoveryDirProfile() {
       QaStep(
         description:
             'Decode REQUEST to echo.test', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'msg_type=0x10, service=0xffff0001, 4B payload', // lint-allow: hardcoded-string
+        expectedOutcome: 'msg_type=0x10, service=0xffff0001, 4B payload', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(requestBytes);
           return frame != null &&
@@ -194,8 +193,7 @@ QaScenario _meetupFlow() {
     steps: [
       QaStep(
         description: 'Create meetup request', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'REQUEST to meetup.v1, action=create', // lint-allow: hardcoded-string
+        expectedOutcome: 'REQUEST to meetup.v1, action=create', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(createBytes);
           return frame != null &&
@@ -256,8 +254,7 @@ QaScenario _boardFlow() {
       QaStep(
         description:
             'Post short message to board.v1', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'REQUEST to board.v1, action=post_short', // lint-allow: hardcoded-string
+        expectedOutcome: 'REQUEST to board.v1, action=post_short', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(postBytes);
           return frame != null &&
@@ -268,8 +265,7 @@ QaScenario _boardFlow() {
       ),
       QaStep(
         description: 'List recent posts', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'REQUEST to board.v1, action=list_recent', // lint-allow: hardcoded-string
+        expectedOutcome: 'REQUEST to board.v1, action=list_recent', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(listBytes);
           return frame != null &&
@@ -280,8 +276,7 @@ QaScenario _boardFlow() {
       ),
       QaStep(
         description: 'Receive list response', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'RESPONSE from board.v1 with post data', // lint-allow: hardcoded-string
+        expectedOutcome: 'RESPONSE from board.v1 with post data', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(listRespBytes);
           return frame != null &&
@@ -314,8 +309,7 @@ QaScenario _timeoutRetry() {
     name: 'Timeout -> Retry', // lint-allow: hardcoded-string
     steps: [
       QaStep(
-        description:
-            'Send request to unavailable service', // lint-allow: hardcoded-string
+        description: 'Send request to unavailable service', // lint-allow: hardcoded-string
         expectedOutcome:
             'REQUEST encodes correctly', // lint-allow: hardcoded-string
         verify: (_) async {
@@ -325,8 +319,7 @@ QaScenario _timeoutRetry() {
       ),
       QaStep(
         description: 'Decode ERROR response', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'ERROR with status NOT_FOUND, TLV status_code=1', // lint-allow: hardcoded-string
+        expectedOutcome: 'ERROR with status NOT_FOUND, TLV status_code=1', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(errorBytes);
           if (frame == null || frame.msgType != MrrpMessageType.error) {
@@ -381,8 +374,7 @@ QaScenario _duplicateHandling() {
       QaStep(
         description:
             'Duplicate REQUEST (same bytes)', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'Decode succeeds (dedup is dispatcher-level)', // lint-allow: hardcoded-string
+        expectedOutcome: 'Decode succeeds (dedup is dispatcher-level)', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(requestBytes);
           return frame != null && frame.requestId == 0x42;
@@ -391,8 +383,7 @@ QaScenario _duplicateHandling() {
       QaStep(
         description:
             'RESPONSE for same request_id', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'RESPONSE decode OK, request_id matches', // lint-allow: hardcoded-string
+        expectedOutcome: 'RESPONSE decode OK, request_id matches', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(responseBytes);
           return frame != null &&
@@ -424,8 +415,7 @@ QaScenario _errorInjection() {
     name: 'Error Injection', // lint-allow: hardcoded-string
     steps: [
       QaStep(
-        description:
-            'Send echo.test request with echo_error', // lint-allow: hardcoded-string
+        description: 'Send echo.test request with echo_error', // lint-allow: hardcoded-string
         expectedOutcome:
             'REQUEST to echo.test decodes OK', // lint-allow: hardcoded-string
         verify: (_) async {
@@ -436,10 +426,8 @@ QaScenario _errorInjection() {
         },
       ),
       QaStep(
-        description:
-            'Verify ERROR response with status code', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'ERROR decode OK, has status_code TLV', // lint-allow: hardcoded-string
+        description: 'Verify ERROR response with status code', // lint-allow: hardcoded-string
+        expectedOutcome: 'ERROR decode OK, has status_code TLV', // lint-allow: hardcoded-string
         verify: (_) async {
           final frame = MrrpCodec.decode(errorBytes);
           if (frame == null || frame.msgType != MrrpMessageType.error) {
@@ -451,8 +439,7 @@ QaScenario _errorInjection() {
         },
       ),
       QaStep(
-        description:
-            'Verify error service_id matches request', // lint-allow: hardcoded-string
+        description: 'Verify error service_id matches request', // lint-allow: hardcoded-string
         expectedOutcome:
             'ERROR service_id = 0xffff0001', // lint-allow: hardcoded-string
         verify: (_) async {
@@ -601,7 +588,7 @@ QaScenario _simPeerRoundTrip() {
           final engine = ref.read(mrrpEngineProvider);
           if (engine == null) {
             AppLogging.mrrpHarness(
-              'MRRP_QA: step3 FAIL — engine is null', // lint-allow: hardcoded-string
+              'MRRP_QA: step3 FAIL - engine is null', // lint-allow: hardcoded-string
             );
             return false;
           }
@@ -629,7 +616,7 @@ QaScenario _simPeerRoundTrip() {
 
             if (!passed) {
               AppLogging.mrrpHarness(
-                'MRRP_QA: step3 FAIL — '
+                'MRRP_QA: step3 FAIL - '
                 'isSuccess=${result.isSuccess}, '
                 'status=${result.status.name}, '
                 'hasResponse=${result.response != null}, '
@@ -640,7 +627,7 @@ QaScenario _simPeerRoundTrip() {
             return passed;
           } on Object catch (e) {
             AppLogging.mrrpHarness(
-              'MRRP_QA: step3 EXCEPTION — $e', // lint-allow: hardcoded-string
+              'MRRP_QA: step3 EXCEPTION - $e', // lint-allow: hardcoded-string
             );
             return false;
           }
@@ -649,8 +636,7 @@ QaScenario _simPeerRoundTrip() {
       QaStep(
         description:
             'Counters record the round-trip', // lint-allow: hardcoded-string
-        expectedOutcome:
-            'requestsSent > 0 and responsesReceived > 0', // lint-allow: hardcoded-string
+        expectedOutcome: 'requestsSent > 0 and responsesReceived > 0', // lint-allow: hardcoded-string
         verify: (ref) async {
           if (ref == null) return false;
           final counters = ref.read(mrrpCountersProvider);

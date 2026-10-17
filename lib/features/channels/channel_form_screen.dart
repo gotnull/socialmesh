@@ -3,11 +3,13 @@
 // lint-allow: haptic-feedback — GestureDetector is for keyboard dismissal, not user interaction
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -131,11 +133,11 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
       // positionPrecision: 0 = disabled, 12-15 = approximate, 32 = precise
       final precision = channel.positionPrecision;
       AppLogging.channels(
-        '📡 ChannelFormScreen: channel ${channel.index} positionPrecision=$precision',
+        'ChannelFormScreen: channel ${channel.index} positionPrecision=$precision',
       );
       _positionEnabled = precision > 0;
       AppLogging.channels(
-        '📡 ChannelFormScreen: _positionEnabled=$_positionEnabled',
+        'ChannelFormScreen: _positionEnabled=$_positionEnabled',
       );
       if (precision == 32) {
         _preciseLocation = true;
@@ -152,7 +154,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
         _positionPrecision = 14; // Default slider position
       }
       AppLogging.channels(
-        '📡 ChannelFormScreen: _preciseLocation=$_preciseLocation, _positionPrecision=$_positionPrecision',
+        'ChannelFormScreen: _preciseLocation=$_preciseLocation, _positionPrecision=$_positionPrecision',
       );
     } else {
       _selectedKeySize = KeySize.bit256;
@@ -949,9 +951,8 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen>
                 const SizedBox(height: AppTheme.spacing2),
                 Text(
                   subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

@@ -47,7 +47,7 @@ class TakCertificateManager {
     AppLogging.tak('Certificate manager initializing');
     final existingCert = await _storage.read(key: _caCertKey);
     if (existingCert == null) {
-      AppLogging.tak('No CA found — generating root CA');
+      AppLogging.tak('No CA found - generating root CA');
       await _generateRootCa();
     } else {
       AppLogging.tak('Found existing CA in secure storage');
@@ -125,7 +125,7 @@ class TakCertificateManager {
     );
     if (DateTime.now().isAfter(renewBefore)) {
       AppLogging.tak(
-        'CA expiry within $renewalThresholdDays days — regenerating',
+        'CA expiry within $renewalThresholdDays days - regenerating',
       );
       await _generateRootCa();
     }

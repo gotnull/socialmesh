@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/logging.dart';
+
 import 'package:socialmesh/l10n/app_localizations.dart';
+
 import 'deep_link_types.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 AppLocalizations get _l10n => safeL10n();
@@ -27,15 +30,13 @@ class DeepLinkRouter {
   /// arguments, and any requirements/fallback info.
   DeepLinkRouteResult route(ParsedDeepLink link) {
     AppLogging.qr(
-      '🔗 Router: Routing ${link.type} link, valid=${link.isValid}, '
+      'Router: Routing ${link.type} link, valid=${link.isValid}, '
       'uri=${link.originalUri}',
     );
 
     // Invalid links go to fallback with error message
     if (!link.isValid) {
-      AppLogging.qr(
-        '🔗 Router: Invalid link - errors=${link.validationErrors}',
-      );
+      AppLogging.qr('Router: Invalid link - errors=${link.validationErrors}');
       return DeepLinkRouteResult(
         routeName: '/main',
         fallbackMessage: link.validationErrors.isNotEmpty
@@ -62,7 +63,7 @@ class DeepLinkRouter {
     };
 
     AppLogging.qr(
-      '🔗 Router: Result - route=${result.routeName}, '
+      'Router: Result - route=${result.routeName}, '
       'args=${result.arguments}, requiresDevice=${result.requiresDevice}',
     );
     return result;
@@ -158,11 +159,11 @@ class DeepLinkRouter {
   /// Route a profile deep link.
   DeepLinkRouteResult _routeProfile(ParsedDeepLink link) {
     AppLogging.qr(
-      '🔗 Router: _routeProfile - displayName=${link.profileDisplayName}',
+      'Router: _routeProfile - displayName=${link.profileDisplayName}',
     );
 
     if (link.profileDisplayName == null) {
-      AppLogging.qr('🔗 Router: ERROR - Missing profile display name');
+      AppLogging.qr('Router: ERROR - Missing profile display name');
       return DeepLinkRouteResult(
         routeName: '/main',
         fallbackMessage: _l10n.deepLinkInvalidProfileLink,

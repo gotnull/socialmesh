@@ -483,7 +483,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
 
       if (pngBytes == null) {
         AppLogging.nodeDex(
-          'Share failed — card image capture returned null '
+          'Share failed - card image capture returned null '
           'for node ${widget.entry.nodeNum}',
         );
         showErrorSnackBar(context, context.l10n.nodedexShareCardImageFailed);
@@ -745,7 +745,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
 
       final renderObject = _captureKey.currentContext?.findRenderObject();
       if (renderObject == null) {
-        AppLogging.nodeDex('Capture failed — render object is null');
+        AppLogging.nodeDex('Capture failed - render object is null');
         return null;
       }
 
@@ -759,7 +759,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
       final image = await boundary.toImage(pixelRatio: _capturePixelRatio);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
-        AppLogging.nodeDex('Capture failed — toByteData returned null');
+        AppLogging.nodeDex('Capture failed - toByteData returned null');
         return null;
       }
 

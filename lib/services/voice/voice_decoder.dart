@@ -22,7 +22,7 @@ abstract final class VoiceDecoder {
   /// plays back messages encoded at any supported bitrate.
   static Future<Uint8List?> decode(Uint8List c2Data) async {
     if (!Codec2Bindings.isAvailable) {
-      AppLogging.voice('Codec2 native library not available — cannot decode');
+      AppLogging.voice('Codec2 native library not available - cannot decode');
       return null;
     }
     if (c2Data.length < VoiceConstants.headerSize) {

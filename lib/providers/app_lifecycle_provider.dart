@@ -45,7 +45,7 @@ class AppLifecycleNotifier extends Notifier<bool> {
 
     state = isForeground;
     AppLogging.debug(
-      '🔋 AppLifecycle: ${isForeground ? "FOREGROUND" : "BACKGROUND"} '
+      'AppLifecycle: ${isForeground ? "FOREGROUND" : "BACKGROUND"} '
       '(state=$lifecycleState)',
     );
   }

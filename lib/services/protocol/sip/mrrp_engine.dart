@@ -269,7 +269,7 @@ class MrrpEngine {
 
       case MrrpMessageType.eventReserved:
         AppLogging.mrrp(
-          'MRRP_RX: eventReserved — ignoring '
+          'MRRP_RX: eventReserved - ignoring '
           '(reserved for future use)', // lint-allow: hardcoded-string
         );
     }
@@ -327,7 +327,7 @@ class MrrpEngine {
     // Privacy gate: reject all inbound requests when not discoverable.
     if (!isServicingEnabled) {
       AppLogging.mrrp(
-        'MRRP_ENGINE: inbound REQUEST dropped — '
+        'MRRP_ENGINE: inbound REQUEST dropped - '
         'servicing disabled (discoverable=off)', // lint-allow: hardcoded-string
       );
       return;
@@ -413,7 +413,7 @@ class MrrpEngine {
     final send = onSend;
     if (send == null) {
       AppLogging.mrrp(
-        'MRRP_TX: no send callback — '
+        'MRRP_TX: no send callback - '
         'dropping', // lint-allow: hardcoded-string
       );
       return false;

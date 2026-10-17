@@ -364,7 +364,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     if (sig != _lastLogSignature) {
       _lastLogSignature = sig;
       AppLogging.sip(
-        'SIP_HUB: build — enabled=$sipEnabled, peers=$peerCount, '
+        'SIP_HUB: build - enabled=$sipEnabled, peers=$peerCount, '
         'sessions=${sessions.length}, '
         'pendingRequests=${pendingRequestNodeIds.length}', // lint-allow: hardcoded-string
       );
@@ -995,7 +995,7 @@ class _IncomingRequestTile extends ConsumerWidget {
 
     AppLogging.sip(
       'SIP_HUB: Block confirmed for '
-      'peer=0x${peerNodeId.toRadixString(16)} — silent drop, '
+      'peer=0x${peerNodeId.toRadixString(16)} - silent drop, '
       'no HS_DECLINE',
     );
     // Persist the block first so any in-flight or retransmitted

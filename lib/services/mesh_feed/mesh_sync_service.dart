@@ -73,7 +73,7 @@ class MeshSyncService {
     AppLogging.meshFeed(
       'sync peer registered: $peerId via ${transport.name} '
       '(cursor: ${existingCursor ?? 'none'}'
-      '${cursorAfter != existingCursor ? ' → ${cursorAfter ?? 'none'} WARNING: cursor changed!' : ' preserved'})',
+      '${cursorAfter != existingCursor ? ' -> ${cursorAfter ?? 'none'} WARNING: cursor changed!' : ' preserved'})',
     );
   }
 
@@ -126,7 +126,7 @@ class MeshSyncService {
     // Verify the write persisted.
     final persisted = await _db.getSyncCursorSeq(peerId);
     AppLogging.meshFeed(
-      'sync ack OK: peer=$peerId cursor ${current ?? 0} → $cursorSeq'
+      'sync ack OK: peer=$peerId cursor ${current ?? 0} -> $cursorSeq'
       '${persisted != cursorSeq ? ' WARNING: readback=${persisted ?? 'none'}' : ''}',
     );
   }

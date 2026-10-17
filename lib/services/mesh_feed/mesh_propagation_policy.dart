@@ -83,14 +83,16 @@ class MeshPropagationPolicy {
 
     // 1. Expired posts are never propagated.
     if (timestamp.isAfter(post.expiresAt)) {
-      AppLogging.meshFeed('propagation DENIED post=$postShort… reason=expired');
+      AppLogging.meshFeed(
+        'propagation DENIED post=$postShort... reason=expired',
+      );
       return PropagationDecision.deniedExpired;
     }
 
     // 2. localOnly posts are never forwarded beyond direct peers.
     if (post.propagation == MeshPostPropagation.localOnly) {
       AppLogging.meshFeed(
-        'propagation DENIED post=$postShort… reason=localOnly',
+        'propagation DENIED post=$postShort... reason=localOnly',
       );
       return PropagationDecision.deniedLocalOnly;
     }
@@ -99,7 +101,7 @@ class MeshPropagationPolicy {
     if (post.propagation == MeshPostPropagation.conservative &&
         !config.allowConservativeOnLora) {
       AppLogging.meshFeed(
-        'propagation DENIED post=$postShort… reason=conservative',
+        'propagation DENIED post=$postShort... reason=conservative',
       );
       return PropagationDecision.deniedConservative;
     }
@@ -107,7 +109,7 @@ class MeshPropagationPolicy {
     // 4. Already rebroadcast from this device.
     if (post.loraRebroadcastAtMs != null) {
       AppLogging.meshFeed(
-        'propagation DENIED post=$postShort… reason=alreadyRebroadcast',
+        'propagation DENIED post=$postShort... reason=alreadyRebroadcast',
       );
       return PropagationDecision.deniedAlreadyRebroadcast;
     }
@@ -116,7 +118,7 @@ class MeshPropagationPolicy {
     final contentBytes = utf8.encode(post.content);
     if (contentBytes.length > config.loraContentBudget) {
       AppLogging.meshFeed(
-        'propagation DENIED post=$postShort… '
+        'propagation DENIED post=$postShort... '
         'reason=overBudget (${contentBytes.length}/${config.loraContentBudget}B)',
       );
       return PropagationDecision.deniedOverBudget;
@@ -128,14 +130,14 @@ class MeshPropagationPolicy {
     final ageMs = timestamp.difference(createdAt).inMilliseconds;
     if (ttlMs > 0 && ageMs > ttlMs * config.maxAgeFraction) {
       AppLogging.meshFeed(
-        'propagation DENIED post=$postShort… '
+        'propagation DENIED post=$postShort... '
         'reason=tooOld (age=${ageMs}ms, max=${(ttlMs * config.maxAgeFraction).round()}ms)',
       );
       return PropagationDecision.deniedTooOld;
     }
 
     AppLogging.meshFeed(
-      'propagation ELIGIBLE post=$postShort… '
+      'propagation ELIGIBLE post=$postShort... '
       '${contentBytes.length}B age=${ageMs}ms',
     );
     return PropagationDecision.eligible;

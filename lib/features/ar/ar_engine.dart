@@ -138,7 +138,7 @@ class AREngine {
       // Initialize calibration service
       await _calibration.initialize();
       AppLogging.app(
-        '[AREngine] Calibration initialized - FOV: ${_calibration.state.horizontalFov.toStringAsFixed(1)}°x${_calibration.state.verticalFov.toStringAsFixed(1)}°',
+        '[AREngine] Calibration initialized - FOV: ${_calibration.state.horizontalFov.toStringAsFixed(1)}degx${_calibration.state.verticalFov.toStringAsFixed(1)}deg',
       );
 
       // Start high-frequency sensor streams
@@ -894,8 +894,7 @@ class AREngine {
           ARAlert(
             type: ARAlertType.lowBattery,
             nodeNum: tracked.nodeNum,
-            message:
-                'Low battery: ${lastNode.batteryLevel}%', // lint-allow: hardcoded-string
+            message: 'Low battery: ${lastNode.batteryLevel}%', // lint-allow: hardcoded-string
             severity: lastNode.batteryLevel! < 10
                 ? ARAlertSeverity.critical
                 : ARAlertSeverity.warning,

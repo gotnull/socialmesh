@@ -101,34 +101,34 @@ class DeepLinkService {
 
   /// Initialize deep link handling
   Future<void> initialize() async {
-    AppLogging.debug('🔗 Initializing deep link service');
+    AppLogging.debug('Initializing deep link service');
 
     // Handle initial link (app opened via deep link)
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
-        AppLogging.debug('🔗 Initial deep link: $initialUri');
+        AppLogging.debug('Initial deep link: $initialUri');
         final parsed = await parseLink(initialUri.toString());
         if (parsed != null) {
           _linkController.add(parsed);
         }
       }
     } catch (e) {
-      AppLogging.debug('🔗 Error getting initial link: $e');
+      AppLogging.debug('Error getting initial link: $e');
     }
 
     // Listen for incoming links while app is running
     await _linkSubscription?.cancel();
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (Uri uri) async {
-        AppLogging.debug('🔗 Received deep link: $uri');
+        AppLogging.debug('Received deep link: $uri');
         final parsed = await parseLink(uri.toString());
         if (parsed != null) {
           _linkController.add(parsed);
         }
       },
       onError: (error) {
-        AppLogging.debug('🔗 Deep link stream error: $error');
+        AppLogging.debug('Deep link stream error: $error');
       },
     );
   }
@@ -146,13 +146,13 @@ class DeepLinkService {
 
       // Handle socialmesh:// scheme
       if (uri.scheme != 'socialmesh') {
-        AppLogging.debug('🔗 Unknown scheme: ${uri.scheme}');
+        AppLogging.debug('Unknown scheme: ${uri.scheme}');
         return null;
       }
 
       final pathSegments = uri.pathSegments;
       if (pathSegments.isEmpty) {
-        AppLogging.debug('🔗 Empty path in deep link');
+        AppLogging.debug('Empty path in deep link');
         return null;
       }
 
@@ -191,11 +191,11 @@ class DeepLinkService {
           return _parseLocationLink(uri.queryParameters);
 
         default:
-          AppLogging.debug('🔗 Unknown deep link type: $type');
+          AppLogging.debug('Unknown deep link type: $type');
           return null;
       }
     } catch (e) {
-      AppLogging.debug('🔗 Error parsing deep link: $e');
+      AppLogging.debug('Error parsing deep link: $e');
       return null;
     }
   }
@@ -206,7 +206,7 @@ class DeepLinkService {
 
     // Expected: /share/{type}/{id}
     if (pathSegments.length < 2 || pathSegments[0] != 'share') {
-      AppLogging.debug('🔗 Invalid web link path: ${uri.path}');
+      AppLogging.debug('Invalid web link path: ${uri.path}');
       return null;
     }
 
@@ -243,7 +243,7 @@ class DeepLinkService {
         return _parseLocationLink(uri.queryParameters);
 
       default:
-        AppLogging.debug('🔗 Unknown web link type: $type');
+        AppLogging.debug('Unknown web link type: $type');
         return null;
     }
   }
@@ -273,7 +273,7 @@ class DeepLinkService {
       );
     } catch (_) {
       // Not base64 - assume it's a Firestore document ID
-      AppLogging.debug('🔗 Node link appears to be Firestore doc ID: $data');
+      AppLogging.debug('Node link appears to be Firestore doc ID: $data');
       return NodeDeepLink(firestoreDocId: data);
     }
   }
@@ -305,21 +305,19 @@ class DeepLinkService {
             try {
               return FirebaseFirestore.instance;
             } catch (e) {
-              AppLogging.debug('🔗 Firebase not available yet: $e');
+              AppLogging.debug('Firebase not available yet: $e');
               return null;
             }
           }());
 
       if (firestore == null) {
-        AppLogging.debug(
-          '🔗 Skipping shared node fetch - Firestore unavailable',
-        );
+        AppLogging.debug('Skipping shared node fetch - Firestore unavailable');
         return null;
       }
 
       final doc = await firestore.collection('shared_nodes').doc(docId).get();
       if (!doc.exists) {
-        AppLogging.debug('🔗 Shared node document not found: $docId');
+        AppLogging.debug('Shared node document not found: $docId');
         return null;
       }
 
@@ -333,7 +331,7 @@ class DeepLinkService {
         longitude: (data['longitude'] as num?)?.toDouble(),
       );
     } catch (e) {
-      AppLogging.debug('🔗 Error fetching shared node: $e');
+      AppLogging.debug('Error fetching shared node: $e');
       return null;
     }
   }
@@ -346,14 +344,14 @@ class DeepLinkService {
     if (link.needsFirestoreFetch) {
       final fetched = await fetchSharedNodeData(link.firestoreDocId!);
       if (fetched == null || !fetched.hasValidNodeData) {
-        AppLogging.debug('🔗 Failed to fetch node data from Firestore');
+        AppLogging.debug('Failed to fetch node data from Firestore');
         return false;
       }
       nodeData = fetched;
     }
 
     if (!nodeData.hasValidNodeData) {
-      AppLogging.debug('🔗 Invalid node data in deep link');
+      AppLogging.debug('Invalid node data in deep link');
       return false;
     }
 
@@ -376,7 +374,7 @@ class DeepLinkService {
     _ref.read(nodesProvider.notifier).addOrUpdateNode(node);
 
     AppLogging.debug(
-      '🔗 Added node from deep link: ${node.displayName} (${node.nodeNum})',
+      'Added node from deep link: ${node.displayName} (${node.nodeNum})',
     );
 
     return true;

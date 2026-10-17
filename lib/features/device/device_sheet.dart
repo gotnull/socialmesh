@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/providers/scanner_lifecycle_providers.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -20,6 +21,7 @@ import '../../providers/connection_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/meshcore_providers.dart';
 import '../../utils/snackbar.dart';
+
 import 'package:socialmesh/core/navigation.dart';
 
 import 'widgets/meshcore_console.dart';
@@ -487,7 +489,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
   }
 
   Future<void> _disconnect(BuildContext context) async {
-    AppLogging.connection('🔌 DISCONNECT: User tapped disconnect button');
+    AppLogging.connection('DISCONNECT: User tapped disconnect button');
 
     // Capture the notifier BEFORE any async operations to avoid disposed ref access
     final deviceConnectionNotifier = ref.read(
@@ -504,7 +506,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
 
     if (confirmed == true && context.mounted) {
       AppLogging.connection('DISCONNECT_REQUESTED source=device_sheet');
-      AppLogging.connection('🔌 DISCONNECT: Starting disconnect sequence...');
+      AppLogging.connection('DISCONNECT: Starting disconnect sequence...');
 
       // Immediately disable UI and show disconnecting state
       safeSetState(() => _disconnecting = true);
@@ -538,10 +540,10 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
       // UI has already moved to Scanner; wait for the teardown to finish.
       await teardown;
 
-      AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
+      AppLogging.connection('DISCONNECT: Disconnect sequence complete');
     } else {
       AppLogging.connection(
-        '🔌 DISCONNECT: Dialog dismissed or context not mounted',
+        'DISCONNECT: Dialog dismissed or context not mounted',
       );
     }
   }

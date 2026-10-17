@@ -102,7 +102,7 @@ class MrrpServiceProfile implements MrrpServiceHandler {
     // Privacy gate: reject all profile requests when profile sharing is off.
     if (!isProfileSharingEnabled) {
       AppLogging.mrrp(
-        'MRRP_SERVICE: profile.v1 request rejected — '
+        'MRRP_SERVICE: profile.v1 request rejected - '
         'profile sharing disabled', // lint-allow: hardcoded-string
       );
       return _buildError(request, MrrpStatusCode.unauthorized);

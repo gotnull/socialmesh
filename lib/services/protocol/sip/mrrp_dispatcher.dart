@@ -276,7 +276,7 @@ class MrrpDispatcher {
       AppLogging.mrrp(
         'MRRP_DISPATCH: stale ${frame.msgType.name} '
         'req_id=0x${frame.requestId.toRadixString(16)}, '
-        'no pending request — dropped', // lint-allow: hardcoded-string
+        'no pending request - dropped', // lint-allow: hardcoded-string
       );
       return;
     }
@@ -292,7 +292,7 @@ class MrrpDispatcher {
       AppLogging.mrrp(
         'MRRP_DISPATCH: ${frame.msgType.name} '
         'req_id=0x${frame.requestId.toRadixString(16)} '
-        'arrived after CANCEL — dropped', // lint-allow: hardcoded-string
+        'arrived after CANCEL - dropped', // lint-allow: hardcoded-string
       );
       pending.timeoutTimer?.cancel();
       return;

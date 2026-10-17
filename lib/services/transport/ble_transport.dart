@@ -416,7 +416,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
   @override
   Stream<DeviceInfo> scan({Duration? timeout, bool scanAll = false}) {
-    AppLogging.ble('📡 BLE_TRANSPORT: scan() called (scanAll: $scanAll)');
+    AppLogging.ble('BLE_TRANSPORT: scan() called (scanAll: $scanAll)');
 
     // Use a StreamController so we can properly cancel the scan
     // The old await for approach didn't exit when stopScan() was called,
@@ -431,18 +431,18 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     () async {
       try {
         // Check if Bluetooth is supported
-        AppLogging.ble('📡 BLE_TRANSPORT: Checking if BT is supported...');
+        AppLogging.ble('BLE_TRANSPORT: Checking if BT is supported...');
         if (!await FlutterBluePlus.isSupported) {
-          AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: Bluetooth not supported');
+          AppLogging.ble('BLE_TRANSPORT: Bluetooth not supported');
           controller.addError(
             Exception('Bluetooth is not supported on this device'),
           );
           return;
         }
-        AppLogging.ble('📡 BLE_TRANSPORT: BT is supported');
+        AppLogging.ble('BLE_TRANSPORT: BT is supported');
 
         // Wait for Bluetooth adapter to be ready (up to 3 seconds)
-        AppLogging.ble('📡 BLE_TRANSPORT: Checking adapter state...');
+        AppLogging.ble('BLE_TRANSPORT: Checking adapter state...');
         final adapterState = await FlutterBluePlus.adapterState
             .where(
               (s) =>
@@ -455,10 +455,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
               onTimeout: () => BluetoothAdapterState.unknown,
             );
 
-        AppLogging.ble('📡 BLE_TRANSPORT: Adapter state = $adapterState');
+        AppLogging.ble('BLE_TRANSPORT: Adapter state = $adapterState');
 
         if (adapterState == BluetoothAdapterState.off) {
-          AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: Bluetooth is turned off');
+          AppLogging.ble('BLE_TRANSPORT: Bluetooth is turned off');
           controller.addError(
             Exception('Please turn on Bluetooth to scan for devices'),
           );
@@ -467,30 +467,30 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
         if (adapterState == BluetoothAdapterState.unknown) {
           AppLogging.ble(
-            '⚠️ 📡 BLE_TRANSPORT: Bluetooth state unknown, attempting scan anyway...',
+            'BLE_TRANSPORT: Bluetooth state unknown, attempting scan anyway...',
           );
         }
 
         final scanDuration = timeout ?? const Duration(seconds: 10);
         AppLogging.ble(
-          '📡 BLE_TRANSPORT: Scan duration = ${scanDuration.inSeconds}s',
+          'BLE_TRANSPORT: Scan duration = ${scanDuration.inSeconds}s',
         );
 
         // Stop any existing scan first
-        AppLogging.ble('📡 BLE_TRANSPORT: Stopping any existing scan...');
+        AppLogging.ble('BLE_TRANSPORT: Stopping any existing scan...');
         try {
           await FlutterBluePlus.stopScan();
         } catch (e) {
-          AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: stopScan error (ignored): $e');
+          AppLogging.ble('BLE_TRANSPORT: stopScan error (ignored): $e');
         }
 
         // Small delay to let BLE subsystem settle
-        AppLogging.ble('📡 BLE_TRANSPORT: Waiting 300ms for BLE to settle...');
+        AppLogging.ble('BLE_TRANSPORT: Waiting 300ms for BLE to settle...');
         await Future.delayed(const Duration(milliseconds: 300));
 
         // Check if controller was closed while waiting
         if (controller.isClosed) {
-          AppLogging.ble('📡 BLE_TRANSPORT: Controller closed during setup');
+          AppLogging.ble('BLE_TRANSPORT: Controller closed during setup');
           return;
         }
 
@@ -502,7 +502,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         int retryCount = 0;
         const maxRetries = 3;
         AppLogging.ble(
-          '📡 BLE_TRANSPORT: Starting scan (max $maxRetries retries)...',
+          'BLE_TRANSPORT: Starting scan (max $maxRetries retries)...',
         );
 
         while (retryCount < maxRetries) {
@@ -516,7 +516,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             ];
             final serviceFilters = scanAll ? <String>[] : defaultServiceFilters;
             AppLogging.ble(
-              '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() '
+              'BLE_TRANSPORT: Calling FlutterBluePlus.startScan() '
               '(attempt ${retryCount + 1}, scanAll=$scanAll, '
               'meshCoreEnabled=$meshCoreEnabled, '
               'checkLocationServices=$checkLocationServices, '
@@ -529,15 +529,13 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
                   : defaultServiceFilters.map(Guid.new).toList(),
               androidCheckLocationServices: checkLocationServices,
             );
-            AppLogging.ble(
-              '📡 BLE_TRANSPORT: startScan() completed successfully',
-            );
+            AppLogging.ble('BLE_TRANSPORT: startScan() completed successfully');
             scanStarted = true;
             break; // Success, exit retry loop
           } catch (e) {
             retryCount++;
             final errorStr = e.toString();
-            AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: startScan() error: $errorStr');
+            AppLogging.ble('BLE_TRANSPORT: startScan() error: $errorStr');
 
             // Android scanner-service rejection (registration failed,
             // internal error, out of resources, throttled). Do NOT
@@ -548,9 +546,9 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             final scanFailure = classifyAndroidScanFailure(e);
             if (scanFailure != null) {
               AppLogging.ble(
-                '⚠️ 📡 BLE_TRANSPORT: Android scan failure '
+                'BLE_TRANSPORT: Android scan failure '
                 'kind=${scanFailure.kind.name} '
-                'code=${scanFailure.platformCode} — not retrying',
+                'code=${scanFailure.platformCode} - not retrying',
               );
               controller.addError(scanFailure);
               return;
@@ -579,8 +577,8 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
             if (isUnauthorized) {
               AppLogging.ble(
-                '⚠️ 📡 BLE_TRANSPORT: BLE permission denied '
-                '(CBManagerStateUnauthorized) — retries will not help',
+                'BLE_TRANSPORT: BLE permission denied '
+                '(CBManagerStateUnauthorized) - retries will not help',
               );
               controller.addError(
                 Exception(
@@ -592,8 +590,8 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
             if (isPoweredOff) {
               AppLogging.ble(
-                '⚠️ 📡 BLE_TRANSPORT: BLE powered off '
-                '(CBManagerStatePoweredOff) — retries will not help',
+                'BLE_TRANSPORT: BLE powered off '
+                '(CBManagerStatePoweredOff) - retries will not help',
               );
               controller.addError(
                 Exception(
@@ -609,7 +607,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
                 errorStr.contains('Bluetooth adapter is not available')) {
               if (retryCount < maxRetries) {
                 AppLogging.ble(
-                  '⚠️ 📡 BLE_TRANSPORT: Bluetooth not ready (attempt $retryCount/$maxRetries), retrying...',
+                  'BLE_TRANSPORT: Bluetooth not ready (attempt $retryCount/$maxRetries), retrying...',
                 );
                 await Future.delayed(Duration(milliseconds: 500 * retryCount));
                 continue;
@@ -631,7 +629,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         timeoutTimer = Timer(
           scanDuration + const Duration(milliseconds: 500),
           () {
-            AppLogging.ble('📡 BLE_TRANSPORT: Scan timeout timer fired');
+            AppLogging.ble('BLE_TRANSPORT: Scan timeout timer fired');
             _finishScan(
               controller,
               scanSubscription,
@@ -643,13 +641,13 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         );
 
         // Subscribe to scan results
-        AppLogging.ble('📡 BLE_TRANSPORT: Listening to scanResults stream...');
+        AppLogging.ble('BLE_TRANSPORT: Listening to scanResults stream...');
         scanSubscription = FlutterBluePlus.scanResults.listen(
           (results) {
             if (controller.isClosed) return;
 
             AppLogging.ble(
-              '📡 BLE_TRANSPORT: scanResults batch received, ${results.length} items',
+              'BLE_TRANSPORT: scanResults batch received, ${results.length} items',
             );
             for (final r in results) {
               deviceCount++;
@@ -661,7 +659,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
                 (key, value) => MapEntry(key, value.toList()),
               );
               AppLogging.ble(
-                '📡 BLE_TRANSPORT: Found device #$deviceCount: ${r.device.remoteId} '
+                'BLE_TRANSPORT: Found device #$deviceCount: ${r.device.remoteId} '
                 '(${r.device.platformName}) services: $serviceUuids',
               );
               controller.add(
@@ -680,7 +678,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             }
           },
           onError: (e) {
-            AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: scanResults error: $e');
+            AppLogging.ble('BLE_TRANSPORT: scanResults error: $e');
             if (!controller.isClosed) {
               // Android delivers scanner-service failures through the
               // results stream (onScanFailed) as well as from
@@ -689,7 +687,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             }
           },
           onDone: () {
-            AppLogging.ble('📡 BLE_TRANSPORT: scanResults stream done');
+            AppLogging.ble('BLE_TRANSPORT: scanResults stream done');
             _finishScan(
               controller,
               scanSubscription,
@@ -700,7 +698,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
           },
         );
       } catch (e) {
-        AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: BLE scan error: $e');
+        AppLogging.ble('BLE_TRANSPORT: BLE scan error: $e');
         if (!controller.isClosed) {
           controller.addError(e);
           controller.close();
@@ -710,7 +708,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
     // Handle cancellation when the stream subscription is cancelled
     controller.onCancel = () async {
-      AppLogging.ble('📡 BLE_TRANSPORT: Scan stream cancelled');
+      AppLogging.ble('BLE_TRANSPORT: Scan stream cancelled');
       await _finishScan(
         controller,
         scanSubscription,
@@ -733,20 +731,20 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     if (controller.isClosed) return;
 
     AppLogging.ble(
-      '📡 BLE_TRANSPORT: Finishing scan, found $deviceCount devices total',
+      'BLE_TRANSPORT: Finishing scan, found $deviceCount devices total',
     );
 
     timeoutTimer?.cancel();
     await scanSubscription?.cancel();
 
     if (scanStarted) {
-      AppLogging.ble('📡 BLE_TRANSPORT: Stopping hardware scan...');
+      AppLogging.ble('BLE_TRANSPORT: Stopping hardware scan...');
       try {
         await FlutterBluePlus.stopScan();
       } catch (e) {
-        AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: stopScan error (ignored): $e');
+        AppLogging.ble('BLE_TRANSPORT: stopScan error (ignored): $e');
       }
-      AppLogging.ble('📡 BLE_TRANSPORT: Scan stopped');
+      AppLogging.ble('BLE_TRANSPORT: Scan stopped');
     }
 
     if (!controller.isClosed) {
@@ -759,14 +757,14 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     // Force cleanup any stale state before connecting
     // This fixes issues where PIN cancellation leaves BLE in a weird state
     if (_state == DeviceConnectionState.connecting) {
-      AppLogging.ble('⚠️ Already connecting - forcing cleanup first');
+      AppLogging.ble('Already connecting - forcing cleanup first');
       await disconnect();
       await Future.delayed(const Duration(milliseconds: 300));
     } else if (_state == DeviceConnectionState.connected) {
-      AppLogging.ble('⚠️ Already connected');
+      AppLogging.ble('Already connected');
       return;
     } else if (_state == DeviceConnectionState.error) {
-      AppLogging.ble('⚠️ Was in error state - cleaning up first');
+      AppLogging.ble('Was in error state - cleaning up first');
       await disconnect();
       await Future.delayed(const Duration(milliseconds: 300));
     }
@@ -792,7 +790,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         try {
           await staleDevice.disconnect();
         } catch (e) {
-          AppLogging.ble('⚠️ Stale pending-reconnect cancel failed: $e');
+          AppLogging.ble('Stale pending-reconnect cancel failed: $e');
         }
       }
 
@@ -805,11 +803,11 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
         // If device is already connected from another app or stale connection, disconnect first
         if (_device!.isConnected) {
-          AppLogging.ble('⚠️ Device already connected, forcing disconnect...');
+          AppLogging.ble('Device already connected, forcing disconnect...');
           try {
             await _device!.disconnect();
           } catch (e) {
-            AppLogging.ble('⚠️ Pre-connect disconnect error (ignored): $e');
+            AppLogging.ble('Pre-connect disconnect error (ignored): $e');
           }
           await Future.delayed(const Duration(milliseconds: 500));
         }
@@ -858,7 +856,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       _deviceStateSubscription = _device!.connectionState.listen((state) {
         AppLogging.ble('Connection state changed: $state');
         if (state == BluetoothConnectionState.disconnected) {
-          AppLogging.ble('⚠️ Device disconnected');
+          AppLogging.ble('Device disconnected');
           final reason = _device?.disconnectReason;
           _recordDisconnect(
             'os_state_change',
@@ -877,7 +875,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         }
       });
     } catch (e) {
-      AppLogging.ble('⚠️ Connection error: $e');
+      AppLogging.ble('Connection error: $e');
       _lastDisconnectError = e;
       await disconnect();
       _updateState(DeviceConnectionState.error);
@@ -937,7 +935,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         '"$_connectedDeviceName" (${device.remoteId})',
       );
     } catch (e) {
-      AppLogging.ble('⚠️ BLE_OS_RECONNECT arm failed: $e');
+      AppLogging.ble('BLE_OS_RECONNECT arm failed: $e');
     }
   }
 
@@ -1044,7 +1042,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     } catch (e) {
       // _discoverServices() already tore down (disconnect + error state)
       // on failure; nothing further to unwind here.
-      AppLogging.ble('⚠️ BLE_OS_RECONNECT bring-up failed: $e');
+      AppLogging.ble('BLE_OS_RECONNECT bring-up failed: $e');
     } finally {
       _osReconnectAdoptInFlight = false;
     }
@@ -1058,13 +1056,13 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       try {
         services = await _device!.discoverServices();
       } on PlatformException catch (e) {
-        AppLogging.ble('⚠️ PlatformException during discoverServices: $e');
+        AppLogging.ble('PlatformException during discoverServices: $e');
         throw Exception('Bluetooth discovery failed: ${e.message ?? e}');
       } on FlutterError catch (e) {
-        AppLogging.ble('⚠️ FlutterError during discoverServices: $e');
+        AppLogging.ble('FlutterError during discoverServices: $e');
         throw Exception('Bluetooth discovery failed: $e');
       } catch (e) {
-        AppLogging.ble('⚠️ Unknown error during discoverServices: $e');
+        AppLogging.ble('Unknown error during discoverServices: $e');
         throw Exception('Bluetooth discovery failed: $e');
       }
 
@@ -1088,7 +1086,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
       if (service == null) {
         // Meshtastic service not found - this device may be MeshCore or another protocol
-        AppLogging.ble('⚠️ Meshtastic service not found (UUID: $_serviceUuid)');
+        AppLogging.ble('Meshtastic service not found (UUID: $_serviceUuid)');
         AppLogging.ble(
           'This device may use a different protocol (e.g., MeshCore). '
           'Discovered services:',
@@ -1149,21 +1147,21 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
         // If fromNum is not available, fall back to polling
         if (_fromNumCharacteristic == null) {
-          AppLogging.ble('⚠️ fromNum not available, using polling fallback');
+          AppLogging.ble('fromNum not available, using polling fallback');
           _startPolling();
         }
       } else {
         final missing = <String>[];
         if (_txCharacteristic == null) missing.add('TX');
         if (_rxCharacteristic == null) missing.add('RX');
-        AppLogging.ble('⚠️ Missing characteristics: ${missing.join(", ")}');
+        AppLogging.ble('Missing characteristics: ${missing.join(", ")}');
         throw Exception(
           'Missing ${missing.join(" and ")} characteristic(s). '
           'Try power cycling the device.',
         );
       }
     } catch (e) {
-      AppLogging.ble('⚠️ Service discovery error: $e');
+      AppLogging.ble('Service discovery error: $e');
       await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;
@@ -1233,7 +1231,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   Future<void> enableNotifications() async {
     if (_fromNumCharacteristic == null) {
       AppLogging.ble(
-        '⚠️ Cannot enable notifications: fromNum characteristic not found',
+        'Cannot enable notifications: fromNum characteristic not found',
       );
       return;
     }
@@ -1243,7 +1241,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       final canIndicate = _fromNumCharacteristic!.properties.indicate;
 
       if (!canNotify && !canIndicate) {
-        AppLogging.ble('⚠️ fromNum does not support notifications');
+        AppLogging.ble('fromNum does not support notifications');
         return;
       }
 
@@ -1253,7 +1251,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             const Duration(seconds: 10),
             onTimeout: () {
               AppLogging.ble(
-                '⚠️ setNotifyValue timed out after 10s, continuing...',
+                'setNotifyValue timed out after 10s, continuing...',
               );
               return false;
             },
@@ -1271,10 +1269,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
               await _drainFromRadio(viaPoll: false);
             } catch (e) {
               _rxReadFailureCount++;
-              AppLogging.ble('⚠️ Error reading fromRadio: $e');
+              AppLogging.ble('Error reading fromRadio: $e');
               if (_isAuthenticationError(e)) {
                 AppLogging.ble(
-                  '⚠️ Authentication error - PIN may have been cancelled',
+                  'Authentication error - PIN may have been cancelled',
                 );
                 _updateState(DeviceConnectionState.error);
               }
@@ -1282,17 +1280,17 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
           }
         },
         onError: (error) {
-          AppLogging.ble('⚠️ fromNum error: $error');
+          AppLogging.ble('fromNum error: $error');
           if (_isAuthenticationError(error)) {
             AppLogging.ble(
-              '⚠️ Authentication error in notification - PIN may have been cancelled',
+              'Authentication error in notification - PIN may have been cancelled',
             );
             _updateState(DeviceConnectionState.error);
           }
         },
         onDone: () {
           AppLogging.ble(
-            '⚠️ fromNum notification stream completed — '
+            'fromNum notification stream completed - '
             'BLE subscription lost while connection may still be alive',
           );
           // Treat a closed notification stream as a disconnect so the
@@ -1307,10 +1305,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       // Subscribe to logRadio for device firmware debug logs
       await _subscribeToLogRadio();
     } catch (e) {
-      AppLogging.ble('⚠️ Error enabling notifications: $e');
+      AppLogging.ble('Error enabling notifications: $e');
       if (_isAuthenticationError(e)) {
         AppLogging.ble(
-          '⚠️ Authentication error enabling notifications - PIN cancelled',
+          'Authentication error enabling notifications - PIN cancelled',
         );
         _updateState(DeviceConnectionState.error);
         rethrow;
@@ -1329,14 +1327,14 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       return;
     }
     if (_refreshInFlight) {
-      AppLogging.ble('refreshNotifications: already in flight — skip');
+      AppLogging.ble('refreshNotifications: already in flight - skip');
       return;
     }
     _refreshInFlight = true;
     _refreshNotificationsCount++;
     AppLogging.ble('BLE_NOTIF: refresh attempted');
     try {
-      AppLogging.ble('🔄 Refreshing fromNum notification subscription');
+      AppLogging.ble('Refreshing fromNum notification subscription');
 
       // Step 1: re-enable BLE-level notification BEFORE cancelling the
       // existing listener. If `setNotifyValue` throws or times out, the
@@ -1351,7 +1349,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
               const Duration(seconds: 10),
               onTimeout: () {
                 AppLogging.ble(
-                  '⚠️ refreshNotifications: setNotifyValue timed out',
+                  'refreshNotifications: setNotifyValue timed out',
                 );
                 throw TimeoutException(
                   'setNotifyValue timed out',
@@ -1363,7 +1361,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         _refreshNotificationsFailureCount++;
         AppLogging.ble('BLE_NOTIF: refresh failed err=$e');
         AppLogging.ble(
-          '⚠️ refreshNotifications: setNotifyValue failed: $e — '
+          'refreshNotifications: setNotifyValue failed: $e - '
           'preserving existing subscription',
         );
         return;
@@ -1387,7 +1385,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
                 await _drainFromRadio(viaPoll: false);
               } catch (e) {
                 _rxReadFailureCount++;
-                AppLogging.ble('⚠️ Error reading fromRadio: $e');
+                AppLogging.ble('Error reading fromRadio: $e');
                 if (_isAuthenticationError(e)) {
                   _updateState(DeviceConnectionState.error);
                 }
@@ -1395,14 +1393,14 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             }
           },
           onError: (error) {
-            AppLogging.ble('⚠️ fromNum error: $error');
+            AppLogging.ble('fromNum error: $error');
             if (_isAuthenticationError(error)) {
               _updateState(DeviceConnectionState.error);
             }
           },
           onDone: () {
             AppLogging.ble(
-              '⚠️ fromNum notification stream completed — '
+              'fromNum notification stream completed - '
               'BLE subscription lost while connection may still be alive',
             );
             _recordDisconnect('notify_stream_closed_refresh');
@@ -1413,7 +1411,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         _refreshNotificationsFailureCount++;
         AppLogging.ble('BLE_NOTIF: refresh failed err=$e');
         AppLogging.ble(
-          '⚠️ refreshNotifications: failed to install new listener — '
+          'refreshNotifications: failed to install new listener - '
           'declaring disconnect for auto-reconnect: $e',
         );
         _recordDisconnect('refresh_install_failed');
@@ -1422,7 +1420,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       }
 
       AppLogging.ble('BLE_NOTIF: refresh ok');
-      AppLogging.ble('🔄 fromNum notifications refreshed');
+      AppLogging.ble('fromNum notifications refreshed');
 
       // After re-subscribing, do one drain of fromRadio in case data
       // accumulated while the subscription was dead.
@@ -1432,7 +1430,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
           if (frames > 0) _lastNotificationAt = DateTime.now();
         } catch (e) {
           _rxReadFailureCount++;
-          AppLogging.ble('⚠️ Error draining fromRadio after refresh: $e');
+          AppLogging.ble('Error draining fromRadio after refresh: $e');
         }
       }
     } finally {
@@ -1468,7 +1466,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
           _dataController.add(value);
         }
       } catch (e) {
-        AppLogging.ble('⚠️ Polling error: $e');
+        AppLogging.ble('Polling error: $e');
       }
     });
   }
@@ -1476,14 +1474,14 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   /// Subscribe to the LogRadio characteristic for device firmware debug logs
   Future<void> _subscribeToLogRadio() async {
     if (_logRadioCharacteristic == null) {
-      AppLogging.ble('⚠️ logRadio characteristic not found, skipping');
+      AppLogging.ble('logRadio characteristic not found, skipping');
       return;
     }
 
     try {
       final canNotify = _logRadioCharacteristic!.properties.notify;
       if (!canNotify) {
-        AppLogging.ble('⚠️ logRadio does not support notifications');
+        AppLogging.ble('logRadio does not support notifications');
         return;
       }
 
@@ -1502,16 +1500,16 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             );
             _deviceLogController.add(logRecord);
           } catch (e) {
-            AppLogging.ble('⚠️ Error parsing LogRecord: $e');
+            AppLogging.ble('Error parsing LogRecord: $e');
           }
         },
         onError: (error) {
-          AppLogging.ble('⚠️ logRadio error: $error');
+          AppLogging.ble('logRadio error: $error');
         },
       );
       AppLogging.ble('logRadio notifications enabled (device logs)');
     } catch (e) {
-      AppLogging.ble('⚠️ Error enabling logRadio notifications: $e');
+      AppLogging.ble('Error enabling logRadio notifications: $e');
     }
   }
 
@@ -1529,16 +1527,16 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       await _drainFromRadio(viaPoll: true);
       _consecutiveAuthErrors = 0; // Reset on success
     } catch (e) {
-      AppLogging.ble('⚠️ Polling error: $e');
+      AppLogging.ble('Polling error: $e');
       if (_isAuthenticationError(e)) {
         _consecutiveAuthErrors++;
         AppLogging.ble(
-          '⚠️ Authentication error during poll (count: $_consecutiveAuthErrors)',
+          'Authentication error during poll (count: $_consecutiveAuthErrors)',
         );
         // After 3 consecutive auth errors, assume PIN was cancelled
         if (_consecutiveAuthErrors >= 3) {
           AppLogging.ble(
-            '⚠️ Multiple auth errors - PIN likely cancelled, transitioning to error state',
+            'Multiple auth errors - PIN likely cancelled, transitioning to error state',
           );
           _updateState(DeviceConnectionState.error);
         }
@@ -1592,7 +1590,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         try {
           await _device!.disconnect();
         } catch (e) {
-          AppLogging.ble('⚠️ Device disconnect error (ignored): $e');
+          AppLogging.ble('Device disconnect error (ignored): $e');
         }
       }
 
@@ -1613,7 +1611,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         AppLogging.ble('Disconnected');
       }
     } catch (e) {
-      AppLogging.ble('⚠️ Disconnect error: $e');
+      AppLogging.ble('Disconnect error: $e');
       // Still clean up state even on error
       _device = null;
       _txCharacteristic = null;
@@ -1681,7 +1679,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       }
       AppLogging.ble('Speech: sent');
     } catch (e) {
-      AppLogging.ble('⚠️ Speech send failed: \$e');
+      AppLogging.ble('Speech send failed: \$e');
       rethrow;
     }
   }
@@ -1742,7 +1740,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         return;
       }
 
-      AppLogging.ble('⚠️ Send error (non-disconnect): $e');
+      AppLogging.ble('Send error (non-disconnect): $e');
       throw TransportSendError('BleTransport write failed: $e');
     }
   }
@@ -1757,7 +1755,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       final rssi = await _device!.readRssi();
       return rssi;
     } catch (e) {
-      AppLogging.ble('⚠️ Failed to read RSSI: $e');
+      AppLogging.ble('Failed to read RSSI: $e');
       return null;
     }
   }

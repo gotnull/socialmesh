@@ -67,7 +67,7 @@ final myNodeBoardsProvider = FutureProvider<List<NodeBoardSummary>>((
   }
   AppLogging.nodeBoard('Provider myNodeBoards: fetching for user=${user.uid}');
   final boards = await repo.getMyBoards(user.uid);
-  AppLogging.nodeBoard('Provider myNodeBoards: ✅ ${boards.length} boards');
+  AppLogging.nodeBoard('Provider myNodeBoards: ${boards.length} boards');
   return boards;
 });
 
@@ -78,7 +78,7 @@ final discoverNodeBoardsProvider = FutureProvider<List<NodeBoardSummary>>((
   final repo = await ref.watch(nodeBoardRepositoryProvider.future);
   final result = await repo.discoverBoards();
   AppLogging.nodeBoard(
-    'Provider discoverNodeBoards: ✅ ${result.boards.length} boards',
+    'Provider discoverNodeBoards: ${result.boards.length} boards',
   );
   return result.boards;
 });
@@ -152,7 +152,7 @@ final nodeBoardThreadListProvider =
         key.sectionId,
       );
       AppLogging.nodeBoard(
-        'Provider threads: ✅ ${result.threads.length} threads for $key',
+        'Provider threads: ${result.threads.length} threads for $key',
       );
       return result.threads;
     });
@@ -195,7 +195,7 @@ final nodeBoardThreadDetailProvider =
       final repo = await ref.watch(nodeBoardRepositoryProvider.future);
       final result = await repo.getThreadDetail(key.slug, key.threadId);
       AppLogging.nodeBoard(
-        'Provider threadDetail: ✅ ${result.replies.length} replies',
+        'Provider threadDetail: ${result.replies.length} replies',
       );
       return ThreadDetailData(thread: result.thread, replies: result.replies);
     });
@@ -210,7 +210,7 @@ final nodeBoardThemesProvider = FutureProvider<List<NodeBoardTheme>>((
   AppLogging.nodeBoard('Provider themes: loading');
   final repo = await ref.watch(nodeBoardRepositoryProvider.future);
   final themes = await repo.getThemes();
-  AppLogging.nodeBoard('Provider themes: ✅ ${themes.length} themes');
+  AppLogging.nodeBoard('Provider themes: ${themes.length} themes');
   return themes;
 });
 
@@ -278,7 +278,7 @@ class NodeBoardCreateNotifier extends AsyncNotifier<void> {
         defaultSections: defaultSections,
       );
 
-      AppLogging.nodeBoard('Create: ✅ board created id=${board.id}');
+      AppLogging.nodeBoard('Create: board created id=${board.id}');
       // Invalidate list providers
       ref.invalidate(myNodeBoardsProvider);
       ref.invalidate(discoverNodeBoardsProvider);
@@ -286,7 +286,7 @@ class NodeBoardCreateNotifier extends AsyncNotifier<void> {
       state = const AsyncValue.data(null);
       return board;
     } catch (e, st) {
-      AppLogging.nodeBoard('Create: ❌ failed: $e');
+      AppLogging.nodeBoard('Create: failed: $e');
       state = AsyncValue.error(e, st);
       rethrow;
     }
@@ -345,7 +345,7 @@ class NodeBoardModNotifier extends AsyncNotifier<void> {
       if (previousOwnerNodeId != null) previousOwnerNodeId,
     }.toList();
     _invalidateBoardSurface(slug, ownerNodeIds: ids);
-    AppLogging.nodeBoard('Mod updateBoard: ✅ invalidated board surface');
+    AppLogging.nodeBoard('Mod updateBoard: invalidated board surface');
   }
 
   Future<void> pinThread(
@@ -363,9 +363,7 @@ class NodeBoardModNotifier extends AsyncNotifier<void> {
     if (ownerNodeId != null) {
       ref.invalidate(nodeBoardSummaryForNodeProvider(ownerNodeId));
     }
-    AppLogging.nodeBoard(
-      'Mod pinThread: ✅ invalidated thread + board surfaces',
-    );
+    AppLogging.nodeBoard('Mod pinThread: invalidated thread + board surfaces');
   }
 
   Future<void> lockThread(
@@ -378,7 +376,7 @@ class NodeBoardModNotifier extends AsyncNotifier<void> {
     await repo.lockThread(listKey.boardId, detailKey.threadId, lock: lock);
     ref.invalidate(nodeBoardThreadListProvider(listKey));
     ref.invalidate(nodeBoardThreadDetailProvider(detailKey));
-    AppLogging.nodeBoard('Mod lockThread: ✅ invalidated thread list + detail');
+    AppLogging.nodeBoard('Mod lockThread: invalidated thread list + detail');
   }
 
   Future<void> deleteThread(
@@ -402,7 +400,7 @@ class NodeBoardModNotifier extends AsyncNotifier<void> {
       listKey.slug,
       ownerNodeIds: ownerNodeId == null ? const [] : [ownerNodeId],
     );
-    AppLogging.nodeBoard('Mod deleteThread: ✅ invalidated board surface');
+    AppLogging.nodeBoard('Mod deleteThread: invalidated board surface');
   }
 
   Future<void> deleteReply(
@@ -422,7 +420,7 @@ class NodeBoardModNotifier extends AsyncNotifier<void> {
     if (ownerNodeId != null) {
       ref.invalidate(nodeBoardSummaryForNodeProvider(ownerNodeId));
     }
-    AppLogging.nodeBoard('Mod deleteReply: ✅ invalidated thread + board');
+    AppLogging.nodeBoard('Mod deleteReply: invalidated thread + board');
   }
 
   Future<void> lockSection(
@@ -442,7 +440,7 @@ class NodeBoardModNotifier extends AsyncNotifier<void> {
         ThreadListKey(slug: slug, boardId: boardId, sectionId: sectionId),
       ),
     );
-    AppLogging.nodeBoard('Mod lockSection: ✅ invalidated section + threads');
+    AppLogging.nodeBoard('Mod lockSection: invalidated section + threads');
   }
 
   Future<NodeBoardThread> createThread(
@@ -455,7 +453,7 @@ class NodeBoardModNotifier extends AsyncNotifier<void> {
     AppLogging.nodeBoard('Mod createThread: slug=$slug sectionId=$sectionId');
     final repo = await ref.read(nodeBoardRepositoryProvider.future);
     final thread = await repo.createThread(slug, input);
-    AppLogging.nodeBoard('Mod createThread: ✅ id=${thread.id}');
+    AppLogging.nodeBoard('Mod createThread: id=${thread.id}');
     // Full board surface: threadCount + lastActivityAt change, and the
     // section's thread list needs the new thread appended.
     ref.invalidate(
@@ -483,7 +481,7 @@ class NodeBoardModNotifier extends AsyncNotifier<void> {
       detailKey.threadId,
       input,
     );
-    AppLogging.nodeBoard('Mod createReply: ✅ id=${reply.id}');
+    AppLogging.nodeBoard('Mod createReply: id=${reply.id}');
     // replyCount + lastReplyAt change on thread and board; if listKey is
     // known, invalidate the section's thread list too so previews update.
     ref.invalidate(nodeBoardThreadDetailProvider(detailKey));
@@ -841,8 +839,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
         lines.add(
           TerminalOutputLine.tappable(
             // Terminal mode copy is English by design (see nodeboard_voice.dart).
-            text:
-                '$prefix${t.title}  (${t.replyCount} replies)', // lint-allow: hardcoded-string
+            text: '$prefix${t.title}  (${t.replyCount} replies)', // lint-allow: hardcoded-string
             index: i + 1,
             tapCommand: 'OPEN ${i + 1}',
           ),

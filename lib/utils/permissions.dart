@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 import '../core/logging.dart';
 
 /// Permission helper for managing app permissions
@@ -26,13 +27,13 @@ class PermissionHelper {
 
       if (!allGranted) {
         AppLogging.permissions(
-          '⚠️ Some Bluetooth permissions were not granted: $statuses',
+          'Some Bluetooth permissions were not granted: $statuses',
         );
       }
 
       return allGranted;
     } catch (e) {
-      AppLogging.permissions('⚠️ Error requesting Bluetooth permissions: $e');
+      AppLogging.permissions('Error requesting Bluetooth permissions: $e');
       return false;
     }
   }
@@ -50,7 +51,7 @@ class PermissionHelper {
           (bluetoothConnect.isGranted || bluetoothConnect.isLimited) &&
           (location.isGranted || location.isLimited);
     } catch (e) {
-      AppLogging.permissions('⚠️ Error checking Bluetooth permissions: $e');
+      AppLogging.permissions('Error checking Bluetooth permissions: $e');
       return false;
     }
   }
@@ -61,7 +62,7 @@ class PermissionHelper {
       final status = await Permission.notification.request();
       return status.isGranted;
     } catch (e) {
-      AppLogging.permissions('⚠️ Error requesting notification permission: $e');
+      AppLogging.permissions('Error requesting notification permission: $e');
       return false;
     }
   }
@@ -72,7 +73,7 @@ class PermissionHelper {
       final status = await Permission.notification.status;
       return status.isGranted;
     } catch (e) {
-      AppLogging.permissions('⚠️ Error checking notification permission: $e');
+      AppLogging.permissions('Error checking notification permission: $e');
       return false;
     }
   }
@@ -83,7 +84,7 @@ class PermissionHelper {
       final status = await Permission.locationWhenInUse.request();
       return status.isGranted || status.isLimited;
     } catch (e) {
-      AppLogging.permissions('⚠️ Error requesting location permission: $e');
+      AppLogging.permissions('Error requesting location permission: $e');
       return false;
     }
   }
@@ -94,7 +95,7 @@ class PermissionHelper {
       final status = await Permission.locationWhenInUse.status;
       return status.isGranted || status.isLimited;
     } catch (e) {
-      AppLogging.permissions('⚠️ Error checking location permission: $e');
+      AppLogging.permissions('Error checking location permission: $e');
       return false;
     }
   }
@@ -104,11 +105,11 @@ class PermissionHelper {
     try {
       final status = await Permission.camera.request();
       if (!status.isGranted) {
-        AppLogging.permissions('⚠️ Camera permission not granted: $status');
+        AppLogging.permissions('Camera permission not granted: $status');
       }
       return status.isGranted;
     } catch (e) {
-      AppLogging.permissions('⚠️ Error requesting camera permission: $e');
+      AppLogging.permissions('Error requesting camera permission: $e');
       return false;
     }
   }
@@ -119,7 +120,7 @@ class PermissionHelper {
       final status = await Permission.camera.status;
       return status.isGranted;
     } catch (e) {
-      AppLogging.permissions('⚠️ Error checking camera permission: $e');
+      AppLogging.permissions('Error checking camera permission: $e');
       return false;
     }
   }
@@ -129,11 +130,11 @@ class PermissionHelper {
     try {
       final status = await Permission.storage.request();
       if (!status.isGranted) {
-        AppLogging.permissions('⚠️ Storage permission not granted: $status');
+        AppLogging.permissions('Storage permission not granted: $status');
       }
       return status.isGranted;
     } catch (e) {
-      AppLogging.permissions('⚠️ Error requesting storage permission: $e');
+      AppLogging.permissions('Error requesting storage permission: $e');
       return false;
     }
   }

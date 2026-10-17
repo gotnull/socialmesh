@@ -32,6 +32,7 @@ import 'stl_providers.dart';
 import '../services/security/stl_envelope.dart';
 
 import 'package:socialmesh/l10n/l10n_utils.dart';
+
 import 'radio_scope_providers.dart';
 
 // ---------------------------------------------------------------------------
@@ -230,7 +231,7 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
     },
     onStateChanged: (state) {
       AppLogging.fileTransfer(
-        'Provider onStateChanged: ${state.fileIdHex} → '
+        'Provider onStateChanged: ${state.fileIdHex} -> '
         '${state.state.name} '
         '(${state.direction.name}, ${state.filename})',
       );
@@ -267,7 +268,7 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
   // the engine alive with its in-memory transfer state intact.
   ref.listen<ProtocolService>(protocolServiceProvider, (previous, next) {
     AppLogging.fileTransfer(
-      'Provider: protocol service changed — re-subscribing stream',
+      'Provider: protocol service changed - re-subscribing stream',
     );
     subscribeToProtocol(next);
   });
@@ -284,14 +285,14 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
         if (transfer?.state == TransferState.offerPending) {
           // Inbound: user accepted → transition engine to chunking.
           AppLogging.spp(
-            'user accepted inbound offer ${offer.payloadIdHex} — '
+            'user accepted inbound offer ${offer.payloadIdHex} - '
             'transitioning engine to chunking',
           );
           engine.acceptTransfer(offer.payloadIdHex);
         } else if (transfer?.state == TransferState.awaitingAccept) {
           // Outbound: receiver sent ACCEPT → resume chunk transmission.
           AppLogging.spp(
-            'receiver accepted outbound offer ${offer.payloadIdHex} — '
+            'receiver accepted outbound offer ${offer.payloadIdHex} - '
             'resuming transfer',
           );
           engine.resumeTransfer(offer.payloadIdHex);
@@ -300,13 +301,13 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
       case SppNegotiationState.aborted:
         AppLogging.spp(
           'offer ${offer.payloadIdHex} '
-          '${offer.state == SppNegotiationState.declined ? "declined" : "aborted"} — '
+          '${offer.state == SppNegotiationState.declined ? "declined" : "aborted"} - '
           'cancelling engine transfer',
         );
         engine.cancelTransfer(offer.payloadIdHex);
       case SppNegotiationState.timedOut:
         AppLogging.spp(
-          'offer ${offer.payloadIdHex} timed out — cancelling engine transfer',
+          'offer ${offer.payloadIdHex} timed out - cancelling engine transfer',
         );
         engine.cancelTransfer(offer.payloadIdHex);
       case SppNegotiationState.offerSent:
@@ -515,7 +516,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       // Expire stale transfers instead of recovering them.
       if (t.expiresAt.isBefore(now)) {
         AppLogging.fileTransfer(
-          'Recovery: ${t.fileIdHex} expired — marking failed',
+          'Recovery: ${t.fileIdHex} expired - marking failed',
         );
         final failed = t.copyWith(
           state: TransferState.failed,
@@ -541,7 +542,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
         if (t.state != TransferState.chunking &&
             t.state != TransferState.waitingMissing) {
           AppLogging.fileTransfer(
-            'Recovery: ${t.fileIdHex} inbound — '
+            'Recovery: ${t.fileIdHex} inbound - '
             'pre-accept state ${t.state.name}, marking failed',
           );
           final failed = t.copyWith(
@@ -561,7 +562,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
         final chunks = await db.loadChunks(t.fileIdHex);
 
         AppLogging.fileTransfer(
-          'Recovery: ${t.fileIdHex} inbound — '
+          'Recovery: ${t.fileIdHex} inbound - '
           '${chunks.length}/${t.chunkCount} chunks found in DB',
         );
 
@@ -577,7 +578,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
         if (t.state != TransferState.chunking &&
             t.state != TransferState.waitingMissing) {
           AppLogging.fileTransfer(
-            'Recovery: ${t.fileIdHex} outbound — '
+            'Recovery: ${t.fileIdHex} outbound - '
             'pre-accept state ${t.state.name}, marking failed',
           );
           final failed = t.copyWith(
@@ -603,7 +604,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
             }
           } catch (e) {
             AppLogging.fileTransfer(
-              'Recovery: ${t.fileIdHex} outbound — '
+              'Recovery: ${t.fileIdHex} outbound - '
               'failed to read source file: $e',
             );
           }
@@ -612,7 +613,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
         if (fileBytes == null) {
           // Source file is gone — transfer cannot be resumed.
           AppLogging.fileTransfer(
-            'Recovery: ${t.fileIdHex} outbound — '
+            'Recovery: ${t.fileIdHex} outbound - '
             'source file missing, marking failed',
           );
           final failed = t.copyWith(
@@ -628,7 +629,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
         }
 
         AppLogging.fileTransfer(
-          'Recovery: ${t.fileIdHex} outbound — '
+          'Recovery: ${t.fileIdHex} outbound - '
           '${fileBytes.length} bytes loaded from disk',
         );
 
@@ -686,7 +687,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       final absPath = p.join(dir.path, rel);
       await File(absPath).writeAsBytes(transfer.fileBytes!);
 
-      AppLogging.fileTransfer('Auto-saved: ${transfer.filename} → $rel');
+      AppLogging.fileTransfer('Auto-saved: ${transfer.filename} -> $rel');
 
       // Persist relative path to DB — survives iOS container UUID rotation.
       final db = ref.read(fileTransferDatabaseProvider);
@@ -1009,7 +1010,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     for (final dim in dimensions) {
       AppLogging.fileTransfer(
         '_compressImageNative($formatName): trying maxDim=$dim, '
-        'binary-searching quality $minQuality–$maxQuality',
+        'binary-searching quality $minQuality-$maxQuality',
       );
 
       // First check: can we fit at minQuality? If not, this dimension
@@ -1109,7 +1110,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     for (final dim in dimensions) {
       AppLogging.fileTransfer(
         '_compressImagePureDart: trying maxDim=$dim, '
-        'binary-searching quality $minQuality–$maxQuality',
+        'binary-searching quality $minQuality-$maxQuality',
       );
 
       final smallest = await compute(
@@ -1311,7 +1312,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     final absPath = p.join(dir.path, rel);
     await File(absPath).writeAsBytes(transfer.fileBytes!);
 
-    AppLogging.fileTransfer('File saved: ${transfer.filename} → $rel');
+    AppLogging.fileTransfer('File saved: ${transfer.filename} -> $rel');
 
     final db = ref.read(fileTransferDatabaseProvider);
     await db.updateSavedPath(fileIdHex, rel);

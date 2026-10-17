@@ -2087,9 +2087,8 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(
-              context,
-            ).colorScheme.copyWith(surface: context.background),
+            colorScheme: Theme.of(context).colorScheme
+                .copyWith(surface: context.background),
           ),
           child: child!,
         );
@@ -2168,9 +2167,9 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
               Flexible(
                 child: Text(
                   _selectedDate != null
-                      ? AppTimeFormat.fullDate(
-                          context,
-                        ).format(_selectedDate!).toUpperCase()
+                      ? AppTimeFormat.fullDate(context)
+                            .format(_selectedDate!)
+                            .toUpperCase()
                       : context.l10n.nodedexRecentLabel,
                   maxLines: 1,
                   softWrap: false,
@@ -3095,7 +3094,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                   onTap: () {
                     AppLogging.nodeDex(
                       'Constellation link tapped: '
-                      '${widget.entry.nodeNum} → ${coSeen.otherNodeNum} '
+                      '${widget.entry.nodeNum} -> ${coSeen.otherNodeNum} '
                       '(co-seen ${relationship.count} times)',
                     );
                     HapticFeedback.selectionClick();
@@ -3428,8 +3427,7 @@ class _MrrpServicesCard extends StatelessWidget {
           for (final id in serviceIds)
             _InfoRow(
               label: MrrpServiceId.nameOf(id),
-              value:
-                  '0x${id.toRadixString(16).padLeft(8, '0')}', // lint-allow: hardcoded-string
+              value: '0x${id.toRadixString(16).padLeft(8, '0')}', // lint-allow: hardcoded-string
               icon: Icons.miscellaneous_services_outlined,
             ),
         ],

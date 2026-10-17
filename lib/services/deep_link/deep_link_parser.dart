@@ -49,54 +49,54 @@ class DeepLinkParser {
   /// This method never throws. Invalid or malformed URIs return a
   /// [ParsedDeepLink] with type [DeepLinkType.invalid].
   ParsedDeepLink parse(String uriString) {
-    AppLogging.qr('🔗 Parser: Parsing URI: $uriString');
+    AppLogging.qr('Parser: Parsing URI: $uriString');
 
     if (uriString.isEmpty) {
-      AppLogging.qr('🔗 Parser: ERROR - Empty URI');
+      AppLogging.qr('Parser: ERROR - Empty URI');
       return ParsedDeepLink.invalid(uriString, ['Empty URI']);
     }
 
     try {
       final uri = Uri.parse(uriString);
       AppLogging.qr(
-        '🔗 Parser: Parsed - scheme=${uri.scheme}, host=${uri.host}, '
+        'Parser: Parsed - scheme=${uri.scheme}, host=${uri.host}, '
         'path=${uri.path}, segments=${uri.pathSegments}, query=${uri.queryParameters}',
       );
 
       // Handle custom schemes (socialmesh://, meshtastic://)
       if (_supportedSchemes.contains(uri.scheme)) {
-        AppLogging.qr('🔗 Parser: Routing to custom scheme handler');
+        AppLogging.qr('Parser: Routing to custom scheme handler');
         return _parseCustomScheme(uri, uriString);
       }
 
       // Handle universal links (https://socialmesh.app/...)
       if (uri.scheme == 'https' && _supportedHosts.contains(uri.host)) {
-        AppLogging.qr('🔗 Parser: Routing to universal link handler');
+        AppLogging.qr('Parser: Routing to universal link handler');
         return _parseUniversalLink(uri, uriString);
       }
 
       // Handle legacy Meshtastic channel links
       if (uri.scheme == 'https' && uri.host == _legacyChannelHost) {
-        AppLogging.qr('🔗 Parser: Routing to legacy channel handler');
+        AppLogging.qr('Parser: Routing to legacy channel handler');
         return _parseLegacyChannelLink(uri, uriString);
       }
 
       // Handle plain HTTP URLs with fragments (legacy fallback)
       if (uri.scheme == 'http' || uri.scheme == 'https') {
         if (uri.fragment.isNotEmpty) {
-          AppLogging.qr('🔗 Parser: Routing to legacy fragment handler');
+          AppLogging.qr('Parser: Routing to legacy fragment handler');
           return _parseLegacyChannelLink(uri, uriString);
         }
       }
 
       AppLogging.qr(
-        'QR - 🔗 Parser: ERROR - Unsupported URI scheme: ${uri.scheme}',
+        'QR - Parser: ERROR - Unsupported URI scheme: ${uri.scheme}',
       );
       return ParsedDeepLink.invalid(uriString, [
         'Unsupported URI scheme: ${uri.scheme}', // lint-allow: hardcoded-string
       ]);
     } catch (e) {
-      AppLogging.qr('🔗 Parser: ERROR - Failed to parse URI: $e');
+      AppLogging.qr('Parser: ERROR - Failed to parse URI: $e');
       return ParsedDeepLink.invalid(uriString, ['Failed to parse URI: $e']);
     }
   }
@@ -115,50 +115,48 @@ class DeepLinkParser {
     final segments = uri.pathSegments;
     final data = segments.isNotEmpty ? segments[0] : null;
 
-    AppLogging.qr('🔗 Parser: Custom scheme - type=$type, data=$data');
+    AppLogging.qr('Parser: Custom scheme - type=$type, data=$data');
 
     // Handle empty type
     if (type.isEmpty) {
-      AppLogging.qr(
-        'QR - 🔗 Parser: ERROR - Missing link type in custom scheme',
-      );
+      AppLogging.qr('QR - Parser: ERROR - Missing link type in custom scheme');
       return ParsedDeepLink.invalid(original, ['Missing link type']);
     }
 
     switch (type) {
       case 'node':
-        AppLogging.qr('🔗 Parser: Processing node link');
+        AppLogging.qr('Parser: Processing node link');
         return _parseNodeLink(data, uri.queryParameters, original);
       case 'channel':
-        AppLogging.qr('🔗 Parser: Processing channel link');
+        AppLogging.qr('Parser: Processing channel link');
         return _parseChannelLink(data, original);
       case 'profile':
-        AppLogging.qr('🔗 Parser: Processing profile link');
+        AppLogging.qr('Parser: Processing profile link');
         return _parseProfileLink(data, original);
       case 'widget':
-        AppLogging.qr('🔗 Parser: Processing widget link');
+        AppLogging.qr('Parser: Processing widget link');
         return _parseWidgetLink(data, original);
       case 'post':
-        AppLogging.qr('🔗 Parser: Processing post link');
+        AppLogging.qr('Parser: Processing post link');
         return _parsePostLink(data, original);
       case 'location':
-        AppLogging.qr('🔗 Parser: Processing location link');
+        AppLogging.qr('Parser: Processing location link');
         return _parseLocationLink(uri.queryParameters, original);
       case 'automation':
-        AppLogging.qr('🔗 Parser: Processing automation link');
+        AppLogging.qr('Parser: Processing automation link');
         return _parseAutomationLink(data, original);
       case 'channel-invite':
-        AppLogging.qr('🔗 Parser: Processing channel invite link');
+        AppLogging.qr('Parser: Processing channel invite link');
         return _parseChannelInviteLink(data, uri.fragment, original);
       case 'help-circle':
-        AppLogging.qr('🔗 Parser: Processing help circle invite link');
+        AppLogging.qr('Parser: Processing help circle invite link');
         return _parseHelpCircleInviteLink(data, original);
       case 'aether':
-        AppLogging.qr('🔗 Parser: Processing aether flight link');
+        AppLogging.qr('Parser: Processing aether flight link');
         return _parseAetherFlightLink(segments, original);
       case 'legal':
         // socialmesh://legal/terms or socialmesh://legal/privacy
-        AppLogging.qr('🔗 Parser: Processing legal document link');
+        AppLogging.qr('Parser: Processing legal document link');
         final document = data; // 'terms' or 'privacy'
         if (document == null ||
             (document != 'terms' && document != 'privacy')) {
@@ -178,7 +176,7 @@ class DeepLinkParser {
         // The sessionId alone never unlocks anything — it triggers the
         // confirmation-polling loop in ExternalPurchaseService, which
         // only succeeds after the Buy Me a Coffee webhook lands.
-        AppLogging.qr('🔗 Parser: Processing purchase return link');
+        AppLogging.qr('Parser: Processing purchase return link');
         final sessionId = uri.queryParameters['sessionId'];
         if (sessionId == null || sessionId.isEmpty) {
           return ParsedDeepLink.invalid(original, [
@@ -194,7 +192,7 @@ class DeepLinkParser {
         // socialmesh://invite/{token}. Token alone does not redeem;
         // the consent screen mounted by the router prompts the user
         // before calling acceptLicenseOrgInvite.
-        AppLogging.qr('🔗 Parser: Processing license org invite link');
+        AppLogging.qr('Parser: Processing license org invite link');
         if (data == null || data.isEmpty) {
           return ParsedDeepLink.invalid(original, [
             'Missing token in invite link',
@@ -206,7 +204,7 @@ class DeepLinkParser {
           licenseOrgInviteToken: data,
         );
       default:
-        AppLogging.qr('🔗 Parser: ERROR - Unknown link type: $type');
+        AppLogging.qr('Parser: ERROR - Unknown link type: $type');
         return ParsedDeepLink.invalid(original, ['Unknown link type: $type']);
     }
   }
@@ -214,7 +212,7 @@ class DeepLinkParser {
   /// Parse a universal link (https://socialmesh.app/share/...).
   ParsedDeepLink _parseUniversalLink(Uri uri, String original) {
     final segments = uri.pathSegments;
-    AppLogging.qr('🔗 Parser: Universal link - segments=$segments');
+    AppLogging.qr('Parser: Universal link - segments=$segments');
 
     // Handle legal document links: /terms and /privacy
     if (segments.length == 1 &&
@@ -223,7 +221,7 @@ class DeepLinkParser {
       // Extract optional section anchor from the fragment (e.g. #radio-compliance)
       final anchor = uri.fragment.isNotEmpty ? uri.fragment : null;
       AppLogging.qr(
-        '🔗 Parser: Legal document link - document=$document, anchor=$anchor',
+        'Parser: Legal document link - document=$document, anchor=$anchor',
       );
       return ParsedDeepLink(
         type: DeepLinkType.legal,
@@ -235,7 +233,7 @@ class DeepLinkParser {
 
     // Handle Aether flight links: /aether/flight/{shareId}
     if (segments.isNotEmpty && segments[0] == 'aether') {
-      AppLogging.qr('🔗 Parser: Aether flight universal link');
+      AppLogging.qr('Parser: Aether flight universal link');
       return _parseAetherFlightLink(segments.sublist(1), original);
     }
 
@@ -244,7 +242,7 @@ class DeepLinkParser {
     // calling acceptLicenseOrgInvite.
     if (segments.length == 2 && segments[0] == 'invite') {
       final token = segments[1];
-      AppLogging.qr('🔗 Parser: License org invite universal link');
+      AppLogging.qr('Parser: License org invite universal link');
       if (token.isEmpty) {
         return ParsedDeepLink.invalid(original, [
           'Missing token in invite link',
@@ -259,33 +257,29 @@ class DeepLinkParser {
 
     // Expect: /share/{type}/{id} or /share/{type}?params
     if (segments.isEmpty || segments[0] != 'share') {
-      AppLogging.qr(
-        'QR - 🔗 Parser: ERROR - Invalid web link path: ${uri.path}',
-      );
+      AppLogging.qr('QR - Parser: ERROR - Invalid web link path: ${uri.path}');
       return ParsedDeepLink.invalid(original, [
         'Invalid web link path: ${uri.path}', // lint-allow: hardcoded-string
       ]);
     }
 
     if (segments.length < 2) {
-      AppLogging.qr('🔗 Parser: ERROR - Missing link type in path');
+      AppLogging.qr('Parser: ERROR - Missing link type in path');
       return ParsedDeepLink.invalid(original, ['Missing link type in path']);
     }
 
     final type = segments[1];
     final id = segments.length > 2 ? segments[2] : null;
-    AppLogging.qr('🔗 Parser: Universal link - type=$type, id=$id');
+    AppLogging.qr('Parser: Universal link - type=$type, id=$id');
 
     switch (type) {
       case 'node':
         // Web share links use Firestore doc ID
         if (id == null || id.isEmpty) {
-          AppLogging.qr('🔗 Parser: ERROR - Missing node ID');
+          AppLogging.qr('Parser: ERROR - Missing node ID');
           return ParsedDeepLink.invalid(original, ['Missing node ID']);
         }
-        AppLogging.qr(
-          'QR - 🔗 Parser: Returning node link with firestoreId=$id',
-        );
+        AppLogging.qr('QR - Parser: Returning node link with firestoreId=$id');
         return ParsedDeepLink(
           type: DeepLinkType.node,
           originalUri: original,
@@ -294,13 +288,13 @@ class DeepLinkParser {
 
       case 'profile':
         if (id == null || id.isEmpty) {
-          AppLogging.qr('🔗 Parser: ERROR - Missing profile display name');
+          AppLogging.qr('Parser: ERROR - Missing profile display name');
           return ParsedDeepLink.invalid(original, [
             'Missing profile display name', // lint-allow: hardcoded-string
           ]);
         }
         AppLogging.qr(
-          'QR - 🔗 Parser: Returning profile link with displayName=$id',
+          'QR - Parser: Returning profile link with displayName=$id',
         );
         return ParsedDeepLink(
           type: DeepLinkType.profile,
@@ -310,12 +304,10 @@ class DeepLinkParser {
 
       case 'widget':
         if (id == null || id.isEmpty) {
-          AppLogging.qr('🔗 Parser: ERROR - Missing widget ID');
+          AppLogging.qr('Parser: ERROR - Missing widget ID');
           return ParsedDeepLink.invalid(original, ['Missing widget ID']);
         }
-        AppLogging.qr(
-          'QR - 🔗 Parser: Returning widget link with widgetId=$id',
-        );
+        AppLogging.qr('QR - Parser: Returning widget link with widgetId=$id');
         return ParsedDeepLink(
           type: DeepLinkType.widget,
           originalUri: original,
@@ -324,10 +316,10 @@ class DeepLinkParser {
 
       case 'post':
         if (id == null || id.isEmpty) {
-          AppLogging.qr('🔗 Parser: ERROR - Missing post ID');
+          AppLogging.qr('Parser: ERROR - Missing post ID');
           return ParsedDeepLink.invalid(original, ['Missing post ID']);
         }
-        AppLogging.qr('🔗 Parser: Returning post link with postId=$id');
+        AppLogging.qr('Parser: Returning post link with postId=$id');
         return ParsedDeepLink(
           type: DeepLinkType.post,
           originalUri: original,
@@ -335,27 +327,27 @@ class DeepLinkParser {
         );
 
       case 'location':
-        AppLogging.qr('🔗 Parser: Processing location from query params');
+        AppLogging.qr('Parser: Processing location from query params');
         return _parseLocationLink(uri.queryParameters, original);
 
       case 'help-circle':
-        AppLogging.qr('🔗 Parser: Processing help circle invite (web)');
+        AppLogging.qr('Parser: Processing help circle invite (web)');
         return _parseHelpCircleInviteLink(id, original);
 
       case 'channel':
         // Check for invite fragment (#t=secret)
         if (id != null && id.isNotEmpty && uri.fragment.isNotEmpty) {
           AppLogging.qr(
-            '🔗 Parser: Channel URL has fragment — treating as invite',
+            'Parser: Channel URL has fragment - treating as invite',
           );
           return _parseChannelInviteLink(id, uri.fragment, original);
         }
         // Web share links use Firestore doc ID
         if (id == null || id.isEmpty) {
-          AppLogging.qr('🔗 Parser: ERROR - Missing channel ID');
+          AppLogging.qr('Parser: ERROR - Missing channel ID');
           return ParsedDeepLink.invalid(original, ['Missing channel ID']);
         }
-        AppLogging.qr('🔗 Parser: Returning channel link with firestoreId=$id');
+        AppLogging.qr('Parser: Returning channel link with firestoreId=$id');
         return ParsedDeepLink(
           type: DeepLinkType.channel,
           originalUri: original,
@@ -365,12 +357,10 @@ class DeepLinkParser {
       case 'automation':
         // Web share links use Firestore doc ID
         if (id == null || id.isEmpty) {
-          AppLogging.qr('🔗 Parser: ERROR - Missing automation ID');
+          AppLogging.qr('Parser: ERROR - Missing automation ID');
           return ParsedDeepLink.invalid(original, ['Missing automation ID']);
         }
-        AppLogging.qr(
-          '🔗 Parser: Returning automation link with firestoreId=$id',
-        );
+        AppLogging.qr('Parser: Returning automation link with firestoreId=$id');
         return ParsedDeepLink(
           type: DeepLinkType.automation,
           originalUri: original,
@@ -457,11 +447,11 @@ class DeepLinkParser {
     String original,
   ) {
     AppLogging.qr(
-      '🔗 Parser: _parseNodeLink - data=$data, queryParams=$queryParams',
+      'Parser: _parseNodeLink - data=$data, queryParams=$queryParams',
     );
 
     if (data == null || data.isEmpty) {
-      AppLogging.qr('🔗 Parser: ERROR - Missing node data');
+      AppLogging.qr('Parser: ERROR - Missing node data');
       return ParsedDeepLink(
         type: DeepLinkType.node,
         originalUri: original,
@@ -473,13 +463,11 @@ class DeepLinkParser {
     try {
       final decoded = utf8.decode(base64Decode(data));
       final json = jsonDecode(decoded) as Map<String, dynamic>;
-      AppLogging.qr('🔗 Parser: Decoded base64 JSON: $json');
+      AppLogging.qr('Parser: Decoded base64 JSON: $json');
 
       final nodeNum = json['nodeNum'] as int?;
       if (nodeNum == null) {
-        AppLogging.qr(
-          'QR - 🔗 Parser: ERROR - Missing nodeNum in decoded JSON',
-        );
+        AppLogging.qr('QR - Parser: ERROR - Missing nodeNum in decoded JSON');
         return ParsedDeepLink(
           type: DeepLinkType.node,
           originalUri: original,
@@ -487,9 +475,7 @@ class DeepLinkParser {
         );
       }
 
-      AppLogging.qr(
-        'QR - 🔗 Parser: Returning node link with nodeNum=$nodeNum',
-      );
+      AppLogging.qr('QR - Parser: Returning node link with nodeNum=$nodeNum');
       return ParsedDeepLink(
         type: DeepLinkType.node,
         originalUri: original,
@@ -503,7 +489,7 @@ class DeepLinkParser {
     } catch (e) {
       // Not valid base64 JSON - treat as Firestore document ID
       AppLogging.qr(
-        '🔗 Parser: Node data is not base64 (error: $e), treating as Firestore ID: $data',
+        'Parser: Node data is not base64 (error: $e), treating as Firestore ID: $data',
       );
       return ParsedDeepLink(
         type: DeepLinkType.node,
@@ -574,7 +560,7 @@ class DeepLinkParser {
           'Missing channel Firestore ID', // lint-allow: hardcoded-string
         ]);
       }
-      AppLogging.qr('🔗 Parser: Detected Firestore channel ID: $firestoreId');
+      AppLogging.qr('Parser: Detected Firestore channel ID: $firestoreId');
       return ParsedDeepLink(
         type: DeepLinkType.channel,
         originalUri: original,
@@ -600,18 +586,16 @@ class DeepLinkParser {
 
   /// Parse a profile deep link.
   ParsedDeepLink _parseProfileLink(String? data, String original) {
-    AppLogging.qr('🔗 Parser: _parseProfileLink - data=$data');
+    AppLogging.qr('Parser: _parseProfileLink - data=$data');
     if (data == null || data.isEmpty) {
-      AppLogging.qr('🔗 Parser: ERROR - Missing profile display name');
+      AppLogging.qr('Parser: ERROR - Missing profile display name');
       return ParsedDeepLink(
         type: DeepLinkType.profile,
         originalUri: original,
         validationErrors: ['Missing profile display name'],
       );
     }
-    AppLogging.qr(
-      'QR - 🔗 Parser: Returning profile link with displayName=$data',
-    );
+    AppLogging.qr('QR - Parser: Returning profile link with displayName=$data');
     return ParsedDeepLink(
       type: DeepLinkType.profile,
       originalUri: original,
@@ -638,7 +622,7 @@ class DeepLinkParser {
           'Missing widget Firestore ID', // lint-allow: hardcoded-string
         ]);
       }
-      AppLogging.qr('🔗 Parser: Detected Firestore widget ID: $firestoreId');
+      AppLogging.qr('Parser: Detected Firestore widget ID: $firestoreId');
       return ParsedDeepLink(
         type: DeepLinkType.widget,
         originalUri: original,
@@ -650,7 +634,7 @@ class DeepLinkParser {
     // Base64 data from share is typically longer and starts with 'ey' (base64 for '{')
     // Firestore IDs are typically 20-28 characters and alphanumeric
     if (_isBase64WidgetData(data)) {
-      AppLogging.qr('🔗 Parser: Detected base64 widget schema');
+      AppLogging.qr('Parser: Detected base64 widget schema');
       return ParsedDeepLink(
         type: DeepLinkType.widget,
         originalUri: original,
@@ -779,7 +763,7 @@ class DeepLinkParser {
       final json = jsonDecode(decoded);
       if (json is Map<String, dynamic>) {
         AppLogging.qr(
-          '🔗 Parser: Decoded automation base64 JSON: ${json['name'] ?? 'unnamed'}',
+          'Parser: Decoded automation base64 JSON: ${json['name'] ?? 'unnamed'}',
         );
         return ParsedDeepLink(
           type: DeepLinkType.automation,
@@ -792,7 +776,7 @@ class DeepLinkParser {
     } catch (e) {
       // Not valid base64 JSON - treat as Firestore document ID
       AppLogging.qr(
-        '🔗 Parser: Automation data is not base64 (error: $e), '
+        'Parser: Automation data is not base64 (error: $e), '
         'treating as Firestore ID: $data',
       );
       return ParsedDeepLink(
@@ -834,14 +818,14 @@ class DeepLinkParser {
     }
 
     if (secret == null || secret.isEmpty) {
-      AppLogging.qr('🔗 Parser: Channel invite missing secret in fragment');
+      AppLogging.qr('Parser: Channel invite missing secret in fragment');
       return ParsedDeepLink.invalid(original, [
         'Missing invite secret in URL fragment', // lint-allow: hardcoded-string
       ]);
     }
 
     AppLogging.qr(
-      '🔗 Parser: Channel invite parsed — id=$inviteId, '
+      'Parser: Channel invite parsed - id=$inviteId, '
       'secret=<redacted ${secret.length} chars>',
     );
 

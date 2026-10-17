@@ -181,7 +181,7 @@ class _BackgroundConnectionScreenState
     await prefs.setInt(kLiveActivityDestination, destination.value);
     safeSetState(() => _liveActivityDestination = destination);
     AppLogging.liveActivity(
-      'BackgroundConnectionScreen: destination → ${destination.name}',
+      'BackgroundConnectionScreen: destination -> ${destination.name}',
     );
   }
 
@@ -200,7 +200,7 @@ class _BackgroundConnectionScreenState
       ref.read(backgroundNotificationUpdaterProvider.notifier).refreshNow();
       await BackgroundBleService.instance.setNotificationStyle(style.value);
       AppLogging.ble(
-        'BackgroundConnectionScreen: notification style → ${style.name}',
+        'BackgroundConnectionScreen: notification style -> ${style.name}',
       );
     }
   }
@@ -466,9 +466,8 @@ class _NotifStyleSelector extends StatelessWidget {
               style == NotificationStyle.minimal
                   ? context.l10n.bgConnStyleMinimalDesc
                   : context.l10n.bgConnStyleDetailedDesc,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: context.textTertiary),
             ),
           ],
         ),
@@ -551,9 +550,8 @@ class _LiveActivityDestinationSelector extends StatelessWidget {
             const SizedBox(height: AppTheme.spacing12),
             Text(
               _description(context),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: context.textTertiary),
             ),
           ],
         ),

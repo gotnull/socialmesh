@@ -17,8 +17,10 @@ const Duration _maxFlightDuration = Duration(hours: 12);
 /// Signature for the function that updates a flight's `isActive` in
 /// Firestore. Extracted into its own provider so tests can override it
 /// without needing a full Firebase environment.
-typedef FlightStatusUpdater =
-    Future<void> Function(String id, {required bool isActive});
+typedef FlightStatusUpdater = Future<void> Function(
+  String id, {
+  required bool isActive,
+});
 
 /// Provider for the flight status updater function.
 ///
@@ -122,7 +124,7 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
   /// Clear all pending events.
   void acknowledgeAll() {
     AppLogging.aether(
-      'Lifecycle: acknowledgeAll() — clearing ${state.pendingEvents.length} events',
+      'Lifecycle: acknowledgeAll() - clearing ${state.pendingEvents.length} events',
     );
     state = state.copyWith(pendingEvents: []);
   }
@@ -143,7 +145,7 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
     if (myFlights.isEmpty) return;
 
     AppLogging.aether(
-      'Lifecycle: _checkFlights() — scanning ${myFlights.length} of '
+      'Lifecycle: _checkFlights() - scanning ${myFlights.length} of '
       '${flights.length} flights (own only)',
     );
 

@@ -104,7 +104,7 @@ class NodeBoardApiService {
     _checkResponse(response);
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     final board = NodeBoard.fromJson(json['board'] as Map<String, dynamic>);
-    AppLogging.nodeBoard('API getBoardBySlug: ✅ board=${board.id}');
+    AppLogging.nodeBoard('API getBoardBySlug: board=${board.id}');
     return board;
   }
 
@@ -121,7 +121,7 @@ class NodeBoardApiService {
     final summary = NodeBoardSummary.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
-    AppLogging.nodeBoard('API getBoardSummaryBySlug: ✅ slug=${summary.slug}');
+    AppLogging.nodeBoard('API getBoardSummaryBySlug: slug=${summary.slug}');
     return summary;
   }
 
@@ -138,7 +138,7 @@ class NodeBoardApiService {
     final summary = NodeBoardSummary.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
-    AppLogging.nodeBoard('API getBoardSummaryByNodeId: ✅ slug=${summary.slug}');
+    AppLogging.nodeBoard('API getBoardSummaryByNodeId: slug=${summary.slug}');
     return summary;
   }
 
@@ -155,7 +155,7 @@ class NodeBoardApiService {
     final boards = list
         .map((e) => NodeBoardSummary.fromJson(e as Map<String, dynamic>))
         .toList();
-    AppLogging.nodeBoard('API getBoardsByUserId: ✅ ${boards.length} boards');
+    AppLogging.nodeBoard('API getBoardsByUserId: ${boards.length} boards');
     return boards;
   }
 
@@ -177,7 +177,7 @@ class NodeBoardApiService {
         .map((e) => NodeBoardSummary.fromJson(e as Map<String, dynamic>))
         .toList();
     AppLogging.nodeBoard(
-      'API discoverBoards: ✅ ${boards.length} boards hasMore=${cursorObj['hasMore']}',
+      'API discoverBoards: ${boards.length} boards hasMore=${cursorObj['hasMore']}',
     );
     return (
       boards: boards,
@@ -229,7 +229,7 @@ class NodeBoardApiService {
     final board = NodeBoard.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
-    AppLogging.nodeBoard('API createBoard: ✅ id=${board.id}');
+    AppLogging.nodeBoard('API createBoard: id=${board.id}');
     return board;
   }
 
@@ -250,7 +250,7 @@ class NodeBoardApiService {
     final board = NodeBoard.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
-    AppLogging.nodeBoard('API updateBoard: ✅ id=${board.id}');
+    AppLogging.nodeBoard('API updateBoard: id=${board.id}');
     return board;
   }
 
@@ -271,7 +271,7 @@ class NodeBoardApiService {
     final sections = list
         .map((e) => NodeBoardSection.fromJson(e as Map<String, dynamic>))
         .toList();
-    AppLogging.nodeBoard('API getSections: ✅ ${sections.length} sections');
+    AppLogging.nodeBoard('API getSections: ${sections.length} sections');
     return sections;
   }
 
@@ -290,7 +290,7 @@ class NodeBoardApiService {
     final section = NodeBoardSection.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
-    AppLogging.nodeBoard('API createSection: ✅ id=${section.id}');
+    AppLogging.nodeBoard('API createSection: id=${section.id}');
     return section;
   }
 
@@ -313,9 +313,8 @@ class NodeBoardApiService {
     if (cursor != null) params['cursor'] = cursor;
 
     final response = await _get(
-      Uri.parse(
-        '$_baseUrl/api/boards/$slug/sections/$sectionId/threads',
-      ).replace(queryParameters: params),
+      Uri.parse('$_baseUrl/api/boards/$slug/sections/$sectionId/threads')
+          .replace(queryParameters: params),
       headers: headers,
     );
     _checkResponse(response);
@@ -327,7 +326,7 @@ class NodeBoardApiService {
         .map((e) => NodeBoardThread.fromJson(e as Map<String, dynamic>))
         .toList();
     AppLogging.nodeBoard(
-      'API getThreads: ✅ ${threads.length} threads hasMore=${cursorObj['hasMore']}',
+      'API getThreads: ${threads.length} threads hasMore=${cursorObj['hasMore']}',
     );
     return (
       threads: threads,
@@ -371,7 +370,7 @@ class NodeBoardApiService {
         .map((e) => NodeBoardReply.fromJson(e as Map<String, dynamic>))
         .toList();
     AppLogging.nodeBoard(
-      'API getThreadDetail: ✅ thread=${thread.id} ${replies.length} replies',
+      'API getThreadDetail: thread=${thread.id} ${replies.length} replies',
     );
     return (
       thread: thread,
@@ -398,7 +397,7 @@ class NodeBoardApiService {
     final thread = NodeBoardThread.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
-    AppLogging.nodeBoard('API createThread: ✅ id=${thread.id}');
+    AppLogging.nodeBoard('API createThread: id=${thread.id}');
     return thread;
   }
 
@@ -422,7 +421,7 @@ class NodeBoardApiService {
     final reply = NodeBoardReply.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
-    AppLogging.nodeBoard('API createReply: ✅ id=${reply.id}');
+    AppLogging.nodeBoard('API createReply: id=${reply.id}');
     return reply;
   }
 
@@ -496,7 +495,7 @@ class NodeBoardApiService {
       body: jsonEncode(body),
     );
     _checkResponse(response);
-    AppLogging.nodeBoard('API mod $action: ✅');
+    AppLogging.nodeBoard('API mod $action:');
   }
 
   // -------------------------------------------------------------------------
@@ -511,7 +510,7 @@ class NodeBoardApiService {
       headers: headers,
     );
     _checkResponse(response);
-    AppLogging.nodeBoard('API markBoardViewed: ✅');
+    AppLogging.nodeBoard('API markBoardViewed:');
   }
 
   // -------------------------------------------------------------------------
@@ -531,9 +530,8 @@ class NodeBoardApiService {
     final params = {'q': query, 'limit': '$limit', 'offset': '$offset'};
 
     final response = await _get(
-      Uri.parse(
-        '$_baseUrl/api/boards/$slug/search',
-      ).replace(queryParameters: params),
+      Uri.parse('$_baseUrl/api/boards/$slug/search')
+          .replace(queryParameters: params),
       headers: headers,
     );
     _checkResponse(response);
@@ -543,7 +541,7 @@ class NodeBoardApiService {
         .cast<Map<String, dynamic>>();
     final total = json['total'] as int;
     AppLogging.nodeBoard(
-      'API search: ✅ ${results.length} results (total=$total)',
+      'API search: ${results.length} results (total=$total)',
     );
     return (results: results, total: total);
   }
@@ -561,7 +559,7 @@ class NodeBoardApiService {
     final themes = list
         .map((e) => NodeBoardTheme.fromJson(e as Map<String, dynamic>))
         .toList();
-    AppLogging.nodeBoard('API getThemes: ✅ ${themes.length} themes');
+    AppLogging.nodeBoard('API getThemes: ${themes.length} themes');
     return themes;
   }
 
@@ -580,7 +578,7 @@ class NodeBoardApiService {
       message = 'HTTP ${response.statusCode}';
     }
 
-    AppLogging.nodeBoard('API ❌ HTTP ${response.statusCode}: $message');
+    AppLogging.nodeBoard('API HTTP ${response.statusCode}: $message');
     throw NodeBoardApiException(response.statusCode, message);
   }
 }

@@ -286,7 +286,7 @@ class _NodeBoardTerminalScreenState
         'authorDisplayName': author.displayName,
         if (author.nodeId != null) 'authorNodeId': author.nodeId,
       }, ownerNodeId: board.ownerNodeId);
-      AppLogging.nodeBoard('Terminal: compose thread ✅ posted');
+      AppLogging.nodeBoard('Terminal: compose thread posted');
       if (!mounted) return;
       notifier.appendOutput([
         TerminalOutputLine(voice.postedThread(), TerminalLineStyle.system),
@@ -295,7 +295,7 @@ class _NodeBoardTerminalScreenState
       _lastRenderedSectionId = null;
       _scrollToBottom();
     } catch (e) {
-      AppLogging.nodeBoard('Terminal: compose thread ❌ $e');
+      AppLogging.nodeBoard('Terminal: compose thread $e');
       if (!mounted) return;
       // lint-allow: hardcoded-string
       notifier.renderError(voice.failedTo('POST THREAD', e));
@@ -361,7 +361,7 @@ class _NodeBoardTerminalScreenState
         listKey: listKey,
         ownerNodeId: board.ownerNodeId,
       );
-      AppLogging.nodeBoard('Terminal: compose reply ✅ posted');
+      AppLogging.nodeBoard('Terminal: compose reply posted');
       if (!mounted) return;
       notifier.appendOutput([
         TerminalOutputLine(voice.postedReply(), TerminalLineStyle.system),
@@ -370,7 +370,7 @@ class _NodeBoardTerminalScreenState
       _lastRenderedThreadId = null;
       _scrollToBottom();
     } catch (e) {
-      AppLogging.nodeBoard('Terminal: compose reply ❌ $e');
+      AppLogging.nodeBoard('Terminal: compose reply $e');
       if (!mounted) return;
       // lint-allow: hardcoded-string
       notifier.renderError(voice.failedTo('POST REPLY', e));

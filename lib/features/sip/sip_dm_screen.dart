@@ -559,7 +559,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     AppLogging.sip(
       'SIP_DM: Block confirmed via overflow for '
       'peer=0x${session.peerNodeId.toRadixString(16)} '
-      '— history preserved, no wire frame',
+      '- history preserved, no wire frame',
     );
     // History is intentionally preserved per Phase 9 spec. The user
     // must explicitly Remove to wipe local conversation.
@@ -590,7 +590,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final records = await store.getNonTerminalForPeerNode(session.peerNodeId);
     if (records.isEmpty) {
       AppLogging.sip(
-        'SIP_DM: Reset secure — no canonical link for '
+        'SIP_DM: Reset secure - no canonical link for '
         'peer=0x${session.peerNodeId.toRadixString(16)} (no-op)',
       );
       if (!mounted) return;
@@ -635,7 +635,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
       'SIP_DM: Remove conversation for '
       'peer=0x${session.peerNodeId.toRadixString(16)} '
       'tag=0x${widget.sessionTag.toRadixString(16)} removed=$removed '
-      '— no wire frame',
+      '- no wire frame',
     );
     if (!mounted) return;
     navigator.pop();

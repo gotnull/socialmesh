@@ -27,19 +27,19 @@ class TranslationPolicyService {
   }) {
     // 1. Entitlement check
     if (!hasEntitlement) {
-      AppLogging.app('TranslationPolicy: denied — no entitlement');
+      AppLogging.app('TranslationPolicy: denied - no entitlement');
       return TranslationPolicyDecision.noEntitlement;
     }
 
     // 2. Provider mode check
     if (providerMode == TranslationProviderMode.disabled) {
-      AppLogging.app('TranslationPolicy: denied — provider disabled');
+      AppLogging.app('TranslationPolicy: denied - provider disabled');
       return TranslationPolicyDecision.providerDisabled;
     }
 
     // 3. Content eligibility
     if (!isContentEligible(text)) {
-      AppLogging.app('TranslationPolicy: denied — content ineligible');
+      AppLogging.app('TranslationPolicy: denied - content ineligible');
       return TranslationPolicyDecision.contentIneligible;
     }
 
@@ -47,14 +47,14 @@ class TranslationPolicyService {
     if (privacyMode == TranslationPrivacyMode.strict &&
         providerMode == TranslationProviderMode.managed) {
       AppLogging.app(
-        'TranslationPolicy: denied — strict privacy blocks managed provider',
+        'TranslationPolicy: denied - strict privacy blocks managed provider',
       );
       return TranslationPolicyDecision.privacyBlocked;
     }
 
     // 5. BYO mode requires a valid key
     if (providerMode == TranslationProviderMode.byo && !hasByoKey) {
-      AppLogging.app('TranslationPolicy: denied — BYO key missing');
+      AppLogging.app('TranslationPolicy: denied - BYO key missing');
       return TranslationPolicyDecision.byoKeyMissing;
     }
 
@@ -63,7 +63,7 @@ class TranslationPolicyService {
       final newChars = text.runes.length;
       if (quotaState.usedChars + newChars > quotaState.charLimit) {
         AppLogging.app(
-          'TranslationPolicy: denied — managed quota would exceed limit '
+          'TranslationPolicy: denied - managed quota would exceed limit '
           '(${quotaState.usedChars} + $newChars > ${quotaState.charLimit})',
         );
         return TranslationPolicyDecision.quotaExhausted;

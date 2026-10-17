@@ -87,9 +87,9 @@ class DeepLinkManager {
       AppLogging.qr('DeepLinkManager: Setting up uriLinkStream listener...');
       _linkSubscription = _appLinks.uriLinkStream.listen(
         (Uri uri) {
-          AppLogging.qr('DeepLinkManager: ⚡ Stream link received: $uri');
+          AppLogging.qr('DeepLinkManager: Stream link received: $uri');
           AppLogging.qr(
-            'DeepLinkManager: ⚡ _appReady=$_appReady at stream receive time',
+            'DeepLinkManager: _appReady=$_appReady at stream receive time',
           );
           _processUri(uri.toString());
         },
@@ -158,18 +158,16 @@ class DeepLinkManager {
     // Step 3: Queue or process based on app readiness
     if (_appReady && _isNavigatorReady()) {
       AppLogging.qr(
-        'DeepLinkManager: ✅ App ready AND navigator ready, processing immediately',
+        'DeepLinkManager: App ready AND navigator ready, processing immediately',
       );
       // App is ready, process immediately (in next frame)
       _scheduleNavigation(parsed);
     } else {
       // App not ready, queue for later
       AppLogging.qr(
-        'DeepLinkManager: ⏳ App NOT ready - _appReady=$_appReady, navigatorReady=${_isNavigatorReady()}',
+        'DeepLinkManager: App NOT ready - _appReady=$_appReady, navigatorReady=${_isNavigatorReady()}',
       );
-      AppLogging.qr(
-        'DeepLinkManager: ⏳ QUEUING link for later: ${parsed.type}',
-      );
+      AppLogging.qr('DeepLinkManager: QUEUING link for later: ${parsed.type}');
       _pendingLink = parsed;
     }
   }
@@ -330,16 +328,16 @@ class DeepLinkManager {
       return;
     }
 
-    AppLogging.qr('DeepLinkManager: ✅ App marked as READY');
+    AppLogging.qr('DeepLinkManager: App marked as READY');
     _appReady = true;
 
     // Process pending link if we have one
     if (_pendingLink != null) {
       AppLogging.qr(
-        'DeepLinkManager: 🚀 Processing PENDING link: ${_pendingLink!.type}',
+        'DeepLinkManager: Processing PENDING link: ${_pendingLink!.type}',
       );
       AppLogging.qr(
-        'DeepLinkManager: 🚀 Pending link details - automationFirestoreId=${_pendingLink!.automationFirestoreId}',
+        'DeepLinkManager: Pending link details - automationFirestoreId=${_pendingLink!.automationFirestoreId}',
       );
       _scheduleNavigation(_pendingLink!);
       _pendingLink = null;
@@ -364,7 +362,7 @@ class DeepLinkManager {
     AppLogging.qr('DeepLinkManager: Scheduling navigation in next frame...');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppLogging.qr(
-        'DeepLinkManager: 🎯 PostFrameCallback fired, calling _performNavigation',
+        'DeepLinkManager: PostFrameCallback fired, calling _performNavigation',
       );
       _performNavigation(link);
     });
@@ -380,7 +378,7 @@ class DeepLinkManager {
     // Silently ignore invalid/empty deep links - don't navigate anywhere
     if (link.type == DeepLinkType.invalid || !link.isValid) {
       AppLogging.qr(
-        'DeepLinkManager: ❌ Ignoring invalid link: ${link.validationErrors}',
+        'DeepLinkManager: Ignoring invalid link: ${link.validationErrors}',
       );
       return;
     }
@@ -415,11 +413,11 @@ class DeepLinkManager {
       }
 
       // For all other types, use the router
-      AppLogging.qr('DeepLinkManager: 🗺️ Using router for ${link.type}');
+      AppLogging.qr('DeepLinkManager: Using router for ${link.type}');
       final routeResult = deepLinkRouter.route(link);
 
       AppLogging.qr(
-        'DeepLinkManager: 🗺️ Router result - route=${routeResult.routeName}, '
+        'DeepLinkManager: Router result - route=${routeResult.routeName}, '
         'args=${routeResult.arguments}, requiresDevice=${routeResult.requiresDevice}',
       );
 
@@ -440,12 +438,10 @@ class DeepLinkManager {
       }
 
       // Navigate to the determined route
-      AppLogging.qr(
-        'DeepLinkManager: 🚀 NAVIGATING to ${routeResult.routeName}',
-      );
-      AppLogging.qr('DeepLinkManager: 🚀 with args=${routeResult.arguments}');
+      AppLogging.qr('DeepLinkManager: NAVIGATING to ${routeResult.routeName}');
+      AppLogging.qr('DeepLinkManager: with args=${routeResult.arguments}');
       _safeNavigate(routeResult.routeName, arguments: routeResult.arguments);
-      AppLogging.qr('DeepLinkManager: ✅ _safeNavigate returned');
+      AppLogging.qr('DeepLinkManager: _safeNavigate returned');
     } catch (e, st) {
       // Never crash on deep link handling - log and continue
       AppLogging.qr('DeepLinkManager: Navigation error: $e\n$st');
@@ -466,7 +462,7 @@ class DeepLinkManager {
     // somehow reaches a feature-flagged-off build.
     if (!AppFeatureFlags.isExternalPurchaseEnabled) {
       AppLogging.purchase(
-        '[DeepLinkManager] purchase-return dropped — feature flag off '
+        '[DeepLinkManager] purchase-return dropped - feature flag off '
         '(uri=${link.originalUri})',
       );
       return;
@@ -474,7 +470,7 @@ class DeepLinkManager {
     final sessionId = link.purchaseSessionId;
     if (sessionId == null || sessionId.isEmpty) {
       AppLogging.purchase(
-        '[DeepLinkManager] purchase-return missing sessionId — ignoring',
+        '[DeepLinkManager] purchase-return missing sessionId - ignoring',
       );
       return;
     }

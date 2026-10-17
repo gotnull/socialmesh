@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -36,7 +37,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     bool causesDisconnect = false,
   }) async {
     AppLogging.connection(
-      '🔧 DeviceManagement: $actionName started'
+      'DeviceManagement: $actionName started'
       '${causesDisconnect ? " (causes disconnect)" : ""}',
     );
 
@@ -128,7 +129,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
 
       if (confirmed != true) {
         AppLogging.connection(
-          '🔧 DeviceManagement: $actionName cancelled by user',
+          'DeviceManagement: $actionName cancelled by user',
         );
         return;
       }
@@ -139,7 +140,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     safeSetState(() => _isProcessing = true);
 
     try {
-      AppLogging.connection('🔧 DeviceManagement: Executing $actionName...');
+      AppLogging.connection('DeviceManagement: Executing $actionName...');
       await action();
 
       if (mounted) {
@@ -151,7 +152,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
         // Pop the screen after triggering actions that cause disconnect
         if (causesDisconnect) {
           AppLogging.connection(
-            '🔧 DeviceManagement: $actionName complete — popping screen, '
+            'DeviceManagement: $actionName complete - popping screen, '
             'expect disconnect shortly',
           );
           Future.delayed(const Duration(milliseconds: 500), () {
@@ -160,7 +161,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
         }
       }
     } catch (e) {
-      AppLogging.connection('🔧 DeviceManagement: $actionName FAILED: $e');
+      AppLogging.connection('DeviceManagement: $actionName FAILED: $e');
       if (mounted) {
         showErrorSnackBar(context, l10n.deviceMgmtFailed(e.toString()));
       }
@@ -231,8 +232,8 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                           autoReconnectStateProvider.notifier,
                         );
                         AppLogging.connection(
-                          '🔧 DeviceManagement: Sending reboot command '
-                          '(delay=2s) — device will restart and BLE will drop',
+                          'DeviceManagement: Sending reboot command '
+                          '(delay=2s) - device will restart and BLE will drop',
                         );
                         await protocol.reboot(delaySeconds: 2, target: target);
                         // Clear stale manualConnecting so auto-reconnect
@@ -240,7 +241,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         if (!mounted) return;
                         autoReconnectNotifier.setState(AutoReconnectState.idle);
                         AppLogging.connection(
-                          '🔧 DeviceManagement: Reboot command sent — '
+                          'DeviceManagement: Reboot command sent - '
                           'expecting disconnect in ~2s, '
                           'autoReconnectState set to idle for reconnect',
                         );
@@ -249,7 +250,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                             .startDeviceRebootCountdown(reason: 'reboot');
                       } else {
                         AppLogging.connection(
-                          '🔧 Remote Admin: Sending reboot to remote device',
+                          'Remote Admin: Sending reboot to remote device',
                         );
                         await protocol.reboot(delaySeconds: 2, target: target);
                       }
@@ -276,8 +277,8 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                           autoReconnectStateProvider.notifier,
                         );
                         AppLogging.connection(
-                          '🔧 DeviceManagement: Sending shutdown command '
-                          '(delay=2s) — device will power off and BLE will drop',
+                          'DeviceManagement: Sending shutdown command '
+                          '(delay=2s) - device will power off and BLE will drop',
                         );
                         await protocol.shutdown(
                           delaySeconds: 2,
@@ -288,13 +289,13 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         if (!mounted) return;
                         autoReconnectNotifier.setState(AutoReconnectState.idle);
                         AppLogging.connection(
-                          '🔧 DeviceManagement: Shutdown command sent — '
+                          'DeviceManagement: Shutdown command sent - '
                           'expecting disconnect in ~2s, '
                           'autoReconnectState set to idle',
                         );
                       } else {
                         AppLogging.connection(
-                          '🔧 Remote Admin: Sending shutdown to remote device',
+                          'Remote Admin: Sending shutdown to remote device',
                         );
                         await protocol.shutdown(
                           delaySeconds: 2,
@@ -337,19 +338,19 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         ref.read(remoteAdminTargetProvider),
                       );
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Sending nodeDbReset — '
+                        'DeviceManagement: Sending nodeDbReset - '
                         'will clear all discovered nodes from device',
                       );
                       await protocol.nodeDbReset(target: target);
                       if (!mounted) return;
                       AppLogging.connection(
-                        '🔧 DeviceManagement: nodeDbReset sent',
+                        'DeviceManagement: nodeDbReset sent',
                       );
                       // Only clear local app state for local device
                       if (target.isLocal) {
                         final nodesNotifier = ref.read(nodesProvider.notifier);
                         AppLogging.connection(
-                          '🔧 DeviceManagement: clearing local nodes cache',
+                          'DeviceManagement: clearing local nodes cache',
                         );
                         nodesNotifier.clearNodes();
                         // Restart the discovery-cooldown window so the
@@ -386,14 +387,14 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         ref.read(remoteAdminTargetProvider),
                       );
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Sending factoryResetConfig — '
+                        'DeviceManagement: Sending factoryResetConfig - '
                         'will wipe channels, region, all config but keep nodedb. '
                         'Device will reboot in ~5s',
                       );
                       await protocol.factoryResetConfig(target: target);
                       if (!mounted) return;
                       AppLogging.connection(
-                        '🔧 DeviceManagement: factoryResetConfig command sent',
+                        'DeviceManagement: factoryResetConfig command sent',
                       );
                       // Only clear local state for local device
                       if (target.isLocal) {
@@ -414,7 +415,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                           regionConfigProvider.notifier,
                         );
                         AppLogging.connection(
-                          '🔧 DeviceManagement: clearing local region '
+                          'DeviceManagement: clearing local region '
                           '+ channels state',
                         );
                         if (settingsAsync.hasValue) {
@@ -422,14 +423,14 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                             false,
                           );
                           AppLogging.connection(
-                            '🔧 DeviceManagement: regionConfigured cleared — '
+                            'DeviceManagement: regionConfigured cleared - '
                             'region selection will be required on next '
                             'connection',
                           );
                         }
                         channelsNotifier.clearChannels();
                         AppLogging.connection(
-                          '🔧 DeviceManagement: Local channels cleared — '
+                          'DeviceManagement: Local channels cleared - '
                           'expecting device disconnect shortly',
                         );
                         // Wipe the region-flow notifier so the
@@ -442,12 +443,12 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         // wiped to UNSET.
                         regionConfigNotifier.reset();
                         AppLogging.connection(
-                          '🔧 DeviceManagement: regionConfigProvider reset',
+                          'DeviceManagement: regionConfigProvider reset',
                         );
                         if (!mounted) return;
                         autoReconnectNotifier.setState(AutoReconnectState.idle);
                         AppLogging.connection(
-                          '🔧 DeviceManagement: autoReconnectState set '
+                          'DeviceManagement: autoReconnectState set '
                           'to idle (cleared stale manualConnecting '
                           'for reconnect)',
                         );
@@ -480,13 +481,13 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       final navigator = Navigator.of(context);
 
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Sending factoryResetDevice — '
+                        'DeviceManagement: Sending factoryResetDevice - '
                         'will WIPE EVERYTHING (config, channels, nodes, '
                         'identity). Device will reboot in ~5s',
                       );
                       await protocol.factoryResetDevice(target: target);
                       AppLogging.connection(
-                        '🔧 DeviceManagement: factoryResetDevice command sent',
+                        'DeviceManagement: factoryResetDevice command sent',
                       );
 
                       // Only clear local state and navigate when targeting
@@ -533,7 +534,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       // 1. Set userDisconnected to prevent auto-reconnect to
                       //    the wiped device during/after disconnect
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Setting userDisconnected=true '
+                        'DeviceManagement: Setting userDisconnected=true '
                         'to prevent auto-reconnect to wiped device',
                       );
                       userDisconnectedNotifier.setUserDisconnected(true);
@@ -541,19 +542,19 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       // 2. Clear manualConnecting (stale from initial
                       //    Scanner connection) so it doesn't block anything
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Setting autoReconnectState '
+                        'DeviceManagement: Setting autoReconnectState '
                         'to idle (clearing stale manualConnecting)',
                       );
                       autoReconnectNotifier.setState(AutoReconnectState.idle);
 
                       // 3. Disconnect transport and wait for it to complete
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Disconnecting transport '
+                        'DeviceManagement: Disconnecting transport '
                         'before navigating to Scanner...',
                       );
                       await deviceConnectionNotifier.disconnect();
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Transport disconnected',
+                        'DeviceManagement: Transport disconnected',
                       );
 
                       // 4. Stop protocol service
@@ -561,7 +562,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
 
                       // 5. Clear ALL local state
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Clearing ALL local state '
+                        'DeviceManagement: Clearing ALL local state '
                         '(region, lastDevice, nodes, channels)',
                       );
                       if (settingsAsync.hasValue) {
@@ -570,14 +571,14 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         );
                         await settingsAsync.requireValue.clearLastDevice();
                         AppLogging.connection(
-                          '🔧 DeviceManagement: regionConfigured + '
+                          'DeviceManagement: regionConfigured + '
                           'lastDevice cleared',
                         );
                       }
                       nodesNotifier.clearNodes();
                       channelsNotifier.clearChannels();
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Local nodes + channels cleared',
+                        'DeviceManagement: Local nodes + channels cleared',
                       );
 
                       // Wipe the region-flow notifier. Its in-memory
@@ -596,7 +597,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       // this State along with it.
                       regionConfigNotifier.reset();
                       AppLogging.connection(
-                        '🔧 DeviceManagement: regionConfigProvider reset',
+                        'DeviceManagement: regionConfigProvider reset',
                       );
 
                       // 6. Set app state and pop screens stacked on top
@@ -641,13 +642,13 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         ref.read(remoteAdminTargetProvider),
                       );
                       AppLogging.connection(
-                        '🔧 DeviceManagement: Sending enterDfuMode — '
+                        'DeviceManagement: Sending enterDfuMode - '
                         'device will boot into firmware update mode, '
                         'BLE will drop',
                       );
                       await protocol.enterDfuMode(target: target);
                       AppLogging.connection(
-                        '🔧 DeviceManagement: enterDfuMode sent — '
+                        'DeviceManagement: enterDfuMode sent - '
                         'expecting disconnect shortly',
                       );
                     },

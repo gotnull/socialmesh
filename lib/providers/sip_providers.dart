@@ -404,7 +404,7 @@ void _autoOpenOverlayLink(
     AppLogging.overlay(
       'auto-open deferred: peer=0x${peerNodeId.toRadixString(16)} '
       '${peer == null ? 'not in cache yet' : 'overlay capability not advertised yet'} '
-      '— will retry on peer-cache update',
+      '- will retry on peer-cache update',
     );
     return;
   }

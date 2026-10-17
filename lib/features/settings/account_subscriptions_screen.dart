@@ -340,7 +340,7 @@ class _AccountSubscriptionsScreenState
                       final online = ref.read(isOnlineProvider);
                       if (!online) {
                         AppLogging.mfa(
-                          '[AccountScreen] MFA tap blocked — offline',
+                          '[AccountScreen] MFA tap blocked - offline',
                         );
                         if (!mounted) return;
                         showErrorSnackBar(
@@ -947,7 +947,7 @@ class _AccountSubscriptionsScreenState
                 final online = ref.read(isOnlineProvider);
                 if (!online) {
                   AppLogging.subscriptions(
-                    '[ManageCard] Restore blocked — offline',
+                    '[ManageCard] Restore blocked - offline',
                   );
                   showErrorSnackBar(
                     context,
@@ -961,7 +961,7 @@ class _AccountSubscriptionsScreenState
                 try {
                   // Use canonical restore flow (includes RevenueCat + Firebase sync)
                   AppLogging.subscriptions(
-                    '🔄 User tapped restore from Manage Card',
+                    'User tapped restore from Manage Card',
                   );
 
                   // CRITICAL: Capture ALL providers before any await to prevent
@@ -1087,14 +1087,14 @@ class _AccountSubscriptionsScreenState
   AuthService? _guardedAuthService() {
     final online = ref.read(isOnlineProvider);
     if (!online) {
-      AppLogging.subscriptions('║ ⚠️ Sign-in blocked — offline');
+      AppLogging.subscriptions('| Sign-in blocked - offline');
       showErrorSnackBar(context, context.l10n.accountSubSignInRequiresInternet);
       return null;
     }
     final isReady =
         ref.read(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
     if (!isReady) {
-      AppLogging.subscriptions('║ ⚠️ Firebase not ready — sign-in blocked');
+      AppLogging.subscriptions('| Firebase not ready - sign-in blocked');
       showErrorSnackBar(context, context.l10n.accountSubCannotConnectSignIn);
       return null;
     }
@@ -1107,11 +1107,11 @@ class _AccountSubscriptionsScreenState
     final l10n = context.l10n;
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
-      '╔══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
-    AppLogging.subscriptions('║ 🔐 SIGN IN WITH GOOGLE STARTED');
+    AppLogging.subscriptions('| SIGN IN WITH GOOGLE STARTED');
     AppLogging.subscriptions(
-      '╚══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
 
     // Guard: Firebase must be initialized before accessing authServiceProvider
@@ -1124,23 +1124,23 @@ class _AccountSubscriptionsScreenState
     try {
       await authService.signInWithGoogle();
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ✅ Google sign-in SUCCESS');
-      AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+      AppLogging.subscriptions('| Google sign-in SUCCESS');
+      AppLogging.subscriptions('| Invalidating userProfileProvider...');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
 
       // Sync RevenueCat with Firebase to link purchases to this account
-      AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
+      AppLogging.subscriptions('| Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
     } on FirebaseAuthMultiFactorException catch (e) {
-      AppLogging.subscriptions('║ 🔐 Google sign-in requires MFA');
+      AppLogging.subscriptions('| Google sign-in requires MFA');
       AppLogging.mfa(
-        '_signInWithGoogle — caught FirebaseAuthMultiFactorException '
+        '_signInWithGoogle - caught FirebaseAuthMultiFactorException '
         '(mounted=$mounted, hints=${e.resolver.hints.length})',
       );
       if (mounted) {
@@ -1149,7 +1149,7 @@ class _AccountSubscriptionsScreenState
           e.resolver,
         );
         AppLogging.mfa(
-          '_signInWithGoogle — MFAVerificationDialog.show returned '
+          '_signInWithGoogle - MFAVerificationDialog.show returned '
           '(credential=${credential != null ? "non-null" : "null"}, '
           'mounted=$mounted)',
         );
@@ -1157,25 +1157,25 @@ class _AccountSubscriptionsScreenState
           ref.invalidate(userProfileProvider);
           await syncRevenueCatWithFirebase(ref);
           AppLogging.mfa(
-            '_signInWithGoogle — ✅ MFA resolved, profile invalidated',
+            '_signInWithGoogle - MFA resolved, profile invalidated',
           );
         } else if (credential == null) {
           AppLogging.mfa(
-            '_signInWithGoogle — ⚠️ MFA dialog returned null — user not signed in',
+            '_signInWithGoogle - MFA dialog returned null - user not signed in',
           );
         }
       } else {
         AppLogging.mfa(
-          '_signInWithGoogle — ⚠️ screen unmounted before MFA dialog could show',
+          '_signInWithGoogle - screen unmounted before MFA dialog could show',
         );
       }
     } on FirebaseAuthException catch (e) {
       // User cancelled - don't show error
       if (e.code == 'sign-in-cancelled') {
-        AppLogging.subscriptions('║ ⚠️ Google sign-in cancelled by user');
+        AppLogging.subscriptions('| Google sign-in cancelled by user');
         return;
       }
-      AppLogging.subscriptions('║ ❌ Google sign-in FAILED: ${e.message}');
+      AppLogging.subscriptions('| Google sign-in FAILED: ${e.message}');
       if (mounted) {
         showErrorSnackBar(
           context,
@@ -1184,11 +1184,11 @@ class _AccountSubscriptionsScreenState
       }
     } catch (e) {
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ❌ Google sign-in FAILED: $e');
+      AppLogging.subscriptions('| Google sign-in FAILED: $e');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       AppLogging.app('Google sign-in error: $e');
       if (mounted) {
@@ -1205,11 +1205,11 @@ class _AccountSubscriptionsScreenState
     final l10n = context.l10n;
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
-      '╔══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
-    AppLogging.subscriptions('║ 🔐 SIGN IN WITH APPLE STARTED');
+    AppLogging.subscriptions('| SIGN IN WITH APPLE STARTED');
     AppLogging.subscriptions(
-      '╚══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
 
     // Guard: Firebase must be initialized before accessing authServiceProvider
@@ -1222,21 +1222,21 @@ class _AccountSubscriptionsScreenState
     try {
       await authService.signInWithApple();
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ✅ Apple sign-in SUCCESS');
-      AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+      AppLogging.subscriptions('| Apple sign-in SUCCESS');
+      AppLogging.subscriptions('| Invalidating userProfileProvider...');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
 
       // Sync RevenueCat with Firebase to link purchases to this account
-      AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
+      AppLogging.subscriptions('| Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
     } on FirebaseAuthMultiFactorException catch (e) {
-      AppLogging.subscriptions('║ 🔐 Apple sign-in requires MFA');
+      AppLogging.subscriptions('| Apple sign-in requires MFA');
       if (mounted) {
         final credential = await MFAVerificationDialog.show(
           context,
@@ -1250,20 +1250,20 @@ class _AccountSubscriptionsScreenState
     } on SignInWithAppleAuthorizationException catch (e) {
       // User cancelled - don't show error
       if (e.code == AuthorizationErrorCode.canceled) {
-        AppLogging.subscriptions('║ ⚠️ Apple sign-in cancelled by user');
+        AppLogging.subscriptions('| Apple sign-in cancelled by user');
         return;
       }
-      AppLogging.subscriptions('║ ❌ Apple sign-in FAILED: ${e.message}');
+      AppLogging.subscriptions('| Apple sign-in FAILED: ${e.message}');
       if (mounted) {
         showErrorSnackBar(context, l10n.accountSubSignInFailed(e.message));
       }
     } catch (e) {
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ❌ Apple sign-in FAILED: $e');
+      AppLogging.subscriptions('| Apple sign-in FAILED: $e');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       AppLogging.app('Apple sign-in error: $e');
       if (mounted) {
@@ -1280,11 +1280,11 @@ class _AccountSubscriptionsScreenState
     final l10n = context.l10n;
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
-      '╔══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
-    AppLogging.subscriptions('║ 🔐 SIGN IN WITH GITHUB STARTED');
+    AppLogging.subscriptions('| SIGN IN WITH GITHUB STARTED');
     AppLogging.subscriptions(
-      '╚══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
 
     // Guard: Firebase must be initialized before accessing authServiceProvider
@@ -1297,21 +1297,21 @@ class _AccountSubscriptionsScreenState
     try {
       await authService.signInWithGitHub();
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ✅ GitHub sign-in SUCCESS');
-      AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+      AppLogging.subscriptions('| GitHub sign-in SUCCESS');
+      AppLogging.subscriptions('| Invalidating userProfileProvider...');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
 
       // Sync RevenueCat with Firebase to link purchases to this account
-      AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
+      AppLogging.subscriptions('| Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
     } on FirebaseAuthMultiFactorException catch (e) {
-      AppLogging.subscriptions('║ 🔐 GitHub sign-in requires MFA');
+      AppLogging.subscriptions('| GitHub sign-in requires MFA');
       if (mounted) {
         final credential = await MFAVerificationDialog.show(
           context,
@@ -1324,26 +1324,26 @@ class _AccountSubscriptionsScreenState
       }
     } on AccountLinkingRequiredException catch (e) {
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ⚠️ GitHub sign-in requires account linking');
-      AppLogging.subscriptions('║    Email: ${e.email}');
+      AppLogging.subscriptions('| GitHub sign-in requires account linking');
+      AppLogging.subscriptions('|    Email: ${e.email}');
       AppLogging.subscriptions(
-        '║    Existing providers: ${e.existingProviders}',
+        '|    Existing providers: ${e.existingProviders}',
       );
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       if (mounted) {
         await _showAccountLinkingDialog(context, e);
       }
     } on FirebaseAuthException catch (e) {
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ❌ GitHub sign-in FAILED: ${e.code}');
+      AppLogging.subscriptions('| GitHub sign-in FAILED: ${e.code}');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       if (mounted && e.code != 'web-context-cancelled') {
         showErrorSnackBar(
@@ -1353,11 +1353,11 @@ class _AccountSubscriptionsScreenState
       }
     } catch (e) {
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ❌ GitHub sign-in FAILED: $e');
+      AppLogging.subscriptions('| GitHub sign-in FAILED: $e');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       AppLogging.app('GitHub sign-in error: $e');
       // User cancelled - don't show error
@@ -1372,11 +1372,11 @@ class _AccountSubscriptionsScreenState
     final l10n = context.l10n;
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
-      '╔══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
-    AppLogging.subscriptions('║ 🔐 SIGN IN WITH TWITTER/X STARTED');
+    AppLogging.subscriptions('| SIGN IN WITH TWITTER/X STARTED');
     AppLogging.subscriptions(
-      '╚══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
 
     // Guard: Firebase must be initialized before accessing authServiceProvider
@@ -1389,19 +1389,19 @@ class _AccountSubscriptionsScreenState
     try {
       await authService.signInWithTwitter();
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ✅ Twitter/X sign-in SUCCESS');
-      AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+      AppLogging.subscriptions('| Twitter/X sign-in SUCCESS');
+      AppLogging.subscriptions('| Invalidating userProfileProvider...');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       ref.invalidate(userProfileProvider);
 
-      AppLogging.subscriptions('║ 🔗 Syncing RevenueCat with Firebase...');
+      AppLogging.subscriptions('| Syncing RevenueCat with Firebase...');
       await syncRevenueCatWithFirebase(ref);
     } on FirebaseAuthMultiFactorException catch (e) {
-      AppLogging.subscriptions('║ 🔐 Twitter/X sign-in requires MFA');
+      AppLogging.subscriptions('| Twitter/X sign-in requires MFA');
       if (mounted) {
         final credential = await MFAVerificationDialog.show(
           context,
@@ -1414,28 +1414,26 @@ class _AccountSubscriptionsScreenState
       }
     } on AccountLinkingRequiredException catch (e) {
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
+      );
+      AppLogging.subscriptions('| Twitter/X sign-in requires account linking');
+      AppLogging.subscriptions('|    Email: ${e.email}');
+      AppLogging.subscriptions(
+        '|    Existing providers: ${e.existingProviders}',
       );
       AppLogging.subscriptions(
-        '║ ⚠️ Twitter/X sign-in requires account linking',
-      );
-      AppLogging.subscriptions('║    Email: ${e.email}');
-      AppLogging.subscriptions(
-        '║    Existing providers: ${e.existingProviders}',
-      );
-      AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       if (mounted) {
         await _showAccountLinkingDialog(context, e);
       }
     } on FirebaseAuthException catch (e) {
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ❌ Twitter/X sign-in FAILED: ${e.code}');
+      AppLogging.subscriptions('| Twitter/X sign-in FAILED: ${e.code}');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       if (mounted && e.code != 'web-context-cancelled') {
         showErrorSnackBar(
@@ -1445,11 +1443,11 @@ class _AccountSubscriptionsScreenState
       }
     } catch (e) {
       AppLogging.subscriptions(
-        '╔══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
-      AppLogging.subscriptions('║ ❌ Twitter/X sign-in FAILED: $e');
+      AppLogging.subscriptions('| Twitter/X sign-in FAILED: $e');
       AppLogging.subscriptions(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       AppLogging.app('Twitter/X sign-in error: $e');
     } finally {
@@ -1565,13 +1563,13 @@ class _AccountSubscriptionsScreenState
       if (!mounted) return;
       if (!ref.read(isOnlineProvider)) {
         AppLogging.subscriptions(
-          '🚪 Sign out blocked — offline (confirmed after refresh)',
+          'Sign out blocked - offline (confirmed after refresh)',
         );
         showErrorSnackBar(context, l10n.accountSubSignOutRequiresInternet);
         return;
       }
       AppLogging.subscriptions(
-        '🚪 Sign out: stale-offline corrected by refresh, proceeding',
+        'Sign out: stale-offline corrected by refresh, proceeding',
       );
     }
 
@@ -1590,20 +1588,20 @@ class _AccountSubscriptionsScreenState
       try {
         AppLogging.subscriptions('');
         AppLogging.subscriptions(
-          '╔══════════════════════════════════════════════════════════════',
+          '+==============================================================',
         );
-        AppLogging.subscriptions('║ 🚪 SIGN OUT INITIATED');
+        AppLogging.subscriptions('| SIGN OUT INITIATED');
         AppLogging.subscriptions(
-          '╚══════════════════════════════════════════════════════════════',
+          '+==============================================================',
         );
         await authService.signOut();
         AppLogging.subscriptions(
-          '╔══════════════════════════════════════════════════════════════',
+          '+==============================================================',
         );
-        AppLogging.subscriptions('║ ✅ Auth signOut() completed');
-        AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+        AppLogging.subscriptions('| Auth signOut() completed');
+        AppLogging.subscriptions('| Invalidating userProfileProvider...');
         AppLogging.subscriptions(
-          '╚══════════════════════════════════════════════════════════════',
+          '+==============================================================',
         );
         // Force the provider to rebuild with new auth state
         ref.invalidate(userProfileProvider);
@@ -1612,11 +1610,11 @@ class _AccountSubscriptionsScreenState
         }
       } catch (e) {
         AppLogging.subscriptions(
-          '╔══════════════════════════════════════════════════════════════',
+          '+==============================================================',
         );
-        AppLogging.subscriptions('║ ❌ Sign out ERROR: $e');
+        AppLogging.subscriptions('| Sign out ERROR: $e');
         AppLogging.subscriptions(
-          '╚══════════════════════════════════════════════════════════════',
+          '+==============================================================',
         );
         if (mounted) {
           showErrorSnackBar(context, l10n.accountSubGenericError(e.toString()));
@@ -1628,7 +1626,7 @@ class _AccountSubscriptionsScreenState
   void _showLinkAccountSheet(BuildContext context) {
     final online = ref.read(isOnlineProvider);
     if (!online) {
-      AppLogging.subscriptions('[LinkAccount] blocked — offline');
+      AppLogging.subscriptions('[LinkAccount] blocked - offline');
       showErrorSnackBar(
         context,
         context.l10n.accountSubLinkingRequiresInternet,
@@ -1730,7 +1728,7 @@ class _AccountSubscriptionsScreenState
     final l10n = context.l10n;
     final online = ref.read(isOnlineProvider);
     if (!online) {
-      AppLogging.subscriptions('[ManageSubscription] blocked — offline');
+      AppLogging.subscriptions('[ManageSubscription] blocked - offline');
       showErrorSnackBar(context, l10n.accountSubManageSubRequiresInternet);
       return;
     }
@@ -1747,7 +1745,7 @@ class _AccountSubscriptionsScreenState
           return;
         }
       } catch (e) {
-        AppLogging.subscriptions('💰 Error launching management URL: $e');
+        AppLogging.subscriptions('Error launching management URL: $e');
       }
     }
 
@@ -1762,7 +1760,7 @@ class _AccountSubscriptionsScreenState
           return;
         }
       } catch (e) {
-        AppLogging.subscriptions('💰 Error launching iOS subscription URL: $e');
+        AppLogging.subscriptions('Error launching iOS subscription URL: $e');
       }
     } else if (Platform.isAndroid) {
       // Deep link to Google Play subscription settings
@@ -1775,7 +1773,7 @@ class _AccountSubscriptionsScreenState
         }
       } catch (e) {
         AppLogging.subscriptions(
-          '💰 Error launching Android subscription URL: $e',
+          'Error launching Android subscription URL: $e',
         );
       }
     }
@@ -1949,7 +1947,7 @@ class _MFAStatusButton extends ConsumerWidget {
     final isOnline = ref.watch(isOnlineProvider);
 
     AppLogging.mfa(
-      '[MFAStatusButton] build — '
+      '[MFAStatusButton] build - '
       'state: ${mfaAsync.isLoading
           ? "loading"
           : mfaAsync.hasError
@@ -1964,7 +1962,7 @@ class _MFAStatusButton extends ConsumerWidget {
 
     if (showAsUnavailable) {
       AppLogging.mfa(
-        '[MFAStatusButton] Offline + loading — showing offline fallback '
+        '[MFAStatusButton] Offline + loading - showing offline fallback '
         'instead of infinite spinner',
       );
     }
@@ -2102,7 +2100,7 @@ class _MFAStatusButton extends ConsumerWidget {
                 data: (factors) {
                   final hasMFA = factors.isNotEmpty;
                   AppLogging.mfa(
-                    '[MFAStatusButton] data — ${factors.length} factor(s), '
+                    '[MFAStatusButton] data - ${factors.length} factor(s), '
                     'hasMFA: $hasMFA',
                   );
                   return Row(
@@ -2721,7 +2719,7 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
       AppLogging.subscriptions(
-        '[CloudSyncPaywall] _loadProducts blocked — offline',
+        '[CloudSyncPaywall] _loadProducts blocked - offline',
       );
       safeSetState(() {
         _error = context.l10n.accountSubSubRequiresInternet;
@@ -2752,7 +2750,7 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
       AppLogging.subscriptions(
-        '[CloudSyncPaywall] _purchase blocked — offline',
+        '[CloudSyncPaywall] _purchase blocked - offline',
       );
       showErrorSnackBar(context, context.l10n.premiumPurchaseRequiresInternet);
       return;

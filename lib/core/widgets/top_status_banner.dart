@@ -96,8 +96,8 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     _cancelReconnectWatchdog();
     _reconnectWatchdog = Timer(_kReconnectTimeout, () {
       AppLogging.connection(
-        '📡 TopStatusBanner: Reconnect watchdog fired after '
-        '${_kReconnectTimeout.inSeconds}s — cancelling auto-reconnect',
+        'TopStatusBanner: Reconnect watchdog fired after '
+        '${_kReconnectTimeout.inSeconds}s - cancelling auto-reconnect',
       );
       _cancelReconnect();
     });
@@ -404,7 +404,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           AppLogging.connection(
-            '📡 TopStatusBanner: Auto-triggering reconnect '
+            'TopStatusBanner: Auto-triggering reconnect '
             '(idle + disconnected + not user-initiated)',
           );
           widget.onRetry();

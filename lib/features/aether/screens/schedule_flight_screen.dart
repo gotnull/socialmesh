@@ -307,7 +307,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     final departure = _departureController.text.trim().toUpperCase();
 
     AppLogging.aether(
-      'Schedule: _validateFlight() — flight=$flightNumber dep=$departure',
+      'Schedule: _validateFlight() - flight=$flightNumber dep=$departure',
     );
 
     if (flightNumber.isEmpty) {
@@ -427,7 +427,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
   void _showValidationFeedback(FlightValidationResult result) {
     AppLogging.aether(
-      'Schedule: validation feedback — ${result.status.name}: ${result.message}',
+      'Schedule: validation feedback - ${result.status.name}: ${result.message}',
     );
     HapticFeedback.mediumImpact();
 
@@ -524,7 +524,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       }
     }
 
-    AppLogging.aether('Schedule: _save() — saving flight');
+    AppLogging.aether('Schedule: _save() - saving flight');
 
     final myNode = _getMyNode();
     if (myNode == null) {
@@ -679,7 +679,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       HapticFeedback.mediumImpact();
 
       AppLogging.aether(
-        'Schedule: flight saved — ${activeFlight.flightNumber} '
+        'Schedule: flight saved - ${activeFlight.flightNumber} '
         '(active=${activeFlight.isActive})',
       );
 
@@ -1505,7 +1505,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     final result = await FlightSearchSheet.show(context);
     if (result != null && mounted) {
       AppLogging.aether(
-        'Schedule: flight selected from search — ${result.callsign}',
+        'Schedule: flight selected from search - ${result.callsign}',
       );
       safeSetState(() {
         _flightNumberController.text = result.callsign;
@@ -1596,7 +1596,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           !lastSeenIsRecentTracking;
 
       AppLogging.aether(
-        'Schedule: processing route data — '
+        'Schedule: processing route data - '
         'dep=${routeInfo.estDepartureAirport} '
         'arr=${routeInfo.estArrivalAirport} '
         'depTime=${routeInfo.departureTime} '
@@ -1645,7 +1645,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
           );
         } else {
           AppLogging.aether(
-            'Schedule: skipping arrival time — flight is '
+            'Schedule: skipping arrival time - flight is '
             '${isActive ? "active (lastSeen is just current tracking)" : "missing arrival data"}',
           );
         }

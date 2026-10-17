@@ -54,7 +54,7 @@ class AgeEligibilityNotifier extends AsyncNotifier<AgeEligibilityState> {
       final signal = await AgeSignalService.fetchPlatformAgeSignal();
       if (signal.ageGroup != AgeGroup.unknown) {
         AppLogging.app(
-          'AgeEligibility: Platform signal received — '
+          'AgeEligibility: Platform signal received - '
           'ageGroup=${signal.ageGroup}, source=${signal.source}',
         );
         final now = DateTime.now().toUtc();
@@ -141,7 +141,7 @@ class AgeEligibilityNotifier extends AsyncNotifier<AgeEligibilityState> {
 
     state = const AsyncData(AgeEligibilityState());
 
-    AppLogging.app('AgeEligibility: Reset for review — gate will re-appear');
+    AppLogging.app('AgeEligibility: Reset for review - gate will re-appear');
 
     // Re-run app init so the router re-evaluates and shows the gate.
     ref.read(appInitProvider.notifier).initialize();

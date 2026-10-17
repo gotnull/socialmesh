@@ -755,19 +755,19 @@ Future<void> linkNode(
 
 /// Unlink a node from current user's profile
 Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
-  AppLogging.social('🔗 [unlinkNode] Starting unlink for nodeId: $nodeId');
+  AppLogging.social('[unlinkNode] Starting unlink for nodeId: $nodeId');
 
   final service = ref.read(socialServiceProvider);
   AppLogging.social(
-    '🔗 [unlinkNode] Got socialService, calling unlinkNodeFromProfile...',
+    '[unlinkNode] Got socialService, calling unlinkNodeFromProfile...',
   );
 
   try {
     await service.unlinkNodeFromProfile(nodeId);
-    AppLogging.social('🔗 [unlinkNode] Firestore unlink completed');
+    AppLogging.social('[unlinkNode] Firestore unlink completed');
   } catch (e, stackTrace) {
-    AppLogging.social('🔗 [unlinkNode] Firestore unlink FAILED: $e');
-    AppLogging.social('🔗 [unlinkNode] Stack trace: $stackTrace');
+    AppLogging.social('[unlinkNode] Firestore unlink FAILED: $e');
+    AppLogging.social('[unlinkNode] Stack trace: $stackTrace');
     rethrow;
   }
 
@@ -775,7 +775,7 @@ Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
   final userProfileNotifier = ref.read(userProfileProvider.notifier);
   final currentProfile = ref.read(userProfileProvider).value;
   AppLogging.social(
-    '🔗 [unlinkNode] Current profile: ${currentProfile != null ? "exists" : "null"}, '
+    '[unlinkNode] Current profile: ${currentProfile != null ? "exists" : "null"}, '
     'linkedNodeIds: ${currentProfile?.linkedNodeIds}',
   );
 
@@ -786,7 +786,7 @@ Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
         ? (updatedLinkedNodes.isNotEmpty ? updatedLinkedNodes.first : null)
         : currentProfile.primaryNodeId;
     AppLogging.social(
-      '🔗 [unlinkNode] Updating local profile: '
+      '[unlinkNode] Updating local profile: '
       'updatedLinkedNodes=$updatedLinkedNodes, newPrimaryId=$newPrimaryId',
     );
     try {
@@ -795,27 +795,27 @@ Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
         primaryNodeId: newPrimaryId,
         clearPrimaryNodeId: newPrimaryId == null,
       );
-      AppLogging.social('🔗 [unlinkNode] Local profile update completed');
+      AppLogging.social('[unlinkNode] Local profile update completed');
     } catch (e, stackTrace) {
-      AppLogging.social('🔗 [unlinkNode] Local profile update FAILED: $e');
-      AppLogging.social('🔗 [unlinkNode] Stack trace: $stackTrace');
+      AppLogging.social('[unlinkNode] Local profile update FAILED: $e');
+      AppLogging.social('[unlinkNode] Stack trace: $stackTrace');
       // Don't rethrow - Firestore already updated
     }
   }
 
   // Invalidate providers to refresh state
-  AppLogging.social('🔗 [unlinkNode] Invalidating providers...');
+  AppLogging.social('[unlinkNode] Invalidating providers...');
   ref.invalidate(linkedNodeIdsProvider);
   ref.invalidate(isNodeLinkedProvider(nodeId));
   ref.invalidate(profileByNodeIdProvider(nodeId));
   // Also invalidate the user's public profile so UI updates
   final currentUser = ref.read(currentUserProvider);
-  AppLogging.social('🔗 [unlinkNode] Current user: ${currentUser?.uid}');
+  AppLogging.social('[unlinkNode] Current user: ${currentUser?.uid}');
   if (currentUser != null) {
     ref.invalidate(publicProfileProvider(currentUser.uid));
-    AppLogging.social('🔗 [unlinkNode] Invalidated publicProfileProvider');
+    AppLogging.social('[unlinkNode] Invalidated publicProfileProvider');
   }
-  AppLogging.social('🔗 [unlinkNode] Unlink complete');
+  AppLogging.social('[unlinkNode] Unlink complete');
 }
 
 /// Refresh cached metadata for all linked nodes using current mesh data.
@@ -903,7 +903,7 @@ void onLinkedNodeUpdated(Ref ref, MeshNode node, MeshNode? previousNode) {
         // Invalidate profile to pick up new metadata
         ref.invalidate(publicProfileProvider(currentUser.uid));
         AppLogging.social(
-          '✅ Updated linked node metadata for ${node.displayName} (${node.nodeNum})',
+          'Updated linked node metadata for ${node.displayName} (${node.nodeNum})',
         );
       })
       .catchError((e) {
@@ -1069,13 +1069,13 @@ class FeedNotifier extends Notifier<FeedState> {
   @override
   FeedState build() {
     ref.onDispose(() {
-      AppLogging.social('📰 [FeedNotifier] dispose — cancelling subscription');
+      AppLogging.social('[FeedNotifier] dispose - cancelling subscription');
       _subscription?.cancel();
     });
 
     if (Firebase.apps.isEmpty) {
       AppLogging.social(
-        '📰 [FeedNotifier] build() — Firebase not initialized, '
+        '[FeedNotifier] build() - Firebase not initialized, '
         'returning isLoading=false',
       );
       return const FeedState(isLoading: false);
@@ -1084,14 +1084,14 @@ class FeedNotifier extends Notifier<FeedState> {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       AppLogging.social(
-        '📰 [FeedNotifier] build() — not signed in, '
+        '[FeedNotifier] build() - not signed in, '
         'returning isLoading=false with empty feed',
       );
       return const FeedState(isLoading: false);
     }
 
     AppLogging.social(
-      '📰 [FeedNotifier] build() — signed in as uid=${currentUser.uid}, '
+      '[FeedNotifier] build() - signed in as uid=${currentUser.uid}, '
       'starting stream, returning isLoading=true',
     );
     _startWatching();
@@ -1101,7 +1101,7 @@ class FeedNotifier extends Notifier<FeedState> {
   void _startWatching() {
     if (Firebase.apps.isEmpty) {
       AppLogging.social(
-        '📰 [FeedNotifier] _startWatching() — Firebase not initialized, '
+        '[FeedNotifier] _startWatching() - Firebase not initialized, '
         'setting isLoading=false',
       );
       state = const FeedState(isLoading: false);
@@ -1111,7 +1111,7 @@ class FeedNotifier extends Notifier<FeedState> {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       AppLogging.social(
-        '📰 [FeedNotifier] _startWatching() — not signed in, '
+        '[FeedNotifier] _startWatching() - not signed in, '
         'cancelling subscription, setting isLoading=false',
       );
       _subscription?.cancel();
@@ -1121,7 +1121,7 @@ class FeedNotifier extends Notifier<FeedState> {
     }
 
     AppLogging.social(
-      '📰 [FeedNotifier] _startWatching() — subscribing to watchFeed()',
+      '[FeedNotifier] _startWatching() - subscribing to watchFeed()',
     );
 
     final service = ref.read(socialServiceProvider);
@@ -1131,7 +1131,7 @@ class FeedNotifier extends Notifier<FeedState> {
         .listen(
           (items) {
             AppLogging.social(
-              '📰 [FeedNotifier] stream emitted — '
+              '[FeedNotifier] stream emitted - '
               '${items.length} items, setting isLoading=false',
             );
             state = FeedState(
@@ -1141,7 +1141,7 @@ class FeedNotifier extends Notifier<FeedState> {
             );
           },
           onError: (e) {
-            AppLogging.social('📰 [FeedNotifier] stream error — $e');
+            AppLogging.social('[FeedNotifier] stream error - $e');
             state = FeedState(error: e.toString());
           },
         );
@@ -1232,15 +1232,13 @@ class ExploreNotifier extends Notifier<ExploreState> {
   @override
   ExploreState build() {
     ref.onDispose(() {
-      AppLogging.social(
-        '🔍 [ExploreNotifier] dispose — cancelling subscription',
-      );
+      AppLogging.social('[ExploreNotifier] dispose - cancelling subscription');
       _subscription?.cancel();
     });
 
     if (Firebase.apps.isEmpty) {
       AppLogging.social(
-        '🔍 [ExploreNotifier] build() — Firebase not initialized, '
+        '[ExploreNotifier] build() - Firebase not initialized, '
         'returning isLoading=false',
       );
       return const ExploreState(isLoading: false);
@@ -1249,7 +1247,7 @@ class ExploreNotifier extends Notifier<ExploreState> {
     // Explore shows public posts — works without auth, but we still need
     // Firebase to be initialized for Firestore access.
     AppLogging.social(
-      '🔍 [ExploreNotifier] build() — Firebase ready, '
+      '[ExploreNotifier] build() - Firebase ready, '
       'starting stream, returning isLoading=true',
     );
     _startWatching();
@@ -1259,7 +1257,7 @@ class ExploreNotifier extends Notifier<ExploreState> {
   void _startWatching() {
     if (Firebase.apps.isEmpty) {
       AppLogging.social(
-        '🔍 [ExploreNotifier] _startWatching() — Firebase not initialized, '
+        '[ExploreNotifier] _startWatching() - Firebase not initialized, '
         'setting isLoading=false',
       );
       state = const ExploreState(isLoading: false);
@@ -1267,7 +1265,7 @@ class ExploreNotifier extends Notifier<ExploreState> {
     }
 
     AppLogging.social(
-      '🔍 [ExploreNotifier] _startWatching() — subscribing to '
+      '[ExploreNotifier] _startWatching() - subscribing to '
       'watchExplorePosts()',
     );
 
@@ -1278,7 +1276,7 @@ class ExploreNotifier extends Notifier<ExploreState> {
         .listen(
           (posts) {
             AppLogging.social(
-              '🔍 [ExploreNotifier] stream emitted — '
+              '[ExploreNotifier] stream emitted - '
               '${posts.length} posts, setting isLoading=false',
             );
             state = ExploreState(
@@ -1288,7 +1286,7 @@ class ExploreNotifier extends Notifier<ExploreState> {
             );
           },
           onError: (e) {
-            AppLogging.social('🔍 [ExploreNotifier] stream error — $e');
+            AppLogging.social('[ExploreNotifier] stream error - $e');
             state = ExploreState(error: e.toString());
           },
         );

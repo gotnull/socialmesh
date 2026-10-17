@@ -183,7 +183,7 @@ class GlobalLayerConnectionStateNotifier
 
     final error = GlobalLayerStateMachine.transitionError(current, target);
     if (error != null) {
-      AppLogging.settings('GlobalLayer: rejected transition — $error');
+      AppLogging.settings('GlobalLayer: rejected transition - $error');
       return false;
     }
 
@@ -349,7 +349,7 @@ class GlobalLayerMetricsNotifier extends Notifier<GlobalLayerMetrics> {
   void recordError(ConnectionErrorRecord error) {
     state = state.recordError(error);
     AppLogging.settings(
-      'GlobalLayer: error recorded — ${error.type.displayLabel}: '
+      'GlobalLayer: error recorded - ${error.type.displayLabel}: '
       '${error.message}',
     );
   }
@@ -432,7 +432,7 @@ class GlobalLayerDiagnosticsNotifier extends Notifier<DiagnosticReport?> {
     if (current == null) return;
     state = current.markComplete();
     AppLogging.settings(
-      'GlobalLayer: diagnostics completed — '
+      'GlobalLayer: diagnostics completed - '
       '${state!.overallStatus.displayLabel}',
     );
   }

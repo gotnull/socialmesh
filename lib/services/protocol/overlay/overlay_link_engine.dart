@@ -382,7 +382,7 @@ class OverlayLinkEngine {
           'linkId=0x${frame.linkId.toRadixString(16)} '
           'existing_peer=${existing.peerNodeNum} '
           'inbound_peer=$senderNodeNum '
-          '— rejecting inbound LINK_OPEN, existing record preserved',
+          '- rejecting inbound LINK_OPEN, existing record preserved',
         );
         await _sendFrame(
           _buildRejectionFrame(

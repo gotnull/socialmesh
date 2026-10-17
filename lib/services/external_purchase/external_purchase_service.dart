@@ -286,7 +286,7 @@ class ExternalPurchaseService {
       return list;
     } catch (e) {
       AppLogging.purchase(
-        '[ExternalPurchaseService] refreshEntitlements failed: $e — '
+        '[ExternalPurchaseService] refreshEntitlements failed: $e - '
         'cache remains authoritative',
       );
       return _cache.read();
@@ -487,7 +487,7 @@ class ExternalPurchaseService {
       }
     } catch (e) {
       AppLogging.purchase(
-        '[ExternalPurchaseService] pollOnce error: $e — continuing',
+        '[ExternalPurchaseService] pollOnce error: $e - continuing',
       );
     }
 
@@ -507,7 +507,7 @@ class ExternalPurchaseService {
     if (_pollingSessionId == null) {
       AppLogging.purchase(
         '[ExternalPurchaseService] payment_confirmed dedup '
-        'sessionId=${status.sessionId} — already handled by prior poll cycle',
+        'sessionId=${status.sessionId} - already handled by prior poll cycle',
       );
       return;
     }

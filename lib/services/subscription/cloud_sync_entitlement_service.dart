@@ -166,7 +166,7 @@ class CloudSyncEntitlementService {
 
   /// Initialize the service and start listening for changes
   Future<void> initialize() async {
-    AppLogging.subscriptions('☁️ CloudSyncEntitlementService initializing...');
+    AppLogging.subscriptions('CloudSyncEntitlementService initializing...');
 
     // Load cached entitlement first for instant UI
     await _loadCachedEntitlement();
@@ -183,7 +183,7 @@ class CloudSyncEntitlementService {
     _authSubscription = _auth.authStateChanges().listen(
       _onAuthStateChange,
       onError: (error) {
-        AppLogging.subscriptions('☁️ Auth state listener error: $error');
+        AppLogging.subscriptions('Auth state listener error: $error');
       },
     );
 
@@ -191,7 +191,7 @@ class CloudSyncEntitlementService {
     await refreshEntitlement();
 
     AppLogging.subscriptions(
-      '☁️ CloudSyncEntitlementService initialized: $_cachedEntitlement',
+      'CloudSyncEntitlementService initialized: $_cachedEntitlement',
     );
   }
 
@@ -199,7 +199,7 @@ class CloudSyncEntitlementService {
   Future<CloudSyncEntitlement> refreshEntitlement() async {
     final user = _auth.currentUser;
     if (user == null) {
-      AppLogging.subscriptions('☁️ No user signed in, no cloud sync access');
+      AppLogging.subscriptions('No user signed in, no cloud sync access');
       _updateEntitlement(CloudSyncEntitlement.none);
       return _cachedEntitlement;
     }
@@ -208,7 +208,7 @@ class CloudSyncEntitlementService {
       // Check if user is an admin first (admins get full access)
       final isAdmin = await _checkIsAdmin(user.uid);
       if (isAdmin) {
-        AppLogging.subscriptions('☁️ User is admin, granting full access');
+        AppLogging.subscriptions('User is admin, granting full access');
         _updateEntitlement(
           const CloudSyncEntitlement(
             state: CloudSyncEntitlementState.grandfathered,
@@ -222,7 +222,7 @@ class CloudSyncEntitlementService {
       // Check grandfathering status (Firebase)
       final grandfathered = await _checkGrandfathered(user.uid);
       if (grandfathered) {
-        AppLogging.subscriptions('☁️ User is grandfathered, full access');
+        AppLogging.subscriptions('User is grandfathered, full access');
         _updateEntitlement(
           const CloudSyncEntitlement(
             state: CloudSyncEntitlementState.grandfathered,
@@ -245,7 +245,7 @@ class CloudSyncEntitlementService {
       _updateEntitlement(entitlement);
       return _cachedEntitlement;
     } catch (e) {
-      AppLogging.subscriptions('☁️ Error refreshing entitlement: $e');
+      AppLogging.subscriptions('Error refreshing entitlement: $e');
       // Return cached on error
       return _cachedEntitlement;
     }
@@ -256,10 +256,10 @@ class CloudSyncEntitlementService {
     try {
       final adminDoc = await _firestore.collection('admins').doc(uid).get();
       final isAdmin = adminDoc.exists;
-      AppLogging.subscriptions('☁️ Admin check for $uid: $isAdmin');
+      AppLogging.subscriptions('Admin check for $uid: $isAdmin');
       return isAdmin;
     } catch (e) {
-      AppLogging.subscriptions('☁️ Error checking admin status: $e');
+      AppLogging.subscriptions('Error checking admin status: $e');
       return false;
     }
   }
@@ -295,7 +295,7 @@ class CloudSyncEntitlementService {
 
       return false;
     } catch (e) {
-      AppLogging.subscriptions('☁️ Error checking grandfathered status: $e');
+      AppLogging.subscriptions('Error checking grandfathered status: $e');
       return false;
     }
   }
@@ -311,9 +311,9 @@ class CloudSyncEntitlementService {
         'created_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      AppLogging.subscriptions('☁️ Marked user as grandfathered: $uid');
+      AppLogging.subscriptions('Marked user as grandfathered: $uid');
     } catch (e) {
-      AppLogging.subscriptions('☁️ Error marking grandfathered: $e');
+      AppLogging.subscriptions('Error marking grandfathered: $e');
     }
   }
 
@@ -324,37 +324,37 @@ class CloudSyncEntitlementService {
     // Extensive debug logging for troubleshooting
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
-      '═══════════════════════════════════════════════════════════',
+      '===========================================================',
     );
     AppLogging.subscriptions(
-      '☁️ [ENTITLEMENT] Resolving entitlement from CustomerInfo...',
+      '[ENTITLEMENT] Resolving entitlement from CustomerInfo...',
     );
     AppLogging.subscriptions(
-      '═══════════════════════════════════════════════════════════',
+      '===========================================================',
     );
     AppLogging.subscriptions(
-      '☁️ [ENTITLEMENT] Looking for entitlement ID: "$_entitlementId"',
+      '[ENTITLEMENT] Looking for entitlement ID: "$_entitlementId"',
     );
     AppLogging.subscriptions(
-      '☁️ [ENTITLEMENT] Customer ID: ${customerInfo.originalAppUserId}',
+      '[ENTITLEMENT] Customer ID: ${customerInfo.originalAppUserId}',
     );
     AppLogging.subscriptions(
-      '☁️ [ENTITLEMENT] All entitlement keys: ${customerInfo.entitlements.all.keys.toList()}',
+      '[ENTITLEMENT] All entitlement keys: ${customerInfo.entitlements.all.keys.toList()}',
     );
     AppLogging.subscriptions(
-      '☁️ [ENTITLEMENT] Active entitlement keys: ${customerInfo.entitlements.active.keys.toList()}',
+      '[ENTITLEMENT] Active entitlement keys: ${customerInfo.entitlements.active.keys.toList()}',
     );
     AppLogging.subscriptions(
-      '☁️ [ENTITLEMENT] Active subscriptions: ${customerInfo.activeSubscriptions}',
+      '[ENTITLEMENT] Active subscriptions: ${customerInfo.activeSubscriptions}',
     );
     AppLogging.subscriptions(
-      '☁️ [ENTITLEMENT] All purchased products: ${customerInfo.allPurchasedProductIdentifiers}',
+      '[ENTITLEMENT] All purchased products: ${customerInfo.allPurchasedProductIdentifiers}',
     );
 
     // List all entitlements with details
     for (final entry in customerInfo.entitlements.all.entries) {
       AppLogging.subscriptions('');
-      AppLogging.subscriptions('   📋 Entitlement "${entry.key}":');
+      AppLogging.subscriptions('   Entitlement "${entry.key}":');
       AppLogging.subscriptions('      - isActive: ${entry.value.isActive}');
       AppLogging.subscriptions(
         '      - productIdentifier: ${entry.value.productIdentifier}',
@@ -375,7 +375,7 @@ class CloudSyncEntitlementService {
     if (entitlement == null) {
       AppLogging.subscriptions('');
       AppLogging.subscriptions(
-        '❌ [ENTITLEMENT] No "$_entitlementId" entitlement found!',
+        '[ENTITLEMENT] No "$_entitlementId" entitlement found!',
       );
       AppLogging.subscriptions(
         '   Available keys: ${customerInfo.entitlements.all.keys.toList()}',
@@ -383,13 +383,13 @@ class CloudSyncEntitlementService {
       AppLogging.subscriptions(
         '   TIP: Check RevenueCat dashboard that entitlement Identifier matches exactly',
       );
-      AppLogging.subscriptions('☁️ No $_entitlementId entitlement found');
+      AppLogging.subscriptions('No $_entitlementId entitlement found');
       return CloudSyncEntitlement.none;
     }
 
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
-      '✅ [ENTITLEMENT] Found "$_entitlementId" entitlement!',
+      '[ENTITLEMENT] Found "$_entitlementId" entitlement!',
     );
     AppLogging.subscriptions('   - isActive: ${entitlement.isActive}');
     AppLogging.subscriptions(
@@ -404,9 +404,9 @@ class CloudSyncEntitlementService {
 
       if (billingIssue) {
         AppLogging.subscriptions(
-          '⚠️ [ENTITLEMENT] Subscription in grace period (billing issue detected)',
+          '[ENTITLEMENT] Subscription in grace period (billing issue detected)',
         );
-        AppLogging.subscriptions('☁️ Subscription in grace period');
+        AppLogging.subscriptions('Subscription in grace period');
         return CloudSyncEntitlement(
           state: CloudSyncEntitlementState.gracePeriod,
           expiresAt: entitlement.expirationDate != null
@@ -423,13 +423,13 @@ class CloudSyncEntitlementService {
       // Check if subscription is cancelled but still active
       if (!willRenew) {
         AppLogging.subscriptions(
-          '⚠️ [ENTITLEMENT] Subscription CANCELLED but still active until expiration',
+          '[ENTITLEMENT] Subscription CANCELLED but still active until expiration',
         );
         AppLogging.subscriptions('   - willRenew: $willRenew');
         AppLogging.subscriptions(
           '   - expirationDate: ${entitlement.expirationDate}',
         );
-        AppLogging.subscriptions('☁️ Subscription cancelled');
+        AppLogging.subscriptions('Subscription cancelled');
         return CloudSyncEntitlement(
           state: CloudSyncEntitlementState.cancelled,
           expiresAt: entitlement.expirationDate != null
@@ -443,8 +443,8 @@ class CloudSyncEntitlementService {
         );
       }
 
-      AppLogging.subscriptions('✅ [ENTITLEMENT] Subscription is ACTIVE!');
-      AppLogging.subscriptions('☁️ Subscription active');
+      AppLogging.subscriptions('[ENTITLEMENT] Subscription is ACTIVE!');
+      AppLogging.subscriptions('Subscription active');
       return CloudSyncEntitlement(
         state: CloudSyncEntitlementState.active,
         expiresAt: entitlement.expirationDate != null
@@ -462,9 +462,9 @@ class CloudSyncEntitlementService {
     // Allow read-only access for previously subscribed users
     if (entitlement.expirationDate != null) {
       AppLogging.subscriptions(
-        '⚠️ [ENTITLEMENT] Subscription EXPIRED, granting read-only access',
+        '[ENTITLEMENT] Subscription EXPIRED, granting read-only access',
       );
-      AppLogging.subscriptions('☁️ Subscription expired, read-only access');
+      AppLogging.subscriptions('Subscription expired, read-only access');
       return CloudSyncEntitlement(
         state: CloudSyncEntitlementState.expired,
         expiresAt: DateTime.parse(entitlement.expirationDate!),
@@ -477,13 +477,13 @@ class CloudSyncEntitlementService {
     }
 
     AppLogging.subscriptions(
-      '❌ [ENTITLEMENT] Entitlement not active and no expiration date, returning none',
+      '[ENTITLEMENT] Entitlement not active and no expiration date, returning none',
     );
     return CloudSyncEntitlement.none;
   }
 
   void _onCustomerInfoUpdate(CustomerInfo customerInfo) {
-    AppLogging.subscriptions('☁️ RevenueCat customer info updated');
+    AppLogging.subscriptions('RevenueCat customer info updated');
     // Re-resolve entitlement (grandfathering check is cached)
     final entitlement = _resolveEntitlementFromCustomerInfo(customerInfo);
 
@@ -495,19 +495,19 @@ class CloudSyncEntitlementService {
 
   void _onAuthStateChange(User? user) {
     if (user == null) {
-      AppLogging.subscriptions('☁️ Auth state changed: User signed out');
+      AppLogging.subscriptions('Auth state changed: User signed out');
       AppLogging.subscriptions(
-        '☁️ Clearing entitlement and cancelling Firestore subscription',
+        'Clearing entitlement and cancelling Firestore subscription',
       );
       _updateEntitlement(CloudSyncEntitlement.none);
       _firestoreSubscription?.cancel();
     } else {
       // Refresh on sign in
       AppLogging.subscriptions(
-        '☁️ Auth state changed: User signed in (uid=${user.uid.substring(0, 8)}...)',
+        'Auth state changed: User signed in (uid=${user.uid.substring(0, 8)}...)',
       );
       AppLogging.subscriptions(
-        '☁️ Refreshing entitlement and starting Firestore listener',
+        'Refreshing entitlement and starting Firestore listener',
       );
       refreshEntitlement();
       _listenToFirestoreEntitlement(user.uid);
@@ -578,9 +578,9 @@ class CloudSyncEntitlementService {
                   mirrorStatus: status,
                 )) {
                   AppLogging.subscriptions(
-                    '☁️ Mirror says feature_only but RC already granted '
+                    'Mirror says feature_only but RC already granted '
                     'full access (state=${_cachedEntitlement.state}); '
-                    'ignoring mirror downgrade — RC wins.',
+                    'ignoring mirror downgrade - RC wins.',
                   );
                   return;
                 }
@@ -598,7 +598,7 @@ class CloudSyncEntitlementService {
           onError: (error) {
             // Handle Firestore errors gracefully (permissions, network, etc.)
             AppLogging.subscriptions(
-              '☁️ Firestore entitlement listener error: $error',
+              'Firestore entitlement listener error: $error',
             );
             // Don't crash - just continue with RevenueCat-only entitlements
           },
@@ -608,7 +608,7 @@ class CloudSyncEntitlementService {
   void _updateEntitlement(CloudSyncEntitlement entitlement) {
     if (_cachedEntitlement.state != entitlement.state) {
       AppLogging.subscriptions(
-        '☁️ Entitlement changed: ${_cachedEntitlement.state} -> ${entitlement.state}',
+        'Entitlement changed: ${_cachedEntitlement.state} -> ${entitlement.state}',
       );
     }
     _cachedEntitlement = entitlement;
@@ -628,12 +628,12 @@ class CloudSyncEntitlementService {
         if (cacheAge < const Duration(hours: 1).inMilliseconds) {
           _cachedEntitlement = _deserializeEntitlement(cached);
           AppLogging.subscriptions(
-            '☁️ Loaded cached entitlement: $_cachedEntitlement',
+            'Loaded cached entitlement: $_cachedEntitlement',
           );
         }
       }
     } catch (e) {
-      AppLogging.subscriptions('☁️ Error loading cached entitlement: $e');
+      AppLogging.subscriptions('Error loading cached entitlement: $e');
     }
   }
 
@@ -646,7 +646,7 @@ class CloudSyncEntitlementService {
         DateTime.now().millisecondsSinceEpoch,
       );
     } catch (e) {
-      AppLogging.subscriptions('☁️ Error caching entitlement: $e');
+      AppLogging.subscriptions('Error caching entitlement: $e');
     }
   }
 

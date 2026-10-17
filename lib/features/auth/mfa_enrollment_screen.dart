@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -56,13 +58,13 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
   Future<void> _sendCode() async {
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.mfa('_sendCode — blocked, device is offline');
+      AppLogging.mfa('_sendCode - blocked, device is offline');
       showErrorSnackBar(context, context.l10n.authMfaSendCodeRequiresInternet);
       return;
     }
 
     if (!_formKey.currentState!.validate()) {
-      AppLogging.mfa('_sendCode — form validation failed');
+      AppLogging.mfa('_sendCode - form validation failed');
       return;
     }
 
@@ -75,20 +77,20 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
     final authService = ref.read(authServiceProvider);
     final phoneNumber = _phoneController.text.trim();
 
-    AppLogging.mfa('_sendCode — requesting code for phone=$phoneNumber');
+    AppLogging.mfa('_sendCode - requesting code for phone=$phoneNumber');
 
     try {
       await authService.enrollMFA(
         phoneNumber: phoneNumber,
         onCodeSent: (verificationId, resendToken) {
           AppLogging.mfa(
-            '_sendCode — onCodeSent callback fired, '
+            '_sendCode - onCodeSent callback fired, '
             'verificationId=${verificationId.substring(0, 8)}..., '
             'resendToken=$resendToken',
           );
           if (!mounted) {
             AppLogging.mfa(
-              '_sendCode — widget disposed in onCodeSent, aborting',
+              '_sendCode - widget disposed in onCodeSent, aborting',
             );
             return;
           }
@@ -102,35 +104,35 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
             context.l10n.authMfaCodeSentTo(phoneNumber),
           );
           AppLogging.mfa(
-            '_sendCode — state updated: isCodeSent=true, isLoading=false',
+            '_sendCode - state updated: isCodeSent=true, isLoading=false',
           );
         },
         onError: (errorCode) {
           AppLogging.mfa(
-            '_sendCode — onError callback fired, errorCode=$errorCode',
+            '_sendCode - onError callback fired, errorCode=$errorCode',
           );
           if (!mounted) {
-            AppLogging.mfa('_sendCode — widget disposed in onError, aborting');
+            AppLogging.mfa('_sendCode - widget disposed in onError, aborting');
             return;
           }
           safeSetState(() => _isLoading = false);
           final friendlyMsg = friendlyMFAErrorCode(errorCode, context.l10n);
-          AppLogging.mfa('_sendCode — showing error snackbar: $friendlyMsg');
+          AppLogging.mfa('_sendCode - showing error snackbar: $friendlyMsg');
           showErrorSnackBar(context, friendlyMsg);
         },
       );
-      AppLogging.mfa('_sendCode — enrollMFA returned (callbacks pending)');
+      AppLogging.mfa('_sendCode - enrollMFA returned (callbacks pending)');
     } on FirebaseAuthMultiFactorException catch (e) {
       // Re-auth during enrollment triggered an MFA challenge (edge case:
       // account still has MFA or Firebase session state is stale).
       AppLogging.mfa(
-        '_sendCode — re-auth requires MFA verification, '
+        '_sendCode - re-auth requires MFA verification, '
         'showing MFA dialog (hints=${e.resolver.hints.length})',
       );
 
       if (!mounted) {
         AppLogging.mfa(
-          '_sendCode — widget disposed before MFA dialog, aborting',
+          '_sendCode - widget disposed before MFA dialog, aborting',
         );
         return;
       }
@@ -139,14 +141,14 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
 
       if (credential == null || !mounted) {
         AppLogging.mfa(
-          '_sendCode — user cancelled MFA verification '
+          '_sendCode - user cancelled MFA verification '
           '(credential=${credential != null}, mounted=$mounted)',
         );
         safeSetState(() => _isLoading = false);
         return;
       }
 
-      AppLogging.mfa('_sendCode — MFA re-auth succeeded, retrying enrollment');
+      AppLogging.mfa('_sendCode - MFA re-auth succeeded, retrying enrollment');
 
       // Re-auth complete — retry the enrollment
       try {
@@ -155,7 +157,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
           phoneNumber: phoneNumber,
           onCodeSent: (verificationId, resendToken) {
             AppLogging.mfa(
-              '_sendCode — retry onCodeSent callback fired, '
+              '_sendCode - retry onCodeSent callback fired, '
               'verificationId=${verificationId.substring(0, 8)}...',
             );
             if (!mounted) return;
@@ -171,7 +173,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
           },
           onError: (errorCode) {
             AppLogging.mfa(
-              '_sendCode — retry onError callback: errorCode=$errorCode',
+              '_sendCode - retry onError callback: errorCode=$errorCode',
             );
             if (!mounted) return;
             safeSetState(() => _isLoading = false);
@@ -181,10 +183,10 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
             );
           },
         );
-        AppLogging.mfa('_sendCode — retry enrollMFA returned');
+        AppLogging.mfa('_sendCode - retry enrollMFA returned');
       } catch (retryErr) {
         AppLogging.mfa(
-          '_sendCode — retry after MFA re-auth failed: '
+          '_sendCode - retry after MFA re-auth failed: '
           'type=${retryErr.runtimeType}, error=$retryErr',
         );
         if (!mounted) return;
@@ -195,7 +197,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
       // enrollMFA normally uses onError callback, but re-auth exceptions
       // bypass that path and throw directly.
       AppLogging.mfa(
-        '_sendCode — unexpected error: type=${e.runtimeType}, error=$e',
+        '_sendCode - unexpected error: type=${e.runtimeType}, error=$e',
       );
       if (!mounted) return;
       safeSetState(() => _isLoading = false);
@@ -206,20 +208,20 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
   Future<void> _verifyCode() async {
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.mfa('_verifyCode — blocked, device is offline');
+      AppLogging.mfa('_verifyCode - blocked, device is offline');
       showErrorSnackBar(context, context.l10n.authMfaVerifyRequiresInternet);
       return;
     }
 
     if (_verificationId == null) {
-      AppLogging.mfa('_verifyCode — no verificationId, aborting');
+      AppLogging.mfa('_verifyCode - no verificationId, aborting');
       return;
     }
 
     final code = _codeController.text.trim();
     if (code.length != 6) {
       AppLogging.mfa(
-        '_verifyCode — invalid code length: ${code.length} (expected 6)',
+        '_verifyCode - invalid code length: ${code.length} (expected 6)',
       );
       showWarningSnackBar(
         context,
@@ -229,7 +231,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
     }
 
     AppLogging.mfa(
-      '_verifyCode — verifying code, '
+      '_verifyCode - verifying code, '
       'verificationId=${_verificationId!.substring(0, 8)}...',
     );
 
@@ -242,32 +244,32 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
 
     try {
       final authService = ref.read(authServiceProvider);
-      AppLogging.mfa('_verifyCode — calling completeMFAEnrollment');
+      AppLogging.mfa('_verifyCode - calling completeMFAEnrollment');
       await authService.completeMFAEnrollment(
         verificationId: _verificationId!,
         smsCode: code,
         displayName: 'Phone',
       );
-      AppLogging.mfa('_verifyCode — completeMFAEnrollment succeeded');
+      AppLogging.mfa('_verifyCode - completeMFAEnrollment succeeded');
 
       if (!mounted) {
-        AppLogging.mfa('_verifyCode — widget disposed after enrollment');
+        AppLogging.mfa('_verifyCode - widget disposed after enrollment');
         return;
       }
 
       await haptics.trigger(HapticType.success);
       if (!mounted) return;
       safeShowSnackBar(context.l10n.authMfaEnabled);
-      AppLogging.mfa('_verifyCode — success, popping with result=true');
+      AppLogging.mfa('_verifyCode - success, popping with result=true');
 
       navigator.pop(true);
     } catch (e) {
-      AppLogging.mfa('_verifyCode — error: type=${e.runtimeType}, error=$e');
+      AppLogging.mfa('_verifyCode - error: type=${e.runtimeType}, error=$e');
       if (!mounted) return;
       await haptics.trigger(HapticType.error);
       if (!mounted) return;
       final friendlyMsg = friendlyMFAError(e, context.l10n);
-      AppLogging.mfa('_verifyCode — showing error snackbar: $friendlyMsg');
+      AppLogging.mfa('_verifyCode - showing error snackbar: $friendlyMsg');
       safeShowSnackBar(friendlyMsg);
       safeSetState(() => _isLoading = false);
     }
@@ -276,7 +278,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
   @override
   Widget build(BuildContext context) {
     AppLogging.mfa(
-      'MFAEnrollmentScreen build — '
+      'MFAEnrollmentScreen build - '
       'isCodeSent=$_isCodeSent, isLoading=$_isLoading, '
       'hasVerificationId=${_verificationId != null}',
     );
@@ -450,7 +452,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
                         ? null
                         : () {
                             AppLogging.mfa(
-                              '_changePhoneNumber — user tapped Change Phone Number',
+                              '_changePhoneNumber - user tapped Change Phone Number',
                             );
                             safeSetState(() {
                               _isCodeSent = false;

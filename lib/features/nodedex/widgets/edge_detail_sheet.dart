@@ -79,7 +79,7 @@ class EdgeDetailSheet extends ConsumerWidget {
         '!${fromNodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
     final toHex =
         '!${toNodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
-    AppLogging.nodeDex('Edge detail sheet opened: $fromHex ↔ $toHex');
+    AppLogging.nodeDex('Edge detail sheet opened: $fromHex <-> $toHex');
     return AppBottomSheet.show<void>(
       context: context,
       child: EdgeDetailSheet(

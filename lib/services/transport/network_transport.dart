@@ -95,7 +95,7 @@ class NetworkTransport implements DeviceTransport {
   void _setState(DeviceConnectionState newState) {
     _state = newState;
     _stateController.add(newState);
-    AppLogging.protocol('NetworkTransport: state → $newState');
+    AppLogging.protocol('NetworkTransport: state -> $newState');
   }
 
   @override
@@ -138,7 +138,7 @@ class NetworkTransport implements DeviceTransport {
           );
           if (data.length > 1024) {
             AppLogging.protocol(
-              '⚠️ NET SECURITY: Large chunk received: ${data.length} bytes '
+              'NET SECURITY: Large chunk received: ${data.length} bytes '
               '(possible flood attack)',
             );
           }

@@ -55,11 +55,10 @@ void _syncLog(String message, {bool verbose = false}) {
 /// Log a sync error with `[SYNC]` prefix.
 /// Logs to BOTH the widgets channel and the always-on sync channel.
 void _syncLogError(String message, [Object? error, StackTrace? stack]) {
-  final full =
-      '[SYNC] ERROR: $message${error != null ? ' — $error' : ''}'; // lint-allow: hardcoded-string
+  final full = '[SYNC] ERROR: $message${error != null ? ' — $error' : ''}'; // lint-allow: hardcoded-string
   AppLogging.widgets(full);
   AppLogging.sync(
-    '[Widget] ERROR: $message${error != null ? ' — $error' : ''}',
+    '[Widget] ERROR: $message${error != null ? ' - $error' : ''}',
   );
 }
 

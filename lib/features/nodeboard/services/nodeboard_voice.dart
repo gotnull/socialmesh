@@ -39,7 +39,7 @@ enum BoardTone {
       _ => BoardTone.neutral,
     };
     if (tone != BoardTone.neutral) {
-      AppLogging.nodeBoard('Voice: tone resolved | theme=$themeId → $tone');
+      AppLogging.nodeBoard('Voice: tone resolved | theme=$themeId -> $tone');
     }
     return tone;
   }

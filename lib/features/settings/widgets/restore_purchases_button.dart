@@ -34,7 +34,7 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
   Future<void> _onPressed(BuildContext context) async {
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.subscriptions('[RestorePurchases] Blocked — offline');
+      AppLogging.subscriptions('[RestorePurchases] Blocked - offline');
       showErrorSnackBar(context, context.l10n.restorePurchasesRequiresInternet);
       return;
     }

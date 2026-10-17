@@ -44,7 +44,7 @@ class DeviceInstallId {
       return fresh;
     } catch (e) {
       AppLogging.purchase(
-        '[DeviceInstallId] Read failed: $e — returning ephemeral id',
+        '[DeviceInstallId] Read failed: $e - returning ephemeral id',
       );
       return _uuid.v4();
     }

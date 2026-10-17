@@ -212,7 +212,7 @@ class FirmwareApiService {
       await File(dfuZipPath).writeAsBytes(dfuBytes);
 
       AppLogging.firmware(
-        'Extracted DFU package: ${dfuFile.name} (${dfuBytes.length} bytes) → $dfuZipPath',
+        'Extracted DFU package: ${dfuFile.name} (${dfuBytes.length} bytes) -> $dfuZipPath',
       );
 
       return dfuZipPath;

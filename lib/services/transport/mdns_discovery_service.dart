@@ -231,18 +231,18 @@ class MeshtasticMdnsDiscovery {
       );
       if (valLen > 100) {
         AppLogging.protocol(
-          '  ⚠️ SECURITY: Oversized TXT value ($valLen chars) for key=${entry.key}',
+          '  SECURITY: Oversized TXT value ($valLen chars) for key=${entry.key}',
         );
       }
       if (hasControl) {
         AppLogging.protocol(
-          '  ⚠️ SECURITY: Control characters detected in TXT[${entry.key}]: '
+          '  SECURITY: Control characters detected in TXT[${entry.key}]: '
           'codeUnits=${codeUnits.where((c) => c < 0x20 || c == 0x7F).toList()}',
         );
       }
       if (hasBidi) {
         AppLogging.protocol(
-          '  ⚠️ SECURITY: Bidi/RTL override characters detected in TXT[${entry.key}]: '
+          '  SECURITY: Bidi/RTL override characters detected in TXT[${entry.key}]: '
           'codeUnits=${codeUnits.where((c) => c >= 0x200E && c <= 0x2069).map((c) => 'U+${c.toRadixString(16).padLeft(4, '0').toUpperCase()}').toList()}',
         );
       }

@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/l10n/l10n_extension.dart';
+
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -140,7 +143,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
 
     try {
       AppLogging.sync(
-        '[WidgetImport] _importWidget — id=${_widget!.id}, '
+        '[WidgetImport] _importWidget - id=${_widget!.id}, '
         'name=${_widget!.name}',
       );
       final storageService = await ref.read(
@@ -322,9 +325,8 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
                 const SizedBox(height: AppTheme.spacing8),
                 Text(
                   context.l10n.widgetBuilderImportSize,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(color: context.accentColor),
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(color: context.accentColor),
                 ),
                 const SizedBox(height: AppTheme.spacing4),
                 Text(_getSizeDisplayName(widgetSchema.size)),
@@ -332,9 +334,8 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
                   const SizedBox(height: AppTheme.spacing16),
                   Text(
                     context.l10n.widgetBuilderImportTags,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: context.accentColor,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(color: context.accentColor),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   Wrap(
@@ -360,9 +361,8 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
           // Widget preview
           Text(
             context.l10n.widgetBuilderImportPreview,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(color: context.accentColor),
+            style: Theme.of(context).textTheme.titleSmall
+                ?.copyWith(color: context.accentColor),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Center(

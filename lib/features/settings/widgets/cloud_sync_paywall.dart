@@ -15,6 +15,7 @@ import '../../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../utils/snackbar.dart';
 import '../../external_purchase/redeem_unlock_code_sheet.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Soft paywall for cloud sync feature
@@ -58,7 +59,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
         _isLoading = false;
       });
     } catch (e) {
-      AppLogging.subscriptions('☁️ Error loading products: $e');
+      AppLogging.subscriptions('Error loading products: $e');
       safeSetState(() {
         _errorMessage = 'Unable to load subscription options';
         _isLoading = false;
@@ -80,7 +81,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
       if (!mounted) return;
       widget.onSubscribed?.call();
     } catch (e) {
-      AppLogging.subscriptions('☁️ Purchase error: $e');
+      AppLogging.subscriptions('Purchase error: $e');
       if (!mounted) return;
       showErrorSnackBar(context, context.l10n.premiumPurchaseFailed);
     } finally {
@@ -98,7 +99,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
     safeSetState(() => _isLoading = true);
 
     try {
-      AppLogging.subscriptions('☁️ Cloud Sync: Starting restore purchases');
+      AppLogging.subscriptions('Cloud Sync: Starting restore purchases');
 
       // Use the same restore flow as packs for consistency
       final success = await restorePurchases(ref);
@@ -113,7 +114,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
 
       if (service.currentEntitlement.hasFullAccess) {
         AppLogging.subscriptions(
-          '☁️ Cloud Sync: Restore successful - full access granted',
+          'Cloud Sync: Restore successful - full access granted',
         );
         // Dismiss sheet first, then show snackbar
         widget.onSubscribed?.call();
@@ -125,7 +126,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
       } else if (success) {
         // User has purchases but no cloud sync entitlement
         AppLogging.subscriptions(
-          '☁️ Cloud Sync: Restore found purchases but no cloud sync entitlement',
+          'Cloud Sync: Restore found purchases but no cloud sync entitlement',
         );
         // Dismiss sheet first so snackbar is visible
         widget.onDismiss?.call();
@@ -134,7 +135,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
         if (!mounted) return;
         showInfoSnackBar(context, context.l10n.cloudSyncNoSubscription);
       } else {
-        AppLogging.subscriptions('☁️ Cloud Sync: Restore found no purchases');
+        AppLogging.subscriptions('Cloud Sync: Restore found no purchases');
         // Dismiss sheet first so snackbar is visible
         widget.onDismiss?.call();
         await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -142,7 +143,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
         showInfoSnackBar(context, context.l10n.premiumRestoreNone);
       }
     } catch (e) {
-      AppLogging.subscriptions('☁️ Cloud Sync: Restore error: $e');
+      AppLogging.subscriptions('Cloud Sync: Restore error: $e');
       if (!mounted) return;
       showErrorSnackBar(context, context.l10n.cloudSyncRestoreFailed);
     } finally {

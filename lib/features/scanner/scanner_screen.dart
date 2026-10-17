@@ -286,7 +286,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       _mountCounter.register();
       final scannerCount = ref.read(scannerMountCountProvider);
       AppLogging.connection(
-        '📡 SCANNER: initState - isOnboarding=${widget.isOnboarding}, '
+        'SCANNER: initState - isOnboarding=${widget.isOnboarding}, '
         'isInline=${widget.isInline}, hashCode=$hashCode, '
         'mountCount=$scannerCount',
       );
@@ -299,7 +299,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       if (scannerCount > 1) {
         AppLogging.connection(
           'SCANNER_NAV_SUPPRESSED_DUPLICATE hashCode=$hashCode '
-          'mountCount=$scannerCount — waiting for siblings to dispose',
+          'mountCount=$scannerCount - waiting for siblings to dispose',
         );
       }
     });
@@ -312,7 +312,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // Check if pairing was invalidated (factory reset, device replaced, etc.)
     // Show the pairing hint immediately so user knows to forget in Bluetooth settings
     if (deviceState.isTerminalInvalidated) {
-      AppLogging.connection('📡 SCANNER: Shown after pairing invalidation');
+      AppLogging.connection('SCANNER: Shown after pairing invalidation');
       AppErrorHandler.addBreadcrumb('Scanner: pairing invalidation detected');
       _showPairingInvalidationHint = true;
     } else if (autoReconnectState == AutoReconnectState.failed &&
@@ -323,7 +323,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // reconnect). Show the same guidance as pairing invalidation so the
       // user knows to forget the device in Bluetooth settings and re-pair.
       AppLogging.connection(
-        '📡 SCANNER: Shown after auto-reconnect PIN/auth failure',
+        'SCANNER: Shown after auto-reconnect PIN/auth failure',
       );
       AppErrorHandler.addBreadcrumb('Scanner: auth failure detected');
       _showPairingInvalidationHint = true;
@@ -331,7 +331,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     } else if (autoReconnectState == AutoReconnectState.failed &&
         deviceState.reason == conn.DisconnectReason.deviceNotFound) {
       AppLogging.connection(
-        '📡 SCANNER: Shown after auto-reconnect failed with deviceNotFound',
+        'SCANNER: Shown after auto-reconnect failed with deviceNotFound',
       );
       // Get saved device name to show in banner
       ref.read(settingsServiceProvider.future).then((settings) {
@@ -353,7 +353,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             !settings.autoReconnect &&
             settings.lastDeviceId != null) {
           AppLogging.connection(
-            '📡 SCANNER: Shown because auto-reconnect is disabled',
+            'SCANNER: Shown because auto-reconnect is disabled',
           );
           setState(() {
             _showAutoReconnectDisabledHint = true;
@@ -444,22 +444,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final count = ref.read(scannerMountCountProvider);
     if (count > 1) {
       AppLogging.connection(
-        '📡 SCANNER: deferring scan start hashCode=$hashCode '
+        'SCANNER: deferring scan start hashCode=$hashCode '
         'mountCount=$count (waiting for siblings to dispose)',
       );
       return;
     }
     _scanWorkStarted = true;
     AppLogging.connection(
-      '📡 SCANNER: lone-survivor activation hashCode=$hashCode',
+      'SCANNER: lone-survivor activation hashCode=$hashCode',
     );
     if (widget.isOnboarding || widget.isInline) {
       AppLogging.connection(
-        '📡 SCANNER: Onboarding/inline mode - starting manual scan',
+        'SCANNER: Onboarding/inline mode - starting manual scan',
       );
       _startScan();
     } else {
-      AppLogging.connection('📡 SCANNER: Normal mode - trying auto-reconnect');
+      AppLogging.connection('SCANNER: Normal mode - trying auto-reconnect');
       _tryAutoReconnect();
     }
   }
@@ -467,7 +467,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   @override
   void dispose() {
     AppLogging.connection(
-      '📡 SCANNER: dispose hashCode=$hashCode _connecting=$_connecting',
+      'SCANNER: dispose hashCode=$hashCode _connecting=$_connecting',
     );
     _rescanTimer?.cancel();
     _backgroundReconnectSub?.close();
@@ -531,7 +531,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final mountCounter = _mountCounter;
     Future.microtask(mountCounter.unregister);
     AppLogging.connection(
-      '📡 SCANNER: dispose - hashCode=$hashCode '
+      'SCANNER: dispose - hashCode=$hashCode '
       'scanWorkStarted=$_scanWorkStarted',
     );
     super.dispose();
@@ -565,7 +565,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final lastWasMeshCore =
         lastDeviceId != null && lastDeviceId.startsWith('meshcore-');
     AppLogging.connection(
-      '📡 SCANNER: _listenForDisconnectCompletion registering — '
+      'SCANNER: _listenForDisconnectCompletion registering - '
       'initial meshtasticState=${initialMeshtastic.state}, '
       'initial meshCoreState=$initialMeshCore, '
       'lastDeviceId=$lastDeviceId, lastWasMeshCore=$lastWasMeshCore',
@@ -579,14 +579,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     void onDone(String source) {
       if (fired) {
         AppLogging.connection(
-          '📡 SCANNER: onDone duplicate ignored (source=$source)',
+          'SCANNER: onDone duplicate ignored (source=$source)',
         );
         return;
       }
       fired = true;
       AppLogging.connection(
-        '📡 SCANNER: Transport disconnect completed (source=$source) '
-        '— starting scan',
+        'SCANNER: Transport disconnect completed (source=$source) '
+        '- starting scan',
       );
       _disconnectSub?.close();
       _disconnectSub = null;
@@ -606,7 +606,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       conn.deviceConnectionProvider,
       (previous, next) {
         AppLogging.connection(
-          '📡 SCANNER: meshtastic listener fired — '
+          'SCANNER: meshtastic listener fired - '
           'prev=${previous?.state}, next=${next.state}',
         );
         if (next.state == conn.DevicePairingState.disconnected ||
@@ -628,7 +628,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       (previous, next) {
         final state = next.asData?.value;
         AppLogging.connection(
-          '📡 SCANNER: meshcore listener fired — '
+          'SCANNER: meshcore listener fired - '
           'prev=${previous?.asData?.value}, next=$state',
         );
         if (state == MeshConnectionState.disconnected) {
@@ -645,13 +645,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       autoReconnectStateProvider,
       (previous, next) {
         AppLogging.connection(
-          '📡 SCANNER: Background reconnect state changed: $previous -> $next',
+          'SCANNER: Background reconnect state changed: $previous -> $next',
         );
         if (next == AutoReconnectState.success) {
           _backgroundReconnectSub?.close();
           _backgroundReconnectSub = null;
           AppLogging.connection(
-            '📡 SCANNER: Background reconnect succeeded — navigating to main',
+            'SCANNER: Background reconnect succeeded - navigating to main',
           );
           if (!mounted) return;
           final appState = ref.read(appInitProvider);
@@ -665,7 +665,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           _backgroundReconnectSub?.close();
           _backgroundReconnectSub = null;
           AppLogging.connection(
-            '📡 SCANNER: Background reconnect finished ($next) — '
+            'SCANNER: Background reconnect finished ($next) - '
             'falling through to manual scan',
           );
           if (!mounted) return;
@@ -688,12 +688,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
       AppLogging.connection(
-        '📡 SCANNER: Popping back to previous screen (pushed from banner/route)',
+        'SCANNER: Popping back to previous screen (pushed from banner/route)',
       );
       navigator.pop();
     } else {
       AppLogging.connection(
-        '📡 SCANNER: At root — setting appInit to initialized for _AppRouter',
+        'SCANNER: At root - setting appInit to initialized for _AppRouter',
       );
       ref.read(appInitProvider.notifier).setInitialized();
     }
@@ -718,7 +718,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final meshCoreState = meshCoreStateAsync.asData?.value;
 
     AppLogging.connection(
-      '📡 SCANNER: _tryAutoReconnect entry — '
+      'SCANNER: _tryAutoReconnect entry - '
       'autoReconnectState=$autoReconnectState, '
       'meshtasticState=${deviceState.state}, '
       'meshtasticReason=${deviceState.reason}, '
@@ -743,7 +743,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             deviceState.state == conn.DevicePairingState.configuring) &&
         !userDisconnected) {
       AppLogging.connection(
-        '📡 SCANNER: gate=block_navigate_to_main TRIPPED — '
+        'SCANNER: gate=block_navigate_to_main TRIPPED - '
         'meshtasticState=${deviceState.state}, userDisconnected=false',
       );
       final appState = ref.read(appInitProvider);
@@ -761,7 +761,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         (deviceState.isConnected ||
             deviceState.state == conn.DevicePairingState.configuring)) {
       AppLogging.connection(
-        '📡 SCANNER: gate=wait_for_disconnect TRIPPED — '
+        'SCANNER: gate=wait_for_disconnect TRIPPED - '
         'meshtasticState=${deviceState.state}, meshCoreState=$meshCoreState, '
         'registering listener for disconnect completion',
       );
@@ -781,7 +781,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     if (autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting) {
       AppLogging.connection(
-        '📡 SCANNER: gate=defer_to_background_reconnect TRIPPED — '
+        'SCANNER: gate=defer_to_background_reconnect TRIPPED - '
         'autoReconnectState=$autoReconnectState',
       );
       AppErrorHandler.addBreadcrumb(
@@ -798,7 +798,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     if (autoReconnectState == AutoReconnectState.failed) {
       AppLogging.connection(
-        '📡 SCANNER: gate=auto_reconnect_failed TRIPPED — '
+        'SCANNER: gate=auto_reconnect_failed TRIPPED - '
         'falling through to _startScan',
       );
       _startScan();
@@ -808,7 +808,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // CRITICAL: Check the global userDisconnected flag
     if (userDisconnected) {
       AppLogging.connection(
-        '📡 SCANNER: gate=user_disconnected_flag TRIPPED — '
+        'SCANNER: gate=user_disconnected_flag TRIPPED - '
         'falling through to _startScan',
       );
       _startScan();
@@ -818,7 +818,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // If user manually disconnected, don't auto-reconnect - just show scanner
     if (deviceState.reason == conn.DisconnectReason.userDisconnected) {
       AppLogging.connection(
-        '📡 SCANNER: gate=meshtastic_disconnect_reason_user TRIPPED — '
+        'SCANNER: gate=meshtastic_disconnect_reason_user TRIPPED - '
         'falling through to _startScan',
       );
       _startScan();
@@ -830,14 +830,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     try {
       settingsService = await settingsFuture;
     } catch (e) {
-      AppLogging.connection('📡 SCANNER: Failed to load settings service: $e');
+      AppLogging.connection('SCANNER: Failed to load settings service: $e');
       _startScan();
       return;
     }
 
     // Check if auto-reconnect is enabled
     if (!settingsService.autoReconnect) {
-      AppLogging.connection('📡 SCANNER: Auto-reconnect disabled in settings');
+      AppLogging.connection('SCANNER: Auto-reconnect disabled in settings');
       _startScan();
       return;
     }
@@ -853,7 +853,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
 
     if (lastDeviceId == null || lastDeviceType == null) {
-      AppLogging.connection('📡 SCANNER: No saved device, starting scan');
+      AppLogging.connection('SCANNER: No saved device, starting scan');
       _startScan();
       return;
     }
@@ -866,7 +866,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     });
 
     AppLogging.connection(
-      '📡 SCANNER: Auto-reconnect looking for device $lastDeviceId ($lastDeviceType)',
+      'SCANNER: Auto-reconnect looking for device $lastDeviceId ($lastDeviceType)',
     );
 
     try {
@@ -880,7 +880,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       await for (final device in scanStream) {
         if (!mounted || run != _autoReconnectRun) break;
         AppLogging.connection(
-          '📡 SCANNER: Auto-reconnect found ${device.id} (looking for $lastDeviceId)',
+          'SCANNER: Auto-reconnect found ${device.id} (looking for $lastDeviceId)',
         );
         if (device.id == lastDeviceId) {
           // Use stored name if scan didn't provide one
@@ -902,13 +902,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       if (lastDevice != null) {
         AppLogging.connection(
-          '📡 SCANNER: Auto-reconnect device found, connecting...',
+          'SCANNER: Auto-reconnect device found, connecting...',
         );
         // Found the device, try to connect
         await _connectToDevice(lastDevice, isAutoReconnect: true);
       } else {
         AppLogging.connection(
-          '📡 SCANNER: Auto-reconnect device not found, starting regular scan',
+          'SCANNER: Auto-reconnect device not found, starting regular scan',
         );
         // Device not found, start regular scan and show info message
         safeSetState(() {
@@ -920,7 +920,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         _startScan();
       }
     } catch (e) {
-      AppLogging.connection('📡 SCANNER: Auto-reconnect failed: $e');
+      AppLogging.connection('SCANNER: Auto-reconnect failed: $e');
       if (run != _autoReconnectRun) return;
       safeSetState(() {
         _autoReconnecting = false;
@@ -966,9 +966,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     if (!mounted) return;
 
     if (_scanning) {
-      AppLogging.connection(
-        '📡 SCANNER: _startScan called but already scanning',
-      );
+      AppLogging.connection('SCANNER: _startScan called but already scanning');
       return;
     }
 
@@ -996,7 +994,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             currentDeviceState.state == conn.DevicePairingState.configuring) &&
         !userDisconnectedFlag) {
       AppLogging.connection(
-        '📡 SCANNER: _startScan BLOCKED — device already '
+        'SCANNER: _startScan BLOCKED - device already '
         '${currentDeviceState.state}, userDisconnected=false, '
         'skipping destructive BLE cleanup',
       );
@@ -1006,7 +1004,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             currentDeviceState.state == conn.DevicePairingState.configuring) &&
         userDisconnectedFlag) {
       AppLogging.connection(
-        '📡 SCANNER: _startScan PROCEEDING DESPITE STALE STATE — '
+        'SCANNER: _startScan PROCEEDING DESPITE STALE STATE - '
         'device=${currentDeviceState.state}, userDisconnected=true '
         '(manual scan owns the adapter)',
       );
@@ -1034,7 +1032,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       return;
     }
     AppLogging.connection(
-      '📡 SCANNER: Starting 10s scan... '
+      'SCANNER: Starting 10s scan... '
       '(isRescan=$isRescan, userJustDisconnected=$userJustDisconnected)',
     );
 
@@ -1050,9 +1048,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ),
         );
       } catch (e) {
-        AppLogging.connection(
-          '📡 SCANNER: Failed to load saved device info: $e',
-        );
+        AppLogging.connection('SCANNER: Failed to load saved device info: $e');
       }
     }
 
@@ -1080,7 +1076,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // Meshtastic). Rescans skip this entirely — the BLE stack is already
       // in a clean state and we just need a fresh discovery pass.
       if (!isRescan) {
-        AppLogging.connection('📡 SCANNER: Aggressive BLE cleanup starting...');
+        AppLogging.connection('SCANNER: Aggressive BLE cleanup starting...');
 
         // 1. Wait for any active scans to fully complete BEFORE stopping
         if (userJustDisconnected) {
@@ -1088,7 +1084,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             final isCurrentlyScanning = await FlutterBluePlus.isScanning.first;
             if (isCurrentlyScanning) {
               AppLogging.connection(
-                '📡 SCANNER: Active scan detected, waiting for it to complete...',
+                'SCANNER: Active scan detected, waiting for it to complete...',
               );
               await FlutterBluePlus.isScanning
                   .firstWhere((scanning) => !scanning)
@@ -1096,19 +1092,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                     const Duration(seconds: 6),
                     onTimeout: () {
                       AppLogging.connection(
-                        '📡 SCANNER: Timeout waiting for scan, forcing stop',
+                        'SCANNER: Timeout waiting for scan, forcing stop',
                       );
                       return false;
                     },
                   );
               AppLogging.connection(
-                '📡 SCANNER: Previous scan completed naturally',
+                'SCANNER: Previous scan completed naturally',
               );
               await Future.delayed(const Duration(milliseconds: 500));
             }
           } catch (e) {
             AppLogging.connection(
-              '📡 SCANNER: Error waiting for scan completion: $e',
+              'SCANNER: Error waiting for scan completion: $e',
             );
           }
         }
@@ -1116,15 +1112,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         // 2. Now stop any lingering scan state
         try {
           await FlutterBluePlus.stopScan();
-          AppLogging.connection('📡 SCANNER: Stopped existing scan');
+          AppLogging.connection('SCANNER: Stopped existing scan');
         } catch (e) {
-          AppLogging.connection('📡 SCANNER: stopScan error (ignoring): $e');
+          AppLogging.connection('SCANNER: stopScan error (ignoring): $e');
         }
 
         // 3. Clean up ALL system devices if user just disconnected
         if (userJustDisconnected) {
           AppLogging.connection(
-            '📡 SCANNER: User just disconnected - cleaning all system devices',
+            'SCANNER: User just disconnected - cleaning all system devices',
           );
           try {
             final systemDevices = await meshSystemDevices();
@@ -1141,12 +1137,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               }
             }
             AppLogging.connection(
-              '📡 SCANNER: Cleaned ${systemDevices.length} system devices',
+              'SCANNER: Cleaned ${systemDevices.length} system devices',
             );
           } catch (e) {
-            AppLogging.connection(
-              '📡 SCANNER: System devices cleanup error: $e',
-            );
+            AppLogging.connection('SCANNER: System devices cleanup error: $e');
           }
         }
 
@@ -1157,23 +1151,23 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             for (final device in systemDevices) {
               if (device.remoteId.toString() == _savedDeviceId) {
                 AppLogging.connection(
-                  '📡 SCANNER: Found saved device in system devices, '
+                  'SCANNER: Found saved device in system devices, '
                   'forcing cleanup...',
                 );
                 try {
                   if (defaultTargetPlatform == TargetPlatform.android) {
                     await device.clearGattCache();
                     AppLogging.connection(
-                      '📡 SCANNER: Cleared GATT cache (Android)',
+                      'SCANNER: Cleared GATT cache (Android)',
                     );
                   }
                   await device.disconnect();
                   AppLogging.connection(
-                    '📡 SCANNER: Disconnected stale connection to saved device',
+                    'SCANNER: Disconnected stale connection to saved device',
                   );
                 } catch (e) {
                   AppLogging.connection(
-                    '📡 SCANNER: Cleanup error (ignoring): $e',
+                    'SCANNER: Cleanup error (ignoring): $e',
                   );
                 }
               }
@@ -1185,7 +1179,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 for (final device in bondedDevices) {
                   if (device.remoteId.toString() == _savedDeviceId) {
                     AppLogging.connection(
-                      '📡 SCANNER: Found saved device in bonded devices, '
+                      'SCANNER: Found saved device in bonded devices, '
                       'cleaning up...',
                     );
                     try {
@@ -1194,24 +1188,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                         await device.disconnect();
                       }
                       AppLogging.connection(
-                        '📡 SCANNER: Cleaned up bonded device',
+                        'SCANNER: Cleaned up bonded device',
                       );
                     } catch (e) {
                       AppLogging.connection(
-                        '📡 SCANNER: Bonded device cleanup error (ignoring): $e',
+                        'SCANNER: Bonded device cleanup error (ignoring): $e',
                       );
                     }
                   }
                 }
               } catch (e) {
                 AppLogging.connection(
-                  '📡 SCANNER: bondedDevices error (ignoring): $e',
+                  'SCANNER: bondedDevices error (ignoring): $e',
                 );
               }
             }
           } catch (e) {
             AppLogging.connection(
-              '📡 SCANNER: systemDevices error (ignoring): $e',
+              'SCANNER: systemDevices error (ignoring): $e',
             );
           }
         }
@@ -1223,22 +1217,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         if (userJustDisconnected) {
           resetDelay += 1000;
           AppLogging.connection(
-            '📡 SCANNER: User just disconnected, adding extra delay',
+            'SCANNER: User just disconnected, adding extra delay',
           );
         }
         AppLogging.connection(
-          '📡 SCANNER: Waiting ${resetDelay}ms for BLE to fully reset...',
+          'SCANNER: Waiting ${resetDelay}ms for BLE to fully reset...',
         );
         await Future.delayed(Duration(milliseconds: resetDelay));
 
         if (!mounted) {
-          AppLogging.connection('📡 SCANNER: Widget unmounted during delay');
+          AppLogging.connection('SCANNER: Widget unmounted during delay');
           return;
         }
       } // end if (!isRescan)
 
       AppLogging.connection(
-        '📡 SCANNER: Starting transport.scan(scanAll: $showAllDevices)...',
+        'SCANNER: Starting transport.scan(scanAll: $showAllDevices)...',
       );
       final scanStream = transport.scan(
         timeout: const Duration(seconds: 10),
@@ -1247,11 +1241,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       await for (final device in scanStream) {
         if (!mounted) {
-          AppLogging.connection('📡 SCANNER: Widget unmounted during scan');
+          AppLogging.connection('SCANNER: Widget unmounted during scan');
           break;
         }
         AppLogging.connection(
-          '📡 SCANNER: Found device ${device.id} (${device.name})',
+          'SCANNER: Found device ${device.id} (${device.name})',
         );
         safeSetState(() {
           // Transport-aware dedupe: `DeviceInfo.==` matches `(id, type)`.
@@ -1267,7 +1261,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         });
       }
       AppLogging.connection(
-        '📡 SCANNER: Scan stream completed, found ${_devices.length} devices',
+        'SCANNER: Scan stream completed, found ${_devices.length} devices',
       );
 
       // A completed scan cycle proves the OS scanner accepted our
@@ -1318,7 +1312,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         if (!savedDeviceFound && _devices.isNotEmpty) {
           // Found other devices but not the saved one - likely connected elsewhere
           AppLogging.connection(
-            '📡 SCANNER: Saved device $_savedDeviceId not found, may be connected elsewhere',
+            'SCANNER: Saved device $_savedDeviceId not found, may be connected elsewhere',
           );
           safeSetState(() {
             _savedDeviceNotFoundName =
@@ -1328,7 +1322,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         }
       }
     } catch (e) {
-      AppLogging.connection('📡 SCANNER: Scan error: $e');
+      AppLogging.connection('SCANNER: Scan error: $e');
       if (mounted) {
         if (e is BleScanFailure) {
           // Android refused the scan: show the localised recovery card
@@ -1352,7 +1346,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         }
       }
     } finally {
-      AppLogging.connection('📡 SCANNER: Scan finally block, mounted=$mounted');
+      AppLogging.connection('SCANNER: Scan finally block, mounted=$mounted');
       safeSetState(() {
         _scanning = false;
       });
@@ -1651,7 +1645,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     _rescanTimer?.cancel();
     HapticFeedback.mediumImpact();
     AppLogging.connection(
-      '📡 SCANNER: User tapped to connect to ${device.id} (${device.name})',
+      'SCANNER: User tapped to connect to ${device.id} (${device.name})',
     );
 
     // Capture providers BEFORE any await
@@ -1666,7 +1660,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // Detect protocol from device info
     final detection = device.detectProtocol();
     AppLogging.connection(
-      '📡 SCANNER: Detected protocol: ${detection.protocolType} (confidence: ${detection.confidence})',
+      'SCANNER: Detected protocol: ${detection.protocolType} (confidence: ${detection.confidence})',
     );
 
     // Route connection based on detected protocol
@@ -1680,7 +1674,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       case MeshProtocolType.unknown:
         // Should not reach here - unknown devices go through warning dialog
         // But if we do, show error and don't attempt Meshtastic connect
-        AppLogging.connection('📡 SCANNER: Unknown protocol - not connecting');
+        AppLogging.connection('SCANNER: Unknown protocol - not connecting');
         if (mounted) {
           showErrorSnackBar(
             context,
@@ -1770,14 +1764,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     ProtocolDetectionResult detection,
   ) async {
     AppLogging.connection(
-      '📡 SCANNER: MeshCore device detected - ${detection.reason}',
+      'SCANNER: MeshCore device detected - ${detection.reason}',
     );
 
     if (!mounted) return;
 
     if (_connecting) {
       AppLogging.connection(
-        '📡 SCANNER: _connectMeshCore called but already connecting',
+        'SCANNER: _connectMeshCore called but already connecting',
       );
       return;
     }
@@ -1808,7 +1802,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // - No stale Meshtastic state interfering with MeshCore UI
       protocol.stop();
       AppLogging.connection(
-        '📡 SCANNER: Stopped Meshtastic ProtocolService for MeshCore connect',
+        'SCANNER: Stopped Meshtastic ProtocolService for MeshCore connect',
       );
 
       // Use ConnectionCoordinator to handle MeshCore connection.
@@ -1881,7 +1875,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       ref.invalidate(linkStatusProvider);
 
       AppLogging.connection(
-        '📡 SCANNER: MeshCore connected successfully: ${result.deviceInfo?.displayName}',
+        'SCANNER: MeshCore connected successfully: ${result.deviceInfo?.displayName}',
       );
 
       safeSetState(() {
@@ -1907,7 +1901,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       }
       // If inline, don't navigate - let connection state trigger rebuild
     } catch (e, stack) {
-      AppLogging.connection('📡 SCANNER: MeshCore connection error: $e');
+      AppLogging.connection('SCANNER: MeshCore connection error: $e');
       AppErrorHandler.reportError(e, stack, context: 'MeshCore connection');
 
       if (!mounted) return;
@@ -1931,13 +1925,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }) async {
     if (_connecting) {
       AppLogging.connection(
-        '📡 SCANNER: _connectToDevice called but already connecting',
+        'SCANNER: _connectToDevice called but already connecting',
       );
       return;
     }
 
     AppLogging.connection(
-      '📡 SCANNER: _connectToDevice ${device.id} (${device.name}), isAutoReconnect=$isAutoReconnect',
+      'SCANNER: _connectToDevice ${device.id} (${device.name}), isAutoReconnect=$isAutoReconnect',
     );
 
     // Capture providers and context-dependent strings BEFORE any await
@@ -1974,10 +1968,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       final transport = ref.read(transportProvider);
       final protocol = ref.read(protocolServiceProvider);
 
-      AppLogging.connection('📡 SCANNER: Calling transport.connect()...');
+      AppLogging.connection('SCANNER: Calling transport.connect()...');
       await transport.connect(device);
       AppLogging.connection(
-        '📡 SCANNER: transport.connect() returned, state=${transport.state}',
+        'SCANNER: transport.connect() returned, state=${transport.state}',
       );
 
       if (!mounted) return;
@@ -1986,7 +1980,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       // Start protocol service and wait for configuration
       AppLogging.debug(
-        '🟡 Scanner screen - protocol instance: ${protocol.hashCode}',
+        'Scanner screen - protocol instance: ${protocol.hashCode}',
       );
 
       // Set device info for hardware model inference (for devices like T1000-E that return UNSET)
@@ -2000,7 +1994,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // If PIN was cancelled or authentication failed, myNodeNum will be null
       if (protocol.myNodeNum == null) {
         AppLogging.debug(
-          '🔴 Scanner: No config received - authentication may have failed',
+          'Scanner: No config received - authentication may have failed',
         );
         await transport.disconnect();
         throw Exception(pinRequiredError);
@@ -2027,7 +2021,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       final settings = await settingsFuture;
 
       AppLogging.debug(
-        '🔍 Checking device region (always check - firmware may have reset it)...',
+        'Checking device region (always check - firmware may have reset it)...',
       );
 
       bool needsRegionSetup = false;
@@ -2036,19 +2030,19 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       {
         config_pbenum.Config_LoRaConfig_RegionCode? region =
             protocol.currentRegion;
-        AppLogging.debug('🔍 Initial region: ${region?.name ?? "null"}');
+        AppLogging.debug('Initial region: ${region?.name ?? "null"}');
 
         // If region not available yet, wait for loraConfigStream with proper timeout
         // This handles the timing issue where config arrives after our initial check
         if (region == null ||
             region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
-          AppLogging.debug('🔍 Waiting for LoRa config stream...');
+          AppLogging.debug('Waiting for LoRa config stream...');
           try {
             // Subscribe to stream FIRST, then request config
             final configFuture = protocol.loraConfigStream.first.timeout(
               const Duration(seconds: 8),
               onTimeout: () {
-                AppLogging.debug('⏱️ LoRa config timeout');
+                AppLogging.debug('LoRa config timeout');
                 throw TimeoutException('LoRa config timeout');
               },
             );
@@ -2059,12 +2053,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             // Wait for response
             final loraConfig = await configFuture;
             region = loraConfig.region;
-            AppLogging.debug('✅ Received LoRa config - region: ${region.name}');
+            AppLogging.debug('Received LoRa config - region: ${region.name}');
           } catch (e) {
-            AppLogging.debug('⚠️ Error getting LoRa config: $e');
+            AppLogging.debug('Error getting LoRa config: $e');
             // Fall back to checking currentRegion one more time
             region = protocol.currentRegion;
-            AppLogging.debug('🔍 Fallback region: ${region?.name ?? "null"}');
+            AppLogging.debug('Fallback region: ${region?.name ?? "null"}');
           }
         }
 
@@ -2075,12 +2069,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         if (region == null ||
             region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
           needsRegionSetup = true;
-          AppLogging.debug('⚠️ Region is UNSET - need to configure!');
+          AppLogging.debug('Region is UNSET - need to configure!');
         } else {
           // Device has a valid region - mark as configured
           await settings.setRegionConfigured(true);
           AppLogging.debug(
-            '✅ Region ${region.name} detected, marked as configured',
+            'Region ${region.name} detected, marked as configured',
           );
         }
       }
@@ -2106,7 +2100,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // and finally call setInitialized exactly once on Ready.
       // `_AppRouter` then unmounts Scanner via `appShellProvider`.
       AppLogging.connection(
-        '📡 SCANNER: deferring post-connect navigation to coordinator '
+        'SCANNER: deferring post-connect navigation to coordinator '
         '(needsRegionSetup=$needsRegionSetup, '
         'isFromNeedsScanner=$isFromNeedsScanner)',
       );
@@ -2791,7 +2785,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                                 await FlutterBluePlus.stopScan();
                               } catch (e) {
                                 AppLogging.connection(
-                                  '📡 SCANNER: stopScan on toggle error: $e',
+                                  'SCANNER: stopScan on toggle error: $e',
                                 );
                               }
                               _rescanTimer?.cancel();

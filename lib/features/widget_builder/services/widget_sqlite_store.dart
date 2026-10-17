@@ -66,7 +66,7 @@ class WidgetSqliteStore {
     await _loadAll();
     AppLogging.storage('WidgetSqliteStore: Initialized');
     AppLogging.sync(
-      '[WidgetStore] init complete — ${_cache?.length ?? 0} widgets loaded, '
+      '[WidgetStore] init complete - ${_cache?.length ?? 0} widgets loaded, '
       'syncEnabled=$_syncEnabled, store hashCode=${identityHashCode(this)}',
     );
   }
@@ -134,7 +134,7 @@ class WidgetSqliteStore {
     final dataJson = jsonEncode(widget.toJson());
 
     AppLogging.sync(
-      '[WidgetStore] save() ENTER — id=${widget.id}, name=${widget.name}, '
+      '[WidgetStore] save() ENTER - id=${widget.id}, name=${widget.name}, '
       'syncEnabled=$_syncEnabled, store hashCode=${identityHashCode(this)}',
     );
 
@@ -151,20 +151,20 @@ class WidgetSqliteStore {
 
       if (syncEnabled) {
         AppLogging.sync(
-          '[WidgetStore] save() — syncEnabled=true, ENQUEUING outbox entry '
+          '[WidgetStore] save() - syncEnabled=true, ENQUEUING outbox entry '
           'for widget ${widget.id}',
         );
         await _enqueueOutboxInTxn(txn, 'widget', widget.id, 'upsert', dataJson);
       } else {
         AppLogging.sync(
-          '[WidgetStore] save() — syncEnabled=FALSE, NOT enqueuing outbox '
+          '[WidgetStore] save() - syncEnabled=FALSE, NOT enqueuing outbox '
           'for widget ${widget.id}. This widget will NOT sync!',
         );
       }
     });
 
     AppLogging.sync(
-      '[WidgetStore] save() EXIT — widget ${widget.id} saved to SQLite, '
+      '[WidgetStore] save() EXIT - widget ${widget.id} saved to SQLite, '
       'cache count=${_cache?.length ?? 0}',
     );
   }
@@ -175,7 +175,7 @@ class WidgetSqliteStore {
   /// delete outbox entry if [syncEnabled] is true.
   Future<void> delete(String id) async {
     AppLogging.sync(
-      '[WidgetStore] delete() ENTER — id=$id, syncEnabled=$_syncEnabled',
+      '[WidgetStore] delete() ENTER - id=$id, syncEnabled=$_syncEnabled',
     );
 
     _cache?.remove(id);
@@ -192,20 +192,20 @@ class WidgetSqliteStore {
 
       if (syncEnabled) {
         AppLogging.sync(
-          '[WidgetStore] delete() — syncEnabled=true, ENQUEUING delete '
+          '[WidgetStore] delete() - syncEnabled=true, ENQUEUING delete '
           'outbox for widget $id',
         );
         await _enqueueOutboxInTxn(txn, 'widget', id, 'delete', '{}');
       } else {
         AppLogging.sync(
-          '[WidgetStore] delete() — syncEnabled=FALSE, NOT enqueuing delete '
+          '[WidgetStore] delete() - syncEnabled=FALSE, NOT enqueuing delete '
           'outbox for widget $id. This deletion will NOT sync!',
         );
       }
     });
 
     AppLogging.storage('WidgetSqliteStore: Soft-deleted widget $id');
-    AppLogging.sync('[WidgetStore] delete() EXIT — widget $id soft-deleted');
+    AppLogging.sync('[WidgetStore] delete() EXIT - widget $id soft-deleted');
   }
 
   /// Clear all widget schemas (for testing/reset).
@@ -229,7 +229,7 @@ class WidgetSqliteStore {
     if (widgets.isEmpty) return 0;
 
     AppLogging.sync(
-      '[WidgetStore] bulkImport() — importing ${widgets.length} widgets '
+      '[WidgetStore] bulkImport() - importing ${widgets.length} widgets '
       '(syncEnabled temporarily disabled)',
     );
 
@@ -258,7 +258,7 @@ class WidgetSqliteStore {
         'WidgetSqliteStore: Bulk imported ${widgets.length} widget schemas',
       );
       AppLogging.sync(
-        '[WidgetStore] bulkImport() complete — ${widgets.length} widgets '
+        '[WidgetStore] bulkImport() complete - ${widgets.length} widgets '
         'imported, restoring syncEnabled=$prevSync',
       );
       return widgets.length;
@@ -273,7 +273,7 @@ class WidgetSqliteStore {
   Future<int> enqueueAllForSync() async {
     final all = getAll();
     AppLogging.sync(
-      '[WidgetStore] enqueueAllForSync() — ${all.length} widgets to enqueue',
+      '[WidgetStore] enqueueAllForSync() - ${all.length} widgets to enqueue',
     );
     if (all.isEmpty) return 0;
 
@@ -288,7 +288,7 @@ class WidgetSqliteStore {
       'WidgetSqliteStore: Enqueued ${all.length} widget schemas for sync',
     );
     AppLogging.sync(
-      '[WidgetStore] enqueueAllForSync() complete — ${all.length} entries '
+      '[WidgetStore] enqueueAllForSync() complete - ${all.length} entries '
       'now in outbox',
     );
     return all.length;
@@ -308,7 +308,7 @@ class WidgetSqliteStore {
     if (remoteWidgets.isEmpty) return 0;
 
     AppLogging.sync(
-      '[WidgetStore] applySyncPull() — applying ${remoteWidgets.length} '
+      '[WidgetStore] applySyncPull() - applying ${remoteWidgets.length} '
       'remote widgets (syncEnabled temporarily disabled to prevent re-enqueue)',
     );
 
@@ -344,7 +344,7 @@ class WidgetSqliteStore {
         'WidgetSqliteStore: Sync pull applied $appliedCount widget schemas',
       );
       AppLogging.sync(
-        '[WidgetStore] applySyncPull() complete — applied $appliedCount, '
+        '[WidgetStore] applySyncPull() complete - applied $appliedCount, '
         'restoring syncEnabled=$prevSync',
       );
     } finally {
@@ -389,7 +389,7 @@ class WidgetSqliteStore {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     AppLogging.sync(
-      '[WidgetStore] _enqueueOutboxInTxn() — '
+      '[WidgetStore] _enqueueOutboxInTxn() - '
       'entityType=$entityType, entityId=$entityId, op=$op, ts=$now',
     );
 
@@ -412,7 +412,7 @@ class WidgetSqliteStore {
     });
 
     AppLogging.sync(
-      '[WidgetStore] _enqueueOutboxInTxn() — outbox entry INSERTED for '
+      '[WidgetStore] _enqueueOutboxInTxn() - outbox entry INSERTED for '
       '$entityType/$entityId op=$op',
     );
   }
@@ -425,7 +425,7 @@ class WidgetSqliteStore {
       limit: limit,
     );
     AppLogging.sync(
-      '[WidgetStore] readOutbox() — ${rows.length} pending entries '
+      '[WidgetStore] readOutbox() - ${rows.length} pending entries '
       '(limit=$limit)',
     );
     return rows;
@@ -439,7 +439,7 @@ class WidgetSqliteStore {
       whereArgs: [id],
     );
     AppLogging.sync(
-      '[WidgetStore] removeOutboxEntry() — removed outbox id=$id',
+      '[WidgetStore] removeOutboxEntry() - removed outbox id=$id',
     );
   }
 
@@ -454,7 +454,7 @@ class WidgetSqliteStore {
       [error, id],
     );
     AppLogging.sync(
-      '[WidgetStore] markOutboxAttemptFailed() — id=$id error=$error',
+      '[WidgetStore] markOutboxAttemptFailed() - id=$id error=$error',
     );
   }
 

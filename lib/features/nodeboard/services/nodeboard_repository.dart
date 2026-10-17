@@ -31,11 +31,11 @@ class NodeBoardRepository {
     try {
       final board = await _api.getBoardBySlug(slug);
       AppLogging.nodeBoard(
-        'Repo getBoardBySlug: ${board != null ? '✅ found' : 'null (not found)'}',
+        'Repo getBoardBySlug: ${board != null ? 'found' : 'null (not found)'}',
       );
       return board;
     } catch (e) {
-      AppLogging.nodeBoard('Repo getBoardBySlug: ❌ $e');
+      AppLogging.nodeBoard('Repo getBoardBySlug: $e');
       return null;
     }
   }
@@ -50,12 +50,12 @@ class NodeBoardRepository {
         await _cache.cacheBoardSummary(fresh);
       }
       AppLogging.nodeBoard(
-        'Repo getBoardSummaryBySlug: ✅ fresh=${fresh != null} cached=${cached != null}',
+        'Repo getBoardSummaryBySlug: fresh=${fresh != null} cached=${cached != null}',
       );
       return fresh ?? cached;
     } catch (e) {
       AppLogging.nodeBoard(
-        'Repo getBoardSummaryBySlug: ❌ API failed, returning cached=${cached != null}',
+        'Repo getBoardSummaryBySlug: API failed, returning cached=${cached != null}',
       );
       return cached;
     }
@@ -66,11 +66,11 @@ class NodeBoardRepository {
     try {
       final summary = await _api.getBoardSummaryByNodeId(nodeId);
       AppLogging.nodeBoard(
-        'Repo getBoardSummaryByNodeId: ${summary != null ? '✅ found' : 'null'}',
+        'Repo getBoardSummaryByNodeId: ${summary != null ? 'found' : 'null'}',
       );
       return summary;
     } catch (e) {
-      AppLogging.nodeBoard('Repo getBoardSummaryByNodeId: ❌ $e');
+      AppLogging.nodeBoard('Repo getBoardSummaryByNodeId: $e');
       return null;
     }
   }
@@ -81,13 +81,11 @@ class NodeBoardRepository {
     try {
       final fresh = await _api.getBoardsByUserId(userId);
       await _cache.cacheBoardSummaries(fresh);
-      AppLogging.nodeBoard(
-        'Repo getMyBoards: ✅ ${fresh.length} boards from API',
-      );
+      AppLogging.nodeBoard('Repo getMyBoards: ${fresh.length} boards from API');
       return fresh;
     } catch (e) {
       AppLogging.nodeBoard(
-        'Repo getMyBoards: ❌ API failed, returning ${cached.length} cached',
+        'Repo getMyBoards: API failed, returning ${cached.length} cached',
       );
       return cached;
     }
@@ -100,11 +98,11 @@ class NodeBoardRepository {
       final result = await _api.discoverBoards(limit: limit, cursor: cursor);
       await _cache.cacheBoardSummaries(result.boards);
       AppLogging.nodeBoard(
-        'Repo discoverBoards: ✅ ${result.boards.length} boards',
+        'Repo discoverBoards: ${result.boards.length} boards',
       );
       return result;
     } catch (e) {
-      AppLogging.nodeBoard('Repo discoverBoards: ❌ API failed');
+      AppLogging.nodeBoard('Repo discoverBoards: API failed');
       final cached = await _cache.getCachedBoardSummaries();
       AppLogging.nodeBoard(
         'Repo discoverBoards: returning ${cached.length} cached',
@@ -163,10 +161,10 @@ class NodeBoardRepository {
     AppLogging.nodeBoard('Repo getSections: slug=$slug');
     try {
       final sections = await _api.getSections(slug);
-      AppLogging.nodeBoard('Repo getSections: ✅ ${sections.length} sections');
+      AppLogging.nodeBoard('Repo getSections: ${sections.length} sections');
       return sections;
     } catch (e) {
-      AppLogging.nodeBoard('Repo getSections: ❌ $e');
+      AppLogging.nodeBoard('Repo getSections: $e');
       return [];
     }
   }
@@ -204,11 +202,11 @@ class NodeBoardRepository {
       );
       await _cache.cacheThreads(boardId, sectionId, result.threads);
       AppLogging.nodeBoard(
-        'Repo getThreads: ✅ ${result.threads.length} threads from API',
+        'Repo getThreads: ${result.threads.length} threads from API',
       );
       return result;
     } catch (e) {
-      AppLogging.nodeBoard('Repo getThreads: ❌ API failed');
+      AppLogging.nodeBoard('Repo getThreads: API failed');
       final cached = await _cache.getCachedThreads(sectionId);
       AppLogging.nodeBoard(
         'Repo getThreads: returning ${cached.length} cached',

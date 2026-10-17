@@ -136,7 +136,7 @@ class MeshCanvasParticipationNotifier
     if (current == null) return;
     if (enabled && !current.participationEnabled) {
       AppLogging.meshCanvas(
-        'participation: rejecting setPresenceSharingEnabled(true) — '
+        'participation: rejecting setPresenceSharingEnabled(true) - '
         'participation is disabled',
       );
       return;
@@ -157,7 +157,7 @@ class MeshCanvasParticipationNotifier
     await store.writeSettings(next);
     state = AsyncData(next);
     AppLogging.meshCanvas(
-      'participation: $reason → onboarding=${next.onboardingSeen} '
+      'participation: $reason -> onboarding=${next.onboardingSeen} '
       'participation=${next.participationEnabled} '
       'sharing=${next.presenceSharingEnabled}',
     );

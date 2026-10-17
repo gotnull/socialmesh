@@ -127,7 +127,7 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
 
   if (!registered) {
     AppLogging.mrrp(
-      'MESH_SERVICE_ENGINE: registration rejected — '
+      'MESH_SERVICE_ENGINE: registration rejected - '
       'MRRP service slot limit reached', // lint-allow: hardcoded-string
     );
     return null;

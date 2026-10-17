@@ -222,7 +222,7 @@ class IncidentDatabase {
         'ALTER TABLE incident_transitions ADD COLUMN supersededBy TEXT', // lint-allow: hardcoded-string
       );
       AppLogging.incidents(
-        'IncidentDatabase: v2 migration — added actorRole, supersededBy',
+        'IncidentDatabase: v2 migration - added actorRole, supersededBy',
       );
     }
   }
@@ -230,7 +230,7 @@ class IncidentDatabase {
   /// Downgrade: drop and recreate.
   Future<void> _onDowngrade(Database db, int oldVersion, int newVersion) async {
     AppLogging.incidents(
-      'IncidentDatabase: downgrade v$oldVersion -> v$newVersion — recreating',
+      'IncidentDatabase: downgrade v$oldVersion -> v$newVersion - recreating',
     );
     await db.execute('DROP TABLE IF EXISTS incident_field_reports');
     await db.execute('DROP TABLE IF EXISTS incident_transitions');

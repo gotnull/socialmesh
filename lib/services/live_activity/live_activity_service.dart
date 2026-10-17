@@ -2,10 +2,12 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:live_activities/live_activities.dart';
 import 'package:live_activities/models/activity_update.dart';
 import 'package:live_activities/models/live_activity_state.dart';
+
 import '../../core/logging.dart';
 
 /// Service for managing iOS Live Activities
@@ -197,22 +199,22 @@ class LiveActivityService {
       AppLogging.liveActivity('createActivity returned: $_currentActivityId');
 
       if (_currentActivityId != null) {
-        AppLogging.liveActivity('✅ Started Live Activity: $_currentActivityId');
+        AppLogging.liveActivity('Started Live Activity: $_currentActivityId');
         return true;
       } else {
         AppLogging.liveActivity(
-          '❌ createActivity returned null - activity was not created',
+          'createActivity returned null - activity was not created',
         );
       }
     } catch (e, stackTrace) {
-      AppLogging.liveActivity('❌ Failed to start Live Activity: $e');
+      AppLogging.liveActivity('Failed to start Live Activity: $e');
       AppLogging.liveActivity('Stack trace: $stackTrace');
       // Common causes:
       // - ActivityInput error 0: App Group mismatch or provisioning issue
       // - No Dynamic Island on device (still works on Lock Screen)
       // - Widget extension not properly installed
       AppLogging.liveActivity(
-        '💡 Tip: Ensure App Group "group.com.gotnull.socialmesh" '
+        'Tip: Ensure App Group "group.com.gotnull.socialmesh" '
         'is configured in both main app and widget extension provisioning profiles',
       );
     }

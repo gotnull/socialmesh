@@ -10,6 +10,7 @@ import 'package:purchases_flutter/purchases_flutter.dart' hide PurchaseResult;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/constants.dart';
 import 'package:socialmesh/core/logging.dart';
+
 import '../config/revenuecat_config.dart';
 import '../models/subscription_models.dart';
 import '../services/subscription/subscription_service.dart';
@@ -71,11 +72,11 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
 
   @override
   PurchaseState build() {
-    AppLogging.subscriptions('💳 [PurchaseStateNotifier] build() called');
+    AppLogging.subscriptions('[PurchaseStateNotifier] build() called');
 
     ref.onDispose(() {
       AppLogging.subscriptions(
-        '💳 [PurchaseStateNotifier] onDispose - cancelling stream subscription',
+        '[PurchaseStateNotifier] onDispose - cancelling stream subscription',
       );
       _subscription?.cancel();
       _subscription = null;
@@ -106,7 +107,7 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
         if (_setEquals(newExternal, _external)) return;
         _external = newExternal;
         AppLogging.subscriptions(
-          '💳 [PurchaseStateNotifier] external entitlements changed: $_external',
+          '[PurchaseStateNotifier] external entitlements changed: $_external',
         );
         state = _computeMerged();
       });
@@ -117,7 +118,7 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
           .maybeWhen(data: (set) => set, orElse: () => const <String>{});
     } else {
       AppLogging.subscriptions(
-        '💳 [PurchaseStateNotifier] external purchase feature flag OFF — '
+        '[PurchaseStateNotifier] external purchase feature flag OFF - '
         'skipping external entitlement merge',
       );
     }
@@ -130,17 +131,17 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
       mergePurchaseStateForTest(_rcState, _external);
 
   Future<void> _init() async {
-    AppLogging.subscriptions('💳 [PurchaseStateNotifier] _init() starting...');
+    AppLogging.subscriptions('[PurchaseStateNotifier] _init() starting...');
     final service = await ref.read(subscriptionServiceProvider.future);
     if (!ref.mounted) {
       AppLogging.subscriptions(
-        '💳 [PurchaseStateNotifier] Not mounted after await, skipping init',
+        '[PurchaseStateNotifier] Not mounted after await, skipping init',
       );
       return;
     }
     _rcState = service.currentState;
     AppLogging.subscriptions(
-      '💳 [PurchaseStateNotifier] Initial RC state: ${_rcState.purchasedProductIds}',
+      '[PurchaseStateNotifier] Initial RC state: ${_rcState.purchasedProductIds}',
     );
     if (_rcState.purchasedProductIds.isNotEmpty) {
       AppLogging.purchase(
@@ -151,44 +152,44 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
     state = _computeMerged();
 
     AppLogging.subscriptions(
-      '💳 [PurchaseStateNotifier] Setting up stateStream listener...',
+      '[PurchaseStateNotifier] Setting up stateStream listener...',
     );
     _subscription = service.stateStream.listen(
       (newState) {
         if (!ref.mounted) {
           AppLogging.subscriptions(
-            '💳 [PurchaseStateNotifier] Not mounted, ignoring stream update',
+            '[PurchaseStateNotifier] Not mounted, ignoring stream update',
           );
           return;
         }
         AppLogging.subscriptions(
-          '💳 [PurchaseStateNotifier] Stream received new RC state: ${newState.purchasedProductIds}',
+          '[PurchaseStateNotifier] Stream received new RC state: ${newState.purchasedProductIds}',
         );
         _rcState = newState;
         state = _computeMerged();
       },
       onError: (e) {
-        AppLogging.subscriptions('💳 [PurchaseStateNotifier] Stream error: $e');
+        AppLogging.subscriptions('[PurchaseStateNotifier] Stream error: $e');
       },
     );
-    AppLogging.subscriptions('💳 [PurchaseStateNotifier] _init() complete');
+    AppLogging.subscriptions('[PurchaseStateNotifier] _init() complete');
   }
 
   /// Refresh purchases from RevenueCat
   Future<void> refresh() async {
-    AppLogging.subscriptions('💳 [PurchaseStateNotifier] refresh() called');
+    AppLogging.subscriptions('[PurchaseStateNotifier] refresh() called');
     final service = await ref.read(subscriptionServiceProvider.future);
     await service.refreshPurchases();
 
     if (!ref.mounted) {
       AppLogging.subscriptions(
-        '💳 [PurchaseStateNotifier] Not mounted after refresh, skipping state update',
+        '[PurchaseStateNotifier] Not mounted after refresh, skipping state update',
       );
       return;
     }
     _rcState = service.currentState;
     AppLogging.subscriptions(
-      '💳 [PurchaseStateNotifier] refresh() setting RC state: ${_rcState.purchasedProductIds}',
+      '[PurchaseStateNotifier] refresh() setting RC state: ${_rcState.purchasedProductIds}',
     );
     state = _computeMerged();
   }
@@ -319,7 +320,7 @@ final subscriptionErrorProvider =
 /// Returns PurchaseResult indicating success, cancellation, or error
 Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
   AppLogging.subscriptions(
-    '💳 [PurchaseProduct] Starting purchase for: $productId',
+    '[PurchaseProduct] Starting purchase for: $productId',
   );
 
   // Capture notifier references up front. WidgetRef becomes invalid when the
@@ -341,35 +342,35 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
     AppLogging.subscriptions(
-      '💳 [PurchaseProduct] Calling service.purchaseProduct...',
+      '[PurchaseProduct] Calling service.purchaseProduct...',
     );
     final result = await service.purchaseProduct(productId);
-    AppLogging.subscriptions('💳 [PurchaseProduct] Result: $result');
+    AppLogging.subscriptions('[PurchaseProduct] Result: $result');
 
     if (result == PurchaseResult.success) {
       AppLogging.subscriptions(
-        '💳 [PurchaseProduct] Success! Refreshing purchase state notifier...',
+        '[PurchaseProduct] Success! Refreshing purchase state notifier...',
       );
       try {
         // Await the refresh to ensure state is updated before returning
         await ref.read(purchaseStateProvider.notifier).refresh();
-        AppLogging.subscriptions('💳 [PurchaseProduct] Refresh complete');
+        AppLogging.subscriptions('[PurchaseProduct] Refresh complete');
 
         // Double-check the state
         final state = ref.read(purchaseStateProvider);
         AppLogging.subscriptions(
-          '💳 [PurchaseProduct] Final state: ${state.purchasedProductIds}',
+          '[PurchaseProduct] Final state: ${state.purchasedProductIds}',
         );
       } catch (_) {
         // ref may be disposed if the calling widget was unmounted during purchase
         AppLogging.subscriptions(
-          '💳 [PurchaseProduct] Widget unmounted during purchase — skipping state refresh',
+          '[PurchaseProduct] Widget unmounted during purchase - skipping state refresh',
         );
       }
     }
     return result;
   } catch (e) {
-    AppLogging.subscriptions('💳 [PurchaseProduct] Error: $e');
+    AppLogging.subscriptions('[PurchaseProduct] Error: $e');
     errorNotifier.setError(e.toString());
     return PurchaseResult.error;
   } finally {
@@ -383,9 +384,9 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
 /// Firebase sign-in is optional but recommended for cross-device purchase syncing.
 Future<bool> restorePurchases(WidgetRef ref) async {
   AppLogging.subscriptions(
-    '💳 [RestorePurchases] ═══════════════════════════════════════════════',
+    '[RestorePurchases] ===============================================',
   );
-  AppLogging.subscriptions('💳 [RestorePurchases] Provider function called');
+  AppLogging.subscriptions('[RestorePurchases] Provider function called');
 
   // Capture notifier references up front — see purchaseProduct for rationale.
   final SubscriptionLoadingNotifier loadingNotifier;
@@ -397,31 +398,29 @@ Future<bool> restorePurchases(WidgetRef ref) async {
     return false;
   }
 
-  AppLogging.subscriptions(
-    '💳 [RestorePurchases] Setting loading state to true',
-  );
+  AppLogging.subscriptions('[RestorePurchases] Setting loading state to true');
   loadingNotifier.setLoading(true);
   errorNotifier.clear();
 
   try {
     AppLogging.subscriptions(
-      '💳 [RestorePurchases] Getting subscription service...',
+      '[RestorePurchases] Getting subscription service...',
     );
     final service = await ref.read(subscriptionServiceProvider.future);
     AppLogging.subscriptions(
-      '💳 [RestorePurchases] Service obtained, isInitialized: ${service.isInitialized}',
+      '[RestorePurchases] Service obtained, isInitialized: ${service.isInitialized}',
     );
 
     // Capture state BEFORE restore to compare later
     final stateBefore = ref.read(purchaseStateProvider);
     final purchaseCountBefore = stateBefore.purchasedProductIds.length;
     AppLogging.subscriptions(
-      '💳 [RestorePurchases] State BEFORE restore: ${stateBefore.purchasedProductIds} (count: $purchaseCountBefore)',
+      '[RestorePurchases] State BEFORE restore: ${stateBefore.purchasedProductIds} (count: $purchaseCountBefore)',
     );
 
-    AppLogging.subscriptions('💳 [RestorePurchases] Calling restorePurchases');
+    AppLogging.subscriptions('[RestorePurchases] Calling restorePurchases');
     await service.restorePurchases();
-    AppLogging.subscriptions('💳 [RestorePurchases] Restore completed');
+    AppLogging.subscriptions('[RestorePurchases] Restore completed');
 
     // Mirror restored purchases into Firestore so the admin panel and the
     // cloud-sync entitlement service see them. Skipped when signed out —
@@ -434,7 +433,7 @@ Future<bool> restorePurchases(WidgetRef ref) async {
       await _syncPurchasesToFirestoreSafe('RestorePurchases');
     } else {
       AppLogging.subscriptions(
-        '💳 [RestorePurchases] No Firebase user — skipping Firestore mirror',
+        '[RestorePurchases] No Firebase user - skipping Firestore mirror',
       );
     }
 
@@ -456,31 +455,31 @@ Future<bool> restorePurchases(WidgetRef ref) async {
       // purchases land in the local cache.
       await externalService.refreshEntitlements();
       AppLogging.subscriptions(
-        '💳 [RestorePurchases] External (Stripe) entitlements refreshed',
+        '[RestorePurchases] External (Stripe) entitlements refreshed',
       );
     } catch (e) {
       // External restore is best-effort. RC remains the source of
       // truth for store IAP, so failure here must not fail the whole
       // restore flow.
       AppLogging.subscriptions(
-        '💳 [RestorePurchases] External entitlement restore failed (non-fatal): $e',
+        '[RestorePurchases] External entitlement restore failed (non-fatal): $e',
       );
     }
 
     // Always refresh state after restore
     AppLogging.subscriptions(
-      '💳 [RestorePurchases] Explicitly refreshing purchase state notifier...',
+      '[RestorePurchases] Explicitly refreshing purchase state notifier...',
     );
     try {
       await ref.read(purchaseStateProvider.notifier).refresh();
     } catch (_) {
       // ref may be disposed if the calling widget was unmounted
       AppLogging.subscriptions(
-        '💳 [RestorePurchases] ref disposed during refresh — returning true',
+        '[RestorePurchases] ref disposed during refresh - returning true',
       );
       return true;
     }
-    AppLogging.subscriptions('💳 [RestorePurchases] Refresh complete');
+    AppLogging.subscriptions('[RestorePurchases] Refresh complete');
 
     // Determine success by comparing state BEFORE and AFTER
     PurchaseState stateAfter;
@@ -488,13 +487,13 @@ Future<bool> restorePurchases(WidgetRef ref) async {
       stateAfter = ref.read(purchaseStateProvider);
     } catch (_) {
       AppLogging.subscriptions(
-        '💳 [RestorePurchases] ref disposed reading state — returning true',
+        '[RestorePurchases] ref disposed reading state - returning true',
       );
       return true;
     }
     final purchaseCountAfter = stateAfter.purchasedProductIds.length;
     AppLogging.subscriptions(
-      '💳 [RestorePurchases] State AFTER restore: ${stateAfter.purchasedProductIds} (count: $purchaseCountAfter)',
+      '[RestorePurchases] State AFTER restore: ${stateAfter.purchasedProductIds} (count: $purchaseCountAfter)',
     );
 
     // Success if we have ANY purchases now, regardless of what we had before
@@ -502,27 +501,25 @@ Future<bool> restorePurchases(WidgetRef ref) async {
     final hasPurchases = purchaseCountAfter > 0;
     final restoredNew = purchaseCountAfter > purchaseCountBefore;
 
-    AppLogging.subscriptions('💳 [RestorePurchases] Result analysis:');
+    AppLogging.subscriptions('[RestorePurchases] Result analysis:');
     AppLogging.subscriptions(
-      '💳 [RestorePurchases]   hasPurchases: $hasPurchases',
+      '[RestorePurchases]   hasPurchases: $hasPurchases',
     );
+    AppLogging.subscriptions('[RestorePurchases]   restoredNew: $restoredNew');
     AppLogging.subscriptions(
-      '💳 [RestorePurchases]   restoredNew: $restoredNew',
-    );
-    AppLogging.subscriptions(
-      '💳 [RestorePurchases] ═══════════════════════════════════════════════',
+      '[RestorePurchases] ===============================================',
     );
 
     // Return true if user has purchases (either already had or just restored)
     return hasPurchases;
   } catch (e, stackTrace) {
-    AppLogging.subscriptions('💳 [RestorePurchases] ❌ ERROR: $e');
-    AppLogging.subscriptions('💳 [RestorePurchases] Stack trace: $stackTrace');
+    AppLogging.subscriptions('[RestorePurchases] ERROR: $e');
+    AppLogging.subscriptions('[RestorePurchases] Stack trace: $stackTrace');
     errorNotifier.setError(e.toString());
     return false;
   } finally {
     AppLogging.subscriptions(
-      '💳 [RestorePurchases] Setting loading state to false',
+      '[RestorePurchases] Setting loading state to false',
     );
     loadingNotifier.setLoading(false);
   }
@@ -558,7 +555,7 @@ Future<FirestoreMirrorSyncResult> _syncPurchasesToFirestoreSafe(
   String callerTag,
 ) async {
   AppLogging.subscriptions(
-    '💳 [$callerTag] Mirror sync — calling syncPurchasesToFirestore...',
+    '[$callerTag] Mirror sync - calling syncPurchasesToFirestore...',
   );
   try {
     final callable = FirebaseFunctions.instance.httpsCallable(
@@ -568,21 +565,21 @@ Future<FirestoreMirrorSyncResult> _syncPurchasesToFirestoreSafe(
     final data = result.data;
     final status = data['status']?.toString();
     AppLogging.subscriptions(
-      '💳 [$callerTag] Mirror sync OK — status=$status data=$data',
+      '[$callerTag] Mirror sync OK - status=$status data=$data',
     );
     return FirestoreMirrorSyncResult(success: true, statusFromBackend: status);
   } catch (syncError, stackTrace) {
     // Stable greppable prefix. Do NOT change without updating downstream
     // log queries / Crashlytics filters.
     AppLogging.subscriptions(
-      '💳 [$callerTag] MIRROR_SYNC_FAILED — '
+      '[$callerTag] MIRROR_SYNC_FAILED - '
       'type=${syncError.runtimeType} error=$syncError',
     );
     AppLogging.subscriptions(
-      '💳 [$callerTag] MIRROR_SYNC_FAILED stack: $stackTrace',
+      '[$callerTag] MIRROR_SYNC_FAILED stack: $stackTrace',
     );
     AppLogging.subscriptions(
-      '💳 [$callerTag] MIRROR_SYNC_FAILED is non-fatal — RC entitlements are '
+      '[$callerTag] MIRROR_SYNC_FAILED is non-fatal - RC entitlements are '
       'unaffected. The mirror will retry on next foreground/restore.',
     );
     return FirestoreMirrorSyncResult(success: false, error: syncError);
@@ -593,17 +590,17 @@ Future<FirestoreMirrorSyncResult> _syncPurchasesToFirestoreSafe(
 /// Call this when the user signs in to Firebase to ensure purchases are properly tracked
 Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
   AppLogging.subscriptions(
-    '💳 [SyncRevenueCat] Starting sync with Firebase Auth...',
+    '[SyncRevenueCat] Starting sync with Firebase Auth...',
   );
 
   final firebaseUser = FirebaseAuth.instance.currentUser;
   if (firebaseUser == null) {
-    AppLogging.subscriptions('💳 [SyncRevenueCat] No Firebase user signed in');
+    AppLogging.subscriptions('[SyncRevenueCat] No Firebase user signed in');
     return false;
   }
 
   AppLogging.subscriptions(
-    '💳 [SyncRevenueCat] Firebase UID: ${firebaseUser.uid}',
+    '[SyncRevenueCat] Firebase UID: ${firebaseUser.uid}',
   );
 
   try {
@@ -613,7 +610,7 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
     } catch (_) {
       // ref may be disposed if the calling widget was unmounted
       AppLogging.subscriptions(
-        '💳 [SyncRevenueCat] ref disposed getting service — aborting',
+        '[SyncRevenueCat] ref disposed getting service - aborting',
       );
       return false;
     }
@@ -627,7 +624,7 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
       } catch (_) {
         // ref may be disposed if the calling widget was unmounted
         AppLogging.subscriptions(
-          '💳 [SyncRevenueCat] ref disposed during refresh — continuing',
+          '[SyncRevenueCat] ref disposed during refresh - continuing',
         );
       }
 
@@ -635,12 +632,12 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
       // for failure semantics — failures are observable but never fatal.
       await _syncPurchasesToFirestoreSafe('SyncRevenueCat');
 
-      AppLogging.subscriptions('💳 [SyncRevenueCat] ✅ Sync complete');
+      AppLogging.subscriptions('[SyncRevenueCat] Sync complete');
     }
 
     return success;
   } catch (e) {
-    AppLogging.subscriptions('💳 [SyncRevenueCat] ❌ Error: $e');
+    AppLogging.subscriptions('[SyncRevenueCat] Error: $e');
     return false;
   }
 }
@@ -681,21 +678,21 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
   ref,
 ) async {
   AppLogging.subscriptions(
-    '💳 [StoreProducts] ═══════════════════════════════════════',
+    '[StoreProducts] =======================================',
   );
   AppLogging.subscriptions(
-    '💳 [StoreProducts] Fetching store products via Offerings...',
+    '[StoreProducts] Fetching store products via Offerings...',
   );
 
   try {
     // Wait for subscription service to be initialized first
     await ref.watch(subscriptionServiceProvider.future);
-    AppLogging.subscriptions('💳 [StoreProducts] Subscription service ready');
+    AppLogging.subscriptions('[StoreProducts] Subscription service ready');
 
     // Use getOfferings() - this is the proper way to get localized prices
     final offerings = await Purchases.getOfferings();
     AppLogging.subscriptions(
-      '💳 [StoreProducts] Offerings fetched, current: ${offerings.current?.identifier}',
+      '[StoreProducts] Offerings fetched, current: ${offerings.current?.identifier}',
     );
 
     final productMap = <String, StoreProductInfo>{};
@@ -703,13 +700,13 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
     // Extract products from all offerings
     for (final offering in offerings.all.values) {
       AppLogging.subscriptions(
-        '💳 [StoreProducts] Processing offering: ${offering.identifier}',
+        '[StoreProducts] Processing offering: ${offering.identifier}',
       );
       for (final package in offering.availablePackages) {
         final product = package.storeProduct;
         final cleanedTitle = StoreProductInfo.cleanTitle(product.title);
         AppLogging.subscriptions(
-          '💳 [StoreProducts]   Package: ${package.identifier} -> ${product.identifier}: ${product.priceString} (title: "${product.title}" -> "$cleanedTitle")',
+          '[StoreProducts]   Package: ${package.identifier} -> ${product.identifier}: ${product.priceString} (title: "${product.title}" -> "$cleanedTitle")',
         );
         productMap[product.identifier] = StoreProductInfo(
           productId: product.identifier,
@@ -722,25 +719,25 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
     }
 
     AppLogging.subscriptions(
-      '💳 [StoreProducts] Loaded ${productMap.length} products from offerings',
+      '[StoreProducts] Loaded ${productMap.length} products from offerings',
     );
     for (final entry in productMap.entries) {
       AppLogging.subscriptions(
-        '💳 [StoreProducts]   ${entry.key}: ${entry.value.priceString} - "${entry.value.title}"',
+        '[StoreProducts]   ${entry.key}: ${entry.value.priceString} - "${entry.value.title}"',
       );
     }
 
     // If offerings didn't have our products, try direct getProducts as fallback
     if (productMap.isEmpty) {
       AppLogging.subscriptions(
-        '💳 [StoreProducts] No products in offerings, trying direct getProducts...',
+        '[StoreProducts] No products in offerings, trying direct getProducts...',
       );
       final productIds = [
         ...OneTimePurchases.allIndividualPurchases.map((p) => p.productId),
         RevenueCatConfig.completePackProductId,
       ];
       AppLogging.subscriptions(
-        '💳 [StoreProducts] Fetching product IDs: $productIds',
+        '[StoreProducts] Fetching product IDs: $productIds',
       );
 
       final products = await Purchases.getProducts(
@@ -748,13 +745,13 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
         productCategory: ProductCategory.nonSubscription,
       );
       AppLogging.subscriptions(
-        '💳 [StoreProducts] getProducts returned ${products.length} products',
+        '[StoreProducts] getProducts returned ${products.length} products',
       );
 
       for (final product in products) {
         final cleanedTitle = StoreProductInfo.cleanTitle(product.title);
         AppLogging.subscriptions(
-          '💳 [StoreProducts]   ${product.identifier}: "${product.title}" -> "$cleanedTitle" - ${product.priceString}',
+          '[StoreProducts]   ${product.identifier}: "${product.title}" -> "$cleanedTitle" - ${product.priceString}',
         );
         productMap[product.identifier] = StoreProductInfo(
           productId: product.identifier,
@@ -767,24 +764,24 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
     }
 
     AppLogging.subscriptions(
-      '💳 [StoreProducts] ═══════════════════════════════════════',
+      '[StoreProducts] =======================================',
     );
     AppLogging.subscriptions(
-      '💳 [StoreProducts] FINAL: ${productMap.length} products loaded',
+      '[StoreProducts] FINAL: ${productMap.length} products loaded',
     );
     for (final entry in productMap.entries) {
       AppLogging.subscriptions(
-        '💳 [StoreProducts]   ${entry.key}: ${entry.value.priceString}',
+        '[StoreProducts]   ${entry.key}: ${entry.value.priceString}',
       );
     }
     AppLogging.subscriptions(
-      '💳 [StoreProducts] ═══════════════════════════════════════',
+      '[StoreProducts] =======================================',
     );
 
     return productMap;
   } catch (e, stackTrace) {
-    AppLogging.subscriptions('💳 [StoreProducts] ❌ ERROR: $e');
-    AppLogging.subscriptions('💳 [StoreProducts] Stack trace: $stackTrace');
+    AppLogging.subscriptions('[StoreProducts] ERROR: $e');
+    AppLogging.subscriptions('[StoreProducts] Stack trace: $stackTrace');
     return {};
   }
 });

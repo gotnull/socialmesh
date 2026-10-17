@@ -565,7 +565,7 @@ class NodeDexDatabase {
         'INTEGER',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v2 migration — added socialTag/userNote timestamps',
+        'NodeDexDatabase: v2 migration - added socialTag/userNote timestamps',
       );
     }
     if (oldVersion < 3) {
@@ -578,7 +578,7 @@ class NodeDexDatabase {
         'TEXT',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v3 migration — added last_known_name column',
+        'NodeDexDatabase: v3 migration - added last_known_name column',
       );
     }
     if (oldVersion < 4) {
@@ -600,7 +600,7 @@ class NodeDexDatabase {
         'TEXT',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v4 migration — added hardware/role/firmware columns',
+        'NodeDexDatabase: v4 migration - added hardware/role/firmware columns',
       );
     }
     if (oldVersion < 5) {
@@ -621,7 +621,7 @@ class NodeDexDatabase {
         '(${NodeDexTables.colPtNodeNum}, ${NodeDexTables.colPtTsMs})',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v5 migration — added presence_transitions table',
+        'NodeDexDatabase: v5 migration - added presence_transitions table',
       );
     }
     if (oldVersion < 6) {
@@ -639,7 +639,7 @@ class NodeDexDatabase {
         'INTEGER',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v6 migration — added local_nickname columns',
+        'NodeDexDatabase: v6 migration - added local_nickname columns',
       );
     }
     if (oldVersion < 7) {
@@ -671,7 +671,7 @@ class NodeDexDatabase {
         'TEXT',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v7 migration — added SIP identity columns',
+        'NodeDexDatabase: v7 migration - added SIP identity columns',
       );
     }
     if (oldVersion < 8) {
@@ -683,7 +683,7 @@ class NodeDexDatabase {
         'TEXT',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v8 migration — added mrrp_service_ids column',
+        'NodeDexDatabase: v8 migration - added mrrp_service_ids column',
       );
     }
     if (oldVersion < 9) {
@@ -702,7 +702,7 @@ class NodeDexDatabase {
         'INTEGER',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v9 migration — added radio preset observation columns',
+        'NodeDexDatabase: v9 migration - added radio preset observation columns',
       );
     }
     if (oldVersion < 10) {
@@ -720,7 +720,7 @@ class NodeDexDatabase {
         'REAL',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v10 migration — added frequency offset columns',
+        'NodeDexDatabase: v10 migration - added frequency offset columns',
       );
     }
     if (oldVersion < 11) {
@@ -739,7 +739,7 @@ class NodeDexDatabase {
         'INTEGER',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v11 migration — added connection-identity columns',
+        'NodeDexDatabase: v11 migration - added connection-identity columns',
       );
     }
     if (oldVersion < 12) {
@@ -760,7 +760,7 @@ class NodeDexDatabase {
         'INTEGER',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v12 migration — added observation context columns',
+        'NodeDexDatabase: v12 migration - added observation context columns',
       );
     }
     if (oldVersion < 13) {
@@ -806,7 +806,7 @@ class NodeDexDatabase {
         '(${NodeDexTables.colNodeNum}, ${NodeDexTables.colIcTsMs} DESC)',
       );
       AppLogging.storage(
-        'NodeDexDatabase: v13 migration — added identity tracking columns + identity changes log',
+        'NodeDexDatabase: v13 migration - added identity tracking columns + identity changes log',
       );
     }
     if (oldVersion < 14) {
@@ -829,7 +829,7 @@ class NodeDexDatabase {
         )
       ''');
       AppLogging.storage(
-        'NodeDexDatabase: v14 migration — added observed_from_regions table',
+        'NodeDexDatabase: v14 migration - added observed_from_regions table',
       );
     }
     if (oldVersion < 15) {
@@ -864,7 +864,7 @@ class NodeDexDatabase {
         'ON ${NodeDexTables.nodeGroups}(${NodeDexTables.colNgGroupId})', // lint-allow: hardcoded-string
       );
       AppLogging.storage(
-        'NodeDexDatabase: v15 migration — added node groups + membership tables',
+        'NodeDexDatabase: v15 migration - added node groups + membership tables',
       );
     }
   }

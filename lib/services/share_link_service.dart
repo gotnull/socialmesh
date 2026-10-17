@@ -130,12 +130,12 @@ class ShareLinkService {
     Rect? sharePositionOrigin,
   }) async {
     AppLogging.qr(
-      '🔗 ShareService: shareProfile - userId=$userId, displayName=$displayName',
+      'ShareService: shareProfile - userId=$userId, displayName=$displayName',
     );
 
     // Use displayName in URL so the receiver can look up the user
     final shareUrl = AppUrls.shareProfileUrl(displayName);
-    AppLogging.qr('🔗 ShareService: Generated share URL: $shareUrl');
+    AppLogging.qr('ShareService: Generated share URL: $shareUrl');
 
     await Share.share(
       'Check out @$displayName on SocialMesh!\n$shareUrl', // lint-allow: hardcoded-string

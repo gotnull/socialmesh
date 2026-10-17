@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:usb_serial/usb_serial.dart';
+
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 
@@ -84,7 +86,7 @@ class UsbTransport implements DeviceTransport {
         );
       }
     } catch (e) {
-      AppLogging.debug('⚠️ USB scan error: $e');
+      AppLogging.debug('USB scan error: $e');
     }
   }
 
@@ -92,7 +94,7 @@ class UsbTransport implements DeviceTransport {
   Future<void> connect(DeviceInfo device) async {
     if (_state == DeviceConnectionState.connected ||
         _state == DeviceConnectionState.connecting) {
-      AppLogging.debug('⚠️ Already connected or connecting');
+      AppLogging.debug('Already connected or connecting');
       return;
     }
 
@@ -139,7 +141,7 @@ class UsbTransport implements DeviceTransport {
           }
         },
         onError: (error) {
-          AppLogging.debug('⚠️ Port error: $error');
+          AppLogging.debug('Port error: $error');
           _updateState(DeviceConnectionState.error);
         },
         onDone: () {
@@ -151,7 +153,7 @@ class UsbTransport implements DeviceTransport {
       _updateState(DeviceConnectionState.connected);
       AppLogging.debug('Connected successfully');
     } catch (e) {
-      AppLogging.debug('⚠️ Connection error: $e');
+      AppLogging.debug('Connection error: $e');
       _updateState(DeviceConnectionState.error);
       rethrow;
     }
@@ -179,7 +181,7 @@ class UsbTransport implements DeviceTransport {
       _updateState(DeviceConnectionState.disconnected);
       AppLogging.debug('Disconnected');
     } catch (e) {
-      AppLogging.debug('⚠️ Disconnect error: $e');
+      AppLogging.debug('Disconnect error: $e');
       _updateState(DeviceConnectionState.error);
     }
   }
@@ -199,7 +201,7 @@ class UsbTransport implements DeviceTransport {
       await _port!.write(Uint8List.fromList(data));
       AppLogging.debug('USB sent successfully');
     } catch (e) {
-      AppLogging.debug('⚠️ Send error: $e');
+      AppLogging.debug('Send error: $e');
       rethrow;
     }
   }

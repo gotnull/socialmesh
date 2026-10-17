@@ -144,8 +144,8 @@ void main() {
         // AppLogging.widgets(...) call. Whitespace-agnostic so the
         // formatter can't break the pin.
         const expectedLogs = <String>[
-          '[Dashboard] Owner discovery card tapped → opening picker',
-          '[Dashboard] Edit-mode add tile tapped → opening picker',
+          '[Dashboard] Owner discovery card tapped -> opening picker',
+          '[Dashboard] Edit-mode add tile tapped -> opening picker',
           '[Dashboard] autoOpenPicker fired (post-purchase)',
         ];
         for (final message in expectedLogs) {

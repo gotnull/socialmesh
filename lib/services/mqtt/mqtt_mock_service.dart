@@ -563,7 +563,7 @@ class MqttMockService implements MqttService {
     final topicValidation = TopicBuilder.validateTopic(topic);
     if (!topicValidation.isValid) {
       AppLogging.settings(
-        'MqttMockService: publish rejected — '
+        'MqttMockService: publish rejected - '
         'invalid topic "$topic": ${topicValidation.error}',
       );
       return MqttPublishResult.failure(topicValidation.error!);
@@ -697,8 +697,7 @@ class MqttMockService implements MqttService {
         return DiagnosticCheckResult(
           type: request.type,
           status: DiagnosticStatus.failed,
-          message:
-              'Mock: ${request.type.title} timed out.', // lint-allow: hardcoded-string
+          message: 'Mock: ${request.type.title} timed out.', // lint-allow: hardcoded-string
           suggestion: 'Check network connectivity and broker availability.',
           duration: stopwatch.elapsed,
           completedAt: DateTime.now(),

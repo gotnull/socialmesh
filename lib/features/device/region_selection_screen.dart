@@ -108,7 +108,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   void initState() {
     super.initState();
     AppLogging.connection(
-      '🌍 RegionSelection: initState — isInitialSetup=${widget.isInitialSetup}',
+      'RegionSelection: initState - isInitialSetup=${widget.isInitialSetup}',
     );
 
     // Pop-on-terminal listener. listenManual is correct in initState
@@ -122,14 +122,14 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
           if (previous != null && previous.isTerminal) return;
           if (!Navigator.canPop(context)) {
             AppLogging.connection(
-              '🌍 RegionSelection: terminal '
+              'RegionSelection: terminal '
               'phase=${next.phase.name} '
-              'no-op — rendered inline (cannot pop)',
+              'no-op - rendered inline (cannot pop)',
             );
             return;
           }
           AppLogging.connection(
-            '🌍 RegionSelection: terminal phase=${next.phase.name} — '
+            'RegionSelection: terminal phase=${next.phase.name} - '
             'popping pushed route',
           );
           Navigator.of(context).pop();
@@ -153,7 +153,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     final protocol = ref.read(protocolServiceProvider);
     final region = protocol.currentRegion;
     AppLogging.connection(
-      '🌍 RegionSelection: _loadCurrentRegion — deviceRegion=${region?.name ?? "null"}',
+      'RegionSelection: _loadCurrentRegion - deviceRegion=${region?.name ?? "null"}',
     );
     if (region != null && region != RegionCode.UNSET) {
       setState(() {
@@ -184,7 +184,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     if (regionState.applyStatus == RegionApplyStatus.applying) return;
     final isInitialSetup = widget.isInitialSetup;
     AppLogging.connection(
-      '🌍 RegionSelection: _saveRegion called — '
+      'RegionSelection: _saveRegion called - '
       'selected=$_selectedRegion, isInitialSetup=$isInitialSetup, '
       'currentApplyStatus=${regionState.applyStatus}',
     );
@@ -210,15 +210,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     );
 
     if (confirmed != true) {
-      AppLogging.connection(
-        '🌍 RegionSelection: Apply dialog cancelled by user',
-      );
+      AppLogging.connection('RegionSelection: Apply dialog cancelled by user');
       return;
     }
     if (!mounted) return;
 
     AppLogging.connection(
-      '🌍 RegionSelection: Apply confirmed — checking device connection',
+      'RegionSelection: Apply confirmed - checking device connection',
     );
 
     // Check if the BLE link is still up before attempting to apply
@@ -232,7 +230,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     final isLinkUp = ref.read(isLinkConnectedProvider);
     if (!isLinkUp) {
       AppLogging.connection(
-        '🌍 RegionSelection: BLOCKED — device disconnected before apply',
+        'RegionSelection: BLOCKED - device disconnected before apply',
       );
       final blockedMessage = context.l10n.regionSelectionDeviceDisconnected;
       safeSetState(() {
@@ -249,7 +247,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
 
     safeSetState(() => _applying = true);
     AppLogging.connection(
-      '🌍 RegionSelection: "Applying..." overlay shown — '
+      'RegionSelection: "Applying..." overlay shown - '
       'region=$_selectedRegion, isInitialSetup=$isInitialSetup',
     );
 
@@ -287,7 +285,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       final shouldSkipApply = alreadyApplied || regionAlreadySet;
 
       AppLogging.connection(
-        '🌍 RegionSelection: _persistAndDismiss — '
+        'RegionSelection: _persistAndDismiss - '
         'shouldSkipApply=$shouldSkipApply, alreadyApplied=$alreadyApplied, '
         'regionAlreadySet=$regionAlreadySet, selected=$_selectedRegion',
       );
@@ -298,7 +296,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         await settings.setRegionConfigured(true);
         settingsRefresh.refresh();
         if (!mounted) return;
-        AppLogging.connection('✅ _persistAndDismiss: skip apply, dismissing');
+        AppLogging.connection('_persistAndDismiss: skip apply, dismissing');
         _popOrSetReady(navigator);
         return;
       }
@@ -320,7 +318,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       // While we await, `_applying = true` keeps the Applying...
       // overlay visible.
       AppLogging.connection(
-        '🌍 RegionSelection: awaiting applyRegion(${_selectedRegion!.name})',
+        'RegionSelection: awaiting applyRegion(${_selectedRegion!.name})',
       );
       try {
         await regionNotifier.applyRegion(
@@ -328,7 +326,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
           reason: 'settings_change',
         );
       } catch (e) {
-        AppLogging.app('⚠️ Foreground region apply failed: $e');
+        AppLogging.app('Foreground region apply failed: $e');
         if (!mounted) return;
         safeSetState(() {
           _applying = false;
@@ -347,7 +345,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       settingsRefresh.refresh();
 
       AppLogging.connection(
-        '✅ _persistAndDismiss: applyRegion completed, dismissing',
+        '_persistAndDismiss: applyRegion completed, dismissing',
       );
       if (!mounted) return;
       // Firmware 2.8+ applies the region live without rebooting, so the
@@ -376,12 +374,12 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   void _popOrSetReady(NavigatorState navigator) {
     if (navigator.canPop()) {
       AppLogging.connection(
-        '✅ _persistAndDismiss: popping RegionSelectionScreen',
+        '_persistAndDismiss: popping RegionSelectionScreen',
       );
       navigator.pop();
     } else {
       AppLogging.connection(
-        '✅ _persistAndDismiss: cannot pop (root route) — '
+        '_persistAndDismiss: cannot pop (root route) - '
         'setting appInit to ready so router shows MainShell',
       );
       ref.read(appInitProvider.notifier).setReady();

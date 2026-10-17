@@ -128,7 +128,7 @@ class ArchiveInspectorService {
     }
 
     AppLogging.fileTransfer(
-      'ARCHIVE_INSPECT: $archiveFilename — ${entries.length} entries, '
+      'ARCHIVE_INSPECT: $archiveFilename - ${entries.length} entries, '
       '${entries.where((e) => e.status == ArchiveEntryStatus.supported).length} supported',
     );
 

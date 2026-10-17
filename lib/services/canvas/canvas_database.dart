@@ -59,7 +59,7 @@ class CanvasDatabase {
         // mesh canvases naturally on next viewer mount.
         if (oldVersion < 2 && newVersion >= 2) {
           AppLogging.meshCanvas(
-            'canvas.db v1 → v2: wiping all rows for 128→64 resize',
+            'canvas.db v1 -> v2: wiping all rows for 128->64 resize',
           );
           await db.delete(CanvasTables.peerDigest);
           await db.delete(CanvasTables.appliedOp);

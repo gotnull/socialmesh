@@ -125,7 +125,7 @@ class OwnPetController extends AsyncNotifier<PetState?> {
 
     if (ownerNodeNum == null) {
       AppLogging.pet(
-        'OwnPetController: no paired ownerNodeNum yet — empty state',
+        'OwnPetController: no paired ownerNodeNum yet - empty state',
       );
       return null;
     }
@@ -277,7 +277,7 @@ class OwnPetController extends AsyncNotifier<PetState?> {
     }
     if (current.stage != PetStage.dormant) {
       AppLogging.pet(
-        'OwnPetController: reSigil refused — stage=${current.stage.name}',
+        'OwnPetController: reSigil refused - stage=${current.stage.name}',
       );
       return PetActionResult.invalidInState(
         state: current,

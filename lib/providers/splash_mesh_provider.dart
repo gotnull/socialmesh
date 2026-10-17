@@ -92,7 +92,7 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
   final isFirebaseReady = await firebaseReady.timeout(
     const Duration(seconds: 5),
     onTimeout: () {
-      AppLogging.settings('⏱️ Firebase ready timeout, using local config');
+      AppLogging.settings('Firebase ready timeout, using local config');
       return false;
     },
   );
@@ -107,23 +107,23 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
             const Duration(seconds: 3),
             onTimeout: () {
               AppLogging.settings(
-                '⏱️ Global config fetch timed out, using local/defaults',
+                'Global config fetch timed out, using local/defaults',
               );
               return null;
             },
           );
 
       if (remoteConfig != null) {
-        AppLogging.settings('🌐 Loaded global mesh config from Firestore');
+        AppLogging.settings('Loaded global mesh config from Firestore');
         // Save to local for offline use
         await _saveGlobalConfigToPrefs(prefs, remoteConfig);
         return _configFromMeshConfigData(remoteConfig);
       }
     } catch (e) {
-      AppLogging.settings('⚠️ Global config fetch failed: $e');
+      AppLogging.settings('Global config fetch failed: $e');
     }
   } else {
-    AppLogging.settings('📱 Firebase not ready, using local config');
+    AppLogging.settings('Firebase not ready, using local config');
   }
 
   // No global config available - check local SharedPreferences
@@ -131,12 +131,12 @@ final splashMeshConfigProvider = FutureProvider<SplashMeshConfig>((ref) async {
 
   if (hasLocalConfig) {
     // User has local config - use it (offline fallback)
-    AppLogging.settings('📱 Loading mesh config from SharedPreferences');
+    AppLogging.settings('Loading mesh config from SharedPreferences');
     return _loadConfigFromPrefs(prefs);
   }
 
   // Fall back to defaults
-  AppLogging.settings('📱 Using default mesh config');
+  AppLogging.settings('Using default mesh config');
   return _loadConfigFromPrefs(prefs);
 });
 

@@ -29,7 +29,7 @@ import 'channel_mute_prefs.dart';
 /// Background message handler - must be a top-level function
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  AppLogging.notifications('🔔 Background message: ${message.messageId}');
+  AppLogging.notifications('Background message: ${message.messageId}');
 
   // If this contains a mesh message payload, try to persist it directly so
   // messages received while the app is backgrounded are not lost.
@@ -49,10 +49,10 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       final parsed = parsePushMessagePayload(data.cast<String, dynamic>());
       if (parsed != null) {
         await storage.saveMessage(parsed);
-        AppLogging.messages('🔔 Background persisted message id=${parsed.id}');
+        AppLogging.messages('Background persisted message id=${parsed.id}');
       }
     } catch (e) {
-      AppLogging.notifications('🔔 Error persisting background message: $e');
+      AppLogging.notifications('Error persisting background message: $e');
     }
   }
 
@@ -89,24 +89,22 @@ class PushNotificationService {
   static const _kDmToggle = 'dm_notifications_enabled';
 
   /// Notification channel for Android
-  static const AndroidNotificationChannel
-  _socialChannel = AndroidNotificationChannel(
-    'social_notifications',
-    'Social Notifications', // lint-allow: hardcoded-string
-    description:
-        'Notifications for follows, likes, and comments', // lint-allow: hardcoded-string
-    importance: Importance.high,
-  );
+  static const AndroidNotificationChannel _socialChannel =
+      AndroidNotificationChannel(
+        'social_notifications',
+        'Social Notifications', // lint-allow: hardcoded-string
+        description: 'Notifications for follows, likes, and comments', // lint-allow: hardcoded-string
+        importance: Importance.high,
+      );
 
   /// Android notification channel for admin announcements
-  final AndroidNotificationChannel
-  _announcementsChannel = const AndroidNotificationChannel(
-    'announcements',
-    'Announcements',
-    description:
-        'Important announcements from SocialMesh', // lint-allow: hardcoded-string
-    importance: Importance.high,
-  );
+  final AndroidNotificationChannel _announcementsChannel =
+      const AndroidNotificationChannel(
+        'announcements',
+        'Announcements',
+        description: 'Important announcements from SocialMesh', // lint-allow: hardcoded-string
+        importance: Importance.high,
+      );
 
   /// Initialize the push notification service
   Future<void> initialize() async {
@@ -128,7 +126,7 @@ class PushNotificationService {
       );
 
       AppLogging.notifications(
-        '🔔 Push notification permission: ${settings.authorizationStatus}',
+        'Push notification permission: ${settings.authorizationStatus}',
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
@@ -181,14 +179,14 @@ class PushNotificationService {
         }
 
         _initialized = true;
-        AppLogging.notifications('🔔 PushNotificationService initialized');
+        AppLogging.notifications('PushNotificationService initialized');
       } else {
         AppLogging.notifications(
-          '🔔 Push notifications not authorized: ${settings.authorizationStatus}',
+          'Push notifications not authorized: ${settings.authorizationStatus}',
         );
       }
     } catch (e) {
-      AppLogging.notifications('🔔 Error initializing push notifications: $e');
+      AppLogging.notifications('Error initializing push notifications: $e');
     }
   }
 
@@ -201,18 +199,16 @@ class PushNotificationService {
   Future<void> _subscribeToAnnouncementsTopic() async {
     try {
       await _messaging.subscribeToTopic('announcements');
-      AppLogging.notifications('🔔 Subscribed to announcements topic');
+      AppLogging.notifications('Subscribed to announcements topic');
 
       // Subscribe to platform-specific topic for targeted broadcasts
       final platformTopic = Platform.isAndroid
           ? 'announcements_android'
           : 'announcements_ios';
       await _messaging.subscribeToTopic(platformTopic);
-      AppLogging.notifications('🔔 Subscribed to $platformTopic topic');
+      AppLogging.notifications('Subscribed to $platformTopic topic');
     } catch (e) {
-      AppLogging.notifications(
-        '🔔 Error subscribing to announcements topic: $e',
-      );
+      AppLogging.notifications('Error subscribing to announcements topic: $e');
     }
   }
 
@@ -220,14 +216,14 @@ class PushNotificationService {
   Future<void> _saveFcmToken() async {
     final user = _auth.currentUser;
     if (user == null) {
-      AppLogging.notifications('🔔 No user signed in, skipping FCM token save');
+      AppLogging.notifications('No user signed in, skipping FCM token save');
       return;
     }
 
     try {
       final token = await _messaging.getToken();
       if (token == null) {
-        AppLogging.notifications('🔔 Could not get FCM token');
+        AppLogging.notifications('Could not get FCM token');
         return;
       }
 
@@ -251,21 +247,19 @@ class PushNotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kPreviousFcmToken, token);
 
-      AppLogging.notifications('🔔 FCM token saved for user ${user.uid}');
+      AppLogging.notifications('FCM token saved for user ${user.uid}');
     } catch (e) {
-      AppLogging.notifications('🔔 Error saving FCM token: $e');
+      AppLogging.notifications('Error saving FCM token: $e');
     }
   }
 
   /// Handle FCM token refresh — delete stale token before writing the new one.
   Future<void> _onTokenRefresh(String newToken) async {
-    AppLogging.notifications('🔔 FCM token refreshed');
+    AppLogging.notifications('FCM token refreshed');
 
     final user = _auth.currentUser;
     if (user == null) {
-      AppLogging.notifications(
-        '🔔 _onTokenRefresh - No user signed in, skipping',
-      );
+      AppLogging.notifications('_onTokenRefresh - No user signed in, skipping');
       return;
     }
 
@@ -276,7 +270,7 @@ class PushNotificationService {
       // If the token actually changed, remove the stale entry from Firestore
       if (previousToken != null && previousToken != newToken) {
         AppLogging.notifications(
-          '🔔 Deleting stale FCM token for user ${user.uid}',
+          'Deleting stale FCM token for user ${user.uid}',
         );
         await _firestore.collection('users').doc(user.uid).update({
           'fcmTokens.$previousToken': FieldValue.delete(),
@@ -284,7 +278,7 @@ class PushNotificationService {
       }
     } catch (e) {
       // Best-effort — don't block the new token write
-      AppLogging.notifications('🔔 Error removing stale FCM token: $e');
+      AppLogging.notifications('Error removing stale FCM token: $e');
     }
 
     // Write the new token (also persists it to SharedPreferences)
@@ -294,7 +288,7 @@ class PushNotificationService {
   /// Handle foreground messages - show local notification
   Future<void> _onForegroundMessage(RemoteMessage message) async {
     AppLogging.notifications(
-      '🔔 Foreground message: ${message.notification?.title}',
+      'Foreground message: ${message.notification?.title}',
     );
 
     // Redact PII before logging — text and sender names replaced with [redacted]
@@ -310,7 +304,7 @@ class PushNotificationService {
         redactedData[key] = '[redacted]';
       }
     }
-    AppLogging.notifications('🔔 Foreground message data: $redactedData');
+    AppLogging.notifications('Foreground message data: $redactedData');
 
     // Emit content refresh event for screens currently visible
     _emitContentRefreshEvent(message);
@@ -331,7 +325,7 @@ class PushNotificationService {
         (data['type'] == 'direct_message' ||
             data['type'] == 'channel_message')) {
       AppLogging.messages(
-        '🔔 Push message received: type=${data['type']}, keys=${data.keys.toList()}',
+        'Push message received: type=${data['type']}, keys=${data.keys.toList()}',
       );
     }
 
@@ -371,14 +365,14 @@ class PushNotificationService {
     final notificationType = message.data['type'] as String?;
     final isAnnouncement = notificationType == 'announcement';
     AppLogging.notifications(
-      '🔔 Foreground message imageUrl: $imageUrl, type: $notificationType',
+      'Foreground message imageUrl: $imageUrl, type: $notificationType',
     );
 
     // Download image for attachment if available
     String? imagePath;
     if (imageUrl != null && imageUrl.isNotEmpty) {
       imagePath = await _downloadImage(imageUrl);
-      AppLogging.notifications('🔔 Downloaded image to: $imagePath');
+      AppLogging.notifications('Downloaded image to: $imagePath');
     }
 
     // Select the appropriate channel — announcements get their own channel
@@ -502,7 +496,7 @@ class PushNotificationService {
         return file.path;
       }
     } catch (e) {
-      AppLogging.notifications('🔔 Error downloading notification image: $e');
+      AppLogging.notifications('Error downloading notification image: $e');
     }
     return null;
   }
@@ -535,7 +529,7 @@ class PushNotificationService {
     final targetId = message.data['targetId'] as String?;
 
     AppLogging.notifications(
-      '🔔 _emitContentRefreshEvent: type=$type, targetId=$targetId',
+      '_emitContentRefreshEvent: type=$type, targetId=$targetId',
     );
 
     if (type == null) return;
@@ -552,7 +546,7 @@ class PushNotificationService {
           ),
         );
         AppLogging.notifications(
-          '🔔 Emitted signal_response refresh for signal: $targetId',
+          'Emitted signal_response refresh for signal: $targetId',
         );
         break;
       case 'new_comment':
@@ -561,7 +555,7 @@ class PushNotificationService {
           ContentRefreshEvent(contentType: 'post_comment', targetId: targetId),
         );
         AppLogging.notifications(
-          '🔔 Emitted post_comment refresh for post: $targetId',
+          'Emitted post_comment refresh for post: $targetId',
         );
         break;
       case 'signal_like':
@@ -570,7 +564,7 @@ class PushNotificationService {
           ContentRefreshEvent(contentType: 'signal_like', targetId: targetId),
         );
         AppLogging.notifications(
-          '🔔 Emitted signal_like refresh for signal: $targetId',
+          'Emitted signal_like refresh for signal: $targetId',
         );
         break;
       case 'new_like':
@@ -590,7 +584,7 @@ class PushNotificationService {
           ),
         );
         AppLogging.notifications(
-          '🔔 Emitted $type refresh with payload keys: ${message.data.keys.toList()}',
+          'Emitted $type refresh with payload keys: ${message.data.keys.toList()}',
         );
         break;
       case 'bug_report_response':
@@ -602,7 +596,7 @@ class PushNotificationService {
           ),
         );
         AppLogging.notifications(
-          '🔔 Emitted bug_report_response refresh for report: $targetId',
+          'Emitted bug_report_response refresh for report: $targetId',
         );
         break;
       case 'new_signal':
@@ -614,7 +608,7 @@ class PushNotificationService {
             ContentRefreshEvent(contentType: 'new_signal', targetId: targetId),
           );
           AppLogging.notifications(
-            '🔔 Emitted new_signal refresh for signal: $targetId',
+            'Emitted new_signal refresh for signal: $targetId',
           );
         }
         break;
@@ -623,7 +617,7 @@ class PushNotificationService {
 
   /// Handle notification tap when app is opened from background
   Future<void> _onMessageOpenedApp(RemoteMessage message) async {
-    AppLogging.notifications('🔔 Notification opened app: ${message.data}');
+    AppLogging.notifications('Notification opened app: ${message.data}');
 
     final type = message.data['type'] as String?;
     final targetId = message.data['targetId'] as String?;
@@ -643,7 +637,7 @@ class PushNotificationService {
             await storage.init();
             await storage.saveMessage(parsed);
             AppLogging.notifications(
-              '🔔 Persisted message from notification open: id=${parsed.id}',
+              'Persisted message from notification open: id=${parsed.id}',
             );
             // Also emit content refresh event so UI refreshes
             _contentRefreshController.add(
@@ -656,7 +650,7 @@ class PushNotificationService {
           }
         } catch (e) {
           AppLogging.notifications(
-            '🔔 Error persisting notification-open message: $e',
+            'Error persisting notification-open message: $e',
           );
         }
       }
@@ -701,34 +695,34 @@ class PushNotificationService {
 
   /// Update FCM token when user signs in
   Future<void> onUserSignIn() async {
-    AppLogging.notifications('🔔 onUserSignIn - Updating FCM token...');
+    AppLogging.notifications('onUserSignIn - Updating FCM token...');
     if (!_initialized) {
-      AppLogging.notifications('🔔 onUserSignIn - Not initialized, skipping');
+      AppLogging.notifications('onUserSignIn - Not initialized, skipping');
       return;
     }
     await _saveFcmToken();
-    AppLogging.notifications('🔔 onUserSignIn - FCM token updated');
+    AppLogging.notifications('onUserSignIn - FCM token updated');
   }
 
   /// Remove FCM token when user signs out
   Future<void> onUserSignOut() async {
-    AppLogging.notifications('🔔 onUserSignOut - START');
+    AppLogging.notifications('onUserSignOut - START');
     final user = _auth.currentUser;
     if (user == null) {
-      AppLogging.notifications('🔔 onUserSignOut - No current user, skipping');
+      AppLogging.notifications('onUserSignOut - No current user, skipping');
       return;
     }
 
     try {
       final token = await _messaging.getToken();
       if (token == null) {
-        AppLogging.notifications('🔔 onUserSignOut - No FCM token, skipping');
+        AppLogging.notifications('onUserSignOut - No FCM token, skipping');
         return;
       }
 
       // Remove this token from user's profile
       AppLogging.notifications(
-        '🔔 onUserSignOut - Removing FCM token for user ${user.uid}',
+        'onUserSignOut - Removing FCM token for user ${user.uid}',
       );
       await _firestore.collection('users').doc(user.uid).update({
         'fcmTokens.$token': FieldValue.delete(),
@@ -738,9 +732,9 @@ class PushNotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_kPreviousFcmToken);
 
-      AppLogging.notifications('🔔 onUserSignOut - ✅ FCM token removed');
+      AppLogging.notifications('onUserSignOut - FCM token removed');
     } catch (e) {
-      AppLogging.notifications('🔔 onUserSignOut - ❌ Error: $e');
+      AppLogging.notifications('onUserSignOut - Error: $e');
     }
   }
 
@@ -776,10 +770,10 @@ class PushNotificationService {
 
       if (updates.isNotEmpty) {
         await _firestore.collection('users').doc(user.uid).update(updates);
-        AppLogging.notifications('🔔 Notification settings updated');
+        AppLogging.notifications('Notification settings updated');
       }
     } catch (e) {
-      AppLogging.notifications('🔔 Error updating notification settings: $e');
+      AppLogging.notifications('Error updating notification settings: $e');
     }
   }
 
@@ -819,7 +813,7 @@ class PushNotificationService {
         'votes': settings?['votes'] ?? true,
       };
     } catch (e) {
-      AppLogging.notifications('🔔 Error getting notification settings: $e');
+      AppLogging.notifications('Error getting notification settings: $e');
       return {
         'follows': true,
         'likes': true,

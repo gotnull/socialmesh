@@ -270,7 +270,7 @@ class TelemetryDatabase {
   Future<void> _addEntry(String type, TelemetryLogEntry entry) async {
     if (!isOpen) {
       AppLogging.storage(
-        'TelemetryDatabase: _addEntry skipped — database not open',
+        'TelemetryDatabase: _addEntry skipped - database not open',
       );
       return;
     }

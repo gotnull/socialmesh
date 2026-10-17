@@ -34,7 +34,7 @@ abstract final class CotCompressor {
 
     if (compressed.length >= data.length) {
       AppLogging.tak(
-        'Compression: skipped — compressed ${compressed.length} >= original ${data.length}',
+        'Compression: skipped - compressed ${compressed.length} >= original ${data.length}',
       );
       return null;
     }

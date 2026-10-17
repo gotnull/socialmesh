@@ -27,7 +27,7 @@ class SecureStorageService {
       await _storage.write(key: 'channel_$name', value: keyString);
       AppLogging.debug('Stored channel key: $name');
     } catch (e) {
-      AppLogging.storage('⚠️ Error storing channel key: $e');
+      AppLogging.storage('Error storing channel key: $e');
       rethrow;
     }
   }
@@ -40,7 +40,7 @@ class SecureStorageService {
 
       return base64Decode(keyString);
     } catch (e) {
-      AppLogging.storage('⚠️ Error retrieving channel key: $e');
+      AppLogging.storage('Error retrieving channel key: $e');
       return null;
     }
   }
@@ -51,7 +51,7 @@ class SecureStorageService {
       await _storage.delete(key: 'channel_$name');
       AppLogging.debug('Deleted channel key: $name');
     } catch (e) {
-      AppLogging.storage('⚠️ Error deleting channel key: $e');
+      AppLogging.storage('Error deleting channel key: $e');
     }
   }
 
@@ -70,7 +70,7 @@ class SecureStorageService {
 
       return keys;
     } catch (e) {
-      AppLogging.storage('⚠️ Error getting all channel keys: $e');
+      AppLogging.storage('Error getting all channel keys: $e');
       return {};
     }
   }
@@ -81,7 +81,7 @@ class SecureStorageService {
       await _storage.deleteAll();
       AppLogging.storage('Cleared all secure storage');
     } catch (e) {
-      AppLogging.storage('⚠️ Error clearing storage: $e');
+      AppLogging.storage('Error clearing storage: $e');
     }
   }
 }
@@ -879,7 +879,7 @@ class SettingsService {
     try {
       return base64Decode(encoded);
     } catch (e) {
-      AppLogging.storage('⚠️ Failed to decode cached remote LoRa config: $e');
+      AppLogging.storage('Failed to decode cached remote LoRa config: $e');
       return null;
     }
   }
@@ -1025,7 +1025,7 @@ class SettingsService {
       // setting. User-authored text is never rewritten.
       return DefaultCannedResponses.localized(responses);
     } catch (e) {
-      AppLogging.storage('⚠️ Error parsing canned responses: $e');
+      AppLogging.storage('Error parsing canned responses: $e');
       return DefaultCannedResponses.all;
     }
   }
@@ -1091,7 +1091,7 @@ class SettingsService {
       configs.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
       return configs;
     } catch (e) {
-      AppLogging.storage('⚠️ Error parsing tapback configs: $e');
+      AppLogging.storage('Error parsing tapback configs: $e');
       return DefaultTapbacks.all;
     }
   }
@@ -1498,7 +1498,7 @@ class NodeStorageService {
       await _preferences.setString(_nodesKey, jsonEncode(jsonList));
       AppLogging.debug('Saved node ${node.nodeNum} to storage');
     } catch (e) {
-      AppLogging.storage('⚠️ Error saving node: $e');
+      AppLogging.storage('Error saving node: $e');
     }
   }
 
@@ -1542,7 +1542,7 @@ class NodeStorageService {
       await _preferences.setString(_nodesKey, jsonEncode(jsonList));
       AppLogging.debug('Saved ${nodesToSave.length} nodes to storage');
     } catch (e) {
-      AppLogging.storage('⚠️ Error saving nodes: $e');
+      AppLogging.storage('Error saving nodes: $e');
     }
   }
 
@@ -1562,7 +1562,7 @@ class NodeStorageService {
           .map((j) => _nodeFromJson(j as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      AppLogging.storage('⚠️ Error loading nodes: $e');
+      AppLogging.storage('Error loading nodes: $e');
       return [];
     }
   }
@@ -1573,7 +1573,7 @@ class NodeStorageService {
       final nodes = await loadNodes();
       return nodes.where((n) => n.nodeNum == nodeNum).firstOrNull;
     } catch (e) {
-      AppLogging.storage('⚠️ Error getting node: $e');
+      AppLogging.storage('Error getting node: $e');
       return null;
     }
   }
@@ -1584,7 +1584,7 @@ class NodeStorageService {
       await _preferences.remove(_nodesKey);
       AppLogging.storage('Cleared all nodes');
     } catch (e) {
-      AppLogging.storage('⚠️ Error clearing nodes: $e');
+      AppLogging.storage('Error clearing nodes: $e');
     }
   }
 
@@ -1597,7 +1597,7 @@ class NodeStorageService {
       await _preferences.setString(_nodesKey, jsonEncode(jsonList));
       AppLogging.storage('Deleted node $nodeNum from storage');
     } catch (e) {
-      AppLogging.storage('⚠️ Error deleting node $nodeNum: $e');
+      AppLogging.storage('Error deleting node $nodeNum: $e');
     }
   }
 

@@ -355,8 +355,11 @@ class _PendingPublish {
 
 /// Callback when the service receives a message from the MQTT broker
 /// that needs to be forwarded to the device.
-typedef OnBrokerMessageFn =
-    Future<void> Function(String topic, List<int> data, bool retained);
+typedef OnBrokerMessageFn = Future<void> Function(
+  String topic,
+  List<int> data,
+  bool retained,
+);
 
 // ---------------------------------------------------------------------------
 // MQTT Client Proxy Service
@@ -1032,7 +1035,7 @@ class MqttClientProxyService {
     final topicValidation = TopicBuilder.validateTopic(topic);
     if (!topicValidation.isValid) {
       AppLogging.mqttProxy(
-        'Rejecting proxy publish — invalid topic "$topic": '
+        'Rejecting proxy publish - invalid topic "$topic": '
         '${topicValidation.error}',
       );
       return;
@@ -1237,7 +1240,7 @@ class MqttClientProxyService {
     AppLogging.mqttProxyWarning(
       'Liveness watchdog: no proof-of-life for '
       '${DateTime.now().difference(reference).inSeconds}s while phase reads '
-      'connected — forcing reconnect',
+      'connected - forcing reconnect',
     );
     _forceReconnectStaleSocket();
   }

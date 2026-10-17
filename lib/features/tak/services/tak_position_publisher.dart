@@ -73,7 +73,7 @@ class TakPositionPublisher {
   void start() {
     if (isRunning) return;
     if (!_config.enabled) {
-      AppLogging.tak('PositionPublisher: not starting — disabled');
+      AppLogging.tak('PositionPublisher: not starting - disabled');
       return;
     }
 
@@ -137,7 +137,7 @@ class TakPositionPublisher {
 
     // Skip (0,0) positions.
     if (lat == 0.0 && lon == 0.0) {
-      AppLogging.tak('PositionPublisher: position is 0,0 — skipping publish');
+      AppLogging.tak('PositionPublisher: position is 0,0 - skipping publish');
       return;
     }
 

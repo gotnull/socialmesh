@@ -56,7 +56,7 @@ class FileTransferDatabase {
           await _createTables(db);
         },
         onUpgrade: (db, oldVersion, newVersion) async {
-          AppLogging.fileTransfer('DB: upgrading v$oldVersion → v$newVersion');
+          AppLogging.fileTransfer('DB: upgrading v$oldVersion -> v$newVersion');
           if (oldVersion < 2) {
             // v2: added offerPending state (shifts enum indexes). Drop and
             // re-create while the feature is pre-release.
@@ -188,7 +188,7 @@ class FileTransferDatabase {
       whereArgs: [fileIdHex],
     );
 
-    AppLogging.fileTransfer('DB: updateSavedPath $fileIdHex → $path');
+    AppLogging.fileTransfer('DB: updateSavedPath $fileIdHex -> $path');
   }
 
   /// Save a received chunk.

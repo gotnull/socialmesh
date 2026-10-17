@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -393,7 +395,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
           child: InkWell(
             onTap: () {
               AppLogging.widgets(
-                '[Dashboard] Owner discovery card tapped → opening picker',
+                '[Dashboard] Owner discovery card tapped -> opening picker',
               );
               ref
                   .read(dashboardDiscoveryAckProvider.notifier)
@@ -494,7 +496,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
             onTap: () {
               HapticFeedback.lightImpact();
               AppLogging.widgets(
-                '[Dashboard] Edit-mode add tile tapped → opening picker',
+                '[Dashboard] Edit-mode add tile tapped -> opening picker',
               );
               _showAddWidgetSheet(context);
             },
@@ -696,9 +698,8 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
             const SizedBox(height: AppTheme.spacing8),
             Text(
               'Customize your dashboard with widgets that matter to you', // lint-allow: hardcoded-string
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: AppTheme.spacing24),
@@ -1002,9 +1003,8 @@ class _AddWidgetSheet extends ConsumerWidget {
               Expanded(
                 child: Text(
                   'Tap to add or remove widgets from your dashboard', // lint-allow: hardcoded-string
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.textSecondary),
                 ),
               ),
               Text(

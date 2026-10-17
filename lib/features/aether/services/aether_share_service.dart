@@ -246,14 +246,14 @@ class AetherShareService {
 
   /// Check if the Aether API is reachable.
   Future<bool> checkHealth() async {
-    AppLogging.aether('checkHealth() — pinging Aether API');
+    AppLogging.aether('checkHealth() - pinging Aether API');
     try {
       final baseUrl = AppUrls.aetherApiUrl;
       final uri = Uri.parse('$baseUrl/health');
       final response = await http.get(uri).timeout(_requestTimeout);
       final healthy = response.statusCode == 200;
       AppLogging.aether(
-        'checkHealth() — ${healthy ? 'healthy' : 'unhealthy (${response.statusCode})'}',
+        'checkHealth() - ${healthy ? 'healthy' : 'unhealthy (${response.statusCode})'}',
       );
       return healthy;
     } catch (e) {
@@ -268,7 +268,7 @@ class AetherShareService {
   Future<List<AetherLeaderboardEntry>> fetchLeaderboard({
     int limit = 50,
   }) async {
-    AppLogging.aether('fetchLeaderboard() — limit=$limit');
+    AppLogging.aether('fetchLeaderboard() - limit=$limit');
     final baseUrl = AppUrls.aetherApiUrl;
     final uri = Uri.parse('$baseUrl/api/leaderboard?limit=$limit');
 
@@ -278,7 +278,7 @@ class AetherShareService {
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         final entries = json['leaderboard'] as List<dynamic>;
-        AppLogging.aether('fetchLeaderboard() — got ${entries.length} entries');
+        AppLogging.aether('fetchLeaderboard() - got ${entries.length} entries');
         return entries
             .map(
               (e) => AetherLeaderboardEntry.fromJson(e as Map<String, dynamic>),

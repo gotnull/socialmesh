@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/navigation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -144,7 +145,7 @@ class MeshCoreHamburgerMenuButton extends ConsumerWidget {
             Scaffold.of(context).openDrawer();
           } catch (e) {
             AppLogging.debug(
-              '⚠️ MeshCoreHamburgerMenuButton: Could not open drawer',
+              'MeshCoreHamburgerMenuButton: Could not open drawer',
             );
           }
         }

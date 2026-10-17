@@ -150,7 +150,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
       // Also check generation for error state — don't show errors for
       // superseded queries.
       if (generation != _searchGeneration) return;
-      AppLogging.aether('FlightSearch: error — $e');
+      AppLogging.aether('FlightSearch: error - $e');
       setState(() {
         _state = _SearchState.error;
         _results = [];

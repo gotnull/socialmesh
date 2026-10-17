@@ -56,12 +56,11 @@ class _MrrpHarnessHomeScreenState extends ConsumerState<MrrpHarnessHomeScreen> {
     final remotePeerCount = cachedServices.length;
 
     // Deduplicate identical log lines across rebuilds.
-    final sig =
-        '$sipEnabled|$mrrpEnabled|$peerCount|$serviceCount'; // lint-allow: hardcoded-string
+    final sig = '$sipEnabled|$mrrpEnabled|$peerCount|$serviceCount'; // lint-allow: hardcoded-string
     if (sig != _lastLogSignature) {
       _lastLogSignature = sig;
       AppLogging.mrrpHarness(
-        'MRRP_HARNESS: home build — sip=$sipEnabled, mrrp=$mrrpEnabled, '
+        'MRRP_HARNESS: home build - sip=$sipEnabled, mrrp=$mrrpEnabled, '
         'peers=$peerCount, services=$serviceCount', // lint-allow: hardcoded-string
       );
     }
@@ -127,8 +126,7 @@ class _MrrpHarnessHomeScreenState extends ConsumerState<MrrpHarnessHomeScreen> {
                     _StatusRow(
                       icon: Icons.people,
                       label: l10n.mrrpHarnessSipPeers,
-                      value:
-                          '$peerCount ($remotePeerCount MRRP)', // lint-allow: hardcoded-string
+                      value: '$peerCount ($remotePeerCount MRRP)', // lint-allow: hardcoded-string
                     ),
                     _StatusRow(
                       icon: Icons.extension,
@@ -309,9 +307,8 @@ class _StatusRow extends StatelessWidget {
           const SizedBox(width: AppTheme.spacing12),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.textSecondary),
           ),
           const Spacer(),
           Text(
@@ -373,9 +370,8 @@ class _ActionButton extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
             Icon(Icons.chevron_right, size: 20, color: context.textTertiary),

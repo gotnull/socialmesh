@@ -1531,17 +1531,17 @@ class SocialService {
 
       if (query.docs.isEmpty) {
         AppLogging.auth(
-          'Social: getProfileByNodeId() - ❌ No profile found for nodeId=$nodeId',
+          'Social: getProfileByNodeId() - No profile found for nodeId=$nodeId',
         );
         return null;
       }
       final profile = PublicProfile.fromFirestore(query.docs.first);
       AppLogging.auth(
-        'Social: getProfileByNodeId() - ✅ Found: userId=${profile.id}, displayName=${profile.displayName}',
+        'Social: getProfileByNodeId() - Found: userId=${profile.id}, displayName=${profile.displayName}',
       );
       return profile;
     } catch (e) {
-      AppLogging.auth('Social: getProfileByNodeId() - ❌ ERROR: $e');
+      AppLogging.auth('Social: getProfileByNodeId() - ERROR: $e');
       return null;
     }
   }
@@ -1632,35 +1632,35 @@ class SocialService {
   /// Unlink a mesh node from the current user's profile.
   Future<void> unlinkNodeFromProfile(int nodeId) async {
     AppLogging.social(
-      '🔗 [SocialService.unlinkNodeFromProfile] Starting for nodeId: $nodeId',
+      '[SocialService.unlinkNodeFromProfile] Starting for nodeId: $nodeId',
     );
 
     final currentUserId = _currentUserId;
     AppLogging.social(
-      '🔗 [SocialService.unlinkNodeFromProfile] currentUserId: $currentUserId',
+      '[SocialService.unlinkNodeFromProfile] currentUserId: $currentUserId',
     );
     if (currentUserId == null) {
       AppLogging.social(
-        '🔗 [SocialService.unlinkNodeFromProfile] ERROR: Not signed in',
+        '[SocialService.unlinkNodeFromProfile] ERROR: Not signed in',
       );
       throw StateError('Must be signed in to unlink nodes');
     }
 
     final docRef = _firestore.collection('profiles').doc(currentUserId);
     AppLogging.social(
-      '🔗 [SocialService.unlinkNodeFromProfile] Fetching profile doc...',
+      '[SocialService.unlinkNodeFromProfile] Fetching profile doc...',
     );
     final doc = await docRef.get();
 
     if (!doc.exists) {
       AppLogging.social(
-        '🔗 [SocialService.unlinkNodeFromProfile] Profile doc does not exist, returning early',
+        '[SocialService.unlinkNodeFromProfile] Profile doc does not exist, returning early',
       );
       return;
     }
 
     AppLogging.social(
-      '🔗 [SocialService.unlinkNodeFromProfile] Profile doc exists, parsing data...',
+      '[SocialService.unlinkNodeFromProfile] Profile doc exists, parsing data...',
     );
     final currentLinkedNodes =
         (doc.data()?['linkedNodeIds'] as List<dynamic>?)
@@ -1669,14 +1669,14 @@ class SocialService {
         [];
     final currentPrimaryId = doc.data()?['primaryNodeId'] as int?;
     AppLogging.social(
-      '🔗 [SocialService.unlinkNodeFromProfile] Current state: '
+      '[SocialService.unlinkNodeFromProfile] Current state: '
       'linkedNodes=$currentLinkedNodes, primaryId=$currentPrimaryId',
     );
 
     // Remove the node
     final removed = currentLinkedNodes.remove(nodeId);
     AppLogging.social(
-      '🔗 [SocialService.unlinkNodeFromProfile] Removed nodeId $nodeId: $removed, '
+      '[SocialService.unlinkNodeFromProfile] Removed nodeId $nodeId: $removed, '
       'remaining: $currentLinkedNodes',
     );
 
@@ -1693,25 +1693,25 @@ class SocialService {
           ? currentLinkedNodes.first
           : null;
       AppLogging.social(
-        '🔗 [SocialService.unlinkNodeFromProfile] Primary node removed, '
+        '[SocialService.unlinkNodeFromProfile] Primary node removed, '
         'new primary: ${updates['primaryNodeId']}',
       );
     }
 
     AppLogging.social(
-      '🔗 [SocialService.unlinkNodeFromProfile] Updating Firestore with: $updates',
+      '[SocialService.unlinkNodeFromProfile] Updating Firestore with: $updates',
     );
     try {
       await docRef.update(updates);
       AppLogging.social(
-        '🔗 [SocialService.unlinkNodeFromProfile] Firestore update SUCCESS',
+        '[SocialService.unlinkNodeFromProfile] Firestore update SUCCESS',
       );
     } catch (e, stackTrace) {
       AppLogging.social(
-        '🔗 [SocialService.unlinkNodeFromProfile] Firestore update FAILED: $e',
+        '[SocialService.unlinkNodeFromProfile] Firestore update FAILED: $e',
       );
       AppLogging.social(
-        '🔗 [SocialService.unlinkNodeFromProfile] Stack trace: $stackTrace',
+        '[SocialService.unlinkNodeFromProfile] Stack trace: $stackTrace',
       );
       rethrow;
     }
@@ -1938,13 +1938,13 @@ class SocialService {
   /// Upload a profile avatar image.
   Future<String> uploadProfileAvatar(String filePath) async {
     AppLogging.auth(
-      'SocialService: uploadProfileAvatar called — filePath: $filePath',
+      'SocialService: uploadProfileAvatar called - filePath: $filePath',
     );
 
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       AppLogging.auth(
-        'SocialService: uploadProfileAvatar aborted — not signed in',
+        'SocialService: uploadProfileAvatar aborted - not signed in',
       );
       throw StateError('Must be signed in to upload avatar');
     }
@@ -2249,13 +2249,13 @@ class SocialService {
     }
     if (!doc.exists) {
       AppLogging.auth(
-        'Social: _getPublicProfile() - ❌ PROFILE NOT FOUND for userId=$userId',
+        'Social: _getPublicProfile() - PROFILE NOT FOUND for userId=$userId',
       );
       return null;
     }
     final profile = PublicProfile.fromFirestore(doc);
     AppLogging.auth(
-      'Social: _getPublicProfile() - ✅ Found: displayName=${profile.displayName}, isVerified=${profile.isVerified}',
+      'Social: _getPublicProfile() - Found: displayName=${profile.displayName}, isVerified=${profile.isVerified}',
     );
     return profile;
   }

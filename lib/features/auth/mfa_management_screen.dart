@@ -35,11 +35,11 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
   @override
   void initState() {
     super.initState();
-    AppLogging.mfa('MFAManagementScreen initState — starting initial load');
+    AppLogging.mfa('MFAManagementScreen initState - starting initial load');
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
       AppLogging.mfa(
-        'MFAManagementScreen initState — offline, skipping network load',
+        'MFAManagementScreen initState - offline, skipping network load',
       );
       safeSetState(() => _isLoadingFactors = false);
       return;
@@ -48,29 +48,29 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
   }
 
   Future<void> _loadFactors() async {
-    AppLogging.mfa('_loadFactors — begin');
+    AppLogging.mfa('_loadFactors - begin');
     safeSetState(() => _isLoadingFactors = true);
     try {
       final authService = ref.read(authServiceProvider);
-      AppLogging.mfa('_loadFactors — calling getEnrolledMFAFactors()');
+      AppLogging.mfa('_loadFactors - calling getEnrolledMFAFactors()');
       final factors = await authService.getEnrolledMFAFactors();
       AppLogging.mfa(
-        '_loadFactors — received ${factors.length} factor(s): '
+        '_loadFactors - received ${factors.length} factor(s): '
         '${factors.map((f) => 'uid=${f.uid}, name=${f.displayName}, type=${f.factorId}').join('; ')}',
       );
       if (!mounted) {
-        AppLogging.mfa('_loadFactors — widget disposed after fetch, aborting');
+        AppLogging.mfa('_loadFactors - widget disposed after fetch, aborting');
         return;
       }
       safeSetState(() {
         _enrolledFactors = factors;
         _isLoadingFactors = false;
       });
-      AppLogging.mfa('_loadFactors — state updated, isLoading=false');
+      AppLogging.mfa('_loadFactors - state updated, isLoading=false');
     } catch (e, st) {
-      AppLogging.mfa('_loadFactors — ERROR: $e\n$st');
+      AppLogging.mfa('_loadFactors - ERROR: $e\n$st');
       if (!mounted) {
-        AppLogging.mfa('_loadFactors — widget disposed after error, aborting');
+        AppLogging.mfa('_loadFactors - widget disposed after error, aborting');
         return;
       }
       safeSetState(() => _isLoadingFactors = false);
@@ -78,11 +78,11 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
   }
 
   Future<void> _enrollMFA() async {
-    AppLogging.mfa('_enrollMFA — user tapped Enable Two-Factor Auth');
+    AppLogging.mfa('_enrollMFA - user tapped Enable Two-Factor Auth');
 
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.mfa('_enrollMFA — blocked, device is offline');
+      AppLogging.mfa('_enrollMFA - blocked, device is offline');
       showErrorSnackBar(context, context.l10n.authMfaRequiresInternet);
       return;
     }
@@ -92,22 +92,22 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
 
     await haptics.trigger(HapticType.medium);
 
-    AppLogging.mfa('_enrollMFA — pushing MFAEnrollmentScreen');
+    AppLogging.mfa('_enrollMFA - pushing MFAEnrollmentScreen');
     final result = await navigator.push<bool>(
       MaterialPageRoute(builder: (context) => const MFAEnrollmentScreen()),
     );
-    AppLogging.mfa('_enrollMFA — MFAEnrollmentScreen returned: $result');
+    AppLogging.mfa('_enrollMFA - MFAEnrollmentScreen returned: $result');
 
     if (result == true && mounted) {
       AppLogging.mfa(
-        '_enrollMFA — enrollment succeeded, invalidating provider and reloading',
+        '_enrollMFA - enrollment succeeded, invalidating provider and reloading',
       );
       // Refresh both local screen state and global provider
       ref.invalidate(enrolledMFAFactorsProvider);
       await _loadFactors();
     } else {
       AppLogging.mfa(
-        '_enrollMFA — enrollment not confirmed or widget disposed '
+        '_enrollMFA - enrollment not confirmed or widget disposed '
         '(result=$result, mounted=$mounted)',
       );
     }
@@ -115,13 +115,13 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
 
   Future<void> _removeFactor(MultiFactorInfo factor) async {
     AppLogging.mfa(
-      '_removeFactor — user tapped remove for factor '
+      '_removeFactor - user tapped remove for factor '
       'uid=${factor.uid}, name=${factor.displayName}, type=${factor.factorId}',
     );
 
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.mfa('_removeFactor — blocked, device is offline');
+      AppLogging.mfa('_removeFactor - blocked, device is offline');
       showErrorSnackBar(context, context.l10n.authMfaRemoveRequiresInternet);
       return;
     }
@@ -131,11 +131,11 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     await haptics.trigger(HapticType.warning);
 
     if (!mounted) {
-      AppLogging.mfa('_removeFactor — widget disposed after haptic, aborting');
+      AppLogging.mfa('_removeFactor - widget disposed after haptic, aborting');
       return;
     }
 
-    AppLogging.mfa('_removeFactor — showing confirmation dialog');
+    AppLogging.mfa('_removeFactor - showing confirmation dialog');
     final confirmed = await AppBottomSheet.showConfirm(
       context: context,
       title: context.l10n.authMfaRemoveConfirmTitle,
@@ -145,32 +145,32 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     );
 
     AppLogging.mfa(
-      '_removeFactor — dialog result: confirmed=$confirmed, mounted=$mounted',
+      '_removeFactor - dialog result: confirmed=$confirmed, mounted=$mounted',
     );
 
     if (confirmed != true || !mounted) {
       AppLogging.mfa(
-        '_removeFactor — aborting: '
+        '_removeFactor - aborting: '
         '${confirmed != true ? 'user cancelled' : 'widget disposed'}',
       );
       return;
     }
 
     AppLogging.mfa(
-      '_removeFactor — proceeding with unenroll for uid=${factor.uid}',
+      '_removeFactor - proceeding with unenroll for uid=${factor.uid}',
     );
 
     try {
       final authService = ref.read(authServiceProvider);
       AppLogging.mfa(
-        '_removeFactor — calling authService.unenrollMFA(${factor.uid})',
+        '_removeFactor - calling authService.unenrollMFA(${factor.uid})',
       );
       await authService.unenrollMFA(factor.uid);
-      AppLogging.mfa('_removeFactor — unenrollMFA returned successfully');
+      AppLogging.mfa('_removeFactor - unenrollMFA returned successfully');
 
       if (!mounted) {
         AppLogging.mfa(
-          '_removeFactor — widget disposed after unenroll, aborting UI update',
+          '_removeFactor - widget disposed after unenroll, aborting UI update',
         );
         return;
       }
@@ -178,26 +178,26 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
       await haptics.trigger(HapticType.success);
       if (!mounted) {
         AppLogging.mfa(
-          '_removeFactor — widget disposed after success haptic, aborting',
+          '_removeFactor - widget disposed after success haptic, aborting',
         );
         return;
       }
       safeShowSnackBar(context.l10n.authMfaRemoved);
       AppLogging.mfa(
-        '_removeFactor — success snackbar shown, '
+        '_removeFactor - success snackbar shown, '
         'invalidating provider and reloading factors',
       );
 
       // Refresh both local screen state and global provider
       ref.invalidate(enrolledMFAFactorsProvider);
       await _loadFactors();
-      AppLogging.mfa('_removeFactor — reload complete after removal');
+      AppLogging.mfa('_removeFactor - reload complete after removal');
     } on FirebaseAuthMultiFactorException catch (e) {
       // Re-auth triggered an MFA challenge for the SAME account.
       // The account has MFA enabled, so re-authentication also requires
       // the second factor. Show the MFA verification dialog, then retry.
       AppLogging.mfa(
-        '_removeFactor — re-auth requires MFA verification, '
+        '_removeFactor - re-auth requires MFA verification, '
         'showing MFA dialog (hints=${e.resolver.hints.length})',
       );
 
@@ -207,13 +207,13 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
 
       if (credential == null) {
         AppLogging.mfa(
-          '_removeFactor — user cancelled MFA verification during re-auth',
+          '_removeFactor - user cancelled MFA verification during re-auth',
         );
         return;
       }
 
       AppLogging.mfa(
-        '_removeFactor — MFA re-auth succeeded, retrying unenroll',
+        '_removeFactor - MFA re-auth succeeded, retrying unenroll',
       );
 
       if (!mounted) return;
@@ -223,7 +223,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
         final authService = ref.read(authServiceProvider);
         await authService.unenrollMFA(factor.uid);
         AppLogging.mfa(
-          '_removeFactor — unenrollMFA succeeded after MFA re-auth',
+          '_removeFactor - unenrollMFA succeeded after MFA re-auth',
         );
 
         if (!mounted) return;
@@ -235,22 +235,22 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
         ref.invalidate(enrolledMFAFactorsProvider);
         await _loadFactors();
         AppLogging.mfa(
-          '_removeFactor — reload complete after MFA re-auth removal',
+          '_removeFactor - reload complete after MFA re-auth removal',
         );
       } on FirebaseAuthException catch (retryErr) {
         AppLogging.mfa(
-          '_removeFactor — retry after MFA re-auth failed: '
+          '_removeFactor - retry after MFA re-auth failed: '
           'code=${retryErr.code}, message=${retryErr.message}',
         );
         if (!mounted) return;
         await haptics.trigger(HapticType.error);
         if (!mounted) return;
         final friendlyMsg = friendlyMFAError(retryErr, context.l10n);
-        AppLogging.mfa('_removeFactor — showing error snackbar: $friendlyMsg');
+        AppLogging.mfa('_removeFactor - showing error snackbar: $friendlyMsg');
         safeShowSnackBar(friendlyMsg);
       } catch (retryErr) {
         AppLogging.mfa(
-          '_removeFactor — unexpected retry error: '
+          '_removeFactor - unexpected retry error: '
           'type=${retryErr.runtimeType}, error=$retryErr',
         );
         if (!mounted) return;
@@ -260,7 +260,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
       }
     } on FirebaseAuthException catch (e, st) {
       AppLogging.mfa(
-        '_removeFactor — FirebaseAuthException: '
+        '_removeFactor - FirebaseAuthException: '
         'code=${e.code}, message=${e.message}, '
         'credential=${e.credential}, email=${e.email}, '
         'tenantId=${e.tenantId}\n$st',
@@ -268,7 +268,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
 
       if (e.code == 'reauthentication-cancelled') {
         AppLogging.mfa(
-          '_removeFactor — user cancelled re-authentication, '
+          '_removeFactor - user cancelled re-authentication, '
           'no error shown',
         );
         return;
@@ -276,7 +276,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
 
       if (e.code == 'wrong-account-selected') {
         AppLogging.mfa(
-          '_removeFactor — wrong account selected during re-auth, '
+          '_removeFactor - wrong account selected during re-auth, '
           'showing warning so user can retry',
         );
         if (!mounted) return;
@@ -284,7 +284,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
         if (!mounted) return;
         final friendlyMsg = friendlyMFAError(e, context.l10n);
         AppLogging.mfa(
-          '_removeFactor — showing warning snackbar: $friendlyMsg',
+          '_removeFactor - showing warning snackbar: $friendlyMsg',
         );
         safeShowSnackBar(friendlyMsg, type: SnackBarType.warning);
         return;
@@ -294,29 +294,29 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
       await haptics.trigger(HapticType.error);
       if (!mounted) return;
       final friendlyMsg = friendlyMFAError(e, context.l10n);
-      AppLogging.mfa('_removeFactor — showing error snackbar: $friendlyMsg');
+      AppLogging.mfa('_removeFactor - showing error snackbar: $friendlyMsg');
       safeShowSnackBar(friendlyMsg);
     } on FirebaseException catch (e, st) {
       AppLogging.mfa(
-        '_removeFactor — FirebaseException: '
+        '_removeFactor - FirebaseException: '
         'code=${e.code}, message=${e.message}, plugin=${e.plugin}\n$st',
       );
       if (!mounted) return;
       await haptics.trigger(HapticType.error);
       if (!mounted) return;
       final friendlyMsg = friendlyMFAError(e, context.l10n);
-      AppLogging.mfa('_removeFactor — showing error snackbar: $friendlyMsg');
+      AppLogging.mfa('_removeFactor - showing error snackbar: $friendlyMsg');
       safeShowSnackBar(friendlyMsg);
     } catch (e, st) {
       AppLogging.mfa(
-        '_removeFactor — unexpected error: '
+        '_removeFactor - unexpected error: '
         'type=${e.runtimeType}, error=$e\n$st',
       );
       if (!mounted) return;
       await haptics.trigger(HapticType.error);
       if (!mounted) return;
       final friendlyMsg = friendlyMFAError(e, context.l10n);
-      AppLogging.mfa('_removeFactor — showing error snackbar: $friendlyMsg');
+      AppLogging.mfa('_removeFactor - showing error snackbar: $friendlyMsg');
       safeShowSnackBar(friendlyMsg);
     }
   }
@@ -328,13 +328,13 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     final hasMFA = enrolledFactors.isNotEmpty;
 
     AppLogging.mfa(
-      'build — isLoading=$_isLoadingFactors, isOnline=$isOnline, '
+      'build - isLoading=$_isLoadingFactors, isOnline=$isOnline, '
       'factorCount=${enrolledFactors.length}, hasMFA=$hasMFA',
     );
 
     // Offline guard: show static unavailable state instead of loading/hanging
     if (!isOnline && _isLoadingFactors) {
-      AppLogging.mfa('build — rendering offline state (no cached factors)');
+      AppLogging.mfa('build - rendering offline state (no cached factors)');
       return GlassScaffold.body(
         title: context.l10n.authMfaManagementTitle,
         body: Center(
@@ -389,7 +389,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     // Show offline banner but allow viewing cached factors if we have them
     if (!isOnline && !_isLoadingFactors && enrolledFactors.isNotEmpty) {
       AppLogging.mfa(
-        'build — offline but have cached factors, showing with banner',
+        'build - offline but have cached factors, showing with banner',
       );
       return _buildMainContent(
         context,
@@ -400,7 +400,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
     }
 
     if (_isLoadingFactors) {
-      AppLogging.mfa('build — rendering loading state');
+      AppLogging.mfa('build - rendering loading state');
       return GlassScaffold.body(
         title: context.l10n.authMfaManagementTitle,
         body: const Center(child: CircularProgressIndicator()),

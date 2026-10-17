@@ -26,7 +26,7 @@ class MrrpServiceBrowserScreen extends ConsumerWidget {
     final cachedServices = ref.watch(mrrpCachedServicesProvider);
 
     AppLogging.mrrpHarness(
-      'MRRP_HARNESS: service browser — '
+      'MRRP_HARNESS: service browser - '
       '${cachedServices.length} peers, '
       '${cachedServices.values.fold<int>(0, (s, l) => s + l.length)} '
       'services total', // lint-allow: hardcoded-string

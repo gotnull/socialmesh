@@ -111,7 +111,7 @@ class ChannelInviteService {
     final channelId = data['channelId'] as String;
 
     AppLogging.channels(
-      '[ChannelInvite] Redeemed invite $inviteId → channel $channelId',
+      '[ChannelInvite] Redeemed invite $inviteId -> channel $channelId',
     );
 
     return ChannelRedeemResult(

@@ -219,7 +219,7 @@ class AutomationDatabase {
   /// Handle downgrades by recreating.
   Future<void> _onDowngrade(Database db, int oldVersion, int newVersion) async {
     AppLogging.storage(
-      'AutomationDatabase: Downgrading v$oldVersion -> v$newVersion — '
+      'AutomationDatabase: Downgrading v$oldVersion -> v$newVersion - '
       'recreating tables',
     );
     for (final table in _tableNames()) {

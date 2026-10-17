@@ -163,7 +163,7 @@ class LocationService {
       _lastPosition = position;
       resetConsecutiveFailures();
       AppLogging.debug(
-        '📍 Got phone GPS position: ${position.latitude}, ${position.longitude}',
+        'Got phone GPS position: ${position.latitude}, ${position.longitude}',
       );
       return position;
     } catch (e) {
@@ -199,7 +199,7 @@ class LocationService {
     // must live here as well as inside the governor.
     if (!(isLocationSharingEnabled?.call() ?? false)) {
       AppLogging.nodes(
-        'Skipping location updates — providePhoneLocation is disabled',
+        'Skipping location updates - providePhoneLocation is disabled',
       );
       return;
     }
@@ -315,7 +315,7 @@ class LocationService {
       if (_consecutiveFailures >= maxConsecutiveFailures) {
         AppLogging.nodes(
           'GPS backoff: skipping tick ($_consecutiveFailures failures, '
-          'max reached — use manual action to retry)',
+          'max reached - use manual action to retry)',
         );
         return PublishDecision.blockedNoPosition;
       }

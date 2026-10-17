@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
+
 import '../../models/mesh_models.dart';
 import '../../core/logging.dart';
 import '../../utils/text_sanitizer.dart';
@@ -93,7 +95,7 @@ Message? parsePushMessagePayload(Map<String, dynamic> data) {
 
     return message;
   } catch (e) {
-    AppLogging.notifications('🔔 Error parsing push payload into Message: $e');
+    AppLogging.notifications('Error parsing push payload into Message: $e');
     return null;
   }
 }

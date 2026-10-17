@@ -19,6 +19,7 @@ import '../core/logging.dart';
 import '../main.dart' show firebaseReady;
 import '../services/local_data_wipe_service.dart';
 import '../services/notifications/push_notification_service.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Exception thrown when account linking is required
@@ -135,11 +136,11 @@ class AuthService {
     try {
       final token = await user.getIdToken(forceRefresh);
       AppLogging.auth(
-        'getIdToken - ✅ Token fetched (length=${token?.length ?? 0})',
+        'getIdToken - Token fetched (length=${token?.length ?? 0})',
       );
       return token;
     } catch (e) {
-      AppLogging.auth('getIdToken - ❌ Error: $e');
+      AppLogging.auth('getIdToken - Error: $e');
       rethrow;
     }
   }
@@ -158,13 +159,13 @@ class AuthService {
     try {
       final result = await user.getIdTokenResult(forceRefresh);
       AppLogging.auth(
-        'getIdTokenResult - ✅ Token result fetched '
+        'getIdTokenResult - Token result fetched '
         '(claims keys=${result.claims?.keys.toList()}, '
         'expiry=${result.expirationTime})',
       );
       return result;
     } catch (e) {
-      AppLogging.auth('getIdTokenResult - ❌ Error: $e');
+      AppLogging.auth('getIdTokenResult - Error: $e');
       rethrow;
     }
   }
@@ -177,7 +178,7 @@ class AuthService {
       _logUserInfo('signInAnonymously - ✅ SUCCESS', credential.user);
       return credential;
     } catch (e) {
-      AppLogging.auth('signInAnonymously - ❌ ERROR: $e');
+      AppLogging.auth('signInAnonymously - ERROR: $e');
       rethrow;
     }
   }
@@ -215,14 +216,14 @@ class AuthService {
     if (current != null && current.isAnonymous) {
       try {
         AppLogging.auth(
-          'linkAnonOrSignInWithCredential - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}…',
+          'linkAnonOrSignInWithCredential - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}...',
         );
         return await current.linkWithCredential(credential);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'credential-already-in-use' ||
             e.code == 'email-already-in-use') {
           AppLogging.auth(
-            'linkAnonOrSignInWithCredential - link conflict (${e.code}) — falling back to signInWithCredential, anon data orphaned',
+            'linkAnonOrSignInWithCredential - link conflict (${e.code}) - falling back to signInWithCredential, anon data orphaned',
           );
           return await _auth.signInWithCredential(credential);
         }
@@ -246,14 +247,14 @@ class AuthService {
     if (current != null && current.isAnonymous) {
       try {
         AppLogging.auth(
-          'linkAnonOrSignInWithProvider - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}…',
+          'linkAnonOrSignInWithProvider - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}...',
         );
         return await current.linkWithProvider(provider);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'credential-already-in-use' ||
             e.code == 'email-already-in-use') {
           AppLogging.auth(
-            'linkAnonOrSignInWithProvider - link conflict (${e.code}) — falling back to signInWithProvider, anon data orphaned',
+            'linkAnonOrSignInWithProvider - link conflict (${e.code}) - falling back to signInWithProvider, anon data orphaned',
           );
           return await _auth.signInWithProvider(provider);
         }
@@ -280,10 +281,10 @@ class AuthService {
       _logUserInfo('signInWithEmail - ✅ SUCCESS', credential.user);
       return credential;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('signInWithEmail - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('signInWithEmail - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('signInWithEmail - ❌ ERROR: $e');
+      AppLogging.auth('signInWithEmail - ERROR: $e');
       rethrow;
     }
   }
@@ -308,7 +309,7 @@ class AuthService {
       UserCredential credential;
       if (current != null && current.isAnonymous) {
         AppLogging.auth(
-          'createAccount - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}…',
+          'createAccount - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}...',
         );
         final emailCredential = EmailAuthProvider.credential(
           email: email,
@@ -324,10 +325,10 @@ class AuthService {
       _logUserInfo('createAccount - ✅ SUCCESS', credential.user);
       return credential;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('createAccount - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('createAccount - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('createAccount - ❌ ERROR: $e');
+      AppLogging.auth('createAccount - ERROR: $e');
       rethrow;
     }
   }
@@ -356,14 +357,14 @@ class AuthService {
       googleUser = await googleSignIn.authenticate();
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        AppLogging.auth('signInWithGoogle - ❌ CANCELLED by user');
+        AppLogging.auth('signInWithGoogle - CANCELLED by user');
         final l10n = safeL10n();
         throw FirebaseAuthException(
           code: 'sign-in-cancelled',
           message: l10n.authErrorGoogleSignInCancelled,
         );
       }
-      AppLogging.auth('signInWithGoogle - ❌ GoogleSignInException: ${e.code}');
+      AppLogging.auth('signInWithGoogle - GoogleSignInException: ${e.code}');
       rethrow;
     }
     AppLogging.auth(
@@ -375,7 +376,7 @@ class AuthService {
     // This is sufficient for Firebase Auth - no accessToken needed
     final idToken = googleUser.authentication.idToken;
     if (idToken == null) {
-      AppLogging.auth('signInWithGoogle - ❌ No idToken received');
+      AppLogging.auth('signInWithGoogle - No idToken received');
       final l10n = safeL10n();
       throw FirebaseAuthException(
         code: 'missing-id-token',
@@ -393,10 +394,10 @@ class AuthService {
       _logUserInfo('signInWithGoogle - ✅ SUCCESS', userCredential.user);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('signInWithGoogle - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('signInWithGoogle - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('signInWithGoogle - ❌ ERROR: $e');
+      AppLogging.auth('signInWithGoogle - ERROR: $e');
       rethrow;
     }
   }
@@ -449,13 +450,13 @@ class AuthService {
 
       return userCredential;
     } on SignInWithAppleAuthorizationException catch (e) {
-      AppLogging.auth('signInWithApple - ❌ APPLE ERROR: code=${e.code}');
+      AppLogging.auth('signInWithApple - APPLE ERROR: code=${e.code}');
       rethrow;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('signInWithApple - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('signInWithApple - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('signInWithApple - ❌ ERROR: $e');
+      AppLogging.auth('signInWithApple - ERROR: $e');
       rethrow;
     }
   }
@@ -517,11 +518,11 @@ class AuthService {
       _logUserInfo('signInWithGitHub - ✅ SUCCESS', userCredential.user);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('signInWithGitHub - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('signInWithGitHub - AUTH ERROR: code=${e.code}');
       _handleProviderAuthError(e, 'GitHub');
       rethrow;
     } catch (e) {
-      AppLogging.auth('signInWithGitHub - ❌ ERROR: $e');
+      AppLogging.auth('signInWithGitHub - ERROR: $e');
       rethrow;
     }
   }
@@ -554,11 +555,11 @@ class AuthService {
       _logUserInfo('signInWithTwitter - ✅ SUCCESS', userCredential.user);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('signInWithTwitter - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('signInWithTwitter - AUTH ERROR: code=${e.code}');
       _handleProviderAuthError(e, 'Twitter/X');
       rethrow;
     } catch (e) {
-      AppLogging.auth('signInWithTwitter - ❌ ERROR: $e');
+      AppLogging.auth('signInWithTwitter - ERROR: $e');
       rethrow;
     }
   }
@@ -588,7 +589,7 @@ class AuthService {
     final hasMFA = factors.isNotEmpty;
     if (hasMFA) {
       AppLogging.auth(
-        '$providerLabel sign-in blocked on iOS — MFA enrolled, '
+        '$providerLabel sign-in blocked on iOS - MFA enrolled, '
         'signInWithProvider would crash (FIRMultiFactorResolver '
         'serialization bug)',
       );
@@ -645,7 +646,7 @@ class AuthService {
     AppLogging.auth('linkPendingCredential - START');
     final user = _auth.currentUser;
     if (user == null) {
-      AppLogging.auth('linkPendingCredential - ❌ No current user');
+      AppLogging.auth('linkPendingCredential - No current user');
       final l10n = safeL10n();
       throw FirebaseAuthException(
         code: 'no-current-user',
@@ -657,10 +658,10 @@ class AuthService {
       _logUserInfo('linkPendingCredential - ✅ SUCCESS', userCredential.user);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('linkPendingCredential - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('linkPendingCredential - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('linkPendingCredential - ❌ ERROR: $e');
+      AppLogging.auth('linkPendingCredential - ERROR: $e');
       rethrow;
     }
   }
@@ -684,13 +685,13 @@ class AuthService {
       try {
         await user.updateDisplayName(displayName);
         await user.reload();
-        AppLogging.auth('updateDisplayName - ✅ SUCCESS');
+        AppLogging.auth('updateDisplayName - SUCCESS');
       } catch (e) {
-        AppLogging.auth('updateDisplayName - ❌ ERROR: $e');
+        AppLogging.auth('updateDisplayName - ERROR: $e');
         rethrow;
       }
     } else {
-      AppLogging.auth('updateDisplayName - ❌ No current user');
+      AppLogging.auth('updateDisplayName - No current user');
     }
   }
 
@@ -701,12 +702,12 @@ class AuthService {
     AppLogging.auth('sendPasswordResetEmail - START - email=$maskedEmail');
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      AppLogging.auth('sendPasswordResetEmail - ✅ SUCCESS');
+      AppLogging.auth('sendPasswordResetEmail - SUCCESS');
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('sendPasswordResetEmail - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('sendPasswordResetEmail - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('sendPasswordResetEmail - ❌ ERROR: $e');
+      AppLogging.auth('sendPasswordResetEmail - ERROR: $e');
       rethrow;
     }
   }
@@ -721,9 +722,9 @@ class AuthService {
       await PushNotificationService().onUserSignOut();
       AppLogging.auth('signOut - FCM token removed, signing out...');
       await _auth.signOut();
-      AppLogging.auth('signOut - ✅ SUCCESS');
+      AppLogging.auth('signOut - SUCCESS');
     } catch (e) {
-      AppLogging.auth('signOut - ❌ ERROR: $e');
+      AppLogging.auth('signOut - ERROR: $e');
       rethrow;
     }
   }
@@ -743,7 +744,7 @@ class AuthService {
     AppLogging.auth('reauthenticateWithGoogle - START');
     final user = _auth.currentUser;
     if (user == null) {
-      AppLogging.auth('reauthenticateWithGoogle - ❌ No current user');
+      AppLogging.auth('reauthenticateWithGoogle - No current user');
       return;
     }
 
@@ -757,7 +758,7 @@ class AuthService {
       googleUser = await googleSignIn.authenticate();
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        AppLogging.auth('reauthenticateWithGoogle - ❌ CANCELLED by user');
+        AppLogging.auth('reauthenticateWithGoogle - CANCELLED by user');
         final l10n = safeL10n();
         throw FirebaseAuthException(
           code: 'reauthentication-cancelled',
@@ -784,7 +785,7 @@ class AuthService {
 
     if (linkedGoogleEmail != null && linkedGoogleEmail != selectedEmail) {
       AppLogging.auth(
-        'reauthenticateWithGoogle - ❌ WRONG ACCOUNT: '
+        'reauthenticateWithGoogle - WRONG ACCOUNT: '
         'signed-in=$linkedGoogleEmail, selected=$selectedEmail',
       );
       throw FirebaseAuthException(
@@ -799,7 +800,7 @@ class AuthService {
     // idToken is sufficient for Firebase - no accessToken needed
     final idToken = googleUser.authentication.idToken;
     if (idToken == null) {
-      AppLogging.auth('reauthenticateWithGoogle - ❌ No idToken received');
+      AppLogging.auth('reauthenticateWithGoogle - No idToken received');
       final l10n = safeL10n();
       throw FirebaseAuthException(
         code: 'missing-id-token',
@@ -812,14 +813,12 @@ class AuthService {
 
     try {
       await user.reauthenticateWithCredential(credential);
-      AppLogging.auth('reauthenticateWithGoogle - ✅ SUCCESS');
+      AppLogging.auth('reauthenticateWithGoogle - SUCCESS');
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth(
-        'reauthenticateWithGoogle - ❌ AUTH ERROR: code=${e.code}',
-      );
+      AppLogging.auth('reauthenticateWithGoogle - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('reauthenticateWithGoogle - ❌ ERROR: $e');
+      AppLogging.auth('reauthenticateWithGoogle - ERROR: $e');
       rethrow;
     }
   }
@@ -829,7 +828,7 @@ class AuthService {
     AppLogging.auth('reauthenticateWithApple - START');
     final user = _auth.currentUser;
     if (user == null) {
-      AppLogging.auth('reauthenticateWithApple - ❌ No current user');
+      AppLogging.auth('reauthenticateWithApple - No current user');
       return;
     }
 
@@ -853,17 +852,15 @@ class AuthService {
       );
 
       await user.reauthenticateWithCredential(oauthCredential);
-      AppLogging.auth('reauthenticateWithApple - ✅ SUCCESS');
+      AppLogging.auth('reauthenticateWithApple - SUCCESS');
     } on SignInWithAppleAuthorizationException catch (e) {
-      AppLogging.auth(
-        'reauthenticateWithApple - ❌ APPLE ERROR: code=${e.code}',
-      );
+      AppLogging.auth('reauthenticateWithApple - APPLE ERROR: code=${e.code}');
       rethrow;
     } on FirebaseAuthException catch (e) {
-      AppLogging.auth('reauthenticateWithApple - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.auth('reauthenticateWithApple - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.auth('reauthenticateWithApple - ❌ ERROR: $e');
+      AppLogging.auth('reauthenticateWithApple - ERROR: $e');
       rethrow;
     }
   }
@@ -873,7 +870,7 @@ class AuthService {
     AppLogging.auth('reauthenticate - START');
     final user = _auth.currentUser;
     if (user == null) {
-      AppLogging.auth('reauthenticate - ❌ No current user');
+      AppLogging.auth('reauthenticate - No current user');
       return;
     }
 
@@ -887,7 +884,7 @@ class AuthService {
       AppLogging.auth('reauthenticate - Using Apple provider');
       await reauthenticateWithApple();
     } else {
-      AppLogging.auth('reauthenticate - ❌ No supported provider found');
+      AppLogging.auth('reauthenticate - No supported provider found');
       final l10n = safeL10n();
       throw FirebaseAuthException(
         code: 'no-supported-provider',
@@ -913,7 +910,7 @@ class AuthService {
     final user = _auth.currentUser;
     _logUserInfo('deleteAccount - START', user);
     if (user == null) {
-      AppLogging.auth('deleteAccount - ❌ No current user to delete');
+      AppLogging.auth('deleteAccount - No current user to delete');
       return;
     }
 
@@ -935,7 +932,7 @@ class AuthService {
       );
     } on FirebaseFunctionsException catch (e) {
       AppLogging.auth(
-        'deleteAccount - ❌ CF failed: code=${e.code}, message=${e.message}',
+        'deleteAccount - CF failed: code=${e.code}, message=${e.message}',
       );
       rethrow;
     }
@@ -987,7 +984,7 @@ class AuthService {
     AppLogging.auth('deleteAccount - Deleting Firebase Auth user...');
     try {
       await user.delete();
-      AppLogging.auth('deleteAccount - ✅ SUCCESS (direct deletion)');
+      AppLogging.auth('deleteAccount - SUCCESS (direct deletion)');
     } on FirebaseAuthException catch (e) {
       AppLogging.auth('deleteAccount - AUTH ERROR: code=${e.code}');
       if (e.code == 'requires-recent-login') {
@@ -999,7 +996,7 @@ class AuthService {
           'deleteAccount - Re-authenticated, attempting deletion again...',
         );
         await user.delete();
-        AppLogging.auth('deleteAccount - ✅ SUCCESS (after re-authentication)');
+        AppLogging.auth('deleteAccount - SUCCESS (after re-authentication)');
       } else {
         rethrow;
       }
@@ -1019,7 +1016,7 @@ class AuthService {
   }) async {
     final user = currentUser;
     if (user == null) {
-      AppLogging.mfa('enrollMFA - ❌ No user signed in');
+      AppLogging.mfa('enrollMFA - No user signed in');
       onError('no-current-user');
       return false;
     }
@@ -1055,13 +1052,13 @@ class AuthService {
 
           final freshUser = currentUser;
           if (freshUser == null) {
-            AppLogging.mfa('enrollMFA - ❌ No user after re-auth');
+            AppLogging.mfa('enrollMFA - No user after re-auth');
             onError('no-current-user');
             return false;
           }
 
           session = await freshUser.multiFactor.getSession();
-          AppLogging.mfa('enrollMFA - ✅ getSession succeeded after re-auth');
+          AppLogging.mfa('enrollMFA - getSession succeeded after re-auth');
         } else {
           rethrow;
         }
@@ -1080,11 +1077,11 @@ class AuthService {
       // Re-auth required MFA — let the UI layer handle it
       rethrow;
     } on FirebaseAuthException catch (e) {
-      AppLogging.mfa('enrollMFA - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.mfa('enrollMFA - AUTH ERROR: code=${e.code}');
       onError(e.code);
       return false;
     } catch (e) {
-      AppLogging.mfa('enrollMFA - ❌ ERROR: $e');
+      AppLogging.mfa('enrollMFA - ERROR: $e');
       onError('unknown');
       return false;
     }
@@ -1107,9 +1104,9 @@ class AuthService {
         AppLogging.mfa('enrollMFA - Auto-verification completed');
         try {
           await _enrollWithCredential(credential);
-          AppLogging.mfa('enrollMFA - ✅ Auto-enrollment SUCCESS');
+          AppLogging.mfa('enrollMFA - Auto-enrollment SUCCESS');
         } catch (e) {
-          AppLogging.mfa('enrollMFA - ❌ Auto-enrollment ERROR: $e');
+          AppLogging.mfa('enrollMFA - Auto-enrollment ERROR: $e');
           onError('unknown');
         }
       },
@@ -1128,7 +1125,7 @@ class AuthService {
             final freshUser = currentUser;
             if (freshUser == null) {
               AppLogging.mfa(
-                'enrollMFA - ❌ No user after re-auth (verificationFailed path)',
+                'enrollMFA - No user after re-auth (verificationFailed path)',
               );
               onError('no-current-user');
               return;
@@ -1136,7 +1133,7 @@ class AuthService {
 
             final freshSession = await freshUser.multiFactor.getSession();
             AppLogging.mfa(
-              'enrollMFA - ✅ Fresh session obtained, retrying verifyPhoneNumber',
+              'enrollMFA - Fresh session obtained, retrying verifyPhoneNumber',
             );
 
             await _verifyPhoneForEnrollment(
@@ -1156,7 +1153,7 @@ class AuthService {
             onError('second-factor-required');
           } catch (retryErr) {
             AppLogging.mfa(
-              'enrollMFA - ❌ Re-auth retry failed '
+              'enrollMFA - Re-auth retry failed '
               '(verificationFailed path): $retryErr',
             );
             if (retryErr is FirebaseAuthException) {
@@ -1166,7 +1163,7 @@ class AuthService {
             }
           }
         } else {
-          AppLogging.mfa('enrollMFA - ❌ Verification FAILED: ${e.code}');
+          AppLogging.mfa('enrollMFA - Verification FAILED: ${e.code}');
           onError(e.code);
         }
       },
@@ -1194,7 +1191,7 @@ class AuthService {
     );
 
     await _enrollWithCredential(credential, displayName: displayName);
-    AppLogging.mfa('completeMFAEnrollment - ✅ SUCCESS');
+    AppLogging.mfa('completeMFAEnrollment - SUCCESS');
   }
 
   /// Internal: Enroll with phone credential
@@ -1224,7 +1221,7 @@ class AuthService {
   Future<void> unenrollMFA(String factorUid) async {
     final user = currentUser;
     if (user == null) {
-      AppLogging.mfa('unenrollMFA - ❌ No user signed in');
+      AppLogging.mfa('unenrollMFA - No user signed in');
       throw FirebaseAuthException(
         code: 'no-current-user',
         message: safeL10n().authErrorNoUserSignedIn,
@@ -1242,7 +1239,7 @@ class AuthService {
       // Force token refresh so subsequent sign-ins reflect the change
       await _auth.currentUser?.getIdToken(true);
 
-      AppLogging.mfa('unenrollMFA - ✅ SUCCESS (reloaded + token refreshed)');
+      AppLogging.mfa('unenrollMFA - SUCCESS (reloaded + token refreshed)');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'unenroll-failed' || e.code == 'requires-recent-login') {
         AppLogging.mfa(
@@ -1263,7 +1260,7 @@ class AuthService {
           rethrow;
         } on FirebaseAuthException catch (reauthErr) {
           AppLogging.mfa(
-            'unenrollMFA - ❌ Re-auth failed: code=${reauthErr.code}',
+            'unenrollMFA - Re-auth failed: code=${reauthErr.code}',
           );
 
           // user-mismatch is the standard code when the credential belongs
@@ -1292,7 +1289,7 @@ class AuthService {
           // Re-fetch user after re-auth to get a fresh session
           final freshUser = _auth.currentUser;
           if (freshUser == null) {
-            AppLogging.mfa('unenrollMFA - ❌ No user after re-auth');
+            AppLogging.mfa('unenrollMFA - No user after re-auth');
             throw FirebaseAuthException(
               code: 'no-current-user',
               message: safeL10n().authErrorSessionLost,
@@ -1303,17 +1300,17 @@ class AuthService {
           await freshUser.reload();
           await _auth.currentUser?.getIdToken(true);
 
-          AppLogging.mfa('unenrollMFA - ✅ SUCCESS (after re-authentication)');
+          AppLogging.mfa('unenrollMFA - SUCCESS (after re-authentication)');
         } on FirebaseAuthException catch (retryErr) {
-          AppLogging.mfa('unenrollMFA - ❌ Retry failed: code=${retryErr.code}');
+          AppLogging.mfa('unenrollMFA - Retry failed: code=${retryErr.code}');
           rethrow;
         }
       } else {
-        AppLogging.mfa('unenrollMFA - ❌ AUTH ERROR: code=${e.code}');
+        AppLogging.mfa('unenrollMFA - AUTH ERROR: code=${e.code}');
         rethrow;
       }
     } catch (e) {
-      AppLogging.mfa('unenrollMFA - ❌ ERROR: $e');
+      AppLogging.mfa('unenrollMFA - ERROR: $e');
       rethrow;
     }
   }
@@ -1327,7 +1324,7 @@ class AuthService {
   Future<List<MultiFactorInfo>> getEnrolledMFAFactors() async {
     final user = currentUser;
     AppLogging.mfa(
-      '[getEnrolledMFAFactors] START — user: ${user?.uid ?? "NULL"}',
+      '[getEnrolledMFAFactors] START - user: ${user?.uid ?? "NULL"}',
     );
     if (user == null) {
       AppLogging.mfa('[getEnrolledMFAFactors] No current user, returning []');
@@ -1343,7 +1340,7 @@ class AuthService {
         onTimeout: () {
           AppLogging.mfa(
             '[getEnrolledMFAFactors] user.reload() TIMED OUT after 5s '
-            '— using cached factors',
+            '- using cached factors',
           );
         },
       );
@@ -1365,7 +1362,7 @@ class AuthService {
     }
     final factors = await refreshedUser.multiFactor.getEnrolledFactors();
     AppLogging.mfa(
-      '[getEnrolledMFAFactors] DONE — ${factors.length} factor(s) enrolled: '
+      '[getEnrolledMFAFactors] DONE - ${factors.length} factor(s) enrolled: '
       '${factors.map((f) => '${f.factorId}(${f.displayName ?? "unnamed"})').join(', ')}',
     );
     return factors;
@@ -1397,7 +1394,7 @@ class AuthService {
         multiFactorInfo: phoneHint,
         verificationCompleted: (_) {},
         verificationFailed: (e) {
-          AppLogging.mfa('verifyMFASignIn - ❌ Verification FAILED: ${e.code}');
+          AppLogging.mfa('verifyMFASignIn - Verification FAILED: ${e.code}');
         },
         codeSent: (String id, int? resendToken) {
           AppLogging.mfa('verifyMFASignIn - Code sent');
@@ -1426,14 +1423,14 @@ class AuthService {
 
       // Complete sign-in with MFA
       final userCredential = await resolver.resolveSignIn(multiFactorAssertion);
-      AppLogging.mfa('verifyMFASignIn - ✅ SUCCESS');
+      AppLogging.mfa('verifyMFASignIn - SUCCESS');
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      AppLogging.mfa('verifyMFASignIn - ❌ AUTH ERROR: code=${e.code}');
+      AppLogging.mfa('verifyMFASignIn - AUTH ERROR: code=${e.code}');
       rethrow;
     } catch (e) {
-      AppLogging.mfa('verifyMFASignIn - ❌ ERROR: $e');
+      AppLogging.mfa('verifyMFASignIn - ERROR: $e');
       rethrow;
     }
   }

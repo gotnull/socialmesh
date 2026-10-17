@@ -32,7 +32,7 @@ final _messageTimelineItemsProvider = Provider.autoDispose
 
       if (myNodeNum == null) {
         AppLogging.messages(
-          '[MsgTimeline] myNodeNum is null — returning empty',
+          '[MsgTimeline] myNodeNum is null - returning empty',
         );
         return const [];
       }
@@ -70,7 +70,7 @@ final _messageTimelineItemsProvider = Provider.autoDispose
         AppLogging.messages(
           '  [Item] ${item.id}: "${item.title}" '
           '${item.start.hour}:${item.start.minute.toString().padLeft(2, '0')}'
-          '–${item.end.hour}:${item.end.minute.toString().padLeft(2, '0')} '
+          '-${item.end.hour}:${item.end.minute.toString().padLeft(2, '0')} '
           '(${item.durationMinutes}min, ${item.messageCount} msgs, '
           '${item.priority.name})',
         );
@@ -142,7 +142,7 @@ class _MessageTimelineScreenState extends ConsumerState<MessageTimelineScreen> {
   void _onFilterChanged(MessageTimelineFilter filter) {
     HapticFeedback.selectionClick();
     AppLogging.messages(
-      '[MsgTimeline] Filter changed: ${_filter.name} → ${filter.name}',
+      '[MsgTimeline] Filter changed: ${_filter.name} -> ${filter.name}',
     );
     setState(() {
       _filter = filter;
@@ -153,7 +153,7 @@ class _MessageTimelineScreenState extends ConsumerState<MessageTimelineScreen> {
   void _onWeekForward() {
     HapticFeedback.selectionClick();
     final next = _weekStart.add(const Duration(days: 7));
-    AppLogging.messages('[MsgTimeline] Week forward: $_weekStart → $next');
+    AppLogging.messages('[MsgTimeline] Week forward: $_weekStart -> $next');
     setState(() {
       _weekStart = next;
       _rebuildKey++;
@@ -163,7 +163,7 @@ class _MessageTimelineScreenState extends ConsumerState<MessageTimelineScreen> {
   void _onWeekBack() {
     HapticFeedback.selectionClick();
     final prev = _weekStart.subtract(const Duration(days: 7));
-    AppLogging.messages('[MsgTimeline] Week back: $_weekStart → $prev');
+    AppLogging.messages('[MsgTimeline] Week back: $_weekStart -> $prev');
     setState(() {
       _weekStart = prev;
       _rebuildKey++;
@@ -173,7 +173,7 @@ class _MessageTimelineScreenState extends ConsumerState<MessageTimelineScreen> {
   void _onWeekToday() {
     HapticFeedback.selectionClick();
     final today = weekStartFor(DateTime.now());
-    AppLogging.messages('[MsgTimeline] Week today: $_weekStart → $today');
+    AppLogging.messages('[MsgTimeline] Week today: $_weekStart -> $today');
     setState(() {
       _weekStart = today;
       _rebuildKey++;

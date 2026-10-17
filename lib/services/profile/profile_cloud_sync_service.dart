@@ -170,7 +170,7 @@ class ProfileCloudSyncService {
 
     if (result.length > 5 * 1024 * 1024) {
       AppLogging.auth(
-        'ProfileSync: _prepareImageForUpload WARNING — result is '
+        'ProfileSync: _prepareImageForUpload WARNING - result is '
         '${result.length} bytes (>5 MB), may be close to storage limit',
       );
     }
@@ -258,19 +258,17 @@ class ProfileCloudSyncService {
   /// Display names are unique and case-insensitive.
   Future<String?> getUserIdByDisplayName(String displayName) async {
     AppLogging.qr(
-      '🔗 ProfileSync: getUserIdByDisplayName called with "$displayName"',
+      'ProfileSync: getUserIdByDisplayName called with "$displayName"',
     );
 
     final normalizedName = displayName.trim().toLowerCase();
     if (normalizedName.isEmpty) {
-      AppLogging.qr(
-        'QR - 🔗 ProfileSync: Empty displayName after normalization',
-      );
+      AppLogging.qr('QR - ProfileSync: Empty displayName after normalization');
       return null;
     }
 
     AppLogging.qr(
-      '🔗 ProfileSync: Querying Firestore for displayNameLower="$normalizedName"',
+      'ProfileSync: Querying Firestore for displayNameLower="$normalizedName"',
     );
 
     try {
@@ -281,12 +279,12 @@ class ProfileCloudSyncService {
           .get();
 
       AppLogging.qr(
-        'QR - 🔗 ProfileSync: Query returned ${query.docs.length} docs',
+        'QR - ProfileSync: Query returned ${query.docs.length} docs',
       );
 
       if (query.docs.isEmpty) {
         AppLogging.qr(
-          '🔗 ProfileSync: No user found with displayName: $displayName',
+          'ProfileSync: No user found with displayName: $displayName',
         );
         return null;
       }
@@ -294,13 +292,13 @@ class ProfileCloudSyncService {
       final userId = query.docs.first.id;
       final docData = query.docs.first.data();
       AppLogging.qr(
-        '🔗 ProfileSync: Found userId=$userId for displayName=$displayName, '
+        'ProfileSync: Found userId=$userId for displayName=$displayName, '
         'doc keys=${docData.keys.toList()}',
       );
       return userId;
     } catch (e) {
       AppLogging.qr(
-        '🔗 ProfileSync: ERROR looking up displayName "$displayName": $e',
+        'ProfileSync: ERROR looking up displayName "$displayName": $e',
       );
       return null;
     }
@@ -401,7 +399,7 @@ class ProfileCloudSyncService {
     if (identical(recovered, cloud)) return cloud;
 
     AppLogging.auth(
-      'ProfileSync: 🩹 Drift recovered from profiles/{uid} → '
+      'ProfileSync: Drift recovered from profiles/{uid} -> '
       'avatar=${recovered.avatarUrl != cloud.avatarUrl}, '
       'banner=${recovered.bannerUrl != cloud.bannerUrl}, '
       'bio=${recovered.bio != cloud.bio}, '
@@ -413,9 +411,8 @@ class ProfileCloudSyncService {
 
     // Persist the recovered fields back to users/{uid}. Stripped-null
     // payload + merge:true means only the newly-filled keys are written.
-    await _userDoc(
-      uid,
-    ).set(profileToFirestoreMap(recovered), SetOptions(merge: true));
+    await _userDoc(uid)
+        .set(profileToFirestoreMap(recovered), SetOptions(merge: true));
     return recovered;
   }
 
@@ -515,7 +512,7 @@ class ProfileCloudSyncService {
     // Check if we're already syncing for this uid
     if (_activeSyncFuture != null && _activeSyncUid == uid) {
       AppLogging.auth(
-        '☁️ fullSync: Already syncing for $uid, returning active future',
+        'fullSync: Already syncing for $uid, returning active future',
       );
       return _activeSyncFuture;
     }
@@ -526,7 +523,7 @@ class ProfileCloudSyncService {
         _activeSyncUid == uid &&
         now.difference(_lastSyncTime!) < _syncDebounceWindow) {
       AppLogging.auth(
-        '☁️ fullSync: Skipping sync for $uid (within debounce window)',
+        'fullSync: Skipping sync for $uid (within debounce window)',
       );
       // Return cached local profile instead of re-syncing
       return _localService.getProfile();
@@ -552,26 +549,26 @@ class ProfileCloudSyncService {
   }) async {
     AppLogging.auth('');
     AppLogging.auth(
-      '╔══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
-    AppLogging.auth('║ ☁️ ProfileCloudSyncService.fullSync() CALLED');
-    AppLogging.auth('║ ☁️ uid: $uid');
+    AppLogging.auth('| ProfileCloudSyncService.fullSync() CALLED');
+    AppLogging.auth('| uid: $uid');
     AppLogging.auth(
-      '╠══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
 
     try {
       // First, fetch any remote changes
-      AppLogging.auth('║ 📥 Fetching cloud doc for uid: $uid');
+      AppLogging.auth('| Fetching cloud doc for uid: $uid');
       final cloudDoc = await _userDoc(uid).get();
-      AppLogging.auth('║ 📥 Cloud doc exists: ${cloudDoc.exists}');
+      AppLogging.auth('| Cloud doc exists: ${cloudDoc.exists}');
 
-      AppLogging.auth('║ 💾 Getting local profile...');
+      AppLogging.auth('| Getting local profile...');
       final localProfile = await _localService.getOrCreateProfile();
-      AppLogging.auth('║ 💾 Local profile:');
-      AppLogging.auth('║    - displayName: ${localProfile.displayName}');
-      AppLogging.auth('║    - id: ${localProfile.id}');
-      AppLogging.auth('║    - isSynced: ${localProfile.isSynced}');
+      AppLogging.auth('| Local profile:');
+      AppLogging.auth('|    - displayName: ${localProfile.displayName}');
+      AppLogging.auth('|    - id: ${localProfile.id}');
+      AppLogging.auth('|    - isSynced: ${localProfile.isSynced}');
 
       // Check if local profile belongs to a different user OR is not for this user at all
       // We should NOT merge local data if:
@@ -581,17 +578,17 @@ class ProfileCloudSyncService {
       final localIdMatchesUid = localProfile.id == uid;
       final localIsForDifferentUser = !localIdMatchesUid;
 
-      AppLogging.auth('║ 🔍 Check: localIdMatchesUid = $localIdMatchesUid');
+      AppLogging.auth('| Check: localIdMatchesUid = $localIdMatchesUid');
       AppLogging.auth(
-        '║ 🔍 Check: localIsForDifferentUser = $localIsForDifferentUser',
+        '| Check: localIsForDifferentUser = $localIsForDifferentUser',
       );
-      AppLogging.auth('║    - localProfile.isSynced: ${localProfile.isSynced}');
-      AppLogging.auth('║    - localProfile.id: ${localProfile.id}');
-      AppLogging.auth('║    - uid: $uid');
+      AppLogging.auth('|    - localProfile.isSynced: ${localProfile.isSynced}');
+      AppLogging.auth('|    - localProfile.id: ${localProfile.id}');
+      AppLogging.auth('|    - uid: $uid');
 
       if (localIsForDifferentUser) {
         AppLogging.auth(
-          '║ ⚠️ LOCAL IS FOR DIFFERENT USER - will prefer cloud data',
+          '| LOCAL IS FOR DIFFERENT USER - will prefer cloud data',
         );
       }
 
@@ -599,7 +596,7 @@ class ProfileCloudSyncService {
 
       if (!cloudDoc.exists || cloudDoc.data() == null) {
         // No cloud profile exists
-        AppLogging.auth('║ 📭 NO CLOUD PROFILE EXISTS');
+        AppLogging.auth('| NO CLOUD PROFILE EXISTS');
         if (localIsForDifferentUser) {
           // Local belongs to different user - create fresh profile for this user.
           // Use the Firebase Auth display name (e.g. from Google) if available
@@ -608,7 +605,7 @@ class ProfileCloudSyncService {
           // Firestore rules require ^[a-zA-Z0-9._]+$.
           final name = _sanitizeDisplayName(authDisplayName);
           AppLogging.auth(
-            '║ 🆕 Creating fresh profile for new user '
+            '| Creating fresh profile for new user '
             '(local was for different user, authDisplayName=$authDisplayName, '
             'sanitized=$name)',
           );
@@ -625,12 +622,12 @@ class ProfileCloudSyncService {
           ).set(profileToFirestoreMap(freshProfile), SetOptions(merge: true));
           finalProfile = freshProfile;
           AppLogging.auth(
-            '║ ✅ Created fresh profile: ${freshProfile.displayName}',
+            '| Created fresh profile: ${freshProfile.displayName}',
           );
         } else {
           // Local profile ID matches this user - push to cloud
           AppLogging.auth(
-            '║ 📤 Pushing local profile to cloud (local.id matches uid)',
+            '| Pushing local profile to cloud (local.id matches uid)',
           );
           final profileForCloud = localProfile.copyWith(
             id: uid,
@@ -643,17 +640,17 @@ class ProfileCloudSyncService {
           );
           finalProfile = profileForCloud;
           AppLogging.auth(
-            '║ ✅ Pushed local to cloud: ${profileForCloud.displayName}',
+            '| Pushed local to cloud: ${profileForCloud.displayName}',
           );
         }
       } else {
         // Cloud profile exists
-        AppLogging.auth('║ 📬 CLOUD PROFILE EXISTS');
+        AppLogging.auth('| CLOUD PROFILE EXISTS');
         final rawCloudProfile = _profileFromFirestore(uid, cloudDoc.data()!);
-        AppLogging.auth('║ ☁️ Cloud profile:');
-        AppLogging.auth('║    - displayName: ${rawCloudProfile.displayName}');
-        AppLogging.auth('║    - id: ${rawCloudProfile.id}');
-        AppLogging.auth('║    - isSynced: ${rawCloudProfile.isSynced}');
+        AppLogging.auth('| Cloud profile:');
+        AppLogging.auth('|    - displayName: ${rawCloudProfile.displayName}');
+        AppLogging.auth('|    - id: ${rawCloudProfile.id}');
+        AppLogging.auth('|    - isSynced: ${rawCloudProfile.isSynced}');
 
         // Recover any fields that drifted out of users/{uid} but still
         // live in profiles/{uid}. A previous bug (null entries in
@@ -677,8 +674,8 @@ class ProfileCloudSyncService {
               patchedName != null &&
               patchedName.isNotEmpty) {
             AppLogging.auth(
-              '║ ➡️ Using CLOUD profile, patching stale Guest name '
-              '→ $patchedName (raw=$authDisplayName)',
+              '| ->Using CLOUD profile, patching stale Guest name '
+              '-> $patchedName (raw=$authDisplayName)',
             );
             finalProfile = cloudProfile.copyWith(displayName: patchedName);
             await _syncPublicProfile(uid, finalProfile);
@@ -687,17 +684,17 @@ class ProfileCloudSyncService {
             ).set(profileToFirestoreMap(finalProfile), SetOptions(merge: true));
           } else {
             AppLogging.auth(
-              '║ ➡️ Using CLOUD profile (local is for different user)',
+              '| ->Using CLOUD profile (local is for different user)',
             );
             finalProfile = cloudProfile;
           }
         } else {
           // Local is for this user - merge with cloud
           AppLogging.auth(
-            '║ 🔀 MERGING local + cloud profiles (local.id matches uid)',
+            '| MERGING local + cloud profiles (local.id matches uid)',
           );
           finalProfile = _mergeProfiles(localProfile, cloudProfile);
-          AppLogging.auth('║ 🔀 Merged result: ${finalProfile.displayName}');
+          AppLogging.auth('| Merged result: ${finalProfile.displayName}');
 
           // Push merged version back to cloud (public mirror first so a
           // uniqueness throw cannot leave users/{uid} half-written).
@@ -710,23 +707,23 @@ class ProfileCloudSyncService {
 
       // Save final profile locally
       AppLogging.auth(
-        '║ 💾 Saving final profile locally: ${finalProfile.displayName}',
+        '| Saving final profile locally: ${finalProfile.displayName}',
       );
       await _localService.saveProfile(finalProfile);
 
-      AppLogging.auth('║ ✅ Full sync COMPLETE');
+      AppLogging.auth('| Full sync COMPLETE');
       AppLogging.auth(
-        '║ 📤 Returning: ${finalProfile.displayName} (id: ${finalProfile.id})',
+        '| Returning: ${finalProfile.displayName} (id: ${finalProfile.id})',
       );
       AppLogging.auth(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       AppLogging.auth('');
       return finalProfile;
     } catch (e) {
-      AppLogging.auth('║ ❌ ERROR during full sync: $e');
+      AppLogging.auth('| ERROR during full sync: $e');
       AppLogging.auth(
-        '╚══════════════════════════════════════════════════════════════',
+        '+==============================================================',
       );
       AppLogging.auth('');
       rethrow;
@@ -764,7 +761,7 @@ class ProfileCloudSyncService {
   /// Upload avatar to Firebase Storage
   Future<String> uploadAvatar(String uid, File imageFile) async {
     AppLogging.auth(
-      'ProfileSync: uploadAvatar called — uid: $uid, path: ${imageFile.path}',
+      'ProfileSync: uploadAvatar called - uid: $uid, path: ${imageFile.path}',
     );
 
     try {
@@ -843,7 +840,7 @@ class ProfileCloudSyncService {
 
       final publicUrl = _publicUrl(_avatarsFolder, uid);
       AppLogging.auth(
-        'ProfileSync: uploadAvatar complete — downloadUrl: $downloadUrl, publicUrl: $publicUrl',
+        'ProfileSync: uploadAvatar complete - downloadUrl: $downloadUrl, publicUrl: $publicUrl',
       );
       return publicUrl;
     } catch (e) {
@@ -896,55 +893,55 @@ class ProfileCloudSyncService {
     final profile = await _localService.getProfile();
     if (profile == null) {
       AppLogging.auth(
-        'ProfileSync: syncAvatarToCloud — no local profile found, skipping',
+        'ProfileSync: syncAvatarToCloud - no local profile found, skipping',
       );
       return;
     }
     if (profile.avatarUrl == null) {
       AppLogging.auth(
-        'ProfileSync: syncAvatarToCloud — avatarUrl is null, skipping',
+        'ProfileSync: syncAvatarToCloud - avatarUrl is null, skipping',
       );
       return;
     }
 
     AppLogging.auth(
-      'ProfileSync: syncAvatarToCloud — avatarUrl: ${profile.avatarUrl}',
+      'ProfileSync: syncAvatarToCloud - avatarUrl: ${profile.avatarUrl}',
     );
 
     // Check if it's a local file path (not already a URL)
     if (!profile.avatarUrl!.startsWith('http')) {
       AppLogging.auth(
-        'ProfileSync: syncAvatarToCloud — is local path, checking file exists...',
+        'ProfileSync: syncAvatarToCloud - is local path, checking file exists...',
       );
       final localFile = File(profile.avatarUrl!);
       final exists = await localFile.exists();
       AppLogging.auth(
-        'ProfileSync: syncAvatarToCloud — local file exists: $exists',
+        'ProfileSync: syncAvatarToCloud - local file exists: $exists',
       );
       if (exists) {
         final cloudUrl = await uploadAvatar(uid, localFile);
         AppLogging.auth(
-          'ProfileSync: syncAvatarToCloud — uploaded, cloudUrl: $cloudUrl',
+          'ProfileSync: syncAvatarToCloud - uploaded, cloudUrl: $cloudUrl',
         );
 
         // Update profile with cloud URL
         final updated = profile.copyWith(avatarUrl: cloudUrl, isSynced: true);
         await _localService.saveProfile(updated);
         AppLogging.auth(
-          'ProfileSync: syncAvatarToCloud — local profile updated with cloud URL',
+          'ProfileSync: syncAvatarToCloud - local profile updated with cloud URL',
         );
 
         // Push the cloud URL to Firestore so other clients can see it
         await _syncPublicProfile(uid, updated);
-        AppLogging.auth('ProfileSync: syncAvatarToCloud — complete');
+        AppLogging.auth('ProfileSync: syncAvatarToCloud - complete');
       } else {
         AppLogging.auth(
-          'ProfileSync: syncAvatarToCloud — local file missing, cannot upload',
+          'ProfileSync: syncAvatarToCloud - local file missing, cannot upload',
         );
       }
     } else {
       AppLogging.auth(
-        'ProfileSync: syncAvatarToCloud — already a cloud URL, skipping upload',
+        'ProfileSync: syncAvatarToCloud - already a cloud URL, skipping upload',
       );
     }
   }
@@ -954,7 +951,7 @@ class ProfileCloudSyncService {
   /// Upload banner to Firebase Storage
   Future<String> uploadBanner(String uid, File imageFile) async {
     AppLogging.auth(
-      'ProfileSync: uploadBanner called — uid: $uid, path: ${imageFile.path}',
+      'ProfileSync: uploadBanner called - uid: $uid, path: ${imageFile.path}',
     );
 
     try {
@@ -1033,7 +1030,7 @@ class ProfileCloudSyncService {
 
       final publicUrl = _publicUrl(_bannersFolder, uid);
       AppLogging.auth(
-        'ProfileSync: uploadBanner complete — downloadUrl: $downloadUrl, publicUrl: $publicUrl',
+        'ProfileSync: uploadBanner complete - downloadUrl: $downloadUrl, publicUrl: $publicUrl',
       );
       return publicUrl;
     } catch (e) {
@@ -1086,55 +1083,55 @@ class ProfileCloudSyncService {
     final profile = await _localService.getProfile();
     if (profile == null) {
       AppLogging.auth(
-        'ProfileSync: syncBannerToCloud — no local profile found, skipping',
+        'ProfileSync: syncBannerToCloud - no local profile found, skipping',
       );
       return;
     }
     if (profile.bannerUrl == null) {
       AppLogging.auth(
-        'ProfileSync: syncBannerToCloud — bannerUrl is null, skipping',
+        'ProfileSync: syncBannerToCloud - bannerUrl is null, skipping',
       );
       return;
     }
 
     AppLogging.auth(
-      'ProfileSync: syncBannerToCloud — bannerUrl: ${profile.bannerUrl}',
+      'ProfileSync: syncBannerToCloud - bannerUrl: ${profile.bannerUrl}',
     );
 
     // Check if it's a local file path (not already a URL)
     if (!profile.bannerUrl!.startsWith('http')) {
       AppLogging.auth(
-        'ProfileSync: syncBannerToCloud — is local path, checking file exists...',
+        'ProfileSync: syncBannerToCloud - is local path, checking file exists...',
       );
       final localFile = File(profile.bannerUrl!);
       final exists = await localFile.exists();
       AppLogging.auth(
-        'ProfileSync: syncBannerToCloud — local file exists: $exists',
+        'ProfileSync: syncBannerToCloud - local file exists: $exists',
       );
       if (exists) {
         final cloudUrl = await uploadBanner(uid, localFile);
         AppLogging.auth(
-          'ProfileSync: syncBannerToCloud — uploaded, cloudUrl: $cloudUrl',
+          'ProfileSync: syncBannerToCloud - uploaded, cloudUrl: $cloudUrl',
         );
 
         // Update profile with cloud URL
         final updated = profile.copyWith(bannerUrl: cloudUrl, isSynced: true);
         await _localService.saveProfile(updated);
         AppLogging.auth(
-          'ProfileSync: syncBannerToCloud — local profile updated with cloud URL',
+          'ProfileSync: syncBannerToCloud - local profile updated with cloud URL',
         );
 
         // Push the cloud URL to Firestore so other clients can see it
         await _syncPublicProfile(uid, updated);
-        AppLogging.auth('ProfileSync: syncBannerToCloud — complete');
+        AppLogging.auth('ProfileSync: syncBannerToCloud - complete');
       } else {
         AppLogging.auth(
-          'ProfileSync: syncBannerToCloud — local file missing, cannot upload',
+          'ProfileSync: syncBannerToCloud - local file missing, cannot upload',
         );
       }
     } else {
       AppLogging.auth(
-        'ProfileSync: syncBannerToCloud — already a cloud URL, skipping upload',
+        'ProfileSync: syncBannerToCloud - already a cloud URL, skipping upload',
       );
     }
   }
@@ -1308,7 +1305,7 @@ class ProfileCloudSyncService {
     if (mergedAvatarUrl != cloud.avatarUrl ||
         mergedBannerUrl != cloud.bannerUrl) {
       AppLogging.auth(
-        'ProfileSync: Preserving local media URLs — '
+        'ProfileSync: Preserving local media URLs - '
         'avatar: ${mergedAvatarUrl != cloud.avatarUrl}, '
         'banner: ${mergedBannerUrl != cloud.bannerUrl}',
       );
@@ -1328,30 +1325,29 @@ class ProfileCloudSyncService {
   /// so this can return the real profile even in airplane mode.
   Future<UserProfile?> getProfileFromCache(String uid) async {
     AppLogging.auth(
-      '[ProfileCloudSync] getProfileFromCache() — '
+      '[ProfileCloudSync] getProfileFromCache() - '
       'attempting Firestore cache read for uid: $uid',
     );
     try {
-      final doc = await _userDoc(
-        uid,
-      ).get(const GetOptions(source: Source.cache));
+      final doc = await _userDoc(uid)
+          .get(const GetOptions(source: Source.cache));
       if (!doc.exists || doc.data() == null) {
         AppLogging.auth(
-          '[ProfileCloudSync] getProfileFromCache() — '
+          '[ProfileCloudSync] getProfileFromCache() - '
           'no cached doc found',
         );
         return null;
       }
       final profile = _profileFromFirestore(uid, doc.data()!);
       AppLogging.auth(
-        '[ProfileCloudSync] getProfileFromCache() — '
+        '[ProfileCloudSync] getProfileFromCache() - '
         'SUCCESS: displayName="${profile.displayName}", '
         'id=${profile.id}',
       );
       return profile;
     } catch (e) {
       AppLogging.auth(
-        '[ProfileCloudSync] getProfileFromCache() — '
+        '[ProfileCloudSync] getProfileFromCache() - '
         'FAILED: $e',
       );
       return null;

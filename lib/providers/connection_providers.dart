@@ -37,6 +37,7 @@ import 'app_providers.dart';
 import 'scanner_lifecycle_providers.dart';
 import 'connectivity_providers.dart';
 import 'meshcore_providers.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 // =============================================================================
@@ -880,7 +881,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     // Clean up subscriptions when provider is disposed
     ref.onDispose(() {
-      AppLogging.connection('🔌 DeviceConnectionNotifier: Disposing...');
+      AppLogging.connection('DeviceConnectionNotifier: Disposing...');
       _restoreCoordinator.invalidate('notifier_dispose');
       _watchdog.stop();
       degradedRecoverySubscription.cancel();
@@ -982,7 +983,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// recovery) may legitimately re-arm. For user-tapped Cancel use
   /// [userCancelAutoReconnect].
   void cancelAutoReconnect() {
-    AppLogging.connection('🔌 cancelAutoReconnect: Cancelling reconnect cycle');
+    AppLogging.connection('cancelAutoReconnect: Cancelling reconnect cycle');
     _retryTimer?.cancel();
     _retryTimer = null;
     _backgroundScanInProgress = false;
@@ -1021,7 +1022,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// Logs `RECONNECT_CANCEL_AUTHORED_STOP` for telemetry.
   Future<void> userCancelAutoReconnect() async {
     AppLogging.connection(
-      'RECONNECT_BANNER_CANCEL_TAPPED — running authoritative cancel',
+      'RECONNECT_BANNER_CANCEL_TAPPED - running authoritative cancel',
     );
 
     _retryTimer?.cancel();
@@ -1065,14 +1066,14 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   Future<void> initialize() async {
     if (_isInitialized) {
       AppLogging.connection(
-        '🔌 DeviceConnectionNotifier: Already initialized, skipping',
+        'DeviceConnectionNotifier: Already initialized, skipping',
       );
       return;
     }
     _isInitialized = true;
     _userDisconnected = false;
 
-    AppLogging.connection('🔌 DeviceConnectionNotifier: Initializing...');
+    AppLogging.connection('DeviceConnectionNotifier: Initializing...');
 
     // Set up connectivity listener for auto-retry when internet comes back online
     // This helps reconnect after region change (device reboot) when connectivity is restored
@@ -1085,7 +1086,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     if (lastDeviceId == null) {
       // Never paired before
       AppLogging.connection(
-        '🔌 DeviceConnectionNotifier: No previous device, state=neverPaired',
+        'DeviceConnectionNotifier: No previous device, state=neverPaired',
       );
       state = DeviceConnectionState2(
         state: DevicePairingState.neverPaired,
@@ -1096,7 +1097,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     // Had a device before - mark as disconnected and start background connection
     AppLogging.connection(
-      '🔌 DeviceConnectionNotifier: Previous device found: $lastDeviceId',
+      'DeviceConnectionNotifier: Previous device found: $lastDeviceId',
     );
     state = DeviceConnectionState2(
       state: DevicePairingState.disconnected,
@@ -1110,14 +1111,14 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       _setupConnectionListener();
     } else {
       AppLogging.connection(
-        '🔌 DeviceConnectionNotifier: MeshCore device - skipping Meshtastic listener',
+        'DeviceConnectionNotifier: MeshCore device - skipping Meshtastic listener',
       );
     }
 
     // Start background connection attempt if auto-reconnect enabled
     if (settings.autoReconnect) {
       AppLogging.connection(
-        '🔌 DeviceConnectionNotifier: Auto-reconnect enabled, scheduling connection...',
+        'DeviceConnectionNotifier: Auto-reconnect enabled, scheduling connection...',
       );
       // Small delay to let UI render first
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -1131,13 +1132,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           }
         } else {
           AppLogging.connection(
-            '🔌 DeviceConnectionNotifier: Skipping auto-connect - user disconnected',
+            'DeviceConnectionNotifier: Skipping auto-connect - user disconnected',
           );
         }
       });
     } else {
       AppLogging.connection(
-        '🔌 DeviceConnectionNotifier: Auto-reconnect disabled',
+        'DeviceConnectionNotifier: Auto-reconnect disabled',
       );
     }
   }
@@ -1158,13 +1159,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       if (!wasOffline || !isNowOnline) return;
 
       AppLogging.connection(
-        '🔌 Connectivity restored: checking if reconnect needed...',
+        'Connectivity restored: checking if reconnect needed...',
       );
 
       // Skip if user manually disconnected
       if (_userDisconnected) {
         AppLogging.connection(
-          '🔌 Connectivity restored but user disconnected - skipping auto-reconnect',
+          'Connectivity restored but user disconnected - skipping auto-reconnect',
         );
         return;
       }
@@ -1184,7 +1185,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // 3. We're disconnected but not by user
       if (isFailed || isScanning || isConnecting || isDisconnected) {
         AppLogging.connection(
-          '🔌 Connectivity restored: triggering reconnect '
+          'Connectivity restored: triggering reconnect '
           '(failed=$isFailed, scanning=$isScanning, connecting=$isConnecting, disconnected=$isDisconnected)',
         );
         // Reset retry counter to give fresh attempts after connectivity restored
@@ -1207,7 +1208,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     _connectionSubscription?.cancel();
     _connectionSubscription = transport.stateStream.listen((transportState) {
       AppLogging.connection(
-        '🔌 DeviceConnectionNotifier: Transport state changed: $transportState (userDisconnected=$_userDisconnected)',
+        'DeviceConnectionNotifier: Transport state changed: $transportState (userDisconnected=$_userDisconnected)',
       );
 
       switch (transportState) {
@@ -1216,7 +1217,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           if (state.state != DevicePairingState.connected &&
               state.state != DevicePairingState.configuring) {
             AppLogging.connection(
-              '🔌 DeviceConnectionNotifier: BLE connected, state=configuring',
+              'DeviceConnectionNotifier: BLE connected, state=configuring',
             );
             state = state.copyWith(state: DevicePairingState.configuring);
             // Transport auto-reconnected (BLE / USB / network) — start protocol
@@ -1226,11 +1227,11 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         case DeviceConnectionState.disconnected:
           if (_userDisconnected) {
             AppLogging.connection(
-              '🔌 DeviceConnectionNotifier: Disconnected (user-initiated), NOT triggering reconnect',
+              'DeviceConnectionNotifier: Disconnected (user-initiated), NOT triggering reconnect',
             );
           } else {
             AppLogging.connection(
-              '🔌 DeviceConnectionNotifier: Disconnected (unexpected), handling...',
+              'DeviceConnectionNotifier: Disconnected (unexpected), handling...',
             );
           }
           _handleDisconnect(
@@ -1240,19 +1241,17 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           );
           break;
         case DeviceConnectionState.connecting:
-          AppLogging.connection(
-            '🔌 DeviceConnectionNotifier: state=connecting',
-          );
+          AppLogging.connection('DeviceConnectionNotifier: state=connecting');
           state = state.copyWith(state: DevicePairingState.connecting);
           break;
         case DeviceConnectionState.disconnecting:
           AppLogging.connection(
-            '🔌 DeviceConnectionNotifier: state=disconnecting (transitional)',
+            'DeviceConnectionNotifier: state=disconnecting (transitional)',
           );
           // Transitional state, ignore
           break;
         case DeviceConnectionState.error:
-          AppLogging.connection('🔌 DeviceConnectionNotifier: state=error');
+          AppLogging.connection('DeviceConnectionNotifier: state=error');
           state = state.copyWith(
             state: DevicePairingState.error,
             reason: DisconnectReason.connectionFailed,
@@ -1280,7 +1279,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // pairing-state guard already suppresses events on healthy sessions.
     if (autoReconnectState == AutoReconnectState.manualConnecting) {
       AppLogging.connection(
-        '🔌 _initializeProtocolAfterAutoReconnect: SKIPPING - '
+        '_initializeProtocolAfterAutoReconnect: SKIPPING - '
         'autoReconnect=$autoReconnectState, '
         'manual connect flow is handling connection',
       );
@@ -1290,7 +1289,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     final transport = ref.read(transportProvider);
     final transportLabel = transport.type.name.toUpperCase();
     AppLogging.connection(
-      '🔌 _initializeProtocolAfterAutoReconnect: $transportLabel auto-reconnected, starting protocol... '
+      '_initializeProtocolAfterAutoReconnect: $transportLabel auto-reconnected, starting protocol... '
       '(autoReconnect=$autoReconnectState)',
     );
     AppLogging.connection(
@@ -1307,7 +1306,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       protocol.setBleManufacturerName(transport.bleManufacturerName);
 
       AppLogging.connection(
-        '🔌 _initializeProtocolAfterAutoReconnect: Starting protocol for $deviceName...',
+        '_initializeProtocolAfterAutoReconnect: Starting protocol for $deviceName...',
       );
       // Route through the canonical restore routine. Replaces a prior
       // `if (configurationComplete && myNodeNum != null) skip` guard
@@ -1323,18 +1322,18 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // Verify we got configuration
       if (protocol.myNodeNum == null) {
         AppLogging.connection(
-          '🔌 _initializeProtocolAfterAutoReconnect: Protocol started but no myNodeNum',
+          '_initializeProtocolAfterAutoReconnect: Protocol started but no myNodeNum',
         );
         return;
       }
 
       AppLogging.connection(
-        '🔌 _initializeProtocolAfterAutoReconnect: Protocol ready! myNodeNum: ${protocol.myNodeNum}',
+        '_initializeProtocolAfterAutoReconnect: Protocol ready! myNodeNum: ${protocol.myNodeNum}',
       );
 
       // Update state to connected
       AppLogging.connection(
-        '🔌 _initializeProtocolAfterAutoReconnect: Marking DevicePairingState.connected',
+        '_initializeProtocolAfterAutoReconnect: Marking DevicePairingState.connected',
       );
       state = state.copyWith(
         state: DevicePairingState.connected,
@@ -1357,9 +1356,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.success);
     } catch (e) {
-      AppLogging.connection(
-        '🔌 _initializeProtocolAfterAutoReconnect: Error: $e',
-      );
+      AppLogging.connection('_initializeProtocolAfterAutoReconnect: Error: $e');
 
       // Determine if this is a PIN/auth error that requires user interaction.
       // These errors cannot be resolved by retrying — the user must manually
@@ -1381,7 +1378,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       if (isAuthError) {
         AppLogging.connection(
-          '🔌 _initializeProtocolAfterAutoReconnect: PIN/auth error — '
+          '_initializeProtocolAfterAutoReconnect: PIN/auth error - '
           'disconnecting transport and routing to Scanner (requires user interaction)',
         );
         AppErrorHandler.addBreadcrumb(
@@ -1415,7 +1412,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           );
           ref.read(appInitProvider.notifier).setNeedsScanner();
           AppLogging.connection(
-            '🔌 _initializeProtocolAfterAutoReconnect: disconnect failed, '
+            '_initializeProtocolAfterAutoReconnect: disconnect failed, '
             'forcing Scanner navigation anyway',
           );
         }
@@ -1423,7 +1420,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         // NOT an auth error — this is a generic config timeout or
         // transport error. Do NOT route to Scanner.
         AppLogging.connection(
-          '🔌 _initializeProtocolAfterAutoReconnect: Non-auth error — '
+          '_initializeProtocolAfterAutoReconnect: Non-auth error - '
           'NOT routing to Scanner (error: $e)',
         );
         await _handleNonAuthRestoreFailure();
@@ -1454,7 +1451,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         _configTimeoutTeardowns < _maxConfigTimeoutTeardowns) {
       _configTimeoutTeardowns++;
       AppLogging.connection(
-        '🔌 _handleNonAuthRestoreFailure: config did not complete but '
+        '_handleNonAuthRestoreFailure: config did not complete but '
         'link is still up - forcing teardown ($cause) '
         '$_configTimeoutTeardowns/$_maxConfigTimeoutTeardowns to '
         're-enter the reconnect pipeline',
@@ -1466,13 +1463,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         await transport.disconnect();
       } catch (disconnectError) {
         AppLogging.connection(
-          '🔌 _handleNonAuthRestoreFailure: teardown disconnect '
+          '_handleNonAuthRestoreFailure: teardown disconnect '
           'failed - $disconnectError',
         );
       }
     } else if (_configTimeoutTeardowns >= _maxConfigTimeoutTeardowns) {
       AppLogging.connection(
-        '🔌 _handleNonAuthRestoreFailure: config-timeout teardown '
+        '_handleNonAuthRestoreFailure: config-timeout teardown '
         'budget exhausted ($_configTimeoutTeardowns) - leaving link '
         'up; user can Retry from the banner',
       );
@@ -1520,7 +1517,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       for (final device in systemDevices) {
         if (device.remoteId.toString() == targetDeviceId) {
           AppLogging.connection(
-            '🔌 $logContext: Found target in system devices, cleaning up...',
+            '$logContext: Found target in system devices, cleaning up...',
           );
           try {
             if (Platform.isAndroid) {
@@ -1545,7 +1542,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           if (device.remoteId.toString() == targetDeviceId) {
             foundInBonded = true;
             AppLogging.connection(
-              '🔌 $logContext: Found target in bonded devices, cleaning up...',
+              '$logContext: Found target in bonded devices, cleaning up...',
             );
             try {
               await device.clearGattCache();
@@ -1560,21 +1557,21 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
         if (!foundInBonded) {
           AppLogging.connection(
-            '🔌 $logContext: Device NOT in bonded devices — '
+            '$logContext: Device NOT in bonded devices - '
             'bond was likely removed in Android Bluetooth settings.',
           );
           return _BleCleanupOutcome.bondMissing;
         }
       } catch (e) {
         // Ignore — proceed with connection attempt if bond check fails
-        AppLogging.connection('🔌 $logContext: Bond check failed: $e');
+        AppLogging.connection('$logContext: Bond check failed: $e');
       }
     }
 
     // 4. Wait for BLE to reset (longer on Android due to GATT cache)
     final resetDelay = Platform.isAndroid ? 1500 : 1000;
     AppLogging.connection(
-      '🔌 $logContext: Waiting ${resetDelay}ms for BLE reset...',
+      '$logContext: Waiting ${resetDelay}ms for BLE reset...',
     );
     await Future.delayed(Duration(milliseconds: resetDelay));
     return _BleCleanupOutcome.ready;
@@ -1585,7 +1582,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Check if user manually disconnected - don't auto-reconnect
     if (_userDisconnected) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: BLOCKED - user manually disconnected',
+        'startBackgroundConnection: BLOCKED - user manually disconnected',
       );
       return;
     }
@@ -1596,7 +1593,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // resumes auto-reconnect on dispose / scan completion.
     if (ref.read(manualScanActiveProvider)) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: BLOCKED - manual scan active '
+        'startBackgroundConnection: BLOCKED - manual scan active '
         '(BLE_SCAN_AUTORECONNECT_SUPPRESSED)',
       );
       return;
@@ -1611,7 +1608,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     if (autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: BLOCKED - auto-reconnect manager '
+        'startBackgroundConnection: BLOCKED - auto-reconnect manager '
         'already active ($autoReconnectState)',
       );
       return;
@@ -1621,7 +1618,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // chosen device connection.
     if (autoReconnectState == AutoReconnectState.manualConnecting) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: BLOCKED - user is manually '
+        'startBackgroundConnection: BLOCKED - user is manually '
         'connecting from Scanner',
       );
       return;
@@ -1648,7 +1645,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       final linkUp = ref.read(transportProvider).isConnected;
       if (readiness == OperationalReadiness.degraded && linkUp) {
         AppLogging.connection(
-          '🔌 startBackgroundConnection: transport connected but session '
+          'startBackgroundConnection: transport connected but session '
           'degraded - restoring session on the live link',
         );
         await _restoreCoordinator.restoreSession(
@@ -1674,7 +1671,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Also skip if we're in the middle of configuring (protocol handshake)
     if (state.state == DevicePairingState.configuring) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: BLOCKED - connection configuring',
+        'startBackgroundConnection: BLOCKED - connection configuring',
       );
       return;
     }
@@ -1682,14 +1679,14 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Guard against concurrent scans - only one background scan at a time
     if (_backgroundScanInProgress) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: BLOCKED - scan already in progress',
+        'startBackgroundConnection: BLOCKED - scan already in progress',
       );
       return;
     }
 
     if (state.state == DevicePairingState.pairedDeviceInvalidated) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: Saved device invalidated, skipping reconnect',
+        'startBackgroundConnection: Saved device invalidated, skipping reconnect',
       );
       return;
     }
@@ -1699,7 +1696,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Check if auto-reconnect is enabled in settings
     if (!settings.autoReconnect) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: BLOCKED - auto-reconnect disabled in settings',
+        'startBackgroundConnection: BLOCKED - auto-reconnect disabled in settings',
       );
       return;
     }
@@ -1710,7 +1707,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     if (lastDeviceId == null) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: No device to reconnect to',
+        'startBackgroundConnection: No device to reconnect to',
       );
       return;
     }
@@ -1718,7 +1715,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // MeshCore auto-reconnect uses _startMeshCoreBackgroundConnection instead
     if (lastProtocol == 'meshcore') {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: MeshCore device - use _startMeshCoreBackgroundConnection',
+        'startBackgroundConnection: MeshCore device - use _startMeshCoreBackgroundConnection',
       );
       _backgroundScanInProgress = false;
       return;
@@ -1738,8 +1735,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     if (ref.read(transportProvider).reconnectMode ==
         TransportReconnectMode.directEndpoint) {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: transport reconnect mode is '
-        'directEndpoint — dispatching network reconnect for $lastDeviceId',
+        'startBackgroundConnection: transport reconnect mode is '
+        'directEndpoint - dispatching network reconnect for $lastDeviceId',
       );
       _backgroundScanInProgress = false;
       state = state.copyWith(state: DevicePairingState.connecting);
@@ -1753,7 +1750,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Check Bluetooth state first
     final btState = await FlutterBluePlus.adapterState.first;
     if (btState != BluetoothAdapterState.on) {
-      AppLogging.connection('🔌 startBackgroundConnection: Bluetooth is off');
+      AppLogging.connection('startBackgroundConnection: Bluetooth is off');
       final l10n = safeL10n();
       state = state.copyWith(
         state: DevicePairingState.error,
@@ -1767,7 +1764,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     _backgroundScanInProgress = true;
 
     AppLogging.connection(
-      '🔌 startBackgroundConnection: Starting scan for: $lastDeviceId',
+      'startBackgroundConnection: Starting scan for: $lastDeviceId',
     );
     state = state.copyWith(state: DevicePairingState.scanning);
 
@@ -1782,7 +1779,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     try {
       // Aggressive BLE cleanup - device may have just been released by another app
       AppLogging.connection(
-        '🔌 startBackgroundConnection: Aggressive BLE cleanup starting...',
+        'startBackgroundConnection: Aggressive BLE cleanup starting...',
       );
       final cleanup = await _cleanupBleBeforeScan(
         lastDeviceId,
@@ -1817,7 +1814,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           type: TransportType.ble,
         );
         AppLogging.connection(
-          '🔌 startBackgroundConnection: Strategy 1 - direct connect to '
+          'startBackgroundConnection: Strategy 1 - direct connect to '
           'saved peripheral $lastDeviceId',
         );
         try {
@@ -1833,7 +1830,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           }
           if (_userDisconnected) return;
           AppLogging.connection(
-            '🔌 startBackgroundConnection: Strategy 1 failed ($e) - '
+            'startBackgroundConnection: Strategy 1 failed ($e) - '
             'falling back to scan',
           );
           state = state.copyWith(state: DevicePairingState.scanning);
@@ -1844,26 +1841,24 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       }
 
       // Scan for 5 seconds
-      AppLogging.connection(
-        '🔌 startBackgroundConnection: Starting 5s scan...',
-      );
+      AppLogging.connection('startBackgroundConnection: Starting 5s scan...');
       await for (final device in transport.scan(
         timeout: const Duration(seconds: 5),
       )) {
         // Check again if user disconnected during scan
         if (_userDisconnected) {
           AppLogging.connection(
-            '🔌 startBackgroundConnection: User disconnected during scan, aborting',
+            'startBackgroundConnection: User disconnected during scan, aborting',
           );
           return;
         }
         AppLogging.connection(
-          '🔌 startBackgroundConnection: Found device ${device.id} (looking for $lastDeviceId)',
+          'startBackgroundConnection: Found device ${device.id} (looking for $lastDeviceId)',
         );
         if (device.id == lastDeviceId) {
           foundDevice = device;
           AppLogging.connection(
-            '🔌 startBackgroundConnection: Target device found!',
+            'startBackgroundConnection: Target device found!',
           );
           break;
         }
@@ -1871,7 +1866,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       if (foundDevice == null) {
         AppLogging.connection(
-          '🔌 startBackgroundConnection: Device not found in scan (attempt ${_reconnectAttempt + 1})',
+          'startBackgroundConnection: Device not found in scan (attempt ${_reconnectAttempt + 1})',
         );
 
         // Check if we're in region apply flow - use more aggressive retry.
@@ -1899,7 +1894,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               ? 10000
               : 10000; // 10s between retries
           AppLogging.connection(
-            '🔌 startBackgroundConnection: Will retry in ${retryDelay}ms '
+            'startBackgroundConnection: Will retry in ${retryDelay}ms '
             '(attempt $_reconnectAttempt/$_maxReconnectAttempts, regionApplying=$isRegionApplying)',
           );
 
@@ -1908,7 +1903,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           _retryTimer = Timer(Duration(milliseconds: retryDelay), () {
             if (ref.mounted && !_userDisconnected) {
               AppLogging.connection(
-                '🔌 startBackgroundConnection: Retry timer fired, attempt $_reconnectAttempt',
+                'startBackgroundConnection: Retry timer fired, attempt $_reconnectAttempt',
               );
               // Reset state so the scanning guard at the top of
               // startBackgroundConnection does not block this retry.
@@ -1930,7 +1925,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
         // Max retries exceeded
         AppLogging.connection(
-          '🔌 startBackgroundConnection: Max retries exceeded ($_maxReconnectAttempts attempts)',
+          'startBackgroundConnection: Max retries exceeded ($_maxReconnectAttempts attempts)',
         );
         _reconnectAttempt = 0; // Reset for next disconnect event
 
@@ -1959,7 +1954,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
             );
             if (!stillBonded) {
               AppLogging.connection(
-                '🔌 startBackgroundConnection: Final scan-fail + bond '
+                'startBackgroundConnection: Final scan-fail + bond '
                 'missing for $lastDeviceId. Routing to pairing '
                 'invalidation (bondForgotten).',
               );
@@ -1969,7 +1964,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               return;
             }
             AppLogging.connection(
-              '🔌 startBackgroundConnection: Final scan-fail with bond '
+              'startBackgroundConnection: Final scan-fail with bond '
               'still present. Treating as unreachable (radio off / '
               'out of range).',
             );
@@ -1977,13 +1972,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
             // Bond query failed. Fall through to existing unreachable
             // path. Logging the failure so triage is not blind.
             AppLogging.connection(
-              '🔌 startBackgroundConnection: Bond check at final scan-fail '
+              'startBackgroundConnection: Bond check at final scan-fail '
               'threw: $e. Falling through to unreachable.',
             );
           }
         } else {
           AppLogging.connection(
-            '🔌 startBackgroundConnection: Final scan-fail on iOS. No '
+            'startBackgroundConnection: Final scan-fail on iOS. No '
             'pre-connect bond signal; treating as unreachable. Pairing '
             'invalidation only fires on connect/auth failure.',
           );
@@ -2011,7 +2006,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // Final check before connecting
       if (_userDisconnected) {
         AppLogging.connection(
-          '🔌 startBackgroundConnection: User disconnected before connect, aborting',
+          'startBackgroundConnection: User disconnected before connect, aborting',
         );
         return;
       }
@@ -2026,7 +2021,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         return;
       }
 
-      AppLogging.connection('🔌 startBackgroundConnection: Error: $e');
+      AppLogging.connection('startBackgroundConnection: Error: $e');
       state = state.copyWith(
         state: DevicePairingState.disconnected,
         reason: DisconnectReason.connectionFailed,
@@ -2067,13 +2062,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     dynamic settings,
   ) async {
     AppLogging.connection(
-      '🔌 MeshCore background connect: Starting for device: $deviceId',
+      'MeshCore background connect: Starting for device: $deviceId',
     );
 
     // Guard against concurrent connection attempts
     if (_backgroundScanInProgress) {
       AppLogging.connection(
-        '🔌 MeshCore background connect: BLOCKED - connection already in progress',
+        'MeshCore background connect: BLOCKED - connection already in progress',
       );
       return;
     }
@@ -2082,14 +2077,14 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     final coordinator = ref.read(connectionCoordinatorProvider);
     if (coordinator.isConnected) {
       AppLogging.connection(
-        '🔌 MeshCore background connect: Already connected, skipping',
+        'MeshCore background connect: Already connected, skipping',
       );
       return;
     }
 
     if (coordinator.isConnecting) {
       AppLogging.connection(
-        '🔌 MeshCore background connect: Connection already in progress, skipping',
+        'MeshCore background connect: Connection already in progress, skipping',
       );
       return;
     }
@@ -2107,7 +2102,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     final tcpId = MeshCoreTcpDeviceId.tryParse(deviceId);
     if (tcpId != null) {
       AppLogging.connection(
-        '🔌 MeshCore background connect: TCP fast-path host=${tcpId.host} '
+        'MeshCore background connect: TCP fast-path host=${tcpId.host} '
         'port=${tcpId.port}',
       );
       state = state.copyWith(state: DevicePairingState.scanning);
@@ -2130,7 +2125,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               .read(autoReconnectStateProvider.notifier)
               .setState(AutoReconnectState.idle);
           AppLogging.connection(
-            '🔌 MeshCore background connect: TCP fast-path succeeded',
+            'MeshCore background connect: TCP fast-path succeeded',
           );
         } else {
           state = state.copyWith(
@@ -2141,7 +2136,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               .read(autoReconnectStateProvider.notifier)
               .setState(AutoReconnectState.failed);
           AppLogging.connection(
-            '🔌 MeshCore background connect: TCP fast-path failed: '
+            'MeshCore background connect: TCP fast-path failed: '
             '${result.errorMessage}',
           );
         }
@@ -2153,7 +2148,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // Looks like a TCP id but didn't parse. Bail rather than fall
       // through to BLE (which would scan forever for a non-BLE peer).
       AppLogging.connection(
-        '🔌 MeshCore background connect: TCP id malformed: $deviceId',
+        'MeshCore background connect: TCP id malformed: $deviceId',
       );
       ref
           .read(autoReconnectStateProvider.notifier)
@@ -2164,7 +2159,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Check Bluetooth state first
     final btState = await FlutterBluePlus.adapterState.first;
     if (btState != BluetoothAdapterState.on) {
-      AppLogging.connection('🔌 MeshCore background connect: Bluetooth is off');
+      AppLogging.connection('MeshCore background connect: Bluetooth is off');
       final l10n = safeL10n();
       state = state.copyWith(
         state: DevicePairingState.error,
@@ -2185,7 +2180,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       // Strategy 1: Direct connect by device identifier
       AppLogging.connection(
-        '🔌 MeshCore background connect: Strategy 1 - direct connect by ID',
+        'MeshCore background connect: Strategy 1 - direct connect by ID',
       );
 
       DeviceInfo foundDevice;
@@ -2194,14 +2189,14 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       try {
         final systemDevices = await meshSystemDevices();
         AppLogging.connection(
-          '🔌 MeshCore background connect: Found ${systemDevices.length} system devices',
+          'MeshCore background connect: Found ${systemDevices.length} system devices',
         );
 
         DeviceInfo? fromSystem;
         for (final device in systemDevices) {
           if (device.remoteId.toString() == deviceId) {
             AppLogging.connection(
-              '🔌 MeshCore background connect: Target found in system devices',
+              'MeshCore background connect: Target found in system devices',
             );
             fromSystem = DeviceInfo(
               id: device.remoteId.toString(),
@@ -2228,7 +2223,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
             );
       } catch (e) {
         AppLogging.connection(
-          '🔌 MeshCore background connect: System devices check failed: $e',
+          'MeshCore background connect: System devices check failed: $e',
         );
         foundDevice = DeviceInfo(
           id: deviceId,
@@ -2250,7 +2245,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       if (result.success) {
         AppLogging.connection(
-          '🔌 MeshCore background connect: Direct connect succeeded!',
+          'MeshCore background connect: Direct connect succeeded!',
         );
         await _finalizeMeshCoreConnect(foundDevice, result, settings);
         return;
@@ -2258,7 +2253,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       // Strategy 2: Fall back to unfiltered scan
       AppLogging.connection(
-        '🔌 MeshCore background connect: Direct connect failed (${result.errorMessage}), '
+        'MeshCore background connect: Direct connect failed (${result.errorMessage}), '
         'trying Strategy 2 - unfiltered scan',
       );
 
@@ -2285,7 +2280,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         scanAll: true, // Don't filter by service UUID
       )) {
         AppLogging.connection(
-          '🔌 MeshCore background connect: Scan found: ${device.id}',
+          'MeshCore background connect: Scan found: ${device.id}',
         );
         if (device.id == deviceId) {
           scannedDevice = device;
@@ -2295,7 +2290,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       if (scannedDevice == null) {
         AppLogging.connection(
-          '🔌 MeshCore background connect: Device not found in scan',
+          'MeshCore background connect: Device not found in scan',
         );
         state = state.copyWith(
           state: DevicePairingState.disconnected,
@@ -2318,7 +2313,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       if (!result.success) {
         AppLogging.connection(
-          '🔌 MeshCore background connect: Scanned device connect failed: ${result.errorMessage}',
+          'MeshCore background connect: Scanned device connect failed: ${result.errorMessage}',
         );
         state = state.copyWith(
           state: DevicePairingState.disconnected,
@@ -2334,11 +2329,11 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       }
 
       AppLogging.connection(
-        '🔌 MeshCore background connect: Scanned device connect succeeded!',
+        'MeshCore background connect: Scanned device connect succeeded!',
       );
       await _finalizeMeshCoreConnect(scannedDevice, result, settings);
     } catch (e) {
-      AppLogging.connection('🔌 MeshCore background connect: Error: $e');
+      AppLogging.connection('MeshCore background connect: Error: $e');
       state = state.copyWith(
         state: DevicePairingState.disconnected,
         reason: DisconnectReason.connectionFailed,
@@ -2382,7 +2377,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
 
     AppLogging.connection(
-      '🔌 MeshCore background connect: Finalized, device=${result.deviceInfo?.displayName}',
+      'MeshCore background connect: Finalized, device=${result.deviceInfo?.displayName}',
     );
 
     // Set success state briefly then idle
@@ -2595,7 +2590,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       // Update state immediately so consumers know we're connected
       AppLogging.connection(
-        'Device fully connected – allowing Go Active to enable',
+        'Device fully connected - allowing Go Active to enable',
       );
       state = state.copyWith(
         state: DevicePairingState.connected,
@@ -2651,7 +2646,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
             );
             if (!isStillBonded) {
               AppLogging.connection(
-                '🔌 _connectToDevice: GATT 133 + bond missing — '
+                '_connectToDevice: GATT 133 + bond missing - '
                 'device was forgotten in Android Bluetooth settings. '
                 'Triggering pairing invalidation.',
               );
@@ -2663,7 +2658,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           } catch (bondCheckError) {
             // Bond check itself failed — fall through to normal error handling
             AppLogging.connection(
-              '🔌 _connectToDevice: Bond check after GATT 133 failed: $bondCheckError',
+              '_connectToDevice: Bond check after GATT 133 failed: $bondCheckError',
             );
           }
         }
@@ -2702,31 +2697,31 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       _authFailurePending = false;
       reason = DisconnectReason.authFailed;
       AppLogging.connection(
-        '🔌 _handleDisconnect: Overriding reason to authFailed '
+        '_handleDisconnect: Overriding reason to authFailed '
         '(PIN/auth failure triggered this disconnect)',
       );
     }
 
     AppLogging.connection(
-      '🔌 _handleDisconnect: reason=$reason, currentState=${state.state}',
+      '_handleDisconnect: reason=$reason, currentState=${state.state}',
     );
 
     // Debug: Log stack trace to identify who triggered this disconnect
     if (kDebugMode) {
       AppLogging.connection(
-        '🔌 _handleDisconnect called from:\n${StackTrace.current}',
+        '_handleDisconnect called from:\n${StackTrace.current}',
       );
     }
 
     if (state.state == DevicePairingState.pairedDeviceInvalidated) {
       AppLogging.connection(
-        '🔌 _handleDisconnect: Saved device invalidated, ignoring',
+        '_handleDisconnect: Saved device invalidated, ignoring',
       );
       return;
     }
 
     if (state.state == DevicePairingState.neverPaired) {
-      AppLogging.connection('🔌 _handleDisconnect: Never paired, ignoring');
+      AppLogging.connection('_handleDisconnect: Never paired, ignoring');
       return; // No device to reconnect to
     }
 
@@ -2795,7 +2790,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       ref.read(protocolServiceProvider).resetForReconnect();
     } catch (e) {
       AppLogging.connection(
-        '🔌 _handleDisconnect: protocol.resetForReconnect failed (non-fatal): $e',
+        '_handleDisconnect: protocol.resetForReconnect failed (non-fatal): $e',
       );
     }
 
@@ -2811,7 +2806,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // If user disconnected, don't trigger any auto-reconnect behavior
     if (reason == DisconnectReason.userDisconnected) {
       AppLogging.connection(
-        '🔌 _handleDisconnect: User-initiated disconnect, no auto-reconnect',
+        '_handleDisconnect: User-initiated disconnect, no auto-reconnect',
       );
       ref
           .read(autoReconnectStateProvider.notifier)
@@ -2846,7 +2841,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           // instead of staying on MainShell with a misleading
           // "Device not found" banner that just loops on retry.
           AppLogging.connection(
-            '🔌 _handleDisconnect: Auth failure — '
+            '_handleDisconnect: Auth failure - '
             'setting needsScanner to route to Scanner screen',
           );
           ref.read(appInitProvider.notifier).setNeedsScanner();
@@ -2867,7 +2862,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         // reconnect (called from initialize()), which is the correct
         // single-path reconnect on startup.
         AppLogging.connection(
-          '🔌 _handleDisconnect: Unexpected disconnect — '
+          '_handleDisconnect: Unexpected disconnect - '
           'autoReconnectManagerProvider will handle reconnect',
         );
         final foreground = ref.read(appLifecycleProvider);
@@ -2912,12 +2907,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
   /// Manually disconnect - prevents auto-reconnect
   Future<void> disconnect() async {
-    AppLogging.connection('🔌 disconnect(): Starting manual disconnect...');
+    AppLogging.connection('disconnect(): Starting manual disconnect...');
 
     // Mark that user intentionally disconnected - prevents any auto-reconnect
     _userDisconnected = true;
     _backgroundScanInProgress = false; // Clear scan guard to allow future scans
-    AppLogging.connection('🔌 disconnect(): Set _userDisconnected=true');
+    AppLogging.connection('disconnect(): Set _userDisconnected=true');
     // Bump the restore generation so any in-flight `restoreSession()`
     // (e.g. a lifecycle-resume restore that started a moment ago) aborts
     // at its next stale check before touching protocol/transport.
@@ -2938,9 +2933,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     }
 
     final transport = ref.read(transportProvider);
-    AppLogging.connection('🔌 disconnect(): Calling transport.disconnect()...');
+    AppLogging.connection('disconnect(): Calling transport.disconnect()...');
     await transport.disconnect();
-    AppLogging.connection('🔌 disconnect(): Transport disconnected');
+    AppLogging.connection('disconnect(): Transport disconnected');
 
     // Preserve the user's chosen transport type across manual disconnect.
     // See `_handleDisconnect` for the full rationale — transport changes
@@ -2957,7 +2952,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.idle);
 
-    AppLogging.connection('🔌 disconnect(): Manual disconnect complete');
+    AppLogging.connection('disconnect(): Manual disconnect complete');
   }
 
   /// User-tapped Disconnect from a shell surface (device sheet, Nodes
@@ -2984,7 +2979,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// Clear the user disconnected flag - call when user explicitly wants to reconnect
   void clearUserDisconnected() {
     AppLogging.connection(
-      '🔌 clearUserDisconnected(): Clearing flag to allow reconnect',
+      'clearUserDisconnected(): Clearing flag to allow reconnect',
     );
     _userDisconnected = false;
 
@@ -3024,7 +3019,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     if (!isMeshCore) {
       _setupConnectionListener();
       AppLogging.connection(
-        '🔌 markAsPaired: Meshtastic device, transport listener active',
+        'markAsPaired: Meshtastic device, transport listener active',
       );
     } else {
       // For MeshCore, cancel any existing Meshtastic transport listener
@@ -3032,7 +3027,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       _connectionSubscription?.cancel();
       _connectionSubscription = null;
       AppLogging.connection(
-        '🔌 markAsPaired: MeshCore device, skipping Meshtastic transport listener',
+        'markAsPaired: MeshCore device, skipping Meshtastic transport listener',
       );
     }
 
@@ -3050,7 +3045,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     _resetInvalidationTracking();
 
     AppLogging.connection(
-      '🔌 markAsPaired: device=${device.id}, myNodeNum=$myNodeNum, isMeshCore=$isMeshCore',
+      'markAsPaired: device=${device.id}, myNodeNum=$myNodeNum, isMeshCore=$isMeshCore',
     );
 
     // Prompt for battery optimization exemption on first BLE connection
@@ -3062,7 +3057,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           await BackgroundBleService.instance
               .promptBatteryOptimizationIfNeeded();
         } catch (e) {
-          AppLogging.connection('🔌 Battery optimization prompt error: $e');
+          AppLogging.connection('Battery optimization prompt error: $e');
         }
       });
     }
@@ -3086,7 +3081,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
             await transport.connect(device);
             return true;
           } catch (e) {
-            AppLogging.connection('🔌 BackgroundReconnect callback error: $e');
+            AppLogging.connection('BackgroundReconnect callback error: $e');
             return false;
           }
         },
@@ -3100,7 +3095,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // MeshCore doesn't use the same message storage/reconciliation
     if (!isMeshCore && !_reconciledThisSession && myNodeNum != null) {
       _reconciledThisSession = true;
-      AppLogging.connection('🔌 Running reconnect canary for node $myNodeNum');
+      AppLogging.connection('Running reconnect canary for node $myNodeNum');
       // Fire-and-forget reconcile
       Future.microtask(() async {
         try {
@@ -3108,7 +3103,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               .read(messagesProvider.notifier)
               .reconcileFromStorageForNode(myNodeNum);
         } catch (e) {
-          AppLogging.connection('🔌 Reconnect canary error: $e');
+          AppLogging.connection('Reconnect canary error: $e');
         }
       });
     }

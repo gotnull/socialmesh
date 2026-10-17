@@ -48,7 +48,9 @@ import '../services/progressive_disclosure.dart';
 import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
 import '../services/trust_score.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
+
 import '../../../providers/radio_scope_providers.dart';
 
 const Duration _kCoSeenRecentActivityWindow = Duration(minutes: 30);
@@ -297,7 +299,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     syncService?.onPullApplied = (appliedCount) {
       if (!ref.mounted || _store == null) return;
       AppLogging.nodeDex(
-        'Sync pull applied $appliedCount entries — reloading state',
+        'Sync pull applied $appliedCount entries - reloading state',
       );
       _reloadFromStore();
     };
@@ -348,7 +350,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     if (_store == null) return;
 
     try {
-      AppLogging.nodeDex('Initializing — loading entries from storage');
+      AppLogging.nodeDex('Initializing - loading entries from storage');
       final entries = await _store!.loadAllAsMap();
       if (!ref.mounted) return;
 
@@ -383,7 +385,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       });
 
       AppLogging.nodeDex(
-        'Init complete — ${entries.length} entries, '
+        'Init complete - ${entries.length} entries, '
         'co-seen flush interval: ${_coSeenFlushInterval.inSeconds}s',
       );
     } catch (e, stack) {
@@ -1065,7 +1067,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     final entry = state[nodeNum];
     if (entry == null) {
       AppLogging.nodeDex(
-        'setSocialTag failed — node $nodeNum not found in state',
+        'setSocialTag failed - node $nodeNum not found in state',
       );
       return;
     }
@@ -1083,7 +1085,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     _store?.saveEntry(updated);
 
     final hexId = '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
-    AppLogging.nodeDex('Social tag updated for $hexId: $previousTag → $newTag');
+    AppLogging.nodeDex(
+      'Social tag updated for $hexId: $previousTag -> $newTag',
+    );
 
     // Push to cloud immediately so user mutations are not lost if the
     // app is closed or the user signs out before the periodic cycle.
@@ -1095,7 +1099,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     final entry = state[nodeNum];
     if (entry == null) {
       AppLogging.nodeDex(
-        'setUserNote failed — node $nodeNum not found in state',
+        'setUserNote failed - node $nodeNum not found in state',
       );
       return;
     }
@@ -1130,7 +1134,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     final entry = state[nodeNum];
     if (entry == null) {
       AppLogging.nodeDex(
-        'setLocalNickname failed — node $nodeNum not found in state',
+        'setLocalNickname failed - node $nodeNum not found in state',
       );
       return;
     }
@@ -1163,7 +1167,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     final nodeNum = updatedEntry.nodeNum;
     if (state[nodeNum] == null) {
       AppLogging.nodeDex(
-        'applySipUpdate — node $nodeNum not in state, inserting',
+        'applySipUpdate - node $nodeNum not in state, inserting',
       );
     }
 
@@ -1333,7 +1337,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       state = entries;
       _lastKnownState = entries;
 
-      AppLogging.nodeDex('Refresh complete — ${entries.length} entries loaded');
+      AppLogging.nodeDex('Refresh complete - ${entries.length} entries loaded');
     } catch (e) {
       AppLogging.nodeDex('Error refreshing: $e');
       AppLogging.storage('NodeDex: Error refreshing: $e');
@@ -1370,7 +1374,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     if (count > 0) {
       await refresh();
     }
-    AppLogging.nodeDex('Import complete — $count entries imported');
+    AppLogging.nodeDex('Import complete - $count entries imported');
     return count;
   }
 
@@ -1432,7 +1436,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     }
 
     AppLogging.nodeDex(
-      'Strategy import complete — $count entries added/updated',
+      'Strategy import complete - $count entries added/updated',
     );
     return count;
   }

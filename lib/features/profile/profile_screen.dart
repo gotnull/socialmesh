@@ -750,14 +750,14 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection>
   AuthService? _guardedAuthService(BuildContext context) {
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.auth('[ProfileScreen] Sign-in blocked — offline');
+      AppLogging.auth('[ProfileScreen] Sign-in blocked - offline');
       showErrorSnackBar(context, context.l10n.profileSignInRequiresInternet);
       return null;
     }
     final isReady =
         ref.read(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
     if (!isReady) {
-      AppLogging.auth('Firebase not ready — sign-in blocked');
+      AppLogging.auth('Firebase not ready - sign-in blocked');
       showErrorSnackBar(context, context.l10n.profileSignInServicesUnavailable);
       return null;
     }
@@ -980,7 +980,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection>
   Future<void> _retrySyncNow(BuildContext context) async {
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.auth('[ProfileScreen] Retry sync blocked — offline');
+      AppLogging.auth('[ProfileScreen] Retry sync blocked - offline');
       showErrorSnackBar(context, context.l10n.profileSyncRequiresInternet);
       return;
     }
@@ -999,7 +999,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection>
   Future<void> _signOut(BuildContext context) async {
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.auth('[ProfileScreen] Sign out blocked — offline');
+      AppLogging.auth('[ProfileScreen] Sign out blocked - offline');
       showErrorSnackBar(context, context.l10n.profileSignOutRequiresInternet);
       return;
     }
@@ -1028,7 +1028,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection>
   Future<void> _deleteAccount(BuildContext context) async {
     final isOnline = ref.read(isOnlineProvider);
     if (!isOnline) {
-      AppLogging.auth('[ProfileScreen] Delete account blocked — offline');
+      AppLogging.auth('[ProfileScreen] Delete account blocked - offline');
       showErrorSnackBar(context, context.l10n.profileDeleteRequiresInternet);
       return;
     }
@@ -1451,7 +1451,7 @@ class _SyncErrorBanner extends ConsumerWidget {
           TextButton(
             onPressed: () {
               AppLogging.auth(
-                'SyncErrorBanner: Retry tapped — calling refresh() '
+                'SyncErrorBanner: Retry tapped - calling refresh() '
                 'which clears errors and re-runs cloud sync',
               );
               ref.read(userProfileProvider.notifier).refresh();
@@ -2183,8 +2183,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
               categories: displayNameCheck.categories
                   .map((c) => c.name)
                   .toList(),
-              details:
-                  'Display names cannot contain inappropriate content. Please choose a different name.', // lint-allow: hardcoded-string
+              details: 'Display names cannot contain inappropriate content. Please choose a different name.', // lint-allow: hardcoded-string
             ),
           );
           return;
@@ -2227,8 +2226,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
               passed: false,
               action: 'reject',
               categories: callsignCheck.categories.map((c) => c.name).toList(),
-              details:
-                  'Callsigns cannot contain inappropriate content. Please use a valid callsign.', // lint-allow: hardcoded-string
+              details: 'Callsigns cannot contain inappropriate content. Please use a valid callsign.', // lint-allow: hardcoded-string
             ),
           );
           return;

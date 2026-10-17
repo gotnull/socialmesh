@@ -54,12 +54,12 @@ final aetherFlightReportsProvider =
 final aetherGlobalLeaderboardProvider = FutureProvider<List<ReceptionReport>>((
   ref,
 ) async {
-  AppLogging.aether('aetherGlobalLeaderboardProvider — fetching leaderboard');
+  AppLogging.aether('aetherGlobalLeaderboardProvider - fetching leaderboard');
   final shareService = ref.watch(aetherShareServiceProvider);
   try {
     final entries = await shareService.fetchLeaderboard(limit: 100);
     AppLogging.aether(
-      'aetherGlobalLeaderboardProvider — got ${entries.length} entries',
+      'aetherGlobalLeaderboardProvider - got ${entries.length} entries',
     );
     return entries.map((e) => e.toReceptionReport()).toList();
   } catch (e) {
@@ -109,7 +109,7 @@ class FlightPositionState {
 /// Auto-refreshes every 30 seconds (cheap — just a GET to our own API).
 final aetherFlightPositionProvider = FutureProvider.autoDispose
     .family<FlightPositionState, String>((ref, callsign) async {
-      AppLogging.aether('aetherFlightPositionProvider — tracking $callsign');
+      AppLogging.aether('aetherFlightPositionProvider - tracking $callsign');
       final shareService = ref.watch(aetherShareServiceProvider);
 
       // Poll our own API every 30 seconds — this is free (no OpenSky credits).

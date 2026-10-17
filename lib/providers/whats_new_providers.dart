@@ -135,7 +135,7 @@ class WhatsNewNotifier extends Notifier<WhatsNewState> {
       );
 
       AppLogging.app(
-        'WhatsNew: loaded — current=$currentVersion, lastSeen=$lastSeen, '
+        'WhatsNew: loaded - current=$currentVersion, lastSeen=$lastSeen, '
         'pending=${pending?.version}, badgeKeys=$featureBadgeKeys',
       );
     } catch (e) {
@@ -159,7 +159,7 @@ class WhatsNewNotifier extends Notifier<WhatsNewState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefLastSeenVersion, payload.version);
 
-      AppLogging.app('WhatsNew: marked seen — version=${payload.version}');
+      AppLogging.app('WhatsNew: marked seen - version=${payload.version}');
 
       // Clear the popup payload and mark session as shown,
       // but keep unseenBadgeKeys intact.

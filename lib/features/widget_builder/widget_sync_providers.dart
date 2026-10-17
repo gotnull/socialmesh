@@ -93,7 +93,7 @@ final widgetSyncServiceProvider = Provider<WidgetSyncService?>((ref) {
         : 'NULL';
     AppLogging.sync(
       '[WidgetProviders] widgetSyncServiceProvider: store is NULL '
-      '(state=$stateDesc) — returning null, sync DISABLED',
+      '(state=$stateDesc) - returning null, sync DISABLED',
     );
     return null;
   }
@@ -115,7 +115,7 @@ final widgetSyncServiceProvider = Provider<WidgetSyncService?>((ref) {
   final canWrite = ref.watch(canCloudSyncWriteProvider);
   AppLogging.sync(
     '[WidgetProviders] canCloudSyncWriteProvider = $canWrite '
-    '— calling setEnabled($canWrite)',
+    '- calling setEnabled($canWrite)',
   );
   syncService.setEnabled(canWrite);
 
@@ -174,7 +174,7 @@ final widgetStorageServiceProvider = FutureProvider<WidgetStorageService>((
     // WidgetStorageService will fall back to SharedPreferences.
     AppLogging.sync(
       '[WidgetProviders] widgetSqliteStoreProvider.future FAILED: $e '
-      '— falling back to SharedPreferences',
+      '- falling back to SharedPreferences',
     );
   }
 

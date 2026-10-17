@@ -59,8 +59,7 @@ class TranslationService {
     if (!isOnline()) {
       throw const TranslationError(
         type: TranslationErrorType.offline,
-        message:
-            'No internet connection', // lint-allow: hardcoded-string - logged only; UI maps type
+        message: 'No internet connection', // lint-allow: hardcoded-string - logged only; UI maps type
       );
     }
 
@@ -97,7 +96,7 @@ class TranslationService {
 
     AppLogging.app(
       'TranslationService: translated message $messageId '
-      '(${result.detectedSourceLanguage ?? "?"} → $targetLanguage, '
+      '(${result.detectedSourceLanguage ?? "?"} -> $targetLanguage, '
       'persisted: $shouldPersist, provider: $providerLabel)',
     );
 

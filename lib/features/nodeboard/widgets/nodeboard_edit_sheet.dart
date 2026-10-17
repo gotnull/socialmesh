@@ -124,13 +124,13 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
             previousOwnerNodeId: widget.board.ownerNodeId,
           );
       if (!mounted) return;
-      AppLogging.nodeBoard('Edit: ✅ saved');
+      AppLogging.nodeBoard('Edit: saved');
       HapticFeedback.lightImpact();
       // lint-allow: hardcoded-string
       showSuccessSnackBar(context, 'Board updated');
       safeNavigatorPop(true);
     } catch (e) {
-      AppLogging.nodeBoard('Edit: ❌ failed: $e');
+      AppLogging.nodeBoard('Edit: failed: $e');
       if (!mounted) return;
       // lint-allow: hardcoded-string
       showErrorSnackBar(context, 'Failed to save: $e');

@@ -77,7 +77,7 @@ final externalPurchaseServiceProvider = FutureProvider<ExternalPurchaseService>(
     // user does not wipe valid offline-cached entitlements.
     if (lastSeenUid != null && lastSeenUid != nextUid) {
       AppLogging.purchase(
-        '[ProviderGraph] uid changed (prev=${lastSeenUid!.length >= 8 ? lastSeenUid!.substring(0, 8) : lastSeenUid} → '
+        '[ProviderGraph] uid changed (prev=${lastSeenUid!.length >= 8 ? lastSeenUid!.substring(0, 8) : lastSeenUid} -> '
         'next=${nextUid == null
             ? 'null'
             : nextUid.length >= 8
@@ -93,7 +93,7 @@ final externalPurchaseServiceProvider = FutureProvider<ExternalPurchaseService>(
     if (next.uid == lastClaimedUid) return;
     lastClaimedUid = next.uid;
     AppLogging.purchase(
-      '[ProviderGraph] sign-in detected (uid=${next.uid.length >= 8 ? next.uid.substring(0, 8) : next.uid}…) '
+      '[ProviderGraph] sign-in detected (uid=${next.uid.length >= 8 ? next.uid.substring(0, 8) : next.uid}...) '
       '- firing claimEntitlementsToAccount',
     );
     unawaited(service.claimEntitlementsToAccount());

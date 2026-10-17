@@ -177,6 +177,6 @@ String friendlyMFAError(Object error, AppLocalizations l10n) {
     return l10n.authMfaErrorInvalidData;
   }
 
-  AppLogging.mfa('MFA error: ${error.runtimeType} — $error');
+  AppLogging.mfa('MFA error: ${error.runtimeType} - $error');
   return l10n.authMfaErrorGeneric;
 }

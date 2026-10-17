@@ -56,7 +56,7 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
 
     final latencyMs = result.latency?.inMilliseconds;
     AppLogging.mrrpHarness(
-      'MRRP_HARNESS: response viewer — '
+      'MRRP_HARNESS: response viewer - '
       'status=${result.status.name} '
       '${latencyMs != null ? 'latency=${latencyMs}ms' : 'no-latency'}', // lint-allow: hardcoded-string
     );
@@ -126,9 +126,8 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
                       const SizedBox(height: AppTheme.spacing12),
                       Text(
                         l10n.mrrpHarnessResponsePending,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.textSecondary,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(color: context.textSecondary),
                       ),
                     ],
                   ),
@@ -171,8 +170,7 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
     final l10n = context.l10n;
     final result = _result!;
     final isTimeout = result.status == MrrpStatusCode.timeout;
-    final statusText =
-        '${result.status.name} (${result.status.code})'; // lint-allow: hardcoded-string
+    final statusText = '${result.status.name} (${result.status.code})'; // lint-allow: hardcoded-string
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,8 +190,7 @@ class _MrrpResponseViewerScreenState extends State<MrrpResponseViewerScreen> {
         if (result.latency != null)
           _InfoRow(
             label: l10n.mrrpHarnessResponseLatency(0),
-            value:
-                '${result.latency!.inMilliseconds}ms', // lint-allow: hardcoded-string
+            value: '${result.latency!.inMilliseconds}ms', // lint-allow: hardcoded-string
           ),
 
         // Timeout marker
@@ -318,9 +315,8 @@ class _InfoRow extends StatelessWidget {
           const SizedBox(width: AppTheme.spacing8),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.textSecondary),
           ),
           const SizedBox(width: AppTheme.spacing8),
           Expanded(

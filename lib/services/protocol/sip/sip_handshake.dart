@@ -702,7 +702,7 @@ class SipHandshakeManager {
         AppLogging.sip(
           'SIP_HS: peer-driven re-emit of HS_CHALLENGE to '
           'node=0x${peerNodeId.toRadixString(16)} '
-          '(duplicate HELLO in challengeSent — previous CHALLENGE lost)',
+          '(duplicate HELLO in challengeSent - previous CHALLENGE lost)',
         );
         onChallengeReemit?.call(peerNodeId, existing.challengeFrame!);
       } else {
@@ -784,7 +784,7 @@ class SipHandshakeManager {
     AppLogging.sip(
       'SIP_HS: <- HS_HELLO from '
       'node=0x${peerNodeId.toRadixString(16)}, '
-      'client_nonce=${_hexPrefix(hello.clientNonce)} — '
+      'client_nonce=${_hexPrefix(hello.clientNonce)} - '
       'queued for user consent',
     );
 
@@ -828,7 +828,7 @@ class SipHandshakeManager {
     final pending = _pendingRequests.remove(peerNodeId);
     if (pending == null || pending.isExpired) {
       AppLogging.sip(
-        'SIP_HS: acceptHandshake — no valid pending request for '
+        'SIP_HS: acceptHandshake - no valid pending request for '
         'node=0x${peerNodeId.toRadixString(16)}',
       );
       onStateChanged?.call();
@@ -919,7 +919,7 @@ class SipHandshakeManager {
     final pending = _pendingRequests.remove(peerNodeId);
     if (pending == null) {
       AppLogging.sip(
-        'SIP_HS: declineHandshake — no pending request for '
+        'SIP_HS: declineHandshake - no pending request for '
         'node=0x${peerNodeId.toRadixString(16)}',
       );
       return null;
@@ -1026,7 +1026,7 @@ class SipHandshakeManager {
     AppLogging.sip(
       'SIP_HS: HS_DECLINE from '
       'node=0x${peerNodeId.toRadixString(16)} '
-      '(reason=0x${decline.reason.toRadixString(16)}) — session cleared, no cooldown',
+      '(reason=0x${decline.reason.toRadixString(16)}) - session cleared, no cooldown',
     );
   }
 

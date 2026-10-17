@@ -77,7 +77,7 @@ void _syncLog(String message, {bool verbose = false}) {
 /// Log a sync error with `[SYNC]` prefix. Always logs.
 void _syncLogError(String message, [Object? error, StackTrace? stack]) {
   AppLogging.nodeDex(
-    '[SYNC] ERROR: $message${error != null ? ' — $error' : ''}',
+    '[SYNC] ERROR: $message${error != null ? ' - $error' : ''}',
   );
   if (stack != null && _syncDebug) {
     AppLogging.nodeDex('[SYNC] STACK: $stack');

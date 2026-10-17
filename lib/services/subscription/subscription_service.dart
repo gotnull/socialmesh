@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/logging.dart';
+
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../config/revenuecat_config.dart';
 import '../../dev/demo/demo_config.dart';
 import '../../models/subscription_models.dart';
@@ -65,13 +68,11 @@ class PurchaseService {
       if (savedProducts != null && savedProducts.isNotEmpty) {
         _storeConfirmedProducts.addAll(savedProducts);
         AppLogging.subscriptions(
-          '💰 Loaded store-confirmed products from storage: $_storeConfirmedProducts',
+          'Loaded store-confirmed products from storage: $_storeConfirmedProducts',
         );
       }
     } catch (e) {
-      AppLogging.subscriptions(
-        '💰 ⚠️ Error loading store-confirmed products: $e',
-      );
+      AppLogging.subscriptions('Error loading store-confirmed products: $e');
     }
   }
 
@@ -84,12 +85,10 @@ class PurchaseService {
         _storeConfirmedProducts.toList(),
       );
       AppLogging.subscriptions(
-        '💰 Saved store-confirmed products to storage: $_storeConfirmedProducts',
+        'Saved store-confirmed products to storage: $_storeConfirmedProducts',
       );
     } catch (e) {
-      AppLogging.subscriptions(
-        '💰 ⚠️ Error saving store-confirmed products: $e',
-      );
+      AppLogging.subscriptions('Error saving store-confirmed products: $e');
     }
   }
 
@@ -106,20 +105,14 @@ class PurchaseService {
   /// FirebaseAuth UID when the user is already signed in. Pass null only when
   /// the user is genuinely signed out; the SDK will then mint an anonymous id.
   Future<void> initialize({String? appUserId}) async {
-    AppLogging.subscriptions(
-      '💰 ═══════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions('💰 REVENUECAT INITIALIZE - START');
-    AppLogging.subscriptions(
-      '💰 ═══════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions(
-      '💰 Platform: ${Platform.isIOS ? "iOS" : "Android"}',
-    );
-    AppLogging.subscriptions('💰 Already initialized: $_isInitialized');
+    AppLogging.subscriptions('===============================================');
+    AppLogging.subscriptions('REVENUECAT INITIALIZE - START');
+    AppLogging.subscriptions('===============================================');
+    AppLogging.subscriptions('Platform: ${Platform.isIOS ? "iOS" : "Android"}');
+    AppLogging.subscriptions('Already initialized: $_isInitialized');
 
     if (_isInitialized) {
-      AppLogging.subscriptions('💰 ⚠️ Already initialized, skipping');
+      AppLogging.subscriptions('Already initialized, skipping');
       return;
     }
 
@@ -135,14 +128,14 @@ class PurchaseService {
 
     try {
       final apiKey = RevenueCatConfig.currentPlatformApiKey;
-      AppLogging.subscriptions('💰 API Key present: ${apiKey.isNotEmpty}');
+      AppLogging.subscriptions('API Key present: ${apiKey.isNotEmpty}');
       AppLogging.subscriptions(
-        '💰 API Key prefix: ${apiKey.length > 10 ? apiKey.substring(0, 10) : "TOO_SHORT"}...',
+        'API Key prefix: ${apiKey.length > 10 ? apiKey.substring(0, 10) : "TOO_SHORT"}...',
       );
 
       if (apiKey.isEmpty) {
         AppLogging.subscriptions(
-          '💰 ❌ RevenueCat API key not configured for ${Platform.isIOS ? "iOS" : "Android"}',
+          'RevenueCat API key not configured for ${Platform.isIOS ? "iOS" : "Android"}',
         );
         return;
       }
@@ -150,23 +143,23 @@ class PurchaseService {
       // Enable debug logging in debug mode (not verbose — verbose dumps
       // full product JSON on every BillingClient query, flooding logcat).
       if (kDebugMode) {
-        AppLogging.subscriptions('💰 Setting LogLevel.debug for debug mode...');
+        AppLogging.subscriptions('Setting LogLevel.debug for debug mode...');
         await Purchases.setLogLevel(LogLevel.debug);
         AppLogging.subscriptions(
-          '💰 RevenueCat debug logging enabled for sandbox testing',
+          'RevenueCat debug logging enabled for sandbox testing',
         );
       }
 
       AppLogging.subscriptions(
         appUserId != null
-            ? '💰 Configuring RevenueCat with appUserID=$appUserId...'
-            : '💰 Configuring RevenueCat with anonymous user...',
+            ? 'Configuring RevenueCat with appUserID=$appUserId...'
+            : 'Configuring RevenueCat with anonymous user...',
       );
       final configuration = PurchasesConfiguration(apiKey)
         ..appUserID = appUserId;
 
       await Purchases.configure(configuration);
-      AppLogging.subscriptions('💰 Purchases.configure() completed');
+      AppLogging.subscriptions('Purchases.configure() completed');
 
       // Suppress alias-on-restore. The SDK persists this flag across
       // launches in NSUserDefaults / SharedPreferences, so once any prior
@@ -180,46 +173,42 @@ class PurchaseService {
 
       // Load store-confirmed products from persistent storage
       // (products confirmed by Google Play but not synced to RevenueCat)
-      AppLogging.subscriptions('💰 Loading store-confirmed products...');
+      AppLogging.subscriptions('Loading store-confirmed products...');
       await _loadStoreConfirmedProducts();
 
       // Listen for customer info updates
-      AppLogging.subscriptions('💰 Adding customer info update listener...');
+      AppLogging.subscriptions('Adding customer info update listener...');
       Purchases.addCustomerInfoUpdateListener(_handleCustomerInfoUpdate);
 
       _isInitialized = true;
-      AppLogging.subscriptions('💰 ✅ RevenueCat SDK initialized successfully');
+      AppLogging.subscriptions('RevenueCat SDK initialized successfully');
 
       // Get initial customer info
-      AppLogging.subscriptions('💰 Fetching initial customer info...');
+      AppLogging.subscriptions('Fetching initial customer info...');
       await refreshPurchases();
-      AppLogging.subscriptions('💰 Initial customer info fetched');
+      AppLogging.subscriptions('Initial customer info fetched');
       AppLogging.subscriptions(
-        '💰 Current state: ${_currentState.purchasedProductIds}',
+        'Current state: ${_currentState.purchasedProductIds}',
       );
     } catch (e, stackTrace) {
-      AppLogging.subscriptions('💰 ❌ Error initializing RevenueCat:');
-      AppLogging.subscriptions('💰   Error: $e');
-      AppLogging.subscriptions('💰   Stack: $stackTrace');
+      AppLogging.subscriptions('Error initializing RevenueCat:');
+      AppLogging.subscriptions('  Error: $e');
+      AppLogging.subscriptions('  Stack: $stackTrace');
     }
-    AppLogging.subscriptions(
-      '💰 ═══════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions('💰 REVENUECAT INITIALIZE - END');
-    AppLogging.subscriptions(
-      '💰 ═══════════════════════════════════════════════',
-    );
+    AppLogging.subscriptions('===============================================');
+    AppLogging.subscriptions('REVENUECAT INITIALIZE - END');
+    AppLogging.subscriptions('===============================================');
   }
 
   /// Handle customer info updates from RevenueCat
   void _handleCustomerInfoUpdate(CustomerInfo customerInfo) {
-    AppLogging.subscriptions('💰 Customer info update received from listener');
+    AppLogging.subscriptions('Customer info update received from listener');
     _updateStateFromCustomerInfo(customerInfo);
   }
 
   /// Update local state from RevenueCat customer info
   void _updateStateFromCustomerInfo(CustomerInfo customerInfo) {
-    AppLogging.subscriptions('💰 _updateStateFromCustomerInfo called');
+    AppLogging.subscriptions('_updateStateFromCustomerInfo called');
 
     // Get non-consumable purchases
     final purchasedIds = customerInfo.nonSubscriptionTransactions
@@ -227,7 +216,7 @@ class PurchaseService {
         .toSet();
 
     AppLogging.subscriptions(
-      '💰 Extracted purchasedIds from nonSubscriptionTransactions: $purchasedIds',
+      'Extracted purchasedIds from nonSubscriptionTransactions: $purchasedIds',
     );
 
     // Also check entitlements for active purchases
@@ -236,13 +225,13 @@ class PurchaseService {
         .map((e) => e.productIdentifier)
         .toSet();
     AppLogging.subscriptions(
-      '💰 Extracted productIds from active entitlements: $entitlementProductIds',
+      'Extracted productIds from active entitlements: $entitlementProductIds',
     );
 
     // Also check all purchased product identifiers
     final allPurchased = customerInfo.allPurchasedProductIdentifiers;
     AppLogging.subscriptions(
-      '💰 All purchased product identifiers: $allPurchased',
+      'All purchased product identifiers: $allPurchased',
     );
 
     // Combine all sources of purchased products
@@ -256,12 +245,10 @@ class PurchaseService {
 
     if (_storeConfirmedProducts.isNotEmpty) {
       AppLogging.subscriptions(
-        '💰 Store-confirmed products (preserved): $_storeConfirmedProducts',
+        'Store-confirmed products (preserved): $_storeConfirmedProducts',
       );
     }
-    AppLogging.subscriptions(
-      '💰 Combined purchased IDs: $combinedPurchasedIds',
-    );
+    AppLogging.subscriptions('Combined purchased IDs: $combinedPurchasedIds');
 
     final previousState = _currentState;
     final newState = PurchaseState(
@@ -269,12 +256,12 @@ class PurchaseService {
       customerId: customerInfo.originalAppUserId,
     );
 
-    AppLogging.subscriptions('💰 STATE TRANSITION:');
+    AppLogging.subscriptions('STATE TRANSITION:');
     AppLogging.subscriptions(
-      '💰   Previous: ${previousState.purchasedProductIds}',
+      '  Previous: ${previousState.purchasedProductIds}',
     );
-    AppLogging.subscriptions('💰   New: ${newState.purchasedProductIds}');
-    AppLogging.subscriptions('💰   Customer ID: ${newState.customerId}');
+    AppLogging.subscriptions('  New: ${newState.purchasedProductIds}');
+    AppLogging.subscriptions('  Customer ID: ${newState.customerId}');
 
     _updateState(newState);
   }
@@ -306,9 +293,9 @@ class PurchaseService {
   /// - networkError (10): Retryable by the user
   /// - paymentPendingError (20): Inform user purchase is pending
   Future<PurchaseResult> purchaseProduct(String productId) async {
-    AppLogging.subscriptions('💳 purchaseProduct($productId) called');
+    AppLogging.subscriptions('purchaseProduct($productId) called');
     if (!_isInitialized) {
-      AppLogging.subscriptions('💳 ❌ Not initialized');
+      AppLogging.subscriptions('Not initialized');
       return PurchaseResult.error;
     }
 
@@ -317,22 +304,22 @@ class PurchaseService {
         productId,
       ], productCategory: ProductCategory.nonSubscription);
       if (products.isEmpty) {
-        AppLogging.subscriptions('💳 Product not found: $productId');
+        AppLogging.subscriptions('Product not found: $productId');
         return PurchaseResult.error;
       }
 
-      AppLogging.subscriptions('💳 Attempting purchase...');
+      AppLogging.subscriptions('Attempting purchase...');
       final result = await Purchases.purchase(
         PurchaseParams.storeProduct(products.first),
       );
-      AppLogging.subscriptions('💳 ✅ Purchase successful');
+      AppLogging.subscriptions('Purchase successful');
       _updateStateFromCustomerInfo(result.customerInfo);
       return PurchaseResult.success;
     } on PlatformException catch (e) {
       // Use RevenueCat's official helper to get strongly-typed error codes
       final errorCode = PurchasesErrorHelper.getErrorCode(e);
       AppLogging.subscriptions(
-        '💳 PlatformException: code=${e.code}, errorCode=$errorCode, message=${e.message}',
+        'PlatformException: code=${e.code}, errorCode=$errorCode, message=${e.message}',
       );
 
       // Handle StoreKit INVALID_RECEIPT bug (error code 7712)
@@ -340,7 +327,7 @@ class PurchaseService {
       // The fix is to wait briefly and sync purchases since the store owns the product.
       if (_isInvalidReceiptError(e)) {
         AppLogging.subscriptions(
-          '💳 ⚠️ StoreKit INVALID_RECEIPT bug detected (7712) - transaction completed but receipt not ready',
+          'StoreKit INVALID_RECEIPT bug detected (7712) - transaction completed but receipt not ready',
         );
         return _handleInvalidReceiptError(productId);
       }
@@ -349,20 +336,20 @@ class PurchaseService {
       switch (errorCode) {
         // User cancelled - safe to ignore
         case PurchasesErrorCode.purchaseCancelledError:
-          AppLogging.subscriptions('💳 User cancelled purchase');
+          AppLogging.subscriptions('User cancelled purchase');
           return PurchaseResult.canceled;
 
         // Product already owned - sync to recognize ownership
         case PurchasesErrorCode.productAlreadyPurchasedError:
           AppLogging.subscriptions(
-            '💳 Product already owned by store, syncing...',
+            'Product already owned by store, syncing...',
           );
           return _handleAlreadyOwned(productId);
 
         // Store problem - RevenueCat auto-retries, user can retry too
         case PurchasesErrorCode.storeProblemError:
           AppLogging.subscriptions(
-            '💳 Store problem (RevenueCat will auto-retry). User can retry.',
+            'Store problem (RevenueCat will auto-retry). User can retry.',
           );
           return PurchaseResult.error;
 
@@ -371,14 +358,14 @@ class PurchaseService {
         // (stale QUIC connections after App Store sheet), then sync.
         case PurchasesErrorCode.networkError:
           AppLogging.subscriptions(
-            '💳 Network error - attempting recovery via syncPurchases...',
+            'Network error - attempting recovery via syncPurchases...',
           );
           return _handleNetworkErrorRecovery(productId);
 
         // Payment pending - inform user
         case PurchasesErrorCode.paymentPendingError:
           AppLogging.subscriptions(
-            '💳 Payment pending - purchase started but awaiting completion.',
+            'Payment pending - purchase started but awaiting completion.',
           );
           // Add to store-confirmed as payment will eventually complete
           await _addStoreConfirmedProduct(productId);
@@ -387,7 +374,7 @@ class PurchaseService {
         // Invalid receipt - StoreKit race condition
         case PurchasesErrorCode.invalidReceiptError:
           AppLogging.subscriptions(
-            '💳 Invalid receipt error - attempting recovery...',
+            'Invalid receipt error - attempting recovery...',
           );
           return _handleInvalidReceiptError(productId);
 
@@ -396,47 +383,47 @@ class PurchaseService {
           // Also check message for ITEM_ALREADY_OWNED (Android specific)
           if (e.message?.contains('ITEM_ALREADY_OWNED') == true) {
             AppLogging.subscriptions(
-              '💳 ITEM_ALREADY_OWNED detected in message, syncing...',
+              'ITEM_ALREADY_OWNED detected in message, syncing...',
             );
             return _handleAlreadyOwned(productId);
           }
-          AppLogging.subscriptions('💳 Purchase error: $errorCode - $e');
+          AppLogging.subscriptions('Purchase error: $errorCode - $e');
           return PurchaseResult.error;
       }
     } on PurchasesErrorCode catch (e) {
       // Direct PurchasesErrorCode thrown (less common path)
-      AppLogging.subscriptions('💳 PurchasesErrorCode thrown directly: $e');
+      AppLogging.subscriptions('PurchasesErrorCode thrown directly: $e');
       if (e == PurchasesErrorCode.purchaseCancelledError) {
-        AppLogging.subscriptions('💳 User cancelled purchase');
+        AppLogging.subscriptions('User cancelled purchase');
         return PurchaseResult.canceled;
       } else if (e == PurchasesErrorCode.productAlreadyPurchasedError) {
         AppLogging.subscriptions(
-          '💳 Product already owned (PurchasesErrorCode), syncing...',
+          'Product already owned (PurchasesErrorCode), syncing...',
         );
         return _handleAlreadyOwned(productId);
       } else if (e == PurchasesErrorCode.paymentPendingError) {
-        AppLogging.subscriptions('💳 Payment pending');
+        AppLogging.subscriptions('Payment pending');
         await _addStoreConfirmedProduct(productId);
         return PurchaseResult.success;
       } else {
-        AppLogging.subscriptions('💳 Purchase error: $e');
+        AppLogging.subscriptions('Purchase error: $e');
         return PurchaseResult.error;
       }
     } catch (e) {
       final errorStr = e.toString();
-      AppLogging.subscriptions('💳 General catch error: $errorStr');
+      AppLogging.subscriptions('General catch error: $errorStr');
 
       // Also check for INVALID_RECEIPT in generic exceptions
       if (errorStr.contains('INVALID_RECEIPT') ||
           errorStr.contains('7712') ||
           errorStr.contains('missing in the receipt')) {
         AppLogging.subscriptions(
-          '💳 ⚠️ StoreKit INVALID_RECEIPT bug detected in generic exception',
+          'StoreKit INVALID_RECEIPT bug detected in generic exception',
         );
         return _handleInvalidReceiptError(productId);
       }
 
-      AppLogging.subscriptions('💳 Purchase error: $e');
+      AppLogging.subscriptions('Purchase error: $e');
       return PurchaseResult.error;
     }
   }
@@ -458,9 +445,9 @@ class PurchaseService {
   /// Solution: Wait briefly and sync purchases since the store owns the product.
   /// Uses syncPurchases() instead of restorePurchases() to avoid OS sign-in prompts.
   Future<PurchaseResult> _handleInvalidReceiptError(String productId) async {
-    AppLogging.subscriptions('💳 _handleInvalidReceiptError($productId)');
+    AppLogging.subscriptions('_handleInvalidReceiptError($productId)');
     AppLogging.subscriptions(
-      '💳 Waiting 2 seconds for StoreKit receipt to update...',
+      'Waiting 2 seconds for StoreKit receipt to update...',
     );
 
     // Wait for StoreKit to update the receipt
@@ -469,22 +456,22 @@ class PurchaseService {
     // Use syncPurchases (not restorePurchases) to avoid OS-level sign-in prompts
     // This programmatically syncs the receipt with RevenueCat backend
     AppLogging.subscriptions(
-      '💳 Calling syncPurchases() after delay (no OS prompts)...',
+      'Calling syncPurchases() after delay (no OS prompts)...',
     );
     try {
       await Purchases.syncPurchases();
-      AppLogging.subscriptions('💳 syncPurchases() completed');
+      AppLogging.subscriptions('syncPurchases() completed');
 
       // Refresh customer info to get updated state
       final customerInfo = await Purchases.getCustomerInfo();
       _updateStateFromCustomerInfo(customerInfo);
     } catch (e) {
-      AppLogging.subscriptions('💳 syncPurchases() error: $e');
+      AppLogging.subscriptions('syncPurchases() error: $e');
     }
 
     if (_currentState.hasPurchased(productId)) {
       AppLogging.subscriptions(
-        '💳 ✅ Product $productId now recognized after INVALID_RECEIPT recovery',
+        'Product $productId now recognized after INVALID_RECEIPT recovery',
       );
       return PurchaseResult.success;
     }
@@ -492,7 +479,7 @@ class PurchaseService {
     // If sync didn't work, the purchase exists in the store but RevenueCat
     // can't sync it. Force-add it to store-confirmed products.
     AppLogging.subscriptions(
-      '💳 ⚠️ Product still not in RevenueCat after sync, adding to store-confirmed',
+      'Product still not in RevenueCat after sync, adding to store-confirmed',
     );
     await _addStoreConfirmedProduct(productId);
 
@@ -500,7 +487,7 @@ class PurchaseService {
     _updateState(_currentState.copyWith(purchasedProductIds: newIds));
 
     AppLogging.subscriptions(
-      '💳 ✅ Manually added $productId after INVALID_RECEIPT recovery',
+      'Manually added $productId after INVALID_RECEIPT recovery',
     );
     return PurchaseResult.success;
   }
@@ -516,7 +503,7 @@ class PurchaseService {
   /// to pick up the completed transaction.
   Future<PurchaseResult> _handleNetworkErrorRecovery(String productId) async {
     AppLogging.subscriptions(
-      '💳 _handleNetworkErrorRecovery($productId) — waiting for network...',
+      '_handleNetworkErrorRecovery($productId) - waiting for network...',
     );
 
     // Brief delay for iOS to tear down the stale QUIC connection and
@@ -526,18 +513,18 @@ class PurchaseService {
     try {
       await Purchases.syncPurchases();
       AppLogging.subscriptions(
-        '💳 syncPurchases() completed after network recovery',
+        'syncPurchases() completed after network recovery',
       );
 
       final customerInfo = await Purchases.getCustomerInfo();
       _updateStateFromCustomerInfo(customerInfo);
     } catch (e) {
-      AppLogging.subscriptions('💳 syncPurchases() failed during recovery: $e');
+      AppLogging.subscriptions('syncPurchases() failed during recovery: $e');
     }
 
     if (_currentState.hasPurchased(productId)) {
       AppLogging.subscriptions(
-        '💳 ✅ Product $productId recovered after network error',
+        'Product $productId recovered after network error',
       );
       return PurchaseResult.success;
     }
@@ -546,7 +533,7 @@ class PurchaseService {
     // before payment went through). Report error so the UI shows the
     // failure message and the user can retry.
     AppLogging.subscriptions(
-      '💳 ❌ Product $productId not found after network recovery — '
+      'Product $productId not found after network recovery - '
       'transaction may not have completed',
     );
     return PurchaseResult.error;
@@ -555,29 +542,27 @@ class PurchaseService {
   /// Handle the case where a product is already owned by the store
   /// but not recognized by RevenueCat
   Future<PurchaseResult> _handleAlreadyOwned(String productId) async {
-    AppLogging.subscriptions('💳 _handleAlreadyOwned($productId)');
+    AppLogging.subscriptions('_handleAlreadyOwned($productId)');
 
     // Use syncPurchases (not restorePurchases) to avoid OS-level sign-in prompts
     // The user just authenticated with the store, so we don't need another sign-in
     AppLogging.subscriptions(
-      '💳 Calling syncPurchases() to sync with store (no OS prompts)...',
+      'Calling syncPurchases() to sync with store (no OS prompts)...',
     );
     try {
       await Purchases.syncPurchases();
-      AppLogging.subscriptions('💳 syncPurchases() completed');
+      AppLogging.subscriptions('syncPurchases() completed');
 
       // Refresh customer info to get updated state
       final customerInfo = await Purchases.getCustomerInfo();
       _updateStateFromCustomerInfo(customerInfo);
     } catch (e) {
-      AppLogging.subscriptions('💳 syncPurchases() error: $e');
+      AppLogging.subscriptions('syncPurchases() error: $e');
     }
 
     // Check if the product is now recognized
     if (_currentState.hasPurchased(productId)) {
-      AppLogging.subscriptions(
-        '💳 ✅ Product $productId now recognized after sync',
-      );
+      AppLogging.subscriptions('Product $productId now recognized after sync');
       return PurchaseResult.success;
     }
 
@@ -586,25 +571,25 @@ class PurchaseService {
     // or there's a PaymentPendingError).
     // Force-add it to store-confirmed products so it persists across refreshes AND app restarts.
     AppLogging.subscriptions(
-      '💳 ⚠️ Product $productId still not recognized after restore',
+      'Product $productId still not recognized after restore',
     );
     AppLogging.subscriptions(
-      '💳 Store confirmed ownership - adding to persistent store-confirmed set',
+      'Store confirmed ownership - adding to persistent store-confirmed set',
     );
 
     // Add to store-confirmed products (persists across refreshes AND app restarts)
     await _addStoreConfirmedProduct(productId);
     AppLogging.subscriptions(
-      '💳 Store-confirmed products: $_storeConfirmedProducts',
+      'Store-confirmed products: $_storeConfirmedProducts',
     );
 
     // Add the product to the current state
     final newIds = {..._currentState.purchasedProductIds, productId};
     _updateState(_currentState.copyWith(purchasedProductIds: newIds));
 
-    AppLogging.subscriptions('💳 ✅ Manually added $productId to state');
+    AppLogging.subscriptions('Manually added $productId to state');
     AppLogging.subscriptions(
-      '💳 Current state: ${_currentState.purchasedProductIds}',
+      'Current state: ${_currentState.purchasedProductIds}',
     );
 
     return PurchaseResult.success;
@@ -613,7 +598,7 @@ class PurchaseService {
   /// Fallback handler for restore errors - tries to get cached customer info
   /// Used when restorePurchases() fails with retryable errors
   Future<bool> _handleRestoreFallback() async {
-    AppLogging.subscriptions('💰 ⚠️ Falling back to getCustomerInfo()...');
+    AppLogging.subscriptions('Falling back to getCustomerInfo()...');
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       // IMPORTANT: Update state so Riverpod gets the current entitlements
@@ -627,24 +612,20 @@ class PurchaseService {
       // Also check store-confirmed products
       final hasStoreConfirmed = _storeConfirmedProducts.isNotEmpty;
 
-      AppLogging.subscriptions('💰 ⚠️ Fallback getCustomerInfo succeeded');
+      AppLogging.subscriptions('Fallback getCustomerInfo succeeded');
+      AppLogging.subscriptions('hasActiveEntitlements: $hasActiveEntitlements');
+      AppLogging.subscriptions('hasPurchasedProducts: $hasPurchasedProducts');
+      AppLogging.subscriptions('hasStoreConfirmed: $hasStoreConfirmed');
       AppLogging.subscriptions(
-        '💰 ⚠️ hasActiveEntitlements: $hasActiveEntitlements',
-      );
-      AppLogging.subscriptions(
-        '💰 ⚠️ hasPurchasedProducts: $hasPurchasedProducts',
-      );
-      AppLogging.subscriptions('💰 ⚠️ hasStoreConfirmed: $hasStoreConfirmed');
-      AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
       return hasActiveEntitlements || hasPurchasedProducts || hasStoreConfirmed;
     } catch (fallbackError) {
       AppLogging.subscriptions(
-        '💰 ❌ Fallback getCustomerInfo also failed: $fallbackError',
+        'Fallback getCustomerInfo also failed: $fallbackError',
       );
       AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
       return false;
     }
@@ -662,23 +643,23 @@ class PurchaseService {
   Future<bool> syncPurchases() async {
     if (!_isInitialized) {
       AppLogging.subscriptions(
-        '💰 syncPurchases skipped — RevenueCat not initialized',
+        'syncPurchases skipped - RevenueCat not initialized',
       );
       return false;
     }
     try {
-      AppLogging.subscriptions('💰 syncPurchases — START');
+      AppLogging.subscriptions('syncPurchases - START');
       await Purchases.syncPurchases();
       final customerInfo = await Purchases.getCustomerInfo();
       _updateStateFromCustomerInfo(customerInfo);
       AppLogging.subscriptions(
-        '💰 syncPurchases — DONE customerId=${customerInfo.originalAppUserId} '
+        'syncPurchases - DONE customerId=${customerInfo.originalAppUserId} '
         'products=${customerInfo.allPurchasedProductIdentifiers}',
       );
       return true;
     } catch (e, stackTrace) {
-      AppLogging.subscriptions('💰 ❌ syncPurchases error: $e');
-      AppLogging.subscriptions('💰 Stack: $stackTrace');
+      AppLogging.subscriptions('syncPurchases error: $e');
+      AppLogging.subscriptions('Stack: $stackTrace');
       return false;
     }
   }
@@ -686,164 +667,152 @@ class PurchaseService {
   /// Refresh purchases from RevenueCat
   Future<void> refreshPurchases() async {
     AppLogging.subscriptions(
-      '💰 refreshPurchases() called, isInitialized: $_isInitialized',
+      'refreshPurchases() called, isInitialized: $_isInitialized',
     );
     if (!_isInitialized) {
-      AppLogging.subscriptions(
-        '💰 ❌ refreshPurchases skipped - not initialized',
-      );
+      AppLogging.subscriptions('refreshPurchases skipped - not initialized');
       return;
     }
 
     try {
-      AppLogging.subscriptions('💰 Calling Purchases.getCustomerInfo()...');
+      AppLogging.subscriptions('Calling Purchases.getCustomerInfo()...');
       final customerInfo = await Purchases.getCustomerInfo();
       AppLogging.subscriptions(
-        '💰 ✅ Got customer info: ${customerInfo.originalAppUserId}',
+        'Got customer info: ${customerInfo.originalAppUserId}',
       );
       AppLogging.subscriptions(
-        '💰   nonSubscriptionTransactions: ${customerInfo.nonSubscriptionTransactions.length}',
+        '  nonSubscriptionTransactions: ${customerInfo.nonSubscriptionTransactions.length}',
       );
       AppLogging.subscriptions(
-        '💰   allPurchasedProductIdentifiers: ${customerInfo.allPurchasedProductIdentifiers}',
+        '  allPurchasedProductIdentifiers: ${customerInfo.allPurchasedProductIdentifiers}',
       );
       _updateStateFromCustomerInfo(customerInfo);
     } catch (e, stackTrace) {
-      AppLogging.subscriptions('💰 ❌ Error refreshing purchases: $e');
-      AppLogging.subscriptions('💰 Stack: $stackTrace');
+      AppLogging.subscriptions('Error refreshing purchases: $e');
+      AppLogging.subscriptions('Stack: $stackTrace');
     }
   }
 
   /// Restore purchases
   Future<bool> restorePurchases() async {
-    AppLogging.subscriptions(
-      '💰 ═══════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions('💰 RESTORE PURCHASES - START');
-    AppLogging.subscriptions(
-      '💰 ═══════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions('💰 isInitialized: $_isInitialized');
+    AppLogging.subscriptions('===============================================');
+    AppLogging.subscriptions('RESTORE PURCHASES - START');
+    AppLogging.subscriptions('===============================================');
+    AppLogging.subscriptions('isInitialized: $_isInitialized');
 
     // Reset pending-payment flag at the start of every attempt so the UI
     // only reacts to the outcome of THIS restore, not a stale prior one.
     _lastRestoreHadPendingPayment = false;
 
     if (!_isInitialized) {
+      AppLogging.subscriptions('RESTORE FAILED: RevenueCat not initialized');
       AppLogging.subscriptions(
-        '💰 ❌ RESTORE FAILED: RevenueCat not initialized',
-      );
-      AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
       return false;
     }
 
     try {
-      AppLogging.subscriptions('💰 Calling Purchases.restorePurchases()...');
+      AppLogging.subscriptions('Calling Purchases.restorePurchases()...');
       final stopwatch = Stopwatch()..start();
       final customerInfo = await Purchases.restorePurchases();
       stopwatch.stop();
 
       AppLogging.subscriptions(
-        '💰 ✅ Restore call completed in ${stopwatch.elapsedMilliseconds}ms',
+        'Restore call completed in ${stopwatch.elapsedMilliseconds}ms',
       );
       AppLogging.subscriptions(
-        '💰 ───────────────────────────────────────────────',
+        '-----------------------------------------------',
       );
-      AppLogging.subscriptions('💰 CUSTOMER INFO RECEIVED:');
+      AppLogging.subscriptions('CUSTOMER INFO RECEIVED:');
       AppLogging.subscriptions(
-        '💰   Original App User ID: ${customerInfo.originalAppUserId}',
+        '  Original App User ID: ${customerInfo.originalAppUserId}',
       );
-      AppLogging.subscriptions('💰   First Seen: ${customerInfo.firstSeen}');
+      AppLogging.subscriptions('  First Seen: ${customerInfo.firstSeen}');
+      AppLogging.subscriptions('  Request Date: ${customerInfo.requestDate}');
       AppLogging.subscriptions(
-        '💰   Request Date: ${customerInfo.requestDate}',
-      );
-      AppLogging.subscriptions(
-        '💰   Management URL: ${customerInfo.managementURL}',
+        '  Management URL: ${customerInfo.managementURL}',
       );
 
       AppLogging.subscriptions(
-        '💰 ───────────────────────────────────────────────',
+        '-----------------------------------------------',
       );
       AppLogging.subscriptions(
-        '💰 NON-SUBSCRIPTION TRANSACTIONS (${customerInfo.nonSubscriptionTransactions.length}):',
+        'NON-SUBSCRIPTION TRANSACTIONS (${customerInfo.nonSubscriptionTransactions.length}):',
       );
       if (customerInfo.nonSubscriptionTransactions.isEmpty) {
-        AppLogging.subscriptions('💰   (none found)');
+        AppLogging.subscriptions('  (none found)');
       } else {
         for (final transaction in customerInfo.nonSubscriptionTransactions) {
           AppLogging.subscriptions(
-            '💰   • Product: ${transaction.productIdentifier}',
+            '  * Product: ${transaction.productIdentifier}',
           );
           AppLogging.subscriptions(
-            '💰     Purchase Date: ${transaction.purchaseDate}',
+            '    Purchase Date: ${transaction.purchaseDate}',
           );
           AppLogging.subscriptions(
-            '💰     Transaction ID: ${transaction.transactionIdentifier}',
+            '    Transaction ID: ${transaction.transactionIdentifier}',
           );
         }
       }
 
       AppLogging.subscriptions(
-        '💰 ───────────────────────────────────────────────',
+        '-----------------------------------------------',
       );
       AppLogging.subscriptions(
-        '💰 ENTITLEMENTS (${customerInfo.entitlements.all.length}):',
+        'ENTITLEMENTS (${customerInfo.entitlements.all.length}):',
       );
       if (customerInfo.entitlements.all.isEmpty) {
-        AppLogging.subscriptions('💰   (none found)');
+        AppLogging.subscriptions('  (none found)');
       } else {
         for (final entry in customerInfo.entitlements.all.entries) {
           final entitlement = entry.value;
-          AppLogging.subscriptions('💰   • ${entry.key}:');
-          AppLogging.subscriptions('💰     isActive: ${entitlement.isActive}');
+          AppLogging.subscriptions('  * ${entry.key}:');
+          AppLogging.subscriptions('    isActive: ${entitlement.isActive}');
           AppLogging.subscriptions(
-            '💰     productIdentifier: ${entitlement.productIdentifier}',
+            '    productIdentifier: ${entitlement.productIdentifier}',
           );
           AppLogging.subscriptions(
-            '💰     latestPurchaseDate: ${entitlement.latestPurchaseDate}',
+            '    latestPurchaseDate: ${entitlement.latestPurchaseDate}',
           );
           AppLogging.subscriptions(
-            '💰     expirationDate: ${entitlement.expirationDate}',
+            '    expirationDate: ${entitlement.expirationDate}',
           );
-          AppLogging.subscriptions('💰     store: ${entitlement.store}');
-          AppLogging.subscriptions(
-            '💰     isSandbox: ${entitlement.isSandbox}',
-          );
+          AppLogging.subscriptions('    store: ${entitlement.store}');
+          AppLogging.subscriptions('    isSandbox: ${entitlement.isSandbox}');
         }
       }
 
       AppLogging.subscriptions(
-        '💰 ───────────────────────────────────────────────',
+        '-----------------------------------------------',
       );
       AppLogging.subscriptions(
-        '💰 ACTIVE SUBSCRIPTIONS (${customerInfo.activeSubscriptions.length}):',
+        'ACTIVE SUBSCRIPTIONS (${customerInfo.activeSubscriptions.length}):',
       );
       if (customerInfo.activeSubscriptions.isEmpty) {
-        AppLogging.subscriptions('💰   (none found)');
+        AppLogging.subscriptions('  (none found)');
       } else {
         for (final sub in customerInfo.activeSubscriptions) {
-          AppLogging.subscriptions('💰   • $sub');
+          AppLogging.subscriptions('  * $sub');
         }
       }
 
       AppLogging.subscriptions(
-        '💰 ───────────────────────────────────────────────',
+        '-----------------------------------------------',
       );
       AppLogging.subscriptions(
-        '💰 ALL PURCHASED PRODUCT IDS (${customerInfo.allPurchasedProductIdentifiers.length}):',
+        'ALL PURCHASED PRODUCT IDS (${customerInfo.allPurchasedProductIdentifiers.length}):',
       );
       if (customerInfo.allPurchasedProductIdentifiers.isEmpty) {
-        AppLogging.subscriptions('💰   (none found)');
+        AppLogging.subscriptions('  (none found)');
       } else {
         for (final productId in customerInfo.allPurchasedProductIdentifiers) {
-          AppLogging.subscriptions('💰   • $productId');
+          AppLogging.subscriptions('  * $productId');
         }
       }
 
       AppLogging.subscriptions(
-        '💰 ───────────────────────────────────────────────',
+        '-----------------------------------------------',
       );
       _updateStateFromCustomerInfo(customerInfo);
 
@@ -855,16 +824,14 @@ class PurchaseService {
       final hasPurchasedProducts =
           customerInfo.allPurchasedProductIdentifiers.isNotEmpty;
 
-      AppLogging.subscriptions('💰 RESTORE RESULT ANALYSIS:');
+      AppLogging.subscriptions('RESTORE RESULT ANALYSIS:');
       AppLogging.subscriptions(
-        '💰   hasNonSubscriptionTransactions: $hasTransactions',
+        '  hasNonSubscriptionTransactions: $hasTransactions',
       );
-      AppLogging.subscriptions('💰   hasActiveEntitlements: $hasEntitlements');
+      AppLogging.subscriptions('  hasActiveEntitlements: $hasEntitlements');
+      AppLogging.subscriptions('  hasPurchasedProducts: $hasPurchasedProducts');
       AppLogging.subscriptions(
-        '💰   hasPurchasedProducts: $hasPurchasedProducts',
-      );
-      AppLogging.subscriptions(
-        '💰   storeConfirmedProducts: $_storeConfirmedProducts',
+        '  storeConfirmedProducts: $_storeConfirmedProducts',
       );
 
       // Return true if ANY purchases were found from any source
@@ -875,29 +842,29 @@ class PurchaseService {
           hasEntitlements ||
           hasPurchasedProducts ||
           hasStoreConfirmed;
-      AppLogging.subscriptions('💰   Final hasPurchases: $hasPurchases');
+      AppLogging.subscriptions('  Final hasPurchases: $hasPurchases');
       AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
-      AppLogging.subscriptions('💰 RESTORE PURCHASES - END');
+      AppLogging.subscriptions('RESTORE PURCHASES - END');
       AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
 
       return hasPurchases;
     } on PlatformException catch (e) {
       final errorCode = PurchasesErrorHelper.getErrorCode(e);
-      AppLogging.subscriptions('💰 ❌ RESTORE ERROR (PlatformException):');
-      AppLogging.subscriptions('💰   Code: ${e.code}, ErrorCode: $errorCode');
-      AppLogging.subscriptions('💰   Message: ${e.message}');
-      AppLogging.subscriptions('💰   Details: ${e.details}');
+      AppLogging.subscriptions('RESTORE ERROR (PlatformException):');
+      AppLogging.subscriptions('  Code: ${e.code}, ErrorCode: $errorCode');
+      AppLogging.subscriptions('  Message: ${e.message}');
+      AppLogging.subscriptions('  Details: ${e.details}');
 
       // Handle errors using RevenueCat's recommended patterns
       switch (errorCode) {
         // Payment pending - fall back to getCustomerInfo
         case PurchasesErrorCode.paymentPendingError:
           AppLogging.subscriptions(
-            '💰 ⚠️ PaymentPendingError detected (old pending purchase)',
+            'PaymentPendingError detected (old pending purchase)',
           );
           _lastRestoreHadPendingPayment = true;
           return _handleRestoreFallback();
@@ -905,30 +872,30 @@ class PurchaseService {
         // Network error - retryable, but try fallback first
         case PurchasesErrorCode.networkError:
           AppLogging.subscriptions(
-            '💰 ⚠️ Network error - trying cached customer info...',
+            'Network error - trying cached customer info...',
           );
           return _handleRestoreFallback();
 
         // Store problem - RevenueCat auto-retries, try fallback
         case PurchasesErrorCode.storeProblemError:
           AppLogging.subscriptions(
-            '💰 ⚠️ Store problem - trying cached customer info...',
+            'Store problem - trying cached customer info...',
           );
           return _handleRestoreFallback();
 
         default:
           AppLogging.subscriptions(
-            '💰 ═══════════════════════════════════════════════',
+            '===============================================',
           );
           return false;
       }
     } catch (e, stackTrace) {
-      AppLogging.subscriptions('💰 ❌ RESTORE ERROR (Exception):');
-      AppLogging.subscriptions('💰   Type: ${e.runtimeType}');
-      AppLogging.subscriptions('💰   Error: $e');
-      AppLogging.subscriptions('💰   Stack: $stackTrace');
+      AppLogging.subscriptions('RESTORE ERROR (Exception):');
+      AppLogging.subscriptions('  Type: ${e.runtimeType}');
+      AppLogging.subscriptions('  Error: $e');
+      AppLogging.subscriptions('  Stack: $stackTrace');
       AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
       return false;
     }
@@ -938,18 +905,14 @@ class PurchaseService {
   /// This associates the RevenueCat customer with a specific user ID (e.g., Firebase UID)
   /// which ensures purchases are tracked consistently across app reinstalls and devices.
   Future<bool> logIn(String userId) async {
-    AppLogging.subscriptions(
-      '💰 ═══════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions('💰 REVENUECAT LOGIN - START');
-    AppLogging.subscriptions(
-      '💰 ═══════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions('💰 User ID to log in: $userId');
-    AppLogging.subscriptions('💰 isInitialized: $_isInitialized');
+    AppLogging.subscriptions('===============================================');
+    AppLogging.subscriptions('REVENUECAT LOGIN - START');
+    AppLogging.subscriptions('===============================================');
+    AppLogging.subscriptions('User ID to log in: $userId');
+    AppLogging.subscriptions('isInitialized: $_isInitialized');
 
     if (!_isInitialized) {
-      AppLogging.subscriptions('💰 ❌ LOGIN FAILED: RevenueCat not initialized');
+      AppLogging.subscriptions('LOGIN FAILED: RevenueCat not initialized');
       return false;
     }
 
@@ -957,48 +920,48 @@ class PurchaseService {
       // Get current customer ID before login
       final currentInfo = await Purchases.getCustomerInfo();
       AppLogging.subscriptions(
-        '💰 Current customer ID: ${currentInfo.originalAppUserId}',
+        'Current customer ID: ${currentInfo.originalAppUserId}',
       );
 
       // Check if already logged in as this user
       if (currentInfo.originalAppUserId == userId) {
-        AppLogging.subscriptions('💰 ✅ Already logged in as this user');
+        AppLogging.subscriptions('Already logged in as this user');
         AppLogging.subscriptions(
-          '💰 ═══════════════════════════════════════════════',
+          '===============================================',
         );
         return true;
       }
 
-      AppLogging.subscriptions('💰 Calling Purchases.logIn($userId)...');
+      AppLogging.subscriptions('Calling Purchases.logIn($userId)...');
       final result = await Purchases.logIn(userId);
 
-      AppLogging.subscriptions('💰 ✅ Login successful');
+      AppLogging.subscriptions('Login successful');
       AppLogging.subscriptions(
-        '💰   New customer ID: ${result.customerInfo.originalAppUserId}',
+        '  New customer ID: ${result.customerInfo.originalAppUserId}',
       );
-      AppLogging.subscriptions('💰   Created new customer: ${result.created}');
+      AppLogging.subscriptions('  Created new customer: ${result.created}');
       AppLogging.subscriptions(
-        '💰   nonSubscriptionTransactions: ${result.customerInfo.nonSubscriptionTransactions.length}',
+        '  nonSubscriptionTransactions: ${result.customerInfo.nonSubscriptionTransactions.length}',
       );
       AppLogging.subscriptions(
-        '💰   allPurchasedProductIdentifiers: ${result.customerInfo.allPurchasedProductIdentifiers}',
+        '  allPurchasedProductIdentifiers: ${result.customerInfo.allPurchasedProductIdentifiers}',
       );
 
       _updateStateFromCustomerInfo(result.customerInfo);
 
       AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
-      AppLogging.subscriptions('💰 REVENUECAT LOGIN - END');
+      AppLogging.subscriptions('REVENUECAT LOGIN - END');
       AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
       return true;
     } catch (e, stackTrace) {
-      AppLogging.subscriptions('💰 ❌ LOGIN ERROR: $e');
-      AppLogging.subscriptions('💰 Stack: $stackTrace');
+      AppLogging.subscriptions('LOGIN ERROR: $e');
+      AppLogging.subscriptions('Stack: $stackTrace');
       AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
+        '===============================================',
       );
       return false;
     }
@@ -1006,22 +969,20 @@ class PurchaseService {
 
   /// Log out user
   Future<void> logOut() async {
-    AppLogging.subscriptions('💰 Logging out from RevenueCat...');
+    AppLogging.subscriptions('Logging out from RevenueCat...');
     if (!_isInitialized) {
-      AppLogging.subscriptions(
-        '💰 ❌ LOGOUT FAILED: RevenueCat not initialized',
-      );
+      AppLogging.subscriptions('LOGOUT FAILED: RevenueCat not initialized');
       return;
     }
 
     try {
       final customerInfo = await Purchases.logOut();
       AppLogging.subscriptions(
-        '💰 ✅ Logged out, now using: ${customerInfo.originalAppUserId}',
+        'Logged out, now using: ${customerInfo.originalAppUserId}',
       );
       _updateStateFromCustomerInfo(customerInfo);
     } catch (e) {
-      AppLogging.subscriptions('💰 ❌ Error logging out: $e');
+      AppLogging.subscriptions('Error logging out: $e');
     }
   }
 
@@ -1040,15 +1001,13 @@ class PurchaseService {
     try {
       final customerInfo = await Purchases.getCustomerInfo();
       // In sandbox, the environment will be "sandbox"
+      AppLogging.subscriptions('RevenueCat environment: sandbox (debug build)');
       AppLogging.subscriptions(
-        '💰 RevenueCat environment: sandbox (debug build)',
-      );
-      AppLogging.subscriptions(
-        '💰 Customer ID: ${customerInfo.originalAppUserId}',
+        'Customer ID: ${customerInfo.originalAppUserId}',
       );
       return kDebugMode;
     } catch (e) {
-      AppLogging.subscriptions('💰 Error checking sandbox mode: $e');
+      AppLogging.subscriptions('Error checking sandbox mode: $e');
       return false;
     }
   }
@@ -1057,19 +1016,19 @@ class PurchaseService {
   Future<List<StoreProduct>> debugGetProducts() async {
     if (!_isInitialized) return [];
     try {
-      AppLogging.subscriptions('💰 Fetching products from RevenueCat');
+      AppLogging.subscriptions('Fetching products from RevenueCat');
       final products = await Purchases.getProducts(
         RevenueCatConfig.allProductIds,
         productCategory: ProductCategory.nonSubscription,
       );
       for (final product in products) {
         AppLogging.subscriptions(
-          '💰 Product: ${product.identifier} - ${product.priceString}',
+          'Product: ${product.identifier} - ${product.priceString}',
         );
       }
       return products;
     } catch (e) {
-      AppLogging.subscriptions('💰 Error getting products: $e');
+      AppLogging.subscriptions('Error getting products: $e');
       return [];
     }
   }
@@ -1080,18 +1039,18 @@ class PurchaseService {
     try {
       final offerings = await Purchases.getOfferings();
       AppLogging.subscriptions(
-        '💰 Current offering: ${offerings.current?.identifier}',
+        'Current offering: ${offerings.current?.identifier}',
       );
       if (offerings.current != null) {
         for (final package in offerings.current!.availablePackages) {
           AppLogging.subscriptions(
-            '💰 Package: ${package.identifier} - ${package.storeProduct.priceString}',
+            'Package: ${package.identifier} - ${package.storeProduct.priceString}',
           );
         }
       }
       return offerings;
     } catch (e) {
-      AppLogging.subscriptions('💰 Error getting offerings: $e');
+      AppLogging.subscriptions('Error getting offerings: $e');
       return null;
     }
   }
@@ -1101,24 +1060,24 @@ class PurchaseService {
     if (!_isInitialized) return;
     try {
       final customerInfo = await Purchases.getCustomerInfo();
-      AppLogging.subscriptions('💰 === Customer Info ===');
+      AppLogging.subscriptions('=== Customer Info ===');
       AppLogging.subscriptions(
-        '💰 App User ID: ${customerInfo.originalAppUserId}',
+        'App User ID: ${customerInfo.originalAppUserId}',
       );
       AppLogging.subscriptions(
-        '💰 Non-subscription transactions: ${customerInfo.nonSubscriptionTransactions.length}',
+        'Non-subscription transactions: ${customerInfo.nonSubscriptionTransactions.length}',
       );
       for (final transaction in customerInfo.nonSubscriptionTransactions) {
         AppLogging.subscriptions(
-          '💰   - ${transaction.productIdentifier} (${transaction.purchaseDate})',
+          '  - ${transaction.productIdentifier} (${transaction.purchaseDate})',
         );
       }
       AppLogging.subscriptions(
-        '💰 Entitlements: ${customerInfo.entitlements.all.keys}',
+        'Entitlements: ${customerInfo.entitlements.all.keys}',
       );
-      AppLogging.subscriptions('💰 ======================');
+      AppLogging.subscriptions('======================');
     } catch (e) {
-      AppLogging.subscriptions('💰 Error getting customer info: $e');
+      AppLogging.subscriptions('Error getting customer info: $e');
     }
   }
 

@@ -32,9 +32,9 @@ class MeshFirestoreConfigService {
     try {
       _firestore = FirebaseFirestore.instance;
       _initialized = true;
-      AppLogging.settings('✅ MeshFirestoreConfigService initialized');
+      AppLogging.settings('MeshFirestoreConfigService initialized');
     } catch (e) {
-      AppLogging.settings('⚠️ MeshFirestoreConfigService init failed: $e');
+      AppLogging.settings('MeshFirestoreConfigService init failed: $e');
     }
   }
 
@@ -57,11 +57,11 @@ class MeshFirestoreConfigService {
           if (!snapshot.exists || snapshot.data() == null) {
             return null;
           }
-          AppLogging.settings('🔄 Mesh config updated from Firestore');
+          AppLogging.settings('Mesh config updated from Firestore');
           return MeshConfigData.fromJson(snapshot.data()!);
         })
         .handleError((e) {
-          AppLogging.settings('⚠️ Mesh config stream error: $e');
+          AppLogging.settings('Mesh config stream error: $e');
           return null;
         });
   }
@@ -76,17 +76,17 @@ class MeshFirestoreConfigService {
       final doc = await _configDoc.get(const GetOptions(source: Source.server));
       if (!doc.exists || doc.data() == null) return null;
 
-      AppLogging.settings('📡 Fetched mesh config from Firestore server');
+      AppLogging.settings('Fetched mesh config from Firestore server');
       return MeshConfigData.fromJson(doc.data()!);
     } catch (e) {
-      AppLogging.settings('⚠️ Failed to fetch mesh config from Firestore: $e');
+      AppLogging.settings('Failed to fetch mesh config from Firestore: $e');
       // Try cache as fallback
       try {
         final cachedDoc = await _configDoc.get(
           const GetOptions(source: Source.cache),
         );
         if (cachedDoc.exists && cachedDoc.data() != null) {
-          AppLogging.settings('📦 Using cached mesh config');
+          AppLogging.settings('Using cached mesh config');
           return MeshConfigData.fromJson(cachedDoc.data()!);
         }
       } catch (_) {}
@@ -103,10 +103,10 @@ class MeshFirestoreConfigService {
         ...config.toJson(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      AppLogging.settings('✅ Mesh config saved to Firestore');
+      AppLogging.settings('Mesh config saved to Firestore');
       return true;
     } catch (e) {
-      AppLogging.settings('⚠️ Failed to save mesh config to Firestore: $e');
+      AppLogging.settings('Failed to save mesh config to Firestore: $e');
       return false;
     }
   }

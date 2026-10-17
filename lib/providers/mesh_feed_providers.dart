@@ -385,7 +385,7 @@ final meshFeedRfTransportProvider = Provider<void>((ref) {
             : post;
 
         AppLogging.meshFeed(
-          'RF-TRANSPORT: received post=${ingestPost.id.substring(0, 8)}… '
+          'RF-TRANSPORT: received post=${ingestPost.id.substring(0, 8)}... '
           'from ${authorNodeNum.toRadixString(16)} '
           'hops=$hopCount content=${ingestPost.content.length} chars',
         );
@@ -410,7 +410,7 @@ final meshFeedRfTransportProvider = Provider<void>((ref) {
       if (encoded == null) {
         AppLogging.meshFeed(
           'RF-TRANSPORT: encoding failed for post='
-          '${post.id.substring(0, 8)}…',
+          '${post.id.substring(0, 8)}...',
         );
         continue;
       }
@@ -421,13 +421,13 @@ final meshFeedRfTransportProvider = Provider<void>((ref) {
         protocol.sendFeedPost(encoded).then((packetId) {
           if (packetId != null) {
             AppLogging.meshFeed(
-              'RF-TRANSPORT: sent post=${post.id.substring(0, 8)}… '
+              'RF-TRANSPORT: sent post=${post.id.substring(0, 8)}... '
               'packetId=$packetId ${encoded.length} bytes',
             );
           } else {
             AppLogging.meshFeed(
               'RF-TRANSPORT: send failed for post='
-              '${post.id.substring(0, 8)}… (not connected or rate limited)',
+              '${post.id.substring(0, 8)}... (not connected or rate limited)',
             );
           }
         });

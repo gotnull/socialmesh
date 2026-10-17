@@ -105,7 +105,7 @@ String _normalizeNodeId(String id) {
 class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
   @override
   AetherFlightMatcherState build() {
-    AppLogging.aether('AetherFlightMatcherNotifier.build() — initializing');
+    AppLogging.aether('AetherFlightMatcherNotifier.build() - initializing');
     // Watch the local nodes list for changes
     ref.listen<Map<int, MeshNode>>(nodesProvider, (previous, next) {
       _recheckMatches();
@@ -124,7 +124,7 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
       if (previous != next) {
         AppLogging.aether(
           'Flight matcher: myNodeNum changed '
-          '(${previous?.toRadixString(16)} → ${next?.toRadixString(16)}), '
+          '(${previous?.toRadixString(16)} -> ${next?.toRadixString(16)}), '
           'rechecking matches',
         );
         _recheckMatches();
@@ -263,7 +263,7 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
       if (myNodeHex == null && flight.userId.isEmpty) {
         AppLogging.aether(
           'Flight matcher: deferring ${flight.flightNumber} '
-          '(node=${flight.nodeId}) — myNodeNum not yet available, '
+          '(node=${flight.nodeId}) - myNodeNum not yet available, '
           'cannot rule out self-flight',
         );
         continue;
@@ -319,7 +319,7 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
     state = state.copyWith(matches: newMatches, hasFetched: true);
     // if (newMatches.isNotEmpty) {
     //   AppLogging.aether(
-    //     'Flight matcher: ${newMatches.length} match(es) found — '
+    //     'Flight matcher: ${newMatches.length} match(es) found - '
     //     '${newMatches.map((m) => m.flight.flightNumber).join(', ')}',
     //   );
     // }

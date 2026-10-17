@@ -213,7 +213,7 @@ class TakGatewayClient {
     try {
       final token = await getAuthToken();
       if (token == null) {
-        AppLogging.tak('PositionPublisher: skipping — not authenticated');
+        AppLogging.tak('PositionPublisher: skipping - not authenticated');
         return false;
       }
       final client = HttpClient();

@@ -31,7 +31,7 @@ abstract final class VoiceEncoder {
   }) async {
     if (pcm.isEmpty) return null;
     if (!Codec2Bindings.isAvailable) {
-      AppLogging.voice('Codec2 native library not available — cannot encode');
+      AppLogging.voice('Codec2 native library not available - cannot encode');
       return null;
     }
     AppLogging.voice(

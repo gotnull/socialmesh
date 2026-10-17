@@ -409,7 +409,7 @@ class _TranslationSettingsScreenState
       final repo = TranslationKeyRepository();
       final key = await repo.readKey();
       AppLogging.app(
-        'TestByoKey: key read — '
+        'TestByoKey: key read - '
         'null=${key == null} empty=${key?.isEmpty} '
         'len=${key?.length} '
         'prefix=${key != null && key.length > 6 ? key.substring(0, 6) : "?"}...',
@@ -422,20 +422,20 @@ class _TranslationSettingsScreenState
       final trimmed = key.trim();
       if (trimmed.length != key.length) {
         AppLogging.app(
-          'TestByoKey: WARNING — key has leading/trailing whitespace! '
+          'TestByoKey: WARNING - key has leading/trailing whitespace! '
           'raw=${key.length} trimmed=${trimmed.length}',
         );
       }
       final adapter = OpenAiTranslationAdapter(apiKey: trimmed);
       try {
-        AppLogging.app('TestByoKey: calling translate("hello" → es)...');
+        AppLogging.app('TestByoKey: calling translate("hello" -> es)...');
         final result = await adapter
             .translate(
               // lint-allow: hardcoded-string - API key probe payload
               const TranslationRequest(text: 'hello', targetLanguage: 'es'),
             )
             .timeout(const Duration(seconds: 10));
-        AppLogging.app('TestByoKey: success — "${result.translatedText}"');
+        AppLogging.app('TestByoKey: success - "${result.translatedText}"');
         if (!mounted) return;
         safeShowSnackBar(
           l10n.translationSettingsByoTestSuccess,
@@ -443,7 +443,7 @@ class _TranslationSettingsScreenState
         );
       } on TranslationError catch (e) {
         AppLogging.app(
-          'TestByoKey: TranslationError — type=${e.type} msg=${e.message}',
+          'TestByoKey: TranslationError - type=${e.type} msg=${e.message}',
         );
         if (!mounted) return;
         safeShowSnackBar(e.message, type: SnackBarType.error);
@@ -455,7 +455,7 @@ class _TranslationSettingsScreenState
           type: SnackBarType.error,
         );
       } catch (e, stack) {
-        AppLogging.app('TestByoKey: unexpected error — $e\n$stack');
+        AppLogging.app('TestByoKey: unexpected error - $e\n$stack');
         if (!mounted) return;
         safeShowSnackBar(
           l10n.translationSettingsByoTestFailed,

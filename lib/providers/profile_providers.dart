@@ -89,11 +89,11 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   Future<UserProfile?> build() async {
     AppLogging.auth('');
     AppLogging.auth(
-      '╔══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
-    AppLogging.auth('║ 🔄 UserProfileNotifier.build() CALLED');
+    AppLogging.auth('| UserProfileNotifier.build() CALLED');
     AppLogging.auth(
-      '╠══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
 
     // Watch auth state - this ensures we rebuild when user signs in/out
@@ -107,8 +107,8 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           ? 'authState: signed-out'
           : 'authState: uid=${authUser.uid} anonymous=${authUser.isAnonymous}',
     );
-    AppLogging.auth('║ 📡 authState.isLoading: ${authState.isLoading}');
-    AppLogging.auth('║ 📡 authState.hasValue: ${authState.hasValue}');
+    AppLogging.auth('| authState.isLoading: ${authState.isLoading}');
+    AppLogging.auth('| authState.hasValue: ${authState.hasValue}');
 
     // CRITICAL: If auth is still loading, we should NOT return stale data
     // Poll Firebase Auth directly to get current user synchronously
@@ -128,30 +128,30 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         : null;
 
     if (!firebaseReady) {
-      AppLogging.auth('║ ⏳ Firebase not ready yet — treating as signed-out');
+      AppLogging.auth('| Firebase not ready yet - treating as signed-out');
     }
 
     AppLogging.auth(
-      '║ 🔥 Firebase currentUser (direct): ${currentUser?.uid ?? "NULL"}',
+      '| Firebase currentUser (direct): ${currentUser?.uid ?? "NULL"}',
     );
 
     // Use the direct Firebase check as source of truth
     final user = currentUser;
 
-    AppLogging.auth('║ 👤 Resolved user: ${user?.uid ?? "NULL"}');
+    AppLogging.auth('| Resolved user: ${user?.uid ?? "NULL"}');
 
     // Initialize and load local profile
     await profileService.initialize();
     final localProfile = await profileService.getOrCreateProfile();
-    AppLogging.auth('║ 💾 Local profile loaded:');
-    AppLogging.auth('║    - displayName: ${localProfile.displayName}');
-    AppLogging.auth('║    - id: ${localProfile.id}');
-    AppLogging.auth('║    - isSynced: ${localProfile.isSynced}');
+    AppLogging.auth('| Local profile loaded:');
+    AppLogging.auth('|    - displayName: ${localProfile.displayName}');
+    AppLogging.auth('|    - id: ${localProfile.id}');
+    AppLogging.auth('|    - isSynced: ${localProfile.isSynced}');
 
     // Check if user is signed in
     if (user != null) {
       AppLogging.auth(
-        '║ 🔐 User IS signed in (${user.uid}), will sync from cloud',
+        '| User IS signed in (${user.uid}), will sync from cloud',
       );
       // Update sync status
       ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
@@ -159,35 +159,35 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       final cloudSync = profileCloudSyncServiceOrNull;
       if (cloudSync == null) {
         AppLogging.auth(
-          '║ ⚠️ profileCloudSyncService not initialized, skipping cloud sync',
+          '| profileCloudSyncService not initialized, skipping cloud sync',
         );
         ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
       } else {
         try {
           AppLogging.auth(
-            '║ ☁️ Calling profileCloudSyncService.fullSync(${user.uid})',
+            '| Calling profileCloudSyncService.fullSync(${user.uid})',
           );
           final synced = await cloudSync.fullSync(
             user.uid,
             authDisplayName: resolveDisplayName(user),
           );
           AppLogging.auth(
-            '║ ☁️ fullSync returned: ${synced?.displayName ?? "NULL"}',
+            '| fullSync returned: ${synced?.displayName ?? "NULL"}',
           );
           if (synced != null) {
-            AppLogging.auth('║ ✅ Cloud sync SUCCESS:');
-            AppLogging.auth('║    - displayName: ${synced.displayName}');
-            AppLogging.auth('║    - id: ${synced.id}');
-            AppLogging.auth('║    - isSynced: ${synced.isSynced}');
+            AppLogging.auth('| Cloud sync SUCCESS:');
+            AppLogging.auth('|    - displayName: ${synced.displayName}');
+            AppLogging.auth('|    - id: ${synced.id}');
+            AppLogging.auth('|    - isSynced: ${synced.isSynced}');
             AppLogging.auth(
-              '╚══════════════════════════════════════════════════════════════',
+              '+==============================================================',
             );
             AppLogging.auth('');
             ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
             return synced;
           }
         } catch (e) {
-          AppLogging.auth('║ ❌ Cloud sync FAILED: $e');
+          AppLogging.auth('| Cloud sync FAILED: $e');
           final errorString = e.toString();
 
           // Check if this is a transient network error
@@ -199,7 +199,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
 
           if (isTransientError) {
             // For transient errors, treat as idle - user is logged in, just offline
-            AppLogging.auth('║ ⚠️ Transient network error, treating as idle');
+            AppLogging.auth('| Transient network error, treating as idle');
             ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
 
             // If the local profile is stale ("Guest"), try Firestore's offline
@@ -211,32 +211,32 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
                 localProfile.displayName.isEmpty;
             if (isStaleLocal) {
               AppLogging.auth(
-                '║ 🔄 Local profile is stale ("${localProfile.displayName}"), '
+                '| Local profile is stale ("${localProfile.displayName}"), '
                 'trying Firestore offline cache...',
               );
               final cached = await cloudSync.getProfileFromCache(user.uid);
               if (cached != null) {
                 AppLogging.auth(
-                  '║ ✅ Firestore cache HIT: "${cached.displayName}"',
+                  '| Firestore cache HIT: "${cached.displayName}"',
                 );
                 await profileService.saveProfile(cached);
                 ref
                     .read(syncStatusProvider.notifier)
                     .setStatus(SyncStatus.idle);
                 AppLogging.auth(
-                  '╚══════════════════════════════════════════════════════════════',
+                  '+==============================================================',
                 );
                 AppLogging.auth('');
                 return cached;
               } else {
                 AppLogging.auth(
-                  '║ ❌ Firestore cache MISS — no cached doc available',
+                  '| Firestore cache MISS - no cached doc available',
                 );
               }
             }
           } else {
             // For actual errors (permissions, etc), show error state
-            AppLogging.auth('║ ❌ Non-transient error, setting error status');
+            AppLogging.auth('| Non-transient error, setting error status');
             ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
             ref.read(syncErrorProvider.notifier).setError(errorString);
           }
@@ -244,31 +244,31 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         }
       }
     } else {
-      AppLogging.auth('║ 🚫 User is NULL - not signed in');
+      AppLogging.auth('| User is NULL - not signed in');
       // When signed out, return a fresh guest profile to avoid showing old user's data
       if (localProfile.isSynced) {
         AppLogging.auth(
-          '║ ⚠️ Local profile WAS synced (isSynced=${localProfile.isSynced})',
+          '| Local profile WAS synced (isSynced=${localProfile.isSynced})',
         );
-        AppLogging.auth('║ 🆕 Creating fresh guest profile');
+        AppLogging.auth('| Creating fresh guest profile');
         final freshGuest = UserProfile.guest();
         await profileService.saveProfile(freshGuest);
-        AppLogging.auth('║ ✅ Returning fresh guest: ${freshGuest.displayName}');
+        AppLogging.auth('| Returning fresh guest: ${freshGuest.displayName}');
         AppLogging.auth(
-          '╚══════════════════════════════════════════════════════════════',
+          '+==============================================================',
         );
         AppLogging.auth('');
         return freshGuest;
       } else {
-        AppLogging.auth('║ ℹ️ Local profile NOT synced, keeping local');
+        AppLogging.auth('| Local profile NOT synced, keeping local');
       }
     }
 
     AppLogging.auth(
-      '║ 📤 FALLBACK: Returning local profile: ${localProfile.displayName}',
+      '| FALLBACK: Returning local profile: ${localProfile.displayName}',
     );
     AppLogging.auth(
-      '╚══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
     AppLogging.auth('');
     return localProfile;
@@ -278,27 +278,25 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   Future<void> refresh() async {
     AppLogging.auth('');
     AppLogging.auth(
-      '╔══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
-    AppLogging.auth('║ 🔁 refresh() CALLED (e.g. from Retry button)');
+    AppLogging.auth('| refresh() CALLED (e.g. from Retry button)');
     AppLogging.auth(
-      '╠══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
 
     // Clear stale sync errors so the banner disappears immediately
     ref.read(syncErrorProvider.notifier).setError(null);
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
 
-    AppLogging.auth('║ 🧹 Cleared syncError and set status to syncing');
+    AppLogging.auth('| Cleared syncError and set status to syncing');
 
     // Invalidate self to re-run build() which does a full cloud sync
     ref.invalidateSelf();
 
+    AppLogging.auth('| Invalidated self - build() will re-run with cloud sync');
     AppLogging.auth(
-      '║ 🔄 Invalidated self — build() will re-run with cloud sync',
-    );
-    AppLogging.auth(
-      '╚══════════════════════════════════════════════════════════════',
+      '+==============================================================',
     );
     AppLogging.auth('');
   }

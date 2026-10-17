@@ -2,8 +2,10 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
 import '../models/mesh_models.dart';
@@ -309,18 +311,18 @@ class ActiveRouteNotifier extends Notifier<Route?> {
   }
 
   void _startLocationTracking() {
-    AppLogging.debug('🛤️ Route: Starting location tracking');
+    AppLogging.debug('Route: Starting location tracking');
     // Cancel any existing subscription first
     _positionSubscription?.cancel();
     // Listen to position updates from nodes (including phone GPS positions)
     _positionSubscription = _protocol.nodeStream.listen((node) async {
       if (state == null) {
-        AppLogging.debug('🛤️ Route: No active route, skipping');
+        AppLogging.debug('Route: No active route, skipping');
         return;
       }
       if (!node.hasPosition) {
         AppLogging.debug(
-          '🛤️ Route: Node ${node.nodeNum} has no position, skipping',
+          'Route: Node ${node.nodeNum} has no position, skipping',
         );
         return;
       }
@@ -328,19 +330,19 @@ class ActiveRouteNotifier extends Notifier<Route?> {
       // Track position updates from our own node
       final myNodeNum = _protocol.myNodeNum;
       AppLogging.debug(
-        '🛤️ Route: Got position from node ${node.nodeNum}, myNodeNum=$myNodeNum',
+        'Route: Got position from node ${node.nodeNum}, myNodeNum=$myNodeNum',
       );
 
       // Skip if this isn't our node (but allow if myNodeNum is null during setup)
       if (myNodeNum != null && node.nodeNum != myNodeNum) {
-        AppLogging.debug('🛤️ Route: Skipping - not our node');
+        AppLogging.debug('Route: Skipping - not our node');
         return;
       }
 
       final newLat = node.latitude!;
       final newLon = node.longitude!;
       AppLogging.debug(
-        '🛤️ Route: New position: $newLat, $newLon (precision=${node.precisionBits})',
+        'Route: New position: $newLat, $newLon (precision=${node.precisionBits})',
       );
 
       // Filter out GPS jumps and low precision positions
@@ -357,7 +359,7 @@ class ActiveRouteNotifier extends Notifier<Route?> {
 
         // Skip duplicate positions (same lat/lon as last point)
         if (lastLoc.latitude == newLat && lastLoc.longitude == newLon) {
-          AppLogging.debug('🛤️ Route: Skipping - duplicate position');
+          AppLogging.debug('Route: Skipping - duplicate position');
           return;
         }
 
@@ -365,7 +367,7 @@ class ActiveRouteNotifier extends Notifier<Route?> {
         // Position precision bits can cause coordinates to jump by kilometers
         if (distance > 500) {
           AppLogging.debug(
-            '🛤️ Route: Skipping - distance too large (${distance.toStringAsFixed(0)}m > 500m limit)',
+            'Route: Skipping - distance too large (${distance.toStringAsFixed(0)}m > 500m limit)',
           );
           return;
         }
@@ -374,20 +376,20 @@ class ActiveRouteNotifier extends Notifier<Route?> {
         if (timeDiff >= 1) {
           final speed = distance / timeDiff; // meters per second
           AppLogging.debug(
-            '🛤️ Route: Distance=${distance.toStringAsFixed(1)}m, timeDiff=${timeDiff}s, speed=${speed.toStringAsFixed(1)}m/s',
+            'Route: Distance=${distance.toStringAsFixed(1)}m, timeDiff=${timeDiff}s, speed=${speed.toStringAsFixed(1)}m/s',
           );
 
           // Skip if speed > 50 m/s (180 km/h) - likely GPS error
           if (speed > 50) {
             AppLogging.debug(
-              '🛤️ Route: Skipping - GPS jump detected (speed too high)',
+              'Route: Skipping - GPS jump detected (speed too high)',
             );
             return;
           }
         }
       } else {
         // First point - log it
-        AppLogging.debug('🛤️ Route: Recording first point');
+        AppLogging.debug('Route: Recording first point');
       }
 
       final location = RouteLocation(
@@ -399,15 +401,13 @@ class ActiveRouteNotifier extends Notifier<Route?> {
       );
 
       AppLogging.debug(
-        '🛤️ Route: Adding location point #${state!.locations.length + 1}',
+        'Route: Adding location point #${state!.locations.length + 1}',
       );
       if (_storage != null) {
         final updated = await _storage!.addLocationToActiveRoute(location);
         if (updated != null) {
           state = updated;
-          AppLogging.debug(
-            '🛤️ Route: Now have ${state!.locations.length} points',
-          );
+          AppLogging.debug('Route: Now have ${state!.locations.length} points');
         }
       }
     });
@@ -993,7 +993,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
             AppLogging.storage(
               'PositionLog: Low-precision replace node !${id.toRadixString(16)} '
               'lat=${node.latitude}, lng=${node.longitude}, '
-              'precision=low($bits) — clearing history',
+              'precision=low($bits) - clearing history',
             );
             await storage.clearPositionLogsForNode(id);
             await storage.addPositionLog(

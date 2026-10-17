@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -50,17 +51,17 @@ class _UniversalQrScannerScreenState
   @override
   void initState() {
     super.initState();
-    AppLogging.qr('📷 Universal QR Scanner: Initializing');
+    AppLogging.qr('Universal QR Scanner: Initializing');
 
     // Create controller with autoStart disabled to prevent race conditions
     _controller = MobileScannerController(autoStart: false);
 
     _controller.barcodes.listen(
       (capture) {
-        AppLogging.qr('📷 Universal QR Scanner: Barcode stream event');
+        AppLogging.qr('Universal QR Scanner: Barcode stream event');
       },
       onError: (error) {
-        AppLogging.qr('📷 Universal QR Scanner ERROR: $error');
+        AppLogging.qr('Universal QR Scanner ERROR: $error');
       },
     );
 
@@ -72,18 +73,16 @@ class _UniversalQrScannerScreenState
     if (_isDisposed) return;
     try {
       await _controller.start();
-      AppLogging.qr('📷 Universal QR Scanner: Camera started');
+      AppLogging.qr('Universal QR Scanner: Camera started');
       if (mounted) safeSetState(() {});
     } catch (error) {
-      AppLogging.qr(
-        'QR - 📷 Universal QR Scanner ERROR: Failed to start: $error',
-      );
+      AppLogging.qr('QR - Universal QR Scanner ERROR: Failed to start: $error');
     }
   }
 
   @override
   void dispose() {
-    AppLogging.qr('📷 Universal QR Scanner: Disposing');
+    AppLogging.qr('Universal QR Scanner: Disposing');
     _isDisposed = true;
     _controller.dispose();
     super.dispose();
@@ -103,7 +102,7 @@ class _UniversalQrScannerScreenState
     _lastProcessedCode = code;
 
     AppLogging.qr(
-      '📷 Universal QR Scanner: Detected ${code.length > 50 ? '${code.substring(0, 50)}...' : code}',
+      'Universal QR Scanner: Detected ${code.length > 50 ? '${code.substring(0, 50)}...' : code}',
     );
 
     safeSetState(() => _isProcessing = true);
@@ -137,7 +136,7 @@ class _UniversalQrScannerScreenState
       final parsed = parser.parse(code);
 
       AppLogging.qr(
-        '📷 Universal QR Scanner: Parsed as ${parsed.type}, valid=${parsed.isValid}',
+        'Universal QR Scanner: Parsed as ${parsed.type}, valid=${parsed.isValid}',
       );
 
       if (!parsed.isValid) {
@@ -180,7 +179,7 @@ class _UniversalQrScannerScreenState
           throw Exception('Invalid QR code');
       }
     } catch (e) {
-      AppLogging.qr('📷 Universal QR Scanner ERROR: $e');
+      AppLogging.qr('Universal QR Scanner ERROR: $e');
       if (mounted) {
         showErrorSnackBar(
           context,
@@ -208,7 +207,7 @@ class _UniversalQrScannerScreenState
       final hexPattern = RegExp(r'^[0-9A-Fa-f]{8}$');
       if (hexPattern.hasMatch(parsed.nodeFirestoreId!)) {
         nodeNum = int.parse(parsed.nodeFirestoreId!, radix: 16);
-        AppLogging.qr('📷 Converted Firestore ID to nodeNum: $nodeNum');
+        AppLogging.qr('Converted Firestore ID to nodeNum: $nodeNum');
       } else {
         throw Exception('Invalid node ID format');
       }
@@ -546,7 +545,7 @@ class _UniversalQrScannerScreenState
 
     // Decode base64 to bytes
     final bytes = Base64Utils.decodeWithPadding(base64Data);
-    AppLogging.qr('📷 Channel QR Decoded ${bytes.length} bytes');
+    AppLogging.qr('Channel QR Decoded ${bytes.length} bytes');
 
     // Parse channel settings from protobuf
     ChannelConfig? channel;

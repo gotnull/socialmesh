@@ -226,19 +226,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     // Region config may not have arrived yet — wait briefly for the stream
     if (region == null ||
         region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
-      AppLogging.app('🔍 Onboarding: Waiting for LoRa config...');
+      AppLogging.app('Onboarding: Waiting for LoRa config...');
       try {
         final loraConfig = await protocol.loraConfigStream.first.timeout(
           const Duration(seconds: 8),
           onTimeout: () {
-            AppLogging.app('⏱️ Onboarding: LoRa config timeout');
+            AppLogging.app('Onboarding: LoRa config timeout');
             throw TimeoutException('LoRa config timeout');
           },
         );
         region = loraConfig.region;
-        AppLogging.app('✅ Onboarding: Received region: ${region.name}');
+        AppLogging.app('Onboarding: Received region: ${region.name}');
       } catch (e) {
-        AppLogging.app('⚠️ Onboarding: Error getting region: $e');
+        AppLogging.app('Onboarding: Error getting region: $e');
         region = protocol.currentRegion;
       }
     }
@@ -248,7 +248,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     if (region == null ||
         region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
       AppLogging.app(
-        '⚠️ Onboarding: Region is UNSET — pushing RegionSelectionScreen',
+        'Onboarding: Region is UNSET - pushing RegionSelectionScreen',
       );
       // CRITICAL: Clear manualConnecting BEFORE pushing RegionSelection.
       // The region apply causes a device reboot (expected disconnect).
@@ -276,9 +276,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       final settings = await ref.read(settingsServiceProvider.future);
       if (mounted) {
         await settings.setRegionConfigured(true);
-        AppLogging.app(
-          '✅ Onboarding: Region ${region.name} already configured',
-        );
+        AppLogging.app('Onboarding: Region ${region.name} already configured');
       }
     }
   }

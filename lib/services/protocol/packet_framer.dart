@@ -73,7 +73,7 @@ class PacketFramer {
       _bufferOverflowCount++;
       _totalBytesDiscarded += _buffer.length;
       AppLogging.protocol(
-        '⚠️ FRAMER SECURITY: Buffer overflow #$_bufferOverflowCount — '
+        'FRAMER SECURITY: Buffer overflow #$_bufferOverflowCount - '
         'clearing ${_buffer.length} bytes '
         '(totalDiscarded=$_totalBytesDiscarded)',
       );
@@ -84,7 +84,7 @@ class PacketFramer {
     // Abuse detection: sustained invalid frames → disconnect
     if (_consecutiveInvalidFrames >= _maxConsecutiveInvalid) {
       AppLogging.protocol(
-        '🚨 FRAMER SECURITY: Abuse threshold reached — '
+        'FRAMER SECURITY: Abuse threshold reached - '
         '$_consecutiveInvalidFrames consecutive invalid frames. '
         'Requesting disconnect.',
       );
@@ -119,7 +119,7 @@ class PacketFramer {
         _totalBytesDiscarded += discarded;
         _consecutiveInvalidFrames++;
         AppLogging.protocol(
-          '⚠️ FRAMER SECURITY: No magic bytes in ${_buffer.length} bytes — '
+          'FRAMER SECURITY: No magic bytes in ${_buffer.length} bytes - '
           'discarding $discarded bytes '
           'consecutiveInvalid=$_consecutiveInvalidFrames '
           'first8=${_buffer.take(8).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
@@ -133,7 +133,7 @@ class PacketFramer {
     if (magicIndex > 0) {
       _totalBytesDiscarded += magicIndex;
       AppLogging.protocol(
-        '⚠️ FRAMER SECURITY: Discarding $magicIndex bytes before magic '
+        'FRAMER SECURITY: Discarding $magicIndex bytes before magic '
         '(totalDiscarded=$_totalBytesDiscarded)',
       );
       _buffer.removeRange(0, magicIndex);
@@ -154,8 +154,8 @@ class PacketFramer {
       _consecutiveInvalidFrames++;
       _totalBytesDiscarded += 2;
       AppLogging.protocol(
-        '⚠️ FRAMER SECURITY: Invalid packet length=$length '
-        '(max=$_maxPacketSize) — consecutiveInvalid=$_consecutiveInvalidFrames '
+        'FRAMER SECURITY: Invalid packet length=$length '
+        '(max=$_maxPacketSize) - consecutiveInvalid=$_consecutiveInvalidFrames '
         'bufferSize=${_buffer.length} '
         'headerHex=${_buffer.take(8).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
       );

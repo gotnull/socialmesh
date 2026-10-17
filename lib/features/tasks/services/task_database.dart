@@ -196,7 +196,7 @@ class TaskDatabase {
   /// Downgrade: drop and recreate.
   Future<void> _onDowngrade(Database db, int oldVersion, int newVersion) async {
     AppLogging.tasks(
-      'TaskDatabase: downgrade v$oldVersion -> v$newVersion — recreating',
+      'TaskDatabase: downgrade v$oldVersion -> v$newVersion - recreating',
     );
     await db.execute('DROP TABLE IF EXISTS task_transitions');
     await db.execute('DROP TABLE IF EXISTS tasks');
@@ -496,7 +496,7 @@ class TaskDatabase {
 
         AppLogging.taskSync(
           'resolved ${rt.taskId}: '
-          '${result.outcome.name} — ${result.reason}',
+          '${result.outcome.name} - ${result.reason}',
         );
 
         // 4. Update projection if resolution changed the state.

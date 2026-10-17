@@ -3,11 +3,14 @@
 import '../../core/boot_timeline.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
+
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
+
 import '../../features/pet/models/pet_enums.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/meshcore_ringtone_preferences.dart';
@@ -15,6 +18,7 @@ import '../protocol/sip/play/sip_play_constants.dart';
 import '../../utils/text_sanitizer.dart';
 import '../audio/notification_sound_service.dart';
 import 'app_badge_counter.dart';
+
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
@@ -153,8 +157,10 @@ class NotificationActions {
 }
 
 /// Callback type for sending reaction messages
-typedef ReactionCallback =
-    Future<void> Function(MessageReactionTarget target, String emoji);
+typedef ReactionCallback = Future<void> Function(
+  MessageReactionTarget target,
+  String emoji,
+);
 
 /// Service for handling local push notifications
 /// Local notifications do NOT require APNs (Apple Push Notification service)
@@ -296,7 +302,7 @@ class NotificationService {
           sound: true,
         );
         AppLogging.notifications(
-          '🔔 iOS notification permissions granted: $granted',
+          'iOS notification permissions granted: $granted',
         );
       }
     }
@@ -310,7 +316,7 @@ class NotificationService {
           >();
       final granted = await androidPlugin?.requestNotificationsPermission();
       AppLogging.notifications(
-        '🔔 Android notification permissions granted: $granted',
+        'Android notification permissions granted: $granted',
       );
 
       // Row 11: eagerly register the MeshCore notification channels
@@ -345,20 +351,20 @@ class NotificationService {
           ),
         );
         AppLogging.notifications(
-          '🔔 Registered MeshCore notification channels: '
+          'Registered MeshCore notification channels: '
           'meshcore_adverts, meshcore_batch_summary',
         );
       }
     }
 
     _initialized = true;
-    AppLogging.notifications('🔔 NotificationService initialized successfully');
+    AppLogging.notifications('NotificationService initialized successfully');
   }
 
   /// Handle notification tap or action
   void _onNotificationResponse(NotificationResponse response) {
     AppLogging.notifications(
-      '🔔 Notification response: action=${response.actionId}, payload=${response.payload}',
+      'Notification response: action=${response.actionId}, payload=${response.payload}',
     );
 
     final actionId = response.actionId;
@@ -374,7 +380,7 @@ class NotificationService {
 
     // Handle regular notification tap - could navigate to specific screen
     if (payload != null && payload.isNotEmpty) {
-      AppLogging.notifications('🔔 Notification tapped with payload: $payload');
+      AppLogging.notifications('Notification tapped with payload: $payload');
       // Push notification payloads use 'type' or 'type|deepLink' format
       // Emit on the stream so the app can navigate
       _pushTapController.add(payload);
@@ -405,7 +411,7 @@ class NotificationService {
       }
       return response?.payload;
     } catch (e) {
-      AppLogging.notifications('🔔 Launch details unavailable: $e');
+      AppLogging.notifications('Launch details unavailable: $e');
       return null;
     }
   }
@@ -413,20 +419,20 @@ class NotificationService {
   /// Handle a reaction action from notification
   void _handleReactionAction(String? payload, String emoji) {
     if (payload == null) {
-      AppLogging.notifications('🔔 Reaction action without payload, ignoring');
+      AppLogging.notifications('Reaction action without payload, ignoring');
       return;
     }
 
     final target = MessageReactionTarget.fromPayload(payload);
     if (target == null) {
       AppLogging.notifications(
-        '🔔 Could not parse reaction target from payload: $payload',
+        'Could not parse reaction target from payload: $payload',
       );
       return;
     }
 
     AppLogging.notifications(
-      '🔔 Sending $emoji reaction to node ${target.toNodeNum} '
+      'Sending $emoji reaction to node ${target.toNodeNum} '
       '(channel=${target.channelIndex}, replyPacketId=${target.replyPacketId})',
     );
 
@@ -435,7 +441,7 @@ class NotificationService {
       onReactionSelected!(target, emoji);
     } else {
       AppLogging.notifications(
-        '🔔 No reaction callback set, cannot send reaction',
+        'No reaction callback set, cannot send reaction',
       );
     }
   }
@@ -448,7 +454,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping notification',
+        'NotificationService not initialized, skipping notification',
       );
       return;
     }
@@ -497,7 +503,7 @@ class NotificationService {
       payload: 'node:${node.nodeNum}',
     );
 
-    AppLogging.notifications('🔔 Showed notification for node: $nodeName');
+    AppLogging.notifications('Showed notification for node: $nodeName');
   }
 
   // ---------------------------------------------------------------------
@@ -544,7 +550,7 @@ class NotificationService {
       notificationDetails: details,
       payload: 'pet:milestone:${toStage.name}', // lint-allow: hardcoded-string
     );
-    AppLogging.notifications('🔔 Pet milestone notification: ${toStage.name}');
+    AppLogging.notifications('Pet milestone notification: ${toStage.name}');
   }
 
   Future<void> showPetSicknessNotification({required int ownerNodeNum}) async {
@@ -575,7 +581,7 @@ class NotificationService {
       notificationDetails: details,
       payload: 'pet:care:sick', // lint-allow: hardcoded-string
     );
-    AppLogging.notifications('🔔 Pet sickness notification dispatched');
+    AppLogging.notifications('Pet sickness notification dispatched');
   }
 
   Future<void> showPetAttentionCallNotification({
@@ -610,9 +616,7 @@ class NotificationService {
       payload:
           'pet:care:attention:${reason.name}', // lint-allow: hardcoded-string
     );
-    AppLogging.notifications(
-      '🔔 Pet attention-call notification: ${reason.name}',
-    );
+    AppLogging.notifications('Pet attention-call notification: ${reason.name}');
   }
 
   String _petStageTitle(PetStage stage) {
@@ -681,7 +685,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping Aether notification',
+        'NotificationService not initialized, skipping Aether notification',
       );
       return;
     }
@@ -725,7 +729,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed Aether flight notification: $flightNumber ($route)',
+      'Showed Aether flight notification: $flightNumber ($route)',
     );
   }
 
@@ -740,7 +744,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping firmware notification',
+        'NotificationService not initialized, skipping firmware notification',
       );
       return;
     }
@@ -792,9 +796,7 @@ class NotificationService {
       payload: 'firmware:$level',
     );
 
-    AppLogging.notifications(
-      '🔔 Showed firmware notification: [$level] $message',
-    );
+    AppLogging.notifications('Showed firmware notification: [$level] $message');
   }
 
   /// Show notification for detection sensor event
@@ -808,7 +810,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping detection notification',
+        'NotificationService not initialized, skipping detection notification',
       );
       return;
     }
@@ -855,7 +857,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed detection sensor notification: $sensorName = $state',
+      'Showed detection sensor notification: $sensorName = $state',
     );
   }
 
@@ -869,7 +871,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping waypoint notification',
+        'NotificationService not initialized, skipping waypoint notification',
       );
       return;
     }
@@ -909,7 +911,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed waypoint notification: "$name" from $senderName',
+      'Showed waypoint notification: "$name" from $senderName',
     );
   }
 
@@ -925,7 +927,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping TAK stale notification',
+        'NotificationService not initialized, skipping TAK stale notification',
       );
       return;
     }
@@ -968,7 +970,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed TAK stale notification for $callsign ($uid)',
+      'Showed TAK stale notification for $callsign ($uid)',
     );
   }
 
@@ -983,7 +985,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping TAK proximity notification',
+        'NotificationService not initialized, skipping TAK proximity notification',
       );
       return;
     }
@@ -1025,7 +1027,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed TAK proximity notification for $callsign ($uid)',
+      'Showed TAK proximity notification for $callsign ($uid)',
     );
   }
 
@@ -1040,11 +1042,11 @@ class NotificationService {
     bool vibrate = true,
   }) async {
     AppLogging.notifications(
-      '🔔 showNewMessageNotification called - initialized: $_initialized',
+      'showNewMessageNotification called - initialized: $_initialized',
     );
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping DM notification',
+        'NotificationService not initialized, skipping DM notification',
       );
       return;
     }
@@ -1110,7 +1112,7 @@ class NotificationService {
     final truncatedMessage = safeSubstring(message, 100);
 
     AppLogging.notifications(
-      '🔔 Calling _notifications.show() for DM from $senderName',
+      'Calling _notifications.show() for DM from $senderName',
     );
     try {
       // Use modulo to keep ID within 32-bit signed int range
@@ -1134,10 +1136,10 @@ class NotificationService {
       );
       await setAppBadgeCount(newBadge);
       AppLogging.notifications(
-        '🔔 Successfully showed DM notification from: $senderName',
+        'Successfully showed DM notification from: $senderName',
       );
     } catch (e) {
-      AppLogging.notifications('🔔 Error showing DM notification: $e');
+      AppLogging.notifications('Error showing DM notification: $e');
       rethrow;
     }
   }
@@ -1239,7 +1241,7 @@ class NotificationService {
     await setAppBadgeCount(newBadge);
 
     AppLogging.notifications(
-      '🔔 Showed channel notification: $senderName in $channelName',
+      'Showed channel notification: $senderName in $channelName',
     );
   }
 
@@ -1267,7 +1269,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping MeshCore DM',
+        'NotificationService not initialized, skipping MeshCore DM',
       );
       return;
     }
@@ -1322,11 +1324,11 @@ class NotificationService {
       );
       await setAppBadgeCount(newBadge);
       AppLogging.notifications(
-        '🔔 Showed MeshCore DM notification from $senderName '
+        'Showed MeshCore DM notification from $senderName '
         '(len=${truncatedMessage.length})',
       );
     } catch (e) {
-      AppLogging.notifications('🔔 Error showing MeshCore DM notification: $e');
+      AppLogging.notifications('Error showing MeshCore DM notification: $e');
       rethrow;
     }
   }
@@ -1393,7 +1395,7 @@ class NotificationService {
     );
     await setAppBadgeCount(newBadge);
     AppLogging.notifications(
-      '🔔 Showed MeshCore channel notification: $senderName in $channelName '
+      'Showed MeshCore channel notification: $senderName in $channelName '
       '(len=${truncatedMessage.length})',
     );
   }
@@ -1427,7 +1429,7 @@ class NotificationService {
       );
     } catch (e) {
       AppLogging.notifications(
-        '🔔 Failed to resolve MeshCore channel sound '
+        'Failed to resolve MeshCore channel sound '
         'channel=$channelId reason=${e.runtimeType}',
       );
       return null;
@@ -1441,7 +1443,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping MeshCore advert',
+        'NotificationService not initialized, skipping MeshCore advert',
       );
       return;
     }
@@ -1496,11 +1498,11 @@ class NotificationService {
         payload: 'meshcore-advert:$pubKeyHex',
       );
       AppLogging.notifications(
-        '🔔 Showed MeshCore advert notification: $contactName ($shortCode)',
+        'Showed MeshCore advert notification: $contactName ($shortCode)',
       );
     } catch (e) {
       AppLogging.notifications(
-        '🔔 Error showing MeshCore advert notification: $e',
+        'Error showing MeshCore advert notification: $e',
       );
       rethrow;
     }
@@ -1521,7 +1523,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, '
+        'NotificationService not initialized, '
         'skipping MeshCore advert batch summary',
       );
       return;
@@ -1564,11 +1566,11 @@ class NotificationService {
         payload: 'meshcore-advert-summary:$peerCount',
       );
       AppLogging.notifications(
-        '🔔 Showed MeshCore advert batch summary: count=$peerCount',
+        'Showed MeshCore advert batch summary: count=$peerCount',
       );
     } catch (e) {
       AppLogging.notifications(
-        '🔔 Error showing MeshCore advert batch summary: $e',
+        'Error showing MeshCore advert batch summary: $e',
       );
       rethrow;
     }
@@ -1611,10 +1613,10 @@ class NotificationService {
       try {
         await _badgeChannel.invokeMethod<void>('clearBadge');
       } catch (e) {
-        AppLogging.notifications('🔔 clearBadge channel error: $e');
+        AppLogging.notifications('clearBadge channel error: $e');
       }
     }
-    AppLogging.notifications('🔔 Badge cleared');
+    AppLogging.notifications('Badge cleared');
   }
 
   /// Set the app icon badge to [count] (unread-message total).
@@ -1631,10 +1633,10 @@ class NotificationService {
       try {
         await _badgeChannel.invokeMethod<void>('setBadge', {'count': clamped});
       } catch (e) {
-        AppLogging.notifications('🔔 setBadge channel error: $e');
+        AppLogging.notifications('setBadge channel error: $e');
       }
     }
-    AppLogging.notifications('🔔 Badge set to $clamped');
+    AppLogging.notifications('Badge set to $clamped');
   }
 
   /// Cancel notification by ID
@@ -1740,7 +1742,7 @@ class NotificationService {
     await setAppBadgeCount(newBadge);
 
     AppLogging.notifications(
-      '🔔 Showed batched DM notification: $messageCount messages from $senderCount senders',
+      'Showed batched DM notification: $messageCount messages from $senderCount senders',
     );
   }
 
@@ -1777,8 +1779,7 @@ class NotificationService {
       final channelNames = byChannel.values
           .map(
             (msgs) =>
-                msgs.first.channelName ??
-                'Channel ${msgs.first.channelIndex}', // lint-allow: hardcoded-string
+                msgs.first.channelName ?? 'Channel ${msgs.first.channelIndex}', // lint-allow: hardcoded-string
           )
           .take(3)
           .join(', ');
@@ -1825,7 +1826,7 @@ class NotificationService {
     await setAppBadgeCount(newBadge);
 
     AppLogging.notifications(
-      '🔔 Showed batched channel notification: $messageCount messages in $channelCount channels',
+      'Showed batched channel notification: $messageCount messages in $channelCount channels',
     );
   }
 
@@ -1889,12 +1890,10 @@ class NotificationService {
       );
 
       AppLogging.notifications(
-        '🔔 Showed batched node notification: $nodeCount nodes',
+        'Showed batched node notification: $nodeCount nodes',
       );
     } catch (e) {
-      AppLogging.notifications(
-        '🔔 Failed to show batched node notification: $e',
-      );
+      AppLogging.notifications('Failed to show batched node notification: $e');
     }
   }
 
@@ -1911,7 +1910,7 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       AppLogging.notifications(
-        '🔔 NotificationService not initialized, skipping bug report notification',
+        'NotificationService not initialized, skipping bug report notification',
       );
       return;
     }
@@ -1919,8 +1918,7 @@ class NotificationService {
     final androidDetails = AndroidNotificationDetails(
       'admin_bug_reports',
       'Bug Reports', // lint-allow: hardcoded-string
-      channelDescription:
-          'Notifications for new user bug reports (admin only)', // lint-allow: hardcoded-string
+      channelDescription: 'Notifications for new user bug reports (admin only)', // lint-allow: hardcoded-string
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
@@ -1958,7 +1956,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed bug report notification for report: $reportId',
+      'Showed bug report notification for report: $reportId',
     );
   }
 
@@ -2017,7 +2015,7 @@ class NotificationService {
       payload: 'sip_dm:$sessionTag',
     );
 
-    AppLogging.notifications('🔔 Showed SIP DM notification from: $peerName');
+    AppLogging.notifications('Showed SIP DM notification from: $peerName');
   }
 
   /// Show notification when a SIP handshake completes and a DM session
@@ -2068,7 +2066,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed SIP handshake notification for: $peerName',
+      'Showed SIP handshake notification for: $peerName',
     );
   }
 
@@ -2120,7 +2118,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed SIP handshake request notification from: $peerName',
+      'Showed SIP handshake request notification from: $peerName',
     );
   }
 
@@ -2229,7 +2227,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed SIP handshake declined notification from: $peerName',
+      'Showed SIP handshake declined notification from: $peerName',
     );
   }
 
@@ -2291,7 +2289,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed SIP peer found notification for: $peerNodeId',
+      'Showed SIP peer found notification for: $peerNodeId',
     );
   }
 
@@ -2369,7 +2367,7 @@ class NotificationService {
     );
 
     AppLogging.notifications(
-      '🔔 Showed SIP Play turn notification for: peer=0x'
+      'Showed SIP Play turn notification for: peer=0x'
       '${peerNodeId.toRadixString(16)} gameType=0x'
       '${gameTypeCode.toRadixString(16)}',
     );

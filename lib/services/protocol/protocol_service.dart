@@ -1812,7 +1812,7 @@ class ProtocolService {
 
     try {
       AppLogging.protocol('PROTOCOL_START_BEGIN instance=$hashCode');
-      AppLogging.debug('🔵 Protocol.start() called - instance: $hashCode');
+      AppLogging.debug('Protocol.start() called - instance: $hashCode');
       AppLogging.protocol('Starting protocol service');
 
       // Defense-in-depth: an existing _dataSubscription at start entry
@@ -1821,8 +1821,8 @@ class ProtocolService {
       // happen now that start() is guarded.
       if (_dataSubscription != null) {
         AppLogging.protocol(
-          '⚠️ PROTOCOL_DATA_SUBSCRIPTION_REPLACED instance=$hashCode '
-          '— orphan _dataSubscription detected on start; cancelling. '
+          'PROTOCOL_DATA_SUBSCRIPTION_REPLACED instance=$hashCode '
+          '- orphan _dataSubscription detected on start; cancelling. '
           'This indicates a prior lifecycle violation.',
         );
         // Breadcrumb so a later crash report carries the lifecycle
@@ -2009,10 +2009,10 @@ class ProtocolService {
         } finally {
           earlyRetryTimer.cancel();
         }
-        AppLogging.debug('✅ Protocol: Configuration was received');
+        AppLogging.debug('Protocol: Configuration was received');
       } catch (e, st) {
-        AppLogging.debug('❌ Protocol: Configuration failed: $e');
-        AppLogging.debug('❌ Protocol: Stacktrace: $st');
+        AppLogging.debug('Protocol: Configuration failed: $e');
+        AppLogging.debug('Protocol: Stacktrace: $st');
         // Convert FlutterBluePlus auth errors to user-friendly message
         final errorStr = e.toString().toLowerCase();
         if (errorStr.contains('authentication') ||
@@ -2106,28 +2106,26 @@ class ProtocolService {
         // First escalation: refresh BLE notification subscription.
         _notificationRefreshRequested = true;
         AppLogging.protocol(
-          '⚠️ DATA_HEALTH: No data received for '
-          '${staleness.inSeconds}s — refreshing BLE notifications',
+          'DATA_HEALTH: No data received for '
+          '${staleness.inSeconds}s - refreshing BLE notifications',
         );
         unawaited(
           _transport.refreshNotifications().catchError((Object e) {
-            AppLogging.protocol(
-              '⚠️ DATA_HEALTH: refreshNotifications failed: $e',
-            );
+            AppLogging.protocol('DATA_HEALTH: refreshNotifications failed: $e');
           }),
         );
 
         // Also send a heartbeat to provoke a device response.
         unawaited(
           _sendHeartbeat().catchError((Object e) {
-            AppLogging.protocol('⚠️ DATA_HEALTH: sendHeartbeat failed: $e');
+            AppLogging.protocol('DATA_HEALTH: sendHeartbeat failed: $e');
           }),
         );
       } else if (staleness > _dataStaleThreshold + _dataStaleDisconnectGrace) {
         // Second escalation: refresh did not help — disconnect.
         AppLogging.protocol(
-          '🔌 DATA_HEALTH: Still no data after notification refresh '
-          '(${staleness.inSeconds}s) — forcing disconnect',
+          'DATA_HEALTH: Still no data after notification refresh '
+          '(${staleness.inSeconds}s) - forcing disconnect',
         );
         _notificationRefreshRequested = false;
         _diagnosticsSupport?.noteDisconnectCause(
@@ -2135,7 +2133,7 @@ class ProtocolService {
         );
         unawaited(
           _transport.disconnect().catchError((Object e) {
-            AppLogging.protocol('⚠️ DATA_HEALTH: disconnect failed: $e');
+            AppLogging.protocol('DATA_HEALTH: disconnect failed: $e');
           }),
         );
       }
@@ -2197,7 +2195,7 @@ class ProtocolService {
         unawaited(
           _transport.refreshNotifications().catchError((Object e) {
             AppLogging.protocol(
-              '⚠️ BLE_RX_STALL_RESUBSCRIBE: refreshNotifications failed: $e',
+              'BLE_RX_STALL_RESUBSCRIBE: refreshNotifications failed: $e',
             );
           }),
         );
@@ -2207,14 +2205,14 @@ class ProtocolService {
     if (staleness > _receiveStallHardThreshold &&
         _smFeatureFlag.bleReceiveStallRecoveryReconnect) {
       AppLogging.protocol(
-        '🔌 BLE_RX_STALL_HARD_RECONNECT: ${staleness.inSeconds}s '
-        'exceeds hard threshold — forcing disconnect for auto-reconnect',
+        'BLE_RX_STALL_HARD_RECONNECT: ${staleness.inSeconds}s '
+        'exceeds hard threshold - forcing disconnect for auto-reconnect',
       );
       _diagnosticsSupport?.noteDisconnectCause('rx_stall_hard_reconnect');
       unawaited(
         _transport.disconnect().catchError((Object e) {
           AppLogging.protocol(
-            '⚠️ BLE_RX_STALL_HARD_RECONNECT: disconnect failed: $e',
+            'BLE_RX_STALL_HARD_RECONNECT: disconnect failed: $e',
           );
         }),
       );
@@ -2259,7 +2257,7 @@ class ProtocolService {
     _rssiPaused = true;
     _rssiTimer?.cancel();
     _rssiTimer = null;
-    AppLogging.protocol('🔋 RSSI polling paused (app backgrounded)');
+    AppLogging.protocol('RSSI polling paused (app backgrounded)');
   }
 
   /// Resume RSSI polling when the app returns to the foreground.
@@ -2269,7 +2267,7 @@ class ProtocolService {
     // Only resume if the service is actively connected.
     if (_transport.isConnected && _configurationComplete) {
       _startRssiPolling();
-      AppLogging.protocol('🔋 RSSI polling resumed (app foregrounded)');
+      AppLogging.protocol('RSSI polling resumed (app foregrounded)');
       // Run an immediate stall check on resume so foreground recovery
       // doesn't wait for the next 30 s tick. iOS may have suspended the
       // out-of-band timer while backgrounded — this is the backstop.
@@ -2477,7 +2475,7 @@ class ProtocolService {
       // --- SECURITY AUDIT LOGGING ---
       if (data.length > 512) {
         AppLogging.protocol(
-          '⚠️ PROTO SECURITY: Oversized transport data: ${data.length} bytes '
+          'PROTO SECURITY: Oversized transport data: ${data.length} bytes '
           '(max expected=512)',
         );
       }
@@ -2629,7 +2627,7 @@ class ProtocolService {
       _consecutiveParseFailures++;
       _totalMalformedPackets++;
       AppLogging.protocol(
-        '⚠️ PROTO SECURITY: Parse failure #$_totalMalformedPackets '
+        'PROTO SECURITY: Parse failure #$_totalMalformedPackets '
         '(consecutive=$_consecutiveParseFailures) '
         'packetLen=${packet.length} '
         'error=$e',
@@ -2680,7 +2678,7 @@ class ProtocolService {
       if (nonce != _nonceInitialConfig) {
         AppLogging.protocol(
           'Handshake: phase-1 nonce mismatch (got $nonce, expected '
-          '$_nonceInitialConfig) — proceeding defensively (firmware may not '
+          '$_nonceInitialConfig) - proceeding defensively (firmware may not '
           'echo wantConfigId)',
         );
       }
@@ -2719,13 +2717,13 @@ class ProtocolService {
       if (nonce != _nonceQueueDrain) {
         AppLogging.protocol(
           'Handshake: phase-2 nonce mismatch (got $nonce, expected '
-          '$_nonceQueueDrain) — proceeding defensively',
+          '$_nonceQueueDrain) - proceeding defensively',
         );
       }
       _handshakePhase = _HandshakePhase.complete;
       _logHandshakePhaseStats(2);
       AppLogging.protocol(
-        'Handshake: queue drain complete — phoneQueue replay done',
+        'Handshake: queue drain complete - phoneQueue replay done',
       );
       AppLogging.protocol(
         'ADMIN_DRAIN: phase2 complete configurationComplete=$_configurationComplete',
@@ -2985,7 +2983,7 @@ class ProtocolService {
 
       if (data.portnum == pn.PortNum.TEXT_MESSAGE_APP) {
         AppLogging.messages(
-          '📨 TEXT_MESSAGE_APP received: packetId=${packet.id}, '
+          'TEXT_MESSAGE_APP received: packetId=${packet.id}, '
           'from=${packet.from.toRadixString(16)}, '
           'to=${packet.to.toRadixString(16)}, '
           'channel=${packet.channel}, '
@@ -3002,14 +3000,14 @@ class ProtocolService {
         final seen = await _dedupeStore.hasSeen(key, ttl: _messagePacketTtl);
         if (seen) {
           AppLogging.messages(
-            '📨 Packet-level dedup BLOCKED: packetId=${packet.id}, '
+            'Packet-level dedup BLOCKED: packetId=${packet.id}, '
             'from=${packet.from.toRadixString(16)}, channel=${packet.channel}',
           );
           return;
         }
 
         AppLogging.messages(
-          '📨 Packet-level dedup PASSED: packetId=${packet.id}, '
+          'Packet-level dedup PASSED: packetId=${packet.id}, '
           'from=${packet.from.toRadixString(16)}',
         );
         await _dedupeStore.markSeen(key, ttl: _messagePacketTtl);
@@ -3401,7 +3399,7 @@ class ProtocolService {
       }
     } catch (e, stack) {
       AppLogging.fileTransfer(
-        '⚠️ Error handling file-transfer packet from '
+        'Error handling file-transfer packet from '
         '${packet.from.toRadixString(16)}: $e\n$stack',
       );
     }
@@ -3472,7 +3470,7 @@ class ProtocolService {
       }
     } catch (e, stack) {
       AppLogging.protocol(
-        '⚠️ Error handling SM packet from '
+        'Error handling SM packet from '
         '${packet.from.toRadixString(16)}: $e\n$stack',
       );
     }
@@ -3910,7 +3908,7 @@ class ProtocolService {
         if (config.hasPosition()) {
           final posConfig = config.position;
           AppLogging.debug(
-            '📍 Received Position config: '
+            'Received Position config: '
             'gpsEnabled=${posConfig.gpsEnabled}, '
             'gpsMode=${posConfig.gpsMode}, '
             'fixedPosition=${posConfig.fixedPosition}, '
@@ -4168,7 +4166,7 @@ class ProtocolService {
         // Handle device metadata response - update node with firmware version
         final metadata = adminMsg.getDeviceMetadataResponse;
         AppLogging.debug(
-          '📋 Received device metadata: firmware="${metadata.firmwareVersion}", '
+          'Received device metadata: firmware="${metadata.firmwareVersion}", '
           'hwModel=${metadata.hwModel.name}',
         );
         AppLogging.protocol(
@@ -4252,10 +4250,10 @@ class ProtocolService {
         // Handle response to getOwnerRequest - contains remote node's User info
         final user = adminMsg.getOwnerResponse;
         AppLogging.protocol(
-          '🔑 📥 Received getOwnerResponse from ${packet.from.toRadixString(16)}: ${user.longName} (${user.shortName})',
+          'Received getOwnerResponse from ${packet.from.toRadixString(16)}: ${user.longName} (${user.shortName})',
         );
         AppLogging.protocol(
-          '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
+          'Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
         );
         AppLogging.protocol(
           'Received owner info from ${packet.from}: ${user.longName}',
@@ -4301,7 +4299,7 @@ class ProtocolService {
           _nodes[packet.from] = updatedNode;
           _nodeController.add(updatedNode);
           AppLogging.protocol(
-            '🔑 ✅ Updated node ${packet.from.toRadixString(16)} with fresh user info',
+            'Updated node ${packet.from.toRadixString(16)} with fresh user info',
           );
         } else {
           // Create new node entry
@@ -4332,7 +4330,7 @@ class ProtocolService {
           _nodes[packet.from] = newNode;
           _nodeController.add(newNode);
           AppLogging.protocol(
-            '🔑 ✅ Created new node ${packet.from.toRadixString(16)} from owner response',
+            'Created new node ${packet.from.toRadixString(16)} from owner response',
           );
         }
       }
@@ -4348,7 +4346,7 @@ class ProtocolService {
     if (config.hasLora()) {
       final loraConfig = config.lora;
       AppLogging.debug(
-        '📡 FromRadio LoRa config: region=${loraConfig.region.name}, '
+        'FromRadio LoRa config: region=${loraConfig.region.name}, '
         'modemPreset=${loraConfig.modemPreset.name}',
       );
       _currentRegion = loraConfig.region;
@@ -4361,7 +4359,7 @@ class ProtocolService {
     if (config.hasPosition()) {
       final posConfig = config.position;
       AppLogging.debug(
-        '📍 FromRadio Position config: gpsEnabled=${posConfig.gpsEnabled}, '
+        'FromRadio Position config: gpsEnabled=${posConfig.gpsEnabled}, '
         'gpsMode=${posConfig.gpsMode}',
       );
       _currentPositionConfig = posConfig;
@@ -4423,11 +4421,11 @@ class ProtocolService {
     // Log with appropriate level
     if (notification.level == pb.LogRecord_Level.ERROR ||
         notification.level == pb.LogRecord_Level.CRITICAL) {
-      AppLogging.protocol('⚠️ Client Notification [ERROR]: $message');
+      AppLogging.protocol('Client Notification [ERROR]: $message');
     } else if (notification.level == pb.LogRecord_Level.WARNING) {
-      AppLogging.protocol('⚠️ Client Notification [WARNING]: $message');
+      AppLogging.protocol('Client Notification [WARNING]: $message');
     } else {
-      AppLogging.protocol('ℹ️ Client Notification [$levelName]: $message');
+      AppLogging.protocol('Client Notification [$levelName]: $message');
     }
 
     // Sanitize the protobuf message before emitting so the UI never
@@ -4443,7 +4441,7 @@ class ProtocolService {
   /// Handle DeviceMetadata from FromRadio (sent during initial config)
   void _handleFromRadioMetadata(pb.DeviceMetadata metadata) {
     AppLogging.debug(
-      '📋 FromRadio metadata: firmware="${metadata.firmwareVersion}", '
+      'FromRadio metadata: firmware="${metadata.firmwareVersion}", '
       'hwModel=${metadata.hwModel.name}',
     );
     AppLogging.protocol(
@@ -4485,13 +4483,13 @@ class ProtocolService {
       _nodes[_myNodeNum!] = updatedNode;
       _nodeController.add(updatedNode);
       AppLogging.debug(
-        '📋 Updated node $_myNodeNum with FromRadio metadata: '
+        'Updated node $_myNodeNum with FromRadio metadata: '
         'firmware="${updatedNode.firmwareVersion}", hw="${updatedNode.hardwareModel}"',
       );
     } else {
       // myNodeNum not set yet - store metadata for later
       AppLogging.debug(
-        '📋 FromRadio metadata received before myNodeNum set - caching',
+        'FromRadio metadata received before myNodeNum set - caching',
       );
       _pendingMetadata = metadata;
     }
@@ -4629,7 +4627,7 @@ class ProtocolService {
 
       if (message.isEmoji) {
         AppLogging.protocol(
-          '🏷️ Incoming tapback: emoji="${message.text}", '
+          'Incoming tapback: emoji="${message.text}", '
           'replyId=${message.replyId}, from=${message.from}, '
           'packetId=${message.packetId}, '
           'data.emoji=${data.emoji}, data.replyId=${data.replyId}',
@@ -4712,7 +4710,7 @@ class ProtocolService {
       // DM peer (packet.from != packet.to). Only meaningful when delivered.
       final realAck = delivered && packet.from != packet.to;
       AppLogging.messages(
-        '🛰️ Ack classified: requestId=$requestId delivered=$delivered '
+        'Ack classified: requestId=$requestId delivered=$delivered '
         'realAck=$realAck from=${packet.from} to=${packet.to}',
       );
 
@@ -4861,7 +4859,7 @@ class ProtocolService {
           if (ProtocolDebugFlags.logTelemetry) {
             AppLogging.protocol(
               'EnvironmentMetrics from ${packet.from}: '
-              'temp=${envMetrics.hasTemperature() ? envMetrics.temperature : "N/A"}°C, '
+              'temp=${envMetrics.hasTemperature() ? envMetrics.temperature : "N/A"}degC, '
               'humidity=${envMetrics.hasRelativeHumidity() ? envMetrics.relativeHumidity : "N/A"}%, '
               'pressure=${envMetrics.hasBarometricPressure() ? envMetrics.barometricPressure : "N/A"}hPa',
             );
@@ -5305,7 +5303,7 @@ class ProtocolService {
 
       if (ProtocolDebugFlags.logPosition) {
         AppLogging.debug(
-          '📍 POSITION_APP from !${packet.from.toRadixString(16)}: '
+          'POSITION_APP from !${packet.from.toRadixString(16)}: '
           'latI=${position.latitudeI}, lngI=${position.longitudeI}, '
           'lat=${position.latitudeI / 1e7}, lng=${position.longitudeI / 1e7}, '
           'isApplePark=$isApplePark, valid=$hasValidPosition, '
@@ -5315,7 +5313,7 @@ class ProtocolService {
 
       if (node != null && hasValidPosition) {
         AppLogging.protocol(
-          '✅ UPDATING NODE ${node.displayName} (!${packet.from.toRadixString(16)}) WITH VALID POSITION: '
+          'UPDATING NODE ${node.displayName} (!${packet.from.toRadixString(16)}) WITH VALID POSITION: '
           '${position.latitudeI / 1e7}, ${position.longitudeI / 1e7}',
         );
         final updatedNode = node.copyWith(
@@ -5344,7 +5342,7 @@ class ProtocolService {
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
         AppLogging.protocol(
-          '✅ Node ${updatedNode.displayName} now hasPosition=${updatedNode.hasPosition}',
+          'Node ${updatedNode.displayName} now hasPosition=${updatedNode.hasPosition}',
         );
       } else if (node != null) {
         // Update lastHeard even if position is invalid
@@ -5426,10 +5424,10 @@ class ProtocolService {
       final shortName = _sanitizedShortName(user.shortName);
 
       AppLogging.protocol(
-        '🔑 📥 Received node info from ${packet.from.toRadixString(16)}: $longName ($shortName)',
+        'Received node info from ${packet.from.toRadixString(16)}: $longName ($shortName)',
       );
       AppLogging.protocol(
-        '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
+        'Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
       );
       AppLogging.protocol('Node info from ${packet.from}: $longName');
 
@@ -5779,18 +5777,18 @@ class ProtocolService {
     // DEBUG: Log position status with debugPrint so it shows in console
     if (ProtocolDebugFlags.logPosition) {
       AppLogging.debug(
-        '📍 NodeInfo ${nodeInfo.num.toRadixString(16)}: hasPosition=${nodeInfo.hasPosition()}',
+        'NodeInfo ${nodeInfo.num.toRadixString(16)}: hasPosition=${nodeInfo.hasPosition()}',
       );
       if (nodeInfo.hasPosition()) {
         final pos = nodeInfo.position;
         AppLogging.debug(
-          '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} POSITION: '
+          'NodeInfo ${nodeInfo.num.toRadixString(16)} POSITION: '
           'latI=${pos.latitudeI}, lngI=${pos.longitudeI}, '
           'lat=${pos.latitudeI / 1e7}, lng=${pos.longitudeI / 1e7}',
         );
       } else {
         AppLogging.debug(
-          '📍 NodeInfo ${nodeInfo.num.toRadixString(16)} has NO position data',
+          'NodeInfo ${nodeInfo.num.toRadixString(16)} has NO position data',
         );
       }
     }
@@ -5859,7 +5857,7 @@ class ProtocolService {
         final driftSeconds = lastHeardEpoch - nowEpoch;
         AppLogging.protocol(
           'NodeInfo ${nodeInfo.num}: implausible lastHeard=$lastHeardEpoch '
-          '(drift=${driftSeconds}s vs phone) — preserving prior '
+          '(drift=${driftSeconds}s vs phone) - preserving prior '
           '${deviceLastHeard?.toIso8601String() ?? 'null'}',
         );
       }
@@ -5872,7 +5870,7 @@ class ProtocolService {
       // otherwise leave it null.
       deviceLastHeard = existingNode?.lastHeard;
       AppLogging.protocol(
-        'NodeInfo ${nodeInfo.num}: no device lastHeard — preserving prior '
+        'NodeInfo ${nodeInfo.num}: no device lastHeard - preserving prior '
         '${deviceLastHeard?.toIso8601String() ?? 'null'}',
       );
     }
@@ -5934,7 +5932,7 @@ class ProtocolService {
 
     if (nodeInfo.hasPosition()) {
       AppLogging.protocol(
-        '📍 NodeInfo ${nodeInfo.num} position check: latI=${nodeInfo.position.latitudeI}, '
+        'NodeInfo ${nodeInfo.num} position check: latI=${nodeInfo.position.latitudeI}, '
         'lngI=${nodeInfo.position.longitudeI}, lat=${nodeInfo.position.latitudeI / 1e7}, '
         'lng=${nodeInfo.position.longitudeI / 1e7}, valid=$hasValidPosition',
       );
@@ -6111,13 +6109,13 @@ class ProtocolService {
   /// Handle channel configuration
   void _handleChannel(channel_pb.Channel channel) {
     AppLogging.debug(
-      '📡 Channel ${channel.index} RAW received: '
+      'Channel ${channel.index} RAW received: '
       'hasSettings=${channel.hasSettings()}, role=${channel.role.name}',
     );
     if (channel.hasSettings()) {
       final settings = channel.settings;
       AppLogging.debug(
-        '📡 Channel ${channel.index} settings: '
+        'Channel ${channel.index} settings: '
         'name="${settings.name}", psk=${settings.psk.length} bytes, '
         'uplink=${settings.uplinkEnabled}, downlink=${settings.downlinkEnabled}, '
         'hasModuleSettings=${settings.hasModuleSettings()}',
@@ -6127,18 +6125,18 @@ class ProtocolService {
       // because proto3 returns false for sub-messages with all default values
       final mod = settings.moduleSettings;
       AppLogging.debug(
-        '📡 Channel ${channel.index} moduleSettings (always read): '
+        'Channel ${channel.index} moduleSettings (always read): '
         'positionPrecision=${mod.positionPrecision}, '
         'isMuted=${mod.isMuted}',
       );
 
       if (settings.hasModuleSettings()) {
         AppLogging.debug(
-          '📡 Channel ${channel.index} has moduleSettings marker set',
+          'Channel ${channel.index} has moduleSettings marker set',
         );
       } else {
         AppLogging.debug(
-          '📡 Channel ${channel.index} has NO moduleSettings marker',
+          'Channel ${channel.index} has NO moduleSettings marker',
         );
       }
     }
@@ -6167,7 +6165,7 @@ class ProtocolService {
       // Always read moduleSettings.positionPrecision directly
       positionPrecision = channel.settings.moduleSettings.positionPrecision;
       AppLogging.debug(
-        '📡 Channel ${channel.index} positionPrecision=$positionPrecision '
+        'Channel ${channel.index} positionPrecision=$positionPrecision '
         '(hasModuleSettings=${channel.settings.hasModuleSettings()})',
       );
     }
@@ -6341,7 +6339,7 @@ class ProtocolService {
 
     if (!_smFeatureFlag.meshtasticPhase2ExtendedRetryEnabled) {
       AppLogging.protocol(
-        'Handshake: queue-drain exhausted $maxAttempts attempts — giving up. '
+        'Handshake: queue-drain exhausted $maxAttempts attempts - giving up. '
         'Phase-2 may complete late; handshake state stays `awaitingQueueDrain` '
         'and a stray configCompleteId(69421) will still transition to '
         'complete.',
@@ -6366,7 +6364,7 @@ class ProtocolService {
     final schedule =
         _queueDrainExtendedScheduleOverride ?? _kQueueDrainExtendedSchedule;
     AppLogging.protocol(
-      'Handshake: queue-drain exhausted $maxAttempts fast attempts — '
+      'Handshake: queue-drain exhausted $maxAttempts fast attempts - '
       'entering extended retry (${schedule.length} attempts)',
     );
     for (var i = 0; i < schedule.length; i++) {
@@ -6381,7 +6379,7 @@ class ProtocolService {
 
     if (_shouldAbortQueueDrain(generation)) return;
     AppLogging.protocol(
-      'Handshake: queue-drain extended retries exhausted — surfacing '
+      'Handshake: queue-drain extended retries exhausted - surfacing '
       'degraded readiness. A stray configCompleteId($_nonceQueueDrain) can '
       'still complete phase-2.',
     );
@@ -6463,7 +6461,7 @@ class ProtocolService {
     } on TimeoutException {
       AppLogging.protocol(
         'Handshake: queue-drain attempt $attemptLabel timed out '
-        'after ${timeout.inMilliseconds}ms — retrying with fresh heartbeat',
+        'after ${timeout.inMilliseconds}ms - retrying with fresh heartbeat',
       );
       // Clear the completer so _handleConfigCompleteId doesn't complete a
       // stale one if the firmware's laggy response finally arrives after
@@ -6628,7 +6626,7 @@ class ProtocolService {
       AppLogging.protocol('Sending message to $to: $text');
       if (isEmoji) {
         AppLogging.protocol(
-          '🏷️ Tapback send: emoji=$text, replyId=$replyId, to=$to, channel=$channel',
+          'Tapback send: emoji=$text, replyId=$replyId, to=$to, channel=$channel',
         );
       }
 
@@ -6667,7 +6665,7 @@ class ProtocolService {
       }
 
       AppLogging.protocol(
-        '🏷️ Data fields: portnum=${data.portnum}, '
+        'Data fields: portnum=${data.portnum}, '
         'emoji=${data.hasEmoji() ? data.emoji : "unset"}, '
         'replyId=${data.hasReplyId() ? data.replyId : "unset"}, '
         'payloadLen=${data.payload.length}',
@@ -6690,7 +6688,7 @@ class ProtocolService {
         pkiAttached: pkiAttached,
       );
       AppLogging.protocol(
-        '📤 Outbound message: packetId=$packetId, '
+        'Outbound message: packetId=$packetId, '
         'to=0x${to.toRadixString(16)}, channel=$channel, '
         'wantAck=$wantAck, pkiEncrypted=$pkiAttached, '
         'pkiSource=${_pkiSourceLabel(callerPkiKey: pkiPublicKey, effectivePkiKey: effectivePkiKey)}, '
@@ -6704,7 +6702,7 @@ class ProtocolService {
       await _transport.send(_prepareForSend(bytes));
 
       AppLogging.protocol(
-        '📤 Sent ${bytes.length} bytes to node via '
+        'Sent ${bytes.length} bytes to node via '
         '${_transport.requiresFraming ? "USB" : "BLE"}',
       );
 
@@ -6744,7 +6742,7 @@ class ProtocolService {
 
       if (isEmoji) {
         AppLogging.protocol(
-          '🏷️ Tapback message object: id=${message.id}, packetId=$packetId, '
+          'Tapback message object: id=${message.id}, packetId=$packetId, '
           'replyId=${message.replyId}, isEmoji=${message.isEmoji}',
         );
       }
@@ -7005,7 +7003,7 @@ class ProtocolService {
         );
       } else {
         AppLogging.sip(
-          'SIP_STARTUP: startup buffer full — discarding early frame',
+          'SIP_STARTUP: startup buffer full - discarding early frame',
         );
       }
       return;
@@ -7032,7 +7030,7 @@ class ProtocolService {
 
     final frame = SipCodec.decode(payload);
     if (frame == null) {
-      AppLogging.sip('SIP_RX: decode failed — dropping');
+      AppLogging.sip('SIP_RX: decode failed - dropping');
       return;
     }
 
@@ -7115,7 +7113,7 @@ class ProtocolService {
       case SipMessageType.txCancel:
         AppLogging.sip(
           'SIP_RX: SIP-3 transfer msgType=${frame.msgType.name} '
-          '— deferred in v0.1, ignoring',
+          '- deferred in v0.1, ignoring',
         );
 
       // ----- MRRP -----
@@ -7227,7 +7225,7 @@ class ProtocolService {
         // drops so operators see the signal without per-frame spam.
         if (_overlayStartupBufferDrops >= _overlayStartupBufferNextLogAt) {
           AppLogging.overlay(
-            'OVERLAY_STARTUP: buffer full — '
+            'OVERLAY_STARTUP: buffer full - '
             'total drops=$_overlayStartupBufferDrops '
             '(unattached or flag off)',
           );
@@ -7307,7 +7305,7 @@ class ProtocolService {
         );
       } else {
         AppLogging.mrrp(
-          'MRRP_STARTUP: startup buffer full — discarding mrrpData frame',
+          'MRRP_STARTUP: startup buffer full - discarding mrrpData frame',
         );
       }
       return;
@@ -7638,7 +7636,7 @@ class ProtocolService {
   ) {
     final hs = _sipHandshake;
     if (hs == null) {
-      AppLogging.sip('SIP_RX: no SipHandshakeManager — dropping HS_HELLO');
+      AppLogging.sip('SIP_RX: no SipHandshakeManager - dropping HS_HELLO');
       return;
     }
 
@@ -7685,7 +7683,7 @@ class ProtocolService {
         final ageGroup = prefs.getString('age_eligibility_age_group') ?? '';
         if (ageGroup == 'under13' || ageGroup == 'teen') {
           AppLogging.sip(
-            'SIP_HS: suppressing incoming HS_HELLO — minor contact restriction',
+            'SIP_HS: suppressing incoming HS_HELLO - minor contact restriction',
           );
           hs.declineHandshake(senderNodeId);
           return;
@@ -7927,7 +7925,7 @@ class ProtocolService {
   void _handleSipIdentityReq(int senderNodeId, SipFrame frame) {
     final identity = _sipIdentity;
     if (identity == null) {
-      AppLogging.sip('SIP_RX: no SipIdentityHandler — dropping ID_REQ');
+      AppLogging.sip('SIP_RX: no SipIdentityHandler - dropping ID_REQ');
       return;
     }
 
@@ -7947,7 +7945,7 @@ class ProtocolService {
   ) {
     final identity = _sipIdentity;
     if (identity == null) {
-      AppLogging.sip('SIP_RX: no SipIdentityHandler — dropping ID_CLAIM');
+      AppLogging.sip('SIP_RX: no SipIdentityHandler - dropping ID_CLAIM');
       return;
     }
 
@@ -7991,7 +7989,7 @@ class ProtocolService {
   void _handleSipDmMsg(SipFrame frame) {
     final dm = _sipDm;
     if (dm == null) {
-      AppLogging.sip('SIP_RX: no SipDmManager — dropping DM_MSG');
+      AppLogging.sip('SIP_RX: no SipDmManager - dropping DM_MSG');
       return;
     }
 
@@ -8021,7 +8019,7 @@ class ProtocolService {
   void _handleSipDmTyping(SipFrame frame) {
     final dm = _sipDm;
     if (dm == null) {
-      AppLogging.sip('SIP_RX: no SipDmManager — dropping DM_TYPING');
+      AppLogging.sip('SIP_RX: no SipDmManager - dropping DM_TYPING');
       return;
     }
 
@@ -8031,7 +8029,7 @@ class ProtocolService {
   void _handleSipDmReaction(SipFrame frame) {
     final dm = _sipDm;
     if (dm == null) {
-      AppLogging.sip('SIP_RX: no SipDmManager — dropping DM_REACTION');
+      AppLogging.sip('SIP_RX: no SipDmManager - dropping DM_REACTION');
       return;
     }
 
@@ -8041,7 +8039,7 @@ class ProtocolService {
   void _handleSipDmDelete(SipFrame frame) {
     final dm = _sipDm;
     if (dm == null) {
-      AppLogging.sip('SIP_RX: no SipDmManager — dropping DM_DELETE');
+      AppLogging.sip('SIP_RX: no SipDmManager - dropping DM_DELETE');
       return;
     }
 
@@ -8051,7 +8049,7 @@ class ProtocolService {
   void _handleSipDmClose(SipFrame frame) {
     final dm = _sipDm;
     if (dm == null) {
-      AppLogging.sip('SIP_RX: no SipDmManager — dropping DM_CLOSE');
+      AppLogging.sip('SIP_RX: no SipDmManager - dropping DM_CLOSE');
       return;
     }
 
@@ -8330,7 +8328,7 @@ class ProtocolService {
         pkiAttached: pkiAttached,
       );
       AppLogging.protocol(
-        '📤 Outbound message (pre-tracked): packetId=$packetId, '
+        'Outbound message (pre-tracked): packetId=$packetId, '
         'to=0x${to.toRadixString(16)}, channel=$channel, '
         'wantAck=$wantAck, pkiEncrypted=$pkiAttached, '
         'pkiSource=${_pkiSourceLabel(callerPkiKey: pkiPublicKey, effectivePkiKey: effectivePkiKey)}, '
@@ -8344,7 +8342,7 @@ class ProtocolService {
       await _transport.send(_prepareForSend(bytes));
 
       AppLogging.protocol(
-        '📤 Sent ${bytes.length} bytes to node via '
+        'Sent ${bytes.length} bytes to node via '
         '${_transport.requiresFraming ? "USB" : "BLE"}',
       );
 
@@ -8426,7 +8424,7 @@ class ProtocolService {
       AppLogging.protocol(
         'Remote admin to ${dest.toRadixString(16)}: '
         '${session == null ? "no session passkey" : "session expired"} '
-        '— sending without passkey',
+        '- sending without passkey',
       );
       return;
     }
@@ -8529,7 +8527,7 @@ class ProtocolService {
           _nodes[_myNodeNum!] = updatedNode;
           _nodeController.add(updatedNode);
           AppLogging.debug(
-            '📍 Updated MY node position locally: $latitude, $longitude',
+            'Updated MY node position locally: $latitude, $longitude',
           );
         }
       }
@@ -8712,13 +8710,13 @@ class ProtocolService {
   Future<void> requestNodeInfo(int nodeNum) async {
     try {
       AppLogging.protocol(
-        '🔑 Sending our User info to trigger key exchange with ${nodeNum.toRadixString(16)}',
+        'Sending our User info to trigger key exchange with ${nodeNum.toRadixString(16)}',
       );
 
       final user = _buildOwnUserPayload();
 
       AppLogging.protocol(
-        '🔑 Sending: ${user.longName} (${user.shortName}) '
+        'Sending: ${user.longName} (${user.shortName}) '
         'pubkey=${user.publicKey.length}B',
       );
 
@@ -8747,11 +8745,11 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
       AppLogging.protocol(
-        '🔑 ✅ Sent NODEINFO with wantResponse to ${nodeNum.toRadixString(16)}',
+        'Sent NODEINFO with wantResponse to ${nodeNum.toRadixString(16)}',
       );
       AppLogging.protocol('Sent NODEINFO request to $nodeNum');
     } catch (e) {
-      AppLogging.protocol('🔑 ❌ Error requesting node info: $e');
+      AppLogging.protocol('Error requesting node info: $e');
       AppLogging.protocol('Error requesting node info: $e');
       rethrow;
     }
@@ -8760,7 +8758,7 @@ class ProtocolService {
   /// Broadcast our User info to all nodes (triggers mesh-wide key exchange)
   Future<void> broadcastUserInfo() async {
     try {
-      AppLogging.protocol('🔑 Broadcasting our User info to mesh');
+      AppLogging.protocol('Broadcasting our User info to mesh');
 
       final user = _buildOwnUserPayload();
 
@@ -8779,9 +8777,9 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
-      AppLogging.protocol('🔑 ✅ Broadcast User info to mesh');
+      AppLogging.protocol('Broadcast User info to mesh');
     } catch (e) {
-      AppLogging.protocol('🔑 ❌ Error broadcasting user info: $e');
+      AppLogging.protocol('Error broadcasting user info: $e');
       AppLogging.protocol('Error broadcasting user info: $e');
     }
   }
@@ -9009,7 +9007,7 @@ class ProtocolService {
 
     try {
       AppLogging.debug(
-        '📡 Setting channel ${config.index}: "${config.name}" (role: ${config.role})',
+        'Setting channel ${config.index}: "${config.name}" (role: ${config.role})',
       );
 
       final channelSettings = channel_pb.ChannelSettings()
@@ -9044,7 +9042,7 @@ class ProtocolService {
         ..role = role;
 
       AppLogging.debug(
-        '📡 Channel protobuf: index=${channel.index}, role=${channel.role.name}, '
+        'Channel protobuf: index=${channel.index}, role=${channel.role.name}, '
         'name="${channel.settings.name}", psk=${channel.settings.psk.length} bytes',
       );
       AppLogging.channels(
@@ -9249,7 +9247,7 @@ class ProtocolService {
 
         // Owner config writes also trigger device reboot.
         AppLogging.protocol(
-          'setOwnerConfig: Emitting localConfigWrite — device reboot expected',
+          'setOwnerConfig: Emitting localConfigWrite - device reboot expected',
         );
         _localConfigWriteController.add(null);
       }
@@ -9543,7 +9541,7 @@ class ProtocolService {
   Future<void> _requestAllChannelDetails() async {
     if (_myNodeNum == null || !_transport.isConnected) return;
 
-    AppLogging.debug('📡 Requesting full channel details for all channels...');
+    AppLogging.debug('Requesting full channel details for all channels...');
 
     // Request channels 0-7 (Meshtastic supports up to 8 channels)
     for (var i = 0; i < 8; i++) {
@@ -9552,7 +9550,7 @@ class ProtocolService {
         // Small delay between requests to avoid overwhelming the device
         await Future.delayed(const Duration(milliseconds: 50));
       } catch (e) {
-        AppLogging.debug('📡 Error requesting channel $i: $e');
+        AppLogging.debug('Error requesting channel $i: $e');
       }
     }
   }
@@ -9562,7 +9560,7 @@ class ProtocolService {
   /// to avoid sending zero which protobufs treats as not present
   Future<void> _requestChannelDetails(int channelIndex) async {
     try {
-      AppLogging.debug('📡 Requesting channel $channelIndex details');
+      AppLogging.debug('Requesting channel $channelIndex details');
 
       // Protocol uses 1-based indexing: send channelIndex + 1
       final adminMsg = admin.AdminMessage()
@@ -9903,7 +9901,7 @@ class ProtocolService {
         AppLogging.protocol('NODEDB_RESET_REFRESH_REQUESTED');
       } catch (e) {
         AppLogging.protocol(
-          'NODEDB_RESET_REFRESH_FAILED error=$e — '
+          'NODEDB_RESET_REFRESH_FAILED error=$e - '
           'app cache will rely on passive peer rebroadcasts until '
           'next manual connect',
         );
@@ -10425,7 +10423,7 @@ class ProtocolService {
     );
     if (isRemote) {
       AppLogging.protocol(
-        '🔧 Remote Admin: Requesting ${configType.name} from ${dest.toRadixString(16)}',
+        'Remote Admin: Requesting ${configType.name} from ${dest.toRadixString(16)}',
       );
     }
 
@@ -10462,13 +10460,13 @@ class ProtocolService {
     final isRemote = dest != _myNodeNum;
 
     AppLogging.protocol(
-      'setConfig: Setting config${isRemote ? ' on remote node $dest' : ''} — '
+      'setConfig: Setting config${isRemote ? ' on remote node $dest' : ''} - '
       'hasDevice=${config.hasDevice()}, hasLora=${config.hasLora()}, '
       'hasPosition=${config.hasPosition()}, hasPower=${config.hasPower()}',
     );
     if (isRemote) {
       AppLogging.protocol(
-        '🔧 Remote Admin: Setting config on ${dest.toRadixString(16)}',
+        'Remote Admin: Setting config on ${dest.toRadixString(16)}',
       );
     }
 
@@ -10492,7 +10490,7 @@ class ProtocolService {
     final outBytes = _prepareForSend(toRadio.writeToBuffer());
 
     AppLogging.protocol(
-      'setConfig: sending admin message — '
+      'setConfig: sending admin message - '
       'packetId=$packetId, adminPayload=${adminBytes.length} bytes, '
       'toRadio=${outBytes.length} bytes, from=${_myNodeNum!}, to=$dest',
     );
@@ -10500,7 +10498,7 @@ class ProtocolService {
     await _transport.send(outBytes);
 
     AppLogging.protocol(
-      'setConfig: transport.send completed — packet $packetId delivered to BLE stack',
+      'setConfig: transport.send completed - packet $packetId delivered to BLE stack',
     );
 
     // Optimistically update the local cache and emit to streams so config
@@ -10517,7 +10515,7 @@ class ProtocolService {
       // The device will reboot to apply the change, so the reconnect flow
       // should enter recovery mode (increased patience + logical matching).
       AppLogging.protocol(
-        'setConfig: Emitting localConfigWrite — device reboot expected',
+        'setConfig: Emitting localConfigWrite - device reboot expected',
       );
       _localConfigWriteController.add(null);
     } else if (config.hasLora()) {
@@ -10536,7 +10534,7 @@ class ProtocolService {
     );
     if (config.hasDevice()) {
       AppLogging.protocol(
-        '_applySavedConfigToCache: caching device config — '
+        '_applySavedConfigToCache: caching device config - '
         'role=${config.device.role.name} (value=${config.device.role.value}), '
         'emitting to deviceConfigController',
       );
@@ -10697,7 +10695,7 @@ class ProtocolService {
       deviceConfig = config_pb.Config_DeviceConfig();
       AppLogging.protocol(
         'setDeviceConfig: ${isLocalTarget ? 'no cached config' : 'remote target'} '
-        '— building from scratch',
+        '- building from scratch',
       );
     }
 
@@ -10717,7 +10715,7 @@ class ProtocolService {
 
     // Verify the protobuf was built correctly before sending
     AppLogging.protocol(
-      'setDeviceConfig proto verification — '
+      'setDeviceConfig proto verification - '
       'deviceConfig.role=${deviceConfig.role.name} (value=${deviceConfig.role.value}), '
       'deviceConfig bytes=${deviceConfig.writeToBuffer().length}',
     );
@@ -10725,7 +10723,7 @@ class ProtocolService {
     final config = config_pb.Config()..device = deviceConfig;
 
     AppLogging.protocol(
-      'setDeviceConfig Config wrapper — '
+      'setDeviceConfig Config wrapper - '
       'config.hasDevice()=${config.hasDevice()}, '
       'config.device.role=${config.device.role.name}, '
       'total config bytes=${config.writeToBuffer().length}',
@@ -10974,7 +10972,7 @@ class ProtocolService {
     );
     if (isRemote) {
       AppLogging.protocol(
-        '🔧 Remote Admin: Requesting ${moduleType.name} from ${dest.toRadixString(16)}',
+        'Remote Admin: Requesting ${moduleType.name} from ${dest.toRadixString(16)}',
       );
     }
 
@@ -11018,7 +11016,7 @@ class ProtocolService {
     );
     if (isRemote) {
       AppLogging.protocol(
-        '🔧 Remote Admin: Setting module config on ${dest.toRadixString(16)}',
+        'Remote Admin: Setting module config on ${dest.toRadixString(16)}',
       );
     }
 
@@ -11046,7 +11044,7 @@ class ProtocolService {
 
       // Module config writes also trigger device reboot.
       AppLogging.protocol(
-        'setModuleConfig: Emitting localConfigWrite — device reboot expected',
+        'setModuleConfig: Emitting localConfigWrite - device reboot expected',
       );
       _localConfigWriteController.add(null);
     }

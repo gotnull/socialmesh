@@ -313,7 +313,7 @@ class _NodeDexConstellationScreenState
 
   void _openDetail(int nodeNum) {
     AppLogging.nodeDex(
-      'Constellation → detail for '
+      'Constellation -> detail for '
       '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}',
     );
     Navigator.of(context).push(

@@ -50,7 +50,7 @@ class MrrpServicePet implements MrrpServiceHandler {
   Future<MrrpFrame> handleRequest(MrrpFrame request, int senderNodeId) async {
     if (!isPetSharingEnabled) {
       AppLogging.mrrp(
-        'MRRP_SERVICE: pet.v1 request rejected — '
+        'MRRP_SERVICE: pet.v1 request rejected - '
         'pet sharing disabled', // lint-allow: hardcoded-string
       );
       return _buildError(request, MrrpStatusCode.unauthorized);

@@ -97,7 +97,7 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
 
       if (response.statusCode == 401) {
         AppLogging.app(
-          'OpenAI: 401 Unauthorized — response body: ${response.body}',
+          'OpenAI: 401 Unauthorized - response body: ${response.body}',
         );
         // Distinguish between invalid key and missing permissions
         final isMissingScope = response.body.contains(
@@ -113,7 +113,7 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
 
       if (response.statusCode == 403) {
         AppLogging.app(
-          'OpenAI: 403 Forbidden — response body: ${response.body}',
+          'OpenAI: 403 Forbidden - response body: ${response.body}',
         );
         final isModelNotFound = response.body.contains(
           'model_not_found',
@@ -127,7 +127,7 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
       }
 
       if (response.statusCode == 429) {
-        AppLogging.app('OpenAI: 429 Rate Limited — ${response.body}');
+        AppLogging.app('OpenAI: 429 Rate Limited - ${response.body}');
         throw const TranslationError(
           type: TranslationErrorType.rateLimited,
           message: 'Rate limit exceeded', // lint-allow: hardcoded-string
@@ -136,12 +136,11 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
 
       if (response.statusCode != 200) {
         AppLogging.app(
-          'OpenAI: unexpected ${response.statusCode} — ${response.body}',
+          'OpenAI: unexpected ${response.statusCode} - ${response.body}',
         );
         throw TranslationError(
           type: TranslationErrorType.apiError,
-          message:
-              'API returned ${response.statusCode}', // lint-allow: hardcoded-string
+          message: 'API returned ${response.statusCode}', // lint-allow: hardcoded-string
         );
       }
 
@@ -149,7 +148,7 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
       final choices = json['choices'] as List?;
       if (choices == null || choices.isEmpty) {
         AppLogging.app(
-          'OpenAI: 200 but empty choices — full response: ${response.body}',
+          'OpenAI: 200 but empty choices - full response: ${response.body}',
         );
         throw const TranslationError(
           type: TranslationErrorType.apiError,
@@ -179,8 +178,8 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
       }
 
       AppLogging.app(
-        'OpenAI: success — '
-        '"${request.text}" → "$translatedText" '
+        'OpenAI: success - '
+        '"${request.text}" -> "$translatedText" '
         '(${request.targetLanguage}, detected=$detectedLanguage)',
       );
 

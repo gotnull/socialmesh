@@ -687,7 +687,7 @@ class SipDmRouter {
       // plaintext fallback so the message still goes out.
       AppLogging.sip(
         'SIP_DM: secure send rejected mid-flight linkId=0x'
-        '${linkId.toRadixString(16)} — falling back to plaintext',
+        '${linkId.toRadixString(16)} - falling back to plaintext',
       );
       return _sendPlaintextText(
         sessionTag: sessionTag,
@@ -751,7 +751,7 @@ class SipDmRouter {
     );
     if (!sent) {
       AppLogging.sip(
-        'SIP_DM: secure reaction rejected mid-flight — plaintext fallback',
+        'SIP_DM: secure reaction rejected mid-flight - plaintext fallback',
       );
       return _sendPlaintextReaction(
         sessionTag: sessionTag,
@@ -805,7 +805,7 @@ class SipDmRouter {
     if (!sent) {
       AppLogging.sipInk(
         'secure_send_rejected mid_flight linkId=0x'
-        '${linkId.toRadixString(16)} — falling back to plaintext',
+        '${linkId.toRadixString(16)} - falling back to plaintext',
       );
       return _sendPlaintextSketch(
         sessionTag: sessionTag,
@@ -937,7 +937,7 @@ class SipDmRouter {
     if (!sent) {
       AppLogging.sipPlay(
         'secure_send_rejected mid_flight linkId=0x'
-        '${linkId.toRadixString(16)} — falling back to plaintext',
+        '${linkId.toRadixString(16)} - falling back to plaintext',
       );
       return _sendPlaintextPlay(
         sessionTag: sessionTag,
@@ -1037,7 +1037,7 @@ class SipDmRouter {
     if (!sent) {
       AppLogging.sipSignal(
         'secure_send_rejected mid_flight linkId=0x'
-        '${linkId.toRadixString(16)} — falling back to plaintext',
+        '${linkId.toRadixString(16)} - falling back to plaintext',
       );
       return _sendPlaintextSignal(
         sessionTag: sessionTag,
@@ -1198,7 +1198,7 @@ SipDmSession? resolveSecureInboundDmSession({
       'record_peer=0x${linkRecordPeerNodeId.toRadixString(16)} '
       'session_peer=0x${fallback.peerNodeId.toRadixString(16)} '
       'session_tag=0x${fallback.sessionTag.toRadixString(16)} '
-      '— link store reported a stale peer for this linkId; falling '
+      '- link store reported a stale peer for this linkId; falling '
       'back to the only active DM session',
     );
     return fallback;

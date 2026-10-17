@@ -219,13 +219,12 @@ class FileTransferState {
 }
 
 /// Callback for sending a packet over the mesh transport.
-typedef SendPacketCallback =
-    Future<bool> Function(
-      Uint8List payload,
-      int portnum, {
-      int? destinationNode,
-      int hopLimit,
-    });
+typedef SendPacketCallback = Future<bool> Function(
+  Uint8List payload,
+  int portnum, {
+  int? destinationNode,
+  int hopLimit,
+});
 
 /// The file transfer engine manages all active transfers.
 ///
@@ -985,7 +984,7 @@ class FileTransferEngine {
     if (transfer.state != TransferState.chunking &&
         transfer.state != TransferState.waitingMissing) {
       AppLogging.fileTransfer(
-        'restoreInboundTransfer: ${transfer.fileIdHex} rejected — '
+        'restoreInboundTransfer: ${transfer.fileIdHex} rejected - '
         'pre-accept state ${transfer.state.name} is not resumable',
       );
       return false;
@@ -1074,7 +1073,7 @@ class FileTransferEngine {
     if (transfer.state != TransferState.chunking &&
         transfer.state != TransferState.waitingMissing) {
       AppLogging.fileTransfer(
-        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected — '
+        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected - '
         'pre-accept state ${transfer.state.name} is not resumable',
       );
       return false;
@@ -1087,7 +1086,7 @@ class FileTransferEngine {
     final fileBytes = transfer.fileBytes!;
     if (fileBytes.length != transfer.totalBytes) {
       AppLogging.fileTransfer(
-        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected — '
+        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected - '
         'file size mismatch (disk=${fileBytes.length}, '
         'expected=${transfer.totalBytes})',
       );
@@ -1105,7 +1104,7 @@ class FileTransferEngine {
     }
     if (!hashMatch) {
       AppLogging.fileTransfer(
-        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected — '
+        'restoreOutboundTransfer: ${transfer.fileIdHex} rejected - '
         'SHA-256 mismatch (file corrupted or modified since original send)',
       );
       return false;
@@ -1176,7 +1175,7 @@ class FileTransferEngine {
     AppLogging.fileTransfer(
       'INACTIVITY: $fileIdHex no chunk received for '
       '${SmRateLimit.chunkInactivityTimeout.inSeconds}s, '
-      '${missing.length} chunks missing — auto-NACKing',
+      '${missing.length} chunks missing - auto-NACKing',
     );
 
     requestMissingChunks(fileIdHex);

@@ -104,7 +104,7 @@ MeshCoreReconnectGateOutcome evaluateMeshCoreReconnectGate({
 /// Watch from a long-lived widget (e.g., `_SocialMeshApp.build`) alongside
 /// `autoReconnectManagerProvider`.
 final meshCoreLifecycleProvider = Provider<void>((ref) {
-  AppLogging.connection('🔄 meshCoreLifecycleProvider INITIALIZED');
+  AppLogging.connection('meshCoreLifecycleProvider INITIALIZED');
 
   // iOS background recovery: at most one OS-level pending-reconnect
   // registration lives here. Armed instead of the immediate dispatch when

@@ -100,7 +100,7 @@ class MeshGameRepository {
     final instance = await _store.get(session.instanceId);
     if (instance == null) {
       AppLogging.meshGameSession(
-        'save ignored — instance missing ${session.instanceId}',
+        'save ignored - instance missing ${session.instanceId}',
       );
       return;
     }

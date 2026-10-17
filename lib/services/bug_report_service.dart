@@ -245,7 +245,7 @@ class BugReportService with WidgetsBindingObserver {
       AppLogging.bugReport('Screenshot uploaded successfully: $url');
       return url;
     } catch (e, stackTrace) {
-      AppLogging.bugReport('❌ Screenshot upload failed: $e');
+      AppLogging.bugReport('Screenshot upload failed: $e');
       AppLogging.bugReport('Stack trace: $stackTrace');
       rethrow;
     }

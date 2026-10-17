@@ -99,7 +99,7 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
   void _toggleConnection() {
     final isSignedIn = ref.read(isSignedInProvider);
     if (!isSignedIn) {
-      AppLogging.tak('TakScreen: connect blocked — not signed in');
+      AppLogging.tak('TakScreen: connect blocked - not signed in');
       return;
     }
     final client = ref.read(takGatewayClientProvider);
@@ -152,9 +152,8 @@ class _TakScreenState extends ConsumerState<TakScreen> with LifecycleSafeMixin {
             Text(
               helpText,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.7),
                 height: 1.5,
               ),
             ),

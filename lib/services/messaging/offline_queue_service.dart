@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/logging.dart';
+
 import 'dart:async';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
+
 import '../../models/mesh_models.dart';
 
 /// A pending message waiting to be sent when connection is restored
@@ -27,23 +30,21 @@ class QueuedMessage {
 }
 
 /// Callback for sending a message
-typedef SendMessageCallback =
-    Future<int> Function({
-      required String text,
-      required int to,
-      required int channel,
-      required bool wantAck,
-      required String messageId,
-    });
+typedef SendMessageCallback = Future<int> Function({
+  required String text,
+  required int to,
+  required int channel,
+  required bool wantAck,
+  required String messageId,
+});
 
 /// Callback for updating message status
-typedef UpdateMessageCallback =
-    void Function(
-      String messageId,
-      MessageStatus status, {
-      int? packetId,
-      String? errorMessage,
-    });
+typedef UpdateMessageCallback = void Function(
+  String messageId,
+  MessageStatus status, {
+  int? packetId,
+  String? errorMessage,
+});
 
 /// Callback to check if ready to send
 typedef ReadyToSendCallback = bool Function();
@@ -94,7 +95,7 @@ class OfflineQueueService {
     _sendCallback = sendCallback;
     _updateCallback = updateCallback;
     _readyToSendCallback = readyToSendCallback;
-    AppLogging.messages('📤 OfflineQueueService initialized');
+    AppLogging.messages('OfflineQueueService initialized');
   }
 
   /// Update connection state - triggers queue processing when connected
@@ -109,7 +110,7 @@ class OfflineQueueService {
 
     if (!wasConnected && isConnected && _queue.isNotEmpty) {
       AppLogging.messages(
-        '📤 Connection restored, processing ${_queue.length} queued messages',
+        'Connection restored, processing ${_queue.length} queued messages',
       );
       _processQueue();
     }
@@ -119,7 +120,7 @@ class OfflineQueueService {
   void processQueueIfNeeded() {
     if (_isConnected && _queue.isNotEmpty && !_isProcessing) {
       AppLogging.messages(
-        '📤 Manual trigger: processing ${_queue.length} queued messages',
+        'Manual trigger: processing ${_queue.length} queued messages',
       );
       _processQueue();
     }
@@ -130,7 +131,7 @@ class OfflineQueueService {
     _queue.add(message);
     _ensureController.add(List.unmodifiable(_queue));
     AppLogging.messages(
-      '📤 Message queued: ${message.id}, queue size: ${_queue.length}',
+      'Message queued: ${message.id}, queue size: ${_queue.length}',
     );
 
     // Try to send immediately if connected
@@ -143,7 +144,7 @@ class OfflineQueueService {
   void remove(String messageId) {
     _queue.removeWhere((m) => m.id == messageId);
     _ensureController.add(List.unmodifiable(_queue));
-    AppLogging.messages('📤 Message removed from queue: $messageId');
+    AppLogging.messages('Message removed from queue: $messageId');
   }
 
   /// Clear all queued messages
@@ -152,7 +153,7 @@ class OfflineQueueService {
     _readinessRetryTimer = null;
     _queue.clear();
     _ensureController.add(List.unmodifiable(_queue));
-    AppLogging.messages('📤 Queue cleared');
+    AppLogging.messages('Queue cleared');
   }
 
   /// Process the queue - send all pending messages
@@ -172,35 +173,31 @@ class OfflineQueueService {
         var attempts = 0;
         while (!_readyToSendCallback!() && attempts < 50) {
           AppLogging.messages(
-            '📤 Waiting for protocol to be ready... (${attempts + 1}/50)',
+            'Waiting for protocol to be ready... (${attempts + 1}/50)',
           );
           await Future.delayed(const Duration(milliseconds: 200));
           attempts++;
           if (!_isConnected) {
-            AppLogging.messages(
-              '📤 Disconnected while waiting, aborting queue',
-            );
+            AppLogging.messages('Disconnected while waiting, aborting queue');
             return;
           }
         }
         if (!_readyToSendCallback!()) {
           // Do not strand the queue until the next connection edge:
           // re-arm a retry so a slow config exchange still drains.
-          AppLogging.messages(
-            '📤 Protocol not ready after 10s, retrying in 5s',
-          );
+          AppLogging.messages('Protocol not ready after 10s, retrying in 5s');
           _armReadinessRetry();
           return;
         }
       }
 
-      AppLogging.messages('📤 Processing queue of ${_queue.length} messages');
+      AppLogging.messages('Processing queue of ${_queue.length} messages');
 
       while (_queue.isNotEmpty && _isConnected) {
         final message = _queue.first;
 
         try {
-          AppLogging.messages('📤 Sending queued message: ${message.id}');
+          AppLogging.messages('Sending queued message: ${message.id}');
 
           final packetId = await _sendCallback!(
             text: message.text,
@@ -222,14 +219,14 @@ class OfflineQueueService {
           _ensureController.add(List.unmodifiable(_queue));
 
           AppLogging.messages(
-            '📤 Queued message sent successfully: ${message.id}',
+            'Queued message sent successfully: ${message.id}',
           );
 
           // Small delay between messages to avoid overwhelming the device
           await Future.delayed(const Duration(milliseconds: 100));
         } catch (e) {
           AppLogging.messages(
-            '📤 Failed to send queued message: ${message.id} - $e',
+            'Failed to send queued message: ${message.id} - $e',
           );
           message.retryCount++;
 
@@ -255,7 +252,7 @@ class OfflineQueueService {
       }
 
       AppLogging.messages(
-        '📤 Queue processing complete, ${_queue.length} remaining',
+        'Queue processing complete, ${_queue.length} remaining',
       );
     } finally {
       _isProcessing = false;

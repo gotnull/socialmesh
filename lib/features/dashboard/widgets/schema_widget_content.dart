@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
@@ -182,16 +183,16 @@ final customWidgetsProvider = FutureProvider<List<WidgetSchema>>((ref) async {
   final syncService = ref.watch(widgetSyncServiceProvider);
 
   AppLogging.sync(
-    '[customWidgetsProvider] syncService=${syncService != null ? "hashCode=${identityHashCode(syncService)}, enabled=${syncService.isEnabled}" : "NULL — widget sync NOT active!"}',
+    '[customWidgetsProvider] syncService=${syncService != null ? "hashCode=${identityHashCode(syncService)}, enabled=${syncService.isEnabled}" : "NULL - widget sync NOT active!"}',
   );
 
   syncService?.onPullApplied = (appliedCount) {
     if (!ref.mounted) return;
     AppLogging.widgets(
-      'Sync pull applied $appliedCount widgets — triggering refresh',
+      'Sync pull applied $appliedCount widgets - triggering refresh',
     );
     AppLogging.sync(
-      '[customWidgetsProvider] onPullApplied callback — $appliedCount widgets arrived from remote, triggering UI refresh',
+      '[customWidgetsProvider] onPullApplied callback - $appliedCount widgets arrived from remote, triggering UI refresh',
     );
     ref.read(widgetRefreshTriggerProvider.notifier).refresh();
   };

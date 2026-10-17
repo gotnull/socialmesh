@@ -1181,7 +1181,7 @@ class NodeDexSqliteStore {
   }) async {
     if (!isReady) {
       AppLogging.storage(
-        'NodeDexSqliteStore: insertPresenceTransition skipped — database not open',
+        'NodeDexSqliteStore: insertPresenceTransition skipped - database not open',
       );
       return;
     }

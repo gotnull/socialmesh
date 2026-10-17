@@ -4,12 +4,17 @@
 import 'package:collection/collection.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
+
 import '../../core/logging.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/routing/conversation_routes.dart';
+
 import 'package:flutter/material.dart';
+
 import '../../core/safety/lifecycle_mixin.dart';
+
 import 'package:flutter/services.dart';
+
 import 'dm_channel_resolver.dart';
 import 'dm_contacts_provider.dart';
 import 'widgets/chat_composer.dart';
@@ -19,10 +24,14 @@ import 'widgets/message_bubble_body.dart';
 import 'widgets/message_date_separator.dart';
 import 'widgets/messaging_unread_divider.dart';
 import 'widgets/quick_responses_sheet.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../utils/text_sanitizer.dart';
 import '../../utils/time_format.dart';
+
 import 'dart:async';
+
 import '../../providers/app_providers.dart';
 import '../../providers/messages_view_mode_provider.dart';
 import '../../core/constants.dart';
@@ -93,8 +102,9 @@ enum ContactFilter { all, favorites, messaged, unread, active }
 ContactFilter contactFilterFromName(String? raw) => ContactFilter.values
     .firstWhere((f) => f.name == raw, orElse: () => ContactFilter.all);
 
-typedef ConversationFallbackRowBuilder =
-    List<ConversationTimelineRow> Function(List<Message> messages);
+typedef ConversationFallbackRowBuilder = List<ConversationTimelineRow> Function(
+  List<Message> messages,
+);
 
 ({
   List<ConversationTimelineRow> rows,
@@ -1143,12 +1153,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         .toList();
     if (blocked.isEmpty) return;
     AppLogging.messages(
-      '📤 AUTO_RESEND readiness=ready, resending ${blocked.length} '
+      'AUTO_RESEND readiness=ready, resending ${blocked.length} '
       'readiness-blocked message(s)',
     );
     for (final msg in blocked) {
       AppLogging.messages(
-        '📤 AUTO_RESEND triggering retry for messageId=${msg.id}',
+        'AUTO_RESEND triggering retry for messageId=${msg.id}',
       );
       _retryMessage(msg);
     }
@@ -1870,7 +1880,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         ?.value
         .lastDeviceProtocol;
     AppLogging.messages(
-      '📤 SEND_TAP type=${widget.type} channel=${widget.channelIndex} '
+      'SEND_TAP type=${widget.type} channel=${widget.channelIndex} '
       'nodeNum=${widget.nodeNum} lastProtocol=$lastDeviceProtocol '
       'connectionState=${connectionState.asData?.value} '
       'protocolReadiness=${ref.read(protocolServiceProvider).readiness} '
@@ -1967,7 +1977,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     }
 
     AppLogging.messages(
-      '📤 SEND_DISPATCH messageId=$messageId type=${widget.type} '
+      'SEND_DISPATCH messageId=$messageId type=${widget.type} '
       'to=0x${to.toRadixString(16)} channel=$channel '
       'textBytes=${textPayloadBudget.utf8Bytes} wantAck=$wantAck '
       'protocolReadiness=${protocol.readiness} '
@@ -2038,7 +2048,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       );
       if (currentMsg == null || currentMsg.status == MessageStatus.delivered) {
         AppLogging.messages(
-          '📤 SEND_OK messageId=$messageId packetId=$packetId '
+          'SEND_OK messageId=$messageId packetId=$packetId '
           'currentStatus=${currentMsg?.status} (skip-update)',
         );
         _trackMessageSentForReview();
@@ -2046,7 +2056,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       }
 
       AppLogging.messages(
-        '📤 SEND_OK messageId=$messageId packetId=$packetId '
+        'SEND_OK messageId=$messageId packetId=$packetId '
         'status=pending->sent',
       );
       // Update status to sent with packet ID and sentAt for DM timeout tracking
@@ -2065,12 +2075,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       _trackMessageSentForReview();
     } catch (e, st) {
       AppLogging.messages(
-        '📤 SEND_FAIL messageId=$messageId error=$e '
+        'SEND_FAIL messageId=$messageId error=$e '
         'protocolReadiness=${protocol.readiness} '
         'configurationComplete=${protocol.configurationComplete} '
         'transportConnected=${protocol.isConnected}',
       );
-      AppLogging.messages('📤 SEND_FAIL_STACK $st');
+      AppLogging.messages('SEND_FAIL_STACK $st');
 
       // Check mounted after await before updating state
       if (!mounted) return;
@@ -2081,7 +2091,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // when that was the cause, instead of leaking the raw StateError.
       final isReadinessBlocked = maybeShowTxBlockedSnackBar(context, e);
       AppLogging.messages(
-        '📤 SEND_FAIL_KIND messageId=$messageId '
+        'SEND_FAIL_KIND messageId=$messageId '
         'readinessBlocked=$isReadinessBlocked',
       );
       messagesNotifier.updateMessage(
@@ -2133,7 +2143,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final protocol = ref.read(protocolServiceProvider);
 
     AppLogging.messages(
-      '📤 RETRY_TAP messageId=${message.id} isBroadcast=${message.isBroadcast} '
+      'RETRY_TAP messageId=${message.id} isBroadcast=${message.isBroadcast} '
       'channel=${message.channel} to=0x${message.to.toRadixString(16)} '
       'connectionState=${connectionState.asData?.value} '
       'protocolReadiness=${protocol.readiness} '
@@ -2175,7 +2185,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     }
 
     AppLogging.messages(
-      '📤 RETRY_DISPATCH messageId=${message.id} '
+      'RETRY_DISPATCH messageId=${message.id} '
       'isBroadcast=${message.isBroadcast} '
       'protocolReadiness=${protocol.readiness} '
       'retryCount=${message.retryCount}',
@@ -2213,7 +2223,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       if (!mounted) return;
 
       AppLogging.messages(
-        '📤 RETRY_OK messageId=${message.id} packetId=$packetId',
+        'RETRY_OK messageId=${message.id} packetId=$packetId',
       );
       messagesNotifier.updateMessage(
         message.id,
@@ -2229,12 +2239,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       );
     } catch (e, st) {
       AppLogging.messages(
-        '📤 RETRY_FAIL messageId=${message.id} error=$e '
+        'RETRY_FAIL messageId=${message.id} error=$e '
         'protocolReadiness=${protocol.readiness} '
         'configurationComplete=${protocol.configurationComplete} '
         'transportConnected=${protocol.isConnected}',
       );
-      AppLogging.messages('📤 RETRY_FAIL_STACK $st');
+      AppLogging.messages('RETRY_FAIL_STACK $st');
 
       // Check mounted after await before updating state
       if (!mounted) return;
@@ -2249,7 +2259,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         maybeShowTxBlockedSnackBar(context, e);
       }
       AppLogging.messages(
-        '📤 RETRY_FAIL_KIND messageId=${message.id} '
+        'RETRY_FAIL_KIND messageId=${message.id} '
         'readinessBlocked=$isReadinessBlocked',
       );
       messagesNotifier.updateMessage(
@@ -2343,9 +2353,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               icon: const Icon(Icons.refresh, size: 20),
               label: Text(
                 context.l10n.messagingRequestUserInfo,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -2372,9 +2381,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 icon: const Icon(Icons.send, size: 20),
                 label: Text(
                   context.l10n.messagingRetryMessage,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -2478,7 +2486,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     if (AppLogging.messagesLoggingEnabled) {
       AppLogging.messages(
-        '📨 ConversationScreen.build: totalMessages=${messages.length}, '
+        'ConversationScreen.build: totalMessages=${messages.length}, '
         'myNodeNum=$myNodeNum, type=${widget.type}, '
         'channelIndex=${widget.channelIndex}, nodeNum=${widget.nodeNum}',
       );
@@ -2527,9 +2535,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     if (AppLogging.messagesLoggingEnabled) {
       AppLogging.messages(
         widget.type == ConversationType.channel
-            ? '📨 Channel filter: channel=${widget.channelIndex}, '
+            ? 'Channel filter: channel=${widget.channelIndex}, '
                   'matched=${fallbackMessages.length}/${messages.length}'
-            : '📨 DM filter: nodeNum=${widget.nodeNum}, '
+            : 'DM filter: nodeNum=${widget.nodeNum}, '
                   'matched=${fallbackMessages.length}/${messages.length}',
       );
     }
@@ -2565,7 +2573,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
     if (rowSelection.usedFallbackRows && timelineState != null) {
       AppLogging.messages(
-        '📨 Using fallback rows: timelineRows=${timelineState.rows.length}, '
+        'Using fallback rows: timelineRows=${timelineState.rows.length}, '
         'timelineMessages=${rowSelection.visibleTimelineMessageCount}, '
         'fallbackMessages=${fallbackMessages.length}',
       );
@@ -3014,7 +3022,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   if (index == filteredRows.length - 1 &&
                                       AppLogging.messagesLoggingEnabled) {
                                     AppLogging.messages(
-                                      '📨 Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, status=${message.status.name}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
+                                      'Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, status=${message.status.name}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
                                     );
                                   }
 

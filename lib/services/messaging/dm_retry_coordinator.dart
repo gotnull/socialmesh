@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants.dart';
@@ -211,7 +212,7 @@ class DmRetryCoordinator {
         message.copyWith(status: MessageStatus.unconfirmed),
       );
       AppLogging.messages(
-        'DmRetryCoordinator: message ${message.id} timed out → unconfirmed',
+        'DmRetryCoordinator: message ${message.id} timed out -> unconfirmed',
       );
     }
   }
@@ -327,7 +328,7 @@ class DmRetryCoordinator {
       );
 
       AppLogging.messages(
-        'DmRetryCoordinator: resend dispatched for $messageId → packetId=$packetId',
+        'DmRetryCoordinator: resend dispatched for $messageId -> packetId=$packetId',
       );
     } catch (e) {
       // Give up this attempt; fall back to unconfirmed so the user can retry
@@ -341,7 +342,7 @@ class DmRetryCoordinator {
         ),
       );
       AppLogging.messages(
-        'DmRetryCoordinator: resend failed for $messageId — $e',
+        'DmRetryCoordinator: resend failed for $messageId - $e',
       );
     }
   }

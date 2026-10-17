@@ -127,7 +127,7 @@ class _NodeConstellationScreenState
 
   Future<void> _handleNodeTap(NodeDexGraphNode node) async {
     AppLogging.nodeDex(
-      'Constellation: card tapped — type=${node.type.name} id=${node.id} '
+      'Constellation: card tapped - type=${node.type.name} id=${node.id} '
       'action=${node.action?.name ?? 'none'}',
     );
     final action = node.action;
@@ -528,7 +528,7 @@ class _NodeConstellationScreenState
 
   Widget _buildEmptyState(NodeDexConstellation constellation) {
     AppLogging.nodeDex(
-      'Constellation: empty graph for node ${widget.nodeNum} — '
+      'Constellation: empty graph for node ${widget.nodeNum} - '
       'reason=${constellation.emptyReason?.name ?? 'unknown'}',
     );
     final l10n = context.l10n;

@@ -121,14 +121,14 @@ class AppInitNotifier extends Notifier<AppInitState> {
     final from = state;
     state = to;
     AppLogging.connection(
-      '🎯 AppInitNotifier: $from → $to${caller.isNotEmpty ? ' ($caller)' : ''}',
+      'AppInitNotifier: $from -> $to${caller.isNotEmpty ? ' ($caller)' : ''}',
     );
   }
 
   @override
   AppInitState build() {
     AppLogging.connection(
-      '🎯 AppInitNotifier.build() called '
+      'AppInitNotifier.build() called '
       '(backgroundServicesStarted=$_backgroundServicesStarted)',
     );
     return AppInitState.uninitialized;
@@ -161,7 +161,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
   Future<void> initialize() async {
     if (state == AppInitState.initializing) {
       AppLogging.connection(
-        '🎯 AppInitNotifier.initialize() SKIPPED — already initializing',
+        'AppInitNotifier.initialize() SKIPPED - already initializing',
       );
       return;
     }
@@ -232,7 +232,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
         // that block; the in-flight guard inside makes an overlap with a
         // still-running first pass a no-op.
         AppLogging.connection(
-          '🎯 AppInitNotifier: retrying device-connection init '
+          'AppInitNotifier: retrying device-connection init '
           '(previous attempt did not complete)',
         );
         _startDeviceConnectionInit();
@@ -403,7 +403,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
         final widgetSync = ref.read(widgetSyncServiceProvider);
         AppLogging.sync(
           '[AppInit] Step 3/3 OK: widgetSyncServiceProvider returned '
-          '${widgetSync != null ? "WidgetSyncService(hashCode=${identityHashCode(widgetSync)}, enabled=${widgetSync.isEnabled})" : "NULL — SYNC IS DISABLED!"} '
+          '${widgetSync != null ? "WidgetSyncService(hashCode=${identityHashCode(widgetSync)}, enabled=${widgetSync.isEnabled})" : "NULL - SYNC IS DISABLED!"} '
           'store.syncEnabled=${store.syncEnabled}',
         );
         if (widgetSync == null) {
@@ -467,12 +467,12 @@ class AppInitNotifier extends Notifier<AppInitState> {
         if (connState.isConnected ||
             connState.state == DevicePairingState.configuring) {
           AppLogging.debug(
-            '🔄 AppInitNotifier: Device already connected/configuring — '
+            'AppInitNotifier: Device already connected/configuring - '
             'skipping background connection',
           );
         } else {
           AppLogging.debug(
-            '🔄 AppInitNotifier: Starting background device connection...',
+            'AppInitNotifier: Starting background device connection...',
           );
           // Initialize and start background connection via the new notifier
           await ref.read(deviceConnectionProvider.notifier).initialize();
@@ -609,12 +609,12 @@ final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
   await MeshFirestoreConfigService.instance.initialize();
 
   if (!MeshFirestoreConfigService.instance.isAvailable) {
-    AppLogging.settings('⚠️ Firestore not available for config watching');
+    AppLogging.settings('Firestore not available for config watching');
     yield null;
     return;
   }
 
-  AppLogging.settings('👀 Starting real-time Firestore config watcher');
+  AppLogging.settings('Starting real-time Firestore config watcher');
 
   await for (final config in MeshFirestoreConfigService.instance.configStream) {
     if (config != null) {
@@ -622,7 +622,7 @@ final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
       final currentValue = settingsService.premiumUpsellEnabled;
       if (config.premiumUpsellEnabled != currentValue) {
         AppLogging.settings(
-          '🔄 Syncing premiumUpsellEnabled: $currentValue -> ${config.premiumUpsellEnabled}',
+          'Syncing premiumUpsellEnabled: $currentValue -> ${config.premiumUpsellEnabled}',
         );
         await settingsService.setPremiumUpsellEnabled(
           config.premiumUpsellEnabled,
@@ -640,7 +640,7 @@ final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
           .map((e) => '${e.key}:${e.value}')
           .join(',');
       await prefs.setString('premium_gated_features', featuresJson);
-      AppLogging.settings('🔄 Synced premium gated features: $featuresJson');
+      AppLogging.settings('Synced premium gated features: $featuresJson');
 
       // Reload SharedPreferences to ensure cached values are updated
       await prefs.reload();
@@ -715,7 +715,7 @@ final premiumFeatureGateProvider = Provider.family<bool, String>((
         // Return the value directly (default to true if not found)
         return features[featureKey] ?? true;
       } catch (e) {
-        AppLogging.settings('⚠️ Failed to parse premium gated features: $e');
+        AppLogging.settings('Failed to parse premium gated features: $e');
         return true; // Gate by default on error
       }
     },
@@ -1632,7 +1632,7 @@ class UserDisconnectedNotifier extends Notifier<bool> {
 
   void setUserDisconnected(bool value) {
     AppLogging.connection(
-      '🔌 UserDisconnectedNotifier: setUserDisconnected($value)',
+      'UserDisconnectedNotifier: setUserDisconnected($value)',
     );
     state = value;
   }
@@ -1657,9 +1657,7 @@ class RebootExpectedNotifier extends Notifier<bool> {
   bool build() => false;
 
   void setRebootExpected(bool value) {
-    AppLogging.connection(
-      '🔄 RebootExpectedNotifier: setRebootExpected($value)',
-    );
+    AppLogging.connection('RebootExpectedNotifier: setRebootExpected($value)');
     state = value;
   }
 }
@@ -1981,7 +1979,7 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
   );
 
   AppLogging.connection(
-    '🔄 DEVICE TRANSITION: kind=${transition.kind.name} '
+    'DEVICE TRANSITION: kind=${transition.kind.name} '
     'prev=${transition.previousDeviceId} new=${transition.newDeviceId} '
     'prevType=${transition.previousTransportType?.name} '
     'newType=${transition.newTransportType.name} '
@@ -2038,7 +2036,7 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
   // storage — that's the fresh hydrate.
   if (transition.forceFreshHydration) {
     AppLogging.connection(
-      '🔄 DEVICE TRANSITION: forceFreshHydration — preserving persisted '
+      'DEVICE TRANSITION: forceFreshHydration - preserving persisted '
       'node cache but rebuilding NodesNotifier against new transport',
     );
   }
@@ -2049,8 +2047,8 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
   // the fresh ProtocolService.
   if (transition.transportFamilyChanged) {
     AppLogging.connection(
-      '🔄 DEVICE TRANSITION: transport family flip '
-      '${transition.previousTransportType?.name} → '
+      'DEVICE TRANSITION: transport family flip '
+      '${transition.previousTransportType?.name} -> '
       '${transition.newTransportType.name}',
     );
     if (transition.newTransportType == TransportType.network) {
@@ -2087,7 +2085,7 @@ void restoreTransportTypeFromSettings(Ref ref, SettingsService settings) {
   if (restoredType == null) return;
   if (ref.read(transportTypeProvider) == restoredType) return;
   AppLogging.connection(
-    '🔄 TRANSPORT RESTORE: ${ref.read(transportTypeProvider).name} → '
+    'TRANSPORT RESTORE: ${ref.read(transportTypeProvider).name} -> '
     '${restoredType.name} from persisted lastDeviceType',
   );
   if (restoredType == TransportType.network) {
@@ -2166,8 +2164,8 @@ void dispatchReconnectMeshCoreAwareForWidget(WidgetRef ref, String deviceId) {
   // log it loudly so a future regression can be tracked down rather
   // than silently routing into the BLE scan loop.
   AppLogging.connection(
-    '⚠️ dispatchReconnectMeshCoreAwareForWidget: non-meshcore protocol '
-    'reached widget-layer reconnect dispatcher (deviceId=$deviceId) — '
+    'dispatchReconnectMeshCoreAwareForWidget: non-meshcore protocol '
+    'reached widget-layer reconnect dispatcher (deviceId=$deviceId) - '
     'ignoring; Meshtastic widgets should drive autoReconnectManager',
   );
 }
@@ -2185,7 +2183,7 @@ bool _routeMeshCoreReconnect({
       ? 'tcp'
       : 'ble';
   AppLogging.connection(
-    '🔄 dispatchReconnect: protocol=meshcore transport=$transportTag '
+    'dispatchReconnect: protocol=meshcore transport=$transportTag '
     'deviceId=$deviceId',
   );
   AppLogging.meshcore(
@@ -2235,7 +2233,7 @@ Future<ActiveDeviceTransition> prepareForDeviceTransition(
   );
 
   AppLogging.connection(
-    '🔄 DEVICE TRANSITION: kind=${transition.kind.name} '
+    'DEVICE TRANSITION: kind=${transition.kind.name} '
     'prev=${transition.previousDeviceId} new=${transition.newDeviceId} '
     'prevType=${transition.previousTransportType?.name} '
     'newType=${transition.newTransportType.name} '
@@ -2271,15 +2269,15 @@ Future<ActiveDeviceTransition> prepareForDeviceTransition(
 
   if (transition.forceFreshHydration) {
     AppLogging.connection(
-      '🔄 DEVICE TRANSITION: forceFreshHydration — preserving persisted '
+      'DEVICE TRANSITION: forceFreshHydration - preserving persisted '
       'node cache but rebuilding NodesNotifier against new transport',
     );
   }
 
   if (transition.transportFamilyChanged) {
     AppLogging.connection(
-      '🔄 DEVICE TRANSITION: transport family flip '
-      '${transition.previousTransportType?.name} → '
+      'DEVICE TRANSITION: transport family flip '
+      '${transition.previousTransportType?.name} -> '
       '${transition.newTransportType.name}',
     );
     if (transition.newTransportType == TransportType.network) {
@@ -2328,13 +2326,13 @@ Future<void> clearDeviceDataBeforeConnect(
   final isDeviceSwitch = _isDeviceSwitch(previousDeviceId, newDeviceId);
   if (isDeviceSwitch && isTransportRebind) {
     AppLogging.app(
-      '🔁 Transport rebind ($previousDeviceId -> $newDeviceId) — same '
+      'Transport rebind ($previousDeviceId -> $newDeviceId) - same '
       'physical radio under a new BLE UUID; suppressing the device-switch '
       'reset so the mesh stays on screen',
     );
   } else if (isDeviceSwitch && !clearNodeData) {
     AppLogging.app(
-      '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
+      'Device switch detected ($previousDeviceId -> $newDeviceId) - '
       'resetting the in-memory node map so the new radio does not render '
       'the previous one\'s mesh while it hydrates',
     );
@@ -2369,7 +2367,7 @@ Future<void> clearDeviceDataBeforeConnect(
   }
 
   AppLogging.app(
-    '🧹 Clearing device data before new connection '
+    'Clearing device data before new connection '
     '(preserving $messageCount messages${clearNodeData ? '' : ' and nodes'})...',
   );
 
@@ -2399,7 +2397,7 @@ Future<void> clearDeviceDataBeforeConnect(
   newNodesNotifier.reset();
 
   AppLogging.app(
-    '✅ Device data cleared (in-memory nodes '
+    'Device data cleared (in-memory nodes '
     '${clearNodeData ? 'reset' : 'preserved'}) - ready for fresh data from device',
   );
 }
@@ -2417,13 +2415,13 @@ Future<void> clearDeviceDataBeforeConnectRef(
   final isDeviceSwitch = _isDeviceSwitch(previousDeviceId, newDeviceId);
   if (isDeviceSwitch && isTransportRebind) {
     AppLogging.app(
-      '🔁 Transport rebind ($previousDeviceId -> $newDeviceId) — same '
+      'Transport rebind ($previousDeviceId -> $newDeviceId) - same '
       'physical radio under a new BLE UUID; suppressing the device-switch '
       'reset so the mesh stays on screen',
     );
   } else if (isDeviceSwitch && !clearNodeData) {
     AppLogging.app(
-      '🔁 Device switch detected ($previousDeviceId -> $newDeviceId) — '
+      'Device switch detected ($previousDeviceId -> $newDeviceId) - '
       'resetting the in-memory node map so the new radio does not render '
       'the previous one\'s mesh while it hydrates',
     );
@@ -2431,7 +2429,7 @@ Future<void> clearDeviceDataBeforeConnectRef(
   }
   final messageCount = ref.read(messagesProvider).length;
   AppLogging.app(
-    '🧹 Clearing device data before new connection '
+    'Clearing device data before new connection '
     '(preserving $messageCount messages${clearNodeData ? '' : ' and nodes'})...',
   );
 
@@ -2462,7 +2460,7 @@ Future<void> clearDeviceDataBeforeConnectRef(
   ref.read(newNodesCountProvider.notifier).reset();
 
   AppLogging.app(
-    '✅ Device data cleared (in-memory nodes '
+    'Device data cleared (in-memory nodes '
     '${clearNodeData ? 'reset' : 'preserved'}) - ready for fresh data from device',
   );
 }
@@ -2494,7 +2492,7 @@ final bluetoothStateProvider = StreamProvider<BluetoothAdapterState>((ref) {
 /// Bluetooth state listener - monitors Bluetooth being turned off/on
 /// and handles reconnection when Bluetooth is turned back on
 final bluetoothStateListenerProvider = Provider<void>((ref) {
-  AppLogging.connection('🔵 BLUETOOTH STATE LISTENER INITIALIZED');
+  AppLogging.connection('BLUETOOTH STATE LISTENER INITIALIZED');
 
   ref.listen<AsyncValue<BluetoothAdapterState>>(bluetoothStateProvider, (
     previous,
@@ -2513,15 +2511,13 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
     );
 
     AppLogging.connection(
-      '🔵 Bluetooth state changed: $prevState -> $currentState',
+      'Bluetooth state changed: $prevState -> $currentState',
     );
 
     // Handle Bluetooth being turned off
     if (currentState == BluetoothAdapterState.off &&
         prevState == BluetoothAdapterState.on) {
-      AppLogging.connection(
-        '🔵 Bluetooth turned OFF - connection will be lost',
-      );
+      AppLogging.connection('Bluetooth turned OFF - connection will be lost');
       // When Bluetooth is turned off, mark the disconnect as NOT user-initiated
       // (unless user had already disconnected before turning off BT)
       // The transport will handle the actual disconnection
@@ -2531,14 +2527,14 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
     if (currentState == BluetoothAdapterState.on &&
         prevState == BluetoothAdapterState.off) {
       AppLogging.connection(
-        '🔵 Bluetooth turned ON - checking if reconnect needed',
+        'Bluetooth turned ON - checking if reconnect needed',
       );
 
       // Skip for MeshCore - this reconnect logic uses Meshtastic scanning
       final settings = await ref.read(settingsServiceProvider.future);
       if (settings.lastDeviceProtocol == 'meshcore') {
         AppLogging.connection(
-          '🔵 Bluetooth ON but last device was MeshCore - not using Meshtastic reconnect',
+          'Bluetooth ON but last device was MeshCore - not using Meshtastic reconnect',
         );
         return;
       }
@@ -2547,7 +2543,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
       final userDisconnected = ref.read(userDisconnectedProvider);
       if (userDisconnected) {
         AppLogging.connection(
-          '🔵 Bluetooth ON but user manually disconnected - not reconnecting',
+          'Bluetooth ON but user manually disconnected - not reconnecting',
         );
         return;
       }
@@ -2556,7 +2552,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
       final lastDeviceId = ref.read(_lastConnectedDeviceIdProvider);
       if (lastDeviceId == null) {
         AppLogging.connection(
-          '🔵 Bluetooth ON but no previous device to reconnect to',
+          'Bluetooth ON but no previous device to reconnect to',
         );
         return;
       }
@@ -2570,7 +2566,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
       );
       if (connectionState == DeviceConnectionState.connected) {
         AppLogging.connection(
-          '🔵 Bluetooth ON but already connected - no action needed',
+          'Bluetooth ON but already connected - no action needed',
         );
         return;
       }
@@ -2579,15 +2575,13 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
       final autoReconnectState = ref.read(autoReconnectStateProvider);
       if (autoReconnectState == AutoReconnectState.scanning ||
           autoReconnectState == AutoReconnectState.connecting) {
-        AppLogging.connection(
-          '🔵 Bluetooth ON but reconnect already in progress',
-        );
+        AppLogging.connection('Bluetooth ON but reconnect already in progress');
         return;
       }
 
       // Trigger a reconnect attempt after a short delay to let BT stabilize
       AppLogging.connection(
-        '🔵 Bluetooth ON - scheduling reconnect attempt in 2s',
+        'Bluetooth ON - scheduling reconnect attempt in 2s',
       );
 
       Future.delayed(const Duration(seconds: 2), () async {
@@ -2595,7 +2589,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
         final currentSettings = await ref.read(settingsServiceProvider.future);
         if (!currentSettings.autoReconnect) {
           AppLogging.connection(
-            '🔵 BT reconnect cancelled - auto-reconnect disabled in settings',
+            'BT reconnect cancelled - auto-reconnect disabled in settings',
           );
           return;
         }
@@ -2604,7 +2598,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
         final stillUserDisconnected = ref.read(userDisconnectedProvider);
         if (stillUserDisconnected) {
           AppLogging.connection(
-            '🔵 BT reconnect cancelled - user disconnected during delay',
+            'BT reconnect cancelled - user disconnected during delay',
           );
           return;
         }
@@ -2617,9 +2611,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
           error: (e, st) => null,
         );
         if (currentConnState == DeviceConnectionState.connected) {
-          AppLogging.connection(
-            '🔵 BT reconnect cancelled - already connected',
-          );
+          AppLogging.connection('BT reconnect cancelled - already connected');
           return;
         }
 
@@ -2627,7 +2619,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
         if (currentAutoState == AutoReconnectState.scanning ||
             currentAutoState == AutoReconnectState.connecting) {
           AppLogging.connection(
-            '🔵 BT reconnect cancelled - reconnect already in progress',
+            'BT reconnect cancelled - reconnect already in progress',
           );
           return;
         }
@@ -2640,14 +2632,14 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
         if (dispatchTransport.reconnectMode ==
             TransportReconnectMode.directEndpoint) {
           AppLogging.connection(
-            '🔵 Bluetooth ON but active transport is '
-            '${dispatchTransport.type.name} — skipping BLE reconnect',
+            'Bluetooth ON but active transport is '
+            '${dispatchTransport.type.name} - skipping BLE reconnect',
           );
           return;
         }
 
         AppLogging.connection(
-          '🔵 Bluetooth ON - starting reconnect for device: $lastDeviceId',
+          'Bluetooth ON - starting reconnect for device: $lastDeviceId',
         );
 
         ref
@@ -2679,7 +2671,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       final protocol = ref.read(protocolServiceProvider);
       configWriteSub = protocol.localConfigWriteStream.listen((_) {
         AppLogging.connection(
-          '🔄 Config write to local node detected — entering reboot recovery mode',
+          'Config write to local node detected - entering reboot recovery mode',
         );
         ref.read(rebootExpectedProvider.notifier).setRebootExpected(true);
       });
@@ -2695,7 +2687,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
   // Track the last connected device ID when we connect
   ref.listen<DeviceInfo?>(connectedDeviceProvider, (previous, next) {
     AppLogging.debug(
-      '🔄 connectedDeviceProvider changed: ${previous?.id} -> ${next?.id}',
+      'connectedDeviceProvider changed: ${previous?.id} -> ${next?.id}',
     );
     if (next != null) {
       AppLogging.connection('Storing device ID for reconnect: ${next.id}');
@@ -2725,7 +2717,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       final settings = await ref.read(settingsServiceProvider.future);
       if (settings.lastDeviceProtocol == 'meshcore') {
         AppLogging.connection(
-          '🔄 IGNORED: connectionStateProvider is Meshtastic-only, '
+          'IGNORED: connectionStateProvider is Meshtastic-only, '
           'last device was MeshCore',
         );
         return;
@@ -2736,7 +2728,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       final userDisconnected = ref.read(userDisconnectedProvider);
 
       AppLogging.debug(
-        '🔄 Connection state: $state (lastDeviceId: $lastDeviceId, '
+        'Connection state: $state (lastDeviceId: $lastDeviceId, '
         'reconnectState: $autoReconnectState, userDisconnected: $userDisconnected)',
       );
 
@@ -2746,7 +2738,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
           (autoReconnectState == AutoReconnectState.scanning ||
               autoReconnectState == AutoReconnectState.connecting)) {
         AppLogging.debug(
-          '🔄 ✅ Connection restored while reconnecting - resetting to idle',
+          'Connection restored while reconnecting - resetting to idle',
         );
         ref
             .read(autoReconnectStateProvider.notifier)
@@ -2763,7 +2755,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       // CRITICAL: Check if user manually disconnected - never auto-reconnect in this case
       if (userDisconnected) {
         AppLogging.connection(
-          '🔄 BLOCKED: User manually disconnected - not auto-reconnecting',
+          'BLOCKED: User manually disconnected - not auto-reconnecting',
         );
         return;
       }
@@ -2773,7 +2765,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       // a DIFFERENT device and it times out (e.g., device is already connected to another phone)
       if (autoReconnectState == AutoReconnectState.manualConnecting) {
         AppLogging.connection(
-          '🔄 BLOCKED: User is manually connecting - not auto-reconnecting',
+          'BLOCKED: User is manually connecting - not auto-reconnecting',
         );
         return;
       }
@@ -2782,7 +2774,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       // (settings was already fetched above for protocol check)
       if (!settings.autoReconnect) {
         AppLogging.connection(
-          '🔄 BLOCKED: Auto-reconnect is disabled in settings',
+          'BLOCKED: Auto-reconnect is disabled in settings',
         );
         return;
       }
@@ -2798,7 +2790,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       if (state == DeviceConnectionState.disconnected &&
           lastDeviceId != null &&
           canAttemptReconnect) {
-        AppLogging.connection('🚀 Device disconnected, STARTING reconnect...');
+        AppLogging.connection('Device disconnected, STARTING reconnect...');
 
         // Set state to scanning immediately to prevent duplicate triggers
         ref
@@ -2832,7 +2824,7 @@ void _dispatchReconnect(Ref ref, String deviceId) {
   switch (transport.reconnectMode) {
     case TransportReconnectMode.directEndpoint:
       AppLogging.connection(
-        '🔄 _dispatchReconnect: transport=${transport.type.name} → '
+        '_dispatchReconnect: transport=${transport.type.name} -> '
         'network endpoint reconnect',
       );
       _performNetworkReconnect(ref, deviceId);
@@ -2929,7 +2921,7 @@ bool get networkReconnectInFlightForTest => _networkReconnectInFlight;
 Future<void> _performNetworkReconnect(Ref ref, String deviceId) async {
   if (_networkReconnectInFlight) {
     AppLogging.connection(
-      'NET RECONNECT: skipped — another reconnect loop is already active',
+      'NET RECONNECT: skipped - another reconnect loop is already active',
     );
     return;
   }
@@ -2947,7 +2939,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
   final endpoint = _parseNetworkEndpointId(deviceId);
   if (endpoint == null) {
     AppLogging.connection(
-      'NET RECONNECT: abandoned — deviceId "$deviceId" is not a '
+      'NET RECONNECT: abandoned - deviceId "$deviceId" is not a '
       'tcp:host:port endpoint',
     );
     ref
@@ -2958,7 +2950,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
 
   if (ref.read(userDisconnectedProvider)) {
     AppLogging.connection(
-      'NET RECONNECT: abandoned — user manually disconnected',
+      'NET RECONNECT: abandoned - user manually disconnected',
     );
     ref
         .read(autoReconnectStateProvider.notifier)
@@ -2969,7 +2961,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
   final settings = await ref.read(settingsServiceProvider.future);
   if (!settings.autoReconnect) {
     AppLogging.connection(
-      'NET RECONNECT: abandoned — auto-reconnect disabled in settings',
+      'NET RECONNECT: abandoned - auto-reconnect disabled in settings',
     );
     ref
         .read(autoReconnectStateProvider.notifier)
@@ -2989,7 +2981,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
   for (var attempt = 1; attempt <= maxAttempts; attempt++) {
     if (ref.read(userDisconnectedProvider)) {
       AppLogging.connection(
-        'NET RECONNECT: abandoned in loop — user manually disconnected',
+        'NET RECONNECT: abandoned in loop - user manually disconnected',
       );
       ref
           .read(autoReconnectStateProvider.notifier)
@@ -2999,7 +2991,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
     final loopAutoState = ref.read(autoReconnectStateProvider);
     if (loopAutoState == AutoReconnectState.manualConnecting) {
       AppLogging.connection(
-        'NET RECONNECT: abandoned — user is manually connecting',
+        'NET RECONNECT: abandoned - user is manually connecting',
       );
       return;
     }
@@ -3010,7 +3002,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
     // fight their choice.
     if (transport.type != TransportType.network) {
       AppLogging.connection(
-        'NET RECONNECT: abandoned — transport switched to '
+        'NET RECONNECT: abandoned - transport switched to '
         '${transport.type.name}',
       );
       ref
@@ -3025,7 +3017,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
       // has already happened, so the banner would sit on "Searching
       // for device..." over a live link. Settle it back to idle.
       AppLogging.connection(
-        'NET RECONNECT: abandoned — transport already connected, '
+        'NET RECONNECT: abandoned - transport already connected, '
         'settling autoReconnectState to idle',
       );
       ref
@@ -3035,7 +3027,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
     }
     if (transport.state == DeviceConnectionState.connecting) {
       AppLogging.connection(
-        'NET RECONNECT: abandoned — transport already connecting',
+        'NET RECONNECT: abandoned - transport already connecting',
       );
       return;
     }
@@ -3073,7 +3065,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
       }
       AppLogging.connection(
         'NET RECONNECT: transport connected to '
-        '${endpoint.host}:${endpoint.port} — starting protocol handshake',
+        '${endpoint.host}:${endpoint.port} - starting protocol handshake',
       );
 
       ref.read(connectedDeviceProvider.notifier).setState(deviceInfo);
@@ -3106,7 +3098,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.success);
       AppLogging.connection(
-        'NET RECONNECT: success — handshake complete on '
+        'NET RECONNECT: success - handshake complete on '
         '${endpoint.host}:${endpoint.port}',
       );
       await Future.delayed(const Duration(milliseconds: 500));
@@ -3116,7 +3108,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
       return;
     } catch (e) {
       AppLogging.connection(
-        'NET RECONNECT: attempt $attempt/$maxAttempts failed — $e',
+        'NET RECONNECT: attempt $attempt/$maxAttempts failed - $e',
       );
       // Ensure any half-open socket is released before the next attempt
       // so the retry sees a clean transport state.
@@ -3135,7 +3127,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
   }
 
   AppLogging.connection(
-    'NET RECONNECT: exhausted $maxAttempts attempts — giving up',
+    'NET RECONNECT: exhausted $maxAttempts attempts - giving up',
   );
   ref
       .read(autoReconnectStateProvider.notifier)
@@ -3198,7 +3190,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
     if (currentState == AutoReconnectState.manualConnecting) {
       AppLogging.connection(
         '_performReconnect ABORTED after delay: User is manually connecting '
-        '— not disrupting their connection',
+        '- not disrupting their connection',
       );
       return;
     }
@@ -3219,7 +3211,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
     if (currentSavedDeviceId != null && currentSavedDeviceId != deviceId) {
       AppLogging.connection(
         '_performReconnect ABORTED after delay: Saved device changed '
-        '($deviceId → $currentSavedDeviceId) — user connected to a different device',
+        '($deviceId -> $currentSavedDeviceId) - user connected to a different device',
       );
       ref
           .read(autoReconnectStateProvider.notifier)
@@ -3270,7 +3262,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       if (loopState == AutoReconnectState.manualConnecting) {
         AppLogging.connection(
           '_performReconnect ABORTED in loop (attempt $attempt): '
-          'User is manually connecting — yielding to Scanner',
+          'User is manually connecting - yielding to Scanner',
         );
         return;
       }
@@ -3294,7 +3286,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           transportState == DeviceConnectionState.connecting) {
         AppLogging.connection(
           '_performReconnect ABORTED in loop (attempt $attempt): '
-          'Transport already ${transportState.name} — not disrupting live connection',
+          'Transport already ${transportState.name} - not disrupting live connection',
         );
         ref
             .read(autoReconnectStateProvider.notifier)
@@ -3307,7 +3299,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       if (loopSavedId != null && loopSavedId != deviceId) {
         AppLogging.connection(
           '_performReconnect ABORTED in loop (attempt $attempt): '
-          'Saved device changed ($deviceId → $loopSavedId)',
+          'Saved device changed ($deviceId -> $loopSavedId)',
         );
         ref
             .read(autoReconnectStateProvider.notifier)
@@ -3380,7 +3372,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
               // Fast path: exact BLE ID match
               if (foundId == deviceId && !completer.isCompleted) {
-                AppLogging.connection('✓ Target device found (exact BLE ID)!');
+                AppLogging.connection('Target device found (exact BLE ID)!');
                 completer.complete(deviceInfo);
               }
             }
@@ -3451,7 +3443,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
             preConnectState == AutoReconnectState.idle) {
           AppLogging.connection(
             '_performReconnect ABORTED before connect: '
-            'state=$preConnectState — not disrupting user connection',
+            'state=$preConnectState - not disrupting user connection',
           );
           if (preConnectState != AutoReconnectState.idle) {
             ref
@@ -3480,7 +3472,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         final isTransportRebind = foundDevice.id != deviceId;
         if (isTransportRebind) {
           AppLogging.connection(
-            '🔄 TRANSPORT REBIND: BLE ID changed $deviceId → ${foundDevice.id} '
+            'TRANSPORT REBIND: BLE ID changed $deviceId -> ${foundDevice.id} '
             '(logical match by name: ${foundDevice.name})',
           );
           // Update in-memory last-connected ID so subsequent loop
@@ -3516,7 +3508,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Check if still connected
           if (transport.state != DeviceConnectionState.connected) {
             AppLogging.connection(
-              '❌ Connection dropped after connect, retrying...',
+              'Connection dropped after connect, retrying...',
             );
             if (attempt < maxRetries) {
               ref
@@ -3579,7 +3571,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           await Future.delayed(const Duration(milliseconds: 500));
           if (transport.state != DeviceConnectionState.connected) {
             AppLogging.debug(
-              '🔄 ❌ Connection dropped after protocol start, retrying...',
+              'Connection dropped after protocol start, retrying...',
             );
             if (attempt < maxRetries) {
               ref
@@ -3604,7 +3596,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
             ref
                 .read(autoReconnectStateProvider.notifier)
                 .setState(AutoReconnectState.success);
-            AppLogging.connection('✅ Reconnection successful and stable!');
+            AppLogging.connection('Reconnection successful and stable!');
 
             // Reset to idle
             await Future.delayed(const Duration(milliseconds: 500));
@@ -3613,7 +3605,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
                 .setState(AutoReconnectState.idle);
             return; // Success!
           } else {
-            AppLogging.connection('❌ Connection dropped at final check');
+            AppLogging.connection('Connection dropped at final check');
             if (attempt < maxRetries) {
               ref
                   .read(autoReconnectStateProvider.notifier)
@@ -3633,11 +3625,11 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
             return;
           }
 
-          AppLogging.connection('❌ Connect error: $e');
+          AppLogging.connection('Connect error: $e');
           // Check if we should abort (connection restored via another path)
           if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
             AppLogging.debug(
-              '🔄 Reconnect cancelled (already connected), ignoring error',
+              'Reconnect cancelled (already connected), ignoring error',
             );
             return;
           }
@@ -3670,7 +3662,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           }
         } else {
           AppLogging.connection(
-            '🔄 Reboot recovery active — skipping invalidation check '
+            'Reboot recovery active - skipping invalidation check '
             '(attempt $attempt/$maxRetries)',
           );
         }
@@ -3682,7 +3674,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
     }
 
     // All retries exhausted
-    AppLogging.connection('❌ Failed to reconnect after $maxRetries attempts');
+    AppLogging.connection('Failed to reconnect after $maxRetries attempts');
     // Clear reboot recovery flag — we gave it our best shot.
     ref.read(rebootExpectedProvider.notifier).setRebootExpected(false);
     ref
@@ -3696,7 +3688,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.idle);
   } catch (e, stackTrace) {
-    AppLogging.connection('❌ Unexpected error during reconnect: $e');
+    AppLogging.connection('Unexpected error during reconnect: $e');
     AppLogging.connection('Stack trace: $stackTrace');
     ref
         .read(autoReconnectStateProvider.notifier)
@@ -3734,15 +3726,15 @@ DeviceInfo? _tryLogicalDeviceMatch(
   final lastDeviceName = settings.lastDeviceName;
 
   AppLogging.connection(
-    '🔍 LOGICAL MATCH: Trying to match ${allCandidates.length} '
-    'candidate(s) — lastNodeNum=${lastNodeNum != null ? lastNodeNum.toRadixString(16) : "null"}, '
+    'LOGICAL MATCH: Trying to match ${allCandidates.length} '
+    'candidate(s) - lastNodeNum=${lastNodeNum != null ? lastNodeNum.toRadixString(16) : "null"}, '
     'lastDeviceName=$lastDeviceName, previousBleId=$previousDeviceId',
   );
 
   // Log all candidates for diagnostics
   for (final entry in allCandidates.entries) {
     AppLogging.connection(
-      '🔍 LOGICAL MATCH: Candidate bleId=${entry.key}, '
+      'LOGICAL MATCH: Candidate bleId=${entry.key}, '
       'name=${entry.value.name}',
     );
   }
@@ -3761,7 +3753,7 @@ DeviceInfo? _tryLogicalDeviceMatch(
     if (strongMatches.length == 1) {
       final match = strongMatches.first;
       AppLogging.connection(
-        '🔍 LOGICAL MATCH: ✅ STRONG match found! '
+        'LOGICAL MATCH: STRONG match found! '
         'name=${match.name} bleId=${match.id} '
         '(suffix=$expectedSuffix matches nodeNum=${lastNodeNum.toRadixString(16)})',
       );
@@ -3770,8 +3762,8 @@ DeviceInfo? _tryLogicalDeviceMatch(
 
     if (strongMatches.length > 1) {
       AppLogging.connection(
-        '🔍 LOGICAL MATCH: ⚠️ Multiple strong matches '
-        '(${strongMatches.length}) — ambiguous, not auto-binding. '
+        'LOGICAL MATCH: Multiple strong matches '
+        '(${strongMatches.length}) - ambiguous, not auto-binding. '
         'Names: ${strongMatches.map((d) => d.name).join(", ")}',
       );
       // Ambiguous: multiple devices with the same node number suffix.
@@ -3780,7 +3772,7 @@ DeviceInfo? _tryLogicalDeviceMatch(
     }
 
     AppLogging.connection(
-      '🔍 LOGICAL MATCH: No strong match by nodeNum suffix ($expectedSuffix)',
+      'LOGICAL MATCH: No strong match by nodeNum suffix ($expectedSuffix)',
     );
   }
 
@@ -3793,8 +3785,8 @@ DeviceInfo? _tryLogicalDeviceMatch(
     if (nameMatches.length == 1) {
       final match = nameMatches.first;
       AppLogging.connection(
-        '🔍 LOGICAL MATCH: 🟡 MEDIUM match by name="${match.name}" '
-        'bleId=${match.id} — name matches lastDeviceName. '
+        'LOGICAL MATCH: MEDIUM match by name="${match.name}" '
+        'bleId=${match.id} - name matches lastDeviceName. '
         'Auto-binding (single candidate with exact name).',
       );
       // Single device with exact same name — safe to rebind.
@@ -3805,14 +3797,14 @@ DeviceInfo? _tryLogicalDeviceMatch(
 
     if (nameMatches.isNotEmpty) {
       AppLogging.connection(
-        '🔍 LOGICAL MATCH: 🟡 ${nameMatches.length} name matches '
-        'for "$lastDeviceName" — ambiguous, not auto-binding',
+        'LOGICAL MATCH: ${nameMatches.length} name matches '
+        'for "$lastDeviceName" - ambiguous, not auto-binding',
       );
     }
   }
 
   AppLogging.connection(
-    '🔍 LOGICAL MATCH: ❌ No safe logical match found among '
+    'LOGICAL MATCH: No safe logical match found among '
     '${allCandidates.length} candidate(s)',
   );
   return null;
@@ -3956,7 +3948,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   };
 
   AppLogging.debug(
-    '🟢 ProtocolService provider created - instance: ${service.hashCode}',
+    'ProtocolService provider created - instance: ${service.hashCode}',
   );
 
   // Set up notification reaction callback to send true tapbacks.
@@ -4023,7 +4015,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   // Keep the service alive for the lifetime of the app
   ref.onDispose(() {
     AppLogging.debug(
-      '🔴 ProtocolService being disposed - instance: ${service.hashCode}',
+      'ProtocolService being disposed - instance: ${service.hashCode}',
     );
     // Clear the callback when disposing
     NotificationService().onReactionSelected = null;
@@ -4258,9 +4250,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     if (!_canRecover(generation)) return;
     final enabled = prefs.getBool(kLiveActivityEnabled) ?? true;
     if (!enabled) {
-      AppLogging.debug(
-        '📱 Live Activity disabled by user preference — skipping',
-      );
+      AppLogging.debug('Live Activity disabled by user preference - skipping');
       return;
     }
 
@@ -4308,9 +4298,9 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     if (rssi != null) _signalHistory.add(rssi);
 
     AppLogging.debug(
-      '📱 Starting Live Activity: device=$deviceName, shortName=$shortName, '
+      'Starting Live Activity: device=$deviceName, shortName=$shortName, '
       'battery=$batteryLevel%, rssi=$rssi, snr=$snr, '
-      'nodes=$activeCount/$totalCount, dest=${_destinationMode.name}→${destination.label}',
+      'nodes=$activeCount/$totalCount, dest=${_destinationMode.name}->${destination.label}',
     );
 
     final success = await _liveActivityService.startMeshActivity(
@@ -4463,8 +4453,8 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     final destination = _resolveDestination(nodes, myNodeNum);
 
     AppLogging.debug(
-      '📱 Live Activity update: nodes=$onlineCount/$totalCount, '
-      'dest=${_destinationMode.name}→${destination.label}',
+      'Live Activity update: nodes=$onlineCount/$totalCount, '
+      'dest=${_destinationMode.name}->${destination.label}',
     );
 
     _liveActivityService.updateActivity(
@@ -4674,7 +4664,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     _lastSnr = null;
     _signalHistory.clear();
     await _liveActivityService.endActivity();
-    AppLogging.debug('📱 Ended Live Activity - device disconnected');
+    AppLogging.debug('Ended Live Activity - device disconnected');
   }
 }
 
@@ -4784,7 +4774,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // completer is unblocked so messages can still flow (in-memory only).
     if (storageAsync.hasError) {
       AppLogging.messages(
-        '❌ messageStorageProvider failed: ${storageAsync.error}',
+        'messageStorageProvider failed: ${storageAsync.error}',
       );
       if (!_storageLoadCompleter.isCompleted) {
         _storageLoadCompleter.complete();
@@ -4797,7 +4787,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // ref.listen re-subscribes streams without touching message state.
     ref.listen(protocolServiceProvider, (previous, next) {
       AppLogging.messages(
-        '📨 Protocol service changed — re-subscribing message streams',
+        'Protocol service changed - re-subscribing message streams',
       );
       _subscribeToStreams(next);
     });
@@ -4821,7 +4811,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Rule: if you add a skip-guard that checks `!= null`, the matching
     // dispose/cancel MUST set the reference to null.  Always.
     ref.onDispose(() {
-      AppLogging.messages('📨 ref.onDispose: cancelling stream subscriptions');
+      AppLogging.messages('ref.onDispose: cancelling stream subscriptions');
       _messageSubscription?.cancel();
       _messageSubscription = null;
       _deliverySubscription?.cancel();
@@ -4840,7 +4830,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // completes — an unhandled exception here would permanently block
     // every incoming message that awaits the completer.
     _loadFromStorage().catchError((Object e, StackTrace s) {
-      AppLogging.messages('❌ _loadFromStorage failed: $e\n$s');
+      AppLogging.messages('_loadFromStorage failed: $e\n$s');
       if (!_storageLoadCompleter.isCompleted) {
         _storageLoadCompleter.complete();
       }
@@ -4867,7 +4857,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     }
     if (_storage == null) {
       AppLogging.messages(
-        '📨 _loadFromStorage: storage is null — completer NOT completed '
+        '_loadFromStorage: storage is null - completer NOT completed '
         '(waiting for messageStorageProvider to resolve)',
       );
       // Do NOT complete the completer when storage is unavailable.
@@ -4938,7 +4928,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       final resetMessages = regularMessages.map((m) {
         if (m.status == MessageStatus.retrying) {
           AppLogging.messages(
-            'MessagesNotifier: reset stale retrying → unconfirmed: ${m.id}',
+            'MessagesNotifier: reset stale retrying -> unconfirmed: ${m.id}',
           );
           return m.copyWith(status: MessageStatus.unconfirmed);
         }
@@ -4947,7 +4937,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
             !m.received &&
             !liveQueueIds.contains(m.id)) {
           AppLogging.messages(
-            'MessagesNotifier: orphaned pending → failed: ${m.id}',
+            'MessagesNotifier: orphaned pending -> failed: ${m.id}',
           );
           final failed = m.copyWith(
             status: MessageStatus.failed,
@@ -4975,7 +4965,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       // Debug: Log channel messages details
       for (final m in savedMessages.where((m) => m.isBroadcast)) {
         AppLogging.messages(
-          '📨 Stored broadcast: from=${m.from}, to=${m.to.toRadixString(16)}, '
+          'Stored broadcast: from=${m.from}, to=${m.to.toRadixString(16)}, '
           'channel=${m.channel}, text="${m.text.substring(0, m.text.length.clamp(0, 20))}"',
         );
       }
@@ -5016,13 +5006,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
     if (identical(protocol, _subscribedProtocol) &&
         _messageSubscription != null) {
       AppLogging.messages(
-        '📨 _subscribeToStreams: skipping — same protocol instance '
+        '_subscribeToStreams: skipping - same protocol instance '
         '(hash=${protocol.hashCode}), subscription active',
       );
       return;
     }
     AppLogging.messages(
-      '📨 _subscribeToStreams: subscribing to protocol hash=${protocol.hashCode}, '
+      '_subscribeToStreams: subscribing to protocol hash=${protocol.hashCode}, '
       'previousHash=${_subscribedProtocol?.hashCode}, '
       'hadSubscription=${_messageSubscription != null}',
     );
@@ -5038,7 +5028,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       if (!ref.mounted) return;
 
       AppLogging.messages(
-        '📨 Stream received message id=${message.id}, '
+        'Stream received message id=${message.id}, '
         'storageCompleterDone=${_storageLoadCompleter.isCompleted}',
       );
 
@@ -5050,7 +5040,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       if (!ref.mounted) return;
 
       AppLogging.messages(
-        '📨 New message: from=${message.from}, to=${message.to.toRadixString(16)}, '
+        'New message: from=${message.from}, to=${message.to.toRadixString(16)}, '
         'channel=${message.channel}, isBroadcast=${message.isBroadcast}, sent=${message.sent}, id=${message.id}',
       );
 
@@ -5062,7 +5052,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
         final sentIsTapback = message.isCanonicalTapback;
         if (sentIsTapback) {
           AppLogging.messages(
-            '🏷️ Sent tapback — persisting hidden reaction row only',
+            'Sent tapback - persisting hidden reaction row only',
           );
           await _persistHiddenTapback(message);
           return;
@@ -5079,13 +5069,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
         });
         if (existingMessage != null) {
           AppLogging.messages(
-            '📨 Skipping duplicate sent message id=${message.id}',
+            'Skipping duplicate sent message id=${message.id}',
           );
           return;
         }
         if (_isDuplicateMessage(message)) {
           AppLogging.messages(
-            '📨 Deduped sent message by signature: id=${message.id}',
+            'Deduped sent message by signature: id=${message.id}',
           );
           return;
         }
@@ -5099,7 +5089,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
       if (_isDuplicateMessage(message)) {
         AppLogging.messages(
-          '📨 Duplicate incoming message ignored: id=${message.id}',
+          'Duplicate incoming message ignored: id=${message.id}',
         );
         return;
       }
@@ -5109,7 +5099,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       final isTapback = message.isCanonicalTapback;
       if (isTapback) {
         AppLogging.messages(
-          '🏷️ Incoming tapback detected — persisting hidden reaction row '
+          'Incoming tapback detected - persisting hidden reaction row '
           '(not adding to message state, isEmoji=${message.isEmoji}, '
           'replyId=${message.replyId})',
         );
@@ -5119,7 +5109,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
       _addMessageToState(message);
       AppLogging.messages(
-        '📨 _addMessageToState DONE: id=${message.id}, '
+        '_addMessageToState DONE: id=${message.id}, '
         'channel=${message.channel}, isBroadcast=${message.isBroadcast}, '
         'stateSize=${state.length}',
       );
@@ -5136,18 +5126,18 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
       if (type == 'direct_message' || type == 'channel_message') {
         AppLogging.messages(
-          '📨 Handling push message event: type=$type, keys=${payload.keys.toList()}',
+          'Handling push message event: type=$type, keys=${payload.keys.toList()}',
         );
         final parsed = parsePushMessagePayload(payload);
         if (parsed == null) {
-          AppLogging.messages('📨 Could not parse push payload into Message');
+          AppLogging.messages('Could not parse push payload into Message');
           return;
         }
 
         // Add to state using canonical addMessage (will dedupe by id)
         addMessage(parsed);
         AppLogging.messages(
-          '📨 Push message persisted locally: id=${parsed.id}, from=${parsed.from}, to=${parsed.to}',
+          'Push message persisted locally: id=${parsed.id}, from=${parsed.from}, to=${parsed.to}',
         );
       }
     });
@@ -5228,7 +5218,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Primary Channel have channel == 0.
     final isChannelMessage = message.isBroadcast;
     AppLogging.debug(
-      '🔔 Is channel message: $isChannelMessage (channel: ${message.channel})',
+      'Is channel message: $isChannelMessage (channel: ${message.channel})',
     );
 
     String? channelName;
@@ -5249,7 +5239,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
           'Channel ${message.channel}'; // lint-allow: hardcoded-string
 
       AppLogging.debug(
-        '🔔 Queueing channel notification: $senderName in $channelName',
+        'Queueing channel notification: $senderName in $channelName',
       );
     } else {
       // Check direct message setting
@@ -5373,11 +5363,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
   void _handleDeliveryUpdate(MessageDeliveryUpdate update) {
     AppLogging.debug(
-      '📨 Delivery update received: packetId=${update.packetId}, '
+      'Delivery update received: packetId=${update.packetId}, '
       'delivered=${update.delivered}, error=${update.error?.message}',
     );
     AppLogging.debug(
-      '📨 Currently tracking packets: ${_packetToMessageId.keys.toList()}',
+      'Currently tracking packets: ${_packetToMessageId.keys.toList()}',
     );
 
     // Drop tracking entries that have lingered past the window in which an
@@ -5398,9 +5388,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     final messageIndex = state.indexWhere((m) => m.id == messageId);
     if (messageIndex == -1) {
-      AppLogging.debug(
-        '📨 ❌ Delivery update for message not in state: $messageId',
-      );
+      AppLogging.debug('Delivery update for message not in state: $messageId');
       return;
     }
 
@@ -5423,12 +5411,12 @@ class MessagesNotifier extends Notifier<List<Message>> {
           update.isSuccess && rawRealAck && message.realAck != true;
       if (!canUpgrade) {
         AppLogging.debug(
-          '📨 ⏭️ Ignoring update for already-delivered message: $messageId',
+          'Ignoring update for already-delivered message: $messageId',
         );
         return;
       }
       AppLogging.messages(
-        '🛰️ Upgrading $messageId realAck ${message.realAck} → true '
+        'Upgrading $messageId realAck ${message.realAck} -> true '
         '(explicit recipient ack superseded earlier implicit ack)',
       );
     }
@@ -5439,7 +5427,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // the message at "sent to radio" rather than flipping it to "failed".
     if (message.isBroadcast && !update.isSuccess) {
       AppLogging.debug(
-        '📨 ⏭️ Ignoring non-success update for broadcast message: $messageId',
+        'Ignoring non-success update for broadcast message: $messageId',
       );
       return;
     }
@@ -5453,7 +5441,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
           ? message.realAck
           : (message.realAck == true ? true : rawRealAck);
       AppLogging.messages(
-        '🛰️ $messageId → delivered (realAck=$nextRealAck, '
+        '$messageId -> delivered (realAck=$nextRealAck, '
         'direct=${message.isDirect}, packetId=${update.packetId})',
       );
       updatedMessage = message.copyWith(
@@ -5487,19 +5475,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
     if (update.isSuccess && rawRealAck) {
       _packetToMessageId.remove(update.packetId);
       _implicitAckedAt.remove(update.packetId);
-      AppLogging.debug('📨 ✅ Message delivered, stopped tracking: $messageId');
+      AppLogging.debug('Message delivered, stopped tracking: $messageId');
     } else if (update.isSuccess) {
       // Implicit ack (or a non-DM success) — record the timestamp so we can
       // evict the tracking entry if no explicit ack ever follows. Overwrites
       // any prior stamp so a duplicate implicit ack refreshes the window.
       _implicitAckedAt[update.packetId] = DateTime.now();
       AppLogging.debug(
-        '📨 📶 Implicit mesh ack for $messageId — awaiting explicit recipient ack',
+        'Implicit mesh ack for $messageId - awaiting explicit recipient ack',
       );
     } else {
-      AppLogging.debug(
-        '📨 ❌ Message failed: $messageId - ${update.error?.message}',
-      );
+      AppLogging.debug('Message failed: $messageId - ${update.error?.message}');
     }
   }
 
@@ -5508,9 +5494,9 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Fresh tracking — drop any stale implicit-ack timestamp carried over
     // from a reused packet id in the unlikely event of wraparound.
     _implicitAckedAt.remove(packetId);
-    AppLogging.debug('📨 Tracking packet $packetId -> message $messageId');
+    AppLogging.debug('Tracking packet $packetId -> message $messageId');
     AppLogging.debug(
-      '📨 Current tracked packets: ${_packetToMessageId.keys.toList()}',
+      'Current tracked packets: ${_packetToMessageId.keys.toList()}',
     );
   }
 
@@ -5535,7 +5521,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       _packetToMessageId.remove(pid);
       _implicitAckedAt.remove(pid);
       AppLogging.messages(
-        '🧹 ACK TRACK EXPIRE packetId=$pid age=${age?.inSeconds}s '
+        'ACK TRACK EXPIRE packetId=$pid age=${age?.inSeconds}s '
         '(window=${_ackUpgradeWindow.inMinutes}m)',
       );
     }
@@ -5554,19 +5540,19 @@ class MessagesNotifier extends Notifier<List<Message>> {
   void untrackPacket(int packetId) {
     _packetToMessageId.remove(packetId);
     _implicitAckedAt.remove(packetId);
-    AppLogging.debug('📨 Untracked stale packet $packetId');
+    AppLogging.debug('Untracked stale packet $packetId');
   }
 
   void addMessage(Message message) {
     if (_isDuplicateMessage(message)) {
-      AppLogging.messages('📨 Duplicate message ignored: id=${message.id}');
+      AppLogging.messages('Duplicate message ignored: id=${message.id}');
       _mergeDuplicateRxMetadata(message);
       return;
     }
 
     if (message.isCanonicalTapback) {
       AppLogging.messages(
-        '🏷️ addMessage: persisting canonical tapback id=${message.id}',
+        'addMessage: persisting canonical tapback id=${message.id}',
       );
       unawaited(_persistHiddenTapback(message));
       return;
@@ -5583,7 +5569,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     }
 
     AppLogging.messages(
-      '📨 addMessage: id=${message.id}, from=${message.from}, to=${message.to}, channel=${message.channel}, convKey=$convKey',
+      'addMessage: id=${message.id}, from=${message.from}, to=${message.to}, channel=${message.channel}, convKey=$convKey',
     );
 
     _addMessageToState(message);
@@ -5592,14 +5578,14 @@ class MessagesNotifier extends Notifier<List<Message>> {
   bool _isDuplicateMessage(Message message) {
     // Layer 1: Exact message ID match
     if (message.id.isNotEmpty && state.any((m) => m.id == message.id)) {
-      AppLogging.messages('📨 Dedup Layer 1 (ID match): id=${message.id}');
+      AppLogging.messages('Dedup Layer 1 (ID match): id=${message.id}');
       return true;
     }
     // Layer 2: Packet ID match
     if (message.packetId != null &&
         state.any((m) => m.packetId == message.packetId)) {
       AppLogging.messages(
-        '📨 Dedup Layer 2 (packetId match): packetId=${message.packetId}',
+        'Dedup Layer 2 (packetId match): packetId=${message.packetId}',
       );
       return true;
     }
@@ -5607,7 +5593,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final signature = _messageSignature(message);
     if (_recentMessageSignatures.containsKey(signature)) {
       AppLogging.messages(
-        '📨 Dedup Layer 3 (signature match): from=${message.from}',
+        'Dedup Layer 3 (signature match): from=${message.from}',
       );
       return true;
     }
@@ -5624,13 +5610,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
         !message.isCanonicalTapback &&
         _isContentDuplicate(message)) {
       AppLogging.messages(
-        '📨 Dedup Layer 4 (content match): from=${message.from}, '
+        'Dedup Layer 4 (content match): from=${message.from}, '
         'channel=${message.channel}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
       );
       return true;
     }
     AppLogging.messages(
-      '📨 Dedup passed all layers: id=${message.id}, '
+      'Dedup passed all layers: id=${message.id}, '
       'packetId=${message.packetId}, stateSize=${state.length}',
     );
     return false;
@@ -5713,7 +5699,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     if (!changed) return;
 
     AppLogging.messages(
-      '📨 Merged rx metadata from duplicate into ${existing.id}: '
+      'Merged rx metadata from duplicate into ${existing.id}: '
       'viaMqtt=${merged.viaMqtt}, hopCount=${merged.hopCount}',
     );
     state = state.map((m) => m.id == existing.id ? merged : m).toList();
@@ -5803,7 +5789,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     );
 
     AppLogging.nodeDex(
-      'Inbound ${message.isBroadcast ? "channel" : "DM"} message → '
+      'Inbound ${message.isBroadcast ? "channel" : "DM"} message -> '
       'NodeDex: from=${message.from}, '
       'ts=${message.timestamp.toIso8601String()}, key=$key, '
       'recordMessage=true, encounterRecorded=$encounterRecorded',
@@ -5870,7 +5856,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       final current = state.firstWhereOrNull((m) => m.id == messageId);
       if (current != null && current.status == MessageStatus.delivered) {
         AppLogging.debug(
-          '📨 ⏭️ Skipping update that would downgrade delivered '
+          'Skipping update that would downgrade delivered '
           'message: $messageId (attempted ${updatedMessage.status.name})',
         );
         return;
@@ -5893,7 +5879,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return m;
     }).toList();
     if (changed) {
-      AppLogging.messages('📨 Marked conversation with node $nodeNum as read');
+      AppLogging.messages('Marked conversation with node $nodeNum as read');
     }
   }
 
@@ -5910,7 +5896,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return m;
     }).toList();
     if (changed) {
-      AppLogging.messages('📨 Marked channel $channelIndex messages as read');
+      AppLogging.messages('Marked channel $channelIndex messages as read');
     }
   }
 
@@ -5948,7 +5934,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     if (_storage == null) return;
     if (_reconciledNodesThisSession.contains(nodeNum)) {
       AppLogging.messages(
-        '📨 Reconciliation already performed for node $nodeNum this session',
+        'Reconciliation already performed for node $nodeNum this session',
       );
       return;
     }
@@ -5970,7 +5956,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     if (localCount > 0 && uiCount == 0) {
       AppLogging.messages(
-        '⚠️ Reconnect canary: conversationKey=dm:$nodeNum or node-scoped, localCount=$localCount, uiCount=$uiCount, nodeIdentity=$nodeNum, since=$since, now=$now, source="reconnect_canary"',
+        'Reconnect canary: conversationKey=dm:$nodeNum or node-scoped, localCount=$localCount, uiCount=$uiCount, nodeIdentity=$nodeNum, since=$since, now=$now, source="reconnect_canary"',
       );
 
       final messages = await _storage!.loadMessagesForNode(
@@ -5987,11 +5973,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
       }
       if (added > 0) {
         AppLogging.messages(
-          '✅ Rehydrate: Added $added messages for node $nodeNum',
+          'Rehydrate: Added $added messages for node $nodeNum',
         );
       } else {
         AppLogging.messages(
-          'ℹ️ Rehydrate: No messages added for node $nodeNum (deduped)',
+          'Rehydrate: No messages added for node $nodeNum (deduped)',
         );
       }
     }
@@ -6013,7 +5999,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
         inserted++;
       }
     }
-    AppLogging.messages('🔧 Force rehydrate: total=$total, inserted=$inserted');
+    AppLogging.messages('Force rehydrate: total=$total, inserted=$inserted');
     return {'total': total, 'inserted': inserted};
   }
 
@@ -6040,7 +6026,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       // Content-based dedup (same sender, text, channel within 60 s)
       if (_isContentDuplicate(m)) {
         AppLogging.messages(
-          '📨 Skipped background merge (content duplicate): id=${m.id}, '
+          'Skipped background merge (content duplicate): id=${m.id}, '
           'from=${m.from}, channel=${m.channel}',
         );
         continue;
@@ -6051,9 +6037,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       inserted++;
     }
     if (inserted > 0) {
-      AppLogging.messages(
-        '📨 Merged $inserted background messages into UI state',
-      );
+      AppLogging.messages('Merged $inserted background messages into UI state');
     }
     return inserted;
   }
@@ -6379,9 +6363,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       if (!ref.mounted) return;
       if (_clearEpoch != initEpoch) {
         AppLogging.nodes(
-          'NodesNotifier._init: abandoning stale load — destructive '
+          'NodesNotifier._init: abandoning stale load - destructive '
           'clearNodes() fired during storage await '
-          '(epoch $initEpoch → $_clearEpoch); starting empty',
+          '(epoch $initEpoch -> $_clearEpoch); starting empty',
         );
         // Do not write `state = nodeMap(...)` — state was already set
         // to {} by clearNodes(). Proceed to the protocol-merge step
@@ -6411,7 +6395,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           nodeMap[node.nodeNum] = node;
           if (node.hasPosition) {
             AppLogging.debug(
-              '📍 Node ${node.nodeNum} has stored position: ${node.latitude}, ${node.longitude}',
+              'Node ${node.nodeNum} has stored position: ${node.latitude}, ${node.longitude}',
             );
           }
           _logFallbackIfNeeded(node);
@@ -6888,7 +6872,7 @@ class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
     });
 
     AppLogging.debug(
-      '🔵 ChannelsNotifier build - protocol has ${protocol.channels.length} channels',
+      'ChannelsNotifier build - protocol has ${protocol.channels.length} channels',
     );
     for (var c in protocol.channels) {
       AppLogging.debug(
@@ -6901,14 +6885,14 @@ class ChannelsNotifier extends Notifier<List<ChannelConfig>> {
         .where((c) => c.index == 0 || c.role != 'DISABLED')
         .toList();
     AppLogging.debug(
-      '🔵 ChannelsNotifier initialized with ${initial.length} channels',
+      'ChannelsNotifier initialized with ${initial.length} channels',
     );
 
     // Listen for future channel updates
     _channelSubscription = protocol.channelStream.listen((channel) {
       if (!ref.mounted) return;
       AppLogging.debug(
-        '🔵 ChannelsNotifier received channel update: '
+        'ChannelsNotifier received channel update: '
         'index=${channel.index}, name="${channel.name}", '
         'positionPrecision=${channel.positionPrecision}, positionEnabled=${channel.positionEnabled}',
       );
@@ -7125,7 +7109,7 @@ class RemoteAdminNotifier extends Notifier<RemoteAdminState> {
           next.asData?.value != DeviceConnectionState.connected;
       if (wasConnected && isDisconnected && state.isRemote) {
         AppLogging.protocol(
-          'BLE disconnected — clearing remote admin target '
+          'BLE disconnected - clearing remote admin target '
           '${state.targetNodeNum?.toRadixString(16)}',
         );
         state = const RemoteAdminState();
@@ -7165,19 +7149,19 @@ class RemoteAdminNotifier extends Notifier<RemoteAdminState> {
       final protocol = ref.read(protocolServiceProvider);
       if (!protocol.isConnected) {
         AppLogging.protocol(
-          '🔑 Remote admin target set to ${nodeNum.toRadixString(16)} but '
-          'transport not connected — sessionPasskey pre-warm skipped',
+          'Remote admin target set to ${nodeNum.toRadixString(16)} but '
+          'transport not connected - sessionPasskey pre-warm skipped',
         );
         return;
       }
       AppLogging.protocol(
-        '🔑 Pre-warming sessionPasskey for remote target '
+        'Pre-warming sessionPasskey for remote target '
         '${nodeNum.toRadixString(16)} via getDeviceMetadata',
       );
       await protocol.getDeviceMetadata(target: AdminTarget.remote(nodeNum));
     } catch (e) {
       AppLogging.protocol(
-        '🔑 sessionPasskey pre-warm failed for ${nodeNum.toRadixString(16)}: '
+        'sessionPasskey pre-warm failed for ${nodeNum.toRadixString(16)}: '
         '$e (non-fatal; subsequent admin operations will retry without '
         'passkey)',
       );
@@ -7427,7 +7411,7 @@ class NodeDiscoveryCooldownNotifier
     state = state.copyWith(discoveredDuringCooldown: updated);
 
     AppLogging.notifications(
-      '🔔 Node discovered during cooldown: ${node.displayName} '
+      'Node discovered during cooldown: ${node.displayName} '
       '(${updated.length} total during cooldown)',
     );
   }
@@ -7442,7 +7426,7 @@ class NodeDiscoveryCooldownNotifier
     );
 
     AppLogging.notifications(
-      '🔔 Started node discovery cooldown for ${state.cooldownDuration.inMinutes} minutes',
+      'Started node discovery cooldown for ${state.cooldownDuration.inMinutes} minutes',
     );
 
     // Schedule cooldown end
@@ -7454,7 +7438,7 @@ class NodeDiscoveryCooldownNotifier
     _cooldownTimer?.cancel();
     _cooldownTimer = null;
     state = const NodeDiscoveryCooldownState();
-    AppLogging.notifications('🔔 Reset node discovery cooldown');
+    AppLogging.notifications('Reset node discovery cooldown');
   }
 
   /// Public seam: restart the cooldown window from "now".
@@ -7470,7 +7454,7 @@ class NodeDiscoveryCooldownNotifier
   /// re-arms via the disconnect→connect listener.
   void restartCooldown() {
     AppLogging.notifications(
-      '🔔 Restarting node discovery cooldown (e.g. after node-db reset)',
+      'Restarting node discovery cooldown (e.g. after node-db reset)',
     );
     _startCooldown();
   }
@@ -7480,7 +7464,7 @@ class NodeDiscoveryCooldownNotifier
     final discoveredCount = state.discoveredDuringCooldown.length;
 
     AppLogging.notifications(
-      '🔔 Node discovery cooldown complete - '
+      'Node discovery cooldown complete - '
       '$discoveredCount nodes discovered',
     );
 
@@ -7508,7 +7492,7 @@ class NodeDiscoveryCooldownNotifier
           );
         } catch (e) {
           AppLogging.notifications(
-            '🔔 Error showing batched node notification: $e',
+            'Error showing batched node notification: $e',
           );
         }
       }
@@ -7635,7 +7619,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
             (state.applyStatus == RegionApplyStatus.applying ||
                 regionAppliedWithinCarryOver(state))) {
           AppLogging.connection(
-            '🌍 REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} '
+            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} '
             'new_session=${next.connectionSessionId} status=${state.applyStatus.name} reason=session_change_same_device',
           );
           // Update the session ID but keep the apply status
@@ -7649,7 +7633,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
           targetDeviceId: currentDeviceId,
         );
         AppLogging.connection(
-          '🌍 REGION_FLOW choose=null session=${next.connectionSessionId} status=idle reason=new_session device=$currentDeviceId',
+          'REGION_FLOW choose=null session=${next.connectionSessionId} status=idle reason=new_session device=$currentDeviceId',
         );
         return;
       }
@@ -7658,7 +7642,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         if (next.isTerminalInvalidated) {
           state = state.copyWith(applyStatus: RegionApplyStatus.failed);
           AppLogging.connection(
-            '🌍 REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=pairing_invalidated',
+            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=pairing_invalidated',
           );
           return;
         }
@@ -7669,7 +7653,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         // Marking as failed here would abort the operation before reconnection can complete.
         if (previous?.isConnected == true && !next.isConnected) {
           AppLogging.connection(
-            '🌍 REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=applying disconnect_expected=true reason=device_reboot',
+            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=applying disconnect_expected=true reason=device_reboot',
           );
           // DO NOT set applyStatus to failed - let _awaitRegionConfirmation handle it
           return;
@@ -7686,7 +7670,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
             region == state.regionChoice) {
           state = state.copyWith(applyStatus: RegionApplyStatus.applied);
           AppLogging.connection(
-            '🌍 REGION_FLOW choose=${region.name} session=${state.connectionSessionId} status=applied reason=region_stream',
+            'REGION_FLOW choose=${region.name} session=${state.connectionSessionId} status=applied reason=region_stream',
           );
         }
       });
@@ -7707,7 +7691,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     final sessionId = ref.read(deviceConnectionProvider).connectionSessionId;
     state = RegionConfigState(connectionSessionId: sessionId);
     AppLogging.connection(
-      '🌍 REGION_FLOW reset session=$sessionId reason=factory_reset',
+      'REGION_FLOW reset session=$sessionId reason=factory_reset',
     );
   }
 
@@ -7729,7 +7713,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         targetDeviceId: deviceId,
       );
       AppLogging.connection(
-        '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=not_connected',
+        'REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=not_connected',
       );
       throw StateError('Cannot set region while disconnected');
     }
@@ -7738,7 +7722,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     if (state.applyStatus == RegionApplyStatus.applied &&
         state.regionChoice == region) {
       AppLogging.connection(
-        '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=already_applied',
+        'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=already_applied',
       );
       return;
     }
@@ -7747,7 +7731,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         state.regionChoice == region &&
         state.connectionSessionId == sessionId) {
       AppLogging.connection(
-        '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applying reason=already_applying',
+        'REGION_FLOW choose=${region.name} session=$sessionId status=applying reason=already_applying',
       );
       return;
     }
@@ -7763,7 +7747,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     // reads (avoids the regionConfigProvider circular dependency).
     ref.read(regionApplyInFlightProvider.notifier).setActive(true);
     AppLogging.connection(
-      '🌍 REGION_FLOW choose=${region.name} session=$sessionId device=$deviceId status=applying reason=$reason',
+      'REGION_FLOW choose=${region.name} session=$sessionId device=$deviceId status=applying reason=$reason',
     );
 
     try {
@@ -7787,7 +7771,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       // Mark as applied - the reconnection confirms success
       state = state.copyWith(applyStatus: RegionApplyStatus.applied);
       AppLogging.connection(
-        '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=reconnect_confirmed',
+        'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=reconnect_confirmed',
       );
     } catch (e) {
       if (!ref.mounted) rethrow;
@@ -7798,7 +7782,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       if (state.applyStatus == RegionApplyStatus.applied &&
           state.regionChoice == region) {
         AppLogging.connection(
-          '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=confirmed_despite_error',
+          'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=confirmed_despite_error',
         );
         // Region was confirmed by stream - don't treat as failure
         return;
@@ -7807,7 +7791,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         // Device has the correct region - mark as applied
         state = state.copyWith(applyStatus: RegionApplyStatus.applied);
         AppLogging.connection(
-          '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=device_has_region',
+          'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=device_has_region',
         );
         return;
       }
@@ -7816,7 +7800,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       if (state.applyStatus == RegionApplyStatus.applying) {
         state = state.copyWith(applyStatus: RegionApplyStatus.failed);
         AppLogging.connection(
-          '🌍 REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=${e.runtimeType}',
+          'REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=${e.runtimeType}',
         );
       }
       rethrow;
@@ -7878,7 +7862,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     // This handles test scenarios where setRegion completes synchronously
     if (protocol.currentRegion == region) {
       AppLogging.connection(
-        '🌍 REGION_FLOW session=$sessionId already_has_region=${region.name}',
+        'REGION_FLOW session=$sessionId already_has_region=${region.name}',
       );
       return; // Device already has the region - no need to wait for reboot
     }
@@ -7908,7 +7892,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       if (!sawDisconnect && !next.isConnected) {
         sawDisconnect = true;
         AppLogging.connection(
-          '🌍 REGION_FLOW session=$sessionId disconnect_during_apply (expected for reboot)',
+          'REGION_FLOW session=$sessionId disconnect_during_apply (expected for reboot)',
         );
         return;
       }
@@ -7956,7 +7940,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         }
         sawReconnect = true;
         AppLogging.connection(
-          '🌍 REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
+          'REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
         );
         final liveReadiness = protocol.readiness;
         if (liveReadiness == OperationalReadiness.ready) {
@@ -8364,7 +8348,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     state = state.copyWith(pendingMessages: newMessages);
 
     AppLogging.notifications(
-      '🔔 Queued message notification (${newMessages.length} pending)',
+      'Queued message notification (${newMessages.length} pending)',
     );
 
     _scheduleFlush();
@@ -8376,7 +8360,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     state = state.copyWith(pendingNodes: newNodes);
 
     AppLogging.notifications(
-      '🔔 Queued node notification (${newNodes.length} pending)',
+      'Queued node notification (${newNodes.length} pending)',
     );
 
     _scheduleFlush();
@@ -8391,7 +8375,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     final totalPending =
         state.pendingMessages.length + state.pendingNodes.length;
     if (totalPending >= _maxBatchSize) {
-      AppLogging.notifications('🔔 Max batch size reached, flushing now');
+      AppLogging.notifications('Max batch size reached, flushing now');
       _flush();
       return;
     }
@@ -8414,7 +8398,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     if (messages.isEmpty && nodes.isEmpty) return;
 
     AppLogging.notifications(
-      '🔔 Flushing ${messages.length} messages and ${nodes.length} nodes',
+      'Flushing ${messages.length} messages and ${nodes.length} nodes',
     );
 
     // Get settings
@@ -8428,9 +8412,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
 
     // If master notifications toggle is off, skip everything
     if (!masterEnabled) {
-      AppLogging.notifications(
-        '🔔 Master notifications disabled, skipping flush',
-      );
+      AppLogging.notifications('Master notifications disabled, skipping flush');
       return;
     }
 
@@ -8448,7 +8430,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
           .where((m) => !m.isChannelMessage && !dmEnabled)
           .length;
       AppLogging.notifications(
-        '🔔 Filtered $channelFiltered channel and $dmFiltered DM notifications (settings changed since queue)',
+        'Filtered $channelFiltered channel and $dmFiltered DM notifications (settings changed since queue)',
       );
     }
 
@@ -8504,7 +8486,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     } catch (e) {
       // Platform channel errors from the notification plugin are non-critical.
       // Log and swallow so they don't propagate as unhandled exceptions.
-      AppLogging.notifications('🔔 Error showing batched notification: $e');
+      AppLogging.notifications('Error showing batched notification: $e');
     }
   }
 
@@ -8518,7 +8500,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
     _flushTimer?.cancel();
     _flushTimer = null;
     state = const NotificationBatchState();
-    AppLogging.notifications('🔔 Cancelled all pending notifications');
+    AppLogging.notifications('Cancelled all pending notifications');
   }
 }
 

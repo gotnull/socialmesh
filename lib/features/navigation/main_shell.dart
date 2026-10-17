@@ -246,7 +246,7 @@ class HamburgerMenuButton extends ConsumerWidget {
           } catch (e) {
             // If no Scaffold ancestor found, log the issue
             AppLogging.app(
-              '⚠️ HamburgerMenuButton: Could not open drawer - no scaffold key or ancestor found',
+              'HamburgerMenuButton: Could not open drawer - no scaffold key or ancestor found',
             );
           }
         }
@@ -376,7 +376,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   void initState() {
     super.initState();
-    AppLogging.connection('🏠 MainShell: initState hashCode=$hashCode');
+    AppLogging.connection('MainShell: initState hashCode=$hashCode');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
@@ -430,7 +430,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   void dispose() {
-    AppLogging.connection('🏠 MainShell: dispose hashCode=$hashCode');
+    AppLogging.connection('MainShell: dispose hashCode=$hashCode');
     // Note: We don't clear the scaffold key here because:
     // 1. Modifying providers during dispose causes Riverpod exceptions
     // 2. When MainShell is recreated, initState will set a new key anyway
@@ -676,7 +676,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     // on a confirmed UNSET region.
     if (isConnected && needsRegionSetup) {
       AppLogging.app(
-        '⚠️ MainShell: Connected but region is UNSET '
+        'MainShell: Connected but region is UNSET '
         '(regionConfigured=$regionConfigured) - forcing region setup',
       );
       // CRITICAL: User has already been through onboarding, so screen should pop after selection

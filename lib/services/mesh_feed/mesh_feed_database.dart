@@ -162,7 +162,7 @@ class MeshFeedDatabase {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    AppLogging.meshFeed('migrating schema v$oldVersion → v$newVersion');
+    AppLogging.meshFeed('migrating schema v$oldVersion -> v$newVersion');
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE mesh_posts ADD COLUMN local_seq INTEGER');
       await db.execute(
@@ -267,7 +267,7 @@ class MeshFeedDatabase {
       row['updated_at_ms'] = nowMs;
       await db.insert('mesh_posts', row);
       AppLogging.meshFeed(
-        'INSERT post=${post.id.substring(0, 8)}… '
+        'INSERT post=${post.id.substring(0, 8)}... '
         'seq=$nextSeq syncSeq=$nextSyncSeq author=${post.authorNodeNum}',
       );
       return true;
@@ -299,7 +299,7 @@ class MeshFeedDatabase {
       whereArgs: [post.id],
     );
     AppLogging.meshFeed(
-      'MERGE post=${post.id.substring(0, 8)}… '
+      'MERGE post=${post.id.substring(0, 8)}... '
       'seq=$nextSeq transports=${mergedTransports.map((t) => t.name).join(",")}',
     );
     return false;
@@ -538,7 +538,7 @@ class MeshFeedDatabase {
       whereArgs: [postId],
     );
     AppLogging.meshFeed(
-      'LoRa rebroadcast marked: post=${postId.substring(0, 8)}…',
+      'LoRa rebroadcast marked: post=${postId.substring(0, 8)}...',
     );
   }
 

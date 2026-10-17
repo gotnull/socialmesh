@@ -83,7 +83,7 @@ class TranslationSettingsNotifier extends Notifier<TranslationSettings> {
         }
       }
     } catch (e) {
-      AppLogging.app('TranslationSettings: failed to load — $e');
+      AppLogging.app('TranslationSettings: failed to load - $e');
     }
   }
 
@@ -92,7 +92,7 @@ class TranslationSettingsNotifier extends Notifier<TranslationSettings> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefsKey, jsonEncode(state.toJson()));
     } catch (e) {
-      AppLogging.app('TranslationSettings: failed to persist — $e');
+      AppLogging.app('TranslationSettings: failed to persist - $e');
     }
   }
 
@@ -146,7 +146,7 @@ class TranslationQuotaNotifier extends Notifier<TranslationQuotaState> {
         }
       }
     } catch (e) {
-      AppLogging.app('TranslationQuota: failed to load — $e');
+      AppLogging.app('TranslationQuota: failed to load - $e');
     }
   }
 
@@ -155,7 +155,7 @@ class TranslationQuotaNotifier extends Notifier<TranslationQuotaState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefsKey, jsonEncode(state.toJson()));
     } catch (e) {
-      AppLogging.app('TranslationQuota: failed to persist — $e');
+      AppLogging.app('TranslationQuota: failed to persist - $e');
     }
   }
 
@@ -447,8 +447,7 @@ class MessageTranslationsNotifier
           messageId: const MessageTranslationState(
             error: TranslationError(
               type: TranslationErrorType.providerDisabled,
-              message:
-                  'No translation provider available', // lint-allow: hardcoded-string
+              message: 'No translation provider available', // lint-allow: hardcoded-string
             ),
           ),
         };
@@ -500,7 +499,7 @@ class MessageTranslationsNotifier
       state = {...state, messageId: MessageTranslationState(result: result)};
     } on TranslationError catch (e) {
       AppLogging.app(
-        'Translation failed for $messageId: ${e.type.name} — ${e.message}',
+        'Translation failed for $messageId: ${e.type.name} - ${e.message}',
       );
       if (!ref.mounted) return;
       state = {...state, messageId: MessageTranslationState(error: e)};

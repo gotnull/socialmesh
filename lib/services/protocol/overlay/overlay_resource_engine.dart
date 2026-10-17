@@ -387,7 +387,7 @@ class OverlayResourceEngine {
       );
       if (data == null) {
         AppLogging.overlay(
-          'resource sendWindow missing local chunk $idx — abort',
+          'resource sendWindow missing local chunk $idx - abort',
         );
         final failed = working.copyWith(
           state: OverlayResourceState.failed,
@@ -559,7 +559,7 @@ class OverlayResourceEngine {
     }
     final manifest = _parseOfferPayload(frame.payload);
     if (manifest == null) {
-      AppLogging.overlay('resource OFFER malformed payload — dropped');
+      AppLogging.overlay('resource OFFER malformed payload - dropped');
       return;
     }
     final now = _clock();
@@ -858,7 +858,7 @@ class OverlayResourceEngine {
     );
     if (assembled == null) {
       // Unexpected: bitmap says complete but store disagrees.
-      AppLogging.overlay('resource COMPLETE assembly failed — corrupt');
+      AppLogging.overlay('resource COMPLETE assembly failed - corrupt');
       await _markCorrupt(staged, senderNodeNum);
       return;
     }

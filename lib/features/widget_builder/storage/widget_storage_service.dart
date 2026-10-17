@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../core/logging.dart';
 import '../models/widget_schema.dart';
 
@@ -30,7 +32,7 @@ class WidgetStorageService {
   /// provider) before any screen creates a WidgetStorageService.
   static void setSharedStore(WidgetSqliteStore store) {
     AppLogging.sync(
-      '[WidgetStorage] setSharedStore() called — '
+      '[WidgetStorage] setSharedStore() called - '
       'store hashCode=${identityHashCode(store)}, '
       'syncEnabled=${store.syncEnabled}',
     );
@@ -50,7 +52,7 @@ class WidgetStorageService {
   Future<void> init() async {
     AppLogging.widgets('[WidgetStorage] Initializing...');
     AppLogging.sync(
-      '[WidgetStorage] init() ENTER — hasStore=$hasStore, '
+      '[WidgetStorage] init() ENTER - hasStore=$hasStore, '
       'sharedStore hashCode=${_sharedStore != null ? identityHashCode(_sharedStore) : "null"}, '
       'syncEnabled=${_sharedStore?.syncEnabled}',
     );
@@ -62,7 +64,7 @@ class WidgetStorageService {
 
     AppLogging.widgets('[WidgetStorage] Initialized successfully');
     AppLogging.sync(
-      '[WidgetStorage] init() EXIT — hasStore=$hasStore, '
+      '[WidgetStorage] init() EXIT - hasStore=$hasStore, '
       'syncEnabled=${_sharedStore?.syncEnabled}',
     );
   }
@@ -71,7 +73,7 @@ class WidgetStorageService {
   Future<void> _migrateToSqliteIfNeeded() async {
     final alreadyMigrated = _prefs?.getBool(_migratedKey) ?? false;
     AppLogging.sync(
-      '[WidgetStorage] _migrateToSqliteIfNeeded() — '
+      '[WidgetStorage] _migrateToSqliteIfNeeded() - '
       'alreadyMigrated=$alreadyMigrated',
     );
     if (alreadyMigrated) return;
@@ -120,7 +122,7 @@ class WidgetStorageService {
       '(${_sharedStore!.count} widgets)',
     );
     AppLogging.sync(
-      '[WidgetStorage] Migration complete — '
+      '[WidgetStorage] Migration complete - '
       '${_sharedStore!.count} widgets in SQLite, '
       'syncEnabled=${_sharedStore!.syncEnabled}',
     );
@@ -143,7 +145,7 @@ class WidgetStorageService {
       '[WidgetStorage] saveWidget called for id=${widget.id}, name=${widget.name}',
     );
     AppLogging.sync(
-      '[WidgetStorage] saveWidget() ENTER — '
+      '[WidgetStorage] saveWidget() ENTER - '
       'id=${widget.id}, name=${widget.name}, '
       'hasStore=$hasStore, '
       'store hashCode=${_sharedStore != null ? identityHashCode(_sharedStore) : "null"}, '
@@ -165,7 +167,7 @@ class WidgetStorageService {
       if (_sharedStore != null) {
         AppLogging.sync(
           '[WidgetStorage] saveWidget: DELEGATING to SQLite store '
-          '(syncEnabled=${_sharedStore!.syncEnabled}) — '
+          '(syncEnabled=${_sharedStore!.syncEnabled}) - '
           'if syncEnabled=false, this widget will NOT be enqueued for sync!',
         );
         await _sharedStore!.save(widget);
@@ -173,7 +175,7 @@ class WidgetStorageService {
           '[WidgetStorage] Widget saved to SQLite: ${widget.name}',
         );
         AppLogging.sync(
-          '[WidgetStorage] saveWidget() EXIT — saved to SQLite OK, '
+          '[WidgetStorage] saveWidget() EXIT - saved to SQLite OK, '
           'widget ${widget.id} (${widget.name})',
         );
         return;
@@ -181,7 +183,7 @@ class WidgetStorageService {
 
       // Legacy SharedPreferences path
       AppLogging.sync(
-        '[WidgetStorage] saveWidget: NO SQLite store — using legacy '
+        '[WidgetStorage] saveWidget: NO SQLite store - using legacy '
         'SharedPreferences path (widget will NOT sync!)',
       );
       final widgets = await getWidgets();
@@ -208,7 +210,7 @@ class WidgetStorageService {
       );
       AppLogging.widgets('Saved widget: ${widget.name}');
       AppLogging.sync(
-        '[WidgetStorage] saveWidget() EXIT — saved to SharedPreferences '
+        '[WidgetStorage] saveWidget() EXIT - saved to SharedPreferences '
         '(NO sync), widget ${widget.id}',
       );
     } catch (e, stack) {
@@ -256,7 +258,7 @@ class WidgetStorageService {
     } catch (e, stack) {
       AppLogging.widgets('[WidgetStorage] ERROR loading widgets: $e');
       AppLogging.widgets('[WidgetStorage] Stack: $stack');
-      AppLogging.widgets('⚠️ Error loading widgets: $e');
+      AppLogging.widgets('Error loading widgets: $e');
       return [];
     }
   }
@@ -281,7 +283,7 @@ class WidgetStorageService {
   Future<void> deleteWidget(String id) async {
     AppLogging.widgets('deleteWidget entry id=$id');
     AppLogging.sync(
-      '[WidgetStorage] deleteWidget() ENTER — '
+      '[WidgetStorage] deleteWidget() ENTER - '
       'id=$id, hasStore=$hasStore, '
       'store.syncEnabled=${_sharedStore?.syncEnabled}',
     );
@@ -296,7 +298,7 @@ class WidgetStorageService {
       }
 
       AppLogging.widgets('Deleted widget: $id');
-      AppLogging.sync('[WidgetStorage] deleteWidget() EXIT — id=$id deleted');
+      AppLogging.sync('[WidgetStorage] deleteWidget() EXIT - id=$id deleted');
     } catch (e) {
       AppLogging.widgets('Error deleting widget: $e');
       AppLogging.sync('[WidgetStorage] deleteWidget() ERROR: $e');
@@ -356,7 +358,7 @@ class WidgetStorageService {
       await saveWidget(importedWidget);
       return importedWidget;
     } catch (e) {
-      AppLogging.widgets('⚠️ Error importing widget: $e');
+      AppLogging.widgets('Error importing widget: $e');
       rethrow;
     }
   }
@@ -533,8 +535,7 @@ class WidgetTemplates {
   static WidgetSchema environmentWidget() {
     return WidgetSchema(
       name: 'Environment',
-      description:
-          'Temperature, humidity, and pressure display', // lint-allow: hardcoded-string
+      description: 'Temperature, humidity, and pressure display', // lint-allow: hardcoded-string
       tags: ['environment', 'temperature', 'humidity', 'pressure', 'sensors'],
       size: CustomWidgetSize.medium,
       root: ElementSchema(
@@ -888,8 +889,7 @@ class WidgetTemplates {
   static WidgetSchema distributionWidget() {
     return WidgetSchema(
       name: 'Distribution',
-      description:
-          'Hardware model or role distribution chart', // lint-allow: hardcoded-string
+      description: 'Hardware model or role distribution chart', // lint-allow: hardcoded-string
       tags: ['distribution', 'chart', 'network', 'hardware', 'role'],
       size: CustomWidgetSize.medium,
       root: ElementSchema(

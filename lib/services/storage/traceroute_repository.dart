@@ -339,7 +339,7 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       // If there are already runs in the DB, skip migration
       if (existing.isNotEmpty) {
         AppLogging.storage(
-          'TracerouteRepository: Migration skipped — DB already has data',
+          'TracerouteRepository: Migration skipped - DB already has data',
         );
         return 0;
       }
@@ -347,7 +347,7 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       final allLogs = await legacy.getAllTraceRouteLogs();
       if (allLogs.isEmpty) {
         AppLogging.storage(
-          'TracerouteRepository: Migration skipped — no legacy data',
+          'TracerouteRepository: Migration skipped - no legacy data',
         );
         return 0;
       }

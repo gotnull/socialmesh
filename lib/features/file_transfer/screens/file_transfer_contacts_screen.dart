@@ -517,7 +517,7 @@ class _FileTransferContactsScreenState
     if (!mounted) return;
     if (transfer != null) {
       AppLogging.fileTransfer(
-        '_sendImageToContact: transfer started — '
+        '_sendImageToContact: transfer started - '
         'id=${transfer.fileIdHex}, file=${transfer.filename}, '
         '${transfer.totalBytes} bytes, ${transfer.chunkCount} chunks',
       );

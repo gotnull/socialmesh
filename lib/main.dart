@@ -27,6 +27,7 @@ import 'package:socialmesh/services/transport/background_ble_service.dart';
 import 'package:socialmesh/services/watch_companion/watch_companion_providers.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
+
 import 'firebase_options.dart';
 import 'core/boot_timeline.dart';
 import 'core/constants.dart';
@@ -340,7 +341,7 @@ Future<void> main() async {
         );
       } else {
         AppLogging.purchase(
-          'boot: STRIPE_PURCHASES_ENABLED on but no publishable key in .env — Payment Sheet will not work',
+          'boot: STRIPE_PURCHASES_ENABLED on but no publishable key in .env - Payment Sheet will not work',
         );
       }
     } catch (e) {
@@ -356,7 +357,7 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    AppLogging.app('🔥 Firebase core initialized');
+    AppLogging.app('Firebase core initialized');
     BootTimeline.instance.mark('firebase_init');
 
     // Remote env-flag overrides: apply cached overrides immediately,
@@ -396,7 +397,7 @@ Future<void> main() async {
           appVerificationDisabledForTesting: true,
         );
         AppLogging.mfa(
-          '⚠️ Debug iOS: appVerificationDisabledForTesting=true — '
+          'Debug iOS: appVerificationDisabledForTesting=true - '
           'reCAPTCHA skipped; requires Firebase Console test phone '
           'whitelist to sign in',
         );
@@ -414,7 +415,7 @@ Future<void> main() async {
       const Duration(seconds: 3),
       onTimeout: () {
         AppLogging.auth(
-          '🔥 Anonymous sign-in timed out — continuing offline; will retry on next foreground',
+          'Anonymous sign-in timed out - continuing offline; will retry on next foreground',
         );
       },
     );
@@ -432,7 +433,7 @@ Future<void> main() async {
   // as a PlatformDispatcher error (the "_handlePlatformError" spike).
   unawaited(
     _initializeFirebaseServices().catchError((Object e, StackTrace st) {
-      AppLogging.app('⚠️ _initializeFirebaseServices failed (non-fatal): $e');
+      AppLogging.app('_initializeFirebaseServices failed (non-fatal): $e');
     }),
   );
 
@@ -505,18 +506,16 @@ Future<void> _ensureAnonymousAuth() async {
     final current = FirebaseAuth.instance.currentUser;
     if (current != null) {
       AppLogging.auth(
-        '🔥 Firebase auth already present: uid=${current.uid} '
+        'Firebase auth already present: uid=${current.uid} '
         'anonymous=${current.isAnonymous}',
       );
       return;
     }
-    AppLogging.auth('🔥 No Firebase user — signing in anonymously');
+    AppLogging.auth('No Firebase user - signing in anonymously');
     final cred = await FirebaseAuth.instance.signInAnonymously();
-    AppLogging.auth('🔥 Anonymous sign-in succeeded: uid=${cred.user?.uid}');
+    AppLogging.auth('Anonymous sign-in succeeded: uid=${cred.user?.uid}');
   } catch (e) {
-    AppLogging.auth(
-      '🔥 Anonymous sign-in failed (non-fatal, app continues): $e',
-    );
+    AppLogging.auth('Anonymous sign-in failed (non-fatal, app continues): $e');
   }
 }
 
@@ -541,7 +540,7 @@ Future<void> _repairFirestoreCacheIfNeeded() async {
     if (previousInitOk) return;
 
     AppLogging.storage(
-      'Firestore init failed last session — clearing persistence cache',
+      'Firestore init failed last session - clearing persistence cache',
     );
 
     try {
@@ -550,7 +549,7 @@ Future<void> _repairFirestoreCacheIfNeeded() async {
       await FirebaseFirestore.instance.clearPersistence();
       AppLogging.storage('Firestore persistence cleared via SDK');
     } catch (e) {
-      AppLogging.storage('clearPersistence() failed ($e) — deleting manually');
+      AppLogging.storage('clearPersistence() failed ($e) - deleting manually');
       await _deleteFirestoreCacheDirectory();
     }
 
@@ -876,7 +875,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       final locationService = ref.read(locationServiceProvider);
       if (!locationService.isRunning) return; // Already stopped — skip noise.
       locationService.stopLocationUpdates();
-      AppLogging.app('🔋 Location updates paused (app backgrounded)');
+      AppLogging.app('Location updates paused (app backgrounded)');
     } catch (_) {
       // Location service may not be initialized yet — safe to ignore.
     }
@@ -891,7 +890,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       final isConnected = ref.read(isLinkConnectedProvider);
       if (isConnected) {
         locationService.startLocationUpdates();
-        AppLogging.app('🔋 Location updates resumed (app foregrounded)');
+        AppLogging.app('Location updates resumed (app foregrounded)');
       }
     } catch (_) {
       // Location service may not be initialized yet — safe to ignore.
@@ -990,7 +989,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   /// Uses protocol-aware state checks to avoid reconnecting while already
   /// connected (MeshCore) or while a reconnect is in progress.
   Future<void> _handleAppResumed() async {
-    AppLogging.connection('📱 APP RESUMED: Checking connection state...');
+    AppLogging.connection('APP RESUMED: Checking connection state...');
 
     // Use protocol-aware connection state checks
     final isLinkConnected = ref.read(isLinkConnectedProvider);
@@ -1005,7 +1004,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         settingsAsync.asData?.value.lastDeviceProtocol ?? 'unknown';
 
     AppLogging.connection(
-      '📱 APP RESUMED: protocol=$protocol, '
+      'APP RESUMED: protocol=$protocol, '
       'isLinkConnected=$isLinkConnected, '
       'isLinkConnecting=$isLinkConnecting, '
       'autoReconnectState=$autoReconnectState, '
@@ -1041,8 +1040,8 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           readiness != OperationalReadiness.idle;
       if (isWedged) {
         AppLogging.connection(
-          '📱 APP RESUMED: BLE link connected but protocol wedged '
-          '(readiness=$readiness) — triggering restoreSession',
+          'APP RESUMED: BLE link connected but protocol wedged '
+          '(readiness=$readiness) - triggering restoreSession',
         );
         try {
           await ref
@@ -1050,7 +1049,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
               .restoreSessionForLifecycleResume();
         } catch (e) {
           AppLogging.connection(
-            '📱 APP RESUMED: restoreSessionForLifecycleResume failed: $e',
+            'APP RESUMED: restoreSessionForLifecycleResume failed: $e',
           );
         }
         // Whether the restore succeeded or aborted (stale, in-flight,
@@ -1062,7 +1061,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // If the active protocol link is connected, do nothing
     if (isLinkConnected) {
       AppLogging.connection(
-        '📱 APP RESUMED: $protocol link already connected, doing nothing',
+        'APP RESUMED: $protocol link already connected, doing nothing',
       );
       return;
     }
@@ -1070,7 +1069,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // If the active protocol link is connecting, do nothing
     if (isLinkConnecting) {
       AppLogging.connection(
-        '📱 APP RESUMED: $protocol link is connecting, doing nothing',
+        'APP RESUMED: $protocol link is connecting, doing nothing',
       );
       return;
     }
@@ -1079,7 +1078,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     if (autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting) {
       AppLogging.connection(
-        '📱 APP RESUMED: Reconnect already in progress, doing nothing',
+        'APP RESUMED: Reconnect already in progress, doing nothing',
       );
       return;
     }
@@ -1090,7 +1089,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // clear this state on success, retry, or dispose.
     if (autoReconnectState == AutoReconnectState.manualConnecting) {
       AppLogging.connection(
-        '📱 APP RESUMED: User is manually connecting from Scanner, '
+        'APP RESUMED: User is manually connecting from Scanner, '
         'not triggering resume-reconnect to saved device',
       );
       return;
@@ -1099,7 +1098,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // CRITICAL: Check the global userDisconnected flag
     if (userDisconnected) {
       AppLogging.connection(
-        '📱 APP RESUMED: User manually disconnected (global flag), NOT triggering reconnect',
+        'APP RESUMED: User manually disconnected (global flag), NOT triggering reconnect',
       );
       return;
     }
@@ -1108,7 +1107,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     if (deviceConnectionState.reason ==
         conn.DisconnectReason.userDisconnected) {
       AppLogging.connection(
-        '📱 APP RESUMED: User manually disconnected (reason), NOT triggering reconnect',
+        'APP RESUMED: User manually disconnected (reason), NOT triggering reconnect',
       );
       return;
     }
@@ -1117,7 +1116,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     try {
       ref.read(connectivityStatusProvider.notifier).checkNow();
     } catch (e) {
-      AppLogging.connection('📱 APP RESUMED: Connectivity refresh failed: $e');
+      AppLogging.connection('APP RESUMED: Connectivity refresh failed: $e');
     }
 
     // If disconnected and we have a saved device, try to reconnect
@@ -1129,7 +1128,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
 
       if (lastDeviceId != null && settings.autoReconnect) {
         AppLogging.connection(
-          '📱 APP RESUMED: Disconnected with saved device, triggering reconnect...',
+          'APP RESUMED: Disconnected with saved device, triggering reconnect...',
         );
 
         // Reset to idle first to allow reconnect to proceed
@@ -1146,11 +1145,11 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         _performReconnectOnResume(lastDeviceId);
       } else {
         AppLogging.connection(
-          '📱 APP RESUMED: No saved device or auto-reconnect disabled',
+          'APP RESUMED: No saved device or auto-reconnect disabled',
         );
       }
     } catch (e) {
-      AppLogging.connection('📱 APP RESUMED: Error checking settings: $e');
+      AppLogging.connection('APP RESUMED: Error checking settings: $e');
     }
   }
 
@@ -1162,7 +1161,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // Reentrancy guard: only one reconnect attempt at a time
     if (_reconnectInFlight) {
       AppLogging.connection(
-        '📱 RECONNECT ON RESUME: BLOCKED - reconnect already in flight',
+        'RECONNECT ON RESUME: BLOCKED - reconnect already in flight',
       );
       return;
     }
@@ -1172,7 +1171,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       final elapsed = DateTime.now().difference(_lastReconnectAttempt!);
       if (elapsed < _reconnectCooldown) {
         AppLogging.connection(
-          '📱 RECONNECT ON RESUME: BLOCKED - cooldown (${elapsed.inMilliseconds}ms < ${_reconnectCooldown.inMilliseconds}ms)',
+          'RECONNECT ON RESUME: BLOCKED - cooldown (${elapsed.inMilliseconds}ms < ${_reconnectCooldown.inMilliseconds}ms)',
         );
         ref
             .read(autoReconnectStateProvider.notifier)
@@ -1186,7 +1185,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final isLinkConnecting = ref.read(isLinkConnectingProvider);
     if (isLinkConnected || isLinkConnecting) {
       AppLogging.connection(
-        '📱 RECONNECT ON RESUME: BLOCKED - link already connected/connecting',
+        'RECONNECT ON RESUME: BLOCKED - link already connected/connecting',
       );
       ref
           .read(autoReconnectStateProvider.notifier)
@@ -1195,7 +1194,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     }
 
     AppLogging.connection(
-      '📱 RECONNECT ON RESUME: Starting for device: $deviceId',
+      'RECONNECT ON RESUME: Starting for device: $deviceId',
     );
 
     _reconnectInFlight = true;
@@ -1205,7 +1204,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       // CRITICAL: Check the global userDisconnected flag
       if (ref.read(userDisconnectedProvider)) {
         AppLogging.connection(
-          '📱 RECONNECT ON RESUME: BLOCKED - user manually disconnected (global flag)',
+          'RECONNECT ON RESUME: BLOCKED - user manually disconnected (global flag)',
         );
         ref
             .read(autoReconnectStateProvider.notifier)
@@ -1217,7 +1216,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       final deviceState = ref.read(conn.deviceConnectionProvider);
       if (deviceState.reason == conn.DisconnectReason.userDisconnected) {
         AppLogging.connection(
-          '📱 RECONNECT ON RESUME: BLOCKED - user manually disconnected (reason)',
+          'RECONNECT ON RESUME: BLOCKED - user manually disconnected (reason)',
         );
         ref
             .read(autoReconnectStateProvider.notifier)
@@ -1241,7 +1240,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       if (restoredType != null &&
           ref.read(transportTypeProvider) != restoredType) {
         AppLogging.connection(
-          '📱 RECONNECT ON RESUME: restoring transport type to '
+          'RECONNECT ON RESUME: restoring transport type to '
           '${restoredType.name} from persisted lastDeviceType',
         );
         if (restoredType == TransportType.network) {
@@ -1271,7 +1270,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     } finally {
       // Always clear the mutex, even on exceptions
       _reconnectInFlight = false;
-      AppLogging.connection('📱 RECONNECT ON RESUME: Completed, mutex cleared');
+      AppLogging.connection('RECONNECT ON RESUME: Completed, mutex cleared');
     }
   }
 
@@ -1280,28 +1279,28 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     String deviceId,
     dynamic settings,
   ) async {
-    AppLogging.connection('📱 RECONNECT ON RESUME: Meshtastic protocol');
+    AppLogging.connection('RECONNECT ON RESUME: Meshtastic protocol');
 
     try {
       final transport = ref.read(transportProvider);
 
       // Quick scan to find the device
-      AppLogging.connection('📱 RECONNECT ON RESUME: Starting 8s scan...');
+      AppLogging.connection('RECONNECT ON RESUME: Starting 8s scan...');
       final scanStream = transport.scan(timeout: const Duration(seconds: 8));
       DeviceInfo? foundDevice;
 
       await for (final device in scanStream) {
-        AppLogging.connection('📱 RECONNECT ON RESUME: Found ${device.id}');
+        AppLogging.connection('RECONNECT ON RESUME: Found ${device.id}');
         if (!mounted) return;
         if (device.id == deviceId) {
           foundDevice = device;
-          AppLogging.connection('📱 RECONNECT ON RESUME: Target device found!');
+          AppLogging.connection('RECONNECT ON RESUME: Target device found!');
           break;
         }
       }
 
       if (foundDevice != null) {
-        AppLogging.connection('📱 RECONNECT ON RESUME: Connecting...');
+        AppLogging.connection('RECONNECT ON RESUME: Connecting...');
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.connecting);
@@ -1328,7 +1327,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
 
         if (connectTransport.state == DeviceConnectionState.connected) {
           AppLogging.connection(
-            '📱 RECONNECT ON RESUME: BLE connected, starting protocol...',
+            'RECONNECT ON RESUME: BLE connected, starting protocol...',
           );
 
           if (!mounted) return;
@@ -1343,14 +1342,14 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
 
           if (protocol.myNodeNum == null) {
             AppLogging.connection(
-              '📱 RECONNECT ON RESUME: No myNodeNum - auth may have failed',
+              'RECONNECT ON RESUME: No myNodeNum - auth may have failed',
             );
             await connectTransport.disconnect();
             throw Exception('Authentication failed');
           }
 
           AppLogging.connection(
-            '📱 RECONNECT ON RESUME: Protocol started, myNodeNum=${protocol.myNodeNum}',
+            'RECONNECT ON RESUME: Protocol started, myNodeNum=${protocol.myNodeNum}',
           );
           if (!mounted) return;
           ref.read(connectedDeviceProvider.notifier).setState(foundDevice);
@@ -1362,7 +1361,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           final locationService = ref.read(locationServiceProvider);
           await locationService.startLocationUpdates();
 
-          AppLogging.connection('📱 RECONNECT ON RESUME: ✅ Success!');
+          AppLogging.connection('RECONNECT ON RESUME: Success!');
 
           await Future.delayed(const Duration(milliseconds: 500));
           if (!mounted) return;
@@ -1371,21 +1370,19 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
               .setState(AutoReconnectState.idle);
         } else {
           AppLogging.connection(
-            '📱 RECONNECT ON RESUME: BLE connect failed, '
+            'RECONNECT ON RESUME: BLE connect failed, '
             'transport.state=${connectTransport.state}',
           );
           throw Exception('Connection failed');
         }
       } else {
-        AppLogging.connection(
-          '📱 RECONNECT ON RESUME: Device not found in scan',
-        );
+        AppLogging.connection('RECONNECT ON RESUME: Device not found in scan');
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.failed);
       }
     } catch (e) {
-      AppLogging.connection('📱 RECONNECT ON RESUME: Failed: $e');
+      AppLogging.connection('RECONNECT ON RESUME: Failed: $e');
       ref
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.failed);
@@ -1404,7 +1401,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     }
     try {
       final service = await ref.read(subscriptionServiceProvider.future);
-      AppLogging.subscriptions('💰 RevenueCat initialized');
+      AppLogging.subscriptions('RevenueCat initialized');
 
       // service.initialize() already called Purchases.configure() with the
       // current Firebase UID (when signed in), so no logIn / pre-login
@@ -1412,19 +1409,19 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       // entitlements; explicit Restore is exposed via the Restore button.
       final firebaseUser = FirebaseAuth.instance.currentUser;
       AppLogging.subscriptions(
-        '💰 [Bootstrap] firebaseUser=${firebaseUser?.uid ?? "(anonymous)"}',
+        '[Bootstrap] firebaseUser=${firebaseUser?.uid ?? "(anonymous)"}',
       );
       await service.refreshPurchases();
-      AppLogging.subscriptions('💰 [Bootstrap] complete');
+      AppLogging.subscriptions('[Bootstrap] complete');
 
       // Initialize cloud sync entitlement service AFTER purchases are
       // bootstrapped so its initial RC read sees the freshly-synced state.
       if (!mounted) return;
       final cloudSyncService = ref.read(cloudSyncEntitlementServiceProvider);
       await cloudSyncService.initialize();
-      AppLogging.subscriptions('☁️ Cloud sync entitlement service initialized');
+      AppLogging.subscriptions('Cloud sync entitlement service initialized');
     } catch (e) {
-      AppLogging.subscriptions('💰 RevenueCat init failed: $e');
+      AppLogging.subscriptions('RevenueCat init failed: $e');
     }
   }
 
@@ -1434,9 +1431,9 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       if (!mounted) return;
       final deepLinkManager = ref.read(deepLinkManagerProvider);
       await deepLinkManager.initialize();
-      AppLogging.app('🔗 Deep link manager initialized');
+      AppLogging.app('Deep link manager initialized');
     } catch (e) {
-      AppLogging.app('🔗 Deep link init failed: $e');
+      AppLogging.app('Deep link init failed: $e');
     }
   }
 
@@ -1456,7 +1453,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
             parseLocalNotificationPayload(payload),
           ),
         );
-    AppLogging.notifications('🔔 Local notification tap routing initialized');
+    AppLogging.notifications('Local notification tap routing initialized');
   }
 
   /// Routes the notification tap that launched the app from a terminated
@@ -1493,7 +1490,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   Future<void> _routeColdStartNotificationTap() async {
     final payload = await NotificationService().takeNotificationLaunchPayload();
     if (!mounted || payload == null || payload.isEmpty) return;
-    AppLogging.notifications('🔔 Cold-start notification tap: $payload');
+    AppLogging.notifications('Cold-start notification tap: $payload');
     _handlePushNotificationNavigation(parseLocalNotificationPayload(payload));
   }
 
@@ -1505,7 +1502,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       final isReady = await firebaseReady;
       if (!isReady) {
         AppLogging.notifications(
-          '🔔 Push notification navigation skipped - Firebase not available',
+          'Push notification navigation skipped - Firebase not available',
         );
         return;
       }
@@ -1514,23 +1511,21 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           .onNotificationNavigation
           .listen(_handlePushNotificationNavigation);
 
-      AppLogging.notifications('🔔 Push notification navigation initialized');
+      AppLogging.notifications('Push notification navigation initialized');
     } catch (e) {
-      AppLogging.notifications(
-        '🔔 Push notification navigation init failed: $e',
-      );
+      AppLogging.notifications('Push notification navigation init failed: $e');
     }
   }
 
   /// Handle navigation from push notification tap
   void _handlePushNotificationNavigation(NotificationNavigation nav) {
     AppLogging.notifications(
-      '🔔 Handling notification navigation: ${nav.type} -> ${nav.targetId}',
+      'Handling notification navigation: ${nav.type} -> ${nav.targetId}',
     );
 
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
-      AppLogging.notifications('🔔 Navigator not available');
+      AppLogging.notifications('Navigator not available');
       return;
     }
 
@@ -1549,15 +1544,13 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           // Navigate using the deep link if provided
           if (nav.deepLink != null && nav.deepLink!.isNotEmpty) {
             final link = nav.deepLink!;
-            AppLogging.notifications('🔔 Announcement deep link: $link');
+            AppLogging.notifications('Announcement deep link: $link');
             // Only navigate if the deep link starts with '/' (internal route).
             // External URLs or malformed values must not hit pushNamed.
             if (link.startsWith('/')) {
               navigator.pushNamed(link);
             } else {
-              AppLogging.notifications(
-                '🔔 Ignoring non-route deep link: $link',
-              );
+              AppLogging.notifications('Ignoring non-route deep link: $link');
             }
           }
           break;
@@ -1779,7 +1772,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           break;
 
         default:
-          AppLogging.notifications('🔔 Unknown notification type: ${nav.type}');
+          AppLogging.notifications('Unknown notification type: ${nav.type}');
       }
     });
   }
@@ -1803,7 +1796,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         return;
       }
       AppLogging.notifications(
-        '🔔 sip_dm tap: session $sessionTag is gone, falling back to hub',
+        'sip_dm tap: session $sessionTag is gone, falling back to hub',
       );
     }
     if (!isTopRouteNamed(navigator, _kSipHubRouteName)) {
@@ -1825,7 +1818,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final node = nodeNum != null ? ref.read(nodesProvider)[nodeNum] : null;
     if (nodeNum == null || node == null) {
       AppLogging.notifications(
-        '🔔 Node tap: $targetId unknown, opening node list',
+        'Node tap: $targetId unknown, opening node list',
       );
       pushNamedUnlessOnTop(navigator, '/nodes');
       return;
@@ -1870,7 +1863,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final waypoint = matches.isEmpty ? null : matches.first;
     if (waypoint == null) {
       AppLogging.notifications(
-        '🔔 Waypoint tap: $waypointId is gone, opening the map',
+        'Waypoint tap: $waypointId is gone, opening the map',
       );
       pushNamedUnlessOnTop(navigator, '/map');
       return;
@@ -1896,7 +1889,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final event = matches.isEmpty ? null : matches.first;
     if (event == null) {
       AppLogging.notifications(
-        '🔔 TAK tap: event $uid no longer active, skipping navigation',
+        'TAK tap: event $uid no longer active, skipping navigation',
       );
       return;
     }
@@ -1919,7 +1912,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final flight = matches.isEmpty ? null : matches.first;
     if (flight == null) {
       AppLogging.notifications(
-        '🔔 Aether tap: flight $flightNumber not loaded, skipping navigation',
+        'Aether tap: flight $flightNumber not loaded, skipping navigation',
       );
       return;
     }
@@ -1944,7 +1937,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final node = ref.read(nodesProvider)[nodeNum];
     if (node == null) {
       AppLogging.notifications(
-        '🔔 DM tap: node $nodeNum unknown, opening conversation list',
+        'DM tap: node $nodeNum unknown, opening conversation list',
       );
       pushNamedUnlessOnTop(navigator, '/messages');
       return;
@@ -1961,7 +1954,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     );
     if (!pushed) {
       AppLogging.notifications(
-        '🔔 DM tap: thread with $nodeNum already on top, staying put',
+        'DM tap: thread with $nodeNum already on top, staying put',
       );
     }
   }
@@ -1982,7 +1975,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final channel = matches.isEmpty ? null : matches.first;
     if (channel == null) {
       AppLogging.notifications(
-        '🔔 Channel tap: index $channelIndex unknown, opening channel list',
+        'Channel tap: index $channelIndex unknown, opening channel list',
       );
       pushNamedUnlessOnTop(navigator, '/channels');
       return;
@@ -2004,7 +1997,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     );
     if (!pushed) {
       AppLogging.notifications(
-        '🔔 Channel tap: index $channelIndex already on top, staying put',
+        'Channel tap: index $channelIndex already on top, staying put',
       );
     }
   }
@@ -2020,7 +2013,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final contact = matches.isEmpty ? null : matches.first;
     if (contact == null) {
       AppLogging.notifications(
-        '🔔 MeshCore DM tap: contact not found, skipping navigation',
+        'MeshCore DM tap: contact not found, skipping navigation',
       );
       return;
     }
@@ -2031,7 +2024,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     );
     if (!pushed) {
       AppLogging.notifications(
-        '🔔 MeshCore DM tap: contact thread already on top, staying put',
+        'MeshCore DM tap: contact thread already on top, staying put',
       );
     }
   }
@@ -2049,7 +2042,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final channel = matches.isEmpty ? null : matches.first;
     if (channel == null) {
       AppLogging.notifications(
-        '🔔 MeshCore channel tap: index $channelIndex unknown, '
+        'MeshCore channel tap: index $channelIndex unknown, '
         'skipping navigation',
       );
       return;
@@ -2061,7 +2054,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     );
     if (!pushed) {
       AppLogging.notifications(
-        '🔔 MeshCore channel tap: index $channelIndex already on top, '
+        'MeshCore channel tap: index $channelIndex already on top, '
         'staying put',
       );
     }
@@ -2092,7 +2085,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         return;
       }
       AppLogging.notifications(
-        '🔔 sip_handshake tap: no active session for peer $peerNodeId, '
+        'sip_handshake tap: no active session for peer $peerNodeId, '
         'falling back to hub',
       );
     }
@@ -2137,13 +2130,13 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     final isFirebaseReady = await firebaseReady.timeout(
       const Duration(seconds: 5),
       onTimeout: () {
-        AppLogging.app('⏱️ Firebase ready timeout, using local accent color');
+        AppLogging.app('Firebase ready timeout, using local accent color');
         return false;
       },
     );
 
     if (!isFirebaseReady) {
-      AppLogging.app('📱 Firebase not ready, using local accent color');
+      AppLogging.app('Firebase not ready, using local accent color');
       return;
     }
 
@@ -2151,43 +2144,43 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     try {
       // Wait for auth state to be ready
       final authState = await ref.read(authStateProvider.future);
-      AppLogging.sync('🎨 Auth state: ${authState?.email ?? "not signed in"}');
+      AppLogging.sync('Auth state: ${authState?.email ?? "not signed in"}');
 
       // If user is signed in, sync from cloud
       if (authState != null) {
-        AppLogging.sync('🎨 User signed in, reading profile (no invalidate)');
+        AppLogging.sync('User signed in, reading profile (no invalidate)');
         // NOTE: Don't invalidate userProfileProvider here!
         // UserProfileNotifier.build() already calls fullSync() which syncs from cloud.
         // Invalidating here causes redundant Firestore writes (batches 6, 7, 8).
 
-        AppLogging.sync('🎨 Waiting for profile future...');
+        AppLogging.sync('Waiting for profile future...');
         final profile = await ref.read(userProfileProvider.future);
         final prefs = profile?.preferences;
 
-        AppLogging.sync('🎨 Profile loaded: ${profile?.displayName}');
+        AppLogging.sync('Profile loaded: ${profile?.displayName}');
         AppLogging.sync(
-          '🎨 Profile accentColorIndex: ${profile?.accentColorIndex}',
+          'Profile accentColorIndex: ${profile?.accentColorIndex}',
         );
-        AppLogging.sync('🎨 Profile updatedAt: ${profile?.updatedAt}');
-        AppLogging.sync('🎨 Profile isSynced: ${profile?.isSynced}');
+        AppLogging.sync('Profile updatedAt: ${profile?.updatedAt}');
+        AppLogging.sync('Profile isSynced: ${profile?.isSynced}');
 
         // Update accent color from cloud if available
         final colorIndex = profile?.accentColorIndex;
-        AppLogging.sync('🎨 Cloud profile accentColorIndex: $colorIndex');
+        AppLogging.sync('Cloud profile accentColorIndex: $colorIndex');
         if (colorIndex != null &&
             colorIndex >= 0 &&
             colorIndex < AccentColors.all.length) {
           final cloudColor = AccentColors.all[colorIndex];
           AppLogging.sync(
-            '🎨 Setting color to: ${AccentColors.names[colorIndex]}',
+            'Setting color to: ${AccentColors.names[colorIndex]}',
           );
           await ref.read(accentColorProvider.notifier).setColor(cloudColor);
           AppLogging.sync(
-            '🎨 Updated accent color from cloud: ${AccentColors.names[colorIndex]}',
+            'Updated accent color from cloud: ${AccentColors.names[colorIndex]}',
           );
         } else {
           AppLogging.sync(
-            '🎨 No valid accentColorIndex in profile, colorIndex=$colorIndex',
+            'No valid accentColorIndex in profile, colorIndex=$colorIndex',
           );
         }
 
@@ -2203,7 +2196,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         await _loadRemainingCloudPreferences(settings, prefs);
       }
     } catch (e) {
-      AppLogging.sync('☁️ Cloud sync failed, using local settings: $e');
+      AppLogging.sync('Cloud sync failed, using local settings: $e');
     }
   }
 
@@ -2310,7 +2303,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
             .toList();
         await settings.setCannedResponses(responses);
         AppLogging.sync(
-          '📝 Loaded ${responses.length} canned responses from cloud',
+          'Loaded ${responses.length} canned responses from cloud',
         );
       } catch (e) {
         AppLogging.sync('Failed to parse canned responses: $e');
@@ -2323,9 +2316,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         final jsonList = jsonDecode(prefs.tapbackConfigsJson!) as List;
         final configs = jsonList.map((j) => TapbackConfig.fromJson(j)).toList();
         await settings.setTapbackConfigs(configs);
-        AppLogging.sync(
-          '👍 Loaded ${configs.length} tapback configs from cloud',
-        );
+        AppLogging.sync('Loaded ${configs.length} tapback configs from cloud');
       } catch (e) {
         AppLogging.sync('Failed to parse tapback configs: $e');
       }
@@ -2337,7 +2328,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         rtttl: prefs.ringtoneRtttl!,
         name: prefs.ringtoneName!,
       );
-      AppLogging.sync('🔔 Loaded ringtone from cloud: ${prefs.ringtoneName}');
+      AppLogging.sync('Loaded ringtone from cloud: ${prefs.ringtoneName}');
     }
 
     // Load splash mesh config from cloud
@@ -2360,7 +2351,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       if (!mounted) return;
       // Invalidate the provider so it reloads with new config
       ref.invalidate(splashMeshConfigProvider);
-      AppLogging.sync('✨ Loaded splash mesh config from cloud');
+      AppLogging.sync('Loaded splash mesh config from cloud');
     }
 
     // Load automations from cloud
@@ -2370,7 +2361,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         await automationRepo.loadFromJson(prefs.automationsJson!);
         if (!mounted) return;
         AppLogging.automations(
-          '⚡ Loaded ${automationRepo.automations.length} automations from cloud',
+          'Loaded ${automationRepo.automations.length} automations from cloud',
         );
       } catch (e) {
         AppLogging.automations('Failed to parse automations: $e');
@@ -2382,13 +2373,13 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       try {
         final iftttService = ref.read(iftttServiceProvider);
         await iftttService.loadFromJson(prefs.iftttConfigJson!);
-        AppLogging.ifttt('🔗 Loaded IFTTT config from cloud');
+        AppLogging.ifttt('Loaded IFTTT config from cloud');
       } catch (e) {
         AppLogging.ifttt('Failed to parse IFTTT config: $e');
       }
     }
 
-    AppLogging.sync('☁️ Loaded user preferences from cloud profile');
+    AppLogging.sync('Loaded user preferences from cloud profile');
   }
 
   @override
@@ -2712,7 +2703,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         },
         onUnknownRoute: (settings) {
           AppLogging.notifications(
-            '🔔 Unknown route: ${settings.name} — falling back to home',
+            'Unknown route: ${settings.name} - falling back to home',
           );
           return MaterialPageRoute(builder: (_) => const _AppRouter());
         },
@@ -3236,14 +3227,14 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
     // Pairs with APP_SHELL below so we can distinguish "_AppRouter
     // never rebuilt" from "_AppRouter rebuilt but provider returned
     // unexpected shell".
-    AppLogging.connection('🎯 _AppRouter: build entry hashCode=$hashCode');
+    AppLogging.connection('_AppRouter: build entry hashCode=$hashCode');
 
     // Also peek the canonical signal feeds so the next log line lets
     // us correlate widget-tree vs provider state without needing to
     // query the device live.
     final appInitSnapshot = ref.read(appInitProvider);
     AppLogging.connection(
-      '🎯 _AppRouter: build appInit=$appInitSnapshot hashCode=$hashCode',
+      '_AppRouter: build appInit=$appInitSnapshot hashCode=$hashCode',
     );
 
     // Single source of truth for shell selection. Combines

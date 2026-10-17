@@ -2,12 +2,15 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
+
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/settings_primitives.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -23,7 +26,9 @@ import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/chip_selector.dart';
 import '../../services/protocol/admin_target.dart';
+
 import 'package:cryptography/cryptography.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
@@ -305,14 +310,14 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
       if (keysChanged) {
         try {
           AppLogging.protocol(
-            '🔑 Security keys changed — sending explicit reboot to commit '
+            'Security keys changed - sending explicit reboot to commit '
             'NVRAM; '
             'target=${target.isLocal ? 'local' : 'remote(${target.resolve(0).toRadixString(16)})'}',
           );
           await protocol.reboot(target: target);
         } catch (e) {
           AppLogging.protocol(
-            '🔑 Explicit reboot after security save failed: $e '
+            'Explicit reboot after security save failed: $e '
             '(non-fatal; the setConfig already returned, firmware may auto-reboot)',
           );
         }

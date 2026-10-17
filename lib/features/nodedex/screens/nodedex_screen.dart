@@ -142,7 +142,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
         .toList();
 
     AppLogging.nodeDex(
-      'Screen build — ${entries.length} entries, '
+      'Screen build - ${entries.length} entries, '
       'filter: ${currentFilter.name}, sort: ${currentSort.name}, '
       'view: ${viewMode.name}',
     );
@@ -184,7 +184,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                 final notifier = ref.read(albumViewModeProvider.notifier);
                 notifier.toggle();
                 AppLogging.nodeDex(
-                  'View mode toggled: ${isAlbumMode ? 'album → list' : 'list → album'}',
+                  'View mode toggled: ${isAlbumMode ? 'album -> list' : 'list -> album'}',
                 );
               },
             ),
@@ -475,7 +475,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               sortOrder: currentSort,
               onChanged: (order) {
                 AppLogging.nodeDex(
-                  'Sort order changed: ${currentSort.name} → ${order.name}',
+                  'Sort order changed: ${currentSort.name} -> ${order.name}',
                 );
                 ref.read(nodeDexSortProvider.notifier).setOrder(order);
               },

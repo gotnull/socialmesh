@@ -138,7 +138,7 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
       final optIn = await MqttPreferences.getMapReportingOptIn();
       if (!optIn) {
         AppLogging.mqttProxyWarning(
-          'evaluate($reason): map-reporting on but consent missing — '
+          'evaluate($reason): map-reporting on but consent missing - '
           'refusing to connect',
         );
         proxyService.markMissingConfig(
@@ -182,7 +182,7 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
         : null;
 
     AppLogging.mqttProxy(
-      'evaluate($reason): proxy enabled — connect '
+      'evaluate($reason): proxy enabled - connect '
       '(subscribe: $hasAnyDownlinkEnabled)',
     );
 
@@ -199,7 +199,7 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
     // Proxy off — mark disabled so the UI distinguishes "off" from "failed".
     // Disconnect a live socket if one was previously settled.
     if (proxyService.isConnected) {
-      AppLogging.mqttProxy('evaluate($reason): proxy disabled — disconnect');
+      AppLogging.mqttProxy('evaluate($reason): proxy disabled - disconnect');
       proxyService.disconnect();
     }
     proxyService.markDisabled();

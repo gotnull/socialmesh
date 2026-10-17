@@ -54,7 +54,7 @@ void _syncLog(String message, {bool verbose = false}) {
 /// Log a sync error with `[SYNC]` prefix.
 void _syncLogError(String message, [Object? error, StackTrace? stack]) {
   AppLogging.automations(
-    '[SYNC] ERROR: $message${error != null ? ' — $error' : ''}',
+    '[SYNC] ERROR: $message${error != null ? ' - $error' : ''}',
   );
 }
 

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
+
 import '../../config/revenuecat_config.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/constants.dart';
@@ -1002,19 +1003,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     if (ref.read(isOnlineProvider)) return true;
     AppLogging.subscriptions(
       '[SubscriptionScreen] isOnline=false on first read for $productId '
-      '— forcing connectivity refresh before blocking',
+      '- forcing connectivity refresh before blocking',
     );
     await ref.read(connectivityStatusProvider.notifier).checkNow();
     if (!mounted) return false;
     if (ref.read(isOnlineProvider)) {
       AppLogging.subscriptions(
         '[SubscriptionScreen] connectivity refresh corrected stale offline '
-        'for $productId — proceeding',
+        'for $productId - proceeding',
       );
       return true;
     }
     AppLogging.subscriptions(
-      '[SubscriptionScreen] Purchase blocked — offline confirmed after refresh '
+      '[SubscriptionScreen] Purchase blocked - offline confirmed after refresh '
       '($productId)',
     );
     if (!mounted) return false;

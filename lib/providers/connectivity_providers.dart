@@ -43,12 +43,12 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
         // Run an immediate check so the UI has fresh data on resume.
         checkNow();
         AppLogging.connection(
-          '🔋 Connectivity: periodic timer resumed (app foregrounded)',
+          'Connectivity: periodic timer resumed (app foregrounded)',
         );
       } else {
         _stopPeriodicTimer();
         AppLogging.connection(
-          '🔋 Connectivity: periodic timer paused (app backgrounded)',
+          'Connectivity: periodic timer paused (app backgrounded)',
         );
       }
     });
@@ -106,7 +106,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
       reason: reason,
     );
     AppLogging.connection(
-      '🌐 Connectivity: status changed -> ${online ? 'online' : 'offline'}, canUseCloudFeatures=${state.online}, reason=$reason',
+      'Connectivity: status changed -> ${online ? 'online' : 'offline'}, canUseCloudFeatures=${state.online}, reason=$reason',
     );
   }
 
@@ -130,7 +130,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
           reason: 'platform_disconnected',
         );
         AppLogging.connection(
-          '🌐 Connectivity: status changed -> offline, canUseCloudFeatures=${state.online}, reason=platform_disconnected',
+          'Connectivity: status changed -> offline, canUseCloudFeatures=${state.online}, reason=platform_disconnected',
         );
         return;
       }
@@ -163,7 +163,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
         reason: reason,
       );
       AppLogging.connection(
-        '🌐 Connectivity: status changed -> ${state.online ? 'online' : 'offline'}, canUseCloudFeatures=${state.online}, reason=$reason',
+        'Connectivity: status changed -> ${state.online ? 'online' : 'offline'}, canUseCloudFeatures=${state.online}, reason=$reason',
       );
     } catch (e) {
       state = ConnectivityStatus(
@@ -172,7 +172,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
         reason: 'error',
       );
       AppLogging.connection(
-        '🌐 Connectivity: status changed -> offline, canUseCloudFeatures=false, reason=error:$e',
+        'Connectivity: status changed -> offline, canUseCloudFeatures=false, reason=error:$e',
       );
     }
   }
@@ -200,7 +200,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
       // ambiguity after every platform event but eliminates the
       // false-negative class of bugs.
       AppLogging.connection(
-        '🌐 Connectivity: platform change -> NONE reported, '
+        'Connectivity: platform change -> NONE reported, '
         'verifying with reachability ping before flipping offline, '
         'results=$results',
       );
@@ -223,7 +223,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
           reason: 'transient_none_ignored',
         );
         AppLogging.connection(
-          '🌐 Connectivity: transient NONE ignored (ping succeeded) - staying online',
+          'Connectivity: transient NONE ignored (ping succeeded) - staying online',
         );
         return;
       }
@@ -233,14 +233,14 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
         reason: 'platform_disconnected',
       );
       AppLogging.connection(
-        '🌐 Connectivity: confirmed offline (NONE + ping failed)',
+        'Connectivity: confirmed offline (NONE + ping failed)',
       );
       return;
     }
 
     // Platform says connected — do a fresh reachability check
     AppLogging.connection(
-      '🌐 Connectivity: platform change -> connected, '
+      'Connectivity: platform change -> connected, '
       'verifying reachability, results=$results',
     );
     await checkNow();

@@ -93,12 +93,12 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
         // Immediate refresh so the UI has fresh data on resume.
         refresh();
         AppLogging.maps(
-          '🔋 WorldMeshMap: periodic refresh resumed (app foregrounded)',
+          'WorldMeshMap: periodic refresh resumed (app foregrounded)',
         );
       } else {
         _stopPeriodicRefresh();
         AppLogging.maps(
-          '🔋 WorldMeshMap: periodic refresh paused (app backgrounded)',
+          'WorldMeshMap: periodic refresh paused (app backgrounded)',
         );
       }
     });
@@ -170,7 +170,7 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
         ),
       );
     } catch (e, st) {
-      AppLogging.maps('WorldMeshMapNotifier: fetch failed — $e');
+      AppLogging.maps('WorldMeshMapNotifier: fetch failed - $e');
 
       final currentData = state.whenOrNull(data: (d) => d);
       final currentNodes = currentData?.nodes ?? {};

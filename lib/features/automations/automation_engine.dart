@@ -2,10 +2,12 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
+
 import 'package:intl/intl.dart';
 
 import '../../utils/time_format.dart';
@@ -29,6 +31,7 @@ import 'automation_debug_service.dart';
 import 'automation_repository.dart';
 import 'scheduler_service.dart';
 import 'services/notification_renderer/notification_renderer_module.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Message model for automation processing (local to avoid import conflict)
@@ -218,7 +221,7 @@ class AutomationEngine {
     }
 
     AppLogging.automations(
-      'AutomationEngine: Scheduled event enrichment — '
+      'AutomationEngine: Scheduled event enrichment - '
       'battery=$batteryLevel, lat=$latitude, lon=$longitude',
     );
 
@@ -291,7 +294,7 @@ class AutomationEngine {
     }
 
     AppLogging.automations(
-      'AutomationEngine: Manual event enrichment — '
+      'AutomationEngine: Manual event enrichment - '
       'battery=$batteryLevel, node=$nodeName, lat=$latitude, lon=$longitude',
     );
 
@@ -366,7 +369,7 @@ class AutomationEngine {
         if (node.batteryLevel! > threshold + 5) {
           if (_firedBatteryLowAlerts[hysteresisKey] == true) {
             AppLogging.automations(
-              '🔋 Battery recovered above $threshold+5: resetting hysteresis for ${automation.name}',
+              'Battery recovered above $threshold+5: resetting hysteresis for ${automation.name}',
             );
             _firedBatteryLowAlerts[hysteresisKey] = false;
           }
@@ -377,7 +380,7 @@ class AutomationEngine {
             node.batteryLevel! <= threshold &&
             _firedBatteryLowAlerts[hysteresisKey] != true) {
           AppLogging.automations(
-            '🔋 Battery crossed threshold $threshold: $previousBattery -> ${node.batteryLevel} (firing ${automation.name})',
+            'Battery crossed threshold $threshold: $previousBattery -> ${node.batteryLevel} (firing ${automation.name})',
           );
           _firedBatteryLowAlerts[hysteresisKey] = true;
           final pos = _nodePositions[node.nodeNum];
@@ -671,7 +674,7 @@ class AutomationEngine {
       'AutomationEngine: Processing ${event.type.name} event',
     );
     AppLogging.automations(
-      '🤖 AutomationEngine: Found ${automations.length} matching automations',
+      'AutomationEngine: Found ${automations.length} matching automations',
     );
 
     for (final automation in automations) {
@@ -687,7 +690,7 @@ class AutomationEngine {
         if (branchResult.selection == BranchSelection.none) {
           // Condition failed and no ELSE branch — skip execution.
           AppLogging.automations(
-            '🤖 AutomationEngine: No branch to execute for "${automation.name}" '
+            'AutomationEngine: No branch to execute for "${automation.name}" '
             '(${branchResult.reason})',
           );
           _debugService?.recordEvaluation(
@@ -723,7 +726,7 @@ class AutomationEngine {
         }
       } else {
         AppLogging.automations(
-          '🤖 AutomationEngine: Skipped "${automation.name}" (${skipReason.displayName})',
+          'AutomationEngine: Skipped "${automation.name}" (${skipReason.displayName})',
         );
         // Build condition tree result for debug when skipped due to conditions
         ConditionNodeResult? treeResult;
@@ -878,7 +881,7 @@ class AutomationEngine {
     // Check node filter
     if (trigger.nodeNum != null && trigger.nodeNum != event.nodeNum) {
       AppLogging.automations(
-        '🤖 _evaluateTrigger: Node filter mismatch (trigger=${trigger.nodeNum}, event=${event.nodeNum})',
+        '_evaluateTrigger: Node filter mismatch (trigger=${trigger.nodeNum}, event=${event.nodeNum})',
       );
       return SkipReason.nodeFilterMismatch;
     }
@@ -898,7 +901,7 @@ class AutomationEngine {
       case TriggerType.messageContains:
         if (trigger.keyword == null || event.messageText == null) {
           AppLogging.automations(
-            '🤖 _evaluateTrigger: messageContains - keyword=${trigger.keyword}, message=${event.messageText}',
+            '_evaluateTrigger: messageContains - keyword=${trigger.keyword}, message=${event.messageText}',
           );
           return SkipReason.keywordNotMatched;
         }
@@ -906,12 +909,12 @@ class AutomationEngine {
         final messageLower = event.messageText!.toLowerCase();
         if (!messageLower.contains(keywordLower)) {
           AppLogging.automations(
-            '🤖 _evaluateTrigger: messageContains - "$messageLower" does not contain "$keywordLower"',
+            '_evaluateTrigger: messageContains - "$messageLower" does not contain "$keywordLower"',
           );
           return SkipReason.keywordNotMatched;
         }
         AppLogging.automations(
-          '🤖 _evaluateTrigger: messageContains - MATCH! "$messageLower" contains "$keywordLower"',
+          '_evaluateTrigger: messageContains - MATCH! "$messageLower" contains "$keywordLower"',
         );
         break;
 
@@ -937,7 +940,7 @@ class AutomationEngine {
                 sensorFilter.toLowerCase(),
               )) {
             AppLogging.automations(
-              '🤖 _evaluateTrigger: detectionSensor - sensor name mismatch (filter=$sensorFilter, event=${event.sensorName})',
+              '_evaluateTrigger: detectionSensor - sensor name mismatch (filter=$sensorFilter, event=${event.sensorName})',
             );
             return SkipReason.nodeFilterMismatch;
           }
@@ -946,7 +949,7 @@ class AutomationEngine {
         final stateFilter = trigger.detectedStateFilter;
         if (stateFilter != null && event.sensorDetected != stateFilter) {
           AppLogging.automations(
-            '🤖 _evaluateTrigger: detectionSensor - state mismatch (filter=$stateFilter, event=${event.sensorDetected})',
+            '_evaluateTrigger: detectionSensor - state mismatch (filter=$stateFilter, event=${event.sensorDetected})',
           );
           return SkipReason.nodeFilterMismatch;
         }

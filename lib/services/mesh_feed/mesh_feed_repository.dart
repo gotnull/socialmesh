@@ -221,7 +221,7 @@ class MeshFeedRepository {
 
     await ingest(post);
     AppLogging.meshFeed(
-      'created local post=${post.id.substring(0, 8)}… '
+      'created local post=${post.id.substring(0, 8)}... '
       'ttl=${ttl.name} propagation=${propagation.name}',
     );
     return post;
