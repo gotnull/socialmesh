@@ -10,6 +10,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/settings_primitives.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/tak/providers/tak_bridge_providers.dart';
 import '../providers/tak_settings_provider.dart';
@@ -81,12 +82,12 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
               // ---------------------------------------------------------------
               if (AppFeatureFlags.isTakGatewayEnabled) ...[
                 SliverToBoxAdapter(
-                  child: _SectionHeader(
+                  child: SettingsListSectionHeader(
                     title: context.l10n.takSettingsSectionConnection,
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _SettingsTile(
+                  child: SettingsNavTile(
                     icon: Icons.link,
                     title: context.l10n.takSettingsGatewayUrlTitle,
                     subtitle: settings.gatewayUrl.isNotEmpty
@@ -96,7 +97,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _SettingsTile(
+                  child: SettingsNavTile(
                     icon: Icons.flash_on,
                     title: context.l10n.takSettingsAutoConnectTitle,
                     subtitle: context.l10n.takSettingsAutoConnectSubtitle,
@@ -116,12 +117,12 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                 // POSITION PUBLISHING (gateway only)
                 // ---------------------------------------------------------------
                 SliverToBoxAdapter(
-                  child: _SectionHeader(
+                  child: SettingsListSectionHeader(
                     title: context.l10n.takSettingsSectionPublishing,
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _SettingsTile(
+                  child: SettingsNavTile(
                     icon: Icons.my_location,
                     title: context.l10n.takSettingsPublishTitle,
                     subtitle: context.l10n.takSettingsPublishSubtitle,
@@ -137,7 +138,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _SettingsTile(
+                  child: SettingsNavTile(
                     icon: Icons.timer_outlined,
                     title: context.l10n.takSettingsIntervalTitle,
                     subtitle: context.l10n.takSettingsIntervalSubtitle,
@@ -153,7 +154,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _SettingsTile(
+                  child: SettingsNavTile(
                     icon: Icons.badge_outlined,
                     title: context.l10n.takSettingsCallsignTitle,
                     subtitle: settings.callsign.isNotEmpty
@@ -167,12 +168,12 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
               // MAP
               // ---------------------------------------------------------------
               SliverToBoxAdapter(
-                child: _SectionHeader(
+                child: SettingsListSectionHeader(
                   title: context.l10n.takSettingsSectionMap,
                 ),
               ),
               SliverToBoxAdapter(
-                child: _SettingsTile(
+                child: SettingsNavTile(
                   icon: Icons.layers_outlined,
                   title: context.l10n.takSettingsMapLayerTitle,
                   subtitle: context.l10n.takSettingsMapLayerSubtitle,
@@ -193,12 +194,12 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
               // ---------------------------------------------------------------
               if (AppFeatureFlags.isTakGatewayEnabled) ...[
                 SliverToBoxAdapter(
-                  child: _SectionHeader(
+                  child: SettingsListSectionHeader(
                     title: context.l10n.takSettingsSectionProximity,
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _SettingsTile(
+                  child: SettingsNavTile(
                     icon: Icons.radar,
                     title: context.l10n.takSettingsProximityTitle,
                     subtitle: context.l10n.takSettingsProximitySubtitle,
@@ -215,7 +216,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                 ),
                 if (settings.proximityAlertEnabled) ...[
                   SliverToBoxAdapter(
-                    child: _SettingsTile(
+                    child: SettingsNavTile(
                       icon: Icons.adjust,
                       title: context.l10n.takSettingsRadiusTitle,
                       subtitle: context.l10n.takSettingsRadiusSubtitle(
@@ -257,12 +258,12 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
               // ---------------------------------------------------------------
               if (AppFeatureFlags.isTakMeshBridgeEnabled) ...[
                 SliverToBoxAdapter(
-                  child: _SectionHeader(
+                  child: SettingsListSectionHeader(
                     title: context.l10n.takBridgeSectionTitle,
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _SettingsTile(
+                  child: SettingsNavTile(
                     icon: Icons.cell_tower,
                     title: context.l10n.takBridgeEnableToggle,
                     subtitle: context.l10n.takBridgeEnableSubtitle,
@@ -291,7 +292,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                     ),
                   ),
                   SliverToBoxAdapter(
-                    child: _SettingsTile(
+                    child: SettingsNavTile(
                       icon: Icons.devices,
                       title: context.l10n.takBridgeClientsTitle,
                       subtitle: context.l10n.takBridgeConnectedClients(
@@ -301,7 +302,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
                   ),
                 ],
                 SliverToBoxAdapter(
-                  child: _SettingsTile(
+                  child: SettingsNavTile(
                     icon: Icons.file_download_outlined,
                     title: context.l10n.takBridgeExportPackage,
                     subtitle: context.l10n.takBridgeExportPackageSubtitle,
@@ -317,7 +318,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
               // ---------------------------------------------------------------
               if (AppFeatureFlags.isTakMeshBridgeEnabled) ...[
                 SliverToBoxAdapter(
-                  child: _SectionHeader(
+                  child: SettingsListSectionHeader(
                     title: context.l10n.takIdentityRegistryTitle,
                   ),
                 ),
@@ -352,9 +353,8 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
             const SizedBox(height: AppTheme.spacing4),
             Text(
               context.l10n.takSettingsGatewayEditorHint,
-              style: Theme.of(
-                sheetContext,
-              ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+              style: Theme.of(sheetContext).textTheme.bodySmall
+                  ?.copyWith(color: context.textTertiary),
             ),
             const SizedBox(height: AppTheme.spacing16),
             TextField(
@@ -415,9 +415,8 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
             const SizedBox(height: AppTheme.spacing4),
             Text(
               context.l10n.takSettingsCallsignEditorHint,
-              style: Theme.of(
-                sheetContext,
-              ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+              style: Theme.of(sheetContext).textTheme.bodySmall
+                  ?.copyWith(color: context.textTertiary),
             ),
             const SizedBox(height: AppTheme.spacing16),
             TextField(
@@ -466,99 +465,6 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
 // =============================================================================
 // Private widgets — mirroring the pattern from settings_screen.dart
 // =============================================================================
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: context.textTertiary,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(icon, color: context.textSecondary),
-                const SizedBox(width: AppTheme.spacing16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: AppTheme.spacing2),
-                        Text(
-                          subtitle!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: context.textTertiary),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (trailing != null)
-                  trailing!
-                else if (onTap != null)
-                  Icon(Icons.chevron_right, color: context.textTertiary),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Compact interval selector that shows the current value and opens a menu.
 class _IntervalSelector extends StatelessWidget {
@@ -644,9 +550,8 @@ class _ProximityAffiliationCheckboxes extends StatelessWidget {
         children: [
           Text(
             context.l10n.takSettingsAlertOn,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textTertiary),
           ),
           for (final option in _options)
             Row(

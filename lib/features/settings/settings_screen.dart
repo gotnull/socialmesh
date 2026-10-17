@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: scaffold — InAppWebView browser, glass blur would obscure web content
 import '../feedback/my_bug_reports_tile.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -31,6 +32,7 @@ import '../../services/haptic_service.dart';
 import 'background_connection_screen.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/animations.dart';
@@ -155,7 +157,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       return const [];
     }
     return [
-      _SettingsTile(
+      SettingsNavTile(
         icon: Icons.sd_card,
         title: context.l10n.settingsTileOfflineMapStorageTitle,
         subtitle: context.l10n.settingsTileOfflineMapStorageSubtitle,
@@ -1844,9 +1846,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 SizedBox(height: AppTheme.spacing8),
                 Text(
                   context.l10n.settingsTryDifferentSearch,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),
@@ -1872,9 +1873,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SectionHeader(title: section),
+                SettingsListSectionHeader(title: section),
                 ...items.map(
-                  (item) => _SettingsTile(
+                  (item) => SettingsNavTile(
                     icon: item.icon,
                     title: item.title,
                     subtitle: item.subtitle,
@@ -1947,7 +1948,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: context.l10n.settingsSectionPremium),
+        SettingsListSectionHeader(title: context.l10n.settingsSectionPremium),
         // Complete Pack mini hero card
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
@@ -2287,7 +2288,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(title: context.l10n.settingsSectionRemoteAdmin),
+        SettingsListSectionHeader(
+          title: context.l10n.settingsSectionRemoteAdmin,
+        ),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           decoration: BoxDecoration(
@@ -2375,9 +2378,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       context.l10n.settingsRemoteAdminNodeCount(
                         adminableNodes.length,
                       ),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: context.textTertiary,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: context.textTertiary),
                     ),
                     const SizedBox(width: AppTheme.spacing4),
                     Icon(
@@ -2559,9 +2561,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         return context.l10n.settingsNotConfigured;
                       }
                       // Find the region info for display
-                      final regionInfo = getAvailableRegions(
-                        context,
-                      ).where((r) => r.code == region).firstOrNull;
+                      final regionInfo = getAvailableRegions(context)
+                          .where((r) => r.code == region)
+                          .firstOrNull;
                       if (regionInfo != null) {
                         return '${regionInfo.name} (${regionInfo.frequency})';
                       }
@@ -2583,7 +2585,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Profile Section - right after Premium, before Connection
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionAccount,
                           ),
                           _ProfileTile(
@@ -2596,7 +2598,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
 
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.shield_outlined,
                             title: context.l10n.settingsTilePrivacyTitle,
                             subtitle: context.l10n.settingsTilePrivacySubtitle,
@@ -2621,10 +2623,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Feedback Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionFeedback,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.bug_report_outlined,
                             title: context.l10n.settingsTileShakeToReportTitle,
                             subtitle:
@@ -2645,10 +2647,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Connection Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionConnection,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.bluetooth,
                             title: context.l10n.settingsTileAutoReconnectTitle,
                             subtitle:
@@ -2662,7 +2664,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               },
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.bluetooth_connected,
                             title: context
                                 .l10n
@@ -2678,7 +2680,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.my_location,
                             title:
                                 context.l10n.settingsTileProvideLocationTitle,
@@ -2700,10 +2702,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Haptic Feedback Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionHapticFeedback,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.vibration,
                             title: context.l10n.settingsTileHapticFeedbackTitle,
                             subtitle:
@@ -2729,7 +2731,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
                           if (settingsService.hapticFeedbackEnabled)
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.tune,
                               title: context.l10n.settingsTileIntensityTitle,
                               subtitle: HapticIntensity.fromValue(
@@ -2745,10 +2747,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Appearance & Accessibility Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionAppearance,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.accessibility_new_rounded,
                             title: context.l10n.settingsTileAppearanceTitle,
                             subtitle:
@@ -2765,10 +2767,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // What's New Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionWhatsNew,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.auto_awesome_outlined,
                             title: context.l10n.settingsTileWhatsNewTitle,
                             subtitle: context.l10n.settingsTileWhatsNewSubtitle,
@@ -2779,10 +2781,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Animations Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionAnimations,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.animation,
                             title: context.l10n.settingsTileListAnimationsTitle,
                             subtitle:
@@ -2806,7 +2808,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               },
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.view_in_ar,
                             title: context.l10n.settingsTile3dEffectsTitle,
                             subtitle:
@@ -2836,10 +2838,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Notifications Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionNotifications,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.notifications_outlined,
                             title:
                                 context.l10n.settingsTilePushNotificationsTitle,
@@ -2865,7 +2867,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
                           if (settingsService.notificationsEnabled) ...[
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.person_add_outlined,
                               title: context.l10n.settingsTileNewNodesTitle,
                               subtitle:
@@ -2888,7 +2890,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 },
                               ),
                             ),
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.chat_bubble_outline,
                               title:
                                   context.l10n.settingsTileDirectMessagesTitle,
@@ -2916,7 +2918,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 },
                               ),
                             ),
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.forum_outlined,
                               title:
                                   context.l10n.settingsTileChannelMessagesTitle,
@@ -2944,7 +2946,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 },
                               ),
                             ),
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.campaign_outlined,
                               title: context
                                   .l10n
@@ -2970,7 +2972,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 },
                               ),
                             ),
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.pin_drop_outlined,
                               title: context.l10n.settingsTileWaypointsTitle,
                               subtitle:
@@ -3003,7 +3005,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             // isSipEnabled) so MeshCanvas-only configs
                             // do not show this Handshake-feature row.
                             if (AppFeatureFlags.isHandshakeEnabled)
-                              _SettingsTile(
+                              SettingsNavTile(
                                 icon: Icons.casino_outlined,
                                 title: context.l10n.settingsTileGameTurnsTitle,
                                 subtitle:
@@ -3029,7 +3031,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                   },
                                 ),
                               ),
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.volume_up_outlined,
                               title: context.l10n.settingsTileSoundTitle,
                               subtitle: context.l10n.settingsTileSoundSubtitle,
@@ -3050,7 +3052,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 },
                               ),
                             ),
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.vibration,
                               title: context.l10n.settingsTileVibrationTitle,
                               subtitle:
@@ -3073,7 +3075,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 },
                               ),
                             ),
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.bug_report_outlined,
                               title: context
                                   .l10n
@@ -3124,10 +3126,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           // Changing it doesn't navigate now — the new
                           // value is read once on the next launch by
                           // MainShellIndexNotifier.build().
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionNavigation,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.tab_outlined,
                             title: context.l10n.settingsTileLandingTabTitle,
                             subtitle:
@@ -3189,10 +3191,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           // becomes noisy. Decoupled from notification
                           // toggles on purpose — these stay accessible
                           // even when notifications are muted.
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionLargeMesh,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.notifications_paused_outlined,
                             title:
                                 context.l10n.settingsTileHideNewNodesBadgeTitle,
@@ -3217,10 +3219,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Messaging Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionMessaging,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.bolt,
                             title: context.l10n.settingsTileQuickResponsesTitle,
                             subtitle:
@@ -3232,7 +3234,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.message,
                             title: context.l10n.settingsTileCannedMessagesTitle,
                             subtitle:
@@ -3249,10 +3251,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Data Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionDataStorage,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.history,
                             title: context.l10n.settingsTileMessageHistoryTitle,
                             subtitle: context.l10n
@@ -3265,7 +3267,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
                           // Message Export
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.download,
                             title: context.l10n.settingsTileExportMessagesTitle,
                             subtitle:
@@ -3279,7 +3281,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           ),
                           // Per-radio data (what is stored under each radio,
                           // switch between radios, delete a radio's data).
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.folder_shared_outlined,
                             title: context.l10n.settingsTileRadioProfilesTitle,
                             subtitle:
@@ -3295,7 +3297,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           // when actionable (removable SD card present, or
                           // a fallback warning to surface).
                           ..._buildOfflineMapStorageTile(context),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.delete_sweep_outlined,
                             title: context
                                 .l10n
@@ -3305,7 +3307,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 .settingsTileClearMessageHistorySubtitle,
                             onTap: () => _confirmClearMessages(context, ref),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.refresh,
                             iconColor: AccentColors.orange,
                             title: context.l10n.settingsTileResetLocalDataTitle,
@@ -3314,7 +3316,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 context.l10n.settingsTileResetLocalDataSubtitle,
                             onTap: () => _confirmResetLocalData(context, ref),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.delete_forever,
                             iconColor: AppTheme.errorRed,
                             title: context.l10n.settingsTileClearAllDataTitle,
@@ -3330,17 +3332,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           _buildRemoteAdminSelector(context, ref),
 
                           // Device Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionDevice,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.sync,
                             title: context.l10n.settingsTileForceSyncTitle,
                             subtitle:
                                 context.l10n.settingsTileForceSyncSubtitle,
                             onTap: () => _forceSync(context, ref),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon:
                                 regionAsync.whenOrNull(
                                       data: (r) =>
@@ -3385,7 +3387,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.settings,
                             title: context.l10n.settingsTileDeviceRoleTitle,
                             subtitle:
@@ -3397,7 +3399,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.radio,
                             title: context.l10n.settingsTileRadioConfigTitle,
                             subtitle:
@@ -3409,7 +3411,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.gps_fixed,
                             title: context.l10n.settingsTilePositionTitle,
                             subtitle: context.l10n.settingsTilePositionSubtitle,
@@ -3420,7 +3422,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.display_settings,
                             title:
                                 context.l10n.settingsTileDisplaySettingsTitle,
@@ -3434,7 +3436,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.bluetooth,
                             title: context.l10n.settingsTileBluetoothTitle,
                             subtitle:
@@ -3446,7 +3448,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.wifi,
                             title: context.l10n.settingsTileNetworkTitle,
                             subtitle: context.l10n.settingsTileNetworkSubtitle,
@@ -3457,7 +3459,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.battery_full,
                             title:
                                 context.l10n.settingsTilePowerManagementTitle,
@@ -3471,7 +3473,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.security,
                             title: context.l10n.settingsTileSecurityTitle,
                             subtitle: context.l10n.settingsTileSecuritySubtitle,
@@ -3482,7 +3484,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.power_settings_new,
                             title:
                                 context.l10n.settingsTileDeviceManagementTitle,
@@ -3496,14 +3498,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.info_outline,
                             title: context.l10n.settingsTileDeviceInfoTitle,
                             subtitle:
                                 context.l10n.settingsTileDeviceInfoSubtitle,
                             onTap: () => _showDeviceInfo(context, ref),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.qr_code_scanner,
                             title: context.l10n.settingsTileScanQrCodeTitle,
                             subtitle:
@@ -3515,10 +3517,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Modules Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionModules,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.cloud,
                             title: context.l10n.settingsTileMqttTitle,
                             subtitle: context.l10n.settingsTileMqttSubtitle,
@@ -3530,7 +3532,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
                           if (_rangeTestAvailable(ref))
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.radar,
                               title: context.l10n.settingsTileRangeTestTitle,
                               subtitle:
@@ -3542,7 +3544,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 ),
                               ),
                             ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.storage,
                             title: context.l10n.settingsTileStoreForwardTitle,
                             subtitle:
@@ -3555,7 +3557,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.sensors,
                             title:
                                 context.l10n.settingsTileDetectionSensorTitle,
@@ -3570,7 +3572,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.notifications_active,
                             title: context
                                 .l10n
@@ -3586,7 +3588,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.lightbulb_outline,
                             title:
                                 context.l10n.settingsTileAmbientLightingTitle,
@@ -3601,7 +3603,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.people_outline,
                             title: context.l10n.settingsTilePaxCounterTitle,
                             subtitle:
@@ -3613,7 +3615,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.analytics_outlined,
                             title: context
                                 .l10n
@@ -3628,7 +3630,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.usb_rounded,
                             title: context.l10n.settingsTileSerialTitle,
                             subtitle: context.l10n.settingsTileSerialSubtitle,
@@ -3639,7 +3641,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.traffic,
                             title:
                                 context.l10n.settingsTileTrafficManagementTitle,
@@ -3655,7 +3657,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ),
                           ),
                           if (_meshBeaconAvailable(ref))
-                            _SettingsTile(
+                            SettingsNavTile(
                               icon: Icons.cell_tower,
                               title: context.l10n.settingsTileMeshBeaconTitle,
                               subtitle:
@@ -3672,10 +3674,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Telemetry Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionTelemetryLogs,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.battery_charging_full,
                             title: context.l10n.settingsTileDeviceMetricsTitle,
                             subtitle:
@@ -3687,7 +3689,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.thermostat,
                             title: context
                                 .l10n
@@ -3703,7 +3705,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.air,
                             title: context.l10n.settingsTileAirQualityTitle,
                             subtitle:
@@ -3715,7 +3717,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.bolt,
                             title: context.l10n.settingsTilePowerMetricsTitle,
                             subtitle:
@@ -3727,7 +3729,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.location_on_outlined,
                             title:
                                 context.l10n.settingsTilePositionHistoryTitle,
@@ -3741,7 +3743,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.timeline,
                             title:
                                 context.l10n.settingsTileTracerouteHistoryTitle,
@@ -3750,7 +3752,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 .settingsTileTracerouteHistorySubtitle,
                             onTap: () => TraceRouteLogScreen.open(context),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.people_alt_outlined,
                             title: context.l10n.settingsTilePaxCounterLogsTitle,
                             subtitle:
@@ -3762,7 +3764,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.sensors,
                             title: context
                                 .l10n
@@ -3778,7 +3780,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.route,
                             title: context.l10n.settingsTileRoutesTitle,
                             subtitle: context.l10n.settingsTileRoutesSubtitle,
@@ -3789,7 +3791,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.download_for_offline_outlined,
                             title:
                                 context.l10n.settingsTileTelemetryExportTitle,
@@ -3802,10 +3804,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Tools Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionTools,
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.gps_fixed,
                             title: context.l10n.settingsTileGpsStatusTitle,
                             subtitle:
@@ -3817,7 +3819,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.system_update,
                             title: context.l10n.settingsTileFirmwareUpdateTitle,
                             subtitle:
@@ -3829,7 +3831,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.ios_share,
                             title: context.l10n.settingsTileExportDataTitle,
                             subtitle:
@@ -3841,7 +3843,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.article_outlined,
                             title: context.l10n.settingsTileAppLogTitle,
                             subtitle: context.l10n.settingsTileAppLogSubtitle,
@@ -3855,7 +3857,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: AppTheme.spacing16),
 
                           // About Section
-                          _SectionHeader(
+                          SettingsListSectionHeader(
                             title: context.l10n.settingsSectionAbout,
                           ),
                           Consumer(
@@ -3866,14 +3868,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                     context.l10n.settingsVersionString(v),
                                 orElse: () => null,
                               );
-                              return _SettingsTile(
+                              return SettingsNavTile(
                                 icon: Icons.info,
                                 title: context.l10n.settingsTileSocialMeshTitle,
                                 subtitle: versionString,
                               );
                             },
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.help,
                             title: context.l10n.settingsTileHelpCenterTitle,
                             subtitle:
@@ -3885,7 +3887,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.help_outline,
                             title: context.l10n.settingsTileHelpSupportTitle,
                             subtitle:
@@ -3893,18 +3895,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             onTap: () =>
                                 LegalDocumentSheet.showSupport(context),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.description_outlined,
                             title: context.l10n.settingsTileTermsOfServiceTitle,
                             onTap: () => LegalDocumentSheet.showTerms(context),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.privacy_tip_outlined,
                             title: context.l10n.settingsTilePrivacyPolicyTitle,
                             onTap: () =>
                                 LegalDocumentSheet.showPrivacy(context),
                           ),
-                          _SettingsTile(
+                          SettingsNavTile(
                             icon: Icons.source_outlined,
                             title: context.l10n.settingsTileOpenSourceTitle,
                             subtitle:
@@ -4360,111 +4362,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
-      // Upper-casing is this widget's job so the section strings stay
-      // title case in the ARB files and can be shared with screens whose
-      // headers render as written (MeshCore Settings).
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: context.textTertiary,
-
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final Color? iconColor;
-  final String title;
-  final Color? titleColor;
-  final String? subtitle;
-  final Color? subtitleColor;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    this.iconColor,
-    required this.title,
-    this.titleColor,
-    this.subtitle,
-    this.subtitleColor,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(icon, color: iconColor ?? context.textSecondary),
-                const SizedBox(width: AppTheme.spacing16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: titleColor ?? context.textPrimary,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: AppTheme.spacing2),
-                        Text(
-                          subtitle!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: subtitleColor ?? context.textTertiary,
-                              ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (trailing != null)
-                  trailing!
-                else if (onTap != null)
-                  Icon(Icons.chevron_right, color: context.textTertiary),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Premium feature tile with owned/locked badge
 class _PremiumFeatureTile extends ConsumerWidget {
   final IconData icon;
@@ -4630,7 +4527,7 @@ class _ProfileTile extends ConsumerWidget {
     return profileAsync.when(
       data: (profile) {
         if (profile == null) {
-          return _SettingsTile(
+          return SettingsNavTile(
             icon: Icons.person_outline,
             title: context.l10n.settingsProfileTitle,
             subtitle: context.l10n.settingsProfileSubtitle,
@@ -4764,13 +4661,13 @@ class _ProfileTile extends ConsumerWidget {
           ),
         );
       },
-      loading: () => _SettingsTile(
+      loading: () => SettingsNavTile(
         icon: Icons.person_outline,
         title: context.l10n.settingsProfileTitle,
         subtitle: context.l10n.settingsLoadingStatus,
         onTap: onTap,
       ),
-      error: (error, stackTrace) => _SettingsTile(
+      error: (error, stackTrace) => SettingsNavTile(
         icon: Icons.person_outline,
         title: context.l10n.settingsProfileTitle,
         subtitle: context.l10n.settingsProfileSubtitle,
@@ -5174,10 +5071,10 @@ class _SocialNotificationsSectionState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppTheme.spacing16),
-          _SectionHeader(
+          SettingsListSectionHeader(
             title: context.l10n.settingsSectionSocialNotifications,
           ),
-          _SettingsTile(
+          SettingsNavTile(
             icon: Icons.notifications_active_outlined,
             title: context.l10n.settingsSocialNotificationsLoading,
             subtitle: context.l10n.settingsSocialNotificationsLoadingSubtitle,
@@ -5190,8 +5087,10 @@ class _SocialNotificationsSectionState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppTheme.spacing16),
-        _SectionHeader(title: context.l10n.settingsSectionSocialNotifications),
-        _SettingsTile(
+        SettingsListSectionHeader(
+          title: context.l10n.settingsSectionSocialNotifications,
+        ),
+        SettingsNavTile(
           icon: Icons.person_add_outlined,
           title: context.l10n.settingsSocialNewFollowersTitle,
           subtitle: context.l10n.settingsSocialNewFollowersSubtitle,
@@ -5200,7 +5099,7 @@ class _SocialNotificationsSectionState
             onChanged: (value) => _updateSetting('follows', value),
           ),
         ),
-        _SettingsTile(
+        SettingsNavTile(
           icon: Icons.favorite_outline,
           title: context.l10n.settingsSocialLikesTitle,
           subtitle: context.l10n.settingsSocialLikesSubtitle,
@@ -5209,7 +5108,7 @@ class _SocialNotificationsSectionState
             onChanged: (value) => _updateSetting('likes', value),
           ),
         ),
-        _SettingsTile(
+        SettingsNavTile(
           icon: Icons.chat_bubble_outline,
           title: context.l10n.settingsSocialCommentsTitle,
           subtitle: context.l10n.settingsSocialCommentsSubtitle,
@@ -5285,7 +5184,7 @@ class _AgeGroupTile extends ConsumerWidget {
       AgeGroup.unknown => context.l10n.settingsAgeGroupSubtitleUnknown,
     };
 
-    return _SettingsTile(
+    return SettingsNavTile(
       icon: Icons.cake_outlined,
       title: context.l10n.settingsAgeGroupTitle,
       subtitle: subtitle,

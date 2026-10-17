@@ -274,4 +274,84 @@ void main() {
       expect(decoration.color, isNotNull);
     });
   });
+
+  group('SettingsListSectionHeader', () {
+    testWidgets('uppercases the title and uses the list header style', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(const SettingsListSectionHeader(title: 'Mesh Bridge')),
+      );
+
+      final text = tester.widget<Text>(find.text('MESH BRIDGE'));
+      expect(text.style?.fontSize, 12);
+      expect(text.style?.fontWeight, FontWeight.w600);
+      expect(text.style?.letterSpacing, 0.5);
+    });
+  });
+
+  group('SettingsNavTile', () {
+    testWidgets('shows a chevron when tappable and nothing trails', (
+      tester,
+    ) async {
+      var taps = 0;
+      await tester.pumpWidget(
+        _wrap(
+          SettingsNavTile(
+            icon: Icons.settings,
+            title: 'Region',
+            subtitle: 'Australia/NZ',
+            onTap: () => taps++,
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      await tester.tap(find.text('Region'));
+      expect(taps, 1);
+    });
+
+    testWidgets('a trailing widget replaces the chevron', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          SettingsNavTile(
+            icon: Icons.settings,
+            title: 'Region',
+            trailing: const Text('On'),
+            onTap: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('On'), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right), findsNothing);
+    });
+
+    testWidgets('no chevron without onTap; colour overrides apply', (
+      tester,
+    ) async {
+      const red = Color(0xFFFF0000);
+      await tester.pumpWidget(
+        _wrap(
+          const SettingsNavTile(
+            icon: Icons.delete,
+            title: 'Clear all data',
+            titleColor: red,
+            subtitle: 'Delete messages',
+            subtitleColor: red,
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.chevron_right), findsNothing);
+      expect(
+        tester.widget<Text>(find.text('Clear all data')).style?.color,
+        red,
+      );
+      expect(
+        tester.widget<Text>(find.text('Delete messages')).style?.color,
+        red,
+      );
+    });
+  });
 }

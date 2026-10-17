@@ -183,3 +183,120 @@ class FieldGroupCard extends StatelessWidget {
     );
   }
 }
+
+/// Section header for navigation lists (the main Settings screen, TAK
+/// settings).
+///
+/// Uppercases [title] itself so section strings stay title case in the ARB
+/// files and can be shared with screens that render headers as written.
+/// Padding `EdgeInsets.fromLTRB(16, 16, 16, 8)`, 12px `w600`,
+/// [BuildContext.textTertiary], `letterSpacing: 0.5`. Form-style screens
+/// use [SettingsSectionHeader] instead.
+class SettingsListSectionHeader extends StatelessWidget {
+  final String title;
+
+  const SettingsListSectionHeader({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 16, 16, 8),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: context.textTertiary,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+/// Row for navigation lists (the main Settings screen, TAK settings).
+///
+/// Same card geometry as [SettingsTile] but always tappable, with the
+/// theme's `titleSmall` title, optional [titleColor] / [subtitleColor]
+/// overrides (destructive or premium rows), and a chevron when [onTap] is
+/// set and no [trailing] widget is given. Form-style screens use
+/// [SettingsTile] instead.
+class SettingsNavTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final Color? titleColor;
+  final String? subtitle;
+  final Color? subtitleColor;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  const SettingsNavTile({
+    super.key,
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    this.titleColor,
+    this.subtitle,
+    this.subtitleColor,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(icon, color: iconColor ?? context.textSecondary),
+                const SizedBox(width: AppTheme.spacing16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: titleColor ?? context.textPrimary,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: AppTheme.spacing2),
+                        Text(
+                          subtitle!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: subtitleColor ?? context.textTertiary,
+                              ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (trailing != null)
+                  trailing!
+                else if (onTap != null)
+                  Icon(Icons.chevron_right, color: context.textTertiary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
