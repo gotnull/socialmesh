@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/settings_primitives.dart';
+import '../../core/widgets/status_banner.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
@@ -240,123 +246,136 @@ class _CannedMessageModuleConfigScreenState
 
   @override
   Widget build(BuildContext context) {
-    return GlassScaffold(
-      title: context.l10n.cannedModuleTitle,
-      actions: [
-        TextButton(
-          onPressed: (_isLoading || _isSaving) ? null : _saveConfig,
-          child: Text(
-            context.l10n.cannedModuleSave,
-            style: TextStyle(
-              color: (_isLoading || _isSaving)
-                  ? SemanticColors.disabled
-                  : context.accentColor,
-              fontWeight: FontWeight.w600,
+    final l10n = context.l10n;
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold(
+        title: l10n.cannedModuleTitle,
+        actions: [
+          TextButton(
+            onPressed: (_isLoading || _isSaving) ? null : _saveConfig,
+            child: Text(
+              l10n.cannedModuleSave,
+              style: TextStyle(
+                color: (_isLoading || _isSaving)
+                    ? SemanticColors.disabled
+                    : context.accentColor,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
-      ],
-      slivers: [
-        if (_isLoading)
-          const SliverFillRemaining(child: ScreenLoadingIndicator())
-        else
-          SliverPadding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _buildOptionsSection(),
-                const SizedBox(height: AppTheme.spacing24),
-                _buildMessagesSection(),
-                const SizedBox(height: AppTheme.spacing24),
-                _buildPresetSection(),
-                const SizedBox(height: AppTheme.spacing24),
-                if (_configPreset == 0) ...[
-                  _buildControlTypeSection(),
-                  const SizedBox(height: AppTheme.spacing24),
-                  _buildInputsSection(),
-                  const SizedBox(height: AppTheme.spacing24),
-                  _buildKeyMappingSection(),
-                  const SizedBox(height: AppTheme.spacing24),
+        ],
+        slivers: [
+          if (_isLoading)
+            const SliverFillRemaining(child: ScreenLoadingIndicator())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+              sliver: SliverList.list(
+                children: [
+                  SettingsSectionHeader(title: l10n.cannedModuleSectionOptions),
+                  _buildToggleTile(
+                    icon: Icons.message,
+                    title: l10n.cannedModuleEnabled,
+                    subtitle: l10n.cannedModuleEnabledSubtitle,
+                    value: _enabled,
+                    onChanged: (value) => _enabled = value,
+                  ),
+                  _buildToggleTile(
+                    icon: Icons.notifications,
+                    title: l10n.cannedModuleSendBell,
+                    subtitle: l10n.cannedModuleSendBellSubtitle,
+                    value: _sendBell,
+                    onChanged: (value) => _sendBell = value,
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  SettingsSectionHeader(
+                    title: l10n.cannedModuleSectionDeviceMessages,
+                  ),
+                  _buildMessagesCard(),
+                  const SizedBox(height: AppTheme.spacing16),
+                  SettingsSectionHeader(title: l10n.cannedModuleSectionPreset),
+                  _buildPresetCard(),
+                  if (_configPreset == 0) ...[
+                    const SizedBox(height: AppTheme.spacing16),
+                    SettingsSectionHeader(
+                      title: l10n.cannedModuleSectionControlType,
+                    ),
+                    // Rotary and up/down are exclusive: each switch locks while
+                    // the other is on.
+                    _buildToggleTile(
+                      icon: Icons.radio_button_checked,
+                      title: l10n.cannedModuleControlRotary,
+                      subtitle: l10n.cannedModuleControlRotaryDesc,
+                      value: _rotary1Enabled,
+                      onChanged: _updown1Enabled
+                          ? null
+                          : (value) => _rotary1Enabled = value,
+                    ),
+                    _buildToggleTile(
+                      icon: Icons.arrow_upward,
+                      title: l10n.cannedModuleControlUpDown,
+                      subtitle: l10n.cannedModuleControlUpDownDesc,
+                      value: _updown1Enabled,
+                      onChanged: _rotary1Enabled
+                          ? null
+                          : (value) => _updown1Enabled = value,
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    SettingsSectionHeader(title: l10n.cannedModuleSectionGpio),
+                    _buildInputsCard(),
+                    const SizedBox(height: AppTheme.spacing16),
+                    SettingsSectionHeader(
+                      title: l10n.cannedModuleSectionKeyMapping,
+                    ),
+                    _buildKeyMappingCard(),
+                  ],
+                  const SizedBox(height: AppTheme.spacing16),
+                  StatusBanner.info(
+                    title: l10n.cannedModuleInfoCard,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing32),
                 ],
-                _buildInfoCard(),
-                const SizedBox(height: AppTheme.spacing32),
-              ]),
+              ),
             ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildOptionsSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.cannedModuleSectionOptions,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: context.textTertiary,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          _SettingsTile(
-            icon: Icons.message,
-            title: context.l10n.cannedModuleEnabled,
-            subtitle: context.l10n.cannedModuleEnabledSubtitle,
-            trailing: ThemedSwitch(
-              value: _enabled,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _enabled = value);
-              },
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.notifications,
-            title: context.l10n.cannedModuleSendBell,
-            subtitle: context.l10n.cannedModuleSendBellSubtitle,
-            trailing: ThemedSwitch(
-              value: _sendBell,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _sendBell = value);
-              },
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildMessagesSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
+  // A null onChanged renders the switch locked.
+  Widget _buildToggleTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool>? onChanged,
+  }) {
+    return SettingsTile(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      trailing: ThemedSwitch(
+        value: value,
+        onChanged: onChanged == null
+            ? null
+            : (next) {
+                HapticFeedback.selectionClick();
+                setState(() => onChanged(next));
+              },
       ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+    );
+  }
+
+  Widget _buildMessagesCard() {
+    return FieldGroupCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.cannedModuleSectionDeviceMessages,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: context.textTertiary,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
           Row(
             children: [
               Icon(Icons.message, size: 20, color: context.accentColor),
@@ -414,7 +433,9 @@ class _CannedMessageModuleConfigScreenState
     );
   }
 
-  Widget _buildPresetSection() {
+  // Single-select preset list: one grouped card, one row per preset,
+  // dividers between rows.
+  Widget _buildPresetCard() {
     final presets = [
       (
         0,
@@ -433,165 +454,90 @@ class _CannedMessageModuleConfigScreenState
       ),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
+    return FieldGroupCard(
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.cannedModuleSectionPreset,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: context.textTertiary,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          ...presets.map((item) {
-            final isSelected = _configPreset == item.$1;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  _applyPreset(item.$1);
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    border: Border.all(
-                      color: isSelected ? context.accentColor : context.border,
-                      width: isSelected ? 2 : 1,
-                    ),
-                    color: isSelected
-                        ? context.accentColor.withAlpha(20)
-                        : context.background,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_unchecked,
-                        color: isSelected
-                            ? context.accentColor
-                            : SemanticColors.disabled,
-                      ),
-                      SizedBox(width: AppTheme.spacing12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.$2,
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              item.$3,
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (index, item) in presets.indexed) ...[
+              if (index > 0) Divider(height: 1, color: context.border),
+              _buildPresetRow(
+                title: item.$2,
+                subtitle: item.$3,
+                isSelected: _configPreset == item.$1,
+                onTap: () => _applyPreset(item.$1),
               ),
-            );
-          }),
-        ],
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildControlTypeSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.cannedModuleSectionControlType,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: context.textTertiary,
-              letterSpacing: 1.2,
+  Widget _buildPresetRow({
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing16,
+          vertical: AppTheme.spacing12,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          _SettingsTile(
-            icon: Icons.radio_button_checked,
-            title: context.l10n.cannedModuleControlRotary,
-            subtitle: context.l10n.cannedModuleControlRotaryDesc,
-            trailing: ThemedSwitch(
-              value: _rotary1Enabled,
-              onChanged: _updown1Enabled
-                  ? null
-                  : (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _rotary1Enabled = value);
-                    },
+            const SizedBox(width: AppTheme.spacing12),
+            Icon(
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: isSelected ? context.accentColor : SemanticColors.disabled,
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          _SettingsTile(
-            icon: Icons.arrow_upward,
-            title: context.l10n.cannedModuleControlUpDown,
-            subtitle: context.l10n.cannedModuleControlUpDownDesc,
-            trailing: ThemedSwitch(
-              value: _updown1Enabled,
-              onChanged: _rotary1Enabled
-                  ? null
-                  : (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _updown1Enabled = value);
-                    },
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildInputsSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+  Widget _buildInputsCard() {
+    return FieldGroupCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.cannedModuleSectionGpio,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: context.textTertiary,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
           _buildGpioPicker(
             context.l10n.cannedModuleGpioPinA,
             _inputbrokerPinA,
@@ -668,7 +614,7 @@ class _CannedMessageModuleConfigScreenState
     );
   }
 
-  Widget _buildKeyMappingSection() {
+  Widget _buildKeyMappingCard() {
     final eventChars = [
       (
         module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
@@ -704,25 +650,10 @@ class _CannedMessageModuleConfigScreenState
       ),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+    return FieldGroupCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.cannedModuleSectionKeyMapping,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: context.textTertiary,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
           _buildEventPicker(
             context.l10n.cannedModuleClockwiseEvent,
             _inputbrokerEventCw ??
@@ -804,75 +735,6 @@ class _CannedMessageModuleConfigScreenState
                 },
               ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildInfoCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.accentColor.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: context.accentColor.withAlpha(50)),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.info_outline, color: context.accentColor, size: 20),
-          SizedBox(width: AppTheme.spacing12),
-          Expanded(
-            child: Text(
-              context.l10n.cannedModuleInfoCard,
-              style: TextStyle(color: context.textSecondary, fontSize: 13),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: context.textSecondary, size: 22),
-        SizedBox(width: AppTheme.spacing12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (subtitle != null)
-                Text(
-                  subtitle!,
-                  style: TextStyle(color: context.textSecondary, fontSize: 12),
-                ),
-            ],
-          ),
-        ),
-        if (trailing != null) trailing!,
       ],
     );
   }

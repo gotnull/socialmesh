@@ -596,9 +596,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen>
     );
   }
 
-  /// One grouped card holding a single-select list: a title block, then one
-  /// row per option separated by dividers. Each option is
-  /// `(value, title, subtitle, leading icon or null)`.
+  // One grouped card holding a single-select list: a title block, then one
+  // row per option separated by dividers. Each option is
+  // (value, title, subtitle, leading icon or null).
   Widget _buildOptionGroup<T>({
     required String title,
     String? description,
