@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -204,48 +207,54 @@ class _TrafficManagementConfigScreenState
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else
           SliverPadding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _SectionHeader(
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+            sliver: SliverList.list(
+              children: [
+                SettingsSectionHeader(
                   title: context.l10n.trafficMgmtSectionPositionDedup,
                 ),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildPositionDedupSection(),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(
+                ..._buildPositionDedupSection(),
+                const SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
                   title: context.l10n.trafficMgmtSectionNodeinfoResponse,
                 ),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildNodeinfoSection(),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(title: context.l10n.trafficMgmtSectionRateLimit),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildRateLimitSection(),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(
+                ..._buildNodeinfoSection(),
+                const SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: context.l10n.trafficMgmtSectionRateLimit,
+                ),
+                ..._buildRateLimitSection(),
+                const SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
                   title: context.l10n.trafficMgmtSectionUnknownPackets,
                 ),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildUnknownPacketsSection(),
+                ..._buildUnknownPacketsSection(),
                 const SizedBox(height: AppTheme.spacing32),
-              ]),
+              ],
             ),
           ),
       ],
     );
   }
 
-  Widget _card({required List<Widget> children}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
+  Widget _buildToggleTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SettingsTile(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      trailing: ThemedSwitch(
+        value: value,
+        onChanged: (next) {
+          HapticFeedback.selectionClick();
+          setState(() => onChanged(next));
+        },
       ),
     );
   }
@@ -254,9 +263,6 @@ class _TrafficManagementConfigScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: AppTheme.spacing16),
-        Divider(color: context.border),
-        const SizedBox(height: AppTheme.spacing8),
         Text(
           title,
           style: TextStyle(
@@ -303,223 +309,147 @@ class _TrafficManagementConfigScreenState
     );
   }
 
-  Widget _buildPositionDedupSection() {
-    return _card(
-      children: [
-        _SettingsTile(
-          icon: Icons.filter_alt,
-          title: context.l10n.trafficMgmtPositionDedup,
-          subtitle: context.l10n.trafficMgmtPositionDedupSubtitle,
-          trailing: ThemedSwitch(
-            value: _positionDedupEnabled,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              setState(() => _positionDedupEnabled = value);
-            },
-          ),
-        ),
-        if (_positionDedupEnabled) ...[
-          _sliderLabel(
-            context.l10n.trafficMgmtMinInterval(_positionMinIntervalSecs),
-            context.l10n.trafficMgmtMinIntervalDesc,
-          ),
-          _slider(
-            value: _positionMinIntervalSecs,
-            min: 10,
-            max: 600,
-            label:
-                '${_positionMinIntervalSecs}s', // lint-allow: hardcoded-string
-            onChanged: (v) => setState(() => _positionMinIntervalSecs = v),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildNodeinfoSection() {
-    return _card(
-      children: [
-        _SettingsTile(
-          icon: Icons.info_outline,
-          title: context.l10n.trafficMgmtDirectResponse,
-          subtitle: context.l10n.trafficMgmtDirectResponseSubtitle,
-          trailing: ThemedSwitch(
-            value: _nodeinfoDirectResponse,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              setState(() => _nodeinfoDirectResponse = value);
-            },
-          ),
-        ),
-        if (_nodeinfoDirectResponse) ...[
-          _sliderLabel(
-            context.l10n.trafficMgmtMaxHops(_nodeinfoDirectResponseMaxHops),
-            context.l10n.trafficMgmtMaxHopsDesc,
-          ),
-          _slider(
-            value: _nodeinfoDirectResponseMaxHops,
-            min: 1,
-            max: 7,
-            label:
-                '$_nodeinfoDirectResponseMaxHops', // lint-allow: hardcoded-string
-            onChanged: (v) =>
-                setState(() => _nodeinfoDirectResponseMaxHops = v),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildRateLimitSection() {
-    return _card(
-      children: [
-        _SettingsTile(
-          icon: Icons.speed,
-          title: context.l10n.trafficMgmtPerNodeRateLimit,
-          subtitle: context.l10n.trafficMgmtPerNodeRateLimitSubtitle,
-          trailing: ThemedSwitch(
-            value: _rateLimitEnabled,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              setState(() => _rateLimitEnabled = value);
-            },
-          ),
-        ),
-        if (_rateLimitEnabled) ...[
-          _sliderLabel(
-            context.l10n.trafficMgmtWindow(_rateLimitWindowSecs),
-            context.l10n.trafficMgmtWindowDesc,
-          ),
-          _slider(
-            value: _rateLimitWindowSecs,
-            min: 10,
-            max: 300,
-            label: '${_rateLimitWindowSecs}s', // lint-allow: hardcoded-string
-            onChanged: (v) => setState(() => _rateLimitWindowSecs = v),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            context.l10n.trafficMgmtMaxPackets(_rateLimitMaxPackets),
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            context.l10n.trafficMgmtMaxPacketsDesc,
-            style: TextStyle(color: context.textSecondary, fontSize: 12),
-          ),
-          _slider(
-            value: _rateLimitMaxPackets,
-            min: 1,
-            max: 50,
-            label: '$_rateLimitMaxPackets', // lint-allow: hardcoded-string
-            onChanged: (v) => setState(() => _rateLimitMaxPackets = v),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildUnknownPacketsSection() {
-    return _card(
-      children: [
-        _SettingsTile(
-          icon: Icons.help_outline,
-          title: context.l10n.trafficMgmtDropUnknown,
-          subtitle: context.l10n.trafficMgmtDropUnknownSubtitle,
-          trailing: ThemedSwitch(
-            value: _dropUnknownEnabled,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              setState(() => _dropUnknownEnabled = value);
-            },
-          ),
-        ),
-        if (_dropUnknownEnabled) ...[
-          _sliderLabel(
-            context.l10n.trafficMgmtThreshold(_unknownPacketThreshold),
-            context.l10n.trafficMgmtThresholdDesc,
-          ),
-          _slider(
-            value: _unknownPacketThreshold,
-            min: 1,
-            max: 20,
-            label: '$_unknownPacketThreshold', // lint-allow: hardcoded-string
-            onChanged: (v) => setState(() => _unknownPacketThreshold = v),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: context.textSecondary, size: 22),
-        SizedBox(width: AppTheme.spacing12),
-        Expanded(
+  List<Widget> _buildPositionDedupSection() {
+    final l10n = context.l10n;
+    return [
+      _buildToggleTile(
+        icon: Icons.filter_alt,
+        title: l10n.trafficMgmtPositionDedup,
+        subtitle: l10n.trafficMgmtPositionDedupSubtitle,
+        value: _positionDedupEnabled,
+        onChanged: (value) => _positionDedupEnabled = value,
+      ),
+      if (_positionDedupEnabled)
+        FieldGroupCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+              _sliderLabel(
+                l10n.trafficMgmtMinInterval(_positionMinIntervalSecs),
+                l10n.trafficMgmtMinIntervalDesc,
               ),
-              if (subtitle != null)
-                Text(
-                  subtitle!,
-                  style: TextStyle(color: context.textSecondary, fontSize: 12),
-                ),
+              _slider(
+                value: _positionMinIntervalSecs,
+                min: 10,
+                max: 600,
+                label: '${_positionMinIntervalSecs}s', // lint-allow: hardcoded-string
+                onChanged: (v) => setState(() => _positionMinIntervalSecs = v),
+              ),
             ],
           ),
         ),
-        if (trailing != null) trailing!,
-      ],
-    );
+    ];
   }
-}
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: context.textTertiary,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
+  List<Widget> _buildNodeinfoSection() {
+    final l10n = context.l10n;
+    return [
+      _buildToggleTile(
+        icon: Icons.info_outline,
+        title: l10n.trafficMgmtDirectResponse,
+        subtitle: l10n.trafficMgmtDirectResponseSubtitle,
+        value: _nodeinfoDirectResponse,
+        onChanged: (value) => _nodeinfoDirectResponse = value,
       ),
-    );
+      if (_nodeinfoDirectResponse)
+        FieldGroupCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sliderLabel(
+                l10n.trafficMgmtMaxHops(_nodeinfoDirectResponseMaxHops),
+                l10n.trafficMgmtMaxHopsDesc,
+              ),
+              _slider(
+                value: _nodeinfoDirectResponseMaxHops,
+                min: 1,
+                max: 7,
+                label: '$_nodeinfoDirectResponseMaxHops', // lint-allow: hardcoded-string
+                onChanged: (v) =>
+                    setState(() => _nodeinfoDirectResponseMaxHops = v),
+              ),
+            ],
+          ),
+        ),
+    ];
+  }
+
+  List<Widget> _buildRateLimitSection() {
+    final l10n = context.l10n;
+    return [
+      _buildToggleTile(
+        icon: Icons.speed,
+        title: l10n.trafficMgmtPerNodeRateLimit,
+        subtitle: l10n.trafficMgmtPerNodeRateLimitSubtitle,
+        value: _rateLimitEnabled,
+        onChanged: (value) => _rateLimitEnabled = value,
+      ),
+      if (_rateLimitEnabled)
+        FieldGroupCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sliderLabel(
+                l10n.trafficMgmtWindow(_rateLimitWindowSecs),
+                l10n.trafficMgmtWindowDesc,
+              ),
+              _slider(
+                value: _rateLimitWindowSecs,
+                min: 10,
+                max: 300,
+                label:
+                    '${_rateLimitWindowSecs}s', // lint-allow: hardcoded-string
+                onChanged: (v) => setState(() => _rateLimitWindowSecs = v),
+              ),
+              Divider(color: context.border),
+              const SizedBox(height: AppTheme.spacing8),
+              _sliderLabel(
+                l10n.trafficMgmtMaxPackets(_rateLimitMaxPackets),
+                l10n.trafficMgmtMaxPacketsDesc,
+              ),
+              _slider(
+                value: _rateLimitMaxPackets,
+                min: 1,
+                max: 50,
+                label: '$_rateLimitMaxPackets', // lint-allow: hardcoded-string
+                onChanged: (v) => setState(() => _rateLimitMaxPackets = v),
+              ),
+            ],
+          ),
+        ),
+    ];
+  }
+
+  List<Widget> _buildUnknownPacketsSection() {
+    final l10n = context.l10n;
+    return [
+      _buildToggleTile(
+        icon: Icons.help_outline,
+        title: l10n.trafficMgmtDropUnknown,
+        subtitle: l10n.trafficMgmtDropUnknownSubtitle,
+        value: _dropUnknownEnabled,
+        onChanged: (value) => _dropUnknownEnabled = value,
+      ),
+      if (_dropUnknownEnabled)
+        FieldGroupCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sliderLabel(
+                l10n.trafficMgmtThreshold(_unknownPacketThreshold),
+                l10n.trafficMgmtThresholdDesc,
+              ),
+              _slider(
+                value: _unknownPacketThreshold,
+                min: 1,
+                max: 20,
+                label:
+                    '$_unknownPacketThreshold', // lint-allow: hardcoded-string
+                onChanged: (v) => setState(() => _unknownPacketThreshold = v),
+              ),
+            ],
+          ),
+        ),
+    ];
   }
 }
