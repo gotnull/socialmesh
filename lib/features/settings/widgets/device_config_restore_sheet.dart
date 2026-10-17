@@ -7,7 +7,6 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/loading_indicator.dart';
-import '../../../core/widgets/settings_primitives.dart';
 import '../../../services/backup/device_config_backup_service.dart';
 import '../../../services/backup/device_config_bundle.dart';
 
@@ -92,13 +91,7 @@ class _DeviceConfigRestoreSheetState extends State<DeviceConfigRestoreSheet> {
                   message: l10n.dataExportDeviceConfigRestoreNodeMismatch,
                 ),
               _MetaCard(bundle: widget.bundle),
-              Padding(
-                padding: const EdgeInsets.only(top: AppTheme.spacing8),
-                child: SettingsSectionHeader(
-                  title: l10n.dataExportDeviceConfigRestoreSheetTitle
-                      .toUpperCase(),
-                ),
-              ),
+              const SizedBox(height: AppTheme.spacing16),
               _ToggleRow(
                 label: l10n.dataExportDeviceConfigRestoreToggleChannels,
                 caption: l10n.dataExportDeviceConfigRestoreChannelsCount(
