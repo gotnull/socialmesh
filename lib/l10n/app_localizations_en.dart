@@ -17097,6 +17097,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'The system temporarily limited Bluetooth scanning because scans started too often. Scanning will retry automatically shortly.';
 
   @override
+  String get scannerNoRadiosFoundHint =>
+      'No radios found yet. Check that your radio is powered on, nearby, and not connected to another phone or app. On ESP32 radios, turning on Wi-Fi switches Bluetooth off.';
+
+  @override
+  String get scannerLocationServicesOffTitle => 'Location is off';
+
+  @override
+  String get scannerLocationServicesOffBody =>
+      'This version of Android only finds Bluetooth radios while Location is on. Turn on Location and scanning will resume automatically.';
+
+  @override
+  String get scannerOpenLocationSettings => 'Open Location Settings';
+
+  @override
+  String get scannerScanPermissionTitle => 'Bluetooth permission needed';
+
+  @override
+  String get scannerScanPermissionBody =>
+      'SocialMesh needs permission to find nearby devices. Allow it in the app settings and scanning will resume automatically.';
+
+  @override
+  String get scannerOpenAppSettings => 'Open App Settings';
+
+  @override
+  String get scannerSettingsOpenFailed =>
+      'Could not open Settings. Please open them manually.';
+
+  @override
   String get scannerPinRequiredError =>
       'Connection failed - please try again and enter the PIN when prompted';
 

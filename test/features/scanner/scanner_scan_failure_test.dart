@@ -104,4 +104,71 @@ void main() {
       }
     });
   });
+
+  group('scannerShowsBleSearchBanner', () {
+    bool shows({
+      bool scanning = false,
+      bool supportsBle = true,
+      bool hasListedRadios = false,
+      bool scanRefused = false,
+    }) => scannerShowsBleSearchBanner(
+      scanning: scanning,
+      supportsBle: supportsBle,
+      hasListedRadios: hasListedRadios,
+      scanRefused: scanRefused,
+    );
+
+    test('shows while a scan is running, whatever else is on screen', () {
+      expect(shows(scanning: true), isTrue);
+      expect(shows(scanning: true, hasListedRadios: true), isTrue);
+      expect(shows(scanning: true, scanRefused: true), isTrue);
+    });
+
+    test('stays up between scan cycles while no radio is listed', () {
+      // The gap between cycles used to render no Bluetooth UI at all.
+      expect(shows(), isTrue);
+    });
+
+    test('hides between cycles once radios are listed', () {
+      // The "Available devices" header with Retry owns that state.
+      expect(shows(hasListedRadios: true), isFalse);
+    });
+
+    test('hides between cycles when the scan was refused', () {
+      // The failure card or error banner explains the refusal; a
+      // "scanning" banner beside it would contradict it.
+      expect(shows(scanRefused: true), isFalse);
+    });
+
+    test('never claims to search on a platform without BLE', () {
+      expect(shows(supportsBle: false), isFalse);
+    });
+  });
+
+  group('scannerSearchSubtitle', () {
+    test('says looking until a full scan cycle completes', () {
+      expect(
+        scannerSearchSubtitle(deviceCount: 0, hasCompletedScan: false),
+        ScannerSearchSubtitle.looking,
+      );
+    });
+
+    test('switches to the nothing-found checklist after a completed scan', () {
+      expect(
+        scannerSearchSubtitle(deviceCount: 0, hasCompletedScan: true),
+        ScannerSearchSubtitle.nothingFoundYet,
+      );
+    });
+
+    test('shows the device count once anything was found', () {
+      expect(
+        scannerSearchSubtitle(deviceCount: 2, hasCompletedScan: false),
+        ScannerSearchSubtitle.devicesFound,
+      );
+      expect(
+        scannerSearchSubtitle(deviceCount: 1, hasCompletedScan: true),
+        ScannerSearchSubtitle.devicesFound,
+      );
+    });
+  });
 }

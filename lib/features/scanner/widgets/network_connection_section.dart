@@ -225,51 +225,71 @@ class _NetworkConnectionSectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header — matches BLE "Available Devices" style
+        // Section header, matching the BLE "Available Devices" style. A Wrap,
+        // not a Row: long localised title + action pairs move the action
+        // to its own line on narrow screens instead of overflowing.
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppTheme.spacing8,
+            runSpacing: AppTheme.spacing4,
             children: [
-              Text(
-                l10n.networkSavedEndpoints,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: context.textSecondary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              if (endpoints.isNotEmpty) ...[
-                const SizedBox(width: AppTheme.spacing8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  ),
-                  child: Text(
-                    '${endpoints.length}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.accentColor,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      l10n.networkSavedEndpoints,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: context.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                ),
-              ],
-              const Spacer(),
-              FilledButton.icon(
+                  if (endpoints.isNotEmpty) ...[
+                    const SizedBox(width: AppTheme.spacing8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      ),
+                      child: Text(
+                        '${endpoints.length}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              TextButton.icon(
                 onPressed: _showAddEndpointSheet,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(l10n.networkAddEndpoint),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing16,
-                    vertical: AppTheme.spacing8,
+                icon: const Icon(Icons.add, size: 16),
+                label: Text(
+                  l10n.networkAddEndpoint,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 10,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ],

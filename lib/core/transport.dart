@@ -82,22 +82,39 @@ class TransportSendError implements Exception {
 /// app does not help; the user has to cycle Bluetooth off and on (or
 /// reboot). `throttled` means Android rejected the scan because scans
 /// were started too frequently - backing off and retrying later succeeds
-/// without any user action.
-enum BleScanFailureKind { stackFailure, throttled }
+/// without any user action. `locationServicesOff` and `permissionDenied`
+/// are Android preconditions refused before any scan starts: the system
+/// Location switch is off (required for BLE scanning up to Android 11),
+/// or a scan permission was not granted. Both need a user action in
+/// system settings, and neither consumes a scan-start slot.
+enum BleScanFailureKind {
+  stackFailure,
+  throttled,
+  locationServicesOff,
+  permissionDenied;
 
-/// Typed error emitted by [DeviceTransport.scan] when the OS-level BLE
-/// scanner rejects the scan itself (as opposed to the adapter being off
-/// or permission missing). Carries the platform error code so logs stay
+  /// True when the OS scanner itself refused a started scan. Only these
+  /// count toward the rescan backoff; precondition failures never reach
+  /// the scanner, so they rescan on the normal cadence and recover as
+  /// soon as the user fixes the setting.
+  bool get isScannerRejection => this == stackFailure || this == throttled;
+}
+
+/// Typed error emitted by [DeviceTransport.scan] when Android refuses a
+/// scan: either the OS-level BLE scanner rejects it, or a scan
+/// precondition (Location services, scan permission) is not met.
+/// Carries the platform error code when there is one so logs stay
 /// diagnosable, while UI layers key off [kind] to show a localised
 /// recovery message instead of the raw plugin exception text.
 class BleScanFailure implements Exception {
   final BleScanFailureKind kind;
 
   /// The raw Android `ScanCallback` error code (e.g. 2 for
-  /// SCAN_FAILED_APPLICATION_REGISTRATION_FAILED).
-  final int platformCode;
+  /// SCAN_FAILED_APPLICATION_REGISTRATION_FAILED). Null for precondition
+  /// failures, which the plugin reports without a numeric code.
+  final int? platformCode;
 
-  const BleScanFailure({required this.kind, required this.platformCode});
+  const BleScanFailure({required this.kind, this.platformCode});
 
   @override
   String toString() =>

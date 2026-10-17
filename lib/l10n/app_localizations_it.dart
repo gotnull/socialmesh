@@ -17282,6 +17282,36 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il sistema ha limitato temporaneamente la scansione Bluetooth perché le scansioni sono state avviate troppo spesso. La scansione riprenderà automaticamente a breve.';
 
   @override
+  String get scannerNoRadiosFoundHint =>
+      'Nessuna radio trovata finora. Verifica che la radio sia accesa, vicina e non connessa a un altro telefono o app. Sulle radio ESP32, attivare il Wi-Fi spegne il Bluetooth.';
+
+  @override
+  String get scannerLocationServicesOffTitle =>
+      'La localizzazione è disattivata';
+
+  @override
+  String get scannerLocationServicesOffBody =>
+      'Questa versione di Android trova le radio Bluetooth solo con la localizzazione attiva. Attiva la localizzazione e la scansione riprenderà automaticamente.';
+
+  @override
+  String get scannerOpenLocationSettings => 'Apri Impostazioni localizzazione';
+
+  @override
+  String get scannerScanPermissionTitle =>
+      'Autorizzazione Bluetooth necessaria';
+
+  @override
+  String get scannerScanPermissionBody =>
+      'SocialMesh ha bisogno dell\'autorizzazione per trovare i dispositivi nelle vicinanze. Consentila nelle impostazioni dell\'app e la scansione riprenderà automaticamente.';
+
+  @override
+  String get scannerOpenAppSettings => 'Apri Impostazioni app';
+
+  @override
+  String get scannerSettingsOpenFailed =>
+      'Impossibile aprire le impostazioni. Aprile manualmente.';
+
+  @override
   String get scannerPinRequiredError =>
       'Connessione fallita - riprova e inserisci il PIN quando richiesto';
 

@@ -17300,6 +17300,34 @@ class AppLocalizationsUk extends AppLocalizations {
       'Система тимчасово обмежила сканування Bluetooth через надто часті запуски. Сканування автоматично відновиться незабаром.';
 
   @override
+  String get scannerNoRadiosFoundHint =>
+      'Рації поки не знайдено. Переконайтеся, що рація увімкнена, поруч і не підключена до іншого телефону чи застосунку. На раціях ESP32 увімкнення Wi-Fi вимикає Bluetooth.';
+
+  @override
+  String get scannerLocationServicesOffTitle => 'Геолокацію вимкнено';
+
+  @override
+  String get scannerLocationServicesOffBody =>
+      'Ця версія Android знаходить Bluetooth-рації лише з увімкненою геолокацією. Увімкніть геолокацію, і сканування відновиться автоматично.';
+
+  @override
+  String get scannerOpenLocationSettings => 'Відкрити налаштування геолокації';
+
+  @override
+  String get scannerScanPermissionTitle => 'Потрібен дозвіл Bluetooth';
+
+  @override
+  String get scannerScanPermissionBody =>
+      'SocialMesh потрібен дозвіл на пошук пристроїв поблизу. Надайте його в налаштуваннях застосунку, і сканування відновиться автоматично.';
+
+  @override
+  String get scannerOpenAppSettings => 'Відкрити налаштування застосунку';
+
+  @override
+  String get scannerSettingsOpenFailed =>
+      'Не вдалося відкрити налаштування. Відкрийте їх вручну.';
+
+  @override
   String get scannerPinRequiredError =>
       'Помилка підключення - спробуйте знову та введіть PIN при запиті';
 

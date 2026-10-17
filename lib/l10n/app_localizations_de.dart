@@ -17316,6 +17316,36 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das System hat das Bluetooth-Scannen vorübergehend eingeschränkt, weil Scans zu häufig gestartet wurden. Der Scan wird in Kürze automatisch fortgesetzt.';
 
   @override
+  String get scannerNoRadiosFoundHint =>
+      'Noch keine Funkgeräte gefunden. Prüfen Sie, ob Ihr Funkgerät eingeschaltet, in der Nähe und nicht mit einem anderen Telefon oder einer anderen App verbunden ist. Bei ESP32-Funkgeräten schaltet das Aktivieren von Wi-Fi Bluetooth aus.';
+
+  @override
+  String get scannerLocationServicesOffTitle =>
+      'Standortdienste sind deaktiviert';
+
+  @override
+  String get scannerLocationServicesOffBody =>
+      'Diese Android-Version findet Bluetooth-Funkgeräte nur bei aktivierten Standortdiensten. Aktivieren Sie den Standort, dann wird der Scan automatisch fortgesetzt.';
+
+  @override
+  String get scannerOpenLocationSettings => 'Standorteinstellungen öffnen';
+
+  @override
+  String get scannerScanPermissionTitle =>
+      'Bluetooth-Berechtigung erforderlich';
+
+  @override
+  String get scannerScanPermissionBody =>
+      'SocialMesh benötigt die Berechtigung, Geräte in der Nähe zu finden. Erlauben Sie dies in den App-Einstellungen, dann wird der Scan automatisch fortgesetzt.';
+
+  @override
+  String get scannerOpenAppSettings => 'App-Einstellungen öffnen';
+
+  @override
+  String get scannerSettingsOpenFailed =>
+      'Die Einstellungen konnten nicht geöffnet werden. Bitte öffnen Sie sie manuell.';
+
+  @override
   String get scannerPinRequiredError =>
       'Verbindung fehlgeschlagen - versuchen Sie es erneut und geben Sie bei Aufforderung die PIN ein';
 

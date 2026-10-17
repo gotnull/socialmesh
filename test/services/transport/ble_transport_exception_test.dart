@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/transport.dart';
@@ -132,6 +133,118 @@ void main() {
     });
   });
 
+  // The Android plugin refuses startScan preconditions with a bare
+  // PlatformException; the messages below are the plugin's exact text
+  // (flutter_blue_plus_android FlutterBluePlusPlugin.startScan).
+  group('BleTransport.classifyAndroidScanFailure startScan preconditions', () {
+    PlatformException startScanError(
+      String message, {
+      String code = 'startScan',
+    }) => PlatformException(code: code, message: message);
+
+    test('maps Location services off to locationServicesOff', () {
+      final failure = BleTransport.classifyAndroidScanFailure(
+        startScanError('Location services are required for Bluetooth scan'),
+      );
+      expect(failure, isNotNull);
+      expect(failure!.kind, BleScanFailureKind.locationServicesOff);
+      expect(failure.platformCode, isNull);
+    });
+
+    test('maps a missing BLUETOOTH_SCAN grant to permissionDenied', () {
+      final failure = BleTransport.classifyAndroidScanFailure(
+        startScanError(
+          'Permission android.permission.BLUETOOTH_SCAN required to scan devices',
+        ),
+      );
+      expect(failure!.kind, BleScanFailureKind.permissionDenied);
+    });
+
+    test('maps a missing ACCESS_FINE_LOCATION grant to permissionDenied', () {
+      final failure = BleTransport.classifyAndroidScanFailure(
+        startScanError(
+          'Permission android.permission.ACCESS_FINE_LOCATION required to scan devices',
+        ),
+      );
+      expect(failure!.kind, BleScanFailureKind.permissionDenied);
+    });
+
+    test(
+      'leaves adapter-off and scanner-null refusals to existing handling',
+      () {
+        expect(
+          BleTransport.classifyAndroidScanFailure(
+            startScanError('Bluetooth must be turned on'),
+          ),
+          isNull,
+        );
+        expect(
+          BleTransport.classifyAndroidScanFailure(
+            startScanError(
+              'getBluetoothLeScanner() is null. Is the Adapter on?',
+            ),
+          ),
+          isNull,
+        );
+      },
+    );
+
+    test('ignores the same text from a non-startScan method', () {
+      expect(
+        BleTransport.classifyAndroidScanFailure(
+          startScanError(
+            'Location services are required for Bluetooth scan',
+            code: 'connect',
+          ),
+        ),
+        isNull,
+      );
+    });
+
+    test('ignores a startScan PlatformException with no message', () {
+      expect(
+        BleTransport.classifyAndroidScanFailure(
+          PlatformException(code: 'startScan'),
+        ),
+        isNull,
+      );
+    });
+  });
+
+  group('BleTransport.scanRequiresLocationServices', () {
+    test('keeps the check up to Android 11 (API 30)', () {
+      for (final sdk in [23, 26, 28, 29, 30]) {
+        expect(
+          BleTransport.scanRequiresLocationServices(sdk),
+          isTrue,
+          reason: 'API $sdk returns no scan results with Location off',
+        );
+      }
+    });
+
+    test('drops the check from Android 12 (API 31) with neverForLocation', () {
+      for (final sdk in [31, 32, 33, 34, 35, 36]) {
+        expect(BleTransport.scanRequiresLocationServices(sdk), isFalse);
+      }
+    });
+
+    test('keeps the check when the SDK level is unknown', () {
+      expect(BleTransport.scanRequiresLocationServices(null), isTrue);
+    });
+  });
+
+  group('BleScanFailureKind.isScannerRejection', () {
+    test('only OS scanner refusals feed the rescan backoff', () {
+      expect(BleScanFailureKind.stackFailure.isScannerRejection, isTrue);
+      expect(BleScanFailureKind.throttled.isScannerRejection, isTrue);
+      expect(
+        BleScanFailureKind.locationServicesOff.isScannerRejection,
+        isFalse,
+      );
+      expect(BleScanFailureKind.permissionDenied.isScannerRejection, isFalse);
+    });
+  });
+
   group('BleScanFailure', () {
     test('toString carries kind and platform code for diagnosability', () {
       const failure = BleScanFailure(
@@ -148,6 +261,14 @@ void main() {
         platformCode: 6,
       );
       expect(failure, isA<Exception>());
+    });
+
+    test('precondition failures carry no platform code', () {
+      const failure = BleScanFailure(
+        kind: BleScanFailureKind.locationServicesOff,
+      );
+      expect(failure.platformCode, isNull);
+      expect(failure.toString(), contains('locationServicesOff'));
     });
   });
 }

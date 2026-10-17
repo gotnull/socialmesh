@@ -29512,6 +29512,54 @@ abstract class AppLocalizations {
   /// **'The system temporarily limited Bluetooth scanning because scans started too often. Scanning will retry automatically shortly.'**
   String get scannerScanThrottledBody;
 
+  /// Subtitle of the scanning banner after at least one full BLE scan found no radio. Lists the common causes; ESP32 Meshtastic radios disable Bluetooth while their Wi-Fi is on.
+  ///
+  /// In en, this message translates to:
+  /// **'No radios found yet. Check that your radio is powered on, nearby, and not connected to another phone or app. On ESP32 radios, turning on Wi-Fi switches Bluetooth off.'**
+  String get scannerNoRadiosFoundHint;
+
+  /// Title of the scanner recovery card when Android (11 and earlier) refuses a BLE scan because the system Location switch is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is off'**
+  String get scannerLocationServicesOffTitle;
+
+  /// Body of the Location-off scanner card. Android 11 and earlier only return BLE scan results while Location is on; the scanner retries on its own once it is.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Android only finds Bluetooth radios while Location is on. Turn on Location and scanning will resume automatically.'**
+  String get scannerLocationServicesOffBody;
+
+  /// Button on the Location-off scanner card that opens the system Location settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Location Settings'**
+  String get scannerOpenLocationSettings;
+
+  /// Title of the scanner recovery card when Android refuses a BLE scan because a scan permission (Nearby devices, or Location on older Android) was not granted.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth permission needed'**
+  String get scannerScanPermissionTitle;
+
+  /// Body of the scan-permission scanner card. The scanner retries on its own once the permission is granted.
+  ///
+  /// In en, this message translates to:
+  /// **'SocialMesh needs permission to find nearby devices. Allow it in the app settings and scanning will resume automatically.'**
+  String get scannerScanPermissionBody;
+
+  /// Button on the scan-permission scanner card that opens the app's system settings page.
+  ///
+  /// In en, this message translates to:
+  /// **'Open App Settings'**
+  String get scannerOpenAppSettings;
+
+  /// Error snackbar when the OS deep link to Location or app settings fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Settings. Please open them manually.'**
+  String get scannerSettingsOpenFailed;
+
   /// Error thrown when Meshtastic config is not received, indicating a PIN/auth issue.
   ///
   /// In en, this message translates to:

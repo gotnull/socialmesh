@@ -17349,6 +17349,34 @@ class AppLocalizationsEs extends AppLocalizations {
       'El sistema limitó temporalmente el escaneo Bluetooth porque se iniciaron escaneos con demasiada frecuencia. El escaneo se reintentará automáticamente en breve.';
 
   @override
+  String get scannerNoRadiosFoundHint =>
+      'Aún no se encontraron radios. Compruebe que su radio esté encendida, cerca y no conectada a otro teléfono o aplicación. En las radios ESP32, activar el Wi-Fi desactiva el Bluetooth.';
+
+  @override
+  String get scannerLocationServicesOffTitle => 'La ubicación está desactivada';
+
+  @override
+  String get scannerLocationServicesOffBody =>
+      'Esta versión de Android solo encuentra radios Bluetooth con la ubicación activada. Active la ubicación y el escaneo se reanudará automáticamente.';
+
+  @override
+  String get scannerOpenLocationSettings => 'Abrir Ajustes de ubicación';
+
+  @override
+  String get scannerScanPermissionTitle => 'Se necesita permiso de Bluetooth';
+
+  @override
+  String get scannerScanPermissionBody =>
+      'SocialMesh necesita permiso para encontrar dispositivos cercanos. Permítalo en los ajustes de la aplicación y el escaneo se reanudará automáticamente.';
+
+  @override
+  String get scannerOpenAppSettings => 'Abrir Ajustes de la aplicación';
+
+  @override
+  String get scannerSettingsOpenFailed =>
+      'No se pudieron abrir los ajustes. Ábralos manualmente.';
+
+  @override
   String get scannerPinRequiredError =>
       'Error de conexión: intente de nuevo e ingrese el PIN cuando se le solicite';
 

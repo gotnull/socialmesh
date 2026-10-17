@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+
 import '../../core/ble_system_devices.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
@@ -329,11 +332,30 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     }
   }
 
-  /// Maps an Android scanner-service rejection onto the typed
-  /// [BleScanFailure] the UI layer can localise and pace retries from.
-  /// Returns null for anything that is not an Android scan-level
-  /// failure (adapter-off, permissions, and every iOS error keep their
-  /// existing handling).
+  /// Whether `startScan` should refuse to run while the system Location
+  /// switch is off. Android up to 11 (API 30) returns no BLE scan results
+  /// with Location off, so the plugin's check turns a silent empty scan
+  /// into an error the scanner can explain. From Android 12 (API 31) the
+  /// manifest declares BLUETOOTH_SCAN with `neverForLocation`, scanning
+  /// works with Location off, and the check would block it for nothing.
+  /// An unknown SDK level keeps the check (iOS ignores the option).
+  @visibleForTesting
+  static bool scanRequiresLocationServices(int? androidSdkInt) =>
+      androidSdkInt == null || androidSdkInt < 31;
+
+  static Future<int?> _androidSdkInt() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return null;
+    try {
+      return (await DeviceInfoPlugin().androidInfo).version.sdkInt;
+    } catch (e) {
+      AppLogging.ble('BLE_TRANSPORT: Android SDK level unavailable: $e');
+      return null;
+    }
+  }
+
+  /// Maps an Android scan refusal onto the typed [BleScanFailure] the UI
+  /// layer can localise and pace retries from. Returns null for anything
+  /// else (adapter-off and every iOS error keep their existing handling).
   ///
   /// Android `ScanCallback` codes:
   ///  - 2 SCAN_FAILED_APPLICATION_REGISTRATION_FAILED
@@ -344,7 +366,27 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   ///      (5 starts per 30 s), so these are surfaced without retrying.
   ///  - 6 SCAN_FAILED_SCANNING_TOO_FREQUENTLY
   ///    → throttled; a backed-off retry succeeds on its own.
+  ///
+  /// The Android plugin refuses `startScan` preconditions with a bare
+  /// [PlatformException] (code `startScan`, no numeric code) before the
+  /// OS scanner is touched: system Location switched off, or a scan
+  /// permission not granted. Those map to `locationServicesOff` and
+  /// `permissionDenied`.
   static BleScanFailure? classifyAndroidScanFailure(Object error) {
+    if (error is PlatformException) {
+      if (error.code != 'startScan') return null;
+      final message = error.message ?? '';
+      if (message.startsWith('Location services are required')) {
+        return const BleScanFailure(
+          kind: BleScanFailureKind.locationServicesOff,
+        );
+      }
+      if (message.startsWith('Permission ') &&
+          message.endsWith('required to scan devices')) {
+        return const BleScanFailure(kind: BleScanFailureKind.permissionDenied);
+      }
+      return null;
+    }
     if (error is! FlutterBluePlusException) return null;
     if (error.platform != ErrorPlatform.android) return null;
     // Scan-level failures only: connect-path exceptions reuse the same
@@ -452,6 +494,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
           return;
         }
 
+        final checkLocationServices = scanRequiresLocationServices(
+          await _androidSdkInt(),
+        );
+
         // Try to start scan with retry for transient states
         int retryCount = 0;
         const maxRetries = 3;
@@ -473,6 +519,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
               '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() '
               '(attempt ${retryCount + 1}, scanAll=$scanAll, '
               'meshCoreEnabled=$meshCoreEnabled, '
+              'checkLocationServices=$checkLocationServices, '
               'serviceFilters=${serviceFilters.isEmpty ? "NONE" : serviceFilters})...',
             );
             await FlutterBluePlus.startScan(
@@ -480,6 +527,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
               withServices: scanAll
                   ? const <Guid>[]
                   : defaultServiceFilters.map(Guid.new).toList(),
+              androidCheckLocationServices: checkLocationServices,
             );
             AppLogging.ble(
               '📡 BLE_TRANSPORT: startScan() completed successfully',
