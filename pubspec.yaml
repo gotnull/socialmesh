@@ -130,7 +130,7 @@ dependencies:
   video_player: ^2.14.1
 
   # Deep linking
-  app_links: ^7.2.1
+  app_links: ^7.2.2
   timeago: ^3.7.1
   align_positioned: ^5.1.0
 
