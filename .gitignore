@@ -29,6 +29,10 @@ android/.kotlin/sessions/
 CLAUDE.md
 AGENTS.md
 .claude/
+# Codex project hooks (private, synced like .claude/) and per-worktree agent
+# task checkpoints (local only, never synced or committed).
+.codex/
+/.agent-tasks/
 /assets/screenshots/
 
 # Native codec2 builds (large, can be re-generated from source, and contain build artifacts)
