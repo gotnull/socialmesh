@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/meshtastic/modem_preset_metadata.dart';
@@ -13,6 +15,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -445,34 +448,39 @@ class _MeshBeaconConfigScreenState extends ConsumerState<MeshBeaconConfigScreen>
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else
             SliverPadding(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+              sliver: SliverList.list(
+                children: [
                   StatusBanner.info(
                     title: l10n.meshBeaconInfoTitle,
                     subtitle: l10n.meshBeaconInfoDescription,
                     icon: Icons.cell_tower,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                    ),
                   ),
-                  const SizedBox(height: AppTheme.spacing24),
-                  _SectionHeader(title: l10n.meshBeaconSectionListen),
-                  const SizedBox(height: AppTheme.spacing8),
-                  _buildListenSection(),
-                  const SizedBox(height: AppTheme.spacing24),
-                  _SectionHeader(title: l10n.meshBeaconSectionBroadcast),
-                  const SizedBox(height: AppTheme.spacing8),
-                  _buildBroadcastSection(),
+                  const SizedBox(height: AppTheme.spacing16),
+                  SettingsSectionHeader(title: l10n.meshBeaconSectionListen),
+                  _buildToggleTile(
+                    icon: Icons.hearing,
+                    title: l10n.meshBeaconListen,
+                    subtitle: l10n.meshBeaconListenSubtitle,
+                    value: _listenEnabled,
+                    onChanged: (value) => _listenEnabled = value,
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  SettingsSectionHeader(title: l10n.meshBeaconSectionBroadcast),
+                  ..._buildBroadcastSection(),
                   if (_broadcastEnabled) ...[
-                    const SizedBox(height: AppTheme.spacing24),
-                    _SectionHeader(title: l10n.meshBeaconSectionOffer),
-                    const SizedBox(height: AppTheme.spacing8),
-                    _buildOfferSection(),
+                    const SizedBox(height: AppTheme.spacing16),
+                    SettingsSectionHeader(title: l10n.meshBeaconSectionOffer),
+                    ..._buildOfferSection(),
                   ],
-                  const SizedBox(height: AppTheme.spacing24),
-                  _SectionHeader(title: l10n.meshBeaconSectionReceived),
-                  const SizedBox(height: AppTheme.spacing8),
-                  _buildReceivedSection(),
+                  const SizedBox(height: AppTheme.spacing16),
+                  SettingsSectionHeader(title: l10n.meshBeaconSectionReceived),
+                  ..._buildReceivedSection(),
                   const SizedBox(height: AppTheme.spacing32),
-                ]),
+                ],
               ),
             ),
         ],
@@ -480,237 +488,215 @@ class _MeshBeaconConfigScreenState extends ConsumerState<MeshBeaconConfigScreen>
     );
   }
 
-  Widget _card({required List<Widget> children}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
+  Widget _buildToggleTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SettingsTile(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      trailing: ThemedSwitch(
+        value: value,
+        onChanged: (next) {
+          HapticFeedback.selectionClick();
+          setState(() => onChanged(next));
+        },
       ),
     );
   }
 
-  Widget _rowDivider() => Column(
-    children: [
-      const SizedBox(height: AppTheme.spacing16),
-      Divider(color: context.border),
-      const SizedBox(height: AppTheme.spacing16),
-    ],
-  );
-
-  Widget _buildListenSection() {
+  List<Widget> _buildBroadcastSection() {
     final l10n = context.l10n;
-    return _card(
-      children: [
-        _SettingsTile(
-          icon: Icons.hearing,
-          title: l10n.meshBeaconListen,
-          subtitle: l10n.meshBeaconListenSubtitle,
-          trailing: ThemedSwitch(
-            value: _listenEnabled,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              setState(() => _listenEnabled = value);
-            },
+    return [
+      _buildToggleTile(
+        icon: Icons.campaign_outlined,
+        title: l10n.meshBeaconBroadcast,
+        subtitle: l10n.meshBeaconBroadcastSubtitle,
+        value: _broadcastEnabled,
+        onChanged: (value) => _broadcastEnabled = value,
+      ),
+      if (_broadcastEnabled) ...[
+        FieldGroupCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _messageController,
+                maxLength: _maxMessageBytes,
+                maxLines: 2,
+                style: TextStyle(color: context.textPrimary),
+                onTapOutside: (_) =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
+                decoration: InputDecoration(
+                  labelText: l10n.meshBeaconMessage,
+                  labelStyle: TextStyle(color: context.textSecondary),
+                  prefixIcon: Icon(
+                    Icons.short_text,
+                    color: context.textSecondary,
+                  ),
+                  filled: true,
+                  fillColor: context.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    borderSide: BorderSide(color: context.accentColor),
+                  ),
+                  counterStyle: TextStyle(color: context.textTertiary),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              Text(
+                l10n.meshBeaconInterval(_intervalHours),
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing4),
+              Text(
+                l10n.meshBeaconIntervalDesc,
+                style: TextStyle(color: context.textSecondary, fontSize: 12),
+              ),
+              SliderTheme(
+                data: SliderThemeData(
+                  inactiveTrackColor: SemanticColors.divider,
+                  thumbColor: context.accentColor,
+                  overlayColor: context.accentColor.withAlpha(30),
+                ),
+                // The radio may hold an interval beyond the slider's range; pin
+                // the thumb at the nearest end and keep the real value until
+                // the user moves it.
+                child: Slider(
+                  value: _intervalHours
+                      .clamp(_minIntervalHours, _maxIntervalHours)
+                      .toDouble(),
+                  min: _minIntervalHours.toDouble(),
+                  max: _maxIntervalHours.toDouble(),
+                  divisions: _maxIntervalHours - _minIntervalHours,
+                  label: '${_intervalHours}h', // lint-allow: hardcoded-string
+                  onChanged: (v) => setState(
+                    () => _intervalSecs = v.toInt() * _secondsPerHour,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildBroadcastSection() {
-    final l10n = context.l10n;
-    return _card(
-      children: [
-        _SettingsTile(
-          icon: Icons.campaign_outlined,
-          title: l10n.meshBeaconBroadcast,
-          subtitle: l10n.meshBeaconBroadcastSubtitle,
-          trailing: ThemedSwitch(
-            value: _broadcastEnabled,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              setState(() => _broadcastEnabled = value);
-            },
-          ),
+        _buildToggleTile(
+          icon: Icons.call_split,
+          title: l10n.meshBeaconLegacySplit,
+          subtitle: l10n.meshBeaconLegacySplitSubtitle,
+          value: _legacySplit,
+          onChanged: (value) => _legacySplit = value,
         ),
-        if (_broadcastEnabled) ...[
-          _rowDivider(),
-          TextField(
-            controller: _messageController,
-            maxLength: _maxMessageBytes,
-            maxLines: 2,
-            style: TextStyle(color: context.textPrimary),
-            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
-            decoration: InputDecoration(
-              labelText: l10n.meshBeaconMessage,
-              labelStyle: TextStyle(color: context.textSecondary),
-              prefixIcon: Icon(Icons.short_text, color: context.textSecondary),
-              filled: true,
-              fillColor: context.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius8),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius8),
-                borderSide: BorderSide(color: context.accentColor),
-              ),
-              counterStyle: TextStyle(color: context.textTertiary),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          Text(
-            l10n.meshBeaconInterval(_intervalHours),
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            l10n.meshBeaconIntervalDesc,
-            style: TextStyle(color: context.textSecondary, fontSize: 12),
-          ),
-          SliderTheme(
-            data: SliderThemeData(
-              inactiveTrackColor: SemanticColors.divider,
-              thumbColor: context.accentColor,
-              overlayColor: context.accentColor.withAlpha(30),
-            ),
-            // The radio may hold an interval beyond the slider's range; pin
-            // the thumb at the nearest end and keep the real value until
-            // the user moves it.
-            child: Slider(
-              value: _intervalHours
-                  .clamp(_minIntervalHours, _maxIntervalHours)
-                  .toDouble(),
-              min: _minIntervalHours.toDouble(),
-              max: _maxIntervalHours.toDouble(),
-              divisions: _maxIntervalHours - _minIntervalHours,
-              label: '${_intervalHours}h', // lint-allow: hardcoded-string
-              onChanged: (v) =>
-                  setState(() => _intervalSecs = v.toInt() * _secondsPerHour),
-            ),
-          ),
-          _rowDivider(),
-          _SettingsTile(
-            icon: Icons.call_split,
-            title: l10n.meshBeaconLegacySplit,
-            subtitle: l10n.meshBeaconLegacySplitSubtitle,
-            trailing: ThemedSwitch(
-              value: _legacySplit,
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _legacySplit = value);
-              },
-            ),
-          ),
-        ],
       ],
-    );
+    ];
   }
 
-  Widget _buildOfferSection() {
+  List<Widget> _buildOfferSection() {
     final l10n = context.l10n;
     final channels = ref
         .watch(channelsProvider)
         .where((c) => c.role.toUpperCase() != 'DISABLED')
         .toList();
     final offerChannel = _offerChannel;
-    return _card(
-      children: [
-        _SettingsTile(
-          icon: Icons.tag,
+    final chevron = Icon(Icons.chevron_right, color: context.textTertiary);
+    return [
+      SettingsTile(
+        icon: Icons.tag,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        title: l10n.meshBeaconOfferChannel,
+        subtitle: offerChannel == null
+            ? l10n.meshBeaconOfferChannelSubtitle
+            : _channelLabel(offerChannel),
+        trailing: chevron,
+        onTap: () => _showOptionPicker<ChannelConfig>(
           title: l10n.meshBeaconOfferChannel,
-          subtitle: offerChannel == null
-              ? l10n.meshBeaconOfferChannelSubtitle
-              : _channelLabel(offerChannel),
-          trailing: Icon(Icons.chevron_right, color: context.textTertiary),
-          onTap: () => _showOptionPicker<ChannelConfig>(
-            title: l10n.meshBeaconOfferChannel,
-            selected: offerChannel == null
-                ? null
-                : channelWithPsk(channels, offerChannel.psk),
-            options: [
+          selected: offerChannel == null
+              ? null
+              : channelWithPsk(channels, offerChannel.psk),
+          options: [
+            _PickerOption<ChannelConfig>(
+              value: null,
+              label: l10n.meshBeaconOfferNone,
+            ),
+            for (final channel in channels)
               _PickerOption<ChannelConfig>(
-                value: null,
-                label: l10n.meshBeaconOfferNone,
+                value: channel,
+                label: _channelLabel(channel),
               ),
-              for (final channel in channels)
-                _PickerOption<ChannelConfig>(
-                  value: channel,
-                  label: _channelLabel(channel),
-                ),
-            ],
-            onSelected: (value) => setState(() => _offerChannel = value),
-          ),
+          ],
+          onSelected: (value) => setState(() => _offerChannel = value),
         ),
-        _rowDivider(),
-        _SettingsTile(
-          icon: Icons.public,
-          title: l10n.meshBeaconOfferRegion,
-          subtitle: _offerRegion == null
-              ? l10n.meshBeaconOfferNone
-              : _regionLabel(_offerRegion!),
-          trailing: Icon(Icons.chevron_right, color: context.textTertiary),
-          onTap: () =>
-              _showOptionPicker<config_pbenum.Config_LoRaConfig_RegionCode>(
-                title: l10n.meshBeaconOfferRegion,
-                selected: _offerRegion,
-                options: [
-                  _PickerOption(value: null, label: l10n.meshBeaconOfferNone),
-                  for (final region in kRegionMetadata)
-                    if (region.code !=
-                        config_pbenum.Config_LoRaConfig_RegionCode.UNSET)
-                      _PickerOption(
-                        value: region.code,
-                        label: region.regionSelectionName(l10n),
-                        subtitle: region.regionSelectionFrequency(l10n),
-                      ),
-                ],
-                onSelected: (value) => setState(() => _offerRegion = value),
-              ),
-        ),
-        _rowDivider(),
-        _SettingsTile(
-          icon: Icons.tune,
-          title: l10n.meshBeaconOfferPreset,
-          subtitle: _offerPreset == null
-              ? l10n.meshBeaconOfferNone
-              : _presetLabel(_offerPreset!),
-          trailing: Icon(Icons.chevron_right, color: context.textTertiary),
-          onTap: () =>
-              _showOptionPicker<config_pbenum.Config_LoRaConfig_ModemPreset>(
-                title: l10n.meshBeaconOfferPreset,
-                selected: _offerPreset,
-                options: [
-                  _PickerOption(value: null, label: l10n.meshBeaconOfferNone),
-                  for (final preset in kModemPresetMetadata)
+      ),
+      SettingsTile(
+        icon: Icons.public,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        title: l10n.meshBeaconOfferRegion,
+        subtitle: _offerRegion == null
+            ? l10n.meshBeaconOfferNone
+            : _regionLabel(_offerRegion!),
+        trailing: chevron,
+        onTap: () =>
+            _showOptionPicker<config_pbenum.Config_LoRaConfig_RegionCode>(
+              title: l10n.meshBeaconOfferRegion,
+              selected: _offerRegion,
+              options: [
+                _PickerOption(value: null, label: l10n.meshBeaconOfferNone),
+                for (final region in kRegionMetadata)
+                  if (region.code !=
+                      config_pbenum.Config_LoRaConfig_RegionCode.UNSET)
                     _PickerOption(
-                      value: preset.preset,
-                      label: preset.label(l10n),
-                      subtitle: preset.description(l10n),
+                      value: region.code,
+                      label: region.regionSelectionName(l10n),
+                      subtitle: region.regionSelectionFrequency(l10n),
                     ),
-                ],
-                onSelected: (value) => setState(() => _offerPreset = value),
-              ),
-        ),
-      ],
-    );
+              ],
+              onSelected: (value) => setState(() => _offerRegion = value),
+            ),
+      ),
+      SettingsTile(
+        icon: Icons.tune,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        title: l10n.meshBeaconOfferPreset,
+        subtitle: _offerPreset == null
+            ? l10n.meshBeaconOfferNone
+            : _presetLabel(_offerPreset!),
+        trailing: chevron,
+        onTap: () =>
+            _showOptionPicker<config_pbenum.Config_LoRaConfig_ModemPreset>(
+              title: l10n.meshBeaconOfferPreset,
+              selected: _offerPreset,
+              options: [
+                _PickerOption(value: null, label: l10n.meshBeaconOfferNone),
+                for (final preset in kModemPresetMetadata)
+                  _PickerOption(
+                    value: preset.preset,
+                    label: preset.label(l10n),
+                    subtitle: preset.description(l10n),
+                  ),
+              ],
+              onSelected: (value) => setState(() => _offerPreset = value),
+            ),
+      ),
+    ];
   }
 
-  Widget _buildReceivedSection() {
+  List<Widget> _buildReceivedSection() {
     final l10n = context.l10n;
     if (_beacons.isEmpty) {
-      return _card(
-        children: [
-          Text(
+      return [
+        FieldGroupCard(
+          child: Text(
             l10n.meshBeaconReceivedEmpty,
             style: TextStyle(
               color: context.textSecondary,
@@ -718,18 +704,10 @@ class _MeshBeaconConfigScreenState extends ConsumerState<MeshBeaconConfigScreen>
               height: 1.4,
             ),
           ),
-        ],
-      );
+        ),
+      ];
     }
-    return Column(
-      children: [
-        for (final beacon in _beacons)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-            child: _buildBeaconCard(beacon),
-          ),
-      ],
-    );
+    return [for (final beacon in _beacons) _buildBeaconCard(beacon)];
   }
 
   Widget _buildBeaconCard(MeshBeaconEvent beacon) {
@@ -740,171 +718,83 @@ class _MeshBeaconConfigScreenState extends ConsumerState<MeshBeaconConfigScreen>
     final offeredChannelName = (beacon.offerChannelName ?? '').isNotEmpty
         ? beacon.offerChannelName!
         : l10n.meshBeaconUnnamedChannel;
-    final receivedAt = MaterialLocalizations.of(
-      context,
-    ).formatTimeOfDay(TimeOfDay.fromDateTime(beacon.receivedAt));
+    final receivedAt = MaterialLocalizations.of(context)
+        .formatTimeOfDay(TimeOfDay.fromDateTime(beacon.receivedAt));
     final metaStyle = TextStyle(color: context.textSecondary, fontSize: 12);
 
-    return _card(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.cell_tower, color: context.textSecondary, size: 22),
-            const SizedBox(width: AppTheme.spacing12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _senderLabel(beacon.senderNodeId),
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    receivedAt,
-                    style: TextStyle(color: context.textTertiary, fontSize: 12),
-                  ),
-                  if (beacon.message.isNotEmpty) ...[
-                    const SizedBox(height: AppTheme.spacing8),
-                    Text(
-                      beacon.message,
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                  if (beacon.hasChannelOffer || beacon.hasRadioOffer) ...[
-                    const SizedBox(height: AppTheme.spacing8),
-                    Wrap(
-                      spacing: AppTheme.spacing12,
-                      runSpacing: AppTheme.spacing4,
-                      children: [
-                        if (beacon.hasChannelOffer)
-                          Text(
-                            l10n.meshBeaconOfferedChannelLabel(
-                              offeredChannelName,
-                            ),
-                            style: metaStyle,
-                          ),
-                        if (beacon.offerRegion != null)
-                          Text(
-                            l10n.meshBeaconOfferedRegionLabel(
-                              _regionLabel(beacon.offerRegion!),
-                            ),
-                            style: metaStyle,
-                          ),
-                        if (beacon.offerPreset != null)
-                          Text(
-                            l10n.meshBeaconOfferedPresetLabel(
-                              _presetLabel(beacon.offerPreset!),
-                            ),
-                            style: metaStyle,
-                          ),
-                      ],
-                    ),
-                  ],
-                  if (alreadyPresent) ...[
-                    const SizedBox(height: AppTheme.spacing4),
-                    Text(
-                      l10n.meshBeaconChannelAlreadyPresent,
-                      style: metaStyle,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            if (beacon.hasChannelOffer && !alreadyPresent)
-              IconButton(
-                tooltip: l10n.meshBeaconAddChannel,
-                icon: Icon(
-                  Icons.add_circle_outline,
-                  color: context.accentColor,
-                ),
-                onPressed: () => _addOfferedChannel(beacon),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final row = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: context.textSecondary, size: 22),
-        const SizedBox(width: AppTheme.spacing12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (subtitle != null)
+    return FieldGroupCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.cell_tower, color: context.textSecondary, size: 22),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  subtitle!,
-                  style: TextStyle(color: context.textSecondary, fontSize: 12),
+                  _senderLabel(beacon.senderNodeId),
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-            ],
+                Text(
+                  receivedAt,
+                  style: TextStyle(color: context.textTertiary, fontSize: 12),
+                ),
+                if (beacon.message.isNotEmpty) ...[
+                  const SizedBox(height: AppTheme.spacing8),
+                  Text(
+                    beacon.message,
+                    style: TextStyle(color: context.textPrimary, fontSize: 13),
+                  ),
+                ],
+                if (beacon.hasChannelOffer || beacon.hasRadioOffer) ...[
+                  const SizedBox(height: AppTheme.spacing8),
+                  Wrap(
+                    spacing: AppTheme.spacing12,
+                    runSpacing: AppTheme.spacing4,
+                    children: [
+                      if (beacon.hasChannelOffer)
+                        Text(
+                          l10n.meshBeaconOfferedChannelLabel(
+                            offeredChannelName,
+                          ),
+                          style: metaStyle,
+                        ),
+                      if (beacon.offerRegion != null)
+                        Text(
+                          l10n.meshBeaconOfferedRegionLabel(
+                            _regionLabel(beacon.offerRegion!),
+                          ),
+                          style: metaStyle,
+                        ),
+                      if (beacon.offerPreset != null)
+                        Text(
+                          l10n.meshBeaconOfferedPresetLabel(
+                            _presetLabel(beacon.offerPreset!),
+                          ),
+                          style: metaStyle,
+                        ),
+                    ],
+                  ),
+                ],
+                if (alreadyPresent) ...[
+                  const SizedBox(height: AppTheme.spacing4),
+                  Text(l10n.meshBeaconChannelAlreadyPresent, style: metaStyle),
+                ],
+              ],
+            ),
           ),
-        ),
-        if (trailing != null) trailing!,
-      ],
-    );
-    if (onTap == null) return row;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radius8),
-      child: row,
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: context.textTertiary,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
+          if (beacon.hasChannelOffer && !alreadyPresent)
+            IconButton(
+              tooltip: l10n.meshBeaconAddChannel,
+              icon: Icon(Icons.add_circle_outline, color: context.accentColor),
+              onPressed: () => _addOfferedChannel(beacon),
+            ),
+        ],
       ),
     );
   }
