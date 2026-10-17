@@ -7,6 +7,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
 import '../../../core/widgets/loading_indicator.dart';
+import '../../../core/widgets/settings_primitives.dart';
 import '../../../services/backup/device_config_backup_service.dart';
 import '../../../services/backup/device_config_bundle.dart';
 
@@ -91,9 +92,12 @@ class _DeviceConfigRestoreSheetState extends State<DeviceConfigRestoreSheet> {
                   message: l10n.dataExportDeviceConfigRestoreNodeMismatch,
                 ),
               _MetaCard(bundle: widget.bundle),
-              _SectionHeader(
-                text: l10n.dataExportDeviceConfigRestoreSheetTitle
-                    .toUpperCase(),
+              Padding(
+                padding: const EdgeInsets.only(top: AppTheme.spacing8),
+                child: SettingsSectionHeader(
+                  title: l10n.dataExportDeviceConfigRestoreSheetTitle
+                      .toUpperCase(),
+                ),
               ),
               _ToggleRow(
                 label: l10n.dataExportDeviceConfigRestoreToggleChannels,
@@ -298,32 +302,6 @@ class _MetaRow extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(fontSize: 12, color: context.textTertiary),
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String text;
-  const _SectionHeader({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing16,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
       ),
     );
   }

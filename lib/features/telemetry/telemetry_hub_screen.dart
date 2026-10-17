@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../routes/routes_screen.dart';
 import 'air_quality_log_screen.dart';
 import 'detection_sensor_log_screen.dart';
@@ -46,7 +47,7 @@ class TelemetryHubScreen extends StatelessWidget {
         ),
         SliverList.list(
           children: [
-            _SectionHeader(title: l10n.settingsSectionTelemetryLogs),
+            SettingsSectionHeader(title: l10n.settingsSectionTelemetryLogs),
             _TelemetryHubTile(
               icon: Icons.battery_charging_full,
               title: l10n.settingsTileDeviceMetricsTitle,
@@ -143,33 +144,6 @@ class TelemetryHubScreen extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-        AppTheme.spacing16,
-        AppTheme.spacing8,
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: context.textTertiary,
-          letterSpacing: 1.2,
-        ),
-      ),
     );
   }
 }
