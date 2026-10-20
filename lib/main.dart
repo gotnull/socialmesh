@@ -1265,127 +1265,27 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         // closes the last on-resume gap.
         dispatchReconnectMeshCoreAwareForWidget(ref, deviceId);
       } else {
-        await _performMeshtasticReconnectOnResume(deviceId, settings);
+        // The background connection owns Meshtastic reconnect. On iOS it
+        // connects straight to the saved peripheral before scanning, the
+        // only way to reach a radio iOS still holds after the app was
+        // terminated: a held radio does not advertise, so a scan alone
+        // never finds it. It refuses to start while the auto-reconnect
+        // state is scanning, so clear the state set by the caller first.
+        AppLogging.connection(
+          'RECONNECT ON RESUME: Meshtastic - handing off to '
+          'startBackgroundConnection',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
+        await ref
+            .read(conn.deviceConnectionProvider.notifier)
+            .startBackgroundConnection();
       }
     } finally {
       // Always clear the mutex, even on exceptions
       _reconnectInFlight = false;
       AppLogging.connection('RECONNECT ON RESUME: Completed, mutex cleared');
-    }
-  }
-
-  /// Reconnect to a Meshtastic device on app resume.
-  Future<void> _performMeshtasticReconnectOnResume(
-    String deviceId,
-    dynamic settings,
-  ) async {
-    AppLogging.connection('RECONNECT ON RESUME: Meshtastic protocol');
-
-    try {
-      final transport = ref.read(transportProvider);
-
-      // Quick scan to find the device
-      AppLogging.connection('RECONNECT ON RESUME: Starting 8s scan...');
-      final scanStream = transport.scan(timeout: const Duration(seconds: 8));
-      DeviceInfo? foundDevice;
-
-      await for (final device in scanStream) {
-        AppLogging.connection('RECONNECT ON RESUME: Found ${device.id}');
-        if (!mounted) return;
-        if (device.id == deviceId) {
-          foundDevice = device;
-          AppLogging.connection('RECONNECT ON RESUME: Target device found!');
-          break;
-        }
-      }
-
-      if (foundDevice != null) {
-        AppLogging.connection('RECONNECT ON RESUME: Connecting...');
-        ref
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.connecting);
-
-        // Run central transition prep BEFORE transport.connect so
-        // transportTypeProvider matches the device family and the
-        // classifier decides preserve-vs-clear-vs-rehydrate via a
-        // single source of truth. On resume this is usually
-        // `sameDevice`, but if the user's last session was TCP and the
-        // resume lands on BLE (or vice-versa) we still need to flip
-        // transport type and (when logical identity matches) force a
-        // fresh hydrate.
-        await prepareForDeviceTransition(
-          ref,
-          device: foundDevice,
-          deviceProtocol: 'meshtastic',
-        );
-        if (!mounted) return;
-
-        // Re-read transport after prep - transportTypeProvider may have
-        // been flipped to the correct family.
-        final connectTransport = ref.read(transportProvider);
-        await connectTransport.connect(foundDevice);
-
-        if (connectTransport.state == DeviceConnectionState.connected) {
-          AppLogging.connection(
-            'RECONNECT ON RESUME: BLE connected, starting protocol...',
-          );
-
-          if (!mounted) return;
-          final protocol = ref.read(protocolServiceProvider);
-
-          // Set device info for hardware model inference
-          protocol.setDeviceName(foundDevice.name);
-          protocol.setBleModelNumber(connectTransport.bleModelNumber);
-          protocol.setBleManufacturerName(connectTransport.bleManufacturerName);
-
-          await protocol.start();
-
-          if (protocol.myNodeNum == null) {
-            AppLogging.connection(
-              'RECONNECT ON RESUME: No myNodeNum - auth may have failed',
-            );
-            await connectTransport.disconnect();
-            throw Exception('Authentication failed');
-          }
-
-          AppLogging.connection(
-            'RECONNECT ON RESUME: Protocol started, myNodeNum=${protocol.myNodeNum}',
-          );
-          if (!mounted) return;
-          ref.read(connectedDeviceProvider.notifier).setState(foundDevice);
-          ref
-              .read(autoReconnectStateProvider.notifier)
-              .setState(AutoReconnectState.success);
-
-          // Start location updates
-          final locationService = ref.read(locationServiceProvider);
-          await locationService.startLocationUpdates();
-
-          AppLogging.connection('RECONNECT ON RESUME: Success!');
-
-          await Future.delayed(const Duration(milliseconds: 500));
-          if (!mounted) return;
-          ref
-              .read(autoReconnectStateProvider.notifier)
-              .setState(AutoReconnectState.idle);
-        } else {
-          AppLogging.connection(
-            'RECONNECT ON RESUME: BLE connect failed, '
-            'transport.state=${connectTransport.state}',
-          );
-          throw Exception('Connection failed');
-        }
-      } else {
-        AppLogging.connection('RECONNECT ON RESUME: Device not found in scan');
-        ref
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.failed);
-      }
-    } catch (e) {
-      AppLogging.connection('RECONNECT ON RESUME: Failed: $e');
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.failed);
     }
   }
 
