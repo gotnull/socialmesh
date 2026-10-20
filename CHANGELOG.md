@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.74.0] - 2026-10-20
+
+### Added
+
+- Channel and direct message history and the Nodes list show a scroll bar while you scroll. Press and hold it to drag through a long history; dragging it to the bottom returns to the latest message.
+
+### Changed
+
+- The Display, Mesh Beacon, Traffic Management and Canned Messages settings screens use the same section headers and rows as the rest of Settings.
+
+### Fixed
+
+- After consenting to MQTT map reporting, the app no longer sticks on "Configuring" and refuses every settings change until it is reset. Broker messages were reaching the radio before its configuration had finished, and over Bluetooth that traffic kept the radio from ever finishing. They now wait. Only channels with downlink enabled are subscribed.
+- Bluetooth scanning explains an empty result. The scanning banner stays up between scan cycles, and a scan that finds nothing lists the usual causes, including ESP32 radios that turn Bluetooth off while Wi-Fi is on. On Android, a missing permission or Location being off shows a card with a shortcut to settings instead of a raw error.
+- On Android 12 and later, Bluetooth scanning no longer depends on Location services being on.
+- Long-pressing your own radio in the Nodes list no longer offers "Message", and the circle at the top of that sheet uses each node's own colour rather than the accent colour.
+- The circle that replaces the "Node Details" title as you scroll uses your own node's colour, matching the large circle above it.
+- The device configuration restore sheet no longer shows its heading twice.
+- Rebooting, shutting down or resetting a remote node from Device Management no longer reports success for a command the node ignored. Without an admin session the remote radio drops these commands, so the app now requests a session and asks you to try again. The screen names the node it is acting on, stays open after a remote command, and hides Sync Time, which only ever set your own radio's clock.
+
 ## [1.73.0] - 2026-10-12
 
 ### Changed
