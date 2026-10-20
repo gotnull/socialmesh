@@ -816,6 +816,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   late final ReadinessWatchdog _watchdog;
   bool _watchdogRebuildInFlight = false;
   bool _backgroundScanInProgress = false; // Guard against concurrent scans
+  Future<void>? _backgroundConnectionInFlight;
   bool _authFailurePending =
       false; // Track PIN/auth failure through disconnect sequence
   int _missingDeviceAttempts = 0;
@@ -1577,8 +1578,29 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     return _BleCleanupOutcome.ready;
   }
 
-  /// Start background connection attempt to known device
-  Future<void> startBackgroundConnection() async {
+  /// Start background connection attempt to known device.
+  ///
+  /// Single-flight: a call while an attempt is running joins that attempt
+  /// instead of starting a second one. At cold start the startup path and
+  /// the app-resume handler both call this, and the body's own guards are
+  /// only set after its first awaits, so without this two attempts could
+  /// both pass them and race for the adapter.
+  Future<void> startBackgroundConnection() {
+    final inFlight = _backgroundConnectionInFlight;
+    if (inFlight != null) {
+      AppLogging.connection(
+        'startBackgroundConnection: joining the attempt already in flight',
+      );
+      return inFlight;
+    }
+    final attempt = _runBackgroundConnection().whenComplete(() {
+      _backgroundConnectionInFlight = null;
+    });
+    _backgroundConnectionInFlight = attempt;
+    return attempt;
+  }
+
+  Future<void> _runBackgroundConnection() async {
     // Check if user manually disconnected - don't auto-reconnect
     if (_userDisconnected) {
       AppLogging.connection(

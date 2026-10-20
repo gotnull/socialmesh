@@ -55,6 +55,61 @@ void main() {
   // Protocol-aware markAsPaired tests
   _protocolAwareMarkAsPairedTests();
 
+  test(
+    'concurrent startBackgroundConnection calls share one attempt',
+    () async {
+      final s = SettingsService();
+      await s.init();
+      final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
+      await messageStorage.init();
+      final nodeStorage = NodeStorageService();
+      await nodeStorage.init();
+      final telemetryStorage = TelemetryDatabase(
+        testDbPath: _uniqueTelemDbPath(),
+      );
+      await telemetryStorage.init();
+      final routeStorage = RouteStorageService(
+        testDbPath: inMemoryDatabasePath,
+      );
+      await routeStorage.init();
+
+      final container = ProviderContainer(
+        overrides: [
+          transportProvider.overrideWithValue(_TestTransport()),
+          meshPacketDedupeStoreProvider.overrideWithValue(
+            MeshPacketDedupeStore(dbPathOverride: ':memory:'),
+          ),
+          settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+          messageStorageProvider.overrideWithValue(
+            AsyncValue.data(messageStorage),
+          ),
+          nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
+          telemetryStorageProvider.overrideWithValue(
+            AsyncValue.data(telemetryStorage),
+          ),
+          routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(deviceConnectionProvider.notifier);
+      // Another reconnect owns the adapter, so each attempt returns at its
+      // first guard; the test only exercises the single-flight wrapper.
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.scanning);
+
+      final first = notifier.startBackgroundConnection();
+      final second = notifier.startBackgroundConnection();
+      expect(identical(first, second), isTrue);
+
+      await first;
+      final third = notifier.startBackgroundConnection();
+      expect(identical(first, third), isFalse);
+      await third;
+    },
+  );
+
   test('saved device invalidates after repeated missing scans', () async {
     final s = SettingsService();
     await s.init();
