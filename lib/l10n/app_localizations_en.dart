@@ -9223,6 +9223,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreFailedToShutDownDevice => 'Failed to shut down device';
 
   @override
+  String get meshcoreRadioTuning => 'Radio Tuning';
+
+  @override
+  String get meshcoreRadioTuningSubtitle =>
+      'Listen before transmit and rebroadcast timing';
+
+  @override
+  String get meshcoreRadioTuningHint =>
+      'Changes apply to the radio straight away. Leave these at their defaults unless your mesh needs them.';
+
+  @override
+  String get meshcoreTuningChannelHeader => 'Channel';
+
+  @override
+  String get meshcoreTuningCadTitle => 'Listen before transmit';
+
+  @override
+  String get meshcoreTuningCadSubtitle =>
+      'Wait for a quiet channel using the radio\'s channel activity detection';
+
+  @override
+  String get meshcoreTuningInterferenceLabel => 'Interference threshold (dB)';
+
+  @override
+  String get meshcoreTuningInterferenceHelper =>
+      'How far above the noise floor counts as a busy channel. 0 turns it off.';
+
+  @override
+  String get meshcoreTuningAgcLabel => 'Gain reset interval (seconds)';
+
+  @override
+  String get meshcoreTuningAgcHelper =>
+      'How often the receiver gain resets, in steps of 4. 0 turns it off.';
+
+  @override
+  String get meshcoreTuningDelayHeader => 'Rebroadcast delay';
+
+  @override
+  String get meshcoreTuningFloodDelayLabel => 'Flood packets';
+
+  @override
+  String get meshcoreTuningDirectDelayLabel => 'Direct packets';
+
+  @override
+  String get meshcoreTuningDelayHelper =>
+      'Random wait before rebroadcasting, as a multiple of the packet\'s airtime, from 0 to 2.';
+
+  @override
+  String get meshcoreTuningLoadFailed =>
+      'Couldn\'t read the radio\'s tuning. Check the connection and try again.';
+
+  @override
+  String get meshcoreTuningApplied => 'Radio tuning applied';
+
+  @override
+  String meshcoreTuningRejected(String setting, String reply) {
+    return '$setting was not applied: $reply';
+  }
+
+  @override
+  String get meshcoreTuningNoReply => 'no reply from the radio';
+
+  @override
+  String meshcoreTuningRangeError(String min, String max) {
+    return 'Enter a number from $min to $max';
+  }
+
+  @override
+  String get meshcoreTuningAgcStepError => 'Use a multiple of 4';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Failed to send advertisement';
 
   @override

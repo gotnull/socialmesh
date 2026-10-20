@@ -9356,6 +9356,78 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ausschalten des Geräts fehlgeschlagen';
 
   @override
+  String get meshcoreRadioTuning => 'Funk-Feinabstimmung';
+
+  @override
+  String get meshcoreRadioTuningSubtitle =>
+      'Vor dem Senden lauschen und Weiterleitungs-Timing';
+
+  @override
+  String get meshcoreRadioTuningHint =>
+      'Änderungen gelten sofort auf dem Funkgerät. Lass die Standardwerte, solange dein Mesh nichts anderes braucht.';
+
+  @override
+  String get meshcoreTuningChannelHeader => 'Kanal';
+
+  @override
+  String get meshcoreTuningCadTitle => 'Vor dem Senden lauschen';
+
+  @override
+  String get meshcoreTuningCadSubtitle =>
+      'Mit der Kanalaktivitätserkennung des Funkgeräts auf einen freien Kanal warten';
+
+  @override
+  String get meshcoreTuningInterferenceLabel => 'Störschwelle (dB)';
+
+  @override
+  String get meshcoreTuningInterferenceHelper =>
+      'Wie weit über dem Grundrauschen ein Kanal als belegt gilt. 0 schaltet es aus.';
+
+  @override
+  String get meshcoreTuningAgcLabel =>
+      'Intervall für Verstärkungs-Reset (Sekunden)';
+
+  @override
+  String get meshcoreTuningAgcHelper =>
+      'Wie oft die Empfängerverstärkung zurückgesetzt wird, in Schritten von 4. 0 schaltet es aus.';
+
+  @override
+  String get meshcoreTuningDelayHeader => 'Weiterleitungsverzögerung';
+
+  @override
+  String get meshcoreTuningFloodDelayLabel => 'Flood-Pakete';
+
+  @override
+  String get meshcoreTuningDirectDelayLabel => 'Direkte Pakete';
+
+  @override
+  String get meshcoreTuningDelayHelper =>
+      'Zufällige Wartezeit vor dem Weiterleiten, als Vielfaches der Sendezeit des Pakets, von 0 bis 2.';
+
+  @override
+  String get meshcoreTuningLoadFailed =>
+      'Die Feinabstimmung des Funkgeräts konnte nicht gelesen werden. Prüfe die Verbindung und versuche es erneut.';
+
+  @override
+  String get meshcoreTuningApplied => 'Funk-Feinabstimmung übernommen';
+
+  @override
+  String meshcoreTuningRejected(String setting, String reply) {
+    return '$setting wurde nicht übernommen: $reply';
+  }
+
+  @override
+  String get meshcoreTuningNoReply => 'keine Antwort vom Funkgerät';
+
+  @override
+  String meshcoreTuningRangeError(String min, String max) {
+    return 'Gib eine Zahl von $min bis $max ein';
+  }
+
+  @override
+  String get meshcoreTuningAgcStepError => 'Verwende ein Vielfaches von 4';
+
+  @override
   String get meshcoreFailedToSendAdTools =>
       'Ankündigung konnte nicht gesendet werden';
 

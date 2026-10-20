@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Channel and direct message history and the Nodes list show a scroll bar while you scroll. Press and hold it to drag through a long history; dragging it to the bottom returns to the latest message.
 - MeshCore radios on firmware 1.18.0 or later can be shut down from MeshCore settings. The app reads the firmware's protocol version when it connects and only offers the option where the radio supports it.
+- Radio Tuning in MeshCore settings, also for firmware 1.18.0 or later, sets listen-before-transmit, the interference threshold, the receiver gain reset interval and the flood and direct rebroadcast delays. It reads the radio's current values when it opens, sends only what you change, and names any setting the radio refuses along with its reason.
 
 ### Changed
 

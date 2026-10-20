@@ -9411,6 +9411,78 @@ class AppLocalizationsFr extends AppLocalizations {
       'Échec de l\'extinction de l\'appareil';
 
   @override
+  String get meshcoreRadioTuning => 'Réglage radio';
+
+  @override
+  String get meshcoreRadioTuningSubtitle =>
+      'Écoute avant émission et délais de retransmission';
+
+  @override
+  String get meshcoreRadioTuningHint =>
+      'Les modifications s\'appliquent immédiatement à la radio. Gardez les valeurs par défaut sauf si votre maillage en a besoin.';
+
+  @override
+  String get meshcoreTuningChannelHeader => 'Canal';
+
+  @override
+  String get meshcoreTuningCadTitle => 'Écouter avant d\'émettre';
+
+  @override
+  String get meshcoreTuningCadSubtitle =>
+      'Attendre un canal libre grâce à la détection d\'activité de canal de la radio';
+
+  @override
+  String get meshcoreTuningInterferenceLabel => 'Seuil d\'interférence (dB)';
+
+  @override
+  String get meshcoreTuningInterferenceHelper =>
+      'Écart au-dessus du bruit de fond à partir duquel le canal est occupé. 0 le désactive.';
+
+  @override
+  String get meshcoreTuningAgcLabel =>
+      'Intervalle de réinitialisation du gain (secondes)';
+
+  @override
+  String get meshcoreTuningAgcHelper =>
+      'Fréquence de réinitialisation du gain du récepteur, par pas de 4. 0 la désactive.';
+
+  @override
+  String get meshcoreTuningDelayHeader => 'Délai de retransmission';
+
+  @override
+  String get meshcoreTuningFloodDelayLabel => 'Paquets flood';
+
+  @override
+  String get meshcoreTuningDirectDelayLabel => 'Paquets directs';
+
+  @override
+  String get meshcoreTuningDelayHelper =>
+      'Attente aléatoire avant de retransmettre, en multiple du temps d\'émission du paquet, de 0 à 2.';
+
+  @override
+  String get meshcoreTuningLoadFailed =>
+      'Impossible de lire le réglage de la radio. Vérifiez la connexion et réessayez.';
+
+  @override
+  String get meshcoreTuningApplied => 'Réglage radio appliqué';
+
+  @override
+  String meshcoreTuningRejected(String setting, String reply) {
+    return '$setting n\'a pas été appliqué : $reply';
+  }
+
+  @override
+  String get meshcoreTuningNoReply => 'pas de réponse de la radio';
+
+  @override
+  String meshcoreTuningRangeError(String min, String max) {
+    return 'Saisissez un nombre de $min à $max';
+  }
+
+  @override
+  String get meshcoreTuningAgcStepError => 'Utilisez un multiple de 4';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Échec de l\'envoi de l\'annonce';
 
   @override

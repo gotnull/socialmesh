@@ -36,6 +36,7 @@ import '../../../utils/snackbar.dart';
 import '../../feedback/my_bug_reports_tile.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_radio_settings_sheet.dart';
+import '../widgets/meshcore_radio_tuning_sheet.dart';
 import '../../../providers/meshcore_ringtone_preferences.dart';
 import '../../settings/ringtone_screen.dart';
 import '../../settings/subscription_screen.dart';
@@ -193,6 +194,17 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                     currentSelfInfo: selfInfo,
                   ),
                 ),
+                if (supportsCli)
+                  _maybeDisabled(
+                    enabled: isConnected,
+                    child: SettingsTile(
+                      icon: Icons.tune_rounded,
+                      title: context.l10n.meshcoreRadioTuning,
+                      subtitle: context.l10n.meshcoreRadioTuningSubtitle,
+                      trailing: _chevron(context),
+                      onTap: () => showMeshCoreRadioTuningSheet(context),
+                    ),
+                  ),
                 _maybeDisabled(
                   enabled: isConnected && !_isApplyingLocation,
                   child: SettingsTile(

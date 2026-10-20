@@ -12351,6 +12351,102 @@
   "@meshcoreFailedToShutDownDevice": {
     "description": "Snackbar when the power-off command could not be sent."
   },
+  "meshcoreRadioTuning": "Radio Tuning",
+  "@meshcoreRadioTuning": {
+    "description": "MeshCore settings tile and sheet title for CLI radio tuning (firmware v1.18+)."
+  },
+  "meshcoreRadioTuningSubtitle": "Listen before transmit and rebroadcast timing",
+  "@meshcoreRadioTuningSubtitle": {
+    "description": "Subtitle of the radio tuning tile."
+  },
+  "meshcoreRadioTuningHint": "Changes apply to the radio straight away. Leave these at their defaults unless your mesh needs them.",
+  "@meshcoreRadioTuningHint": {
+    "description": "Explainer at the top of the radio tuning sheet."
+  },
+  "meshcoreTuningChannelHeader": "Channel",
+  "@meshcoreTuningChannelHeader": {
+    "description": "Section header for channel access settings."
+  },
+  "meshcoreTuningCadTitle": "Listen before transmit",
+  "@meshcoreTuningCadTitle": {
+    "description": "Switch title for channel activity detection before transmit."
+  },
+  "meshcoreTuningCadSubtitle": "Wait for a quiet channel using the radio's channel activity detection",
+  "@meshcoreTuningCadSubtitle": {
+    "description": "Switch subtitle explaining channel activity detection."
+  },
+  "meshcoreTuningInterferenceLabel": "Interference threshold (dB)",
+  "@meshcoreTuningInterferenceLabel": {
+    "description": "Field label: RSSI interference threshold in dB."
+  },
+  "meshcoreTuningInterferenceHelper": "How far above the noise floor counts as a busy channel. 0 turns it off.",
+  "@meshcoreTuningInterferenceHelper": {
+    "description": "Helper text under the interference threshold field."
+  },
+  "meshcoreTuningAgcLabel": "Gain reset interval (seconds)",
+  "@meshcoreTuningAgcLabel": {
+    "description": "Field label: AGC reset interval in seconds."
+  },
+  "meshcoreTuningAgcHelper": "How often the receiver gain resets, in steps of 4. 0 turns it off.",
+  "@meshcoreTuningAgcHelper": {
+    "description": "Helper text under the AGC reset interval field."
+  },
+  "meshcoreTuningDelayHeader": "Rebroadcast delay",
+  "@meshcoreTuningDelayHeader": {
+    "description": "Section header for the rebroadcast delay factors."
+  },
+  "meshcoreTuningFloodDelayLabel": "Flood packets",
+  "@meshcoreTuningFloodDelayLabel": {
+    "description": "Field label: delay factor for flood packets."
+  },
+  "meshcoreTuningDirectDelayLabel": "Direct packets",
+  "@meshcoreTuningDirectDelayLabel": {
+    "description": "Field label: delay factor for direct (routed) packets."
+  },
+  "meshcoreTuningDelayHelper": "Random wait before rebroadcasting, as a multiple of the packet's airtime, from 0 to 2.",
+  "@meshcoreTuningDelayHelper": {
+    "description": "Helper text under the rebroadcast delay fields."
+  },
+  "meshcoreTuningLoadFailed": "Couldn't read the radio's tuning. Check the connection and try again.",
+  "@meshcoreTuningLoadFailed": {
+    "description": "Banner when the tuning values cannot be read from the radio."
+  },
+  "meshcoreTuningApplied": "Radio tuning applied",
+  "@meshcoreTuningApplied": {
+    "description": "Snackbar after every tuning change was accepted."
+  },
+  "meshcoreTuningRejected": "{setting} was not applied: {reply}",
+  "@meshcoreTuningRejected": {
+    "description": "Snackbar when the radio refused one setting; reply is the radio's own text.",
+    "placeholders": {
+      "setting": {
+        "type": "String"
+      },
+      "reply": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreTuningNoReply": "no reply from the radio",
+  "@meshcoreTuningNoReply": {
+    "description": "Used as the reply when the radio did not answer."
+  },
+  "meshcoreTuningRangeError": "Enter a number from {min} to {max}",
+  "@meshcoreTuningRangeError": {
+    "description": "Validation error for a number outside its range.",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreTuningAgcStepError": "Use a multiple of 4",
+  "@meshcoreTuningAgcStepError": {
+    "description": "Validation error when the AGC interval is not a multiple of 4."
+  },
   "meshcoreFailedToSendAdTools": "Failed to send advertisement",
   "@meshcoreFailedToSendAdTools": {
     "description": "Error snackbar when advertisement fails in tools"

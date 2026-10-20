@@ -16112,6 +16112,126 @@ abstract class AppLocalizations {
   /// **'Failed to shut down device'**
   String get meshcoreFailedToShutDownDevice;
 
+  /// MeshCore settings tile and sheet title for CLI radio tuning (firmware v1.18+).
+  ///
+  /// In en, this message translates to:
+  /// **'Radio Tuning'**
+  String get meshcoreRadioTuning;
+
+  /// Subtitle of the radio tuning tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen before transmit and rebroadcast timing'**
+  String get meshcoreRadioTuningSubtitle;
+
+  /// Explainer at the top of the radio tuning sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes apply to the radio straight away. Leave these at their defaults unless your mesh needs them.'**
+  String get meshcoreRadioTuningHint;
+
+  /// Section header for channel access settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get meshcoreTuningChannelHeader;
+
+  /// Switch title for channel activity detection before transmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen before transmit'**
+  String get meshcoreTuningCadTitle;
+
+  /// Switch subtitle explaining channel activity detection.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for a quiet channel using the radio\'s channel activity detection'**
+  String get meshcoreTuningCadSubtitle;
+
+  /// Field label: RSSI interference threshold in dB.
+  ///
+  /// In en, this message translates to:
+  /// **'Interference threshold (dB)'**
+  String get meshcoreTuningInterferenceLabel;
+
+  /// Helper text under the interference threshold field.
+  ///
+  /// In en, this message translates to:
+  /// **'How far above the noise floor counts as a busy channel. 0 turns it off.'**
+  String get meshcoreTuningInterferenceHelper;
+
+  /// Field label: AGC reset interval in seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain reset interval (seconds)'**
+  String get meshcoreTuningAgcLabel;
+
+  /// Helper text under the AGC reset interval field.
+  ///
+  /// In en, this message translates to:
+  /// **'How often the receiver gain resets, in steps of 4. 0 turns it off.'**
+  String get meshcoreTuningAgcHelper;
+
+  /// Section header for the rebroadcast delay factors.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebroadcast delay'**
+  String get meshcoreTuningDelayHeader;
+
+  /// Field label: delay factor for flood packets.
+  ///
+  /// In en, this message translates to:
+  /// **'Flood packets'**
+  String get meshcoreTuningFloodDelayLabel;
+
+  /// Field label: delay factor for direct (routed) packets.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct packets'**
+  String get meshcoreTuningDirectDelayLabel;
+
+  /// Helper text under the rebroadcast delay fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Random wait before rebroadcasting, as a multiple of the packet\'s airtime, from 0 to 2.'**
+  String get meshcoreTuningDelayHelper;
+
+  /// Banner when the tuning values cannot be read from the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the radio\'s tuning. Check the connection and try again.'**
+  String get meshcoreTuningLoadFailed;
+
+  /// Snackbar after every tuning change was accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio tuning applied'**
+  String get meshcoreTuningApplied;
+
+  /// Snackbar when the radio refused one setting; reply is the radio's own text.
+  ///
+  /// In en, this message translates to:
+  /// **'{setting} was not applied: {reply}'**
+  String meshcoreTuningRejected(String setting, String reply);
+
+  /// Used as the reply when the radio did not answer.
+  ///
+  /// In en, this message translates to:
+  /// **'no reply from the radio'**
+  String get meshcoreTuningNoReply;
+
+  /// Validation error for a number outside its range.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number from {min} to {max}'**
+  String meshcoreTuningRangeError(String min, String max);
+
+  /// Validation error when the AGC interval is not a multiple of 4.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a multiple of 4'**
+  String get meshcoreTuningAgcStepError;
+
   /// Error snackbar when advertisement fails in tools
   ///
   /// In en, this message translates to:

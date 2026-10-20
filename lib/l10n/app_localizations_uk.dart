@@ -9358,6 +9358,77 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreFailedToShutDownDevice => 'Не вдалося вимкнути пристрій';
 
   @override
+  String get meshcoreRadioTuning => 'Налаштування радіо';
+
+  @override
+  String get meshcoreRadioTuningSubtitle =>
+      'Прослуховування перед передаванням і затримки ретрансляції';
+
+  @override
+  String get meshcoreRadioTuningHint =>
+      'Зміни застосовуються до радіо одразу. Залиште типові значення, якщо вашій мережі не потрібне інше.';
+
+  @override
+  String get meshcoreTuningChannelHeader => 'Канал';
+
+  @override
+  String get meshcoreTuningCadTitle => 'Слухати перед передаванням';
+
+  @override
+  String get meshcoreTuningCadSubtitle =>
+      'Чекати на вільний канал за допомогою виявлення активності каналу в радіо';
+
+  @override
+  String get meshcoreTuningInterferenceLabel => 'Поріг завад (дБ)';
+
+  @override
+  String get meshcoreTuningInterferenceHelper =>
+      'Наскільки вище рівня шуму канал вважається зайнятим. 0 вимикає.';
+
+  @override
+  String get meshcoreTuningAgcLabel => 'Інтервал скидання підсилення (секунди)';
+
+  @override
+  String get meshcoreTuningAgcHelper =>
+      'Як часто скидається підсилення приймача, з кроком 4. 0 вимикає.';
+
+  @override
+  String get meshcoreTuningDelayHeader => 'Затримка ретрансляції';
+
+  @override
+  String get meshcoreTuningFloodDelayLabel => 'Flood-пакети';
+
+  @override
+  String get meshcoreTuningDirectDelayLabel => 'Прямі пакети';
+
+  @override
+  String get meshcoreTuningDelayHelper =>
+      'Випадкове очікування перед ретрансляцією, кратне ефірному часу пакета, від 0 до 2.';
+
+  @override
+  String get meshcoreTuningLoadFailed =>
+      'Не вдалося прочитати налаштування радіо. Перевірте підключення та повторіть спробу.';
+
+  @override
+  String get meshcoreTuningApplied => 'Налаштування радіо застосовано';
+
+  @override
+  String meshcoreTuningRejected(String setting, String reply) {
+    return '$setting не застосовано: $reply';
+  }
+
+  @override
+  String get meshcoreTuningNoReply => 'немає відповіді від радіо';
+
+  @override
+  String meshcoreTuningRangeError(String min, String max) {
+    return 'Введіть число від $min до $max';
+  }
+
+  @override
+  String get meshcoreTuningAgcStepError => 'Використайте число, кратне 4';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Не вдалося надіслати оголошення';
 
   @override

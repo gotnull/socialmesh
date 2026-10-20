@@ -9338,6 +9338,77 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось выключить устройство';
 
   @override
+  String get meshcoreRadioTuning => 'Настройка радио';
+
+  @override
+  String get meshcoreRadioTuningSubtitle =>
+      'Прослушивание перед передачей и задержки ретрансляции';
+
+  @override
+  String get meshcoreRadioTuningHint =>
+      'Изменения применяются к радио сразу. Оставьте значения по умолчанию, если вашей сети не нужно иное.';
+
+  @override
+  String get meshcoreTuningChannelHeader => 'Канал';
+
+  @override
+  String get meshcoreTuningCadTitle => 'Слушать перед передачей';
+
+  @override
+  String get meshcoreTuningCadSubtitle =>
+      'Ждать свободного канала с помощью обнаружения активности канала в радио';
+
+  @override
+  String get meshcoreTuningInterferenceLabel => 'Порог помех (дБ)';
+
+  @override
+  String get meshcoreTuningInterferenceHelper =>
+      'Насколько выше уровня шума канал считается занятым. 0 отключает.';
+
+  @override
+  String get meshcoreTuningAgcLabel => 'Интервал сброса усиления (секунды)';
+
+  @override
+  String get meshcoreTuningAgcHelper =>
+      'Как часто сбрасывается усиление приёмника, с шагом 4. 0 отключает.';
+
+  @override
+  String get meshcoreTuningDelayHeader => 'Задержка ретрансляции';
+
+  @override
+  String get meshcoreTuningFloodDelayLabel => 'Flood-пакеты';
+
+  @override
+  String get meshcoreTuningDirectDelayLabel => 'Прямые пакеты';
+
+  @override
+  String get meshcoreTuningDelayHelper =>
+      'Случайное ожидание перед ретрансляцией, кратное эфирному времени пакета, от 0 до 2.';
+
+  @override
+  String get meshcoreTuningLoadFailed =>
+      'Не удалось прочитать настройку радио. Проверьте подключение и повторите попытку.';
+
+  @override
+  String get meshcoreTuningApplied => 'Настройка радио применена';
+
+  @override
+  String meshcoreTuningRejected(String setting, String reply) {
+    return '$setting не применено: $reply';
+  }
+
+  @override
+  String get meshcoreTuningNoReply => 'нет ответа от радио';
+
+  @override
+  String meshcoreTuningRangeError(String min, String max) {
+    return 'Введите число от $min до $max';
+  }
+
+  @override
+  String get meshcoreTuningAgcStepError => 'Используйте число, кратное 4';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Не удалось отправить объявление';
 
   @override
