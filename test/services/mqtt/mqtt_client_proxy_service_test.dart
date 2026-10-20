@@ -7,6 +7,8 @@ import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+import 'package:socialmesh/generated/meshtastic/config.pbenum.dart';
+import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/services/mqtt/mqtt_client_proxy_service.dart';
 
 void main() {
@@ -232,7 +234,7 @@ void main() {
           tlsEnabled: false,
           username: '',
           topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
+          subscriptionTopics: const [],
         );
 
         expect(service.debugConnectAttemptsStarted, 0);
@@ -245,7 +247,7 @@ void main() {
           username: '',
           password: '',
           topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
+          subscriptionTopics: const [],
         );
 
         expect(
@@ -266,10 +268,10 @@ void main() {
           tlsEnabled: false,
           username: '',
           topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
+          subscriptionTopics: const [],
         );
 
-        // Call connect with a different host — the settled check must
+        // Call connect with a different host - the settled check must
         // fail (host mismatch), and a real attempt must start. We use
         // an unroutable port that will fail fast so the test stays fast.
         // Wrap in a future so we don't await the real broker timeout.
@@ -279,7 +281,7 @@ void main() {
           username: '',
           password: '',
           topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
+          subscriptionTopics: const [],
         );
 
         // The counter must increment immediately (synchronously, before
@@ -303,7 +305,7 @@ void main() {
           username: '',
           password: '',
           topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
+          subscriptionTopics: const [],
         );
         final f2 = service.connect(
           address: '127.0.0.1:1',
@@ -311,7 +313,7 @@ void main() {
           username: '',
           password: '',
           topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
+          subscriptionTopics: const [],
         );
 
         await Future.wait([f1, f2]);
@@ -331,7 +333,7 @@ void main() {
         username: '',
         password: '',
         topicPrefix: 'msh/2/e',
-        shouldSubscribe: false,
+        subscriptionTopics: const [],
       );
       // Different port → different args. The second must be rejected
       // (preserves the original _isConnecting safety net).
@@ -341,7 +343,7 @@ void main() {
         username: '',
         password: '',
         topicPrefix: 'msh/2/e',
-        shouldSubscribe: false,
+        subscriptionTopics: const [],
       );
 
       await Future.wait([f1, f2]);
@@ -360,20 +362,20 @@ void main() {
         tlsEnabled: false,
         username: '',
         topicPrefix: 'msh/2/e',
-        shouldSubscribe: false,
+        subscriptionTopics: const [],
       );
       await service.disconnect();
       expect(service.isConnected, false);
 
       // After disconnect, the settled idempotency must NOT short-circuit
-      // — we are no longer settled.
+      // - we are no longer settled.
       await service.connect(
         address: 'broker.example:1883',
         tlsEnabled: false,
         username: '',
         password: '',
         topicPrefix: 'msh/2/e',
-        shouldSubscribe: false,
+        subscriptionTopics: const [],
       );
 
       expect(
@@ -532,8 +534,8 @@ void main() {
       'connect failure to unreachable port maps to a non-none reason',
       () async {
         // 127.0.0.1:1 reliably refuses on macOS/Linux test boxes. We don't
-        // care about the *exact* reason mapping here — the OS error text
-        // varies by platform — only that we transition to phase=failed
+        // care about the *exact* reason mapping here - the OS error text
+        // varies by platform - only that we transition to phase=failed
         // with a non-none reason and a sanitized lastError.
         await service.connect(
           address: '127.0.0.1:1',
@@ -541,7 +543,7 @@ void main() {
           username: '',
           password: '',
           topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
+          subscriptionTopics: const [],
         );
         expect(service.phase, MqttProxyConnectionPhase.failed);
         expect(service.failureReason, isNot(MqttProxyFailureReason.none));
@@ -550,40 +552,37 @@ void main() {
       },
     );
 
-    test(
-      'malformed CONNACK from a non-MQTT endpoint fails cleanly, no crash',
-      () async {
-        // A non-MQTT endpoint (wrong port / an HTTP service) replies with bytes
-        // that mqtt_client parses as a CONNACK with an out-of-range return code,
-        // throwing a RangeError on the raw socket read callback — off the
-        // connect() future. Without the guarded zone this escapes as an
-        // unhandled async error (the production Crashlytics non-fatal); the test
-        // would surface it as an unhandled exception. We assert the connect maps
-        // to a structured failure instead.
-        final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
-        server.listen((socket) {
-          socket.listen((_) {
-            // After the client's CONNECT arrives, reply with a CONNACK whose
-            // return code (0x30 = 48) is outside the valid 0..6 range.
-            socket.add([0x20, 0x02, 0x00, 0x30]);
-          });
+    test('malformed CONNACK from a non-MQTT endpoint fails cleanly, no crash', () async {
+      // A non-MQTT endpoint (wrong port / an HTTP service) replies with bytes
+      // that mqtt_client parses as a CONNACK with an out-of-range return code,
+      // throwing a RangeError on the raw socket read callback - off the
+      // connect() future. Without the guarded zone this escapes as an
+      // unhandled async error (the production Crashlytics non-fatal); the test
+      // would surface it as an unhandled exception. We assert the connect maps
+      // to a structured failure instead.
+      final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((socket) {
+        socket.listen((_) {
+          // After the client's CONNECT arrives, reply with a CONNACK whose
+          // return code (0x30 = 48) is outside the valid 0..6 range.
+          socket.add([0x20, 0x02, 0x00, 0x30]);
         });
-        addTearDown(() => server.close());
+      });
+      addTearDown(() => server.close());
 
-        await service.connect(
-          address: '127.0.0.1:${server.port}',
-          tlsEnabled: false,
-          username: '',
-          password: '',
-          topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
-        );
+      await service.connect(
+        address: '127.0.0.1:${server.port}',
+        tlsEnabled: false,
+        username: '',
+        password: '',
+        topicPrefix: 'msh/2/e',
+        subscriptionTopics: const [],
+      );
 
-        expect(service.phase, MqttProxyConnectionPhase.failed);
-        expect(service.failureReason, MqttProxyFailureReason.protocolRejected);
-        expect(service.diagnostics.lastError, isNotNull);
-      },
-    );
+      expect(service.phase, MqttProxyConnectionPhase.failed);
+      expect(service.failureReason, MqttProxyFailureReason.protocolRejected);
+      expect(service.diagnostics.lastError, isNotNull);
+    });
 
     test(
       'disconnect from settled clears phase to disconnected, reason none',
@@ -594,7 +593,7 @@ void main() {
           tlsEnabled: false,
           username: '',
           topicPrefix: 'msh/2/e',
-          shouldSubscribe: false,
+          subscriptionTopics: const [],
         );
         expect(service.phase, MqttProxyConnectionPhase.connected);
 
@@ -618,7 +617,7 @@ void main() {
         final service = MqttClientProxyService();
         addTearDown(service.dispose);
 
-        // Idle (initial): publish must be suppressed — no counter increment.
+        // Idle (initial): publish must be suppressed - no counter increment.
         service.handleDevicePublish(
           topic: 'msh/US/OVMesh/2/e/LongFast/!aaaa',
           data: [1, 2, 3],
@@ -634,7 +633,7 @@ void main() {
 
       // Must not throw.
       service.handleDevicePublish(topic: 'msh/2/e', data: [0]);
-      // No publish counter — service is fully disposed.
+      // No publish counter - service is fully disposed.
     });
 
     test(
@@ -647,8 +646,8 @@ void main() {
         // Fire 50 publishes in a tight loop while disconnected. The
         // dedupe is tested via observable behavior: the publish counter
         // must remain 0 and no exception is thrown. (Log-side dedupe
-        // is asserted by the source structure — single first-hit then
-        // suppression — and is not directly observable from a unit test
+        // is asserted by the source structure - single first-hit then
+        // suppression - and is not directly observable from a unit test
         // without a log capture sink.)
         for (var i = 0; i < 50; i++) {
           service.handleDevicePublish(
@@ -808,7 +807,7 @@ void main() {
     // Pinned against the actual mqtt_client package strings observed in the
     // field. Strict brokers (ovmesh.com) silently TCP-close a malformed
     // CONNECT, so mqtt_client surfaces a "Missing Connection Acknowledgement"
-    // timeout — must map to protocolRejected, not unknown.
+    // timeout - must map to protocolRejected, not unknown.
     test('missing CONNACK text maps to protocolRejected', () {
       const text =
           'mqtt-client::NoConnectionException: The maximum allowed connection '
@@ -872,7 +871,7 @@ void main() {
         username: 'alice',
         password: sentinelPassword,
         topicPrefix: 'msh/2/e',
-        shouldSubscribe: false,
+        subscriptionTopics: const [],
       );
 
       expect(service.diagnostics.lastError, isNotNull);
@@ -913,7 +912,7 @@ void main() {
       final service = MqttClientProxyService();
       addTearDown(service.dispose);
 
-      // Counted at entry, before topic validation — so the received tally
+      // Counted at entry, before topic validation - so the received tally
       // reflects everything the radio forwarder handed us.
       service.handleDevicePublish(topic: 'a/b/#', data: [1]);
 
@@ -1086,7 +1085,7 @@ void main() {
         password: '',
         topicPrefix: 'msh/2/e',
         nodeUserId: '!a6960864',
-        shouldSubscribe: false,
+        subscriptionTopics: const [],
       );
 
       final bytes = await connectBytes.future;
@@ -1168,6 +1167,96 @@ void main() {
       ]);
       expect(forwarded, isEmpty);
       expect(service.diagnostics.messagesRelayed, 0);
+    });
+  });
+
+  group('mqttProxySubscriptionTopics', () {
+    const prefix = 'msh/EU_868/2/e';
+
+    ChannelConfig channel(
+      int index,
+      String name, {
+      bool downlink = true,
+      String role = 'SECONDARY',
+    }) => ChannelConfig(
+      index: index,
+      name: name,
+      psk: const [1],
+      downlink: downlink,
+      role: role,
+    );
+
+    List<String> topics(
+      List<ChannelConfig> channels, {
+      Config_LoRaConfig_ModemPreset? preset =
+          Config_LoRaConfig_ModemPreset.LONG_FAST,
+      bool usePreset = true,
+    }) => mqttProxySubscriptionTopics(
+      topicPrefix: prefix,
+      channels: channels,
+      preset: preset,
+      usePreset: usePreset,
+    );
+
+    test('no downlink channel subscribes to nothing', () {
+      expect(topics([channel(0, 'Home', downlink: false)]), isEmpty);
+      expect(topics(const []), isEmpty);
+    });
+
+    test('a named downlink channel gets its own topic plus PKI', () {
+      expect(topics([channel(1, 'Home')]), ['$prefix/Home/+', '$prefix/PKI/+']);
+    });
+
+    test('an unnamed primary uses the preset-derived firmware name', () {
+      expect(topics([channel(0, '', role: 'PRIMARY')]), [
+        '$prefix/LongFast/+',
+        '$prefix/PKI/+',
+      ]);
+      expect(
+        topics([
+          channel(0, '', role: 'PRIMARY'),
+        ], preset: Config_LoRaConfig_ModemPreset.MEDIUM_SLOW),
+        ['$prefix/MediumSlow/+', '$prefix/PKI/+'],
+      );
+    });
+
+    test('an unnamed primary on custom modem settings is "Custom"', () {
+      expect(topics([channel(0, '', role: 'PRIMARY')], usePreset: false), [
+        '$prefix/Custom/+',
+        '$prefix/PKI/+',
+      ]);
+    });
+
+    test('an unnamed primary with an unknown preset is skipped', () {
+      expect(topics([channel(0, '', role: 'PRIMARY')], preset: null), isEmpty);
+    });
+
+    test('unnamed secondaries and disabled channels are skipped', () {
+      expect(
+        topics([
+          channel(1, ''),
+          channel(2, 'Old', role: 'DISABLED'),
+          channel(3, 'Ops'),
+        ]),
+        ['$prefix/Ops/+', '$prefix/PKI/+'],
+      );
+    });
+
+    test('channels sharing a name subscribe once', () {
+      expect(
+        topics([channel(0, '', role: 'PRIMARY'), channel(1, 'LongFast')]),
+        ['$prefix/LongFast/+', '$prefix/PKI/+'],
+      );
+    });
+
+    test('never subscribes to the whole region', () {
+      final all = topics([
+        channel(0, '', role: 'PRIMARY'),
+        channel(1, 'Home'),
+        channel(2, 'Ops'),
+      ]);
+      expect(all, isNot(contains('$prefix/#')));
+      expect(all.where((t) => t.endsWith('#')), isEmpty);
     });
   });
 }

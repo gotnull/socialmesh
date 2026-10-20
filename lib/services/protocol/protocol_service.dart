@@ -238,7 +238,7 @@ class SmFileTransferEvent {
 ///
 /// Carries plain decoded fields so the feature layer never depends on the
 /// generated protobuf. Coordinates are already converted to decimal degrees.
-/// [isDelete] is true when the wire `expire == 1` — the firmware
+/// [isDelete] is true when the wire `expire == 1` - the firmware
 /// "delete for everyone" sentinel.
 class MeshWaypointEvent {
   final int id;
@@ -353,16 +353,16 @@ class _AdminSession {
 /// Distinguishes the five failure classes called out in the iOS receive
 /// stall fix plan:
 ///
-/// - **A — Raw BLE stopped**: `lastNotificationAt` stale, with
+/// - **A - Raw BLE stopped**: `lastNotificationAt` stale, with
 ///   `fromNumNotificationCount` provided for cross-tick comparison.
-/// - **B — Decode/ingest stopped**: `lastDataReceivedAt` recent but
+/// - **B - Decode/ingest stopped**: `lastDataReceivedAt` recent but
 ///   `lastSuccessfulDecodeAt` stale.
-/// - **C — DB insert stopped**: `lastTextMessageEmittedAt` recent but
+/// - **C - DB insert stopped**: `lastTextMessageEmittedAt` recent but
 ///   the `_MessagesNotifier.lastInsertAt` (carried separately by the
 ///   provider) stale.
-/// - **D — Provider/UI invalidation stopped**: covered by tests, not
+/// - **D - Provider/UI invalidation stopped**: covered by tests, not
 ///   by this snapshot.
-/// - **E — Notifications stopped**: out-of-scope for this snapshot
+/// - **E - Notifications stopped**: out-of-scope for this snapshot
 ///   (covered by `notificationBatchProvider` logging in a future
 ///   follow-up).
 class ReceivePipelineDiagnostics {
@@ -501,7 +501,7 @@ class ProtocolService {
   /// the app. This is the upstream end of the proxy publish path; comparing it
   /// against the MQTT service's `framesReceivedFromRadio` isolates whether a
   /// non-delivery is the device going quiet, a stream/provider loss, or an
-  /// app-side MQTT problem. Observability only — no wire semantics.
+  /// app-side MQTT problem. Observability only - no wire semantics.
   int _proxyFramesForwardedFromRadio = 0;
 
   /// Cumulative count of MQTT client-proxy frames forwarded from the radio.
@@ -526,7 +526,7 @@ class ProtocolService {
   /// `RestoreSessionCoordinator` via [bindSessionGeneration] before each
   /// restore. Used as a coarse staleness tag in readiness logs and lets
   /// callers correlate ConfigComplete frames with the originating restore.
-  /// Within one [ProtocolService] start cycle the generation is fixed —
+  /// Within one [ProtocolService] start cycle the generation is fixed -
   /// the actual stale-completion guard is on the coordinator side
   /// (cancelled `_dataSubscription` + errored completers in `stop`).
   int _sessionGeneration = 0;
@@ -572,7 +572,7 @@ class ProtocolService {
   // --- Phased connect handshake ---
   //
   // The firmware replays packets that arrived while the phone app was
-  // disconnected from its internal `phoneQueue` — but only in response to a
+  // disconnected from its internal `phoneQueue` - but only in response to a
   // second wantConfigId following the initial one. Mirrors the two-phase
   // `sendWantConfig` / `sendWantDatabase` sequence the official Meshtastic
   // iOS app uses (NONCE_ONLY_CONFIG = 69420 then NONCE_ONLY_DB = 69421).
@@ -632,7 +632,7 @@ class ProtocolService {
   ///
   /// Updated inside [_handleDataAsync] every time the transport delivers
   /// bytes. The RSSI polling timer checks this value to detect a stalled
-  /// notification path — if connected and configured but no data has arrived
+  /// notification path - if connected and configured but no data has arrived
   /// for [_dataStaleThreshold], the protocol service asks the transport to
   /// refresh its BLE notification subscriptions. If data flow still doesn't
   /// resume after an additional [_dataStaleDisconnectGrace], it triggers a
@@ -654,7 +654,7 @@ class ProtocolService {
 
   /// Timestamp of the last successful protobuf decode in [_processPacket].
   /// Distinguishes failure class B (decode/ingest stopped) from class A
-  /// (raw BLE stopped) — class A is `_lastDataReceivedAt` stale, class B
+  /// (raw BLE stopped) - class A is `_lastDataReceivedAt` stale, class B
   /// is `_lastDataReceivedAt` recent but `_lastSuccessfulDecodeAt` stale.
   DateTime? _lastSuccessfulDecodeAt;
 
@@ -763,7 +763,7 @@ class ProtocolService {
   static const Duration _messagePacketTtl = Duration(minutes: 120);
 
   /// Minimum plausible Unix timestamp for message timestamps.
-  /// 2020-01-01 00:00:00 UTC — any rxTime before this is treated as invalid.
+  /// 2020-01-01 00:00:00 UTC - any rxTime before this is treated as invalid.
   static const int _minPlausibleEpoch = 1577836800;
 
   /// Maximum clock drift tolerance: 1 day into the future.
@@ -821,7 +821,7 @@ class ProtocolService {
   // occurs. Without this buffer, every packet that arrives during the
   // startup window (between BLE connection and the first UI screen that
   // watches sipDiscoveryProvider / mrrpEngineProvider) is permanently
-  // lost — including SERVICE_ADVERT frames that populate Mesh Explorer.
+  // lost - including SERVICE_ADVERT frames that populate Mesh Explorer.
   //
   // Both buffers are bounded to prevent unbounded memory growth if
   // attachment never happens (e.g. SIP is later disabled).
@@ -848,7 +848,7 @@ class ProtocolService {
   /// Cumulative count of overlay v0.2 frames discarded because the
   /// startup buffer was full at the time of arrival. Observability
   /// hook for "overlay traffic vanished mysteriously" diagnostics
-  /// (P2 caveat). Logged at rate-limited intervals — never per-frame.
+  /// (P2 caveat). Logged at rate-limited intervals - never per-frame.
   int _overlayStartupBufferDrops = 0;
 
   // ---------------------------------------------------------------------------
@@ -913,7 +913,7 @@ class ProtocolService {
   /// Any frames buffered during the pre-attachment startup window are
   /// drained in a microtask after this method returns. The drain is
   /// deferred because it may trigger MRRP callbacks that mutate other
-  /// Riverpod providers — Riverpod forbids cross-provider state changes
+  /// Riverpod providers - Riverpod forbids cross-provider state changes
   /// during a provider's synchronous initialization.
   void attachSipDiscovery(SipDiscovery? discovery) {
     _sipDiscovery = discovery;
@@ -969,7 +969,7 @@ class ProtocolService {
       handshake.onChallengeReemit = (peerNodeId, frame) {
         final encoded = SipCodec.encode(frame);
         if (encoded == null) return;
-        // Same gated path as the original CHALLENGE — re-emits respect
+        // Same gated path as the original CHALLENGE - re-emits respect
         // the SIP byte budget. Reused frame keeps the wrapper nonce
         // stable so the peer (which never saw the dropped original)
         // accepts it normally.
@@ -994,11 +994,11 @@ class ProtocolService {
   ///
   /// The provider layer wires this to auto-open an overlay v0.2 link in
   /// the background when both peers advertise overlay capability. Kept
-  /// as a narrow void callback — protocol_service must not depend on
+  /// as a narrow void callback - protocol_service must not depend on
   /// the overlay engine directly.
   ///
   /// Invoked fire-and-forget. Exceptions thrown by the callback are
-  /// logged and swallowed — they MUST NOT break the SIP/DM ready path.
+  /// logged and swallowed - they MUST NOT break the SIP/DM ready path.
   void Function(int peerNodeId)? onSipHandshakeComplete;
 
   /// Attach a SipIdentityHandler for inbound identity frames.
@@ -1040,8 +1040,8 @@ class ProtocolService {
   ///
   /// [_mrrpEngine] is assigned synchronously so any frames arriving after
   /// this call are handled directly. Buffered frames from the pre-attachment
-  /// window are drained in a microtask — same pattern as [attachSipDiscovery]
-  /// — because the drain triggers counter / advert-cache updates that mutate
+  /// window are drained in a microtask - same pattern as [attachSipDiscovery]
+  /// - because the drain triggers counter / advert-cache updates that mutate
   /// other Riverpod providers. Riverpod forbids cross-provider state changes
   /// during a provider's synchronous initialization.
   ///
@@ -1078,13 +1078,13 @@ class ProtocolService {
   /// overlay. Only one handler may be attached at a time; passing
   /// `null` detaches. The provider layer (`overlayAttachmentProvider`)
   /// calls `attachOverlayInbound(null)` from `ref.onDispose` to null
-  /// the reference on every teardown — avoiding the class of bugs
+  /// the reference on every teardown - avoiding the class of bugs
   /// described in the "no duplicate subscribers" P1 locked rule.
   ///
   /// When [handler] is attached and the startup buffer contains
   /// frames that arrived before attach, they are drained in a
   /// microtask to avoid cross-provider mutation during synchronous
-  /// provider init — same contract as [attachMrrpEngine].
+  /// provider init - same contract as [attachMrrpEngine].
   void attachOverlayInbound(
     Future<void> Function(int senderNodeId, Uint8List mrrpPayload)? handler,
   ) {
@@ -1346,7 +1346,7 @@ class ProtocolService {
 
   /// Inject a replayed fragment event into the live broadcast stream.
   /// Used by the replay tool so capture files are replayed through the
-  /// same pipeline as live traffic — every consumer (stats, capture
+  /// same pipeline as live traffic - every consumer (stats, capture
   /// writer, NodeDex bridge) sees the event identically to a real RF
   /// arrival. The live ingress path uses the same private controller;
   /// this getter exists solely to bridge replay traffic from the UI
@@ -1490,6 +1490,16 @@ class ProtocolService {
     pb.MqttClientProxyMessage proxyMsg,
   ) async {
     if (_myNodeNum == null || !_transport.isConnected) return;
+    // Broker downlinks are best-effort live traffic. Until the handshake is
+    // ready they compete with the config dump and the queue drain for the
+    // link, and on BLE a busy broker can keep the radio from ever reaching
+    // ready. Drop them; the next ones arrive once the radio is operational.
+    if (!isOperational) {
+      AppLogging.mqttProxy(
+        'Dropped proxy message before ready (topic: ${proxyMsg.topic})',
+      );
+      return;
+    }
     final toRadio = pb.ToRadio()..mqttClientProxyMessage = proxyMsg;
     try {
       await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -1635,7 +1645,7 @@ class ProtocolService {
 
   /// ACK tracker for confirmed-mode remote admin operations.
   ///
-  /// Local admin callers MUST NOT use this — local packets are processed
+  /// Local admin callers MUST NOT use this - local packets are processed
   /// synchronously by the firmware and never produce routing ACKs.
   AdminAckTracker get adminAckTracker => _adminAckTracker;
 
@@ -1658,7 +1668,7 @@ class ProtocolService {
   /// what each value means and why it differs from raw transport state).
   OperationalReadiness get readiness => _readiness;
 
-  /// Stream of operational-readiness transitions. Broadcast — multiple
+  /// Stream of operational-readiness transitions. Broadcast - multiple
   /// listeners (UI banner, TX guard, watchdog) may attach independently.
   Stream<OperationalReadiness> get readinessStream =>
       _readinessController.stream;
@@ -1686,7 +1696,7 @@ class ProtocolService {
   ///
   /// Called by `RestoreSessionCoordinator.restoreSession` before `start()`
   /// so readiness logs can correlate with the originating restore. The
-  /// generation is opaque to the protocol service itself — within one
+  /// generation is opaque to the protocol service itself - within one
   /// start cycle the generation is fixed; the actual stale-completion
   /// guard is on the coordinator side (cancelled `_dataSubscription` +
   /// errored completers in `stop`).
@@ -1698,7 +1708,7 @@ class ProtocolService {
 
   /// Test-only: expose the first-RX-after-bind state-machine bits so
   /// `test/services/protocol/first_rx_after_restore_log_test.dart` can
-  /// assert the contract (one log per bind) without scraping logs —
+  /// assert the contract (one log per bind) without scraping logs -
   /// `AppLogging.protocol` writes to `debugPrint`, not the
   /// `setAppLogSink` channel, so capture-based tests don't work for it.
   @visibleForTesting
@@ -1713,7 +1723,7 @@ class ProtocolService {
   /// `_myNodeNum != null` without running a full two-phase handshake. They
   /// must call this once with [OperationalReadiness.ready] to satisfy the
   /// new TX guards. Production code paths reach `ready` only via
-  /// `_handleConfigCompleteId`'s phase-2 branch — this hook does not
+  /// `_handleConfigCompleteId`'s phase-2 branch - this hook does not
   /// short-circuit that.
   @visibleForTesting
   void debugForceReadinessForTesting(OperationalReadiness state) {
@@ -1766,7 +1776,7 @@ class ProtocolService {
   /// **Idempotency contract** (matches the single-owner invariant
   /// established to fix the duplicate-`DATA_SUBSCRIBED` bug):
   /// - Concurrent callers awaiting the same in-flight start receive the
-  ///   same future via [_startCompleter] — no second body execution.
+  ///   same future via [_startCompleter] - no second body execution.
   /// - Callers that arrive after a successful start while the transport
   ///   is still connected are skipped with a `PROTOCOL_START_SKIPPED_*`
   ///   log line. This is the common case when both the network reconnect
@@ -1806,7 +1816,7 @@ class ProtocolService {
     // (the common case when only one path calls `start()`), a later
     // `completeError` on it would surface as an unhandled async error.
     // The async function's returned future already carries the same
-    // error to the original caller — this swallow only quiets the
+    // error to the original caller - this swallow only quiets the
     // duplicate completer copy.
     localCompleter.future.catchError((_) {});
 
@@ -1817,7 +1827,7 @@ class ProtocolService {
 
       // Defense-in-depth: an existing _dataSubscription at start entry
       // means a prior start left an orphan listener. Recover by
-      // cancelling + replacing, but log loudly — this should never
+      // cancelling + replacing, but log loudly - this should never
       // happen now that start() is guarded.
       if (_dataSubscription != null) {
         AppLogging.protocol(
@@ -1911,7 +1921,7 @@ class ProtocolService {
             reason: 'transport_${state.name}',
           );
           // Per-session contact-sync cache is invalid the moment the radio
-          // is gone — a different radio (different NodeDB) could attach next.
+          // is gone - a different radio (different NodeDB) could attach next.
           _syncedContactsThisSession.clear();
           // Only complete with error if we're actually waiting for config
           // This prevents double-errors when enableNotifications throws directly
@@ -2122,7 +2132,7 @@ class ProtocolService {
           }),
         );
       } else if (staleness > _dataStaleThreshold + _dataStaleDisconnectGrace) {
-        // Second escalation: refresh did not help — disconnect.
+        // Second escalation: refresh did not help - disconnect.
         AppLogging.protocol(
           'DATA_HEALTH: Still no data after notification refresh '
           '(${staleness.inSeconds}s) - forcing disconnect',
@@ -2160,7 +2170,7 @@ class ProtocolService {
   ///
   /// Distinct from [_checkDataFlowHealth]:
   /// - Uses the transport's `lastNotificationAt` (transport-layer truth)
-  ///   so it can fire even when `_lastDataReceivedAt` is recent — e.g.
+  ///   so it can fire even when `_lastDataReceivedAt` is recent - e.g.
   ///   when raw bytes are arriving but not being decoded.
   /// - Emits exactly ONE structured `BLE_RX_STALL_SUSPECTED` warning
   ///   per stall episode (gated by [_stallEpisodeStartedAt]).
@@ -2220,7 +2230,7 @@ class ProtocolService {
   }
 
   /// Snapshot of receive-pipeline diagnostic state for logs and the
-  /// debug provider. Always returns fresh values — the caller may rely
+  /// debug provider. Always returns fresh values - the caller may rely
   /// on `toLogPayload()` for one-line logging or read individual fields
   /// for in-app diagnostic surfaces.
   ReceivePipelineDiagnostics get receivePipelineDiagnostics {
@@ -2270,7 +2280,7 @@ class ProtocolService {
       AppLogging.protocol('RSSI polling resumed (app foregrounded)');
       // Run an immediate stall check on resume so foreground recovery
       // doesn't wait for the next 30 s tick. iOS may have suspended the
-      // out-of-band timer while backgrounded — this is the backstop.
+      // out-of-band timer while backgrounded - this is the backstop.
       final lastNotification = _diagnosticsSupport?.lastNotificationAt;
       if (lastNotification != null &&
           DateTime.now().difference(lastNotification) >
@@ -2288,7 +2298,7 @@ class ProtocolService {
   /// lines 210 and 240, and Transports/Bluetooth Low Energy/BLEConnection.swift
   /// lines 130–169). The iOS app explicitly reads FROMRADIO after every
   /// `wantConfigID` write because BLE NOTIFY alone is not reliable on iOS
-  /// during the quiet window between phase 1 and phase 2 — the firmware's
+  /// during the quiet window between phase 1 and phase 2 - the firmware's
   /// phase-2 response can sit in the FROMRADIO characteristic unread until
   /// something forces a read.
   ///
@@ -2394,7 +2404,7 @@ class ProtocolService {
     _framer.clear();
     _configurationComplete = false;
     _handshakePhase = _HandshakePhase.idle;
-    // Lifecycle reset — a subsequent start() must be allowed to run as a
+    // Lifecycle reset - a subsequent start() must be allowed to run as a
     // fresh start (no skip on `_isStarted` or `_startInFlight`). Any
     // in-flight body still mid-execution either sees its `_configCompleter`
     // errored above or finds itself superseded, and unwinds; its `finally`
@@ -2407,25 +2417,25 @@ class ProtocolService {
   }
 
   /// Light-weight reset called when the transport disconnects but the
-  /// protocol service stays alive (the common case — a reboot, an
+  /// protocol service stays alive (the common case - a reboot, an
   /// out-of-range blip, a region apply). Clears the "we already
   /// finished the handshake" flags so the next reconnect's `start()`
   /// is allowed to run a fresh `wantConfig` exchange instead of being
   /// skipped by the in-process SKIP guards.
   ///
   /// Specifically:
-  /// - `_isStarted = false` — re-enables `start()` after the
+  /// - `_isStarted = false` - re-enables `start()` after the
   ///   disconnect window even if `_transport.isConnected` flips back
   ///   to `true` before the next `start()` call.
-  /// - `_configurationComplete = false` and `_myNodeNum = null` — the
+  /// - `_configurationComplete = false` and `_myNodeNum = null` - the
   ///   prior session's configuration is no longer authoritative once
   ///   the link drops; the radio may have rebooted and reset its node
   ///   db. Without this, `_initializeProtocolAfterAutoReconnect`
   ///   would skip `start()` thinking we're "already configured" and
-  ///   no fresh `NodeInfo` packets would arrive — leaving the Nodes
+  ///   no fresh `NodeInfo` packets would arrive - leaving the Nodes
   ///   screen permanently at 0.
   ///
-  /// Does NOT cancel subscriptions, RSSI timers, or completers — the
+  /// Does NOT cancel subscriptions, RSSI timers, or completers - the
   /// transport disconnect already drives those, and a heavier teardown
   /// belongs in `stop()`.
   void resetForReconnect() {
@@ -2461,7 +2471,7 @@ class ProtocolService {
       _stallEpisodeStartedAt = null;
       // Log the first inbound packet after a restore exactly once per
       // bind. Uses only the existing `_sessionGeneration` + a single
-      // wall-clock anchor recorded in `bindSessionGeneration` — no
+      // wall-clock anchor recorded in `bindSessionGeneration` - no
       // additional protocol state introduced.
       if (!_firstRxAfterBindLogged && _bindAt != null) {
         final elapsedMs = DateTime.now().difference(_bindAt!).inMilliseconds;
@@ -2665,7 +2675,7 @@ class ProtocolService {
   ///
   /// Defensive nonce handling: if the first phase sends back a nonce the
   /// firmware did not echo (older builds, custom forks), we still accept it
-  /// while we're in the matching phase — log the discrepancy but proceed.
+  /// while we're in the matching phase - log the discrepancy but proceed.
   /// Same applies to phase 2. Without this we hard-fail on any firmware
   /// that doesn't preserve `wantConfigId` in `configCompleteId`.
   void _handleConfigCompleteId(int nonce) {
@@ -2706,7 +2716,7 @@ class ProtocolService {
 
       _emitConfigSnapshot('config_complete');
 
-      // Phase-1 done — kick off phase 2 and DO NOT run post-config setup
+      // Phase-1 done - kick off phase 2 and DO NOT run post-config setup
       // yet. Post-config admin chatter is deferred to the phase-2 branch
       // below so it does not contend with the NodeDB stream.
       unawaited(_requestQueueDrain());
@@ -2833,12 +2843,12 @@ class ProtocolService {
   ///
   /// Called for every incoming decoded packet so [MeshHealthAnalyzer] can
   /// compute per-node statistics, channel utilization, and issue detection.
-  /// Skips own-node packets — they arrive via BLE (no RF metrics) and would
+  /// Skips own-node packets - they arrive via BLE (no RF metrics) and would
   /// create false spam/signal-degradation detections.
   void _emitPacketTelemetry(pb.MeshPacket packet) {
     if (!_meshTelemetryController.hasListener) return;
 
-    // Skip packets from our own device — they are BLE-delivered local data,
+    // Skip packets from our own device - they are BLE-delivered local data,
     // not mesh RF traffic. They lack RSSI/SNR and arrive in rapid bursts
     // (device metrics, local stats, position, nodeinfo) which the analyzer
     // would misclassify as interval spam.
@@ -2900,8 +2910,8 @@ class ProtocolService {
 
     // Diagnostic: trace unicast packets through the receive pipeline.
     // This fires for any packet where `to` is not broadcast.  Tagged
-    // protocol (not fileTransfer) because it covers ALL portnums —
-    // routing, admin, text, etc. — not just file-transfer traffic.
+    // protocol (not fileTransfer) because it covers ALL portnums -
+    // routing, admin, text, etc. - not just file-transfer traffic.
     final isBroadcast = packet.to == 0xFFFFFFFF || packet.to == 0;
     if (!isBroadcast) {
       AppLogging.protocol(
@@ -3063,7 +3073,7 @@ class ProtocolService {
             // Multiplex PRIVATE_APP (256) by inspecting payload magic bytes:
             // SIP (2-byte magic), STL-wrapped file-transfer, or
             // file-transfer (kind nibble). Anything else is unknown and
-            // dropped — signals now ride SM_SIGNAL (portnum 261).
+            // dropped - signals now ride SM_SIGNAL (portnum 261).
             final privatePayload = Uint8List.fromList(data.payload);
             if (SipCodec.isSipPayload(privatePayload)) {
               _logIncomingMrrpCandidatePacket(packet, privatePayload);
@@ -3102,7 +3112,7 @@ class ProtocolService {
           case pn.PortNum.RETICULUM_TUNNEL_APP:
             // Gated by AppFeatureFlags.isReticulumTunnelEnabled. When
             // false (default), the handler is a no-op and the broadcast
-            // controller never sees the event — saves the dispatch loop
+            // controller never sees the event - saves the dispatch loop
             // and downstream consumer cost on every port-76 packet.
             if (AppFeatureFlags.isReticulumTunnelEnabled) {
               _handleReticulumTunnelPacket(packet, data);
@@ -3285,7 +3295,7 @@ class ProtocolService {
 
   /// Handle inbound port-76 (`RETICULUM_TUNNEL_APP`) fragments.
   ///
-  /// Phase 1 — protocol-intelligence foundation. We do not parse the
+  /// Phase 1 - protocol-intelligence foundation. We do not parse the
   /// fragmentation framing (the wire format is undocumented and is
   /// deliberately reverse-engineered from captures in a later phase).
   /// Every payload becomes one [ReticulumFragmentEvent] carrying the
@@ -3327,7 +3337,7 @@ class ProtocolService {
   ///
   /// File transfers ride PRIVATE_APP because custom SM portnums (260-263)
   /// are not reliably relayed by all firmware versions in the field. The
-  /// payload is decoded the same way as portnum 263 — only the transport
+  /// payload is decoded the same way as portnum 263 - only the transport
   /// portnum differs.
   Future<void> _handleFileTransferOnPrivateApp(
     pb.MeshPacket packet,
@@ -3349,7 +3359,7 @@ class ProtocolService {
       );
 
       // STL: verify signature via fail-closed API, then strip envelope.
-      // Invalid or malformed STL packets are dropped — no fallback.
+      // Invalid or malformed STL packets are dropped - no fallback.
       var innerPayload = payload;
       if (StlEnvelope.isStlWrapped(payload)) {
         final verified = await _stlMiddleware.verifyAndUnwrap(payload);
@@ -3517,7 +3527,7 @@ class ProtocolService {
       longitude: signal.longitude,
       receivedAt: DateTime.now(),
       hasImage: signal.hasImage,
-      // No presenceInfo in binary signals — presence is a separate packet.
+      // No presenceInfo in binary signals - presence is a separate packet.
     );
 
     AppLogging.social(
@@ -4174,7 +4184,7 @@ class ProtocolService {
           'hwModel=${metadata.hwModel.name}, hasWifi=${metadata.hasWifi}',
         );
 
-        // Only update local node — remote metadata responses must not
+        // Only update local node - remote metadata responses must not
         // overwrite the local device's cached firmware version or hardware
         // model.
         if (isLocalResponse &&
@@ -4218,7 +4228,7 @@ class ProtocolService {
 
           _emitConfigSnapshot('local_metadata');
         } else if (!isLocalResponse && _nodes.containsKey(packet.from)) {
-          // Remote metadata response — update the remote node's metadata
+          // Remote metadata response - update the remote node's metadata
           // without polluting the local device's cache. This mirrors the
           // iOS app's pattern of storing metadata per-node.
           final remoteNode = _nodes[packet.from]!;
@@ -4504,7 +4514,7 @@ class ProtocolService {
 
   // rxRssi/rxSnr describe the link to whatever transmitted this packet.
   // They may only be attributed to packet.from when that node *is* the
-  // transmitter — i.e. a direct (0-hop, non-MQTT) reception. A relayed or
+  // transmitter - i.e. a direct (0-hop, non-MQTT) reception. A relayed or
   // MQTT-tunnelled packet carries the next hop's signal, not the source
   // node's, so attributing it would show a meaningless value. When hop info
   // is absent we treat the packet as not-direct rather than guess.
@@ -4591,7 +4601,7 @@ class ProtocolService {
       // Validate that rxTime is plausible: devices without a time source
       // (no GPS, no phone sync) may report rxTime as 0 or a small uptime
       // value. Historical messages replayed on connect inherit whatever
-      // rxTime the device stored at original receipt — if the device had
+      // rxTime the device stored at original receipt - if the device had
       // no clock then, rxTime will be invalid. Pass useChronologicalFallback
       // so unknown-time packets sink to the top of the conversation rather
       // than being re-stamped to DateTime.now() and out-sorting freshly-sent
@@ -5224,9 +5234,9 @@ class ProtocolService {
   /// Extract the best available timestamp from a [pb.Position] protobuf.
   ///
   /// Follows the standard Meshtastic timestamp fallback order:
-  ///   1. `position.timestamp` — actual GPS solution time (epoch seconds)
-  ///   2. `position.time` — phone-provided time (epoch seconds)
-  ///   3. [fallback] — the time the radio actually heard the frame (packet
+  ///   1. `position.timestamp` - actual GPS solution time (epoch seconds)
+  ///   2. `position.time` - phone-provided time (epoch seconds)
+  ///   3. [fallback] - the time the radio actually heard the frame (packet
   ///      rx_time via the monotonic last-heard path), NOT the local wall
   ///      clock. A stationary node that has lost GPS lock, or a fix replayed
   ///      from the firmware buffer or relayed over MQTT, sends a Position with
@@ -5358,7 +5368,7 @@ class ProtocolService {
         final newNode = MeshNode(
           nodeNum: packet.from,
           // Leave longName/shortName null for placeholder nodes.
-          // Real names arrive via NodeInfo — baking hex IDs here
+          // Real names arrive via NodeInfo - baking hex IDs here
           // pollutes the data model and prevents displayName from
           // showing the correct fallback or the real name later.
           longName: null,
@@ -5525,7 +5535,7 @@ class ProtocolService {
   /// Update lastHeard timestamp and RF signal metadata for a node.
   ///
   /// Called for every incoming mesh packet. [rxRssi] and [rxSnr] are
-  /// the per-packet RF metrics from the radio — they tell us how strong
+  /// the per-packet RF metrics from the radio - they tell us how strong
   /// the signal was when our radio received it. They describe the link to
   /// whatever transmitted the packet, so they only belong to [nodeNum] when
   /// it is the transmitter: a direct (0-hop, non-MQTT) reception, signalled
@@ -5755,11 +5765,11 @@ class ProtocolService {
   }
 
   // The firmware stores NodeInfo.snr from received packets regardless of
-  // hops, so a relayed/MQTT NodeInfo carries the next hop's snr — not the
+  // hops, so a relayed/MQTT NodeInfo carries the next hop's snr - not the
   // source node's. Only attribute snr from a direct (0-hop, non-MQTT) NodeInfo.
   //
   // hops_away is omitted on the wire when 0 (proto3 default), so its absence
-  // means "direct", not "unknown" — only a present, positive hops_away marks
+  // means "direct", not "unknown" - only a present, positive hops_away marks
   // a relayed node. Treating absence as not-direct would wrongly suppress snr
   // for the common case of a directly-heard node.
   bool _isDirectNodeInfo(pb.NodeInfo nodeInfo) {
@@ -5810,7 +5820,7 @@ class ProtocolService {
     // NodeInfo.lastHeard is a uint32 Unix timestamp (seconds) recording
     // when the DEVICE last received a packet from this node. Using
     // DateTime.now() here would reset every node's "Last Heard" to the
-    // reconnection time, which is misleading — the user sees "Seen 2m
+    // reconnection time, which is misleading - the user sees "Seen 2m
     // ago" + a 3-day-old absolute timestamp because presence ages from
     // the fabricated "now" while the displayed timestamp is the same
     // fabricated value (just rendered absolutely).
@@ -5851,7 +5861,7 @@ class ProtocolService {
           '(${deviceLastHeard.toIso8601String()})',
         );
       } else {
-        // Implausible firmware timestamp — fall back to whatever we
+        // Implausible firmware timestamp - fall back to whatever we
         // already had, NOT to "now".
         deviceLastHeard = existingNode?.lastHeard;
         final driftSeconds = lastHeardEpoch - nowEpoch;
@@ -5957,7 +5967,7 @@ class ProtocolService {
     if (existingNode != null) {
       // Preserve existing names if new ones are empty, sanitize to prevent UTF-16 crashes.
       // BUT: don't preserve hex placeholder names (e.g. "!db2f10e0") that were
-      // baked in by position-update placeholder creation — those are not real names
+      // baked in by position-update placeholder creation - those are not real names
       // and should be replaced by null so displayName uses the proper fallback.
       final newLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
@@ -6028,7 +6038,7 @@ class ProtocolService {
         // The firmware only populates `channel` on NodeInfo when the
         // node was last heard on a NON-default channel (proto comment
         // at `mesh.pb.dart:2401`). When unset, fall back to the prior
-        // value rather than zeroing — the firmware's silence on this
+        // value rather than zeroing - the firmware's silence on this
         // field doesn't mean "now on Primary"; it means "no update".
         lastHeardChannel: nodeInfo.hasChannel()
             ? nodeInfo.channel
@@ -6235,7 +6245,7 @@ class ProtocolService {
       // Brief pause to let device process the heartbeat before config request
       await Future.delayed(const Duration(milliseconds: 100));
     } catch (e) {
-      // Non-fatal — proceed with config request even if heartbeat fails
+      // Non-fatal - proceed with config request even if heartbeat fails
       AppLogging.protocol('Heartbeat send failed (non-fatal): $e');
     }
   }
@@ -6258,7 +6268,7 @@ class ProtocolService {
       // Wake device by sending START2 bytes. This is serial-UART-specific
       // (USB CP210x/CH34x): the UART buffer drops leading bytes until it
       // locks onto the frame preamble. TCP and BLE have no such buffer,
-      // so we must not emit these bytes there — the firmware's PhoneAPI
+      // so we must not emit these bytes there - the firmware's PhoneAPI
       // treats them as a malformed framed packet.
       if (_transport.requiresWakeSequence) {
         final wakeBytes = List<int>.filled(32, 0xC3); // 32 START2 bytes
@@ -6307,8 +6317,8 @@ class ProtocolService {
   }
 
   /// Second wantConfigId that triggers the firmware to replay packets it
-  /// buffered in its `phoneQueue` while the app was disconnected and — on
-  /// firmware versions like T1000-E 2.7.x — stream the rest of the NodeDB.
+  /// buffered in its `phoneQueue` while the app was disconnected and - on
+  /// firmware versions like T1000-E 2.7.x - stream the rest of the NodeDB.
   ///
   /// Mirrors the iOS reference behavior (AccessoryManager+Connect.swift
   /// Steps 4–5): send a heartbeat first to nudge iOS Core Bluetooth's
@@ -6349,7 +6359,7 @@ class ProtocolService {
 
     // Fast attempts exhausted. Right after a BLE out-of-range/return
     // reconnect the phase-2 ack can be lost while the link itself stays up,
-    // and nothing else ever re-drives phase-2 — readiness would pin at
+    // and nothing else ever re-drives phase-2 - readiness would pin at
     // `handshakePhase2` with every TX path blocked until a manual
     // disconnect/reconnect. Keep re-driving the drain on a widening
     // schedule, then surface `degraded` so the recovery pipeline gets a
@@ -6358,7 +6368,7 @@ class ProtocolService {
     // still completes phase-2 (degraded -> ready).
     //
     // Airtime note: heartbeat + wantConfigId are ToRadio frames consumed
-    // device-locally over the BLE config channel — no LoRa TX. A re-sent
+    // device-locally over the BLE config channel - no LoRa TX. A re-sent
     // drain nonce may re-replay phoneQueue packets; the inbound dedupe
     // store absorbs the duplicates.
     final schedule =
@@ -6478,8 +6488,8 @@ class ProtocolService {
   /// Diagnostic log line emitted at the moment a DM is about to be
   /// dispatched to the radio. Captures everything the firmware will
   /// use to decide whether the DM is routable: destination's
-  /// last-heard channel index (firmware uses this — or the channel
-  /// hash from NodeDB — to pick which channel-key to encrypt with),
+  /// last-heard channel index (firmware uses this - or the channel
+  /// hash from NodeDB - to pick which channel-key to encrypt with),
   /// hops away, last-heard time, PKI key state, plus a snapshot of
   /// our local channel set with each channel's firmware-equivalent
   /// hash byte.
@@ -6495,7 +6505,7 @@ class ProtocolService {
   /// Emits a one-line CONFIG_SNAPSHOT capturing everything we know about
   /// the connected radio (own role/region/preset/firmware/hwModel/channels/
   /// pubkey). Dumped as a single greppable line so it can be diffed across
-  /// peers — connect to peer A, grab line, connect to peer B, grab line,
+  /// peers - connect to peer A, grab line, connect to peer B, grab line,
   /// compare. Used to track down peer-firmware-side DM rejection where
   /// channels match byte-for-byte but unicasts NAK NO_CHANNEL.
   void _emitConfigSnapshot(String trigger) {
@@ -6595,11 +6605,11 @@ class ProtocolService {
   ///
   /// When [pkiPublicKey] is non-null and non-empty, the outbound MeshPacket
   /// is marked `pki_encrypted = true` and carries the recipient's
-  /// curve25519 public key — matching the official Meshtastic iOS app's
+  /// curve25519 public key - matching the official Meshtastic iOS app's
   /// DM send path (`AccessoryManager+ToRadio.swift:327-329`). The local
   /// firmware then encrypts the payload with PKI rather than the channel
   /// PSK. Pass null/empty for non-PKI recipients (firmware falls back to
-  /// the channel PSK — same behaviour as iOS without `pkiEncrypted` set).
+  /// the channel PSK - same behaviour as iOS without `pkiEncrypted` set).
   Future<int> sendMessage({
     required String text,
     required int to,
@@ -6635,7 +6645,7 @@ class ProtocolService {
       // with PKI instead of channel PSK. Mirrors meshtastic-ios behaviour
       // where `UserEntity.pkiEncrypted == true` flips DMs to PKI without
       // any caller-side decision. Broadcasts (`to == 0xFFFFFFFF`) are
-      // skipped — PKI is unicast-only. Resolved before the size check
+      // skipped - PKI is unicast-only. Resolved before the size check
       // because PKI packets have a lower encoded-`Data` ceiling.
       final effectivePkiKey = _resolveEffectivePkiKey(
         to: to,
@@ -6714,7 +6724,7 @@ class ProtocolService {
       // PKI failsafe: push the recipient's contact to the radio's local
       // NodeDB so firmware doesn't NAK future DMs with "PKI Failed" if
       // the entry rolls off. Mirrors meshtastic-ios `addContactFromURL`
-      // post-PKI-DM Task. Fire-and-forget — must never block or fail
+      // post-PKI-DM Task. Fire-and-forget - must never block or fail
       // the DM.
       if (pkiAttached) {
         _maybeSyncContactAfterPkiDm(to);
@@ -7197,7 +7207,7 @@ class ProtocolService {
 
   void _handleMrrpPacket(int senderNodeId, int channelIndex, SipFrame frame) {
     // Overlay v0.2 pre-filter. MRRP v0.2 link frames use
-    // version_minor=2 and msg_type 0x20..0x27 — none of which the
+    // version_minor=2 and msg_type 0x20..0x27 - none of which the
     // MRRP v0.1 engine recognises, so a v0.1-only peer would drop
     // them. Give the overlay first look; fall through only when this
     // is not a v0.2 frame.
@@ -7282,7 +7292,7 @@ class ProtocolService {
         '${mrrpFrame.actionId.toRadixString(16).padLeft(4, '0')} '
         'payload=${mrrpFrame.payload.length}B',
       );
-      // Fire-and-forget — apply happens on the canvas handler's own
+      // Fire-and-forget - apply happens on the canvas handler's own
       // sliding-window cap. Errors are logged inside the handler.
       unawaited(canvasHandler(senderNodeId, channelIndex, mrrpFrame.payload));
       return;
@@ -7323,7 +7333,7 @@ class ProtocolService {
     }
 
     // Overlay v0.2 link frames ride inside the same mrrpData carrier
-    // but use msg_type 0x20..0x2A — outside the MRRP v0.1 codec table.
+    // but use msg_type 0x20..0x2A - outside the MRRP v0.1 codec table.
     // The dispatcher routes them via OverlayLinkCodec.isLinkFrame(); the
     // overlay layer logs its own ingress. Skip MRRP trace decoding to
     // avoid spurious "unknown msg_type" + "decode=failed" log noise.
@@ -7468,7 +7478,7 @@ class ProtocolService {
   /// accounting.
   ///
   /// Use this for send paths that are **not** pre-accounted by their own
-  /// builders (handshake, identity claims — HS_HELLO, HS_CHALLENGE,
+  /// builders (handshake, identity claims - HS_HELLO, HS_CHALLENGE,
   /// HS_RESPONSE, HS_ACCEPT, HS_DECLINE, ID_CLAIM, ID_RESP). Discovery
   /// and DM builders record their own bytes against the limiter before
   /// returning the encoded frame; those paths MUST continue to call
@@ -7478,7 +7488,7 @@ class ProtocolService {
   /// When no rate limiter has been attached (tests, early boot),
   /// behaviour degrades gracefully to [_sendSipAndCount]. When the
   /// limiter refuses the send, the bytes are dropped, the throttle
-  /// counter is incremented, and `false` is returned — no exceptions.
+  /// counter is incremented, and `false` is returned - no exceptions.
   ///
   /// [channelIndex] selects the Meshtastic channel (0..7). Defaults to 0,
   /// preserving existing primary-channel behaviour for every current caller
@@ -7579,7 +7589,7 @@ class ProtocolService {
 
   /// Silently drop a pending SIP handshake request from [peerNodeId].
   ///
-  /// Unlike [declineSipHandshake], this emits NO wire frame — the peer
+  /// Unlike [declineSipHandshake], this emits NO wire frame - the peer
   /// sees nothing different from "node unreachable." Used by the Block
   /// path in the consent prompt: combined with
   /// `PeerSafetyManager.block`, future HELLOs from this peer hit the
@@ -7640,7 +7650,7 @@ class ProtocolService {
       return;
     }
 
-    // SIP v0.2 target check — drop overheard handshakes before any
+    // SIP v0.2 target check - drop overheard handshakes before any
     // consent UI / notification / sound / state mutation runs.
     // Spec: docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.2.
     if (_shouldDropHandshakeForTarget(
@@ -7654,7 +7664,7 @@ class ProtocolService {
     // T+S guard: silent drop. A blocked peer's HS_HELLO must not
     // queue into _pendingRequests, must not show a consent prompt,
     // must not fire a notification, and must NOT emit a wire
-    // response (no HS_DECLINE — that confirms we exist + saw the
+    // response (no HS_DECLINE - that confirms we exist + saw the
     // request). The peer sees nothing different from "node
     // unreachable." No info-level log mentions the peer node id.
     if (_safetyGate.isBlocked(senderNodeId)) return;
@@ -7701,7 +7711,7 @@ class ProtocolService {
       }();
     }
 
-    // Queue the request for user consent — no automatic challenge response.
+    // Queue the request for user consent - no automatic challenge response.
     // Consent is a hard privacy boundary and is required even on the
     // simultaneous-open yield path.
     hs.handleHello(senderNodeId, frame);
@@ -7711,7 +7721,7 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) return;
 
-    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    // SIP v0.2 target check - see _handleSipHandshakeHello.
     if (_shouldDropHandshakeForTarget(
       senderNodeId,
       SipMessageType.hsChallenge,
@@ -7721,7 +7731,7 @@ class ProtocolService {
     }
 
     // T+S guard: silent drop. A blocked peer cannot drive our
-    // handshake state forward — no challenge response, no eventual
+    // handshake state forward - no challenge response, no eventual
     // complete notification. Mirrors the HELLO + DECLINE guards.
     if (_safetyGate.isBlocked(senderNodeId)) return;
 
@@ -7739,7 +7749,7 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) return;
 
-    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    // SIP v0.2 target check - see _handleSipHandshakeHello.
     if (_shouldDropHandshakeForTarget(
       senderNodeId,
       SipMessageType.hsResponse,
@@ -7748,7 +7758,7 @@ class ProtocolService {
       return;
     }
 
-    // T+S guard: silent drop. Mirrors the HELLO + DECLINE guards —
+    // T+S guard: silent drop. Mirrors the HELLO + DECLINE guards -
     // a blocked peer cannot complete a handshake against us.
     if (_safetyGate.isBlocked(senderNodeId)) return;
 
@@ -7768,7 +7778,7 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) return;
 
-    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    // SIP v0.2 target check - see _handleSipHandshakeHello.
     if (_shouldDropHandshakeForTarget(
       senderNodeId,
       SipMessageType.hsAccept,
@@ -7777,7 +7787,7 @@ class ProtocolService {
       return;
     }
 
-    // T+S guard: silent drop. Mirrors the HELLO + DECLINE guards —
+    // T+S guard: silent drop. Mirrors the HELLO + DECLINE guards -
     // a blocked peer cannot complete a handshake against us.
     if (_safetyGate.isBlocked(senderNodeId)) return;
 
@@ -7794,7 +7804,7 @@ class ProtocolService {
     final hs = _sipHandshake;
     if (hs == null) return;
 
-    // SIP v0.2 target check — see _handleSipHandshakeHello.
+    // SIP v0.2 target check - see _handleSipHandshakeHello.
     if (_shouldDropHandshakeForTarget(
       senderNodeId,
       SipMessageType.hsDecline,
@@ -7835,7 +7845,7 @@ class ProtocolService {
     // create a DM session, must not fire the completion
     // notification, and must not invoke `onSipHandshakeComplete`
     // (which auto-opens an overlay link). We DO consume the result
-    // so it doesn't pile up in `_completed` forever — but we drop
+    // so it doesn't pile up in `_completed` forever - but we drop
     // it on the floor immediately afterwards.
     if (_safetyGate.isBlocked(peerNodeId)) {
       hs.consumeResult(peerNodeId);
@@ -8120,7 +8130,7 @@ class ProtocolService {
 
     final packetId = _generatePacketId();
 
-    // Use the normal protobuf portnum setter — NOT _createDataWithPortnum.
+    // Use the normal protobuf portnum setter - NOT _createDataWithPortnum.
     // PRIVATE_APP (256) is a known proto enum value, so the standard setter
     // produces the exact wire encoding that firmware expects.
     final data = pb.Data()
@@ -8238,7 +8248,7 @@ class ProtocolService {
   /// Send a text message with pre-tracking callback
   /// This allows tracking to be set up BEFORE the message is sent,
   /// avoiding race conditions where ACK arrives before tracking is ready
-  /// See [sendMessage] for [pkiPublicKey] semantics — this variant adds
+  /// See [sendMessage] for [pkiPublicKey] semantics - this variant adds
   /// a `onPacketIdGenerated` pre-tracking callback so callers can wire
   /// up ACK tracking before the packet hits the wire.
   Future<int> sendMessageWithPreTracking({
@@ -8351,7 +8361,7 @@ class ProtocolService {
         _pendingMessages[packetId] = messageId;
       }
 
-      // PKI failsafe — see [sendMessage] for rationale. Fire-and-forget,
+      // PKI failsafe - see [sendMessage] for rationale. Fire-and-forget,
       // never blocks or fails the DM.
       if (pkiAttached) {
         _maybeSyncContactAfterPkiDm(to);
@@ -8412,7 +8422,7 @@ class ProtocolService {
   /// Matches the iOS app's pattern: `if fromUser != toUser { adminPacket.sessionPasskey = ... }`.
   /// Only applied to SET/ACTION operations, not GET/request operations.
   void _applySessionPasskey(admin.AdminMessage adminMsg, int dest) {
-    if (dest == _myNodeNum) return; // Local admin — no passkey needed.
+    if (dest == _myNodeNum) return; // Local admin - no passkey needed.
 
     final session = _adminSessions[dest];
     if (session == null || session.isExpired) {
@@ -8440,7 +8450,7 @@ class ProtocolService {
   /// Store a session passkey received from a remote node's admin response.
   void _storeSessionPasskey(int nodeNum, List<int> passkey) {
     if (passkey.isEmpty) return;
-    if (nodeNum == _myNodeNum) return; // Local node — ignore.
+    if (nodeNum == _myNodeNum) return; // Local node - ignore.
 
     _adminSessions.removeWhere((_, session) => session.isExpired);
     _adminSessions[nodeNum] = _AdminSession(
@@ -8466,7 +8476,7 @@ class ProtocolService {
   ///
   /// Rate-limited to one broadcast every [_positionBroadcastMinInterval]
   /// (20 s). Returns silently if the cooldown has not elapsed. This is the
-  /// authoritative last-mile gate — no caller can bypass it.
+  /// authoritative last-mile gate - no caller can bypass it.
   Future<void> sendPosition({
     required double latitude,
     required double longitude,
@@ -8545,7 +8555,7 @@ class ProtocolService {
   /// "delete for everyone" (forces immediate expiry on all nodes). [lockedTo]
   /// of a node number restricts future edits to that node; `0` leaves it open.
   ///
-  /// User-initiated only — there is no auto-resend and the receive path never
+  /// User-initiated only - there is no auto-resend and the receive path never
   /// rebroadcasts, so this stays within the normal Meshtastic airtime budget
   /// (it does not ride the SIP rate limiter). Emits a self-echo on
   /// [waypointStream] so the sender sees the waypoint immediately.
@@ -8839,7 +8849,7 @@ class ProtocolService {
   /// Sends an empty telemetry packet with the matching variant set and
   /// `wantResponse = true` so the node's corresponding telemetry module
   /// replies with its current values. The reply is ingested by the normal
-  /// inbound `TELEMETRY_APP` path ([_handleTelemetry]) — no request tracking
+  /// inbound `TELEMETRY_APP` path ([_handleTelemetry]) - no request tracking
   /// is needed. Since firmware 2.7.13 nodes no longer broadcast telemetry by
   /// default, so this is the on-demand pull path.
   Future<void> requestTelemetry(
@@ -9129,7 +9139,7 @@ class ProtocolService {
   ///
   /// Pass [target] to specify local or remote device. Defaults to local.
   ///
-  /// Note: Device role is NOT sent here — it belongs in Config.DeviceConfig
+  /// Note: Device role is NOT sent here - it belongs in Config.DeviceConfig
   /// (via [setDeviceConfig]), which is the only place the firmware reads it.
   /// This matches the official Meshtastic iOS app's approach.
   Future<void> setOwnerConfig({
@@ -9179,7 +9189,7 @@ class ProtocolService {
       );
 
       // Build User object with all provided fields
-      // Note: role is intentionally NOT set here — it belongs in
+      // Note: role is intentionally NOT set here - it belongs in
       // Config.DeviceConfig and is sent via setDeviceConfig().
       final user = pb.User();
       if (trimmedLong != null) user.longName = trimmedLong;
@@ -9263,13 +9273,13 @@ class ProtocolService {
   /// Mirrors the official Meshtastic iOS app's PKI failsafe in
   /// `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift`
   /// (`addContactFromURL`, ~line 145, called from line 333 after every PKI DM
-  /// send). The intent — quoting the iOS source comment verbatim — is "so
+  /// send). The intent - quoting the iOS source comment verbatim - is "so
   /// that any nodes that have rolled out of the db are there and we don't
   /// get a PKI Failed error".
   ///
   /// The packet is a LOCAL admin (`to == from == myNodeNum`, never on-air,
   /// zero airtime cost) sent with `wantAck=true` + `priority=RELIABLE` to
-  /// match the iOS contract. Errors are swallowed and logged — they must
+  /// match the iOS contract. Errors are swallowed and logged - they must
   /// never fail an in-flight DM.
   ///
   /// Idempotency: per-session dedup via [_syncedContactsThisSession]. iOS
@@ -9376,7 +9386,7 @@ class ProtocolService {
   ///
   /// Skips silently when:
   /// - the packet has no `publicKey` set (most non-PKI packets)
-  /// - the sender is unknown to the local nodeDB (no MeshNode to update —
+  /// - the sender is unknown to the local nodeDB (no MeshNode to update -
   ///   `_handleNodeInfo` handles node creation; we only augment existing)
   /// - the cached pubkey already matches (idempotent)
   ///
@@ -9439,7 +9449,7 @@ class ProtocolService {
 
   /// Returns the curve25519 pubkey to attach on an outbound DM, in
   /// preference order: caller-supplied, then nodeDB-resolved. Returns null
-  /// for broadcasts or when no key is available — falling back to channel
+  /// for broadcasts or when no key is available - falling back to channel
   /// PSK encryption. Mirrors meshtastic-ios `UserEntity.pkiEncrypted`
   /// behaviour where the send path consults the receiver's stored pubkey
   /// without any caller decision.
@@ -9459,9 +9469,9 @@ class ProtocolService {
 
   /// One-token label describing where the PKI pubkey on an outbound DM came
   /// from, for log line greppability:
-  /// - `caller` — UI-layer resolver passed an explicit key
-  /// - `nodedb` — auto-resolved from the local nodeDB
-  /// - `none` — no PKI key in play (channel-PSK encryption)
+  /// - `caller` - UI-layer resolver passed an explicit key
+  /// - `nodedb` - auto-resolved from the local nodeDB
+  /// - `none` - no PKI key in play (channel-PSK encryption)
   String _pkiSourceLabel({
     required List<int>? callerPkiKey,
     required List<int>? effectivePkiKey,
@@ -9877,8 +9887,8 @@ class ProtocolService {
       // Transport-agnostic post-reset rehydration: the radio's NodeDB
       // is now empty (or about to be once it processes the admin
       // packet). Send a fresh `wantConfigId` so the firmware replays
-      // its config bundle — including the local NodeInfo and any
-      // peers it still has cached — into our data subscription.
+      // its config bundle - including the local NodeInfo and any
+      // peers it still has cached - into our data subscription.
       //
       // - On TCP, the link stays up across `nodeDbReset`. Without
       //   this re-fetch the app would sit at Nodes (0) until peers
@@ -9890,7 +9900,7 @@ class ProtocolService {
       //   `_transport.isConnected` guard inside `_requestConfiguration`
       //   no-ops the call in that case, and the subsequent BLE
       //   reconnect's `_handleDisconnect → resetForReconnect →
-      //   protocol.start()` path runs a fresh wantConfig anyway —
+      //   protocol.start()` path runs a fresh wantConfig anyway -
       //   so this call never duplicates work on BLE.
       try {
         AppLogging.protocol(
@@ -10102,7 +10112,7 @@ class ProtocolService {
 
   /// Sets a fixed GPS position. Defaults to the directly-connected device;
   /// pass [target] (an [AdminTarget.remote]) to set the fixed position on a
-  /// remote node — e.g. an installed tower node that can no longer be
+  /// remote node - e.g. an installed tower node that can no longer be
   /// reached over BLE. Remote sends route via [MeshPacketBuilder.admin] and
   /// carry the PKC session passkey when one is available; with no [target]
   /// the packet is self-addressed exactly as before.
@@ -10153,7 +10163,7 @@ class ProtocolService {
   /// Removes (clears) the fixed GPS override. Defaults to the
   /// directly-connected device; pass [target] (an [AdminTarget.remote]) to
   /// clear the fixed position on a remote node. Clearing a fixed position
-  /// does not imply the node has a live GPS source — a GPS-less tower will
+  /// does not imply the node has a live GPS source - a GPS-less tower will
   /// simply hold no position afterwards. Remote sends route via
   /// [MeshPacketBuilder.admin] and carry the PKC session passkey when one is
   /// available; with no [target] the packet is self-addressed as before.
@@ -10506,7 +10516,7 @@ class ProtocolService {
     // The device will reboot after config changes, dropping the BLE
     // connection before it can send back a config response. Without this
     // update the cache holds stale pre-save values.
-    // Only update for local node config — remote admin targets should not
+    // Only update for local node config - remote admin targets should not
     // pollute the local cache.
     if (!isRemote) {
       _applySavedConfigToCache(config);
@@ -10596,8 +10606,8 @@ class ProtocolService {
     AppLogging.protocol('Setting LoRa config');
 
     // Read-modify-write: clone the cached config so we preserve every field the
-    // device sent us — including advanced fields the UI doesn't expose and
-    // unknown firmware fields — then apply the form values on top. Firmware
+    // device sent us - including advanced fields the UI doesn't expose and
+    // unknown firmware fields - then apply the form values on top. Firmware
     // replaces the whole LoRa config block on SET, so building from scratch
     // would zero out everything not listed below. This is critical for remote
     // admin: a TX-disabled node can't answer a fresh getConfig, so without a
@@ -10680,7 +10690,7 @@ class ProtocolService {
     final isLocalTarget = target == null || target.isLocal;
     final config_pb.Config_DeviceConfig deviceConfig;
     if (isLocalTarget && _currentDeviceConfig != null) {
-      // Clone by round-tripping through serialization — this preserves
+      // Clone by round-tripping through serialization - this preserves
       // every field the device sent us, including ones our generated
       // protobuf doesn't know about (unknown fields).
       deviceConfig = config_pb.Config_DeviceConfig.fromBuffer(
@@ -12063,7 +12073,7 @@ enum OperationalReadiness {
 
   /// Phase-1 completed (`_myNodeNum` populated). Awaiting phase-2
   /// queue-drain replay + `configCompleteId(_nonceQueueDrain)`.
-  /// **`_myNodeNum != null` alone is NOT sufficient for `ready` — the
+  /// **`_myNodeNum != null` alone is NOT sufficient for `ready` - the
   /// regression's root cause is precisely this gap.**
   handshakePhase2,
 

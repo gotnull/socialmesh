@@ -4,7 +4,7 @@
 // Centralized ModemPreset metadata. One row per Meshtastic
 // `Config_LoRaConfig_ModemPreset`. The radio_config_screen modem
 // preset selector reads from [kModemPresetMetadata]. Adding a new
-// preset is one entry plus one ARB key per locale — no per-screen
+// preset is one entry plus one ARB key per locale - no per-screen
 // edits. Mirrors the Apple iOS app's `enum ModemPresets:
 // CaseIterable` from
 // `meshtastic-ios/Meshtastic/Enums/LoraConfigEnums.swift`.
@@ -29,7 +29,7 @@ class ModemPresetMetadata {
   final double bandwidthKhz;
 }
 
-// Ordered as they appear in the picker — protobuf-numeric except for
+// Ordered as they appear in the picker - protobuf-numeric except for
 // VERY_LONG_SLOW (deprecated upstream in 2.5 but still surfaced for
 // users who already have it set; iOS hides it entirely).
 final List<ModemPresetMetadata> kModemPresetMetadata = <ModemPresetMetadata>[
@@ -165,4 +165,37 @@ bool isUsBelow500KhzBandwidth({
   if (preset == null) return false;
   final metadata = modemPresetMetadataFor(preset);
   return metadata != null && metadata.bandwidthKhz < 500;
+}
+
+/// The channel name the firmware gives a primary channel whose name is empty.
+///
+/// The firmware derives it from the modem preset (`LongFast`, `MediumSlow`,
+/// ...) or uses `Custom` when presets are off, and it publishes and listens
+/// on MQTT under that name. Returns null for a preset the firmware does not
+/// know, so callers can skip the channel rather than guess a topic.
+String? firmwareChannelNameFor({
+  required config_pbenum.Config_LoRaConfig_ModemPreset? preset,
+  required bool usePreset,
+}) {
+  if (!usePreset) return 'Custom'; // lint-allow: hardcoded-string
+  return switch (preset) {
+    config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST => 'LongFast',
+    config_pbenum.Config_LoRaConfig_ModemPreset.LONG_SLOW => 'LongSlow',
+    config_pbenum.Config_LoRaConfig_ModemPreset.VERY_LONG_SLOW => 'VLongSlow',
+    config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_SLOW => 'MediumSlow',
+    config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_FAST => 'MediumFast',
+    config_pbenum.Config_LoRaConfig_ModemPreset.SHORT_SLOW => 'ShortSlow',
+    config_pbenum.Config_LoRaConfig_ModemPreset.SHORT_FAST => 'ShortFast',
+    config_pbenum.Config_LoRaConfig_ModemPreset.LONG_MODERATE => 'LongMod',
+    config_pbenum.Config_LoRaConfig_ModemPreset.SHORT_TURBO => 'ShortTurbo',
+    config_pbenum.Config_LoRaConfig_ModemPreset.LONG_TURBO => 'LongTurbo',
+    config_pbenum.Config_LoRaConfig_ModemPreset.LITE_FAST => 'LiteFast',
+    config_pbenum.Config_LoRaConfig_ModemPreset.LITE_SLOW => 'LiteSlow',
+    config_pbenum.Config_LoRaConfig_ModemPreset.NARROW_FAST => 'NarrowFast',
+    config_pbenum.Config_LoRaConfig_ModemPreset.NARROW_SLOW => 'NarrowSlow',
+    config_pbenum.Config_LoRaConfig_ModemPreset.TINY_FAST => 'TinyFast',
+    config_pbenum.Config_LoRaConfig_ModemPreset.TINY_SLOW => 'TinySlow',
+    config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_TURBO => 'MediumTurbo',
+    _ => null,
+  };
 }

@@ -108,7 +108,7 @@ final mqttClientProxyForwarderProvider = Provider<void>((ref) {
 
 /// Evaluates the proxy state from cached MQTT config and current channel
 /// downlink coverage, then either calls `connect` or `disconnect` on the
-/// service. Idempotent — safe to call from multiple triggers.
+/// service. Idempotent - safe to call from multiple triggers.
 ///
 /// Reasons used in logs (kept short, structured): `initial-build`,
 /// `config-stream-emit`, `link-connected`, `app-resumed`,
@@ -174,7 +174,13 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
     );
 
     final channels = ref.read(channelsProvider);
-    final hasAnyDownlinkEnabled = channels.any((ch) => ch.downlink);
+    final lora = protocol.currentLoraConfig;
+    final subscriptionTopics = mqttProxySubscriptionTopics(
+      topicPrefix: topicPrefix,
+      channels: channels,
+      preset: lora?.modemPreset,
+      usePreset: lora?.usePreset ?? true,
+    );
 
     final myNodeNum = protocol.myNodeNum;
     final nodeUserId = myNodeNum != null
@@ -183,7 +189,7 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
 
     AppLogging.mqttProxy(
       'evaluate($reason): proxy enabled - connect '
-      '(subscribe: $hasAnyDownlinkEnabled)',
+      '(subscribe: $subscriptionTopics)',
     );
 
     proxyService.connect(
@@ -193,10 +199,10 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
       password: cfg.password,
       topicPrefix: topicPrefix,
       nodeUserId: nodeUserId,
-      shouldSubscribe: hasAnyDownlinkEnabled,
+      subscriptionTopics: subscriptionTopics,
     );
   } else {
-    // Proxy off — mark disabled so the UI distinguishes "off" from "failed".
+    // Proxy off - mark disabled so the UI distinguishes "off" from "failed".
     // Disconnect a live socket if one was previously settled.
     if (proxyService.isConnected) {
       AppLogging.mqttProxy('evaluate($reason): proxy disabled - disconnect');
@@ -217,7 +223,7 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
 /// to uplink, causing 0-hop MQTT delivery to appear as the primary
 /// transport path.
 ///
-/// The evaluator is idempotent — `MqttClientProxyService.connect` short-
+/// The evaluator is idempotent - `MqttClientProxyService.connect` short-
 /// circuits when the live socket already matches the requested args, so
 /// firing it from many triggers (cold start, save, link-connected,
 /// app-resumed, downlink-toggle, config emission) is safe.
@@ -273,7 +279,7 @@ final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
 });
 
 // ---------------------------------------------------------------------------
-// Controller — entry point for callers (e.g. settings screen save flow)
+// Controller - entry point for callers (e.g. settings screen save flow)
 // ---------------------------------------------------------------------------
 
 /// Façade exposing a one-line refresh entry point that shares the same
@@ -285,7 +291,7 @@ class MqttClientProxyController {
   final Ref _ref;
 
   /// Triggers an immediate evaluation of the proxy state from the
-  /// current cached MQTT config. Safe to call repeatedly — the
+  /// current cached MQTT config. Safe to call repeatedly - the
   /// underlying connect/disconnect is idempotent.
   Future<void> refresh({String reason = 'manual'}) async {
     await _evaluateProxyState(_ref, reason);

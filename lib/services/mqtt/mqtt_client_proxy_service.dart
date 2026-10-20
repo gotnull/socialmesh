@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// MQTT Client Proxy Service — connects to an MQTT broker on behalf
+/// MQTT Client Proxy Service - connects to an MQTT broker on behalf
 /// of the Meshtastic device when `proxyToClientEnabled` is true.
 ///
 /// 1. Device sends `FromRadio.mqttClientProxyMessage` → this service
@@ -13,7 +13,7 @@ library;
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:typed_data/typed_data.dart' show Uint8Buffer;
@@ -21,10 +21,56 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/constants.dart';
 import '../../core/logging.dart';
+import '../../core/meshtastic/modem_preset_metadata.dart';
 import '../../core/mqtt/mqtt_topic_builder.dart';
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../models/mesh_models.dart';
+
+/// Broker topics the proxy subscribes to for [channels], under
+/// [topicPrefix] (`<root>/2/e`).
+///
+/// One `<prefix>/<channel name>/+` per downlink-enabled channel, plus
+/// `<prefix>/PKI/+` for direct messages, and nothing when no channel has
+/// downlink on. PKI follows the firmware rule rather than being always on:
+/// the radio drops PKI downlinks when no channel has downlink enabled, so
+/// subscribing then would only relay traffic it discards. A primary channel
+/// with an empty name is subscribed under the name the firmware derives from
+/// the modem preset. A secondary channel with an empty name, or a primary on
+/// a preset the firmware does not name, is skipped. The whole-root wildcard is never used: on a busy region it
+/// relays traffic for every channel to the radio, which floods the BLE link
+/// and the mesh.
+List<String> mqttProxySubscriptionTopics({
+  required String topicPrefix,
+  required List<ChannelConfig> channels,
+  required config_pbenum.Config_LoRaConfig_ModemPreset? preset,
+  required bool usePreset,
+}) {
+  final topics = <String>[];
+  for (final channel in channels) {
+    if (!channel.downlink) continue;
+    if (channel.role.toUpperCase() == 'DISABLED') continue;
+    var name = channel.name;
+    if (name.isEmpty) {
+      final isPrimary =
+          channel.index == 0 || channel.role.toUpperCase() == 'PRIMARY';
+      if (!isPrimary) continue;
+      final derived = firmwareChannelNameFor(
+        preset: preset,
+        usePreset: usePreset,
+      );
+      if (derived == null) continue;
+      name = derived;
+    }
+    final topic = '$topicPrefix/$name/+';
+    if (!topics.contains(topic)) topics.add(topic);
+  }
+  if (topics.isEmpty) return const [];
+  topics.add('$topicPrefix/PKI/+');
+  return topics;
+}
 
 // ---------------------------------------------------------------------------
-// Diagnostics state — exposed to UI for the diagnostics surface
+// Diagnostics state - exposed to UI for the diagnostics surface
 // ---------------------------------------------------------------------------
 
 /// High-level lifecycle phase of the MQTT client proxy. The mqtt_client
@@ -44,7 +90,7 @@ enum MqttProxyConnectionPhase {
   /// Connect call in flight (DNS / TCP / TLS / auth all collapse here).
   connecting,
 
-  /// Connected — publish is allowed.
+  /// Connected - publish is allowed.
   connected,
 
   /// Cleanly disconnected (intentional or by remote with no error to report).
@@ -73,7 +119,7 @@ enum MqttProxyFailureReason {
   // User has enabled "Map Reporting" but has not opted-in to the
   // privacy disclaimer that authorizes the unencrypted broadcast of
   // their device's real-time location. The proxy refuses to come up at
-  // all in this state — the radio's MQTT config can still publish on
+  // all in this state - the radio's MQTT config can still publish on
   // its own (if the device has WiFi), but the app-side bridge stays
   // disconnected until consent is recorded.
   mapReportingConsentRequired,
@@ -122,7 +168,7 @@ class MqttProxyDiagnostics {
   /// Timestamp of the last failure transition.
   final DateTime? lastFailureAt;
 
-  /// The last error message encountered (sanitized — no secrets).
+  /// The last error message encountered (sanitized - no secrets).
   final String? lastError;
 
   /// Number of messages relayed from device to broker.
@@ -259,7 +305,7 @@ class MqttProxyPreflightResult {
 }
 
 // ---------------------------------------------------------------------------
-// Connect args — used for idempotency checks (settled + in-flight)
+// Connect args - used for idempotency checks (settled + in-flight)
 // ---------------------------------------------------------------------------
 
 /// Snapshot of the parameters used for a [MqttClientProxyService.connect]
@@ -268,7 +314,7 @@ class MqttProxyPreflightResult {
 /// live socket agrees, or (b) an in-flight attempt with these exact args
 /// is already running.
 ///
-/// The password is intentionally NOT part of equality — credentials must
+/// The password is intentionally NOT part of equality - credentials must
 /// not influence reconnect decisions and must never be logged via the
 /// generated `toString`.
 class _ConnectArgs {
@@ -279,7 +325,7 @@ class _ConnectArgs {
     required this.hasAuth,
     required this.username,
     required this.topicPrefix,
-    required this.shouldSubscribe,
+    required this.subscriptionTopics,
     required this.nodeUserId,
   });
 
@@ -289,7 +335,7 @@ class _ConnectArgs {
   final bool hasAuth;
   final String username;
   final String topicPrefix;
-  final bool shouldSubscribe;
+  final List<String> subscriptionTopics;
   final String? nodeUserId;
 
   @override
@@ -302,7 +348,7 @@ class _ConnectArgs {
           other.hasAuth == hasAuth &&
           other.username == username &&
           other.topicPrefix == topicPrefix &&
-          other.shouldSubscribe == shouldSubscribe &&
+          listEquals(other.subscriptionTopics, subscriptionTopics) &&
           other.nodeUserId == nodeUserId;
 
   @override
@@ -313,14 +359,14 @@ class _ConnectArgs {
     hasAuth,
     username,
     topicPrefix,
-    shouldSubscribe,
+    Object.hashAll(subscriptionTopics),
     nodeUserId,
   );
 
   @override
   String toString() =>
       '_ConnectArgs(host: $host, port: $port, tls: $tlsEnabled, ' // lint-allow: hardcoded-string
-      'auth: $hasAuth, topic: $topicPrefix, sub: $shouldSubscribe)'; // lint-allow: hardcoded-string
+      'auth: $hasAuth, topic: $topicPrefix, sub: $subscriptionTopics)'; // lint-allow: hardcoded-string
 }
 
 // ---------------------------------------------------------------------------
@@ -386,7 +432,7 @@ class MqttClientProxyService {
   bool _disposed = false;
   bool _intentionalDisconnect = false;
 
-  // Idempotency state — see _ConnectArgs.
+  // Idempotency state - see _ConnectArgs.
   // _lastConnectArgs: the args of the currently settled connection.
   // _pendingConnectArgs: the args of an in-flight connect attempt.
   _ConnectArgs? _lastConnectArgs;
@@ -445,7 +491,7 @@ class MqttClientProxyService {
   // blind), which lets device publishes vanish while the UI still reads
   // "Connected". We track an independent proof-of-life (PINGRESP, any inbound
   // traffic, or a fresh connect) and force a real reconnect when it goes
-  // silent past the threshold. Foreground-only by nature — iOS suspends the
+  // silent past the threshold. Foreground-only by nature - iOS suspends the
   // timer in the background, where the provider's app-resume trigger covers us.
   StreamSubscription<MqttPublishMessage>? _publishedSub;
   DateTime? _lastProofOfLifeAt;
@@ -455,7 +501,7 @@ class MqttClientProxyService {
   // declaring the socket dead.
   static const Duration _livenessStaleThreshold = Duration(seconds: 135);
 
-  // Publish suppression dedupe — collapse repeated identical warnings on
+  // Publish suppression dedupe - collapse repeated identical warnings on
   // the same (phase, reason, topic-family) tuple to avoid log spam when
   // the device fires bursts during an outage.
   String? _lastSuppressionKey;
@@ -518,7 +564,7 @@ class MqttClientProxyService {
   @visibleForTesting
   bool get debugLivenessWatchdogActive => _livenessWatchdog != null;
 
-  /// Test-only: drives the true half-open failure mode — phase `connected`
+  /// Test-only: drives the true half-open failure mode - phase `connected`
   /// and the socket reporting `connected` (via [_debugSimulateLiveSocket]),
   /// but proof-of-life stale past the threshold. A following
   /// [debugTickLivenessWatchdog] then exercises the force-reconnect path the
@@ -612,7 +658,7 @@ class MqttClientProxyService {
     required bool tlsEnabled,
     required String username,
     required String topicPrefix,
-    required bool shouldSubscribe,
+    required List<String> subscriptionTopics,
     String? nodeUserId,
   }) {
     _phase = MqttProxyConnectionPhase.connected;
@@ -628,7 +674,7 @@ class MqttClientProxyService {
       hasAuth: username.isNotEmpty,
       username: username,
       topicPrefix: topicPrefix,
-      shouldSubscribe: shouldSubscribe,
+      subscriptionTopics: subscriptionTopics,
       nodeUserId: nodeUserId,
     );
     _debugSimulateLiveSocket = true;
@@ -652,10 +698,9 @@ class MqttClientProxyService {
   /// [address] is `host:port` or just `host` (defaults to mqtt.meshtastic.org).
   /// [topicPrefix] is the topic prefix to subscribe to (e.g. `msh/2/e`).
   /// [nodeUserId] is the user ID string for client identification.
-  /// [shouldSubscribe] controls whether to subscribe to inbound topics.
-  /// Per the official Meshtastic app, subscribe only when at least one
-  /// channel has downlink enabled. When false, the proxy can still publish
-  /// (uplink) but will not receive messages from the broker.
+  /// [subscriptionTopics] are the broker topics to subscribe to (see
+  /// [mqttProxySubscriptionTopics]). When empty the proxy can still publish
+  /// (uplink) but receives nothing from the broker.
   Future<void> connect({
     required String address,
     required bool tlsEnabled,
@@ -663,7 +708,7 @@ class MqttClientProxyService {
     required String password,
     required String topicPrefix,
     String? nodeUserId,
-    bool shouldSubscribe = false,
+    List<String> subscriptionTopics = const [],
   }) async {
     if (_disposed) return;
 
@@ -704,7 +749,7 @@ class MqttClientProxyService {
       hasAuth: username.isNotEmpty,
       username: username,
       topicPrefix: topicPrefix,
-      shouldSubscribe: shouldSubscribe,
+      subscriptionTopics: subscriptionTopics,
       nodeUserId: nodeUserId,
     );
 
@@ -725,7 +770,7 @@ class MqttClientProxyService {
     }
 
     // In-flight idempotency: an attempt with these exact args is already
-    // running. Coalesce — let the first attempt finish; do not start a
+    // running. Coalesce - let the first attempt finish; do not start a
     // duplicate destructive reconnect.
     if (_isConnecting && _pendingConnectArgs == newArgs) {
       AppLogging.mqttProxy(
@@ -758,7 +803,7 @@ class MqttClientProxyService {
     _brokerPort = port;
     _tlsEnabled = useTls;
     _hasAuth = username.isNotEmpty;
-    // topicPrefix is "<root>/2/e" — strip the suffix so diagnostics
+    // topicPrefix is "<root>/2/e" - strip the suffix so diagnostics
     // surface the user-configured root, not the derived publish prefix.
     _topicRoot = topicPrefix.endsWith('/2/e')
         ? topicPrefix.substring(0, topicPrefix.length - 4)
@@ -816,12 +861,12 @@ class MqttClientProxyService {
     // is spec-compliant per MQTT-3.1.2-13.
     //
     // Do NOT add `.withWillQos(MqttQos.atLeastOnce)` here unless you
-    // also call `.withWillTopic` + `.withWillMessage` — without those,
+    // also call `.withWillTopic` + `.withWillMessage` - without those,
     // the Will Flag stays 0 and a non-zero Will QoS violates the spec,
     // causing strict brokers (ovmesh.com, EMQX) to silently TCP-close
     // the CONNECT and surface as a "Missing Connection Acknowledgement"
     // timeout 47 s later. Lenient brokers (mosquitto default,
-    // mqtt.meshtastic.org) accept it — which is why an earlier version
+    // mqtt.meshtastic.org) accept it - which is why an earlier version
     // of this code shipped the violation undetected.
     final connMessage = MqttConnectMessage()
         .withClientIdentifier(clientId)
@@ -866,16 +911,15 @@ class MqttClientProxyService {
               _reconnectAttempts = 0;
               _lastError = null;
 
-              // Subscribe to the topic only if downlink is enabled on at least
-              // one channel.  This matches the official Meshtastic iOS app: when
-              // no channel has downlinkEnabled, the proxy connects (allowing the
-              // device to publish / uplink) but does NOT subscribe (no inbound
-              // MQTT messages are relayed to the device).
-              if (shouldSubscribe) {
-                final subscriptionTopic = '$topicPrefix/#';
-                _subscribedTopic = subscriptionTopic;
-                AppLogging.mqttProxy('Subscribing to $subscriptionTopic');
-                client.subscribe(subscriptionTopic, MqttQos.atLeastOnce);
+              // Subscribe only to the downlink channels' topics. With no
+              // downlink channel the proxy still connects so the device can
+              // publish (uplink), but nothing is relayed back to it.
+              if (subscriptionTopics.isNotEmpty) {
+                _subscribedTopic = subscriptionTopics.join(', ');
+                for (final topic in subscriptionTopics) {
+                  AppLogging.mqttProxy('Subscribing to $topic');
+                  client.subscribe(topic, MqttQos.atLeastOnce);
+                }
               } else {
                 _subscribedTopic = null;
                 AppLogging.mqttProxy(
@@ -1109,7 +1153,7 @@ class MqttClientProxyService {
   /// Publishes a single frame to the live broker socket. The caller must have
   /// verified the phase is `connected` and the client socket is healthy.
   /// Shared by the live publish path and the queue flush. Does NOT count the
-  /// publish — `_messagesPublished` advances only on broker confirmation
+  /// publish - `_messagesPublished` advances only on broker confirmation
   /// (`_onPublishConfirmed`), so a frame fired into a dead socket never counts.
   void _publishToClient({
     required String topic,
@@ -1169,7 +1213,7 @@ class MqttClientProxyService {
   }) {
     if (_pendingPublishes.length >= _maxPendingPublishes) {
       _pendingPublishes.removeAt(0);
-      // The evicted frame was deferred earlier and is now lost — count it as
+      // The evicted frame was deferred earlier and is now lost - count it as
       // dropped so the deferred/dropped tallies stay honest.
       _publishesDropped++;
       AppLogging.mqttProxyWarning(
@@ -1206,7 +1250,7 @@ class MqttClientProxyService {
   }
 
   // ---------------------------------------------------------------------------
-  // Private — liveness watchdog
+  // Private - liveness watchdog
   // ---------------------------------------------------------------------------
 
   /// Starts (or restarts) the periodic liveness check. No-op when the
@@ -1247,7 +1291,7 @@ class MqttClientProxyService {
 
   /// Forces a genuine reconnect of a socket the package still believes is
   /// connected. Tears the client down first so `connectionStatus.state` stops
-  /// reporting `connected` — otherwise the provider's `connect()` would
+  /// reporting `connected` - otherwise the provider's `connect()` would
   /// short-circuit as an idempotent no-op. Reuses the reconnect-request
   /// debounce so overlapping ticks cannot storm the path.
   void _forceReconnectStaleSocket() {
@@ -1302,7 +1346,7 @@ class MqttClientProxyService {
       flushed++;
     }
     _publishesFlushed += flushed;
-    // TTL-expired frames were deferred but never delivered — count as dropped.
+    // TTL-expired frames were deferred but never delivered - count as dropped.
     _publishesDropped += expired;
     if (flushed > 0 || expired > 0) {
       AppLogging.mqttProxy(
@@ -1328,7 +1372,7 @@ class MqttClientProxyService {
     _emitDiagnostics();
   }
 
-  /// Marks the service as `disabled` — proxy mode is off. Used by the
+  /// Marks the service as `disabled` - proxy mode is off. Used by the
   /// provider when MQTT or the proxy toggle is turned off so the UI can
   /// distinguish "off" from "failed".
   void markDisabled() {
@@ -1374,7 +1418,7 @@ class MqttClientProxyService {
   }
 
   // ---------------------------------------------------------------------------
-  // Private — message handling
+  // Private - message handling
   // ---------------------------------------------------------------------------
 
   /// Handles an inbound MQTT message from the broker.
@@ -1391,7 +1435,7 @@ class MqttClientProxyService {
       // Drop broker stat / heartbeat traffic before forwarding to the
       // radio. The public Meshtastic broker (and many compatible
       // brokers) publishes node-status updates on `…/stat/…`
-      // subtopics — these are not LoRa frames and have no value to the
+      // subtopics - these are not LoRa frames and have no value to the
       // radio's downlink path. Forwarding them wastes airtime + battery.
       if (topic.contains('/stat/')) {
         AppLogging.mqttProxy(
@@ -1428,7 +1472,7 @@ class MqttClientProxyService {
   }
 
   // ---------------------------------------------------------------------------
-  // Private — connection callbacks
+  // Private - connection callbacks
   // ---------------------------------------------------------------------------
 
   void _onConnected() {
@@ -1486,7 +1530,7 @@ class MqttClientProxyService {
     _flushPendingPublishes();
   }
 
-  /// PINGRESP received — the broker answered our keep-alive, so the socket is
+  /// PINGRESP received - the broker answered our keep-alive, so the socket is
   /// alive. On a publish-only (no-downlink) connection this is the only
   /// inbound traffic, so it is the watchdog's primary proof-of-life signal.
   void _onPong() {
@@ -1507,7 +1551,7 @@ class MqttClientProxyService {
   }
 
   // ---------------------------------------------------------------------------
-  // Private — helpers
+  // Private - helpers
   // ---------------------------------------------------------------------------
 
   Future<void> _disconnectClient() async {
@@ -1571,7 +1615,7 @@ class MqttClientProxyService {
 
   /// Maps `NoConnectionException` to the most plausible structured reason.
   /// The mqtt_client package uses this for both "max retries exceeded" and
-  /// "broker rejected CONNACK" — text inspection is the only way to tell.
+  /// "broker rejected CONNACK" - text inspection is the only way to tell.
   @visibleForTesting
   static MqttProxyFailureReason debugMapNoConnectionExceptionMessage(
     String exceptionText,
@@ -1681,7 +1725,7 @@ class MqttClientProxyService {
   }
 
   // ---------------------------------------------------------------------------
-  // Static — preflight
+  // Static - preflight
   // ---------------------------------------------------------------------------
 
   /// Validates a candidate MQTT proxy configuration before any connect

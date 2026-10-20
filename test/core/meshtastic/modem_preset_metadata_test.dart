@@ -117,4 +117,40 @@ void main() {
       expect(check(), isFalse);
     });
   });
+
+  group('firmwareChannelNameFor', () {
+    test('every selectable preset has a firmware channel name', () {
+      for (final meta in kModemPresetMetadata) {
+        expect(
+          firmwareChannelNameFor(preset: meta.preset, usePreset: true),
+          isNotNull,
+          reason: '${meta.preset} has no channel name',
+        );
+      }
+    });
+
+    test('matches the firmware short names', () {
+      String? name(Config_LoRaConfig_ModemPreset p) =>
+          firmwareChannelNameFor(preset: p, usePreset: true);
+      expect(name(Config_LoRaConfig_ModemPreset.LONG_FAST), 'LongFast');
+      expect(name(Config_LoRaConfig_ModemPreset.VERY_LONG_SLOW), 'VLongSlow');
+      expect(name(Config_LoRaConfig_ModemPreset.LONG_MODERATE), 'LongMod');
+      expect(name(Config_LoRaConfig_ModemPreset.MEDIUM_FAST), 'MediumFast');
+    });
+
+    test('custom modem settings name the channel "Custom"', () {
+      expect(
+        firmwareChannelNameFor(
+          preset: Config_LoRaConfig_ModemPreset.LONG_FAST,
+          usePreset: false,
+        ),
+        'Custom',
+      );
+      expect(firmwareChannelNameFor(preset: null, usePreset: false), 'Custom');
+    });
+
+    test('an unknown preset has no name', () {
+      expect(firmwareChannelNameFor(preset: null, usePreset: true), isNull);
+    });
+  });
 }

@@ -17,7 +17,7 @@ import 'package:socialmesh/services/mqtt/mqtt_client_proxy_service.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
 // ---------------------------------------------------------------------------
-// Recording proxy service — captures connect/disconnect calls
+// Recording proxy service - captures connect/disconnect calls
 // ---------------------------------------------------------------------------
 
 class _RecordingProxyService extends MqttClientProxyService {
@@ -36,7 +36,7 @@ class _RecordingProxyService extends MqttClientProxyService {
     required String password,
     required String topicPrefix,
     String? nodeUserId,
-    bool shouldSubscribe = false,
+    List<String> subscriptionTopics = const [],
   }) async {
     connectCalls.add(
       _ConnectCall(
@@ -44,7 +44,7 @@ class _RecordingProxyService extends MqttClientProxyService {
         tlsEnabled: tlsEnabled,
         username: username,
         topicPrefix: topicPrefix,
-        shouldSubscribe: shouldSubscribe,
+        subscriptionTopics: subscriptionTopics,
       ),
     );
     _fakeConnected = true;
@@ -67,18 +67,18 @@ class _ConnectCall {
     required this.tlsEnabled,
     required this.username,
     required this.topicPrefix,
-    required this.shouldSubscribe,
+    required this.subscriptionTopics,
   });
 
   final String address;
   final bool tlsEnabled;
   final String username;
   final String topicPrefix;
-  final bool shouldSubscribe;
+  final List<String> subscriptionTopics;
 }
 
 // ---------------------------------------------------------------------------
-// Fake protocol service — settable currentMqttConfig + controlled stream
+// Fake protocol service - settable currentMqttConfig + controlled stream
 // ---------------------------------------------------------------------------
 
 class _FakeProtocolService extends ProtocolService {
@@ -288,13 +288,13 @@ void main() {
         proxyService: proxyService,
       );
 
-      // Mount the provider — the synchronous `initial-build` evaluation
+      // Mount the provider - the synchronous `initial-build` evaluation
       // should fire connect from the cached config.
       container.read(mqttClientProxyAutoConnectProvider);
 
       expect(proxyService.connectCalls, hasLength(1));
       expect(proxyService.connectCalls.first.address, 'broker.example:1883');
-      expect(proxyService.connectCalls.first.shouldSubscribe, false);
+      expect(proxyService.connectCalls.first.subscriptionTopics, isEmpty);
     });
 
     test('cold start with no cached config does nothing', () {
@@ -319,7 +319,7 @@ void main() {
       container.read(mqttClientProxyAutoConnectProvider);
       expect(proxyService.connectCalls, isEmpty);
 
-      // Device emits a config — auto-connect must react.
+      // Device emits a config - auto-connect must react.
       protocol.emitMqttConfig(_proxyEnabledConfig());
       // Stream delivery happens in the microtask queue.
       await Future<void>.delayed(Duration.zero);
@@ -402,7 +402,7 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         final baseline = proxyService.connectCalls.length;
 
-        // Add another channel, also downlink-disabled — coverage unchanged.
+        // Add another channel, also downlink-disabled - coverage unchanged.
         container
             .read(channelsProvider.notifier)
             .setChannel(_channel(index: 1, downlink: false));
@@ -429,19 +429,18 @@ void main() {
             .setChannel(_channel(index: 0, downlink: false));
         container.read(mqttClientProxyAutoConnectProvider);
         await Future<void>.delayed(Duration.zero);
-        expect(proxyService.connectCalls.last.shouldSubscribe, false);
+        expect(proxyService.connectCalls.last.subscriptionTopics, isEmpty);
 
-        // Enable downlink on a channel — coverage flips false → true.
+        // Enable downlink on a channel - coverage flips false → true.
         container
             .read(channelsProvider.notifier)
             .setChannel(_channel(index: 0, downlink: true));
         await Future<void>.delayed(Duration.zero);
 
-        expect(
-          proxyService.connectCalls.last.shouldSubscribe,
-          true,
-          reason: 'downlink-flag flip must update shouldSubscribe',
-        );
+        expect(proxyService.connectCalls.last.subscriptionTopics, [
+          'msh/2/e/ch0/+',
+          'msh/2/e/PKI/+',
+        ], reason: 'downlink-flag flip must subscribe to that channel only');
       },
     );
   });

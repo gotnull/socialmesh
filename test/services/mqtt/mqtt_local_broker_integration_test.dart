@@ -43,7 +43,7 @@ void main() {
     password: pass,
     topicPrefix: topicPrefix,
     nodeUserId: '!c1a0de01',
-    shouldSubscribe: false,
+    subscriptionTopics: const [],
   );
 
   group('MqttClientProxyService against local EMQX', () {
@@ -62,7 +62,7 @@ void main() {
       service.handleDevicePublish(topic: topic, data: [1, 2, 3]);
 
       // The count must advance only when the QoS1 PUBACK completes the publish
-      // protocol on client.published — the behaviour mocks cannot prove.
+      // protocol on client.published - the behaviour mocks cannot prove.
       await _pollUntil(() => service.diagnostics.messagesPublished == 1);
       expect(
         service.diagnostics.messagesPublished,
