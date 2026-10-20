@@ -8,6 +8,7 @@
 #   no-raw-snackbar            Raw SnackBar() construction
 #   no-fab                     FloatingActionButton
 #   no-bare-logging            Bare debugPrint/print (use AppLogging.<feature>)
+#   no-non-ascii-log           Non-ASCII (emoji, box drawing, em-dash) inside an AppLogging call
 #   no-private-log             Private _log() methods (use AppLogging.<feature> directly)
 #   no-hardcoded-ui-strings    Hardcoded user-facing strings (Text('...'), title: '...')
 #   no-raw-latlng              Raw LatLng(<expr>, <expr>) outside safeLatLng()
@@ -46,17 +47,16 @@
 #   scripts/hooks/socialmesh-lint.sh --diff-only        # Check only changed lines in staged files
 #   scripts/hooks/socialmesh-lint.sh file1 file2        # Check specific files
 #   scripts/hooks/socialmesh-lint.sh --format           # Also run dart format check
-#   scripts/hooks/socialmesh-lint.sh --em-dash file ... # Also flag em-dash chars (opt-in: see below)
+#   scripts/hooks/socialmesh-lint.sh --em-dash file ... # Flag em-dash chars in every file type (see below)
 #   scripts/hooks/socialmesh-lint.sh --unsafe-pop file ... # Flag unsafe Navigator.pop in callbacks (opt-in)
 #   scripts/hooks/socialmesh-lint.sh --no-raw-latlng file ... # Flag raw LatLng() outside safeLatLng (opt-in)
 #   scripts/hooks/socialmesh-lint.sh --no-raw-from-char-codes file ... # Flag unguarded String.fromCharCode(s) (opt-in)
 #   scripts/hooks/socialmesh-lint.sh --diff-only --format  # Combined
 #
-# --em-dash is opt-in by design. The em-dash character (U+2014) is banned
-# project-wide, but hundreds of legacy files still contain them. Running the
-# check by default would block routine edits on unrelated files. Pass
-# --em-dash when you specifically want to scrub em-dashes from files you are
-# touching (e.g. before committing your own changes).
+# The em-dash character (U+2014) is banned project-wide. The check always runs
+# on Dart under lib/ and test/ and on lib/l10n/app_en.arb. Other file types
+# (other locales, markdown, YAML, shell, TS) still hold legacy em-dashes, so
+# they are checked only when --em-dash is passed.
 #
 # --unsafe-pop is opt-in by design. Closures like
 #   onPressed: () => Navigator.of(context).pop()
@@ -134,11 +134,9 @@ fi
 MODE="staged"       # staged | all | explicit
 DIFF_ONLY=false
 RUN_FORMAT=false
-CHECK_EM_DASH=false  # Opt-in: em-dash check is OFF by default. Hundreds of
-                     # legacy files contain em-dashes; flipping this on by
-                     # default would block routine edits on unrelated files.
-                     # Pass --em-dash when you specifically want to scrub
-                     # em-dashes from files you are about to touch.
+CHECK_EM_DASH=false  # The em-dash check always runs on lib/ and test/ Dart
+                     # and the English ARB. --em-dash extends it to every
+                     # other file type, which still carry legacy em-dashes.
 CHECK_UNSAFE_POP=false  # Opt-in: surfaces Navigator.of(context).pop in
                         # arrow callbacks. False positives are unavoidable
                         # without AST analysis (Builder/parameter contexts
@@ -631,6 +629,52 @@ check_file() {
     fi
 
     # ------------------------------------------------------------------
+    # BLOCK: Non-ASCII inside AppLogging calls
+    #
+    # Log lines are plain ASCII: exported App Logs, Crashlytics breadcrumbs
+    # and grep all handle them reliably, and emoji markers carry nothing
+    # the words beside them do not. The awk state machine follows each
+    # AppLogging.<feature>( call across lines to its closing paren and
+    # reports every line of the call that holds a byte above 0x7F.
+    # Values interpolated at runtime are not checked.
+    # ------------------------------------------------------------------
+    if [ "$in_lib" = true ] && [ "$in_lib_generated" = false ] \
+       && [[ "$file" != *"core/logging.dart" ]]; then
+      while read -r lineno; do
+        [ -n "$lineno" ] || continue
+        line_in_scope "$file" "$lineno" || continue
+        record_hit "$file" "$lineno" "no-non-ascii-log" \
+          "Non-ASCII in a log call: use plain ASCII (- for dashes, -> for arrows, no emoji)" "error"
+      done < <(LC_ALL=C awk '
+        {
+          line = $0
+          if (!inlog) {
+            if (match(line, /AppLogging\.[A-Za-z_]+\(/)) {
+              inlog = 1; depth = 0; rest = substr(line, RSTART)
+            } else {
+              next
+            }
+          } else {
+            rest = line
+          }
+          n = length(rest)
+          for (i = 1; i <= n; i++) {
+            c = substr(rest, i, 1)
+            if (c == "(") depth++
+            else if (c == ")") {
+              depth--
+              if (depth == 0) {
+                if (substr(rest, 1, i) ~ /[\200-\377]/) print NR
+                inlog = 0
+                next
+              }
+            }
+          }
+          if (rest ~ /[\200-\377]/) print NR
+        }' "$file" 2>/dev/null | sort -un || true)
+    fi
+
+    # ------------------------------------------------------------------
     # BLOCK: Private _log() method definitions
     #
     # Private _log() wrappers around AppLogging add needless indirection.
@@ -938,11 +982,17 @@ check_file() {
   # The skip-generated guard at the top of check_file already excludes
   # vendored / auto-generated files we do not own.
   #
-  # OPT-IN: this check only runs with --em-dash because hundreds of
-  # legacy files still contain em-dashes; flipping it on by default
-  # would block routine edits unrelated to em-dash cleanup.
+  # Always on for Dart under lib/ and test/ and for the English ARB,
+  # which were swept clean on 17th Oct 2026. Other file types (other
+  # locales, markdown, YAML, shell, TS) still carry legacy em-dashes and
+  # are checked only with --em-dash.
   # ------------------------------------------------------------------
-  if [ "$CHECK_EM_DASH" = true ]; then
+  local em_dash_default=false
+  case "$file" in
+    lib/l10n/app_en.arb|*/lib/l10n/app_en.arb) em_dash_default=true ;;
+    lib/*.dart|test/*.dart|*/lib/*.dart|*/test/*.dart) em_dash_default=true ;;
+  esac
+  if [ "$CHECK_EM_DASH" = true ] || [ "$em_dash_default" = true ]; then
     grep_check "$file" \
       $'\xe2\x80\x94' \
       "no-em-dash" \
