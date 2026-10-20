@@ -1255,7 +1255,7 @@ PODS:
   - Firebase/Storage (12.19.0):
     - Firebase/CoreOnly
     - FirebaseStorage (~> 12.19.0)
-  - firebase_analytics (12.5.0):
+  - firebase_analytics (12.6.0):
     - firebase_core
     - FirebaseAnalytics (= 12.19.0)
     - Flutter
@@ -1992,7 +1992,7 @@ SPEC CHECKSUMS:
   emoji_picker_flutter: ece213fc274bdddefb77d502d33080dc54e616cc
   file_picker_darwin: 4c2b9a50ea44cb3b071381ea0cf48591bdd80251
   Firebase: 7ca191e43724142f79fae653547b3382c45413cc
-  firebase_analytics: c585b1a7c188ac00b8ae6e37033140230579604b
+  firebase_analytics: 99133ddb6f6cf89c0b49cafae131070607abbfa5
   firebase_auth: 09023e4cff3162bed3375fb2f4f350b07c422206
   firebase_core: 55de508663ceda7d1dc369a32b327a5655019ae2
   firebase_crashlytics: 289a6a01605d663873a978d9daaa3648edc3f3b5
