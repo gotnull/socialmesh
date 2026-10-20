@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/node_color.dart';
 import '../../core/routing/conversation_routes.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -66,7 +67,8 @@ bool _manageHelpCircleVisible({required bool isMyNode}) =>
 /// Shows the long-press quick-action sheet for [node].
 ///
 /// [isMyNode] controls whether the destructive "Disconnect device" entry
-/// is appended (only meaningful for the user's own node tile).
+/// is appended (only meaningful for the user's own node tile), and hides
+/// "Message", since the connected node cannot be messaged.
 /// [onDisconnect] is invoked when the user picks Disconnect; the caller
 /// owns the actual transport teardown because that lives on the
 /// nodes-screen state.
@@ -107,7 +109,7 @@ Future<void> showNodeQuickActionsSheet(
       label: context.l10n.quickActionViewDetails,
       value: NodeQuickAction.viewDetails,
     ),
-    if (showMessageAction)
+    if (showMessageAction && !isMyNode)
       BottomSheetAction(
         icon: Icons.chat_bubble_outline,
         label: context.l10n.nodeDetailMessageButton,
@@ -328,7 +330,14 @@ class _NodeQuickActionsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        NodeAvatar(text: node.avatarName, color: context.accentColor, size: 48),
+        NodeAvatar(
+          text: node.avatarName,
+          color: resolveNodeColor(
+            nodeNum: node.nodeNum,
+            avatarColor: node.avatarColor,
+          ),
+          size: 48,
+        ),
         const SizedBox(width: AppTheme.spacing16),
         Expanded(
           child: Column(

@@ -130,6 +130,22 @@ void main() {
       );
     });
 
+    test('Message entry is hidden for the connected node', () {
+      expect(
+        sheetSource.contains('if (showMessageAction && !isMyNode)'),
+        true,
+        reason: 'The connected node cannot be messaged.',
+      );
+    });
+
+    test('header avatar uses the node identity colour', () {
+      final header = sheetSource.substring(
+        sheetSource.indexOf('class _NodeQuickActionsHeader'),
+      );
+      expect(header, contains('resolveNodeColor('));
+      expect(header, isNot(contains('accentColor')));
+    });
+
     test('logs every meaningful state transition', () {
       // Sheet-side markers cover sheet lifecycle (open, action picked,
       // dismissed). Action-side markers (favorite toggled, mute toggled,
