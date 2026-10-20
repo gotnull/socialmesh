@@ -389,7 +389,7 @@ class AppLogging {
   }
 
   static void ble(String message) {
-    if (bleLoggingEnabled) debugPrint('📱 BLE: $message');
+    if (bleLoggingEnabled) debugPrint('BLE: $message');
   }
 
   /// Severity-2 BLE warning. Forwarded to the app log sink (in-app log
@@ -397,14 +397,14 @@ class AppLogging {
   /// can surface receive-pipeline stalls and recovery failures even
   /// when verbose BLE logging is disabled at the device.
   static void bleWarning(String message) {
-    if (bleLoggingEnabled) debugPrint('📱 BLE: $message');
+    if (bleLoggingEnabled) debugPrint('BLE: $message');
     _appLogSink?.call(2, 'ble', message);
   }
 
   /// Short fingerprint for a PSK / public-key byte string suitable for
   /// log lines.
   ///
-  /// Format: `<len>B:aabbccdd…eeff0011` - the byte length, a colon, and
+  /// Format: `<len>B:aabbccdd...eeff0011` - the byte length, a colon, and
   /// the first 4 + last 4 bytes in lowercase hex. Empty/null PSKs
   /// render as `0B:none`. Single-byte PSKs (the canonical default
   /// LongFast `AQ==`) render as `1B:01`.
@@ -420,7 +420,7 @@ class AppLogging {
     }
     final head = hex.substring(0, 8);
     final tail = hex.substring(hex.length - 8);
-    return '${psk.length}B:$head…$tail';
+    return '${psk.length}B:$head...$tail';
   }
 
   static Logger get mapLogger {
@@ -530,7 +530,7 @@ class AppLogging {
   }
 
   static void notifications(String message) {
-    if (notificationsLoggingEnabled) debugPrint('🔔 $message');
+    if (notificationsLoggingEnabled) debugPrint('Notifications: $message');
   }
 
   static void audio(String message) {
@@ -1106,10 +1106,10 @@ class AppLogging {
   }
 
   /// Short fingerprint for a public-key byte string suitable for log
-  /// lines. Format: `<lenB:first4…last4hex>`. Empty/null renders as
-  /// `0B:none`. Keys ≤8 bytes are emitted in full hex (still safe - too
-  /// short to identify rotation material). Larger keys get head/tail
-  /// only.
+  /// lines. Format: `<lenB:first4...last4hex>`. Empty/null renders as
+  /// `0B:none`. Keys of 8 bytes or fewer are emitted in full hex (still
+  /// safe - too short to identify rotation material). Larger keys get
+  /// head/tail only.
   ///
   /// Never log a full public key - even though pks are not strictly
   /// secret, the fingerprint is enough to correlate sender/receiver
@@ -1123,7 +1123,7 @@ class AppLogging {
     }
     final head = hex.substring(0, 8);
     final tail = hex.substring(hex.length - 8);
-    return '${key.length}B:$head…$tail';
+    return '${key.length}B:$head...$tail';
   }
 
   /// Compact 4-byte hex form for a 32-bit Meshtastic / MeshCore node ID.
@@ -1150,7 +1150,7 @@ class AppLogging {
   }
 
   /// Bounded preview of a frame's leading bytes for malformed-frame
-  /// diagnostics. Format: `len=NNN head=AA BB CC …`. Caller must NEVER
+  /// diagnostics. Format: `len=NNN head=AA BB CC ...`. Caller must NEVER
   /// pass plaintext or post-decryption payloads - preview is for
   /// codec-layer error paths only (oversize, undersized, decode failed).
   ///
@@ -1163,7 +1163,7 @@ class AppLogging {
         .take(headLen)
         .map((b) => b.toRadixString(16).padLeft(2, '0'))
         .join(' ');
-    final ellipsis = bytes.length > headLen ? ' …' : '';
+    final ellipsis = bytes.length > headLen ? ' ...' : '';
     return 'len=${bytes.length} head=$head$ellipsis';
   }
 

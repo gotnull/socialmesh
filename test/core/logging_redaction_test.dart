@@ -33,11 +33,11 @@ void main() {
       );
     });
 
-    test('larger keys are truncated to first4…last4', () {
+    test('larger keys are truncated to first4...last4', () {
       // 32-byte canonical Ed25519 public key
       final key = Uint8List.fromList(List.generate(32, (i) => i));
       final fp = AppLogging.publicKeyFingerprint(key);
-      expect(fp, '32B:00010203…1c1d1e1f');
+      expect(fp, '32B:00010203...1c1d1e1f');
     });
 
     test('full key never appears in output for keys > 8 bytes', () {
@@ -95,7 +95,7 @@ void main() {
       final bytes = List<int>.generate(64, (i) => i);
       final preview = AppLogging.framePreview(bytes);
       expect(preview.startsWith('len=64 head='), isTrue);
-      expect(preview.endsWith('…'), isTrue);
+      expect(preview.endsWith('...'), isTrue);
       // Should only contain hex for the first 16 bytes, not all 64.
       // Each byte = 2 hex chars + 1 space = 3 chars; 16 bytes = 48 - 1 = 47.
       expect(preview.split('head=').last.length, lessThan(60));
@@ -104,7 +104,7 @@ void main() {
     test('max parameter clamps preview length', () {
       final bytes = List<int>.generate(64, (i) => i);
       final preview = AppLogging.framePreview(bytes, max: 4);
-      expect(preview, 'len=64 head=00 01 02 03 …');
+      expect(preview, 'len=64 head=00 01 02 03 ...');
     });
 
     test('max parameter is hard-capped at 32', () {
@@ -112,8 +112,8 @@ void main() {
       final preview = AppLogging.framePreview(bytes, max: 1024);
       // Should still cap at 32 bytes.
       final headPart = preview.split('head=').last;
-      // 32 bytes worth = 32 hex pairs, 31 spaces between them, plus " …"
-      // = 32*2 + 31 = 95 chars, then ' …' = 97 total.
+      // 32 bytes worth = 32 hex pairs, 31 spaces between them, plus " ..."
+      // = 32*2 + 31 = 95 chars, then ' ...' = 99 total.
       expect(headPart.length, lessThanOrEqualTo(100));
     });
   });

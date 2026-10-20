@@ -674,6 +674,18 @@ check_file() {
         }' "$file" 2>/dev/null | sort -un || true)
     fi
 
+    # logging.dart is exempt above because it defines AppLogging, but its
+    # category prefixes and redaction formats are written into every log
+    # line, so the whole file must be ASCII.
+    if [[ "$file" == *"lib/core/logging.dart" ]]; then
+      while read -r lineno; do
+        [ -n "$lineno" ] || continue
+        line_in_scope "$file" "$lineno" || continue
+        record_hit "$file" "$lineno" "no-non-ascii-log" \
+          "Non-ASCII in logging.dart: prefixes and formats reach every log line; use plain ASCII" "error"
+      done < <(LC_ALL=C awk '/[\200-\377]/ { print NR }' "$file" 2>/dev/null || true)
+    fi
+
     # ------------------------------------------------------------------
     # BLOCK: Private _log() method definitions
     #

@@ -88,8 +88,8 @@ void main() {
       AppLogging.meshcore(
         'event=test pk=${AppLogging.publicKeyFingerprint(fullKey)}',
       );
-      // Expect the format: pk=32B:<8hex>…<8hex>
-      expect(sinkLines.single, matches(r'pk=32B:[0-9a-f]{8}…[0-9a-f]{8}'));
+      // Expect the format: pk=32B:<8hex>...<8hex>
+      expect(sinkLines.single, matches(r'pk=32B:[0-9a-f]{8}\.\.\.[0-9a-f]{8}'));
     });
 
     test('framePreview never emits more than 32 bytes of hex', () {
@@ -99,7 +99,7 @@ void main() {
       );
       final line = sinkLines.single;
       // Count hex pairs (XX) in the head section.
-      final head = line.split('head=').last.split(' …').first;
+      final head = line.split('head=').last.split(' ...').first;
       final pairs = head.split(' ').where((s) => s.isNotEmpty).length;
       expect(pairs, lessThanOrEqualTo(32));
     });
@@ -132,7 +132,7 @@ void main() {
       expect(line, contains('type=contact'));
       expect(line, contains('size=12'));
       expect(line, contains('target='));
-      expect(line, matches(r'target=32B:[0-9a-f]{8}…[0-9a-f]{8}'));
+      expect(line, matches(r'target=32B:[0-9a-f]{8}\.\.\.[0-9a-f]{8}'));
 
       // Full pubkey hex must never leak.
       expect(line.contains(fullKeyHex), isFalse);
