@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sigil Generator — deterministic geometric identity from node data.
+// Sigil Generator - deterministic geometric identity from node data.
 //
 // Each Meshtastic node gets a unique geometric sigil derived entirely
 // from its node number. The generation is deterministic: the same
@@ -24,6 +24,7 @@ import 'dart:ui';
 
 import '../../../core/logging.dart';
 import '../models/nodedex_entry.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Generates deterministic sigil data from a node's numeric identity.
@@ -292,7 +293,7 @@ class SigilGenerator {
           edges.add((centerIndex, targetOffset + i));
         }
       } else if (sigil.innerRings > 0) {
-        // No center dot but has inner rings — draw radials to innermost ring
+        // No center dot but has inner rings - draw radials to innermost ring
         final innermostOffset = sigil.innerRings * vertices;
         for (int i = 0; i < vertices; i++) {
           // Connect alternate vertices for visual interest based on symmetry

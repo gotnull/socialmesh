@@ -32,7 +32,7 @@ class ChannelKeyField extends StatefulWidget {
   final bool showGenerateButton;
 
   // Optional external controller. When provided, the parent owns the
-  // lifecycle and can read the current text directly — required for the
+  // lifecycle and can read the current text directly - required for the
   // create-channel wizard so a manually-typed key persists into the
   // wizard draft even if the user taps Continue without first tapping
   // the inline check button.
@@ -91,7 +91,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
   @override
   void didUpdateWidget(ChannelKeyField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only sync from keyBase64 when we own the controller — when the
+    // Only sync from keyBase64 when we own the controller - when the
     // parent owns it, the parent is the source of truth and must not be
     // overwritten on rebuild (this was the wizard regression).
     if (_ownedController != null &&
@@ -197,7 +197,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
           borderRadius: BorderRadius.circular(AppTheme.radius12),
           // Outer card keeps its neutral border. The error state is
           // shown by the inner input box and the validation message
-          // only — matching the inner radius avoids a double red ring
+          // only - matching the inner radius avoids a double red ring
           // with mismatched corners.
           border: Border.all(color: context.border),
         ),
@@ -310,7 +310,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       maxLength: 64,
                       controller: _keyController,
                       // AES-256 base64 is 44 chars and wraps on iPhone
-                      // width — let the field grow to two lines so the
+                      // width - let the field grow to two lines so the
                       // entire key is visible while editing.
                       maxLines: 2,
                       minLines: 1,

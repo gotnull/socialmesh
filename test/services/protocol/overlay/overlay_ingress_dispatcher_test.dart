@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Integration tests for [OverlayIngressDispatcher] — the thin glue
+/// Integration tests for [OverlayIngressDispatcher] - the thin glue
 /// between `ProtocolService.attachOverlayInbound` and
 /// [OverlayLinkEngine].
 library;
@@ -120,7 +120,7 @@ void main() {
     await dispatcher.handleInboundMrrpBytes(42, wire);
     await dispatcher.handleInboundMrrpBytes(42, wire);
 
-    // Dispatcher is a thin proxy — both calls are handed off. The
+    // Dispatcher is a thin proxy - both calls are handed off. The
     // engine's collision handler is what replies LINK_OPEN_NO the
     // second time (covered in P1 tests).
     expect(dispatcher.handledCount, 2);

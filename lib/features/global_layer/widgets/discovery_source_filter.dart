@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Discovery Source Filter Chips — Local/Remote/Mixed toggles for the
+/// Discovery Source Filter Chips - Local/Remote/Mixed toggles for the
 /// NodeDex screen filter bar.
 ///
 /// These chips allow users to filter the NodeDex entry list by how
@@ -109,7 +109,7 @@ class DiscoverySourceFilterRow extends ConsumerWidget {
 /// A single discovery source filter chip.
 ///
 /// Displays the source label, an icon, and an optional count badge.
-/// Tapping toggles the filter — tapping the already-selected chip
+/// Tapping toggles the filter - tapping the already-selected chip
 /// clears the filter back to "All Sources".
 class _DiscoverySourceChip extends StatelessWidget {
   final NodeDiscoverySource? source;

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 
 /// Retro segmented pip bar used for visible pet stats. 10 segments.
-/// Matches the Tamagotchi hardware metaphor — a small row of ticks that
+/// Matches the Tamagotchi hardware metaphor - a small row of ticks that
 /// fill as the stat rises.
 class PetStatPipRow extends StatelessWidget {
   final String label;

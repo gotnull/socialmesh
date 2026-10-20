@@ -18,7 +18,7 @@
 //
 // Wire emulation: each device's CanvasOutboundChannel feeds the
 // other device's MrrpServiceCanvas.applyInbound (with senderNodeId
-// and channelIndex). The channel never touches a real SIP path —
+// and channelIndex). The channel never touches a real SIP path -
 // this is a pure logic + LWW + state-machine test.
 
 import 'dart:io';

@@ -323,7 +323,7 @@ class AutomationEngine {
       branchActions: automation.effectiveThenActions,
       branchResult: const BranchSelectionResult(
         selection: BranchSelection.thenBranch,
-        reason: 'Manual execution — condition evaluation bypassed, THEN path',
+        reason: 'Manual execution - condition evaluation bypassed, THEN path',
         manualBypass: true,
       ),
     );
@@ -659,7 +659,7 @@ class AutomationEngine {
           (a) =>
               a.enabled &&
               a.trigger.type == event.type &&
-              // Scheduled events have no source protocol — the user's
+              // Scheduled events have no source protocol - the user's
               // filter intent is honoured at action dispatch via
               // `_routingProtocol`, so the gate skips the protocol
               // check here. Every other event type carries a real
@@ -688,7 +688,7 @@ class AutomationEngine {
         // Phase 3: Determine branch selection based on condition result.
         final branchResult = _selectBranch(automation, event);
         if (branchResult.selection == BranchSelection.none) {
-          // Condition failed and no ELSE branch — skip execution.
+          // Condition failed and no ELSE branch - skip execution.
           AppLogging.automations(
             'AutomationEngine: No branch to execute for "${automation.name}" '
             '(${branchResult.reason})',
@@ -770,7 +770,7 @@ class AutomationEngine {
     if (tree == null) {
       return const BranchSelectionResult(
         selection: BranchSelection.thenBranch,
-        reason: 'No conditions — default THEN path',
+        reason: 'No conditions - default THEN path',
       );
     }
 
@@ -779,24 +779,24 @@ class AutomationEngine {
     if (treeResult.passed) {
       return BranchSelectionResult(
         selection: BranchSelection.thenBranch,
-        reason: 'Condition tree passed — THEN path',
+        reason: 'Condition tree passed - THEN path',
         conditionTreeResult: treeResult,
       );
     }
 
-    // Condition failed — check for ELSE branch.
+    // Condition failed - check for ELSE branch.
     if (automation.effectiveElseActions != null) {
       return BranchSelectionResult(
         selection: BranchSelection.elseBranch,
-        reason: 'Condition tree failed — ELSE path',
+        reason: 'Condition tree failed - ELSE path',
         conditionTreeResult: treeResult,
       );
     }
 
-    // Condition failed, no ELSE — skip.
+    // Condition failed, no ELSE - skip.
     return BranchSelectionResult(
       selection: BranchSelection.none,
-      reason: 'Condition tree failed — no ELSE branch, skipping',
+      reason: 'Condition tree failed - no ELSE branch, skipping',
       conditionTreeResult: treeResult,
     );
   }
@@ -819,7 +819,7 @@ class AutomationEngine {
     final buf = StringBuffer('${automation.id}_${event.type.name}');
 
     switch (event.type) {
-      // Node-scoped triggers — dedupe per originating node
+      // Node-scoped triggers - dedupe per originating node
       case TriggerType.nodeOnline:
       case TriggerType.nodeOffline:
       case TriggerType.batteryLow:
@@ -833,7 +833,7 @@ class AutomationEngine {
         if (event.nodeNum != null) buf.write('_node${event.nodeNum}');
         break;
 
-      // Message-scoped triggers — dedupe per sender (and channel when relevant)
+      // Message-scoped triggers - dedupe per sender (and channel when relevant)
       case TriggerType.messageReceived:
       case TriggerType.messageContains:
         if (event.nodeNum != null) buf.write('_node${event.nodeNum}');
@@ -845,7 +845,7 @@ class AutomationEngine {
         if (event.nodeNum != null) buf.write('_node${event.nodeNum}');
         break;
 
-      // Schedule-scoped triggers — dedupe per slot
+      // Schedule-scoped triggers - dedupe per slot
       case TriggerType.scheduled:
         if (event.slotKey != null) {
           buf.write('_slot${event.slotKey}');
@@ -854,7 +854,7 @@ class AutomationEngine {
         }
         break;
 
-      // Manual — no extra discriminator
+      // Manual - no extra discriminator
       case TriggerType.manual:
         break;
     }
@@ -967,7 +967,7 @@ class AutomationEngine {
         break;
     }
 
-    // Conditions are no longer evaluated here — they are evaluated in
+    // Conditions are no longer evaluated here - they are evaluated in
     // _selectBranch() which determines THEN/ELSE/NONE branch selection.
     // This allows condition failures to route to ELSE actions instead of
     // unconditionally skipping execution.

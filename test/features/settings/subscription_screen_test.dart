@@ -182,7 +182,7 @@ TRANSLATION_ENABLED=false
     );
   });
 
-  group('SubscriptionScreen — paywall copy', () {
+  group('SubscriptionScreen - paywall copy', () {
     testWidgets('header shows lifetime value proposition', (tester) async {
       await tester.pumpWidget(_buildTestWidget());
       // Use pump() instead of pumpAndSettle() because AnimatedGoldButton
@@ -304,7 +304,7 @@ TRANSLATION_ENABLED=false
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      // Error message may be below fold — scroll to find it
+      // Error message may be below fold - scroll to find it
       await tester.scrollUntilVisible(find.text('Something went wrong'), 200);
       expect(find.text('Something went wrong'), findsOneWidget);
     });

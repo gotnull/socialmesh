@@ -7,7 +7,7 @@ library;
 
 /// Current state of a mesh game session.
 ///
-/// Values are frozen on the wire — transmitted as a single byte in
+/// Values are frozen on the wire - transmitted as a single byte in
 /// `STATE_RESP`. See `docs/mesh_games/MESH_GAMES_V0_1.md` § 5.1.
 enum MeshGameStatus {
   /// Session is in progress. Either player's turn may be expected.
@@ -21,7 +21,7 @@ enum MeshGameStatus {
   abandoned(0x03),
 
   /// Local state has drifted from peer state; UI should offer resync.
-  /// Non-terminal — returns to [active] on successful `STATE_RESP`.
+  /// Non-terminal - returns to [active] on successful `STATE_RESP`.
   stale(0x04);
 
   const MeshGameStatus(this.code);

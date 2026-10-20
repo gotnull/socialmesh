@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// [blockedPeerNodeIdsProvider] tests — pins the contract of the
+/// [blockedPeerNodeIdsProvider] tests - pins the contract of the
 /// derived list provider that feeds the SIP Hub Blocked section
 /// + filters the active lists.
 ///
 /// Hard rules pinned here:
 ///
 ///   - Returns an empty list while the manager is still loading
-///     (cold start) — the SIP Hub then renders no Blocked section,
+///     (cold start) - the SIP Hub then renders no Blocked section,
 ///     which is the safer default.
 ///   - Updates synchronously (within the same microtask) once a
 ///     `block` write completes.
 ///   - Sorted numerically for stable row order across rebuilds.
-///   - Returns a fresh list each rebuild — no aliased mutation hazard.
+///   - Returns a fresh list each rebuild - no aliased mutation hazard.
 ///   - Reading the provider does NOT mutate any safety / protocol
 ///     state (defense-in-depth: rendering is read-only).
 library;
@@ -89,7 +89,7 @@ void main() {
           .then((_) => c.read(peerSafetyManagerProvider.notifier));
       await mgr.block(0xAAAA);
       // Watching is needed for derived providers to recompute on
-      // dependency changes — read-only test setups must spin up a
+      // dependency changes - read-only test setups must spin up a
       // listener for the watch chain to fire.
       c.listen(blockedPeerNodeIdsProvider, (_, _) {}, fireImmediately: true);
       expect(c.read(blockedPeerNodeIdsProvider), equals([0xAAAA]));
@@ -129,7 +129,7 @@ void main() {
       await c.read(peerSafetyManagerProvider.future);
       final mgr = c.read(peerSafetyManagerProvider.notifier);
       await mgr.block(0xFEED);
-      // Read the provider an arbitrary number of times — none of
+      // Read the provider an arbitrary number of times - none of
       // these should mutate state.
       for (var i = 0; i < 5; i += 1) {
         c.read(blockedPeerNodeIdsProvider);

@@ -136,42 +136,39 @@ void main() {
       );
     });
 
-    test(
-      'no file outside MeshPacketBuilder references MeshPacket_Priority.RELIABLE',
-      () {
-        final reliablePattern = RegExp(
-          r'MeshPacket_Priority\.RELIABLE',
-          multiLine: true,
-        );
+    test('no file outside MeshPacketBuilder references MeshPacket_Priority.RELIABLE', () {
+      final reliablePattern = RegExp(
+        r'MeshPacket_Priority\.RELIABLE',
+        multiLine: true,
+      );
 
-        final files = _collectDartFiles(
-          'lib/',
-          excludeDirs: excludeDirs,
-          allowFiles: allowedReliableFiles,
-        );
+      final files = _collectDartFiles(
+        'lib/',
+        excludeDirs: excludeDirs,
+        allowFiles: allowedReliableFiles,
+      );
 
-        final violations = <String, List<String>>{};
+      final violations = <String, List<String>>{};
 
-        for (final file in files) {
-          final source = file.readAsStringSync();
-          final matches = _matchesWithLineNumbers(reliablePattern, source);
-          if (matches.isNotEmpty) {
-            violations[file.path] = matches;
-          }
+      for (final file in files) {
+        final source = file.readAsStringSync();
+        final matches = _matchesWithLineNumbers(reliablePattern, source);
+        if (matches.isNotEmpty) {
+          violations[file.path] = matches;
         }
+      }
 
-        expect(
-          violations,
-          isEmpty,
-          reason:
-              'Found MeshPacket_Priority.RELIABLE outside MeshPacketBuilder. '
-              'Priority assignment belongs exclusively in MeshPacketBuilder.\n'
-              'FIX: Use MeshPacketBuilder.remoteAdmin() which sets RELIABLE '
-              'automatically.\n'
-              '${_formatViolations(violations)}',
-        );
-      },
-    );
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Found MeshPacket_Priority.RELIABLE outside MeshPacketBuilder. '
+            'Priority assignment belongs exclusively in MeshPacketBuilder.\n'
+            'FIX: Use MeshPacketBuilder.remoteAdmin() which sets RELIABLE '
+            'automatically.\n'
+            '${_formatViolations(violations)}',
+      );
+    });
 
     test('no file outside MeshPacketBuilder sets ..wantAck = true', () {
       final wantAckPattern = RegExp(

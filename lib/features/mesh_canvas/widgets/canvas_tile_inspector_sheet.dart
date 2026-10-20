@@ -3,18 +3,18 @@
 
 // S7.D tile inspector sheet for the MeshCanvas viewer.
 //
-// Spec anchor: docs/canvas/CANVAS_V0_1.md §S0.ux.15 — "long-press
+// Spec anchor: docs/canvas/CANVAS_V0_1.md §S0.ux.15 - "long-press
 // opens the tile inspector (last painter / paint time / per-cell
 // op history)."
 //
 // What the sheet shows for one cell:
 //   - Current colour (palette name + filled swatch); the empty-cell
 //     branch renders "Empty cell" when nothing has ever landed here.
-//   - Last painter — "You (local)" on the Local Device Canvas (every
+//   - Last painter - "You (local)" on the Local Device Canvas (every
 //     paint is the local user), or "Node !<hex8>" on mesh canvases.
-//   - Last painted — relative time via the canonical
+//   - Last painted - relative time via the canonical
 //     nodedexRelativeXxx ARB keys.
-//   - Recent history — up to 10 most-recent applied_op entries for
+//   - Recent history - up to 10 most-recent applied_op entries for
 //     this exact cell, newest first. Empty placeholder when fresh.
 //
 // Async path: the sheet opens immediately and renders a tiny spinner

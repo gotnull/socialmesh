@@ -83,16 +83,14 @@ void main() {
     });
 
     test('applies search query against multiple fields', () {
-      final filtered = const WorldMeshFilters(
-        searchQuery: 'bravo',
-      ).apply(nodes);
+      final filtered = const WorldMeshFilters(searchQuery: 'bravo')
+          .apply(nodes);
       expect(filtered.map((n) => n.nodeNum), [2]);
     });
 
     test('applies hardware filter', () {
-      final filtered = const WorldMeshFilters(
-        hardwareFilter: {'TBEAM'},
-      ).apply(nodes);
+      final filtered = const WorldMeshFilters(hardwareFilter: {'TBEAM'})
+          .apply(nodes);
       expect(filtered.map((n) => n.nodeNum), [1, 3]);
     });
 
@@ -118,9 +116,8 @@ void main() {
     });
 
     test('hasEnvironmentSensors=true matches any env sensor field', () {
-      final filtered = const WorldMeshFilters(
-        hasEnvironmentSensors: true,
-      ).apply(nodes);
+      final filtered = const WorldMeshFilters(hasEnvironmentSensors: true)
+          .apply(nodes);
       expect(filtered.map((n) => n.nodeNum), [1, 3]);
     });
 
@@ -133,9 +130,8 @@ void main() {
     });
 
     test('no match returns empty list', () {
-      final filtered = const WorldMeshFilters(
-        hardwareFilter: {'NRF52'},
-      ).apply(nodes);
+      final filtered = const WorldMeshFilters(hardwareFilter: {'NRF52'})
+          .apply(nodes);
       expect(filtered, isEmpty);
     });
 

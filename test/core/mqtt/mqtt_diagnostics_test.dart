@@ -560,9 +560,8 @@ void main() {
       });
 
       test('totalDuration is non-null after markComplete', () {
-        final report = DiagnosticReport.initial(
-          tlsEnabled: true,
-        ).markComplete();
+        final report = DiagnosticReport.initial(tlsEnabled: true)
+            .markComplete();
         expect(report.totalDuration, isNotNull);
       });
     });
@@ -624,9 +623,8 @@ void main() {
 
     group('markComplete', () {
       test('sets completedAt', () {
-        final report = DiagnosticReport.initial(
-          tlsEnabled: true,
-        ).markComplete();
+        final report = DiagnosticReport.initial(tlsEnabled: true)
+            .markComplete();
         expect(report.completedAt, isNotNull);
       });
 
@@ -1060,7 +1058,7 @@ void main() {
 
     test('returns auth-specific message for auth failure', () {
       var report = DiagnosticReport.initial(tlsEnabled: false);
-      // Pass config, DNS, TCP — fail auth
+      // Pass config, DNS, TCP - fail auth
       for (final result in report.results) {
         if (result.type == DiagnosticCheckType.authentication) {
           report = report.updateResult(

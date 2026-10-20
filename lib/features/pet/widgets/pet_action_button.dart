@@ -9,18 +9,18 @@ import '../../../core/widgets/animations.dart';
 /// Compact square-ish action button for the pet's bottom action row.
 ///
 /// Optional [onLongPress] enables a Tamagotchi-style hold gesture
-/// (tap = primary action, hold = alt action) — used for Charge → Surge.
+/// (tap = primary action, hold = alt action) - used for Charge → Surge.
 ///
-/// States (must be visually distinct — the bar shows 4–6 of these
+/// States (must be visually distinct - the bar shows 4–6 of these
 /// side-by-side and the user must be able to tell at a glance which
 /// one to tap):
 ///
-///   * Normal              — accent color, clear border, icon bright
-///   * Pulsing (actionable) — normal + animated glow ring + bold label
-///   * Dimmed (tappable no-op) — accent VISIBLE but muted, label
+///   * Normal              - accent color, clear border, icon bright
+///   * Pulsing (actionable) - normal + animated glow ring + bold label
+///   * Dimmed (tappable no-op) - accent VISIBLE but muted, label
 ///       in textSecondary; tap still registers so the engine can
 ///       toast "already charged" etc.
-///   * Disabled (untappable) — NEUTRAL gray, accent removed entirely,
+///   * Disabled (untappable) - NEUTRAL gray, accent removed entirely,
 ///       label in textTertiary, no tap response. This drops the
 ///       accent color so disabled reads unambiguously as "off" and
 ///       can't be confused with a dimmed accent button.
@@ -147,7 +147,7 @@ class _PetActionButtonState extends State<PetActionButton>
       child: Icon(widget.icon, size: 22, color: iconColor),
     );
 
-    // Animated glow ring — only allocated when pulsing. The
+    // Animated glow ring - only allocated when pulsing. The
     // SingleTickerProviderStateMixin doesn't spin if we aren't
     // calling `_pulseController.repeat()` in this branch, so the
     // non-pulsing path has zero animation cost.

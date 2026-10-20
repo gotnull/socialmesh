@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../../utils/time_format.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
@@ -10,8 +12,10 @@ import '../../core/meshtastic/region_metadata.dart' as region_metadata;
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
@@ -57,7 +61,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   bool _tlsEnabled = false;
   bool _proxyToClientEnabled = false;
   bool _mapReportingEnabled = false;
-  // App-local consent flag — sticky across sessions via SharedPreferences.
+  // App-local consent flag - sticky across sessions via SharedPreferences.
   // The radio's mapReportingEnabled gates whether map-reporting attempts
   // happen at all; this gates whether the unencrypted location is actually
   // emitted (`shouldReportLocation`) and whether the app-side proxy will
@@ -119,7 +123,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   }
 
   /// Cached default-broker state from the previous [_onAddressChanged]
-  /// invocation. `null` means "not seeded yet" — the very first listener
+  /// invocation. `null` means "not seeded yet" - the very first listener
   /// fire will not trigger autofill, which lets [_applyConfig] set the
   /// address from the radio's stored config without overwriting the
   /// device-stored credentials with the public defaults.
@@ -277,7 +281,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     final l10n = context.l10n;
 
     // Pre-save confirmation. Saving an MQTT config triggers a radio
-    // reboot, so warn before kicking off the apply — the user has one
+    // reboot, so warn before kicking off the apply - the user has one
     // last chance to back out of an accidental tap. We do this BEFORE
     // flipping `_isSaving` so the spinner only spins for the real
     // network round-trip, not for the human deciding.
@@ -340,7 +344,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       );
 
       if (mounted) {
-        // Stay on the MQTT screen after save — the user wants to watch the
+        // Stay on the MQTT screen after save - the user wants to watch the
         // CLIENT PROXY STATUS card update with the new connection result
         // (phase + reason) without having to re-open the screen. Just
         // dismiss the keyboard so the diagnostics card scrolls into view.
@@ -383,8 +387,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              // Save is disabled while loading, in-flight, or — gated by
-              // [_hasChanges] — when no edit has been made yet. Prevents
+              // Save is disabled while loading, in-flight, or - gated by
+              // [_hasChanges] - when no edit has been made yet. Prevents
               // fat-finger no-op saves that would still trigger the radio
               // reboot countdown.
               onPressed: (_isLoading || _isSaving || !_hasChanges)
@@ -827,7 +831,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                             // JSON Output and Client Proxy are mutually
                             // exclusive on the radio (JSON bypasses the
                             // encrypted proxy pipeline). TLS, however, is
-                            // independent — SocialMesh's proxy fully
+                            // independent - SocialMesh's proxy fully
                             // supports TLS to the broker, so do NOT force
                             // TLS off when proxy is enabled.
                             if (value) _jsonEnabled = false;
@@ -997,7 +1001,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                 value: diag.messagesRelayed.toString(),
                 icon: Icons.download,
               ),
-              // Publish-path counters — isolate where device→broker frames go.
+              // Publish-path counters - isolate where device→broker frames go.
               InfoTableRow(
                 label: l10n.mqttProxyFramesReceived,
                 value: diag.framesReceivedFromRadio.toString(),
@@ -1181,7 +1185,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       ); // lint-allow: hardcoded-string
     }
     // Every field is emitted unconditionally (with a "None" fallback) so a
-    // support dump is always complete — an absent line used to be ambiguous
+    // support dump is always complete - an absent line used to be ambiguous
     // between "healthy" and "old app version".
     buffer
       ..writeln(
@@ -1275,7 +1279,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // GDPR / CCPA consent block — must precede any
+          // GDPR / CCPA consent block - must precede any
           // interval/precision controls. Once the user toggles Map
           // Reporting on, they must read and expressly opt in to the
           // privacy disclaimer before the firmware-level
@@ -1312,7 +1316,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
           // merged AXSwitch in the iOS accessibility tree, which steals
           // taps from a child ThemedSwitch. Wrapping the row in an
           // explicit InkWell gives the toggle its own gesture detector
-          // AND lets the user tap the label text — better UX anyway.
+          // AND lets the user tap the label text - better UX anyway.
           InkWell(
             onTap: () {
               HapticFeedback.selectionClick();
@@ -1325,7 +1329,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Switch is presentational only — the InkWell owns the
+                  // Switch is presentational only - the InkWell owns the
                   // tap. `onChanged: null` would render disabled, so pass
                   // a no-op closure that keeps the visual enabled state.
                   IgnorePointer(
@@ -1350,7 +1354,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
             ),
           ),
           // Interval + precision controls only render after the user has
-          // expressly opted in — no point letting them tune publish
+          // expressly opted in - no point letting them tune publish
           // frequency for a broadcast they have not authorized.
           if (!_mapReportingOptIn) const SizedBox.shrink(),
           if (_mapReportingOptIn) ...[

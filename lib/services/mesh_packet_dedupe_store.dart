@@ -19,12 +19,12 @@ import '../core/radio_scope.dart';
 /// non-zero ID. If a malformed packet or firmware bug delivers
 /// `packetId == 0`, the second such packet from the same sender on the
 /// same channel within 90 minutes WILL be deduplicated. This is by
-/// design — bypassing dedupe on `packetId == 0` would let a malformed-
+/// design - bypassing dedupe on `packetId == 0` would let a malformed-
 /// packet flood replay endlessly. Different senders or different
 /// channels do not collide on `packetId == 0`.
 ///
 /// Different `senderNodeId` values never collide even if both reset to
-/// `packetId == 1` simultaneously — the composite key includes the
+/// `packetId == 1` simultaneously - the composite key includes the
 /// sender. `packetId` rollover (32-bit wrap to 0) is also safe because
 /// the key includes the rolled-over value as a distinct row.
 class MeshPacketKey {

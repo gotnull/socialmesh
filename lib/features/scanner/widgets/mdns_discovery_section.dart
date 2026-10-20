@@ -40,7 +40,7 @@ class _MdnsDiscoverySectionState extends ConsumerState<MdnsDiscoverySection>
   void initState() {
     super.initState();
     // Start mDNS scanning if not already running.
-    // We do NOT stop scanning on dispose — the provider manages its own
+    // We do NOT stop scanning on dispose - the provider manages its own
     // lifecycle via ref.onDispose. This prevents the device list from
     // being cleared on widget rebuilds.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -108,7 +108,7 @@ class _MdnsDiscoverySectionState extends ConsumerState<MdnsDiscoverySection>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header — matches BLE "Available Devices" style
+        // Section header - matches BLE "Available Devices" style
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(

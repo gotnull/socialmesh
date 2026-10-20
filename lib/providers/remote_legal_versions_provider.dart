@@ -11,7 +11,7 @@ import 'app_providers.dart';
 /// Cache keys for the last-fetched remote legal document versions.
 ///
 /// These are stored in [SharedPreferences] so that the effective versions
-/// survive offline launches — if the user was once online and saw a newer
+/// survive offline launches - if the user was once online and saw a newer
 /// remote version, they will still be prompted even when offline.
 const _cachedTermsKey = 'cached_remote_terms_version';
 const _cachedPrivacyKey = 'cached_remote_privacy_version';
@@ -22,7 +22,7 @@ const _document = 'legal_versions';
 
 /// The effective legal document versions the user must accept.
 ///
-/// This is computed as `max(hardcoded, remote)` — the hardcoded values in
+/// This is computed as `max(hardcoded, remote)` - the hardcoded values in
 /// [LegalConstants] serve as a floor that ships with every app release,
 /// while the remote Firestore document can raise the bar server-side
 /// without an app update.

@@ -491,7 +491,7 @@ void main() {
       });
     });
 
-    group('Phase 5.1 — Manual Run Clarity', () {
+    group('Phase 5.1 - Manual Run Clarity', () {
       test('manual run outcome is distinct from automatic THEN execution', () {
         final manualEntry = _logEntry(
           branchSelection: 'then',

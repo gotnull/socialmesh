@@ -129,7 +129,7 @@ class _PeerHeader extends StatelessWidget {
           nodeNum: sigilSeed,
           size: 56,
           // Anonymous-tier sigils are seeded by an ambient ID (not a
-          // real nodeNum) and have no NodeDex entry — keep them inert.
+          // real nodeNum) and have no NodeDex entry - keep them inert.
           enableTap: tier != InteractionTier.anonymous,
         ),
         const SizedBox(width: AppTheme.spacing16),
@@ -418,7 +418,7 @@ class _ActionButtons extends ConsumerWidget {
     protocol.acceptSipHandshake(peer.nodeId);
     // T+S: mark first-contact ONLY when the local user explicitly
     // taps Accept. Inbound HELLO / DECLINE / ACCEPT do NOT carry
-    // consent — the user-tap is the consent moment.
+    // consent - the user-tap is the consent moment.
     ref
         .read(peerSafetyManagerProvider.notifier)
         .markFirstHandshake(peer.nodeId, DateTime.now().millisecondsSinceEpoch);
@@ -438,11 +438,11 @@ class _ActionButtons extends ConsumerWidget {
 
     final handshake = ref.read(sipHandshakeProvider);
     if (handshake == null) {
-      // Chip is the single source of truth — no redundant snackbar.
+      // Chip is the single source of truth - no redundant snackbar.
       return;
     }
 
-    // Already in progress — don't interrupt.
+    // Already in progress - don't interrupt.
     final currentState = handshake.getState(peer.nodeId);
     if (currentState != SipHandshakeState.idle &&
         currentState != SipHandshakeState.declined &&
@@ -452,7 +452,7 @@ class _ActionButtons extends ConsumerWidget {
     }
 
     // Explicit user retry from a terminal state overrides the
-    // 120s post-failure cooldown — the cooldown is meant to throttle
+    // 120s post-failure cooldown - the cooldown is meant to throttle
     // automatic retransmits, not block deliberate user retries.
     final isUserRetry =
         currentState == SipHandshakeState.failed ||
@@ -534,7 +534,7 @@ class _ActionButtons extends ConsumerWidget {
     await ref
         .read(peerSafetyManagerProvider.notifier)
         .block(peer.nodeId, reasonCode: 'mesh_explorer_block');
-    // Also clear any in-flight pending consent state — silent
+    // Also clear any in-flight pending consent state - silent
     // drop, no HS_DECLINE on the wire.
     if (!context.mounted) return;
     ref.read(protocolServiceProvider).cancelSipHandshake(peer.nodeId);

@@ -582,13 +582,15 @@ void main() {
       );
       await bridge.start();
 
-      final reply = await mock
-          .invokeFromNativeAndDecode('onSessionStateChanged', <String, Object>{
-            'activationState': 'activated',
-            'isReachable': true,
-            'isPaired': true,
-            'isWatchAppInstalled': false,
-          });
+      final reply = await mock.invokeFromNativeAndDecode(
+        'onSessionStateChanged',
+        <String, Object>{
+          'activationState': 'activated',
+          'isReachable': true,
+          'isPaired': true,
+          'isWatchAppInstalled': false,
+        },
+      );
       expect(reply, isNull);
     });
   });

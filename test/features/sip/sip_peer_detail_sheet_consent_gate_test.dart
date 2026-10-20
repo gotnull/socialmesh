@@ -82,7 +82,7 @@ void main() {
       );
       await tester.pump();
 
-      // No button whatsoever — neither Start handshake nor Open chat
+      // No button whatsoever - neither Start handshake nor Open chat
       // nor Handshake complete. Consent gate is mandatory.
       expect(find.byType(FilledButton), findsNothing);
     });

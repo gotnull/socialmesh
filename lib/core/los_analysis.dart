@@ -47,10 +47,10 @@ class LosResult {
 
 /// LOS analysis verdict.
 enum LosVerdict {
-  /// Clearance exceeds 60% of the first Fresnel zone — strong path.
+  /// Clearance exceeds 60% of the first Fresnel zone - strong path.
   clear,
 
-  /// Some clearance exists but less than 60% Fresnel — marginal path.
+  /// Some clearance exists but less than 60% Fresnel - marginal path.
   marginal,
 
   /// Earth curvature alone obstructs the direct path.
@@ -63,9 +63,9 @@ enum LosVerdict {
 /// Evaluate line-of-sight between two geographic points.
 ///
 /// Parameters:
-///   [altA] / [altB] — altitude in meters above mean sea level.
-///   [distanceMeters] — great-circle distance between the two points.
-///   [frequencyMhz] — operating frequency (default 906 MHz for LoRa US).
+///   [altA] / [altB] - altitude in meters above mean sea level.
+///   [distanceMeters] - great-circle distance between the two points.
+///   [frequencyMhz] - operating frequency (default 906 MHz for LoRa US).
 ///
 /// Uses the standard 4/3 earth radius model for atmospheric refraction.
 ///
@@ -238,15 +238,15 @@ class TerrainLosResult {
 /// Analyse line-of-sight over a real terrain profile.
 ///
 /// Parameters:
-///   [samples] — ordered elevation samples from [ElevationService].
+///   [samples] - ordered elevation samples from [ElevationService].
 ///     Each sample must have a non-null [elevationMeters]; samples with
 ///     null elevation are treated as sea level (0 m) to avoid crashing.
-///   [altAMeters] / [altBMeters] — altitude of endpoint A / B in meters
+///   [altAMeters] / [altBMeters] - altitude of endpoint A / B in meters
 ///     above mean sea level. These are the antenna heights above terrain
 ///     (or sea level where terrain = 0). When null, the LOS line and
 ///     Fresnel analysis are skipped; the method returns
 ///     [LosVerdict.unknown] and [hasAltitudeData] == false.
-///   [frequencyMhz] — operating frequency (default 906 MHz for LoRa US).
+///   [frequencyMhz] - operating frequency (default 906 MHz for LoRa US).
 ///
 /// Assumptions:
 ///   - Antenna heights are given as absolute elevations (AMSL), matching the
@@ -292,7 +292,7 @@ TerrainLosResult evaluateLosFromProfile({
   double terrain(int i) => samples[i].elevationMeters ?? 0.0;
 
   if (altAMeters == null || altBMeters == null) {
-    // No altitude data — can still return terrain-only profile counts but
+    // No altitude data - can still return terrain-only profile counts but
     // cannot compute clearance or LOS line.
     return TerrainLosResult(
       verdict: LosVerdict.unknown,

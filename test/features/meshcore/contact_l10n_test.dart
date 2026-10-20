@@ -77,7 +77,7 @@ void main() {
         // The static label() returns the bare ASCII string 'Chat' for use in
         // toString/search. The localized version returns the richer "Chat
         // Node" copy used in user-facing surfaces. This test pins the
-        // separation — if the static label is repurposed for display, this
+        // separation - if the static label is repurposed for display, this
         // test will fail and force a conscious decision.
         expect(MeshCoreAdvType.label(MeshCoreAdvType.chat), 'Chat');
         expect(

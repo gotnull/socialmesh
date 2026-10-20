@@ -6,23 +6,23 @@
 // Spec anchor: docs/canvas/CANVAS_PARTICIPATION_V0_1.md §5.5.
 //
 // Canonical inner-settings pattern: SettingsSectionHeader +
-// SettingsTile + ThemedSwitch — same primitives as
+// SettingsTile + ThemedSwitch - same primitives as
 // `lib/features/settings/mqtt_config_screen.dart`. Surfaced from the
 // MeshCanvas overview app bar via [showCanvasParticipationSettingsSheet].
 //
 // Two sections:
 //   - PARTICIPATION: two toggles.
-//       1. Mesh participation — flips
+//       1. Mesh participation - flips
 //          `meshCanvasParticipationProvider`. Toggling this off
 //          forces presence sharing off (invariant enforced by the
 //          notifier; the UI mirrors).
-//       2. Share my presence — flips
+//       2. Share my presence - flips
 //          `meshCanvasPresenceSharingEnabledProvider`. Visually
 //          disabled while participation is off, with a small tooltip
 //          line explaining why.
 //   - ABOUT: two action rows.
-//       1. What is MeshCanvas? — opens the canonical help sheet.
-//       2. Replay onboarding — re-opens the first-run onboarding
+//       1. What is MeshCanvas? - opens the canonical help sheet.
+//       2. Replay onboarding - re-opens the first-run onboarding
 //          sheet regardless of the persisted `onboardingSeen` value.
 library;
 
@@ -63,7 +63,7 @@ class _CanvasParticipationSettingsSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
     final accent = context.accentColor;
-    // Cheap boolean selectors — they return false during AsyncLoading
+    // Cheap boolean selectors - they return false during AsyncLoading
     // which matches the conservative default we want for the sheet.
     final participation = ref.watch(meshCanvasParticipationEnabledProvider);
     final sharing = ref.watch(meshCanvasPresenceSharingEnabledProvider);

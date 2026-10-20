@@ -124,7 +124,7 @@ final reticulumNodeDexBridgeProvider = Provider<ReticulumNodeDexBridge>((ref) {
   );
 });
 
-/// Stats notifier — pure state container around [ReticulumStatsRecorder].
+/// Stats notifier - pure state container around [ReticulumStatsRecorder].
 ///
 /// Fragment events are pushed in via [recordFragment] from the dispatch
 /// loop in `protocolServiceProvider`, NOT pulled from the stream by the

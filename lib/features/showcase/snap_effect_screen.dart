@@ -7,6 +7,7 @@ import 'package:socialmesh/core/logging.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/snappable.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Demo screen to test the Thanos snap disintegration effect

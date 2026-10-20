@@ -11,9 +11,9 @@
 //
 //   nodeDexNodeConstellationProvider(centerNodeNum)
 //     ├─ nodeDexConstellationFilterProvider(centerNodeNum)
-//     ├─ nodeDexEntryProvider(centerNodeNum)        — NodeDexEntry
-//     ├─ nodesProvider                              — Map<int, MeshNode>
-//     └─ channelsProvider                           — List<ChannelConfig>
+//     ├─ nodeDexEntryProvider(centerNodeNum)        - NodeDexEntry
+//     ├─ nodesProvider                              - Map<int, MeshNode>
+//     └─ channelsProvider                           - List<ChannelConfig>
 //
 // All upstream providers are watched lazily; if the entry is missing
 // the provider returns a constellation with `emptyReason: missingEntry`
@@ -551,7 +551,7 @@ class _ConstellationBuilder {
   void addMessage() {
     // Message-content access is intentionally NOT performed here. The
     // graph card renders a count and a "View thread" affordance via
-    // an action node — bodies are never put into labels or subtitles.
+    // an action node - bodies are never put into labels or subtitles.
     final entry = this.entry;
     final messageCount = entry?.messageCount ?? 0;
     if (messageCount <= 0) return;
@@ -655,7 +655,7 @@ class _ConstellationBuilder {
 
   NodeDexConstellation build() {
     // Apply the rfOnly filter to MQTT-tagged surrounding nodes
-    // (centre is exempt — hiding it would defeat the screen).
+    // (centre is exempt - hiding it would defeat the screen).
     final retained = <NodeDexGraphNode>[];
     for (final n in _nodes) {
       if (filter.rfOnly && n.viaMqtt && !n.centered) continue;

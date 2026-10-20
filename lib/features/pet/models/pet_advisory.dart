@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetAdvisory — the single highest-priority "what should the user do
+// PetAdvisory - the single highest-priority "what should the user do
 // right now?" signal, derived purely from [PetState] + [PetConfig].
 //
 // Why this exists
@@ -16,7 +16,7 @@
 //
 // Purity
 // ------
-// No Flutter, no Riverpod, no DateTime.now() — takes `now` explicitly.
+// No Flutter, no Riverpod, no DateTime.now() - takes `now` explicitly.
 // This keeps the derivation fully unit-testable and deterministic.
 
 import 'package:flutter/foundation.dart';
@@ -55,7 +55,7 @@ enum PetAdvisoryAction { charge, resonate, stabilise, purge, dim, reSigil }
 /// `.select` on this without rebuilding every frame.
 @immutable
 class PetAdvisory {
-  /// The canonical "kind" of this advisory — drives message + icon.
+  /// The canonical "kind" of this advisory - drives message + icon.
   /// Kept as an explicit enum rather than inferred from fields so the
   /// UI layer doesn't have to reason about priority.
   final PetAdvisoryKind kind;
@@ -120,7 +120,7 @@ PetAdvisory computePrimaryAdvisory({
   required PetConfig config,
   required bool inSleepWindow,
 }) {
-  // Stage-driven terminals first — these override even sickness because
+  // Stage-driven terminals first - these override even sickness because
   // you can't purge a dormant pet or feed an egg.
   if (state.stage == PetStage.dormant) {
     return const PetAdvisory(
@@ -136,7 +136,7 @@ PetAdvisory computePrimaryAdvisory({
     );
   }
 
-  // Sickness is the most-urgent live state — the pet is actively harmed.
+  // Sickness is the most-urgent live state - the pet is actively harmed.
   if (state.isSick) {
     return const PetAdvisory(
       kind: PetAdvisoryKind.sick,
@@ -145,7 +145,7 @@ PetAdvisory computePrimaryAdvisory({
     );
   }
 
-  // Active attention call — the pet is actively beeping. Surface the
+  // Active attention call - the pet is actively beeping. Surface the
   // reason-specific action so "tap Sync" is never the primary hint
   // (Sync just silences the beep; the underlying need has its own
   // action). This mirrors the care-engine philosophy that each need
@@ -192,7 +192,7 @@ PetAdvisory computePrimaryAdvisory({
     }
   }
 
-  // Hygiene imminent sickness — artefacts at the sickness threshold.
+  // Hygiene imminent sickness - artefacts at the sickness threshold.
   // Surfaces BEFORE passive low-stat nudges because the consequence
   // (sickness) is a bigger state change than a mood dip.
   if (state.hygieneArtefacts.length >= config.hygieneSicknessThreshold) {
@@ -203,7 +203,7 @@ PetAdvisory computePrimaryAdvisory({
     );
   }
 
-  // Passive low-stat warnings — nudge before a call fires.
+  // Passive low-stat warnings - nudge before a call fires.
   if (state.energy <= config.callTriggerStatThreshold) {
     return const PetAdvisory(
       kind: PetAdvisoryKind.energyLow,
@@ -219,7 +219,7 @@ PetAdvisory computePrimaryAdvisory({
     );
   }
 
-  // Mild mess — single artefact, no urgency.
+  // Mild mess - single artefact, no urgency.
   if (state.hygieneArtefacts.isNotEmpty) {
     return const PetAdvisory(
       kind: PetAdvisoryKind.hygieneMild,
@@ -236,7 +236,7 @@ PetAdvisory computePrimaryAdvisory({
     );
   }
 
-  // Bedtime hint — pet is awake but inside the sleep window.
+  // Bedtime hint - pet is awake but inside the sleep window.
   if (inSleepWindow) {
     return const PetAdvisory(
       kind: PetAdvisoryKind.bedtime,

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
@@ -139,9 +140,8 @@ class _MessageTile extends StatelessWidget {
                 SizedBox(height: AppTheme.spacing2),
                 Text(
                   message,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.textSecondary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

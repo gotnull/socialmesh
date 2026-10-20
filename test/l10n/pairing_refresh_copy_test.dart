@@ -28,10 +28,10 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 const _bannedPhrases = <String>[
   'Your phone removed',
   'your phone removed',
-  // Italian "Il telefono ha rimosso" — pre-fix copy.
+  // Italian "Il telefono ha rimosso" - pre-fix copy.
   'Il telefono ha rimosso',
   'il telefono ha rimosso',
-  // Portuguese "Seu telefone removeu" — pre-fix copy.
+  // Portuguese "Seu telefone removeu" - pre-fix copy.
   'Seu telefone removeu',
   'seu telefone removeu',
 ];
@@ -113,7 +113,7 @@ void main() {
           isNot(matches(RegExp(_bannedPhrases.join('|')))),
           reason:
               'Region-selection pairing copy must not blame the phone '
-              'either — it is the same recovery scenario reached via the '
+              'either - it is the same recovery scenario reached via the '
               'region apply path.',
         );
       }
@@ -123,7 +123,7 @@ void main() {
   test('all shipped locales (en, it, pt) carry the reset-aware refresh keys '
       'and none of them contain the banned phone-blaming phrasing', () async {
     // Russian (ru) is community-managed by skrashevich and is
-    // intentionally not asserted here — translators pick keys up
+    // intentionally not asserted here - translators pick keys up
     // from en.arb at their own cadence.
     const locales = <Locale>[Locale('en'), Locale('it'), Locale('pt')];
     for (final locale in locales) {

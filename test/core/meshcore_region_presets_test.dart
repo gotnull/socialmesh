@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D26 — region preset table regression pins.
+// D26 - region preset table regression pins.
 //
 // The 19 presets each pin (frequencyMHz, bandwidthKhz, sf, cr,
 // txPowerDbm). Wrong values can put a user out of regulatory band
@@ -25,7 +25,7 @@ void main() {
       expect(
         ids.toSet().length,
         equals(ids.length),
-        reason: 'duplicate preset ids — would break persistence hydration',
+        reason: 'duplicate preset ids - would break persistence hydration',
       );
       for (final id in ids) {
         expect(

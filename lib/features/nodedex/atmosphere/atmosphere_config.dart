@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Atmosphere Configuration — constants for the Elemental Atmosphere system.
+// Atmosphere Configuration - constants for the Elemental Atmosphere system.
 //
 // Defines particle limits, timing, colors, and performance thresholds
 // for all ambient atmospheric effects. Values are calibrated to be
 // visually subtle and performant on low-end devices.
 //
 // The atmosphere system renders four effect types:
-//   1. Rain    — vertical streaks tied to packet activity / node count
-//   2. Embers  — rising sparks tied to patina scores / relay contribution
-//   3. Mist    — drifting fog tied to sparse data regions
-//   4. Starlight — ambient twinkling background particles
+//   1. Rain    - vertical streaks tied to packet activity / node count
+//   2. Embers  - rising sparks tied to patina scores / relay contribution
+//   3. Mist    - drifting fog tied to sparse data regions
+//   4. Starlight - ambient twinkling background particles
 //
 // All effects are background-layer, non-interactive, and purely cosmetic.
 // They never obstruct text, sigils, or interactive elements.
@@ -143,7 +143,7 @@ class AtmosphereColors {
   AtmosphereColors._();
 
   // ---------------------------------------------------------------------------
-  // Rain — cool blue-grey tones
+  // Rain - cool blue-grey tones
   // ---------------------------------------------------------------------------
 
   /// Rain particle colors for dark theme.
@@ -165,7 +165,7 @@ class AtmosphereColors {
   static const double rainMaxAlpha = 0.25;
 
   // ---------------------------------------------------------------------------
-  // Embers — warm amber-orange tones
+  // Embers - warm amber-orange tones
   // ---------------------------------------------------------------------------
 
   /// Ember particle colors for dark theme.
@@ -191,7 +191,7 @@ class AtmosphereColors {
   static const double emberCoreBrightness = 1.6;
 
   // ---------------------------------------------------------------------------
-  // Mist — translucent grey-white
+  // Mist - translucent grey-white
   // ---------------------------------------------------------------------------
 
   /// Mist particle colors for dark theme.
@@ -212,7 +212,7 @@ class AtmosphereColors {
   static const double mistMaxAlpha = 0.18;
 
   // ---------------------------------------------------------------------------
-  // Starlight — pale white-blue points
+  // Starlight - pale white-blue points
   // ---------------------------------------------------------------------------
 
   /// Starlight particle colors for dark theme.
@@ -287,7 +287,7 @@ class AtmosphereIntensity {
   static const double mistSparseFractionSaturation = 0.5;
 
   // ---------------------------------------------------------------------------
-  // Starlight intensity (ambient — always gently present when enabled)
+  // Starlight intensity (ambient - always gently present when enabled)
   // ---------------------------------------------------------------------------
 
   /// Minimum starlight intensity. Starlight is always at least this

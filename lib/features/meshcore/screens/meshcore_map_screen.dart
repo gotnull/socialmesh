@@ -3,6 +3,7 @@
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
+
 import 'dart:async';
 import 'dart:math';
 
@@ -12,8 +13,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../core/units/geo_distance.dart';
+
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../../core/logging.dart';
 import '../../../core/los_analysis.dart';
 import '../../../core/map_config.dart';
@@ -101,7 +105,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   // Camera-boundary NaN recovery. flutter_map's pinch pipeline can commit a
   // non-finite pose through its internal moveRaw() (a math.log(scale<=0)
   // overflow), bypassing every safeMove guard and leaving the camera centre
-  // NaN — which then throws fatally in Crs.checkLatLng on the next tile build
+  // NaN - which then throws fatally in Crs.checkLatLng on the next tile build
   // and every later pinch. onPositionChanged is the one hook that fires on the
   // internal move, so we snap back to the last finite pose before that frame
   // builds. See lib/core/safe_lat_lng.dart isFiniteCameraPose.
@@ -200,7 +204,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     final contactsState = ref.watch(meshCoreContactsProvider);
     // D42-A: path overlay drives the polyline + hop markers.
     final pathOverlay = ref.watch(meshCorePathOverlayProvider);
-    // D-Q10: user-dropped POI pins. AsyncValue — hydrates from
+    // D-Q10: user-dropped POI pins. AsyncValue - hydrates from
     // SharedPreferences once after first build; treat the loading /
     // error state as "no pins" so the map renders cleanly.
     final pinnedLocations =
@@ -1991,7 +1995,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   }
 }
 
-/// Measurement card for MeshCore map — distance + bearing between two points.
+/// Measurement card for MeshCore map - distance + bearing between two points.
 /// Long-press for actions sheet.
 class _MeshCoreMeasurementCard extends StatelessWidget {
   final LatLng start;

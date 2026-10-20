@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Modified: Default canvas size increased from screen dimensions to 4000x4000
 // for generous mobile panning.
@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 import '../data/vs_node_data_provider.dart';
 import 'vs_node_view.dart';
 
-/// Default canvas dimensions — much larger than upstream defaults to give
+/// Default canvas dimensions - much larger than upstream defaults to give
 /// mobile users generous room to spread nodes out. The InteractiveViewer
 /// handles constraining the visible portion.
 const double _kDefaultCanvasSize = 4000.0;
@@ -67,7 +67,7 @@ class InteractiveVSNodeView extends StatefulWidget {
 
   /// The minimum allowed scale.
   ///
-  /// Lowered from upstream default of 0.01 to 0.1 — scales below 0.1 make
+  /// Lowered from upstream default of 0.01 to 0.1 - scales below 0.1 make
   /// nodes unreadably small on mobile and cause precision issues with touch
   /// target hit testing.
   final double minScale;
@@ -113,7 +113,7 @@ class _InteractiveVSNodeViewState extends State<InteractiveVSNodeView> {
   void didUpdateWidget(covariant InteractiveVSNodeView oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Handle controller swaps — remove listener from old, add to new.
+    // Handle controller swaps - remove listener from old, add to new.
     if (widget.controller != oldWidget.controller) {
       _controller.removeListener(_onTransformChanged);
 

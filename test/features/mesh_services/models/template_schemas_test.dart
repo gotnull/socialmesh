@@ -112,7 +112,7 @@ void main() {
       }
     });
 
-    test('forType(game) returns null — games use dedicated UI, not schema', () {
+    test('forType(game) returns null - games use dedicated UI, not schema', () {
       expect(MeshServiceSchemas.forType(MeshServiceType.game), isNull);
     });
 

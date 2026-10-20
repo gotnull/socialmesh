@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Telemetry Database — SQLite-backed telemetry history storage.
+// Telemetry Database - SQLite-backed telemetry history storage.
 //
 // Replaces the SharedPreferences StringList approach which suffered from:
 // - Full read-modify-write of EVERY entry on each new telemetry packet
@@ -128,7 +128,7 @@ class TelemetryDatabase {
 
   Database get _database {
     if (_db == null) {
-      throw StateError('TelemetryDatabase not initialized — call init() first');
+      throw StateError('TelemetryDatabase not initialized - call init() first');
     }
     return _db!;
   }
@@ -223,7 +223,7 @@ class TelemetryDatabase {
           final id = json['id'] as String? ?? '';
           final timestamp = json['timestamp'] as int? ?? 0;
 
-          // Strip id/nodeNum/timestamp from data — they live in columns
+          // Strip id/nodeNum/timestamp from data - they live in columns
           final data = Map<String, dynamic>.from(json)
             ..remove('id')
             ..remove('nodeNum')
@@ -481,7 +481,7 @@ class TelemetryDatabase {
   }
 
   // ---------------------------------------------------------------------------
-  // Traceroute Logs (legacy — new traceroutes use TracerouteDatabase)
+  // Traceroute Logs (legacy - new traceroutes use TracerouteDatabase)
   // ---------------------------------------------------------------------------
 
   Future<void> addTraceRouteLog(TraceRouteLog log) async {

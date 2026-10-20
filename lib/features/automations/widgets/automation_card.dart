@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -62,9 +62,8 @@ class AutomationCard extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: isEnabled
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.2)
+                        ? Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.2)
                         : context.background,
                     borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
@@ -220,7 +219,7 @@ class AutomationCard extends StatelessWidget {
                   Flexible(child: _buildLastRunSignal(context, lastRun!)),
                 ],
                 const Spacer(),
-                // Run button — visible for manual-trigger automations
+                // Run button - visible for manual-trigger automations
                 if (onRun != null) ...[
                   GestureDetector(
                     onTap: () {

@@ -181,7 +181,7 @@ void main() {
               isEmpty,
               reason:
                   'Network/TCP must NOT receive the serial wake preamble '
-                  '— PhoneAPI parses these bytes as a malformed packet.',
+                  '- PhoneAPI parses these bytes as a malformed packet.',
             );
           } finally {
             protocol.stop();
@@ -277,7 +277,7 @@ void main() {
 
   group('network transport does not send wake bytes mid-flight', () {
     // The 32-byte wake preamble is gated entirely on
-    // requiresWakeSequence — not on requiresFraming, not on type. This
+    // requiresWakeSequence - not on requiresFraming, not on type. This
     // test encodes that contract directly: a transport that claims to
     // be framed-but-PhoneAPI (our network transport shape) receives
     // only the wantConfigId, and the first byte of that first send is

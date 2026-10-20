@@ -26,7 +26,7 @@ import '../../../services/protocol/sip/signal/sip_signal_payload.dart';
 
 /// Estimated duration of a phrase playback. Mirrors the synth's
 /// per-note rendering: each note runs for `durationTicks * tickMs`
-/// plus a 40 ms inter-note gap. Pure function — kept inline here so
+/// plus a 40 ms inter-note gap. Pure function - kept inline here so
 /// the bubble can disable Replay without coupling to the synth's
 /// internals.
 Duration _phrasePlaybackDuration(SipSignalPhraseBody phrase) {
@@ -36,7 +36,7 @@ Duration _phrasePlaybackDuration(SipSignalPhraseBody phrase) {
     totalMs += 40; // inter-note gap mirroring _renderPhrase's 0.04 s pad
   }
   // Add a small tail so the button re-enables a touch AFTER the audio
-  // tail decays — avoids a perceptible "click before silence" feel.
+  // tail decays - avoids a perceptible "click before silence" feel.
   return Duration(milliseconds: totalMs + 80);
 }
 
@@ -65,7 +65,7 @@ String instrumentLabel(BuildContext context, SipSignalInstrument instrument) {
 }
 
 /// Map a MIDI note (0..127) to a human-readable note name like `C4`.
-/// Pure helper — no localisation needed (note names are universal in
+/// Pure helper - no localisation needed (note names are universal in
 /// Western music notation).
 String midiNoteName(int midi) {
   const names = [
@@ -95,7 +95,7 @@ class SipSignalBubble extends ConsumerWidget {
   /// complexity vs the timeline-rebuild loop.
   final Uint8List entryPayload;
 
-  /// Outbound vs inbound — affects bubble alignment + copy ("you sent" vs
+  /// Outbound vs inbound - affects bubble alignment + copy ("you sent" vs
   /// implicit incoming).
   final bool isOutbound;
 
@@ -270,20 +270,20 @@ class _MorseBubbleBodyState extends ConsumerState<_MorseBubbleBody> {
               ),
             ),
             const Spacer(),
-            // No instrument chip on Morse bubbles — the receiver
+            // No instrument chip on Morse bubbles - the receiver
             // decodes the rhythm, not the timbre, so labelling the
             // tone (Sine / Bell / etc.) is noise and was being read
             // as a Morse-format detail. Phrase bubbles still surface
             // it because the timbre is part of the musical content.
             // The speed (WPM) is shown as a chip in the same visual
-            // language as the phrase-bubble's instrument chip — the
+            // language as the phrase-bubble's instrument chip - the
             // metadata family across signal types should read
             // identically.
             _WpmChipReadout(speedWpm: morse.speedWpm),
           ],
         ),
         const SizedBox(height: AppTheme.spacing6),
-        // Decoded text first (always show both — the bubble's whole
+        // Decoded text first (always show both - the bubble's whole
         // genius is that the receiver doesn't need a Morse decoder
         // ring to read the message).
         Text(
@@ -304,7 +304,7 @@ class _MorseBubbleBodyState extends ConsumerState<_MorseBubbleBody> {
             fontFamily: AppTheme.fontFamily,
             letterSpacing: 1.2,
           ),
-          // No truncation — let the pattern wrap on multiple lines.
+          // No truncation - let the pattern wrap on multiple lines.
           softWrap: true,
         ),
         const SizedBox(height: AppTheme.spacing8),
@@ -323,7 +323,7 @@ class _MorseBubbleBodyState extends ConsumerState<_MorseBubbleBody> {
 
 /// Pill chip rendering an instrument readout, mirroring the
 /// composer's `_InstrumentChip` selected-state styling. Pure
-/// presentation — no tap target.
+/// presentation - no tap target.
 class _InstrumentChipReadout extends StatelessWidget {
   final SipSignalInstrument instrument;
   const _InstrumentChipReadout({required this.instrument});

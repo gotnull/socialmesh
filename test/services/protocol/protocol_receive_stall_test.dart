@@ -102,7 +102,7 @@ class _StallFakeTransport extends DeviceTransport
       case _RefreshFailureMode.preserved:
         _refreshNotificationsFailureCount++;
         // Simulates the BleTransport branch where setNotifyValue throws
-        // and the prior subscription is preserved — counter bumps but
+        // and the prior subscription is preserved - counter bumps but
         // no state transition.
         break;
       case _RefreshFailureMode.dropped:
@@ -233,7 +233,7 @@ void main() {
 
         try {
           protocol.debugSetConfigurationComplete(value: true);
-          // Stale by 2 minutes — past the 90 s suspected threshold.
+          // Stale by 2 minutes - past the 90 s suspected threshold.
           transport.setLastNotificationAt(
             DateTime.now().subtract(const Duration(minutes: 2)),
           );
@@ -294,7 +294,7 @@ void main() {
             protocol.debugRunReceiveStallCheck();
             expect(warnings.length, 1);
 
-            // Fresh data arrives — should reset the episode flag.
+            // Fresh data arrives - should reset the episode flag.
             await protocol.handleIncomingPacket(
               _buildTextMessage(packetId: 42, fromNode: 0x10),
             );
@@ -537,7 +537,7 @@ void main() {
     test('stall check is NOT logically gated on _rssiPaused', () async {
       // The 30-min iOS-background stall is the bug we are fixing.
       // The legacy `_checkDataFlowHealth` path skips when paused; the
-      // new `_checkReceiveStall` must NOT skip — that is what allows
+      // new `_checkReceiveStall` must NOT skip - that is what allows
       // recovery to be triggered on resume even though Dart timers
       // may have been suspended by iOS while backgrounded.
       await _withTempDirectory((dir) async {
@@ -611,7 +611,7 @@ void main() {
         try {
           protocol.debugSetConfigurationComplete(value: true);
           protocol.debugSetRssiPaused(paused: true);
-          // Last notification 2 minutes ago — stale.
+          // Last notification 2 minutes ago - stale.
           transport.setLastNotificationAt(
             DateTime.now().subtract(const Duration(minutes: 2)),
           );

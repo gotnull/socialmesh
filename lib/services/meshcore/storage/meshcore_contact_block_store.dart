@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // D-Q8: SharedPreferences-backed per-contact block list. Local-only
-// (no wire surface) — blocked contacts still appear on the radio's
+// (no wire surface) - blocked contacts still appear on the radio's
 // roster and their messages still arrive; SocialMesh just suppresses
 // the OS notification for them so an unwanted peer can't keep
 // nagging the user.
@@ -13,7 +13,7 @@
 // enforced at write time via `.toSet().toList()`.
 //
 // Distinct from D-Q3 favorites which lives in the firmware-side
-// `flags` byte. Block is a SocialMesh-local concept — the upstream
+// `flags` byte. Block is a SocialMesh-local concept - the upstream
 // MeshCore firmware does not surface it.
 
 import 'package:shared_preferences/shared_preferences.dart';

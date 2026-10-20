@@ -140,7 +140,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // =========================================================================
-  // A) providePhoneLocation gate — no packets when disabled
+  // A) providePhoneLocation gate - no packets when disabled
   // =========================================================================
 
   group('Invariant A: providePhoneLocation gate', () {
@@ -264,7 +264,7 @@ void main() {
     });
 
     test(
-      'gate is evaluated dynamically — toggling mid-session works',
+      'gate is evaluated dynamically - toggling mid-session works',
       () async {
         var enabled = false;
         final (:governor, :protocol) = _makeGovernor(isEnabled: () => enabled);
@@ -299,14 +299,14 @@ void main() {
         expect(
           protocol.sentPositions,
           hasLength(1),
-          reason: 'Third call blocked — still 1',
+          reason: 'Third call blocked - still 1',
         );
       },
     );
   });
 
   // =========================================================================
-  // B) Distance gate — stationary phone does not repeatedly broadcast
+  // B) Distance gate - stationary phone does not repeatedly broadcast
   // =========================================================================
 
   group('Invariant B: distance gate for automatic reasons', () {
@@ -337,7 +337,7 @@ void main() {
       expect(
         protocol.sentPositions,
         hasLength(1),
-        reason: 'Stationary — second tick blocked by distance',
+        reason: 'Stationary - second tick blocked by distance',
       );
     });
 
@@ -453,7 +453,7 @@ void main() {
         const Duration(seconds: 120),
       );
 
-      // Same location, manual action — distance gate bypassed.
+      // Same location, manual action - distance gate bypassed.
       final d2 = await governor.requestPublish(
         latitude: 38.7223,
         longitude: -9.1393,
@@ -509,7 +509,7 @@ void main() {
   });
 
   // =========================================================================
-  // C) Time gate — publishes no more often than minInterval
+  // C) Time gate - publishes no more often than minInterval
   // =========================================================================
 
   group('Invariant C: time gate', () {
@@ -567,7 +567,7 @@ void main() {
         reason: PositionPublishReason.timerTick,
       );
 
-      // 60 seconds later, resume — should be blocked (needs 300s).
+      // 60 seconds later, resume - should be blocked (needs 300s).
       governor.lastPublishedAtOverride = DateTime.now().subtract(
         const Duration(seconds: 60),
       );
@@ -749,7 +749,7 @@ void main() {
   });
 
   // =========================================================================
-  // D) Burst prevention — multiple triggers cannot produce >1 publish
+  // D) Burst prevention - multiple triggers cannot produce >1 publish
   // =========================================================================
 
   group('Invariant D: burst prevention', () {
@@ -758,7 +758,7 @@ void main() {
       () async {
         final (:governor, :protocol) = _makeGovernor(isEnabled: () => true);
 
-        // Simulate reconnect completing — first publish allowed.
+        // Simulate reconnect completing - first publish allowed.
         final d1 = await governor.requestPublish(
           latitude: 38.7223,
           longitude: -9.1393,
@@ -804,7 +804,7 @@ void main() {
         );
         expect(d1, PublishDecision.allowed);
 
-        // "Stop" the timer (this is simulated — governor state persists).
+        // "Stop" the timer (this is simulated - governor state persists).
         // "Restart" with another lifecycleResume immediately.
         final d2 = await governor.requestPublish(
           latitude: 38.7223,
@@ -826,7 +826,7 @@ void main() {
         reason: PositionPublishReason.manualAction,
       );
 
-      // Rapid second manual action — blocked.
+      // Rapid second manual action - blocked.
       final d2 = await governor.requestPublish(
         latitude: 39.0,
         longitude: -9.0,
@@ -834,7 +834,7 @@ void main() {
       );
       expect(d2, PublishDecision.blockedInterval);
 
-      // Third manual action — still blocked.
+      // Third manual action - still blocked.
       final d3 = await governor.requestPublish(
         latitude: 40.0,
         longitude: -8.0,
@@ -861,7 +861,7 @@ void main() {
           reason: PositionPublishReason.timerTick,
         );
 
-        // Immediate manual action — still within 60s of last publish.
+        // Immediate manual action - still within 60s of last publish.
         final d2 = await governor.requestPublish(
           latitude: 39.0,
           longitude: -9.0,
@@ -872,30 +872,27 @@ void main() {
       },
     );
 
-    test(
-      'manual action 61s after auto publish is allowed (manual uses 60s interval)',
-      () async {
-        final (:governor, :protocol) = _makeGovernor(isEnabled: () => true);
+    test('manual action 61s after auto publish is allowed (manual uses 60s interval)', () async {
+      final (:governor, :protocol) = _makeGovernor(isEnabled: () => true);
 
-        await governor.requestPublish(
-          latitude: 38.7223,
-          longitude: -9.1393,
-          reason: PositionPublishReason.timerTick,
-        );
+      await governor.requestPublish(
+        latitude: 38.7223,
+        longitude: -9.1393,
+        reason: PositionPublishReason.timerTick,
+      );
 
-        governor.lastPublishedAtOverride = DateTime.now().subtract(
-          const Duration(seconds: 61),
-        );
+      governor.lastPublishedAtOverride = DateTime.now().subtract(
+        const Duration(seconds: 61),
+      );
 
-        final d2 = await governor.requestPublish(
-          latitude: 39.0,
-          longitude: -9.0,
-          reason: PositionPublishReason.manualAction,
-        );
-        expect(d2, PublishDecision.allowed);
-        expect(protocol.sentPositions, hasLength(2));
-      },
-    );
+      final d2 = await governor.requestPublish(
+        latitude: 39.0,
+        longitude: -9.0,
+        reason: PositionPublishReason.manualAction,
+      );
+      expect(d2, PublishDecision.allowed);
+      expect(protocol.sentPositions, hasLength(2));
+    });
   });
 
   // =========================================================================
@@ -954,7 +951,7 @@ void main() {
         const Duration(seconds: 600),
       );
 
-      // Same location — distance gate should block.
+      // Same location - distance gate should block.
       final d = await governor.requestPublish(
         latitude: 38.7223,
         longitude: -9.1393,
@@ -966,7 +963,7 @@ void main() {
   });
 
   // =========================================================================
-  // Gate ordering — interval checked before distance
+  // Gate ordering - interval checked before distance
   // =========================================================================
 
   group('Gate ordering', () {
@@ -1014,7 +1011,7 @@ void main() {
       expect(governor.publishCount, 1);
       expect(governor.denyCount, 0);
 
-      // Immediate second — denied.
+      // Immediate second - denied.
       await governor.requestPublish(
         latitude: 39.0,
         longitude: -9.0,
@@ -1023,7 +1020,7 @@ void main() {
       expect(governor.publishCount, 1);
       expect(governor.denyCount, 1);
 
-      // Third — also denied.
+      // Third - also denied.
       await governor.requestPublish(
         latitude: 40.0,
         longitude: -8.0,
@@ -1075,7 +1072,7 @@ void main() {
         const Duration(seconds: 600),
       );
 
-      // Paris — ~340km away, well over 150m.
+      // Paris - ~340km away, well over 150m.
       final d = await governor.requestPublish(
         latitude: 48.8566,
         longitude: 2.3522,
@@ -1087,7 +1084,7 @@ void main() {
   });
 
   // =========================================================================
-  // LocationService integration — sendPositionOnce routes through governor
+  // LocationService integration - sendPositionOnce routes through governor
   // =========================================================================
 
   group('LocationService integration with governor', () {
@@ -1111,7 +1108,7 @@ void main() {
         expect(d1, PublishDecision.allowed);
         expect(protocol.sentPositions, hasLength(1));
 
-        // Immediately again — blocked by interval.
+        // Immediately again - blocked by interval.
         final d2 = await service.sendPositionOnce();
         expect(d2, PublishDecision.blockedInterval);
         expect(protocol.sentPositions, hasLength(1));
@@ -1256,39 +1253,35 @@ void main() {
   // =========================================================================
 
   group('LocationService startLocationUpdates burst prevention', () {
-    test(
-      'startLocationUpdates does not immediately publish if governor blocks',
-      () async {
-        final protocol = _SpyProtocolService();
-        final governor = PhonePositionGovernor(
-          protocol,
-          isLocationSharingEnabled: () => true,
-        );
+    test('startLocationUpdates does not immediately publish if governor blocks', () async {
+      final protocol = _SpyProtocolService();
+      final governor = PhonePositionGovernor(
+        protocol,
+        isLocationSharingEnabled: () => true,
+      );
 
-        // Pre-seed a recent publish so the governor blocks the initial tick.
-        governor.lastPublishedAtOverride = DateTime.now();
-        governor.setLastPublishedPosition(38.7223, -9.1393);
+      // Pre-seed a recent publish so the governor blocks the initial tick.
+      governor.lastPublishedAtOverride = DateTime.now();
+      governor.setLastPublishedPosition(38.7223, -9.1393);
 
-        final service = _TestableLocationService(
-          protocol,
-          isLocationSharingEnabled: () => true,
-          governor: governor,
-          fakePosition: _fakePosition(latitude: 38.7223, longitude: -9.1393),
-        );
+      final service = _TestableLocationService(
+        protocol,
+        isLocationSharingEnabled: () => true,
+        governor: governor,
+        fakePosition: _fakePosition(latitude: 38.7223, longitude: -9.1393),
+      );
 
-        await service.startLocationUpdates();
+      await service.startLocationUpdates();
 
-        // No immediate publish because governor blocked it (interval + distance).
-        expect(
-          protocol.sentPositions,
-          isEmpty,
-          reason:
-              'startLocationUpdates must not produce an immediate publish if governor blocks',
-        );
+      // No immediate publish because governor blocked it (interval + distance).
+      expect(
+        protocol.sentPositions,
+        isEmpty,
+        reason: 'startLocationUpdates must not produce an immediate publish if governor blocks',
+      );
 
-        service.dispose();
-      },
-    );
+      service.dispose();
+    });
 
     test(
       'startLocationUpdates publishes on initial tick if governor allows',
@@ -1299,7 +1292,7 @@ void main() {
           isLocationSharingEnabled: () => true,
         );
 
-        // Fresh governor — no previous publish.
+        // Fresh governor - no previous publish.
         final service = _TestableLocationService(
           protocol,
           isLocationSharingEnabled: () => true,

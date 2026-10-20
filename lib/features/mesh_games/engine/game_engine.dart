@@ -49,8 +49,8 @@ class GameApplyRejected<TState> extends GameApplyResult<TState> {
 
 /// Pure rules engine.
 ///
-/// * `TState` — the engine's in-memory state type.
-/// * `TMove`  — the engine's in-memory move type.
+/// * `TState` - the engine's in-memory state type.
+/// * `TMove`  - the engine's in-memory move type.
 abstract class GameEngine<TState, TMove> {
   const GameEngine();
 

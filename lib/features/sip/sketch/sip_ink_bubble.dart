@@ -4,7 +4,7 @@
 /// Inline message bubble that renders a SIP Ink sketch.
 ///
 /// Decodes the stored binary payload on every build and falls back to
-/// a localized "Unsupported sketch" label if decoding fails — never
+/// a localized "Unsupported sketch" label if decoding fails - never
 /// crashes regardless of input.
 library;
 
@@ -62,7 +62,7 @@ class SipInkBubble extends StatelessWidget {
             sketch: result.sketch,
             canvasSize: result.sketch?.canvasSize ?? SipInkConstants.canvas64,
             color: isOutbound ? context.accentColor : context.textPrimary,
-            // Bubbles never carry overflow points — the payload is
+            // Bubbles never carry overflow points - the payload is
             // already clamped to budget by the time it crosses the
             // wire. Keep a sensible non-null colour for the painter
             // contract.

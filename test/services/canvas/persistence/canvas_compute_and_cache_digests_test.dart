@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Test for [CanvasRepository.computeAndCacheDigests] — the bridge
+// Test for [CanvasRepository.computeAndCacheDigests] - the bridge
 // between the pure digest computer and the canvas table cache.
 //
 // Spec: docs/canvas/CANVAS_SYNC_V0_1.md §5.1.

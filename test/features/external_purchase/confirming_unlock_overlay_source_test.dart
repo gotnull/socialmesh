@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// Source-text regressions for [ConfirmingUnlockOverlay] — specifically
+// Source-text regressions for [ConfirmingUnlockOverlay] - specifically
 // the post-purchase "View your group" CTA that ties the Stripe
 // confirmation success state to the License Org Overview screen's
 // card-level auto-prompt.
@@ -9,7 +9,7 @@
 // Why source-text: a live widget test would need a fake CallableInvoker
 // PLUS a fake authStateProvider PLUS a fake currentUserLicenseOrgIdsProvider
 // PLUS a fake licenseOrgProvider, then drive a fake ConfirmationState
-// through stages. That is fragile and the surface area is small —
+// through stages. That is fragile and the surface area is small -
 // pin the gating invariants here.
 
 import 'dart:io';
@@ -20,15 +20,14 @@ void main() {
   late String src;
 
   setUpAll(() {
-    src = File(
-      'lib/features/external_purchase/confirming_unlock_overlay.dart',
-    ).readAsStringSync();
+    src = File('lib/features/external_purchase/confirming_unlock_overlay.dart')
+        .readAsStringSync();
   });
 
-  group('_Success — post-purchase rename CTA', () {
+  group('_Success - post-purchase rename CTA', () {
     test('is a ConsumerWidget (needs ref.watch on org providers)', () {
       // The CTA depends on currentUserLicenseOrgIdsProvider +
-      // licenseOrgProvider — both Riverpod providers. _Success must
+      // licenseOrgProvider - both Riverpod providers. _Success must
       // be a ConsumerWidget for `ref.watch` to be in scope.
       expect(src, contains('class _Success extends ConsumerWidget'));
     });
@@ -54,7 +53,7 @@ void main() {
       'navigates via the global navigatorKey, not Navigator.of(context)',
       () {
         // The overlay sits inside MaterialApp.builder as a Stack
-        // sibling of the Navigator subtree — `Navigator.of(context)`
+        // sibling of the Navigator subtree - `Navigator.of(context)`
         // and `Navigator.of(context, rootNavigator: true)` both fail
         // because there is no Navigator ancestor above the overlay.
         // The CTA must use the global `navigatorKey.currentState`
@@ -86,7 +85,7 @@ void main() {
 
     test('falls back to plain Dismiss when no unnamed org exists', () {
       // Personal-pack buyers, members redeeming via invite, or
-      // owners who already named everything — none should see the
+      // owners who already named everything - none should see the
       // CTA. The fallback branch renders just the Dismiss button.
       // The if/spread + else collection-if compiles to `] else`
       // (NOT `} else`) because the truthy branch is a list spread.

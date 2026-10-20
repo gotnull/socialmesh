@@ -4,7 +4,7 @@
 // Riverpod scaffolding for the MeshCanvas feature.
 //
 // Spec anchor: docs/canvas/CANVAS_V0_1.md §S0 product invariants.
-// S8 wired the production protocol stack — paint ops on a Mesh
+// S8 wired the production protocol stack - paint ops on a Mesh
 // Canvas now enqueue, drain through the canvas governor + SIP
 // limiter, and ride out as canvas.v1 MRRP frames. Digest / sync
 // catch-up lands in S9.
@@ -56,7 +56,7 @@ final canvasRepositoryProvider = FutureProvider<CanvasRepository>((ref) async {
 });
 
 /// The auto-created Local Device Canvas (`scope = 'local'`). Always
-/// returns a row — created on first read, returned thereafter.
+/// returns a row - created on first read, returned thereafter.
 final localDeviceCanvasProvider = FutureProvider<CanvasSummary>((ref) async {
   final repo = await ref.watch(canvasRepositoryProvider.future);
   return repo.getOrCreateLocalCanvas();
@@ -65,7 +65,7 @@ final localDeviceCanvasProvider = FutureProvider<CanvasSummary>((ref) async {
 /// All canvases known to this device, newest-activity first. Drives
 /// the S7.C overview list. The Local Device Canvas is auto-created
 /// on first read so the local section always has something to show
-/// — fresh installs would otherwise land on an awkward empty state
+/// - fresh installs would otherwise land on an awkward empty state
 /// for the only canvas every user definitely owns.
 final canvasListProvider = FutureProvider<List<CanvasSummary>>((ref) async {
   // Ensure the local sandbox exists before we list.
@@ -87,7 +87,7 @@ final canvasCellsProvider = FutureProvider.family<List<CanvasCell>, int>((
 });
 
 /// User's currently-selected palette index. Defaults to palette index
-/// 8 (black) — a sensible "any colour but the erase sentinel" start.
+/// 8 (black) - a sensible "any colour but the erase sentinel" start.
 /// In S7.A, only [SocialMeshPalette.quickStripIndices] values flow
 /// through here from the bottom strip; the full sheet in S7.B can
 /// emit any index in 0..63.
@@ -105,7 +105,7 @@ class SelectedColorNotifier extends Notifier<int> {
 
   /// Set the active palette index. Out-of-range inputs are rejected
   /// silently so the UI can't accidentally pick a reserved or
-  /// unknown index — the wire codec would drop the resulting paint
+  /// unknown index - the wire codec would drop the resulting paint
   /// anyway, but this keeps the state honest.
   ///
   /// Also pushes the chosen index into [recentColorsProvider] so the
@@ -120,7 +120,7 @@ class SelectedColorNotifier extends Notifier<int> {
 
 /// Most-recently-used palette indices, newest first. Capped at
 /// [RecentColorsNotifier.maxRecents] entries. In-session only in S7.B
-/// — no SharedPreferences yet because the value of "recents survive
+/// - no SharedPreferences yet because the value of "recents survive
 /// app restart" is small and the persistence glue would dominate the
 /// slice. A later slice can add disk-backed recall without changing
 /// any caller.
@@ -129,7 +129,7 @@ final recentColorsProvider = NotifierProvider<RecentColorsNotifier, List<int>>(
 );
 
 class RecentColorsNotifier extends Notifier<List<int>> {
-  /// Soft cap — picked to fit comfortably as a single pinned row at
+  /// Soft cap - picked to fit comfortably as a single pinned row at
   /// the top of the palette sheet at any phone width without
   /// horizontal scroll on a 360pt screen.
   static const int maxRecents = 8;
@@ -139,7 +139,7 @@ class RecentColorsNotifier extends Notifier<List<int>> {
 
   /// Insert [paletteIndex] at the head of the recents list. If it
   /// already exists, move-to-front rather than duplicate. Out-of-range
-  /// indices are ignored (defence in depth — [SelectedColorNotifier]
+  /// indices are ignored (defence in depth - [SelectedColorNotifier]
   /// already validates).
   void push(int paletteIndex) {
     if (paletteIndex < 0 || paletteIndex > SocialMeshPalette.maxIndex) return;
@@ -180,7 +180,7 @@ class LocalCanvasOpSeqNotifier extends Notifier<int> {
 // ---------------------------------------------------------------------------
 
 /// Feature-level 250 B / 60 s outbound airtime governor (§S0.rate.9
-/// of CANVAS_V0_1.md). Lives for the app's lifetime — the budget is
+/// of CANVAS_V0_1.md). Lives for the app's lifetime - the budget is
 /// per-device, not per-session.
 final canvasOutboundGovernorProvider = Provider<CanvasOutboundGovernor>((ref) {
   return CanvasOutboundGovernor();
@@ -305,7 +305,7 @@ final mrrpServiceCanvasProvider = FutureProvider<MrrpServiceCanvas>((
 ///
 /// Also force-materialises [sipDiscoveryProvider]. ProtocolService
 /// buffers every inbound SIP frame in a 16-entry startup queue
-/// until `attachSipDiscovery` is called — and `sipDiscoveryProvider`
+/// until `attachSipDiscovery` is called - and `sipDiscoveryProvider`
 /// is what calls it. Without this watch the canvas frames arrive
 /// at the iPhone, get parked in the startup buffer, and never reach
 /// the canvas demux because nothing else on the MeshCanvas surface
@@ -346,7 +346,7 @@ final canvasProtocolWiringProvider = FutureProvider<void>((ref) async {
 ///     local DB yet, no peer activity heard. The overview renders a
 ///     "No paints yet - seed the first pixel" copy. Tapping the row
 ///     calls `repo.getOrCreateMeshCanvas(canvasId, channelIndex,
-///     name)` and pushes the viewer — the canvas row is only
+///     name)` and pushes the viewer - the canvas row is only
 ///     persisted at first interaction, NOT eagerly at app boot.
 ///
 ///   - **Live** (`materialised` set): a canvas row already exists,
@@ -356,7 +356,7 @@ final canvasProtocolWiringProvider = FutureProvider<void>((ref) async {
 ///
 /// The key insight: the channel IS the canvas. We never wait for
 /// discovery before showing a row. CANVAS_V0_1.md §3 makes the
-/// derivation deterministic — both sides compute the same
+/// derivation deterministic - both sides compute the same
 /// `canvas_id` independently from `(channel_psk, canvas_name)`.
 class LatentChannelCanvas {
   final int channelIndex;
@@ -374,7 +374,7 @@ class LatentChannelCanvas {
     required this.materialised,
   });
 
-  /// Whether any paint has ever landed on this canvas — used by the
+  /// Whether any paint has ever landed on this canvas - used by the
   /// overview to switch between dormant + active row copy.
   bool get isDormant => materialised == null || materialised!.cellCount == 0;
 }
@@ -385,7 +385,7 @@ class LatentChannelCanvas {
 /// channels). For each channel we compute the canonical `canvas_id`
 /// via [deriveCanvasIdFromChannel] and merge in any matching
 /// `canvas` table row from [canvasListProvider]. Channels without a
-/// table row appear as dormant entries — the user can still tap them
+/// table row appear as dormant entries - the user can still tap them
 /// to seed a paint.
 ///
 /// Ordering: by channel index ascending (Primary first, then 1..7).

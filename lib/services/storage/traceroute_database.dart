@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Traceroute Database — SQLite schema and lifecycle management.
+// Traceroute Database - SQLite schema and lifecycle management.
 //
 // Database: traceroute_history.db
 // Schema version: 6

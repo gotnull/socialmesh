@@ -97,7 +97,7 @@ void main() {
         expect(framesSent, 0, reason: 'gate must block every send');
         expect(channel.sent, isEmpty);
 
-        // Rows remain queued and ready — re-enabling will drain them.
+        // Rows remain queued and ready - re-enabling will drain them.
         final ready = await repo.getQueuedReadyOps(
           nowMs: DateTime.now().millisecondsSinceEpoch,
           limit: 64,

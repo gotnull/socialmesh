@@ -15,7 +15,7 @@ import '../../services/protocol/sip/mrrp_types.dart';
 import 'mrrp_budget_panel_screen.dart';
 import 'widgets/mrrp_event_tile.dart';
 
-/// Traffic Console — chronological event stream of all MRRP activity.
+/// Traffic Console - chronological event stream of all MRRP activity.
 class MrrpTrafficConsoleScreen extends ConsumerStatefulWidget {
   const MrrpTrafficConsoleScreen({super.key});
 
@@ -56,9 +56,8 @@ class _MrrpTrafficConsoleScreenState
         final query = _searchQuery.toLowerCase();
         final peerHex =
             e.peerNodeId?.toRadixString(16).padLeft(8, '0').toLowerCase() ?? '';
-        final serviceName = MrrpServiceId.nameOf(
-          e.serviceId ?? 0,
-        ).toLowerCase();
+        final serviceName = MrrpServiceId.nameOf(e.serviceId ?? 0)
+            .toLowerCase();
         final typeName = e.msgType.name.toLowerCase();
         if (!peerHex.contains(query) &&
             !serviceName.contains(query) &&
@@ -84,7 +83,7 @@ class _MrrpTrafficConsoleScreenState
         _filterPeerId == null &&
         _filterServiceId == null;
 
-    // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
+    // lint-allow: haptic-feedback - keyboard dismissal, not interactive action
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(
@@ -120,7 +119,7 @@ class _MrrpTrafficConsoleScreenState
                 allEvents.length,
               ]),
               filterChips: [
-                // "All" chip — clears all filters
+                // "All" chip - clears all filters
                 StatusFilterChip(
                   label: l10n.mrrpHarnessTrafficFilterAll,
                   icon: Icons.list,
@@ -263,9 +262,8 @@ class _MrrpTrafficConsoleScreenState
                       Text(
                         l10n.mrrpHarnessTrafficEmptyDescription,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.textTertiary,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(color: context.textTertiary),
                       ),
                     ],
                   ),

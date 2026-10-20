@@ -98,7 +98,7 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
-  group('ReticulumBridgeProvider — initial state', () {
+  group('ReticulumBridgeProvider - initial state', () {
     test('exposes default host/port and disconnected status', () async {
       final factory = _FakeFactory();
       final ctrl = StreamController<ReticulumFrame>.broadcast();
@@ -134,7 +134,7 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeProvider — gate logic', () {
+  group('ReticulumBridgeProvider - gate logic', () {
     test('does not connect when bridgeEnabled is false', () async {
       final factory = _FakeFactory();
       final ctrl = StreamController<ReticulumFrame>.broadcast();
@@ -227,7 +227,7 @@ void main() {
     );
   });
 
-  group('ReticulumBridgeProvider — frame forwarding', () {
+  group('ReticulumBridgeProvider - frame forwarding', () {
     test('forwards reassembled frame body as HDLC-encoded bytes', () async {
       final factory = _FakeFactory();
       final socket = _FakeBridgeSocket();
@@ -251,12 +251,12 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeProvider — error resilience', () {
+  group('ReticulumBridgeProvider - error resilience', () {
     test(
       'service connect error does not throw the provider into AsyncError',
       () async {
         final factory = _FakeFactory();
-        // Every connect attempt fails — but the service catches and
+        // Every connect attempt fails - but the service catches and
         // surfaces as status=error.
         for (var i = 0; i < 4; i++) {
           factory.queueError(StateError('boom $i'));
@@ -280,7 +280,7 @@ void main() {
     );
   });
 
-  group('ReticulumBridgeProvider — persistence', () {
+  group('ReticulumBridgeProvider - persistence', () {
     test('setHost persists to SharedPreferences', () async {
       final factory = _FakeFactory();
       final ctrl = StreamController<ReticulumFrame>.broadcast();
@@ -312,7 +312,7 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeProvider — dispose hygiene', () {
+  group('ReticulumBridgeProvider - dispose hygiene', () {
     test(
       'dispose cancels frame subscription so post-dispose frames are no-ops',
       () async {
@@ -343,7 +343,7 @@ void main() {
 
         c.dispose();
         // Push a frame after dispose. Provider's frame subscription
-        // must have been cancelled — no exception, no writes.
+        // must have been cancelled - no exception, no writes.
         ctrl.add(_frame(1));
         await _pump();
         expect(socket.writes, isEmpty);
@@ -352,7 +352,7 @@ void main() {
     );
   });
 
-  group('ReticulumBridgeProvider — hardening surface', () {
+  group('ReticulumBridgeProvider - hardening surface', () {
     test('lastForwardAt + log entries propagate into UI state', () async {
       final factory = _FakeFactory();
       factory.queueSocket(_FakeBridgeSocket());

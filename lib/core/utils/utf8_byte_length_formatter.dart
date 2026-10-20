@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert' show utf8;
+
 import 'package:flutter/services.dart';
 
 /// Truncates input to a maximum UTF-8 *byte* length (not character count).
@@ -30,7 +31,7 @@ class Utf8ByteLengthFormatter extends TextInputFormatter {
 
     while (text.isNotEmpty && utf8.encode(text).length > maxBytes) {
       // Drop one user-perceived character (UTF-16 code unit pair when
-      // applicable) — `String.characters.skipLast(1).toString()` would
+      // applicable) - `String.characters.skipLast(1).toString()` would
       // need the `characters` package; `substring` on UTF-16 length is
       // sufficient because we only need *some* truncation that fits.
       text = text.substring(0, text.length - 1);

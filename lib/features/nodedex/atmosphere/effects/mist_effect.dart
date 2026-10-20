@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Mist Effect — drifting fog particles driven by sparse data regions.
+// Mist Effect - drifting fog particles driven by sparse data regions.
 //
 // Mist manifests as soft, translucent blobs that drift slowly across
 // the viewport. The effect intensity is tied to the fraction of nodes
-// with sparse data — nodes classified as "ghost" or "unknown" traits,
+// with sparse data - nodes classified as "ghost" or "unknown" traits,
 // or nodes with very few encounters relative to their age. A mesh
 // full of mystery produces thicker fog.
 //
 // Visual characteristics:
 //   - Large soft radial gradient blobs (ParticleShape.blob)
-//   - Very low alpha — more felt than seen
+//   - Very low alpha - more felt than seen
 //   - Slow horizontal drift with slight vertical oscillation
 //   - Blobs overlap to create organic fog density variations
 //   - Larger blobs drift slower (atmospheric perspective)
 //   - Particles spawn at random positions and drift off-screen
 //
 // Mist is the most ambient and least attention-grabbing of the four
-// atmosphere effects. It creates a sense of the unknown — regions
+// atmosphere effects. It creates a sense of the unknown - regions
 // of the mesh that are not yet well-documented, nodes that flicker
 // in and out of existence. The fog lifts as the user explores more
 // of their mesh and accumulates richer data.
@@ -46,7 +46,7 @@ class MistSpawnStrategy extends ParticleSpawnStrategy {
   @override
   double get spawnInterval {
     if (intensity <= 0) return double.infinity;
-    // Mist spawns very infrequently — large, long-lived blobs.
+    // Mist spawns very infrequently - large, long-lived blobs.
     // At full intensity, one every ~600ms. At low intensity, every ~4s.
     const baseInterval = 0.6;
     return baseInterval / intensity.clamp(0.05, 1.0);
@@ -54,7 +54,7 @@ class MistSpawnStrategy extends ParticleSpawnStrategy {
 
   @override
   void initParticle(Particle p, Size canvasSize, bool isDark) {
-    // Blob radius — larger blobs create softer, more diffuse fog.
+    // Blob radius - larger blobs create softer, more diffuse fog.
     final radius = randomRange(
       AtmosphereTiming.mistRadiusMin,
       AtmosphereTiming.mistRadiusMax,
@@ -66,17 +66,17 @@ class MistSpawnStrategy extends ParticleSpawnStrategy {
         (radius - AtmosphereTiming.mistRadiusMin) /
         (AtmosphereTiming.mistRadiusMax - AtmosphereTiming.mistRadiusMin);
 
-    // Drift speed — inversely proportional to size.
+    // Drift speed - inversely proportional to size.
     final speed = ui.lerpDouble(
       AtmosphereTiming.mistSpeedMax,
       AtmosphereTiming.mistSpeedMin,
       sizeFactor,
     )!;
 
-    // Drift direction — randomly left or right.
+    // Drift direction - randomly left or right.
     final direction = rng.nextBool() ? 1.0 : -1.0;
 
-    // Lifetime — larger blobs live longer.
+    // Lifetime - larger blobs live longer.
     final lifetime = ui.lerpDouble(
       AtmosphereTiming.mistLifetimeMin,
       AtmosphereTiming.mistLifetimeMax,
@@ -89,17 +89,17 @@ class MistSpawnStrategy extends ParticleSpawnStrategy {
         : AtmosphereColors.mistLight;
     final baseColor = randomColor(palette);
 
-    // Spawn position — anywhere on the canvas, with preference for
+    // Spawn position - anywhere on the canvas, with preference for
     // the lower two-thirds where fog naturally accumulates.
     final spawnY = canvasSize.height * (0.2 + rng.nextDouble() * 0.8);
 
-    // Horizontal spawn position — offset so blobs drift into view.
+    // Horizontal spawn position - offset so blobs drift into view.
     double spawnX;
     if (direction > 0) {
-      // Drifting right — spawn on the left edge or slightly off-screen.
+      // Drifting right - spawn on the left edge or slightly off-screen.
       spawnX = -radius + rng.nextDouble() * canvasSize.width * 0.5;
     } else {
-      // Drifting left — spawn on the right half or slightly off-screen.
+      // Drifting left - spawn on the right half or slightly off-screen.
       spawnX =
           canvasSize.width * 0.5 +
           rng.nextDouble() * (canvasSize.width * 0.5 + radius);
@@ -148,7 +148,7 @@ class MistPainter extends CustomPainter {
   /// Elapsed time in seconds, used for vertical oscillation.
   final double elapsed;
 
-  /// Cached paint object — reused every frame.
+  /// Cached paint object - reused every frame.
   final Paint _blobPaint = Paint()
     ..isAntiAlias = true
     ..style = PaintingStyle.fill;
@@ -170,7 +170,7 @@ class MistPainter extends CustomPainter {
       final drawX = p.x;
       final drawY = p.y + vertOscillation;
 
-      // Generous bounds check — blobs are large, so we use a wider margin.
+      // Generous bounds check - blobs are large, so we use a wider margin.
       final margin = p.size * 1.5;
       if (drawX < -margin ||
           drawX > size.width + margin ||
@@ -179,7 +179,7 @@ class MistPainter extends CustomPainter {
         continue;
       }
 
-      // Extended lifecycle fade for mist — longer fade-in and fade-out
+      // Extended lifecycle fade for mist - longer fade-in and fade-out
       // than default particles, so large blobs do not pop in or out.
       final progress = p.progress;
       double lifecycleFade;

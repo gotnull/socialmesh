@@ -25,25 +25,22 @@ void main() {
       expect(MeshtasticReadinessFlags.disabled.watchdogEnabled, isFalse);
     });
 
-    test(
-      'release-default policy is encoded as: env-unset + !debug + !profile -> false',
-      () {
-        // We can't actually run with kDebugMode=false in a unit test,
-        // but the policy lives in `fromEnv` and is one boolean
-        // expression: `envOverride ?? (kDebugMode || kProfileMode)`.
-        // Asserting it textually keeps the contract pinned even if
-        // someone refactors the body later.
-        final source = '''envOverride ?? defaultOn''';
-        expect(
-          source.contains(r'envOverride ?? defaultOn'),
-          isTrue,
-          reason:
-              'Default-on path must remain `envOverride ?? (kDebugMode || '
-              'kProfileMode)` per the regression-fix policy: OFF in release '
-              'unless env explicitly enables.',
-        );
-      },
-    );
+    test('release-default policy is encoded as: env-unset + !debug + !profile -> false', () {
+      // We can't actually run with kDebugMode=false in a unit test,
+      // but the policy lives in `fromEnv` and is one boolean
+      // expression: `envOverride ?? (kDebugMode || kProfileMode)`.
+      // Asserting it textually keeps the contract pinned even if
+      // someone refactors the body later.
+      final source = '''envOverride ?? defaultOn''';
+      expect(
+        source.contains(r'envOverride ?? defaultOn'),
+        isTrue,
+        reason:
+            'Default-on path must remain `envOverride ?? (kDebugMode || '
+            'kProfileMode)` per the regression-fix policy: OFF in release '
+            'unless env explicitly enables.',
+      );
+    });
 
     test('manual constructor wins regardless of env', () {
       const onFlags = MeshtasticReadinessFlags(watchdogEnabled: true);

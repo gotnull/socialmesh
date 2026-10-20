@@ -8,6 +8,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 import 'mesh_health_models.dart';

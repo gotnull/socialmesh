@@ -329,7 +329,7 @@ void main() {
           channelIndex: _kChannel,
           canvasId: _kCanvasId,
         );
-        // tick() at +4s — heartbeat NOT due, also same-state duplicate.
+        // tick() at +4s - heartbeat NOT due, also same-state duplicate.
         h.clock.advance(const Duration(seconds: 4));
         expect(await h.coordinator.tick(), 0);
         expect(h.channel.sent, hasLength(1));
@@ -468,7 +468,7 @@ void main() {
       // No retry queue: a subsequent tick at +1 s does nothing
       // (heartbeat not due, last emit never succeeded so
       // lastAnyEmitMs is still null and heartbeat condition fires
-      // again — let's actually verify).
+      // again - let's actually verify).
       h.clock.advance(const Duration(seconds: 1));
       h.channel.setDefault(CanvasSendResult.sent(wireBytes: 0));
       // Heartbeat condition: lastAnyEmitMs == null counts as
@@ -505,7 +505,7 @@ void main() {
         channelIndex: _kChannel,
         canvasId: _kCanvasId,
       );
-      // The attach attempted but sipRateLimited — no successful emit.
+      // The attach attempted but sipRateLimited - no successful emit.
       expect(h.channel.sent, hasLength(1));
       final before = h.channel.sent.length;
 

@@ -230,9 +230,8 @@ class _BatteryGuideContent extends StatelessWidget {
                   // Description
                   Text(
                     context.l10n.batteryOptDescription,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: context.textSecondary,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: context.textSecondary),
                   ),
                   const SizedBox(height: AppTheme.spacing16),
 

@@ -7,7 +7,7 @@
 // records with NaN / infinite coordinates. Before the fix the plane
 // marker was constructed unconditionally as
 // `Marker(point: LatLng(position.latitude, position.longitude), ...)`
-// — the surrounding `finiteMarkers([...])` wrapper filtered the bad
+// - the surrounding `finiteMarkers([...])` wrapper filtered the bad
 // marker out at the layer level, but the construction itself is now
 // suppressed earlier (and logged) via `_isFiniteFlightPosition`.
 
@@ -108,7 +108,7 @@ void main() {
 
     // flutter_map may rebuild the marker child more than once during a
     // single pump (positioning + repaint boundary), so accept any
-    // non-zero count — the regression we care about is the NaN-case
+    // non-zero count - the regression we care about is the NaN-case
     // findsNothing.
     expect(find.byIcon(Icons.flight), findsAtLeastNWidgets(1));
     expect(tester.takeException(), isNull);

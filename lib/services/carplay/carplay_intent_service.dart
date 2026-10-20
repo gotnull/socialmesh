@@ -21,7 +21,7 @@ import 'carplay_feature_flags.dart';
 /// The native SiriKit intent handlers (in the Runner target) relay
 /// send/search/mark-read requests over the `com.socialmesh/carplay` channel.
 /// This service answers them against [ProtocolService] and the message/node/
-/// channel providers — the same paths the in-app UI uses. iOS-only.
+/// channel providers - the same paths the in-app UI uses. iOS-only.
 ///
 /// Conversation id scheme (matches the native converters):
 ///   `dm-<nodeNum>` | `channel-<index>`.
@@ -174,8 +174,7 @@ class CarPlayIntentService {
       default:
         throw PlatformException(
           code: 'UNSUPPORTED',
-          message:
-              'CarPlay method ${call.method} not supported', // lint-allow: hardcoded-string - native channel error
+          message: 'CarPlay method ${call.method} not supported', // lint-allow: hardcoded-string - native channel error
         );
     }
   }

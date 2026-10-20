@@ -130,7 +130,7 @@ abstract final class MeshPacketBuilder {
   /// `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift`
   /// (`addContactFromURL`, ~line 145).
   ///
-  /// Do not generalize this to other admin commands — the wantAck/RELIABLE
+  /// Do not generalize this to other admin commands - the wantAck/RELIABLE
   /// pair is intentional here to match the iOS-firmware contract for
   /// `addContact`, where the radio is expected to dispatch a SharedContact
   /// admin response and update its local NodeDB.
@@ -157,7 +157,7 @@ abstract final class MeshPacketBuilder {
   ///
   /// When [pkiPublicKey] is non-null and non-empty, the packet is marked
   /// `pki_encrypted = true` and carries the recipient's curve25519 public
-  /// key — matching `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift:327-329`
+  /// key - matching `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift:327-329`
   /// where the official Meshtastic iOS app sets these fields for any
   /// outbound DM to a node whose `UserEntity.pkiEncrypted` is true. The
   /// firmware then encrypts the payload with PKI rather than the channel

@@ -10,13 +10,13 @@
 //   - sigil avatar at the centre (always present, generated from
 //     nodeNum if no `SigilData` is cached)
 //   - thin gradient "memory ring" tinted by social tag (or default
-//     purple when untagged) — the live `_NodeMarker` has a flat
+//     purple when untagged) - the live `_NodeMarker` has a flat
 //     outline, so the swept gradient + glow is the differentiator
 //   - selected state thickens the ring and brightens the glow
 //   - stale state (last positioned encounter > 7 days old) drops the
 //     marker to ~60 % opacity so the ring fades but stays legible
 //
-// The marker is purely presentational — taps are handled by the
+// The marker is purely presentational - taps are handled by the
 // surrounding `GestureDetector` in `MapScreen`.
 
 import 'package:flutter/material.dart';

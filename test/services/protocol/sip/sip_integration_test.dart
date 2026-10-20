@@ -271,7 +271,7 @@ void main() {
       expect(challenge1, isNotNull);
 
       // Replay the same hello to B (second time should be absorbed).
-      // Session is in challengeSent — duplicate HS_HELLO dropped.
+      // Session is in challengeSent - duplicate HS_HELLO dropped.
       hsManagerB.handleHello(nodeA, hello);
       expect(
         hsManagerB.getState(nodeA),

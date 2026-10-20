@@ -42,12 +42,11 @@ import 'stripe_payment_sheet_launcher.dart';
 /// kicks the existing confirmation overlay. Tests inject a stub so
 /// they can verify the createCheckout payload without touching the
 /// Stripe SDK.
-typedef OrgCheckoutLauncher =
-    Future<void> Function(
-      WidgetRef ref,
-      ExternalPurchaseService service,
-      CheckoutSessionDescriptor descriptor,
-    );
+typedef OrgCheckoutLauncher = Future<void> Function(
+  WidgetRef ref,
+  ExternalPurchaseService service,
+  CheckoutSessionDescriptor descriptor,
+);
 
 /// Outcome of a sheet session, returned to the caller via the
 /// `Navigator.pop` value. Lets test rigs and future entry-point
@@ -146,7 +145,7 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
   String? _errorMessage;
   // Tracks whether the user manually edited the Group ID. Once true,
   // we stop auto-deriving the slug from the Name so we don't clobber
-  // the customisation. Reset never — only set, never cleared.
+  // the customisation. Reset never - only set, never cleared.
   bool _slugTouchedByUser = false;
 
   @override
@@ -191,7 +190,7 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
 
   void _onSlugChanged() {
     // First user-initiated slug edit pins the field; auto-derive is
-    // suppressed from here on. Cheap predicate — once set, stays set.
+    // suppressed from here on. Cheap predicate - once set, stays set.
     if (!_slugTouchedByUser) {
       _slugTouchedByUser = true;
     }
@@ -200,7 +199,7 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
 
   void _clearErrorAndRepaint() {
     // Repaint so the disabled-state recomputes against the new text.
-    // Also clear any stale error from a previous failed submit —
+    // Also clear any stale error from a previous failed submit -
     // the user is now editing, the old error no longer matches the
     // current text.
     if (_errorMessage != null) {

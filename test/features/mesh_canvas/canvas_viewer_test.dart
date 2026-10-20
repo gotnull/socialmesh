@@ -13,8 +13,8 @@
 // long-press handlers emit cell coordinates in the canvas-pixel space
 // (0..widthCells-1, 0..heightCells-1) AND that the painter renders
 // pre-painted cells at the right offsets. They don't claim to fully
-// validate "feels r/place" — that's a sim-verify gate per the slice
-// plan — but they prevent the failure mode where the gesture wiring
+// validate "feels r/place" - that's a sim-verify gate per the slice
+// plan - but they prevent the failure mode where the gesture wiring
 // silently breaks during a refactor.
 library;
 
@@ -74,10 +74,10 @@ Future<void> _pumpViewer(
 // ---------------------------------------------------------------------------
 
 void main() {
-  group('CanvasViewer — S0.ux.15 / S0.ux.16 acceptance', () {
+  group('CanvasViewer - S0.ux.15 / S0.ux.16 acceptance', () {
     testWidgets(
       'r/place gesture wiring: tap at (top-left corner of cell (5,7)) '
-      'fires onTapPaint(5, 7) — proves the GestureDetector lives inside '
+      'fires onTapPaint(5, 7) - proves the GestureDetector lives inside '
       "the InteractiveViewer's transformed child so canvas-pixel-space "
       'is the local coordinate space',
       (tester) async {
@@ -90,7 +90,7 @@ void main() {
 
         // CellSize defaults to 4 logical pixels. Cell (5, 7) starts at
         // (20, 28) in canvas-pixel space. Tap the centre of that cell
-        // — InteractiveViewer at scale=1 makes the child's local
+        // - InteractiveViewer at scale=1 makes the child's local
         // coords match screen coords for the canvas region.
         await tester.tapAt(const Offset(22, 30));
         await tester.pumpAndSettle();
@@ -102,7 +102,7 @@ void main() {
     );
 
     testWidgets(
-      'long-press emits onLongPressInspect with cell coords — S0.ux.15 '
+      'long-press emits onLongPressInspect with cell coords - S0.ux.15 '
       'requires long-press to open the tile inspector; S7.D wires the '
       'sheet but S7.A pins the callback contract.',
       (tester) async {
@@ -124,7 +124,7 @@ void main() {
     );
 
     testWidgets(
-      'no callbacks fire when the user drags — InteractiveViewer claims '
+      'no callbacks fire when the user drags - InteractiveViewer claims '
       'the pan gesture and the GestureDetector recogniser does not '
       'misfire onTapUp. Critical: without this guarantee, dragging the '
       'canvas would paint a streak of cells (the "grid editor" failure '
@@ -151,7 +151,7 @@ void main() {
       },
     );
 
-    testWidgets('tap outside the canvas surface does not fire onTapPaint — '
+    testWidgets('tap outside the canvas surface does not fire onTapPaint - '
         'the viewer\'s SizedBox clamps the GestureDetector to the canvas '
         'extent so taps beyond it are dropped, not misattributed.', (
       tester,
@@ -164,7 +164,7 @@ void main() {
       );
 
       // Cell space goes up to x=511, y=511 (128 cells × 4 px).
-      // The viewport is 512x600 — anything in y > 512 is outside
+      // The viewport is 512x600 - anything in y > 512 is outside
       // the canvas surface.
       await tester.tapAt(const Offset(100, 580));
       await tester.pumpAndSettle();
@@ -172,7 +172,7 @@ void main() {
     });
   });
 
-  group('CanvasGridPainter — S7.A rendering invariants', () {
+  group('CanvasGridPainter - S7.A rendering invariants', () {
     test('shouldRepaint stays false when cells reference is identical', () {
       const cellSize = 4.0;
       final cells = <CanvasCell>[
@@ -209,7 +209,7 @@ void main() {
         isFalse,
         reason:
             'Identity-based shouldRepaint lets RepaintBoundary cache '
-            'the GPU layer across pan/zoom frames — the load-bearing '
+            'the GPU layer across pan/zoom frames - the load-bearing '
             'optimisation that prevents the canvas from re-rasterising '
             'on every gesture frame.',
       );
@@ -267,13 +267,13 @@ void main() {
           1.0,
           reason:
               'Quick-strip swatch at palette index $i must be fully '
-              'opaque — it represents a paint colour, not a void.',
+              'opaque - it represents a paint colour, not a void.',
         );
       }
     });
   });
 
-  group('SocialMeshPalette — S7.A canonical palette', () {
+  group('SocialMeshPalette - S7.A canonical palette', () {
     test('64 entries, names match', () {
       expect(SocialMeshPalette.colors.length, 64);
       expect(SocialMeshPalette.names.length, 64);
@@ -293,7 +293,7 @@ void main() {
       expect(SocialMeshPalette.quickStripIndices.first, 0);
     });
 
-    test('colorOf / nameOf are crash-safe for out-of-range input — wire '
+    test('colorOf / nameOf are crash-safe for out-of-range input - wire '
         'frames carrying an unknown palette index must NOT crash the '
         'viewer (CANVAS_V0_1.md §11 + I4)', () {
       expect(SocialMeshPalette.colorOf(-1), const Color(0x00000000));

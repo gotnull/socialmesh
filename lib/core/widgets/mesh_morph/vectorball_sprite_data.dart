@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// Vectorball sprite + palette data — verbatim port of
+// Vectorball sprite + palette data - verbatim port of
 // rsvpnano/src/demos/VectorballData.h, itself extracted from the
 // Equinox Vectorball JAR. Do not hand-edit; regenerate with the
 // tools/extract_vectorball_data.py one-liner if the reference

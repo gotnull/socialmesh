@@ -13,7 +13,7 @@
 ///             canonical link via overlayLinkStore.
 ///   - Remove = clear local conversation via
 ///              SipDmManager.removeSessionLocally. NO DM_CLOSE on
-///              the wire — must NOT call closeSession.
+///              the wire - must NOT call closeSession.
 ///
 /// Block, Reset, Remove all gate on
 /// AppBottomSheet.showConfirm(... isDestructive: true). Mute is a
@@ -27,7 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final src = File('lib/features/sip/sip_dm_screen.dart').readAsStringSync();
 
-  group('SIP DM overflow menu — required imports', () {
+  group('SIP DM overflow menu - required imports', () {
     test('imports peer_safety_providers, overlay_providers, '
         'app_bottom_sheet', () {
       expect(src.contains('peer_safety_providers.dart'), isTrue);
@@ -89,14 +89,14 @@ void main() {
         body.contains('closeSession'),
         isFalse,
         reason:
-            'Block must NOT call closeSession — that emits DM_CLOSE '
+            'Block must NOT call closeSession - that emits DM_CLOSE '
             'on the wire',
       );
       expect(
         body.contains('removeSessionLocally'),
         isFalse,
         reason:
-            'Block preserves local history per Phase 9 spec — must '
+            'Block preserves local history per Phase 9 spec - must '
             'NOT call removeSessionLocally',
       );
       expect(
@@ -172,14 +172,14 @@ void main() {
         RegExp(r'removeSessionLocally\(\s*widget\.sessionTag').hasMatch(body),
         isTrue,
         reason:
-            'Remove must call SipDmManager.removeSessionLocally — no '
+            'Remove must call SipDmManager.removeSessionLocally - no '
             'wire frame emitted',
       );
       expect(
         body.contains('closeSession'),
         isFalse,
         reason:
-            'Remove must NOT call closeSession — that would emit '
+            'Remove must NOT call closeSession - that would emit '
             'DM_CLOSE and notify the peer',
       );
       expect(
@@ -273,7 +273,7 @@ void main() {
       expect(removeIdx, greaterThan(dataIdx));
     });
 
-    test('Mute label is dynamic — flips to Unmute when peer is muted', () {
+    test('Mute label is dynamic - flips to Unmute when peer is muted', () {
       // The build computes isMuted then conditionally picks the
       // ARB key. Pin the conditional so a refactor cannot collapse
       // it back to a single static label.
@@ -283,14 +283,14 @@ void main() {
         ).hasMatch(src),
         isTrue,
         reason:
-            'Mute / Unmute label must be conditional on isMuted — '
+            'Mute / Unmute label must be conditional on isMuted - '
             'a flat label would break the toggle UX',
       );
     });
 
     test('Block / Reset / Remove all route through their respective '
         'destructive confirm sheets (semantics not merged)', () {
-      // Each action handler must reach its own confirm sheet — the
+      // Each action handler must reach its own confirm sheet - the
       // grouping refactor must not have collapsed them into one
       // generic confirm path. Verify by scanning each handler body
       // for its dedicated ARB title key.

@@ -3546,7 +3546,7 @@ abstract class AppLocalizations {
   /// **'Failed to run: {error}'**
   String automationScreenRunFailed(String error);
 
-  /// Success snackbar after manual run — clarifies conditions were bypassed
+  /// Success snackbar after manual run - clarifies conditions were bypassed
   ///
   /// In en, this message translates to:
   /// **'Ran \"{name}\" - conditions bypassed, THEN executed'**
@@ -6240,13 +6240,13 @@ abstract class AppLocalizations {
   /// **'SocialMesh MeshCore Diagnostics'**
   String get debugScreenMeshcoreDiagnosticsSubject;
 
-  /// Protocol chip label — Meshtastic TCP. Brand name; do not translate.
+  /// Protocol chip label - Meshtastic TCP. Brand name; do not translate.
   ///
   /// In en, this message translates to:
   /// **'Meshtastic'**
   String get networkProtocolMeshtastic;
 
-  /// Protocol chip label — MeshCore TCP. Debug-only path; brand name plus a (dev) suffix indicating non-production status.
+  /// Protocol chip label - MeshCore TCP. Debug-only path; brand name plus a (dev) suffix indicating non-production status.
   ///
   /// In en, this message translates to:
   /// **'MeshCore'**
@@ -7575,7 +7575,7 @@ abstract class AppLocalizations {
   /// A single row in the Identity changes sheet when no prior pubkey was recorded (legacy data, first observation).
   ///
   /// In en, this message translates to:
-  /// **'— → {newKey}'**
+  /// **'- → {newKey}'**
   String nodedexIdentityChangePubkeyFromUnknown(String newKey);
 
   /// A single row in the Identity changes sheet: shows the truncated previous pubkey fingerprint followed by the new one. {previous} and {newKey} are 8-hex-char fingerprints.
@@ -8640,139 +8640,139 @@ abstract class AppLocalizations {
   /// **'Sent'**
   String get fileTransferDirectionSent;
 
-  /// Transfer card status — created, not yet sent
+  /// Transfer card status - created, not yet sent
   ///
   /// In en, this message translates to:
   /// **'Preparing…'**
   String get fileTransferStatusPreparing;
 
-  /// Transfer card status — offer sent to remote node
+  /// Transfer card status - offer sent to remote node
   ///
   /// In en, this message translates to:
   /// **'Offer sent, waiting…'**
   String get fileTransferStatusOfferSent;
 
-  /// Transfer card status — inbound offer waiting for user acceptance
+  /// Transfer card status - inbound offer waiting for user acceptance
   ///
   /// In en, this message translates to:
   /// **'Incoming file - tap to review'**
   String get fileTransferStatusOfferPending;
 
-  /// Transfer card status — outbound transfer in progress
+  /// Transfer card status - outbound transfer in progress
   ///
   /// In en, this message translates to:
   /// **'Sending {pct}%'**
   String fileTransferStatusSending(String pct);
 
-  /// Transfer card status — inbound transfer in progress
+  /// Transfer card status - inbound transfer in progress
   ///
   /// In en, this message translates to:
   /// **'Receiving {pct}%'**
   String fileTransferStatusReceiving(String pct);
 
-  /// Transfer card status — NACK recovery phase
+  /// Transfer card status - NACK recovery phase
   ///
   /// In en, this message translates to:
   /// **'Recovering missing chunks…'**
   String get fileTransferStatusRecovering;
 
-  /// Transfer card status — transfer complete and verified
+  /// Transfer card status - transfer complete and verified
   ///
   /// In en, this message translates to:
   /// **'Complete'**
   String get fileTransferStatusComplete;
 
-  /// Transfer card status — transfer cancelled
+  /// Transfer card status - transfer cancelled
   ///
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get fileTransferStatusCancelled;
 
-  /// Transfer card status — outbound offer sent, waiting for receiver to accept
+  /// Transfer card status - outbound offer sent, waiting for receiver to accept
   ///
   /// In en, this message translates to:
   /// **'Awaiting Accept'**
   String get fileTransferStatusAwaitingAccept;
 
-  /// Transfer card status — generic failure
+  /// Transfer card status - generic failure
   ///
   /// In en, this message translates to:
   /// **'Failed'**
   String get fileTransferStatusFailed;
 
-  /// Transfer fail reason — file exceeded mesh size limit
+  /// Transfer fail reason - file exceeded mesh size limit
   ///
   /// In en, this message translates to:
   /// **'File too large for mesh transfer'**
   String get fileTransferFailReasonOversized;
 
-  /// Transfer fail reason — no response within timeout
+  /// Transfer fail reason - no response within timeout
   ///
   /// In en, this message translates to:
   /// **'Transfer timed out'**
   String get fileTransferFailReasonTimeout;
 
-  /// Transfer fail reason — malformed chunk data
+  /// Transfer fail reason - malformed chunk data
   ///
   /// In en, this message translates to:
   /// **'Invalid data received'**
   String get fileTransferFailReasonInvalid;
 
-  /// Transfer fail reason — airtime rate limiter fired
+  /// Transfer fail reason - airtime rate limiter fired
   ///
   /// In en, this message translates to:
   /// **'Rate limited - try again later'**
   String get fileTransferFailReasonRateLimited;
 
-  /// Transfer fail reason — SHA-256 mismatch
+  /// Transfer fail reason - SHA-256 mismatch
   ///
   /// In en, this message translates to:
   /// **'File verification failed'**
   String get fileTransferFailReasonHashMismatch;
 
-  /// Transfer fail reason — too many NACK rounds
+  /// Transfer fail reason - too many NACK rounds
   ///
   /// In en, this message translates to:
   /// **'Max retries exceeded'**
   String get fileTransferFailReasonMaxRetries;
 
-  /// Transfer fail reason — transfer TTL exceeded
+  /// Transfer fail reason - transfer TTL exceeded
   ///
   /// In en, this message translates to:
   /// **'Transfer expired'**
   String get fileTransferFailReasonExpired;
 
-  /// Transfer card metadata — destination node display name or short hex
+  /// Transfer card metadata - destination node display name or short hex
   ///
   /// In en, this message translates to:
   /// **'to {nodeName}'**
   String fileTransferMetaNodeTo(String nodeName);
 
-  /// Transfer card metadata — source node display name or short hex
+  /// Transfer card metadata - source node display name or short hex
   ///
   /// In en, this message translates to:
   /// **'from {nodeName}'**
   String fileTransferMetaNodeFrom(String nodeName);
 
-  /// Transfer card relative time — less than one minute ago
+  /// Transfer card relative time - less than one minute ago
   ///
   /// In en, this message translates to:
   /// **'just now'**
   String get fileTransferTimeJustNow;
 
-  /// Transfer card relative time — N minutes ago
+  /// Transfer card relative time - N minutes ago
   ///
   /// In en, this message translates to:
   /// **'{count}m ago'**
   String fileTransferTimeMinutesAgo(int count);
 
-  /// Transfer card relative time — N hours ago
+  /// Transfer card relative time - N hours ago
   ///
   /// In en, this message translates to:
   /// **'{count}h ago'**
   String fileTransferTimeHoursAgo(int count);
 
-  /// Transfer card relative time — N days ago
+  /// Transfer card relative time - N days ago
   ///
   /// In en, this message translates to:
   /// **'{count}d ago'**
@@ -11900,7 +11900,7 @@ abstract class AppLocalizations {
   /// Subtitle for the no-GPS traceroute banner. Explains the fallback behaviour so the user is not confused by a blank map.
   ///
   /// In en, this message translates to:
-  /// **'None of the hops on this traceroute reported a position. The map is centered on your location instead — open the route again once any hop reports GPS.'**
+  /// **'None of the hops on this traceroute reported a position. The map is centered on your location instead - open the route again once any hop reports GPS.'**
   String get mapTracerouteNoGpsSubtitle;
 
   /// Text displayed in map view
@@ -14030,73 +14030,73 @@ abstract class AppLocalizations {
   /// **'Splits a name:pskHex code from the PSK field into the two inputs above'**
   String get meshcoreChannelEditImportFromCodeSubtitle;
 
-  /// D34d — accessibility tooltip for the dice button in the PSK input that fills the field with a random 16-byte (128-bit) PSK
+  /// D34d - accessibility tooltip for the dice button in the PSK input that fills the field with a random 16-byte (128-bit) PSK
   ///
   /// In en, this message translates to:
   /// **'Generate random key'**
   String get meshcoreChannelEditRandomPskTooltip;
 
-  /// D34d — short snackbar shown after the dice button generates a random PSK
+  /// D34d - short snackbar shown after the dice button generates a random PSK
   ///
   /// In en, this message translates to:
   /// **'Random key generated'**
   String get meshcoreChannelEditRandomPskGenerated;
 
-  /// D34d — title of the action tile that opens the passphrase-to-PSK derivation sheet
+  /// D34d - title of the action tile that opens the passphrase-to-PSK derivation sheet
   ///
   /// In en, this message translates to:
   /// **'Generate from passphrase'**
   String get meshcoreChannelEditDeriveFromPassphrase;
 
-  /// D34d — subtitle on the passphrase-to-PSK action tile explaining the deterministic derivation
+  /// D34d - subtitle on the passphrase-to-PSK action tile explaining the deterministic derivation
   ///
   /// In en, this message translates to:
   /// **'Creates a repeatable 128-bit channel key from a passphrase'**
   String get meshcoreChannelEditDeriveFromPassphraseSubtitle;
 
-  /// D34d — header of the passphrase-to-PSK bottom sheet
+  /// D34d - header of the passphrase-to-PSK bottom sheet
   ///
   /// In en, this message translates to:
   /// **'Generate from passphrase'**
   String get meshcoreChannelEditPassphraseSheetTitle;
 
-  /// D34d — sub-header explainer above the passphrase input, calling out the deterministic property
+  /// D34d - sub-header explainer above the passphrase input, calling out the deterministic property
   ///
   /// In en, this message translates to:
   /// **'Type the same passphrase on every device that should join this channel. The same passphrase always produces the same key.'**
   String get meshcoreChannelEditPassphraseSheetHint;
 
-  /// D34d — label of the passphrase TextField
+  /// D34d - label of the passphrase TextField
   ///
   /// In en, this message translates to:
   /// **'Passphrase'**
   String get meshcoreChannelEditPassphraseLabel;
 
-  /// D34d — placeholder text for the passphrase TextField
+  /// D34d - placeholder text for the passphrase TextField
   ///
   /// In en, this message translates to:
   /// **'e.g. orange-bicycle-thunder'**
   String get meshcoreChannelEditPassphraseHint;
 
-  /// D34d — privacy reassurance shown beneath the passphrase TextField
+  /// D34d - privacy reassurance shown beneath the passphrase TextField
   ///
   /// In en, this message translates to:
   /// **'Your passphrase is never stored or sent anywhere. Only the derived key is written to the radio.'**
   String get meshcoreChannelEditPassphraseHelper;
 
-  /// D34d — validation error when the user tries to generate a PSK with an empty or whitespace-only passphrase
+  /// D34d - validation error when the user tries to generate a PSK with an empty or whitespace-only passphrase
   ///
   /// In en, this message translates to:
   /// **'Enter a passphrase'**
   String get meshcoreChannelEditPassphraseRequired;
 
-  /// D34d — primary button on the passphrase sheet that performs the HMAC-SHA256 derivation and returns the 16-byte PSK
+  /// D34d - primary button on the passphrase sheet that performs the HMAC-SHA256 derivation and returns the 16-byte PSK
   ///
   /// In en, this message translates to:
   /// **'Generate key'**
   String get meshcoreChannelEditPassphraseGenerate;
 
-  /// D34d — short snackbar shown after the passphrase sheet successfully derives and fills the PSK field
+  /// D34d - short snackbar shown after the passphrase sheet successfully derives and fills the PSK field
   ///
   /// In en, this message translates to:
   /// **'Key generated from passphrase'**
@@ -14252,37 +14252,37 @@ abstract class AppLocalizations {
   /// **'Delete locally'**
   String get meshcoreChatActionDelete;
 
-  /// D33 — long-press menu action that opens the composer in reply mode targeting this message
+  /// D33 - long-press menu action that opens the composer in reply mode targeting this message
   ///
   /// In en, this message translates to:
   /// **'Reply'**
   String get meshcoreChatActionReply;
 
-  /// D33 — header line of the composer reply chip; {name} is the target sender's display name (or 'You' for own outbound messages)
+  /// D33 - header line of the composer reply chip; {name} is the target sender's display name (or 'You' for own outbound messages)
   ///
   /// In en, this message translates to:
   /// **'Replying to {name}'**
   String meshcoreChatComposerReplyingTo(String name);
 
-  /// D33 — accessibility label / tooltip for the [×] button on the composer reply chip
+  /// D33 - accessibility label / tooltip for the [×] button on the composer reply chip
   ///
   /// In en, this message translates to:
   /// **'Cancel reply'**
   String get meshcoreChatComposerCancelReply;
 
-  /// D33 — fallback row shown above a reply bubble when the target message isn't in local history
+  /// D33 - fallback row shown above a reply bubble when the target message isn't in local history
   ///
   /// In en, this message translates to:
   /// **'Reply to a message you don\'t have'**
   String get meshcoreChatReplyMissingTarget;
 
-  /// D33 — sender label used in the composer chip + reply quote preview when the target is the user's own outbound message
+  /// D33 - sender label used in the composer chip + reply quote preview when the target is the user's own outbound message
   ///
   /// In en, this message translates to:
   /// **'You'**
   String get meshcoreChatReplyYou;
 
-  /// D33 — snackbar shown when MeshCoreSendRateLimiter rejects a reply (or any text) send. {seconds} is the suggested retry delay rounded to whole seconds.
+  /// D33 - snackbar shown when MeshCoreSendRateLimiter rejects a reply (or any text) send. {seconds} is the suggested retry delay rounded to whole seconds.
   ///
   /// In en, this message translates to:
   /// **'Too much radio traffic. Try again in {seconds}s.'**
@@ -14396,7 +14396,7 @@ abstract class AppLocalizations {
   /// **'Could not delete message'**
   String get meshcoreChatMessageDeleteFailed;
 
-  /// D43-A3 - Footer rendered above the oldest loaded message when paging exhausts the stored history (real bottom of history OR the 500-message trim wall — indistinguishable)
+  /// D43-A3 - Footer rendered above the oldest loaded message when paging exhausts the stored history (real bottom of history OR the 500-message trim wall - indistinguishable)
   ///
   /// In en, this message translates to:
   /// **'No older messages'**
@@ -15464,31 +15464,31 @@ abstract class AppLocalizations {
   /// **'This configuration uses less than 500 kHz bandwidth. FCC Part 15.247 sets a minimum 6 dB bandwidth of 500 kHz for digital modulation systems in the 902-928 MHz band. What applies depends on your device\'s authorisation and how it is configured. Radios on different bandwidths cannot hear each other, so agree any change with your local mesh.'**
   String get meshcoreRadioSettingsUsBandwidthNoticeBody;
 
-  /// D26 — Section header for region preset row at top of MeshCore radio settings sheet
+  /// D26 - Section header for region preset row at top of MeshCore radio settings sheet
   ///
   /// In en, this message translates to:
   /// **'REGION'**
   String get meshcoreRadioSettingsRegionSectionHeader;
 
-  /// D26 — Title of the row that opens the region preset picker
+  /// D26 - Title of the row that opens the region preset picker
   ///
   /// In en, this message translates to:
   /// **'Region preset'**
   String get meshcoreRadioSettingsRegionTileTitle;
 
-  /// D26 — Title of the modal sheet that lists region presets
+  /// D26 - Title of the modal sheet that lists region presets
   ///
   /// In en, this message translates to:
   /// **'Choose region preset'**
   String get meshcoreRadioSettingsRegionPickerTitle;
 
-  /// D26 — Sentinel label for a manually-edited radio config that does not match any preset
+  /// D26 - Sentinel label for a manually-edited radio config that does not match any preset
   ///
   /// In en, this message translates to:
   /// **'Custom'**
   String get meshcoreRadioSettingsRegionCustom;
 
-  /// D26 — Subtitle of the Custom row in the region preset picker
+  /// D26 - Subtitle of the Custom row in the region preset picker
   ///
   /// In en, this message translates to:
   /// **'Keep your current values'**
@@ -16980,61 +16980,61 @@ abstract class AppLocalizations {
   /// **'Location'**
   String get meshcoreLocationInfoLabel;
 
-  /// D26 — In-flight subtitle while a settings tile is dispatching a command (e.g. set location)
+  /// D26 - In-flight subtitle while a settings tile is dispatching a command (e.g. set location)
   ///
   /// In en, this message translates to:
   /// **'Applying…'**
   String get meshcoreApplying;
 
-  /// D26 — Title of the lat/lon editor sheet
+  /// D26 - Title of the lat/lon editor sheet
   ///
   /// In en, this message translates to:
   /// **'Set node location'**
   String get meshcoreLocationSheetTitle;
 
-  /// D26 — Privacy hint shown in the lat/lon editor sheet
+  /// D26 - Privacy hint shown in the lat/lon editor sheet
   ///
   /// In en, this message translates to:
   /// **'Your location may be broadcast to nearby nodes in your next advertisement.'**
   String get meshcoreLocationSheetPrivacyHint;
 
-  /// D26 — Label for the latitude TextFormField
+  /// D26 - Label for the latitude TextFormField
   ///
   /// In en, this message translates to:
   /// **'Latitude'**
   String get meshcoreLocationLatLabel;
 
-  /// D26 — Range hint for the latitude TextFormField
+  /// D26 - Range hint for the latitude TextFormField
   ///
   /// In en, this message translates to:
   /// **'-90 to 90'**
   String get meshcoreLocationLatHint;
 
-  /// D26 — Validation error when latitude is out of range or unparseable
+  /// D26 - Validation error when latitude is out of range or unparseable
   ///
   /// In en, this message translates to:
   /// **'Latitude must be between -90 and 90'**
   String get meshcoreLocationLatRangeError;
 
-  /// D26 — Label for the longitude TextFormField
+  /// D26 - Label for the longitude TextFormField
   ///
   /// In en, this message translates to:
   /// **'Longitude'**
   String get meshcoreLocationLonLabel;
 
-  /// D26 — Range hint for the longitude TextFormField
+  /// D26 - Range hint for the longitude TextFormField
   ///
   /// In en, this message translates to:
   /// **'-180 to 180'**
   String get meshcoreLocationLonHint;
 
-  /// D26 — Validation error when longitude is out of range or unparseable
+  /// D26 - Validation error when longitude is out of range or unparseable
   ///
   /// In en, this message translates to:
   /// **'Longitude must be between -180 and 180'**
   String get meshcoreLocationLonRangeError;
 
-  /// D26 — Apply button on the lat/lon editor sheet
+  /// D26 - Apply button on the lat/lon editor sheet
   ///
   /// In en, this message translates to:
   /// **'Apply'**
@@ -17058,25 +17058,25 @@ abstract class AppLocalizations {
   /// **'Location unavailable. Check permissions and try again.'**
   String get meshcoreLocationGpsUnavailable;
 
-  /// D26 — Success snackbar after applying a non-zero location
+  /// D26 - Success snackbar after applying a non-zero location
   ///
   /// In en, this message translates to:
   /// **'Location updated'**
   String get meshcoreLocationUpdated;
 
-  /// D26 — Success snackbar after clearing the stored location
+  /// D26 - Success snackbar after clearing the stored location
   ///
   /// In en, this message translates to:
   /// **'Location cleared'**
   String get meshcoreLocationCleared;
 
-  /// D26 — Error snackbar when the radio rejects a setAdvertLatLon command
+  /// D26 - Error snackbar when the radio rejects a setAdvertLatLon command
   ///
   /// In en, this message translates to:
   /// **'Failed to set location'**
   String get meshcoreFailedToSetLocation;
 
-  /// D26 — Error snackbar when the firmware rejects setDeviceTime because device time is already ahead of the phone (firmware is forward-only)
+  /// D26 - Error snackbar when the firmware rejects setDeviceTime because device time is already ahead of the phone (firmware is forward-only)
   ///
   /// In en, this message translates to:
   /// **'Device clock is already ahead - sync skipped'**
@@ -19866,7 +19866,7 @@ abstract class AppLocalizations {
   /// **'About MeshCanvas'**
   String get meshCanvasHelpTitle;
 
-  /// Opening paragraph of the MeshCanvas help sheet. Frames MeshCanvas as r/place adapted to LoRa: channel-scoped, slow, no central authority. Mesh-only — the Local Device Canvas is a developer / debug surface and is intentionally not surfaced in user-facing help.
+  /// Opening paragraph of the MeshCanvas help sheet. Frames MeshCanvas as r/place adapted to LoRa: channel-scoped, slow, no central authority. Mesh-only - the Local Device Canvas is a developer / debug surface and is intentionally not surfaced in user-facing help.
   ///
   /// In en, this message translates to:
   /// **'A shared pixel canvas painted live by everyone on your Meshtastic channel. Each tap sends one tiny radio frame to nearby devices, who paint the same pixel on their own canvas. No servers, no accounts, no admins; just LoRa radios and pixels.'**
@@ -20058,7 +20058,7 @@ abstract class AppLocalizations {
   /// **'Show other devices that you\'re currently looking at or painting on a canvas. Off by default. When you do enable it, your presence is ephemeral; it never persists and fades automatically when you leave. Toggle from MeshCanvas settings any time.'**
   String get meshCanvasOnboardingRowPresenceBody;
 
-  /// Secondary action on the MeshCanvas onboarding sheet. Opts into Local Device Canvas only — no mesh participation, no presence sharing.
+  /// Secondary action on the MeshCanvas onboarding sheet. Opts into Local Device Canvas only - no mesh participation, no presence sharing.
   ///
   /// In en, this message translates to:
   /// **'Explore locally'**
@@ -20346,19 +20346,19 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{0 painted} =1{1 painted} other{{count} painted}}'**
   String meshCanvasOverviewCellCount(int count);
 
-  /// Plain prefix of the Mesh empty-state title. The widget's pad() helper inserts a single space before the gradient keyword — do NOT add a trailing space here or the gradient WidgetSpan will render a visible double-space gap. Empty-state fires only when zero Meshtastic channels are configured; once channels exist the latent-channel list renders instead.
+  /// Plain prefix of the Mesh empty-state title. The widget's pad() helper inserts a single space before the gradient keyword - do NOT add a trailing space here or the gradient WidgetSpan will render a visible double-space gap. Empty-state fires only when zero Meshtastic channels are configured; once channels exist the latent-channel list renders instead.
   ///
   /// In en, this message translates to:
   /// **'No'**
   String get meshCanvasOverviewEmptyTitlePrefix;
 
-  /// Gradient-animated keyword of the Mesh empty-state title. Single word only — multi-word keywords render with baseline-gap artifacts inside the gradient WidgetSpan.
+  /// Gradient-animated keyword of the Mesh empty-state title. Single word only - multi-word keywords render with baseline-gap artifacts inside the gradient WidgetSpan.
   ///
   /// In en, this message translates to:
   /// **'channels'**
   String get meshCanvasOverviewEmptyTitleKeyword;
 
-  /// Plain suffix after the gradient keyword. No leading space — the widget pad() helper handles spacing.
+  /// Plain suffix after the gradient keyword. No leading space - the widget pad() helper handles spacing.
   ///
   /// In en, this message translates to:
   /// **'yet'**
@@ -20370,7 +20370,7 @@ abstract class AppLocalizations {
   /// **'Bring a Meshtastic channel online and its canvas wakes up.'**
   String get meshCanvasOverviewEmptyTagline1;
 
-  /// Second cycling tagline. Names the v0.1 architecture in one beat — no central anything, the channel is the artifact.
+  /// Second cycling tagline. Names the v0.1 architecture in one beat - no central anything, the channel is the artifact.
   ///
   /// In en, this message translates to:
   /// **'Channel is canvas. No cloud, no admins, no global wall.'**
@@ -20448,7 +20448,7 @@ abstract class AppLocalizations {
   /// **'Your first paint will broadcast over the mesh radio to everyone tuned to this channel.'**
   String get meshCanvasViewerEmptyMeshSubtitle;
 
-  /// Centered atmospheric prompt shown on a mesh canvas with zero painted cells WHILE sync work is in progress (hydration state recovering or syncing). Replaces the 'Tap to seed' copy so we don't lie to the user that the board is dormant when pixels may land in seconds. The viewport is still tappable underneath — this is just an honest holding message.
+  /// Centered atmospheric prompt shown on a mesh canvas with zero painted cells WHILE sync work is in progress (hydration state recovering or syncing). Replaces the 'Tap to seed' copy so we don't lie to the user that the board is dormant when pixels may land in seconds. The viewport is still tappable underneath - this is just an honest holding message.
   ///
   /// In en, this message translates to:
   /// **'Looking for paint from nearby devices…'**
@@ -20460,7 +20460,7 @@ abstract class AppLocalizations {
   /// **'If anyone else has painted this canvas, their pixels will appear in a moment.'**
   String get meshCanvasViewerEmptyMeshHydratingSubtitle;
 
-  /// Centered atmospheric prompt shown on the Local Device Canvas when it has zero painted cells. Local-only register — no channel / mesh language.
+  /// Centered atmospheric prompt shown on the Local Device Canvas when it has zero painted cells. Local-only register - no channel / mesh language.
   ///
   /// In en, this message translates to:
   /// **'Tap to paint'**
@@ -24108,7 +24108,7 @@ abstract class AppLocalizations {
   /// **'First Sighting'**
   String get nodedexFirstSighting;
 
-  /// NodeDex self-mode discovery row label. The first time this app connected to this nodeNum as the user's local radio. Connection-identity semantics, not mesh-observation — distinct from 'First Discovered' which records when the entry first appeared in the mesh from this phone's POV.
+  /// NodeDex self-mode discovery row label. The first time this app connected to this nodeNum as the user's local radio. Connection-identity semantics, not mesh-observation - distinct from 'First Discovered' which records when the entry first appeared in the mesh from this phone's POV.
   ///
   /// In en, this message translates to:
   /// **'First used'**
@@ -24510,7 +24510,7 @@ abstract class AppLocalizations {
   /// **'last {relative}'**
   String nodedexLastRelative(String relative);
 
-  /// NodeDex 'last presence-active encounter' label. Distinct from the device-level 'Last heard' (= time we last received any packet from the node) — encounter only updates when presence transitions to active, so it can lag the radio's last_heard by hours or days.
+  /// NodeDex 'last presence-active encounter' label. Distinct from the device-level 'Last heard' (= time we last received any packet from the node) - encounter only updates when presence transitions to active, so it can lag the radio's last_heard by hours or days.
   ///
   /// In en, this message translates to:
   /// **'Last encounter'**
@@ -25284,7 +25284,7 @@ abstract class AppLocalizations {
   /// **'First Discovered'**
   String get nodedexSortFirstDiscovered;
 
-  /// NodeDex sort order — sorts by the encounter timestamp, not the radio last_heard.
+  /// NodeDex sort order - sorts by the encounter timestamp, not the radio last_heard.
   ///
   /// In en, this message translates to:
   /// **'Last encounter'**
@@ -26950,13 +26950,13 @@ abstract class AppLocalizations {
   /// **'This link was received in a message. Verify the destination before continuing.'**
   String get openLinkDescription;
 
-  /// Primary button label on the open-link confirm sheet — launches the URL in the browser.
+  /// Primary button label on the open-link confirm sheet - launches the URL in the browser.
   ///
   /// In en, this message translates to:
   /// **'Open'**
   String get openLinkOpenAction;
 
-  /// Secondary button label on the open-link confirm sheet — dismisses without launching.
+  /// Secondary button label on the open-link confirm sheet - dismisses without launching.
   ///
   /// In en, this message translates to:
   /// **'Cancel'**
@@ -29464,7 +29464,7 @@ abstract class AppLocalizations {
   /// **'Pairing needs to be refreshed - the radio\'s Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.'**
   String get scannerPairingInvalidatedError;
 
-  /// Title of the recovery card shown when the saved BLE pairing no longer matches the device. Reset-aware wording — does not blame the phone.
+  /// Title of the recovery card shown when the saved BLE pairing no longer matches the device. Reset-aware wording - does not blame the phone.
   ///
   /// In en, this message translates to:
   /// **'Pairing needs to be refreshed'**
@@ -29476,13 +29476,13 @@ abstract class AppLocalizations {
   /// **'This can happen after a factory reset or region/device reset. The radio may have cleared its Bluetooth identity, so your phone\'s saved pairing no longer matches this device.\n\nRemove the old pairing from your phone\'s Bluetooth settings, then pair with the device again.'**
   String get scannerPairingRefreshBody;
 
-  /// Primary action on the pairing-refresh card — opens the OS Bluetooth Settings so the user can forget the stale pairing.
+  /// Primary action on the pairing-refresh card - opens the OS Bluetooth Settings so the user can forget the stale pairing.
   ///
   /// In en, this message translates to:
   /// **'Open Bluetooth Settings'**
   String get scannerPairingRefreshOpenBluetoothSettings;
 
-  /// Secondary action on the pairing-refresh card — re-runs the BLE scan after the user has forgotten the stale pairing in Bluetooth Settings.
+  /// Secondary action on the pairing-refresh card - re-runs the BLE scan after the user has forgotten the stale pairing in Bluetooth Settings.
   ///
   /// In en, this message translates to:
   /// **'Scan again'**
@@ -32878,67 +32878,67 @@ abstract class AppLocalizations {
   /// **'Cannot transition from {stateName}: terminal state: {stateName}'**
   String taskErrorTerminalState(String stateName);
 
-  /// Task priority label for 'immediate' — displayed via enum .name in badges/UI
+  /// Task priority label for 'immediate' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'immediate'**
   String get taskPriorityImmediate;
 
-  /// Task priority label for 'priority' — displayed via enum .name in badges/UI
+  /// Task priority label for 'priority' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'priority'**
   String get taskPriorityPriority;
 
-  /// Task priority label for 'routine' — displayed via enum .name in badges/UI
+  /// Task priority label for 'routine' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'routine'**
   String get taskPriorityRoutine;
 
-  /// Task state label for 'acknowledged' — displayed via enum .name in badges/UI
+  /// Task state label for 'acknowledged' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'acknowledged'**
   String get taskStateAcknowledged;
 
-  /// Task state label for 'assigned' — displayed via enum .name in badges/UI
+  /// Task state label for 'assigned' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'assigned'**
   String get taskStateAssigned;
 
-  /// Task state label for 'cancelled' — displayed via enum .name in badges/UI
+  /// Task state label for 'cancelled' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'cancelled'**
   String get taskStateCancelled;
 
-  /// Task state label for 'completed' — displayed via enum .name in badges/UI
+  /// Task state label for 'completed' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'completed'**
   String get taskStateCompleted;
 
-  /// Task state label for 'created' — displayed via enum .name in badges/UI
+  /// Task state label for 'created' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'created'**
   String get taskStateCreated;
 
-  /// Task state label for 'failed' — displayed via enum .name in badges/UI
+  /// Task state label for 'failed' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'failed'**
   String get taskStateFailed;
 
-  /// Task state label for 'in progress' — displayed via enum .name in badges/UI (camelCase, needs human-readable form)
+  /// Task state label for 'in progress' - displayed via enum .name in badges/UI (camelCase, needs human-readable form)
   ///
   /// In en, this message translates to:
   /// **'inProgress'**
   String get taskStateInProgress;
 
-  /// Task state label for 'reassigned' — displayed via enum .name in badges/UI
+  /// Task state label for 'reassigned' - displayed via enum .name in badges/UI
   ///
   /// In en, this message translates to:
   /// **'reassigned'**
@@ -38508,7 +38508,7 @@ abstract class AppLocalizations {
   /// **'Reference code copied'**
   String get referenceCodeCopied;
 
-  /// Primary CTA in the BMC handoff sheet — opens the external checkout URL.
+  /// Primary CTA in the BMC handoff sheet - opens the external checkout URL.
   ///
   /// In en, this message translates to:
   /// **'Open Buy Me a Coffee'**
@@ -42102,7 +42102,7 @@ abstract class AppLocalizations {
   /// **'End Activity'**
   String get bgConnLiveActivityDisableConfirm;
 
-  /// Title of the Live Activity destination picker — what the lock-screen route's right side shows
+  /// Title of the Live Activity destination picker - what the lock-screen route's right side shows
   ///
   /// In en, this message translates to:
   /// **'Destination'**
@@ -49276,7 +49276,7 @@ abstract class AppLocalizations {
   /// **'Edit Dashboard'**
   String get dashboardEditTitle;
 
-  /// Button on the dashboard Environment Metrics widget shown when there are no readings yet — opens the full environment metrics log screen.
+  /// Button on the dashboard Environment Metrics widget shown when there are no readings yet - opens the full environment metrics log screen.
   ///
   /// In en, this message translates to:
   /// **'Open log'**
@@ -49378,7 +49378,7 @@ abstract class AppLocalizations {
   /// **'Nodes'**
   String get dashboardNodesLabel;
 
-  /// Subtitle on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets — promotes opening the picker.
+  /// Subtitle on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets - promotes opening the picker.
   ///
   /// In en, this message translates to:
   /// **'{count} ready to add: environment, mesh health, map, and more'**
@@ -51367,7 +51367,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step traceroute_results
   ///
   /// In en, this message translates to:
-  /// **'Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" — the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.'**
+  /// **'Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" - the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.'**
   String get helpTracerouteResultsBubble;
 
   /// Help bubble text for step traceroute_history
@@ -51976,7 +51976,7 @@ abstract class AppLocalizations {
   /// **'Your NodePet lives with your node and evolves locally from your care and mesh activity.'**
   String get helpNodeDexSectionPetCompanionSelf;
 
-  /// Info-sheet copy for the Companion card when viewing a remote peer. Keeps expectations conservative while remote companion sharing is still alpha — avoids promising live updates or protocol details.
+  /// Info-sheet copy for the Companion card when viewing a remote peer. Keeps expectations conservative while remote companion sharing is still alpha - avoids promising live updates or protocol details.
   ///
   /// In en, this message translates to:
   /// **'If this node shares a companion summary, it can appear here. Full companion state stays local to its owner.'**
@@ -53243,7 +53243,7 @@ abstract class AppLocalizations {
   /// **'Executed'**
   String get automationHistoryOutcomeExecuted;
 
-  /// History label when automation was manually triggered — clarifies THEN was forced
+  /// History label when automation was manually triggered - clarifies THEN was forced
   ///
   /// In en, this message translates to:
   /// **'Ran THEN manually'**
@@ -53441,7 +53441,7 @@ abstract class AppLocalizations {
   /// **'Last: {outcome}'**
   String automationCardLastRun(String outcome);
 
-  /// Brief last run outcome on card when run was manual — distinct from auto success
+  /// Brief last run outcome on card when run was manual - distinct from auto success
   ///
   /// In en, this message translates to:
   /// **'Last: Manual test'**
@@ -53513,7 +53513,7 @@ abstract class AppLocalizations {
   /// **'Device was reset or replaced. Set it up again.'**
   String get connectionErrorDeviceReset;
 
-  /// Banner copy shown when SocialMesh detects on Android that the saved Meshtastic device is no longer in the system bonded list. Routes the user to Scanner so the OS pairing PIN flow runs again. Android-only — iOS does not expose pre-connection bond state.
+  /// Banner copy shown when SocialMesh detects on Android that the saved Meshtastic device is no longer in the system bonded list. Routes the user to Scanner so the OS pairing PIN flow runs again. Android-only - iOS does not expose pre-connection bond state.
   ///
   /// In en, this message translates to:
   /// **'This device was removed from Android Bluetooth settings. Re-pair it from Scanner.'**
@@ -54491,7 +54491,7 @@ abstract class AppLocalizations {
   /// **'Send text, sketches, or start a tiny game.'**
   String get sipDmEmptyDescription;
 
-  /// Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting — this is the shared mesh budget.
+  /// Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting - this is the shared mesh budget.
   ///
   /// In en, this message translates to:
   /// **'Sending paused - mesh bandwidth limit reached. Try again shortly.'**
@@ -54527,7 +54527,7 @@ abstract class AppLocalizations {
   /// **'Close Session'**
   String get sipDmCloseAction;
 
-  /// Overflow menu item that silences notifications for this peer's messages. Inbound DMs still arrive and are stored — only the system notification is suppressed. Reversible toggle.
+  /// Overflow menu item that silences notifications for this peer's messages. Inbound DMs still arrive and are stored - only the system notification is suppressed. Reversible toggle.
   ///
   /// In en, this message translates to:
   /// **'Mute notifications'**
@@ -54551,7 +54551,7 @@ abstract class AppLocalizations {
   /// **'Reset secure connection'**
   String get sipDmMenuResetSecure;
 
-  /// Overflow menu item that wipes the local DM history with this peer and tears down the local session. Emits no wire frame — peer is not notified. Local-only.
+  /// Overflow menu item that wipes the local DM history with this peer and tears down the local session. Emits no wire frame - peer is not notified. Local-only.
   ///
   /// In en, this message translates to:
   /// **'Remove conversation'**
@@ -54671,7 +54671,7 @@ abstract class AppLocalizations {
   /// **'Offer declined'**
   String get sipPlayLifecycleDeclined;
 
-  /// Header inside the Play composer panel — the panel shown when the user selects the Play tab.
+  /// Header inside the Play composer panel - the panel shown when the user selects the Play tab.
   ///
   /// In en, this message translates to:
   /// **'Play a game'**
@@ -54689,7 +54689,7 @@ abstract class AppLocalizations {
   /// **'Send only tiny moves over the mesh.'**
   String get sipPlayPanelTttSupporting;
 
-  /// Optional badge on the Tic-Tac-Toe card calling out how compact each move is on the wire. Phrased as user-facing value (compact mesh moves) rather than internal metric — earlier 'B' shorthand read like a glitch.
+  /// Optional badge on the Tic-Tac-Toe card calling out how compact each move is on the wire. Phrased as user-facing value (compact mesh moves) rather than internal metric - earlier 'B' shorthand read like a glitch.
   ///
   /// In en, this message translates to:
   /// **'Tiny moves • ~7 bytes'**
@@ -54701,7 +54701,7 @@ abstract class AppLocalizations {
   /// **'Drop discs into a column. First to four-in-a-row wins.'**
   String get sipPlayPanelC4Supporting;
 
-  /// Optional badge on the Connect Four card calling out how compact each move is on the wire. C4 moves are 1 byte (column only — landing row is derived) so the envelope is the same 7 bytes as TTT.
+  /// Optional badge on the Connect Four card calling out how compact each move is on the wire. C4 moves are 1 byte (column only - landing row is derived) so the envelope is the same 7 bytes as TTT.
   ///
   /// In en, this message translates to:
   /// **'Tiny moves • ~7 bytes'**
@@ -54779,7 +54779,7 @@ abstract class AppLocalizations {
   /// **'This conversation includes a game your build doesn\'t recognize. The original sender\'s app may be newer.'**
   String get sipPlayUnsupportedGameBody;
 
-  /// Title of the bubble shown when a SIP Play envelope fails to decode (truncated, version mismatch, etc.). State is unchanged — the bubble is informational only.
+  /// Title of the bubble shown when a SIP Play envelope fails to decode (truncated, version mismatch, etc.). State is unchanged - the bubble is informational only.
   ///
   /// In en, this message translates to:
   /// **'Game data unreadable'**
@@ -54905,13 +54905,13 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get sipDmComposerModePlay;
 
-  /// Signal tab label in the DM composer mode switcher. Visible only when the peer supports SIP Signal v1 and is not blocked. Signal is musical-phrase + Morse — 'Close Encounters over LoRa.'
+  /// Signal tab label in the DM composer mode switcher. Visible only when the peer supports SIP Signal v1 and is not blocked. Signal is musical-phrase + Morse - 'Close Encounters over LoRa.'
   ///
   /// In en, this message translates to:
   /// **'Signal'**
   String get sipDmComposerModeSignal;
 
-  /// Header at the top of the rich-composer bottom sheet — houses the Sketch / Play / Signal tabs separately from the always-on text input.
+  /// Header at the top of the rich-composer bottom sheet - houses the Sketch / Play / Signal tabs separately from the always-on text input.
   ///
   /// In en, this message translates to:
   /// **'Compose'**
@@ -54923,7 +54923,7 @@ abstract class AppLocalizations {
   /// **'Open compose options'**
   String get sipDmComposerSheetTooltip;
 
-  /// Tooltip shown on the rich-composer trigger when the peer's CAP_BEACON / CAP_RESP / handshake-derived feature row hasn't arrived yet. Distinguishes the brief pending placeholder state from the unsupported / hidden state — the trigger is rendered greyed-out so the input bar's leading slot stays visually stable, then snaps to the regular tooltip the moment caps land.
+  /// Tooltip shown on the rich-composer trigger when the peer's CAP_BEACON / CAP_RESP / handshake-derived feature row hasn't arrived yet. Distinguishes the brief pending placeholder state from the unsupported / hidden state - the trigger is rendered greyed-out so the input bar's leading slot stays visually stable, then snaps to the regular tooltip the moment caps land.
   ///
   /// In en, this message translates to:
   /// **'Checking peer capabilities…'**
@@ -55091,7 +55091,7 @@ abstract class AppLocalizations {
   /// **'Space'**
   String get sipSignalMorseTapSpace;
 
-  /// Label for the tap-Morse backspace key — removes the most recent symbol or separator.
+  /// Label for the tap-Morse backspace key - removes the most recent symbol or separator.
   ///
   /// In en, this message translates to:
   /// **'Back'**
@@ -55115,7 +55115,7 @@ abstract class AppLocalizations {
   /// **'Try the example'**
   String get sipSignalToneExampleHint;
 
-  /// Placeholder shown in the reply quote when replying to a SIP Signal entry. Mirrors how sketch replies use sipDmInkReplyPlaceholder — Signal envelopes carry no plaintext body to quote.
+  /// Placeholder shown in the reply quote when replying to a SIP Signal entry. Mirrors how sketch replies use sipDmInkReplyPlaceholder - Signal envelopes carry no plaintext body to quote.
   ///
   /// In en, this message translates to:
   /// **'📡 Signal'**
@@ -55169,7 +55169,7 @@ abstract class AppLocalizations {
   /// **'Morse'**
   String get sipSignalBubbleMorseLabel;
 
-  /// Fallback bubble title when an inbound Signal envelope fails to decode. State is informational only — never crashes ingest.
+  /// Fallback bubble title when an inbound Signal envelope fails to decode. State is informational only - never crashes ingest.
   ///
   /// In en, this message translates to:
   /// **'Signal can\'t be read'**
@@ -55181,7 +55181,7 @@ abstract class AppLocalizations {
   /// **'Draw a quick sketch - kept tiny so it fits on the mesh.'**
   String get sipInkComposerHint;
 
-  /// Hint replacing sipInkComposerHint when the user has drawn past the SIP Ink budget — explains that overflow strokes are visible but will be dropped on send.
+  /// Hint replacing sipInkComposerHint when the user has drawn past the SIP Ink budget - explains that overflow strokes are visible but will be dropped on send.
   ///
   /// In en, this message translates to:
   /// **'Strokes past the dashed line won\'t fit on the mesh and won\'t be sent.'**
@@ -55211,13 +55211,13 @@ abstract class AppLocalizations {
   /// **'Undo'**
   String get sipInkUndo;
 
-  /// Tooltip on the SIP Ink composer's Send button — fires when the user dispatches the encoded sketch as a DM_INK frame.
+  /// Tooltip on the SIP Ink composer's Send button - fires when the user dispatches the encoded sketch as a DM_INK frame.
   ///
   /// In en, this message translates to:
   /// **'Send'**
   String get sipInkSend;
 
-  /// Quoted text shown when a user replies to a sketch — ink has no plaintext body, so this placeholder stands in for the quote in both the local reply indicator and the recipient's wire-encoded quote prefix.
+  /// Quoted text shown when a user replies to a sketch - ink has no plaintext body, so this placeholder stands in for the quote in both the local reply indicator and the recipient's wire-encoded quote prefix.
   ///
   /// In en, this message translates to:
   /// **'🎨 Sketch'**
@@ -55595,7 +55595,7 @@ abstract class AppLocalizations {
   /// **'Decline'**
   String get sipHubDecline;
 
-  /// Block button label on the incoming handshake request card. Blocking silently drops the pending request and persists a local block — no HS_DECLINE is sent on the wire.
+  /// Block button label on the incoming handshake request card. Blocking silently drops the pending request and persists a local block - no HS_DECLINE is sent on the wire.
   ///
   /// In en, this message translates to:
   /// **'Block'**
@@ -55697,7 +55697,7 @@ abstract class AppLocalizations {
   /// **'Total'**
   String get meshCapacityStatTotal;
 
-  /// Secondary button label on the recommendation card — opens the explanation sheet.
+  /// Secondary button label on the recommendation card - opens the explanation sheet.
   ///
   /// In en, this message translates to:
   /// **'Learn more'**
@@ -56069,13 +56069,13 @@ abstract class AppLocalizations {
   /// **'Why preset choice matters'**
   String get meshCapacitySheetTitle;
 
-  /// Intro paragraph in the Mesh Capacity explanation sheet — frames presets as a tradeoff.
+  /// Intro paragraph in the Mesh Capacity explanation sheet - frames presets as a tradeoff.
   ///
   /// In en, this message translates to:
   /// **'Meshtastic radio presets are a tradeoff between range and capacity. Long-range presets are useful when the network is sparse or you are trying to discover other nodes. In dense areas, the same settings can consume too much airtime, causing delays, missed messages, and unreliable routing.'**
   String get meshCapacitySheetIntro;
 
-  /// Second paragraph in the Mesh Capacity explanation sheet — explains the capacity vs range tradeoff.
+  /// Second paragraph in the Mesh Capacity explanation sheet - explains the capacity vs range tradeoff.
   ///
   /// In en, this message translates to:
   /// **'Faster presets reduce range but allow the local mesh to carry more traffic. Dense urban areas and large events usually need faster presets to stay responsive. Sparser, exploratory deployments still benefit from long-range presets.'**
@@ -56141,19 +56141,19 @@ abstract class AppLocalizations {
   /// **'Before changing presets'**
   String get meshCapacitySheetRiskHeader;
 
-  /// Risk paragraph in the Mesh Capacity explanation sheet — warns the user that compatibility is impacted.
+  /// Risk paragraph in the Mesh Capacity explanation sheet - warns the user that compatibility is impacted.
   ///
   /// In en, this message translates to:
   /// **'Changing presets affects who you can communicate with. Your group should move together, or you may stop hearing nodes that remain on the old preset. SocialMesh never changes radio settings on its own.'**
   String get meshCapacitySheetRiskBody;
 
-  /// Primary action button label in the Mesh Capacity explanation sheet — navigates to the existing Radio Configuration screen so the user can change settings themselves.
+  /// Primary action button label in the Mesh Capacity explanation sheet - navigates to the existing Radio Configuration screen so the user can change settings themselves.
   ///
   /// In en, this message translates to:
   /// **'Open radio settings'**
   String get meshCapacitySheetOpenSettings;
 
-  /// Secondary action button label in the Mesh Capacity explanation sheet — dismisses the sheet without navigating.
+  /// Secondary action button label in the Mesh Capacity explanation sheet - dismisses the sheet without navigating.
   ///
   /// In en, this message translates to:
   /// **'Close'**
@@ -59105,7 +59105,7 @@ abstract class AppLocalizations {
   /// **'of {seconds}s max'**
   String voiceRecordingMaxSeconds(String seconds);
 
-  /// Cancel button in the voice recording overlay — discards the recording
+  /// Cancel button in the voice recording overlay - discards the recording
   ///
   /// In en, this message translates to:
   /// **'Cancel'**
@@ -59129,7 +59129,7 @@ abstract class AppLocalizations {
   /// **'Discard'**
   String get voiceRecordingDiscardConfirm;
 
-  /// Retake button in the voice recording overlay — discards and restarts the recording
+  /// Retake button in the voice recording overlay - discards and restarts the recording
   ///
   /// In en, this message translates to:
   /// **'Retake'**
@@ -61913,49 +61913,49 @@ abstract class AppLocalizations {
   /// **'NodePet'**
   String get petScreenTitle;
 
-  /// Primary action label — replenishes the pet's energy.
+  /// Primary action label - replenishes the pet's energy.
   ///
   /// In en, this message translates to:
   /// **'Feed'**
   String get petActionCharge;
 
-  /// Secondary action label — hold-to-surge charges faster but raises instability.
+  /// Secondary action label - hold-to-surge charges faster but raises instability.
   ///
   /// In en, this message translates to:
   /// **'Overfeed'**
   String get petActionSurge;
 
-  /// Action label — brief premium interaction that raises mood.
+  /// Action label - brief premium interaction that raises mood.
   ///
   /// In en, this message translates to:
   /// **'Play'**
   String get petActionResonate;
 
-  /// Action label — clears a distortion artefact (hygiene analogue).
+  /// Action label - clears a distortion artefact (hygiene analogue).
   ///
   /// In en, this message translates to:
   /// **'Clean'**
   String get petActionStabilise;
 
-  /// Action label — medicine analogue; only valid while the pet is sick.
+  /// Action label - medicine analogue; only valid while the pet is sick.
   ///
   /// In en, this message translates to:
   /// **'Medicine'**
   String get petActionPurge;
 
-  /// Action label — puts the pet to sleep during the sleep window.
+  /// Action label - puts the pet to sleep during the sleep window.
   ///
   /// In en, this message translates to:
   /// **'Sleep'**
   String get petActionDim;
 
-  /// Action label — opens a sheet with detailed pet stats.
+  /// Action label - opens a sheet with detailed pet stats.
   ///
   /// In en, this message translates to:
   /// **'Status'**
   String get petActionInspect;
 
-  /// Action label — restart a dormant pet from a fresh sigil seed.
+  /// Action label - restart a dormant pet from a fresh sigil seed.
   ///
   /// In en, this message translates to:
   /// **'Revive'**
@@ -61973,13 +61973,13 @@ abstract class AppLocalizations {
   /// **'A digital companion that hatches from your node\'s signature and grows over time. The better you care for it, the healthier it stays.'**
   String get petOnboardingPage1Body;
 
-  /// Title of the second onboarding card — introduces the plain-language advisory line above the pet.
+  /// Title of the second onboarding card - introduces the plain-language advisory line above the pet.
   ///
   /// In en, this message translates to:
   /// **'The status line tells you what to do'**
   String get petOnboardingPage2Title;
 
-  /// Body of the second onboarding card — explains the status line + pulsing-button cue.
+  /// Body of the second onboarding card - explains the status line + pulsing-button cue.
   ///
   /// In en, this message translates to:
   /// **'Above your pet, a single status line says exactly what it needs and names the button to tap - Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.'**
@@ -62117,31 +62117,31 @@ abstract class AppLocalizations {
   /// **'Dormant'**
   String get petStageDormant;
 
-  /// Evolution branch name — pre-hatch placeholder.
+  /// Evolution branch name - pre-hatch placeholder.
   ///
   /// In en, this message translates to:
   /// **'Unborn'**
   String get petBranchUnborn;
 
-  /// Evolution branch name — pristine-care adult form.
+  /// Evolution branch name - pristine-care adult form.
   ///
   /// In en, this message translates to:
   /// **'Luminous'**
   String get petBranchLuminous;
 
-  /// Evolution branch name — moderate-care adult form.
+  /// Evolution branch name - moderate-care adult form.
   ///
   /// In en, this message translates to:
   /// **'Steady'**
   String get petBranchSteady;
 
-  /// Evolution branch name — high-surge adult form.
+  /// Evolution branch name - high-surge adult form.
   ///
   /// In en, this message translates to:
   /// **'Volatile'**
   String get petBranchVolatile;
 
-  /// Evolution branch name — neglect-path adult form.
+  /// Evolution branch name - neglect-path adult form.
   ///
   /// In en, this message translates to:
   /// **'Dimmed'**
@@ -62261,61 +62261,61 @@ abstract class AppLocalizations {
   /// **'Status'**
   String get petInspectTitle;
 
-  /// Inspect sheet section — identity block.
+  /// Inspect sheet section - identity block.
   ///
   /// In en, this message translates to:
   /// **'Identity'**
   String get petInspectSectionIdentity;
 
-  /// Inspect sheet section — visible stats block.
+  /// Inspect sheet section - visible stats block.
   ///
   /// In en, this message translates to:
   /// **'Stats'**
   String get petInspectSectionStats;
 
-  /// Inspect sheet section — recent events block.
+  /// Inspect sheet section - recent events block.
   ///
   /// In en, this message translates to:
   /// **'Recent'**
   String get petInspectSectionRecent;
 
-  /// Inspect row label — shows the deterministic seed (hex).
+  /// Inspect row label - shows the deterministic seed (hex).
   ///
   /// In en, this message translates to:
   /// **'DNA seed'**
   String get petInspectRowDnaSeed;
 
-  /// Inspect row label — shows the owning node number.
+  /// Inspect row label - shows the owning node number.
   ///
   /// In en, this message translates to:
   /// **'Owner node'**
   String get petInspectRowOwnerNode;
 
-  /// Inspect row label — current life-cycle stage.
+  /// Inspect row label - current life-cycle stage.
   ///
   /// In en, this message translates to:
   /// **'Stage'**
   String get petInspectRowStage;
 
-  /// Inspect row label — current evolution branch.
+  /// Inspect row label - current evolution branch.
   ///
   /// In en, this message translates to:
   /// **'Branch'**
   String get petInspectRowBranch;
 
-  /// Inspect row label — hatch timestamp.
+  /// Inspect row label - hatch timestamp.
   ///
   /// In en, this message translates to:
   /// **'Hatched'**
   String get petInspectRowHatched;
 
-  /// Inspect row label — elapsed time since the pet entered the current stage.
+  /// Inspect row label - elapsed time since the pet entered the current stage.
   ///
   /// In en, this message translates to:
   /// **'In stage'**
   String get petInspectRowInStage;
 
-  /// Title for the dedicated DNA Viewer sheet — shows the structural genome derived from the pet's dnaSeed.
+  /// Title for the dedicated DNA Viewer sheet - shows the structural genome derived from the pet's dnaSeed.
   ///
   /// In en, this message translates to:
   /// **'DNA Blueprint'**
@@ -62327,55 +62327,55 @@ abstract class AppLocalizations {
   /// **'View DNA blueprint'**
   String get petDnaViewerOpenAction;
 
-  /// DNA Viewer section header — identity block (seed, stage, branch).
+  /// DNA Viewer section header - identity block (seed, stage, branch).
   ///
   /// In en, this message translates to:
   /// **'Identity'**
   String get petDnaSectionIdentity;
 
-  /// DNA Viewer section header — structural trait breakdown.
+  /// DNA Viewer section header - structural trait breakdown.
   ///
   /// In en, this message translates to:
   /// **'Decoded traits'**
   String get petDnaSectionDecoded;
 
-  /// DNA Viewer decoded trait — core polygon symmetry class.
+  /// DNA Viewer decoded trait - core polygon symmetry class.
   ///
   /// In en, this message translates to:
   /// **'Symmetry'**
   String get petDnaTraitSymmetry;
 
-  /// DNA Viewer decoded trait — petal/orbital count.
+  /// DNA Viewer decoded trait - petal/orbital count.
   ///
   /// In en, this message translates to:
   /// **'Orbital complexity'**
   String get petDnaTraitOrbitals;
 
-  /// DNA Viewer decoded trait — twist cycles.
+  /// DNA Viewer decoded trait - twist cycles.
   ///
   /// In en, this message translates to:
   /// **'Resonance'**
   String get petDnaTraitResonance;
 
-  /// DNA Viewer decoded trait — strand count (Monad / Dyad / Triad).
+  /// DNA Viewer decoded trait - strand count (Monad / Dyad / Triad).
   ///
   /// In en, this message translates to:
   /// **'Strand configuration'**
   String get petDnaTraitStrands;
 
-  /// DNA Viewer decoded trait — number of broken strand segments.
+  /// DNA Viewer decoded trait - number of broken strand segments.
   ///
   /// In en, this message translates to:
   /// **'Volatility markers'**
   String get petDnaTraitVolatility;
 
-  /// DNA Viewer decoded trait — anomaly bit flag.
+  /// DNA Viewer decoded trait - anomaly bit flag.
   ///
   /// In en, this message translates to:
   /// **'Anomaly'**
   String get petDnaTraitAnomaly;
 
-  /// DNA Viewer decoded trait — seed-derived body rotation angle in degrees.
+  /// DNA Viewer decoded trait - seed-derived body rotation angle in degrees.
   ///
   /// In en, this message translates to:
   /// **'Signature rotation'**
@@ -62555,7 +62555,7 @@ abstract class AppLocalizations {
   /// **'No companion seen from this node yet.'**
   String get petCompanionRemoteNoObservation;
 
-  /// Remote Companion empty-state shown when the node responded but declined to share or has no companion bound (covers both error responses and empty payloads — they look the same to the user).
+  /// Remote Companion empty-state shown when the node responded but declined to share or has no companion bound (covers both error responses and empty payloads - they look the same to the user).
   ///
   /// In en, this message translates to:
   /// **'This node isn\'t sharing its companion.'**
@@ -62657,7 +62657,7 @@ abstract class AppLocalizations {
   /// **'Calm'**
   String get petAlleleCalm;
 
-  /// Value format for an allele ratio row — the base letter, two spaces, percentage, percent sign. E.g. 'A  34%'.
+  /// Value format for an allele ratio row - the base letter, two spaces, percentage, percent sign. E.g. 'A  34%'.
   ///
   /// In en, this message translates to:
   /// **'{letter}  {percent}%'**
@@ -64097,7 +64097,7 @@ abstract class AppLocalizations {
   /// **'Host'**
   String get reticulumBridgeHostLabel;
 
-  /// Placeholder for the host input field. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files.
+  /// Placeholder for the host input field. Avoid embedding the literal loopback IP - the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files.
   ///
   /// In en, this message translates to:
   /// **'rnsd host or IP'**
@@ -64433,7 +64433,7 @@ abstract class AppLocalizations {
   /// **'Host'**
   String get rnsCompanionSettingsHostLabel;
 
-  /// Placeholder for the host input. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files.
+  /// Placeholder for the host input. Avoid embedding the literal loopback IP - the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files.
   ///
   /// In en, this message translates to:
   /// **'laptop IP or hostname'**
@@ -65891,7 +65891,7 @@ abstract class AppLocalizations {
   /// **'All seats taken - regenerate after revoking'**
   String get licenseOrgInviteMintExhausted;
 
-  /// Secondary action on the rendered invite link tile that mints a fresh URL. Replaces the current link — anyone holding the previous URL will see 'this invite was cancelled'.
+  /// Secondary action on the rendered invite link tile that mints a fresh URL. Replaces the current link - anyone holding the previous URL will see 'this invite was cancelled'.
   ///
   /// In en, this message translates to:
   /// **'Regenerate link'**

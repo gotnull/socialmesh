@@ -12,7 +12,7 @@ import '../../l10n/app_localizations.dart';
 /// Falls back to the original English [title] when no localization exists.
 String localizedFlowTitle(String title, AppLocalizations l10n) {
   return switch (title) {
-    // Trigger nodes — displayNames
+    // Trigger nodes - displayNames
     'Event' => l10n.flowNodeEvent,
     'Node Online' => l10n.flowNodeNodeOnline,
     'Node Offline' => l10n.flowNodeNodeOffline,
@@ -29,7 +29,7 @@ String localizedFlowTitle(String title, AppLocalizations l10n) {
     'Channel Activity' => l10n.flowNodeChannelActivity,
     'Detection Sensor' => l10n.flowNodeDetectionSensor,
     'Manual' => l10n.flowNodeManual,
-    // Action nodes — displayNames
+    // Action nodes - displayNames
     'Send Message' => l10n.flowNodeSendMessage,
     'Play Sound' => l10n.flowNodePlaySound,
     'Vibrate' => l10n.flowNodeVibrate,
@@ -40,7 +40,7 @@ String localizedFlowTitle(String title, AppLocalizations l10n) {
     'Send to Channel' => l10n.flowNodeSendToChannel,
     'Trigger Shortcut' => l10n.flowNodeTriggerShortcut,
     'Execute' => l10n.flowNodeExecute,
-    // Condition nodes — displayNames
+    // Condition nodes - displayNames
     'Time Range' => l10n.flowNodeTimeRange,
     'Day of Week' => l10n.flowNodeDayOfWeek,
     'Battery Above' => l10n.flowNodeBatteryAbove,
@@ -49,7 +49,7 @@ String localizedFlowTitle(String title, AppLocalizations l10n) {
     'Node Is Offline' => l10n.flowNodeNodeIsOffline,
     'Within Geofence' => l10n.flowNodeWithinGeofence,
     'Outside Geofence' => l10n.flowNodeOutsideGeofence,
-    // Logic gate nodes — displayNames + descriptions
+    // Logic gate nodes - displayNames + descriptions
     'AND' => l10n.flowNodeAnd,
     'OR' => l10n.flowNodeOr,
     'NOT' => l10n.flowNodeNot,

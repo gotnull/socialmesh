@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D25 — `MeshCoreHamburgerMenuButton` route-aware behaviour.
+// D25 - `MeshCoreHamburgerMenuButton` route-aware behaviour.
 //
 // Pre-D25 the button always tried to open the shell drawer. On
 // pushed routes (Settings, Device Info, …) the shell's `Scaffold`
 // is below the navigator stack, so `openDrawer()` silently no-ops
 // and a tap visibly does nothing. Splitting behaviour by route
 // depth: hamburger + drawer at the root, back arrow + pop on
-// pushed routes — fixes the dead-tap without touching any of the
+// pushed routes - fixes the dead-tap without touching any of the
 // six callsites.
 
 import 'package:flutter/material.dart';
@@ -157,7 +157,7 @@ void main() {
 
     // Root: tooltip is the localized menu hint (we don't pin the
     // exact ARB string here so a future re-translation doesn't
-    // brittle the test — just assert the icon-button has SOME
+    // brittle the test - just assert the icon-button has SOME
     // tooltip, and that it differs from the pushed-route one).
     final rootButton = tester.widget<IconButton>(
       find.ancestor(

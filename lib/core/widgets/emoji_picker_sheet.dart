@@ -12,7 +12,7 @@ import '../widgets/app_bottom_sheet.dart';
 /// Full emoji picker powered by emoji_picker_flutter.
 ///
 /// Shows the complete Unicode emoji set with categories, search, recents, and
-/// skin tone selection — no hardcoded emoji lists. Shared between message
+/// skin tone selection - no hardcoded emoji lists. Shared between message
 /// tapbacks and waypoint icons; present it via [showEmojiPickerSheet].
 class EmojiPickerSheet extends StatelessWidget {
   final ValueChanged<String> onEmojiSelected;

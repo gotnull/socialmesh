@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Album Cover — premium collector stats dashboard.
+// Album Cover - premium collector stats dashboard.
 //
 // The album cover sits at the top of the album grid view and serves
 // as the visual anchor for the entire collector experience. It
@@ -100,7 +100,7 @@ class _AlbumCoverState extends ConsumerState<AlbumCover>
           ),
         );
 
-    // Scale up from 0.96 — subtle enough to feel intentional,
+    // Scale up from 0.96 - subtle enough to feel intentional,
     // not dramatic enough to feel gimmicky.
     _scaleAnimation = Tween<double>(begin: 0.96, end: 1.0).animate(
       CurvedAnimation(
@@ -109,7 +109,7 @@ class _AlbumCoverState extends ConsumerState<AlbumCover>
       ),
     );
 
-    // Blur clears during the first 40% — a brief focus-rack effect
+    // Blur clears during the first 40% - a brief focus-rack effect
     // that resolves quickly. 2.5px is enough to be cinematic without
     // looking like a loading glitch.
     _blurAnimation = Tween<double>(begin: 2.5, end: 0.0).animate(
@@ -176,7 +176,7 @@ class _AlbumCoverState extends ConsumerState<AlbumCover>
 }
 
 // =============================================================================
-// Cover Card — the main container
+// Cover Card - the main container
 // =============================================================================
 
 class _CoverCard extends StatelessWidget {
@@ -478,18 +478,16 @@ class _CoverDividerPainter extends CustomPainter {
 
     // Left line (gradient fade-in).
     final leftGradient = Paint()
-      ..shader = LinearGradient(
-        colors: [color.withValues(alpha: 0.0), color],
-      ).createShader(Rect.fromLTRB(0, cy, center - lineGap, cy));
+      ..shader = LinearGradient(colors: [color.withValues(alpha: 0.0), color])
+          .createShader(Rect.fromLTRB(0, cy, center - lineGap, cy));
     leftGradient.strokeWidth = 0.75;
     leftGradient.style = PaintingStyle.stroke;
     canvas.drawLine(Offset(16, cy), Offset(center - lineGap, cy), leftGradient);
 
     // Right line (gradient fade-out).
     final rightGradient = Paint()
-      ..shader = LinearGradient(
-        colors: [color, color.withValues(alpha: 0.0)],
-      ).createShader(Rect.fromLTRB(center + lineGap, cy, size.width, cy));
+      ..shader = LinearGradient(colors: [color, color.withValues(alpha: 0.0)])
+          .createShader(Rect.fromLTRB(center + lineGap, cy, size.width, cy));
     rightGradient.strokeWidth = 0.75;
     rightGradient.style = PaintingStyle.stroke;
     canvas.drawLine(

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — BLE connecting state with animated fullscreen overlay
+// lint-allow: scaffold - BLE connecting state with animated fullscreen overlay
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -175,7 +175,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// Scanner is still showing the connecting overlay. Defends against
   /// the case where apple-code 14 surfaces through `_handleDisconnect`
   /// (and routes to `pairedDeviceInvalidated`) instead of throwing back
-  /// to Scanner's own catch block — without this safety net the overlay
+  /// to Scanner's own catch block - without this safety net the overlay
   /// would stay up indefinitely under a stale `_connecting=true` flag.
   ProviderSubscription<conn.DeviceConnectionState2>?
   _pairingInvalidationSafetySub;
@@ -191,7 +191,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   /// D28 follow-up: parallel disconnect-completion listener for MeshCore.
   /// `deviceConnectionProvider` is Meshtastic-flavoured and never
-  /// transitions to `disconnected` for a MeshCore session — the
+  /// transitions to `disconnected` for a MeshCore session - the
   /// MeshCore coordinator updates `meshCoreConnectionStateProvider`
   /// instead. Without this listener, tapping Disconnect on a
   /// MeshCore BLE device left the Scanner stuck in the
@@ -224,12 +224,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// recovery in under a minute.
   static const Duration _manualConnectTimeoutDuration = Duration(seconds: 60);
 
-  /// Set once per ScannerScreen instance — the first to read `count==1`
+  /// Set once per ScannerScreen instance - the first to read `count==1`
   /// in its post-frame callback wins the BLE-adapter ownership for this
   /// scanner session. Subsequent concurrent mounts (e.g. the state-
   /// driven `_AppRouter` rebuild after `setNeedsScanner()` racing with
   /// `pushNamedAndRemoveUntil('/app', …)`) stay quiet until they're the
-  /// last one alive — at which point the listener below promotes them.
+  /// last one alive - at which point the listener below promotes them.
   /// This prevents two scanners contending for the BLE adapter while
   /// both being disposed before `transport.scan()` actually opens
   /// (see logs.txt evidence: hashCodes 701430859 + 445134485 both running
@@ -243,7 +243,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   /// Captured notifier references taken at `initState` so `dispose`
   /// doesn't need `ref.read(...)` (unreliable during widget teardown
-  /// — `ref.read` after `unmount` throws "Bad state: Using `ref` when
+  /// - `ref.read` after `unmount` throws "Bad state: Using `ref` when
   /// a widget is about to or has been unmounted is unsafe", swallowed
   /// by our defensive try/catch but leaving the mount counter inflated
   /// by 1. That phantom is what stuck the lone-survivor pattern in the
@@ -260,7 +260,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     // Subscribe to scanner-mount-count changes so we can start scan work
     // when our register-bump in the post-frame callback below settles
-    // the count to 1. listenManual is safe in initState — it just sets
+    // the count to 1. listenManual is safe in initState - it just sets
     // up a subscription, no state mutation.
     _scannerCountSub = ref.listenManual<int>(scannerMountCountProvider, (
       prev,
@@ -317,7 +317,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       _showPairingInvalidationHint = true;
     } else if (autoReconnectState == AutoReconnectState.failed &&
         deviceState.reason == conn.DisconnectReason.authFailed) {
-      // PIN/auth failure during auto-reconnect — the device was found and
+      // PIN/auth failure during auto-reconnect - the device was found and
       // BLE-connected but protocol configuration timed out (likely because
       // the system pairing/PIN dialog wasn't shown during background
       // reconnect). Show the same guidance as pairing invalidation so the
@@ -422,7 +422,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     //   2. pushNamedAndRemoveUntil('/app', ...) creates a NEW _AppRouter
     //      which also mounts ScannerScreen #2 (initState runs)
     //   3. ScannerScreen #1 is disposed moments later when old routes are
-    //      removed — but its initState already ran
+    //      removed - but its initState already ran
     //
     // By deferring the scan start to a post-frame callback, Scanner #1 is
     // disposed before the callback fires (mounted == false → no-op), so
@@ -436,7 +436,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   /// Promotes this Scanner to "active" if (a) it's the only Scanner
   /// alive and (b) it hasn't already started its work. Safe to call
-  /// repeatedly — the [_scanWorkStarted] latch makes subsequent calls
+  /// repeatedly - the [_scanWorkStarted] latch makes subsequent calls
   /// no-op. Called from initState's post-frame callback and from the
   /// [_scannerCountSub] listener whenever sibling scanners dispose.
   void _maybeStartScanWork() {
@@ -488,7 +488,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       try {
         _clearManualConnectIfCurrent(_activeManualSession!, reason: 'dispose');
       } catch (_) {
-        // ref may be invalid if container is already disposing — ignore
+        // ref may be invalid if container is already disposing - ignore
       }
     }
     // Close the lifecycle-counter subscription before unregister so we
@@ -497,7 +497,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       _scannerCountSub?.close();
     } catch (_) {
       // Subscription may be invalid if the underlying container is
-      // already torn down — safe to ignore during dispose.
+      // already torn down - safe to ignore during dispose.
     }
     _scannerCountSub = null;
 
@@ -505,7 +505,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // the captured notifier reference (taken at initState) so we don't
     // depend on `ref.read` working during widget teardown. Defer the
     // actual state write via Future.microtask so the mutation happens
-    // AFTER BuildOwner.finalizeTree completes — writing state during
+    // AFTER BuildOwner.finalizeTree completes - writing state during
     // finalize trips Riverpod's "Tried to modify a provider while the
     // widget tree was building" assertion (Crashlytics
     // 88594eb858cbccdc06d041dc0fcbbafe). Capturing the notifier above
@@ -519,14 +519,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         'BLE_SCAN_AUTORECONNECT_RESUMED reason=scanner_dispose',
       );
     }
-    // Always unregister via the captured notifier — no `ref.read` here,
+    // Always unregister via the captured notifier - no `ref.read` here,
     // so this can't silently fail and inflate the counter into a phantom.
     // Same microtask-defer treatment as the setActive(false) call above:
     // mutating a NotifierProvider's state during BuildOwner.finalizeTree
     // trips Riverpod's "Tried to modify a provider while the widget
     // tree was building" assertion (Crashlytics 88594eb858cbccdc06d041dc0fcbbafe).
     // The single-microtask delay is invisible to the next-frame
-    // mount check — by the time _AppRouter or a pushNamed callsite
+    // mount check - by the time _AppRouter or a pushNamed callsite
     // reads the count, the decrement has landed.
     final mountCounter = _mountCounter;
     Future.microtask(mountCounter.unregister);
@@ -542,7 +542,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// own duplicate scan.
   /// Listens for the transport to finish disconnecting so we can start
   /// scanning. This is needed when the user taps Disconnect in the device
-  /// sheet — the Scanner may initialize before the transport is fully
+  /// sheet - the Scanner may initialize before the transport is fully
   /// torn down (the disconnect is async). Once we see disconnected state,
   /// we start the normal scan flow.
   void _listenForDisconnectCompletion() {
@@ -680,7 +680,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   /// Navigate to main app after successful connection.
   /// If Scanner was pushed on top of MainShell (e.g. from the
-  /// TopStatusBanner "Connect" button), just pop back — MainShell
+  /// TopStatusBanner "Connect" button), just pop back - MainShell
   /// will rebuild with the connected state automatically. If Scanner
   /// is the root route (pushed via /app after disconnect), set
   /// appInit to initialized so _AppRouter shows MainShell.
@@ -728,14 +728,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
 
     // CRITICAL: If a device is already connected or configuring, do NOT
-    // scan or do BLE cleanup — that would disconnect the active connection
+    // scan or do BLE cleanup - that would disconnect the active connection
     // and create a cascade of reconnect cycles. This can happen when the
     // router shows the scanner while a connection is already live (e.g.
     // settings.lastDeviceId is null but the device is paired in memory).
     //
     // EXCEPTION: If the user explicitly disconnected (userDisconnected flag
     // is true), the transport disconnect may still be in flight when Scanner
-    // initializes. In that case do NOT redirect to main — the user wants
+    // initializes. In that case do NOT redirect to main - the user wants
     // to be here. The device state will transition to disconnected shortly;
     // just fall through and let _startScan() handle it once the transport
     // finishes tearing down.
@@ -790,7 +790,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       safeSetState(() {
         _autoReconnecting = true;
       });
-      // Listen for background reconnect outcome — when it completes or
+      // Listen for background reconnect outcome - when it completes or
       // fails, we either navigate away or fall through to manual scan.
       _listenForBackgroundReconnectOutcome();
       return;
@@ -956,7 +956,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   /// Start a BLE scan.
   ///
-  /// [isRescan] — when true this is an automatic background rescan:
+  /// [isRescan] - when true this is an automatic background rescan:
   ///   • the device list is NOT cleared (cumulative discovery)
   ///   • aggressive BLE cleanup is skipped (already done on first scan)
   ///   • saved-device metadata is not reloaded
@@ -975,7 +975,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // aggressive cleanup (stopScan, system device disconnect) can
     // destroy an active connection and trigger a cascade of auto-
     // reconnect cycles. When the user explicitly disconnected, we
-    // proceed even if the transport hasn't fully settled — the manual
+    // proceed even if the transport hasn't fully settled - the manual
     // scan owns the BLE adapter for the duration of the session.
     final conn.DeviceConnectionState2 currentDeviceState;
     final bool userJustDisconnected;
@@ -1010,7 +1010,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       );
     }
 
-    // Manual scan is now imminent — suppress background auto-reconnect.
+    // Manual scan is now imminent - suppress background auto-reconnect.
     // Cleared in `dispose()` and in `_finishScan()` so a tear-down or
     // natural completion lets background reconnect resume.
     ref.read(manualScanActiveProvider.notifier).setActive(true);
@@ -1019,7 +1019,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
 
     // Capture providers BEFORE any await. Scan binds to the dedicated
-    // BLE scan transport — see `bleScanTransportProvider` docs — so a
+    // BLE scan transport - see `bleScanTransportProvider` docs - so a
     // session-transport pinned to `network` (e.g. after a TCP
     // disconnect) does not silently convert the BLE scan into an
     // empty NetworkTransport.scan() stream.
@@ -1061,11 +1061,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       }
       // NOTE: do NOT clear `_errorMessage` or `_showPairingInvalidationHint`
       // here. These cards (the red "phone removed stored pairing info" error
-      // and the purple "Bluetooth pairing was removed — forget in Settings"
+      // and the purple "Bluetooth pairing was removed - forget in Settings"
       // hint) carry critical context the user must act on (forget+re-pair in
       // iOS Settings). Earlier behavior wiped them at the start of every
       // rescan, replacing them with a transient "Scanning for nearby
-      // devices" banner — making the user lose the recovery instructions.
+      // devices" banner - making the user lose the recovery instructions.
       // Both cards now stay until the user explicitly dismisses via X.
     });
     AppLogging.connection('BLE_SCAN_STARTED transport=ble isRescan=$isRescan');
@@ -1073,7 +1073,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     try {
       // On the first scan (not a rescan), perform aggressive BLE cleanup to
       // handle devices that were just disconnected from another app (like
-      // Meshtastic). Rescans skip this entirely — the BLE stack is already
+      // Meshtastic). Rescans skip this entirely - the BLE stack is already
       // in a clean state and we just need a fresh discovery pass.
       if (!isRescan) {
         AppLogging.connection('SCANNER: Aggressive BLE cleanup starting...');
@@ -1284,7 +1284,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // that a PRIOR scan attempt set (transient init wedge,
       // user-toggled-off recovery, permission re-granted from
       // Settings, etc.). The pairing-invalidation hint is owned by a
-      // separate flag and is intentionally NOT cleared here — it
+      // separate flag and is intentionally NOT cleared here - it
       // requires the user to forget+re-pair in iOS Settings before
       // scans can find the right device, and the rescan loop runs
       // continuously.
@@ -1441,7 +1441,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// Build the list of devices to display in the scanner.
   ///
   /// By default, only shows radios positively identified by their advertised
-  /// service UUID (see [scannerShouldDisplayDevice]) — name-only guesses are
+  /// service UUID (see [scannerShouldDisplayDevice]) - name-only guesses are
   /// excluded so this matches the OS-level scan filter on every platform.
   /// MeshCore is included alongside Meshtastic when `MESHCORE_ENABLED=true`
   /// in `.env`. All scanned devices, including name-only and unknown ones, are
@@ -1529,7 +1529,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
   }
 
-  /// Builds the per-protocol slivers — one pinned `SliverPersistentHeader`
+  /// Builds the per-protocol slivers - one pinned `SliverPersistentHeader`
   /// (Nodes-screen-style sticky header) plus a `SliverList` of device
   /// cards for each non-empty group. The saved-device placeholder
   /// renders above all groups without a header.
@@ -1727,7 +1727,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// Only clears when the supplied [session] still matches the current
   /// monotonic token. A stale call (older session id) logs
   /// `MANUAL_CONNECT_CLEAR_SKIPPED_STALE_SESSION` and is otherwise a
-  /// no-op — the newer session's lifecycle owns the latch.
+  /// no-op - the newer session's lifecycle owns the latch.
   void _clearManualConnectIfCurrent(int session, {required String reason}) {
     if (!mounted) return;
     final current = ref.read(manualConnectSessionProvider);
@@ -1952,7 +1952,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     });
 
     try {
-      // Central transition prep — classifies the connection, persists the
+      // Central transition prep - classifies the connection, persists the
       // new identity, clears state in the correct order (before the
       // transport-type flip so NodesNotifier._init cannot race the
       // clear), and only then flips transportTypeProvider. MUST run
@@ -2084,7 +2084,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // Capture the manual-connect session id once. The region-UNSET
       // branch hands off to auto-reconnect (clearing the latch early
       // with reason=region_apply_handoff). The post-promotion success
-      // call below uses this same snapshot — the helper is idempotent
+      // call below uses this same snapshot - the helper is idempotent
       // when invoked twice for the same session.
       final int? manualSession = !isAutoReconnect ? _activeManualSession : null;
 
@@ -2119,7 +2119,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // Ensure offline queue is initialized and process any pending messages
       offlineQueue.processQueueIfNeeded();
 
-      // Success — don't reset _connecting, let the coordinator + appShell
+      // Success - don't reset _connecting, let the coordinator + appShell
       // handle the transition out of Scanner.
       return;
     } catch (e, stack) {
@@ -2145,7 +2145,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       }
 
       // Force cleanup on error to ensure clean state for retry. Re-read
-      // transport rather than relying on an outer-scope capture — this
+      // transport rather than relying on an outer-scope capture - this
       // catch block is reached from paths where prepareForDeviceTransition
       // may have flipped transportTypeProvider since the original read.
       try {
@@ -2207,7 +2207,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // clearing here lets auto-reconnect grab the OLD saved device
       // before the user retries. That race window was a reading-the-
       // error-snackbar window of a few seconds. The latch-survival
-      // bug it tried to prevent is much worse — it bricks the entire
+      // bug it tried to prevent is much worse - it bricks the entire
       // recovery path. The user's tapping another device increments
       // the session token, atomically reasserting manualConnecting
       // for the new attempt.
@@ -2260,7 +2260,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   @override
   Widget build(BuildContext context) {
     // The Scanner is always a dead-end with no logical "back" target
-    // — the user is here either because no device is paired yet, the
+    // - the user is here either because no device is paired yet, the
     // device just disconnected, or they tapped Scan from the device
     // sheet. Allowing iOS edge swipe / system back to dismiss it
     // strands them on whatever stale screen is below (splash,
@@ -2357,13 +2357,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       topicId: 'device_connection',
       stepKeys: const {},
       child: GlassScaffold(
-        // `automaticallyImplyLeading: false` UNCONDITIONALLY — even in
+        // `automaticallyImplyLeading: false` UNCONDITIONALLY - even in
         // onboarding. Auto-imply is the exact failure mode behind the
         // inert back arrow: when `Navigator.canPop()` returns true
         // (e.g. a stale push wasn't fully removed by
         // `pushNamedAndRemoveUntil`), Scaffold inserts a chevron that
         // does nothing under our PopScope. We never want Scaffold to
-        // infer the chevron — onboarding gets its back affordance
+        // infer the chevron - onboarding gets its back affordance
         // from the explicit `leading: IconButton(...)` below.
         automaticallyImplyLeading: false,
         leading: widget.isOnboarding
@@ -2570,7 +2570,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                   ),
 
                 // Suppress the generic red error card whenever the
-                // pairing-refresh card is showing — that card already
+                // pairing-refresh card is showing - that card already
                 // carries the reset-aware title/body/actions, and
                 // showing both stacks two near-identical messages with
                 // contradictory framings (the old red copy still
@@ -2694,7 +2694,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             TextButton(
                               onPressed: () {
                                 // Retry the scan but keep the pairing-refresh
-                                // card visible — the user still needs to
+                                // card visible - the user still needs to
                                 // forget+re-pair in iOS Settings before any
                                 // scan result can produce a working pairing.
                                 AppLogging.connection(

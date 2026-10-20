@@ -100,7 +100,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   ///
   /// When RegionSelectionScreen is rendered inline by
   /// `_AppRouter`/`appShellProvider` (no Navigator.push above it),
-  /// `Navigator.canPop()` is false and the listener is a no-op —
+  /// `Navigator.canPop()` is false and the listener is a no-op -
   /// the router unmount path handles the screen swap.
   ProviderSubscription<MeshtasticOnboardingState>? _onboardingFlowTerminalSub;
 
@@ -301,7 +301,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         return;
       }
 
-      // Start global reboot countdown — banner persists across
+      // Start global reboot countdown - banner persists across
       // navigation and auto-cancels when the device reconnects.
       ref
           .read(countdownProvider.notifier)
@@ -420,7 +420,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
 
     // During initial setup, block both system-back and the iOS edge
     // swipe-back gesture. Region must be picked before the user
-    // proceeds — letting them slide back to the splash/connecting
+    // proceeds - letting them slide back to the splash/connecting
     // screen leaves the app in a stale state with no way forward
     // (the device is connected but unconfigured). Also block while
     // an apply is in flight so the user can't bail mid-write.

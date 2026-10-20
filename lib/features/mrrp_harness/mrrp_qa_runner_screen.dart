@@ -14,7 +14,7 @@ import '../../core/widgets/section_header.dart';
 import '../../services/haptic_service.dart';
 import 'models/mrrp_qa_scenario.dart';
 
-/// QA Scenario Runner — guided test sequences through MRRP protocol flows.
+/// QA Scenario Runner - guided test sequences through MRRP protocol flows.
 class MrrpQaRunnerScreen extends ConsumerStatefulWidget {
   const MrrpQaRunnerScreen({super.key});
 
@@ -401,9 +401,8 @@ class _StepRow extends StatelessWidget {
                 ),
                 Text(
                   '${l10n.mrrpHarnessQaExpected}: ${step.expectedOutcome}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: context.textSecondary,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: context.textSecondary),
                 ),
               ],
             ),
@@ -419,10 +418,8 @@ class _StepRow extends StatelessWidget {
             ),
             child: Text(
               statusText,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: statusColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: statusColor, fontWeight: FontWeight.w700),
             ),
           ),
         ],

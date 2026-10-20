@@ -78,7 +78,7 @@ final watchCompanionChannelBridgeProvider =
 /// are still loading or unavailable, matching the `SettingsService` default.
 ///
 /// Lives in this file (rather than inside `_internal/`) because the value
-/// is protocol-neutral — it is just an integer — and downstream consumers
+/// is protocol-neutral - it is just an integer - and downstream consumers
 /// across the package read it directly without going through an adapter.
 final watchDefaultChannelIndexProvider = Provider<int>((ref) {
   final settingsAsync = ref.watch(settingsServiceProvider);
@@ -97,7 +97,7 @@ final watchDefaultChannelIndexProvider = Provider<int>((ref) {
 ///
 /// Re-exports the internal facade so the settings screen and the
 /// snapshot composer share one source of truth for "what channels
-/// does the Watch know about right now" — they cannot drift.
+/// does the Watch know about right now" - they cannot drift.
 final watchCompanionAvailableChannelsProvider =
     Provider<List<WatchCompanionChannelPreview>>((ref) {
       return ref.watch(watchChannelsFacadeProvider);

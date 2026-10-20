@@ -9,7 +9,7 @@ import 'package:socialmesh/services/protocol/reticulum/reticulum_fragment.dart';
 void main() {
   const parser = ReticulumFragmentParser();
 
-  group('ReticulumFragmentParser — header decode', () {
+  group('ReticulumFragmentParser - header decode', () {
     test('parses index + positive position + body', () {
       final payload = Uint8List.fromList([0x05, 0x02, 0xAA, 0xBB, 0xCC]);
       final h = parser.parse(payload);
@@ -77,7 +77,7 @@ void main() {
   group('Captured-byte vectors from real RF (2026-04-25)', () {
     // Pinned from the 2026-04-25T08-22-52.909194Z captures. These are
     // the actual position bytes observed from `landandair/RNS_Over_Meshtastic`
-    // running standalone — promote-to-v1.0 evidence.
+    // running standalone - promote-to-v1.0 evidence.
     test('single-fragment announce: index=0, position=-1', () {
       final payload = Uint8List.fromList([
         0x00, 0xFF, // header: index=0, position=-1

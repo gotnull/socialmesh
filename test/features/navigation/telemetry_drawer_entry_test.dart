@@ -24,8 +24,7 @@ void main() {
       expect(
         source.contains("import '../telemetry/telemetry_hub_screen.dart';"),
         true,
-        reason:
-            'main_shell must import TelemetryHubScreen so the drawer entry can navigate to it.',
+        reason: 'main_shell must import TelemetryHubScreen so the drawer entry can navigate to it.',
       );
     });
 

@@ -82,7 +82,7 @@ class WhatsNewSheet {
       final state = container.read(whatsNewProvider);
 
       if (!state.isLoaded) {
-        // State hasn't loaded yet — schedule a retry after a short delay
+        // State hasn't loaded yet - schedule a retry after a short delay
         Future<void>.delayed(const Duration(milliseconds: 500), () {
           _tryShow();
         });
@@ -175,9 +175,8 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
     if (!_initialized) {
       _initialized = true;
       // All payloads in reverse chronological order (newest first)
-      _payloads = WhatsNewRegistry.localizedPayloads(
-        context.l10n,
-      ).reversed.toList();
+      _payloads = WhatsNewRegistry.localizedPayloads(context.l10n).reversed
+          .toList();
     }
   }
 
@@ -205,7 +204,7 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
   }
 
   /// Returns the interpolated color between adjacent page colors based
-  /// on the current scroll position — smooth transitions during drag.
+  /// on the current scroll position - smooth transitions during drag.
   Color _interpolatedColor(Color fallback) {
     if (_pageColors.isEmpty) return fallback;
     if (!_pageController.hasClients) return _pageColors[_currentPage];
@@ -252,7 +251,7 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
           padding: EdgeInsets.only(bottom: viewPadding.bottom),
           child: Column(
             children: [
-              // Drag pill — matches AppBottomSheet._DragPill
+              // Drag pill - matches AppBottomSheet._DragPill
               Container(
                 width: 40,
                 height: 4,
@@ -263,7 +262,7 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
                 ),
               ),
 
-              // PageView carousel — Expanded fills remaining space
+              // PageView carousel - Expanded fills remaining space
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
@@ -343,7 +342,7 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
 }
 
 // =============================================================================
-// PAGE INDICATOR DOTS — tappable
+// PAGE INDICATOR DOTS - tappable
 // =============================================================================
 
 class _PageIndicator extends StatelessWidget {
@@ -407,7 +406,7 @@ class _WhatsNewPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // MeshNodeBrain at size N renders at N*1.6 — accommodate that.
+    // MeshNodeBrain at size N renders at N*1.6 - accommodate that.
     const mascotSize = 56.0;
     const mascotRenderSize = mascotSize * 1.6; // 89.6
 
@@ -439,7 +438,7 @@ class _WhatsNewPage extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Ico mascot — SizedBox matches actual render size
+              // Ico mascot - SizedBox matches actual render size
               SizedBox(
                 width: mascotRenderSize,
                 height: mascotRenderSize,
@@ -639,7 +638,7 @@ class _WhatsNewItemCard extends ConsumerWidget {
   void _handleDeepLink(BuildContext context, WidgetRef ref) {
     ref.haptics.tabChange();
 
-    // Capture notifier BEFORE popping — once the sheet is unmounted
+    // Capture notifier BEFORE popping - once the sheet is unmounted
     // ref becomes invalid and any ref.read() silently fails.
     final whatsNewNotifier = ref.read(whatsNewProvider.notifier);
 
@@ -660,7 +659,7 @@ class _WhatsNewItemCard extends ConsumerWidget {
 
     // Capture notifier references BEFORE popping the sheet.
     // Once the sheet is popped this widget is unmounted and ref becomes
-    // invalid — any ref.read() after that silently fails.
+    // invalid - any ref.read() after that silently fails.
     final whatsNewNotifier = ref.read(whatsNewProvider.notifier);
     final helpNotifier = ref.read(helpProvider.notifier);
 
@@ -670,7 +669,7 @@ class _WhatsNewItemCard extends ConsumerWidget {
 
     // Navigate to the feature screen first, THEN start the help tour.
     // The tour overlay only renders inside a HelpTourController, which
-    // lives on the destination screen — starting the tour without
+    // lives on the destination screen - starting the tour without
     // navigating there means nothing visible happens.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final navContext = navigatorKey.currentContext;
@@ -706,7 +705,7 @@ class _WhatsNewItemCard extends ConsumerWidget {
   /// [mainShellIndexProvider] so the shell chrome stays intact.
   /// Drawer-only routes push a new [MaterialPageRoute].
   static void _navigateToRoute(String route) {
-    // Bottom-nav tab routes — switch tab index instead of pushing.
+    // Bottom-nav tab routes - switch tab index instead of pushing.
     final tabIndex = _tabIndexForRoute(route);
     if (tabIndex != null) {
       final ctx = navigatorKey.currentContext;
@@ -722,9 +721,8 @@ class _WhatsNewItemCard extends ConsumerWidget {
 
     final Widget? screen = _screenForRoute(route);
     if (screen != null) {
-      Navigator.of(
-        navContext,
-      ).push(MaterialPageRoute<void>(builder: (_) => screen));
+      Navigator.of(navContext)
+          .push(MaterialPageRoute<void>(builder: (_) => screen));
     }
   }
 
@@ -916,7 +914,7 @@ class _TitleParts {
     }
 
     // A single chip (e.g. title is just "DM") is probably not what the
-    // author intended as a chip treatment — fall back to plain text.
+    // author intended as a chip treatment - fall back to plain text.
     if (chips.length < 2) {
       return _TitleParts(chips: const [], remainder: trimmed);
     }

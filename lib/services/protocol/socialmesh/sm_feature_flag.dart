@@ -13,7 +13,7 @@ library;
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Safe wrapper — returns null if dotenv is not initialized (e.g. in tests).
+/// Safe wrapper - returns null if dotenv is not initialized (e.g. in tests).
 String? _safeGetEnv(String key) {
   try {
     return dotenv.env[key];
@@ -112,7 +112,7 @@ class SmFeatureFlag {
   ///
   /// When true, ProtocolService runs an out-of-band 30-second timer that
   /// inspects cached transport timestamps and emits a single severity-2
-  /// `BLE_RX_STALL_SUSPECTED` warning per stall episode. Pure logging —
+  /// `BLE_RX_STALL_SUSPECTED` warning per stall episode. Pure logging -
   /// no recovery side-effect on its own.
   /// Default: true. Flip only via constructor arg in tests.
   bool get bleReceiveStallDetectionEnabled => _bleReceiveStallDetectionEnabled;

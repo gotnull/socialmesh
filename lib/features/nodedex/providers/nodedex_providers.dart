@@ -2,17 +2,17 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../../features/nodes/node_display_name_resolver.dart';
 
-// NodeDex Providers — Riverpod 3.x state management for the mesh field journal.
+// NodeDex Providers - Riverpod 3.x state management for the mesh field journal.
 //
 // Provider hierarchy:
 //
 // nodeDexStoreProvider (FutureProvider)
-//   └── nodeDexProvider (NotifierProvider) — source of truth for all entries
-//         ├── nodeDexEntryProvider(int) — single entry lookup
-//         ├── nodeDexStatsProvider — aggregate statistics
-//         ├── nodeDexTraitProvider(int) — computed trait for a node
-//         ├── nodeDexSortedEntriesProvider — sorted list for UI
-//         └── nodeDexConstellationProvider — historical graph data for constellation view
+//   └── nodeDexProvider (NotifierProvider) - source of truth for all entries
+//         ├── nodeDexEntryProvider(int) - single entry lookup
+//         ├── nodeDexStatsProvider - aggregate statistics
+//         ├── nodeDexTraitProvider(int) - computed trait for a node
+//         ├── nodeDexSortedEntriesProvider - sorted list for UI
+//         └── nodeDexConstellationProvider - historical graph data for constellation view
 //
 // The nodeDexProvider listens to nodesProvider for automatic discovery
 // tracking. When a new node appears or an existing node updates, the
@@ -66,15 +66,15 @@ const Duration _kLiveSightingMaxAge = Duration(minutes: 2);
 /// Classification of how a node observation entered the NodeDex pipeline.
 ///
 /// Encounters and activity stats only count [livePacket] sightings. Sync
-/// replays — whether the device's NodeDB after reconnect, a buffered
+/// replays - whether the device's NodeDB after reconnect, a buffered
 /// MeshPacket whose `rxTime` is older than [_kLiveSightingMaxAge], or an
-/// `_init` seed pass — must update metadata only.
+/// `_init` seed pass - must update metadata only.
 ///
 /// Derived from `node.lastHeard` age: the protocol layer maps incoming
 /// MeshPackets to the firmware's `packet.rxTime`, so a stale buffered
 /// packet replayed at reconnect surfaces here with an old timestamp.
 enum NodeIngestSource {
-  /// Genuinely live RF sighting — `lastHeard` is within
+  /// Genuinely live RF sighting - `lastHeard` is within
   /// [_kLiveSightingMaxAge] of now. Counts as an encounter.
   livePacket,
 
@@ -102,7 +102,7 @@ NodeIngestSource _classifyIngestSource(
   if (lastHeard == null) return NodeIngestSource.unknown;
   final age = now.difference(lastHeard);
   if (age.isNegative) {
-    // Future-dated lastHeard — distrust and treat as unknown rather than
+    // Future-dated lastHeard - distrust and treat as unknown rather than
     // assuming live, since clock skew can fabricate "fresher than now".
     return NodeIngestSource.unknown;
   }
@@ -240,7 +240,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   ///
   /// Returns the protobuf int value (0–9) of the local radio's active
   /// modem preset, or null if no radio is connected or config is unknown.
-  /// This is observation metadata — it tells us what *our* radio was set
+  /// This is observation metadata - it tells us what *our* radio was set
   /// to when we detected a node, not the remote node's own preset.
   int? _resolveCurrentPreset() {
     try {
@@ -259,7 +259,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     try {
       final protocol = ref.read(protocolServiceProvider);
       final offset = protocol.currentLoraConfig?.frequencyOffset;
-      // Only store non-zero offsets — zero is the default and not interesting.
+      // Only store non-zero offsets - zero is the default and not interesting.
       if (offset == null || offset == 0.0) return null;
       return offset;
     } catch (_) {
@@ -313,7 +313,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     // Listen to local-identity transitions and stamp firstUsedAt /
     // lastUsedAt on the matching entry. Sourced from myNodeNumProvider
     // (which fires only when the protocol stream surfaces a real connected
-    // identity) and NEVER from packet ingest — the encounter pipeline and
+    // identity) and NEVER from packet ingest - the encounter pipeline and
     // the connection-identity pipeline must stay separated, otherwise sync
     // replay of the local node's stale NodeDB entry would falsely advance
     // lastUsedAt.
@@ -321,7 +321,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     // The initial value at subscription time is handled separately by
     // `_init()` (after `state` is populated), since `ref.listen` with
     // `fireImmediately: true` would invoke the callback during `build()`,
-    // before `state` is initialised — and `_stampLocalIdentity` reads it.
+    // before `state` is initialised - and `_stampLocalIdentity` reads it.
     ref.listen<int?>(myNodeNumProvider, (_, next) {
       if (!ref.mounted) return;
       if (next == null) return;
@@ -368,7 +368,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
       // Stamp the initial connection-identity if it's already known. This
       // mirrors what the myNodeNumProvider listener does on subsequent
-      // changes — the listener can't fire for the value that was present
+      // changes - the listener can't fire for the value that was present
       // at subscription time, so we read it explicitly here. Runs after
       // the seed so any newly-created self entry is in `state` already.
       final initialMyNodeNum = ref.read(myNodeNumProvider);
@@ -400,7 +400,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   /// Stamp `firstUsedAt` / `lastUsedAt` on the entry for [nodeNum] when the
   /// app's local-identity stream emits it as the connected radio.
   ///
-  /// **Driven by `myNodeNumProvider` only** — never invoked from packet
+  /// **Driven by `myNodeNumProvider` only** - never invoked from packet
   /// ingest. The two pipelines are kept separate so that sync-replay of the
   /// local node's stale NodeDB entry through `_handleNodesUpdate` cannot
   /// falsely advance these timestamps.
@@ -409,7 +409,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   /// myNodeNumProvider re-emissions that fire on stream re-subscription
   /// don't churn SQL.
   ///
-  /// If the entry doesn't exist yet, defer silently — the discovery path
+  /// If the entry doesn't exist yet, defer silently - the discovery path
   /// in `_handleNodesUpdate` will create it shortly and the next emission
   /// (or stream rehydrate) will catch up. We don't pre-create here because
   /// `NodeDexEntry` requires a `firstSeen` and we shouldn't synthesize one
@@ -478,7 +478,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     final updated = Map<int, NodeDexEntry>.from(state);
     var changed = false;
 
-    // Per-call counters for structured logging — surface how many node
+    // Per-call counters for structured logging - surface how many node
     // updates landed as live sightings vs. sync replay vs. unknown so
     // production logs can confirm the bug-fix gate is firing.
     var liveCount = 0;
@@ -497,7 +497,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
       // Own node gets a NodeDex entry (so it appears in "Your Device"
       // section and has a correct sigil), but we skip encounter counting
-      // and co-seen tracking — you're always with your own device so
+      // and co-seen tracking - you're always with your own device so
       // those metrics are meaningless and would pollute the graph.
       // When the user switches to a different device, the previous
       // device naturally moves to "Discovered Nodes" because
@@ -617,7 +617,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
               )
             : withRegion;
         // Stamp the active identity pubkey so subsequent observations can
-        // detect rotation. Safe to backfill at creation time — no prior
+        // detect rotation. Safe to backfill at creation time - no prior
         // identity to archive yet.
         final observedPubkey = _extractIdentityPubkey(node);
         final withIdentity = observedPubkey != null
@@ -629,7 +629,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         updated[nodeNum] = withIdentity;
 
         // Only track encounters and co-seen for nodes that are
-        // genuinely heard recently — stale entries from the device's
+        // genuinely heard recently - stale entries from the device's
         // node database should not inflate co-seen metrics.
         if (!seedOnly && !isOwnNode && _isRecentCoSeenActivity(node, now)) {
           _lastEncounterTime[nodeNum] = now;
@@ -650,7 +650,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           'hopCount: ${node.hopCount ?? "n/a"}',
         );
       } else if (isOwnNode) {
-        // Own node already exists — update position/region and name,
+        // Own node already exists - update position/region and name,
         // skip encounter counting entirely.
         var updatedEntry = existing;
 
@@ -677,7 +677,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         }
       } else {
         // Existing node: check if we should record a new encounter.
-        // Encounters require a live sighting — a sync-replay update with
+        // Encounters require a live sighting - a sync-replay update with
         // a stale `node.lastHeard` (the device replayed a packet it
         // received hours ago) must not count as a fresh encounter.
         // A packet was genuinely heard since our last tick only when the
@@ -791,7 +791,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           // Node didn't qualify for a new encounter (stale or within
           // cooldown), but we should still refresh cached metadata
           // from the live node data. Metadata updates don't inflate
-          // any metrics — they just keep the display name, hardware
+          // any metrics - they just keep the display name, hardware
           // model, role, firmware version, and sigil current.
           var updatedEntry = existing;
           var metadataChanged = false;
@@ -818,7 +818,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           }
 
           // NOTE: intentionally NO _addRegionFromNode, _sessionSeenNodes,
-          // or _lastEncounterTime here — region updates and encounter
+          // or _lastEncounterTime here - region updates and encounter
           // tracking are only meaningful when paired with a real encounter.
 
           if (metadataChanged) {
@@ -1211,7 +1211,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   void _triggerImmediateSync() {
     if (_store == null) return;
 
-    // Read the sync service once — do not watch (this is a callback,
+    // Read the sync service once - do not watch (this is a callback,
     // not a build method).
     final syncService = ref.read(nodeDexSyncServiceProvider);
     if (syncService == null || !syncService.isEnabled) return;
@@ -1259,7 +1259,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     if (_sessionSeenNodes.contains(nodeNum)) {
       for (final peerNum in _sessionSeenNodes) {
         if (peerNum == nodeNum) continue;
-        // Only increment if the relationship already exists — we do not
+        // Only increment if the relationship already exists - we do not
         // create new co-seen relationships from message activity alone.
         if (updated.coSeenNodes.containsKey(peerNum)) {
           updated = updated.incrementCoSeenMessages(peerNum, by: count);
@@ -1279,11 +1279,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   }
 
   /// Record an encounter that did not arrive through the [nodesProvider]
-  /// `lastHeard` polling path — typically a received text message, which
+  /// `lastHeard` polling path - typically a received text message, which
   /// is direct proof that the sender was on-mesh at [timestamp].
   ///
   /// Bypasses the tick-path freshness gate (`hasFreshLastHeard`) and the
-  /// tick-path cooldown bookkeeping (`_lastEncounterTime`) — those guard
+  /// tick-path cooldown bookkeeping (`_lastEncounterTime`) - those guard
   /// against re-recording the same `node.lastHeard` value. The
   /// entry-level cooldown inside [NodeDexEntry.recordEncounter]
   /// (`encounterCooldownMinutes`) still applies, so chatty channels do
@@ -1478,7 +1478,7 @@ final nodeDexEntryProvider = Provider.family<NodeDexEntry?, int>((
 /// Single authority for "is this NodeDex entry the user's own connected device?".
 ///
 /// Every NodeDex UI/widget that needs to branch on self vs. remote MUST consume
-/// this provider — never compare nodeNum to myNodeNum inline. Centralizing the
+/// this provider - never compare nodeNum to myNodeNum inline. Centralizing the
 /// check keeps the rule consistent if the source of identity ever changes
 /// (e.g. multi-radio context) and lets us add tests at one boundary.
 ///
@@ -1937,7 +1937,7 @@ Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
   final messages = ref.watch(messagesProvider);
   final storeAsync = ref.watch(nodeDexStoreProvider);
 
-  // 1. Encounters from the NodeDex entry — grouped into sessions.
+  // 1. Encounters from the NodeDex entry - grouped into sessions.
   if (entry != null) {
     events.addAll(_groupEncounters(entry.encounters));
 
@@ -1969,7 +1969,7 @@ Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
 
   // 3. Messages to/from this node.
   for (final msg in messages) {
-    // Skip tapback emoji reactions — they are metadata, not messages
+    // Skip tapback emoji reactions - they are metadata, not messages
     if (msg.isEmoji) continue;
     if (msg.from == nodeNum || msg.to == nodeNum) {
       events.add(
@@ -2291,7 +2291,7 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
     }).toList();
   }
 
-  // Apply search. NodeDex is a journal of encounters — entries persist after
+  // Apply search. NodeDex is a journal of encounters - entries persist after
   // the live node drops out of nodesProvider, so we must search the entry's
   // own stored names too. Searching only against the live MeshNode would
   // make any historical / out-of-range node unfindable.
@@ -2447,7 +2447,7 @@ class ConstellationEdge {
   /// Target node number.
   final int to;
 
-  /// Weight (co-seen count) — higher means stronger connection.
+  /// Weight (co-seen count) - higher means stronger connection.
   final int weight;
 
   /// When this co-seen relationship was first recorded.
@@ -2509,14 +2509,14 @@ class ConstellationData {
     return _sortedWeights[index.clamp(0, _sortedWeights.length - 1)];
   }
 
-  /// Median edge weight — the natural threshold for "significant" edges.
+  /// Median edge weight - the natural threshold for "significant" edges.
   int get medianWeight => weightAtPercentile(0.5);
 }
 
 /// Provider for the constellation graph data.
 ///
 /// Builds a force-directed layout where strongly-connected nodes cluster
-/// together. The layout is deterministic — seeded from node number hashes
+/// together. The layout is deterministic - seeded from node number hashes
 /// and then refined through force simulation. Edge weight statistics are
 /// computed for UI-side density filtering.
 final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
@@ -2587,7 +2587,7 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
   // Compute degree (connection count) for each node to inform layout.
   final degree = List<int>.filled(nodeCount, 0);
 
-  // Seed initial positions from hash — spread in a wider circle.
+  // Seed initial positions from hash - spread in a wider circle.
   for (int i = 0; i < nodeCount; i++) {
     final hash = _positionHash(allEntries[i].nodeNum);
     final angle = (hash & 0xFFFF) / 65535.0 * 2.0 * 3.14159265358979;
@@ -2632,7 +2632,7 @@ final nodeDexConstellationProvider = Provider<ConstellationData>((ref) {
   final idealLength = _sqrt(area / nodeCount) * 1.8;
   final idealLengthSq = idealLength * idealLength;
 
-  // Force simulation parameters — tuned for spread, not collapse.
+  // Force simulation parameters - tuned for spread, not collapse.
   const iterations = 350;
   // Strong repulsion prevents hairball formation.
   final repulsionStrength = idealLengthSq * 0.8;
@@ -2840,7 +2840,7 @@ double _pow(double base, double exponent) {
   if (base <= 0) return 0;
   if (exponent == 0) return 1;
   if (exponent == 1) return base;
-  // Use dart:math for correctness — this is called once per iteration,
+  // Use dart:math for correctness - this is called once per iteration,
   // not per-node, so performance is not critical.
   // ln(base) * exponent, then exp().
   // Approximation: repeated squaring for integer-ish exponents,

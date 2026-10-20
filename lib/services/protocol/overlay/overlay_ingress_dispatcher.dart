@@ -10,7 +10,7 @@
 ///
 /// 1. Accept raw MRRP v0.2 wire bytes handed over by
 ///    [ProtocolService] after the overlay sniffer claims the frame.
-/// 2. Decode. If the decode fails, log and drop — no contamination of
+/// 2. Decode. If the decode fails, log and drop - no contamination of
 ///    the legacy MRRP path.
 /// 3. Record a capability observation (the peer just sent a well-
 ///    formed v0.2 frame, which is proof of link support).

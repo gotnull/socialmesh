@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Raw-band sync_response test — the pathological-tile fallback path.
+// Raw-band sync_response test - the pathological-tile fallback path.
 //
 // Spec: docs/canvas/CANVAS_SYNC_V0_1.md §3.4 + §10.4.
 //

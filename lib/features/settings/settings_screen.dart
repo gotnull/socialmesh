@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — InAppWebView browser, glass blur would obscure web content
+// lint-allow: scaffold - InAppWebView browser, glass blur would obscure web content
 import '../feedback/my_bug_reports_tile.dart';
 
 import 'package:flutter/material.dart';
@@ -148,7 +148,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   /// Get all searchable settings items
-  // Offline map storage tile — visible only when actionable: a removable
+  // Offline map storage tile - visible only when actionable: a removable
   // SD card is mounted, or the cache fell back to internal and the user
   // should see why. iOS and card-less devices render nothing.
   List<Widget> _buildOfflineMapStorageTile(BuildContext context) {
@@ -2996,7 +2996,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                             // SIP Play "your turn" notification toggle.
-                            // Field-test request — only surfaces on
+                            // Field-test request - only surfaces on
                             // builds where SIP is enabled (mirrors how
                             // the Handshake hub itself is gated in the
                             // drawer). When the env flag is off, SIP
@@ -3123,7 +3123,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           // The bottom-nav order is fixed (Messages,
                           // Map, Nodes, Dashboard); this picker only
                           // chooses which tab the app boots into.
-                          // Changing it doesn't navigate now — the new
+                          // Changing it doesn't navigate now - the new
                           // value is read once on the next launch by
                           // MainShellIndexNotifier.build().
                           SettingsListSectionHeader(
@@ -3189,7 +3189,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           // Large mesh section: knobs aimed at 1000+ node
                           // deployments where the default visual feedback
                           // becomes noisy. Decoupled from notification
-                          // toggles on purpose — these stay accessible
+                          // toggles on purpose - these stay accessible
                           // even when notifications are muted.
                           SettingsListSectionHeader(
                             title: context.l10n.settingsSectionLargeMesh,
@@ -3293,7 +3293,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          // Offline map storage location — only rendered
+                          // Offline map storage location - only rendered
                           // when actionable (removable SD card present, or
                           // a fallback warning to surface).
                           ..._buildOfflineMapStorageTile(context),

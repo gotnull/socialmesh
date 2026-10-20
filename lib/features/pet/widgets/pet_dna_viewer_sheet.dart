@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetDnaViewerSheet — dedicated DNA inspection surface.
+// PetDnaViewerSheet - dedicated DNA inspection surface.
 //
 // Presents the pet's dnaSeed as a large legible genome artefact plus
 // a decoded-traits panel. Opened from the pet home screen via the
 // "View DNA blueprint" affordance. The pet renderer itself no longer
-// carries an inline helix — structural inspection lives here.
+// carries an inline helix - structural inspection lives here.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,7 +25,7 @@ import 'pet_dna_painter.dart';
 import 'pet_render_model.dart' show PetSigilGeometry;
 
 class PetDnaViewerSheet extends ConsumerWidget {
-  /// Provided by `AppBottomSheet.showScrollable`'s builder — the
+  /// Provided by `AppBottomSheet.showScrollable`'s builder - the
   /// internal `ListView` must wire through this so the draggable
   /// sheet's drag gestures coordinate with the scroll position.
   final ScrollController? scrollController;
@@ -74,11 +74,11 @@ class _PetDnaViewerBodyState extends State<_PetDnaViewerBody>
   @override
   void initState() {
     super.initState();
-    // 10 s cycle — slower than the pet (5 s) so the DNA reads as a
+    // 10 s cycle - slower than the pet (5 s) so the DNA reads as a
     // calmer, ceremonial object.
     _controller = AnimationController(
       vsync: this,
-      // Slow readable rotation — one full helix turn per 20s. Was 10s,
+      // Slow readable rotation - one full helix turn per 20s. Was 10s,
       // which read as "jittery" at the previous bead count.
       duration: const Duration(seconds: 20),
     )..repeat();
@@ -110,7 +110,7 @@ class _PetDnaViewerBodyState extends State<_PetDnaViewerBody>
       // gestures on the sheet coordinate with scroll position.
       controller: widget.scrollController,
       // Horizontal padding matches the other content-heavy sheets
-      // (device_sheet, nodedex_detail_screen) — `showScrollable`
+      // (device_sheet, nodedex_detail_screen) - `showScrollable`
       // doesn't wrap the builder's child, so the ListView itself owns
       // the gutter.
       padding: const EdgeInsets.fromLTRB(
@@ -262,7 +262,7 @@ class _PetDnaViewerBodyState extends State<_PetDnaViewerBody>
 
 class _DnaCanvas extends StatelessWidget {
   final PetDnaGeometry geometry;
-  final dynamic palette; // PetRenderPalette — avoid widening the import
+  final dynamic palette; // PetRenderPalette - avoid widening the import
   final AnimationController controller;
   final double userSpin;
   final ValueChanged<double> onSpinDelta;
@@ -283,9 +283,9 @@ class _DnaCanvas extends StatelessWidget {
       height: 520,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        // Horizontal drag scrubs the user spin — clockwise positive.
+        // Horizontal drag scrubs the user spin - clockwise positive.
         onHorizontalDragUpdate: (d) {
-          // Map pixels to radians — 180 px per full rotation feels
+          // Map pixels to radians - 180 px per full rotation feels
           // responsive without being twitchy.
           onSpinDelta(d.delta.dx / 180 * 3.14159);
         },

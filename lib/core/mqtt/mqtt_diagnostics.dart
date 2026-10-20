@@ -15,10 +15,12 @@
 library;
 
 import 'dart:convert';
+
 import '../../l10n/app_localizations.dart';
 import 'mqtt_config.dart';
 import 'mqtt_connection_state.dart';
 import 'mqtt_metrics.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// The outcome of a single diagnostic check.
@@ -35,7 +37,7 @@ enum DiagnosticStatus {
   /// The check completed with a warning (non-blocking).
   warning,
 
-  /// The check failed (blocking — likely cause of the problem).
+  /// The check failed (blocking - likely cause of the problem).
   failed,
 
   /// The check was skipped because a prerequisite failed.
@@ -65,7 +67,7 @@ enum DiagnosticStatus {
 ///
 /// The order of these values matches the recommended execution order
 /// in the diagnostics flow. Each check depends on the previous one
-/// passing — if DNS fails, TCP/TLS/Auth checks are skipped.
+/// passing - if DNS fails, TCP/TLS/Auth checks are skipped.
 enum DiagnosticCheckType {
   /// Validates that the config fields are well-formed before
   /// attempting any network operations.
@@ -116,18 +118,12 @@ enum DiagnosticCheckType {
     configValidation =>
       'Verifying that the broker address, port, and topic root ' // lint-allow: hardcoded-string
           'are correctly formatted.', // lint-allow: hardcoded-string
-    dnsResolution =>
-      'Looking up the broker hostname to find its network address.', // lint-allow: hardcoded-string
-    tcpConnection =>
-      'Establishing a network connection to the broker.', // lint-allow: hardcoded-string
-    tlsHandshake =>
-      'Negotiating a secure (encrypted) connection with the broker.', // lint-allow: hardcoded-string
-    authentication =>
-      'Verifying your username and password with the broker.', // lint-allow: hardcoded-string
-    subscribeTest =>
-      'Subscribing to a test topic to verify read access.', // lint-allow: hardcoded-string
-    publishTest =>
-      'Publishing a test message to verify write access.', // lint-allow: hardcoded-string
+    dnsResolution => 'Looking up the broker hostname to find its network address.', // lint-allow: hardcoded-string
+    tcpConnection => 'Establishing a network connection to the broker.', // lint-allow: hardcoded-string
+    tlsHandshake => 'Negotiating a secure (encrypted) connection with the broker.', // lint-allow: hardcoded-string
+    authentication => 'Verifying your username and password with the broker.', // lint-allow: hardcoded-string
+    subscribeTest => 'Subscribing to a test topic to verify read access.', // lint-allow: hardcoded-string
+    publishTest => 'Publishing a test message to verify write access.', // lint-allow: hardcoded-string
   };
 
   /// Localised description of what this check verifies.
@@ -248,9 +244,7 @@ class DiagnosticCheckResult {
   /// Convenience constructor for a skipped check.
   DiagnosticCheckResult.skipped(this.type, {String? reason})
     : status = DiagnosticStatus.skipped,
-      message =
-          reason ??
-          'Skipped because a previous check failed.', // lint-allow: hardcoded-string
+      message = reason ?? 'Skipped because a previous check failed.', // lint-allow: hardcoded-string
       suggestion = null,
       relatedFields = const [],
       duration = null,
@@ -316,7 +310,7 @@ class DiagnosticCheckResult {
   @override
   String toString() =>
       'DiagnosticCheckResult(${type.name}: ${status.name}'
-      '${message.isNotEmpty ? " — $message" : ""})'; // lint-allow: hardcoded-string
+      '${message.isNotEmpty ? " - $message" : ""})'; // lint-allow: hardcoded-string
 }
 
 /// The complete result of a diagnostics run.
@@ -594,7 +588,7 @@ class ConfigDiagnostics {
         'TLS is enabled but the port is 1883 (standard non-TLS port). ' // lint-allow: hardcoded-string
         'Consider using port 8883 for TLS connections.', // lint-allow: hardcoded-string
       );
-      // This is a warning, not a hard failure — some brokers do TLS on 1883
+      // This is a warning, not a hard failure - some brokers do TLS on 1883
     }
 
     // Topic root validation

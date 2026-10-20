@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D22 — Drain heartbeat + non-overlap guard regression tests for
+// D22 - Drain heartbeat + non-overlap guard regression tests for
 // MeshCoreConversationsNotifier.
 //
 // The heartbeat is the missed-tickle recovery mechanism: while
@@ -232,7 +232,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 5));
       // First sync: a contact V3 message frame (0x10). Use a
       // payload that the parser will reject (insufficient size) so
-      // we don't pull in the full frame layout — for this test we
+      // we don't pull in the full frame layout - for this test we
       // only care that the heartbeat loop classifies it as
       // `message` and re-fires sync.
       transport.simulateReceiveFrame(
@@ -283,7 +283,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 1));
       expect(n.debugActiveDrain, equals(MeshCoreDrainSource.manual));
 
-      // Now fire the heartbeat — must skip with already_draining_manual.
+      // Now fire the heartbeat - must skip with already_draining_manual.
       await n.debugFireHeartbeatTick();
       expect(
         meshLogs.any(
@@ -385,7 +385,7 @@ void main() {
     );
 
     test('failed sendCommand surfaces as failed outcome (no crash)', () async {
-      // Simulate transport disconnect after the session was built —
+      // Simulate transport disconnect after the session was built -
       // sendRaw will throw StateError, drainOnce catches and
       // classifies as failed.
       final c = _container(session: session);

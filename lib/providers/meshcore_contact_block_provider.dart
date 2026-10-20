@@ -39,7 +39,7 @@ class MeshCoreContactBlockNotifier extends AsyncNotifier<Set<String>> {
 
   /// Synchronous block check. Returns false until the AsyncNotifier
   /// has hydrated from SharedPreferences (effectively "not blocked"
-  /// during the first frame after app launch, which is fine — the
+  /// during the first frame after app launch, which is fine - the
   /// block-list is rarely empty for users who use the feature, and
   /// missing a single notification on cold-start is acceptable).
   bool isBlocked(String pubKeyHex) {

@@ -4,13 +4,13 @@
 // Riverpod 3.x providers for the rns_companion HTTP client.
 //
 // Three layers:
-//   * `rnsCompanionBaseUrlProvider` — overridable URL string
-//   * `rnsCompanionClientProvider`  — singleton client built off the URL
-//   * data providers — `services`, `pages(destination)`, `page(d, p)`
+//   * `rnsCompanionBaseUrlProvider` - overridable URL string
+//   * `rnsCompanionClientProvider`  - singleton client built off the URL
+//   * data providers - `services`, `pages(destination)`, `page(d, p)`
 //
 // All data providers are `FutureProvider` (read-only, no caching
 // beyond Riverpod's per-arg memoisation). No state mutation, no
-// background fetch — refresh by invalidating the provider from a UI
+// background fetch - refresh by invalidating the provider from a UI
 // retry button.
 
 import 'dart:async';
@@ -44,7 +44,7 @@ class RnsCompanionEndpointNotifier extends Notifier<RnsCompanionEndpoint> {
         port: prefs.getInt(_kPrefPort) ?? kRnsCompanionDefaultPort,
       );
     } catch (_) {
-      // Defaults already in state — silent recovery is fine.
+      // Defaults already in state - silent recovery is fine.
     }
   }
 
@@ -96,7 +96,7 @@ final rnsCompanionServicesProvider =
       return ref.watch(rnsCompanionClientProvider).listServices();
     });
 
-/// Lightweight reachability probe — calls `/health` with a short
+/// Lightweight reachability probe - calls `/health` with a short
 /// timeout so the UI can render a "connected / unreachable" pill
 /// without waiting on the heavier `listServices()` call. Refreshes
 /// when the user taps the pill or invalidates the provider.

@@ -47,7 +47,7 @@ class PresenceCache {
 
   /// Broadcast stream of canvasLocalIds whose buckets just mutated.
   /// Provider layer subscribes to drive UI invalidation in O(1) per
-  /// frame — without it, the UI would either poll on a timer or
+  /// frame - without it, the UI would either poll on a timer or
   /// require an external invalidation hook on every emit/inbound
   /// path, which we already proved fragile during S8.
   final StreamController<int> _changeController =
@@ -56,7 +56,7 @@ class PresenceCache {
   /// Subscribe to per-canvas mutation events. Each event is a
   /// `canvasLocalId` that just had an entry inserted, refreshed, or
   /// evicted. Late subscribers do NOT receive backfill (broadcast
-  /// stream semantics) — that is fine; providers reconcile by reading
+  /// stream semantics) - that is fine; providers reconcile by reading
   /// `entriesForCanvas` on each event.
   Stream<int> get changeStream => _changeController.stream;
 

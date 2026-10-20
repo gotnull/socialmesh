@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — GestureDetector is for keyboard dismissal, not user interaction
+// lint-allow: haptic-feedback - GestureDetector is for keyboard dismissal, not user interaction
 
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../utils/time_format.dart';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -26,7 +28,9 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
+
 import 'package:flutter/services.dart';
+
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../map/map_screen.dart';
@@ -46,7 +50,7 @@ class TraceRouteLogScreen extends ConsumerStatefulWidget {
   static const String routeName = 'traceroute-history';
 
   /// Opens the history view, unless one is already on top of the navigation
-  /// stack — in which case it's a no-op. Prevents nested duplicate history
+  /// stack - in which case it's a no-op. Prevents nested duplicate history
   /// views when "View" is tapped repeatedly from traceroute notifications.
   ///
   /// All callers must route through here (rather than pushing the screen
@@ -79,7 +83,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
   // Optional per-node filter: seeded from widget.nodeNum, clearable so the user
   // can broaden from a single node to all nodes via the chip's close icon.
   // The app-bar traceroute action stays bound to widget.nodeNum, not this
-  // filter — clearing the chip to browse all history must not remove the
+  // filter - clearing the chip to browse all history must not remove the
   // ability to re-run the traceroute the screen was opened for.
   int? _filterNodeNum;
 
@@ -1041,7 +1045,7 @@ class _TraceRouteCard extends StatelessWidget {
             ),
           ],
 
-          // Show on Map button — visible for direct connections too
+          // Show on Map button - visible for direct connections too
           if (log.response && _hasMapData(log, allNodes)) ...[
             const SizedBox(height: AppTheme.spacing12),
             const Divider(color: Colors.white12, height: 1),

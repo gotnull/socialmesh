@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Global Layer Setup Wizard — a 6-step guided flow that configures
+/// Global Layer Setup Wizard - a 6-step guided flow that configures
 /// the MQTT bridge between the user's local mesh and the wider world.
 ///
 /// Steps:
@@ -242,7 +242,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
         return true; // Explanation
       case 1:
         // When advanced fields are visible the user may have edited the
-        // host — always check the controller in that case.
+        // host - always check the controller in that case.
         final preset = BrokerPreset.defaults[_selectedPresetIndex];
         if (_showAdvancedBrokerFields || preset.isCustom) {
           return _hostController.text.trim().isNotEmpty;
@@ -984,7 +984,7 @@ class _GlobalLayerSetupWizardState extends ConsumerState<GlobalLayerSetupWizard>
             ),
             const SizedBox(height: AppTheme.spacing12),
 
-            // Port + TLS row — matched heights via IntrinsicHeight
+            // Port + TLS row - matched heights via IntrinsicHeight
             IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

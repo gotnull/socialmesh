@@ -18,6 +18,7 @@ import '../providers/telemetry_providers.dart';
 import '../features/nodes/node_display_name_resolver.dart';
 import '../services/haptic_service.dart';
 import '../utils/snackbar.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// The type of countdown operation. Used for grouping, deduplication, and
@@ -60,7 +61,7 @@ class CountdownTask {
 
   /// Wall-clock deadline for this countdown. The tick loop recomputes
   /// [remainingSeconds] from this instead of decrementing, so time spent
-  /// with the app suspended (screen locked, backgrounded) still counts —
+  /// with the app suspended (screen locked, backgrounded) still counts -
   /// a cooldown that expired while locked completes on the first tick
   /// after resume rather than freezing where it left off.
   final DateTime endsAt;
@@ -305,7 +306,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// "region changed".
   void startDeviceRebootCountdown({String? reason}) {
     final label = reason != null
-        ? 'Device rebooting — $reason' // lint-allow: hardcoded-string
+        ? 'Device rebooting - $reason' // lint-allow: hardcoded-string
         : 'Device rebooting';
 
     startCountdown(
@@ -369,7 +370,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// Convenience: start a telemetry request cooldown for [nodeNum] / [type].
   ///
   /// Keyed per (node, type) so the three requestable metric types each have
-  /// their own reload cooldown ring. No completion action — the reply is
+  /// their own reload cooldown ring. No completion action - the reply is
   /// ingested asynchronously and updates the telemetry tiles on its own.
   void startTelemetryRequestCountdown(int nodeNum, TelemetryRequestType type) {
     final nodes = ref.read(nodesProvider);
@@ -493,10 +494,10 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
       case CountdownType.positionBroadcast:
         _onPositionBroadcastComplete(task);
       case CountdownType.fileTransfer:
-        // No completion action needed — transfer state drives the UI.
+        // No completion action needed - transfer state drives the UI.
         break;
       case CountdownType.telemetryRequest:
-        // No completion action — the reply (if any) arrives asynchronously
+        // No completion action - the reply (if any) arrives asynchronously
         // and updates the telemetry tiles via the inbound logger.
         break;
     }
@@ -560,7 +561,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     // still trying. The auto-reconnect system handles the actual
     // reconnection independently.
     showGlobalInfoSnackBar(
-      'Device may still be rebooting — reconnecting automatically', // lint-allow: hardcoded-string
+      'Device may still be rebooting - reconnecting automatically', // lint-allow: hardcoded-string
       duration: const Duration(seconds: 4),
     );
   }
@@ -582,7 +583,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   /// Called when the device transitions to [DeviceConnectionState.connected].
   ///
   /// If a device reboot countdown is active, it means the reboot cycle
-  /// completed successfully — cancel the countdown (banner disappears)
+  /// completed successfully - cancel the countdown (banner disappears)
   /// and show a success snackbar.
   void _onDeviceReconnected() {
     final rebootTasks = state.entries

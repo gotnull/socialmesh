@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Offline Map Screen — a lightweight, device-free map reachable from the
+// Offline Map Screen - a lightweight, device-free map reachable from the
 // scanner so users can browse and pre-download map tiles before pairing a node
 // (e.g. prepping for an off-grid trip). Deliberately carries NO mesh layers:
 // it has no protocol dependency and nothing to render empty when disconnected.
@@ -325,13 +325,13 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
 
   @override
   Widget build(BuildContext context) {
-    // lint-allow: haptic-feedback — the only bare GestureDetector here is the
+    // lint-allow: haptic-feedback - the only bare GestureDetector here is the
     // keyboard-dismiss wrapper; control taps (compass, zoom) haptic via the
     // shared MapControls widgets.
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold.body(
-        // A full-bleed map must not live in a scrollable viewport — mirror the
+        // A full-bleed map must not live in a scrollable viewport - mirror the
         // main map screen so the body gets fixed, bounded constraints.
         physics: const NeverScrollableScrollPhysics(),
         resizeToAvoidBottomInset: false,

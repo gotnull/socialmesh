@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Pet providers — owner-side state and actions.
+// Pet providers - owner-side state and actions.
 //
 // The ownPetProvider is an AsyncNotifier that:
 //   1. Reads myNodeNumProvider to discover the current device's node id.
@@ -64,7 +64,7 @@ final petCareEngineProvider = Provider<PetCareEngine>((ref) {
 
 /// The SQLite-backed repository. Held alive for the app's lifetime.
 /// Shared SQLite handle for pet.db. Both [petRepositoryProvider] and
-/// [petTimelineRepositoryProvider] multiplex onto it — pet.db already
+/// [petTimelineRepositoryProvider] multiplex onto it - pet.db already
 /// holds own_pet, remote_pet_cache AND (v2+) pet_timeline_events.
 final petDatabaseProvider = Provider<PetDatabase>((ref) {
   final db = PetDatabase();
@@ -89,13 +89,13 @@ final petTimelineRecorderProvider = Provider<PetTimelineRecorder>((ref) {
 });
 
 /// Owner-side pet state. `null` when no device has ever paired (no node
-/// identity yet) — consumers should treat this as the pre-feature empty
+/// identity yet) - consumers should treat this as the pre-feature empty
 /// state rather than an error.
 class OwnPetController extends AsyncNotifier<PetState?> {
   Timer? _animationTicker;
 
   /// Guard against overlapping animation ticks. A Timer.periodic callback
-  /// is sync, but [_animationTick] is async — if the SQLite persist
+  /// is sync, but [_animationTick] is async - if the SQLite persist
   /// stalls past the 10s period, a new tick would otherwise start
   /// concurrently and race against the pending one on state read/write.
   bool _tickInFlight = false;
@@ -158,7 +158,7 @@ class OwnPetController extends AsyncNotifier<PetState?> {
       hatchedAt: DateTime.now(),
     );
     await repo.saveOwnPet(fresh);
-    // Fresh egg has no events yet — nothing to ingest. The first
+    // Fresh egg has no events yet - nothing to ingest. The first
     // `hatched` event will flow through _persist on the next tick.
     AppLogging.pet(
       'OwnPetController: hatched fresh egg for node=$ownerNodeNum '
@@ -232,7 +232,7 @@ class OwnPetController extends AsyncNotifier<PetState?> {
         await _persist(next);
       }
       // Record to the timeline whenever recentEvents grew or changed
-      // — this can happen without a meaningful-change persist (e.g.
+      // - this can happen without a meaningful-change persist (e.g.
       // a `sleepEntered` edge-transition that doesn't touch stats).
       if (next.recentEvents.length != current.recentEvents.length ||
           (next.recentEvents.isNotEmpty &&
@@ -262,12 +262,12 @@ class OwnPetController extends AsyncNotifier<PetState?> {
   Future<PetActionResult> inspect() => _apply(CareAction.inspect);
 
   /// Replace a dormant pet with a fresh egg. Returns invalidInState
-  /// when the pet isn't dormant — the UI gates the button, but the
+  /// when the pet isn't dormant - the UI gates the button, but the
   /// engine still refuses safely.
   Future<PetActionResult> reSigil() async {
     final current = state.value;
     if (current == null) {
-      // Unreachable in practice — the button only mounts when a pet
+      // Unreachable in practice - the button only mounts when a pet
       // exists. Refuse safely with a throwaway placeholder state.
       return PetActionResult.invalidInState(
         state: _placeholderState(),
@@ -289,7 +289,7 @@ class OwnPetController extends AsyncNotifier<PetState?> {
       ownerNodeNum: current.ownerNodeNum,
       hatchedAt: DateTime.now(),
     );
-    // Wipe the retired creature's timeline first — a re-sigil is a
+    // Wipe the retired creature's timeline first - a re-sigil is a
     // new life, its own story. The new egg's events flow in through
     // the normal _recordTimeline path on subsequent ticks.
     try {
@@ -310,7 +310,7 @@ class OwnPetController extends AsyncNotifier<PetState?> {
   Future<PetActionResult> _apply(CareAction action) async {
     final current = state.value;
     if (current == null) {
-      // Unreachable in practice — the action bar only mounts when a pet
+      // Unreachable in practice - the action bar only mounts when a pet
       // exists. Refuse safely with a throwaway placeholder state.
       return PetActionResult.invalidInState(
         state: _placeholderState(),
@@ -360,7 +360,7 @@ final ownPetProvider = AsyncNotifierProvider<OwnPetController, PetState?>(
 );
 
 /// Compact mesh-visible summary derived from the owner state. Recomputes
-/// only when the compact fields actually change — the .select keeps it
+/// only when the compact fields actually change - the .select keeps it
 /// stable under UI-only animation ticks.
 final petPublicStateProvider = Provider<PetPublicState?>((ref) {
   final async = ref.watch(ownPetProvider);
@@ -484,7 +484,7 @@ class PetIngestController {
 
   /// Record a bare share-status signal without ingesting a payload.
   /// Used by the MRRP response observer for error frames and empty
-  /// payloads — the peer acknowledged the request but declined or had
+  /// payloads - the peer acknowledged the request but declined or had
   /// nothing to share. The Companion card uses this to explain the
   /// absence of a preview in plain language.
   void recordShareStatus(int nodeNum, RemotePetShareStatus status) {
@@ -497,7 +497,7 @@ final petIngestControllerProvider = Provider<PetIngestController>((ref) {
 });
 
 /// Client that broadcasts pet.v1/get_summary REQUESTs over the active
-/// MRRP dispatcher. Returns null until MRRP + SIP are both enabled — see
+/// MRRP dispatcher. Returns null until MRRP + SIP are both enabled - see
 /// [pet_remote_client.dart] for peer-targeting semantics.
 final petRemoteClientProvider = Provider<PetRemoteClient?>((ref) {
   final dispatcher = ref.watch(mrrpDispatcherProvider);
@@ -507,7 +507,7 @@ final petRemoteClientProvider = Provider<PetRemoteClient?>((ref) {
 
 /// Durable watermark for one-shot hatch / evolution effects. Backed by
 /// SharedPreferences so the hatch animation never replays on rebuild or
-/// resume. `null` while shared prefs is still loading — consumers should
+/// resume. `null` while shared prefs is still loading - consumers should
 /// skip one-shots until the future resolves.
 final petAnimationTrackerProvider = FutureProvider<PetAnimationTracker>((
   ref,
@@ -562,7 +562,7 @@ final petNotificationDispatcherProvider = Provider<PetNotificationDispatcher?>((
     sink: const DefaultPetNotificationSink(),
     // The dispatcher is only ever activated via the notification bridge,
     // which is only `ref.watch`ed from PetHomeScreen. If the bridge is
-    // firing AT ALL, NodePet is mounted — but the user may have
+    // firing AT ALL, NodePet is mounted - but the user may have
     // backgrounded the app with it still mounted, in which case they
     // want the OS banner. Gate on the real lifecycle instead.
     isAppInForeground: () {
@@ -574,7 +574,7 @@ final petNotificationDispatcherProvider = Provider<PetNotificationDispatcher?>((
 
 /// Bridge provider that watches [ownPetProvider] for state transitions
 /// and forwards them to [petNotificationDispatcherProvider]. Owns no
-/// state of its own — it exists so the notification pipeline is wired
+/// state of its own - it exists so the notification pipeline is wired
 /// exactly where the pet state machine lives, not from UI lifecycle.
 ///
 /// Consumers of the notification feature (currently just the Pet home
@@ -596,7 +596,7 @@ final petNotificationBridgeProvider = Provider<void>((ref) {
 });
 
 // ---------------------------------------------------------------------------
-// Peer pet live-state layer — smoothed display band derived from remote cache
+// Peer pet live-state layer - smoothed display band derived from remote cache
 // + peer presence freshness. No persistence; the Notifier rebuilds from its
 // two inputs whenever either changes.
 // ---------------------------------------------------------------------------
@@ -606,12 +606,12 @@ final peerPetLiveStateMapperProvider = Provider<PeerPetLiveStateMapper>((ref) {
   return const PeerPetLiveStateMapper();
 });
 
-/// Injectable clock — tests override to a fake.
+/// Injectable clock - tests override to a fake.
 final peerPetClockProvider = Provider<DateTime Function()>((ref) {
   return DateTime.now;
 });
 
-/// Sync-derived view of the per-peer remote pet observation — the
+/// Sync-derived view of the per-peer remote pet observation - the
 /// AsyncValue unwrapped to `T?` so consumers don't have to branch on
 /// loading/error every frame. Exists as a separate provider so tests
 /// can override a plain value without wrestling with FutureProvider
@@ -625,13 +625,13 @@ final peerPetObservationProvider = Provider.family<RemotePetObservation?, int>((
 });
 
 /// Smoothed live band for a peer, derived from:
-///   * `remotePetProvider(nodeNum)` — decoded public state + observedAt
-///   * `peerLastSeenProvider(nodeNum)` — presence freshness from nodes map
+///   * `remotePetProvider(nodeNum)` - decoded public state + observedAt
+///   * `peerLastSeenProvider(nodeNum)` - presence freshness from nodes map
 ///
 /// Asymmetric transition rules (see [PeerPetLiveStateMapper] docs):
 /// upgrades and wire-authoritative low-energy entries are immediate;
 /// downgrades, lateral-to-unknown, and sleepy/dormant exits go through
-/// a 15s cooldown. Timers are strictly single-shot — scheduling a new
+/// a 15s cooldown. Timers are strictly single-shot - scheduling a new
 /// one always cancels the previous one, so rapid-fire signal updates
 /// cannot accumulate pending transitions.
 class PeerPetLiveStateController extends Notifier<PeerPetLiveState> {
@@ -644,7 +644,7 @@ class PeerPetLiveStateController extends Notifier<PeerPetLiveState> {
   DateTime? _pendingSince;
 
   /// The last value this Notifier returned from [build]. Tracks the
-  /// "current band" across rebuilds triggered by `ref.watch` — the
+  /// "current band" across rebuilds triggered by `ref.watch` - the
   /// framework-visible `state` is refreshed only when we emit, so we
   /// also need a local cache of our own returned value to detect
   /// true band transitions (vs. meaningless rebuilds).
@@ -658,7 +658,7 @@ class PeerPetLiveStateController extends Notifier<PeerPetLiveState> {
     // Notifier instance is preserved, so `_cooldownTimer`, `_pendingBand`,
     // and `_pendingSince` all survive rebuilds. We read the observation
     // through [peerPetObservationProvider] (sync-derived) rather than
-    // the FutureProvider directly — this removes an AsyncValue branch
+    // the FutureProvider directly - this removes an AsyncValue branch
     // per frame and makes the input cleanly overridable in tests.
     final observation = ref.watch(peerPetObservationProvider(nodeNum));
     final lastSeen = ref.watch(peerLastSeenProvider(nodeNum));
@@ -696,7 +696,7 @@ class PeerPetLiveStateController extends Notifier<PeerPetLiveState> {
   /// Called when the cooldown timer fires. Runs outside of `build()`,
   /// so we drive state via direct assignment. If a newer input has
   /// arrived since scheduling, the rebuild path will already have
-  /// handled it — we only commit when the pending band still matches
+  /// handled it - we only commit when the pending band still matches
   /// what the latest signal says.
   void _onCooldownFire() {
     final now = ref.read(peerPetClockProvider)();
@@ -739,14 +739,14 @@ class PeerPetLiveStateController extends Notifier<PeerPetLiveState> {
 
   /// Apply [decision] to pending/timer bookkeeping and return the
   /// Notifier's next state value. Returns [prior] unchanged (same
-  /// reference) when the decision would not change the band — callers
+  /// reference) when the decision would not change the band - callers
   /// compare with `identical` to decide whether to emit.
   PeerPetLiveState _applyDecision(
     PeerPetSmoothingDecision decision,
     DateTime now, {
     required PeerPetLiveState? prior,
   }) {
-    // Pending-band bookkeeping — only reset the clock when the band
+    // Pending-band bookkeeping - only reset the clock when the band
     // actually changes; otherwise repeated builds with the same pending
     // band would reset the cooldown and it would never expire.
     if (decision.pendingBand == null) {
@@ -768,12 +768,12 @@ class PeerPetLiveStateController extends Notifier<PeerPetLiveState> {
 
     final emit = decision.emit;
     if (emit == null) {
-      // No change — preserve reference so Riverpod's equality check
+      // No change - preserve reference so Riverpod's equality check
       // suppresses the rebuild.
       return prior ?? PeerPetLiveState.initial(now);
     }
     if (prior != null && emit == prior.band) {
-      // Band unchanged — same reference, no emission.
+      // Band unchanged - same reference, no emission.
       return prior;
     }
     if (prior != null) {
@@ -797,7 +797,7 @@ final peerPetLiveStateProvider =
     );
 
 // ---------------------------------------------------------------------------
-// Lifecycle timeline — persisted event log + projected view model.
+// Lifecycle timeline - persisted event log + projected view model.
 // ---------------------------------------------------------------------------
 
 /// Raw timeline records for the current owner. Rebuilds whenever
@@ -810,7 +810,7 @@ final petTimelineRecordsProvider = FutureProvider<List<PetTimelineRecord>>((
 ) async {
   // Trigger rebuild on any owner-state emission. This is how new
   // rows (written through by OwnPetController.recordTimeline) get
-  // picked up — we don't listen to DB changes directly.
+  // picked up - we don't listen to DB changes directly.
   final pet = ref.watch(ownPetProvider).value;
   if (pet == null) return const <PetTimelineRecord>[];
   final repo = ref.watch(petTimelineRepositoryProvider);
@@ -818,14 +818,14 @@ final petTimelineRecordsProvider = FutureProvider<List<PetTimelineRecord>>((
   return repo.loadForOwner(pet.ownerNodeNum);
 });
 
-/// The built render model. UI consumes this directly — no further
+/// The built render model. UI consumes this directly - no further
 /// manipulation needed.
 final petTimelineViewProvider = Provider<AsyncValue<PetTimelineView?>>((ref) {
   final petAsync = ref.watch(ownPetProvider);
   final recordsAsync = ref.watch(petTimelineRecordsProvider);
 
   // Loading/error on either input propagates. Null pet (no owner
-  // bound) resolves to data(null) — the screen renders an empty
+  // bound) resolves to data(null) - the screen renders an empty
   // state.
   if (petAsync.isLoading || recordsAsync.isLoading) {
     return const AsyncValue<PetTimelineView?>.loading();

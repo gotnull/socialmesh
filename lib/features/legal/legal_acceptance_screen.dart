@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — pre-auth gate screen, no navigation chrome
+// lint-allow: scaffold - pre-auth gate screen, no navigation chrome
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
@@ -27,7 +27,7 @@ import '../../services/haptic_service.dart';
 /// gracefully on Android or shows an explanation on iOS (App Store
 /// does not allow force-quitting).
 ///
-/// Design: no dark patterns — both buttons are clearly visible, no
+/// Design: no dark patterns - both buttons are clearly visible, no
 /// pre-checked boxes, plain-English summary.
 class LegalAcceptanceScreen extends ConsumerStatefulWidget {
   const LegalAcceptanceScreen({super.key});

@@ -4,7 +4,7 @@
 /// In-memory per-peer rate limiter for mesh-game commands.
 ///
 /// Enforces the "≤ 1 game command per 2 s per sender" rule from the
-/// spec § 6.1 step 3. State is not persisted — a restart relaxes the
+/// spec § 6.1 step 3. State is not persisted - a restart relaxes the
 /// limiter, which is intentional and safe.
 library;
 

@@ -137,7 +137,7 @@ enum OverlaySecureDataSubtype {
   rpcEnvelope(0x04),
 
   /// Phase 2: encrypted DM_INK sketch payload. Body is a v1 SIP Ink
-  /// envelope (timestamp_s ‖ ink_bytes) — see
+  /// envelope (timestamp_s ‖ ink_bytes) - see
   /// `SipDmMessages.encodeSecureDmInk`.
   dmInk(0x05),
 
@@ -342,11 +342,11 @@ enum OverlayCapabilityTlvType {
   /// `supported_features` uint32 bitset (`OverlayCapabilityFeature`).
   supportedFeatures(0x10),
 
-  /// `overlay_max_chunk_bytes` uint16 — advertised per-chunk payload
+  /// `overlay_max_chunk_bytes` uint16 - advertised per-chunk payload
   /// ceiling the peer will accept.
   maxChunkBytes(0x11),
 
-  /// `overlay_max_resource_bytes` uint32 — advertised resource cap.
+  /// `overlay_max_resource_bytes` uint32 - advertised resource cap.
   maxResourceBytes(0x12);
 
   const OverlayCapabilityTlvType(this.code);
@@ -371,7 +371,7 @@ abstract final class OverlayCapabilityFeature {
   /// Peer supports SPP v0.2 resource transfer.
   static const int resourceV02 = 1 << 1;
 
-  /// Peer supports `OVERLAY_SECURE_ENABLED` envelope (§12) — reserved
+  /// Peer supports `OVERLAY_SECURE_ENABLED` envelope (§12) - reserved
   /// for v0.3.
   static const int secureV03 = 1 << 2;
 

@@ -10,7 +10,7 @@ import '../theme.dart';
 import 'edge_fade.dart';
 
 // ---------------------------------------------------------------------------
-// Layout constants — single source of truth for search + filter headers.
+// Layout constants - single source of truth for search + filter headers.
 // All values follow the 8dp grid from the design system.
 // ---------------------------------------------------------------------------
 
@@ -82,7 +82,7 @@ class SearchFilterLayout {
 }
 
 // ---------------------------------------------------------------------------
-// SearchFilterHeader — composable, non-sliver widget.
+// SearchFilterHeader - composable, non-sliver widget.
 // ---------------------------------------------------------------------------
 
 /// A search bar + horizontally-scrollable filter-chip row with consistent
@@ -185,7 +185,7 @@ class SearchFilterHeader extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// SearchFilterHeaderDelegate — sliver persistent header delegate.
+// SearchFilterHeaderDelegate - sliver persistent header delegate.
 // ---------------------------------------------------------------------------
 
 /// A [SliverPersistentHeaderDelegate] that renders a pinned search bar +
@@ -229,7 +229,7 @@ class SearchFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   /// Optional trailing controls outside the scrollable chip area.
   final List<Widget> trailingControls;
 
-  /// The current [TextScaler] — pass `MediaQuery.textScalerOf(context)`.
+  /// The current [TextScaler] - pass `MediaQuery.textScalerOf(context)`.
   final TextScaler textScaler;
 
   /// An opaque key used by [shouldRebuild] to detect content changes.

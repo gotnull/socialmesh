@@ -318,7 +318,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
         break;
     }
 
-    // Then filter by role — orthogonal to the presence/favorites
+    // Then filter by role - orthogonal to the presence/favorites
     // dimension above. Looks up the live MeshNode by nodeNum so we
     // don't have to copy role onto _Contact.
     if (_activeRoleFilter != roleFilterAll) {
@@ -337,7 +337,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       }).toList();
     }
 
-    // Build the body content — use CustomScrollView with a pinned sliver
+    // Build the body content - use CustomScrollView with a pinned sliver
     // header so the search bar + filter chips never overflow on compact
     // screens.
     final textScaler = MediaQuery.textScalerOf(context);
@@ -1098,7 +1098,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   /// Unread count snapshot captured at chat-open time before
   /// `_markAsRead` flips the per-message `read` flags. Stays static for
   /// the screen's lifetime so the "New messages" divider doesn't migrate
-  /// as more inbound messages arrive during the session. Session-only —
+  /// as more inbound messages arrive during the session. Session-only -
   /// resets to 0 the next time the screen mounts.
   int _initialUnreadCount = 0;
 
@@ -2038,7 +2038,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // Check mounted after await before updating state
       if (!mounted) return;
 
-      // Read current state — ACK may have arrived during the async send,
+      // Read current state - ACK may have arrived during the async send,
       // in which case the message is already delivered.  Build the update
       // from the *current* message, not the stale pendingMessage, so we
       // never overwrite delivered status.
@@ -2249,7 +2249,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // Check mounted after await before updating state
       if (!mounted) return;
 
-      // Retry is silent on readiness-gate failures — the user already saw
+      // Retry is silent on readiness-gate failures - the user already saw
       // the snackbar on the original Send. Mark the bubble failed with the
       // localised readiness message; the readiness->ready auto-resend
       // listener will pick it up and dispatch again as soon as the radio is
@@ -2585,7 +2585,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     // Mark any new unread messages as read while this chat is open.
     // _markAsRead() is only called once in initState, so messages arriving
-    // after that are never marked — causing a persistent badge.
+    // after that are never marked - causing a persistent badge.
     final hasUnreadInView = unfilteredRows
         .map((row) => row.message)
         .whereType<Message>()
@@ -2609,7 +2609,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     // Capture whether the user was parked at the bottom on the PREVIOUS frame
     // before swapping in the new rows. _isNearLatest reads the live item
-    // positions, which still reflect the prior layout — testing it after the
+    // positions, which still reflect the prior layout - testing it after the
     // swap would check the newly-appended index (not yet laid out) and always
     // return false.
     final wasParkedAtLatest =
@@ -2630,7 +2630,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         .toList();
 
     // Auto-scroll to the newest message when one arrives while the user is
-    // already parked at the bottom. Honour the user's scroll position — if
+    // already parked at the bottom. Honour the user's scroll position - if
     // they've scrolled up to read history, the Jump-to-Latest pill handles it.
     final latestMessage = visibleMessages.isNotEmpty
         ? visibleMessages.last
@@ -2674,7 +2674,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               }
               // Pop synchronously. The PopScope above this scaffold
               // already calls _persistReadingPositionNow() after the
-              // pop completes — awaiting before popping risked the
+              // pop completes - awaiting before popping risked the
               // tap appearing dead if the storage write was slow or
               // wedged. Every other caller of _persistReadingPositionNow
               // in this file uses `unawaited()`; the back button now
@@ -3284,7 +3284,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           onTap: () => _showQuickResponses(),
                           // 48×48 mirrors the send button on the right
                           // of the composer so the leading and trailing
-                          // affordances are visually balanced — same
+                          // affordances are visually balanced - same
                           // circle size, same icon size.
                           child: Container(
                             width: 48,
@@ -3607,7 +3607,7 @@ class _MessageBubble extends ConsumerWidget {
     final translationState = ref.watch(messageTranslationProvider(message.id));
 
     // Restore cached translation on app restart for settled messages only.
-    // Skip pending/sending messages — they haven't been translated yet and
+    // Skip pending/sending messages - they haven't been translated yet and
     // the dedupe cache hit during build would cause state mutation that
     // interferes with message rendering.
     final isSettled = !isPending && !isRetrying && !isUnconfirmed;
@@ -4297,7 +4297,7 @@ class _MessageBubble extends ConsumerWidget {
   }
 
   Future<void> _handleTranslate(BuildContext context, WidgetRef ref) async {
-    // Await the subscription service directly — it's a FutureProvider that
+    // Await the subscription service directly - it's a FutureProvider that
     // resolves once RevenueCat initialization completes.  This is the source
     // of truth; purchaseStateProvider is just a reactive mirror that may not
     // have received _init()'s update yet.

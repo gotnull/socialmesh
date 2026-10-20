@@ -32,7 +32,7 @@ import '../../providers/app_providers.dart';
 /// ## Lifecycle
 /// - Foreground-only: the ticker runs on a [Timer.periodic] which is only
 ///   active while the app process is alive. Retries are NOT fired in the
-///   background. This is documented and intentional — true background retry
+///   background. This is documented and intentional - true background retry
 ///   would require platform-specific background execution that is outside
 ///   the current scope.
 /// - On **app restart**, [MessagesNotifier._loadFromStorage] resets any
@@ -45,7 +45,7 @@ import '../../providers/app_providers.dart';
 /// ## Provider wiring
 /// Instantiated and started by [dmRetryCoordinatorProvider] (keepAlive).
 /// [MessagesNotifier] reads it once during [build] to ensure it is
-/// created — but uses `ref.read()` (not `ref.watch()`) to avoid a
+/// created - but uses `ref.read()` (not `ref.watch()`) to avoid a
 /// circular dependency.
 class DmRetryCoordinator {
   final Ref _ref;
@@ -55,7 +55,7 @@ class DmRetryCoordinator {
 
   DmRetryCoordinator(this._ref);
 
-  /// Start the periodic ticker.  Idempotent — safe to call multiple times.
+  /// Start the periodic ticker.  Idempotent - safe to call multiple times.
   void start() {
     if (_started || _disposed) return;
     _started = true;
@@ -79,14 +79,14 @@ class DmRetryCoordinator {
   }
 
   // ---------------------------------------------------------------------------
-  // Public API — called from UI layer
+  // Public API - called from UI layer
   // ---------------------------------------------------------------------------
 
   /// Immediately resend [message] as a manual one-shot attempt.
   /// Updates [Message.retryCount], [Message.lastAttemptAt], and sets
   /// status to [MessageStatus.retrying] while the send is in flight.
   ///
-  /// Safe to call from a widget — the send is dispatched asynchronously and
+  /// Safe to call from a widget - the send is dispatched asynchronously and
   /// does not require [BuildContext].
   Future<void> scheduleResend(Message message) async {
     if (_disposed) return;
@@ -191,7 +191,7 @@ class DmRetryCoordinator {
     if (message.status == MessageStatus.delivered) return false;
     if (message.status == MessageStatus.failed) return false;
     if (message.status == MessageStatus.pending) return false;
-    // Skip legacy messages with no sentAt — we cannot compute a timeout
+    // Skip legacy messages with no sentAt - we cannot compute a timeout
     if (message.status == MessageStatus.sent && message.sentAt == null) {
       return false;
     }

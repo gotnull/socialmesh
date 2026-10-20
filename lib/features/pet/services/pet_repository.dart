@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetRepository — thin CRUD layer over pet.db for owner-side pet state
+// PetRepository - thin CRUD layer over pet.db for owner-side pet state
 // and the remote pet cache.
 
 import 'dart:typed_data';

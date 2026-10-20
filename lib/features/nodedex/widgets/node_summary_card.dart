@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Node Summary Card — computed insight card for NodeDex detail.
+// Node Summary Card - computed insight card for NodeDex detail.
 //
 // Displays time-of-day distribution as a horizontal bar,
 // activity streak, busiest day, and a one-line summary sentence.

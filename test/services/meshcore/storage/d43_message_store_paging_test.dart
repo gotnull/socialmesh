@@ -185,7 +185,7 @@ void main() {
         );
         expect(page1.map((m) => m.id), equals(['m-c', 'm-d']));
 
-        // Older than m-c: timestamps tied with m-a, m-b — both have
+        // Older than m-c: timestamps tied with m-a, m-b - both have
         // ids lexically < 'm-c', so both qualify. Strictly-less by id
         // excludes m-c itself.
         final page2 = await store.loadContactMessagesBefore(

@@ -806,32 +806,29 @@ void main() {
       );
     });
 
-    test(
-      'degradation and recovery: connected -> degraded -> reconnecting -> connected',
-      () {
-        expect(
-          GlobalLayerStateMachine.canTransition(
-            GlobalLayerConnectionState.connected,
-            GlobalLayerConnectionState.degraded,
-          ),
-          isTrue,
-        );
-        expect(
-          GlobalLayerStateMachine.canTransition(
-            GlobalLayerConnectionState.degraded,
-            GlobalLayerConnectionState.reconnecting,
-          ),
-          isTrue,
-        );
-        expect(
-          GlobalLayerStateMachine.canTransition(
-            GlobalLayerConnectionState.reconnecting,
-            GlobalLayerConnectionState.connected,
-          ),
-          isTrue,
-        );
-      },
-    );
+    test('degradation and recovery: connected -> degraded -> reconnecting -> connected', () {
+      expect(
+        GlobalLayerStateMachine.canTransition(
+          GlobalLayerConnectionState.connected,
+          GlobalLayerConnectionState.degraded,
+        ),
+        isTrue,
+      );
+      expect(
+        GlobalLayerStateMachine.canTransition(
+          GlobalLayerConnectionState.degraded,
+          GlobalLayerConnectionState.reconnecting,
+        ),
+        isTrue,
+      );
+      expect(
+        GlobalLayerStateMachine.canTransition(
+          GlobalLayerConnectionState.reconnecting,
+          GlobalLayerConnectionState.connected,
+        ),
+        isTrue,
+      );
+    });
 
     test('direct recovery: degraded -> connected (without reconnecting)', () {
       expect(
@@ -860,32 +857,29 @@ void main() {
       );
     });
 
-    test(
-      'unexpected disconnect: connected -> reconnecting -> error -> disconnected',
-      () {
-        expect(
-          GlobalLayerStateMachine.canTransition(
-            GlobalLayerConnectionState.connected,
-            GlobalLayerConnectionState.reconnecting,
-          ),
-          isTrue,
-        );
-        expect(
-          GlobalLayerStateMachine.canTransition(
-            GlobalLayerConnectionState.reconnecting,
-            GlobalLayerConnectionState.error,
-          ),
-          isTrue,
-        );
-        expect(
-          GlobalLayerStateMachine.canTransition(
-            GlobalLayerConnectionState.error,
-            GlobalLayerConnectionState.disconnected,
-          ),
-          isTrue,
-        );
-      },
-    );
+    test('unexpected disconnect: connected -> reconnecting -> error -> disconnected', () {
+      expect(
+        GlobalLayerStateMachine.canTransition(
+          GlobalLayerConnectionState.connected,
+          GlobalLayerConnectionState.reconnecting,
+        ),
+        isTrue,
+      );
+      expect(
+        GlobalLayerStateMachine.canTransition(
+          GlobalLayerConnectionState.reconnecting,
+          GlobalLayerConnectionState.error,
+        ),
+        isTrue,
+      );
+      expect(
+        GlobalLayerStateMachine.canTransition(
+          GlobalLayerConnectionState.error,
+          GlobalLayerConnectionState.disconnected,
+        ),
+        isTrue,
+      );
+    });
 
     test('reconnect give up: reconnecting -> disconnected', () {
       expect(

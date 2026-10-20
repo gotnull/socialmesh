@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Widget tests for VoiceRecordingOverlay — verifies the four-phase flow
+// Widget tests for VoiceRecordingOverlay - verifies the four-phase flow
 // (idle → recording → paused → reviewing) and crash-free behaviour.
 
 import 'dart:async';
@@ -57,7 +57,7 @@ Future<void> _tapRecord(WidgetTester tester) async {
 // =============================================================================
 
 void main() {
-  group('VoiceRecordingOverlay — idle phase', () {
+  group('VoiceRecordingOverlay - idle phase', () {
     testWidgets('starts in idle phase with record button', (tester) async {
       await tester.pumpWidget(_wrap(_overlay()));
       await tester.pump();
@@ -101,7 +101,7 @@ void main() {
     });
   });
 
-  group('VoiceRecordingOverlay — recording phase', () {
+  group('VoiceRecordingOverlay - recording phase', () {
     testWidgets('transitions to recording after tapping record', (
       tester,
     ) async {
@@ -166,7 +166,7 @@ void main() {
 
       // Tap the cancel button in the confirmation sheet to keep recording.
       // AppBottomSheet.showConfirm uses 'Cancel' as default cancelLabel.
-      // There are two 'Cancel' texts — the overlay button and the sheet button.
+      // There are two 'Cancel' texts - the overlay button and the sheet button.
       // The sheet's Cancel is rendered later in the tree, so tap the last one.
       await tester.tap(find.text('Cancel').last);
       await tester.pump();
@@ -182,7 +182,7 @@ void main() {
       await tester.pump();
       await _tapRecord(tester);
 
-      // Find the stop button — it's a Container with a white rounded square
+      // Find the stop button - it's a Container with a white rounded square
       // inside the red circle. The GestureDetector wrapping the 80×80 circle
       // should contain a white container (the stop square).
       // Tap into the center of the recording actions area.
@@ -205,7 +205,7 @@ void main() {
     });
   });
 
-  group('VoiceRecordingOverlay — paused phase', () {
+  group('VoiceRecordingOverlay - paused phase', () {
     testWidgets('pause transitions to paused state', (tester) async {
       await tester.pumpWidget(_wrap(_overlay()));
       await tester.pump();
@@ -259,7 +259,7 @@ void main() {
     });
   });
 
-  group('VoiceRecordingOverlay — review phase', () {
+  group('VoiceRecordingOverlay - review phase', () {
     testWidgets('autoStopNotifier transitions to review phase', (tester) async {
       final notifier = ValueNotifier<bool>(false);
       addTearDown(notifier.dispose);
@@ -309,7 +309,7 @@ void main() {
       await tester.pump();
       expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
 
-      // Tap Retake — confirmation sheet should appear.
+      // Tap Retake - confirmation sheet should appear.
       await tester.tap(find.text('Retake'));
       // Pump through the bottom sheet open animation (repeating overlay
       // animations prevent pumpAndSettle, so pump a fixed duration instead).
@@ -328,7 +328,7 @@ void main() {
     });
   });
 
-  group('VoiceRecordingOverlay — amplitude stream', () {
+  group('VoiceRecordingOverlay - amplitude stream', () {
     testWidgets('subscribes to amplitude stream from onStartRecording', (
       tester,
     ) async {
@@ -371,7 +371,7 @@ void main() {
     });
   });
 
-  group('VoiceRecordingOverlay — timer advancement', () {
+  group('VoiceRecordingOverlay - timer advancement', () {
     testWidgets('timer increments elapsed time while recording', (
       tester,
     ) async {
@@ -407,7 +407,7 @@ void main() {
     });
   });
 
-  group('VoiceRecordingOverlay — crash-free rendering', () {
+  group('VoiceRecordingOverlay - crash-free rendering', () {
     testWidgets('renders without crash when no optional params given', (
       tester,
     ) async {

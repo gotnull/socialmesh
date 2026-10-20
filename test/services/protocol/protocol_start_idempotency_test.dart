@@ -16,8 +16,8 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 ///
 /// `logs.txt` line 174 + 182 showed two `Protocol.start() called` lines
 /// for the same instance, followed by two `DATA_SUBSCRIBED to transport`
-/// lines. Two paths raced — the network reconnect dispatcher (Path A)
-/// and the transport-state listener (Path B) — both calling
+/// lines. Two paths raced - the network reconnect dispatcher (Path A)
+/// and the transport-state listener (Path B) - both calling
 /// `protocol.start()` on the same singleton. Result: two listeners on
 /// `dataStream`, every inbound packet processed twice.
 ///
@@ -160,7 +160,7 @@ void main() {
         transport.enableNotificationsCallCount,
         1,
         reason:
-            'enableNotifications() must be called once — second '
+            'enableNotifications() must be called once - second '
             'start() did not re-enter the body.',
       );
 
@@ -232,7 +232,7 @@ void main() {
           2,
           reason:
               'After stop() and a fresh start(), the body must execute '
-              'again — no SKIPPED_ALREADY_STARTED short-circuit.',
+              'again - no SKIPPED_ALREADY_STARTED short-circuit.',
         );
         expect(transport.dataStreamListenCount, 2);
 

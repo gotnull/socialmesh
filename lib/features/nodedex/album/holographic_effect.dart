@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Holographic Effect — animated rainbow gradient overlay for rare+ cards.
+// Holographic Effect - animated rainbow gradient overlay for rare+ cards.
 //
 // Renders a diagonal rainbow shimmer that drifts slowly across the card
 // surface, creating the look of a premium holographic trading card.
@@ -19,7 +19,7 @@
 //   - Single CustomPainter per card, no widget-per-band
 //   - Animation driven by a single AnimationController
 //   - RepaintBoundary recommended on parent for isolation
-//   - No allocations per frame — gradient is rebuilt only when
+//   - No allocations per frame - gradient is rebuilt only when
 //     animation value changes
 
 import 'dart:math' as math;

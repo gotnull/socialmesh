@@ -76,7 +76,7 @@ final profileServiceProvider = Provider<ProfileService>((ref) {
   return profileService;
 });
 
-/// Provider for cloud sync service (nullable — Firebase may not be ready).
+/// Provider for cloud sync service (nullable - Firebase may not be ready).
 final profileCloudSyncServiceProvider = Provider<ProfileCloudSyncService?>((
   ref,
 ) {
@@ -116,7 +116,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     //
     // Guard: firebaseAuthProvider throws StateError when Firebase hasn't
     // finished initializing (common on Android where init is slower than
-    // iOS). Check firebaseReadyProvider first — if not ready, treat as
+    // iOS). Check firebaseReadyProvider first - if not ready, treat as
     // signed-out. build() will be re-invoked automatically once
     // firebaseReadyProvider resolves because we watch authStateProvider
     // above which depends on the same chain.
@@ -274,7 +274,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     return localProfile;
   }
 
-  /// Refresh profile — clears sync errors and retries cloud sync if possible.
+  /// Refresh profile - clears sync errors and retries cloud sync if possible.
   Future<void> refresh() async {
     AppLogging.auth('');
     AppLogging.auth(

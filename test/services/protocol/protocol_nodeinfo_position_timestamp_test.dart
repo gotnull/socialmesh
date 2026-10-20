@@ -142,7 +142,7 @@ void main() {
   test('NodeInfo position with a valid embedded time uses that time', () async {
     final protocol = ProtocolService(_FakeTransport());
 
-    // 2026-06-29 10:00 UTC — a real (if older) GPS/phone time on the fix.
+    // 2026-06-29 10:00 UTC - a real (if older) GPS/phone time on the fix.
     const embeddedEpoch = 1782554400;
     await _deliver(
       protocol,

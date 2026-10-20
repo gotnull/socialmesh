@@ -5,9 +5,9 @@
 // Drives four time-compressed scenarios against the service with
 // `package:fake_async`, asserting the cross-cutting success criteria:
 //
-//   * no leaked sockets — every fake socket the factory minted is
+//   * no leaked sockets - every fake socket the factory minted is
 //     closed by service teardown (or was the live one at the time)
-//   * queue returns to 0 — no frames stuck after a send burst
+//   * queue returns to 0 - no frames stuck after a send burst
 //   * counters monotonically sane (no rollover, drops accounted for)
 //   * retry / auto-disable behave visibly (counters + autoDisabled
 //     reach the expected end state)
@@ -80,7 +80,7 @@ class _SoakFactory {
   void queueError(Object e) => responses.add(_Resp(error: e));
 
   /// Number of sockets that are currently NOT closed. After dispose,
-  /// must always be 0 — anything else is a leak.
+  /// must always be 0 - anything else is a leak.
   int get openSocketCount => minted.where((s) => !s.closed).length;
 }
 
@@ -104,7 +104,7 @@ Uint8List _body(int seed) =>
     Uint8List.fromList(List<int>.generate(40, (i) => (seed + i) & 0xFF));
 
 void main() {
-  group('Soak — Scenario 1: 15 minutes idle connected', () {
+  group('Soak - Scenario 1: 15 minutes idle connected', () {
     test('service stays connected, queue stays empty, no socket leaks', () {
       fakeAsync((async) {
         final factory = _SoakFactory();
@@ -139,8 +139,8 @@ void main() {
     });
   });
 
-  group('Soak — Scenario 2: 30 minutes intermittent announces', () {
-    test('one frame per minute for 30 minutes — all forwarded, queue settles, '
+  group('Soak - Scenario 2: 30 minutes intermittent announces', () {
+    test('one frame per minute for 30 minutes - all forwarded, queue settles, '
         'no leaks', () {
       fakeAsync((async) {
         final factory = _SoakFactory();
@@ -173,7 +173,7 @@ void main() {
     });
   });
 
-  group('Soak — Scenario 3: bad host (refused connection)', () {
+  group('Soak - Scenario 3: bad host (refused connection)', () {
     test(
       'auto-disable latches at threshold, no infinite retry, no socket leaks',
       () {
@@ -205,7 +205,7 @@ void main() {
           expect(svc.counters.connectAttempts, 5);
           expect(svc.counters.connectErrors, 5);
 
-          // Time advances 1 hour — must NOT trigger any further attempts.
+          // Time advances 1 hour - must NOT trigger any further attempts.
           async.elapse(const Duration(hours: 1));
           async.flushMicrotasks();
           expect(svc.counters.connectAttempts, 5);
@@ -226,7 +226,7 @@ void main() {
     );
   });
 
-  group('Soak — Scenario 4: rnsd restart while connected', () {
+  group('Soak - Scenario 4: rnsd restart while connected', () {
     test(
       'peer close → reconnect → forwarding resumes; no frames double-counted',
       () {
@@ -285,7 +285,7 @@ void main() {
     );
   });
 
-  group('Soak — cross-cutting: diagnostics blob is meaningful', () {
+  group('Soak - cross-cutting: diagnostics blob is meaningful', () {
     test(
       'session log captures connect / connected / lost / reconnect lifecycle',
       () {

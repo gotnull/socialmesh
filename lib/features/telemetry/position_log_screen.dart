@@ -3,14 +3,18 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../utils/time_format.dart';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/map_config.dart';
 import '../../core/safe_lat_lng.dart';
@@ -82,7 +86,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
   MapTileStyle _mapStyle = MapTileStyle.dark;
   bool _isExporting = false;
 
-  /// Optional per-node filter — set from widget.initialNodeNum, clearable.
+  /// Optional per-node filter - set from widget.initialNodeNum, clearable.
   int? _filterNodeNum;
 
   /// When a list row is tapped, the map flips on and centers on this log.
@@ -796,7 +800,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
                           itemBuilder: (context, index) {
                             final log = filtered[index];
                             // Only show distance from the previous log if it
-                            // belongs to the same node — otherwise the delta
+                            // belongs to the same node - otherwise the delta
                             // is a phantom jump between unrelated nodes.
                             final prevLog = index < filtered.length - 1
                                 ? filtered[index + 1]
@@ -865,7 +869,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
 }
 
 // ---------------------------------------------------------------------------
-// Date range banner — shown below filter chips when a custom range is active
+// Date range banner - shown below filter chips when a custom range is active
 // ---------------------------------------------------------------------------
 
 class _DateRangeBanner extends StatelessWidget {
@@ -921,7 +925,7 @@ class _DateRangeBanner extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Map view — compact node picker, auto-fit bounds, proper controls layout
+// Map view - compact node picker, auto-fit bounds, proper controls layout
 // ---------------------------------------------------------------------------
 
 class _PositionMapView extends StatefulWidget {
@@ -1276,9 +1280,8 @@ class _PositionMapViewState extends State<_PositionMapView> {
                               color: dotColor,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: nodeContrastColor(
-                                  dotColor,
-                                ).withValues(alpha: 0.4),
+                                color: nodeContrastColor(dotColor)
+                                    .withValues(alpha: 0.4),
                                 width: 0.5,
                               ),
                             ),
@@ -1453,7 +1456,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
 }
 
 // ---------------------------------------------------------------------------
-// Node list drawer panel — slides from left, matching world map pattern
+// Node list drawer panel - slides from left, matching world map pattern
 // ---------------------------------------------------------------------------
 
 class _PositionNodeListPanel extends StatelessWidget {
@@ -1735,7 +1738,7 @@ class _PositionNodeListPanel extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Position info card — shown at bottom when a marker is tapped
+// Position info card - shown at bottom when a marker is tapped
 // ---------------------------------------------------------------------------
 
 class _PositionInfoCard extends StatelessWidget {
@@ -1917,7 +1920,7 @@ class _StatItem extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Position card (list view) — matches NodeDex / Presence tile styling
+// Position card (list view) - matches NodeDex / Presence tile styling
 // ---------------------------------------------------------------------------
 
 class _PositionCard extends StatelessWidget {
@@ -2038,7 +2041,7 @@ class _PositionCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Info badge — matches InfoChip pattern from core/widgets
+// Info badge - matches InfoChip pattern from core/widgets
 // ---------------------------------------------------------------------------
 
 class _InfoBadge extends StatelessWidget {

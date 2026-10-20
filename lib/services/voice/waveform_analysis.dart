@@ -74,8 +74,8 @@ abstract final class WaveformAnalyser {
   /// `"${transferId}_${payload.length}"` or `"${filename}_${payload.length}"`.
   ///
   /// Returns `null` only if [c2Payload] is not a valid `.c2` file.
-  /// If Codec2 is unavailable the returned analysis is a graceful fallback —
-  /// not null — so the card still renders.
+  /// If Codec2 is unavailable the returned analysis is a graceful fallback -
+  /// not null - so the card still renders.
   static Future<WaveformAnalysis?> analyse(
     Uint8List c2Payload, {
     required String cacheKey,
@@ -96,7 +96,7 @@ abstract final class WaveformAnalyser {
     WaveformAnalysis result;
 
     if (!Codec2Bindings.isAvailable) {
-      // Native library absent — produce a stable low-amplitude placeholder.
+      // Native library absent - produce a stable low-amplitude placeholder.
       result = _buildFallback(
         key: key,
         durationMs: durationMs,
@@ -197,7 +197,7 @@ abstract final class WaveformAnalyser {
         peaks[i] = math.max(peaks[i] / maxPeak, 0.05);
       }
     } else {
-      // All-silence recording — flat floor.
+      // All-silence recording - flat floor.
       for (var i = 0; i < bucketCount; i++) {
         peaks[i] = 0.05;
       }

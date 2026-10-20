@@ -8,7 +8,7 @@ void main() {
   // Regression: connecting to a different physical device must trigger a
   // node-data clear, otherwise the persistent NodeStorageService loads
   // every node identity ever seen and unions it with the new device's
-  // NodeDB — making every device appear to share the same node count.
+  // NodeDB - making every device appear to share the same node count.
   //
   // This tests the pure predicate that drives the auto-clear; the helpers
   // (clearDeviceDataBeforeConnect[Ref]) consult it to override their
@@ -29,7 +29,7 @@ void main() {
     });
 
     test('returns false when previous is null (first ever connect)', () {
-      // Never connected before — caller's explicit clearNodeData decision
+      // Never connected before - caller's explicit clearNodeData decision
       // stands. We don't auto-clear because there is nothing to leak from.
       expect(isDeviceSwitchForTest(null, 'AA:BB:CC:DD:EE:01'), isFalse);
     });
@@ -45,7 +45,7 @@ void main() {
     });
 
     test(
-      'case-sensitive — different casing IS treated as a different device',
+      'case-sensitive - different casing IS treated as a different device',
       () {
         // BLE IDs on iOS are UUIDs and casing matters. A device id is the
         // canonical identifier the transport gives us; we must not normalise.

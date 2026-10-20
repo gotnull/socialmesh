@@ -7,8 +7,8 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 
 /// Small, visually-secondary operational health badge for SiteOps node
-/// visibility (fresh / stale / offline / unknown). Coexists with — and does
-/// not replace — the social presence label.
+/// visibility (fresh / stale / offline / unknown). Coexists with - and does
+/// not replace - the social presence label.
 class NodeHealthBadge extends StatelessWidget {
   const NodeHealthBadge({super.key, required this.state});
 

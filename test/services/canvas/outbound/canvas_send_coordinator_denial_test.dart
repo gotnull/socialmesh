@@ -57,7 +57,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('CanvasSendCoordinator — denial timestamps', () {
+  group('CanvasSendCoordinator - denial timestamps', () {
     test('before any drain, both denial timestamps are null', () async {
       final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
       await db.init();
@@ -159,7 +159,7 @@ void main() {
       expect(coordinator.lastSipDenialAtMs, 2_000_000);
     });
 
-    test('successful drain leaves both denial timestamps untouched — they '
+    test('successful drain leaves both denial timestamps untouched - they '
         'only track failures, the view model handles decay itself', () async {
       final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
       await db.init();

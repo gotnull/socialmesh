@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// Built-in MorphTimeline presets. New ones are a single entry — define the
+// Built-in MorphTimeline presets. New ones are a single entry - define the
 // keyframe list, register it in the registry map at the bottom, and the
 // widget's `MeshMorphWidget.preset(...)` factory picks it up.
 
@@ -23,11 +23,11 @@ enum MeshMorphPresetId {
   /// on the icosahedron so the brand logo is always last visible.
   platonicCircuit,
 
-  /// Soft / surface shapes only — torus, möbius, hyperboloid, saddle,
+  /// Soft / surface shapes only - torus, möbius, hyperboloid, saddle,
   /// sphere. No edges drawn; reads as a flowing organic loop.
   surfaceFlow,
 
-  /// Wireframe-only — cube, octahedron, pyramid, icosahedron. The
+  /// Wireframe-only - cube, octahedron, pyramid, icosahedron. The
   /// edges-on-the-whole-time look.
   wireframeMarch,
 }
@@ -43,7 +43,7 @@ class MeshMorphPresets {
 
   /// The user-requested opener: starts as a cube grid, condenses to a
   /// tighter cube ("square"), inflates to a sphere, then unfolds into the
-  /// icosahedron — ending with a long hold so the SocialMesh logo
+  /// icosahedron - ending with a long hold so the SocialMesh logo
   /// silhouette sits cleanly on the screen. Total ≈ 15 s.
   static final MorphTimeline icosahedronJourney = MorphTimeline([
     _kf(
@@ -51,7 +51,7 @@ class MeshMorphPresets {
       hold: const Duration(milliseconds: 2200),
       morph: const Duration(milliseconds: 1400),
     ),
-    // "Square" — the same cube but viewed/held as the second hero
+    // "Square" - the same cube but viewed/held as the second hero
     // silhouette. We keep the cube generator (no separate "square"
     // primitive in the rsvpnano catalog) but give it a shorter hold so
     // the eye reads "two cube poses → sphere".
@@ -101,7 +101,7 @@ class MeshMorphPresets {
     ),
   ], presetId: 'vectorball_tour');
 
-  /// Only the geometry darlings — cube, octahedron, sphere, icosahedron.
+  /// Only the geometry darlings - cube, octahedron, sphere, icosahedron.
   /// Reads as "platonic solids of progressively higher symmetry" with the
   /// icosahedron as the climax.
   static final MorphTimeline platonicCircuit = MorphTimeline([
@@ -176,7 +176,7 @@ class MeshMorphPresets {
 
   static MorphTimeline byId(MeshMorphPresetId id) => _byId[id]!;
 
-  /// All registered ids in declaration order — useful for a settings
+  /// All registered ids in declaration order - useful for a settings
   /// picker that wants to show every available animation.
   static List<MeshMorphPresetId> get all => MeshMorphPresetId.values;
 }

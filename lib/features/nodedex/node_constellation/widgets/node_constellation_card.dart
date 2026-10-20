@@ -7,9 +7,9 @@
 // redundant icon-in-rounded-square inside each card body.
 //
 // Two density modes:
-//   * hero=true  — centre identity card pinned at the top; renders
+//   * hero=true  - centre identity card pinned at the top; renders
 //                  the procedural sigil avatar and richer InfoTable.
-//   * hero=false — full-width timeline-row card.
+//   * hero=false - full-width timeline-row card.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -154,7 +154,7 @@ class NodeConstellationCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Section caption — uppercase, letterspaced, accent dot.
+        // Section caption - uppercase, letterspaced, accent dot.
         // Mirrors the "Color Theme" / "App Color" / "PORTFOLIO VALUE"
         // captions in the references.
         Row(
@@ -203,7 +203,7 @@ class NodeConstellationCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppTheme.spacing10),
-        // Title — bold, large, panel-style.
+        // Title - bold, large, panel-style.
         Text(
           title,
           style: TextStyle(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Observed Radio Preset — canonical app-level modem preset representation.
+// Observed Radio Preset - canonical app-level modem preset representation.
 //
 // Mirrors the protobuf Config_LoRaConfig_ModemPreset values (0–13 as of
 // v2.7.23) for stable SQLite persistence in nodedex.db, while providing:
@@ -12,7 +12,7 @@
 //
 // Semantic note: When associated with a node observation, this
 // represents the preset of the *local* radio at the time the node was
-// detected — NOT the remote node's own preset. We cannot know a remote
+// detected - NOT the remote node's own preset. We cannot know a remote
 // node's modem preset from received packets alone. Name accordingly:
 // lastObservedOnPreset, observedOnPreset.
 
@@ -33,7 +33,7 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 ///
 /// **Semantic note**: When associated with a node observation, this
 /// represents the preset of the *local* radio at the time the node was
-/// detected — NOT the remote node's own preset. We cannot know a remote
+/// detected - NOT the remote node's own preset. We cannot know a remote
 /// node's modem preset from received packets alone. Name accordingly:
 /// `lastObservedOnPreset`, `observedOnPreset`.
 enum ObservedRadioPreset {
@@ -100,7 +100,7 @@ enum ObservedRadioPreset {
   /// Used for SQLite persistence and protobuf interop.
   final int protobufValue;
 
-  /// Strongly-typed protobuf enum — used to look up shared metadata.
+  /// Strongly-typed protobuf enum - used to look up shared metadata.
   final config_pbenum.Config_LoRaConfig_ModemPreset protobufEnum;
 
   const ObservedRadioPreset(this.protobufValue, this.protobufEnum);
@@ -112,7 +112,7 @@ enum ObservedRadioPreset {
 
   /// Resolve from a protobuf integer value.
   ///
-  /// Returns `null` for unknown/unmapped values — callers must handle
+  /// Returns `null` for unknown/unmapped values - callers must handle
   /// gracefully (e.g. display "Unknown" in UI, skip in filters).
   static ObservedRadioPreset? fromProtobufValue(int? value) {
     if (value == null) return null;
@@ -120,7 +120,7 @@ enum ObservedRadioPreset {
   }
 
   /// Localized human-readable label for UI display. Single source of
-  /// truth — pulls from [kModemPresetMetadata] so the radio config
+  /// truth - pulls from [kModemPresetMetadata] so the radio config
   /// picker and the NodeDex chips always match.
   String label(AppLocalizations l10n) =>
       modemPresetMetadataFor(protobufEnum)!.label(l10n);

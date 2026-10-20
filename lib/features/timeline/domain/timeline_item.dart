@@ -12,7 +12,7 @@ enum TimelineContext { messages, channel, nodedex, map }
 
 /// A single item rendered on the weekly timeline board.
 ///
-/// This is a pure domain model — NO UI logic. All visual decisions
+/// This is a pure domain model - NO UI logic. All visual decisions
 /// (color, position, size) are computed by the layout provider.
 @immutable
 class TimelineItem {

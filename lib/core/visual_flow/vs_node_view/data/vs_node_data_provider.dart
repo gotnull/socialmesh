@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Fixed method name spelling: applyViewPortTransfrom → applyViewPortTransform
-// Modified: Added grid snapping — nodes align to a visible grid on drop.
+// Modified: Added grid snapping - nodes align to a visible grid on drop.
 // Modified: Added drag state tracking for live drop-target preview rendering.
 
 import 'package:flutter/material.dart';
@@ -47,7 +47,7 @@ class VSNodeDataProvider extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
-  // Drag state — tracked so the canvas can render a drop-target preview
+  // Drag state - tracked so the canvas can render a drop-target preview
   // ---------------------------------------------------------------------------
 
   /// The ID of the node currently being dragged, or null.

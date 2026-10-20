@@ -14,6 +14,7 @@ import '../../../services/haptic_service.dart';
 import '../../../services/voice/voice_constants.dart';
 import '../../../services/voice/voice_player.dart';
 import '../../../services/voice/waveform_analysis.dart';
+
 import 'package:timeago/timeago.dart' as timeago;
 
 import 'waveform_painter.dart';
@@ -90,7 +91,7 @@ class _VoiceAttachmentCardState extends ConsumerState<VoiceAttachmentCard>
     super.initState();
     _player = VoicePlayer();
 
-    // Parse frame count and mode from header — fast, no decode needed.
+    // Parse frame count and mode from header - fast, no decode needed.
     if (widget.c2Payload.length >= 4 &&
         widget.c2Payload[0] == VoiceConstants.magicByte) {
       final quality = VoiceQuality.fromWireModeByte(widget.c2Payload[1]);
@@ -133,12 +134,12 @@ class _VoiceAttachmentCardState extends ConsumerState<VoiceAttachmentCard>
     final haptics = ref.haptics;
     haptics.buttonTap();
     if (_player.isPlaying.value) {
-      // Pause — keeps the audio source and seek position intact so that
+      // Pause - keeps the audio source and seek position intact so that
       // drag-to-seek and resume both work correctly.
       await _player.pause();
       safeSetState(() {});
     } else if (_loaded) {
-      // Source is already in memory — resume from current position (which
+      // Source is already in memory - resume from current position (which
       // may have been updated by a drag-to-seek while paused).
       await _player.resume();
       safeSetState(() {});
@@ -486,7 +487,7 @@ class _WaveformWidget extends StatelessWidget {
     if (failed) {
       return Center(
         child: Text(
-          '— — —', // lint-allow: hardcoded-string
+          '- - -', // lint-allow: hardcoded-string
           style: TextStyle(color: SemanticColors.error, fontSize: 13),
         ),
       );

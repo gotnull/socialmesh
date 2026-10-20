@@ -62,7 +62,7 @@ class _ContactImportSheetState extends ConsumerState<_ContactImportSheet>
         .read(meshCoreContactsProvider.notifier)
         .commitContactImport(widget.preview);
     if (!mounted) return;
-    // Bubble the result up to the caller — they own the snackbar +
+    // Bubble the result up to the caller - they own the snackbar +
     // any downstream navigation.
     navigator.pop(ok);
   }

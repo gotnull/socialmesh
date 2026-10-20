@@ -6,7 +6,7 @@
 /// These tests fail loudly if anyone (including a future "cleanup"
 /// pass) re-numbers the SIP Ink message type, the `dmInkV1` feature
 /// bit, or the secure-data subtype. Each value is in the
-/// SIP_V0_1 §3.1 / §6 amendment and OVERLAY_V0_2 §25.5 spec — these
+/// SIP_V0_1 §3.1 / §6 amendment and OVERLAY_V0_2 §25.5 spec - these
 /// numbers are wire surface and cannot move without a protocol bump.
 library;
 

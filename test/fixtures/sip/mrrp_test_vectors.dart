@@ -60,7 +60,7 @@ abstract final class MrrpTestVectors {
   // SERVICE_DIR_REQ (msg_type=0x02)
   // ---------------------------------------------------------------------------
 
-  /// SERVICE_DIR_REQ — empty payload request for peer's service directory.
+  /// SERVICE_DIR_REQ - empty payload request for peer's service directory.
   ///
   /// Header: magic(4D 52) ver(00 01) type(02) flags(01) hdr_len(14 00)
   ///         req_id(01 00 00 00) service_id(00 00 00 00) action_id(00 00)
@@ -182,7 +182,7 @@ abstract final class MrrpTestVectors {
   /// Header: magic(4D 52) ver(00 01) type(12) flags(06) hdr_len(17 00)
   ///         req_id(42 00 00 00) service_id(00 00 DE AD) action_id(01 00)
   ///         payload_len(00 00)
-  /// TLV: status_code(05 01 01) — type=0x05, len=1, value=0x01 (NOT_FOUND)
+  /// TLV: status_code(05 01 01) - type=0x05, len=1, value=0x01 (NOT_FOUND)
   static final Uint8List error = hexToBytes(
     '4D 52 00 01 12 06 17 00 42 00 00 00 00 00 DE AD'
     '01 00 00 00'
@@ -239,7 +239,7 @@ abstract final class MrrpTestVectors {
   /// Header: magic(4D 52) ver(00 01) type(10) flags(01) hdr_len(18 00)
   ///         req_id(07 00 00 00) service_id(01 00 00 00) action_id(01 00)
   ///         payload_len(00 00)
-  /// TLV: request_ttl_s(02 02 0F 00) — type=0x02, len=2, value=15 (LE uint16)
+  /// TLV: request_ttl_s(02 02 0F 00) - type=0x02, len=2, value=15 (LE uint16)
   static final Uint8List requestWithTlv = hexToBytes(
     '4D 52 00 01 10 01 18 00 07 00 00 00 01 00 00 00'
     '01 00 00 00'

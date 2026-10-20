@@ -6,7 +6,7 @@ import '../../../core/theme.dart';
 
 /// Sticky header delegate for drawer section headers.
 ///
-/// Opaque by design — do NOT wrap in `BackdropFilter`. A live blur on a
+/// Opaque by design - do NOT wrap in `BackdropFilter`. A live blur on a
 /// pinned sticky header re-runs every frame as content scrolls under it
 /// and dropped frames on older devices.
 class DrawerStickyHeaderDelegate extends SliverPersistentHeaderDelegate {

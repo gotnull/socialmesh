@@ -32,7 +32,7 @@ Future<Uint8List> _sha256(Uint8List data) async {
   return Uint8List.fromList(h.bytes);
 }
 
-/// Build two engines — one sender, one receiver — and a pair of
+/// Build two engines - one sender, one receiver - and a pair of
 /// recording egress instances. Tests drive them by copying frames
 /// between the two egress buffers.
 class _Pair {
@@ -318,7 +318,7 @@ void main() {
         resourceId: offered.resourceId,
       );
 
-      // Skip chunk delivery entirely — just send COMPLETE.
+      // Skip chunk delivery entirely - just send COMPLETE.
       final completeFrame = OverlayResourceFrame(
         type: OverlayResourceMsgType.complete,
         resourceId: offered.resourceId,
@@ -381,7 +381,7 @@ void main() {
       senderNodeNum: 1,
     );
     // (We don't have an accessor on the engine for state; verify
-    // behavior instead — a follow-up sendWindow refuses.)
+    // behavior instead - a follow-up sendWindow refuses.)
     final sent = await pair.sender.sendWindow(
       peerEndpointHint: receiverHint,
       resourceId: offered.resourceId,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetPublicStateCodec — 8-byte wire format for pet.v1.
+// PetPublicStateCodec - 8-byte wire format for pet.v1.
 //
 // Layout (little-endian uint32 for dnaSeed):
 //   byte 0   : schema_tag (0x01)

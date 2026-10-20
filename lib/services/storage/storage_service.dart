@@ -400,7 +400,7 @@ class SettingsService {
       _preferences.getBool('automation_alert_notifications_enabled') ?? true;
 
   // Display: hide the new-nodes nav badge.
-  // Decoupled from `newNodeNotificationsEnabled` on purpose — large-mesh
+  // Decoupled from `newNodeNotificationsEnabled` on purpose - large-mesh
   // users (1000+ nodes) want to silence the constantly-incrementing
   // badge in the bottom nav without losing the underlying notification
   // pipeline or new-node tracking. Default false (badge visible) so
@@ -489,7 +489,7 @@ class SettingsService {
         return decoded.whereType<String>().toList(growable: false);
       }
     } catch (_) {
-      // Corrupt entry — fall back to defaults silently rather than
+      // Corrupt entry - fall back to defaults silently rather than
       // crash the drawer on bootstrap.
     }
     return const <String>[];
@@ -517,7 +517,7 @@ class SettingsService {
         return decoded.whereType<String>().toList(growable: false);
       }
     } catch (_) {
-      // Corrupt entry — pretend it was unset rather than crash.
+      // Corrupt entry - pretend it was unset rather than crash.
     }
     return null;
   }
@@ -546,7 +546,7 @@ class SettingsService {
         return decoded.whereType<String>().toList(growable: false);
       }
     } catch (_) {
-      // Corrupt entry — fall back to default ordering rather than
+      // Corrupt entry - fall back to default ordering rather than
       // crash. Matches drawerItemOrder's fallback semantics.
     }
     return null;
@@ -580,7 +580,7 @@ class SettingsService {
 
   /// Notification: SIP Play "your turn" pings.
   ///
-  /// Field-test request — when an inbound SIP Play move from the
+  /// Field-test request - when an inbound SIP Play move from the
   /// opponent transitions the local side into the active player, fire
   /// a local notification so a backgrounded user gets a visible cue.
   /// Default true; the user can opt out from the Notifications section
@@ -699,7 +699,7 @@ class SettingsService {
 
   int get mapTileStyleIndex => _preferences.getInt('map_tile_style_index') ?? 0;
 
-  // Offline map base style — persisted separately from the main map so the
+  // Offline map base style - persisted separately from the main map so the
   // device-free offline map keeps its own (terrain-by-default) preference.
   // Null when never set, so callers can apply their own default.
   Future<void> setOfflineMapTileStyleIndex(int index) async {
@@ -710,8 +710,8 @@ class SettingsService {
       _preferences.getInt('offline_map_tile_style_index');
 
   // Offline map tile storage on the removable SD card (Android only).
-  // OfflineTileCache reads the key directly at boot — before providers
-  // exist — so the key is a shared public constant.
+  // OfflineTileCache reads the key directly at boot - before providers
+  // exist - so the key is a shared public constant.
   Future<void> setOfflineMapStorageOnSdCard(bool enabled) async {
     await _preferences.setBool(offlineMapStorageOnSdCardKey, enabled);
   }
@@ -1280,7 +1280,7 @@ class SettingsService {
   // Phone GPS Location Sharing
   // Whether to send the phone's GPS position to the mesh on a periodic timer.
   // Follows the standard Meshtastic companion app default (opt-in, false).
-  // When false, the 30-second position timer is a no-op — no POSITION_APP
+  // When false, the 30-second position timer is a no-op - no POSITION_APP
   // packets are emitted from the phone to the mesh.
   Future<void> setProvidePhoneLocation(bool enabled) async {
     await _preferences.setBool('provide_phone_location', enabled);

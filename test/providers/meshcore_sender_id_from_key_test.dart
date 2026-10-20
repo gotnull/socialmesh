@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Phase 3 Slice A — pins the pubkey-to-int derivation that produces
+// Phase 3 Slice A - pins the pubkey-to-int derivation that produces
 // the stable per-contact `from` value handed to the automation
 // engine + IFTTT service for MeshCore inbound messages.
 //

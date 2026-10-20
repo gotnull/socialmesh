@@ -45,14 +45,11 @@ void main() {
       expect(nodeMarkerLabel(_node(nodeNum: 0xAB)), '00AB');
     });
 
-    test(
-      'handles grapheme clusters (emoji + combining marks) without slicing them',
-      () {
-        // Emoji is one grapheme cluster but two code units. We must not
-        // split it mid-cluster. The result must contain the full emoji.
-        expect(nodeMarkerLabel(_node(shortName: '🛰️')), '🛰️'.toUpperCase());
-      },
-    );
+    test('handles grapheme clusters (emoji + combining marks) without slicing them', () {
+      // Emoji is one grapheme cluster but two code units. We must not
+      // split it mid-cluster. The result must contain the full emoji.
+      expect(nodeMarkerLabel(_node(shortName: '🛰️')), '🛰️'.toUpperCase());
+    });
 
     test('upper-cases regardless of input case', () {
       expect(nodeMarkerLabel(_node(shortName: 'abcd')), 'ABCD');

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Atmosphere Overlay — composable widget that stacks all effect layers.
+// Atmosphere Overlay - composable widget that stacks all effect layers.
 //
 // This is the primary integration point for the Elemental Atmosphere
 // system. Screens that want atmospheric effects place an AtmosphereOverlay
@@ -67,13 +67,13 @@ import 'particle_system.dart';
 /// This ensures that the constellation screen gets full atmospheric
 /// presence while detail and map screens get only a subtle hint.
 enum AtmosphereContext {
-  /// Constellation view — full effect intensity.
+  /// Constellation view - full effect intensity.
   constellation,
 
-  /// Node detail screen — very subtle, background ambiance only.
+  /// Node detail screen - very subtle, background ambiance only.
   detail,
 
-  /// Map overlay — subtle, must not interfere with map readability.
+  /// Map overlay - subtle, must not interfere with map readability.
   map,
 }
 
@@ -100,7 +100,7 @@ extension _AtmosphereContextMultiplier on AtmosphereContext {
 /// what intensity, then mounts only the layers that have non-zero
 /// intensity for the given [context].
 ///
-/// The overlay is completely non-interactive — it wraps everything in
+/// The overlay is completely non-interactive - it wraps everything in
 /// [IgnorePointer] and never captures touch events.
 ///
 /// When the atmosphere system is disabled (via user toggle, reduce-motion,
@@ -160,11 +160,11 @@ class AtmosphereOverlay extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    // Build the layer stack. Order matters — back to front:
-    // 1. Mist (largest, most diffuse — sits deepest)
-    // 2. Starlight (small static points — behind moving particles)
-    // 3. Rain (directional streaks — mid layer)
-    // 4. Embers (glowing sparks — foreground of atmosphere)
+    // Build the layer stack. Order matters - back to front:
+    // 1. Mist (largest, most diffuse - sits deepest)
+    // 2. Starlight (small static points - behind moving particles)
+    // 3. Rain (directional streaks - mid layer)
+    // 4. Embers (glowing sparks - foreground of atmosphere)
     return IgnorePointer(
       child: Stack(
         fit: StackFit.expand,

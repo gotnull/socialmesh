@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Widget SQLite Store — CRUD operations with Cloud Sync outbox support.
+// Widget SQLite Store - CRUD operations with Cloud Sync outbox support.
 //
 // This store manages custom widget schemas in SQLite and maintains a sync
 // outbox for the Cloud Sync pipeline. It follows the same pattern as
@@ -221,7 +221,7 @@ class WidgetSqliteStore {
   // ---------------------------------------------------------------------------
 
   /// Import widget schemas from a list, typically from SharedPreferences
-  /// migration. Does NOT enqueue outbox entries — the sync service
+  /// migration. Does NOT enqueue outbox entries - the sync service
   /// will handle the initial push after migration.
   ///
   /// Returns the number of widget schemas imported.
@@ -509,7 +509,7 @@ class WidgetSqliteStore {
 
   /// Parse a JSON string into a list of widget schemas.
   ///
-  /// Does not modify the store — use [bulkImport] to persist.
+  /// Does not modify the store - use [bulkImport] to persist.
   static List<WidgetSchema> parseJson(String jsonString) {
     final list = jsonDecode(jsonString) as List;
     return list

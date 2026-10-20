@@ -661,7 +661,7 @@ List<ConversationTimelineRow> buildConversationTimelineRows(
     // Tiebreak by Meshtastic packetId numerically so the comparator does
     // not accidentally let outbound digit IDs ('1747654920123') sort
     // against inbound deterministic IDs ('pkt-<hex>-<hex>') via a string
-    // compare — that path produced the user-reported "my message sorts
+    // compare - that path produced the user-reported "my message sorts
     // mid-list" symptom when timestamps collided. When only one side has
     // a packetId, the row with a real packet (settled outbound echo or
     // inbound) sorts after a still-pending outbound at the same

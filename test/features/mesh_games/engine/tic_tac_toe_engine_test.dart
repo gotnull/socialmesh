@@ -48,13 +48,11 @@ void main() {
       s = apply(s, 1, 3);
       s = apply(s, 0, 1);
       s = apply(s, 1, 4);
-      final r =
-          engine.applyMove(
-                state: s,
-                actorIndex: 0,
-                move: const TicTacToeMove(2),
-              )
-              as GameApplyAccepted<TicTacToeState>;
+      final r = engine.applyMove(
+        state: s,
+        actorIndex: 0,
+        move: const TicTacToeMove(2),
+      ) as GameApplyAccepted<TicTacToeState>;
       expect(r.isTerminal, isTrue);
       expect(r.winnerIndex, 0);
       expect(r.nextTurnIndex, -1);
@@ -66,13 +64,11 @@ void main() {
       s = apply(s, 1, 1);
       s = apply(s, 0, 3);
       s = apply(s, 1, 2);
-      final r =
-          engine.applyMove(
-                state: s,
-                actorIndex: 0,
-                move: const TicTacToeMove(6),
-              )
-              as GameApplyAccepted<TicTacToeState>;
+      final r = engine.applyMove(
+        state: s,
+        actorIndex: 0,
+        move: const TicTacToeMove(6),
+      ) as GameApplyAccepted<TicTacToeState>;
       expect(r.winnerIndex, 0);
     });
 
@@ -82,13 +78,11 @@ void main() {
       s = apply(s, 1, 1);
       s = apply(s, 0, 4);
       s = apply(s, 1, 2);
-      final r =
-          engine.applyMove(
-                state: s,
-                actorIndex: 0,
-                move: const TicTacToeMove(8),
-              )
-              as GameApplyAccepted<TicTacToeState>;
+      final r = engine.applyMove(
+        state: s,
+        actorIndex: 0,
+        move: const TicTacToeMove(8),
+      ) as GameApplyAccepted<TicTacToeState>;
       expect(r.winnerIndex, 0);
     });
 
@@ -106,13 +100,11 @@ void main() {
       s = apply(s, 1, 5); // O
       s = apply(s, 0, 7); // X
       s = apply(s, 1, 6); // O
-      final r =
-          engine.applyMove(
-                state: s,
-                actorIndex: 0,
-                move: const TicTacToeMove(8),
-              )
-              as GameApplyAccepted<TicTacToeState>;
+      final r = engine.applyMove(
+        state: s,
+        actorIndex: 0,
+        move: const TicTacToeMove(8),
+      ) as GameApplyAccepted<TicTacToeState>;
       expect(r.isTerminal, isTrue);
       expect(r.winnerIndex, -1);
     });

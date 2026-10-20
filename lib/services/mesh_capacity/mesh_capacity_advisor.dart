@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Mesh Capacity Advisor — pure deterministic logic.
+// Mesh Capacity Advisor - pure deterministic logic.
 //
 // No Flutter widget imports. No provider reads. No I/O. Given the inputs
 // (recently-heard RF nodes + active modem preset + clock), this returns
@@ -22,7 +22,7 @@ import 'mesh_capacity_models.dart';
 /// mesh into each pressure level for that preset.
 ///
 /// The defaults below are the v1 spec values. They are intentionally
-/// conservative — long-range presets fill airtime quickly because each
+/// conservative - long-range presets fill airtime quickly because each
 /// packet costs more on-air time, so the advisory thresholds are low.
 /// Faster presets tolerate far more density before delivery degrades.
 class MeshCapacityThresholds {
@@ -118,7 +118,7 @@ class MeshCapacityAdvisor {
   ///
   /// [nodes] is the live NodeDB map. [myNodeNum] is excluded from RF
   /// density counts to avoid self-counting. [preset] may be `null` when
-  /// the device has not advertised LoRa config yet — in that case the
+  /// the device has not advertised LoRa config yet - in that case the
   /// advisor degrades gracefully and produces a `presetUnknown`
   /// recommendation rather than guessing.
   MeshCapacitySnapshot evaluate({
@@ -271,7 +271,7 @@ class MeshCapacityAdvisor {
                 config_pbenum.Config_LoRaConfig_ModemPreset.SHORT_FAST,
           );
         }
-        // Short presets at congested levels are unusual — surface as
+        // Short presets at congested levels are unusual - surface as
         // event-like density rather than nagging about a preset change.
         return const MeshCapacityRecommendation(
           severity: MeshCapacityRecommendationSeverity.advisory,
@@ -302,7 +302,7 @@ class MeshCapacityAdvisor {
           );
         }
         if (isShort) {
-          // Already on a short preset and still saturated — surface as
+          // Already on a short preset and still saturated - surface as
           // event-like density, no concrete preset suggestion.
           return const MeshCapacityRecommendation(
             severity: MeshCapacityRecommendationSeverity.warning,

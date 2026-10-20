@@ -14,7 +14,7 @@ class TimelineTimeGrid extends StatelessWidget {
   /// The full grid height (24 hours * pixelsPerMinute * 60).
   final double totalHeight;
 
-  /// Pixels per minute — controls vertical density.
+  /// Pixels per minute - controls vertical density.
   final double pixelsPerMinute;
 
   /// Current time for the red indicator line. Null hides it.

@@ -14,7 +14,7 @@ import '../../../services/haptic_service.dart';
 import '../../incidents/screens/incident_list_screen.dart';
 import 'drawer_menu_tile.dart';
 
-/// Enterprise (RBAC) section in the drawer — visible only to org members.
+/// Enterprise (RBAC) section in the drawer - visible only to org members.
 ///
 /// Consumer users (no orgId/role) see nothing. Org members see items gated
 /// by their role using [PermissionGate] and [RoleGate].
@@ -29,7 +29,7 @@ class DrawerEnterpriseSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final service = ref.watch(permissionServiceProvider);
 
-    // Consumer users see nothing — no orgId means no enterprise section.
+    // Consumer users see nothing - no orgId means no enterprise section.
     if (service.currentOrgId == null) {
       return const SizedBox.shrink();
     }
@@ -67,7 +67,7 @@ class DrawerEnterpriseSection extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Column(
             children: [
-              // View team incidents — all org roles (observer+)
+              // View team incidents - all org roles (observer+)
               RoleGate(
                 minRole: Role.observer,
                 child: DrawerMenuTile(
@@ -84,7 +84,7 @@ class DrawerEnterpriseSection extends ConsumerWidget {
 
               const SizedBox(height: AppTheme.spacing4),
 
-              // View team tasks — all org roles (observer+)
+              // View team tasks - all org roles (observer+)
               RoleGate(
                 minRole: Role.observer,
                 child: DrawerMenuTile(
@@ -101,7 +101,7 @@ class DrawerEnterpriseSection extends ConsumerWidget {
 
               const SizedBox(height: AppTheme.spacing4),
 
-              // Create field report — operator+
+              // Create field report - operator+
               PermissionGate(
                 permission: Permission.createFieldReport,
                 child: DrawerMenuTile(
@@ -118,7 +118,7 @@ class DrawerEnterpriseSection extends ConsumerWidget {
 
               const SizedBox(height: AppTheme.spacing4),
 
-              // Export reports — supervisor+
+              // Export reports - supervisor+
               PermissionGate(
                 permission: Permission.exportReports,
                 mode: PermissionGateMode.disabled,
@@ -137,7 +137,7 @@ class DrawerEnterpriseSection extends ConsumerWidget {
 
               const SizedBox(height: AppTheme.spacing4),
 
-              // Manage users — admin only
+              // Manage users - admin only
               RoleGate(
                 minRole: Role.admin,
                 child: DrawerMenuTile(
@@ -154,7 +154,7 @@ class DrawerEnterpriseSection extends ConsumerWidget {
 
               const SizedBox(height: AppTheme.spacing4),
 
-              // Manage devices — admin only
+              // Manage devices - admin only
               RoleGate(
                 minRole: Role.admin,
                 child: DrawerMenuTile(
@@ -171,7 +171,7 @@ class DrawerEnterpriseSection extends ConsumerWidget {
 
               const SizedBox(height: AppTheme.spacing4),
 
-              // Configure org settings — admin only
+              // Configure org settings - admin only
               RoleGate(
                 minRole: Role.admin,
                 child: DrawerMenuTile(

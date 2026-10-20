@@ -174,7 +174,7 @@ class ReticulumBridgeNotifier extends AsyncNotifier<ReticulumBridgeUiState> {
       (_) => _refreshFromService(),
     );
 
-    // React to flag changes — but defer the first reaction until after
+    // React to flag changes - but defer the first reaction until after
     // build() has produced the initial state, so _emit has somewhere
     // to write into.
     ref.listen<ReticulumFlags>(reticulumFlagsProvider, (_, next) {
@@ -230,7 +230,7 @@ class ReticulumBridgeNotifier extends AsyncNotifier<ReticulumBridgeUiState> {
     final current = state.value;
     if (current == null) return;
     state = AsyncData(current.copyWith(host: host));
-    // Endpoint changed — if currently connected/connecting, drop and
+    // Endpoint changed - if currently connected/connecting, drop and
     // let the next gate reconciliation reopen against the new host.
     await _restartIfRunning();
   }
@@ -398,7 +398,7 @@ class ReticulumBridgeNotifier extends AsyncNotifier<ReticulumBridgeUiState> {
     } catch (e) {
       // The service captures connect errors internally and surfaces
       // them via statusStream. Anything that escapes here should not
-      // crash the provider — log + swallow.
+      // crash the provider - log + swallow.
       ReticulumSafeLog.event('bridge_connect_unhandled error=$e');
     }
   }

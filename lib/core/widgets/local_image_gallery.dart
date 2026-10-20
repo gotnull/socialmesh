@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — immersive fullscreen black gallery overlay
+// lint-allow: scaffold - immersive fullscreen black gallery overlay
 import 'dart:io';
 
 import 'package:flutter/material.dart';

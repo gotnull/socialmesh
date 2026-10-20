@@ -187,7 +187,7 @@ class _StepDot extends StatelessWidget {
 
     // Fixed-size dot so Next/Back never reflows the step indicator row.
     // Active/inactive/completed state is expressed by background alpha,
-    // border weight, and font weight — NOT by width/height deltas. The
+    // border weight, and font weight - NOT by width/height deltas. The
     // earlier 28px ↔ 36px swing (and the nested 12px ↔ 16px icon swing)
     // caused the entire screen below to jump on step transitions.
     return Column(

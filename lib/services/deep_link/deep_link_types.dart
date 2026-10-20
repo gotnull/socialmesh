@@ -49,7 +49,7 @@ enum DeepLinkType {
   legal,
 
   /// External purchase return: socialmesh://purchase-return?sessionId=XYZ
-  /// The redirect itself NEVER unlocks anything — it kicks off polling
+  /// The redirect itself NEVER unlocks anything - it kicks off polling
   /// against the backend, which only flips to `paid` once the
   /// Buy Me a Coffee webhook lands.
   purchaseReturn,
@@ -180,7 +180,7 @@ class ParsedDeepLink {
   final String? legalSectionAnchor;
 
   // External purchase return fields
-  /// Session id from socialmesh://purchase-return?sessionId=… — handed
+  /// Session id from socialmesh://purchase-return?sessionId=… - handed
   /// to ExternalPurchaseService to start polling for webhook confirmation.
   final String? purchaseSessionId;
 

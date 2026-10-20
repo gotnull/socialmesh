@@ -11,7 +11,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../services/protocol/sip/mrrp_dispatcher.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
 
-/// Response viewer — shows the result of an MRRP request.
+/// Response viewer - shows the result of an MRRP request.
 ///
 /// Receives a [Future<MrrpRequestResult>] and displays pending state,
 /// then the resolved response with status, latency, payload hex, etc.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — immersive fullscreen black gallery overlay
+// lint-allow: scaffold - immersive fullscreen black gallery overlay
 
 import 'dart:io';
 
@@ -29,7 +29,7 @@ import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 class FileTransferImageGallery extends ConsumerStatefulWidget {
   const FileTransferImageGallery._({required this.transfer});
 
-  /// The full transfer state — used to render metadata in the overlay.
+  /// The full transfer state - used to render metadata in the overlay.
   final FileTransferState transfer;
 
   /// Returns `true` if the given transfer is a completed image that can be
@@ -372,7 +372,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
               // Author / node row
               Row(
                 children: [
-                  // Sigil avatar for the peer node — tap opens NodeDex.
+                  // Sigil avatar for the peer node - tap opens NodeDex.
                   if (peerNodeNum != null)
                     TappableSigilAvatar(nodeNum: peerNodeNum, size: 40)
                   else
@@ -601,7 +601,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Info badge — matches the signal gallery pattern
+// Info badge - matches the signal gallery pattern
 // ---------------------------------------------------------------------------
 
 class _InfoBadge extends StatelessWidget {

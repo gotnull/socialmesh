@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetStatusLine — plain-language "what should I tap right now?" banner
+// PetStatusLine - plain-language "what should I tap right now?" banner
 // above the creature. Driven by [PetAdvisory].
 //
 // The care loop was not discoverable without this: stats decayed

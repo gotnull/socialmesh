@@ -65,13 +65,10 @@ void main() {
       },
     );
 
-    test(
-      'reports rates the hardware cannot make exactly, rather than rounding',
-      () {
-        // 22050 does not divide 16 MHz, so there is no exact countertop/refresh.
-        expect(BuzzerSpeechCodec.timingFor(22050), isNull);
-      },
-    );
+    test('reports rates the hardware cannot make exactly, rather than rounding', () {
+      // 22050 does not divide 16 MHz, so there is no exact countertop/refresh.
+      expect(BuzzerSpeechCodec.timingFor(22050), isNull);
+    });
   });
 
   group('BuzzerSpeechCodec.condition', () {
@@ -128,23 +125,20 @@ void main() {
       expect(pcm.last, 128);
     });
 
-    test(
-      'drives hard, because loudness is what carries intelligibility here',
-      () {
-        // Crest factor well under a raw signal's ~20 dB. The offline chain lands
-        // the built-in vocabulary near 5 dB and anything gentler lost every A/B.
-        var peak = 0.0;
-        var sumSq = 0.0;
-        for (final s in pcm) {
-          final v = (s - 128) / 127.0;
-          if (v.abs() > peak) peak = v.abs();
-          sumSq += v * v;
-        }
-        final rms = math.sqrt(sumSq / pcm.length);
-        final crestDb = 20 * (math.log(peak / rms) / math.ln10);
-        expect(crestDb, lessThan(12));
-      },
-    );
+    test('drives hard, because loudness is what carries intelligibility here', () {
+      // Crest factor well under a raw signal's ~20 dB. The offline chain lands
+      // the built-in vocabulary near 5 dB and anything gentler lost every A/B.
+      var peak = 0.0;
+      var sumSq = 0.0;
+      for (final s in pcm) {
+        final v = (s - 128) / 127.0;
+        if (v.abs() > peak) peak = v.abs();
+        sumSq += v * v;
+      }
+      final rms = math.sqrt(sumSq / pcm.length);
+      final crestDb = 20 * (math.log(peak / rms) / math.ln10);
+      expect(crestDb, lessThan(12));
+    });
 
     test('empty input produces no audio rather than throwing', () {
       expect(BuzzerSpeechCodec.condition([], 22050, timing), isEmpty);

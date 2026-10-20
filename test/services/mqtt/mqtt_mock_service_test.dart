@@ -364,7 +364,7 @@ void main() {
       final result = await service.publish('a/b/#', [0x01]);
       final error = result.error!;
       // Names the offending wildcard, explains the rule, and is a full
-      // sentence — never ellipsised or one-word.
+      // sentence - never ellipsised or one-word.
       expect(error, contains('#'));
       expect(error.toLowerCase(), contains('wildcard'));
       expect(error, isNot(contains('…')));

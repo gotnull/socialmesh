@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — shared animation widgets delegate onTap to parent callbacks
+// lint-allow: haptic-feedback - shared animation widgets delegate onTap to parent callbacks
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
 import 'package:socialmesh/core/theme.dart';

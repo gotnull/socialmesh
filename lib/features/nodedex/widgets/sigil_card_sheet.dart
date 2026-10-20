@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sigil Card Sheet — bottom sheet for previewing and sharing a node's
+// Sigil Card Sheet - bottom sheet for previewing and sharing a node's
 // collectible identity card.
 //
 // Flow:
@@ -45,7 +45,7 @@ import '../models/nodedex_entry.dart';
 import '../services/trait_engine.dart';
 import 'sigil_card.dart';
 
-/// Card capture pixel ratio — 3x produces a ~960x1344 PNG which looks
+/// Card capture pixel ratio - 3x produces a ~960x1344 PNG which looks
 /// crisp on all modern screens and social media platforms.
 const double _capturePixelRatio = 3.0;
 
@@ -528,7 +528,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
       // Share via system share sheet.
       await Share.shareXFiles(
         [XFile(file.path)],
-        subject: '${widget.displayName} — Sigil Card',
+        subject: '${widget.displayName} - Sigil Card',
         text: shareText,
         sharePositionOrigin: sharePosition,
       );
@@ -575,7 +575,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
 
       _publishedSigilId = sigilId;
 
-      // Open the wallet pass URL in Safari — iOS will detect the
+      // Open the wallet pass URL in Safari - iOS will detect the
       // .pkpass MIME type and present the "Add to Wallet" dialog.
       final walletUrl = Uri.parse(
         '${AppUrls.sigilApiUrl}/api/sigil/$sigilId/wallet',
@@ -661,7 +661,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
 
   /// Publish sigil card data to the API and return the shareable URL.
   ///
-  /// Returns null if the API call fails — sharing should still proceed
+  /// Returns null if the API call fails - sharing should still proceed
   /// with just the image (graceful degradation).
   Future<String?> _publishSigilCard() async {
     final entry = widget.entry;

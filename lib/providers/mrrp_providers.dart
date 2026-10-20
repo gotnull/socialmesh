@@ -58,7 +58,7 @@ class MrrpEnabledNotifier extends Notifier<bool> {
   void setEnabled(bool value) => state = value;
 }
 
-/// MRRP service registry — registers built-in service handlers.
+/// MRRP service registry - registers built-in service handlers.
 final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
   final mrrpEnabled = ref.watch(mrrpEnabledProvider);
   final sipEnabled = ref.watch(sipEnabledProvider);
@@ -124,7 +124,7 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
     ),
   );
 
-  // incident.v1 — mesh incident reporting over SPP.
+  // incident.v1 - mesh incident reporting over SPP.
   if (AppFeatureFlags.isMeshIncidentsEnabled) {
     final incidentService = ref.read(meshIncidentServiceProvider);
     final incident = MrrpServiceIncident(
@@ -165,7 +165,7 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
     );
   }
 
-  // pet.v1 — opt-in compact owner pet public state.
+  // pet.v1 - opt-in compact owner pet public state.
   if (AppFeatureFlags.isPetEnabled) {
     final pet = MrrpServicePet(
       bytesProvider: () {
@@ -186,7 +186,7 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
     );
   }
 
-  // echo.test — only when harness is enabled.
+  // echo.test - only when harness is enabled.
   if (AppFeatureFlags.isMrrpHarnessEnabled) {
     final echo = MrrpServiceEcho();
     registry.register(
@@ -222,7 +222,7 @@ final mrrpDispatcherProvider = Provider<MrrpDispatcher?>((ref) {
   return MrrpDispatcher(registry: registry);
 });
 
-/// MRRP counters — session-scoped instrumentation (shared singleton).
+/// MRRP counters - session-scoped instrumentation (shared singleton).
 final mrrpCountersProvider = Provider<MrrpCounters>((ref) {
   final counters = MrrpCounters();
   counters.onChange = () {
@@ -365,7 +365,7 @@ class _MrrpCountersEpoch extends Notifier<int> {
   void bump() => state++;
 }
 
-/// MRRP engine — main entry point for the protocol stack.
+/// MRRP engine - main entry point for the protocol stack.
 final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   // MRRP rides inside SIP frames, so inbound MRRP requests cannot be routed
   // unless the SIP ingress path is attached. Do this eagerly here rather than
@@ -384,7 +384,7 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   final dedupCache = ref.watch(mrrpDedupCacheProvider);
   if (dedupCache == null) return null;
 
-  // SIP transport send callback — shared by engine, dispatcher, and advert.
+  // SIP transport send callback - shared by engine, dispatcher, and advert.
   // Rate-limited via SipRateLimiter to enforce the 1024 bytes/60s airtime
   // budget shared with SIP discovery frames.
   Future<bool> sendViaSip(Uint8List mrrpPayload) async {
@@ -435,7 +435,7 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
 
   // Trust + Safety gate. Hot-path consulted at `_routeFrame` to
   // silently drop every MRRP frame originating from a blocked peer
-  // — request, response, advert, dirReq, dirResp.
+  // - request, response, advert, dirReq, dirResp.
   engine.attachPeerSafetyGate(ref.read(peerSafetyGateProvider));
 
   // Wire counters and traffic event callback on engine.
@@ -467,7 +467,7 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   // RESPONSE/ERROR whose dedup check passed; we inspect the service ID
   // and (on success) decode the 8-byte PetPublicState from the payload,
   // then write it to the remote_pet_cache keyed by the authoritative
-  // sender nodeNum from the Meshtastic packet — NOT by a requester-side
+  // sender nodeNum from the Meshtastic packet - NOT by a requester-side
   // assumed target (see peer-targeting notes in pet_remote_client.dart).
   if (AppFeatureFlags.isPetEnabled) {
     engine.onResponseObserved = (frame, senderNodeId) {
@@ -497,7 +497,7 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
         Uint8List.fromList(frame.payload),
       );
       if (decoded == null) return;
-      // ref.read is safe here — we're inside a provider body's closure,
+      // ref.read is safe here - we're inside a provider body's closure,
       // not rebuilding. Fire-and-forget; failures are logged internally.
       // ingestRemotePet also flips share status to `sharing`.
       ref
@@ -517,7 +517,7 @@ final mrrpEngineProvider = Provider<MrrpEngine?>((ref) {
   // epoch, advert epoch, traffic events) during this provider's build.
   engine.start();
 
-  // Attach to protocol service — drain of buffered startup frames is
+  // Attach to protocol service - drain of buffered startup frames is
   // scheduled as a microtask. The engine is already running, so
   // handleInboundFrame processes them when the microtask executes.
   final protocol = ref.read(protocolServiceProvider);

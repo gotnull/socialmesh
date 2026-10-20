@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Regression tests for the pet notification dispatcher — exercises the
+// Regression tests for the pet notification dispatcher - exercises the
 // full contract:
 //
 //   * fire-once-per-event guarantees for stage transitions, sickness
@@ -56,7 +56,7 @@ class _RecordingSink implements PetNotificationSink {
   }
 }
 
-/// Variant that delays every send — models the real flutter_local_notifications
+/// Variant that delays every send - models the real flutter_local_notifications
 /// platform channel latency so concurrent dispatch races are observable.
 class _SlowRecordingSink extends _RecordingSink {
   final Duration delay;
@@ -288,7 +288,7 @@ void main() {
     });
 
     test('stale sicknessOnset during catch-up is gated by isSick flag '
-        '(pet already recovered — no notify)', () async {
+        '(pet already recovered - no notify)', () async {
       final (ledger, _) = await _newLedger();
       final sink = _RecordingSink();
       final d = PetNotificationDispatcher(ledger: ledger, sink: sink);
@@ -314,7 +314,7 @@ void main() {
       await d.onStateTransition(previous: null, current: s, now: now1);
       expect(sink.sicknessCount, 1);
 
-      // Purge — pet recovers. Ledger should clear.
+      // Purge - pet recovers. Ledger should clear.
       final recovered = s.copyWith(isSick: false);
       await d.onStateTransition(
         previous: s,
@@ -353,7 +353,7 @@ void main() {
       await d.onStateTransition(previous: s, current: s, now: now);
       expect(sink.callCount, 1);
 
-      // Answer the call (activeCall becomes null) — ledger should clear.
+      // Answer the call (activeCall becomes null) - ledger should clear.
       final answered = s.copyWith(activeCall: null);
       await d.onStateTransition(
         previous: s,
@@ -407,7 +407,7 @@ void main() {
       'cold start with existing ledger does NOT re-emit milestone alerts',
       () async {
         // Simulate: user already got the hatch notification in a prior
-        // session. Restart the app — a fresh dispatcher with a fresh
+        // session. Restart the app - a fresh dispatcher with a fresh
         // ledger instance over the SAME SharedPreferences store must
         // NOT re-notify.
         final transitionAt = _hatch.add(const Duration(minutes: 10));

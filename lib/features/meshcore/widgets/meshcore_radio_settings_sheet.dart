@@ -114,7 +114,7 @@ class _MeshCoreRadioSettingsSheetState
   // D26: currently-selected region preset id, or
   // [kMeshCoreCustomPresetId] when the user has manually edited a
   // field so the live tuple no longer matches a known preset.
-  // Source of truth for the "Region" chip's selection state only —
+  // Source of truth for the "Region" chip's selection state only -
   // not proof of what the radio has actually applied.
   String _selectedPresetId = kMeshCoreCustomPresetId;
 
@@ -503,7 +503,7 @@ class _MeshCoreRadioSettingsSheetState
           );
           // D26: also persist the chip-selection state so the next
           // sheet open re-highlights the right region. This is UI
-          // state only — the saved tuple above is the canonical
+          // state only - the saved tuple above is the canonical
           // store of last-applied values.
           await _store.savePresetId(nodeKey, _selectedPresetId);
           AppLogging.meshcore(

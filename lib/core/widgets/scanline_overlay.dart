@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Pocket-space scanline backdrop — faint horizontal grain painted behind
+// Pocket-space scanline backdrop - faint horizontal grain painted behind
 // the NodePet hero. Matches the OG PetCreature backdrop treatment
 // (Colors.white @ alpha 0.035, 6px cadence, 1px stroke) so the "pocket
 // space" ambience reads the same regardless of whether the creature is
 // the bespoke painter or the mesh wireframe.
 //
-// Static — no animation, no shader. Safe to pin anywhere behind a hero.
+// Static - no animation, no shader. Safe to pin anywhere behind a hero.
 
 import 'package:flutter/material.dart';
 

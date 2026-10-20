@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetTimelineView — immutable view-model types consumed by
+// PetTimelineView - immutable view-model types consumed by
 // [PetTimelineScreen]. The projector in
 // `pet_timeline_projector.dart` is the only code that builds these
 // structures; the UI layer treats them as read-only render data.
 //
 // Shape (top → bottom in the screen):
 //
-//   PetTimelineOrigin   — the DNA/hatch "beginning of story" node.
-//   PetTimelineSection  — one per stage encountered (egg, juvenile,
+//   PetTimelineOrigin   - the DNA/hatch "beginning of story" node.
+//   PetTimelineSection  - one per stage encountered (egg, juvenile,
 //                         adolescent, adult, elder, dormant). Contains a
 //                         chronological list of entries.
-//   PetTimelineUpcoming — the ghost "next stage in ~Xd" hint at the
+//   PetTimelineUpcoming - the ghost "next stage in ~Xd" hint at the
 //                         tail of the feed. Null when the pet is
 //                         dormant or config can't project.
 //
-// Entries inside a section are a sealed union — either a single event
+// Entries inside a section are a sealed union - either a single event
 // with full importance, or a grouped compression of repeated minor
 // care actions within a tight window.
 
@@ -43,7 +43,7 @@ enum PetTimelineImportance {
   minor,
 }
 
-/// The "origin" node at the very top of the timeline. Not an event —
+/// The "origin" node at the very top of the timeline. Not an event -
 /// it's the fixed starting point, computed from [PetState] fields
 /// that never change after hatch.
 @immutable
@@ -83,7 +83,7 @@ class PetTimelineSection {
   /// reached, the section is absent from the view entirely.
   final DateTime startedAt;
 
-  /// True for the stage the pet is currently in — the UI highlights
+  /// True for the stage the pet is currently in - the UI highlights
   /// this section and draws the "current" marker between its last
   /// entry and the upcoming block.
   final bool isCurrent;
@@ -111,7 +111,7 @@ class PetTimelineSection {
       Object.hash(stage, startedAt, isCurrent, Object.hashAll(entries));
 }
 
-/// Sealed union — a section entry is either a single event or a
+/// Sealed union - a section entry is either a single event or a
 /// grouped compression.
 sealed class PetTimelineEntry {
   final PetTimelineImportance importance;
@@ -129,7 +129,7 @@ sealed class PetTimelineEntry {
 final class PetTimelineSingleEntry extends PetTimelineEntry {
   final CareEvent event;
 
-  /// Captured stage/branch at the instant the event was recorded —
+  /// Captured stage/branch at the instant the event was recorded -
   /// not the pet's CURRENT stage/branch. Used to render context chips
   /// on important-tier cards (e.g. "sickness onset · Adult / Steady").
   final PetStage stageAtEvent;
@@ -178,7 +178,7 @@ final class PetTimelineGroupedEntry extends PetTimelineEntry {
   final DateTime lastAt;
 
   /// Stage the pet was in during this group (captured at firstAt).
-  /// Minor groups don't cross stage boundaries — the projector
+  /// Minor groups don't cross stage boundaries - the projector
   /// flushes any active group at every stage transition.
   final PetStage stageAtGroup;
   final PetBranch branchAtGroup;
@@ -220,7 +220,7 @@ class PetTimelineUpcoming {
 
   /// Remaining time to the next stage from "now" at view-model build
   /// time. Stored so the UI can render "in 2 days" without re-
-  /// computing — the projector runs on every state emission.
+  /// computing - the projector runs on every state emission.
   final Duration remaining;
 
   const PetTimelineUpcoming({
@@ -278,7 +278,7 @@ class PetTimelineView {
 }
 
 /// A single row as stored in / read from the `pet_timeline_events`
-/// table. Not the UI view-model — the projector converts these into
+/// table. Not the UI view-model - the projector converts these into
 /// [PetTimelineEntry]s with grouping applied.
 @immutable
 class PetTimelineRecord {

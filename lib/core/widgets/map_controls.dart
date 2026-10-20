@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../l10n/l10n_extension.dart';
 import '../theme.dart';
 
@@ -201,7 +202,7 @@ class MapNavigationControls extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Center on my location — always tappable so we can show feedback
+          // Center on my location - always tappable so we can show feedback
           _ZoomButton(
             icon: Icons.my_location,
             onPressed: () {

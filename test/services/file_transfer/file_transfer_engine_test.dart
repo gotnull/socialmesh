@@ -453,7 +453,7 @@ void main() {
       );
       engine.handleIncomingChunk(chunk, sourceNodeNum: 0x1234);
 
-      // Now accept — should auto-complete and verify hash
+      // Now accept - should auto-complete and verify hash
       engine.acceptTransfer(idHex);
 
       final transfer = engine.getTransfer(idHex);
@@ -741,7 +741,7 @@ void main() {
         final transfer = engine.getTransfer(idHex);
         expect(transfer!.state, TransferState.complete);
 
-        // Advance past timeout — nothing should break
+        // Advance past timeout - nothing should break
         final packetsBefore = sentPackets.length;
         async.elapse(SmRateLimit.chunkInactivityTimeout * 2);
 
@@ -798,7 +798,7 @@ void main() {
         // Wait 8 seconds (< 10s timeout)
         async.elapse(const Duration(seconds: 8));
 
-        // Chunk 2 arrives (still missing 1) — timer resets
+        // Chunk 2 arrives (still missing 1) - timer resets
         engine.handleIncomingChunk(
           SmFileChunk(
             fileId: fileId,
@@ -809,13 +809,13 @@ void main() {
           sourceNodeNum: 0xABCD,
         );
 
-        // 8s later — no NACK yet because timer was reset
+        // 8s later - no NACK yet because timer was reset
         async.elapse(const Duration(seconds: 8));
         final transfer = engine.getTransfer(idHex);
         expect(transfer!.state, TransferState.chunking);
         expect(transfer.nackRounds, 0);
 
-        // 3 more seconds — now past timeout since last chunk
+        // 3 more seconds - now past timeout since last chunk
         async.elapse(const Duration(seconds: 3));
         final updated = engine.getTransfer(idHex);
         expect(updated!.state, TransferState.waitingMissing);
@@ -1071,11 +1071,11 @@ void main() {
         expect(engine.getTransfer(idHex)!.isActive, isTrue);
 
         // Completion timeout starts at t=4, fires at t=64.
-        // Advance to t=63 — should still be active.
+        // Advance to t=63 - should still be active.
         async.elapse(const Duration(seconds: 57));
         expect(engine.getTransfer(idHex)!.isActive, isTrue);
 
-        // Advance to t=65 — past the timeout.
+        // Advance to t=65 - past the timeout.
         async.elapse(const Duration(seconds: 2));
 
         // Sender marks complete as safety valve.
@@ -1119,7 +1119,7 @@ void main() {
         );
         expect(engine.getTransfer(idHex)!.state, TransferState.complete);
 
-        // Advance past original timeout — state should not change.
+        // Advance past original timeout - state should not change.
         async.elapse(SmRateLimit.senderCompletionTimeout);
         expect(engine.getTransfer(idHex)!.state, TransferState.complete);
       });
@@ -1164,7 +1164,7 @@ void main() {
 
         // The completion timeout should have restarted from
         // the retransmission, not from the original send.
-        // Advance 30s — should still be active (timeout = 60s from now).
+        // Advance 30s - should still be active (timeout = 60s from now).
         async.elapse(const Duration(seconds: 30));
         expect(engine.getTransfer(idHex)!.isActive, isTrue);
 
@@ -1262,96 +1262,90 @@ void main() {
       });
     });
 
-    test(
-      'receiver resets inactivity timer on retransmitted chunk during waitingMissing',
-      () {
-        fakeAsync((async) {
-          final engine = FileTransferEngine(
-            sendPacket:
-                (payload, portnum, {destinationNode, hopLimit = 3}) async {
-                  return true;
-                },
-            onStateChanged: (_) {},
-          );
-          addTearDown(engine.dispose);
+    test('receiver resets inactivity timer on retransmitted chunk during waitingMissing', () {
+      fakeAsync((async) {
+        final engine = FileTransferEngine(
+          sendPacket:
+              (payload, portnum, {destinationNode, hopLimit = 3}) async {
+                return true;
+              },
+          onStateChanged: (_) {},
+        );
+        addTearDown(engine.dispose);
 
-          final fileId = generateFileId();
-          final offer = SmFileOffer(
+        final fileId = generateFileId();
+        final offer = SmFileOffer(
+          fileId: fileId,
+          filename: 'timer_reset.bin',
+          mimeType: 'application/octet-stream',
+          totalBytes: 600,
+          chunkSize: 200,
+          chunkCount: 3,
+          sha256Hash: Uint8List(32),
+          createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          expiresAt:
+              DateTime.now()
+                  .add(const Duration(hours: 24))
+                  .millisecondsSinceEpoch ~/
+              1000,
+        );
+
+        engine.handleIncomingOffer(offer, sourceNodeNum: 0xABCD);
+        final idHex = fileIdToHex(fileId);
+
+        // Receive chunks 0 and 2 (missing 1).
+        engine.handleIncomingChunk(
+          SmFileChunk(
             fileId: fileId,
-            filename: 'timer_reset.bin',
-            mimeType: 'application/octet-stream',
-            totalBytes: 600,
-            chunkSize: 200,
+            chunkIndex: 0,
             chunkCount: 3,
-            sha256Hash: Uint8List(32),
-            createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-            expiresAt:
-                DateTime.now()
-                    .add(const Duration(hours: 24))
-                    .millisecondsSinceEpoch ~/
-                1000,
-          );
+            payload: Uint8List(200),
+          ),
+          sourceNodeNum: 0xABCD,
+        );
+        engine.handleIncomingChunk(
+          SmFileChunk(
+            fileId: fileId,
+            chunkIndex: 2,
+            chunkCount: 3,
+            payload: Uint8List(200),
+          ),
+          sourceNodeNum: 0xABCD,
+        );
 
-          engine.handleIncomingOffer(offer, sourceNodeNum: 0xABCD);
-          final idHex = fileIdToHex(fileId);
+        // NACK round 1 fires.
+        async.elapse(
+          SmRateLimit.chunkInactivityTimeout +
+              const Duration(milliseconds: 100),
+        );
+        expect(engine.getTransfer(idHex)!.nackRounds, 1);
+        expect(engine.getTransfer(idHex)!.state, TransferState.waitingMissing);
 
-          // Receive chunks 0 and 2 (missing 1).
-          engine.handleIncomingChunk(
-            SmFileChunk(
-              fileId: fileId,
-              chunkIndex: 0,
-              chunkCount: 3,
-              payload: Uint8List(200),
-            ),
-            sourceNodeNum: 0xABCD,
-          );
-          engine.handleIncomingChunk(
-            SmFileChunk(
-              fileId: fileId,
-              chunkIndex: 2,
-              chunkCount: 3,
-              payload: Uint8List(200),
-            ),
-            sourceNodeNum: 0xABCD,
-          );
+        // Retransmitted chunk 1 arrives while in waitingMissing,
+        // but with WRONG data (simulating partial multi-chunk recovery).
+        // Actually, let's send a duplicate of chunk 0 instead
+        // (chunk 1 is still missing). This should reset the timer.
+        async.elapse(const Duration(seconds: 5));
+        engine.handleIncomingChunk(
+          SmFileChunk(
+            fileId: fileId,
+            chunkIndex: 0,
+            chunkCount: 3,
+            payload: Uint8List(200),
+          ),
+          sourceNodeNum: 0xABCD,
+        );
 
-          // NACK round 1 fires.
-          async.elapse(
-            SmRateLimit.chunkInactivityTimeout +
-                const Duration(milliseconds: 100),
-          );
-          expect(engine.getTransfer(idHex)!.nackRounds, 1);
-          expect(
-            engine.getTransfer(idHex)!.state,
-            TransferState.waitingMissing,
-          );
+        // Timer should have been reset by the chunk arrival.
+        // 5 more seconds should not trigger the next NACK.
+        async.elapse(const Duration(seconds: 5));
+        expect(engine.getTransfer(idHex)!.nackRounds, 1);
 
-          // Retransmitted chunk 1 arrives while in waitingMissing,
-          // but with WRONG data (simulating partial multi-chunk recovery).
-          // Actually, let's send a duplicate of chunk 0 instead
-          // (chunk 1 is still missing). This should reset the timer.
-          async.elapse(const Duration(seconds: 5));
-          engine.handleIncomingChunk(
-            SmFileChunk(
-              fileId: fileId,
-              chunkIndex: 0,
-              chunkCount: 3,
-              payload: Uint8List(200),
-            ),
-            sourceNodeNum: 0xABCD,
-          );
-
-          // Timer should have been reset by the chunk arrival.
-          // 5 more seconds should not trigger the next NACK.
-          async.elapse(const Duration(seconds: 5));
-          expect(engine.getTransfer(idHex)!.nackRounds, 1);
-
-          // But 6 more seconds (total 11 from chunk arrival) should.
-          async.elapse(const Duration(seconds: 6));
-          expect(engine.getTransfer(idHex)!.nackRounds, 2);
-        });
-      },
-    );
+        // But 6 more seconds (total 11 from chunk arrival) should.
+        async.elapse(const Duration(seconds: 6));
+        expect(engine.getTransfer(idHex)!.nackRounds, 2);
+      });
+    });
   });
 
   group('FileTransferEngine - lost final chunk recovery', () {
@@ -1444,7 +1438,7 @@ void main() {
           sourceNodeNum: 0x5678,
         );
 
-        // Transfer should complete — hash matches.
+        // Transfer should complete - hash matches.
         final completed = engine.getTransfer(idHex)!;
         expect(completed.state, TransferState.complete);
         expect(completed.fileBytes, isNotNull);
@@ -1587,7 +1581,7 @@ void main() {
         engine.handleIncomingChunk(chunk, sourceNodeNum: 0x1111);
         expect(engine.getTransfer(idHex)!.state, TransferState.complete);
 
-        // Send it again — should be ignored (transfer not active).
+        // Send it again - should be ignored (transfer not active).
         engine.handleIncomingChunk(chunk, sourceNodeNum: 0x1111);
         expect(engine.getTransfer(idHex)!.state, TransferState.complete);
       });

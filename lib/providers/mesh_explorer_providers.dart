@@ -44,8 +44,8 @@ final meshExplorerEnabledProvider = Provider<bool>((ref) {
 /// a list of [MeshExplorerPeer] objects sorted by tier then proximity.
 ///
 /// Peers can appear via two paths:
-/// 1. **SIP CAP_BEACON** — discovered via periodic beacon exchange (300s+jitter).
-/// 2. **MRRP SERVICE_ADVERT** — nodes that advertised services but haven't
+/// 1. **SIP CAP_BEACON** - discovered via periodic beacon exchange (300s+jitter).
+/// 2. **MRRP SERVICE_ADVERT** - nodes that advertised services but haven't
 ///    exchanged a beacon yet. These are added as [AnonymousPeer] entries so
 ///    that service advertisers are immediately visible in the NEARBY section.
 final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
@@ -136,7 +136,7 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
 
   // Synthesize peers from MRRP SERVICE_ADVERT cache for nodes that were NOT
   // already discovered via SIP CAP_BEACON. A SERVICE_ADVERT proves the node
-  // is nearby and advertising services — it should appear in the peer list
+  // is nearby and advertising services - it should appear in the peer list
   // even without a beacon exchange.
   final sipNodeIds = peers.map((p) => p.nodeId).toSet();
   for (final entry in cachedServices.entries) {
@@ -166,7 +166,7 @@ final meshExplorerPeersProvider = Provider<List<MeshExplorerPeer>>((ref) {
         nodeId: nodeId,
         ambientId: nodeId, // use nodeId as sigil seed (no beacon caps hash)
         lastSeenMs: latestCachedAt,
-        features: 0, // unknown — no beacon received
+        features: 0, // unknown - no beacon received
         mrrpServiceIds: serviceIds,
       ),
     );

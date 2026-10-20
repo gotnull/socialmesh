@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -401,9 +401,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.15),
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppTheme.radius10),
                     ),
                     child: Icon(
@@ -467,9 +466,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.15),
+                        color: Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(AppTheme.radius10),
                       ),
                       child: Icon(
@@ -646,9 +644,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                 children: [
                   Text(
                     context.l10n.automationActionChannelsCount(channels.length),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: context.textTertiary),
                   ),
                 ],
               ),
@@ -760,9 +757,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                 children: [
                   Text(
                     context.l10n.automationActionChannelsCount(channels.length),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: context.textTertiary),
                   ),
                 ],
               ),
@@ -1477,9 +1473,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
           Expanded(
             child: Text(
               description,
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(color: SemanticColors.disabled),
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: SemanticColors.disabled),
             ),
           ),
         ],
@@ -1538,9 +1533,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.2)
+                      ? Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.2)
                       : context.card,
                   borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
@@ -1730,9 +1724,8 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                   const SizedBox(width: AppTheme.spacing12),
                   Text(
                     context.l10n.automationActionSelectSound,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -1779,9 +1772,8 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
                     context.l10n.automationActionSoundsCount(
                       displayItems.length,
                     ),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: context.textTertiary),
                   ),
                 ],
               ),

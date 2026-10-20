@@ -83,9 +83,8 @@ class _ChannelReorderSheetState extends ConsumerState<_ChannelReorderSheet> {
               const SizedBox(height: AppTheme.spacing4),
               Text(
                 context.l10n.channelsReorderSheetHint,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: context.textTertiary),
               ),
             ],
           ),

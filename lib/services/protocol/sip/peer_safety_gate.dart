@@ -15,7 +15,7 @@
 /// - Sync only. The hot path (every inbound SIP frame) cannot await.
 /// - Read only. Mutations (block / mute / markFirstHandshake) go
 ///   through `PeerSafetyManager` directly via the providers layer.
-/// - Default-safe — when no implementation is wired (early startup,
+/// - Default-safe - when no implementation is wired (early startup,
 ///   tests), `isBlocked` MUST return false. Treat the absence of
 ///   safety state as "everything allowed."
 library;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34b-A1 — `MeshCoreDiscoveryScreen` widget regression pins.
+// D34b-A1 - `MeshCoreDiscoveryScreen` widget regression pins.
 //
 // Pinned invariants:
 //   - Empty state renders the canonical AnimatedEmptyState shell when
@@ -13,7 +13,7 @@
 //   - The Heard badge appears for an advert whose pubkey is NOT in
 //     the contact list.
 //   - Sort toggle reorders alphabetically vs. by recency (key still
-//     reachable; we don't assert visual order — recency comes from
+//     reachable; we don't assert visual order - recency comes from
 //     wall-clock timestamps the notifier owns).
 //   - Search field filters by name.
 //   - Long-press → Delete removes the entry.
@@ -244,7 +244,7 @@ void main() {
     final notifier = container.read(meshCoreDiscoveredAdvertsProvider.notifier);
     // Seed two entries so the list does NOT collapse to AnimatedEmptyState
     // after the deletion. The empty-state widget keeps its pulse/icon
-    // tickers running — pumpAndSettle would never return, and disposing
+    // tickers running - pumpAndSettle would never return, and disposing
     // the bottom-sheet Navigator while a row+sheet ticker pair are still
     // active leaks tickers.
     notifier.recordAdvert(
@@ -303,7 +303,7 @@ void main() {
     // List was not cleared.
     expect(container.read(meshCoreDiscoveredAdvertsProvider), hasLength(2));
 
-    // clearAll() drains the list directly — wire-side regression
+    // clearAll() drains the list directly - wire-side regression
     // already pinned by the notifier unit test; here we only verify
     // the screen exposes the action and the confirm-sheet path.
     container.read(meshCoreDiscoveredAdvertsProvider.notifier).clearAll();

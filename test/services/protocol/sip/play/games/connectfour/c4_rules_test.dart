@@ -41,7 +41,7 @@ void main() {
 
       test('partially-filled column → next-empty row above', () {
         var b = C4Board.empty();
-        // Drop 3 discs into column 2 — they land at rows 5, 4, 3.
+        // Drop 3 discs into column 2 - they land at rows 5, 4, 3.
         b = b.apply(2, C4Disc.red);
         expect(b.landingRowFor(2), equals(4));
         b = b.apply(2, C4Disc.yellow);

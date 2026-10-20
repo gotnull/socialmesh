@@ -238,7 +238,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
       return;
     }
 
-    // Platform says connected — do a fresh reachability check
+    // Platform says connected - do a fresh reachability check
     AppLogging.connection(
       'Connectivity: platform change -> connected, '
       'verifying reachability, results=$results',

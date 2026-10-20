@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — full-screen map, glass blur would obscure tiles
+// lint-allow: scaffold - full-screen map, glass blur would obscure tiles
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -12,8 +12,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../core/units/geo_distance.dart';
+
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../core/los_analysis.dart';
@@ -42,6 +45,7 @@ import 'widgets/node_intelligence_panel.dart';
 import 'world_mesh_filter_sheet.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/skeleton_config.dart';
+
 import 'package:skeletonizer/skeletonizer.dart';
 
 /// World Mesh Map screen showing all Meshtastic nodes from mesh-observer
@@ -60,7 +64,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   // Camera-boundary NaN recovery. flutter_map's pinch pipeline can commit a
   // non-finite pose through its internal moveRaw() (a math.log(scale<=0)
   // overflow), bypassing every safeMove guard and leaving the camera centre
-  // NaN — which then throws fatally in Crs.checkLatLng on the next tile build
+  // NaN - which then throws fatally in Crs.checkLatLng on the next tile build
   // and every later pinch. onPositionChanged is the one hook that fires on the
   // internal move, so we snap back to the last finite pose before that frame
   // builds. See lib/core/safe_lat_lng.dart isFiniteCameraPose.
@@ -68,7 +72,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   double _lastFiniteZoom = 3.0;
   bool _cameraRecoveryScheduled = false;
   // Map rotation and selection use ValueNotifiers so that pan/rotate gestures
-  // and node selection do not trigger a full screen rebuild — only the
+  // and node selection do not trigger a full screen rebuild - only the
   // compass, the highlight overlay, and the info card listen. This is what
   // unblocks 12k+ markers from being reconstructed on every camera frame or
   // marker tap.
@@ -95,7 +99,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   AnimationController? _animationController;
 
   // Tracks whether the node info sheet is currently open. New marker taps
-  // while the sheet is visible just update the selection notifier — the
+  // while the sheet is visible just update the selection notifier - the
   // sheet body listens to it and rebuilds with the new node, no extra push.
   bool _isNodeSheetOpen = false;
 
@@ -167,7 +171,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   ///
   /// Sets the selection notifier so the highlight overlay tracks the tapped
   /// node, then opens (or refreshes) the modal scrollable sheet. Tapping a
-  /// new marker while the sheet is open updates the notifier — the sheet's
+  /// new marker while the sheet is open updates the notifier - the sheet's
   /// body is a `ValueListenableBuilder` that rebuilds with the new node
   /// without dismissing/re-presenting.
   Future<void> _showNodeInfoSheet(WorldMeshNode node) async {
@@ -319,7 +323,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 ),
               // Filter button with badge
               _buildFilterButton(accentColor),
-              // Favorites — Consumer subtree so the AppBar (and the rest of
+              // Favorites - Consumer subtree so the AppBar (and the rest of
               // the screen) does not rebuild every time the favorites count
               // changes.
               Consumer(
@@ -537,7 +541,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   /// Build filter button with active filter count badge.
   ///
   /// Wrapped in a Consumer so the rest of the AppBar (and screen body) does
-  /// not rebuild when filter state toggles — only this subtree.
+  /// not rebuild when filter state toggles - only this subtree.
   Widget _buildFilterButton(Color accentColor) {
     return Consumer(
       builder: (context, ref, _) {
@@ -733,7 +737,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     ThemeData theme,
     WorldMeshMapState state,
   ) {
-    // Memoised filtered list — Riverpod caches the result by (filters, nodes)
+    // Memoised filtered list - Riverpod caches the result by (filters, nodes)
     // so this provider returns the same List instance across screen rebuilds
     // unless filters or underlying data change.
     final displayNodes = ref.watch(worldMeshAdvancedFilteredNodesProvider);
@@ -778,7 +782,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 _currentZoom = position.zoom;
                 if (hasGesture &&
                     position.rotation != _mapRotationNotifier.value) {
-                  // ValueNotifier — only the compass overlay rebuilds.
+                  // ValueNotifier - only the compass overlay rebuilds.
                   // Previously this was a setState that re-rendered the
                   // FlutterMap and all 12k markers on every gesture frame.
                   _mapRotationNotifier.value = position.rotation;
@@ -810,7 +814,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   !MapConfig.isMapboxActive)
                 MapConfig.satelliteReferenceLabelsTileLayer(),
               // Marker clustering for better visualization of dense areas.
-              // Markers do NOT capture selection state — selection styling is
+              // Markers do NOT capture selection state - selection styling is
               // rendered by `_SelectionHighlightLayer` below, so a node tap
               // does not invalidate all 12k marker decorations.
               MarkerClusterLayerWidget(
@@ -993,7 +997,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                       ),
                   ]),
                 ),
-              // Selection highlight overlay — listens only to the selection
+              // Selection highlight overlay - listens only to the selection
               // notifier so tapping a node does not rebuild the screen or the
               // 12k-marker cluster layer.
               _SelectionHighlightLayer(
@@ -1020,7 +1024,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           onFitAll: () {
             // Single-pass bounds computation, ignoring nodes with garbage
             // positions. The mesh-observer feed contains a small fraction
-            // of nodes with lat/lon outside the valid WGS-84 ranges — those
+            // of nodes with lat/lon outside the valid WGS-84 ranges - those
             // would slip past `.isFinite` and then make `safeLatLng` return
             // null, which silently no-op'd the whole fit. Filter strictly.
             var minLat = double.infinity;
@@ -1363,7 +1367,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   }
 }
 
-/// Tappable pill at the right edge of the World Map stats bar — shows
+/// Tappable pill at the right edge of the World Map stats bar - shows
 /// a pulsing live-status dot, the last-updated relative time, and a
 /// refresh affordance. Tapping anywhere on the pill triggers
 /// [onTap] (typically `forceRefresh()`).
@@ -1856,7 +1860,7 @@ String _worldMeshAvatarText(WorldMeshNode node) {
 /// Rich info card for WorldMeshNode - shows all available data from mesh-observer
 /// Body content for the world-mesh node info bottom sheet.
 ///
-/// Hosted inside `AppBottomSheet.showScrollable` — the parent provides the
+/// Hosted inside `AppBottomSheet.showScrollable` - the parent provides the
 /// drag pill, sheet chrome, and scroll controller. The heavy intelligence
 /// panel + section cards are wrapped in `Skeletonizer` for the first frame
 /// so the sheet animates in with a shimmer placeholder rather than popping a
@@ -2047,7 +2051,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
 
         Divider(height: 1),
 
-        // SCROLLABLE CONTENT — heavy section, wrapped in Skeletonizer for
+        // SCROLLABLE CONTENT - heavy section, wrapped in Skeletonizer for
         // the first frame so the sheet's slide-up animation doesn't reveal
         // a half-built widget tree.
         Expanded(
@@ -2503,7 +2507,7 @@ class _MetricChip {
   });
 }
 
-/// Measurement card for World Mesh map — shows distance, bearing, altitude,
+/// Measurement card for World Mesh map - shows distance, bearing, altitude,
 /// and LOS between two points/nodes. Long-press for actions sheet.
 class _WorldMeasurementCard extends StatefulWidget {
   final LatLng start;

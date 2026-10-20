@@ -21,7 +21,7 @@ void main() {
     });
 
     test('short distance at high altitude is clear', () {
-      // Two nodes at 500m altitude, 1km apart — trivially clear
+      // Two nodes at 500m altitude, 1km apart - trivially clear
       final result = evaluateLos(altA: 500, altB: 500, distanceMeters: 1000);
       expect(result.verdict, LosVerdict.clear);
       expect(result.earthBulgeMeters, greaterThan(0));
@@ -30,7 +30,7 @@ void main() {
     });
 
     test('very long distance at sea level is obstructed', () {
-      // Two nodes at 2m altitude, 200km apart — earth curvature blocks
+      // Two nodes at 2m altitude, 200km apart - earth curvature blocks
       final result = evaluateLos(altA: 2, altB: 2, distanceMeters: 200000);
       expect(result.verdict, LosVerdict.obstructed);
       expect(result.actualClearanceMeters, lessThan(0));
@@ -216,8 +216,8 @@ void main() {
       expect(result.verdict, LosVerdict.unknown);
     });
 
-    test('clear path — antennas high above flat terrain', () {
-      // Antennas at 500m altitude, terrain at 10m — trivially clear.
+    test('clear path - antennas high above flat terrain', () {
+      // Antennas at 500m altitude, terrain at 10m - trivially clear.
       final samples = flatSamples(20, 5000, 10.0);
       final result = evaluateLosFromProfile(
         samples: samples,
@@ -230,7 +230,7 @@ void main() {
       expect(result.additionalClearanceNeededMeters, equals(0.0));
     });
 
-    test('obstructed path — terrain peak higher than LOS line', () {
+    test('obstructed path - terrain peak higher than LOS line', () {
       // Antennas at 100m altitude, terrain spike to 200m at midpoint.
       final n = 11;
       final dist = 10000.0;
@@ -307,7 +307,7 @@ void main() {
       }
     });
 
-    test('insufficient data — single sample returns unknown', () {
+    test('insufficient data - single sample returns unknown', () {
       final samples = flatSamples(1, 0, 100.0);
       final result = evaluateLosFromProfile(
         samples: samples,

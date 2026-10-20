@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/subscription_providers.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Gold colors for verified badges

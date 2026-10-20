@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Tests for [OverlayBitmap] — the SPP v0.2 chunk-receipt bitmap.
+/// Tests for [OverlayBitmap] - the SPP v0.2 chunk-receipt bitmap.
 ///
 /// Covers byte-width rounding, LSB-first packing order, missing-chunk
 /// enumeration, decode robustness at edge chunk counts (1, 64, 512,

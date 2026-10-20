@@ -8,7 +8,7 @@
 //      for the primary store CTA).
 //   2. Tapping the external button starts checkout (calls
 //      createCheckout via the service).
-//   3. Redirect alone does NOT unlock — confirming stage shows the
+//   3. Redirect alone does NOT unlock - confirming stage shows the
 //      overlay but never writes to the entitlement cache.
 //   4. Confirmed payment updates the UI (succeeded stage shows the
 //      pack name).
@@ -117,7 +117,7 @@ BMC_PURCHASE_ENABLED=true
   });
 
   // -------------------------------------------------------------------------
-  // SCENARIO 1 — secondary, not replacement
+  // SCENARIO 1 - secondary, not replacement
   // -------------------------------------------------------------------------
 
   group('AlternativePaymentLink (Scenario 1: secondary, not replacement)', () {
@@ -144,7 +144,7 @@ BMC_PURCHASE_ENABLED=true
         ),
       );
 
-      // Both must be present — the alt-payment link augments, never
+      // Both must be present - the alt-payment link augments, never
       // replaces, the primary store CTA. If a future refactor ever
       // hides the FilledButton when AlternativePaymentLink is
       // present, this test fails.
@@ -183,7 +183,7 @@ BMC_PURCHASE_ENABLED=true
   });
 
   // -------------------------------------------------------------------------
-  // SCENARIO 2 + 5 — tapping starts checkout, reference code is visible
+  // SCENARIO 2 + 5 - tapping starts checkout, reference code is visible
   // -------------------------------------------------------------------------
 
   group('BuyMeACoffeeHandoffSheet (Scenarios 2 + 5)', () {
@@ -210,7 +210,7 @@ BMC_PURCHASE_ENABLED=true
     }
 
     testWidgets(
-      'opens checkout — calls createExternalCheckout with the productId',
+      'opens checkout - calls createExternalCheckout with the productId',
       (tester) async {
         final invoker = _RecordingInvoker()
           ..respond('createExternalCheckout', {
@@ -227,7 +227,7 @@ BMC_PURCHASE_ENABLED=true
 
         await openSheet(tester, service);
 
-        // The sheet auto-fires createExternalCheckout on mount —
+        // The sheet auto-fires createExternalCheckout on mount -
         // there should be no "Confirm" prompt the user has to tap
         // before a session is created.
         expect(invoker.calls, contains('createExternalCheckout'));
@@ -280,12 +280,12 @@ BMC_PURCHASE_ENABLED=true
   });
 
   // -------------------------------------------------------------------------
-  // SCENARIO 3 — redirect alone does NOT unlock
-  // SCENARIO 4 — confirmed payment updates the UI
+  // SCENARIO 3 - redirect alone does NOT unlock
+  // SCENARIO 4 - confirmed payment updates the UI
   // -------------------------------------------------------------------------
 
   group('ConfirmingUnlockOverlay (Scenarios 3 + 4)', () {
-    testWidgets('idle state renders ONLY the child — no overlay', (
+    testWidgets('idle state renders ONLY the child - no overlay', (
       tester,
     ) async {
       final service = await _buildService();
@@ -308,7 +308,7 @@ BMC_PURCHASE_ENABLED=true
       '(redirect alone never unlocks)',
       (tester) async {
         final service = await _buildService();
-        // Stage=confirming — equivalent to "redirect just arrived,
+        // Stage=confirming - equivalent to "redirect just arrived,
         // still waiting on webhook". The cache MUST stay empty.
         const confirming = ConfirmationState(
           stage: ConfirmationStage.confirming,
@@ -321,7 +321,7 @@ BMC_PURCHASE_ENABLED=true
             child: const ConfirmingUnlockOverlay(child: Text('app body')),
           ),
         );
-        // Cannot pumpAndSettle here — the overlay's CircularProgressIndicator
+        // Cannot pumpAndSettle here - the overlay's CircularProgressIndicator
         // is an indefinite animation. Pump explicit frames instead.
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 50));

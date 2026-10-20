@@ -57,7 +57,7 @@ class OverlayFeatureFlags {
 
   /// Read the flag snapshot from the current `.env` environment.
   ///
-  /// Missing or unparseable values default to `false` — preserving the
+  /// Missing or unparseable values default to `false` - preserving the
   /// locked principle that overlay must be explicitly opt-in per
   /// install.
   ///
@@ -75,7 +75,7 @@ class OverlayFeatureFlags {
 
   /// True only if both [linkEnabled] and [resourceEnabled] are set.
   /// Callers SHOULD gate overlay resource traffic on this getter
-  /// rather than reading [resourceEnabled] directly — it encodes the
+  /// rather than reading [resourceEnabled] directly - it encodes the
   /// "resource requires link" invariant once.
   bool get resourceActive => linkEnabled && resourceEnabled;
 

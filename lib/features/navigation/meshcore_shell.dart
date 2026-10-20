@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — navigation shell root scaffold with drawer and bottom nav
+// lint-allow: scaffold - navigation shell root scaffold with drawer and bottom nav
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -95,7 +95,7 @@ final meshCoreShellScaffoldKeyProvider =
 /// Context-aware leading button for MeshCore app bars.
 ///
 /// On the MeshCore shell's root tabs (Contacts / Channels / Map /
-/// Tools — i.e. routes where `Navigator.canPop` is `false`), this
+/// Tools - i.e. routes where `Navigator.canPop` is `false`), this
 /// renders a hamburger and opens the shell's drawer. On any pushed
 /// route above the shell (Settings, Device Info, etc.) it instead
 /// renders a back arrow and pops the route.
@@ -103,7 +103,7 @@ final meshCoreShellScaffoldKeyProvider =
 /// D25: pre-D25 the button always tried to open the drawer via the
 /// shell's scaffold key, which silently failed on pushed routes
 /// because the shell's `Scaffold` is not on top of the navigator
-/// stack — the drawer surface couldn't reach the foreground. Tapping
+/// stack - the drawer surface couldn't reach the foreground. Tapping
 /// did nothing visible. Splitting the behaviour by route depth makes
 /// the button do the obviously-correct thing in each context without
 /// touching any callsite.
@@ -126,14 +126,14 @@ class MeshCoreHamburgerMenuButton extends ConsumerWidget {
         HapticFeedback.lightImpact();
 
         if (canPop) {
-          // Pushed route — back arrow path. Never attempt to open
+          // Pushed route - back arrow path. Never attempt to open
           // the drawer; the shell's scaffold isn't on top of the
           // navigator stack so `openDrawer` would silently no-op.
           Navigator.pop(context);
           return;
         }
 
-        // Shell-root route — open the drawer using the provider-
+        // Shell-root route - open the drawer using the provider-
         // stored scaffold key.
         final scaffoldState = scaffoldKey?.currentState;
         if (scaffoldState != null) {
@@ -289,7 +289,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
   // Tab order mirrors `MainShell._buildScreen`: Messages / Map /
   // Nodes / Dashboard. The Messages tab houses both Contacts and
   // Channels in sub-tabs; the Nodes tab is the standalone contact
-  // roster (full discovered-peer list) — same shape as Meshtastic's
+  // roster (full discovered-peer list) - same shape as Meshtastic's
   // MessagesContainerScreen + NodesScreen split.
   Widget _buildScreen(int index) {
     switch (index) {

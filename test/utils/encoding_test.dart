@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/utils/encoding.dart';
 

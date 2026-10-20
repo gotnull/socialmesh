@@ -32,7 +32,7 @@ class InvalidTransitionException implements Exception {
 
 /// The set of all valid (fromState, toState) pairs.
 ///
-/// Spec: INCIDENT_LIFECYCLE.md — Valid Transitions table.
+/// Spec: INCIDENT_LIFECYCLE.md - Valid Transitions table.
 const _validTransitions = <(IncidentState, IncidentState)>{
   // draft ->
   (IncidentState.draft, IncidentState.open), // submit
@@ -76,7 +76,7 @@ Permission _permissionForTarget(IncidentState target) {
 /// Validates transitions, enforces RBAC via [PermissionService], and writes
 /// to the append-only `incident_transitions` table.
 ///
-/// The `incidents.state` column is a projection — updated after each
+/// The `incidents.state` column is a projection - updated after each
 /// transition for query convenience but never treated as authoritative.
 ///
 /// Spec: INCIDENT_LIFECYCLE.md (Sprint 007), Sprint 008/W3.1.

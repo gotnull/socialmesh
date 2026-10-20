@@ -227,9 +227,8 @@ void main() {
         expect(report.outcome, CanvasInboundOutcome.applied);
         expect(report.appliedCount, 3);
 
-        final canvas = (await h.repo.listCanvases(
-          scope: CanvasScope.mesh,
-        )).single;
+        final canvas = (await h.repo.listCanvases(scope: CanvasScope.mesh))
+            .single;
         final cells = await h.repo.getCanvasCells(canvas.localId);
         expect(cells, hasLength(3));
       } finally {
@@ -276,9 +275,8 @@ void main() {
         expect(stale.appliedCount, 0);
         expect(stale.unappliedByRepositoryCount, 1);
 
-        final canvas = (await h.repo.listCanvases(
-          scope: CanvasScope.mesh,
-        )).single;
+        final canvas = (await h.repo.listCanvases(scope: CanvasScope.mesh))
+            .single;
         final cells = await h.repo.getCanvasCells(canvas.localId);
         expect(cells.single.color, 5);
 
@@ -321,9 +319,8 @@ void main() {
         expect(second.unappliedByRepositoryCount, 1);
 
         // The 6-field dedupe prevented a second applied_op row.
-        final canvas = (await h.repo.listCanvases(
-          scope: CanvasScope.mesh,
-        )).single;
+        final canvas = (await h.repo.listCanvases(scope: CanvasScope.mesh))
+            .single;
         final applied = await h.repo.getRecentAppliedOps(canvas.localId);
         expect(applied, hasLength(1));
       } finally {
@@ -364,9 +361,8 @@ void main() {
           );
           expect(second.outcome, CanvasInboundOutcome.applied);
 
-          final canvas = (await h.repo.listCanvases(
-            scope: CanvasScope.mesh,
-          )).single;
+          final canvas = (await h.repo.listCanvases(scope: CanvasScope.mesh))
+              .single;
           final applied = await h.repo.getRecentAppliedOps(canvas.localId);
           expect(applied, hasLength(2));
           final cells = await h.repo.getCanvasCells(canvas.localId);
@@ -405,9 +401,8 @@ void main() {
         expect(report.appliedCount, 0);
         expect(report.replayWindowRejectedCount, 1);
 
-        final canvas = (await h.repo.listCanvases(
-          scope: CanvasScope.mesh,
-        )).single;
+        final canvas = (await h.repo.listCanvases(scope: CanvasScope.mesh))
+            .single;
         final cells = await h.repo.getCanvasCells(canvas.localId);
         expect(cells, isEmpty);
       } finally {
@@ -472,7 +467,7 @@ void main() {
           opTs: _nowSec(h.clock),
           opSeq: 0,
         );
-        // Truncate to common-prefix only — sniffer matches but
+        // Truncate to common-prefix only - sniffer matches but
         // decodePaint will reject the length.
         final truncated = Uint8List.fromList(full.sublist(0, 12));
         final report = await h.handler.applyInbound(
@@ -565,7 +560,7 @@ void main() {
         );
         expect(dropped.outcome, CanvasInboundOutcome.rateLimited);
 
-        // Advance past the window — same sender can paint again.
+        // Advance past the window - same sender can paint again.
         h.clock.advance(
           CanvasInboundLimiter.defaultWindow + const Duration(seconds: 1),
         );

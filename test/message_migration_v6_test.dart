@@ -250,7 +250,7 @@ void main() {
       expect(ch0Messages.first.text, 'Already correct');
     });
 
-    test('migration is idempotent — running twice causes no damage', () async {
+    test('migration is idempotent - running twice causes no damage', () async {
       final dbPath = await _createV5Database([
         _row(
           id: 'idem-broken',
@@ -287,7 +287,7 @@ void main() {
       var dm = await storage1.loadConversation('dm:10:20');
       expect(dm.length, 1);
 
-      // Close (simulate app restart) — but the DB is already at v6.
+      // Close (simulate app restart) - but the DB is already at v6.
       // Re-opening should not re-run migration (oldVersion == newVersion).
       final storage2 = MessageDatabase(testDbPath: dbPath);
       await storage2.init();
@@ -345,7 +345,7 @@ void main() {
           channel: null,
           conversationKey: 'dm:10:20',
         ),
-        // Unread broken message — read flag preserved
+        // Unread broken message - read flag preserved
         _row(
           id: 'mix-unread',
           from: 50,

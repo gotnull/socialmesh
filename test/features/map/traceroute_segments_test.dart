@@ -158,7 +158,7 @@ void main() {
         flat.contains('if (unverified) { return polylines; }'),
         true,
         reason:
-            'When unverified, the return path must be skipped — there is no '
+            'When unverified, the return path must be skipped - there is no '
             'echo back, so there is nothing real to draw.',
       );
     });

@@ -7,7 +7,7 @@
 /// first-run user before the gate is completed). The capability layer treats
 /// [unknown] conservatively and applies safe defaults.
 enum AgeGroup {
-  /// Age is not yet known — conservative safe defaults apply.
+  /// Age is not yet known - conservative safe defaults apply.
   unknown,
 
   /// User is under 13. App is not available in this age group.

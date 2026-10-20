@@ -206,7 +206,7 @@ void main() {
       );
       await engine.processNodeUpdate(node100Online);
 
-      // Node 200 goes offline, then online — within 1 minute of node 100
+      // Node 200 goes offline, then online - within 1 minute of node 100
       final node200Offline = MeshNode(
         nodeNum: 200,
         shortName: 'N2',
@@ -392,7 +392,7 @@ void main() {
           trigger: const AutomationTrigger(type: TriggerType.messageReceived),
           actions: const [AutomationAction(type: ActionType.pushNotification)],
           conditions: const [
-            // Time range 03:00-03:01 — almost certainly not current time
+            // Time range 03:00-03:01 - almost certainly not current time
             AutomationCondition(
               type: ConditionType.timeRange,
               config: {'timeStart': '03:00', 'timeEnd': '03:01'},

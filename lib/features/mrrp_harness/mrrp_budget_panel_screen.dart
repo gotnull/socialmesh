@@ -13,7 +13,7 @@ import '../../providers/sip_providers.dart';
 import '../../services/protocol/sip/mrrp_counters.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
 
-/// Budget & Timing Panel — rate limiter state and protocol metrics.
+/// Budget & Timing Panel - rate limiter state and protocol metrics.
 class MrrpBudgetPanelScreen extends ConsumerWidget {
   const MrrpBudgetPanelScreen({super.key});
 
@@ -358,9 +358,8 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
           child: Text(
             'No latency data', // lint-allow: hardcoded-string
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textTertiary),
           ),
         ),
       ];
@@ -391,30 +390,25 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
                 children: [
                   Text(
                     name,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   _CounterRow(
                     label: 'min', // lint-allow: hardcoded-string
-                    value:
-                        '${stats.min.inMilliseconds}ms', // lint-allow: hardcoded-string
+                    value: '${stats.min.inMilliseconds}ms', // lint-allow: hardcoded-string
                   ),
                   _CounterRow(
                     label: 'max', // lint-allow: hardcoded-string
-                    value:
-                        '${stats.max.inMilliseconds}ms', // lint-allow: hardcoded-string
+                    value: '${stats.max.inMilliseconds}ms', // lint-allow: hardcoded-string
                   ),
                   _CounterRow(
                     label: 'avg', // lint-allow: hardcoded-string
-                    value:
-                        '${stats.average.inMilliseconds}ms', // lint-allow: hardcoded-string
+                    value: '${stats.average.inMilliseconds}ms', // lint-allow: hardcoded-string
                   ),
                   _CounterRow(
                     label: 'last', // lint-allow: hardcoded-string
-                    value:
-                        '${stats.last.inMilliseconds}ms', // lint-allow: hardcoded-string
+                    value: '${stats.last.inMilliseconds}ms', // lint-allow: hardcoded-string
                   ),
                   _CounterRow(
                     label: 'count', // lint-allow: hardcoded-string
@@ -460,9 +454,8 @@ class _CounterRow extends StatelessWidget {
           const SizedBox(width: AppTheme.spacing8),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textSecondary),
           ),
           const Spacer(),
           Text(

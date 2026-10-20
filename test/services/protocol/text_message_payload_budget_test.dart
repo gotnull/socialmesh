@@ -78,9 +78,8 @@ void main() {
       final text = 'ä' * 113; // 226 UTF-8 bytes
 
       final plain = TextMessagePayloadSizer.standard().measure(text);
-      final pki = TextMessagePayloadSizer.standard(
-        pkiEncrypted: true,
-      ).measure(text);
+      final pki = TextMessagePayloadSizer.standard(pkiEncrypted: true)
+          .measure(text);
 
       expect(plain.utf8Bytes, 226);
       expect(plain.fitsInPacket, isTrue);

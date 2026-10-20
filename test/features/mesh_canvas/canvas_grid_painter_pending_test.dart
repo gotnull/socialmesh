@@ -64,61 +64,58 @@ void main() {
     Colors.blue,
   ];
 
-  test(
-    'pending cells render at color.a × pendingOpacityFactor; non-pending at full alpha',
-    () {
-      final cells = <CanvasCell>[
-        const CanvasCell(
-          canvasLocalId: 1,
-          x: 1,
-          y: 2,
-          color: 1, // red
-          lastTs: 0,
-          lastAuthor: 0,
-          lastSeq: 0,
-        ),
-        const CanvasCell(
-          canvasLocalId: 1,
-          x: 3,
-          y: 4,
-          color: 2, // green
-          lastTs: 0,
-          lastAuthor: 0,
-          lastSeq: 0,
-        ),
-      ];
-      // Mark only (1, 2) as pending.
-      final pending = <int>{2 * 64 + 1};
+  test('pending cells render at color.a × pendingOpacityFactor; non-pending at full alpha', () {
+    final cells = <CanvasCell>[
+      const CanvasCell(
+        canvasLocalId: 1,
+        x: 1,
+        y: 2,
+        color: 1, // red
+        lastTs: 0,
+        lastAuthor: 0,
+        lastSeq: 0,
+      ),
+      const CanvasCell(
+        canvasLocalId: 1,
+        x: 3,
+        y: 4,
+        color: 2, // green
+        lastTs: 0,
+        lastAuthor: 0,
+        lastSeq: 0,
+      ),
+    ];
+    // Mark only (1, 2) as pending.
+    final pending = <int>{2 * 64 + 1};
 
-      final painter = CanvasGridPainter(
-        cells: cells,
-        palette: palette,
-        cellSize: cellSize,
-        outsideColor: outside,
-        surfaceColor: surface,
-        chunkLineColor: chunk,
-        borderColor: ring,
-        pendingCellIndices: pending,
-      );
+    final painter = CanvasGridPainter(
+      cells: cells,
+      palette: palette,
+      cellSize: cellSize,
+      outsideColor: outside,
+      surfaceColor: surface,
+      chunkLineColor: chunk,
+      borderColor: ring,
+      pendingCellIndices: pending,
+    );
 
-      final recording = _RecordingCanvas();
-      painter.paint(recording, const Size(64 * cellSize, 64 * cellSize));
+    final recording = _RecordingCanvas();
+    painter.paint(recording, const Size(64 * cellSize, 64 * cellSize));
 
-      final drawsByCell = {for (final d in recording.draws) d.rect.topLeft: d};
-      // (1, 2) cell → pending → reduced alpha.
-      final pendingDraw = drawsByCell[const Offset(cellSize, 2 * cellSize)];
-      expect(pendingDraw, isNotNull);
-      expect(
-        pendingDraw!.alpha,
-        closeTo(1.0 * 0.55, 0.001),
-        reason: 'pending cell alpha must be palette alpha * 0.55',
-      );
-      // (3, 4) cell → not pending → full alpha.
-      final fullDraw = drawsByCell[const Offset(3 * cellSize, 4 * cellSize)];
-      expect(fullDraw, isNotNull);
-      expect(fullDraw!.alpha, closeTo(1.0, 0.001));
-    },
-  );
+    final drawsByCell = {for (final d in recording.draws) d.rect.topLeft: d};
+    // (1, 2) cell → pending → reduced alpha.
+    final pendingDraw = drawsByCell[const Offset(cellSize, 2 * cellSize)];
+    expect(pendingDraw, isNotNull);
+    expect(
+      pendingDraw!.alpha,
+      closeTo(1.0 * 0.55, 0.001),
+      reason: 'pending cell alpha must be palette alpha * 0.55',
+    );
+    // (3, 4) cell → not pending → full alpha.
+    final fullDraw = drawsByCell[const Offset(3 * cellSize, 4 * cellSize)];
+    expect(fullDraw, isNotNull);
+    expect(fullDraw!.alpha, closeTo(1.0, 0.001));
+  });
 
   test('empty pendingCellIndices set leaves every cell at full alpha', () {
     final cells = <CanvasCell>[
@@ -141,7 +138,7 @@ void main() {
       surfaceColor: surface,
       chunkLineColor: chunk,
       borderColor: ring,
-      // No pending set — explicit default.
+      // No pending set - explicit default.
     );
 
     final recording = _RecordingCanvas();

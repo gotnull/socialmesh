@@ -6,7 +6,7 @@
 // graph. They represent the boolean result of a condition or logic gate node,
 // allowing downstream nodes to branch based on whether a condition was met.
 //
-// Color: Cyan — visually distinct from the amber event signal wires, making
+// Color: Cyan - visually distinct from the amber event signal wires, making
 // it easy for users to distinguish "event flow" from "condition evaluation"
 // at a glance.
 //
@@ -33,8 +33,8 @@ const Color kBoolGateColor = Color(0xFF22D3EE);
 /// this path continue?"
 ///
 /// Accepts connections from:
-/// - [BoolGateOutputData] — the primary condition/logic gate output type.
-/// - [VSBoolOutputData] — the standard vs_node_view boolean output, allowing
+/// - [BoolGateOutputData] - the primary condition/logic gate output type.
+/// - [VSBoolOutputData] - the standard vs_node_view boolean output, allowing
 ///   interoperability with any generic boolean-producing node.
 class BoolGateInputData extends VSInputData {
   BoolGateInputData({
@@ -54,7 +54,7 @@ class BoolGateInputData extends VSInputData {
 
 /// Output interface that emits a boolean gate signal.
 ///
-/// Used on condition nodes and logic gate nodes — any node that evaluates
+/// Used on condition nodes and logic gate nodes - any node that evaluates
 /// a boolean expression and forwards the result downstream.
 ///
 /// The [outputFunction] receives a map of the node's evaluated input values
@@ -81,7 +81,7 @@ class BoolGateOutputData extends VSOutputData<BoolGatePayload> {
 /// to reconstruct the corresponding [AutomationCondition] model.
 ///
 /// At runtime, the actual condition evaluation is handled by
-/// [AutomationEngine._evaluateCondition] — this payload is used only for
+/// [AutomationEngine._evaluateCondition] - this payload is used only for
 /// graph compilation and visual feedback, not for live event processing.
 class BoolGatePayload {
   const BoolGatePayload({
@@ -108,7 +108,7 @@ class BoolGatePayload {
   /// The boolean result of this condition evaluation.
   ///
   /// At design time this represents a preview/default state. At compile time
-  /// it is always set to true — the actual runtime evaluation is deferred to
+  /// it is always set to true - the actual runtime evaluation is deferred to
   /// the [AutomationEngine].
   ///
   /// For visual feedback, a false result can dim downstream wires and nodes

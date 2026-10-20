@@ -55,7 +55,7 @@ final _takGatewayUrlProvider = Provider<String>((ref) {
 /// TAK Gateway WebSocket client.
 ///
 /// Watches [_takGatewayUrlProvider] so it only rebuilds (and re-creates the
-/// client) when the effective gateway URL actually changes — not on every
+/// client) when the effective gateway URL actually changes - not on every
 /// settings async-state transition.
 final takGatewayClientProvider = Provider<TakGatewayClient>((ref) {
   final authService = ref.read(authServiceProvider);
@@ -167,7 +167,7 @@ class TakPersistenceNotifier extends AsyncNotifier<List<TakEvent>> {
       (e) => e.uid == event.uid && e.type == event.type,
     );
     if (idx >= 0) {
-      // Skip state emission when the event content is identical — avoids
+      // Skip state emission when the event content is identical - avoids
       // a full provider-chain cascade (filter → map layer → marker rebuild)
       // for duplicate or unchanged updates.
       if (current[idx].contentEquals(event)) {
@@ -189,7 +189,7 @@ class TakPersistenceNotifier extends AsyncNotifier<List<TakEvent>> {
 
     // Merge into in-memory list, tracking whether anything actually changed.
     // On initial connect the gateway snapshot is usually identical to the
-    // events we just loaded from SQLite — emitting a new state for the same
+    // events we just loaded from SQLite - emitting a new state for the same
     // data triggers a full cascade: takActiveEventsProvider →
     // filteredTakEventsProvider → TakMapLayer rebuild (27+ markers).
     final current = List<TakEvent>.of(state.value ?? []);

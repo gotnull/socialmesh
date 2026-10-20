@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 // Compact Mesh Health Indicator Widget
 //
 // A small, embeddable widget showing mesh health at a glance.
@@ -14,6 +14,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../services/mesh_health/mesh_health_models.dart';
 import '../../../services/mesh_health/mesh_health_providers.dart';
 import 'mesh_health_dashboard.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Compact health indicator for embedding in other screens
@@ -129,9 +130,8 @@ class MeshHealthIndicator extends ConsumerWidget {
   }
 
   void _openDashboard(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const MeshHealthDashboard()));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const MeshHealthDashboard()));
   }
 }
 

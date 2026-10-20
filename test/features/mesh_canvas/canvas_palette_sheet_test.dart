@@ -5,15 +5,15 @@
 //
 // Spec anchors:
 // - CANVAS_V0_1.md §S0.ux.15 ("active palette swatch is one tap away
-//   (bottom strip or quick-access)") — the strip stays pinned at the
+//   (bottom strip or quick-access)") - the strip stays pinned at the
 //   bottom; the sheet is the secondary surface reached via "More".
-// - CANVAS_V0_1.md §11 — canonical 64-entry palette identified by
+// - CANVAS_V0_1.md §11 - canonical 64-entry palette identified by
 //   `palette_id = 1`.
 //
 // S7.B acceptance: palette must be fast, compact, mobile-friendly,
 // and keep the canvas dominant. The tests pin the structural
-// contract — 64 swatches in an 8-column grid, tap returns palette
-// index via Navigator.pop — that the host screen + sheet rely on.
+// contract - 64 swatches in an 8-column grid, tap returns palette
+// index via Navigator.pop - that the host screen + sheet rely on.
 library;
 
 import 'package:flutter/material.dart';
@@ -24,9 +24,9 @@ import 'package:socialmesh/features/mesh_canvas/widgets/canvas_color_strip.dart'
 import 'package:socialmesh/features/mesh_canvas/widgets/canvas_palette_sheet.dart';
 
 void main() {
-  group('CanvasColorStrip — S7.B "More" button wiring', () {
+  group('CanvasColorStrip - S7.B "More" button wiring', () {
     testWidgets('when onMore is provided, tapping the More button fires the '
-        'callback exactly once — this is the open-sheet trigger', (
+        'callback exactly once - this is the open-sheet trigger', (
       tester,
     ) async {
       var moreTaps = 0;
@@ -52,7 +52,7 @@ void main() {
     });
 
     testWidgets(
-      'when onMore is null, the strip omits the More button — keeps the '
+      'when onMore is null, the strip omits the More button - keeps the '
       'strip reusable in contexts without the full palette sheet',
       (tester) async {
         await tester.pumpWidget(
@@ -76,8 +76,8 @@ void main() {
     );
   });
 
-  group('CanvasPaletteSheet — S0.ux.15 + §11 acceptance', () {
-    testWidgets('sheet renders all 64 swatches in an 8-column grid — keeps the '
+  group('CanvasPaletteSheet - S0.ux.15 + §11 acceptance', () {
+    testWidgets('sheet renders all 64 swatches in an 8-column grid - keeps the '
         'canvas dominant by never spanning more than the configured '
         'initialChildSize of the screen', (tester) async {
       // Pump a host that opens the sheet so we can inspect its
@@ -95,13 +95,13 @@ void main() {
           find.bySemanticsLabel(name),
           findsOneWidget,
           reason:
-              'Sheet must render palette index $i (name="$name") — '
+              'Sheet must render palette index $i (name="$name") - '
               'all 64 canonical colours from §11 are required.',
         );
       }
     });
 
-    testWidgets('tapping a swatch pops the sheet with the palette index — host '
+    testWidgets('tapping a swatch pops the sheet with the palette index - host '
         'reads the popped value to update selectedColorProvider', (
       tester,
     ) async {
@@ -118,7 +118,7 @@ void main() {
     });
 
     testWidgets(
-      'dismissing without picking returns null — host does NOT update '
+      'dismissing without picking returns null - host does NOT update '
       'selectedColorProvider on a tap-outside dismiss',
       (tester) async {
         final host = GlobalKey<_SheetHostScaffoldState>();

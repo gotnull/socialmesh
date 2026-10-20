@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// Redeem unlock code sheet — SUPPORT FALLBACK ONLY.
+// Redeem unlock code sheet - SUPPORT FALLBACK ONLY.
 //
 // This is intentionally NOT discoverable from the primary purchase
 // flow. It exists for cases where:
@@ -40,13 +40,13 @@ Future<void> showRedeemUnlockCodeSheet(BuildContext context) {
 }
 
 /// Open the "keep this pack across devices" nudge. Shown after an
-/// anonymous user successfully redeems a code — install-scoped
+/// anonymous user successfully redeems a code - install-scoped
 /// entitlements are bound to a deviceInstallId that uninstall destroys,
 /// so the pack is lost on reinstall unless they sign in to re-key it
 /// onto a Firebase uid.
 ///
 /// Uses the global navigator key internally so callers don't have to
-/// thread a BuildContext through async gaps — keeps
+/// thread a BuildContext through async gaps - keeps
 /// `use_build_context_synchronously` quiet at call sites.
 Future<void> showKeepPackSignInNudge() {
   final ctx = navigatorKey.currentContext;
@@ -110,7 +110,7 @@ class _RedeemUnlockCodeBodyState extends ConsumerState<_RedeemUnlockCodeBody>
 
       // Nudge anonymous users to sign in so the freshly-granted
       // entitlement survives reinstall. Install-scoped entitlements are
-      // keyed on deviceInstallId, which uninstall destroys — sign-in
+      // keyed on deviceInstallId, which uninstall destroys - sign-in
       // re-keys them to the Firebase uid, which is portable across
       // devices. Deferred so the redeem-sheet pop animation finishes
       // before the second sheet opens.
@@ -133,7 +133,7 @@ class _RedeemUnlockCodeBodyState extends ConsumerState<_RedeemUnlockCodeBody>
 
   @override
   Widget build(BuildContext context) {
-    // No outer Padding(viewInsets.bottom) — AppBottomSheet.show wraps in
+    // No outer Padding(viewInsets.bottom) - AppBottomSheet.show wraps in
     // showModalBottomSheet with isScrollControlled+useSafeArea, which
     // already pushes the sheet content above the keyboard. Adding our
     // own bottom-padding double-counts the keyboard inset and produces

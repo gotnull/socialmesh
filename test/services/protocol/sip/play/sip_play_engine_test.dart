@@ -146,7 +146,7 @@ void main() {
           SipPlayEntryDirection.inbound,
         ),
         _entry(
-          // Skipped seq=2 — seq=3 must be dropped.
+          // Skipped seq=2 - seq=3 must be dropped.
           _envelope(
             action: SipPlayAction.move,
             seq: 3,
@@ -204,7 +204,7 @@ void main() {
           SipPlayEntryDirection.inbound,
         ),
         _entry(
-          // seq=5 — out of order, dropped
+          // seq=5 - out of order, dropped
           _envelope(
             action: SipPlayAction.move,
             seq: 5,
@@ -213,7 +213,7 @@ void main() {
           SipPlayEntryDirection.outbound,
         ),
         _entry(
-          // seq=2 — correct
+          // seq=2 - correct
           _envelope(
             action: SipPlayAction.move,
             seq: 2,
@@ -244,7 +244,7 @@ void main() {
       expect(state.isTerminal, isTrue);
     });
 
-    test('full TTT win sequence on diagonal — winner detected at end', () {
+    test('full TTT win sequence on diagonal - winner detected at end', () {
       final state = _replayTtt([
         _entry(
           _envelope(action: SipPlayAction.offer, seq: 0),
@@ -290,7 +290,7 @@ void main() {
           ),
           SipPlayEntryDirection.inbound,
         ),
-        // X takes 8 — wins on diagonal 0-4-8
+        // X takes 8 - wins on diagonal 0-4-8
         _entry(
           _envelope(
             action: SipPlayAction.move,
@@ -375,7 +375,7 @@ void main() {
           SipPlayEntryDirection.outbound,
         ),
         _entry(
-          // O tries cell 4 — already occupied by X.
+          // O tries cell 4 - already occupied by X.
           _envelope(
             action: SipPlayAction.move,
             seq: 3,
@@ -397,7 +397,7 @@ void main() {
           SipPlayEntryDirection.outbound,
         ),
         _entry(
-          // Should be a no-op — sync is reserved.
+          // Should be a no-op - sync is reserved.
           _envelope(action: SipPlayAction.sync, seq: 1),
           SipPlayEntryDirection.inbound,
         ),
@@ -433,7 +433,7 @@ void main() {
       expect(state, isA<UnsupportedInstanceState>());
       expect(state.status, equals(SipPlayInstanceStatus.unsupported));
       expect(state.gameTypeCode, equals(0xFE));
-      // No board on UnsupportedInstanceState — its absence IS the
+      // No board on UnsupportedInstanceState - its absence IS the
       // assertion (subsequent envelopes can't apply moves).
     });
 
@@ -716,7 +716,7 @@ void main() {
           ),
           SipPlayEntryDirection.inbound,
         ),
-        // R at col 3 — wins horizontally on row 5.
+        // R at col 3 - wins horizontally on row 5.
         _entry(
           _envelope(
             action: SipPlayAction.move,
@@ -806,7 +806,7 @@ void main() {
         );
         seq += 1;
       }
-      // Attempt a 7th drop (red) into column 0 — column is full.
+      // Attempt a 7th drop (red) into column 0 - column is full.
       entries.add(
         _entry(
           _envelope(
@@ -819,7 +819,7 @@ void main() {
         ),
       );
       final state = _replayC4(entries);
-      // The full-column move was dropped — lastAppliedSeq stays at 7
+      // The full-column move was dropped - lastAppliedSeq stays at 7
       // (1 accept + 6 successful moves, last one's seq was 7).
       expect(state.lastAppliedSeq, equals(7));
       expect(state.board.cellAt(0, 0), isNotNull);
@@ -844,10 +844,10 @@ void main() {
   // Sticky-terminal invariant: a witnessed decline/resign envelope must
   // make the instance non-blocking even if replay context is missing.
   // Regression for the picker that stuck on "A game offer is already in
-  // progress" after the peer declined — see SocialMesh issue where a
+  // progress" after the peer declined - see SocialMesh issue where a
   // truncated history (offer entry lost, only decline surviving)
   // replayed back to `pendingOffer` and blocked every future offer.
-  group('hasNonTerminalInstanceForGameType — sticky terminal invariant', () {
+  group('hasNonTerminalInstanceForGameType - sticky terminal invariant', () {
     test('orphan decline with no offer → does not block', () {
       // Replay context missing: only the decline survives. Without the
       // sticky-terminal override, replay returns pendingOffer and the
@@ -962,7 +962,7 @@ void main() {
       ];
       final truncated = fullLog.sublist(1);
       // Pin the underlying replay regression: with the offer gone,
-      // replay regresses to pendingOffer / -1 — the exact signature
+      // replay regresses to pendingOffer / -1 - the exact signature
       // from the captured log. We assert it here so a future replay
       // refactor can't silently mask the upstream issue.
       final replayed = SipPlayEngine.replay(truncated);

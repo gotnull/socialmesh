@@ -11,7 +11,7 @@ import 'package:socialmesh/services/mesh_feed/mesh_post.dart';
 
 /// Fake in-memory [MeshFeedDatabase] for unit testing the repository layer.
 ///
-/// Uses a simple Map store — no real SQLite dependency.
+/// Uses a simple Map store - no real SQLite dependency.
 class FakeMeshFeedDatabase extends MeshFeedDatabase {
   FakeMeshFeedDatabase() : super(dbPathOverride: ':memory:');
 
@@ -402,7 +402,7 @@ void main() {
       await repo.dispose();
 
       // A closed broadcast StreamController.stream.listen returns a done
-      // subscription — verify it fires onDone immediately.
+      // subscription - verify it fires onDone immediately.
       final completer = Completer<bool>();
       repo.feedStream.listen(
         (_) {},

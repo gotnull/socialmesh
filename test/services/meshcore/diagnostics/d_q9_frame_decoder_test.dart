@@ -93,7 +93,7 @@ void main() {
       final toField = fields.firstWhere((f) => f.label == 'to');
       // Full 64-char pubkey hex must NEVER appear.
       expect(toField.value, isNot(contains('cccccccc' * 4)));
-      // Fingerprint format is `32B:<8 hex>…<8 hex>` — 21 chars,
+      // Fingerprint format is `32B:<8 hex>…<8 hex>` - 21 chars,
       // well under the full 64-char pubkey.
       expect(toField.value.length, lessThanOrEqualTo(24));
     });

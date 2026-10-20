@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — immersive fullscreen black gallery overlay
+// lint-allow: scaffold - immersive fullscreen black gallery overlay
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n_extension.dart';
 import '../safety/safe_image.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// A fullscreen image gallery with swipe navigation and pinch-to-zoom.
@@ -82,7 +83,7 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Image PageView — fills the entire screen
+          // Image PageView - fills the entire screen
           GestureDetector(
             onTap: _toggleOverlay,
             child: PageView.builder(
@@ -140,7 +141,7 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
                     ),
                     child: Row(
                       children: [
-                        // Counter pill — only shown for multiple images
+                        // Counter pill - only shown for multiple images
                         if (_isMultiImage) ...[
                           const Spacer(),
                           Container(
@@ -165,7 +166,7 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
                           ),
                         ],
                         const Spacer(),
-                        // Close button — top-right to avoid overlapping
+                        // Close button - top-right to avoid overlapping
                         // navigation elements visible in screenshot content
                         Container(
                           decoration: BoxDecoration(

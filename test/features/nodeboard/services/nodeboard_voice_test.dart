@@ -50,9 +50,8 @@ void main() {
 
     test('embeds nodeHex and sysop into handshake lines', () {
       for (final tone in BoardTone.values) {
-        final lines = NodeBoardVoice(
-          tone: tone,
-        ).handshake(nodeHex: '!ABC123', sysop: 'distortion');
+        final lines = NodeBoardVoice(tone: tone)
+            .handshake(nodeHex: '!ABC123', sysop: 'distortion');
         final joined = lines.join('\n');
         expect(
           joined.contains('!ABC123'),
@@ -68,15 +67,15 @@ void main() {
     });
 
     test('different tones produce different handshake openers', () {
-      final hacker = NodeBoardVoice(
-        tone: BoardTone.hacker,
-      ).handshake(nodeHex: '!X', sysop: 'y').first;
-      final wasteland = NodeBoardVoice(
-        tone: BoardTone.wasteland,
-      ).handshake(nodeHex: '!X', sysop: 'y').first;
-      final chaotic = NodeBoardVoice(
-        tone: BoardTone.chaotic,
-      ).handshake(nodeHex: '!X', sysop: 'y').first;
+      final hacker = NodeBoardVoice(tone: BoardTone.hacker)
+          .handshake(nodeHex: '!X', sysop: 'y')
+          .first;
+      final wasteland = NodeBoardVoice(tone: BoardTone.wasteland)
+          .handshake(nodeHex: '!X', sysop: 'y')
+          .first;
+      final chaotic = NodeBoardVoice(tone: BoardTone.chaotic)
+          .handshake(nodeHex: '!X', sysop: 'y')
+          .first;
       expect(hacker, isNot(equals(wasteland)));
       expect(hacker, isNot(equals(chaotic)));
       expect(wasteland, isNot(equals(chaotic)));
@@ -117,7 +116,7 @@ void main() {
           NodeBoardVoice(tone: tone).activityLabel.toLowerCase(),
       };
       // At least 4 of the 6 tones should be textually distinct (some may
-      // overlap — e.g. neutral vs corporate both speak plainly).
+      // overlap - e.g. neutral vs corporate both speak plainly).
       expect(labels.length, greaterThanOrEqualTo(4));
     });
   });

@@ -227,9 +227,8 @@ class _InsertLinkSheetState extends State<_InsertLinkSheet> {
         Text(
           l10n.formattingLinkSheetDescription,
           textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: context.textSecondary),
         ),
         const SizedBox(height: AppTheme.spacing16),
         BottomSheetTextField(

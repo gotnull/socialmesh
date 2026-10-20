@@ -159,9 +159,8 @@ Future<_StubService> _open(
     ProviderScope(
       overrides: [
         licenseOrgFleetServiceProvider.overrideWithValue(stub),
-        licenseOrgMembersProvider(
-          _org,
-        ).overrideWith((ref) => Stream.value(members)),
+        licenseOrgMembersProvider(_org)
+            .overrideWith((ref) => Stream.value(members)),
         // fleetDeviceByIdProvider derives from this, so overriding the
         // snapshot exercises the real lookup rather than stubbing it.
         licenseOrgFleetProvider(_org).overrideWith(

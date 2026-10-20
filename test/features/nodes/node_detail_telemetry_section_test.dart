@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Verifies NodeDetailScreen exposes a Telemetry section that links to
-/// every per-node telemetry log screen. This is a wire-up invariant —
+/// every per-node telemetry log screen. This is a wire-up invariant -
 /// users should be able to jump from a node to its telemetry history
 /// without going through the global Settings / drawer hub.
 void main() {
@@ -64,7 +64,7 @@ void main() {
       // users see only that node's history, not the global log.
       // TraceRouteLogScreen navigation is centralized through
       // TraceRouteLogScreen.open(context, nodeNum:) (see the .open
-      // factory). The node-scoping invariant is identical — the current
+      // factory). The node-scoping invariant is identical - the current
       // nodeNum is still threaded through.
       const expectedLaunches = <String>[
         'DeviceMetricsLogScreen(nodeNum: nodeNum)',
@@ -106,7 +106,7 @@ void main() {
         sectionBody.contains('RoutesScreen'),
         false,
         reason:
-            'Routes is user-local (phone GPS tracks), not node-scoped — it '
+            'Routes is user-local (phone GPS tracks), not node-scoped - it '
             'does not belong in the per-node telemetry section.',
       );
     });

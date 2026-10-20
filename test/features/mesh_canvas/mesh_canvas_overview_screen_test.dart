@@ -3,7 +3,7 @@
 
 // S7.C / S8 acceptance tests for the overview screen.
 //
-// IA invariants (load-bearing — see screen header doc):
+// IA invariants (load-bearing - see screen header doc):
 //   - LOCAL tab renders the Local Device Canvas viewport DIRECTLY
 //     (no intermediary card, no navigation push). Identity chip
 //     reads "Local Device Canvas".
@@ -87,7 +87,7 @@ Future<void> _pumpOverview(
     'mesh_canvas.participation.presence_sharing_enabled':
         presenceSharingEnabled,
   });
-  // Build a unique set of canvas-cell overrides — the Local tab reads
+  // Build a unique set of canvas-cell overrides - the Local tab reads
   // canvasCellsProvider(_localCanvas.localId) AND every canvas in the
   // fixture; dedupe so Riverpod doesn't reject a double-override.
   final cellOverrideIds = <int>{
@@ -100,9 +100,8 @@ Future<void> _pumpOverview(
         canvasListProvider.overrideWith((ref) async => canvases),
         localDeviceCanvasProvider.overrideWith((ref) async => _localCanvas),
         for (final id in cellOverrideIds)
-          canvasCellsProvider(
-            id,
-          ).overrideWith((ref) async => const <CanvasCell>[]),
+          canvasCellsProvider(id)
+              .overrideWith((ref) async => const <CanvasCell>[]),
         channelsProvider.overrideWith(() => _StubChannelsNotifier(channels)),
       ],
       child: MaterialApp(
@@ -123,7 +122,7 @@ Future<void> _pumpOverview(
 }
 
 void main() {
-  group('MeshCanvasOverviewScreen — IA acceptance', () {
+  group('MeshCanvasOverviewScreen - IA acceptance', () {
     testWidgets('Local tab renders the Local Device Canvas viewport DIRECTLY '
         '(no card, no Primary, no channel name)', (tester) async {
       await _pumpOverview(
@@ -174,7 +173,7 @@ void main() {
       expect(find.text('OTHER CHANNELS'), findsNothing);
     });
 
-    testWidgets('Mesh tab lists channel canvases — channel names appear only '
+    testWidgets('Mesh tab lists channel canvases - channel names appear only '
         'in Mesh mode and the viewport from Local mode is gone', (
       tester,
     ) async {
@@ -187,14 +186,14 @@ void main() {
       );
 
       await tester.tap(find.text('Mesh'));
-      // pumpAndSettle is safe here — the channel-list path has no
+      // pumpAndSettle is safe here - the channel-list path has no
       // indefinite tickers.
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
       // Channel rows visible.
       expect(find.text('Primary'), findsOneWidget);
       expect(find.text('LongFast'), findsOneWidget);
-      // Local viewport is gone — no viewport body in tree.
+      // Local viewport is gone - no viewport body in tree.
       expect(find.byType(CanvasViewportBody), findsNothing);
       // No "Local Device Canvas" framing anywhere in Mesh mode.
       expect(find.text('Local Device Canvas'), findsNothing);
@@ -239,7 +238,7 @@ void main() {
 
     testWidgets(
       'zero configured channels in Mesh mode shows AnimatedEmptyState '
-      'with channel-centric copy — never "waiting for mesh canvases"',
+      'with channel-centric copy - never "waiting for mesh canvases"',
       (tester) async {
         await _pumpOverview(tester, channels: const []);
 
@@ -260,7 +259,7 @@ void main() {
       // The latent provider keys materialised rows by
       // (channelIndex, derived canvasId). For the materialised-path
       // tap test we need the fixture canvas's canvas_id to MATCH
-      // what the provider derives from (psk, name) — otherwise the
+      // what the provider derives from (psk, name) - otherwise the
       // row is dormant and the tap hits the get-or-create branch,
       // which needs a real repository.
       const psk = <int>[1, 2, 3];
@@ -305,13 +304,13 @@ void main() {
   });
 
   // ────────────────────────────────────────────────────────────────
-  // S3 — participation gate + first-run trigger.
+  // S3 - participation gate + first-run trigger.
   // Spec: docs/canvas/CANVAS_PARTICIPATION_V0_1.md §5.1 + §5.2.
   // ────────────────────────────────────────────────────────────────
-  group('MeshCanvasOverviewScreen — participation gate', () {
+  group('MeshCanvasOverviewScreen - participation gate', () {
     testWidgets(
       'Mesh tab with participation disabled renders the calm CTA card '
-      'and NO channel list — channels stay hidden until explicit opt-in',
+      'and NO channel list - channels stay hidden until explicit opt-in',
       (tester) async {
         await _pumpOverview(
           tester,
@@ -330,7 +329,7 @@ void main() {
           find.byKey(const ValueKey('mesh-canvas-participation-enable')),
           findsOneWidget,
         );
-        // PRIMARY COMMONS / channel name MUST NOT appear — the entire
+        // PRIMARY COMMONS / channel name MUST NOT appear - the entire
         // channel list is suppressed until the user opts in.
         expect(find.text('PRIMARY COMMONS'), findsNothing);
         expect(find.text('Primary'), findsNothing);
@@ -380,7 +379,7 @@ void main() {
         // Drain the post-frame callback + sheet animation.
         await tester.pumpAndSettle();
 
-        // Sheet body marker — both CTAs uniquely identify the sheet.
+        // Sheet body marker - both CTAs uniquely identify the sheet.
         expect(
           find.byKey(const ValueKey('mesh-canvas-onboarding-explore')),
           findsOneWidget,
@@ -405,7 +404,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Neither CTA is present — sheet stayed shut.
+        // Neither CTA is present - sheet stayed shut.
         expect(
           find.byKey(const ValueKey('mesh-canvas-onboarding-explore')),
           findsNothing,

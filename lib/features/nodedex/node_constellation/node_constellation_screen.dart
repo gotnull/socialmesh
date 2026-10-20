@@ -341,7 +341,7 @@ class _NodeConstellationScreenState
 
     final statTiles = _buildStatTiles(centre, encounter, message);
 
-    // Co-seen peers — drives the corner peek of sigils on the hero.
+    // Co-seen peers - drives the corner peek of sigils on the hero.
     final coSeenLinks = ref.watch(
       nodeDexHistoricalCoSeenLinksProvider(widget.nodeNum),
     );
@@ -438,7 +438,7 @@ class _NodeConstellationScreenState
 
     if (encounter != null) {
       final total =
-          _firstDetailValue(encounter, NodeDexGraphDetailKind.total) ?? '—';
+          _firstDetailValue(encounter, NodeDexGraphDetailKind.total) ?? '-';
       tiles.add(
         NodeConstellationStatTile(
           value: total,
@@ -464,7 +464,7 @@ class _NodeConstellationScreenState
     }
 
     if (message != null) {
-      final total = message.count?.toString() ?? '—';
+      final total = message.count?.toString() ?? '-';
       tiles.add(
         NodeConstellationStatTile(
           value: total,

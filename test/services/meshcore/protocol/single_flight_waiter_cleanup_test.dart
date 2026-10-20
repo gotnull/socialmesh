@@ -9,7 +9,7 @@
 //
 // Also pins the StateError-as-null contract: when the transport
 // layer throws StateError ("not connected" / "session not active")
-// mid-send, `sendAndWait` returns null rather than rethrowing —
+// mid-send, `sendAndWait` returns null rather than rethrowing -
 // matches the existing TimeoutException semantics so periodic
 // pollers don't leak unhandled async errors into Crashlytics.
 

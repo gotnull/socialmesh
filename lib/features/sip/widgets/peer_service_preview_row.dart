@@ -6,10 +6,10 @@
 /// Renders up to [peerServicePreviewMax] service chips on the SIP hub
 /// peer tile, followed by a "+N more" tag when the peer advertises
 /// additional services beyond the preview cap. Tap goes through the
-/// parent tile — this widget is presentational only, no GestureDetector.
+/// parent tile - this widget is presentational only, no GestureDetector.
 ///
 /// Data comes from [`peerServicesPreviewProvider`] +
-/// [`peerServicesCountProvider`] — thin projections of
+/// [`peerServicesCountProvider`] - thin projections of
 /// `mrrpCachedServicesProvider`. No new subscriptions.
 library;
 

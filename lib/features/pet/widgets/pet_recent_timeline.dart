@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetRecentTimeline — chronological vertical timeline of recent care
+// PetRecentTimeline - chronological vertical timeline of recent care
 // events, with chevron pagination at the bottom.
 //
 // Visual language mirrors
@@ -14,7 +14,7 @@
 //   * Landmark events (hatched, stage transitions, branch resolution,
 //     dormancy, re-sigil) get a larger dot + glow so milestones pop
 //     out of the day-to-day care noise
-//   * Footer: chevron prev/next + page indicator — pagination is
+//   * Footer: chevron prev/next + page indicator - pagination is
 //     inline in the sheet (no separate screen)
 //
 // Events render NEWEST-FIRST (the underlying [PetState.recentEvents]
@@ -63,7 +63,7 @@ class _PetRecentTimelineState extends State<PetRecentTimeline> {
   void didUpdateWidget(covariant PetRecentTimeline old) {
     super.didUpdateWidget(old);
     // If the events list shrank (e.g. recentEventsCapacity trim) the
-    // current page index may now exceed the total — clamp it.
+    // current page index may now exceed the total - clamp it.
     if (widget.events.length != old.events.length) {
       final totalPages = _totalPages(widget.events.length);
       if (_currentPage >= totalPages && totalPages > 0) {
@@ -183,7 +183,7 @@ class _PetRecentTimelineState extends State<PetRecentTimeline> {
 }
 
 // ============================================================================
-// Timeline items (sealed — events + day headers)
+// Timeline items (sealed - events + day headers)
 // ============================================================================
 
 sealed class _TimelineItem {

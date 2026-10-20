@@ -157,7 +157,7 @@ class DefaultTapbacks {
 }
 
 /// Tapback reaction to a message.
-/// Stores the raw emoji string — no enum mapping needed for display.
+/// Stores the raw emoji string - no enum mapping needed for display.
 class MessageTapback {
   final String id;
   final String messageId;

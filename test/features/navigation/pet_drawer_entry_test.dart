@@ -3,7 +3,7 @@
 
 // Regression guard: NodePet must NOT be a top-level drawer entry.
 //
-// Access to NodePet is now owned by NodeDex detail — the Companion card
+// Access to NodePet is now owned by NodeDex detail - the Companion card
 // on the user's own node surfaces an "Open NodePet" action. The feature
 // is discovered through NodeDex, not advertised in the global drawer.
 // This test fails if anyone reintroduces a drawer tile.
@@ -40,7 +40,7 @@ void main() {
         source.contains('l10n.petDrawerLabel'),
         false,
         reason:
-            'petDrawerLabel must no longer be referenced — NodePet is not a '
+            'petDrawerLabel must no longer be referenced - NodePet is not a '
             'top-level drawer entry.',
       );
     });

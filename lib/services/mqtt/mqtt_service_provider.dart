@@ -4,10 +4,10 @@
 /// Riverpod providers for the [MqttService] layer.
 ///
 /// This module provides:
-/// - [mqttServiceProvider] — singleton [MqttService] instance (mock or real)
-/// - [mqttConnectionForwarderProvider] — bridges service connection events
+/// - [mqttServiceProvider] - singleton [MqttService] instance (mock or real)
+/// - [mqttConnectionForwarderProvider] - bridges service connection events
 ///   to the Global Layer provider layer
-/// - [mqttMessageForwarderProvider] — bridges inbound messages to metrics
+/// - [mqttMessageForwarderProvider] - bridges inbound messages to metrics
 ///   and remote sightings providers
 ///
 /// The service defaults to [MqttMockService] until a real MQTT client
@@ -78,7 +78,7 @@ final mqttServiceProvider = Provider<MqttService>((ref) {
 /// and forwards state transitions to [GlobalLayerConnectionStateNotifier]
 /// and session tracking to [GlobalLayerMetricsNotifier].
 ///
-/// It is a "fire-and-forget" provider — reading it once starts the
+/// It is a "fire-and-forget" provider - reading it once starts the
 /// forwarding. It is typically read during app initialization or
 /// when the Global Layer feature is first accessed.
 ///

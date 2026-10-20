@@ -141,7 +141,7 @@ void main() {
     });
 
     test('truncates at word boundary when possible', () {
-      // "The quick brown fox jumps" — limit to 16 graphemes
+      // "The quick brown fox jumps" - limit to 16 graphemes
       // 16 - 1(suffix) = 15 keep chars
       // "The quick brown" = 15, last space at index 9 (after "quick")
       final result = safeTruncateAtWord('The quick brown fox jumps', 16);
@@ -274,7 +274,7 @@ void main() {
       final spec = NotificationSpec.fromUserTemplate(
         titleTemplate: '{{node.name}} Alert',
         bodyTemplate:
-            '{{node.name}} detected at {{location}} — Battery: {{battery}}',
+            '{{node.name}} detected at {{location}} - Battery: {{battery}}',
       );
       expect(spec.tiers, hasLength(3));
       expect(spec.tiers[0].level, TemplateTierLevel.full);
@@ -365,7 +365,7 @@ void main() {
       defaultSpec = NotificationSpec.fromUserTemplate(
         titleTemplate: '{{node.name}} Alert',
         bodyTemplate:
-            '{{node.name}} detected at {{location}} — Battery: {{battery}}',
+            '{{node.name}} detected at {{location}} - Battery: {{battery}}',
       );
       defaultVariables = {
         'node.name': 'Base Camp',
@@ -602,7 +602,7 @@ void main() {
       });
 
       test('usedFallback is true when no tier fits', () {
-        // Zero-grapheme policy — nothing can possibly fit
+        // Zero-grapheme policy - nothing can possibly fit
         const impossiblePolicy = NotificationPolicy(
           channel: 'test',
           title: FieldPolicy(maxGraphemes: 0),
@@ -853,7 +853,7 @@ void main() {
         // Reproduces the real-world bug: template packed with the same
         // variable 28 times. With a 20-char node name the resolved text
         // far exceeds 250 graphemes. The renderer must TRUNCATE the
-        // resolved text — preserving partial content — not drop the
+        // resolved text - preserving partial content - not drop the
         // variable entirely, which would leave only the literal suffix.
         final body = "${List.filled(28, '{{node.name}}').join(' ')} 123456";
         final spec = NotificationSpec.fromUserTemplate(
@@ -869,7 +869,7 @@ void main() {
             'location': '37.774900, -122.419400',
           },
         );
-        // The body must NOT be just "123456" — the variable content
+        // The body must NOT be just "123456" - the variable content
         // should be preserved via truncation, not dropped.
         expect(result.parts.body, isNot(equals('123456')));
         expect(result.parts.body, contains('Base Camp Alpha'));
@@ -916,7 +916,7 @@ void main() {
         // When a long resolved body is truncated, the beginning
         // (first variables) should survive, not just the literal tail.
         final body =
-            '{{node.name}} at {{location}} — '
+            '{{node.name}} at {{location}} - '
             "${List.filled(20, '{{node.name}}').join(' ')} TAIL_MARKER";
         final spec = NotificationSpec.fromUserTemplate(
           titleTemplate: 'Alert',

@@ -164,23 +164,26 @@ void main() {
       expect(cache.activeProductIds(), isEmpty);
     });
 
-    test('legacy cache entries (no subjectKind) default to user-owned', () async {
-      // Belt and braces: a cache populated by an older app version
-      // had no `subjectKind` or `orgId` keys. After the upgrade, those
-      // entries must still grant access exactly as before.
-      await prefs.setString(
-        'external_purchase.entitlements_cache',
-        '[{"productId":"theme_pack","status":"active","provider":"buymeacoffee",'
-            '"grantedAt":"2026-05-05T10:00:00.000Z",'
-            '"lastVerifiedAt":"2026-05-05T10:00:00.000Z",'
-            '"sessionId":"sess-1"}]',
-      );
-      final readBack = cache.read();
-      expect(readBack, hasLength(1));
-      expect(readBack.single.ownerKind, OwnerKind.user);
-      expect(readBack.single.orgId, isNull);
-      expect(cache.activeProductIds(), {'theme_pack'});
-    });
+    test(
+      'legacy cache entries (no subjectKind) default to user-owned',
+      () async {
+        // Belt and braces: a cache populated by an older app version
+        // had no `subjectKind` or `orgId` keys. After the upgrade, those
+        // entries must still grant access exactly as before.
+        await prefs.setString(
+          'external_purchase.entitlements_cache',
+          '[{"productId":"theme_pack","status":"active","provider":"buymeacoffee",'
+              '"grantedAt":"2026-05-05T10:00:00.000Z",'
+              '"lastVerifiedAt":"2026-05-05T10:00:00.000Z",'
+              '"sessionId":"sess-1"}]',
+        );
+        final readBack = cache.read();
+        expect(readBack, hasLength(1));
+        expect(readBack.single.ownerKind, OwnerKind.user);
+        expect(readBack.single.orgId, isNull);
+        expect(cache.activeProductIds(), {'theme_pack'});
+      },
+    );
 
     test(
       'mixed user + org + revoked: activeProductIds returns only active user',

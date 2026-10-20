@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Observation Timeline — compact field journal timeline strip.
+// Observation Timeline - compact field journal timeline strip.
 //
 // Renders a horizontal timeline showing key observation milestones
 // for a node: first sighting, last sighting, encounter count, and
@@ -14,7 +14,7 @@
 //
 // Design constraints:
 //   - Single-line height, suitable for embedding in detail headers
-//   - No scrolling — content fits within available width
+//   - No scrolling - content fits within available width
 //   - Field journal aesthetic: muted colors, small type, monospace dates
 //   - Fully deterministic rendering from NodeDexEntry data
 
@@ -403,10 +403,10 @@ class _TimelinePainter extends CustomPainter {
   }
 }
 
-/// Inline observation summary — a single-line text version of the timeline.
+/// Inline observation summary - a single-line text version of the timeline.
 ///
 /// Used in list tiles where the full timeline strip would be too large.
-/// Renders something like: "Observed 12 Mar — 47 sightings — last 2h ago"
+/// Renders something like: "Observed 12 Mar - 47 sightings - last 2h ago"
 class ObservationSummary extends StatelessWidget {
   /// The NodeDex entry to summarize.
   final NodeDexEntry entry;

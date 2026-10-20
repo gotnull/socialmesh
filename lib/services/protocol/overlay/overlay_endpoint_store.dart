@@ -11,7 +11,7 @@
 /// `peer_node_num_hint` support the deterministic tie-break rules
 /// documented in `docs/sip/OVERLAY_V0_2.md` §24.1.4.
 ///
-/// **No key material is ever persisted here** — private keys live in
+/// **No key material is ever persisted here** - private keys live in
 /// [FlutterSecureStorage] only. `persona_pub_ed` is the peer's public
 /// key and may safely be stored.
 library;
@@ -110,7 +110,7 @@ class OverlayEndpointStore {
     final db = _db;
     if (db == null || !db.isOpen) {
       throw StateError(
-        'OverlayEndpointStore not initialized — call init() first',
+        'OverlayEndpointStore not initialized - call init() first',
       );
     }
     return db;

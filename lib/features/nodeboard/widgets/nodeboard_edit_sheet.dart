@@ -319,7 +319,7 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
             ],
           ),
         ),
-        // Fixed save button — pinned to the bottom of the sheet, never
+        // Fixed save button - pinned to the bottom of the sheet, never
         // scrolls with the form content.
         Container(
           decoration: BoxDecoration(
@@ -354,7 +354,7 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
 }
 
 /// Canonical TextField with OutlineInputBorder, prefix icon, floating
-/// label, and muted hint — matches mqtt_config_screen.dart exactly.
+/// label, and muted hint - matches mqtt_config_screen.dart exactly.
 class _LabeledField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
@@ -429,7 +429,7 @@ class _LabeledField extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Visibility radio group — mirrors appearance_accessibility FontModeSelector
+// Visibility radio group - mirrors appearance_accessibility FontModeSelector
 // pattern: stacked InkWell rows inside a card with radio on the right.
 // ---------------------------------------------------------------------------
 
@@ -712,7 +712,7 @@ class _ThemeListTile extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Node linking — rendered as a _SettingsTile to match the inner settings
+// Node linking - rendered as a _SettingsTile to match the inner settings
 // aesthetic. Action button lives below the tile as a trailing row.
 // ---------------------------------------------------------------------------
 
@@ -810,7 +810,7 @@ class _NodeLinkTile extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Full-width gradient submit button — matches Create Signal pattern.
+// Full-width gradient submit button - matches Create Signal pattern.
 // ---------------------------------------------------------------------------
 
 class _GradientSubmitButton extends StatelessWidget {

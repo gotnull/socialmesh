@@ -68,7 +68,7 @@ class NodeBoardCardContainer extends StatelessWidget {
   }
 }
 
-/// Small stat chip — icon + label/count. Matches NodeDex / Aether chip
+/// Small stat chip - icon + label/count. Matches NodeDex / Aether chip
 /// style. Use for thread counts, reply counts, time-ago, etc.
 class NodeBoardStatChip extends StatelessWidget {
   final IconData icon;

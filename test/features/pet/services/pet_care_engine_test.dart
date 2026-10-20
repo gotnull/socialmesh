@@ -22,7 +22,7 @@ PetState _freshJuvenile(PetConfig config, DateTime at) {
 }
 
 void main() {
-  group('PetCareEngine — determinism (acceptance #1)', () {
+  group('PetCareEngine - determinism (acceptance #1)', () {
     test('same (ownerNodeNum, hatchedAt) produces identical dnaSeed 100x', () {
       final hatchedAt = DateTime(2026, 4, 1, 12);
       final seeds = <int>{};
@@ -46,7 +46,7 @@ void main() {
     });
   });
 
-  group('PetCareEngine — stat decay (acceptance #2)', () {
+  group('PetCareEngine - stat decay (acceptance #2)', () {
     test('full-stat start drains energy over ~10h (production defaults)', () {
       const config = PetConfig();
       final engine = PetCareEngine(config: config);
@@ -108,7 +108,7 @@ void main() {
         s = engine.advanceTo(s, start.add(elapsed));
       }
       // After 45 minutes, at least one 30-minute care tick must have
-      // fired — stats must have decayed off the hatch value.
+      // fired - stats must have decayed off the hatch value.
       expect(
         s.energy,
         lessThan(initialEnergy),
@@ -117,7 +117,7 @@ void main() {
     });
   });
 
-  group('PetCareEngine — attention calls + mistakes (acceptance #3)', () {
+  group('PetCareEngine - attention calls + mistakes (acceptance #3)', () {
     test('ignoring a call past deadline increments mistake counter', () {
       const config = PetConfig();
       final engine = PetCareEngine(config: config);
@@ -160,7 +160,7 @@ void main() {
         reason: 'totalCalls counted at start; expiry must not re-count',
       );
       expect(s.stageAccumulators.mistakes, greaterThan(0));
-      // attentionScore is the key derived value — 0 answered / 1 total = 0.0
+      // attentionScore is the key derived value - 0 answered / 1 total = 0.0
       // (with the bug: 0 / 2 = 0.0, same output but the semantics are wrong
       // and multi-call sequences diverge from truth).
       expect(s.stageAccumulators.attentionScore, 0.0);
@@ -235,7 +235,7 @@ void main() {
     });
   });
 
-  group('PetCareEngine — sleep transitions (acceptance #4)', () {
+  group('PetCareEngine - sleep transitions (acceptance #4)', () {
     test('entering sleep window sets isAsleep', () {
       const config = PetConfig();
       final engine = PetCareEngine(config: config);
@@ -294,7 +294,7 @@ void main() {
     });
   });
 
-  group('PetCareEngine — sickness (acceptance #5)', () {
+  group('PetCareEngine - sickness (acceptance #5)', () {
     test('multiple Surges push instability past threshold → sickness', () {
       const config = PetConfig();
       final engine = PetCareEngine(config: config);
@@ -335,7 +335,7 @@ void main() {
     });
   });
 
-  group('PetCareEngine — persistence round-trip (acceptance #7)', () {
+  group('PetCareEngine - persistence round-trip (acceptance #7)', () {
     test('PetState survives JSON round-trip unchanged', () {
       const config = PetConfig();
       final engine = PetCareEngine(config: config);
@@ -371,7 +371,7 @@ void main() {
     });
   });
 
-  group('PetCareEngine — long-gap catch-up invariants', () {
+  group('PetCareEngine - long-gap catch-up invariants', () {
     test('exact mode for gap ≤ 24h', () {
       const config = PetConfig();
       final engine = PetCareEngine(config: config);
@@ -449,7 +449,7 @@ void main() {
       final now = start.add(const Duration(days: 5));
       s = engine.advanceTo(s, now);
 
-      // Every artefact must land at or before `now` — no futures.
+      // Every artefact must land at or before `now` - no futures.
       for (final a in s.hygieneArtefacts) {
         expect(
           a.isAfter(now),

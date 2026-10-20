@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Modified: Added sci-fi themed canvas background rendering.
 // Modified: Long-press gesture opens context menu with haptic-friendly delay.
@@ -121,7 +121,7 @@ class VSNodeView extends StatelessWidget {
 
           final view = Stack(
             children: [
-              // Canvas background — the gesture detector fills the entire
+              // Canvas background - the gesture detector fills the entire
               // canvas area. Single tap clears selection and closes any
               // open context menu. Long-press opens the context menu for
               // creating new nodes (mobile-friendly alternative to
@@ -160,7 +160,7 @@ class VSNodeView extends StatelessWidget {
                         : const SizedBox.expand(),
                   ),
 
-              // Connection lines — painted between all connected interfaces
+              // Connection lines - painted between all connected interfaces
               // with glow effect.
               CustomPaint(
                 foregroundPainter: MultiGradientLinePainter(
@@ -172,7 +172,7 @@ class VSNodeView extends StatelessWidget {
                 ),
               ),
 
-              // Snap-preview ghost — rendered at the grid-snapped target
+              // Snap-preview ghost - rendered at the grid-snapped target
               // position while a node is being dragged. Shows the user
               // exactly where the node will land on the grid.
               if (nodeDataProvider.isDraggingNode &&
@@ -189,7 +189,7 @@ class VSNodeView extends StatelessWidget {
               // Node widgets.
               ...nodes,
 
-              // Context menu — positioned at the point where the user
+              // Context menu - positioned at the point where the user
               // long-pressed or right-clicked.
               if (nodeDataProvider.contextMenuContext != null)
                 Positioned(
@@ -279,7 +279,7 @@ class _DashedRectPainter extends CustomPainter {
       }
     }
 
-    // Corner accent dots — small filled circles at the four corners of the
+    // Corner accent dots - small filled circles at the four corners of the
     // rectangle so the target feels anchored to the grid.
     final dotPaint = Paint()
       ..color = color.withValues(alpha: 0.6)

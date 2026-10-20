@@ -13,7 +13,7 @@ import 'package:socialmesh/services/meshcore/meshcore_usb_framing.dart';
 
 /// Build a synthetic DeviceInfo for the TCP transport's connect signature.
 /// The id/name fields are unused by the transport itself (host/port come
-/// from the constructor) — they exist only so the [MeshTransport.connect]
+/// from the constructor) - they exist only so the [MeshTransport.connect]
 /// signature is satisfied.
 DeviceInfo _synthDevice() => DeviceInfo(
   id: 'meshcore-tcp:test',
@@ -33,7 +33,7 @@ void main() {
     test('connect succeeds against a local ServerSocket', () async {
       final server = await ServerSocket.bind('127.0.0.1', 0);
       addTearDown(server.close);
-      // Accept and discard — we just need the listener to exist.
+      // Accept and discard - we just need the listener to exist.
       server.listen((s) => s.destroy());
 
       final t = MeshCoreTcpTransport(host: '127.0.0.1', port: server.port);
@@ -46,7 +46,7 @@ void main() {
 
     test('connect to a refused port surfaces an error', () async {
       // Bind a port and immediately close it so the OS can re-issue it but
-      // nothing is listening — `connect` should throw.
+      // nothing is listening - `connect` should throw.
       final probe = await ServerSocket.bind('127.0.0.1', 0);
       final closedPort = probe.port;
       await probe.close();
@@ -135,48 +135,43 @@ void main() {
           const Duration(seconds: 2),
         );
         // The transport should have stripped the USB header and emitted only
-        // the payload — same shape as a BLE notification carries.
+        // the payload - same shape as a BLE notification carries.
         expect(emitted, payload);
       },
     );
 
-    test(
-      'a frame split across two socket reads still produces one dataStream event',
-      () async {
-        final server = await ServerSocket.bind('127.0.0.1', 0);
-        addTearDown(server.close);
+    test('a frame split across two socket reads still produces one dataStream event', () async {
+      final server = await ServerSocket.bind('127.0.0.1', 0);
+      addTearDown(server.close);
 
-        final clientReady = Completer<Socket>();
-        server.listen((s) {
-          if (!clientReady.isCompleted) clientReady.complete(s);
-        });
+      final clientReady = Completer<Socket>();
+      server.listen((s) {
+        if (!clientReady.isCompleted) clientReady.complete(s);
+      });
 
-        final t = MeshCoreTcpTransport(host: '127.0.0.1', port: server.port);
-        addTearDown(t.dispose);
+      final t = MeshCoreTcpTransport(host: '127.0.0.1', port: server.port);
+      addTearDown(t.dispose);
 
-        await t.connect(_synthDevice());
-        final clientSocket = await clientReady.future;
-        addTearDown(clientSocket.destroy);
+      await t.connect(_synthDevice());
+      final clientSocket = await clientReady.future;
+      addTearDown(clientSocket.destroy);
 
-        // Pre-subscribe so the first emit is captured.
-        final firstFrame = t.dataStream.first.timeout(
-          const Duration(seconds: 2),
-        );
+      // Pre-subscribe so the first emit is captured.
+      final firstFrame = t.dataStream.first.timeout(const Duration(seconds: 2));
 
-        const payload = [0x05, 0x11, 0x22, 0x33];
-        // Write the header alone first, then the payload separately. The
-        // decoder must buffer across the gap and still emit a single
-        // complete frame.
-        clientSocket.add([MeshCoreUsbMarkers.radioToApp, payload.length, 0x00]);
-        await clientSocket.flush();
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-        clientSocket.add(payload);
-        await clientSocket.flush();
+      const payload = [0x05, 0x11, 0x22, 0x33];
+      // Write the header alone first, then the payload separately. The
+      // decoder must buffer across the gap and still emit a single
+      // complete frame.
+      clientSocket.add([MeshCoreUsbMarkers.radioToApp, payload.length, 0x00]);
+      await clientSocket.flush();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      clientSocket.add(payload);
+      await clientSocket.flush();
 
-        final emitted = await firstFrame;
-        expect(emitted, payload);
-      },
-    );
+      final emitted = await firstFrame;
+      expect(emitted, payload);
+    });
 
     test('sendBytes throws when not connected', () async {
       final t = MeshCoreTcpTransport(host: '127.0.0.1', port: 1);

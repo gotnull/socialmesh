@@ -119,7 +119,7 @@ class RpsEngine extends GameEngine<RpsState, RpsMove> {
     required int turnIndex,
     required int actorIndex,
   }) {
-    // RPS is commit-reveal — either actor may commit any time until
+    // RPS is commit-reveal - either actor may commit any time until
     // they personally have committed.
     if (actorIndex != 0 && actorIndex != 1) return false;
     if (state.bothCommitted) return false;

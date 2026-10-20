@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/services/storage/storage_service.dart';
 
-/// Sprint 5 — landing tab configuration (Section I).
+/// Sprint 5 - landing tab configuration (Section I).
 ///
 /// Covers the SharedPreferences round-trip + source pins that:
 /// - `MainShellIndexNotifier.build()` reads `defaultLandingTab` and
@@ -18,7 +18,7 @@ import 'package:socialmesh/services/storage/storage_service.dart';
 ///   Notifications sections so it stays reachable regardless of other
 ///   gating.
 void main() {
-  group('SettingsService — defaultLandingTab', () {
+  group('SettingsService - defaultLandingTab', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -85,7 +85,7 @@ void main() {
         source.contains('static const int _legacyDefault = 2; // Nodes tab'),
         true,
         reason:
-            'The historical app behaviour is "start on Nodes" — fresh '
+            'The historical app behaviour is "start on Nodes" - fresh '
             'installs and upgraders without a stored value must see no '
             'change in landing tab.',
       );
@@ -119,7 +119,7 @@ void main() {
         true,
         reason:
             'Per CLAUDE.md canonical inner-settings pattern, single-select '
-            'pickers use ChipSelector — never SegmentedButton.',
+            'pickers use ChipSelector - never SegmentedButton.',
       );
       // All four tab values must be wired.
       for (final v in const ['value: 0', 'value: 1', 'value: 2', 'value: 3']) {

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetDnaGeometry — deterministic structural blueprint of a pet's dnaSeed,
+// PetDnaGeometry - deterministic structural blueprint of a pet's dnaSeed,
 // rendered in the dedicated DNA Viewer (NOT on the creature itself).
 //
 // The creature renderer expresses personality; the DNA Viewer is the
-// genome artifact — legible, large, alien. They share the dnaSeed as
+// genome artifact - legible, large, alien. They share the dnaSeed as
 // source of truth but use different geometry models optimised for their
 // respective readability goals.
 //
-// Everything here is pure + deterministic — same identity always
+// Everything here is pure + deterministic - same identity always
 // produces the same blueprint. Lightweight to compute (no caching
 // necessary at this scale).
 
@@ -53,7 +53,7 @@ class PetDnaDecodedTraits {
   /// Strand configuration: 1 = monad, 2 = dyad, 3 = triad.
   final int strandCount;
 
-  /// Number of discontinuous segments in the strand — volatility
+  /// Number of discontinuous segments in the strand - volatility
   /// markers. 0 for stable branches.
   final int volatility;
 
@@ -76,7 +76,7 @@ class PetDnaDecodedTraits {
 }
 
 /// Complete DNA Viewer geometry. Derived from the existing
-/// [PetSigilGeometry] so the two stay in lockstep — what the viewer
+/// [PetSigilGeometry] so the two stay in lockstep - what the viewer
 /// visualises IS what the creature renderer consumes.
 @immutable
 class PetDnaGeometry {
@@ -96,7 +96,7 @@ class PetDnaGeometry {
   /// Total vertical span as a fraction of canvas height.
   final double verticalSpanFactor;
 
-  /// Integer twist count over the span — wrap-continuous.
+  /// Integer twist count over the span - wrap-continuous.
   final int twistCycles;
 
   /// Strand count (1 / 2 / 3).
@@ -111,7 +111,7 @@ class PetDnaGeometry {
 
   final PetDnaDecodedTraits decoded;
 
-  /// Fixed-length seed-derived base sequence — the pet's "genetic
+  /// Fixed-length seed-derived base sequence - the pet's "genetic
   /// fingerprint" in DNA terms, its "resonance allele profile" in
   /// NodePet terms. Same seed always produces the same sequence.
   ///
@@ -174,16 +174,16 @@ class PetDnaGeometry {
   }) {
     final helix = sigil.helix;
 
-    // Anchor count — fixed at 18 for the viewer (denser than the
+    // Anchor count - fixed at 18 for the viewer (denser than the
     // creature-renderer helix). Bounded + cheap.
     const anchorCount = 18;
 
     // Rune markers spawn at deterministic anchor positions from a
-    // seed-derived bitmask — feels hand-placed but is stable.
+    // seed-derived bitmask - feels hand-placed but is stable.
     final runeMask = dnaSeed ^ (dnaSeed >> 11) ^ (dnaSeed << 3);
     var runeCount = 0;
 
-    // Rung placement — 7 rungs evenly spaced (or scaled by presence
+    // Rung placement - 7 rungs evenly spaced (or scaled by presence
     // for stages that carry less structure).
     final rungCount = stage == PetStage.egg
         ? 0
@@ -200,7 +200,7 @@ class PetDnaGeometry {
         : 2;
     final effectiveRungCount = effectiveStrandCount == 2 ? rungCount : 0;
 
-    // Radius — roomy. Body in viewer is ignored (nothing competes for
+    // Radius - roomy. Body in viewer is ignored (nothing competes for
     // canvas space here), so we wrap 35..45 % of minSide.
     final radiusJitter = ((dnaSeed >> 5) & 0x1F) / 31.0;
     double radiusFactor;
@@ -222,7 +222,7 @@ class PetDnaGeometry {
         break;
     }
 
-    // Vertical span for the viewer — tall, fills most of the canvas
+    // Vertical span for the viewer - tall, fills most of the canvas
     // because this IS the canvas's subject.
     final verticalSpanFactor = stage == PetStage.egg
         ? 0.60
@@ -282,7 +282,7 @@ class PetDnaGeometry {
       signatureRotationDeg: signatureRotationDeg,
     );
 
-    // Resonance-allele profile — the pet's 32-step "genetic" sequence.
+    // Resonance-allele profile - the pet's 32-step "genetic" sequence.
     // The painter uses this to color every bead/rung in the helix; the
     // decoded traits panel uses it to surface dominant allele + ratios.
     final alleleSequence = List<PetBaseAllele>.unmodifiable(

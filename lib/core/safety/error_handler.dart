@@ -70,7 +70,7 @@ class AppErrorHandler {
     final log = _loggerForError(details.exception, details.stack);
 
     // Expected, recoverable transients (network-image drops, etc.) are logged
-    // locally but never reported — they are non-actionable and otherwise
+    // locally but never reported - they are non-actionable and otherwise
     // collapse into a single misleading "top issue".
     if (isRecoverableTransientError(details.exception, details.stack)) {
       log('FlutterError [SUPPRESSED transient]: ${details.exception}');
@@ -124,7 +124,7 @@ class AppErrorHandler {
     // #441, #403): SocketException from the keep-alive ping path bypasses
     // the library's sync try/catch because `_Socket.add` reports write
     // failures asynchronously via the socket's error stream. autoReconnect
-    // recovers the connection independently — we log locally and skip the
+    // recovers the connection independently - we log locally and skip the
     // Crashlytics report to silence the non-actionable noise.
     if (_isMqttKeepAliveSocketError(error, stack)) {
       AppLogging.mqttProxyWarning(
@@ -137,14 +137,14 @@ class AppErrorHandler {
     final log = _loggerForError(error, stack);
 
     // Expected, recoverable transients (BLE connect resets, foreground-task
-    // stops, network-image TLS drops) are logged locally but not reported —
+    // stops, network-image TLS drops) are logged locally but not reported -
     // they are non-actionable and would otherwise dominate the dashboard.
     if (isRecoverableTransientError(error, stack)) {
       log('PlatformError [SUPPRESSED transient]: $error');
       return true;
     }
 
-    // Capture the ACTUAL error type before any sanitization —
+    // Capture the ACTUAL error type before any sanitization -
     // this is critical for diagnosing what's generating platform errors.
     final errorType = error.runtimeType.toString();
     final errorCategory = _categorizePlatformError(error, stack);
@@ -158,7 +158,7 @@ class AppErrorHandler {
     // We return true below which means we've handled the error and
     // prevented an app crash. Reporting fatal: true here would cause
     // the Crashlytics native SDK to invoke its crash recording path
-    // (FIRCLSExceptionRecordOnDemand) which can itself crash — creating
+    // (FIRCLSExceptionRecordOnDemand) which can itself crash - creating
     // a crash-in-crash loop.
 
     // Set discriminating custom keys BEFORE recordError so Crashlytics
@@ -182,7 +182,7 @@ class AppErrorHandler {
         rawMessage.length > 256 ? rawMessage.substring(0, 256) : rawMessage,
       );
     } catch (_) {
-      // Crashlytics not initialized — continue to recordError below.
+      // Crashlytics not initialized - continue to recordError below.
     }
 
     _reportToCrashlytics(
@@ -200,8 +200,8 @@ class AppErrorHandler {
   /// Detects the upstream-uncatchable mqtt_client keep-alive socket error.
   ///
   /// Matches only SocketException originating from the mqtt_client keep-alive
-  /// ping path (shamblett/mqtt_client#377). Unrelated SocketExceptions — HTTP,
-  /// Firestore, BLE-over-TCP — will not have these frames and are unaffected.
+  /// ping path (shamblett/mqtt_client#377). Unrelated SocketExceptions - HTTP,
+  /// Firestore, BLE-over-TCP - will not have these frames and are unaffected.
   static bool _isMqttKeepAliveSocketError(Object error, StackTrace stack) {
     if (error is! SocketException) return false;
     final stackStr = stack.toString();
@@ -219,8 +219,8 @@ class AppErrorHandler {
   /// that resets, the foreground task being stopped. They are non-actionable
   /// and, because they all funnel through this handler, collapse into a single
   /// misleading "top issue" on the dashboard. Suppressing them keeps the
-  /// reported set genuine. The match list is intentionally narrow — only the
-  /// specific recoverable messages, never broad prefixes — so a real network
+  /// reported set genuine. The match list is intentionally narrow - only the
+  /// specific recoverable messages, never broad prefixes - so a real network
   /// or BLE failure (for example "Connection refused") still reports.
   static bool isRecoverableTransientError(Object error, StackTrace? stack) {
     // Network-image load failures: the completer reports the underlying load
@@ -259,7 +259,7 @@ class AppErrorHandler {
     }
 
     // BLE / foreground-task lifecycle strings arrive as bare String platform
-    // errors (no type information) — match them exactly.
+    // errors (no type information) - match them exactly.
     if (error is String) {
       final trimmed = error.trim();
       if (trimmed == 'Connection reset' || trimmed == 'Service stopped') {
@@ -316,7 +316,7 @@ class AppErrorHandler {
       return 'protobuf';
     }
 
-    // Stream / async lifecycle errors — match specific messages, NOT the
+    // Stream / async lifecycle errors - match specific messages, NOT the
     // generic "bad state" prefix which every StateError carries.
     if (combined.contains('stream has already been listened') ||
         combined.contains('cannot add event after closing') ||
@@ -426,7 +426,7 @@ class AppErrorHandler {
       return false;
     }
 
-    // Riverpod provider errors are recoverable — the provider enters an
+    // Riverpod provider errors are recoverable - the provider enters an
     // error state and watchers receive the error. The app continues.
     if (library == 'riverpod') {
       return false;
@@ -540,7 +540,7 @@ class AppErrorHandler {
     String? reason,
     bool isFatal = false,
   }) {
-    // Debug and simulator builds never forward to Crashlytics — they only
+    // Debug and simulator builds never forward to Crashlytics - they only
     // generate assert()-only framework noise and dev-loop transients. The
     // local log above the call sites still fires for diagnosis.
     if (!isReportableBuild(debug: kDebugMode, simulator: _isSimulator)) {
@@ -584,7 +584,7 @@ class AppErrorHandler {
   ///
   /// **Important**: This must NOT destroy error-diagnostic information.
   /// The previous regex `[A-Za-z0-9_-]{32,}` was matching Dart class names,
-  /// method names, and stack trace identifiers — making Crashlytics reports
+  /// method names, and stack trace identifiers - making Crashlytics reports
   /// unreadable. The updated patterns target actual secrets (API keys, JWTs,
   /// Firebase tokens) while preserving error messages and stack traces.
   static String _sanitizeString(String input) {
@@ -702,18 +702,17 @@ extension ErrorZone on Zone {
     void Function(Object error, StackTrace stack)? onError,
   }) {
     return runZonedGuarded(body, (error, stack) {
-          AppErrorHandler.addBreadcrumb('Zone error caught');
-          if (onError != null) {
-            onError(error, stack);
-          } else {
-            AppErrorHandler._reportToCrashlytics(
-              error,
-              stack,
-              reason: 'Uncaught zone error',
-              isFatal: false,
-            );
-          }
-        })
-        as R;
+      AppErrorHandler.addBreadcrumb('Zone error caught');
+      if (onError != null) {
+        onError(error, stack);
+      } else {
+        AppErrorHandler._reportToCrashlytics(
+          error,
+          stack,
+          reason: 'Uncaught zone error',
+          isFatal: false,
+        );
+      }
+    }) as R;
   }
 }

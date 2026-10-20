@@ -20,7 +20,7 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 /// Real on-air Meshtastic packets always carry a non-zero ID (firmware
 /// reserves `0` for "unset"). If a malformed packet or firmware bug
 /// delivers `packetId == 0`, the second such packet from the same
-/// sender on the same channel inside the 90-min TTL is dropped — by
+/// sender on the same channel inside the 90-min TTL is dropped - by
 /// design. Bypassing dedupe on `packetId == 0` would let a malformed-
 /// packet flood replay endlessly.
 class _FakeTransport extends DeviceTransport {
@@ -149,7 +149,7 @@ void main() {
           messages.length,
           1,
           reason:
-              'packetId==0 dedupe is intentional — protects against '
+              'packetId==0 dedupe is intentional - protects against '
               'malformed-packet replay floods',
         );
       } finally {
@@ -178,7 +178,7 @@ void main() {
 
         try {
           // First packet has packetId 0 (e.g. malformed). Second packet
-          // has a real, distinct packetId — must not collide.
+          // has a real, distinct packetId - must not collide.
           await protocol.handleIncomingPacket(
             _buildTextMessage(packetId: 0, fromNode: 0x55, text: 'a'),
           );

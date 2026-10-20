@@ -215,17 +215,15 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
       return;
     }
     _accelerometerSub ??=
-        accelerometerEventStream(samplingPeriod: _sensorSamplingPeriod).listen((
-          event,
-        ) {
-          _updateTilt(event.x, event.y);
-        });
+        accelerometerEventStream(samplingPeriod: _sensorSamplingPeriod)
+            .listen((event) {
+              _updateTilt(event.x, event.y);
+            });
     _gyroscopeSub ??=
-        gyroscopeEventStream(samplingPeriod: _sensorSamplingPeriod).listen((
-          event,
-        ) {
-          _updateGyro(event.x, event.y);
-        });
+        gyroscopeEventStream(samplingPeriod: _sensorSamplingPeriod)
+            .listen((event) {
+              _updateGyro(event.x, event.y);
+            });
   }
 
   void _stopSensors() {
@@ -473,7 +471,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                     ),
                   ),
 
-                  // Floating nodes — wrapped in RepaintBoundary to isolate
+                  // Floating nodes - wrapped in RepaintBoundary to isolate
                   // repaints from the rest of the widget subtree. The
                   // AnimatedBuilder observes both _floatController (for time-
                   // based motion) and _convergeController (for the converge

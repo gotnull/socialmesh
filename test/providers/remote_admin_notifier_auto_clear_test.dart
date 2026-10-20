@@ -96,7 +96,7 @@ void main() {
         cleared.targetNodeNum,
         isNull,
         reason:
-            'iOS Settings picker resets on disconnect — SocialMesh must '
+            'iOS Settings picker resets on disconnect - SocialMesh must '
             'mirror this so a stale remote target cannot survive a '
             'reconnect cycle and silently route admin writes to the '
             'wrong node.',
@@ -125,7 +125,7 @@ void main() {
     test(
       'disconnect without a prior connected event does NOT clear the target',
       () async {
-        // Skip any "connected" event — this models the case where the app
+        // Skip any "connected" event - this models the case where the app
         // boots already-disconnected. The auto-clear guard requires
         // wasConnected==true, so an initial disconnect must not trigger
         // a spurious clear of an explicitly-set target.

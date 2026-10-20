@@ -33,7 +33,7 @@ void main() {
     });
   });
 
-  group('MrrpDedupCache — request dedup', () {
+  group('MrrpDedupCache - request dedup', () {
     late MrrpDedupCache cache;
     const key1 = MrrpDedupKey(
       pubkeyHint: 0xA1B2C3D4,
@@ -56,15 +56,12 @@ void main() {
       expect(cache.requestCacheSize, 1);
     });
 
-    test(
-      'duplicate request without cached response returns null but isDuplicate true',
-      () {
-        cache.checkAndRecordRequest(key1);
-        final result = cache.checkAndRecordRequest(key1);
-        expect(result, isNull);
-        expect(cache.isDuplicate(key1), isTrue);
-      },
-    );
+    test('duplicate request without cached response returns null but isDuplicate true', () {
+      cache.checkAndRecordRequest(key1);
+      final result = cache.checkAndRecordRequest(key1);
+      expect(result, isNull);
+      expect(cache.isDuplicate(key1), isTrue);
+    });
 
     test('duplicate request with cached response returns the response', () {
       cache.checkAndRecordRequest(key1);
@@ -140,7 +137,7 @@ void main() {
     });
   });
 
-  group('MrrpDedupCache — response dedup', () {
+  group('MrrpDedupCache - response dedup', () {
     late MrrpDedupCache cache;
 
     setUp(() {
@@ -179,7 +176,7 @@ void main() {
     });
   });
 
-  group('MrrpDedupCache — concurrent requests to same ID', () {
+  group('MrrpDedupCache - concurrent requests to same ID', () {
     test(
       'parallel requests with same key: first processes, second is dedup',
       () {
@@ -225,9 +222,8 @@ void main() {
       ByteData.sublistView(pubkeyBytes).setUint32(0, 0xCAFEBABE, Endian.little);
 
       final sessionBytes = Uint8List(4);
-      ByteData.sublistView(
-        sessionBytes,
-      ).setUint32(0, 0x00001234, Endian.little);
+      ByteData.sublistView(sessionBytes)
+          .setUint32(0, 0x00001234, Endian.little);
 
       final frame = MrrpFrame(
         versionMajor: 0,

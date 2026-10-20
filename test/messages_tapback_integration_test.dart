@@ -181,48 +181,45 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  test(
-    'canonical tapbacks stay out of messagesProvider but appear in the grouped timeline',
-    () async {
-      final h = await _createHarness();
-      addTearDown(h.container.dispose);
+  test('canonical tapbacks stay out of messagesProvider but appear in the grouped timeline', () async {
+    final h = await _createHarness();
+    addTearDown(h.container.dispose);
 
-      final notifier = h.container.read(messagesProvider.notifier);
-      final parent = _message(
-        id: 'parent',
+    final notifier = h.container.read(messagesProvider.notifier);
+    final parent = _message(
+      id: 'parent',
+      from: 10,
+      to: 20,
+      text: 'Hello',
+      packetId: 100,
+    );
+    notifier.addMessage(parent);
+
+    h.protocol.emit(
+      _message(
+        id: 'tapback',
         from: 10,
         to: 20,
-        text: 'Hello',
-        packetId: 100,
-      );
-      notifier.addMessage(parent);
+        text: '👍',
+        packetId: 101,
+        replyId: 100,
+        isEmoji: true,
+      ),
+    );
+    await _waitForMessagePersisted(h.storage, 'tapback');
 
-      h.protocol.emit(
-        _message(
-          id: 'tapback',
-          from: 10,
-          to: 20,
-          text: '👍',
-          packetId: 101,
-          replyId: 100,
-          isEmoji: true,
-        ),
-      );
-      await _waitForMessagePersisted(h.storage, 'tapback');
+    final state = h.container.read(messagesProvider);
+    expect(state.map((message) => message.id), ['parent']);
 
-      final state = h.container.read(messagesProvider);
-      expect(state.map((message) => message.id), ['parent']);
+    final stored = await h.storage.loadConversation(
+      MessageDatabase.conversationKeyFromParams(nodeA: 10, nodeB: 20),
+    );
+    expect(stored.map((message) => message.id), contains('tapback'));
 
-      final stored = await h.storage.loadConversation(
-        MessageDatabase.conversationKeyFromParams(nodeA: 10, nodeB: 20),
-      );
-      expect(stored.map((message) => message.id), contains('tapback'));
-
-      final rows = await _loadDmRows(h.storage);
-      expect(rows, hasLength(1));
-      expect(rows.single.tapbacks.map((tapback) => tapback.id), ['tapback']);
-    },
-  );
+    final rows = await _loadDmRows(h.storage);
+    expect(rows, hasLength(1));
+    expect(rows.single.tapbacks.map((tapback) => tapback.id), ['tapback']);
+  });
 
   test(
     'persisted canonical tapbacks survive restart and remain grouped',

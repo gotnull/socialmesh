@@ -443,62 +443,59 @@ void main() {
   });
 
   group('Traceroute CSV export', () {
-    test(
-      'exported CSV has correct header and data for stored traceroutes',
-      () async {
-        final csvStorage = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
-        await csvStorage.init();
+    test('exported CSV has correct header and data for stored traceroutes', () async {
+      final csvStorage = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
+      await csvStorage.init();
 
-        await csvStorage.addTraceRouteLog(
-          TraceRouteLog(
-            nodeNum: 0xAABBCCDD,
-            targetNode: 0xAABBCCDD,
-            sent: true,
-            response: true,
-            hopsTowards: 2,
-            hopsBack: 1,
-            hops: [
-              TraceRouteHop(nodeNum: 0x11111111, snr: 10.0),
-              TraceRouteHop(nodeNum: 0x22222222, snr: -2.0),
-              TraceRouteHop(nodeNum: 0x33333333, snr: 6.0, back: true),
-            ],
-            snr: 7.5,
-          ),
+      await csvStorage.addTraceRouteLog(
+        TraceRouteLog(
+          nodeNum: 0xAABBCCDD,
+          targetNode: 0xAABBCCDD,
+          sent: true,
+          response: true,
+          hopsTowards: 2,
+          hopsBack: 1,
+          hops: [
+            TraceRouteHop(nodeNum: 0x11111111, snr: 10.0),
+            TraceRouteHop(nodeNum: 0x22222222, snr: -2.0),
+            TraceRouteHop(nodeNum: 0x33333333, snr: 6.0, back: true),
+          ],
+          snr: 7.5,
+        ),
+      );
+
+      // Simulate the CSV export logic from data_export_screen.dart
+      final logs = await csvStorage.getTraceRouteLogs(0xAABBCCDD);
+      final buffer = StringBuffer();
+      buffer.writeln('timestamp,target_node,hops,route,snr_values');
+      for (final log in logs) {
+        final hopNodes = log.hops.map((h) => h.nodeNum).join('>');
+        final snrValues = log.hops.map((h) => h.snr ?? 'N/A').join(',');
+        buffer.writeln(
+          '${log.timestamp.toIso8601String()},${log.targetNode},${log.hops.length},"$hopNodes","$snrValues"',
         );
+      }
 
-        // Simulate the CSV export logic from data_export_screen.dart
-        final logs = await csvStorage.getTraceRouteLogs(0xAABBCCDD);
-        final buffer = StringBuffer();
-        buffer.writeln('timestamp,target_node,hops,route,snr_values');
-        for (final log in logs) {
-          final hopNodes = log.hops.map((h) => h.nodeNum).join('>');
-          final snrValues = log.hops.map((h) => h.snr ?? 'N/A').join(',');
-          buffer.writeln(
-            '${log.timestamp.toIso8601String()},${log.targetNode},${log.hops.length},"$hopNodes","$snrValues"',
-          );
-        }
+      final csv = buffer.toString();
 
-        final csv = buffer.toString();
+      // Verify header
+      expect(csv, contains('timestamp,target_node,hops,route,snr_values'));
 
-        // Verify header
-        expect(csv, contains('timestamp,target_node,hops,route,snr_values'));
+      // Verify data row exists with route info
+      expect(csv, contains('${0xAABBCCDD}'));
+      expect(csv, contains('${0x11111111}>${0x22222222}>${0x33333333}'));
+      expect(csv, contains('10.0'));
+      expect(csv, contains('-2.0'));
+      expect(csv, contains('6.0'));
 
-        // Verify data row exists with route info
-        expect(csv, contains('${0xAABBCCDD}'));
-        expect(csv, contains('${0x11111111}>${0x22222222}>${0x33333333}'));
-        expect(csv, contains('10.0'));
-        expect(csv, contains('-2.0'));
-        expect(csv, contains('6.0'));
-
-        // Verify the CSV has exactly 2 lines (header + 1 data row)
-        final lines = csv
-            .trim()
-            .split('\n')
-            .where((l) => l.trim().isNotEmpty)
-            .toList();
-        expect(lines.length, 2);
-      },
-    );
+      // Verify the CSV has exactly 2 lines (header + 1 data row)
+      final lines = csv
+          .trim()
+          .split('\n')
+          .where((l) => l.trim().isNotEmpty)
+          .toList();
+      expect(lines.length, 2);
+    });
 
     test('CSV export with no traceroutes produces header only', () {
       final buffer = StringBuffer();
@@ -541,94 +538,91 @@ void main() {
   });
 
   group('Traceroute end-to-end simulation', () {
-    test(
-      'simulated inbound RouteDiscovery produces correct TraceRouteLog in storage',
-      () async {
-        final e2eStorage = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
-        await e2eStorage.init();
+    test('simulated inbound RouteDiscovery produces correct TraceRouteLog in storage', () async {
+      final e2eStorage = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
+      await e2eStorage.init();
 
-        // Simulate what _handleTracerouteMessage does:
-        // 1. Parse RouteDiscovery from protobuf payload
-        final routeDiscovery = pb.RouteDiscovery(
-          route: [0x11111111, 0x22222222],
-          snrTowards: [40, -8], // 10.0 dB, -2.0 dB
-          routeBack: [0x33333333],
-          snrBack: [24], // 6.0 dB
+      // Simulate what _handleTracerouteMessage does:
+      // 1. Parse RouteDiscovery from protobuf payload
+      final routeDiscovery = pb.RouteDiscovery(
+        route: [0x11111111, 0x22222222],
+        snrTowards: [40, -8], // 10.0 dB, -2.0 dB
+        routeBack: [0x33333333],
+        snrBack: [24], // 6.0 dB
+      );
+      final payload = routeDiscovery.writeToBuffer();
+
+      // 2. Parse it back (simulating fromBuffer in handler)
+      final parsed = pb.RouteDiscovery.fromBuffer(payload);
+
+      // 3. Build hops (same logic as _handleTracerouteMessage)
+      const targetNode = 0xAABBCCDD;
+      final forwardRoute = parsed.route.toList();
+      final forwardSnr = parsed.snrTowards.toList();
+      final forwardHops = <TraceRouteHop>[];
+      for (var i = 0; i < forwardRoute.length; i++) {
+        final snrRaw = i < forwardSnr.length ? forwardSnr[i] : null;
+        forwardHops.add(
+          TraceRouteHop(
+            nodeNum: forwardRoute[i],
+            snr: snrRaw != null ? snrRaw / 4.0 : null,
+          ),
         );
-        final payload = routeDiscovery.writeToBuffer();
+      }
 
-        // 2. Parse it back (simulating fromBuffer in handler)
-        final parsed = pb.RouteDiscovery.fromBuffer(payload);
-
-        // 3. Build hops (same logic as _handleTracerouteMessage)
-        const targetNode = 0xAABBCCDD;
-        final forwardRoute = parsed.route.toList();
-        final forwardSnr = parsed.snrTowards.toList();
-        final forwardHops = <TraceRouteHop>[];
-        for (var i = 0; i < forwardRoute.length; i++) {
-          final snrRaw = i < forwardSnr.length ? forwardSnr[i] : null;
-          forwardHops.add(
-            TraceRouteHop(
-              nodeNum: forwardRoute[i],
-              snr: snrRaw != null ? snrRaw / 4.0 : null,
-            ),
-          );
-        }
-
-        final backRoute = parsed.routeBack.toList();
-        final backSnrList = parsed.snrBack.toList();
-        final backHops = <TraceRouteHop>[];
-        for (var i = 0; i < backRoute.length; i++) {
-          final snrRaw = i < backSnrList.length ? backSnrList[i] : null;
-          backHops.add(
-            TraceRouteHop(
-              nodeNum: backRoute[i],
-              snr: snrRaw != null ? snrRaw / 4.0 : null,
-              back: true,
-            ),
-          );
-        }
-
-        // 4. Build and store log
-        final log = TraceRouteLog(
-          nodeNum: targetNode,
-          targetNode: targetNode,
-          sent: true,
-          response: true,
-          hopsTowards: forwardRoute.length,
-          hopsBack: backRoute.length,
-          hops: [...forwardHops, ...backHops],
-          snr: 7.5,
+      final backRoute = parsed.routeBack.toList();
+      final backSnrList = parsed.snrBack.toList();
+      final backHops = <TraceRouteHop>[];
+      for (var i = 0; i < backRoute.length; i++) {
+        final snrRaw = i < backSnrList.length ? backSnrList[i] : null;
+        backHops.add(
+          TraceRouteHop(
+            nodeNum: backRoute[i],
+            snr: snrRaw != null ? snrRaw / 4.0 : null,
+            back: true,
+          ),
         );
+      }
 
-        await e2eStorage.addTraceRouteLog(log);
+      // 4. Build and store log
+      final log = TraceRouteLog(
+        nodeNum: targetNode,
+        targetNode: targetNode,
+        sent: true,
+        response: true,
+        hopsTowards: forwardRoute.length,
+        hopsBack: backRoute.length,
+        hops: [...forwardHops, ...backHops],
+        snr: 7.5,
+      );
 
-        // 5. Verify storage
-        final storedLogs = await e2eStorage.getTraceRouteLogs(targetNode);
-        expect(storedLogs.length, 1);
+      await e2eStorage.addTraceRouteLog(log);
 
-        final stored = storedLogs.first;
-        expect(stored.targetNode, targetNode);
-        expect(stored.response, true);
-        expect(stored.hopsTowards, 2);
-        expect(stored.hopsBack, 1);
-        expect(stored.hops.length, 3);
-        expect(stored.hops[0].nodeNum, 0x11111111);
-        expect(stored.hops[0].snr, 10.0);
-        expect(stored.hops[0].back, false);
-        expect(stored.hops[1].nodeNum, 0x22222222);
-        expect(stored.hops[1].snr, -2.0);
-        expect(stored.hops[1].back, false);
-        expect(stored.hops[2].nodeNum, 0x33333333);
-        expect(stored.hops[2].snr, 6.0);
-        expect(stored.hops[2].back, true);
+      // 5. Verify storage
+      final storedLogs = await e2eStorage.getTraceRouteLogs(targetNode);
+      expect(storedLogs.length, 1);
 
-        // 6. Verify it also shows up in getAllTraceRouteLogs
-        final allLogs = await e2eStorage.getAllTraceRouteLogs();
-        expect(allLogs.length, 1);
-        expect(allLogs.first.targetNode, targetNode);
-      },
-    );
+      final stored = storedLogs.first;
+      expect(stored.targetNode, targetNode);
+      expect(stored.response, true);
+      expect(stored.hopsTowards, 2);
+      expect(stored.hopsBack, 1);
+      expect(stored.hops.length, 3);
+      expect(stored.hops[0].nodeNum, 0x11111111);
+      expect(stored.hops[0].snr, 10.0);
+      expect(stored.hops[0].back, false);
+      expect(stored.hops[1].nodeNum, 0x22222222);
+      expect(stored.hops[1].snr, -2.0);
+      expect(stored.hops[1].back, false);
+      expect(stored.hops[2].nodeNum, 0x33333333);
+      expect(stored.hops[2].snr, 6.0);
+      expect(stored.hops[2].back, true);
+
+      // 6. Verify it also shows up in getAllTraceRouteLogs
+      final allLogs = await e2eStorage.getAllTraceRouteLogs();
+      expect(allLogs.length, 1);
+      expect(allLogs.first.targetNode, targetNode);
+    });
 
     test('direct-path traceroute (zero hops) stores correctly', () async {
       final storage5 = TelemetryDatabase(testDbPath: _uniqueTelemDbPath());
@@ -723,7 +717,7 @@ void main() {
         expect(logs.length, 1);
         expect(logs.first.response, false);
 
-        // Now a response arrives — replaceOrAdd should swap the placeholder
+        // Now a response arrives - replaceOrAdd should swap the placeholder
         await storage.replaceOrAddTraceRouteLog(
           TraceRouteLog(
             nodeNum: targetNode,
@@ -797,59 +791,56 @@ void main() {
       },
     );
 
-    test(
-      'replaceOrAddTraceRouteLog only removes pending entry for matching target',
-      () async {
-        const targetA = 0x11111111;
-        const targetB = 0x22222222;
+    test('replaceOrAddTraceRouteLog only removes pending entry for matching target', () async {
+      const targetA = 0x11111111;
+      const targetB = 0x22222222;
 
-        // Store pending entries for two different targets
-        await storage.addTraceRouteLog(
-          TraceRouteLog(
-            nodeNum: targetA,
-            targetNode: targetA,
-            sent: true,
-            response: false,
-            hopsTowards: 0,
-            hopsBack: 0,
-          ),
-        );
-        await storage.addTraceRouteLog(
-          TraceRouteLog(
-            nodeNum: targetB,
-            targetNode: targetB,
-            sent: true,
-            response: false,
-            hopsTowards: 0,
-            hopsBack: 0,
-          ),
-        );
+      // Store pending entries for two different targets
+      await storage.addTraceRouteLog(
+        TraceRouteLog(
+          nodeNum: targetA,
+          targetNode: targetA,
+          sent: true,
+          response: false,
+          hopsTowards: 0,
+          hopsBack: 0,
+        ),
+      );
+      await storage.addTraceRouteLog(
+        TraceRouteLog(
+          nodeNum: targetB,
+          targetNode: targetB,
+          sent: true,
+          response: false,
+          hopsTowards: 0,
+          hopsBack: 0,
+        ),
+      );
 
-        // Response arrives for targetB only
-        await storage.replaceOrAddTraceRouteLog(
-          TraceRouteLog(
-            nodeNum: targetB,
-            targetNode: targetB,
-            sent: true,
-            response: true,
-            hopsTowards: 1,
-            hopsBack: 0,
-            hops: [TraceRouteHop(nodeNum: 0x99999999, snr: 4.0)],
-          ),
-        );
+      // Response arrives for targetB only
+      await storage.replaceOrAddTraceRouteLog(
+        TraceRouteLog(
+          nodeNum: targetB,
+          targetNode: targetB,
+          sent: true,
+          response: true,
+          hopsTowards: 1,
+          hopsBack: 0,
+          hops: [TraceRouteHop(nodeNum: 0x99999999, snr: 4.0)],
+        ),
+      );
 
-        // targetA still has its pending entry
-        final logsA = await storage.getTraceRouteLogs(targetA);
-        expect(logsA.length, 1);
-        expect(logsA.first.response, false);
+      // targetA still has its pending entry
+      final logsA = await storage.getTraceRouteLogs(targetA);
+      expect(logsA.length, 1);
+      expect(logsA.first.response, false);
 
-        // targetB was replaced
-        final logsB = await storage.getTraceRouteLogs(targetB);
-        expect(logsB.length, 1);
-        expect(logsB.first.response, true);
-        expect(logsB.first.hopsTowards, 1);
-      },
-    );
+      // targetB was replaced
+      final logsB = await storage.getTraceRouteLogs(targetB);
+      expect(logsB.length, 1);
+      expect(logsB.first.response, true);
+      expect(logsB.first.hopsTowards, 1);
+    });
 
     test(
       'timed-out traceroute stays as No Response when no reply arrives',
@@ -867,7 +858,7 @@ void main() {
           ),
         );
 
-        // No response ever arrives — entry remains with response: false
+        // No response ever arrives - entry remains with response: false
         final logs = await storage.getTraceRouteLogs(targetNode);
         expect(logs.length, 1);
         expect(logs.first.response, false);
@@ -944,7 +935,7 @@ void main() {
     );
   });
 
-  // Issue #142 — RouteDiscovery appends one extra SNR entry beyond the
+  // Issue #142 - RouteDiscovery appends one extra SNR entry beyond the
   // intermediate-hop list in each direction: target's reception of the
   // forward query (forwardSnr.last) and origin's reception of the reply
   // (snrBack.last). Older builds dropped both. These tests pin the new
@@ -983,8 +974,8 @@ void main() {
     test('direct connection (zero intermediate hops) captures both endpoint '
         'SNRs from the single-entry SNR arrays', () {
       final routeDiscovery = pb.RouteDiscovery(
-        snrTowards: [32], // 8.0 dB — target heard our query
-        snrBack: [-12], // -3.0 dB — we heard the reply
+        snrTowards: [32], // 8.0 dB - target heard our query
+        snrBack: [-12], // -3.0 dB - we heard the reply
       );
 
       final parsed = pb.RouteDiscovery.fromBuffer(
@@ -1013,7 +1004,7 @@ void main() {
         'endpoint SNRs are null (legacy / partial responder)', () {
       final routeDiscovery = pb.RouteDiscovery(
         route: [0x11111111],
-        snrTowards: [40], // exactly 1 — no endpoint entry
+        snrTowards: [40], // exactly 1 - no endpoint entry
         routeBack: [0x22222222],
         snrBack: [16],
       );
@@ -1066,11 +1057,11 @@ void main() {
       expect(log.originSnrBack, isNull);
     });
 
-    // Defensive cases — firmware may send malformed SNR arrays (truncated
+    // Defensive cases - firmware may send malformed SNR arrays (truncated
     // by transit, or overlong from a future variant). The parser must
     // never crash and must preserve confidently mappable values; the
     // production parser logs an anomaly via AppLogging.protocol for
-    // both shapes (not asserted here — debugPrint isn't captured by
+    // both shapes (not asserted here - debugPrint isn't captured by
     // the test harness without extra plumbing).
 
     test('truncated SNR arrays (snr.len < route.len) do not crash and '
@@ -1189,7 +1180,7 @@ void main() {
       expect(backHops, hasLength(1));
       expect(backHops.first.snr, -1.0);
 
-      // Endpoint takes the LAST entry — middle entries silently dropped
+      // Endpoint takes the LAST entry - middle entries silently dropped
       // (logged as anomaly in production via AppLogging.protocol).
       expect(targetSnrTowards, 6.0); // 24 / 4.0
       expect(originSnrBack, 3.0); // 12 / 4.0

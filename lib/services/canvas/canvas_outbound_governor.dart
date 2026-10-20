@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCanvas outbound governor — sliding-window 250 B / 60 s budget
+// MeshCanvas outbound governor - sliding-window 250 B / 60 s budget
 // shared across every canvas the local device drives.
 //
 // Spec: docs/canvas/CANVAS_V0_1.md §2 + invariant I2 (anti-starvation).
-// This governor is strictly subordinate to the SIP rate limiter — it
+// This governor is strictly subordinate to the SIP rate limiter - it
 // does not know about SIP, ProtocolService, transport, or any wire
 // framing. Its sole job is to keep canvas traffic from monopolising
 // the 1024 B / 60 s SIP budget by capping canvas's slice at 250 B.

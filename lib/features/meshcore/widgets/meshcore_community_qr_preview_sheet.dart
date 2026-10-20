@@ -3,7 +3,7 @@
 
 // D-Q7: preview sheet that surfaces a freshly-scanned community
 // payload before any channel is written to the radio. The user
-// taps "Add" per row — never a bulk-accept button — so each PSK
+// taps "Add" per row - never a bulk-accept button - so each PSK
 // import is a deliberate, consented action. PSKs are previewed as
 // the first 8 hex chars + ellipsis (matches the diagnostics-bundle
 // fingerprint convention).
@@ -118,7 +118,7 @@ class _CommunityPreviewSheetState extends ConsumerState<_CommunityPreviewSheet>
     try {
       // Pick the next free 0-7 slot at accept time. Computing lazily
       // (not at sheet open) lets successive Adds correctly skip slots
-      // that filled mid-session — same logic as the per-channel QR
+      // that filled mid-session - same logic as the per-channel QR
       // scanner's `newIndex` walk.
       final channelsState = ref.read(meshCoreChannelsProvider);
       final usedIndices = channelsState.channels.map((c) => c.index).toSet();

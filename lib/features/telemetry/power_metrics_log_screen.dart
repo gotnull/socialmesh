@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../utils/time_format.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
@@ -11,7 +12,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 
-/// Screen showing power metrics history — per-channel voltage and current
+/// Screen showing power metrics history - per-channel voltage and current
 /// readings broadcast by nodes with a power-monitoring sensor (INA-style
 /// multi-channel monitors).
 ///

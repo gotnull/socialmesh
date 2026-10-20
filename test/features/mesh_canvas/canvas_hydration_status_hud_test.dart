@@ -9,7 +9,7 @@
 //   - idle → HUD is structurally absent (zero footprint).
 //   - recovering / syncing / quiet → HUD shows the matching label.
 //   - HUD is NOT a descendant of InteractiveViewer when used as a
-//     sibling — anchored chrome regression pin.
+//     sibling - anchored chrome regression pin.
 //
 // The HUD reads `meshCanvasHydrationStatusProvider`; tests override
 // the provider directly with a synthetic state rather than wiring
@@ -55,7 +55,7 @@ Future<void> _pumpHud(WidgetTester tester, MeshCanvasHydrationState state) {
 }
 
 void main() {
-  testWidgets('idle state renders nothing — happy-path zero footprint', (
+  testWidgets('idle state renders nothing - happy-path zero footprint', (
     tester,
   ) async {
     await _pumpHud(tester, MeshCanvasHydrationState.idle);
@@ -86,7 +86,7 @@ void main() {
 
   testWidgets(
     'I6 regression: HUD is NOT a descendant of InteractiveViewer when '
-    'used as a sibling — anchored chrome stays still under pan/zoom',
+    'used as a sibling - anchored chrome stays still under pan/zoom',
     (tester) async {
       await tester.pumpWidget(
         ProviderScope(

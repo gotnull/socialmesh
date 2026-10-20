@@ -65,7 +65,7 @@ void main() {
     });
 
     test('handles boundary right at maxBytes with mixed ASCII + multibyte', () {
-      // 'a' (1B) + '中' (3B) + '中' (3B) = 7 bytes — fits in 7.
+      // 'a' (1B) + '中' (3B) + '中' (3B) = 7 bytes - fits in 7.
       final out = apply('a中中', maxBytes: 7);
       expect(out.text, 'a中中');
       // Same input, cap at 6 → drop last '中', leaves 'a中' (4B).

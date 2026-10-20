@@ -116,7 +116,7 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
         case SmPacketType.fileOffer:
           final offer = event.packet as SmFileOffer;
           if (event.version >= 1) {
-            // SPP v1 offer — route through negotiation layer.
+            // SPP v1 offer - route through negotiation layer.
             final negotiation = ref.read(payloadNegotiationProvider);
             final result = negotiation.handleIncomingOffer(
               offer,
@@ -134,7 +134,7 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
                 autoAccept: true,
               );
             } else if (result == SppNegotiationState.offerPending) {
-              // User must decide — create a visible transfer entry
+              // User must decide - create a visible transfer entry
               // in offerPending state so the UI can show accept/reject.
               AppLogging.spp(
                 'offer surfaced to UI '
@@ -148,7 +148,7 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
             }
             // declined → negotiation already sent DECLINE
           } else {
-            // Legacy v0 offer — existing behavior.
+            // Legacy v0 offer - existing behavior.
             final settingsAsync = ref.read(settingsServiceProvider);
             final autoAccept = settingsAsync.maybeWhen(
               data: (s) => s.fileTransferAutoAccept,
@@ -409,7 +409,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
   @override
   FileTransferListState build() {
     // Ensure the engine is alive so the broadcast stream has a listener.
-    // This is the primary creation path — _initializeBackgroundServices
+    // This is the primary creation path - _initializeBackgroundServices
     // may not have run yet (Android timing), and broadcast streams
     // silently drop events with no listener.
     try {
@@ -452,7 +452,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
         }
         resolved.add(t);
       } else if (t.savedFilePath!.startsWith('/')) {
-        // Legacy absolute path — validate, then either keep or clear.
+        // Legacy absolute path - validate, then either keep or clear.
         if (File(t.savedFilePath!).existsSync()) {
           resolved.add(t);
         } else {
@@ -464,13 +464,13 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
             await db.updateSavedPath(t.fileIdHex, rel);
             resolved.add(t.copyWith(savedFilePath: abs));
           } else {
-            // File truly gone — clear the stale path.
+            // File truly gone - clear the stale path.
             await db.updateSavedPath(t.fileIdHex, null);
             resolved.add(t.copyWith(clearSavedFilePath: true));
           }
         }
       } else {
-        // Relative path — resolve to absolute for in-memory use.
+        // Relative path - resolve to absolute for in-memory use.
         final abs = p.join(docsDir.path, t.savedFilePath!);
         resolved.add(
           File(abs).existsSync()
@@ -486,7 +486,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     );
     state = state.copyWith(transfers: map, isLoading: false);
 
-    // Recover active inbound transfers — rehydrate engine with persisted
+    // Recover active inbound transfers - rehydrate engine with persisted
     // chunks so transfers survive app restart.
     await _recoverActiveTransfers(db, resolved);
   }
@@ -536,7 +536,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       if (t.direction == TransferDirection.inbound) {
         // Inbound: only post-accept transfers (chunking / waitingMissing)
         // are eligible for active chunk recovery. Transfers in offerPending
-        // were never accepted by the user — restoring them to chunking
+        // were never accepted by the user - restoring them to chunking
         // would silently bypass consent. Negotiation state is not persisted,
         // so the offer cannot be re-presented. Fail them cleanly.
         if (t.state != TransferState.chunking &&
@@ -611,7 +611,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
         }
 
         if (fileBytes == null) {
-          // Source file is gone — transfer cannot be resumed.
+          // Source file is gone - transfer cannot be resumed.
           AppLogging.fileTransfer(
             'Recovery: ${t.fileIdHex} outbound - '
             'source file missing, marking failed',
@@ -650,7 +650,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
   void updateTransfer(FileTransferState transfer) {
     final prev = state.transfers[transfer.fileIdHex];
 
-    // Engine updates never include savedFilePath — preserve it from the
+    // Engine updates never include savedFilePath - preserve it from the
     // previous notifier state so auto-save results aren't lost.
     final merged = transfer.savedFilePath == null && prev?.savedFilePath != null
         ? transfer.copyWith(savedFilePath: prev!.savedFilePath)
@@ -689,7 +689,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
 
       AppLogging.fileTransfer('Auto-saved: ${transfer.filename} -> $rel');
 
-      // Persist relative path to DB — survives iOS container UUID rotation.
+      // Persist relative path to DB - survives iOS container UUID rotation.
       final db = ref.read(fileTransferDatabaseProvider);
       await db.updateSavedPath(transfer.fileIdHex, rel);
 
@@ -779,7 +779,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     // the auto-save microtask). Voice messages especially need this.
     unawaited(_autoSaveFile(transfer));
 
-    // Start sending (offer only — chunks gated on ACCEPT).
+    // Start sending (offer only - chunks gated on ACCEPT).
     await engine.startTransfer(transfer.fileIdHex);
 
     // Register with negotiation layer so we get ACCEPT/DECLINE/TIMEOUT
@@ -836,7 +836,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       '(target=${targetNodeNum != null ? "!${targetNodeNum.toRadixString(16)}" : "none"})',
     );
     final imagePicker = ImagePicker();
-    // Pick at full quality — we handle all compression ourselves so we
+    // Pick at full quality - we handle all compression ourselves so we
     // can binary-search for the optimal quality/dimension trade-off.
     final pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
@@ -889,7 +889,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       );
 
       if (result == null) {
-        // Native JPEG also failed — fall back to pure-Dart encoder.
+        // Native JPEG also failed - fall back to pure-Dart encoder.
         AppLogging.fileTransfer(
           'pickAndSendImage: native JPEG failed, trying pure-Dart fallback',
         );
@@ -922,7 +922,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       return null;
     }
 
-    // Generate a short filename — ImagePicker temp names can exceed
+    // Generate a short filename - ImagePicker temp names can exceed
     // SmFileTransferLimits.maxFilenameBytes (64 bytes).
     final filename = 'img_${DateTime.now().millisecondsSinceEpoch}.$extension';
 
@@ -981,7 +981,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
   /// Strategy: walk a dimension ladder from large to small. At each
   /// dimension, binary-search quality (1–85) to find the highest quality
   /// that fits in the byte budget. This maximizes perceptual quality for
-  /// a given size — a 96×96 at Q72 looks far better than a 160×160 at
+  /// a given size - a 96×96 at Q72 looks far better than a 160×160 at
   /// Q25 because compression artifacts at low quality are more visually
   /// offensive than smaller dimensions.
   ///
@@ -999,10 +999,10 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
 
     // Dimension ladder from largest to smallest. We try each dimension
     // and binary-search for the best quality that fits. Larger dimensions
-    // are tried first — if we can fit at 160px with acceptable quality,
+    // are tried first - if we can fit at 160px with acceptable quality,
     // that's preferable to dropping to 96px.
     const dimensions = [160, 128, 96, 80, 64, 48, 32];
-    // Quality search bounds. 85 is the ceiling — above that gains are
+    // Quality search bounds. 85 is the ceiling - above that gains are
     // diminishing. Floor of 20 avoids unusable artifact soup.
     const maxQuality = 85;
     const minQuality = 20;
@@ -1030,7 +1030,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
           '_compressImageNative($formatName): native encode failed at '
           'maxDim=$dim: $e',
         );
-        return null; // Native encoder can't handle this image — bail out.
+        return null; // Native encoder can't handle this image - bail out.
       }
 
       if (smallest.isEmpty) {
@@ -1045,7 +1045,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
           '_compressImageNative($formatName): maxDim=$dim too large even at '
           'Q$minQuality (${smallest.length} bytes), stepping down',
         );
-        continue; // This dimension can't fit — try a smaller one.
+        continue; // This dimension can't fit - try a smaller one.
       }
 
       // Binary search: find the highest quality that still fits.
@@ -1070,10 +1070,10 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
             best = candidate;
             lo = mid + 1; // Try higher quality.
           } else {
-            hi = mid - 1; // Too large — try lower quality.
+            hi = mid - 1; // Too large - try lower quality.
           }
         } catch (_) {
-          hi = mid - 1; // Encode failed — try lower quality.
+          hi = mid - 1; // Encode failed - try lower quality.
         }
       }
 
@@ -1173,7 +1173,7 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
   /// Top-level function for isolate: resize and encode as JPEG.
   ///
   /// Uses YUV 4:2:0 chroma subsampling for better compression at small
-  /// sizes — standard for photographic content and saves ~15-20% over
+  /// sizes - standard for photographic content and saves ~15-20% over
   /// 4:4:4 with no perceptible quality difference at these dimensions.
   static Uint8List? _resizeAndEncodeJpeg(_CompressArgs args) {
     try {
@@ -1287,12 +1287,12 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
       return null;
     }
 
-    // Already saved — verify the file still exists on disk.
+    // Already saved - verify the file still exists on disk.
     if (transfer.savedFilePath != null) {
       if (File(transfer.savedFilePath!).existsSync()) {
         return transfer.savedFilePath;
       }
-      // File was deleted externally — fall through to re-save if bytes available.
+      // File was deleted externally - fall through to re-save if bytes available.
     }
 
     if (transfer.fileBytes == null) {

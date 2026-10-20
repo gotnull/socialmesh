@@ -176,33 +176,30 @@ void main() {
         expect(loaded.map((m) => m.id), equals(['keep']));
       });
 
-      test(
-        'deleteContactMessage is a quiet no-op on unknown id (D30)',
-        () async {
-          const contactKeyHex =
-              'cafebabe00112233445566778899aabbccddeeff00112233445566778899aabb';
-          final senderKey = Uint8List.fromList(List.generate(32, (i) => i));
-          await store.addContactMessage(
-            contactKeyHex,
-            MeshCoreStoredMessage(
-              id: 'keep',
-              senderKey: senderKey,
-              text: 'still here',
-              timestamp: DateTime(2026, 5, 4),
-              isOutgoing: true,
-            ),
-          );
+      test('deleteContactMessage is a quiet no-op on unknown id (D30)', () async {
+        const contactKeyHex =
+            'cafebabe00112233445566778899aabbccddeeff00112233445566778899aabb';
+        final senderKey = Uint8List.fromList(List.generate(32, (i) => i));
+        await store.addContactMessage(
+          contactKeyHex,
+          MeshCoreStoredMessage(
+            id: 'keep',
+            senderKey: senderKey,
+            text: 'still here',
+            timestamp: DateTime(2026, 5, 4),
+            isOutgoing: true,
+          ),
+        );
 
-          final removed = await store.deleteContactMessage(
-            contactKeyHex,
-            'never-existed',
-          );
-          expect(removed, isFalse);
+        final removed = await store.deleteContactMessage(
+          contactKeyHex,
+          'never-existed',
+        );
+        expect(removed, isFalse);
 
-          final loaded = await store.loadContactMessages(contactKeyHex);
-          expect(loaded.map((m) => m.id), equals(['keep']));
-        },
-      );
+        final loaded = await store.loadContactMessages(contactKeyHex);
+        expect(loaded.map((m) => m.id), equals(['keep']));
+      });
 
       test('snrQuarter round-trips through JSON (D30 Part C)', () async {
         const contactKeyHex =

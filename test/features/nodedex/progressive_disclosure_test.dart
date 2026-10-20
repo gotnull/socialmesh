@@ -366,7 +366,7 @@ void main() {
     });
 
     // -------------------------------------------------------------------------
-    // Monotonicity — more data never reduces the tier
+    // Monotonicity - more data never reduces the tier
     // -------------------------------------------------------------------------
 
     group('monotonicity', () {
@@ -743,7 +743,7 @@ void main() {
     });
 
     // -------------------------------------------------------------------------
-    // Stability — small input changes cause proportional output changes
+    // Stability - small input changes cause proportional output changes
     // -------------------------------------------------------------------------
 
     group('stability', () {

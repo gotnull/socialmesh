@@ -15,7 +15,7 @@ RnsCompanionClient _client(MockClient mock) {
 }
 
 void main() {
-  group('RnsCompanionClient — happy path parsing', () {
+  group('RnsCompanionClient - happy path parsing', () {
     test('listServices parses the stub response shape', () async {
       final mock = MockClient((req) async {
         expect(req.url.path, '/services');
@@ -133,7 +133,7 @@ void main() {
     });
   });
 
-  group('RnsCompanionClient — error mapping', () {
+  group('RnsCompanionClient - error mapping', () {
     test('404 maps to RnsCompanionNotFoundError', () async {
       final mock = MockClient((_) async => http.Response('not found', 404));
       expect(
@@ -150,16 +150,13 @@ void main() {
       );
     });
 
-    test(
-      'JSON object instead of array maps to RnsCompanionParseError on listServices',
-      () async {
-        final mock = MockClient((_) async => http.Response('{"foo": 1}', 200));
-        expect(
-          () => _client(mock).listServices(),
-          throwsA(isA<RnsCompanionParseError>()),
-        );
-      },
-    );
+    test('JSON object instead of array maps to RnsCompanionParseError on listServices', () async {
+      final mock = MockClient((_) async => http.Response('{"foo": 1}', 200));
+      expect(
+        () => _client(mock).listServices(),
+        throwsA(isA<RnsCompanionParseError>()),
+      );
+    });
 
     test('SocketException maps to RnsCompanionConnectionError', () async {
       final mock = MockClient(
@@ -214,7 +211,7 @@ void main() {
     });
   });
 
-  group('RnsCompanionClient — base URI', () {
+  group('RnsCompanionClient - base URI', () {
     test('respects an injected baseUri', () async {
       final captured = <Uri>[];
       final mock = MockClient((req) async {

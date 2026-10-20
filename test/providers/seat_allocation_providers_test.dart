@@ -263,7 +263,7 @@ void main() {
     });
   });
 
-  group('licenseOrgActiveSeatCountProvider — auth-change re-subscribe', () {
+  group('licenseOrgActiveSeatCountProvider - auth-change re-subscribe', () {
     // Regression for the wedge bug observed on 2026-05-28:
     // - foolvo signs in, opens the org overview, Capacity reads 1/10.
     // - foolvo signs out, socialmeshapp signs in, then back to foolvo.
@@ -277,14 +277,13 @@ void main() {
     // which forces a teardown + re-subscribe when uid changes. We
     // pin that invariant via source-text inspection because the
     // observable behaviour requires a live Firestore subscription
-    // and a real auth flip — neither is easy to fake in pure-dart
+    // and a real auth flip - neither is easy to fake in pure-dart
     // tests, and a stub stream would re-emit naturally without
     // surfacing the bug. The source-text check guards against
     // someone removing the watch line.
     test('provider body watches currentUserProvider uid', () {
-      final src = File(
-        'lib/providers/seat_allocation_providers.dart',
-      ).readAsStringSync();
+      final src = File('lib/providers/seat_allocation_providers.dart')
+          .readAsStringSync();
       // Bound the search to the org-count provider body so a watch
       // line that drifts into the per-user seats provider does not
       // accidentally satisfy this test.

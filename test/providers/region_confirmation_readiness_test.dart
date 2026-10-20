@@ -18,7 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// even though the device was actually moving toward `ready`.
 ///
 /// Driving the full provider graph end-to-end requires the
-/// ProtocolService + transport + readiness stream stack — not in
+/// ProtocolService + transport + readiness stream stack - not in
 /// scope for a surgical patch test. These pins assert the shape of
 /// the implementation contract via source-level inspection.
 void main() {
@@ -27,125 +27,134 @@ void main() {
     source = await File('lib/providers/app_providers.dart').readAsString();
   });
 
-  group('region confirmation listens to readiness, not just transport state', () {
-    test('subscribes to meshtasticReadinessProvider in addition to '
-        'deviceConnectionProvider', () {
-      // Both subscriptions must be attached. Without the readiness
-      // arm, completion still fires on transport.connected and the
-      // regression returns.
-      expect(
-        source.contains(
-          'ref.listen<AsyncValue<OperationalReadiness>>(\n      meshtasticReadinessProvider,',
-        ),
-        isTrue,
-        reason:
-            '_awaitRegionConfirmation must add a listener on '
-            'meshtasticReadinessProvider so that completion is gated '
-            'on protocol readiness, not just BLE link state.',
-      );
-    });
-
-    test(
-      'completes only when readiness reaches OperationalReadiness.ready',
-      () {
-        // The completion path inside the readiness listener must
-        // require `readiness == OperationalReadiness.ready`.
+  group(
+    'region confirmation listens to readiness, not just transport state',
+    () {
+      test('subscribes to meshtasticReadinessProvider in addition to '
+          'deviceConnectionProvider', () {
+        // Both subscriptions must be attached. Without the readiness
+        // arm, completion still fires on transport.connected and the
+        // regression returns.
         expect(
-          source.contains('if (readiness != OperationalReadiness.ready)'),
+          source.contains(
+            'ref.listen<AsyncValue<OperationalReadiness>>(\n      meshtasticReadinessProvider,',
+          ),
+          isTrue,
+          reason:
+              '_awaitRegionConfirmation must add a listener on '
+              'meshtasticReadinessProvider so that completion is gated '
+              'on protocol readiness, not just BLE link state.',
+        );
+      });
+
+      test(
+        'completes only when readiness reaches OperationalReadiness.ready',
+        () {
+          // The completion path inside the readiness listener must
+          // require `readiness == OperationalReadiness.ready`.
+          expect(
+            source.contains('if (readiness != OperationalReadiness.ready)'),
+            isTrue,
+          );
+          // And there must be at least one completeSuccess call from the
+          // readiness arm (we use named reasons "ready_after_reboot" /
+          // "ready_no_reboot" to disambiguate in logs).
+          expect(
+            source.contains("completeSuccess('ready_after_reboot')"),
+            isTrue,
+          );
+        },
+      );
+
+      test('the connection-arm reconnect detection sync-reads live '
+          'protocol.readiness instead of trusting a cached flag', () {
+        // The legacy code (a) called completeSuccess() immediately when
+        // next.state == DevicePairingState.connected after a saw-disconnect,
+        // and (b) the first iteration of this patch trusted a cached
+        // `readinessReady` boolean which Riverpod replayed from a stale
+        // gen=1 emission across the device-reboot cycle. The current
+        // shape sync-reads `protocol.readiness` at the moment of the
+        // connected transition. Pin the shape so neither regression
+        // sneaks back.
+        final collapsed = source.replaceAll(RegExp(r'\s+'), ' ');
+        expect(
+          collapsed.contains('final liveReadiness = protocol.readiness;'),
+          isTrue,
+          reason:
+              'connection arm must sync-read live protocol.readiness '
+              'instead of using the cached readinessReady boolean. A '
+              'stale ready emission can otherwise leak from the prior '
+              'session and prematurely complete the wait.',
+        );
+        expect(
+          collapsed.contains(
+            'if (liveReadiness == OperationalReadiness.ready) { '
+            "completeSuccess('connected_then_ready');",
+          ),
           isTrue,
         );
-        // And there must be at least one completeSuccess call from the
-        // readiness arm (we use named reasons "ready_after_reboot" /
-        // "ready_no_reboot" to disambiguate in logs).
+      });
+
+      test(
+        'readinessReady is dropped when readiness leaves ready, so a '
+        'stale gen=N ready emission cannot persist across a reboot cycle',
+        () {
+          // The single most important regression pin in this group: the
+          // gen=1 stale-ready bug fired BECAUSE the readiness arm set
+          // readinessReady=true on a stale emission and never cleared
+          // it. The current shape clears the flag the moment readiness
+          // drops below ready and emits a `readiness_dropped` log line
+          // so the transition is visible in field debug.
+          final collapsed = source.replaceAll(RegExp(r'\s+'), ' ');
+          expect(
+            collapsed.contains(
+                  "'REGION_CONFIRMATION: readiness_dropped ' "
+                  "'readiness=",
+                ) ||
+                collapsed.contains(
+                  "'REGION_CONFIRMATION: readiness_dropped' "
+                  "'readiness=",
+                ) ||
+                collapsed.contains(
+                  'REGION_CONFIRMATION: readiness_dropped readiness=',
+                ),
+            isTrue,
+            reason:
+                'the readiness-dropped diagnostic is the smoking-gun log '
+                'line for stale-flag regressions. If a future patch removes '
+                'it without thinking, the regression returns silently.',
+          );
+          expect(
+            collapsed.contains('readinessReady = false;'),
+            isTrue,
+            reason:
+                'the flag MUST be cleared on any drop below ready. Without '
+                'this, a Riverpod-cached ready emission from the prior '
+                'session would persist across the reboot cycle and the '
+                'connection arm could prematurely complete.',
+          );
+        },
+      );
+
+      test('logs the canonical REGION_CONFIRMATION wait/ready/'
+          'connected_not_ready/pairing_invalidated tags so log triage '
+          'is unambiguous', () {
         expect(
-          source.contains("completeSuccess('ready_after_reboot')"),
+          source.contains('REGION_CONFIRMATION: waiting readiness'),
           isTrue,
         );
-      },
-    );
-
-    test('the connection-arm reconnect detection sync-reads live '
-        'protocol.readiness instead of trusting a cached flag', () {
-      // The legacy code (a) called completeSuccess() immediately when
-      // next.state == DevicePairingState.connected after a saw-disconnect,
-      // and (b) the first iteration of this patch trusted a cached
-      // `readinessReady` boolean which Riverpod replayed from a stale
-      // gen=1 emission across the device-reboot cycle. The current
-      // shape sync-reads `protocol.readiness` at the moment of the
-      // connected transition. Pin the shape so neither regression
-      // sneaks back.
-      final collapsed = source.replaceAll(RegExp(r'\s+'), ' ');
-      expect(
-        collapsed.contains('final liveReadiness = protocol.readiness;'),
-        isTrue,
-        reason:
-            'connection arm must sync-read live protocol.readiness '
-            'instead of using the cached readinessReady boolean. A '
-            'stale ready emission can otherwise leak from the prior '
-            'session and prematurely complete the wait.',
-      );
-      expect(
-        collapsed.contains(
-          'if (liveReadiness == OperationalReadiness.ready) { '
-          "completeSuccess('connected_then_ready');",
-        ),
-        isTrue,
-      );
-    });
-
-    test('readinessReady is dropped when readiness leaves ready, so a '
-        'stale gen=N ready emission cannot persist across a reboot cycle', () {
-      // The single most important regression pin in this group: the
-      // gen=1 stale-ready bug fired BECAUSE the readiness arm set
-      // readinessReady=true on a stale emission and never cleared
-      // it. The current shape clears the flag the moment readiness
-      // drops below ready and emits a `readiness_dropped` log line
-      // so the transition is visible in field debug.
-      final collapsed = source.replaceAll(RegExp(r'\s+'), ' ');
-      expect(
-        collapsed.contains(
-              "'REGION_CONFIRMATION: readiness_dropped ' "
-              "'readiness=",
-            ) ||
-            collapsed.contains(
-              "'REGION_CONFIRMATION: readiness_dropped' "
-              "'readiness=",
-            ) ||
-            collapsed.contains(
-              'REGION_CONFIRMATION: readiness_dropped readiness=',
-            ),
-        isTrue,
-        reason:
-            'the readiness-dropped diagnostic is the smoking-gun log '
-            'line for stale-flag regressions. If a future patch removes '
-            'it without thinking, the regression returns silently.',
-      );
-      expect(
-        collapsed.contains('readinessReady = false;'),
-        isTrue,
-        reason:
-            'the flag MUST be cleared on any drop below ready. Without '
-            'this, a Riverpod-cached ready emission from the prior '
-            'session would persist across the reboot cycle and the '
-            'connection arm could prematurely complete.',
-      );
-    });
-
-    test('logs the canonical REGION_CONFIRMATION wait/ready/'
-        'connected_not_ready/pairing_invalidated tags so log triage '
-        'is unambiguous', () {
-      expect(source.contains('REGION_CONFIRMATION: waiting readiness'), isTrue);
-      expect(source.contains('REGION_CONFIRMATION: ready target='), isTrue);
-      expect(
-        source.contains('REGION_CONFIRMATION: connected_not_ready'),
-        isTrue,
-      );
-      expect(
-        source.contains('REGION_CONFIRMATION: pairing_invalidated'),
-        isTrue,
-      );
-    });
-  });
+        expect(source.contains('REGION_CONFIRMATION: ready target='), isTrue);
+        expect(
+          source.contains('REGION_CONFIRMATION: connected_not_ready'),
+          isTrue,
+        );
+        expect(
+          source.contains('REGION_CONFIRMATION: pairing_invalidated'),
+          isTrue,
+        );
+      });
+    },
+  );
 
   group('terminal-invalidation surfaces as a typed exception', () {
     test('_RegionPairingInvalidatedException is defined and used in the '
@@ -156,7 +165,7 @@ void main() {
         reason:
             'a typed exception lets applyRegion\'s catch (and downstream '
             'screens) distinguish pairing-invalidation from a plain '
-            'TimeoutException — the former should route to re-pair, the '
+            'TimeoutException - the former should route to re-pair, the '
             'latter should optimistically mark applied during onboarding.',
       );
       expect(

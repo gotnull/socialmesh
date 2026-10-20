@@ -18,7 +18,7 @@ import 'package:socialmesh/features/dashboard/providers/dashboard_providers.dart
 /// thereafter. The non-owner upsell card is unrelated paywall surface
 /// and is NOT gated by this flag.
 void main() {
-  group('Dashboard discovery card ack — source pins', () {
+  group('Dashboard discovery card ack - source pins', () {
     final screenFile = File(
       'lib/features/dashboard/widget_dashboard_screen.dart',
     );
@@ -59,7 +59,7 @@ void main() {
         ),
         true,
         reason:
-            'Dashboard must read the ack provider as a defaulting boolean — '
+            'Dashboard must read the ack provider as a defaulting boolean - '
             'unset (first launch) treats as not-yet-dismissed.',
       );
       expect(
@@ -83,7 +83,7 @@ void main() {
         screenSource.contains(".dismiss(reason: 'edit_mode_entered')"),
         true,
         reason:
-            'Entering edit mode must also persist the ack — that is the '
+            'Entering edit mode must also persist the ack - that is the '
             'clearest signal the user understands the customization model.',
       );
     });
@@ -96,12 +96,12 @@ void main() {
         true,
         reason:
             'The paywall upsell card must remain independent of the '
-            'discovery ack — it is monetization surface, not noise.',
+            'discovery ack - it is monetization surface, not noise.',
       );
     });
   });
 
-  group('DashboardDiscoveryAckNotifier — behaviour', () {
+  group('DashboardDiscoveryAckNotifier - behaviour', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });

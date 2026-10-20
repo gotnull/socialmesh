@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeBoard thread detail screen — premium layout matching NodeDex /
+// NodeBoard thread detail screen - premium layout matching NodeDex /
 // Signals / Aether card hierarchy. Shows the original post in a
 // NodeBoardCardContainer, a replies card grouping every reply tile,
 // and a fixed bottom reply composer.
@@ -208,7 +208,7 @@ class _NodeBoardThreadScreenState extends ConsumerState<NodeBoardThreadScreen>
 }
 
 // ---------------------------------------------------------------------------
-// Original post card — renders the thread body inside a NodeBoardCardContainer
+// Original post card - renders the thread body inside a NodeBoardCardContainer
 // so the screen's card hierarchy is consistent with NodeDex / Aether.
 // ---------------------------------------------------------------------------
 
@@ -276,7 +276,7 @@ class _ThreadOpCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Author header — Wraps so long display names + hex
+                    // Author header - Wraps so long display names + hex
                     // IDs don't clip on narrow widths.
                     Wrap(
                       spacing: AppTheme.spacing8,
@@ -371,7 +371,7 @@ class _EmptyRepliesBlock extends StatelessWidget {
       child: Center(
         child: Text(
           // lint-allow: hardcoded-string
-          'No replies yet — be the first.',
+          'No replies yet - be the first.',
           style: TextStyle(
             fontFamily: AppTheme.fontFamily,
             fontSize: 13,
@@ -417,7 +417,7 @@ class _CenteredMessage extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Error card — centered, bordered, uses error tone from SemanticColors.
+// Error card - centered, bordered, uses error tone from SemanticColors.
 // ---------------------------------------------------------------------------
 
 class _ErrorCard extends StatelessWidget {
@@ -464,7 +464,7 @@ class _ErrorCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Time-ago formatter — short, locale-aware via l10n placeholder strings.
+// Time-ago formatter - short, locale-aware via l10n placeholder strings.
 // ---------------------------------------------------------------------------
 
 String _formatTimeAgo(DateTime dt, dynamic l10n) {
@@ -488,7 +488,7 @@ String _formatTimeAgo(DateTime dt, dynamic l10n) {
 }
 
 // ---------------------------------------------------------------------------
-// Author-identity helpers — shared with nodeboard_reply_tile.dart so thread
+// Author-identity helpers - shared with nodeboard_reply_tile.dart so thread
 // OP and replies render sigils/colors the same way.
 // ---------------------------------------------------------------------------
 

@@ -33,7 +33,7 @@ class InvalidTransitionException implements Exception {
 
 /// The set of all valid (fromState, toState) pairs.
 ///
-/// Spec: TASK_SYSTEM.md — Valid Transitions table.
+/// Spec: TASK_SYSTEM.md - Valid Transitions table.
 const _validTransitions = <(TaskState, TaskState)>{
   // created ->
   (TaskState.created, TaskState.assigned), // assign
@@ -61,7 +61,7 @@ const _validTransitions = <(TaskState, TaskState)>{
 /// Validates transitions, enforces RBAC via [PermissionService], and writes
 /// to the append-only `task_transitions` table.
 ///
-/// The `tasks.state` column is a projection — updated after each
+/// The `tasks.state` column is a projection - updated after each
 /// transition for query convenience but never treated as authoritative.
 ///
 /// Spec: TASK_SYSTEM.md (Sprint 007/W3.1), Sprint 008/W4.1.

@@ -6,7 +6,7 @@
 // Surfaces `MeshCoreFrameCapture` (already populated by ConnectionCoordinator
 // in debug builds) so a developer / field user can inspect recent RX/TX
 // frames without attaching a debugger or scraping os_log. Uses the
-// existing `toCompactHex()` redaction format — no raw plaintext payloads
+// existing `toCompactHex()` redaction format - no raw plaintext payloads
 // beyond what the capture layer already emits to the structured log
 // channel.
 //

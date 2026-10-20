@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: keyboard-dismissal — config screen with TextFormFields in sub-sections
+// lint-allow: keyboard-dismissal - config screen with TextFormFields in sub-sections
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/transport.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
@@ -345,7 +346,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
       // Only overwrite user-facing values when the user has NOT started
       // editing.  Once _hasChanges is true the user has made a selection
-      // and we must not clobber it — otherwise the stream response (or
+      // and we must not clobber it - otherwise the stream response (or
       // the optimistic cache update inside setConfig) silently reverts
       // their choice, _saveConfig recalculates roleChanged as false,
       // and the save is skipped entirely.
@@ -386,7 +387,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
   void _applyUserConfig(pb.User user) {
     safeSetState(() {
       // Only overwrite user-facing values when the user has NOT started
-      // editing — same guard as _applyDeviceConfig to prevent the stream
+      // editing - same guard as _applyDeviceConfig to prevent the stream
       // response from silently reverting in-progress edits.
       if (!_hasChanges) {
         _isUnmessagable = user.isUnmessagable;
@@ -492,7 +493,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         });
 
         // Listen for user config response (for isUnmessagable/isLicensed)
-        // Only for local device — user flags are not fetched via remote admin.
+        // Only for local device - user flags are not fetched via remote admin.
         if (!isRemote) {
           _userConfigSubscription = protocol.userConfigStream.listen((user) {
             if (mounted) _applyUserConfig(user);
@@ -600,7 +601,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
     // Cancel stream subscriptions BEFORE saving. setDeviceConfig calls
     // _applySavedConfigToCache which emits back on deviceConfigStream.
-    // If we're still listening, _applyDeviceConfig fires — and once we
+    // If we're still listening, _applyDeviceConfig fires - and once we
     // set _hasChanges=false later, the guard is gone and a late stream
     // event can overwrite _selectedRole back to the old value.
     _configSubscription?.cancel();
@@ -671,7 +672,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         return;
       }
 
-      // Save device config FIRST — the role lives in Config.DeviceConfig,
+      // Save device config FIRST - the role lives in Config.DeviceConfig,
       // which is the only place the firmware reads it from.  setOwnerConfig
       // (below) triggers a reboot, so if we sent it first the device would
       // reboot before this packet arrived and the role would never persist.
@@ -699,7 +700,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
       }
 
       // Save name and user flags via setOwnerConfig (setOwner admin message).
-      // Role is NOT sent here — it belongs in Config.DeviceConfig above.
+      // Role is NOT sent here - it belongs in Config.DeviceConfig above.
       // This is sent AFTER setDeviceConfig so the device processes the
       // device config before the setOwner-triggered reboot.
       if (nameChanged || userFlagsChanged) {
@@ -742,7 +743,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         );
       }
 
-      // Start global reboot countdown for local saves — banner persists
+      // Start global reboot countdown for local saves - banner persists
       // across navigation and auto-cancels when the device reconnects.
       // Remote admin saves don't reboot the local device.
       if (!isRemote) {
@@ -866,9 +867,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
                   context.l10n.deviceConfigNameHelpText,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ),
 
@@ -1047,7 +1047,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
 
               const SizedBox(height: AppTheme.spacing24),
 
-              // Danger Zone — only for local devices
+              // Danger Zone - only for local devices
               if (!isRemote) ...[
                 _buildSectionHeader(context.l10n.deviceConfigSectionDangerZone),
                 _buildDangerZone(),
@@ -1537,9 +1537,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           TextFormField(
             key: const ValueKey('tzdef'),
             controller: _tzdefController,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textPrimary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.textPrimary),
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
@@ -1590,9 +1589,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         children: [
           Text(
             context.l10n.deviceConfigGpioWarning,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: context.textTertiary),
           ),
           const SizedBox(height: AppTheme.spacing16),
           Row(
@@ -1644,9 +1642,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           controller: controller,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: context.textPrimary),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: context.textPrimary),
           decoration: InputDecoration(
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(
@@ -1704,9 +1701,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 const SizedBox(height: AppTheme.spacing2),
                 Text(
                   subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

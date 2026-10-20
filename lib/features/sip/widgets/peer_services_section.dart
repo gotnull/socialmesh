@@ -7,7 +7,7 @@
 /// Uses [`peerServicesFullProvider`] (a pure projection of
 /// `mrrpCachedServicesProvider`). No new subscriptions, no new
 /// transport. Tapping a service opens the existing
-/// `ServiceDetailScreen` — no parallel pipeline.
+/// `ServiceDetailScreen` - no parallel pipeline.
 library;
 
 import 'package:flutter/material.dart';
@@ -19,7 +19,7 @@ import '../../../providers/sip_hub_services_providers.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 
 /// Scrollable-free section (parent handles scrolling). Renders nothing
-/// when the peer has zero advertised services — the parent decides
+/// when the peer has zero advertised services - the parent decides
 /// whether to show an empty-state placeholder.
 class PeerServicesSection extends ConsumerWidget {
   final int peerNodeId;

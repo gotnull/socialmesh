@@ -515,7 +515,7 @@ void main() {
 
     test('handleInboundDm drops interleaved duplicate (A → B → A)', () {
       // Plan §interleave: A first arrival, B different frame, A again
-      // (delayed via second mesh path) — the third call MUST drop.
+      // (delayed via second mesh path) - the third call MUST drop.
       final frameA = buildInboundDmWithNonce(0x12345678, 'A', 0xAA);
       final frameB = buildInboundDmWithNonce(0x12345678, 'B', 0xBB);
 
@@ -533,7 +533,7 @@ void main() {
     });
 
     test(
-      'dedupe ring is per-session — same nonce on different sessions both pass',
+      'dedupe ring is per-session - same nonce on different sessions both pass',
       () {
         // Cross-session collision protection: even if two distinct
         // sessions happened to see the same wire-nonce (improbable but
@@ -565,12 +565,12 @@ void main() {
         final f = buildInboundDmWithNonce(tag, 'msg $i', 0x1000 + i);
         expect(dm.handleInboundDm(f), isNotNull, reason: 'fresh msg $i');
       }
-      // Send the 33rd distinct frame — fits because ring evicts
+      // Send the 33rd distinct frame - fits because ring evicts
       // oldest when capacity is exceeded.
       final fresh33 = buildInboundDmWithNonce(tag, 'msg 32', 0x2000);
       expect(dm.handleInboundDm(fresh33), isNotNull);
       // Replay msg-1 (still inside the ring, since msg-0 was just
-      // evicted) — must drop.
+      // evicted) - must drop.
       final replayMsg1 = buildInboundDmWithNonce(tag, 'msg 1', 0x1001);
       expect(dm.handleInboundDm(replayMsg1), isNull);
     });

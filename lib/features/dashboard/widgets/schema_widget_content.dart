@@ -178,7 +178,7 @@ final customWidgetsProvider = FutureProvider<List<WidgetSchema>>((ref) async {
     'store=${store != null ? "hashCode=${identityHashCode(store)}, syncEnabled=${store.syncEnabled}, count=${store.count}" : "NULL"}',
   );
 
-  // Activate sync service — wire up onPullApplied to trigger refresh
+  // Activate sync service - wire up onPullApplied to trigger refresh
   // when remote widget schemas arrive from another device.
   final syncService = ref.watch(widgetSyncServiceProvider);
 

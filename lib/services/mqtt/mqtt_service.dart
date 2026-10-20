@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// MqttService — mockable abstraction for MQTT client operations.
+/// MqttService - mockable abstraction for MQTT client operations.
 ///
 /// This interface decouples the Global Layer UI and provider layers
 /// from any specific MQTT client library. All network-touching MQTT
@@ -11,7 +11,7 @@
 /// - Swappable client implementations (mqtt_client, mqtt5_client, etc.)
 /// - Clean separation between connection lifecycle and UI state
 ///
-/// The service is stateful — it holds a single broker connection
+/// The service is stateful - it holds a single broker connection
 /// and exposes streams for connection events and inbound messages.
 /// Callers should not instantiate multiple services for the same
 /// broker; use the Riverpod provider layer to manage the singleton.
@@ -252,13 +252,13 @@ class MqttServiceException implements Exception {
 
 /// Classification of MQTT service errors.
 enum MqttServiceErrorType {
-  /// DNS resolution failed — host not found.
+  /// DNS resolution failed - host not found.
   dnsResolution,
 
-  /// TCP connection failed — host unreachable or port refused.
+  /// TCP connection failed - host unreachable or port refused.
   tcpConnection,
 
-  /// TLS handshake failed — certificate issue or protocol mismatch.
+  /// TLS handshake failed - certificate issue or protocol mismatch.
   tlsHandshake,
 
   /// Authentication rejected by the broker.
@@ -267,7 +267,7 @@ enum MqttServiceErrorType {
   /// Subscription rejected by the broker.
   subscriptionRejected,
 
-  /// Publish failed — broker NACK or timeout.
+  /// Publish failed - broker NACK or timeout.
   publishFailed,
 
   /// Connection lost unexpectedly.
@@ -290,8 +290,8 @@ enum MqttServiceErrorType {
 /// Abstract interface for all MQTT client operations.
 ///
 /// Implementations:
-/// - `MqttClientService` — real MQTT client using the `mqtt_client` package
-/// - `MqttMockService` — deterministic mock for tests and V1 UI development
+/// - `MqttClientService` - real MQTT client using the `mqtt_client` package
+/// - `MqttMockService` - deterministic mock for tests and V1 UI development
 ///
 /// All methods are asynchronous. Connection state changes are broadcast
 /// via [connectionEvents]. Inbound messages are broadcast via [messages].
@@ -425,17 +425,17 @@ abstract class MqttService {
   /// Runs a single diagnostic check against the broker.
   ///
   /// Each [DiagnosticCheckType] maps to a specific network operation:
-  /// - [DiagnosticCheckType.configValidation] — validates config locally
-  /// - [DiagnosticCheckType.dnsResolution] — resolves broker hostname
-  /// - [DiagnosticCheckType.tcpConnection] — opens TCP socket to broker
-  /// - [DiagnosticCheckType.tlsHandshake] — performs TLS negotiation
-  /// - [DiagnosticCheckType.authentication] — sends MQTT CONNECT
-  /// - [DiagnosticCheckType.subscribe] — subscribes to a test topic
-  /// - [DiagnosticCheckType.publish] — publishes to a test topic
+  /// - [DiagnosticCheckType.configValidation] - validates config locally
+  /// - [DiagnosticCheckType.dnsResolution] - resolves broker hostname
+  /// - [DiagnosticCheckType.tcpConnection] - opens TCP socket to broker
+  /// - [DiagnosticCheckType.tlsHandshake] - performs TLS negotiation
+  /// - [DiagnosticCheckType.authentication] - sends MQTT CONNECT
+  /// - [DiagnosticCheckType.subscribe] - subscribes to a test topic
+  /// - [DiagnosticCheckType.publish] - publishes to a test topic
   ///
   /// Returns a [DiagnosticCheckResult] with status, message, and timing.
   ///
-  /// This method does NOT require an active connection — it creates
+  /// This method does NOT require an active connection - it creates
   /// temporary connections/sockets as needed for each check.
   Future<DiagnosticCheckResult> runDiagnosticCheck(
     DiagnosticCheckRequest request,

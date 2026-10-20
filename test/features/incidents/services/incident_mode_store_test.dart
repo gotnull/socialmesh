@@ -210,9 +210,9 @@ void main() {
       final proj = await store.loadIncidentProjection(incidentId);
       expect(proj!.helpState, IncidentLifecycleState.responderArrived);
       // Persisted timeline is chronological regardless of insert order.
-      final times = (await store.getTimeline(
-        incidentId,
-      )).map((e) => e.timestamp).toList();
+      final times = (await store.getTimeline(incidentId))
+          .map((e) => e.timestamp)
+          .toList();
       expect(times, [...times]..sort());
     });
   });
@@ -492,7 +492,7 @@ void main() {
             timestamp: at(1),
           ),
         ]);
-        // Hazard report (id 3) — must never appear in active help requests.
+        // Hazard report (id 3) - must never appear in active help requests.
         await store.ingestEvent(
           IncidentEvent(
             incidentId: 3,

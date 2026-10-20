@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Animated Sigil Container — orchestrates multi-layer sigil animations.
+// Animated Sigil Container - orchestrates multi-layer sigil animations.
 //
 // This widget manages multiple AnimationControllers to drive the
 // AnimatedSigilPainter through its animation phases:
 //
-// Phase 1 — REVEAL (plays once on mount)
+// Phase 1 - REVEAL (plays once on mount)
 //   Edges draw on sequentially, vertex dots materialize, center dot
 //   fades in last. Duration: ~1.8 seconds.
 //
-// Phase 2 — AMBIENT (loops after reveal completes)
+// Phase 2 - AMBIENT (loops after reveal completes)
 //   - Slow rotation: outer ring rotates forward, inner rings
 //     counter-rotate. Full cycle: ~25 seconds.
 //   - Breathing pulse: vertex dots twinkle with staggered timing.
@@ -338,7 +338,7 @@ class _AnimatedSigilContainerState extends State<AnimatedSigilContainer>
     }
 
     if (!hasReveal && hasAmbient) {
-      // No reveal phase — start ambient immediately.
+      // No reveal phase - start ambient immediately.
       _startAmbient();
     }
   }
@@ -460,7 +460,7 @@ class _AnimatedSigilContainerState extends State<AnimatedSigilContainer>
     if (_tracerController != null) listenables.add(_tracerController!);
 
     if (listenables.isEmpty) {
-      // No active controllers — return a dummy listenable that never fires.
+      // No active controllers - return a dummy listenable that never fires.
       return const _NeverListenable();
     }
     if (listenables.length == 1) return listenables.first;
@@ -586,7 +586,7 @@ class _AnimatedSigilContainerState extends State<AnimatedSigilContainer>
 // Utility
 // =============================================================================
 
-/// A [Listenable] that never notifies — used as a no-op when there are no
+/// A [Listenable] that never notifies - used as a no-op when there are no
 /// active animation controllers so we can still provide a non-null listenable
 /// to AnimatedBuilder without allocating a real controller.
 class _NeverListenable implements Listenable {

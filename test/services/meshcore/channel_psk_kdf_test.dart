@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34d — channel PSK helper tests.
+// D34d - channel PSK helper tests.
 //
 // Pins:
 //   - randomPsk length + non-determinism (smoke)
@@ -22,7 +22,7 @@ void main() {
     });
 
     test(
-      'is non-deterministic across calls (smoke — 8 calls all distinct)',
+      'is non-deterministic across calls (smoke - 8 calls all distinct)',
       () {
         // 16 bytes from `Random.secure()`; collision probability is 1/2^128
         // per pair, so 8 sequential calls colliding is practically impossible.
@@ -64,7 +64,7 @@ void main() {
     test('"test phrase" pins to '
         '5f37102be03ffac2f2f329df52bd365d under '
         'kMeshCoreChannelKdfLabel "socialmesh.meshcore.channel.v1"', () {
-      // Authoritative byte vector — recomputing this value against the
+      // Authoritative byte vector - recomputing this value against the
       // upstream `crypto` package confirms HMAC-SHA256(label, "test phrase")
       // truncated to the first 16 bytes. If this test ever changes value,
       // either the label or the truncation length silently moved; treat as
@@ -89,7 +89,7 @@ void main() {
     });
 
     test('passphrase that contains internal whitespace is accepted', () {
-      // "alpha bravo" is valid — only fully-blank input is rejected.
+      // "alpha bravo" is valid - only fully-blank input is rejected.
       expect(() => derivePskFromPassphrase('alpha bravo'), returnsNormally);
     });
 

@@ -28,7 +28,7 @@ import 'mesh_game_codec.dart';
 class MeshGameSendResult {
   final MrrpDeliveryState delivery;
 
-  /// Convenience — whether the send is considered successful.
+  /// Convenience - whether the send is considered successful.
   bool get ok => delivery.statusCode == MrrpStatusCode.ok;
 
   const MeshGameSendResult(this.delivery);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Pins for [resolveSecureInboundDmSession] — the recovery path that
+/// Pins for [resolveSecureInboundDmSession] - the recovery path that
 /// salvages encrypted DM frames whose link store record has a stale
 /// `peerNodeNum` (the cross-peer linkId-collision scenario surfaced
 /// in real-device logs as `secure_decrypt_dropped reason=no_dm_session
@@ -106,7 +106,7 @@ void main() {
         isNull,
         reason:
             'with 2+ active sessions and no peer match, the resolver '
-            'must NEVER guess — refusing is the contract',
+            'must NEVER guess - refusing is the contract',
       );
     });
 

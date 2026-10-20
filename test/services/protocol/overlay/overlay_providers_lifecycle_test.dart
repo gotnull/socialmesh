@@ -4,7 +4,7 @@
 /// Provider-lifecycle tests for `lib/providers/overlay_providers.dart`.
 ///
 /// These tests run with sqflite_common_ffi (disk-backed `links.db`
-/// inside a tmp dir — the FutureProvider initialisation path does not
+/// inside a tmp dir - the FutureProvider initialisation path does not
 /// accept an in-memory override, so we let it create a real file and
 /// clean up afterwards).
 ///
@@ -39,7 +39,7 @@ import '_overlay_link_test_harness.dart';
 
 /// Minimal fake standing in for [ProtocolService]. Captures overlay
 /// attachment state and the SIP sink payload. Only the methods the
-/// overlay touches are implemented — everything else throws.
+/// overlay touches are implemented - everything else throws.
 class _FakeProtocolService implements ProtocolService {
   Future<void> Function(int, Uint8List)? attachedHandler;
   int attachCount = 0;
@@ -238,7 +238,7 @@ void main() {
 
       await container.read(overlayAttachmentProvider.future);
       final egress = container.read(overlayProtocolEgressProvider);
-      // We don't need to build a real frame — just verify the sink gets
+      // We don't need to build a real frame - just verify the sink gets
       // hit when the adapter decides to pass through.
       final attached = fake.attachedHandler;
       expect(attached, isNotNull);

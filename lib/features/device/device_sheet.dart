@@ -285,7 +285,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         // Defensive guard: while teardown is in flight (`_disconnecting`),
         // suppress the scan CTA. Without this, the async disconnect
         // window between `userDisconnected=true` and the route swap
-        // can show a tappable "Scan for Devices" button — the user can
+        // can show a tappable "Scan for Devices" button - the user can
         // tap it before `pushNamedAndRemoveUntil('/app', …)` lands,
         // pushing Scanner onto a dead device-sheet stack.
         // While auto-reconnect is searching for a radio that is out of
@@ -435,8 +435,8 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
             // Match the disconnect button's pattern: capture the root
             // navigator, set needsScanner, then route-replace via the
             // root navigator key. `pushNamedAndRemoveUntil('/app', (_)
-            // => false)` clears EVERY route — including the modal sheet
-            // itself — so a separate `Navigator.pop` is both unnecessary
+            // => false)` clears EVERY route - including the modal sheet
+            // itself - so a separate `Navigator.pop` is both unnecessary
             // and harmful: dual-navigation on the same navigator races
             // the rebuild and previously triggered a provider-during-
             // build assertion when `setNeedsScanner` rebuilt

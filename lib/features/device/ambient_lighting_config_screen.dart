@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/logging.dart';
@@ -256,9 +258,8 @@ class _AmbientLightingConfigScreenState
                     boxShadow: _ledState
                         ? [
                             BoxShadow(
-                              color: Color(
-                                _currentColor,
-                              ).withValues(alpha: 0.5),
+                              color: Color(_currentColor)
+                                  .withValues(alpha: 0.5),
                               blurRadius: 30,
                               spreadRadius: 10,
                             ),
@@ -487,9 +488,8 @@ class _ColorSlider extends StatelessWidget {
             width: 50,
             child: Text(
               label,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.textSecondary),
             ),
           ),
           Expanded(

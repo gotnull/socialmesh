@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
@@ -121,7 +122,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
 
       switch (decision) {
         case PublishDecision.allowed:
-          // Start global broadcast countdown — banner persists across
+          // Start global broadcast countdown - banner persists across
           // navigation and confirms propagation to the mesh.
           ref
               .read(countdownProvider.notifier)
@@ -141,7 +142,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
           );
         case PublishDecision.blockedInterval:
           safeShowSnackBar(
-            'Location was shared recently — please wait before sharing again', // lint-allow: hardcoded-string
+            'Location was shared recently - please wait before sharing again', // lint-allow: hardcoded-string
             type: SnackBarType.warning,
           );
         case PublishDecision.blockedDistance:
@@ -168,7 +169,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
 
     if (!mounted || resultNodeNum == null) return;
 
-    // Start the global countdown — survives navigation and screen disposal.
+    // Start the global countdown - survives navigation and screen disposal.
     ref
         .read(countdownProvider.notifier)
         .startTracerouteCountdown(resultNodeNum);
@@ -184,7 +185,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
       await protocol.requestAllPositions();
       if (!mounted) return;
 
-      // Start global position request countdown — banner persists
+      // Start global position request countdown - banner persists
       // across navigation and sets expectations for trickle-in time.
       notifier.startPositionRequestCountdown();
     } catch (e) {

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // MeshCanvas immutable model types used by the repository / DAO layer.
-// Spec: docs/canvas/CANVAS_V0_1.md. These are pure data classes — no
+// Spec: docs/canvas/CANVAS_V0_1.md. These are pure data classes - no
 // protocol, no persistence calls, no side effects.
 library;
 

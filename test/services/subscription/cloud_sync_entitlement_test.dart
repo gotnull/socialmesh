@@ -159,7 +159,7 @@ void main() {
       // This verifies the entitlement ID matches what's configured in RevenueCat
       // The service uses 'Socialmesh Pro' as the entitlement identifier
       // If this test fails, check RevenueCat dashboard configuration
-      // lint-allow: socialmesh-name-casing — see cloud_sync_entitlement_service.dart
+      // lint-allow: socialmesh-name-casing - see cloud_sync_entitlement_service.dart
       expect(
         CloudSyncEntitlementService.grandfatherCutoffDate,
         DateTime(2025, 2, 1),
@@ -297,17 +297,17 @@ void main() {
   });
 
   // ─────────────────────────────────────────────────────────────────────
-  // Regression: RC-ARCH-01 — RevenueCat is the source of truth.
+  // Regression: RC-ARCH-01 - RevenueCat is the source of truth.
   // The Firestore mirror at user_entitlements/{uid} is a cache and may
   // lag (e.g. user just upgraded from a feature pack to Cloud Monthly,
-  // or syncPurchasesToFirestore failed silently — see RC-ARCH-04).
+  // or syncPurchasesToFirestore failed silently - see RC-ARCH-04).
   // shouldApplyMirrorStatus must NEVER let a stale mirror downgrade an
   // entitlement that RC has already proven as full access.
   // ─────────────────────────────────────────────────────────────────────
   group('RC-ARCH-01: shouldApplyMirrorStatus (RC wins on downgrade)', () {
     test('feature_only mirror is REJECTED when RC already says active', () {
       // Scenario A in the task spec: Firestore says feature_only / stale,
-      // RC says active — feature must STAY UNLOCKED.
+      // RC says active - feature must STAY UNLOCKED.
       expect(
         CloudSyncEntitlementService.shouldApplyMirrorStatus(
           currentState: CloudSyncEntitlementState.active,
@@ -351,7 +351,7 @@ void main() {
 
     test('feature_only mirror IS APPLIED when RC has no full access', () {
       // Scenario C in the task spec: Firestore says feature_only AND RC
-      // has not granted cloud sync — the user is correctly limited.
+      // has not granted cloud sync - the user is correctly limited.
       // No accidental unlock here.
       for (final state in [
         CloudSyncEntitlementState.none,
@@ -370,7 +370,7 @@ void main() {
     });
 
     test('grandfathered mirror is ALWAYS applied (upgrade is safe)', () {
-      // grandfathered is never a downgrade — applying it always grants
+      // grandfathered is never a downgrade - applying it always grants
       // more access, never less.
       for (final state in CloudSyncEntitlementState.values) {
         expect(

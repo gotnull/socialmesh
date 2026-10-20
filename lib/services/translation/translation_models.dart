@@ -21,7 +21,7 @@ enum TranslationPrivacyMode {
   /// Managed provider allowed, local cache only, tighter DM rules.
   private_,
 
-  /// Managed provider disabled — BYO only, no shared persistence.
+  /// Managed provider disabled - BYO only, no shared persistence.
   strict,
 }
 
@@ -106,7 +106,7 @@ enum TranslationPolicyDecision {
   /// User lacks translation entitlement.
   noEntitlement,
 
-  /// Managed quota exhausted — suggest BYO.
+  /// Managed quota exhausted - suggest BYO.
   quotaExhausted,
 
   /// Privacy mode blocks managed provider.

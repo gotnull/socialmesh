@@ -8,7 +8,7 @@
 // commonly used in BBS art.
 //
 // The terminal mode is an AESTHETIC LAYER, not a protocol emulator. We
-// do NOT interpret ANSI colour escapes at runtime — preset palettes drive
+// do NOT interpret ANSI colour escapes at runtime - preset palettes drive
 // colour. Inputs that rely on raw escapes are reduced to plain characters.
 
 import '../../../utils/text_sanitizer.dart';

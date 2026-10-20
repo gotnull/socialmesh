@@ -51,7 +51,7 @@ class _MeshCoreMessagesContainerScreenState
   Widget build(BuildContext context) {
     // Mirrors `MessagesContainerScreen.build`: the TabBarView is
     // scrollable so it lives inside a SliverFillRemaining(
-    // hasScrollBody: true) child — never in `GlassScaffold.body(body:)`
+    // hasScrollBody: true) child - never in `GlassScaffold.body(body:)`
     // (lint enforces `no-scrollable-in-glass-body`).
     return GlassScaffold(
       resizeToAvoidBottomInset: false,

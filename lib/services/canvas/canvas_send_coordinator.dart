@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCanvas send coordinator — drains `pending_op` rows, batches them
+// MeshCanvas send coordinator - drains `pending_op` rows, batches them
 // into canvas.v1 paint_batch frames via CanvasCodec, and pushes them
 // through the rate-limit chain (canvas governor → SIP limiter → wire).
 //
@@ -156,7 +156,7 @@ class CanvasSendCoordinator {
   /// transmission-status view model to derive
   /// `isCanvasBudgetCooling` via an elapsed-time window
   /// (CANVAS_TRANSMISSION_STATUS_V0_1.md §2.2). The coordinator does
-  /// not clear this on success — the view model applies its own
+  /// not clear this on success - the view model applies its own
   /// decay threshold.
   int? _lastGovernorDenialAtMs;
 
@@ -176,7 +176,7 @@ class CanvasSendCoordinator {
   ];
 
   /// Backoff applied when the canvas governor (250 B / 60 s) refuses a
-  /// frame. Short — the window may free up bytes soon.
+  /// frame. Short - the window may free up bytes soon.
   static const Duration _governorBackoff = Duration(seconds: 1);
 
   /// Backoff applied when the SIP limiter refuses a frame. Slightly
@@ -212,7 +212,7 @@ class CanvasSendCoordinator {
   Future<int> drain({int maxFrames = defaultMaxFramesPerDrain}) async {
     if (maxFrames <= 0) return 0;
     if (!_canSend()) {
-      // Participation off — leave `pending_op` rows in place so they
+      // Participation off - leave `pending_op` rows in place so they
       // resume on re-enable. NEVER drop user work here.
       // CANVAS_PARTICIPATION_V0_1.md §5.3.
       AppLogging.meshCanvas(
@@ -277,7 +277,7 @@ class CanvasSendCoordinator {
       // wait for the next iteration (or the next drain call).
       final batchPlan = _planNextBatch(candidates);
       if (batchPlan.ops.isEmpty) {
-        // Defensive — should never happen given `candidates.isNotEmpty`.
+        // Defensive - should never happen given `candidates.isNotEmpty`.
         return framesSent;
       }
 

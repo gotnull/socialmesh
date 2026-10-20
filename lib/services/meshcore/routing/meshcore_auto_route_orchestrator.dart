@@ -126,26 +126,24 @@ Uint8List buildSendTextMsgPayload({
 /// dependency. Mirrors `MeshCoreSession.addUpdateContact` but
 /// narrowed to the fields the orchestrator drives. Extracted so the
 /// orchestrator is testable without mocking a full session.
-typedef MeshCoreAddUpdateContactCall =
-    Future<bool> Function({
-      required Uint8List pubKey,
-      required int advType,
-      required String name,
-      required int pathLength,
-      required Uint8List pathBytes,
-    });
+typedef MeshCoreAddUpdateContactCall = Future<bool> Function({
+  required Uint8List pubKey,
+  required int advType,
+  required String name,
+  required int pathLength,
+  required Uint8List pathBytes,
+});
 
 /// D48-A2: function signature for the `CMD_SEND_TXT_MSG 0x02`
 /// dependency. Mirrors `MeshCoreSession.sendTextMessage` but only
 /// the inputs the orchestrator drives. Defaults the timeout to the
 /// 5 s sync-ack window inside the session.
-typedef MeshCoreSendTextMessageCall =
-    Future<MeshCoreTextSendResult> Function({
-      required int command,
-      required Uint8List payload,
-      required int expectedResponse,
-      required MeshCoreSendKind sendKind,
-    });
+typedef MeshCoreSendTextMessageCall = Future<MeshCoreTextSendResult> Function({
+  required int command,
+  required Uint8List payload,
+  required int expectedResponse,
+  required MeshCoreSendKind sendKind,
+});
 
 /// D48-A2: bound to one outbound contact DM. Construct, call
 /// [sendWithAutoRoute], read the outcome, discard.

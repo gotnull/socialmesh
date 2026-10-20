@@ -175,56 +175,52 @@ Future<_Harness> _createHarness() async {
 
 void main() {
   group('Node reconnect persistence (regression)', () {
-    test(
-      'clearDeviceDataBeforeConnect (default) preserves nodes in storage',
-      () async {
-        final h = await _createHarness();
-        addTearDown(h.container.dispose);
+    test('clearDeviceDataBeforeConnect (default) preserves nodes in storage', () async {
+      final h = await _createHarness();
+      addTearDown(h.container.dispose);
 
-        // Seed 150 nodes to simulate a long session
-        await _seedNodes(h.storage, count: 150);
-        final beforeClear = await h.storage.loadNodes();
-        expect(beforeClear, hasLength(150));
+      // Seed 150 nodes to simulate a long session
+      await _seedNodes(h.storage, count: 150);
+      final beforeClear = await h.storage.loadNodes();
+      expect(beforeClear, hasLength(150));
 
-        // Initialise NodesNotifier so it loads from storage
-        h.container.read(nodesProvider);
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-        expect(
-          h.container.read(nodesProvider).length,
-          150,
-          reason: 'All 150 nodes should be in memory after init',
-        );
+      // Initialise NodesNotifier so it loads from storage
+      h.container.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(
+        h.container.read(nodesProvider).length,
+        150,
+        reason: 'All 150 nodes should be in memory after init',
+      );
 
-        // Simulate reconnect — default clearNodeData: false
-        // We cannot call the WidgetRef version in a unit test, so replicate
-        // the exact operations that clearDeviceDataBeforeConnectRef performs
-        // when clearNodeData is false (the default for reconnect paths).
+      // Simulate reconnect - default clearNodeData: false
+      // We cannot call the WidgetRef version in a unit test, so replicate
+      // the exact operations that clearDeviceDataBeforeConnectRef performs
+      // when clearNodeData is false (the default for reconnect paths).
 
-        // Channels are always cleared:
-        h.container.read(channelsProvider.notifier).clearChannels();
-        // New-nodes badge reset:
-        h.container.read(newNodesCountProvider.notifier).reset();
-        // NOTE: nodesProvider.notifier.clearNodes() is NOT called.
-        // NOTE: nodeStorage.clearNodes() is NOT called.
+      // Channels are always cleared:
+      h.container.read(channelsProvider.notifier).clearChannels();
+      // New-nodes badge reset:
+      h.container.read(newNodesCountProvider.notifier).reset();
+      // NOTE: nodesProvider.notifier.clearNodes() is NOT called.
+      // NOTE: nodeStorage.clearNodes() is NOT called.
 
-        // Verify in-memory nodes are still present
-        expect(
-          h.container.read(nodesProvider).length,
-          150,
-          reason:
-              'Reconnect with default clearNodeData should preserve in-memory nodes',
-        );
+      // Verify in-memory nodes are still present
+      expect(
+        h.container.read(nodesProvider).length,
+        150,
+        reason: 'Reconnect with default clearNodeData should preserve in-memory nodes',
+      );
 
-        // Verify persistent storage is still intact
-        final afterClear = await h.storage.loadNodes();
-        expect(
-          afterClear,
-          hasLength(150),
-          reason:
-              'Reconnect with default clearNodeData should preserve stored nodes',
-        );
-      },
-    );
+      // Verify persistent storage is still intact
+      final afterClear = await h.storage.loadNodes();
+      expect(
+        afterClear,
+        hasLength(150),
+        reason:
+            'Reconnect with default clearNodeData should preserve stored nodes',
+      );
+    });
 
     test(
       'clearDeviceDataBeforeConnect with clearNodeData: true wipes all nodes',
@@ -238,7 +234,7 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 150));
         expect(h.container.read(nodesProvider).length, 150);
 
-        // Simulate forget-device path — clearNodeData: true
+        // Simulate forget-device path - clearNodeData: true
         h.container.read(nodesProvider.notifier).clearNodes();
         h.container.read(channelsProvider.notifier).clearChannels();
         h.container.read(newNodesCountProvider.notifier).reset();
@@ -266,7 +262,7 @@ void main() {
         final h = await _createHarness();
         addTearDown(h.container.dispose);
 
-        // Seed 150 nodes — simulates accumulated session knowledge
+        // Seed 150 nodes - simulates accumulated session knowledge
         final seeded = await _seedNodes(h.storage, count: 150);
 
         h.container.read(nodesProvider);
@@ -304,58 +300,55 @@ void main() {
       },
     );
 
-    test(
-      'storage round-trip preserves node count across simulated restart',
-      () async {
-        final h = await _createHarness();
-        addTearDown(h.container.dispose);
+    test('storage round-trip preserves node count across simulated restart', () async {
+      final h = await _createHarness();
+      addTearDown(h.container.dispose);
 
-        // Session 1: accumulate 150 nodes
-        await _seedNodes(h.storage, count: 150);
-        h.container.read(nodesProvider);
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-        expect(h.container.read(nodesProvider).length, 150);
+      // Session 1: accumulate 150 nodes
+      await _seedNodes(h.storage, count: 150);
+      h.container.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(h.container.read(nodesProvider).length, 150);
 
-        // Verify storage has all 150
-        final stored = await h.storage.loadNodes();
-        expect(stored, hasLength(150));
+      // Verify storage has all 150
+      final stored = await h.storage.loadNodes();
+      expect(stored, hasLength(150));
 
-        // Session 2: create a fresh container (simulates cold app restart)
-        // Re-use the same storage instance (same SharedPreferences backing)
-        final container2 = ProviderContainer(
-          overrides: [
-            protocolServiceProvider.overrideWithValue(
-              ProtocolService(_FakeTransport()),
-            ),
-            nodeStorageProvider.overrideWith((ref) async => h.storage),
-            deviceFavoritesProvider.overrideWith((ref) async {
-              final service = DeviceFavoritesService();
-              await service.init();
-              return service;
-            }),
-            nodeIdentityStoreProvider.overrideWith(
-              (ref) async => h.identityStore,
-            ),
-          ],
-        );
-        addTearDown(container2.dispose);
+      // Session 2: create a fresh container (simulates cold app restart)
+      // Re-use the same storage instance (same SharedPreferences backing)
+      final container2 = ProviderContainer(
+        overrides: [
+          protocolServiceProvider.overrideWithValue(
+            ProtocolService(_FakeTransport()),
+          ),
+          nodeStorageProvider.overrideWith((ref) async => h.storage),
+          deviceFavoritesProvider.overrideWith((ref) async {
+            final service = DeviceFavoritesService();
+            await service.init();
+            return service;
+          }),
+          nodeIdentityStoreProvider.overrideWith(
+            (ref) async => h.identityStore,
+          ),
+        ],
+      );
+      addTearDown(container2.dispose);
 
-        await container2.read(nodeStorageProvider.future);
-        await container2.read(deviceFavoritesProvider.future);
-        await container2.read(nodeIdentityStoreProvider.future);
+      await container2.read(nodeStorageProvider.future);
+      await container2.read(deviceFavoritesProvider.future);
+      await container2.read(nodeIdentityStoreProvider.future);
 
-        // NodesNotifier._init() should load all 150 from storage
-        container2.read(nodesProvider);
-        await Future<void>.delayed(const Duration(milliseconds: 150));
+      // NodesNotifier._init() should load all 150 from storage
+      container2.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
 
-        expect(
-          container2.read(nodesProvider).length,
-          150,
-          reason:
-              'After cold restart, all 150 nodes should be restored from storage',
-        );
-      },
-    );
+      expect(
+        container2.read(nodesProvider).length,
+        150,
+        reason:
+            'After cold restart, all 150 nodes should be restored from storage',
+      );
+    });
 
     test(
       'new nodes discovered via mesh traffic are persisted and survive restart',
@@ -423,14 +416,13 @@ void main() {
 
         await Future<void>.delayed(const Duration(milliseconds: 100));
 
-        // Badge should NOT have incremented — these are all known nodes
+        // Badge should NOT have incremented - these are all known nodes
         // (addOrUpdateNode goes through the same merge path as the stream
         // listener, which only increments for genuinely new nodeNums)
         expect(
           h.container.read(newNodesCountProvider),
           0,
-          reason:
-              'Re-sending known nodes after reconnect should not inflate the new-nodes badge',
+          reason: 'Re-sending known nodes after reconnect should not inflate the new-nodes badge',
         );
       },
     );

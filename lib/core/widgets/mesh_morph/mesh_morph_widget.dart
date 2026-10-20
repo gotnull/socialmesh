@@ -26,20 +26,20 @@ import 'mesh_shape.dart';
 import 'morph_timeline.dart';
 import 'morph_presets.dart';
 
-/// Tumble axis preset — same names as AnimatedMeshNode's so callers can
+/// Tumble axis preset - same names as AnimatedMeshNode's so callers can
 /// switch between the static logo and the morph widget without re-thinking
 /// rotation behaviour.
 enum MorphRotationStyle {
-  /// Static — no rotation applied.
+  /// Static - no rotation applied.
   none,
 
   /// Slow continuous Y-axis spin.
   spin,
 
-  /// Multi-axis slow tumble — matches the SocialMesh splash logo feel.
+  /// Multi-axis slow tumble - matches the SocialMesh splash logo feel.
   tumble,
 
-  /// Faster Y spin with a slight X wobble — more "demo" energy.
+  /// Faster Y spin with a slight X wobble - more "demo" energy.
   showcase,
 }
 
@@ -215,7 +215,7 @@ class _MeshMorphWidgetState extends State<MeshMorphWidget>
   void _onTick(Duration t) {
     if (!widget.animate) return;
     _tickCount++;
-    // Detect cycle wrap — fire onCycleComplete when we cross back to t=0
+    // Detect cycle wrap - fire onCycleComplete when we cross back to t=0
     // (within one frame of duration).
     final cycle = widget.sequence.cycleLength;
     if (cycle > Duration.zero) {

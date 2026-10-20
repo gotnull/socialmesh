@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetEvolutionEngine — pure functions that decide when a pet advances to the
+// PetEvolutionEngine - pure functions that decide when a pet advances to the
 // next stage and (at the adolescent→adult boundary) which branch it takes.
 //
-// Branch rules are deliberately simple and explainable from code — no RPG
+// Branch rules are deliberately simple and explainable from code - no RPG
 // stat soup. Three dimensions ride over adolescent stage accumulators:
 // mistakes, surges, attentionScore. Four buckets: Luminous, Steady,
 // Volatile, Dimmed.
@@ -19,7 +19,7 @@ class PetEvolutionEngine {
   const PetEvolutionEngine({required this.config});
 
   /// Duration the pet should remain in [stage] before auto-advancing.
-  /// Dormant is indefinite — returns null.
+  /// Dormant is indefinite - returns null.
   Duration? durationFor(PetStage stage) {
     switch (stage) {
       case PetStage.egg:

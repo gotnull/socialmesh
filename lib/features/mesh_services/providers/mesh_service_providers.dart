@@ -32,7 +32,7 @@ final meshServicesEnabledProvider = Provider<bool>((ref) {
   return AppFeatureFlags.isMeshServicesEnabled;
 });
 
-/// Mesh services store — SQLite persistence layer.
+/// Mesh services store - SQLite persistence layer.
 ///
 /// Opens the database on first access. Null when feature is disabled.
 final meshServiceStoreProvider = Provider<MeshServiceStore?>((ref) {
@@ -41,7 +41,7 @@ final meshServiceStoreProvider = Provider<MeshServiceStore?>((ref) {
 
   ref.watch(radioScopeProvider);
   final store = MeshServiceStore();
-  // Open is async — callers must await ensureOpen before operating.
+  // Open is async - callers must await ensureOpen before operating.
   bindStoreToRadioScope(ref, store, store.close);
   return store;
 });
@@ -58,7 +58,7 @@ class _MeshServicesEpoch extends Notifier<int> {
   void bump() => state++;
 }
 
-/// Mesh service engine — lifecycle management + MRRP handler.
+/// Mesh service engine - lifecycle management + MRRP handler.
 ///
 /// Registration is deterministic: if the MRRP service registry is not
 /// available (feature flags, initialization order), this provider returns
@@ -87,7 +87,7 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
   //   1. advertEngine.onSend is wired (sendViaSip callback)
   //   2. advertEngine.start() is called (_started = true)
   // Without this, broadcastNow() called from onInstancePublished is a
-  // silent no-op — _started is false and onSend is null — which is
+  // silent no-op - _started is false and onSend is null - which is
   // exactly why no SERVICE_ADVERT log appears after service creation.
   // This mirrors the identical guard in mrrpCachedServicesProvider.
   ref.watch(mrrpEngineProvider);
@@ -109,7 +109,7 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
     engine.onInstancePublished = advertEngine.broadcastNow;
   }
 
-  // Register handler — fail explicitly if the MRRP service slot limit
+  // Register handler - fail explicitly if the MRRP service slot limit
   // is reached. An unregistered engine must not start.
   final handler = MeshServicesHandler(store: store, engine: engine);
   final registered = registry.register(
@@ -136,7 +136,7 @@ final meshServiceEngineProvider = Provider<MeshServiceEngine?>((ref) {
   engine.start();
 
   // Populate initial SERVICE_ADVERT descriptors with any existing active
-  // instance titles. Runs async — doesn't block provider build.
+  // instance titles. Runs async - doesn't block provider build.
   _updateServiceDescriptors(store, registry, advertEngine);
 
   ref.onDispose(() {
@@ -179,7 +179,7 @@ final meshServiceActiveCountProvider = Provider<AsyncValue<int>>((ref) {
       .whenData((list) => list.length);
 });
 
-/// MRRP delivery tracker — maps engine request lifecycle to [DeliveryPhase].
+/// MRRP delivery tracker - maps engine request lifecycle to [DeliveryPhase].
 ///
 /// Null when the MRRP engine is not available (feature flags, SIP disabled).
 final mrrpDeliveryTrackerProvider = Provider<MrrpDeliveryTracker?>((ref) {
@@ -215,7 +215,7 @@ void _updateServiceDescriptors(
           MrrpServiceFlags.userVisible;
 
       if (active.isEmpty) {
-        // No active instances — clear instance descriptors and suppress
+        // No active instances - clear instance descriptors and suppress
         // userVisible on the base descriptor so the service disappears
         // from Mesh Explorer on remote peers. The handler remains
         // registered for inbound requests (e.g. LIST_INSTANCES returns 0).

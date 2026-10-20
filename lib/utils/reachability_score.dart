@@ -5,7 +5,7 @@ import 'dart:math' as math;
 import '../models/reachability_models.dart';
 
 // =============================================================================
-// Opportunistic Mesh Reach Likelihood Model (v1) — BETA
+// Opportunistic Mesh Reach Likelihood Model (v1) - BETA
 // =============================================================================
 //
 // Author: Fulvio Cusumano (https://github.com/gotnull)

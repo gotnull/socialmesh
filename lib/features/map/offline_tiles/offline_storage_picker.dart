@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Offline Storage Picker — shared storage-location section (internal vs
+// Offline Storage Picker - shared storage-location section (internal vs
 // removable SD card) used by the region download sheet and the Settings
 // surface, plus the Settings bottom sheet that hosts it.
 

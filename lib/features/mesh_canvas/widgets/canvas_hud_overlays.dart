@@ -16,7 +16,7 @@
 //     has to scan back to the strip to remember "what am I painting
 //     with?" while panning.
 //
-// Both are intentionally < 200pt wide and < 32pt tall — they exist
+// Both are intentionally < 200pt wide and < 32pt tall - they exist
 // to *frame* the canvas, not compete with it. No animations beyond
 // a 120ms colour cross-fade on the HUD pill so colour changes feel
 // snappy without being noisy. Future budget / cooldown indicators
@@ -39,7 +39,7 @@ class CanvasIdentityChip extends StatelessWidget {
   /// "Offline sandbox · paints remain local". Optional.
   final String? subtitle;
 
-  /// Leading icon — `Icons.smartphone_outlined` for local,
+  /// Leading icon - `Icons.smartphone_outlined` for local,
   /// `Icons.share_outlined` for mesh in S7-final.
   final IconData icon;
 
@@ -106,7 +106,7 @@ class CanvasIdentityChip extends StatelessWidget {
   }
 }
 
-/// Small "you are painting with" HUD pill — a coloured dot + short
+/// Small "you are painting with" HUD pill - a coloured dot + short
 /// name. Lives just above the bottom colour strip so it sits where
 /// the user's thumb already is. Use [eraserLabel] for the
 /// transparent / index-0 case where a "colour" isn't meaningful.

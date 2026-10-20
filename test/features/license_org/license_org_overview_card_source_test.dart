@@ -30,18 +30,16 @@ void main() {
   late String labelSrc;
 
   setUpAll(() {
-    src = File(
-      'lib/features/license_org/license_org_overview_card.dart',
-    ).readAsStringSync();
+    src = File('lib/features/license_org/license_org_overview_card.dart')
+        .readAsStringSync();
     // The action->label mapping used to be duplicated in this card and
     // in the audit log screen, and the copies drifted. It now lives in
     // one shared helper, which is where the label assertions belong.
-    labelSrc = File(
-      'lib/features/license_org/utils/audit_action_label.dart',
-    ).readAsStringSync();
+    labelSrc = File('lib/features/license_org/utils/audit_action_label.dart')
+        .readAsStringSync();
   });
 
-  group('LicenseOrgOverviewCard — name display invariants', () {
+  group('LicenseOrgOverviewCard - name display invariants', () {
     test(
       'empty-name fallback uses licenseOrgNameEmptyPlaceholder (not orgId)',
       () {
@@ -60,7 +58,7 @@ void main() {
           assignmentLine,
           isNot(contains(': orgId')),
           reason:
-              'displayName must NEVER fall back to the orgId slug — '
+              'displayName must NEVER fall back to the orgId slug - '
               'use l10n.licenseOrgNameEmptyPlaceholder instead.',
         );
       },
@@ -81,7 +79,7 @@ void main() {
     });
   });
 
-  group('LicenseOrgOverviewCard — edit-name affordance gating', () {
+  group('LicenseOrgOverviewCard - edit-name affordance gating', () {
     test('edit icon only renders for owner role', () {
       // The trailing IconButton on the SectionTitle must be gated on
       // isOwner so admins / members never see the affordance.
@@ -107,7 +105,7 @@ void main() {
     });
   });
 
-  group('LicenseOrgOverviewCard — sheet validation invariants', () {
+  group('LicenseOrgOverviewCard - sheet validation invariants', () {
     test('TextField sets a maxLength matching the backend cap', () {
       // socialmesh-lint enforces maxLength on every TextField; here
       // we additionally pin that it uses the service constant so
@@ -146,7 +144,7 @@ void main() {
   // sheet immediately, with session-scoped dismissal tracking so a
   // "Not yet" tap stays sticky for the rest of the app session.
   // ===========================================================================
-  group('LicenseOrgOverviewCard — auto-prompt invariants', () {
+  group('LicenseOrgOverviewCard - auto-prompt invariants', () {
     test('uses a module-level Set to track per-orgId one-shot state', () {
       // A provider would tempt persistence and make the dismissal
       // permanent across launches. The whole point is to re-nudge
@@ -210,7 +208,7 @@ void main() {
   // them with the dedicated icon + label, not the generic "Other
   // event" fallback.
   // ===========================================================================
-  group('LicenseOrgOverviewCard — audit log rename row', () {
+  group('LicenseOrgOverviewCard - audit log rename row', () {
     test('icon switch covers LicenseOrgAuditAction.licenseOrgRenamed', () {
       expect(src, contains('case LicenseOrgAuditAction.licenseOrgRenamed:'));
       // The case sits in the _iconFor switch and must return a
@@ -219,15 +217,9 @@ void main() {
       expect(src, contains('return Icons.edit_outlined'));
     });
 
-    test(
-      'label switch resolves to licenseOrgAuditActionLicenseOrgRenamed l10n key',
-      () {
-        expect(
-          labelSrc,
-          contains('l10n.licenseOrgAuditActionLicenseOrgRenamed'),
-        );
-      },
-    );
+    test('label switch resolves to licenseOrgAuditActionLicenseOrgRenamed l10n key', () {
+      expect(labelSrc, contains('l10n.licenseOrgAuditActionLicenseOrgRenamed'));
+    });
 
     test('the card delegates to the one shared label mapping', () {
       // Guards the regression this extraction fixed: a second copy of
@@ -255,20 +247,20 @@ void main() {
   // Regression: _openNameSheet must receive orgId as an explicit
   // parameter rather than relying on findAncestorWidgetOfExactType,
   // which walks UP from the calling element and EXCLUDES the
-  // starting widget — so calling it from the card's own context
+  // starting widget - so calling it from the card's own context
   // resolved to '' silently and the backend rejected with
   // `invalid-argument`. Sim-verified on 2026-05-28: the rename
   // appeared to do nothing (no snackbar, no Firestore write)
   // before this fix landed.
   // ===========================================================================
-  group('LicenseOrgOverviewCard — _openNameSheet orgId regression', () {
+  group('LicenseOrgOverviewCard - _openNameSheet orgId regression', () {
     test('_openNameSheet signature carries an explicit orgId param', () {
       expect(src, contains('required String orgId,'));
     });
 
     test('callers pass orgId explicitly (no ancestor-lookup fallback)', () {
-      // Both call sites — manual edit-icon tap and auto-prompt
-      // post-frame — must include `orgId: orgId,`.
+      // Both call sites - manual edit-icon tap and auto-prompt
+      // post-frame - must include `orgId: orgId,`.
       expect(src, contains('orgId: orgId,'));
       expect(
         src,

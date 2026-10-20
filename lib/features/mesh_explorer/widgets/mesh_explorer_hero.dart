@@ -4,7 +4,7 @@
 /// Compact mesh status strip for the Mesh Explorer home screen.
 ///
 /// Shows connection state, peer count, and service count in a
-/// visually subordinate strip at the top — not the main content.
+/// visually subordinate strip at the top - not the main content.
 library;
 
 import 'package:flutter/material.dart';

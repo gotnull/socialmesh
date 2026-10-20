@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Pins for `OverlaySecureSessionManager.resetSession` — the
+/// Pins for `OverlaySecureSessionManager.resetSession` - the
 /// user-driven secure-session revoke surface added for the Trust +
 /// Safety "Reset secure session" action on accepted SIP DM sessions.
 ///
@@ -9,7 +9,7 @@
 ///   1. Calling `resetSession(linkId)` on an established session
 ///      drops the in-memory session entry. `isEstablished` flips
 ///      from true to false. Returns `true`.
-///   2. Calling `resetSession(linkId)` again returns `false` —
+///   2. Calling `resetSession(linkId)` again returns `false` -
 ///      idempotent, no exception.
 ///   3. The underlying overlay link record is NOT closed: `state`
 ///      stays `active`, `closeReason` stays null.
@@ -186,7 +186,7 @@ void main() {
       expect(alice.secureManager.sessionCount, equals(0));
     });
 
-    test('idempotent — second call returns false, no exception', () async {
+    test('idempotent - second call returns false, no exception', () async {
       final alice = await _buildRig();
       final bob = await _buildRig();
       addTearDown(() async {

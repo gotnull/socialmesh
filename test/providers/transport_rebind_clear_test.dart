@@ -6,7 +6,7 @@
 // NOT wipe the cached NodeDB. The previous implementation compared only
 // raw BLE UUIDs and forced `clearNodeData = true` on any mismatch,
 // destroying the user's own-node metadata (long name / short name)
-// whenever the UUID changed — even though the physical radio was the
+// whenever the UUID changed - even though the physical radio was the
 // same.
 //
 // The fix adds an `isTransportRebind` signal to both
@@ -19,7 +19,7 @@
 // the in-memory NodesNotifier must retain its existing nodes.
 //
 // Since storage became radio-scoped, the connect path no longer deletes
-// persisted stores at all — a true switch resets the in-memory view and
+// persisted stores at all - a true switch resets the in-memory view and
 // leaves the previous radio's cache in its own scope. The persisted
 // assertions here pin that: preserved on rebind AND on switch, for
 // different reasons.
@@ -111,7 +111,7 @@ typedef _ClearArgs = ({
 // Thin adapter so the test can invoke [clearDeviceDataBeforeConnectRef]
 // with a real Riverpod [Ref]. A Notifier.method call runs AFTER build(),
 // so modifying other providers (which clearDeviceDataBeforeConnectRef
-// does via channelsProvider / nodesProvider) is permitted — unlike a
+// does via channelsProvider / nodesProvider) is permitted - unlike a
 // FutureProvider body, whose async work still counts as initialization.
 class _ClearRunner extends Notifier<void> {
   @override
@@ -200,40 +200,37 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('clearDeviceDataBeforeConnectRef — transport rebind suppression', () {
-    test(
-      'rebind: isTransportRebind=true preserves cached nodes even when UUIDs differ',
-      () async {
-        final h = await _makeHarness(lastMyNodeNum: 0x1234abcd);
-        addTearDown(h.container.dispose);
+  group('clearDeviceDataBeforeConnectRef - transport rebind suppression', () {
+    test('rebind: isTransportRebind=true preserves cached nodes even when UUIDs differ', () async {
+      final h = await _makeHarness(lastMyNodeNum: 0x1234abcd);
+      addTearDown(h.container.dispose);
 
-        await h.nodeStorage.saveNodes([_node(1), _node(2), _node(3)]);
-        // Warm the in-memory NodesNotifier from storage.
-        h.container.read(nodesProvider);
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-        expect(h.container.read(nodesProvider).length, 3);
+      await h.nodeStorage.saveNodes([_node(1), _node(2), _node(3)]);
+      // Warm the in-memory NodesNotifier from storage.
+      h.container.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(h.container.read(nodesProvider).length, 3);
 
-        // BLE UUID rotated from ...:01 to ...:02, same physical radio.
-        await h.container.read(_clearRunnerProvider.notifier).run((
-          prev: 'AA:BB:CC:DD:EE:01',
-          next: 'AA:BB:CC:DD:EE:02',
-          rebind: true,
-          clearNode: false,
-        ));
+      // BLE UUID rotated from ...:01 to ...:02, same physical radio.
+      await h.container.read(_clearRunnerProvider.notifier).run((
+        prev: 'AA:BB:CC:DD:EE:01',
+        next: 'AA:BB:CC:DD:EE:02',
+        rebind: true,
+        clearNode: false,
+      ));
 
-        expect(
-          h.container.read(nodesProvider).length,
-          3,
-          reason: 'Transport rebind must preserve in-memory nodes',
-        );
-        final stored = await h.nodeStorage.loadNodes();
-        expect(
-          stored,
-          hasLength(3),
-          reason: 'Transport rebind must preserve persisted nodes',
-        );
-      },
-    );
+      expect(
+        h.container.read(nodesProvider).length,
+        3,
+        reason: 'Transport rebind must preserve in-memory nodes',
+      );
+      final stored = await h.nodeStorage.loadNodes();
+      expect(
+        stored,
+        hasLength(3),
+        reason: 'Transport rebind must preserve persisted nodes',
+      );
+    });
 
     test(
       'true switch: UUIDs differ + isTransportRebind=false resets the '
@@ -265,7 +262,7 @@ void main() {
           hasLength(3),
           reason:
               'The persisted cache belongs to the previous radio and stays in '
-              'its own storage scope — the switch swaps datasets rather than '
+              'its own storage scope - the switch swaps datasets rather than '
               'deleting one',
         );
       },

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodePet 3D mesh creature renderer — pet-owned fork of the
+// NodePet 3D mesh creature renderer - pet-owned fork of the
 // icosahedron-mesh visual foundation that powers Ico (advisor).
 //
 // This file deliberately CLONES the icosahedron geometry, projection,
@@ -45,7 +45,7 @@ import '../models/pet_enums.dart';
 import 'pet_render_model.dart' show PetRenderMode;
 
 // ---------------------------------------------------------------------------
-// 3D math (forked from animated_mesh_node.dart — kept pet-private)
+// 3D math (forked from animated_mesh_node.dart - kept pet-private)
 // ---------------------------------------------------------------------------
 
 @immutable
@@ -102,7 +102,7 @@ int _mix(int seed) {
 }
 
 // ---------------------------------------------------------------------------
-// Icosahedron geometry (forked from animated_mesh_node.dart — kept pet-private)
+// Icosahedron geometry (forked from animated_mesh_node.dart - kept pet-private)
 // ---------------------------------------------------------------------------
 
 final double _phi = (1 + math.sqrt(5)) / 2;
@@ -133,7 +133,7 @@ final List<_P3> _baseVertices = (() {
       .toList(growable: false);
 })();
 
-/// Icosahedron edge list — 30 edges, each vertex connects to 5 others.
+/// Icosahedron edge list - 30 edges, each vertex connects to 5 others.
 const List<List<int>> _edges = [
   [0, 1],
   [0, 5],
@@ -167,7 +167,7 @@ const List<List<int>> _edges = [
   [10, 11],
 ];
 
-/// Icosahedron triangular faces — 20 faces.
+/// Icosahedron triangular faces - 20 faces.
 const List<List<int>> _faces = [
   [0, 1, 5],
   [0, 1, 7],
@@ -192,17 +192,17 @@ const List<List<int>> _faces = [
 ];
 
 /// Front-facing upper vertex used as the anchor for the stable face
-/// overlay. Vertex 5 is `(0, 1, _phi)` — top-front in the base
+/// overlay. Vertex 5 is `(0, 1, _phi)` - top-front in the base
 /// orientation. Face stays anchored to its projected position so the
 /// creature reads as looking at the user.
 const int _faceVertexIndex = 5;
 
-/// Upper vertices used as antenna roots — sorted top-to-bottom in the
+/// Upper vertices used as antenna roots - sorted top-to-bottom in the
 /// base orientation. Antennae extrude from one or more of these.
 const List<int> _antennaRootVertices = [5, 1, 0, 11];
 
 // ---------------------------------------------------------------------------
-// Morphology — pure value object derived from (dnaSeed, branch, stage)
+// Morphology - pure value object derived from (dnaSeed, branch, stage)
 // ---------------------------------------------------------------------------
 
 enum NodePetAntennaStyle { none, straight, curled, branched }
@@ -221,7 +221,7 @@ class NodePetAntenna {
   final NodePetAntennaStyle style;
 
   /// Per-antenna sway phase offset (0..2π) so antennae move
-  /// independently — never robotic-synchronous.
+  /// independently - never robotic-synchronous.
   final double swayPhase;
 
   const NodePetAntenna({
@@ -236,11 +236,11 @@ class NodePetAntenna {
 @immutable
 class NodePetMorphology {
   /// Per-vertex radial scale multipliers (0.78..1.30). Length 12.
-  /// Drives the seed-irregular silhouette — the foundation of "this
+  /// Drives the seed-irregular silhouette - the foundation of "this
   /// pet does not look like any other pet".
   final List<double> vertexRadii;
 
-  /// Lopsidedness factor — additional X-axis scale on the right
+  /// Lopsidedness factor - additional X-axis scale on the right
   /// hemisphere only (left side keeps 1.0). 0.88..1.18. Guarantees
   /// asymmetry that no mascot has.
   final double lopsidedness;
@@ -251,9 +251,9 @@ class NodePetMorphology {
   /// Antennae list. Empty for egg / unborn.
   final List<NodePetAntenna> antennae;
 
-  /// Internal sigil edge list — non-adjacent vertex index pairs that
+  /// Internal sigil edge list - non-adjacent vertex index pairs that
   /// the painter draws as faint inner lines. THE socialmesh-native
-  /// differentiator — internal graph visible through the mesh body.
+  /// differentiator - internal graph visible through the mesh body.
   final List<(int, int)> sigilEdges;
 
   /// Eye spacing as a fraction of the projected head circle radius.
@@ -323,7 +323,7 @@ class NodePetMorphology {
       }
     }
 
-    // Lopsidedness — right hemisphere bias only.
+    // Lopsidedness - right hemisphere bias only.
     final lopJitter = ((m >>> 11) & 0x1F) / 31.0;
     final lopsidedness = 0.88 + 0.30 * lopJitter;
 
@@ -331,7 +331,7 @@ class NodePetMorphology {
     final headJitter = ((m >>> 17) & 0x0F) / 15.0;
     final headStretch = 1.05 + 0.25 * headJitter;
 
-    // Antennae — egg / unborn / dormant get none.
+    // Antennae - egg / unborn / dormant get none.
     final antennae = <NodePetAntenna>[];
     if (stage != PetStage.egg &&
         stage != PetStage.dormant &&
@@ -402,7 +402,7 @@ class NodePetMorphology {
     final sigilEdges = <(int, int)>[];
     if (stage != PetStage.egg && branch != PetBranch.unborn) {
       // Candidate pool: pairs that are NOT in the icosahedron edge
-      // list (i.e. the pair is "internal" — a chord across the mesh).
+      // list (i.e. the pair is "internal" - a chord across the mesh).
       final adjacentSet = <int>{};
       for (final e in _edges) {
         adjacentSet.add(e[0] * 12 + e[1]);
@@ -501,7 +501,7 @@ class NodePetMorphology {
 enum NodePetPupilShape { round, verticalSlit, horizontalBar, diamond }
 
 // ---------------------------------------------------------------------------
-// Expression — pure value object derived from (mood + flags + stage)
+// Expression - pure value object derived from (mood + flags + stage)
 // ---------------------------------------------------------------------------
 
 enum NodePetEyeShape { open, halfClosed, closedSleeping, wideAlert, sickAsymm }
@@ -872,7 +872,7 @@ class _NodePetMeshCreatureState extends State<NodePetMeshCreature>
       _doubleBlinkPending = _rng.nextDouble() < 0.15;
     }
 
-    // Eye-look wandering — Lissajous so it never settles into a
+    // Eye-look wandering - Lissajous so it never settles into a
     // periodic loop. Tau-rates are incommensurate.
     final tau = p * math.pi * 2;
     _lookX =
@@ -946,7 +946,7 @@ class _NodePetMeshCreatureState extends State<NodePetMeshCreature>
   }
 }
 
-/// Tiny xorshift32 PRNG — used only for non-deterministic blink jitter.
+/// Tiny xorshift32 PRNG - used only for non-deterministic blink jitter.
 /// Determinism for visuals is supplied by Murmur3 + dnaSeed; this class
 /// is for "feel alive" timing variation only.
 class _Random {
@@ -1027,7 +1027,7 @@ class _NodePetMeshPainter extends CustomPainter {
     final tumbleY = math.sin(tau * 0.35) * 0.18;
     final tilt = math.sin(tau * 0.19 + 0.7) * 0.06;
 
-    // Squash-stretch breathing — the animator's "alive" trick.
+    // Squash-stretch breathing - the animator's "alive" trick.
     // Inhale: wider+shorter. Exhale: taller+narrower. Volume preserved.
     final breath =
         math.sin(tau) * 0.07 * expression.breathScale * (0.85 + 0.3 * vitality);
@@ -1047,7 +1047,7 @@ class _NodePetMeshPainter extends CustomPainter {
     final postureBob = expression.postureY * minSide * 0.10;
     final bodyCenter = Offset(center.dx, center.dy + bob + postureBob);
 
-    // Sick frame jitter — sub-pixel offset every frame.
+    // Sick frame jitter - sub-pixel offset every frame.
     final sickJitter = expression.edgeElectricity > 0
         ? Offset(
             math.sin(tau * 17 + dnaSeed) * 1.2 * expression.edgeElectricity,
@@ -1067,12 +1067,12 @@ class _NodePetMeshPainter extends CustomPainter {
       // Radial scale.
       var p = _P3(base.x * radial, base.y * radial, base.z * radial);
 
-      // Lopsidedness — right hemisphere only.
+      // Lopsidedness - right hemisphere only.
       if (p.x > 0) {
         p = _P3(p.x * morphology.lopsidedness, p.y, p.z);
       }
 
-      // Head stretch — upper vertices Y-elongated.
+      // Head stretch - upper vertices Y-elongated.
       if (p.y < -0.05) {
         p = _P3(p.x, p.y * headStretch, p.z);
       }
@@ -1089,7 +1089,7 @@ class _NodePetMeshPainter extends CustomPainter {
       p = p.rotateZ(tilt);
       p = p.rotateY(tumbleY);
 
-      // Forward lean (calling/sick) — z-translate.
+      // Forward lean (calling/sick) - z-translate.
       if (expression.leanZ != 0) {
         p = p.translate(0, 0, expression.leanZ * 0.1);
       }
@@ -1112,13 +1112,13 @@ class _NodePetMeshPainter extends CustomPainter {
       _paintAlertRings(canvas, bodyCenter, minSide);
     }
 
-    // 5. Faces (depth-sorted) — thin filled triangles for branch +
+    // 5. Faces (depth-sorted) - thin filled triangles for branch +
     // stage. Skip in tiny.
     if (mode != PetRenderMode.tiny) {
       _paintFaces(canvas, transformed, projected);
     }
 
-    // 6. Internal sigil graph — visible chord lines through the mesh.
+    // 6. Internal sigil graph - visible chord lines through the mesh.
     // Depth-sorted with edges so the painter feels coherent.
     if (mode != PetRenderMode.tiny && morphology.sigilEdges.isNotEmpty) {
       _paintSigilEdges(canvas, transformed, projected);
@@ -1128,12 +1128,12 @@ class _NodePetMeshPainter extends CustomPainter {
     _paintEdges(canvas, transformed, projected);
     _paintNodes(canvas, transformed, projected);
 
-    // 8. Antennae — extruded from upper vertices.
+    // 8. Antennae - extruded from upper vertices.
     if (mode != PetRenderMode.tiny && morphology.antennae.isNotEmpty) {
       _paintAntennae(canvas, transformed, projected, tau);
     }
 
-    // 9. Stable face overlay — ALWAYS facing the user, anchored at the
+    // 9. Stable face overlay - ALWAYS facing the user, anchored at the
     // projected position of the head vertex but rendered in screen
     // space. The mesh body tumbles behind it.
     if (!expression.faceHidden) {
@@ -1205,7 +1205,7 @@ class _NodePetMeshPainter extends CustomPainter {
     for (final entry in facesWithDepth) {
       final f = _faces[entry.$1];
       final z = entry.$2;
-      // Front-facing fade — front faces (z < 0) get more alpha.
+      // Front-facing fade - front faces (z < 0) get more alpha.
       final frontness = (1.0 - (z + 0.2).clamp(-0.5, 0.5)).clamp(0.0, 1.0);
       // Per-face golden-ratio phase shimmer.
       final shimmer =
@@ -1249,7 +1249,7 @@ class _NodePetMeshPainter extends CustomPainter {
       var p1 = projected[e[0]];
       var p2 = projected[e[1]];
 
-      // Sick-state edge electricity — perpendicular jitter on each
+      // Sick-state edge electricity - perpendicular jitter on each
       // endpoint, fast frequency.
       if (expression.edgeElectricity > 0) {
         final tau = phase * math.pi * 2;
@@ -1324,7 +1324,7 @@ class _NodePetMeshPainter extends CustomPainter {
     List<_P3> transformed,
     List<Offset> projected,
   ) {
-    // Internal chords through the mesh — the socialmesh-native
+    // Internal chords through the mesh - the socialmesh-native
     // identity beat. Drawn at low alpha so the body still reads as
     // a coherent mesh, but visible enough that users see the
     // creature is "constructed" from a graph.
@@ -1362,7 +1362,7 @@ class _NodePetMeshPainter extends CustomPainter {
       final dy = rootP.y / dirLen;
       final dz = rootP.z / dirLen;
 
-      // Sway — per-antenna phase, short amplitude.
+      // Sway - per-antenna phase, short amplitude.
       final sway = math.sin(tau * 0.9 + ant.swayPhase) * 0.025;
 
       // Tip in 3D body-space, with splay rotation in XZ.
@@ -1476,10 +1476,10 @@ class _NodePetMeshPainter extends CustomPainter {
     double tau,
   ) {
     // Anchor at the projected position of the head vertex. Head
-    // vertex is _faceVertexIndex (5) — the upper-front vertex in the
+    // vertex is _faceVertexIndex (5) - the upper-front vertex in the
     // base orientation. As the body tumbles slightly the face follows
     // its projected location, but the face glyphs themselves are
-    // drawn flat in screen-space — they never rotate.
+    // drawn flat in screen-space - they never rotate.
     final headProj = projected[_faceVertexIndex];
     // Pull face slightly toward the body centre so it sits on the
     // "front" of the head, not floating off the apex.
@@ -1489,7 +1489,7 @@ class _NodePetMeshPainter extends CustomPainter {
       headProj.dy + (bodyCenter.dy - headProj.dy) * 0.55,
     );
 
-    // Face circle radius — scales with projection of the head vertex.
+    // Face circle radius - scales with projection of the head vertex.
     final headScale = transformed[_faceVertexIndex].projectionScale(
       _perspective,
     );
@@ -1498,7 +1498,7 @@ class _NodePetMeshPainter extends CustomPainter {
     // Eyes.
     _paintEyes(canvas, headCenter, faceR);
 
-    // Mouth (skip in tiny — eyes alone carry the read).
+    // Mouth (skip in tiny - eyes alone carry the read).
     if (mode != PetRenderMode.tiny) {
       _paintMouth(canvas, headCenter, faceR);
     }
@@ -1525,12 +1525,12 @@ class _NodePetMeshPainter extends CustomPainter {
       NodePetEyeShape.sickAsymm => const [0.15, 0.65],
     };
 
-    // Natural blink — sine close curve.
+    // Natural blink - sine close curve.
     final blinkClose = isBlinking
         ? math.sin(blinkProgress * math.pi).clamp(0.0, 1.0)
         : 0.0;
 
-    // Eye-tracking pupil offset — pupils follow the look target,
+    // Eye-tracking pupil offset - pupils follow the look target,
     // clamped within the eye whites. Mood modulates range/speed.
     final lookRange = switch (expression.eyes) {
       NodePetEyeShape.wideAlert => 0.45,
@@ -1614,7 +1614,7 @@ class _NodePetMeshPainter extends CustomPainter {
           canvas.drawPath(p, pupilPaint);
       }
 
-      // Shine — top-left highlight.
+      // Shine - top-left highlight.
       canvas.drawCircle(
         Offset(
           pupilCenter.dx - pupilSize * 0.32,
@@ -1626,7 +1626,7 @@ class _NodePetMeshPainter extends CustomPainter {
 
       canvas.restore();
 
-      // Lid outline — sells the eye against a busy mesh background.
+      // Lid outline - sells the eye against a busy mesh background.
       final outline = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0

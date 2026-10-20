@@ -3,7 +3,7 @@
 
 // Regression tests for time-exact stage transitions.
 //
-// Stage duration boundaries are honoured precisely — they do NOT snap to
+// Stage duration boundaries are honoured precisely - they do NOT snap to
 // care-tick boundaries. The care-tick cadence continues to drive
 // decay/hygiene/sickness/call lifecycle, independent of stage progression.
 
@@ -60,7 +60,7 @@ void main() {
           .add(const Duration(seconds: 1));
       final advanced = engine.advanceTo(s, justAfter);
       expect(advanced.stage, PetStage.juvenile);
-      // The transition fires exactly at the eggDuration boundary — its
+      // The transition fires exactly at the eggDuration boundary - its
       // stageStartedAt is _hatch + eggDuration, not at _hatch + 30min.
       expect(advanced.stageStartedAt, _hatch.add(config.eggDuration));
     });
@@ -137,7 +137,7 @@ void main() {
     test('long catch-up across all stages is deterministic', () {
       const config = PetConfig();
       final engine = PetCareEngine(config: config);
-      // Advance well past elder end — should land in dormant with stable
+      // Advance well past elder end - should land in dormant with stable
       // timestamps regardless of run order.
       final at = _hatch
           .add(config.productiveLifespan)
@@ -156,7 +156,7 @@ void main() {
         const config = PetConfig();
         final engine = PetCareEngine(config: config);
         final s = _fromEgg(config);
-        // 8 days forward — exact handles the first 24h, bounded handles
+        // 8 days forward - exact handles the first 24h, bounded handles
         // the remainder. Should land in adult with stageStartedAt at the
         // exact adolescent-end boundary.
         final at = _hatch.add(const Duration(days: 8));
@@ -199,7 +199,7 @@ void main() {
       );
       var s = engine.advanceTo(_fromEgg(config), adolescentStart);
       final startEnergy = s.energy;
-      // Advance 5 minutes — well below careTickDuration (30 min).
+      // Advance 5 minutes - well below careTickDuration (30 min).
       s = engine.advanceTo(s, s.lastTickAt.add(const Duration(minutes: 5)));
       expect(s.energy, startEnergy);
     });
@@ -220,7 +220,7 @@ void main() {
       expect(advanced.energy, config.statMax - config.energyDecayPerTick);
     });
 
-    test('care-tick cadence realigns to the stage-transition instant — '
+    test('care-tick cadence realigns to the stage-transition instant - '
         'first care tick in a new stage fires stageStartedAt + careTickDuration, '
         'NOT at the nearest absolute-time tick', () {
       const config = PetConfig();

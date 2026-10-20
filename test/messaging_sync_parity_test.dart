@@ -224,7 +224,7 @@ void main() {
       processor.start(transport);
       processor.processingEnabled = true;
 
-      // 2024-06-15 12:00:00 UTC — plausible
+      // 2024-06-15 12:00:00 UTC - plausible
       const rxTime = 1718452800;
 
       transport.emitData(
@@ -253,7 +253,7 @@ void main() {
       processor.start(transport);
       processor.processingEnabled = true;
 
-      // Epoch 100 — clearly a device-uptime value, not a real timestamp.
+      // Epoch 100 - clearly a device-uptime value, not a real timestamp.
       const rxTime = 100;
 
       transport.emitData(
@@ -302,7 +302,7 @@ void main() {
         processor.start(transport);
         processor.processingEnabled = true;
 
-        // 2 days into the future — beyond the 1-day tolerance.
+        // 2 days into the future - beyond the 1-day tolerance.
         final futureEpoch =
             (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 172800;
 

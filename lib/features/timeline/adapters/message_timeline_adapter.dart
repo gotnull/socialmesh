@@ -35,11 +35,11 @@ enum MessageTimelineFilter {
 /// Transforms a flat list of [Message] objects into [TimelineItem] sessions
 /// suitable for the weekly timeline board.
 ///
-/// Messages are grouped into communication sessions — clusters of messages
+/// Messages are grouped into communication sessions - clusters of messages
 /// within the same conversation (DM peer or channel) separated by at most
 /// [_kSessionGapMinutes] of silence. Each session becomes one timeline item.
 ///
-/// The adapter is stateless and pure — it takes inputs and returns outputs
+/// The adapter is stateless and pure - it takes inputs and returns outputs
 /// without side effects.
 class MessageTimelineAdapter {
   const MessageTimelineAdapter._();

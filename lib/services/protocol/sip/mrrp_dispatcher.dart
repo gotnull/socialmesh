@@ -231,7 +231,7 @@ class MrrpDispatcher {
     if (simHandler != null) {
       final simResponses = await simHandler(frame);
       if (simResponses != null) {
-        // Sim peer handled — inject responses through correlation path.
+        // Sim peer handled - inject responses through correlation path.
         for (final response in simResponses) {
           handleResponse(response);
         }
@@ -399,7 +399,7 @@ class MrrpDispatcher {
     }
   }
 
-  /// Handle an inbound CANCEL frame — the remote peer is cancelling a
+  /// Handle an inbound CANCEL frame - the remote peer is cancelling a
   /// request they sent to us.
   ///
   /// This is informational; the dispatcher logs it. The request may

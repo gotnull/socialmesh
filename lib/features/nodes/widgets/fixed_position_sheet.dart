@@ -29,8 +29,8 @@ class FixedPositionInput {
 /// safe path; a node's reported position pre-fills the fields when available,
 /// and a GPS-less node simply opens blank for manual entry.
 ///
-/// "Use my phone's location" fills the fields from the **phone's** GPS — never
-/// the remote node's — so an installer is not misled into stamping their own
+/// "Use my phone's location" fills the fields from the **phone's** GPS - never
+/// the remote node's - so an installer is not misled into stamping their own
 /// coordinates onto a tower by accident.
 class FixedPositionSheet extends ConsumerStatefulWidget {
   const FixedPositionSheet({
@@ -174,7 +174,7 @@ class _FixedPositionSheetState extends ConsumerState<FixedPositionSheet>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return GestureDetector(
-      // lint-allow: haptic-feedback — GestureDetector is for keyboard
+      // lint-allow: haptic-feedback - GestureDetector is for keyboard
       // dismissal, not user interaction
       onTap: () => FocusScope.of(context).unfocus(),
       child: Column(
@@ -191,9 +191,8 @@ class _FixedPositionSheetState extends ConsumerState<FixedPositionSheet>
           SizedBox(height: AppTheme.spacing8),
           Text(
             l10n.fixedPositionSheetDescription(widget.nodeName),
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textTertiary),
           ),
           SizedBox(height: AppTheme.spacing16),
           _coordField(

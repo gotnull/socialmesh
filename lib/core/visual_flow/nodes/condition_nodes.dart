@@ -9,7 +9,7 @@
 //   only when the condition is met (acts as a filter/gate on the signal)
 // - Serializes/deserializes its configuration
 //
-// Condition nodes are pass-through filters — they sit between trigger nodes
+// Condition nodes are pass-through filters - they sit between trigger nodes
 // and action nodes, forwarding the event signal downstream only when the
 // condition criteria are satisfied. At compile time, the compiler extracts
 // the condition configuration from each condition node in the path and adds
@@ -28,13 +28,14 @@ import '../vs_node_view/common.dart';
 import '../vs_node_view/data/vs_interface.dart';
 import '../vs_node_view/data/vs_node_data.dart';
 import '../vs_node_view/data/vs_subgroup.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/// Node width for condition nodes — wider than the default to accommodate
+/// Node width for condition nodes - wider than the default to accommodate
 /// configuration widgets with proper padding.
 const double _kConditionNodeWidth = 220.0;
 
@@ -209,10 +210,10 @@ class _GeofenceConditionConfig {
 /// criteria.
 ///
 /// Inputs:
-/// - [EventSignalInputData] 'event_in' — the upstream event signal.
+/// - [EventSignalInputData] 'event_in' - the upstream event signal.
 ///
 /// Outputs:
-/// - [EventSignalOutputData] 'event_out' — the filtered event signal,
+/// - [EventSignalOutputData] 'event_out' - the filtered event signal,
 ///   forwarded only when the condition is met.
 ///
 /// The embedded [configWidget] is rendered between the input and output
@@ -299,7 +300,7 @@ Widget _buildTimeRangeWidget(_TimeRangeConfig config) {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Text(
-            '—',
+            '-',
             style: TextStyle(
               fontSize: 12,
               color: _kConditionAccent.withValues(alpha: 0.6),

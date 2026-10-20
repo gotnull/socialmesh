@@ -24,7 +24,7 @@ class RnsCompanionServicesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncHealth = ref.watch(rnsCompanionHealthProvider);
     final asyncServices = ref.watch(rnsCompanionServicesProvider);
-    // Health probe has a 2s timeout vs services' 5s — when the
+    // Health probe has a 2s timeout vs services' 5s - when the
     // companion is unreachable, the health probe surfaces the error
     // first. Surface that error to the screen instead of also
     // waiting for /services to time out (3+ extra seconds of
@@ -258,7 +258,7 @@ class _LastAnnounceChip extends ConsumerWidget {
     final asyncServices = ref.watch(rnsCompanionServicesProvider);
     final services = asyncServices.value;
     if (services == null) {
-      // Loading or error — the connection pill above already covers
+      // Loading or error - the connection pill above already covers
       // these states. Render nothing to avoid duplicate noise.
       return const SizedBox.shrink();
     }

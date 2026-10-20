@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -240,9 +241,8 @@ class GpsStatusScreen extends ConsumerWidget {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: _getSatelliteColor(
-                              satsInView,
-                            ).withValues(alpha: 0.15),
+                            color: _getSatelliteColor(satsInView)
+                                .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(
                               AppTheme.radius12,
                             ),
@@ -431,9 +431,8 @@ class GpsStatusScreen extends ConsumerWidget {
                   hasGpsFix
                       ? context.l10n.gpsStatusSatellitesCount(satsInView ?? 0)
                       : context.l10n.gpsStatusSearchingSatellites,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),
@@ -487,9 +486,8 @@ class GpsStatusScreen extends ConsumerWidget {
           SizedBox(width: AppTheme.spacing12),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.textSecondary),
           ),
           const Spacer(),
           Text(
@@ -552,9 +550,8 @@ class GpsStatusScreen extends ConsumerWidget {
         SizedBox(width: AppTheme.spacing4),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: context.textTertiary),
         ),
       ],
     );

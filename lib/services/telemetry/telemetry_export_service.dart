@@ -103,8 +103,7 @@ class TelemetryExportService {
   Future<void> shareBundle(String zipPath, {Rect? sharePosition}) async {
     await shareFiles(
       [XFile(zipPath)],
-      subject:
-          'SocialMesh telemetry export', // lint-allow: hardcoded-string — share-sheet subject, not in-app UI
+      subject: 'SocialMesh telemetry export', // lint-allow: hardcoded-string - share-sheet subject, not in-app UI
       sharePositionOrigin: sharePosition,
     );
   }
@@ -136,7 +135,7 @@ class TelemetryExportService {
     });
   }
 
-  String _readme() => '''SocialMesh — App Telemetry Store Export (v1)
+  String _readme() => '''SocialMesh - App Telemetry Store Export (v1)
 =============================================
 
 This export contains telemetry samples stored by the SocialMesh app. It does

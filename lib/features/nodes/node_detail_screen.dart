@@ -899,7 +899,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   /// Surfaces the user's SocialMesh-specific node intelligence (social
   /// tag + free-form note) directly on Node Details so the user does not
   /// have to dig through Overflow > View in NodeDex. The card reads
-  /// [nodeDexEntryProvider] — no parallel local state — and dispatches
+  /// [nodeDexEntryProvider] - no parallel local state - and dispatches
   /// edits straight to [NodeDexNotifier.setSocialTag]. The full editor
   /// (notes, encounters, classification history) still lives on
   /// NodeDexDetailScreen, reachable via the prominent "Open" trailing
@@ -1215,7 +1215,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   /// Telemetry history section: links to per-node log screens for every
   /// telemetry category that has recorded data for this node.
   ///
-  /// Hides categories with no recorded data so the section stays compact —
+  /// Hides categories with no recorded data so the section stays compact -
   /// an empty air-quality entry on a battery-only node would be noise.
   /// Returns [SizedBox.shrink] when the node has no telemetry at all.
   Widget _buildTelemetrySection(BuildContext context, MeshNode node) {
@@ -1258,7 +1258,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     // remote node the row is always shown with a reload control so the user
     // can pull telemetry the node no longer broadcasts by default (firmware
     // 2.7.13+). For My Node the row only appears when data exists and has no
-    // reload — you cannot request your own telemetry over the mesh.
+    // reload - you cannot request your own telemetry over the mesh.
     void addRequestable({
       required bool hasData,
       required IconData icon,
@@ -1337,7 +1337,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     }
 
     // Position / Traceroute / PAX / Detection are not telemetry-module
-    // requests — they keep their existing "shown only when data exists"
+    // requests - they keep their existing "shown only when data exists"
     // behavior (Position has Exchange Positions; Traceroute has its own
     // button).
     if (hasPosition) {
@@ -1938,9 +1938,8 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   const SizedBox(width: AppTheme.spacing4),
                   Text(
                     context.l10n.nodeDetailLastHeardTimestamp(
-                      AppTimeFormat.fullDateAndTime(
-                        context,
-                      ).format(node.lastHeard!),
+                      AppTimeFormat.fullDateAndTime(context)
+                          .format(node.lastHeard!),
                     ),
                     style: TextStyle(fontSize: 11, color: context.textTertiary),
                   ),
@@ -1976,8 +1975,8 @@ class _TelemetryNavTile extends StatelessWidget {
     // Wrap the InkWell in a transparent Material so the ripple paints
     // on a surface that lives INSIDE the parent Container's clip
     // region. Without this, the InkWell hunts up the tree for the
-    // nearest Material — which is the Scaffold's root Material above
-    // the clipped card — and the splash bleeds past the card's
+    // nearest Material - which is the Scaffold's root Material above
+    // the clipped card - and the splash bleeds past the card's
     // rounded corners on long-press.
     return Material(
       color: Colors.transparent,

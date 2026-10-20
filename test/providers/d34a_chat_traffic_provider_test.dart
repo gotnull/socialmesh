@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34a — `meshCoreChatTrafficProvider` regression pins.
+// D34a - `meshCoreChatTrafficProvider` regression pins.
 //
 // Pins:
 //   - With no session, the provider returns the empty snapshot.
@@ -82,7 +82,7 @@ void main() {
         allowed: true,
       );
 
-      // Force a refresh — production uses a 1 Hz Timer, but the test
+      // Force a refresh - production uses a 1 Hz Timer, but the test
       // drives the Notifier explicitly to stay deterministic.
       container.read(meshCoreChatTrafficProvider.notifier).refreshNow();
       snap = container.read(meshCoreChatTrafficProvider);

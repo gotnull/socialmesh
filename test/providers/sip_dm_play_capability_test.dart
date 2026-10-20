@@ -59,7 +59,7 @@ SipDmHistoryEntry _inboundTextEntry({int timestampMs = 1000000}) {
 }
 
 void main() {
-  group('evaluatePlaySendCapability — initiating offer (strict)', () {
+  group('evaluatePlaySendCapability - initiating offer (strict)', () {
     test('peer unknown → blocked with blockedPeerUnknown', () {
       final decision = evaluatePlaySendCapability(
         action: SipPlayAction.offer,
@@ -96,7 +96,7 @@ void main() {
       () {
         // Even though the peer demonstrably produced play frames
         // (we see them in session history), launching a NEW offer
-        // remains gated on discovery capability — the user spec is
+        // remains gated on discovery capability - the user spec is
         // explicit: "Outbound new offer to peer with no dmPlay
         // capability -> still blocked."
         final decision = evaluatePlaySendCapability(
@@ -128,14 +128,14 @@ void main() {
     });
   });
 
-  group('evaluatePlaySendCapability — lifecycle response (session-aware)', () {
+  group('evaluatePlaySendCapability - lifecycle response (session-aware)', () {
     test('decline + stale discovery + session has inbound play → allowed by '
         'session evidence (THE CORE BUG FIX)', () {
       // Repro of the user-reported regression: the peer sent us a
       // dmPlay offer (so it's in session.messages as inbound play),
       // but the discovery cap cache only ever observed
       // features=0x1, so peer.supportsDmPlayV1 is false. The router
-      // must allow the decline anyway — the user has a pending UI
+      // must allow the decline anyway - the user has a pending UI
       // bubble they need to be able to dismiss.
       final decision = evaluatePlaySendCapability(
         action: SipPlayAction.decline,

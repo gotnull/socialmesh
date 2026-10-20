@@ -435,7 +435,7 @@ void main() {
         acceptedTermsVersion: '2099-01-01',
         acceptedPrivacyVersion: '2099-01-01',
       );
-      // Hardcoded floor is whatever LegalConstants currently has — 2099 is
+      // Hardcoded floor is whatever LegalConstants currently has - 2099 is
       // guaranteed newer.
       expect(state.termsVersionChanged, isFalse);
       expect(state.privacyVersionChanged, isFalse);

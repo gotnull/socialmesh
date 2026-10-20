@@ -186,7 +186,7 @@ class FirmwareApiService {
       }
 
       if (dfuFile == null) {
-        // Try a looser match — sometimes the target name differs slightly
+        // Try a looser match - sometimes the target name differs slightly
         for (final file in archive.files) {
           if (file.isFile &&
               file.name.contains(firmwareTarget) &&

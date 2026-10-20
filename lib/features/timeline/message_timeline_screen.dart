@@ -116,7 +116,7 @@ class _MessageTimelineScreenState extends ConsumerState<MessageTimelineScreen> {
 
   /// Incremented only by explicit user actions (buttons, filters) to force
   /// the [EventsPlanner] to rebuild via [ValueKey]. Scroll-driven week
-  /// changes from [onDayChange] do NOT touch this — keeping the planner
+  /// changes from [onDayChange] do NOT touch this - keeping the planner
   /// alive prevents a crash in `_onPointerUp` when the widget is disposed
   /// mid-gesture (the library calls `setState` without a `mounted` check).
   int _rebuildKey = 0;
@@ -312,7 +312,7 @@ class _MessageTimelineScreenState extends ConsumerState<MessageTimelineScreen> {
     return EventsPlanner(
       // _rebuildKey is only incremented by explicit user actions (nav buttons,
       // filter chips). Scroll-driven onDayChange does NOT increment it, so
-      // the planner survives mid-gesture — preventing a crash in the
+      // the planner survives mid-gesture - preventing a crash in the
       // library's _onPointerUp which calls setState without a mounted check.
       key: ValueKey('planner_$_rebuildKey'),
       controller: _controller,

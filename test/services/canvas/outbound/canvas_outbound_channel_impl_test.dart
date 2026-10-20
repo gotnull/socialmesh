@@ -69,7 +69,7 @@ Uint8List _samplePaint({int canvasId = 0xCAFEBABE12345678}) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('ProductionCanvasOutboundChannel — happy path', () {
+  group('ProductionCanvasOutboundChannel - happy path', () {
     test('threads channelIndex through to sendSipGated', () async {
       final sender = _FakeSender();
       final channel = ProductionCanvasOutboundChannel(sender: sender);
@@ -101,7 +101,7 @@ void main() {
     });
   });
 
-  group('ProductionCanvasOutboundChannel — SIP rate limit', () {
+  group('ProductionCanvasOutboundChannel - SIP rate limit', () {
     test(
       'pre-check denial returns sipRateLimited and never calls the wire',
       () async {
@@ -154,7 +154,7 @@ void main() {
     );
   });
 
-  group('ProductionCanvasOutboundChannel — send failure', () {
+  group('ProductionCanvasOutboundChannel - send failure', () {
     test('sendSipGated returns false -> transientFailure', () async {
       final sender = _FakeSender()..nextResult = false;
       final channel = ProductionCanvasOutboundChannel(sender: sender);

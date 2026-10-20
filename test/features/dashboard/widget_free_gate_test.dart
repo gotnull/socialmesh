@@ -18,7 +18,7 @@ const _widgetPackProductId = 'widget_pack';
 
 /// Pins the contract that every widget shipped in the first-launch
 /// default dashboard must also be re-addable from the picker without
-/// purchasing — i.e. it must appear in `_freeWidgetTypes` (or be in
+/// purchasing - i.e. it must appear in `_freeWidgetTypes` (or be in
 /// `DashboardWidgetType.custom`'s implicit free bucket).
 ///
 /// `_freeWidgetTypes` is a private const inside
@@ -50,7 +50,7 @@ void main() {
     addTearDown(container.dispose);
     final notifier = container.read(dashboardWidgetsProvider.notifier);
     // Force the default-fallback path by calling the private behavior
-    // through a fresh notifier — at construction the state is `[]` and
+    // through a fresh notifier - at construction the state is `[]` and
     // `_loadWidgets` runs async. Since we want the deterministic
     // default set, build it from the same code path the notifier uses
     // when SharedPrefs is empty.
@@ -64,7 +64,7 @@ void main() {
     // Every type in the default set must either be free or be the
     // `custom` bucket. A non-free, non-custom widget shipped in
     // defaults would be locked on re-add: removed once, then a
-    // paywall on the second add — bad UX for a widget the user
+    // paywall on the second add - bad UX for a widget the user
     // never had to purchase in the first place.
     //
     // `nearbyNodes` is currently in defaults but NOT yet in the free
@@ -103,7 +103,7 @@ void main() {
       'merged entitlement set', () {
     // Entitlements are computed purely from RC + external sets, with
     // complete_pack bundle expansion. There is no widget-toggle input
-    // anywhere in the merge — this test pins that invariant so a
+    // anywhere in the merge - this test pins that invariant so a
     // future refactor can't accidentally tie widget state into the
     // entitlement provider.
     final rcWithPack = PurchaseState(
@@ -114,7 +114,7 @@ void main() {
       rcWithPack,
       const <String>{},
     );
-    // Simulate a widget being disabled then re-enabled — irrelevant
+    // Simulate a widget being disabled then re-enabled - irrelevant
     // input for the merge, but the test pins the contract that the
     // function signature offers no way to feed widget state in.
     final afterToggle = mergePurchaseStateForTest(rcWithPack, const <String>{});
@@ -147,7 +147,7 @@ void main() {
         contains(_widgetPackProductId),
         reason:
             'Making recentMessages free must not weaken the Widget Pack '
-            'entitlement itself — paid users still own the pack and the '
+            'entitlement itself - paid users still own the pack and the '
             'remaining premium widgets stay gated by hasWidgetPack.',
       );
     },

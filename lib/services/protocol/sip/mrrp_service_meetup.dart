@@ -291,9 +291,8 @@ class MrrpServiceMeetup implements MrrpServiceHandler {
     final remaining = token.isExpiredAt(now)
         ? 0
         : token.expiresAt.difference(now).inSeconds;
-    ByteData.sublistView(
-      payload,
-    ).setUint16(10, remaining.clamp(0, 65535), Endian.little);
+    ByteData.sublistView(payload)
+        .setUint16(10, remaining.clamp(0, 65535), Endian.little);
     payload[12] = token.partyCount;
     return _buildResponse(request, payload);
   }

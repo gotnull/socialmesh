@@ -9,7 +9,7 @@ import '../../../core/widgets/animations.dart';
 class NavItem {
   /// Stable string identifier for customization (user-chosen
   /// ordering). Persisted via SharedPreferences in
-  /// `bottomTabOrder` — once shipped, the id is a release contract
+  /// `bottomTabOrder` - once shipped, the id is a release contract
   /// and must never be renamed. See
   /// `bottom_tab_providers.dart` for the canonical id list.
   final String id;

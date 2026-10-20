@@ -51,7 +51,7 @@ class WatchCompanionIntentTarget {
 /// dispatching down the normal send path.
 ///
 /// [replyToMessageId] (v2+) is the wire-stable id of the inbox message the
-/// canned send is replying to. It stays opaque on the Watch — the phone
+/// canned send is replying to. It stays opaque on the Watch - the phone
 /// resolves it to a Meshtastic packet id. Null for a standalone send.
 class WatchCompanionIntentPayload {
   const WatchCompanionIntentPayload({this.cannedKey, this.replyToMessageId});

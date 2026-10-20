@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D-Q10: user-dropped map pin (POI annotation). Local-only — no
+// D-Q10: user-dropped map pin (POI annotation). Local-only - no
 // wire frame is emitted, no copy is shared with the mesh.
 
 import 'dart:convert';

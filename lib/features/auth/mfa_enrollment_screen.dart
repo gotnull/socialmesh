@@ -150,7 +150,7 @@ class _MFAEnrollmentScreenState extends ConsumerState<MFAEnrollmentScreen>
 
       AppLogging.mfa('_sendCode - MFA re-auth succeeded, retrying enrollment');
 
-      // Re-auth complete — retry the enrollment
+      // Re-auth complete - retry the enrollment
       try {
         final retryService = ref.read(authServiceProvider);
         await retryService.enrollMFA(

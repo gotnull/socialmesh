@@ -64,7 +64,7 @@ void main() {
       // refactor that drops or renames a cue forces a test update.
       // `consentRequested` was added so the user gets an audible
       // cue when an inbound HS_HELLO surfaces the Accept / Decline
-      // prompt — distinct from `connectionSucceeded` (which fires
+      // prompt - distinct from `connectionSucceeded` (which fires
       // *after* the handshake completes).
       expect(SipPlaySoundCue.values.length, equals(5));
       expect(

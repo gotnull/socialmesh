@@ -17,6 +17,7 @@ import 'meshcore_detector.dart';
 import 'meshcore_tcp_transport.dart';
 import 'meshtastic_adapter.dart';
 import 'protocol/meshcore_capture.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Parsed `meshcore-tcp:<host>:<port>` device identifier, or `null` when
@@ -123,14 +124,16 @@ class ConnectionResult {
 /// Factory function type for creating MeshCore adapters.
 ///
 /// Injectable for testing to verify MeshCore path is never called for Meshtastic.
-typedef MeshCoreAdapterFactoryFn =
-    MeshCoreAdapter Function(MeshTransport transport);
+typedef MeshCoreAdapterFactoryFn = MeshCoreAdapter Function(
+  MeshTransport transport,
+);
 
 /// Factory function type for creating Meshtastic adapters.
 ///
 /// Injectable for testing to verify Meshtastic path is never called for MeshCore.
-typedef MeshtasticAdapterFactoryFn =
-    MeshtasticAdapter Function(ProtocolService protocolService);
+typedef MeshtasticAdapterFactoryFn = MeshtasticAdapter Function(
+  ProtocolService protocolService,
+);
 
 /// Factory function type for creating a MeshCore transport.
 ///
@@ -347,7 +350,7 @@ class ConnectionCoordinator {
     // fall back to whatever the DeviceInfo itself captured during scan.
     // The DeviceInfo's `serviceUuids` field is populated by the BLE scan
     // result, so this restores the on-air signal that name-based detection
-    // alone would miss — important for MeshCore companion firmware that
+    // alone would miss - important for MeshCore companion firmware that
     // ships under a `Meshtastic_*` advertised name (the only reliable
     // discriminator is the Nordic UART vs Meshtastic service UUID).
     // -------------------------------------------------------------------------
@@ -560,11 +563,11 @@ class ConnectionCoordinator {
   ///
   /// Dev/simulator-only path: the BLE companion firmware variants also expose
   /// the same `<` / `>` framed binary protocol over TCP (default port 5000)
-  /// when built with WIFI_SSID. This bypasses BLE scanning entirely — useful
+  /// when built with WIFI_SSID. This bypasses BLE scanning entirely - useful
   /// for simulator builds that have no BLE peer available.
   ///
   /// Identical identify/start sequence to the BLE path
-  /// ([_connectMeshCore]) — the only difference is the byte source.
+  /// ([_connectMeshCore]) - the only difference is the byte source.
   /// The single-flight guard, cancellation-by-attempt-id, and provider
   /// state propagation all reuse the existing wiring.
   ///

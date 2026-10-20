@@ -13,7 +13,7 @@ import '../../../l10n/app_localizations.dart';
 // drawer customization sheet only needs icon + label + accent to
 // render a "show hidden item" tile, so we expose those three fields
 // here behind an id lookup. Keeping the lookup in lock-step with the
-// drawer's real list is pinned by `drawer_customization_test.dart` —
+// drawer's real list is pinned by `drawer_customization_test.dart` -
 // every customizable id in the live drawer must resolve here too.
 class DrawerHiddenItemDescriptor {
   final IconData icon;

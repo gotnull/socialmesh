@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/services.dart';
 
 import '../../core/logging.dart';
@@ -11,6 +12,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/navigation.dart';
 import '../../utils/snackbar.dart';
+
 import 'package:cloud_functions/cloud_functions.dart';
 
 class ReportBugSheet extends StatefulWidget {
@@ -189,7 +191,7 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
         screenshotBytes: widget.initialScreenshot,
       );
 
-      // Draft is only cleared on success — a thrown error keeps it so the
+      // Draft is only cleared on success - a thrown error keeps it so the
       // user can retry without retyping.
       widget.onDescriptionChanged?.call('');
 

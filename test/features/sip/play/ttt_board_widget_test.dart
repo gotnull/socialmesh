@@ -63,7 +63,7 @@ void main() {
         ),
       );
       await tester.tap(_cell(2));
-      // Bounded pump — the parent's pulse animation runs forever
+      // Bounded pump - the parent's pulse animation runs forever
       // by design (overlay breathing) so pumpAndSettle would deadlock.
       await tester.pump(const Duration(milliseconds: 50));
       expect(lastTapped, equals(2));
@@ -83,7 +83,7 @@ void main() {
         ),
       );
       await tester.tap(_cell(0));
-      // Bounded pump — the parent's pulse animation runs forever
+      // Bounded pump - the parent's pulse animation runs forever
       // by design (overlay breathing) so pumpAndSettle would deadlock.
       await tester.pump(const Duration(milliseconds: 50));
       expect(taps, equals(0));
@@ -106,7 +106,7 @@ void main() {
       for (var i = 0; i < 9; i += 1) {
         await tester.tap(_cell(i));
       }
-      // Bounded pump — the parent's pulse animation runs forever
+      // Bounded pump - the parent's pulse animation runs forever
       // by design (overlay breathing) so pumpAndSettle would deadlock.
       await tester.pump(const Duration(milliseconds: 50));
       expect(taps, equals(0));
@@ -127,7 +127,7 @@ void main() {
         ),
       );
       // Pump past the draw-in animation so the painter is fully drawn.
-      // Bounded pump — the parent's pulse animation runs forever
+      // Bounded pump - the parent's pulse animation runs forever
       // by design (overlay breathing) so pumpAndSettle would deadlock.
       await tester.pump(const Duration(milliseconds: 50));
 
@@ -176,7 +176,7 @@ void main() {
       // Tap a different empty cell.
       await tester.tap(_cell(0));
       // The pending overlay's pulse animation never finishes by
-      // design — use bounded pumps instead of pumpAndSettle to
+      // design - use bounded pumps instead of pumpAndSettle to
       // process the tap callbacks.
       await tester.pump(const Duration(milliseconds: 50));
       expect(

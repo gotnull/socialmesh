@@ -4,9 +4,11 @@ import 'dart:async';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -327,7 +329,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Listen to device log stream — must be in build() for Riverpod 3.x
+    // Listen to device log stream - must be in build() for Riverpod 3.x
     ref.listen(deviceLogStreamProvider, (previous, next) {
       next.whenData((logRecord) {
         _handleNewLogRecord(logRecord);

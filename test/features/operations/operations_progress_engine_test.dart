@@ -51,7 +51,7 @@ void main() {
     );
   }
 
-  group('OperationsProgressEngine — uniqueNodeEncounter', () {
+  group('OperationsProgressEngine - uniqueNodeEncounter', () {
     test('first unique node advances FIRST_CONTACT to completion', () {
       final def = uniqueDef();
       final progress = OperationProgress.empty(def, now: now);
@@ -261,7 +261,7 @@ void main() {
     });
   });
 
-  group('OperationsProgressEngine — traceroute', () {
+  group('OperationsProgressEngine - traceroute', () {
     test('successful traceroute completes PATHFINDER', () {
       final def = tracerouteDef();
       final progress = OperationProgress.empty(def, now: now);

@@ -98,11 +98,11 @@ class WhatsNewRegistry {
   WhatsNewRegistry._();
 
   // ===========================================================================
-  // PAYLOADS — add new versions at the bottom
+  // PAYLOADS - add new versions at the bottom
   // ===========================================================================
 
   static final List<WhatsNewPayload> _payloads = [
-    // v1.9.0 — Reachability introduction
+    // v1.9.0 - Reachability introduction
     WhatsNewPayload(
       version: '1.9.0',
       headline: "What's New in SocialMesh",
@@ -112,7 +112,7 @@ class WhatsNewRegistry {
           id: 'reachability_intro',
           title: 'Reachability',
           description:
-              'Estimate how likely you are to reach each node on your mesh — '
+              'Estimate how likely you are to reach each node on your mesh - '
               'without sending a single test packet.\n\n'
               'Reachability passively observes traffic flowing through the '
               'network and assigns High, Medium, or Low confidence to every '
@@ -126,7 +126,7 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.10.0 — World Map
+    // v1.10.0 - World Map
     WhatsNewPayload(
       version: '1.10.0',
       headline: "What's New in SocialMesh",
@@ -137,7 +137,7 @@ class WhatsNewRegistry {
           title: 'World Map',
           description:
               'See the entire global Meshtastic network on a single map. '
-              'Every dot is a node sharing its location — zoom, pan, and '
+              'Every dot is a node sharing its location - zoom, pan, and '
               'tap to explore node details, hardware info, and last-seen '
               'times.\n\n'
               'No connection required. The World Map pulls live data from '
@@ -151,7 +151,7 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.10.1 — Presence introduction
+    // v1.10.1 - Presence introduction
     WhatsNewPayload(
       version: '1.10.1',
       headline: "What's New in SocialMesh",
@@ -162,7 +162,7 @@ class WhatsNewRegistry {
           title: 'Presence',
           description:
               'See who is active on your mesh at a glance. Presence shows '
-              'real-time node activity with intent indicators — whether '
+              'real-time node activity with intent indicators - whether '
               'someone is monitoring, mobile, or at a fixed base station.\n\n'
               'Filter by activity level, search by name, and tap any node '
               'to see their full profile. Find it in the drawer under Social.',
@@ -179,7 +179,7 @@ class WhatsNewRegistry {
     // feature: its history entry deep-linked to a route that no longer
     // exists.
 
-    // v1.13.0 — NodeDex introduction
+    // v1.13.0 - NodeDex introduction
     WhatsNewPayload(
       version: '1.13.0',
       headline: "What's New in SocialMesh",
@@ -194,7 +194,7 @@ class WhatsNewRegistry {
               'Sigil and a personality Trait derived from real behavior.\n\n'
               'Find it in the drawer menu under Social. Filter by trait, '
               'search by name or hex ID, and tap any entry to explore its '
-              'full profile — signal history, discovery timeline, and more.',
+              'full profile - signal history, discovery timeline, and more.',
           icon: Icons.auto_stories_outlined,
           iconColor: Color(0xFFFFCA28), // Colors.amber.shade400
           deepLinkRoute: '/nodedex',
@@ -205,7 +205,7 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.15.0 — Aether introduction (gated behind AETHER_ENABLED)
+    // v1.15.0 - Aether introduction (gated behind AETHER_ENABLED)
     if (AppFeatureFlags.isAetherEnabled)
       WhatsNewPayload(
         version: '1.15.0',
@@ -232,7 +232,7 @@ class WhatsNewRegistry {
         ],
       ),
 
-    // v1.16.0 — TAK Gateway integration (gated behind TAK_GATEWAY_ENABLED)
+    // v1.16.0 - TAK Gateway integration (gated behind TAK_GATEWAY_ENABLED)
     if (AppFeatureFlags.isTakGatewayEnabled)
       WhatsNewPayload(
         version: '1.16.0',
@@ -261,7 +261,7 @@ class WhatsNewRegistry {
         ],
       ),
 
-    // v1.27.0 — Translation Pack (gated behind TRANSLATION_ENABLED)
+    // v1.27.0 - Translation Pack (gated behind TRANSLATION_ENABLED)
     if (AppFeatureFlags.isTranslationEnabled)
       WhatsNewPayload(
         version: '1.27.0',
@@ -276,7 +276,7 @@ class WhatsNewRegistry {
                 'single tap. Powered by OpenAI, it works on channels '
                 'and direct messages alike.\n\n'
                 'Long-press any message and tap Translate to see the result '
-                'inline — with smart caching so repeated translations are '
+                'inline - with smart caching so repeated translations are '
                 'instant. Available as a separate add-on.',
             icon: Icons.translate,
             iconColor: Color(0xFF26A69A), // AccentColors.teal
@@ -285,7 +285,7 @@ class WhatsNewRegistry {
         ],
       ),
 
-    // v1.30.0 — IF/THEN/ELSE automations + grouped reactions
+    // v1.30.0 - IF/THEN/ELSE automations + grouped reactions
     WhatsNewPayload(
       version: '1.30.0',
       headline: "What's New in SocialMesh",
@@ -297,7 +297,7 @@ class WhatsNewRegistry {
           description:
               'Automations now support structured condition trees with '
               'IF / THEN / ELSE logic. Build complex rules that branch '
-              'based on multiple conditions — battery level, node status, '
+              'based on multiple conditions - battery level, node status, '
               'time of day, and more.\n\n'
               'Each run shows exactly which branch was taken and why, '
               'with a detailed execution history you can inspect anytime.',
@@ -311,7 +311,7 @@ class WhatsNewRegistry {
           id: 'reaction_grouping_intro',
           title: 'Grouped Reactions',
           description:
-              'Message reactions are now grouped by emoji — if five people '
+              'Message reactions are now grouped by emoji - if five people '
               'send a thumbs-up, you see one compact chip instead of five. '
               'Long-press any reaction to see every sender.\n\n'
               'Reactions also wrap to the next line instead of overflowing '
@@ -322,7 +322,7 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.41.0 — Apple Watch companion
+    // v1.41.0 - Apple Watch companion
     WhatsNewPayload(
       version: '1.41.0',
       headline: "What's New in SocialMesh",
@@ -345,7 +345,7 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.45.0 — CarPlay mesh messaging (major feature reveal)
+    // v1.45.0 - CarPlay mesh messaging (major feature reveal)
     WhatsNewPayload(
       version: '1.45.0',
       headline: "What's New in SocialMesh",

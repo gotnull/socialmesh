@@ -5,14 +5,14 @@
 ///
 /// A [NotificationPolicy] defines the maximum visible grapheme-cluster
 /// lengths and (optionally) payload byte budgets for each notification
-/// field. Policies are pure configuration — no business logic — so they
+/// field. Policies are pure configuration - no business logic - so they
 /// can be swapped or extended without touching the renderer.
 ///
 /// Predefined policies:
-/// - [NotificationPolicy.ios] — measured on-device: ~256 visible chars
+/// - [NotificationPolicy.ios] - measured on-device: ~256 visible chars
 ///   for body in expanded notification view.
-/// - [NotificationPolicy.android] — BigTextStyle renders ~450-500 chars.
-/// - [NotificationPolicy.strictest] — intersection of all platform limits
+/// - [NotificationPolicy.android] - BigTextStyle renders ~450-500 chars.
+/// - [NotificationPolicy.strictest] - intersection of all platform limits
 ///   (the default for cross-platform local notifications).
 library;
 
@@ -41,10 +41,10 @@ class FieldPolicy {
 /// [ReductionPriority] order, dropping optional fields entirely before
 /// applying per-field truncation.
 enum ReductionPriority {
-  /// Dropped first — supplementary context (snippet, preview).
+  /// Dropped first - supplementary context (snippet, preview).
   lowest,
 
-  /// Dropped second — secondary identifiers.
+  /// Dropped second - secondary identifiers.
   low,
 
   /// Truncated but not dropped.
@@ -72,7 +72,7 @@ class VariablePolicy {
     this.fallback = '',
   });
 
-  /// Default variable policy — generous limit, normal priority.
+  /// Default variable policy - generous limit, normal priority.
   static const standard = VariablePolicy();
 
   @override

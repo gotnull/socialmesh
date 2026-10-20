@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// [SipDmManager.removeSessionLocally] tests — pins the local-only,
+/// [SipDmManager.removeSessionLocally] tests - pins the local-only,
 /// no-wire-frame contract for the Phase 9 "Remove conversation"
 /// overflow action.
 ///
@@ -79,10 +79,10 @@ void main() {
       expect(messagesRef, isEmpty);
     });
 
-    test('emits NO wire frame — rate limiter remains untouched', () {
+    test('emits NO wire frame - rate limiter remains untouched', () {
       dm.createSession(sessionTag: 0xBB, peerNodeId: 0x5678);
       // Snapshot whatever the limiter knows. removeSessionLocally
-      // must not call canSend / recordSend / generateNonce — we only
+      // must not call canSend / recordSend / generateNonce - we only
       // need to confirm the post-call ability to send a non-trivial
       // frame is unchanged. Easiest probe: budget large enough for
       // any wire frame remains intact.
@@ -93,7 +93,7 @@ void main() {
         isTrue,
         reason:
             'removeSessionLocally must not consume rate limiter '
-            'budget — it never sends a wire frame',
+            'budget - it never sends a wire frame',
       );
     });
 
@@ -122,7 +122,7 @@ void main() {
       expect(fired, equals(1));
     });
 
-    test('removing a session does NOT send DM_CLOSE — confirm by '
+    test('removing a session does NOT send DM_CLOSE - confirm by '
         'comparing return shape with closeSession', () {
       // closeSession returns a Uint8List? (the encoded DM_CLOSE
       // frame). removeSessionLocally returns a bool. Verify both
@@ -133,7 +133,7 @@ void main() {
 
       final closeReturn = dm.closeSession(0xAA);
       // closeSession produces a DM_CLOSE encoded frame when the
-      // limiter has budget — non-null is the expected good case.
+      // limiter has budget - non-null is the expected good case.
       expect(closeReturn, isNotNull);
 
       final removeReturn = dm.removeSessionLocally(0xBB);

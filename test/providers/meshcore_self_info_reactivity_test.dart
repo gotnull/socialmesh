@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D24.A — `MeshCoreSelfInfoNotifier` reactivity regression tests.
+// D24.A - `MeshCoreSelfInfoNotifier` reactivity regression tests.
 //
 // Pre-D24 the notifier watched `meshCoreAdapterProvider`, but the
 // adapter is a singleton whose reference does not change identity

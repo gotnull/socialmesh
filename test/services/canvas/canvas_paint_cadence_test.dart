@@ -33,7 +33,7 @@ void main() {
     });
 
     test(
-      'cadence is per-canvas — a tap on canvas A does not gate canvas B',
+      'cadence is per-canvas - a tap on canvas A does not gate canvas B',
       () {
         final cadence = CanvasPaintCadence(nowMs: () => 1000);
         cadence.recordTap(1);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34a — chat-traffic counter regression pins.
+// D34a - chat-traffic counter regression pins.
 //
 // These tests pin the in-memory measurement layer that gates the
 // future D34 reactions feature. The counters track byte usage,
@@ -32,7 +32,7 @@ class _FakeClock {
 }
 
 void main() {
-  group('MeshCoreSendRateLimiter — D34a counters', () {
+  group('MeshCoreSendRateLimiter - D34a counters', () {
     test('initial snapshot is fully empty (zero across all kinds)', () {
       final clock = _FakeClock(DateTime(2026, 5, 9, 12));
       final lim = MeshCoreSendRateLimiter(clock: clock.call);
@@ -181,7 +181,7 @@ void main() {
       );
       expect(lim.snapshot().currentWindowSentBytes, 200);
 
-      // Advance 60 seconds + 1 ms — crosses the boundary.
+      // Advance 60 seconds + 1 ms - crosses the boundary.
       clock.advance(const Duration(seconds: 60, milliseconds: 1));
       final s = lim.snapshot();
       expect(
@@ -235,7 +235,7 @@ void main() {
       );
       expect(lim.snapshot().peakWindowUsage, 350);
 
-      // New window — peak holds.
+      // New window - peak holds.
       clock.advance(const Duration(seconds: 60, milliseconds: 1));
       lim.recordSend(
         kind: MeshCoreSendKind.plainChannel,
@@ -318,7 +318,7 @@ void main() {
     });
   });
 
-  group('MeshCoreSendKind — log tag stability', () {
+  group('MeshCoreSendKind - log tag stability', () {
     test('every kind produces a stable enum-name log tag', () {
       // The log tag is consumed by os_log greps in the field. If a
       // kind is renamed, this test fails so the on-call has to update

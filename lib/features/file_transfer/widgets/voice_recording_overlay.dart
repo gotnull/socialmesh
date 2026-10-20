@@ -14,10 +14,10 @@ import '../../../services/voice/voice_player.dart';
 
 /// Full-screen recording overlay with a four-phase flow:
 ///
-/// 1. **Idle** — big red record button, quality picker. Tap to start.
-/// 2. **Recording** — live waveform, elapsed timer, pause & stop buttons.
-/// 3. **Paused** — frozen waveform, resume & stop buttons.
-/// 4. **Reviewing** — preview playback, send/retake/cancel.
+/// 1. **Idle** - big red record button, quality picker. Tap to start.
+/// 2. **Recording** - live waveform, elapsed timer, pause & stop buttons.
+/// 3. **Paused** - frozen waveform, resume & stop buttons.
+/// 4. **Reviewing** - preview playback, send/retake/cancel.
 class VoiceRecordingOverlay extends StatefulWidget {
   const VoiceRecordingOverlay({
     super.key,
@@ -258,7 +258,7 @@ class _VoiceRecordingOverlayState extends State<VoiceRecordingOverlay>
       _previewDragging = false;
       _previewDragProgress = 0.0;
     });
-    // Don't auto-start — user taps record again from idle.
+    // Don't auto-start - user taps record again from idle.
   }
 
   Future<void> _loadPreviewPayload() async {
@@ -276,14 +276,14 @@ class _VoiceRecordingOverlayState extends State<VoiceRecordingOverlay>
     if (_previewPayload == null || _player == null) return;
 
     if (_player!.isPlaying.value) {
-      // Pause — keeps position so resume and seek both work.
+      // Pause - keeps position so resume and seek both work.
       await _player!.pause();
       if (mounted) setState(() {});
       return;
     }
 
     if (_previewLoaded) {
-      // Already loaded — resume from current (possibly seeked) position.
+      // Already loaded - resume from current (possibly seeked) position.
       await _player!.resume();
       if (mounted) setState(() {});
       return;
@@ -436,7 +436,7 @@ class _VoiceRecordingOverlayState extends State<VoiceRecordingOverlay>
 
     HapticFeedback.mediumImpact();
     notifier.value = picked;
-    // Reset to idle — user must tap record again with the new quality.
+    // Reset to idle - user must tap record again with the new quality.
     _amplitudeSub?.cancel();
     _amplitudeSub = null;
     _positionSub?.cancel();
@@ -875,7 +875,7 @@ class _VoiceRecordingOverlayState extends State<VoiceRecordingOverlay>
           color: Colors.white70,
           onTap: _resumeRecording,
         ),
-        // Done / Stop — same as recording stop
+        // Done / Stop - same as recording stop
         _buildStopCircle(),
         // Cancel
         _SideActionButton(
@@ -926,7 +926,7 @@ class _VoiceRecordingOverlayState extends State<VoiceRecordingOverlay>
 }
 
 // =============================================================================
-// _RecordButton — big red circle with pulsating ring (idle state)
+// _RecordButton - big red circle with pulsating ring (idle state)
 // =============================================================================
 
 class _RecordButton extends StatelessWidget {
@@ -999,7 +999,7 @@ class _RecordButton extends StatelessWidget {
 }
 
 // =============================================================================
-// _ReadyPill — static badge shown in review phase
+// _ReadyPill - static badge shown in review phase
 // =============================================================================
 
 class _ReadyPill extends StatelessWidget {
@@ -1040,7 +1040,7 @@ class _ReadyPill extends StatelessWidget {
 }
 
 // =============================================================================
-// _PausedPill — amber badge shown when recording is paused
+// _PausedPill - amber badge shown when recording is paused
 // =============================================================================
 
 class _PausedPill extends StatelessWidget {
@@ -1081,7 +1081,7 @@ class _PausedPill extends StatelessWidget {
 }
 
 // =============================================================================
-// _SideActionButton — flanking ghost buttons
+// _SideActionButton - flanking ghost buttons
 // =============================================================================
 
 class _SideActionButton extends StatelessWidget {
@@ -1129,7 +1129,7 @@ class _SideActionButton extends StatelessWidget {
 }
 
 // =============================================================================
-// _RecPill — live recording indicator
+// _RecPill - live recording indicator
 // =============================================================================
 
 class _RecPill extends StatelessWidget {
@@ -1183,7 +1183,7 @@ class _RecPill extends StatelessWidget {
 }
 
 // =============================================================================
-// _WaveformPainter — scrolling amplitude bars driven directly by mic samples
+// _WaveformPainter - scrolling amplitude bars driven directly by mic samples
 // =============================================================================
 
 class _WaveformPainter extends CustomPainter {
@@ -1259,7 +1259,7 @@ class _WaveformPainter extends CustomPainter {
 enum _OverlayPhase { idle, recording, paused, reviewing }
 
 // =============================================================================
-// _QualityOption — row in the voice quality picker bottom sheet
+// _QualityOption - row in the voice quality picker bottom sheet
 // =============================================================================
 
 class _QualityOption extends StatelessWidget {

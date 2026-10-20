@@ -10,7 +10,7 @@
 ///     [SipDmSendError.peerBlocked]. No frame is built, no entry
 ///     appended.
 ///   - Malformed inbound DM_PLAY: drop without crash. The codec
-///     never throws — the manager logs and discards.
+///     never throws - the manager logs and discards.
 ///   - Global airtime budget still authoritative: a starved limiter
 ///     blocks even an unblocked peer's outbound.
 library;
@@ -80,7 +80,7 @@ Uint8List _offerBytes() {
 }
 
 void main() {
-  group('SipDmManager.handleInboundPlay — block guard', () {
+  group('SipDmManager.handleInboundPlay - block guard', () {
     test('blocked peer DM_PLAY is silently dropped, '
         'no history mutation', () {
       final gate = _MutableSafetyGate();
@@ -127,7 +127,7 @@ void main() {
     });
   });
 
-  group('SipDmManager.buildPlayMessage — outbound gates', () {
+  group('SipDmManager.buildPlayMessage - outbound gates', () {
     test('blocked peer returns peerBlocked, no entry appended, '
         'no rate-limiter consumption', () {
       final gate = _MutableSafetyGate();
@@ -143,7 +143,7 @@ void main() {
       expect(result.isOk, isFalse);
       expect(result.error, equals(SipDmSendError.peerBlocked));
       expect(dm.getHistory(0xAA), isEmpty);
-      // Limiter budget intact — block fired before any consumption.
+      // Limiter budget intact - block fired before any consumption.
       expect(limiter.canSend(64), isTrue);
     });
 
@@ -163,7 +163,7 @@ void main() {
       expect(history.first.direction, equals(SipDmDirection.outbound));
     });
 
-    test('global airtime budget still authoritative — outbound blocked '
+    test('global airtime budget still authoritative - outbound blocked '
         'when limiter is starved', () {
       // Default-config limiter starts with full budget. Drain it
       // first, then attempt an unrelated send.

@@ -136,7 +136,7 @@ class MeshCoreRadioParamsStore {
   }
 
   /// D26: persist the user-selected region preset id for [nodeKey].
-  /// This is **UI state only** — the preset id is the chip the user
+  /// This is **UI state only** - the preset id is the chip the user
   /// last tapped on the radio settings sheet, not proof of what
   /// firmware has applied. Live values from `selfInfo` remain the
   /// source of truth for the actual radio params; this just hydrates

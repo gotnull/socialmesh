@@ -47,7 +47,7 @@ void main() {
   // Decision-order coverage
   // ===========================================================================
 
-  group('evaluateRadioCompatibility — decision order', () {
+  group('evaluateRadioCompatibility - decision order', () {
     test('isSelf wins over everything → selfNode', () {
       final summary = evaluateRadioCompatibility(
         entry: baseEntry(
@@ -89,28 +89,25 @@ void main() {
       expect(summary.localFrequencyOffsetNow, isNull);
     });
 
-    test(
-      'mqtt source short-circuits even when presets match → indirectOrMqttObservation',
-      () {
-        final preset =
-            config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
-        final summary = evaluateRadioCompatibility(
-          entry: baseEntry(
-            lastObservedOnPreset: preset,
-            lastObservationSource: ObservationSource.mqtt,
-          ),
-          localConfig: loraConfigWith(
-            preset: config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
-          ),
-          isSelf: false,
-        );
+    test('mqtt source short-circuits even when presets match → indirectOrMqttObservation', () {
+      final preset =
+          config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
+      final summary = evaluateRadioCompatibility(
+        entry: baseEntry(
+          lastObservedOnPreset: preset,
+          lastObservationSource: ObservationSource.mqtt,
+        ),
+        localConfig: loraConfigWith(
+          preset: config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
+        ),
+        isSelf: false,
+      );
 
-        expect(
-          summary.status,
-          NodeDexReachabilityStatus.indirectOrMqttObservation,
-        );
-      },
-    );
+      expect(
+        summary.status,
+        NodeDexReachabilityStatus.indirectOrMqttObservation,
+      );
+    });
 
     test('hopsAway > 0 short-circuits → indirectOrMqttObservation', () {
       final preset =
@@ -162,28 +159,25 @@ void main() {
       expect(summary.status, NodeDexReachabilityStatus.differentPreset);
     });
 
-    test(
-      'same preset + frequency offset diff > epsilon → differentFrequencyOffset',
-      () {
-        final preset =
-            config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
-        final summary = evaluateRadioCompatibility(
-          entry: baseEntry(
-            lastObservedOnPreset: preset,
-            lastObservedFrequencyOffset: 50.0,
-            lastObservationSource: ObservationSource.directRf,
-            lastHopsAway: 0,
-          ),
-          localConfig: loraConfigWith(frequencyOffset: 75.0),
-          isSelf: false,
-        );
+    test('same preset + frequency offset diff > epsilon → differentFrequencyOffset', () {
+      final preset =
+          config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
+      final summary = evaluateRadioCompatibility(
+        entry: baseEntry(
+          lastObservedOnPreset: preset,
+          lastObservedFrequencyOffset: 50.0,
+          lastObservationSource: ObservationSource.directRf,
+          lastHopsAway: 0,
+        ),
+        localConfig: loraConfigWith(frequencyOffset: 75.0),
+        isSelf: false,
+      );
 
-        expect(
-          summary.status,
-          NodeDexReachabilityStatus.differentFrequencyOffset,
-        );
-      },
-    );
+      expect(
+        summary.status,
+        NodeDexReachabilityStatus.differentFrequencyOffset,
+      );
+    });
 
     test(
       'same preset + same offset + directRf + hops 0 → likelyReachableOnRf',
@@ -210,7 +204,7 @@ void main() {
   // Live-fallback path
   // ===========================================================================
 
-  group('evaluateRadioCompatibility — live MeshNode fallback', () {
+  group('evaluateRadioCompatibility - live MeshNode fallback', () {
     test(
       'entry source null, live viaMqtt true → indirectOrMqttObservation',
       () {
@@ -299,79 +293,70 @@ void main() {
       expect(summary.hopsAway, 0);
     });
 
-    test(
-      'no fallback and no persisted source → unknown source, classified by preset',
-      () {
-        final preset =
-            config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
-        final summary = evaluateRadioCompatibility(
-          entry: baseEntry(lastObservedOnPreset: preset),
-          localConfig: loraConfigWith(),
-          isSelf: false,
-        );
+    test('no fallback and no persisted source → unknown source, classified by preset', () {
+      final preset =
+          config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
+      final summary = evaluateRadioCompatibility(
+        entry: baseEntry(lastObservedOnPreset: preset),
+        localConfig: loraConfigWith(),
+        isSelf: false,
+      );
 
-        // No source/hops information either way — falls through to the
-        // preset comparison and matches → likelyReachableOnRf. Honest:
-        // we have no MQTT/relay signal so we don't claim one.
-        expect(summary.status, NodeDexReachabilityStatus.likelyReachableOnRf);
-        expect(summary.observationSource, isNull);
-        expect(summary.hopsAway, isNull);
-      },
-    );
+      // No source/hops information either way - falls through to the
+      // preset comparison and matches → likelyReachableOnRf. Honest:
+      // we have no MQTT/relay signal so we don't claim one.
+      expect(summary.status, NodeDexReachabilityStatus.likelyReachableOnRf);
+      expect(summary.observationSource, isNull);
+      expect(summary.hopsAway, isNull);
+    });
   });
 
   // ===========================================================================
   // Honest unknowns: never become false mismatches
   // ===========================================================================
 
-  group('evaluateRadioCompatibility — honest unknowns', () {
-    test(
-      'lastObservedFrequencyOffset null + matching preset → likelyReachableOnRf',
-      () {
-        final preset =
-            config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
-        final summary = evaluateRadioCompatibility(
-          entry: baseEntry(
-            lastObservedOnPreset: preset,
-            // No persisted offset.
-            lastObservationSource: ObservationSource.directRf,
-            lastHopsAway: 0,
-          ),
-          // Local has a non-zero offset.
-          localConfig: loraConfigWith(frequencyOffset: 75.0),
-          isSelf: false,
-        );
+  group('evaluateRadioCompatibility - honest unknowns', () {
+    test('lastObservedFrequencyOffset null + matching preset → likelyReachableOnRf', () {
+      final preset =
+          config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
+      final summary = evaluateRadioCompatibility(
+        entry: baseEntry(
+          lastObservedOnPreset: preset,
+          // No persisted offset.
+          lastObservationSource: ObservationSource.directRf,
+          lastHopsAway: 0,
+        ),
+        // Local has a non-zero offset.
+        localConfig: loraConfigWith(frequencyOffset: 75.0),
+        isSelf: false,
+      );
 
-        // Helper does NOT flip to differentFrequencyOffset just because
-        // local has an offset and persisted is null — that would be a
-        // false mismatch.
-        expect(summary.status, NodeDexReachabilityStatus.likelyReachableOnRf);
-      },
-    );
+      // Helper does NOT flip to differentFrequencyOffset just because
+      // local has an offset and persisted is null - that would be a
+      // false mismatch.
+      expect(summary.status, NodeDexReachabilityStatus.likelyReachableOnRf);
+    });
 
-    test(
-      'localConfig has zero offset + persisted has non-zero → no false mismatch',
-      () {
-        final preset =
-            config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
-        final summary = evaluateRadioCompatibility(
-          entry: baseEntry(
-            lastObservedOnPreset: preset,
-            lastObservedFrequencyOffset: 50.0,
-            lastObservationSource: ObservationSource.directRf,
-            lastHopsAway: 0,
-          ),
-          // Local offset is 0.0 (suppressed by helper to null).
-          localConfig: loraConfigWith(frequencyOffset: 0.0),
-          isSelf: false,
-        );
+    test('localConfig has zero offset + persisted has non-zero → no false mismatch', () {
+      final preset =
+          config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
+      final summary = evaluateRadioCompatibility(
+        entry: baseEntry(
+          lastObservedOnPreset: preset,
+          lastObservedFrequencyOffset: 50.0,
+          lastObservationSource: ObservationSource.directRf,
+          lastHopsAway: 0,
+        ),
+        // Local offset is 0.0 (suppressed by helper to null).
+        localConfig: loraConfigWith(frequencyOffset: 0.0),
+        isSelf: false,
+      );
 
-        // Local-now is treated as unknown offset, not "zero != 50",
-        // so we don't flip to differentFrequencyOffset.
-        expect(summary.status, NodeDexReachabilityStatus.likelyReachableOnRf);
-        expect(summary.localFrequencyOffsetNow, isNull);
-      },
-    );
+      // Local-now is treated as unknown offset, not "zero != 50",
+      // so we don't flip to differentFrequencyOffset.
+      expect(summary.status, NodeDexReachabilityStatus.likelyReachableOnRf);
+      expect(summary.localFrequencyOffsetNow, isNull);
+    });
 
     test(
       'frequency offset diff below epsilon (1.0 Hz) → likelyReachableOnRf',

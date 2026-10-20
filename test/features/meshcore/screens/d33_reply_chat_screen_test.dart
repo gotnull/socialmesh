@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// D33 — reply UI widget tests for the MeshCore chat screen.
+// D33 - reply UI widget tests for the MeshCore chat screen.
 //
 // Pinned invariants:
 //   - The long-press Reply action is offered ONLY for messages that
@@ -15,7 +15,7 @@
 //
 // These tests pump the chat screen with deterministic
 // `initialMessages` and exercise the long-press / composer / bubble
-// surfaces directly. They do not rely on the wire send path —
+// surfaces directly. They do not rely on the wire send path -
 // envelope codec parity is covered separately in
 // `test/services/meshcore/protocol/d33_chat_meta_envelope_test.dart`
 // and `test/providers/d33_inbound_reply_envelope_test.dart`.
@@ -179,7 +179,7 @@ void main() {
                 id: 'legacy-1',
                 text: 'legacy bubble',
                 isOutgoing: false,
-                // mmf intentionally null — pre-D33 record.
+                // mmf intentionally null - pre-D33 record.
               ),
             ],
           ),

@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import '../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../utils/time_format.dart';
 
 import '../../core/logging.dart';
@@ -478,7 +480,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
     try {
       await repository.replyToReport(reportId: widget.report.id, message: text);
 
-      // Draft is only cleared on success — a thrown error keeps it so the
+      // Draft is only cleared on success - a thrown error keeps it so the
       // user can retry without retyping.
       ref
           .read(settingsServiceProvider)
@@ -551,7 +553,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header — always visible, tappable to expand. Wrapped in a local
+          // Header - always visible, tappable to expand. Wrapped in a local
           // Material so the InkWell splash paints + clips against this card's
           // border radius, not the far-up app Material.
           Material(
@@ -667,7 +669,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
             ),
           ),
 
-          // Expanded content — full description + thread + reply box
+          // Expanded content - full description + thread + reply box
           if (_isExpanded) ...[
             Divider(height: 1, color: context.border.withValues(alpha: 0.5)),
 

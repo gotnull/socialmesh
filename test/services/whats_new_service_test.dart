@@ -133,7 +133,7 @@ void main() {
   });
 
   // ===========================================================================
-  // WhatsNewRegistry — allPayloads
+  // WhatsNewRegistry - allPayloads
   // ===========================================================================
 
   group('WhatsNewRegistry.allPayloads', () {
@@ -230,19 +230,16 @@ void main() {
       expect(payload, isNull);
     });
 
-    test(
-      'returns payload when current version is newer than payload (update catchup)',
-      () {
-        final payload = WhatsNewRegistry.getPendingPayload(
-          currentVersion: '1.13.0',
-          lastSeenVersion: '1.0.0',
-        );
+    test('returns payload when current version is newer than payload (update catchup)', () {
+      final payload = WhatsNewRegistry.getPendingPayload(
+        currentVersion: '1.13.0',
+        lastSeenVersion: '1.0.0',
+      );
 
-        // User updated from 1.0.0 to 1.13.0, should see the 1.13.0 payload
-        expect(payload, isNotNull);
-        expect(payload!.version, '1.13.0');
-      },
-    );
+      // User updated from 1.0.0 to 1.13.0, should see the 1.13.0 payload
+      expect(payload, isNotNull);
+      expect(payload!.version, '1.13.0');
+    });
 
     test('returns null for invalid current version string', () {
       final payload = WhatsNewRegistry.getPendingPayload(
@@ -433,13 +430,13 @@ void main() {
 
   group('WhatsNewState transitions', () {
     test('fresh install -> show -> dismiss flow', () {
-      // Step 1: Fresh install — nothing seen yet
+      // Step 1: Fresh install - nothing seen yet
       const step1 = WhatsNewState.initial;
       expect(step1.isLoaded, isFalse);
       expect(step1.hasPending, isFalse);
       expect(step1.shownThisSession, isFalse);
 
-      // Step 2: Load completes — pending payload found
+      // Step 2: Load completes - pending payload found
       const payload = WhatsNewPayload(
         version: '1.13.0',
         headline: "What's New",
@@ -464,12 +461,12 @@ void main() {
       expect(step2.isBadgeKeyUnseen('nodedex'), isTrue);
       expect(step2.shownThisSession, isFalse);
 
-      // Step 3: Sheet is shown — mark shown this session
+      // Step 3: Sheet is shown - mark shown this session
       final step3 = step2.copyWith(shownThisSession: true);
       expect(step3.shownThisSession, isTrue);
       expect(step3.hasPending, isTrue); // Still pending until dismissed
 
-      // Step 4: User dismisses popup — payload cleared but badge keys persist
+      // Step 4: User dismisses popup - payload cleared but badge keys persist
       final step4 = step3.copyWith(
         clearPendingPayload: true,
         // Badge keys are NOT cleared on popup dismiss (decoupled)
@@ -484,7 +481,7 @@ void main() {
       expect(step4.hasUnseenBadgeKeys, isTrue);
       expect(step4.shownThisSession, isTrue);
 
-      // Step 5: User navigates to NodeDex — badge key dismissed individually
+      // Step 5: User navigates to NodeDex - badge key dismissed individually
       final step5 = step4.copyWith(
         unseenBadgeKeys: Set<String>.from(step4.unseenBadgeKeys)
           ..remove('nodedex'),
@@ -494,7 +491,7 @@ void main() {
       expect(step5.hasUnseenBadgeKeys, isFalse);
     });
 
-    test('upgrade with nothing new — no popup, no badges', () {
+    test('upgrade with nothing new - no popup, no badges', () {
       // User upgraded but lastSeen matches current, no pending
       const state = WhatsNewState(
         isLoaded: true,
@@ -517,7 +514,7 @@ void main() {
       expect(state.isBadgeKeyUnseen('feature_c'), isTrue);
       expect(state.hasUnseenBadgeKeys, isTrue);
 
-      // Dismiss feature_a — others remain
+      // Dismiss feature_a - others remain
       final afterA = state.copyWith(
         unseenBadgeKeys: Set<String>.from(state.unseenBadgeKeys)
           ..remove('feature_a'),
@@ -527,7 +524,7 @@ void main() {
       expect(afterA.isBadgeKeyUnseen('feature_c'), isTrue);
       expect(afterA.hasUnseenBadgeKeys, isTrue);
 
-      // Dismiss feature_b — one remains
+      // Dismiss feature_b - one remains
       final afterB = afterA.copyWith(
         unseenBadgeKeys: Set<String>.from(afterA.unseenBadgeKeys)
           ..remove('feature_b'),
@@ -536,7 +533,7 @@ void main() {
       expect(afterB.isBadgeKeyUnseen('feature_c'), isTrue);
       expect(afterB.hasUnseenBadgeKeys, isTrue);
 
-      // Dismiss feature_c — all gone
+      // Dismiss feature_c - all gone
       final afterC = afterB.copyWith(
         unseenBadgeKeys: Set<String>.from(afterB.unseenBadgeKeys)
           ..remove('feature_c'),
@@ -691,7 +688,7 @@ void main() {
             isNot(contains('google translate')),
             reason:
                 'Item ${item.id} description must not reference Google Translate '
-                '— translation is powered by OpenAI',
+                '- translation is powered by OpenAI',
           );
         }
       }
@@ -703,22 +700,19 @@ void main() {
   // ===========================================================================
 
   group('WhatsNewRegistry feature flags', () {
-    test(
-      'Translation Pack payload (1.27.0) is absent when TRANSLATION_ENABLED is not set',
-      () {
-        // In the test environment dotenv is not initialised, so
-        // AppFeatureFlags.isTranslationEnabled returns false.
-        // The v1.27.0 payload must therefore be excluded from the registry.
-        final payload = WhatsNewRegistry.getPayload('1.27.0');
-        expect(
-          payload,
-          isNull,
-          reason:
-              'Translation Pack What\'s New entry must be gated behind '
-              'TRANSLATION_ENABLED — it should not appear when the flag is off',
-        );
-      },
-    );
+    test('Translation Pack payload (1.27.0) is absent when TRANSLATION_ENABLED is not set', () {
+      // In the test environment dotenv is not initialised, so
+      // AppFeatureFlags.isTranslationEnabled returns false.
+      // The v1.27.0 payload must therefore be excluded from the registry.
+      final payload = WhatsNewRegistry.getPayload('1.27.0');
+      expect(
+        payload,
+        isNull,
+        reason:
+            'Translation Pack What\'s New entry must be gated behind '
+            'TRANSLATION_ENABLED - it should not appear when the flag is off',
+      );
+    });
 
     test(
       'Translation Pack badge key is absent from allPayloads when flag is off',
@@ -739,22 +733,19 @@ void main() {
       },
     );
 
-    test(
-      'Translation Pack item is absent from getUnseenBadgeKeys when flag is off',
-      () {
-        final keys = WhatsNewRegistry.getUnseenBadgeKeys(
-          currentVersion: '1.27.0',
-          lastSeenVersion: null,
-        );
+    test('Translation Pack item is absent from getUnseenBadgeKeys when flag is off', () {
+      final keys = WhatsNewRegistry.getUnseenBadgeKeys(
+        currentVersion: '1.27.0',
+        lastSeenVersion: null,
+      );
 
-        expect(
-          keys,
-          isNot(contains('translation_pack')),
-          reason:
-              'translation_pack badge key must not be returned when '
-              'TRANSLATION_ENABLED is not set',
-        );
-      },
-    );
+      expect(
+        keys,
+        isNot(contains('translation_pack')),
+        reason:
+            'translation_pack badge key must not be returned when '
+            'TRANSLATION_ENABLED is not set',
+      );
+    });
   });
 }

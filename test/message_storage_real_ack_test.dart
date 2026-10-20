@@ -129,7 +129,7 @@ void main() {
     });
     await v9.close();
 
-    // Now open the same file with the production MessageDatabase — this
+    // Now open the same file with the production MessageDatabase - this
     // triggers the v9 → v10 migration.
     final storage = MessageDatabase(testDbPath: dbPath);
     await storage.init();

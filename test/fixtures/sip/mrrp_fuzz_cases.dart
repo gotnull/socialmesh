@@ -208,7 +208,7 @@ abstract final class MrrpFuzzCases {
   }
 
   static Uint8List _buildOversizedFrame() {
-    // 216 bytes total — 1 over SIP_MAX_PAYLOAD
+    // 216 bytes total - 1 over SIP_MAX_PAYLOAD
     final frame = Uint8List(216);
     frame[0] = 0x4D;
     frame[1] = 0x52;

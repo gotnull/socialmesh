@@ -104,9 +104,8 @@ void main() {
       // The wipe list is private, so this pins it by source text -
       // the established convention for this kind of registration
       // invariant in this repo.
-      final src = File(
-        'lib/services/local_data_wipe_service.dart',
-      ).readAsStringSync();
+      final src = File('lib/services/local_data_wipe_service.dart')
+          .readAsStringSync();
       expect(
         src,
         contains("'$licenseOrgCacheDbName'"),

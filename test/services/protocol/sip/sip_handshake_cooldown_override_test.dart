@@ -28,10 +28,10 @@ SipHandshakeManager _newManager({int localNodeId = 0xAAAA}) {
 }
 
 void main() {
-  group('SipHandshakeManager.initiateHandshake — cooldown override', () {
+  group('SipHandshakeManager.initiateHandshake - cooldown override', () {
     test('default behaviour: cooldown still blocks within the window', () {
       // Mid-window retry without the override flag must still be
-      // throttled — preserves the original behaviour for any caller
+      // throttled - preserves the original behaviour for any caller
       // that hasn't opted in.
       FakeAsync().run((fake) {
         final mgr = _newManager();
@@ -89,7 +89,7 @@ void main() {
               'next failure starts a fresh window',
         );
 
-        // The override path also took us back to helloSent — the
+        // The override path also took us back to helloSent - the
         // session is live again.
         expect(mgr.getState(0xBEEF), SipHandshakeState.helloSent);
       });
@@ -98,7 +98,7 @@ void main() {
     test('overrideCooldown does NOT bypass other gates '
         '(in-progress session, dm-unavailable)', () {
       // The override only crosses the cooldown gate. An already-
-      // tracked in-progress session must still block — otherwise we
+      // tracked in-progress session must still block - otherwise we
       // could clobber a live HS_CHALLENGE waiting for response.
       final mgr = _newManager();
       final first = mgr.initiateHandshake(0xBEEF);
@@ -110,7 +110,7 @@ void main() {
         isNull,
         reason:
             'overrideCooldown must not bypass the duplicate-session '
-            'guard — the override is for the cooldown specifically',
+            'guard - the override is for the cooldown specifically',
       );
 
       // dm-unavailable is also independent of the override.
@@ -128,7 +128,7 @@ void main() {
 
     test('overrideCooldown is a no-op when not in cooldown', () {
       final mgr = _newManager();
-      // Fresh peer, no prior failure — the override flag should
+      // Fresh peer, no prior failure - the override flag should
       // simply have no effect.
       final hello = mgr.initiateHandshake(0xCAFE, overrideCooldown: true);
       expect(hello, isNotNull);

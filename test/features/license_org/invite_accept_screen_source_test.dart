@@ -8,7 +8,7 @@
 // restart. The membership + seat Firestore snapshots already
 // invalidate the org / seat providers, but the entitlement docs only
 // land in the local cache via the `getExternalEntitlements` callable
-// — so a manual refresh is required immediately after a successful
+// - so a manual refresh is required immediately after a successful
 // redeem. Without it the user sees confirmation but no premium
 // unlock, which is exactly the "did it work?" anxiety we hit during
 // the Community Pack e2e on 2026-05-28.
@@ -21,12 +21,11 @@ void main() {
   late String src;
 
   setUpAll(() {
-    src = File(
-      'lib/features/license_org/invite_accept_screen.dart',
-    ).readAsStringSync();
+    src = File('lib/features/license_org/invite_accept_screen.dart')
+        .readAsStringSync();
   });
 
-  group('InviteAcceptScreen — refresh-on-redeem', () {
+  group('InviteAcceptScreen - refresh-on-redeem', () {
     test('imports refreshExternalEntitlements from the provider graph', () {
       expect(
         src,
@@ -61,10 +60,10 @@ void main() {
     });
   });
 
-  group('InviteAcceptScreen — alreadyAllocated UX branch', () {
+  group('InviteAcceptScreen - alreadyAllocated UX branch', () {
     test('uses the alreadyMember copy when the backend reports replay', () {
       // The backend returns `alreadyAllocated: true` when the caller
-      // already has an active seat (idempotent replay — a double-tap
+      // already has an active seat (idempotent replay - a double-tap
       // or a stranger's invite-link to an existing member). A fresh
       // green "Joined" snackbar in that case is misleading; the user
       // could think they joined a new group. Branch on the flag.

@@ -20,7 +20,7 @@ import 'drawer_hidden_item_descriptor.dart';
 /// When modifications exist (some items hidden / custom order): the
 /// icon shows an accent dot to signal there are changes to review.
 ///
-/// Tapping the button opens [_showDrawerCustomizationSheet] — a brief
+/// Tapping the button opens [_showDrawerCustomizationSheet] - a brief
 /// summary of what's modified plus a "Reset to defaults" CTA.
 class DrawerCustomizeButton extends ConsumerWidget {
   const DrawerCustomizeButton({super.key});

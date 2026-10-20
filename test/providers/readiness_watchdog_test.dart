@@ -125,7 +125,7 @@ RestoreSessionCoordinator _makeCoordinator(
 }
 
 /// Bundles the per-test setup. The watchdog itself is constructed but
-/// NOT started — `watchdog.start()` MUST happen inside the `fakeAsync`
+/// NOT started - `watchdog.start()` MUST happen inside the `fakeAsync`
 /// block so the readiness-stream listener captures the fake clock zone.
 class _Setup {
   _Setup({this.isAppBackgrounded = _alwaysForeground});
@@ -202,11 +202,11 @@ void main() {
       fakeAsync((async) {
         s.watchdog.start();
         s.protocol.emit(OperationalReadiness.linkConnected);
-        // Past phase-1 deadline — log fires but no rebuild yet.
+        // Past phase-1 deadline - log fires but no rebuild yet.
         async.elapse(const Duration(seconds: 13));
         async.flushMicrotasks();
         expect(s.rebuildCount, 0);
-        // Past total deadline — rebuild fires.
+        // Past total deadline - rebuild fires.
         async.elapse(const Duration(seconds: 8));
         async.flushMicrotasks();
         expect(s.rebuildCount, 1);
@@ -316,7 +316,7 @@ void main() {
         async.elapse(const Duration(seconds: 19));
         // Re-emit handshakePhase2. With the buggy `_arm()` this
         // would create a fresh phase-1+total pair while the original
-        // total (deadline at 20 s) was still pending — orphan. With
+        // total (deadline at 20 s) was still pending - orphan. With
         // the fix, the previous pair is cancelled before fresh ones
         // are created.
         s.protocol.emit(OperationalReadiness.handshakePhase2);
@@ -381,7 +381,7 @@ void main() {
       fakeAsync((async) {
         s.watchdog.start();
         s.protocol.emit(OperationalReadiness.linkConnected);
-        // 14 s into the arm — firmware-typical phase-1 completion.
+        // 14 s into the arm - firmware-typical phase-1 completion.
         async.elapse(const Duration(seconds: 14));
         s.protocol.emit(OperationalReadiness.handshakePhase2);
         // Drive past the 18 s phase-1 deadline. Phase-1 timer fires
@@ -391,7 +391,7 @@ void main() {
         async.flushMicrotasks();
       });
 
-      // No rebuild yet — still inside total deadline (14 + 5 = 19 s,
+      // No rebuild yet - still inside total deadline (14 + 5 = 19 s,
       // total at 20 s).
       expect(s.rebuildCount, 0);
       // Watchdog still armed (only phase-1 timer fired; total still

@@ -27,7 +27,7 @@ class LocationService {
 
   /// Callback that returns whether the user has opted in to sharing
   /// their phone GPS position with the mesh. Evaluated on every tick.
-  /// When `null`, defaults to `false` (safe — no emission).
+  /// When `null`, defaults to `false` (safe - no emission).
   final bool Function()? isLocationSharingEnabled;
 
   Timer? _locationTimer;
@@ -74,7 +74,7 @@ class LocationService {
   ///
   /// The governor enforces the actual minimum publish interval (300s for
   /// automatic, 60s for manual). This timer cadence controls how often
-  /// we *check* whether a publish is warranted — the governor will deny
+  /// we *check* whether a publish is warranted - the governor will deny
   /// most ticks for stationary users, preventing airtime waste.
   static const int positionUpdateIntervalSeconds = 30;
 
@@ -145,7 +145,7 @@ class LocationService {
 
   /// Get current position once.
   ///
-  /// This does NOT check [isLocationSharingEnabled] — it only reads
+  /// This does NOT check [isLocationSharingEnabled] - it only reads
   /// the phone GPS. Callers that need a position for display (map,
   /// incident form, etc.) can use this freely. The gate is enforced
   /// only on the *send-to-mesh* path inside the governor.
@@ -220,7 +220,7 @@ class LocationService {
     // unconditional immediate send that caused burst-on-resume.
     await _governedTick(PositionPublishReason.lifecycleResume);
 
-    // Then poll every N seconds — governor decides on each tick.
+    // Then poll every N seconds - governor decides on each tick.
     _locationTimer = Timer.periodic(
       Duration(seconds: positionUpdateIntervalSeconds),
       (_) => _governedTick(PositionPublishReason.timerTick),

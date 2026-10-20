@@ -387,7 +387,7 @@ void main() {
   // covered separately in
   // `test/services/license_org/license_org_seat_service_test.dart`.
   // ===========================================================================
-  group('revoke action — source-text guards', () {
+  group('revoke action - source-text guards', () {
     late String src;
     setUpAll(() {
       src = io.File('lib/features/license_org/license_org_members_sheet.dart')
@@ -432,7 +432,7 @@ void main() {
   // and renders under the Active members list. Hidden entirely when zero
   // revocations exist so the user doesn't see a heading over an empty list.
   // ===========================================================================
-  group('revoked history — source-text guards', () {
+  group('revoked history - source-text guards', () {
     late String src;
     setUpAll(() {
       src = io.File('lib/features/license_org/license_org_members_sheet.dart')
@@ -457,7 +457,7 @@ void main() {
         src,
         contains('final itemCount = 1 + members.length + revoked.length'),
       );
-      // Old dual-section gates must NOT come back — keep them
+      // Old dual-section gates must NOT come back - keep them
       // absent so a refactor can't accidentally re-introduce the
       // orphan-heading edge cases.
       expect(src, isNot(contains('hasActive')));

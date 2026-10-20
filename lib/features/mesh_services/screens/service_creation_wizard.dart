@@ -326,7 +326,7 @@ class _ServiceCreationWizardState extends ConsumerState<ServiceCreationWizard>
             SummaryRow(
               label: l10n.serviceWizardReviewType,
               value: selectedType == null
-                  ? '—' // lint-allow: hardcoded-string
+                  ? '-' // lint-allow: hardcoded-string
                   : meshServiceIntentName(l10n, selectedType),
               icon: resolved?.icon,
               iconColor: resolved?.accentColor,

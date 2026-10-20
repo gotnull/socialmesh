@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../models/tak_event.dart';
 import '../utils/cot_affiliation.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// List tile for a single TAK/CoT event in the event list.
@@ -43,7 +44,7 @@ class TakEventTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Leading icon — uses MIL-STD-2525 affiliation color
+                // Leading icon - uses MIL-STD-2525 affiliation color
                 Opacity(
                   opacity: isStale ? 0.4 : 1.0,
                   child: Container(
@@ -64,7 +65,7 @@ class TakEventTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppTheme.spacing12),
-                // Content — vertical stack
+                // Content - vertical stack
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

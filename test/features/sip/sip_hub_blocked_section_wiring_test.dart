@@ -43,9 +43,8 @@ void main() {
         reason: 'Pending requests list must be filter-derived',
       );
       expect(
-        RegExp(
-          r'pendingRequestNodeIds[\s\S]{0,200}!blockedSet\.contains',
-        ).hasMatch(src),
+        RegExp(r'pendingRequestNodeIds[\s\S]{0,200}!blockedSet\.contains')
+            .hasMatch(src),
         isTrue,
         reason:
             'Pending request filtering must check blockedSet '
@@ -56,9 +55,8 @@ void main() {
     test('filters sessions against the blocked set', () {
       expect(src.contains('filteredSessions'), isTrue);
       expect(
-        RegExp(
-          r'sessions[\s\S]{0,200}!blockedSet\.contains\(s\.peerNodeId',
-        ).hasMatch(src),
+        RegExp(r'sessions[\s\S]{0,200}!blockedSet\.contains\(s\.peerNodeId')
+            .hasMatch(src),
         isTrue,
         reason: 'Conversations filter must drop blocked peers',
       );
@@ -66,9 +64,8 @@ void main() {
 
     test('filters discovered peers against the blocked set', () {
       expect(
-        RegExp(
-          r'unconnectedPeers[\s\S]{0,400}!blockedSet\.contains\(p\.nodeId',
-        ).hasMatch(src),
+        RegExp(r'unconnectedPeers[\s\S]{0,400}!blockedSet\.contains\(p\.nodeId')
+            .hasMatch(src),
         isTrue,
         reason: 'Discovered peers filter must drop blocked peers',
       );
@@ -87,7 +84,7 @@ void main() {
       );
     });
 
-    test('uses ExpansionTile (collapsed by default — no '
+    test('uses ExpansionTile (collapsed by default - no '
         'initiallyExpanded: true)', () {
       // Find the section class body.
       final start = src.indexOf('class _BlockedPeersSection');
@@ -100,7 +97,7 @@ void main() {
         body.contains('initiallyExpanded: true'),
         isFalse,
         reason:
-            'Blocked section must collapse by default — leaving it '
+            'Blocked section must collapse by default - leaving it '
             'expanded draws unwanted attention',
       );
     });
@@ -157,11 +154,11 @@ void main() {
           body.contains(s),
           isFalse,
           reason:
-              '_BlockedPeerTile must not call $s — Phase 10 spec '
+              '_BlockedPeerTile must not call $s - Phase 10 spec '
               'requires render-layer purity',
         );
       }
-      // Block-from-blocked-section also makes no sense — this is a
+      // Block-from-blocked-section also makes no sense - this is a
       // list of already-blocked peers. Verify no `.block(` call.
       expect(
         RegExp(r'\.block\(\s*peerNodeId').hasMatch(body),

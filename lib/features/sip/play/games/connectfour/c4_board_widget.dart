@@ -3,7 +3,7 @@
 
 /// Renders a Connect Four board for one [SipPlayInstanceState].
 ///
-/// Pure renderer — every column tap dispatches up to a supplied
+/// Pure renderer - every column tap dispatches up to a supplied
 /// `onColumnTap(column)` callback. The widget itself never sends a
 /// frame or mutates engine state; the parent [_C4BoardSection] is
 /// responsible for the optimistic-pending overlay, the interaction
@@ -20,7 +20,7 @@
 ///     landing row, gently pulsing while the engine catches up.
 ///   - Theme-driven colours: accent for the local player's discs,
 ///     muted text-primary for the peer (no hard-coded red / yellow
-///     in render code — the wire enum names are spec-only).
+///     in render code - the wire enum names are spec-only).
 library;
 
 import 'package:flutter/material.dart';
@@ -51,7 +51,7 @@ abstract final class _Tuning {
   /// disc is fully invisible at the start of the drop and only
   /// emerges once it enters the first hole below. Without this lip
   /// the column starts directly at hole 0 and the disc can't ever
-  /// be "behind the board" at start — it always pokes into hole 0
+  /// be "behind the board" at start - it always pokes into hole 0
   /// from frame zero. 0.6 of a cell gives the disc room to sit
   /// fully hidden plus a small reveal animation as it enters.
   static const double lipFraction = 0.6;
@@ -75,7 +75,7 @@ class C4BoardWidget extends StatefulWidget {
   /// user taps a legal column; once the engine state catches up the
   /// parent clears it. While set, the targeted column renders the
   /// ghost disc at the landing row and all other columns are
-  /// non-interactive — UI consistency without touching the
+  /// non-interactive - UI consistency without touching the
   /// authoritative state.
   final C4Move? pendingMove;
 
@@ -129,7 +129,7 @@ class _C4BoardWidgetState extends State<C4BoardWidget>
       'moveCount=${widget.board.moveCount}',
     );
     return AspectRatio(
-      // Cols : (rows + lip) — the extra `lipFraction` of a row
+      // Cols : (rows + lip) - the extra `lipFraction` of a row
       // worth of vertical space at the top is the "drop slot"
       // where a freshly-tapped disc starts its descent. Cells stay
       // approximately square at the new ratio.
@@ -212,7 +212,7 @@ class _ColumnState extends State<_Column> with TickerProviderStateMixin {
 
   /// Drop animation 0 → 1 the first time a disc resolves into a new
   /// row in this column. The animation is keyed off `_lastSettledRow`
-  /// — when the column gains a disc at a new row, we re-trigger.
+  /// - when the column gains a disc at a new row, we re-trigger.
   late final AnimationController _drop;
 
   /// Last row that has a disc in this column (snapshotted between
@@ -281,7 +281,7 @@ class _ColumnState extends State<_Column> with TickerProviderStateMixin {
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing2),
       child: Listener(
-        // Raw pointer-down observer — fires regardless of _canTap.
+        // Raw pointer-down observer - fires regardless of _canTap.
         // Lets us prove a tap physically reached the column even when
         // the gesture detector below has its callbacks nulled out.
         // Behaviour-neutral: Listener does not consume the event.
@@ -331,9 +331,8 @@ class _ColumnState extends State<_Column> with TickerProviderStateMixin {
                       dropProgress: Curves.easeOutCubic.transform(_drop.value),
                       topSettledRow: _lastSettledTopRow,
                       accent: widget.accent,
-                      mutedDisc: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium!.color!.withValues(alpha: 0.85),
+                      mutedDisc: Theme.of(context).textTheme.bodyMedium!.color!
+                          .withValues(alpha: 0.85),
                       cellBg: context.card,
                       // Board face matches the outer board container
                       // colour so the column reads as one continuous
@@ -355,10 +354,10 @@ class _ColumnState extends State<_Column> with TickerProviderStateMixin {
 
 /// Custom painter for one Connect Four column. Paints in z-order so
 /// the disc visually slides DOWN BEHIND the board face, only visible
-/// through the cell-holes — exactly like a physical Connect Four
+/// through the cell-holes - exactly like a physical Connect Four
 /// frame:
 ///
-///   1. Shaft (`cellBg`) fills the column — what's seen through holes
+///   1. Shaft (`cellBg`) fills the column - what's seen through holes
 ///      when no disc is there.
 ///   2. Settled / dropping / pending discs are painted at their hole
 ///      positions with a subtle radial gradient (top-left highlight,
@@ -369,10 +368,10 @@ class _ColumnState extends State<_Column> with TickerProviderStateMixin {
 ///   4. The board face is painted last as a single rect with circular
 ///      holes punched out via [PathFillType.evenOdd]. Anything above
 ///      (between holes during the drop animation, edges of discs, etc.)
-///      is hidden by the board face — discs only show through the
+///      is hidden by the board face - discs only show through the
 ///      holes.
 ///
-/// Does NOT draw across columns — each column is its own painter so
+/// Does NOT draw across columns - each column is its own painter so
 /// the drop animation can be targeted to one column without
 /// re-painting the whole board.
 class _C4ColumnPainter extends CustomPainter {
@@ -416,7 +415,7 @@ class _C4ColumnPainter extends CustomPainter {
     final cellHeight = size.height / (C4Board.rows + _Tuning.lipFraction);
     final cellWidth = size.width;
     final lipHeight = cellHeight * _Tuning.lipFraction;
-    // Hole radius — what the user reads as the "disc size" once the
+    // Hole radius - what the user reads as the "disc size" once the
     // board face is overlaid. Same size as the disc itself; the
     // depth cue comes from the hole inner-shadow + the disc radial
     // gradient, not from a size mismatch.
@@ -430,7 +429,7 @@ class _C4ColumnPainter extends CustomPainter {
     //    disc is there. Drawn over the entire column so the drop
     //    animation has a continuous "behind the board" surface.
     //    Darken the shaft significantly relative to the board face
-    //    so the punched-out holes read as recessed cutouts — when
+    //    so the punched-out holes read as recessed cutouts - when
     //    shaft and board face are the same colour the entire panel
     //    looks flat and the disc appears to be "on" the surface
     //    rather than visible through the holes.
@@ -443,7 +442,7 @@ class _C4ColumnPainter extends CustomPainter {
     //    falling y-offset instead of its final row centre. The
     //    falling disc is drawn UNDER the board face, so between
     //    rows it slides behind the plastic and disappears, then
-    //    reappears as it reaches the next hole — the desired
+    //    reappears as it reaches the next hole - the desired
     //    "drop through" feel.
     for (var row = 0; row < C4Board.rows; row += 1) {
       final disc = board.cellAt(row, column);
@@ -457,7 +456,7 @@ class _C4ColumnPainter extends CustomPainter {
         // zero. As the animation progresses, the disc descends
         // through the lip and emerges only when it reaches hole 0.
         // `holeRadius` as the start cy puts the disc fully inside
-        // the lip if `lipHeight >= 2*holeRadius` — when the lip is
+        // the lip if `lipHeight >= 2*holeRadius` - when the lip is
         // smaller, we still start the disc as high as it can go
         // while staying inside the column bounds.
         final finalY = rowCentreY(row);
@@ -478,7 +477,7 @@ class _C4ColumnPainter extends CustomPainter {
     // 3. Pending overlay: same-size ghost disc at the targeted
     //    column's landing row, gently pulsing alpha. Drawn in the
     //    same layer as settled discs (under the board face) so the
-    //    preview hole shows the ghost only — outside the hole the
+    //    preview hole shows the ghost only - outside the hole the
     //    board face hides it.
     if (pendingDisc != null && pendingLandingRow != null) {
       final pulseT = 0.6 + (pulseValue * 0.4);
@@ -494,7 +493,7 @@ class _C4ColumnPainter extends CustomPainter {
 
     // 4. Inner shadow ring just inside the hole edge. Drawn as a
     //    soft stroked ring at radius = holeRadius - strokeWidth so
-    //    the dark edge sits inside the hole — gives the disc the
+    //    the dark edge sits inside the hole - gives the disc the
     //    "set into a recessed cup" look without darkening the disc
     //    body. Subtle by design (alpha = 0.18). Drawn before the
     //    board face so the face's hole boundary isn't disturbed.
@@ -540,7 +539,7 @@ class _C4ColumnPainter extends CustomPainter {
   }
 
   /// Paint one disc at [centre] with [radius] using a subtle radial
-  /// gradient — top-left highlight + slight bottom-right shade — so
+  /// gradient - top-left highlight + slight bottom-right shade - so
   /// the disc reads as a 3D ball without going overboard. [opacity]
   /// modulates the entire shader (used for the pulsing ghost).
   void _paintDisc(

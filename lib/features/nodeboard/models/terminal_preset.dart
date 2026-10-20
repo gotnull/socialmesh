@@ -4,7 +4,7 @@
 // Lightweight preset identifier for NodeBoard terminal mode.
 //
 // The terminal is rendered in SocialMesh's standard premium theme
-// (GlassScaffold, context.accentColor, context.card, etc.) — there is
+// (GlassScaffold, context.accentColor, context.card, etc.) - there is
 // no per-preset palette overriding the app theme. A preset is kept
 // only to drive optional retro flourishes: the prompt glyph and an
 // ASCII header template supplied by the backend.

@@ -33,9 +33,8 @@ Widget _wrap(Widget child, {required double textScale}) {
     // the screen height, and a bare MediaQueryData reports a zero screen.
     home: Builder(
       builder: (context) => MediaQuery(
-        data: MediaQuery.of(
-          context,
-        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(textScale)),
         child: Scaffold(body: child),
       ),
     ),

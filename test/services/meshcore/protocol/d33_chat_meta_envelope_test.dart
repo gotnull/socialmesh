@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// D33 — chat-meta.v1 envelope codec byte-vector tests.
+// D33 - chat-meta.v1 envelope codec byte-vector tests.
 //
 // Pins:
 //   - The exact wire shape (`[mrrp]<base64url-envelope>[/mrrp] <summary>`)
@@ -25,7 +25,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 
 void main() {
-  group('MeshCoreMmf — channel scope', () {
+  group('MeshCoreMmf - channel scope', () {
     test('toBytes produces exactly 6 bytes', () {
       final mmf = MeshCoreMmf.channel(
         channelIndex: 0x05,
@@ -84,7 +84,7 @@ void main() {
     });
   });
 
-  group('MeshCoreMmf — contact scope', () {
+  group('MeshCoreMmf - contact scope', () {
     test('toBytes produces exactly 11 bytes', () {
       final prefix = Uint8List.fromList([0x79, 0x42, 0x6D, 0x8D, 0xB8, 0xFD]);
       final mmf = MeshCoreMmf.contact(
@@ -174,7 +174,7 @@ void main() {
     });
   });
 
-  group('ChatMetaEnvelopeCodec — encodeReply byte vectors', () {
+  group('ChatMetaEnvelopeCodec - encodeReply byte vectors', () {
     test('channel reply encodes a recoverable envelope', () {
       final target = MeshCoreMmf.channel(
         channelIndex: 0,
@@ -258,7 +258,7 @@ void main() {
     });
   });
 
-  group('ChatMetaEnvelopeCodec — decoder defence', () {
+  group('ChatMetaEnvelopeCodec - decoder defence', () {
     test('plain text passes through unchanged', () {
       final r = ChatMetaEnvelopeCodec.decode('hello world');
       expect(r.isPlainText, isTrue);
@@ -290,7 +290,7 @@ void main() {
     });
 
     test('mismatched magic falls through to plain text', () {
-      // 9 bytes of "MRR/0\x01\x06\x02\x00" — wrong magic byte.
+      // 9 bytes of "MRR/0\x01\x06\x02\x00" - wrong magic byte.
       final fake = Uint8List.fromList([
         0x4D, 0x52, 0x52, 0x21, 0x2F, // bad magic 4th byte
         0x01, 0x06, 0x02, 0x00,
@@ -319,7 +319,7 @@ void main() {
     });
 
     test('reserved REACTION op (D34) is rejected in D33', () {
-      // Legitimate envelope shape with op=0x01 — must fail to decode
+      // Legitimate envelope shape with op=0x01 - must fail to decode
       // until D34 wires up the handler.
       final inner = Uint8List.fromList([
         ...kChatMetaMagic,

@@ -7,7 +7,7 @@ import '../theme.dart';
 import 'edge_fade.dart';
 import 'status_filter_chip.dart';
 
-/// One option in a [ChipSelector] — the displayable face of a `T` value.
+/// One option in a [ChipSelector] - the displayable face of a `T` value.
 ///
 /// Each option carries its own accent [color] so a multi-option picker
 /// can colour-code semantically (e.g. green for "detected", red for
@@ -24,7 +24,7 @@ class ChipOption<T> {
   final String label;
 
   /// Leading glyph. When null, the chip renders a small filled circle
-  /// in [color] instead — useful for severity/status pickers where the
+  /// in [color] instead - useful for severity/status pickers where the
   /// color itself carries the meaning.
   final IconData? icon;
   final Color color;
@@ -32,7 +32,7 @@ class ChipOption<T> {
 
 /// Centered, wrapping row of [StatusFilterChip]s used as a single-select
 /// picker. Replaces Material's `SegmentedButton` for inner-settings,
-/// config, and form screens — segments wrap and look broken when labels
+/// config, and form screens - segments wrap and look broken when labels
 /// are longer than ~5 characters or when more than 2 options are shown,
 /// while the chip row degrades cleanly to multiple lines.
 ///
@@ -65,7 +65,7 @@ class ChipSelector<T> extends StatelessWidget {
   final T value;
 
   /// Available options, in display order. Order is the only ordering
-  /// guarantee — the widget does not sort.
+  /// guarantee - the widget does not sort.
   final List<ChipOption<T>> options;
 
   /// Called when the user taps an option. `null` disables every chip
@@ -73,7 +73,7 @@ class ChipSelector<T> extends StatelessWidget {
   final ValueChanged<T>? onChanged;
 
   /// When false, chips render but don't respond to taps. Defaults to
-  /// true. Distinct from `onChanged: null` only in intent — both are
+  /// true. Distinct from `onChanged: null` only in intent - both are
   /// rendered identically.
   final bool enabled;
 
@@ -110,7 +110,7 @@ class ChipSelector<T> extends StatelessWidget {
     ];
 
     if (scrollable) {
-      // EdgeFade.end always renders a right-edge fade — visually
+      // EdgeFade.end always renders a right-edge fade - visually
       // signals "more options exist off-screen" without depending on a
       // ScrollController to check overflow. Negligible visual cost when
       // the chips actually fit on one row.

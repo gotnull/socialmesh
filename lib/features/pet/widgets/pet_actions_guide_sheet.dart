@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Pet Action Guide — explains what each care action does and when
+// Pet Action Guide - explains what each care action does and when
 // to use it. Opens from the help IconButton in the pet home screen
 // app bar. Uses the reusable [HelpSheet] widget; this file just
 // supplies the data (icon + localized title + description per action)

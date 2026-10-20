@@ -7,10 +7,10 @@
 /// local and remote admin paths impossible to confuse at the call site.
 ///
 /// ```dart
-/// // Local admin — clean packet, no routing flags
+/// // Local admin - clean packet, no routing flags
 /// await protocol.setConfig(config, target: AdminTarget.local());
 ///
-/// // Remote admin — RELIABLE + wantAck, optional ACK confirmation
+/// // Remote admin - RELIABLE + wantAck, optional ACK confirmation
 /// await protocol.setConfig(
 ///   config,
 ///   target: AdminTarget.remote(0x12345678),
@@ -22,7 +22,7 @@ sealed class AdminTarget {
   /// Target the locally-connected device.
   ///
   /// Packets built for a local target MUST NOT set wantAck or RELIABLE
-  /// priority — those flags cause the firmware to route through the mesh
+  /// priority - those flags cause the firmware to route through the mesh
   /// stack instead of processing directly as a local admin command.
   const factory AdminTarget.local() = LocalAdminTarget;
 

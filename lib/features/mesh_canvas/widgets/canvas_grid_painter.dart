@@ -5,7 +5,7 @@
 //
 // Spec anchor: docs/canvas/CANVAS_V0_1.md §S0.ux.15 (the viewer must
 // feel r/place-style, not a grid editor) and §S0.ux.16 (S7 critical
-// acceptance — the canvas itself must read as a real artifact, not a
+// acceptance - the canvas itself must read as a real artifact, not a
 // sparse debug surface).
 //
 // What "real canvas" means visually in v0.1:
@@ -16,7 +16,7 @@
 //     the bounds during pan.
 //   - A 32-cell chunk lattice (4 × 4 chunks) draws faint hairlines.
 //     The 32-cell spacing matches the wire-format tile boundaries
-//     from CANVAS_V0_1.md §6.3/§6.4 — same units the receiver uses
+//     from CANVAS_V0_1.md §6.3/§6.4 - same units the receiver uses
 //     for tile-aligned sync_request, so the lattice doubles as a
 //     debugging affordance.
 //   - Painted cells render on top of all chrome; the transparent
@@ -67,7 +67,7 @@ class CanvasGridPainter extends CustomPainter {
 
   /// Indexed palette. `palette[cellRow.color]` resolves to the on-
   /// screen colour for that cell. Index 0 is treated as "transparent
-  /// / unpainted" and is skipped — the surface colour shows through.
+  /// / unpainted" and is skipped - the surface colour shows through.
   final List<Color> palette;
 
   /// Side length (logical pixels) of one cell. The viewer sets this
@@ -181,7 +181,7 @@ class CanvasGridPainter extends CustomPainter {
       canvas.drawRect(Offset.zero & size, Paint()..color = outsideColor);
     }
 
-    // Layer 1: canvas surface fill — the board itself.
+    // Layer 1: canvas surface fill - the board itself.
     canvas.drawRect(surfaceRect, Paint()..color = surfaceColor);
 
     // Layer 2 (chunk lattice) intentionally removed. The semi-
@@ -196,7 +196,7 @@ class CanvasGridPainter extends CustomPainter {
     // Layer 2b: shimmer overlay on syncing tiles. Diagonal gradient
     // sweep over each tile rect currently receiving raw-band
     // sync_responses. Rendered BEFORE the cell layer so painted
-    // cells overlay the shimmer cleanly — only the still-unpainted
+    // cells overlay the shimmer cleanly - only the still-unpainted
     // surface of a syncing tile shows the pulse. As pixels land,
     // the shimmer naturally shrinks to fit the remaining empty area.
     // Spec: CANVAS_SYNC_V0_1.md (S0.ux.30).

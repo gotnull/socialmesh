@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Constellation Screen — redesigned mesh network graph visualization.
+// Constellation Screen - redesigned mesh network graph visualization.
 //
 // A calm, interactive star-map-style view of the user's mesh network.
 // Nodes are rendered as soft-glow circles, edges are near-invisible by
@@ -76,7 +76,7 @@ class _Hit {
   _Hit._();
 }
 
-/// Neighbor display cap — prevents high-degree nodes from lighting up
+/// Neighbor display cap - prevents high-degree nodes from lighting up
 /// the entire graph on selection. Only the top N connections (by edge
 /// weight) are highlighted; the rest stay dimmed.
 const int _maxHighlightedNeighbors = 8;
@@ -278,7 +278,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
   }
 
   // =========================================================================
-  // Canvas — GestureDetector INSIDE InteractiveViewer (critical!)
+  // Canvas - GestureDetector INSIDE InteractiveViewer (critical!)
   //
   // The GestureDetector must be a child of InteractiveViewer so that:
   // 1. InteractiveViewer handles pan/zoom first
@@ -312,7 +312,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
           ),
         ),
 
-        // Fixed canvas — NO InteractiveViewer.
+        // Fixed canvas - NO InteractiveViewer.
         // Pinch-to-zoom is handled manually via onScale* with a
         // pointer-count guard: single finger = tap only, two fingers = zoom.
         // The view NEVER pans or bounces from touch.
@@ -403,7 +403,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
   }
 
   // =========================================================================
-  // Pinch-to-zoom — two-finger only, no single-finger pan
+  // Pinch-to-zoom - two-finger only, no single-finger pan
   //
   // Single touches pass through to onTapUp / onLongPressStart.
   // Only when 2+ pointers are down do we apply zoom transforms.
@@ -420,7 +420,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
   }
 
   void _onPinchUpdate(ScaleUpdateDetails details, Size canvasSize) {
-    // Ignore single-finger drags — they must not move the view.
+    // Ignore single-finger drags - they must not move the view.
     if (_pointerCount < 2 || _scaleStartMatrix == null) return;
 
     final newScale = (_scaleStartZoom * details.scale).clamp(
@@ -574,7 +574,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
         _lastTapTime = now;
       }
     } else {
-      // Tapped empty space — deselect.
+      // Tapped empty space - deselect.
       if (_selectedNodeNum != null) {
         safeSetState(() {
           _selectedNodeNum = null;
@@ -789,7 +789,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
   }
 
   void _autoFitView() {
-    // Reset to identity — the provider already normalizes to 0..1,
+    // Reset to identity - the provider already normalizes to 0..1,
     // so the default transform shows the full constellation.
     _transformController.value = Matrix4.identity();
   }
@@ -891,7 +891,7 @@ class _ConstellationScreenState extends ConsumerState<ConstellationScreen>
   }
 
   // =========================================================================
-  // Utility — neighbor computation with cap
+  // Utility - neighbor computation with cap
   // =========================================================================
 
   /// Extract the zoom/scale factor from a transformation matrix.

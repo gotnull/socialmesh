@@ -12,7 +12,7 @@ const int kMeshCoreDefaultTcpPort = 5000;
 /// Each saved endpoint is bound to one protocol. Meshtastic is the
 /// production default; MeshCore is exposed only as a dev/debug option
 /// (gated in the UI) and goes through [ConnectionCoordinator]'s
-/// dedicated `connectMeshCoreTcp` path — never through the Meshtastic
+/// dedicated `connectMeshCoreTcp` path - never through the Meshtastic
 /// network transport.
 enum NetworkEndpointProtocol {
   meshtastic,

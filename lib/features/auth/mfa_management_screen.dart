@@ -218,7 +218,7 @@ class _MFAManagementScreenState extends ConsumerState<MFAManagementScreen>
 
       if (!mounted) return;
 
-      // Re-auth is now complete with MFA — retry the unenroll
+      // Re-auth is now complete with MFA - retry the unenroll
       try {
         final authService = ref.read(authServiceProvider);
         await authService.unenrollMFA(factor.uid);

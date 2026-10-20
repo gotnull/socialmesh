@@ -309,7 +309,7 @@ void main() {
     );
 
     test('local target with no cached config builds from scratch', () async {
-      // No config injected — cache is empty
+      // No config injected - cache is empty
       expect(protocol.currentDeviceConfig, isNull);
 
       transport.clear();

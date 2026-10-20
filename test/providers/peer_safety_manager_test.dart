@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// [PeerSafetyManager] tests — hot-path queries, mutation paths,
+/// [PeerSafetyManager] tests - hot-path queries, mutation paths,
 /// serialised writes, and the durability contract (cache + DB stay
 /// consistent across re-init).
 library;
@@ -68,7 +68,7 @@ Future<PeerSafetyManager> _readyManager(ProviderContainer c) async {
 void main() {
   setUpAll(_initFfi);
 
-  group('PeerSafetyManager — hot-path queries', () {
+  group('PeerSafetyManager - hot-path queries', () {
     test('isBlocked / isMuted / hasFirstContact return false on a fresh '
         'install', () async {
       final c = _newContainer().container;
@@ -109,7 +109,7 @@ void main() {
     });
 
     test(
-      'markFirstHandshake is idempotent — only first timestamp is kept',
+      'markFirstHandshake is idempotent - only first timestamp is kept',
       () async {
         final c = _newContainer();
         final mgr = await _readyManager(c.container);
@@ -132,7 +132,7 @@ void main() {
     );
   });
 
-  group('PeerSafetyManager — mutation paths', () {
+  group('PeerSafetyManager - mutation paths', () {
     test('unblock() removes from cache and clears blocked_at_ms', () async {
       final c = _newContainer();
       final mgr = await _readyManager(c.container);
@@ -203,7 +203,7 @@ void main() {
     });
   });
 
-  group('PeerSafetyManager — durability', () {
+  group('PeerSafetyManager - durability', () {
     test(
       'cache rebuilds from DB on re-init (new container, same DB path)',
       () async {
@@ -222,7 +222,7 @@ void main() {
       },
     );
 
-    test('serialised writes — concurrent block calls all persist', () async {
+    test('serialised writes - concurrent block calls all persist', () async {
       final c = _newContainer();
       final mgr = await _readyManager(c.container);
       // Fire many overlapping blocks; the manager must serialise

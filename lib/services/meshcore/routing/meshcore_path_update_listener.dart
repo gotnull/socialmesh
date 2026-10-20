@@ -36,11 +36,10 @@ import '../protocol/meshcore_session.dart';
 /// (length 1..64) to the path-history notifier so it can persist to
 /// SharedPreferences + reactively update consumers. Receives the
 /// contact's hex-prefix-keyed history slot via the provider family.
-typedef MeshCorePathRecorder =
-    Future<void> Function({
-      required String contactPubKeyHex,
-      required Uint8List pathBytes,
-    });
+typedef MeshCorePathRecorder = Future<void> Function({
+  required String contactPubKeyHex,
+  required Uint8List pathBytes,
+});
 
 class MeshCorePathUpdateListener {
   MeshCorePathUpdateListener({

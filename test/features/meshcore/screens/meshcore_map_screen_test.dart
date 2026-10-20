@@ -37,7 +37,7 @@ void main() {
   // FlutterMap pulls in tile-loading and platform-channel deps that aren't
   // friendly under flutter_test. The screen has THREE branches, gated on
   // (isConnected, hasMapContent). The first two branches don't render
-  // FlutterMap at all — they're pure widget trees — so they're cheap and
+  // FlutterMap at all - they're pure widget trees - so they're cheap and
   // useful to pin. The third branch (the actual map) is exercised
   // end-to-end on a simulator, not here.
 

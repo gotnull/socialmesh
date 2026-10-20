@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Trust Score — computed trust indicator from observable node behavior.
+// Trust Score - computed trust indicator from observable node behavior.
 //
 // Trust is NOT user-assigned (that is socialTag). Trust is always
 // derived from real metrics: encounter frequency, node age, direct
@@ -12,18 +12,18 @@
 // NodeDexEntry (and optional role) always produces the same result.
 //
 // Signals and weights:
-//   1. Frequently Seen (25%) — encounter count (logarithmic)
-//   2. Long-lived      (25%) — age since first seen (asymptotic)
-//   3. Direct Contact  (20%) — message count (logarithmic)
-//   4. Relay Usefulness(15%) — router role + encounter threshold
-//   5. Network Presence(15%) — recency of last seen (decay curve)
+//   1. Frequently Seen (25%) - encounter count (logarithmic)
+//   2. Long-lived      (25%) - age since first seen (asymptotic)
+//   3. Direct Contact  (20%) - message count (logarithmic)
+//   4. Relay Usefulness(15%) - router role + encounter threshold
+//   5. Network Presence(15%) - recency of last seen (decay curve)
 //
 // Trust levels:
-//   Unknown     — score < 0.15 (almost no data)
-//   Observed    — 0.15 to < 0.35
-//   Familiar    — 0.35 to < 0.55
-//   Trusted     — 0.55 to < 0.75
-//   Established — 0.75+
+//   Unknown     - score < 0.15 (almost no data)
+//   Observed    - 0.15 to < 0.35
+//   Familiar    - 0.35 to < 0.55
+//   Trusted     - 0.55 to < 0.75
+//   Established - 0.75+
 
 import 'dart:math' as math;
 
@@ -31,11 +31,12 @@ import 'package:flutter/material.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../models/nodedex_entry.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Discrete trust classification derived from computed score.
 enum TrustLevel {
-  /// Almost no data — recently discovered or insufficient history.
+  /// Almost no data - recently discovered or insufficient history.
   unknown,
 
   /// Some encounters, beginning to accumulate history.
@@ -137,7 +138,7 @@ class TrustScore {
   TrustScore._();
 
   // ---------------------------------------------------------------------------
-  // Signal weights — must sum to 1.0
+  // Signal weights - must sum to 1.0
   // ---------------------------------------------------------------------------
 
   static const double _wFrequentlySeen = 0.25;
@@ -156,7 +157,7 @@ class TrustScore {
   static const double _thresholdEstablished = 0.75;
 
   // ---------------------------------------------------------------------------
-  // Curve constants — tuned for real-world mesh node behavior
+  // Curve constants - tuned for real-world mesh node behavior
   // ---------------------------------------------------------------------------
 
   /// Encounter count at which the frequently-seen signal saturates (~90%).
@@ -203,7 +204,7 @@ class TrustScore {
   ///
   /// Useful for deterministic testing. In production, use [compute].
   ///
-  /// Nodes with zero encounters always return [TrustLevel.unknown] —
+  /// Nodes with zero encounters always return [TrustLevel.unknown] -
   /// trust requires at least one observation event.
   static TrustResult computeAt(
     NodeDexEntry entry,
@@ -253,7 +254,7 @@ class TrustScore {
   }
 
   // ---------------------------------------------------------------------------
-  // Signal scoring functions — each returns 0.0 to 1.0
+  // Signal scoring functions - each returns 0.0 to 1.0
   // ---------------------------------------------------------------------------
 
   /// Logarithmic curve: rapid early gains, diminishing returns.
@@ -283,7 +284,7 @@ class TrustScore {
   /// Binary relay role check + encounter volume bonus.
   ///
   /// A relay role alone gives 0.7. High encounter count adds up to 0.3.
-  /// Without a relay role, returns 0.0 — this signal only fires for
+  /// Without a relay role, returns 0.0 - this signal only fires for
   /// nodes that actually route traffic.
   static double _scoreRelayUsefulness(String? role, int encounterCount) {
     if (role == null || !_relayRoles.contains(role.toUpperCase())) {

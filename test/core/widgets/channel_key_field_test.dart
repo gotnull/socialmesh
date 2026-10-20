@@ -51,7 +51,7 @@ void main() {
         await tester.pumpWidget(build());
 
         // Enter edit mode and type a different value into the
-        // parent-owned controller directly — simulates what happens
+        // parent-owned controller directly - simulates what happens
         // while the user is editing the field.
         await tester.tap(find.text('Edit'));
         await tester.pumpAndSettle();
@@ -60,7 +60,7 @@ void main() {
         controller.text = typed;
         await tester.pumpAndSettle();
 
-        // Parent rebuilds — passing the SAME keyBase64 prop it started
+        // Parent rebuilds - passing the SAME keyBase64 prop it started
         // with. The widget's didUpdateWidget must not clobber the
         // controller, because the controller is parent-owned.
         await tester.pumpWidget(build());
@@ -93,7 +93,7 @@ void main() {
         await tester.enterText(find.byType(TextField), typed);
         await tester.pump();
 
-        // Parent can read controller.text right now — without the
+        // Parent can read controller.text right now - without the
         // user tapping the inline check button. This is the wizard's
         // _commitEncryptionKeyFromController contract.
         expect(controller.text, typed);
@@ -306,7 +306,7 @@ void main() {
         expect(find.textContaining('•'), findsOneWidget);
         expect(find.text(seed), findsNothing);
 
-        // Tap Show — key becomes visible.
+        // Tap Show - key becomes visible.
         await tester.tap(find.text('Show'));
         await tester.pumpAndSettle();
         expect(find.text(seed), findsOneWidget);

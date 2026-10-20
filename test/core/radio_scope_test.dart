@@ -68,9 +68,8 @@ void main() {
         await File(p.join(root.path, 'messages.db-wal')).writeAsString('A-wal');
         final cacheDir = Directory(p.join(root.path, 'cache'))
           ..createSync(recursive: true);
-        await File(
-          p.join(cacheDir.path, 'mesh_seen_packets.db'),
-        ).writeAsString('D');
+        await File(p.join(cacheDir.path, 'mesh_seen_packets.db'))
+            .writeAsString('D');
 
         SharedPreferences.setMockInitialValues({
           'last_my_node_num': 0x1234abcd,
@@ -167,9 +166,8 @@ void main() {
         expect(RadioScope.instance.currentKey, 'node-deadbeef');
         expect(scopeDir(provisional).existsSync(), isFalse);
         expect(
-          File(
-            p.join(scopeDir('node-deadbeef').path, 'messages.db'),
-          ).readAsStringSync(),
+          File(p.join(scopeDir('node-deadbeef').path, 'messages.db'))
+              .readAsStringSync(),
           'observed before identity',
         );
         expect(prefs.getString('rs/node-deadbeef/nodes'), 'early');
@@ -205,9 +203,8 @@ void main() {
       expect(RadioScope.instance.currentKey, 'node-deadbeef');
       expect(scopeDir(provisional).existsSync(), isFalse);
       expect(
-        File(
-          p.join(scopeDir('node-deadbeef').path, 'messages.db'),
-        ).readAsStringSync(),
+        File(p.join(scopeDir('node-deadbeef').path, 'messages.db'))
+            .readAsStringSync(),
         'history',
       );
     });
@@ -221,9 +218,8 @@ void main() {
 
       expect(RadioScope.instance.currentKey, 'node-00002222');
       expect(
-        File(
-          p.join(scopeDir('node-00001111').path, 'messages.db'),
-        ).readAsStringSync(),
+        File(p.join(scopeDir('node-00001111').path, 'messages.db'))
+            .readAsStringSync(),
         'radio one',
       );
     });
@@ -256,9 +252,8 @@ void main() {
 
       expect(RadioScope.instance.currentKey, 'node-6944378a');
       expect(
-        File(
-          p.join(scopeDir('node-6944378a').path, 'messages.db'),
-        ).readAsStringSync(),
+        File(p.join(scopeDir('node-6944378a').path, 'messages.db'))
+            .readAsStringSync(),
         'years of history',
       );
       expect(scopeDir('node-a6960864').existsSync(), isFalse);
@@ -295,9 +290,8 @@ void main() {
 
         expect(RadioScope.instance.currentKey, 'node-00002222');
         expect(
-          File(
-            p.join(scopeDir('node-00001111').path, 'messages.db'),
-          ).readAsStringSync(),
+          File(p.join(scopeDir('node-00001111').path, 'messages.db'))
+              .readAsStringSync(),
           'radio one',
         );
       },
@@ -326,9 +320,8 @@ void main() {
       expect(folded, isTrue);
       expect(RadioScope.instance.currentKey, 'node-00002222');
       expect(
-        File(
-          p.join(scopeDir('node-00002222').path, 'messages.db'),
-        ).readAsStringSync(),
+        File(p.join(scopeDir('node-00002222').path, 'messages.db'))
+            .readAsStringSync(),
         'radio one',
       );
       expect(scopeDir('node-00001111').existsSync(), isFalse);
@@ -351,9 +344,8 @@ void main() {
 
       expect(RadioScope.instance.currentKey, 'node-00002222');
       expect(
-        File(
-          p.join(scopeDir('node-00002222').path, 'messages.db'),
-        ).readAsStringSync(),
+        File(p.join(scopeDir('node-00002222').path, 'messages.db'))
+            .readAsStringSync(),
         'radio one',
       );
       expect(scopeDir('node-00001111').existsSync(), isFalse);
@@ -376,9 +368,8 @@ void main() {
 
         expect(RadioScope.instance.currentKey, 'node-00002222');
         expect(
-          File(
-            p.join(scopeDir('node-00001111').path, 'messages.db'),
-          ).readAsStringSync(),
+          File(p.join(scopeDir('node-00001111').path, 'messages.db'))
+              .readAsStringSync(),
           'radio one',
         );
       },
@@ -396,9 +387,8 @@ void main() {
       await RadioScope.instance.useNodeNum(0x4444, ownPublicKey: key);
       expect(RadioScope.instance.currentKey, 'node-00004444');
       expect(
-        File(
-          await RadioScope.instance.databasePath('messages.db'),
-        ).existsSync(),
+        File(await RadioScope.instance.databasePath('messages.db'))
+            .existsSync(),
         isFalse,
       );
     });
@@ -413,18 +403,16 @@ void main() {
 
       await RadioScope.instance.useNodeNum(0xbbbb);
       expect(
-        File(
-          await RadioScope.instance.databasePath('messages.db'),
-        ).existsSync(),
+        File(await RadioScope.instance.databasePath('messages.db'))
+            .existsSync(),
         isFalse,
       );
       await writeScopedFile('messages.db', 'from B');
 
       await RadioScope.instance.useNodeNum(0xaaaa);
       expect(
-        File(
-          await RadioScope.instance.databasePath('messages.db'),
-        ).readAsStringSync(),
+        File(await RadioScope.instance.databasePath('messages.db'))
+            .readAsStringSync(),
         'from A',
       );
     });

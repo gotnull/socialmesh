@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Unit tests for NodeSummaryEngine — verifies correctness and
+// Unit tests for NodeSummaryEngine - verifies correctness and
 // determinism of computed summary statistics.
 
 import 'package:clock/clock.dart';

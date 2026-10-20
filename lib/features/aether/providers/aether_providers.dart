@@ -47,7 +47,7 @@ final aetherFlightReportsProvider =
       return service.watchReports(flightId);
     });
 
-/// Provider for global leaderboard — all-time top distances
+/// Provider for global leaderboard - all-time top distances
 ///
 /// Fetches from the Aether REST API which aggregates all reception
 /// reports globally. Falls back to Firestore if the API is unavailable.
@@ -103,16 +103,16 @@ class FlightPositionState {
 ///
 /// Reads cached positions from the Aether API's server-side OpenSky cache.
 /// The server polls OpenSky once per active flight every 60s and caches
-/// results — clients never call OpenSky directly, so zero OpenSky credits
+/// results - clients never call OpenSky directly, so zero OpenSky credits
 /// are consumed by the app regardless of user count.
 ///
-/// Auto-refreshes every 30 seconds (cheap — just a GET to our own API).
+/// Auto-refreshes every 30 seconds (cheap - just a GET to our own API).
 final aetherFlightPositionProvider = FutureProvider.autoDispose
     .family<FlightPositionState, String>((ref, callsign) async {
       AppLogging.aether('aetherFlightPositionProvider - tracking $callsign');
       final shareService = ref.watch(aetherShareServiceProvider);
 
-      // Poll our own API every 30 seconds — this is free (no OpenSky credits).
+      // Poll our own API every 30 seconds - this is free (no OpenSky credits).
       // The server-side cache updates every 60s from OpenSky, so 30s client
       // polls give near-instant pickup of new data without waste.
       final timer = Timer.periodic(const Duration(seconds: 30), (_) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D26 — typed wire-helper byte-for-byte regression pins.
+// D26 - typed wire-helper byte-for-byte regression pins.
 //
 // Each new helper in `MeshCoreSession` (`setAdvertName`,
 // `setAdvertLatLon`, `setDeviceTime`, `rebootDevice`) emits a
@@ -240,7 +240,7 @@ void main() {
         final t = _FakeTransport();
         addTearDown(t.dispose);
         final session = MeshCoreSession(t);
-        // No expectedReplyCode — firmware never sends OK; the helper
+        // No expectedReplyCode - firmware never sends OK; the helper
         // is fire-and-forget.
         await session.rebootDevice();
         expect(t.sentData, hasLength(1));
@@ -248,7 +248,7 @@ void main() {
           t.sentData.single,
           equals(<int>[0x13, 0x72, 0x65, 0x62, 0x6f, 0x6f, 0x74]),
         );
-        // Pin: exactly 7 bytes — opcode + 6-byte magic word, no
+        // Pin: exactly 7 bytes - opcode + 6-byte magic word, no
         // optional data.
         expect(t.sentData.single.length, equals(7));
       },

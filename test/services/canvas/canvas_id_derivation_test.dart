@@ -8,7 +8,7 @@
 //   canvas_id = first 8 bytes (little-endian u64) of
 //               SHA-256(channel_psk_bytes_or_empty || canvas_name_utf8)
 //
-// Both sides of a paint exchange compute this independently — they
+// Both sides of a paint exchange compute this independently - they
 // never negotiate. So the derivation must be:
 //   1) deterministic for fixed (psk, name) input,
 //   2) byte-exact against the spec test vector (well-known SHA-256 of
@@ -31,7 +31,7 @@ import 'package:socialmesh/services/canvas/canvas_constants.dart';
 int _spec(Iterable<int> psk, String name) {
   // Reference implementation re-derived from the spec text so the
   // test does not just call the function under test. This is what
-  // makes the test a real pin — they must agree byte for byte.
+  // makes the test a real pin - they must agree byte for byte.
   final input = <int>[...psk, ...utf8.encode(name)];
   final hash = sha256.convert(input).bytes;
   var id = 0;
@@ -42,7 +42,7 @@ int _spec(Iterable<int> psk, String name) {
 }
 
 void main() {
-  group('deriveCanvasIdFromChannel — CANVAS_V0_1.md §3', () {
+  group('deriveCanvasIdFromChannel - CANVAS_V0_1.md §3', () {
     test('is deterministic for fixed (psk, name)', () {
       const psk = <int>[1, 2, 3, 4, 5];
       const name = 'Primary';

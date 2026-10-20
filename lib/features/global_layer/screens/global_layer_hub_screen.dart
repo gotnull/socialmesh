@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Global Layer Hub Screen — entry point for the Global Layer feature.
+/// Global Layer Hub Screen - entry point for the Global Layer feature.
 ///
 /// This screen acts as a router:
 /// - If setup is not complete → shows the Setup Wizard
@@ -21,6 +21,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/mqtt_providers.dart';
 import 'global_layer_setup_wizard.dart';
 import 'global_layer_status_screen.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Hub screen that routes to the appropriate Global Layer sub-screen

@@ -18,7 +18,7 @@ import 'package:socialmesh/services/storage/storage_service.dart';
 ///   `_buildClusterLayer` helper, and the shared `ClusterListSheet` widget
 ///   (now in `mesh_map_widget.dart` so the route map reuses it).
 void main() {
-  group('SettingsService — mapClusterMarkers', () {
+  group('SettingsService - mapClusterMarkers', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -40,7 +40,7 @@ void main() {
     });
   });
 
-  group('map_screen clustering wiring — source pins', () {
+  group('map_screen clustering wiring - source pins', () {
     final mapFile = File('lib/features/map/map_screen.dart');
     late String source;
 
@@ -137,7 +137,7 @@ void main() {
         true,
         reason:
             'Clustering must disable above a per-style zoom via the package '
-            "parameter that actually drives it — `disableClusteringAtZoom`. "
+            "parameter that actually drives it - `disableClusteringAtZoom`. "
             'The old `maxZoom:` only affected the disabled tap-to-zoom path '
             '(zoomToBoundsOnClick: false) and was dead.',
       );

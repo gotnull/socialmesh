@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 /// Systematic codebase audit tests
@@ -169,14 +170,14 @@ void main() {
 
       for (final file in files) {
         final content = readFile(file);
-        final subscriptionCount = RegExp(
-          r'StreamSubscription[<\w,\s>]*\??\s+_',
-        ).allMatches(content).length;
+        final subscriptionCount = RegExp(r'StreamSubscription[<\w,\s>]*\??\s+_')
+            .allMatches(content)
+            .length;
 
         if (subscriptionCount > 0) {
-          final cancelCount = RegExp(
-            r'\.cancel\(\)',
-          ).allMatches(content).length;
+          final cancelCount = RegExp(r'\.cancel\(\)')
+              .allMatches(content)
+              .length;
           // Should have at least as many cancels as subscriptions
           // (may have more due to null-safe ?. calls)
           if (cancelCount < subscriptionCount) {
@@ -320,9 +321,8 @@ void main() {
               context.split('try {').length > context.split('} catch').length;
 
           // Also allow if it's a simple rethrow-prevention pattern with _
-          final catchParam = RegExp(
-            r'catch\s*\((_)\)',
-          ).hasMatch(content.substring(match.start, match.end + 10));
+          final catchParam = RegExp(r'catch\s*\((_)\)')
+              .hasMatch(content.substring(match.start, match.end + 10));
 
           if (isNestedCleanupTry || catchParam) {
             continue;
@@ -573,7 +573,7 @@ void main() {
         isFalse,
         reason:
             'protocol_service must not import stl_signing_service.dart '
-            'directly — use StlMiddleware instead',
+            'directly - use StlMiddleware instead',
       );
     });
 
@@ -586,7 +586,7 @@ void main() {
         isTrue,
         reason:
             'file_transfer_providers must use computeStlAwareChunkSize '
-            'for chunk sizing — not inline arithmetic',
+            'for chunk sizing - not inline arithmetic',
       );
     });
   });

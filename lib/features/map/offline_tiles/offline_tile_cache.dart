@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Offline Tile Cache — durable configuration of flutter_map's built-in tile
+// Offline Tile Cache - durable configuration of flutter_map's built-in tile
 // cache, plus the pre-download primitives used by the region downloader.
 //
 // flutter_map 8.x already persists tiles to disk by default, but in an
@@ -86,7 +86,7 @@ class OfflineTileCache {
   ///
   /// The root honours the SD-card preference when set, degrading silently to
   /// internal storage (with [fellBackToInternal] raised for the UI) when the
-  /// card is missing or unwritable — an unwritable root must never reach the
+  /// card is missing or unwritable - an unwritable root must never reach the
   /// provider, whose constructor would raise an unhandled async error and
   /// leave every cache call awaiting a completer that never completes.
   Future<void> configure() async {
@@ -116,7 +116,7 @@ class OfflineTileCache {
 
   /// Re-root the cache at [target], destroying and re-creating the built-in
   /// provider. Throws [OfflineStorageUnavailableException] when the SD card
-  /// is requested but missing/unwritable — the preference is persisted only
+  /// is requested but missing/unwritable - the preference is persisted only
   /// after the new provider exists. Never call while a region download is
   /// running.
   Future<void> switchStorageLocation(OfflineTileStorageLocation target) async {
@@ -177,7 +177,7 @@ class OfflineTileCache {
         satelliteLabelsOn: false,
         offlineSource: true,
       ),
-      // This layer is never rendered — it exists only so flutter_map's own
+      // This layer is never rendered - it exists only so flutter_map's own
       // resolver generates cache-parity URLs. The transformer satisfies the
       // lint and is harmless on an unrendered layer.
       tileUpdateTransformer: finiteCameraTileUpdateTransformer,

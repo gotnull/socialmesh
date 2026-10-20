@@ -18,7 +18,7 @@ abstract final class OperationIds {
   static const signalHunter = 'signal_hunter';
   static const pathfinder = 'pathfinder';
 
-  // Deferred — present in catalog, disabled.
+  // Deferred - present in catalog, disabled.
   static const longRangeObserver = 'long_range_observer';
   static const nightWatch = 'night_watch';
   static const multiHopObserver = 'multi_hop_observer';

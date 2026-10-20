@@ -4,7 +4,7 @@
 import 'package:characters/characters.dart';
 
 // Emoji-only detection for chat-body rendering ("jumbomoji") and translation
-// gating. Pure text logic, shared across both protocols — no Flutter, no theme.
+// gating. Pure text logic, shared across both protocols - no Flutter, no theme.
 //
 // Single source of truth for which runes count as emoji. Keep the range table
 // in this file only so emoji knowledge does not fragment across the codebase.
@@ -44,7 +44,7 @@ bool _isEmojiRune(int rune) {
 // Whether the grapheme [cluster] is an emoji. Conservative: every rune must be
 // an emoji rune, so mixed clusters (e.g. a letter with a stray selector) are
 // not treated as emoji and real text is never enlarged. Keycap sequences
-// (1️⃣, #️⃣) are the one exception — their base is an ASCII digit / # / *, so
+// (1️⃣, #️⃣) are the one exception - their base is an ASCII digit / # / *, so
 // they fail the all-runes check, but the keycap combiner U+20E3 occurs only in
 // emoji and is enough to identify them.
 bool _isEmojiCluster(String cluster) {

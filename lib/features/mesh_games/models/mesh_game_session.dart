@@ -6,7 +6,7 @@
 ///
 /// The session is authoritative for UI. The wire protocol (see
 /// `docs/mesh_games/MESH_GAMES_V0_1.md`) serializes *subsets* of this
-/// model — never the whole thing.
+/// model - never the whole thing.
 library;
 
 import 'dart:convert';

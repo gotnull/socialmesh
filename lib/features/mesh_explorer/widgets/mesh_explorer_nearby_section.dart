@@ -114,7 +114,7 @@ class _PeerTile extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              // Compact sigil avatar — IdentifiedPeer sigil taps jump
+              // Compact sigil avatar - IdentifiedPeer sigil taps jump
               // to NodeDex; for AnonymousPeer the seed is an ambient ID
               // (not a real nodeNum) so we leave the avatar inert and
               // let the row's InkWell handle the peer-detail sheet.
@@ -330,14 +330,14 @@ class _PeerAction extends ConsumerWidget {
     switch (peer.tier) {
       case InteractionTier.anonymous:
         // If the peer already sent us a handshake request, do not
-        // accept via tile-tap — consent is mandatory via the explicit
+        // accept via tile-tap - consent is mandatory via the explicit
         // Accept / Decline buttons in the SIP hub's incoming-request
         // card. A tap here must never stand in for that consent.
         final currentState = hs?.getState(peer.nodeId);
         if (currentState == SipHandshakeState.pendingApproval) {
           return;
         }
-        // Already in progress — don't interrupt.
+        // Already in progress - don't interrupt.
         if (currentState != null &&
             currentState != SipHandshakeState.idle &&
             currentState != SipHandshakeState.declined &&

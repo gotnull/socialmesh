@@ -176,7 +176,7 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
       final currentNodes = currentData?.nodes ?? {};
 
       if (currentNodes.isEmpty) {
-        // No data in state yet — try to load from cache
+        // No data in state yet - try to load from cache
         await _loadFromCache(
           cacheService,
           reason: 'Fetch failed',

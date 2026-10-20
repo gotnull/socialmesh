@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../models/mesh_models.dart';
 import '../node_color.dart';
 import 'app_bottom_sheet.dart';
@@ -557,9 +558,8 @@ class NodeInfoCard extends ConsumerWidget {
               if (node.viaMqtt)
                 NodeStatChip(
                   icon: Icons.cloud,
-                  value: classifyTransport(
-                    node.viaMqtt,
-                  ).localizedLabel(context.l10n),
+                  value: classifyTransport(node.viaMqtt)
+                      .localizedLabel(context.l10n),
                   color: context.textSecondary,
                 ),
               if (node.hopCount != null && node.hopCount! > 0)
@@ -902,9 +902,8 @@ class _NodeActionLegendSheet extends StatelessWidget {
                     const SizedBox(height: AppTheme.spacing4),
                     Text(
                       item.description,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.textSecondary,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: context.textSecondary),
                     ),
                   ],
                 ),

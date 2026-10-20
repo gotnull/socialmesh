@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/services/storage/storage_service.dart';
 
-/// Sprint 3 — Large Mesh settings.
+/// Sprint 3 - Large Mesh settings.
 ///
 /// Covers:
 /// - The two new SharedPreferences-backed settings (`hideNewNodesBadge`,
@@ -20,7 +20,7 @@ import 'package:socialmesh/services/storage/storage_service.dart';
 /// - The Messages container restores the persisted sub-tab on init
 ///   and writes back on user-driven tab changes.
 void main() {
-  group('SettingsService — hideNewNodesBadge', () {
+  group('SettingsService - hideNewNodesBadge', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -44,7 +44,7 @@ void main() {
     });
   });
 
-  group('SettingsService — messagesDefaultSubtab', () {
+  group('SettingsService - messagesDefaultSubtab', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -87,7 +87,7 @@ void main() {
 
     test('toggle is OUTSIDE the notifications gate', () {
       // The new toggle must NOT sit inside the existing
-      // `if (settingsService.notificationsEnabled)` block — otherwise
+      // `if (settingsService.notificationsEnabled)` block - otherwise
       // a user who silenced notifications can't hide the badge.
       final flat = source.replaceAll(RegExp(r'\s+'), ' ');
       // Look for the toggle's ARB key.

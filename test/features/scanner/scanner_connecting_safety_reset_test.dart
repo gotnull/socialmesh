@@ -12,7 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Background: the manual-connect path on Scanner sets `_connecting=true`
 /// and intentionally leaves it true on success so Navigator transitions
 /// can replace the screen. Failures are caught by Scanner's own
-/// `_connectToDevice` catch — except apple-code 14, which surfaces
+/// `_connectToDevice` catch - except apple-code 14, which surfaces
 /// asynchronously through the transport state stream while the catch
 /// has already been left. Without the safety net, `_connecting` stays
 /// true forever and the user sees the spinner indefinitely even after
@@ -24,9 +24,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   late String source;
   setUpAll(() async {
-    source = await File(
-      'lib/features/scanner/scanner_screen.dart',
-    ).readAsString();
+    source = await File('lib/features/scanner/scanner_screen.dart')
+        .readAsString();
   });
 
   group('Scanner pairing-invalidation safety reset', () {
@@ -39,7 +38,7 @@ void main() {
         isTrue,
         reason:
             'safety net must be its own subscription so it has a clear '
-            'install/release lifecycle — and so the contract is '
+            'install/release lifecycle - and so the contract is '
             'visible at the field declaration.',
       );
       expect(
@@ -119,7 +118,7 @@ void main() {
 
     test('clears _connecting AND _autoReconnecting AND surfaces the '
         'pairing-invalidation hint', () {
-      // _connecting alone is not enough — the autoReconnecting flag
+      // _connecting alone is not enough - the autoReconnecting flag
       // also drives the overlay copy. And the user needs to see the
       // re-pair guidance card, so _showPairingInvalidationHint must
       // be set in the same setState. Whitespace-collapsed match so

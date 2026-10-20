@@ -158,9 +158,8 @@ void main() {
           final protocol = await _freshProtocol(dir, transport);
           try {
             await protocol.handleIncomingPacket(
-              pb.FromRadio(
-                myInfo: pb.MyNodeInfo(myNodeNum: myNodeNum),
-              ).writeToBuffer(),
+              pb.FromRadio(myInfo: pb.MyNodeInfo(myNodeNum: myNodeNum))
+                  .writeToBuffer(),
             );
 
             await protocol.requestTelemetry(targetNodeNum, type: type);
@@ -188,7 +187,7 @@ void main() {
               expectedVariant,
               reason:
                   'The requested variant determines which telemetry module '
-                  'replies — it must be the only one present.',
+                  'replies - it must be the only one present.',
             );
           } finally {
             protocol.stop();
@@ -218,9 +217,8 @@ void main() {
       final protocol = await _freshProtocol(dir, transport);
       try {
         await protocol.handleIncomingPacket(
-          pb.FromRadio(
-            myInfo: pb.MyNodeInfo(myNodeNum: myNodeNum),
-          ).writeToBuffer(),
+          pb.FromRadio(myInfo: pb.MyNodeInfo(myNodeNum: myNodeNum))
+              .writeToBuffer(),
         );
 
         await protocol.requestTelemetry(
@@ -263,9 +261,8 @@ void main() {
       final protocol = await _freshProtocol(dir, transport);
       try {
         await protocol.handleIncomingPacket(
-          pb.FromRadio(
-            myInfo: pb.MyNodeInfo(myNodeNum: myNodeNum),
-          ).writeToBuffer(),
+          pb.FromRadio(myInfo: pb.MyNodeInfo(myNodeNum: myNodeNum))
+              .writeToBuffer(),
         );
 
         await protocol.requestTelemetry(

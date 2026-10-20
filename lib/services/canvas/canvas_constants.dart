@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCanvas persistence constants — schema names, geometry, validation
+// MeshCanvas persistence constants - schema names, geometry, validation
 // bounds, retention windows. Sourced from docs/canvas/CANVAS_V0_1.md.
 // Bumping any value here is a wire/schema change that MUST come with a
 // matching spec revision and a database migration.
@@ -22,7 +22,7 @@ abstract final class CanvasDbConfig {
   /// painted at coordinates ≥ 64 invalid for the new geometry, and
   /// any cached digest blob the wrong size. The onUpgrade handler
   /// drops every canvas table row; users opening a previously-used
-  /// build wake to a fresh canvas state — the protocol then
+  /// build wake to a fresh canvas state - the protocol then
   /// re-hydrates from peers via digest sync. This is acceptable per
   /// the v0.1 board-size-reduction directive ("safe to wipe").
   static const int dbVersion = 2;
@@ -46,7 +46,7 @@ abstract final class CanvasTables {
 /// emotionally inactive boards under typical 2-20 user densities.
 /// 64 × 64 quadruples observed paint density at the same cell count
 /// (e.g., 316 cells → ~7.7 % occupancy vs ~1.9 %) and cuts the worst-
-/// case sync workload from 16 tiles to 4 — fewer mismatched tiles per
+/// case sync workload from 16 tiles to 4 - fewer mismatched tiles per
 /// digest cycle, fewer sync_requests, faster hydration on first run,
 /// less governor pressure, denser visible activity. Tile size stays
 /// 32 × 32 so the RLE / raw-band coordinate math, governor sizing,
@@ -194,14 +194,14 @@ int canvasTileIndexForCell(int x, int y) =>
 ///             SHA-256(channel_psk_bytes_or_empty || canvas_name_utf8)
 /// ```
 ///
-/// `channelPsk` may be empty (default-keyed channel) — the SHA-256 input
+/// `channelPsk` may be empty (default-keyed channel) - the SHA-256 input
 /// just becomes the UTF-8 name in that case. The function is pure: two
 /// devices with the same `(psk, name)` always derive the same id, which
 /// is what makes channel-bound canvases converge without negotiation.
 ///
 /// Returned as a Dart `int`. SQLite's INTEGER column is a 64-bit signed
 /// type, so values with the high bit set arrive in storage as negative
-/// numbers; that is fine — the canvas table never reasons about sign,
+/// numbers; that is fine - the canvas table never reasons about sign,
 /// only equality.
 int deriveCanvasIdFromChannel({
   required List<int> channelPsk,

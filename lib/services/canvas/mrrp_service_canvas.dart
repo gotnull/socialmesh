@@ -29,10 +29,10 @@
 // Meshtastic `packet.channel` into handlers. S5 exposes two entry
 // points:
 //
-//   - [applyInbound] — direct call with explicit channelIndex. Used by
+//   - [applyInbound] - direct call with explicit channelIndex. Used by
 //     tests, and (in S6) by `ProtocolService` after sniffing
 //     canvas.v1 frames out of the inbound SIP path.
-//   - [handleRequest] — the standard `MrrpServiceHandler` interface
+//   - [handleRequest] - the standard `MrrpServiceHandler` interface
 //     called by the dispatcher. channelIndex is unavailable here, so
 //     the frame is logged and dropped (no apply). S6 will add a
 //     channel-aware dispatch path; until then, real wire delivery
@@ -68,7 +68,7 @@ const Duration kCanvasReplayFutureThreshold = Duration(minutes: 5);
 
 /// Sentinel passed to [MrrpServiceCanvas.applyInbound] when the caller
 /// has no channel context (e.g., the legacy dispatcher path). The
-/// service treats this value as "channel unknown — drop after logging".
+/// service treats this value as "channel unknown - drop after logging".
 const int kCanvasChannelIndexUnknown = -1;
 
 // ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ enum CanvasInboundOutcome {
   /// Frame failed codec validation (wrong magic, truncated, etc.).
   decodeFailed,
 
-  /// channelIndex was [kCanvasChannelIndexUnknown] — handler has no
+  /// channelIndex was [kCanvasChannelIndexUnknown] - handler has no
   /// safe way to bind the canvas, so the frame was dropped.
   noChannelContext,
 }
@@ -106,7 +106,7 @@ enum CanvasInboundOutcome {
 /// Aggregate result of applying one inbound canvas.v1 frame.
 ///
 /// `appliedCount` and `replayWindowRejectedCount` are authoritative.
-/// Dup-vs-LWW-stale is intentionally NOT split at this layer — the
+/// Dup-vs-LWW-stale is intentionally NOT split at this layer - the
 /// repository conflates both into "applyInboundPaint returns false",
 /// and the distinction is observable via the `applied_op` table
 /// (dups skip the row entirely; LWW-stale insert with was_accepted=0).
@@ -157,7 +157,7 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
   /// accepted into canonical state. The provider layer wires this to
   /// invalidate `canvasCellsProvider(canvasLocalId)` so live viewers
   /// repaint without waiting for a local tap. Without it, inbound
-  /// paints land in SQLite but no viewer rebuilds — the user only
+  /// paints land in SQLite but no viewer rebuilds - the user only
   /// sees them after they themselves paint and trigger a manual
   /// invalidate.
   final void Function(int canvasLocalId)? _onCellApplied;
@@ -224,7 +224,7 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
     return _emptyOkResponse(request);
   }
 
-  /// Direct apply entry point — used by tests and (post-S6) by the
+  /// Direct apply entry point - used by tests and (post-S6) by the
   /// ProtocolService canvas demux. Returns a [CanvasInboundReport]
   /// describing the outcome.
   ///
@@ -776,7 +776,7 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
 
   /// Find an existing mesh canvas, or create one keyed on
   /// `(canvas_id, channel_index)`. Returns null when [channelIndex] is
-  /// the unknown sentinel — the dispatcher path lands here.
+  /// the unknown sentinel - the dispatcher path lands here.
   Future<CanvasSummary?> _findOrCreateCanvas({
     required int canvasId,
     required int channelIndex,

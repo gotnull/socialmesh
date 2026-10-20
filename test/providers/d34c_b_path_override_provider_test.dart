@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34c-B-A — `MeshCoreContactsNotifier.setPathOverride` and the
+// D34c-B-A - `MeshCoreContactsNotifier.setPathOverride` and the
 // override side-effects on `setContactPathFromTrace` / `resetPath`.
 //
 // Pinned invariants:
@@ -16,7 +16,7 @@
 //   - On wire failure, the local override is NOT applied and state
 //     stays untouched.
 //   - Contact metadata (name, advType, lat/lon) is preserved across
-//     the override write — only out_path_len + out_path mutate.
+//     the override write - only out_path_len + out_path mutate.
 //   - No-session path returns false and emits the redacted skip log.
 
 import 'dart:async';
@@ -88,7 +88,7 @@ class _RecordingTransport implements MeshCoreTransport {
 
     // Contact frame format mirrors what `getContacts()` parses. We
     // build it via `addUpdateContact`'s outbound encoder by sending
-    // through a throwaway session would be circular — instead, the
+    // through a throwaway session would be circular - instead, the
     // simplest way to keep this test deterministic is to NOT rely on
     // the post-refresh contact list and seed via addContactLocal
     // both before AND after, asserting the override is applied to

@@ -27,7 +27,7 @@ class CanvasDatabase {
 
   CanvasDatabase({this._testDbPath});
 
-  /// Open (or create) the database. Idempotent — calling more than once
+  /// Open (or create) the database. Idempotent - calling more than once
   /// is a no-op after the first successful open.
   Future<void> init() async {
     if (_db != null) return;
@@ -52,7 +52,7 @@ class CanvasDatabase {
         // v1 → v2 (64×64 reduction): nuke every canvas row. Pre-v2
         // cells may sit at coords ≥ 64 (no longer valid), and
         // cached digest blobs were 128 bytes (now must be 32). No
-        // user-data loss concerns at this stage — v0.1 is still
+        // user-data loss concerns at this stage - v0.1 is still
         // pre-launch. Local Device Canvas, Mesh canvases, pending
         // ops, applied_op history, and peer digest cache all reset.
         // Hydration from peers via canvas_digest sync re-populates
@@ -76,7 +76,7 @@ class CanvasDatabase {
     final db = _db;
     if (db == null) {
       throw StateError(
-        'CanvasDatabase not initialized — call init() first', // lint-allow: hardcoded-string
+        'CanvasDatabase not initialized - call init() first', // lint-allow: hardcoded-string
       );
     }
     return db;
@@ -85,7 +85,7 @@ class CanvasDatabase {
   /// Whether the database has been opened.
   bool get isOpen => _db != null;
 
-  /// Close the database. Idempotent — safe to call multiple times.
+  /// Close the database. Idempotent - safe to call multiple times.
   Future<void> close() async {
     final db = _db;
     if (db == null) return;

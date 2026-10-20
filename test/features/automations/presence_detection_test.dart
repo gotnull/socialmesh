@@ -87,32 +87,29 @@ void main() {
     },
   );
 
-  test(
-    'processPresenceUpdate triggers nodeOffline automation when becoming inactive',
-    () async {
-      final automation = Automation(
-        id: 'presence-offline-test',
-        name: 'Presence Offline Test',
-        trigger: const AutomationTrigger(type: TriggerType.nodeOffline),
-        actions: const [
-          AutomationAction(
-            type: ActionType.sendMessage,
-            config: {'targetNodeNum': 999, 'messageText': 'Node went offline'},
-          ),
-        ],
-      );
-      repo.addTestAutomation(automation);
+  test('processPresenceUpdate triggers nodeOffline automation when becoming inactive', () async {
+    final automation = Automation(
+      id: 'presence-offline-test',
+      name: 'Presence Offline Test',
+      trigger: const AutomationTrigger(type: TriggerType.nodeOffline),
+      actions: const [
+        AutomationAction(
+          type: ActionType.sendMessage,
+          config: {'targetNodeNum': 999, 'messageText': 'Node went offline'},
+        ),
+      ],
+    );
+    repo.addTestAutomation(automation);
 
-      final node = MeshNode(nodeNum: 88, longName: 'PresenceNode2');
+    final node = MeshNode(nodeNum: 88, longName: 'PresenceNode2');
 
-      await engine.processPresenceUpdate(
-        node,
-        previous: PresenceConfidence.active,
-        current: PresenceConfidence.stale,
-      );
+    await engine.processPresenceUpdate(
+      node,
+      previous: PresenceConfidence.active,
+      current: PresenceConfidence.stale,
+    );
 
-      expect(sentMessages, isNotEmpty);
-      expect(sentMessages.first.$1, 999);
-    },
-  );
+    expect(sentMessages, isNotEmpty);
+    expect(sentMessages.first.$1, 999);
+  });
 }

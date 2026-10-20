@@ -139,7 +139,7 @@ class AetherService {
         });
   }
 
-  /// Get global leaderboard — all-time top distances
+  /// Get global leaderboard - all-time top distances
   ///
   /// This is the primary leaderboard query. Results are sorted by
   /// estimatedDistance descending so the longest range contacts appear first.

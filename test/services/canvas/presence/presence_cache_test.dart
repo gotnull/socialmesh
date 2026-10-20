@@ -304,7 +304,7 @@ void main() {
         nowMs: 1000,
       );
       // Expired at nowMs = 1000 + 60 * 1000 = 61000. Run upsert at
-      // 61001 — the existing entry is past TTL, so a lower-state
+      // 61001 - the existing entry is past TTL, so a lower-state
       // upsert is accepted.
       final ok = _upsert(
         cache,
@@ -823,12 +823,10 @@ void main() {
       // safe. Comments may legitimately mention these names to document
       // the invariant, so the check matches the actual `import ...`
       // syntax rather than free text.
-      final cacheSrc = File(
-        'lib/services/canvas/presence_cache.dart',
-      ).readAsStringSync();
-      final modelSrc = File(
-        'lib/services/canvas/presence_models.dart',
-      ).readAsStringSync();
+      final cacheSrc = File('lib/services/canvas/presence_cache.dart')
+          .readAsStringSync();
+      final modelSrc = File('lib/services/canvas/presence_models.dart')
+          .readAsStringSync();
       final banned = <Pattern>[
         "import 'package:sqflite",
         "import 'package:shared_preferences",

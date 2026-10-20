@@ -3,9 +3,11 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../core/command/commands.dart';
 import '../core/logging.dart';
 import 'connection_providers.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Manages lifecycle-aware command execution.

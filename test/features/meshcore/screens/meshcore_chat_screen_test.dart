@@ -555,7 +555,7 @@ void main() {
     );
 
     testWidgets('inbound bubble HIDES path metadata when pathLength is 0xFF '
-        '(firmware "path unknown" sentinel — D30 live-smoke fix)', (
+        '(firmware "path unknown" sentinel - D30 live-smoke fix)', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 4000);
@@ -740,7 +740,7 @@ void main() {
     test(
       'MeshCoreMessage round-trips snrQuarter through copyWith (D30 model)',
       () {
-        // copyWith only takes a status override — the rest of the
+        // copyWith only takes a status override - the rest of the
         // fields (including snrQuarter) must propagate untouched so
         // a status flip during retry doesn't drop the inbound link
         // metadata we already showed the user.

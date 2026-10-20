@@ -10,7 +10,7 @@
 /// - a list of tappable instance cards (tap → existing
 ///   `ServiceDetailScreen`).
 ///
-/// Data comes from [`localServicesSummaryProvider`] — a pure projection
+/// Data comes from [`localServicesSummaryProvider`] - a pure projection
 /// of the existing `meshServiceActiveInstancesProvider`. No new
 /// subscriptions, no new transport, no parallel pipeline.
 ///
@@ -36,7 +36,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../../providers/sip_hub_services_providers.dart';
 import '../../../services/haptic_service.dart';
 
-/// Returns the slivers comprising the "Your Services" section — header,
+/// Returns the slivers comprising the "Your Services" section - header,
 /// create CTA, and the instance list. Designed to slot between the
 /// Incoming Requests and Peers sections of the SIP hub's sliver list.
 List<Widget> buildYourServicesSlivers(BuildContext context, WidgetRef ref) {
@@ -51,7 +51,7 @@ List<Widget> buildYourServicesSlivers(BuildContext context, WidgetRef ref) {
   final async = ref.watch(localServicesSummaryProvider);
   final items = async.asData?.value ?? const <MeshServiceInstance>[];
 
-  // Always show the section header + CTA — empty list shows only the
+  // Always show the section header + CTA - empty list shows only the
   // CTA so the Create affordance is discoverable even when empty.
   return [
     SliverPersistentHeader(

@@ -6,7 +6,7 @@
 // Drives the lifecycle of the native bridge through a single
 // MethodChannel (name pinned in [kWatchCompanionChannelName]). The
 // iOS bridge is a transport only; this Dart class is the policy
-// owner — it decides when to activate the session, when to push a
+// owner - it decides when to activate the session, when to push a
 // snapshot, and how to route an inbound intent.
 //
 // This file is public (lives at the package root, not under

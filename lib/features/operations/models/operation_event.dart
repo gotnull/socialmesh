@@ -24,7 +24,7 @@ sealed class OperationsEvent {
 }
 
 /// A unique non-self node was encountered (live RF / MQTT / indirect
-/// sighting only — sync replays from a reconnected device's NodeDB do
+/// sighting only - sync replays from a reconnected device's NodeDB do
 /// NOT produce this event because the upstream NodeDex pipeline filters
 /// them out via `NodeIngestSource.livePacket`).
 class OperationNodeEncountered extends OperationsEvent {

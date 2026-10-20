@@ -84,8 +84,7 @@ class BackgroundBleService {
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'ble_connection',
         channelName: 'Mesh Connection',
-        channelDescription:
-            'Keeps the BLE connection to your mesh radio alive', // lint-allow: hardcoded-string
+        channelDescription: 'Keeps the BLE connection to your mesh radio alive', // lint-allow: hardcoded-string
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         // No sound or vibration -- this is a silent status indicator.
@@ -276,8 +275,7 @@ class BackgroundBleService {
     await FlutterForegroundTask.updateService(
       notificationTitle:
           'Disconnected from $deviceName', // lint-allow: hardcoded-string
-      notificationText:
-          'Auto-reconnect failed. Tap to reopen.', // lint-allow: hardcoded-string
+      notificationText: 'Auto-reconnect failed. Tap to reopen.', // lint-allow: hardcoded-string
     );
   }
 

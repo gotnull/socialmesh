@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Service detail screen — shows a specific service from a remote peer.
+/// Service detail screen - shows a specific service from a remote peer.
 ///
 /// Known template types get custom rendering; unknown services fall back
 /// to the schema-driven generic renderer. Handles data fetching via MRRP
@@ -145,7 +145,7 @@ class _RemoteInstanceDetail {
 }
 
 // ---------------------------------------------------------------------------
-// Instance cache — survives screen navigation, avoids redundant MRRP fetches.
+// Instance cache - survives screen navigation, avoids redundant MRRP fetches.
 //
 // LoRa round-trips for LIST_INSTANCES + GET_INSTANCE take 13–21 seconds.
 // Without caching, every tap on the same service card forces the user to
@@ -269,7 +269,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
 
   void _loadServiceData() {
     if (widget.serviceId == kMeshServicesInstanceServiceId) {
-      // User-created service — check cache before hitting the mesh.
+      // User-created service - check cache before hitting the mesh.
       final key = _cacheKey(widget.nodeId, widget.serviceId);
       final cached = _instanceCache[key];
       if (cached != null && cached.instances.isNotEmpty) {
@@ -278,7 +278,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
         );
         final age = DateTime.now().difference(cached.fetchedAt);
         if (cacheHasCompleteDetails) {
-          // Show cached data instantly — no loading spinner.
+          // Show cached data instantly - no loading spinner.
           setState(() {
             _remoteInstances = cached.instances;
             _loading = false;
@@ -299,10 +299,10 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
         return;
       }
 
-      // No cache — fetch with loading indicator.
+      // No cache - fetch with loading indicator.
       _fetchRemoteInstances();
     } else {
-      // Built-in service — try local template schema match.
+      // Built-in service - try local template schema match.
       _loadSchema();
     }
   }
@@ -321,7 +321,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       }
     }
 
-    // Unknown service type — show empty schema state.
+    // Unknown service type - show empty schema state.
     setState(() {
       _loading = false;
     });
@@ -336,7 +336,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   /// a 15-20s blank screen on slow meshes.
   ///
   /// When [silent] is true, the fetch runs in the background without
-  /// showing a loading indicator — used for stale-while-revalidate.
+  /// showing a loading indicator - used for stale-while-revalidate.
   Future<void> _fetchRemoteInstances({bool silent = false}) async {
     final tracker = ref.read(mrrpDeliveryTrackerProvider);
     if (tracker == null) {
@@ -556,7 +556,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
         ? null
         : MeshServicePresetId.fromCode(presetCode);
 
-    offset++; // status — skip for display purposes
+    offset++; // status - skip for display purposes
 
     final titleLen = payload[offset++];
     if (offset + titleLen > payload.length) return null;
@@ -846,7 +846,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
             child: _buildContent(context, l10n),
           ),
         ),
-        // Delivery progress card — shown during active MRRP request.
+        // Delivery progress card - shown during active MRRP request.
         if (_activeDelivery != null)
           SliverToBoxAdapter(
             child: Padding(
@@ -874,8 +874,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       showExpertDetails: delivery.statusCode != null,
       expertToggleLabel: l10n.deliveryExpertToggle as String,
       expertDetails: [
-        if (delivery.statusCode != null)
-          'Status: ${delivery.statusCode!.name}', // lint-allow: hardcoded-string
+        if (delivery.statusCode != null) 'Status: ${delivery.statusCode!.name}', // lint-allow: hardcoded-string
         if (delivery.latency != null)
           'Latency: ${delivery.latency!.inMilliseconds}ms', // lint-allow: hardcoded-string
       ],
@@ -939,7 +938,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
   }
 
   Widget _buildContent(BuildContext context, dynamic l10n) {
-    // Always show the header card immediately — we already have
+    // Always show the header card immediately - we already have
     // title, icon, service type, and node ID from the SERVICE_ADVERT.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1029,7 +1028,7 @@ class _ServiceDetailScreenState extends ConsumerState<ServiceDetailScreen>
       );
     }
 
-    // No instances and no schema — show empty state.
+    // No instances and no schema - show empty state.
     if (widget.serviceId == kMeshServicesInstanceServiceId) {
       return _NoInstancesState(l10n: l10n);
     }
@@ -1148,9 +1147,8 @@ class _ServiceHeaderCard extends StatelessWidget {
                 children: [
                   Text(
                     l10n.meshServicesNetworkNode(
-                          '0x${nodeId.toRadixString(16)}',
-                        )
-                        as String,
+                      '0x${nodeId.toRadixString(16)}',
+                    ) as String,
                     style: context.bodySmallStyle?.copyWith(
                       color: context.textSecondary,
                     ),
@@ -1165,9 +1163,8 @@ class _ServiceHeaderCard extends StatelessWidget {
                   const SizedBox(height: AppTheme.spacing6),
                   Text(
                     l10n.meshServicesNetworkServiceId(
-                          '0x${serviceId.toRadixString(16)}',
-                        )
-                        as String,
+                      '0x${serviceId.toRadixString(16)}',
+                    ) as String,
                     style: context.bodySmallStyle?.copyWith(
                       color: context.textSecondary,
                     ),

@@ -17,7 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/widgets/section_header.dart';
 
 void main() {
-  group('SectionTitle — trailing', () {
+  group('SectionTitle - trailing', () {
     testWidgets('interactive trailing stays hit-testable', (tester) async {
       var taps = 0;
       await tester.pumpWidget(
@@ -56,7 +56,7 @@ void main() {
     testWidgets(
       'wide trailing (info pill) preserves its natural width in the row',
       (tester) async {
-        // The compensation must not eat the trailing's width — only
+        // The compensation must not eat the trailing's width - only
         // its height. A wide trailing (e.g. a verified-vendor pill in
         // the device-shop product detail screen) must still claim
         // its natural horizontal footprint in the row, or the title
@@ -85,7 +85,7 @@ void main() {
           pillSize.width,
           equals(pillWidth),
           reason:
-              'Trailing lost its natural width — compensation '
+              'Trailing lost its natural width - compensation '
               'is over-collapsing the horizontal axis.',
         );
         expect(
@@ -117,7 +117,7 @@ void main() {
               body: SizedBox(
                 width: totalWidth,
                 child: SectionTitle(
-                  title: 'short', // ~40px wide — well under half of 400
+                  title: 'short', // ~40px wide - well under half of 400
                   trailing: SizedBox(
                     key: trailingKey,
                     width: trailingWidth,
@@ -136,7 +136,7 @@ void main() {
           trailingRect.right,
           equals(totalWidth),
           reason:
-              'Trailing not pinned to right edge — Flexible '
+              'Trailing not pinned to right edge - Flexible '
               'regression. Check that the title is wrapped in '
               'Expanded (not Flexible) in section_header.dart.',
         );

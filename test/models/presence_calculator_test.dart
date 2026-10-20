@@ -196,7 +196,7 @@ void main() {
       expect(PresenceCalculator.isOnline(farFuture, now: now), isFalse);
     });
 
-    test('no correction applied — valid historical timestamp unchanged', () {
+    test('no correction applied - valid historical timestamp unchanged', () {
       final now = DateTime.now();
       final heard = now.subtract(const Duration(minutes: 5));
       // Should be fading, not corrected to something else.

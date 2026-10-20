@@ -184,7 +184,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
   });
 
   // ─────────────────────────────────────────────────────────────────────
-  // Regression: RC-ARCH-04 — Firestore mirror sync failures must be
+  // Regression: RC-ARCH-04 - Firestore mirror sync failures must be
   // observable but non-fatal. The result type (FirestoreMirrorSyncResult)
   // is the public contract; integration coverage of the actual callable
   // would need cloud_functions mocking infrastructure that doesn't exist

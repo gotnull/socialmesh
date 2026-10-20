@@ -43,7 +43,7 @@ import '../../core/widgets/loading_indicator.dart';
 /// Widgets available for free.
 ///
 /// Must stay in sync with the first-launch default dashboard
-/// (`DashboardWidgetsNotifier._getDefaultWidgets`) — any widget that
+/// (`DashboardWidgetsNotifier._getDefaultWidgets`) - any widget that
 /// ships on the default dashboard must also be re-addable from the
 /// picker without purchasing, otherwise removing then re-adding
 /// triggers a paywall the user did not see when the widget was first
@@ -56,7 +56,7 @@ const _freeWidgetTypes = {
 };
 
 // Single source of truth for what the picker treats as "addable". Custom
-// widgets are excluded — those are added from the Widget Builder, not here.
+// widgets are excluded - those are added from the Widget Builder, not here.
 // Both _buildDashboard and _AddWidgetSheet.build consume this so the
 // dashboard's "unused premium count" can never drift from the picker's list.
 Iterable<DashboardWidgetType> _addableWidgetTypes() =>
@@ -224,7 +224,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
         unusedPremiumCount > 0 &&
         !discoveryDismissed;
     final showUpsell = !hasWidgetPack && !_editMode;
-    // Sticky edit-mode add tile gating uses the visible widget list — hidden
+    // Sticky edit-mode add tile gating uses the visible widget list - hidden
     // persisted configs must not suppress the tile.
     final showEditAddTile =
         _editMode &&
@@ -1060,7 +1060,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                   onTap: () {
                     // One gate-decision log per user action. Logging
                     // per-itemBuilder-call would emit O(visible widgets)
-                    // lines on every list rebuild — too noisy.
+                    // lines on every list rebuild - too noisy.
                     final entitled = isFree || hasWidgetPack;
                     AppLogging.purchase(
                       'WIDGET_GATE: ${type.name} enabled=$isAdded '

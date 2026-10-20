@@ -405,7 +405,7 @@ void main() {
       }
     });
 
-    test('same (ts, author) — newer op_seq via u8 modulo wins', () async {
+    test('same (ts, author) - newer op_seq via u8 modulo wins', () async {
       // Direct comparator test isolates the rollover-aware op_seq rule
       // from the I/O layer.
       expect(
@@ -431,7 +431,7 @@ void main() {
         ),
         isTrue,
       );
-      // delta=128 sits at the inclusive boundary and is NOT accepted —
+      // delta=128 sits at the inclusive boundary and is NOT accepted -
       // the safe forward window is [1..127].
       expect(
         CanvasRepository.debugAcceptForTest(
@@ -641,9 +641,8 @@ void main() {
           opTs: 100,
           opSeq: 1,
         );
-        final pending = (await h.repo.getPendingOpsForCanvas(
-          mesh.localId,
-        )).single;
+        final pending = (await h.repo.getPendingOpsForCanvas(mesh.localId))
+            .single;
 
         // 4 failures keep it queued.
         for (var i = 0; i < 4; i++) {
@@ -654,9 +653,8 @@ void main() {
             nextAttemptAtMs: 9000 + i,
           );
         }
-        var current = (await h.repo.getPendingOpsForCanvas(
-          mesh.localId,
-        )).single;
+        var current = (await h.repo.getPendingOpsForCanvas(mesh.localId))
+            .single;
         expect(current.attempts, 4);
         expect(current.state, PendingOpState.queued);
         expect(current.nextAttemptAtMs, 9003);

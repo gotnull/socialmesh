@@ -139,7 +139,7 @@ void main() {
       expect(TttMark.o.opponent, equals(TttMark.x));
     });
 
-    test('wire codes are stable (X=0, O=1) — pinned for engine + codec', () {
+    test('wire codes are stable (X=0, O=1) - pinned for engine + codec', () {
       expect(TttMark.x.code, equals(0));
       expect(TttMark.o.code, equals(1));
       expect(TttMark.fromCode(0), equals(TttMark.x));

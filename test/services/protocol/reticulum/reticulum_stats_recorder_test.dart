@@ -106,7 +106,7 @@ void main() {
       }
       expect(recorder.current.fragmentsPerSecond, closeTo(5 / 60.0, 0.001));
 
-      // Advance well past 60 s and tick — window should empty out.
+      // Advance well past 60 s and tick - window should empty out.
       nowMs += 120_000;
       recorder.tick();
       expect(recorder.current.fragmentsPerSecond, 0.0);

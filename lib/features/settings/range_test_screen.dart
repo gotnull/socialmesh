@@ -3,11 +3,14 @@
 import '../../core/logging.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../core/l10n/l10n_extension.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
@@ -242,8 +245,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
       ); // captured before await
       // Send a range test message to the target node
       await protocol.sendMessage(
-        text:
-            'RT ${DateTime.now().millisecondsSinceEpoch}', // lint-allow: hardcoded-string
+        text: 'RT ${DateTime.now().millisecondsSinceEpoch}', // lint-allow: hardcoded-string
         to: _selectedTargetNode!,
       );
     } catch (e) {

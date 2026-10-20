@@ -17,7 +17,7 @@
 //
 // The merge in [effectiveEntitlementsProvider] is the single point
 // where store and external entitlements meet. UI never reads either
-// source directly — it always goes through the merge. This guarantees
+// source directly - it always goes through the merge. This guarantees
 // a unified semantic for "is this pack unlocked?" even after we add
 // future entitlement sources (Stripe, NOWPayments, manual codes).
 
@@ -104,7 +104,7 @@ final externalPurchaseServiceProvider = FutureProvider<ExternalPurchaseService>(
 });
 
 /// Stream of confirmation states, used by the post-redirect overlay
-/// (chunk 3 wires this into the UI). Never throws — the broadcast
+/// (chunk 3 wires this into the UI). Never throws - the broadcast
 /// stream's only error path is `dispose()`.
 final externalConfirmationStreamProvider = StreamProvider<ConfirmationState>((
   ref,
@@ -162,7 +162,7 @@ final externalEntitlementsProvider = StreamProvider<Set<String>>((ref) async* {
 
 /// Family checker for "has this pack via the external pipeline?".
 ///
-/// UI should NEVER read this directly — the canonical entry point is
+/// UI should NEVER read this directly - the canonical entry point is
 /// [hasFeatureProvider] / [hasPurchasedProvider] in
 /// `subscription_providers.dart`, which merge across all entitlement
 /// sources via [effectiveEntitlementsProvider]. This family exists
@@ -182,7 +182,7 @@ final hasExternalEntitlementProvider = Provider.family<bool, String>((
 ///
 /// This is the single merge point. Adding a new entitlement source
 /// (Stripe, NOWPayments, future webhook providers) means extending
-/// the union here — UI gates require zero changes.
+/// the union here - UI gates require zero changes.
 ///
 /// Bundle expansion: if the merge contains `complete_pack`, the six
 /// individual packs are implicitly unlocked too. We expand here so
@@ -222,7 +222,7 @@ final hasEffectiveEntitlementProvider = Provider.family<bool, String>((
 
 /// Imperative refresh hook for the UI's "checking now" affordances.
 /// Returns the freshly-loaded entitlement set (or the cache on
-/// network failure — never throws).
+/// network failure - never throws).
 Future<Set<String>> refreshExternalEntitlements(WidgetRef ref) async {
   AppLogging.purchase('[ProviderGraph] refreshExternalEntitlements requested');
   final service = await ref.read(externalPurchaseServiceProvider.future);

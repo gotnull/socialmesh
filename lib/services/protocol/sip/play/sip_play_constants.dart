@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// SIP Play v1 — wire constants for the turn-based mini-game framework
+// SIP Play v1 - wire constants for the turn-based mini-game framework
 // that rides inside accepted SIP Handshake DM sessions.
 //
 // Wire is intentionally tiny. The full envelope before the SIP DM
 // frame wrapper is:
 //
 //   u8  typeAndVersion   // 0x11 = type=1 (SipPlay) version=1
-//   u8  gameType         // see SipPlayGameType — 0x01 = TTT
+//   u8  gameType         // see SipPlayGameType - 0x01 = TTT
 //   u16 instanceId       // big-endian, scoped to (sessionTag, peer pair)
 //   u8  action           // see SipPlayAction
 //   u8  seq              // strict per-instance monotonic
@@ -18,7 +18,7 @@
 // for the wire enum but receivers MUST drop it without applying state
 // changes. Recovery from out-of-order or seq-mismatched frames is
 // drop-and-log; users resign + re-offer if a game wedges. This keeps
-// replay deterministic and tests trivial — the same discipline that
+// replay deterministic and tests trivial - the same discipline that
 // made SIP Ink robust.
 
 /// Static constants for the SIP Play wire envelope.
@@ -50,17 +50,17 @@ abstract final class SipPlayConstants {
 /// for a given id render the entry as the "unsupported game" fallback
 /// (no crash, no state mutation).
 enum SipPlayGameType {
-  /// Tic-Tac-Toe v1 — 3x3 grid, classic rules.
+  /// Tic-Tac-Toe v1 - 3x3 grid, classic rules.
   ticTacToe(0x01),
 
-  /// Connect Four v1 — 6x7 grid, gravity-fed discs, 4-in-a-row wins.
+  /// Connect Four v1 - 6x7 grid, gravity-fed discs, 4-in-a-row wins.
   connectFour(0x02);
 
   const SipPlayGameType(this.code);
   final int code;
 
   /// Resolve a wire byte to a known game type. Returns null for
-  /// unknown / reserved codes — receivers must render those as the
+  /// unknown / reserved codes - receivers must render those as the
   /// safe unsupported fallback.
   static SipPlayGameType? fromCode(int code) {
     for (final t in values) {
@@ -86,7 +86,7 @@ enum SipPlayAction {
   accept(0x01),
 
   /// Decline a pending offer. Empty payload. Distinct from `resign`
-  /// — declining is "no thanks" before play starts, not surrendering
+  /// - declining is "no thanks" before play starts, not surrendering
   /// an active game.
   decline(0x02),
 
@@ -96,10 +96,10 @@ enum SipPlayAction {
   move(0x03),
 
   /// Surrender an active game. Empty payload. Only legal when the
-  /// instance is `active`. Sets a terminal state — no further moves.
+  /// instance is `active`. Sets a terminal state - no further moves.
   resign(0x04),
 
-  /// Reserved in v1 — see enum-level dartdoc. Receivers drop without
+  /// Reserved in v1 - see enum-level dartdoc. Receivers drop without
   /// applying state.
   sync(0x05);
 

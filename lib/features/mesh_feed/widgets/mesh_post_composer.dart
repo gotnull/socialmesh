@@ -137,7 +137,7 @@ class _MeshPostComposerScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Content input — GradientBorderContainer
+                        // Content input - GradientBorderContainer
                         GradientBorderContainer(
                           borderRadius: 24,
                           borderWidth: 3,
@@ -293,7 +293,7 @@ class _MeshPostComposerScreenState
                 ),
               ),
 
-              // Post button — fixed above keyboard, matching Create Signal
+              // Post button - fixed above keyboard, matching Create Signal
               BottomActionBar(
                 child: BouncyTap(
                   onTap: _hasContent && !_isPosting ? _handlePost : null,

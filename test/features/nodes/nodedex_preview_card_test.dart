@@ -75,36 +75,33 @@ void main() {
       );
     });
 
-    test(
-      'classify tap opens SocialTagSelector and dispatches via the notifier',
-      () {
-        expect(
-          source.contains('SocialTagSelector('),
-          true,
-          reason:
-              'Tag classification must reuse the canonical SocialTagSelector '
-              'widget, not a one-off picker.',
-        );
-        expect(
-          source.contains('tagNotifier.setSocialTag(node.nodeNum, tag);'),
-          true,
-          reason:
-              'Tag selection must dispatch through NodeDexNotifier.setSocialTag '
-              'so the SQLite store + cloud sync stay in lockstep with the '
-              'rest of NodeDex.',
-        );
-        // Pre-captured notifier (async-safety pattern).
-        expect(
-          source.contains(
-            'final tagNotifier = ref.read(nodeDexProvider.notifier);',
-          ),
-          true,
-          reason:
-              'Notifier must be read BEFORE awaiting the sheet so the post-'
-              'await callback does not trip the async-safety lint.',
-        );
-      },
-    );
+    test('classify tap opens SocialTagSelector and dispatches via the notifier', () {
+      expect(
+        source.contains('SocialTagSelector('),
+        true,
+        reason:
+            'Tag classification must reuse the canonical SocialTagSelector '
+            'widget, not a one-off picker.',
+      );
+      expect(
+        source.contains('tagNotifier.setSocialTag(node.nodeNum, tag);'),
+        true,
+        reason:
+            'Tag selection must dispatch through NodeDexNotifier.setSocialTag '
+            'so the SQLite store + cloud sync stay in lockstep with the '
+            'rest of NodeDex.',
+      );
+      // Pre-captured notifier (async-safety pattern).
+      expect(
+        source.contains(
+          'final tagNotifier = ref.read(nodeDexProvider.notifier);',
+        ),
+        true,
+        reason:
+            'Notifier must be read BEFORE awaiting the sheet so the post-'
+            'await callback does not trip the async-safety lint.',
+      );
+    });
 
     test('classification stays in the InfoTable; note moves out of the '
         'right-aligned 5:6 cell', () {
@@ -252,7 +249,7 @@ void main() {
           source.contains('context.l10n.$key'),
           true,
           reason:
-              'Card must reference l10n key $key — no hardcoded strings '
+              'Card must reference l10n key $key - no hardcoded strings '
               'are allowed in user-facing UI per CLAUDE.md.',
         );
       }

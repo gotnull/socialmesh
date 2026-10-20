@@ -190,13 +190,13 @@ enum DateFormatMode {
   /// Follow the device's regional setting (locale-derived ordering)
   system('System Default', 'Follow device region'),
 
-  /// Month-first ordering — e.g. Jan 3, 2026 / 01/03/2026 (US style)
+  /// Month-first ordering - e.g. Jan 3, 2026 / 01/03/2026 (US style)
   monthDayYear('MM/DD/YYYY', 'Jan 3, 2026'),
 
-  /// Day-first ordering — e.g. 3 Jan 2026 / 03/01/2026
+  /// Day-first ordering - e.g. 3 Jan 2026 / 03/01/2026
   dayMonthYear('DD/MM/YYYY', '3 Jan 2026'),
 
-  /// Year-first ISO ordering — e.g. 2026-01-03
+  /// Year-first ISO ordering - e.g. 2026-01-03
   yearMonthDay('YYYY-MM-DD', '2026-01-03');
 
   final String displayName;

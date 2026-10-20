@@ -72,10 +72,10 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
       expect(merged.hasPurchased('ringtone_pack'), isTrue);
     });
 
-    test('rc + external merge — union, not intersection', () {
+    test('rc + external merge - union, not intersection', () {
       // If a future refactor flips the merge to intersection, a user
       // with store-purchased theme_pack and external-purchased
-      // widget_pack would see neither — silent regression. Pin the
+      // widget_pack would see neither - silent regression. Pin the
       // semantics here.
       final merged = mergePurchaseStateForTest(
         const PurchaseState(purchasedProductIds: {'theme_pack'}),
@@ -119,7 +119,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
       expect(merged.hasFeature(PremiumFeature.customRingtones), isTrue);
     });
 
-    test('external never overrides — additive only', () {
+    test('external never overrides - additive only', () {
       // Empty external set must NOT clear store entitlements. The
       // merge is union, so adding an empty set is a no-op.
       final merged = mergePurchaseStateForTest(
@@ -131,7 +131,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     });
 
     test('reproduces the live bug: anonymous user with external ringtone_pack '
-        'only — `hasFeature(customRingtones)` must return true', () {
+        'only - `hasFeature(customRingtones)` must return true', () {
       // The exact case from logs.txt: no RC purchases (anon user, no
       // store CTAs ever tapped), one external entitlement
       // `ringtone_pack` from an unlock code. Before the merge fix
@@ -145,7 +145,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     });
 
     test('preserves the rc state customerId field', () {
-      // copyWith sanity — only purchasedProductIds should be merged;
+      // copyWith sanity - only purchasedProductIds should be merged;
       // customerId (and any future RC-side metadata) survives.
       final merged = mergePurchaseStateForTest(
         const PurchaseState(

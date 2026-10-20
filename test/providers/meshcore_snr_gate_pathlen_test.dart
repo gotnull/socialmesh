@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// Commercialisation audit — verification of the direct-link SNR gate.
+// Commercialisation audit - verification of the direct-link SNR gate.
 //
 // Pins the invariant enforced inline in
 // `MeshCoreConversationsNotifier._handleIncomingContactMessage`
@@ -28,7 +28,7 @@
 // these cover input parsing + the gate decision + the recording sink.
 //
 // NOTE (RSSI): this MeshCore inbound path does not attribute a
-// per-contact RSSI at all — RSSI only surfaces as device-wide radio
+// per-contact RSSI at all - RSSI only surfaces as device-wide radio
 // stats (`lastRssiDbm`). So this file verifies SNR gating only and
 // makes no claim about RSSI gating.
 
@@ -120,7 +120,7 @@ void main() {
       );
     });
 
-    test('does NOT record SNR for an unknown-path frame (path_len == 0xFF) — '
+    test('does NOT record SNR for an unknown-path frame (path_len == 0xFF) - '
         '0xFF is not treated as direct', () {
       final recorded = _snrWouldBeRecorded(
         _v3Frame(snrQuarter: 36, pathLen: 0xFF),

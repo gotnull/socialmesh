@@ -505,7 +505,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     );
   }
 
-  /// D47-A: per-device auto-add policy section. Six rows total —
+  /// D47-A: per-device auto-add policy section. Six rows total -
   /// 4 type toggles, 1 eviction toggle, 1 error banner when the
   /// firmware read fails. State is held in
   /// [meshCoreAutoAddConfigProvider]; the initial read fires lazily
@@ -669,7 +669,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   /// can see what the policy WILL be when they enable it.
   ///
   /// No firmware round-trip; settings persist to SharedPreferences
-  /// D-Q2: chat-appearance section — per-app MeshCore chat text scale.
+  /// D-Q2: chat-appearance section - per-app MeshCore chat text scale.
   /// Discrete steps via [ChipSelector]; the active value reflects
   /// [meshCoreChatTextScaleProvider] and tapping a chip writes the
   /// new value via the notifier (which clamps + persists).
@@ -799,7 +799,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               for (final step in const [0.8, 0.9, 1.0, 1.1, 1.25, 1.5])
                 ChipOption<double>(
                   value: step,
-                  // Numeric scale factor — not translatable.
+                  // Numeric scale factor - not translatable.
                   label: _formatScaleChip(step), // lint-allow: hardcoded-string
                   icon: Icons.text_fields_rounded,
                   color: context.accentColor,
@@ -1174,7 +1174,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
 
   /// D26: open the lat/lon editor sheet. Validates `lat ∈ [-90,
   /// 90]` and `lon ∈ [-180, 180]` before dispatching; routes through
-  /// the typed `setAdvertLatLon` helper. Logs are coordinate-free —
+  /// the typed `setAdvertLatLon` helper. Logs are coordinate-free -
   /// only `cleared=` and `location_set=true`. Includes a "Clear"
   /// action that sends `(0, 0)` (firmware's clear-stored-location
   /// convention).
@@ -1201,7 +1201,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     // .scrollController)). The compact `.show` variant landed too
     // high on the screen for a 2-field form and tripped the
     // gray-area cosmetic bug per the project's bottom-sheet variant
-    // rule — content-heavy sheets MUST use showScrollable.
+    // rule - content-heavy sheets MUST use showScrollable.
     final result = await AppBottomSheet.showScrollable<_EditLocationResult>(
       context: context,
       initialChildSize: 0.85,
@@ -1272,7 +1272,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     safeSetState(() => _isSyncingTime = true);
     try {
       // D26: route through the typed `setDeviceTime` helper. Firmware
-      // is forward-only — if its RTC is already ahead of the phone
+      // is forward-only - if its RTC is already ahead of the phone
       // (drift, manual adjustment), the helper returns `false` and we
       // surface a different snackbar so the user knows the sync was
       // not silently dropped on the floor.
@@ -1323,7 +1323,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     try {
       // D26: route through `rebootDevice` so the magic-word "reboot"
       // payload is appended. The pre-D26 path called
-      // `sendCommand(MeshCoreCommands.reboot)` with no payload — the
+      // `sendCommand(MeshCoreCommands.reboot)` with no payload - the
       // firmware's `memcmp(&cmd_frame[1], "reboot", 6)` check rejects
       // that frame silently, so the tile never actually rebooted the
       // radio. Fire-and-forget; firmware does not send OK.
@@ -1404,7 +1404,7 @@ class _EditLocationResult {
 /// actions: "Use my location" prefills from the phone GPS,
 /// "Clear" dispatches `(0, 0)` (firmware's clear convention), and
 /// "Apply" sends the entered values. Coordinates never appear in
-/// logs — the caller logs only `cleared=` and `location_set=true`.
+/// logs - the caller logs only `cleared=` and `location_set=true`.
 ///
 /// Body shape mirrors the canonical content-heavy bottom sheet
 /// pattern (`device_sheet.dart` style): Column -> Padding(header)
@@ -1474,7 +1474,7 @@ class _EditLocationSheetState extends ConsumerState<_EditLocationSheet>
 
   /// Prefill the lat/lon fields from the phone's GPS via the shared
   /// [LocationService]. Failure (denied permission, no fix yet) just
-  /// surfaces a snackbar — the user can still type values manually.
+  /// surfaces a snackbar - the user can still type values manually.
   Future<void> _useMyLocation() async {
     if (_fetchingGps) return;
     final l10n = context.l10n;
@@ -1519,15 +1519,13 @@ class _EditLocationSheetState extends ConsumerState<_EditLocationSheet>
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final lat = double.parse(_latController.text.trim());
     final lon = double.parse(_lonController.text.trim());
-    Navigator.of(
-      context,
-    ).pop(_EditLocationResult(lat: lat, lon: lon, cleared: false));
+    Navigator.of(context)
+        .pop(_EditLocationResult(lat: lat, lon: lon, cleared: false));
   }
 
   void _clear() {
-    Navigator.of(
-      context,
-    ).pop(const _EditLocationResult(lat: 0, lon: 0, cleared: true));
+    Navigator.of(context)
+        .pop(const _EditLocationResult(lat: 0, lon: 0, cleared: true));
   }
 
   @override

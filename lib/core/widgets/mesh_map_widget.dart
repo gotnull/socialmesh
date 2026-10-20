@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+
 import 'map_tile_layer.dart';
 import '../l10n/l10n_extension.dart';
 import '../map_config.dart';
@@ -163,7 +164,7 @@ class MeshMapWidget extends StatefulWidget {
 }
 
 class _MeshMapWidgetState extends State<MeshMapWidget> {
-  // Effective controller: the caller's when supplied, otherwise our own — so
+  // Effective controller: the caller's when supplied, otherwise our own - so
   // the camera-NaN recovery below always has a handle to snap back with.
   late final bool _ownsController = widget.mapController == null;
   late final MapController _effectiveController =
@@ -173,7 +174,7 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
   // consumer is protected at once. flutter_map's pinch pipeline can commit a
   // non-finite pose through its internal moveRaw() (a math.log(scale<=0)
   // overflow) that bypasses every safeMove guard, leaving the camera centre
-  // NaN — which then throws fatally in Crs.checkLatLng on the next tile build
+  // NaN - which then throws fatally in Crs.checkLatLng on the next tile build
   // and every later pinch. onPositionChanged fires on that internal move, so
   // we snap back to the last finite pose before the crashing frame builds.
   // See lib/core/safe_lat_lng.dart isFiniteCameraPose.
@@ -259,7 +260,7 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
           // Additional layers (polylines, circles, etc.)
           ...widget.additionalLayers,
 
-          // Node markers — built once from `nodeMarkers` (or an explicit
+          // Node markers - built once from `nodeMarkers` (or an explicit
           // `clusteredMarkers` override) and rendered either plain or in a
           // cluster layer, mirroring the main map screen. Each marker keys on
           // its nodeNum so the cluster tap-to-list sheet can recover the node.

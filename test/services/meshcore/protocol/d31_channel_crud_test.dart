@@ -12,7 +12,7 @@
 //   [idx:u8][name:32 bytes (null-padded)][psk:16 bytes] = 49 bytes
 //
 // Firmware references:
-//   - cmd opcode: CMD_SET_CHANNEL = 32 (0x20) — verified against the
+//   - cmd opcode: CMD_SET_CHANNEL = 32 (0x20) - verified against the
 //     pinned SHA in `meshcore_protocol/pin.yml`.
 //   - response: RESP_CODE_OK (0x00) on accept; RESP_CODE_ERR (0x01)
 //     with ERR_CODE_NOT_FOUND on bad slot.
@@ -61,7 +61,7 @@ class _RecordingTransport implements MeshCoreTransport {
 void main() {
   group('MeshCoreSession.setChannel wire format (D31 Part A)', () {
     test(
-      'encodes [idx][name:32 null-padded][psk:16] — total 50 bytes incl cmd',
+      'encodes [idx][name:32 null-padded][psk:16] - total 50 bytes incl cmd',
       () async {
         final transport = _RecordingTransport();
         final session = MeshCoreSession(transport);
@@ -120,7 +120,7 @@ void main() {
         }
 
         // PSK region: bytes 34..49 (16 bytes). Must equal supplied PSK
-        // BYTE-FOR-BYTE — pre-D31 this was off-by-one (psk[0] became 0
+        // BYTE-FOR-BYTE - pre-D31 this was off-by-one (psk[0] became 0
         // and psk[15] was dropped).
         final pskRegion = wire.sublist(34, 50);
         expect(pskRegion, equals(psk));
@@ -132,7 +132,7 @@ void main() {
 
     test('encodes 32-byte name with no null pad', () async {
       // Boundary: name fills the entire 32-byte region. There is no
-      // 33rd "trailing null" — firmware reads the buffer as a 32-char
+      // 33rd "trailing null" - firmware reads the buffer as a 32-char
       // C-string with implicit termination by length.
       final transport = _RecordingTransport();
       final session = MeshCoreSession(transport);
@@ -170,7 +170,7 @@ void main() {
       for (int i = 2; i < 34; i++) {
         expect(wire[i], 0);
       }
-      // PSK starts at offset 34, not 35 — the off-by-one regression
+      // PSK starts at offset 34, not 35 - the off-by-one regression
       // would surface here as wire[34] == 0 and wire[35] == 0xAA.
       expect(wire[34], 0xAA);
       expect(wire[49], 0xAA);
@@ -184,7 +184,7 @@ void main() {
       final session = MeshCoreSession(transport);
 
       // Firmware also has a 32-byte branch but returns
-      // ERR_CODE_UNSUPPORTED_CMD at the pinned SHA — block at the
+      // ERR_CODE_UNSUPPORTED_CMD at the pinned SHA - block at the
       // wrapper rather than waste an airtime round-trip.
       expect(
         () => session.setChannel(index: 0, name: 'x', psk: Uint8List(15)),
@@ -203,7 +203,7 @@ void main() {
       final transport = _RecordingTransport();
       final session = MeshCoreSession(transport);
 
-      // Index is u8 on the wire — anything beyond 255 cannot be encoded.
+      // Index is u8 on the wire - anything beyond 255 cannot be encoded.
       // Negative indices are also nonsensical.
       expect(
         () => session.setChannel(index: -1, name: 'x', psk: Uint8List(16)),
@@ -237,7 +237,7 @@ void main() {
 
   group('MeshCoreSession.removeChannel wire format (D31 Part A)', () {
     test(
-      'encodes as setChannel(idx, "", zeros) — 50-byte empty frame',
+      'encodes as setChannel(idx, "", zeros) - 50-byte empty frame',
       () async {
         // Pin the convention: removeChannel must produce exactly the
         // same byte vector as setChannel with empty name + zero PSK.

@@ -20,14 +20,14 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 /// transport stays connected through `nodeDbReset` (the radio clears
 /// its NodeDB in place rather than rebooting + dropping the link),
 /// the previous implementation cleared the local nodes cache and
-/// then waited for peers to passively re-broadcast — leaving the
+/// then waited for peers to passively re-broadcast - leaving the
 /// Nodes screen at `Nodes (0)` for an unbounded window with no
 /// indication that anything would ever recover.
 ///
 /// The fix sends a fresh `wantConfigId` immediately after the local
 /// cache clear, so the firmware replays its config bundle (including
 /// the local NodeInfo + any peers it still has cached) into our
-/// existing data subscription. Transport-agnostic by design — on
+/// existing data subscription. Transport-agnostic by design - on
 /// BLE the transport disconnects almost immediately and
 /// `_requestConfiguration`'s internal `_transport.isConnected` guard
 /// no-ops the call, leaving the BLE reconnect path's existing
@@ -36,7 +36,7 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 /// IMPORTANT NON-GOAL: this fix MUST NOT manufacture a transport
 /// disconnect/reconnect to mask the issue. Doing so would create
 /// avoidable reconnect races. The test below verifies that the
-/// transport stays connected throughout — only a `ToRadio` with
+/// transport stays connected throughout - only a `ToRadio` with
 /// `wantConfigId` should appear on the wire.
 
 const int _nonceInitialConfig = 69420;
@@ -136,7 +136,7 @@ Future<ProtocolService> _freshProtocol(
 
 /// Walk every captured `ToRadio` send and yield the `wantConfigId`
 /// nonces. Admin-message sends decode as ToRadio with `packet` set
-/// (no `wantConfigId`) — those are skipped automatically by the
+/// (no `wantConfigId`) - those are skipped automatically by the
 /// `hasWantConfigId()` check.
 Iterable<int> _sentWantConfigNonces(_RecordingFakeTransport transport) sync* {
   for (final bytes in transport.sent) {
@@ -182,7 +182,7 @@ void main() {
       final protocol = await _freshProtocol(dir, transport);
       try {
         // Seed the protocol with a `myNodeNum` (required precondition
-        // for `nodeDbReset` to dispatch — the admin packet uses it as
+        // for `nodeDbReset` to dispatch - the admin packet uses it as
         // the source).
         final myInfoFrame = pb.FromRadio(
           myInfo: pb.MyNodeInfo(myNodeNum: 0xA6960864),
@@ -200,7 +200,7 @@ void main() {
         // to complete.
         await Future<void>.delayed(const Duration(milliseconds: 300));
 
-        // 1. The transport must still be connected — the fix is
+        // 1. The transport must still be connected - the fix is
         //    explicitly transport-agnostic and must NOT manufacture
         //    a disconnect/reconnect to mask the issue.
         expect(
@@ -208,7 +208,7 @@ void main() {
           isTrue,
           reason:
               'TCP-style transport must remain connected through '
-              'nodeDbReset — a forced disconnect would create '
+              'nodeDbReset - a forced disconnect would create '
               'reconnect races.',
         );
         expect(
@@ -271,7 +271,7 @@ void main() {
             isEmpty,
             reason:
                 'Remote nodeDbReset must not request our own config '
-                'refresh — the admin packet is destined for the peer, our '
+                'refresh - the admin packet is destined for the peer, our '
                 'local NodeDB is unaffected.',
           );
         } finally {
@@ -287,7 +287,7 @@ void main() {
     // Models the BLE reboot path: nodeDbReset's admin packet goes
     // out, the radio reboots, the transport drops the link, and by
     // the time `_requestConfiguration` runs the transport is no
-    // longer connected. The path must NOT throw — the BLE
+    // longer connected. The path must NOT throw - the BLE
     // reconnect's `resetForReconnect` + `protocol.start()` does the
     // re-fetch on its own.
     await _withTempDirectory((dir) async {
@@ -318,7 +318,7 @@ void main() {
           isEmpty,
           reason:
               'When the transport drops during the reset window, '
-              'the wantConfigId is correctly skipped — the BLE '
+              'the wantConfigId is correctly skipped - the BLE '
               'reconnect path will re-handshake.',
         );
       } finally {
@@ -357,7 +357,7 @@ void main() {
           isEmpty,
           reason:
               'wantConfigId must not be sent before the settle delay '
-              'elapses — an early replay races the firmware commit and '
+              'elapses - an early replay races the firmware commit and '
               'restores the pre-reset NodeDB.',
         );
 

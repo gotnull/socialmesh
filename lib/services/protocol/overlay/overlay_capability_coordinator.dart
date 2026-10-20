@@ -13,7 +13,7 @@
 /// P2 keeps snapshots **in memory**. Persistence lands in P3 alongside
 /// identity binding (`endpoints.db` in `docs/sip/OVERLAY_V0_2.md`
 /// §13.3). For P2, a process restart means capability observations
-/// start empty — acceptable because the only consumer is `openLocal`,
+/// start empty - acceptable because the only consumer is `openLocal`,
 /// which is not yet wired to any product flow.
 library;
 

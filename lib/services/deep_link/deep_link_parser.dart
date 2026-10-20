@@ -173,7 +173,7 @@ class DeepLinkParser {
         );
       case 'purchase-return':
         // socialmesh://purchase-return?sessionId=XYZ
-        // The sessionId alone never unlocks anything — it triggers the
+        // The sessionId alone never unlocks anything - it triggers the
         // confirmation-polling loop in ExternalPurchaseService, which
         // only succeeds after the Buy Me a Coffee webhook lands.
         AppLogging.qr('Parser: Processing purchase return link');

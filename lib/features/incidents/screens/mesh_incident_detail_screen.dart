@@ -184,9 +184,8 @@ class _CaseHeader extends StatelessWidget {
     final isActive = caseState.effectiveStatus == IncidentMeshStatus.active;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-      ).copyWith(top: AppTheme.spacing16),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16)
+          .copyWith(top: AppTheme.spacing16),
       child: GradientBorderContainer(
         borderRadius: AppTheme.radius16,
         borderWidth: isActive ? 2 : 1.5,
@@ -431,7 +430,7 @@ class _ReportTimelineEntry extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Badge widgets — matching app design language
+// Badge widgets - matching app design language
 // ---------------------------------------------------------------------------
 
 class _StatusBadge extends StatelessWidget {

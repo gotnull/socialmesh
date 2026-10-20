@@ -241,7 +241,7 @@ void main() {
     });
 
     // -------------------------------------------------------------------------
-    // Monotonicity — more data should yield higher scores
+    // Monotonicity - more data should yield higher scores
     // -------------------------------------------------------------------------
 
     group('monotonicity', () {
@@ -380,7 +380,7 @@ void main() {
     });
 
     // -------------------------------------------------------------------------
-    // Stability — small input changes cause small output changes
+    // Stability - small input changes cause small output changes
     // -------------------------------------------------------------------------
 
     group('stability', () {

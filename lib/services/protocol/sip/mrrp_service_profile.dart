@@ -22,7 +22,7 @@ import 'mrrp_frame.dart';
 import 'mrrp_service_handler.dart';
 import 'mrrp_types.dart';
 
-/// Profile configuration — which fields the user has chosen to share.
+/// Profile configuration - which fields the user has chosen to share.
 class MrrpProfileConfig {
   /// Display name (max 32 bytes UTF-8).
   final String displayName;

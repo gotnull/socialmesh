@@ -65,7 +65,7 @@ class Automation {
   /// Returns the effective ELSE action list for runtime execution.
   ///
   /// Returns [elseActions] when set and non-empty, otherwise `null`.
-  /// A `null` result means no ELSE branch exists — the automation is
+  /// A `null` result means no ELSE branch exists - the automation is
   /// THEN-only (or legacy linear).
   List<AutomationAction>? get effectiveElseActions =>
       (elseActions != null && elseActions!.isNotEmpty) ? elseActions : null;
@@ -128,11 +128,11 @@ class Automation {
     'enabled': enabled,
     'trigger': trigger.toJson(),
     'actions': actions.map((a) => a.toJson()).toList(),
-    // Legacy flat conditions — always written for backward compatibility.
+    // Legacy flat conditions - always written for backward compatibility.
     'conditions': conditions?.map((c) => c.toJson()).toList(),
-    // Typed condition tree — written when explicitly set.
+    // Typed condition tree - written when explicitly set.
     if (conditionTree != null) 'conditionTree': conditionTree!.toJson(),
-    // Branch-aware action lists — written when explicitly set.
+    // Branch-aware action lists - written when explicitly set.
     if (thenActions != null)
       'thenActions': thenActions!.map((a) => a.toJson()).toList(),
     if (elseActions != null)
@@ -630,7 +630,7 @@ class AutomationTrigger {
     return null;
   }
 
-  /// Localized validation — returns localized error message if invalid.
+  /// Localized validation - returns localized error message if invalid.
   String? localizedValidate(AppLocalizations l10n) {
     switch (type) {
       case TriggerType.messageContains:
@@ -887,7 +887,7 @@ class AutomationAction {
     return null;
   }
 
-  /// Localized validation — returns localized error message if invalid.
+  /// Localized validation - returns localized error message if invalid.
   String? localizedValidate(AppLocalizations l10n) {
     switch (type) {
       case ActionType.sendMessage:

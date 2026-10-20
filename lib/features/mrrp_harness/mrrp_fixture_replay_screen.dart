@@ -41,7 +41,7 @@ class _FixtureDescriptor {
 }
 
 // ---------------------------------------------------------------------------
-// Hex helper (local copy — test-only file cannot be imported from lib/)
+// Hex helper (local copy - test-only file cannot be imported from lib/)
 // ---------------------------------------------------------------------------
 
 Uint8List _hexToBytes(String hex) {
@@ -508,7 +508,7 @@ final List<_FixtureDescriptor> _fuzzCases = [
 // Screen
 // ---------------------------------------------------------------------------
 
-/// Fixture Replay Panel — replays test vectors through MrrpCodec.decode()
+/// Fixture Replay Panel - replays test vectors through MrrpCodec.decode()
 /// and compares decoded output against expected field values.
 class MrrpFixtureReplayScreen extends ConsumerStatefulWidget {
   const MrrpFixtureReplayScreen({super.key});
@@ -675,7 +675,7 @@ class _MrrpFixtureReplayScreenState
   }
 
   Map<String, String> _extractFields(dynamic frame) {
-    // frame is MrrpFrame — use dynamic to avoid import cycle issues with
+    // frame is MrrpFrame - use dynamic to avoid import cycle issues with
     // the concrete type extensions. The fields are standard properties.
     final f = frame as dynamic;
     final map = <String, String>{
@@ -683,14 +683,11 @@ class _MrrpFixtureReplayScreenState
       'versionMinor': '${f.versionMinor}', // lint-allow: hardcoded-string
       'msgType':
           '0x${(f.msgType as MrrpMessageType).code.toRadixString(16).padLeft(2, '0')}', // lint-allow: hardcoded-string
-      'flags':
-          '0x${(f.flags as int).toRadixString(16).padLeft(2, '0')}', // lint-allow: hardcoded-string
+      'flags': '0x${(f.flags as int).toRadixString(16).padLeft(2, '0')}', // lint-allow: hardcoded-string
       'headerLen': '${f.headerLen}', // lint-allow: hardcoded-string
       'requestId': '${f.requestId}', // lint-allow: hardcoded-string
-      'serviceId':
-          '0x${(f.serviceId as int).toRadixString(16).padLeft(8, '0')}', // lint-allow: hardcoded-string
-      'actionId':
-          '0x${(f.actionId as int).toRadixString(16).padLeft(4, '0')}', // lint-allow: hardcoded-string
+      'serviceId': '0x${(f.serviceId as int).toRadixString(16).padLeft(8, '0')}', // lint-allow: hardcoded-string
+      'actionId': '0x${(f.actionId as int).toRadixString(16).padLeft(4, '0')}', // lint-allow: hardcoded-string
       'payloadLen': '${f.payloadLen}', // lint-allow: hardcoded-string
     };
 
@@ -901,9 +898,8 @@ class _UnplayedFixtureTile extends StatelessWidget {
                       ),
                       Text(
                         l10n.mrrpHarnessFixtureBytes(byteCount),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.textSecondary,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: context.textSecondary),
                       ),
                     ],
                   ),

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — haptic triggered via ref.read(hapticServiceProvider)
+// lint-allow: haptic-feedback - haptic triggered via ref.read(hapticServiceProvider)
 
-/// Global Layer Topic Explorer Screen — manage and monitor MQTT topic
+/// Global Layer Topic Explorer Screen - manage and monitor MQTT topic
 /// subscriptions for the Global Layer feature.
 ///
 /// Shows:
@@ -327,9 +327,8 @@ class _GlobalLayerTopicExplorerScreenState
                     context.l10n.globalLayerFailedToLoadTopics(
                       error.toString(),
                     ),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: Theme.of(context).colorScheme.error),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -542,10 +541,8 @@ class _StatColumn extends StatelessWidget {
         const SizedBox(height: AppTheme.spacing2),
         Text(
           label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: context.textTertiary,
-            fontSize: 9,
-          ),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: context.textTertiary, fontSize: 9),
         ),
       ],
     );
@@ -892,10 +889,8 @@ class _EmptyTopicsState extends StatelessWidget {
           const SizedBox(height: AppTheme.spacing8),
           Text(
             context.l10n.globalLayerEmptyTopicsDescription,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.textSecondary,
-              height: 1.5,
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textSecondary, height: 1.5),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppTheme.spacing24),
@@ -998,9 +993,8 @@ class _AddTopicSheetState extends ConsumerState<_AddTopicSheet> {
           const SizedBox(height: AppTheme.spacing4),
           Text(
             context.l10n.globalLayerAddCustomTopicDescription,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: AppTheme.spacing20),
 
@@ -1123,9 +1117,8 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
           const SizedBox(height: AppTheme.spacing4),
           Text(
             context.l10n.globalLayerAddFromTemplateDescription,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: AppTheme.spacing16),
 
@@ -1311,10 +1304,8 @@ class _TemplateTile extends StatelessWidget {
                     ),
                     child: Text(
                       context.l10n.globalLayerTemplateAdded,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: context.textTertiary,
-                        fontSize: 10,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: context.textTertiary, fontSize: 10),
                     ),
                   )
                 else if (hasUnresolved)

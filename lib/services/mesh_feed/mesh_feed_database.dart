@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// SQLite persistence for the mesh feed — canonical replicated post store.
+/// SQLite persistence for the mesh feed - canonical replicated post store.
 ///
 /// Database: `mesh_feed.db`
 /// Schema version: 1
 ///
 /// Tables:
-///   - `mesh_posts` — canonical post objects with deterministic IDs
-///   - `mesh_post_receipts` — transport receipt metadata per post
-///   - `mesh_sync_peers` — peer sync session metadata
+///   - `mesh_posts` - canonical post objects with deterministic IDs
+///   - `mesh_post_receipts` - transport receipt metadata per post
+///   - `mesh_sync_peers` - peer sync session metadata
 library;
 
 import 'dart:async';
@@ -200,7 +200,7 @@ class MeshFeedDatabase {
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE mesh_posts ADD COLUMN sync_seq INTEGER');
       // Backfill sync_seq from local_seq for existing rows (all are
-      // already-replicated content — safe to expose to outbound sync).
+      // already-replicated content - safe to expose to outbound sync).
       await db.execute(
         'UPDATE mesh_posts SET sync_seq = local_seq WHERE sync_seq IS NULL',
       );
@@ -232,9 +232,9 @@ class MeshFeedDatabase {
   /// Insert or update a post. Returns true if a new row was created.
   ///
   /// On conflict (same deterministic ID), merges transport metadata and
-  /// updates last_seen_at_ms. Content is NOT overwritten — canonical material
+  /// updates last_seen_at_ms. Content is NOT overwritten - canonical material
   /// is immutable. Assigns monotonic [local_seq] on every mutation.
-  /// [sync_seq] is only assigned on INSERT (new content) — metadata-only
+  /// [sync_seq] is only assigned on INSERT (new content) - metadata-only
   /// merges do NOT bump sync_seq, preventing outbound churn loops.
   Future<bool> upsertPost(MeshPost post) async {
     final db = await _ensureDb();
@@ -254,7 +254,7 @@ class MeshFeedDatabase {
     final nextSeq = Sqflite.firstIntValue(seqResult) ?? 1;
 
     if (existing.isEmpty) {
-      // Also compute sync_seq for new posts — may differ from local_seq
+      // Also compute sync_seq for new posts - may differ from local_seq
       // if a prior mutation bumped local_seq without inserting new content.
       final syncSeqResult = await db.rawQuery(
         'SELECT COALESCE(MAX(sync_seq), 0) + 1 AS next FROM mesh_posts',
@@ -273,8 +273,8 @@ class MeshFeedDatabase {
       return true;
     }
 
-    // Merge: update metadata only — canonical identity material is immutable.
-    // Do NOT bump sync_seq — metadata merges are not outbound-sync-eligible.
+    // Merge: update metadata only - canonical identity material is immutable.
+    // Do NOT bump sync_seq - metadata merges are not outbound-sync-eligible.
     final existingPost = MeshPost.fromRow(existing.first);
     final mergedTransports = {
       ...existingPost.seenViaTransports,
@@ -409,7 +409,7 @@ class MeshFeedDatabase {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     // Use INSERT ... ON CONFLICT to preserve existing cursor columns.
     // ConflictAlgorithm.replace would DELETE the row and re-insert,
-    // nuking sync_cursor_seq back to NULL — destroying cursor state.
+    // nuking sync_cursor_seq back to NULL - destroying cursor state.
     await db.rawInsert(
       '''
       INSERT INTO mesh_sync_peers
@@ -495,11 +495,11 @@ class MeshFeedDatabase {
 
   /// Get posts after a sync_seq cursor, ordered deterministically.
   ///
-  /// Uses `sync_seq` — only bumped on INSERT (new content), not on
+  /// Uses `sync_seq` - only bumped on INSERT (new content), not on
   /// metadata-only merges. This prevents provenance updates from making
   /// already-synced posts re-eligible for outbound sync.
   ///
-  /// Ordering: `sync_seq ASC, id ASC` — monotonic sequence with
+  /// Ordering: `sync_seq ASC, id ASC` - monotonic sequence with
   /// deterministic tiebreak on canonical ID for same-seq ties.
   Future<List<MeshPost>> getPostsAfterSeq({
     int? afterSeq,

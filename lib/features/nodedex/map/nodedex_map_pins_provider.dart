@@ -14,7 +14,7 @@
 // the freshest pins last (i.e. on top), matching the canonical map's
 // "newest on top" convention.
 //
-// Time is read from [nodedexMapNowProvider] — overridable in tests so
+// Time is read from [nodedexMapNowProvider] - overridable in tests so
 // staleness assertions are deterministic; production reads the wall
 // clock once per build.
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetState — the full owner-side pet state. Lives in pet.db's single-row
+// PetState - the full owner-side pet state. Lives in pet.db's single-row
 // own_pet table, keyed by ownerNodeNum. All persistence round-trips through
 // toJson/fromJson.
 //
@@ -87,7 +87,7 @@ class PetState {
       hygieneArtefacts: const [],
       activeCall: null,
       stageAccumulators: const CareAccumulators.empty(),
-      // Recent feed starts empty — an egg that was just laid has NOT
+      // Recent feed starts empty - an egg that was just laid has NOT
       // hatched yet. The `hatched` event is emitted by the care engine
       // on the real egg → juvenile transition (see
       // PetCareEngine._applyStageTransition).
@@ -97,7 +97,7 @@ class PetState {
 
   /// Deterministic 32-bit seed from ownerNodeNum and hatch time.
   /// The renderer is required to use the full seed (not just branch) for
-  /// in-branch morphology differentiation — see design doc §renderer.
+  /// in-branch morphology differentiation - see design doc §renderer.
   static int computeDnaSeed(int ownerNodeNum, DateTime hatchedAt) {
     // Mix two 32-bit fields with a stable non-crypto hash.
     final hatchMs = hatchedAt.toUtc().millisecondsSinceEpoch;

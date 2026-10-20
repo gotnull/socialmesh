@@ -78,9 +78,9 @@ void main() {
 
     final visible = (await db.getAll()).map((w) => w.id).toSet();
     expect(visible, {2, 3});
-    final all = (await db.getAll(
-      includeExpired: true,
-    )).map((w) => w.id).toSet();
+    final all = (await db.getAll(includeExpired: true))
+        .map((w) => w.id)
+        .toSet();
     expect(all, {1, 2, 3});
   });
 
@@ -101,9 +101,9 @@ void main() {
 
     final removed = await db.cleanupExpired();
     expect(removed, 1);
-    final remaining = (await db.getAll(
-      includeExpired: true,
-    )).map((w) => w.id).toSet();
+    final remaining = (await db.getAll(includeExpired: true))
+        .map((w) => w.id)
+        .toSet();
     expect(remaining, {2, 3, 4});
   });
 }

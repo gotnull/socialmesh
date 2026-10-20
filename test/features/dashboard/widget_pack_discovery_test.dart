@@ -37,7 +37,7 @@ void main() {
           dashboardSource.contains('this.autoOpenPicker = false'),
           true,
           reason:
-              'autoOpenPicker must default to false — drawer/dashboard '
+              'autoOpenPicker must default to false - drawer/dashboard '
               'navigation MUST NOT auto-open the picker.',
         );
       });
@@ -80,7 +80,7 @@ void main() {
           subscriptionSource.contains('autoOpenPicker: true'),
           true,
           reason:
-              'The dashboard push must request the picker auto-opens — '
+              'The dashboard push must request the picker auto-opens - '
               'otherwise the user is back at square one (looking for the '
               'small "+" icon).',
         );
@@ -89,7 +89,7 @@ void main() {
           false,
           reason:
               'subscription_screen.dart must not reference WidgetBuilderScreen '
-              'anymore — the post-purchase route was the only call site. '
+              'anymore - the post-purchase route was the only call site. '
               'WidgetBuilderScreen is still reachable from main_shell drawer.',
         );
       });
@@ -125,7 +125,7 @@ void main() {
           reason:
               'Owner discovery card visibility predicate must require '
               'ownership AND not-edit-mode AND at least one unused premium '
-              'widget — all three together. Tranche 1 added a fourth '
+              'widget - all three together. Tranche 1 added a fourth '
               'conjunct (!discoveryDismissed) but the original three must '
               'still appear in this order.',
         );
@@ -133,7 +133,7 @@ void main() {
           flattened.contains('!discoveryDismissed'),
           true,
           reason:
-              'Tranche 1 added a persistent ack flag — visibility must '
+              'Tranche 1 added a persistent ack flag - visibility must '
               'also gate on !discoveryDismissed so a customized dashboard '
               'does not keep showing the discovery card.',
         );
@@ -161,7 +161,7 @@ void main() {
           'AppLogging.widgets('.allMatches(dashboardSource).length,
           greaterThanOrEqualTo(3),
           reason:
-              'Expect at least 3 AppLogging.widgets(...) calls — one per '
+              'Expect at least 3 AppLogging.widgets(...) calls - one per '
               'user-intent event (discovery tap, edit-tile tap, autoOpen '
               'fire). No build-side logs.',
         );
@@ -175,8 +175,8 @@ void main() {
           true,
           reason: 'Sticky edit-mode add tile builder must exist.',
         );
-        // Visible-count gating: must reference enabledWidgets.length —
-        // the visible list — when comparing to maxWidgets, NOT
+        // Visible-count gating: must reference enabledWidgets.length -
+        // the visible list - when comparing to maxWidgets, NOT
         // widgetConfigs.length (which would include hidden persisted
         // configs and incorrectly suppress the tile).
         expect(
@@ -258,7 +258,7 @@ void main() {
             dashboardSource.contains('l10n.$key'),
             true,
             reason:
-                'Dashboard must reference l10n.$key — the discovery surfaces '
+                'Dashboard must reference l10n.$key - the discovery surfaces '
                 'depend on it.',
           );
         }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Traceroute Repository — SQLite-backed persistence for traceroute history.
+// Traceroute Repository - SQLite-backed persistence for traceroute history.
 //
 // Provides:
 //   - saveRun: transactional insert of a run + its hops
@@ -370,7 +370,7 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       AppLogging.storage(
         'TracerouteRepository: Migration from SharedPreferences failed: $e',
       );
-      // Migration failure is not fatal — new data will still be written to DB
+      // Migration failure is not fatal - new data will still be written to DB
       return 0;
     }
   }

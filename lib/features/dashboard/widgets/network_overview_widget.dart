@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/transport.dart';
@@ -153,9 +154,8 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: AppTheme.spacing2),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: context.textTertiary),
         ),
       ],
     );

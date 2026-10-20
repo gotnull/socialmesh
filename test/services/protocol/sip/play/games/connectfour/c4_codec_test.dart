@@ -4,7 +4,7 @@
 /// Pin the 1-byte Connect Four move payload format. Wire format:
 /// `bits 7..4 = disc (0=red, 1=yellow)`, `bits 3..0 = column (0..6)`.
 /// The receiver derives the landing row from current board state via
-/// gravity — the row is NOT transmitted.
+/// gravity - the row is NOT transmitted.
 library;
 
 import 'dart:typed_data';
@@ -64,9 +64,9 @@ void main() {
     });
 
     test('rejects out-of-range column encoded into the byte', () {
-      // 0x07: column nibble = 7 — out of range (legal max is 6).
+      // 0x07: column nibble = 7 - out of range (legal max is 6).
       expect(C4Codec.decodeMove(Uint8List.fromList([0x07])), isNull);
-      // 0xFF: column nibble = 0xF — out of range.
+      // 0xFF: column nibble = 0xF - out of range.
       expect(C4Codec.decodeMove(Uint8List.fromList([0xFF])), isNull);
     });
 

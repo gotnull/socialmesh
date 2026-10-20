@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../utils/time_format.dart';
+
 import 'package:fl_chart/fl_chart.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -48,7 +52,7 @@ enum _MetricFilter {
 // Screen
 // =============================================================================
 
-/// Environment metrics history screen — temperature, humidity, pressure logs.
+/// Environment metrics history screen - temperature, humidity, pressure logs.
 ///
 /// Follows the standard screen architecture:
 /// GlassScaffold → pinned SearchFilterHeaderDelegate → SliverList.
@@ -318,7 +322,7 @@ class _EnvironmentMetricsLogScreenState
                 child: SizedBox(height: AppTheme.spacing8),
               ),
 
-              // Scoped node name subtitle — only when filtering by a single node
+              // Scoped node name subtitle - only when filtering by a single node
               if (scopedNodeName != null)
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
@@ -383,7 +387,7 @@ class _EnvironmentMetricsLogScreenState
                 ),
               ),
 
-              // Pinned chart legend — frosted glass, stays visible while
+              // Pinned chart legend - frosted glass, stays visible while
               // the list scrolls beneath it (matching section header UX).
               if (filtered.length >= 2)
                 SliverPersistentHeader(
@@ -401,7 +405,7 @@ class _EnvironmentMetricsLogScreenState
                   ),
                 ),
 
-              // Chart — always visible when there is data (matches
+              // Chart - always visible when there is data (matches
               // Android BaseMetricScreen / iOS EnvironmentMetricsLog).
               if (filtered.length >= 2)
                 SliverToBoxAdapter(
@@ -412,7 +416,7 @@ class _EnvironmentMetricsLogScreenState
                   ),
                 ),
 
-              // Content — empty state or list
+              // Content - empty state or list
               if (filtered.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -572,7 +576,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header — node name + timestamp + map affordance
+              // Header - node name + timestamp + map affordance
               Row(
                 children: [
                   Icon(Icons.thermostat, size: 16, color: context.accentColor),
@@ -586,9 +590,8 @@ class _EnvironmentMetricsCard extends StatelessWidget {
                   ),
                   Text(
                     '${dateFormat.format(log.timestamp)} ${timeFormat.format(log.timestamp)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: context.textTertiary),
                   ),
                   if (onTap != null) ...[
                     const SizedBox(width: AppTheme.spacing8),
@@ -606,7 +609,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
 
               const SizedBox(height: AppTheme.spacing12),
 
-              // Metric chips — single-line pill layout matching SectionFilterChip
+              // Metric chips - single-line pill layout matching SectionFilterChip
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -696,7 +699,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Chart — all metrics overlaid, matching Android/iOS reference apps
+// Chart - all metrics overlaid, matching Android/iOS reference apps
 // =============================================================================
 
 class _EnvironmentMetricsChart extends StatelessWidget {
@@ -722,7 +725,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
 
     // Overlay mode ("All" filter): temperature (left °C axis) +
     // humidity (right % axis), both normalised into a shared 0–100 range.
-    // Pressure and other metrics are excluded — their ranges compress the
+    // Pressure and other metrics are excluded - their ranges compress the
     // two lines. They render in the cards below instead.
     final tempSpots = <FlSpot>[];
     final humiditySpots = <FlSpot>[];
@@ -1118,13 +1121,13 @@ class _EnvironmentMetricsChart extends StatelessWidget {
 // shared with the device metrics screen.
 
 // =============================================================================
-// Single-line metric chip — matches SectionFilterChip visual language
+// Single-line metric chip - matches SectionFilterChip visual language
 // =============================================================================
 
 /// Read-only data chip styled to match [SectionFilterChip].
 ///
 /// Single-line horizontal layout: icon + label text.
-/// Pill shape, tinted background, subtle border — identical to the
+/// Pill shape, tinted background, subtle border - identical to the
 /// design system chips used across Nodes, NodeDex, Channels, etc.
 class _MetricChip extends StatelessWidget {
   final IconData icon;

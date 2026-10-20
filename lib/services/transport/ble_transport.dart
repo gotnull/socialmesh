@@ -250,7 +250,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   String? _bleModelNumber;
   String? _bleManufacturerName;
 
-  // Last error captured during connect() — kept so that the
+  // Last error captured during connect() - kept so that the
   // transport-state-listener path in DeviceConnectionNotifier can route
   // BLE-layer pairing failures (apple-code 14, "Peer removed pairing
   // information") through handlePairingInvalidation instead of
@@ -682,7 +682,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             if (!controller.isClosed) {
               // Android delivers scanner-service failures through the
               // results stream (onScanFailed) as well as from
-              // startScan itself — classify both paths identically.
+              // startScan itself - classify both paths identically.
               controller.addError(classifyAndroidScanFailure(e) ?? e);
             }
           },
@@ -1188,7 +1188,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       for (final char in deviceInfoService.characteristics) {
         try {
           final data = await char.read();
-          // Strip whitespace and embedded quotes — some devices (e.g. Heltec
+          // Strip whitespace and embedded quotes - some devices (e.g. Heltec
           // MeshPocket) return model number as '"1.0"' with literal quote
           // bytes in the BLE characteristic value.
           final value = sanitizeExternalText(
@@ -1338,7 +1338,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
       // Step 1: re-enable BLE-level notification BEFORE cancelling the
       // existing listener. If `setNotifyValue` throws or times out, the
-      // existing subscription is still good — preserve it and bail with
+      // existing subscription is still good - preserve it and bail with
       // a recoverable warning. This is the
       // "preserve previous working subscription" branch from the plan's
       // failure semantics.
@@ -1370,7 +1370,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       // Step 2: cancel the old listener and install the new one. If the
       // listener install fails after the cancel, we transition to
       // `disconnected` so the auto-reconnect path establishes a fresh
-      // session — never leave the transport "connected, no subscription".
+      // session - never leave the transport "connected, no subscription".
       await _fromNumSubscription?.cancel();
       _fromNumSubscription = null;
 

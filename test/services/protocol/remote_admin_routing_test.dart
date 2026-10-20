@@ -128,7 +128,7 @@ void main() {
     transport = _CapturingTransport();
     protocol = ProtocolService(transport);
     await _primeNodeNum(protocol);
-    // Bypass the new readiness gate — this test injects packets directly
+    // Bypass the new readiness gate - this test injects packets directly
     // rather than running the full two-phase handshake.
     protocol.debugForceReadinessForTesting(OperationalReadiness.ready);
   });
@@ -497,7 +497,7 @@ void main() {
   });
 
   // =========================================================================
-  // Regression tests for audit round 2 — methods that were missed in the
+  // Regression tests for audit round 2 - methods that were missed in the
   // initial remote admin routing fix.
   // =========================================================================
 
@@ -770,7 +770,7 @@ void main() {
 
   // Fixed-position admin defaults to the local device when no target is
   // given. With no AdminTarget, MeshPacketBuilder.admin resolves to
-  // localAdmin (to == from == myNodeNum, no wantAck) — byte-for-byte the
+  // localAdmin (to == from == myNodeNum, no wantAck) - byte-for-byte the
   // pre-PR-2 behaviour. These guard against accidental remote routing of
   // the default call.
   group('setFixedPosition defaults to local (no target)', () {
@@ -844,7 +844,7 @@ void main() {
     });
   });
 
-  // Commercialisation audit — pins the fixed-position encoding contract on
+  // Commercialisation audit - pins the fixed-position encoding contract on
   // the default (local) path: the AdminMessage uses 1e-7 fixed-point
   // lat/lon, matching the Meshtastic Position wire contract.
   group('setFixedPosition encoding contract (1e-7 fixed-point lat/lon)', () {

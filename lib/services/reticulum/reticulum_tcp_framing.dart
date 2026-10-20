@@ -26,7 +26,7 @@ const int hdlcEscMask = 0x20;
 const int kReticulumTcpMinFrameSize = 19;
 
 /// Thrown by [HdlcFrameDecoder.feed] when the byte stream contains a
-/// malformed escape sequence — either an `0x7D` followed by a byte
+/// malformed escape sequence - either an `0x7D` followed by a byte
 /// other than `0x5D` / `0x5E`, or an `0x7D` immediately preceding a
 /// closing FLAG (no follower byte).
 class HdlcDecodeError implements Exception {
@@ -43,7 +43,7 @@ class ReticulumTcpFraming {
   /// Encode [body] as a single HDLC frame:
   /// `0x7E + escape(body) + 0x7E`.
   ///
-  /// Escapes `0x7D` before `0x7E`. Byte order matters — see class
+  /// Escapes `0x7D` before `0x7E`. Byte order matters - see class
   /// docs.
   static Uint8List encodeFrame(List<int> body) {
     final out = BytesBuilder(copy: false);
@@ -82,7 +82,7 @@ class HdlcFrameDecoder {
   int _droppedUndersize = 0;
 
   /// Number of frames that decoded cleanly but failed the
-  /// [minFrameSize] gate. Increments silently — caller can surface in
+  /// [minFrameSize] gate. Increments silently - caller can surface in
   /// diagnostics.
   int get droppedUndersize => _droppedUndersize;
 
@@ -103,7 +103,7 @@ class HdlcFrameDecoder {
       final raw = _buffer.toBytes();
       final start = _indexOf(raw, hdlcFlag, 0);
       if (start < 0) {
-        // No FLAG at all yet — keep buffering, but discard pre-FLAG
+        // No FLAG at all yet - keep buffering, but discard pre-FLAG
         // junk to bound memory.
         _buffer.clear();
         return frames;

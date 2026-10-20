@@ -5,7 +5,7 @@
 // board section. The status captions ("Your turn", "You won", "They
 // declined", etc.) and the turn pulse-dot describe lifecycle states
 // in terms that don't reference X/O, discs, or any game-specific
-// vocabulary — they take booleans + an accent colour and produce the
+// vocabulary - they take booleans + an accent colour and produce the
 // matching localised string / widget. Tic-Tac-Toe and Connect Four
 // both consume these directly.
 
@@ -17,7 +17,7 @@ import '../../../core/theme.dart';
 /// Resolved visual treatment for a terminal SIP Play state. Returned
 /// from [playOutcomeStyle] so the renderer can wrap the caption in a
 /// colour-coded chip (green for win, red for loss, neutral for draw /
-/// resign / decline). Active / pending states return null — the
+/// resign / decline). Active / pending states return null - the
 /// renderer falls back to the plain text caption.
 class PlayOutcomeStyle {
   final Color color;
@@ -79,7 +79,7 @@ PlayOutcomeStyle? playOutcomeStyle({
 /// renders the plain "Your turn" / "Their turn" text. For terminal
 /// states (won / lost / draw / resigned / declined), wraps the text
 /// in a small colour-coded chip with an icon so the resolution is
-/// readable at a glance — UX #4.
+/// readable at a glance - UX #4.
 class PlayStatusBanner extends StatelessWidget {
   final bool isLocalTurn;
   final bool isActive;
@@ -128,7 +128,7 @@ class PlayStatusBanner extends StatelessWidget {
       remoteDeclined: remoteDeclined,
     );
     if (style == null) {
-      // Active / pending — keep the existing plain caption look so
+      // Active / pending - keep the existing plain caption look so
       // the in-game UI doesn't shift.
       return Text(
         caption,
@@ -174,7 +174,7 @@ class PlayStatusBanner extends StatelessWidget {
 }
 
 /// Build the user-facing status caption for an active or terminal
-/// SIP Play instance. Pure helper — no localization context needed
+/// SIP Play instance. Pure helper - no localization context needed
 /// at the call site beyond a [BuildContext].
 String playStatusCaption({
   required BuildContext context,
@@ -198,7 +198,7 @@ String playStatusCaption({
   return isLocalTurn ? l10n.sipPlayStatusYourTurn : l10n.sipPlayStatusTheirTurn;
 }
 
-/// Small dot that pulses when it's the local user's turn — a subtle
+/// Small dot that pulses when it's the local user's turn - a subtle
 /// "your move" cue placed inline with the status caption. Pure
 /// presentation; no business logic.
 class PlayTurnPulseDot extends StatefulWidget {

@@ -251,14 +251,17 @@ class LicenseOrgCache {
         );
       }
 
-      await txn
-          .insert(LicenseOrgCacheTables.fleetAuthorisations, <String, Object?>{
-            LicenseOrgCacheTables.colUid: uid,
-            LicenseOrgCacheTables.colLicenseOrgId: licenseOrgId,
-            LicenseOrgCacheTables.colSyncedAtMs: syncedAt
-                .toUtc()
-                .millisecondsSinceEpoch,
-          }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await txn.insert(
+        LicenseOrgCacheTables.fleetAuthorisations,
+        <String, Object?>{
+          LicenseOrgCacheTables.colUid: uid,
+          LicenseOrgCacheTables.colLicenseOrgId: licenseOrgId,
+          LicenseOrgCacheTables.colSyncedAtMs: syncedAt
+              .toUtc()
+              .millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     });
 
     AppLogging.groupLicensing(

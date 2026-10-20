@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCoreSendRateLimiter — D33 P2 prerequisite.
+// MeshCoreSendRateLimiter - D33 P2 prerequisite.
 //
 // Token-bucket rate limiter for outbound MeshCore text frames. Mirrors
 // the SIP rate limiter's proportional-refill shape but is simpler: no
@@ -21,7 +21,7 @@
 // Scope:
 //   - Counts host -> firmware text payload bytes (the `payload` arg
 //     to `sendAndWait` for the SET_TXT / SET_CHANNEL_TXT codes).
-//   - Does NOT count framing overhead (codec adds ~3-4 B) — the
+//   - Does NOT count framing overhead (codec adds ~3-4 B) - the
 //     budget is set with this offset folded in already.
 //   - Does NOT count non-text commands (advertise, get_channel,
 //     etc.). Those are infrequent and don't compete for the airtime
@@ -48,7 +48,7 @@ class MeshCoreSendRateLimiterConstants {
 /// D34a: kind tags used to attribute outbound text bytes for the
 /// chat-traffic measurement layer.
 ///
-/// The `reaction*` values are reserved-only — D34a does NOT implement
+/// The `reaction*` values are reserved-only - D34a does NOT implement
 /// reactions. They exist so the future D34b reactions slice does not
 /// have to rename buckets, and so regression tests can pin that the
 /// names round-trip without populating their counters.
@@ -63,7 +63,7 @@ enum MeshCoreSendKind {
 
 extension MeshCoreSendKindLog on MeshCoreSendKind {
   /// Stable wire-safe label used in `event=text.send.*` log lines.
-  /// Matches the enum identifier — never the user-facing label.
+  /// Matches the enum identifier - never the user-facing label.
   String get logTag => name;
 }
 
@@ -105,7 +105,7 @@ class ChatTrafficSnapshot {
   /// progress bar reads `usedBytes / capacityBytes`.
   final int currentWindowUsedBytes;
 
-  /// Window capacity (matches the rate limiter budget — 1024 B by
+  /// Window capacity (matches the rate limiter budget - 1024 B by
   /// default).
   final int windowCapacityBytes;
 
@@ -118,7 +118,7 @@ class ChatTrafficSnapshot {
   final int currentWindowSentBytes;
 
   /// Bytes attempted but rejected by the rate limiter in the current
-  /// window. Does NOT consume the token bucket — this is purely a
+  /// window. Does NOT consume the token bucket - this is purely a
   /// counter for diagnostics.
   final int currentWindowRejectedBytes;
 
@@ -418,7 +418,7 @@ class MeshCoreSendRateLimiter {
   ///
   /// Privacy: this method must only be passed counts and the kind. The
   /// caller must NEVER pass a payload, pubkey, or any envelope content
-  /// — `bytes` is the post-envelope size already known to the limiter.
+  /// - `bytes` is the post-envelope size already known to the limiter.
   void recordSend({
     required MeshCoreSendKind kind,
     required int bytes,

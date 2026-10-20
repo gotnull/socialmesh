@@ -52,7 +52,7 @@ class _RecordingTransport extends DeviceTransport {
   int sendCallIndex = 0;
 
   /// If non-null, the send call at the matching [sendCallIndex] throws.
-  /// One-shot — automatically resets to null after firing.
+  /// One-shot - automatically resets to null after firing.
   int? failOnSendCallIndex;
 
   @override
@@ -197,7 +197,7 @@ _setupServiceWithPeer(
 
   // Seed _myNodeNum so sendMessage's "device not ready" guard passes.
   await protocol.handleIncomingPacket(_frameMyNodeInfo(_myNodeNum));
-  // Bypass the new readiness gate — this test injects packets directly
+  // Bypass the new readiness gate - this test injects packets directly
   // rather than running the full two-phase handshake.
   protocol.debugForceReadinessForTesting(OperationalReadiness.ready);
 
@@ -318,7 +318,7 @@ void main() {
         wantAck: true,
       );
 
-      // The contact-sync send is fire-and-forget — give the microtask
+      // The contact-sync send is fire-and-forget - give the microtask
       // queue a turn to flush.
       await Future<void>.delayed(const Duration(milliseconds: 30));
 
@@ -505,7 +505,7 @@ void main() {
 
         // Replicate what the production transport-state listener does on
         // disconnect. The listener is wired inside `start()` which the
-        // test bypasses — this debug seam mirrors that exact effect so
+        // test bypasses - this debug seam mirrors that exact effect so
         // the post-disconnect re-sync path is covered without driving a
         // full reconnect handshake.
         protocol.debugSimulateTransportDisconnectForContactSync();
@@ -548,7 +548,7 @@ void main() {
 
       // After setup, sendCallIndex was reset to 0. Send #0 (the DM) must
       // succeed; send #1 (the unawaited contact sync) must throw. The
-      // DM must still resolve cleanly with a packetId — the sync error
+      // DM must still resolve cleanly with a packetId - the sync error
       // is swallowed by `syncContactToDevice`'s catch.
       transport.failOnSendCallIndex = 1;
 

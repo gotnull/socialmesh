@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sync Coverage Tests — verifies Cloud Sync contract completeness,
+// Sync Coverage Tests - verifies Cloud Sync contract completeness,
 // merge/conflict resolution, serialization round-trips, and queue
 // behavior for all syncable entity types.
 
@@ -120,7 +120,7 @@ void main() {
   // socialTag and userNote per-field timestamp merge
   // ===========================================================================
 
-  group('mergeWith — socialTag last-write-wins', () {
+  group('mergeWith - socialTag last-write-wins', () {
     NodeDexEntry makeEntry({
       int nodeNum = 42,
       DateTime? firstSeen,
@@ -286,7 +286,7 @@ void main() {
     });
   });
 
-  group('mergeWith — userNote last-write-wins', () {
+  group('mergeWith - userNote last-write-wins', () {
     NodeDexEntry makeEntry({
       int nodeNum = 42,
       String? userNote,
@@ -385,7 +385,7 @@ void main() {
   // Conflict detection
   // ===========================================================================
 
-  group('mergeWith — conflict detection', () {
+  group('mergeWith - conflict detection', () {
     NodeDexEntry makeEntry({
       int nodeNum = 42,
       NodeSocialTag? socialTag,
@@ -497,7 +497,7 @@ void main() {
   // Serialization round-trip with new timestamp fields
   // ===========================================================================
 
-  group('serialization — timestamp fields round-trip', () {
+  group('serialization - timestamp fields round-trip', () {
     test('socialTagUpdatedAtMs survives toJson/fromJson', () {
       final entry = NodeDexEntry(
         nodeNum: 42,
@@ -553,13 +553,13 @@ void main() {
   // Regression: Firestore set(merge: true) clear semantics
   // ---------------------------------------------------------------------------
   // Clearable user-editable fields (socialTag, userNote, localNickname) must
-  // be emitted as explicit null in toJson() so that the outbox upload path —
-  // which uses SetOptions(merge: true) with the payload nested under `data` —
+  // be emitted as explicit null in toJson() so that the outbox upload path -
+  // which uses SetOptions(merge: true) with the payload nested under `data` -
   // actually clears the cloud value. Firestore deep-merges nested maps, so a
   // missing key preserves the stale value and it reappears on the next pull.
   // ===========================================================================
 
-  group('regression — cleared fields survive Firestore merge', () {
+  group('regression - cleared fields survive Firestore merge', () {
     Map<String, dynamic> firestoreMerge(
       Map<String, dynamic> before,
       Map<String, dynamic> after,
@@ -720,7 +720,7 @@ void main() {
   // copyWith timestamp auto-stamping
   // ===========================================================================
 
-  group('copyWith — auto-stamps timestamps', () {
+  group('copyWith - auto-stamps timestamps', () {
     test('setting socialTag auto-stamps socialTagUpdatedAtMs', () {
       final entry = NodeDexEntry(
         nodeNum: 42,
@@ -846,7 +846,7 @@ void main() {
   // mergeWith preserves non-user-editable merge rules
   // ===========================================================================
 
-  group('mergeWith — metric merge rules still work', () {
+  group('mergeWith - metric merge rules still work', () {
     NodeDexEntry makeEntry({
       int nodeNum = 42,
       DateTime? firstSeen,
@@ -937,7 +937,7 @@ void main() {
   // Encounter union merge
   // ===========================================================================
 
-  group('mergeWith — encounter union merge', () {
+  group('mergeWith - encounter union merge', () {
     test('encounters from both sides are combined', () {
       final a = NodeDexEntry(
         nodeNum: 42,
@@ -1014,7 +1014,7 @@ void main() {
   // Region merge
   // ===========================================================================
 
-  group('mergeWith — region merge', () {
+  group('mergeWith - region merge', () {
     test('regions from both sides are combined', () {
       final a = NodeDexEntry(
         nodeNum: 42,
@@ -1094,7 +1094,7 @@ void main() {
   // Co-seen edge merge
   // ===========================================================================
 
-  group('mergeWith — co-seen edge merge', () {
+  group('mergeWith - co-seen edge merge', () {
     test('co-seen edges from both sides are combined', () {
       final a = NodeDexEntry(
         nodeNum: 42,
@@ -1314,7 +1314,7 @@ void main() {
   // Integration-style: local create -> serialize -> remote apply -> merge
   // ===========================================================================
 
-  group('integration — create -> upload -> apply -> second device', () {
+  group('integration - create -> upload -> apply -> second device', () {
     test('Device A creates entry with socialTag, Device B receives it', () {
       // Device A creates an entry with a classification
       final deviceA = NodeDexEntry(
@@ -1411,7 +1411,7 @@ void main() {
       );
     });
 
-    test('Device A clears note, Device B has note — clear propagates', () {
+    test('Device A clears note, Device B has note - clear propagates', () {
       // Device A cleared the note at time 3000
       final deviceA = NodeDexEntry(
         nodeNum: 42,

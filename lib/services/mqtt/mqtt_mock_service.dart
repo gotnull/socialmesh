@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// MqttMockService — deterministic mock implementation of [MqttService].
+/// MqttMockService - deterministic mock implementation of [MqttService].
 ///
 /// This service simulates all MQTT operations with configurable delays
 /// and outcomes, enabling:
@@ -214,11 +214,11 @@ class MockBehavior {
 /// Use [behavior] to control success/failure for each operation type.
 ///
 /// The mock provides additional methods for test control:
-/// - [injectMessage] — simulate an inbound message from the broker
-/// - [injectConnectionEvent] — simulate a connection state change
-/// - [updateBehavior] — change mock behavior at runtime
-/// - [publishHistory] — inspect messages that were "published"
-/// - [subscriptionHistory] — inspect subscription attempts
+/// - [injectMessage] - simulate an inbound message from the broker
+/// - [injectConnectionEvent] - simulate a connection state change
+/// - [updateBehavior] - change mock behavior at runtime
+/// - [publishHistory] - inspect messages that were "published"
+/// - [subscriptionHistory] - inspect subscription attempts
 class MqttMockService implements MqttService {
   /// Current mock behavior configuration.
   MockBehavior _behavior;
@@ -290,7 +290,7 @@ class MqttMockService implements MqttService {
   /// subscribers are listening, the message is dropped (broadcast
   /// stream semantics).
   ///
-  /// The topic does not need to match any active subscription —
+  /// The topic does not need to match any active subscription -
   /// this is intentional to allow testing edge cases.
   void injectMessage(MqttInboundMessage message) {
     _assertNotDisposed();
@@ -334,7 +334,7 @@ class MqttMockService implements MqttService {
   }
 
   // ---------------------------------------------------------------------------
-  // MqttService implementation — Connection lifecycle
+  // MqttService implementation - Connection lifecycle
   // ---------------------------------------------------------------------------
 
   @override
@@ -458,7 +458,7 @@ class MqttMockService implements MqttService {
   }
 
   // ---------------------------------------------------------------------------
-  // MqttService implementation — Connection state
+  // MqttService implementation - Connection state
   // ---------------------------------------------------------------------------
 
   @override
@@ -474,7 +474,7 @@ class MqttMockService implements MqttService {
       _connectionEventsController.stream;
 
   // ---------------------------------------------------------------------------
-  // MqttService implementation — Subscriptions
+  // MqttService implementation - Subscriptions
   // ---------------------------------------------------------------------------
 
   @override
@@ -544,7 +544,7 @@ class MqttMockService implements MqttService {
   Set<String> get activeSubscriptions => Set.unmodifiable(_subscriptions);
 
   // ---------------------------------------------------------------------------
-  // MqttService implementation — Messaging
+  // MqttService implementation - Messaging
   // ---------------------------------------------------------------------------
 
   @override
@@ -609,7 +609,7 @@ class MqttMockService implements MqttService {
   Stream<MqttInboundMessage> get messages => _messagesController.stream;
 
   // ---------------------------------------------------------------------------
-  // MqttService implementation — Health & diagnostics
+  // MqttService implementation - Health & diagnostics
   // ---------------------------------------------------------------------------
 
   @override
@@ -659,12 +659,12 @@ class MqttMockService implements MqttService {
       return result.copyWith(duration: stopwatch.elapsed);
     }
 
-    // TLS check — skip if TLS is not enabled
+    // TLS check - skip if TLS is not enabled
     if (request.type == DiagnosticCheckType.tlsHandshake && !config.useTls) {
       return DiagnosticCheckResult(
         type: request.type,
         status: DiagnosticStatus.skipped,
-        message: 'TLS is not enabled — skipped.',
+        message: 'TLS is not enabled - skipped.',
         duration: stopwatch.elapsed,
         completedAt: DateTime.now(),
       );
@@ -731,7 +731,7 @@ class MqttMockService implements MqttService {
           final skippedResult = checkResult.copyWith(
             status: DiagnosticStatus.skipped,
             message:
-                'Skipped — prerequisite '
+                'Skipped - prerequisite '
                 '${prerequisite.title} failed.',
             completedAt: DateTime.now(),
           );
@@ -755,7 +755,7 @@ class MqttMockService implements MqttService {
   }
 
   // ---------------------------------------------------------------------------
-  // MqttService implementation — Reconnection
+  // MqttService implementation - Reconnection
   // ---------------------------------------------------------------------------
 
   @override

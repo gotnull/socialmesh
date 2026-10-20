@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // D-Q10: SharedPreferences-backed store for the per-app pinned
-// locations list (map POI annotations). Local-only — no wire
+// locations list (map POI annotations). Local-only - no wire
 // surface, no copy is shared with the mesh.
 //
 // Storage shape: a `StringList` of JSON-encoded
@@ -16,7 +16,7 @@ import '../../../models/meshcore_pinned_location.dart';
 const String _kPinnedLocationsKey = 'meshcore_pinned_locations_v1';
 
 /// Cap on the number of pins kept in the store. Older pins evicted
-/// FIFO. Sized to keep the JSON blob bounded — at ~120 B per pin,
+/// FIFO. Sized to keep the JSON blob bounded - at ~120 B per pin,
 /// 200 entries is ~24 KB which SharedPreferences handles trivially.
 const int kMeshCorePinnedLocationCapacity = 200;
 

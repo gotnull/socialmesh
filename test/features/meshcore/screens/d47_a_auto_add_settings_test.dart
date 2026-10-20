@@ -43,7 +43,7 @@ class _StubAutoAddNotifier extends MeshCoreAutoAddConfigNotifier {
 
   @override
   Future<void> refresh() async {
-    // No-op — the lazy first-load fires `refresh` and we don't want
+    // No-op - the lazy first-load fires `refresh` and we don't want
     // it to mutate the stubbed state.
   }
 

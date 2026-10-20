@@ -71,7 +71,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('computeTransmissionStatus — snapshot derivation', () {
+  group('computeTransmissionStatus - snapshot derivation', () {
     test('fresh canvas with empty queue → idle severity', () async {
       final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
       await db.init();
@@ -177,7 +177,7 @@ void main() {
         opTs: 1000,
         opSeq: 0,
       );
-      // Pin the governor right at the boundary — 230 bytes used
+      // Pin the governor right at the boundary - 230 bytes used
       // out of 250 leaves only 20 B headroom, below the 24-byte
       // minPaint threshold. The view model treats this as cooling.
       stack.governor.recordSend(230);

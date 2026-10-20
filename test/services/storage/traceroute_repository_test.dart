@@ -119,7 +119,7 @@ void main() {
   // =========================================================================
   // saveRun + listRuns
   // =========================================================================
-  group('SqliteTracerouteRepository — saveRun & listRuns', () {
+  group('SqliteTracerouteRepository - saveRun & listRuns', () {
     test('save and read a single completed run with hops', () async {
       final (db, repo) = await createRepo();
 
@@ -282,7 +282,7 @@ void main() {
   // =========================================================================
   // replaceOrAddRun
   // =========================================================================
-  group('SqliteTracerouteRepository — replaceOrAddRun', () {
+  group('SqliteTracerouteRepository - replaceOrAddRun', () {
     test('replaces pending run with completed response', () async {
       final (db, repo) = await createRepo();
 
@@ -412,7 +412,7 @@ void main() {
   // =========================================================================
   // deleteRunsForNode
   // =========================================================================
-  group('SqliteTracerouteRepository — deleteRunsForNode', () {
+  group('SqliteTracerouteRepository - deleteRunsForNode', () {
     test('deletes all runs for a specific node', () async {
       final (db, repo) = await createRepo();
 
@@ -464,7 +464,7 @@ void main() {
   // =========================================================================
   // deleteAllRuns
   // =========================================================================
-  group('SqliteTracerouteRepository — deleteAllRuns', () {
+  group('SqliteTracerouteRepository - deleteAllRuns', () {
     test('deletes everything', () async {
       final (db, repo) = await createRepo();
 
@@ -501,7 +501,7 @@ void main() {
   // =========================================================================
   // prune
   // =========================================================================
-  group('SqliteTracerouteRepository — prune', () {
+  group('SqliteTracerouteRepository - prune', () {
     test('global cap prunes oldest runs', () async {
       final (db, repo) = await createRepo();
 
@@ -625,7 +625,7 @@ void main() {
   // =========================================================================
   // Persistence across close/reopen (restart simulation)
   // =========================================================================
-  group('SqliteTracerouteRepository — restart simulation', () {
+  group('SqliteTracerouteRepository - restart simulation', () {
     test('data survives close and reopen with file-backed DB', () async {
       // Use a temp file path for this test
       final tempDir = await databaseFactoryFfi.getDatabasesPath();
@@ -682,7 +682,7 @@ void main() {
   // =========================================================================
   // Migration from SharedPreferences
   // =========================================================================
-  group('SqliteTracerouteRepository — migrateFromSharedPreferences', () {
+  group('SqliteTracerouteRepository - migrateFromSharedPreferences', () {
     test('migrates legacy data from SharedPreferences', () async {
       final legacy = TelemetryDatabase(testDbPath: _uniqueDbPath('telem_mig'));
       await legacy.init();
@@ -754,7 +754,7 @@ void main() {
       // Pre-populate DB with existing data
       await repo.saveRun(makeRun(targetNode: 0xFFFFFFFF));
 
-      // Attempt migration — should be skipped
+      // Attempt migration - should be skipped
       final migrated = await repo.migrateFromSharedPreferences(legacy);
       expect(migrated, 0);
 
@@ -782,7 +782,7 @@ void main() {
   // =========================================================================
   // Edge cases and data integrity
   // =========================================================================
-  group('SqliteTracerouteRepository — edge cases', () {
+  group('SqliteTracerouteRepository - edge cases', () {
     test('hop order is preserved after roundtrip', () async {
       final (db, repo) = await createRepo();
 
@@ -894,7 +894,7 @@ void main() {
   // =========================================================================
   // Origin node persistence (schema v6)
   // =========================================================================
-  group('SqliteTracerouteRepository — origin node', () {
+  group('SqliteTracerouteRepository - origin node', () {
     test('originNodeNum round-trips through save and list', () async {
       final (db, repo) = await createRepo();
 

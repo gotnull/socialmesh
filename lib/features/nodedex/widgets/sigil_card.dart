@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sigil Card — premium collectible trading card for mesh node identity.
+// Sigil Card - premium collectible trading card for mesh node identity.
 //
 // A visually striking card showcasing a node's procedural identity:
 // - Rarity-based ornate border with glow effects
@@ -247,7 +247,7 @@ class SigilCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Card body — the full card layout
+// Card body - the full card layout
 // =============================================================================
 
 class _CardBody extends StatelessWidget {
@@ -351,7 +351,7 @@ class _CardBody extends StatelessWidget {
                     ),
                   ),
 
-                  // Sigil hero area — large and dramatic
+                  // Sigil hero area - large and dramatic
                   Expanded(
                     flex: 9,
                     child: _SigilHero(
@@ -519,7 +519,7 @@ class _CardInfoRevealState extends State<_CardInfoReveal>
 }
 
 // =============================================================================
-// Background painter — layered radial gradients for depth
+// Background painter - layered radial gradients for depth
 // =============================================================================
 
 class _CardBackgroundPainter extends CustomPainter {
@@ -611,7 +611,7 @@ class _CardBackgroundPainter extends CustomPainter {
 }
 
 // =============================================================================
-// Trait banner — top header with trait + role
+// Trait banner - top header with trait + role
 // =============================================================================
 
 class _TraitBanner extends StatelessWidget {
@@ -707,7 +707,7 @@ class _TraitBanner extends StatelessWidget {
 }
 
 // =============================================================================
-// Sigil hero — large dramatic sigil display
+// Sigil hero - large dramatic sigil display
 // =============================================================================
 
 class _SigilHero extends StatelessWidget {
@@ -783,7 +783,7 @@ class _SigilHero extends StatelessWidget {
 }
 
 // =============================================================================
-// Orbit ring painter — decorative ring around sigil for rare+ cards
+// Orbit ring painter - decorative ring around sigil for rare+ cards
 // =============================================================================
 
 class _OrbitRingPainter extends CustomPainter {
@@ -848,7 +848,7 @@ class _OrbitRingPainter extends CustomPainter {
 }
 
 // =============================================================================
-// Name plate — node name and hex ID
+// Name plate - node name and hex ID
 // =============================================================================
 
 class _NamePlate extends StatelessWidget {
@@ -876,7 +876,7 @@ class _NamePlate extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Display name — bold and prominent
+          // Display name - bold and prominent
           Text(
             displayName,
             style: TextStyle(
@@ -1020,7 +1020,7 @@ class _OrnamentDividerPainter extends CustomPainter {
 }
 
 // =============================================================================
-// Stats grid — RPG-style ability scores
+// Stats grid - RPG-style ability scores
 // =============================================================================
 
 class _DeviceInfoGrid extends StatelessWidget {
@@ -1042,7 +1042,7 @@ class _DeviceInfoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hw = hardwareModel ?? '—';
+    final hw = hardwareModel ?? '-';
     final deviceRole = _formatRole(role);
     final fw = _formatFirmware(firmwareVersion);
 
@@ -1054,7 +1054,7 @@ class _DeviceInfoGrid extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Hardware — full width row
+          // Hardware - full width row
           _DeviceInfoCell(
             label: context.l10n.nodedexCardDeviceHardware,
             value: hw,
@@ -1089,9 +1089,9 @@ class _DeviceInfoGrid extends StatelessWidget {
     );
   }
 
-  /// Format role for display — title-case, strip underscores.
+  /// Format role for display - title-case, strip underscores.
   static String _formatRole(String? role) {
-    if (role == null || role.isEmpty) return '—';
+    if (role == null || role.isEmpty) return '-';
     // Convert e.g. "ROUTER_CLIENT" → "Router Client"
     return role
         .split('_')
@@ -1103,9 +1103,9 @@ class _DeviceInfoGrid extends StatelessWidget {
         .join(' ');
   }
 
-  /// Format firmware for display — strip long hashes, keep version core.
+  /// Format firmware for display - strip long hashes, keep version core.
   static String _formatFirmware(String? fw) {
-    if (fw == null || fw.isEmpty) return '—';
+    if (fw == null || fw.isEmpty) return '-';
     // Trim long git hashes: "2.7.15.567b8ea" → "2.7.15"
     final parts = fw.split('.');
     if (parts.length > 3) {

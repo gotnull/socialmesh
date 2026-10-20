@@ -50,7 +50,7 @@ class ArchiveInspectorService {
   /// Inspects the given [archiveBytes] and returns a manifest describing
   /// all entries, their types, safety status, and available actions.
   ///
-  /// The archive is decoded in memory — no files are written to disk
+  /// The archive is decoded in memory - no files are written to disk
   /// during inspection.
   ArchiveManifest inspect({
     required Uint8List archiveBytes,

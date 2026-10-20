@@ -62,7 +62,7 @@ class WaypointDatabase {
 
   Database get _database {
     if (_db == null) {
-      throw StateError('WaypointDatabase not initialized — call init() first');
+      throw StateError('WaypointDatabase not initialized - call init() first');
     }
     return _db!;
   }

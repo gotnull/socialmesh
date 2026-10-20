@@ -62,7 +62,7 @@ void main() {
     });
 
     test('HELLO WORLD renders with the canonical word separator', () {
-      // Word separator is now MorseTable.wordSeparator (` · ` —
+      // Word separator is now MorseTable.wordSeparator (` · ` -
       // middle-dot, picked because U+00B7 doesn't collide with the
       // dot/dash alphabet and reads as a single visual token between
       // words).
@@ -97,7 +97,7 @@ void main() {
     test('decode handles continuous input via greedy longest-prefix', () {
       // No separators: decoder walks the longest matching prefix per
       // step. Spec acknowledges this is inherently lossy on ambiguous
-      // input — `...---...` could be `SOS`, `V7`, `EE---...`, etc.
+      // input - `...---...` could be `SOS`, `V7`, `EE---...`, etc.
       // We just pin that the decoder produces a non-empty decode and
       // doesn't crash. Real users get separator-anchored decodes.
       final decoded = MorseTable.decode('...---...');

@@ -116,7 +116,7 @@ class _MrrpServiceTileState extends State<MrrpServiceTile> {
           Padding(
             padding: const EdgeInsets.only(left: 36, top: AppTheme.spacing4),
             child: GestureDetector(
-              // lint-allow: haptic-feedback — toggle control, not navigation action
+              // lint-allow: haptic-feedback - toggle control, not navigation action
               onTap: () => setState(() => _showRawHex = !_showRawHex),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

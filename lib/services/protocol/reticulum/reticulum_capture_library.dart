@@ -139,7 +139,7 @@ class ReticulumCaptureLibrary {
         ReticulumSafeLog.event('library_sidecar_decode_error error=$e');
       }
     }
-    // No sidecar — classify and persist one.
+    // No sidecar - classify and persist one.
     final classification = await _classifier.classify(capture);
     final checksum = await _computeChecksum(capture);
     final stat = await capture.stat();
@@ -171,8 +171,8 @@ class ReticulumCaptureLibrary {
   ///
   /// Behavior:
   ///   * Reads [sourceFile] bytes once.
-  ///   * Computes SHA-256 — rejects as duplicate if already present.
-  ///   * Validates SMRC magic + version via the classifier — rejects
+  ///   * Computes SHA-256 - rejects as duplicate if already present.
+  ///   * Validates SMRC magic + version via the classifier - rejects
   ///     as invalid / unsupported on failure.
   ///   * Copies bytes into `reticulum_captures/imported/<filename>`,
   ///     uniquifying with a numeric suffix on collision.
@@ -243,7 +243,7 @@ class ReticulumCaptureLibrary {
   }
 
   /// Persist updated provenance fields. Caller may not change derived
-  /// fields (kind, recordCount, etc.) — those come from the SMRC
+  /// fields (kind, recordCount, etc.) - those come from the SMRC
   /// header and are tied to the bytes on disk.
   Future<ReticulumCaptureEntry> updateProvenance(
     ReticulumCaptureEntry entry, {

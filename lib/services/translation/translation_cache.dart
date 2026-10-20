@@ -81,7 +81,7 @@ class TranslationCache {
 
   /// Generate a short hash of the original text for cache verification.
   static String textHash(String text) {
-    // Simple FNV-1a hash — fast, good distribution, no crypto dependency
+    // Simple FNV-1a hash - fast, good distribution, no crypto dependency
     var hash = 2166136261;
     for (var i = 0; i < text.length; i++) {
       hash ^= text.codeUnitAt(i);

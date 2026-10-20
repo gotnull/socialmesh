@@ -104,7 +104,7 @@ sealed class ConditionNode {
   /// Only meaningful for trees that are purely AND-gated predicates (i.e.,
   /// trees produced by [fromLegacyConditions]). For complex trees with ANY
   /// or NOT nodes, this returns all predicates found via depth-first
-  /// traversal — the caller should prefer the tree model instead.
+  /// traversal - the caller should prefer the tree model instead.
   List<AutomationCondition> toLegacyConditions() {
     return switch (this) {
       PredicateNode(condition: final c) => [c],

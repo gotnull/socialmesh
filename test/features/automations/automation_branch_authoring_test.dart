@@ -9,7 +9,7 @@ import 'package:socialmesh/features/automations/models/condition_node.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 
 void main() {
-  group('Phase 4 — Model preservation', () {
+  group('Phase 4 - Model preservation', () {
     test('editor save with unmodified conditions preserves conditionTree', () {
       // Build an automation with a complex conditionTree (AnyGroup)
       final originalTree = AnyGroup(
@@ -170,7 +170,7 @@ void main() {
     });
   });
 
-  group('Phase 4 — Branch structure in serialization', () {
+  group('Phase 4 - Branch structure in serialization', () {
     test('THEN/ELSE round-trip correctly through JSON', () {
       final automation = Automation(
         name: 'Branch Test',
@@ -242,7 +242,7 @@ void main() {
     });
   });
 
-  group('Phase 4 — Validation', () {
+  group('Phase 4 - Validation', () {
     test('automation without THEN actions is invalid', () {
       // The validation is UI-level, but model allows it.
       // Effective THEN with empty actions = empty list
@@ -282,7 +282,7 @@ void main() {
     });
   });
 
-  group('Phase 4 — AutomationSummary', () {
+  group('Phase 4 - AutomationSummary', () {
     late AppLocalizations l10n;
 
     setUp(() {
@@ -329,7 +329,7 @@ void main() {
     });
   });
 
-  group('Phase 4 — Import flow preservation', () {
+  group('Phase 4 - Import flow preservation', () {
     test('import with branches preserves structure', () {
       final importJson = {
         'name': 'Imported Branched',
@@ -408,7 +408,7 @@ void main() {
     });
   });
 
-  group('Phase 4 — ConditionNode from conditions', () {
+  group('Phase 4 - ConditionNode from conditions', () {
     test('single condition → PredicateNode', () {
       final conditions = [
         const AutomationCondition(type: ConditionType.timeRange),

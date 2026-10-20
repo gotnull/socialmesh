@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Constellation CustomPainter — star-map rendering engine.
+// Constellation CustomPainter - star-map rendering engine.
 //
 // Philosophy: "Show stars, not wires."
 //
@@ -44,7 +44,7 @@ import 'cluster_engine.dart';
 import 'quadtree.dart';
 
 // =============================================================================
-// Rendering constants — calibrated for calm star-map aesthetic
+// Rendering constants - calibrated for calm star-map aesthetic
 // =============================================================================
 
 class _K {
@@ -56,7 +56,7 @@ class _K {
   static const double nodeMaxBonusConnections = 20.0;
 
   // -- Glow -----------------------------------------------------------------
-  // Soft halo around each node. Very subtle by default — produces a faint
+  // Soft halo around each node. Very subtle by default - produces a faint
   // nebula effect when many nodes overlap, rather than neon blobs.
   static const double glowRadiusMultiplier = 2.0;
   static const double glowBlurSigma = 3.0;
@@ -171,7 +171,7 @@ enum _LOD {
   /// Zoom 0.50–1.6: standard circles with subtle glow and faint edges.
   standard,
 
-  /// Zoom > 1.6: full detail — glow, center dot, labels, curved edges.
+  /// Zoom > 1.6: full detail - glow, center dot, labels, curved edges.
   full,
 }
 
@@ -182,7 +182,7 @@ _LOD _lodForZoom(double zoom) {
 }
 
 // =============================================================================
-// Edge visibility mode — controls which edges are drawn
+// Edge visibility mode - controls which edges are drawn
 // =============================================================================
 
 /// Controls how aggressively edges are drawn.
@@ -213,7 +213,7 @@ enum EdgeVisibility {
 /// The core rendering engine for the constellation graph.
 ///
 /// This painter implements a "stars first, connections on demand" philosophy.
-/// By default, the canvas shows luminous dots on dark space — like a real
+/// By default, the canvas shows luminous dots on dark space - like a real
 /// night sky. Connections are revealed progressively through:
 /// - Node selection (shows top-6 connections as elegant arcs)
 /// - Edge density control (cycles none → sparse → normal → dense → all)
@@ -238,7 +238,7 @@ class ConstellationPainter extends CustomPainter {
   /// The accent color from the app theme.
   final Color accentColor;
 
-  /// Edge weight threshold — edges below this weight are hidden.
+  /// Edge weight threshold - edges below this weight are hidden.
   final int weightThreshold;
 
   /// Whether to draw background edges at all (independent of selection edges).
@@ -387,18 +387,18 @@ class ConstellationPainter extends CustomPainter {
       );
     }
 
-    // 3) Selection edges — always drawn when a node is selected,
+    // 3) Selection edges - always drawn when a node is selected,
     //    regardless of density setting.
     if (hasFocus) {
       _paintSelectionEdges(canvas, positions, visibleNodeNums, lod);
     }
 
-    // 4) Node glows — soft halos behind the solid cores.
+    // 4) Node glows - soft halos behind the solid cores.
     if (lod != _LOD.minimal) {
       _paintNodeGlows(canvas, visibleItems, hasFocus);
     }
 
-    // 5) Node fills — solid cores.
+    // 5) Node fills - solid cores.
     _paintNodeFills(canvas, visibleItems, hasFocus, lod);
 
     // 6) Selection ring (on top of the node fill).
@@ -406,7 +406,7 @@ class ConstellationPainter extends CustomPainter {
       _paintSelectionRing(canvas, positions);
     }
 
-    // 7) Labels — collision-detected, hard-capped.
+    // 7) Labels - collision-detected, hard-capped.
     if (lod != _LOD.minimal) {
       _paintLabels(canvas, positions, visibleItems, hasFocus, lod);
     }
@@ -418,7 +418,7 @@ class ConstellationPainter extends CustomPainter {
   }
 
   // =========================================================================
-  // Spotlight — soft ambient glow behind the selected node
+  // Spotlight - soft ambient glow behind the selected node
   // =========================================================================
 
   void _paintSpotlight(Canvas canvas, Map<int, Offset> positions) {
@@ -436,7 +436,7 @@ class ConstellationPainter extends CustomPainter {
   }
 
   // =========================================================================
-  // Background edges — faint structural lines (density-controlled)
+  // Background edges - faint structural lines (density-controlled)
   // =========================================================================
 
   void _paintBackgroundEdges(
@@ -457,7 +457,7 @@ class ConstellationPainter extends CustomPainter {
         continue;
       }
 
-      // In focus mode, don't draw background edges at all — only selection
+      // In focus mode, don't draw background edges at all - only selection
       // edges are shown. This keeps the focus clean.
       if (hasFocus) continue;
 
@@ -509,7 +509,7 @@ class ConstellationPainter extends CustomPainter {
   }
 
   // =========================================================================
-  // Selection edges — elegant arcs from selected node to top neighbors
+  // Selection edges - elegant arcs from selected node to top neighbors
   // =========================================================================
 
   void _paintSelectionEdges(
@@ -571,13 +571,13 @@ class ConstellationPainter extends CustomPainter {
       ..color = color.withValues(alpha: alpha.clamp(0.0, 1.0))
       ..strokeWidth = stroke;
 
-    // Always use curves for highlighted edges — they look much better.
+    // Always use curves for highlighted edges - they look much better.
     final path = _curvedEdgePath(from, to);
     canvas.drawPath(path, _edgePaint);
   }
 
   /// Paint an edge connected to the selected node but NOT to a top neighbor.
-  /// Barely visible — just a whisper of structure.
+  /// Barely visible - just a whisper of structure.
   void _paintDimEdge(Canvas canvas, Offset from, Offset to, double nw) {
     final alpha = _K.edgeDimAlphaBase + nw * _K.edgeDimAlphaWeightMult;
     final stroke = _K.edgeDimStrokeMin + nw * _K.edgeDimStrokeWeightMult;
@@ -619,7 +619,7 @@ class ConstellationPainter extends CustomPainter {
   }
 
   // =========================================================================
-  // Node glows — soft halos behind the solid cores
+  // Node glows - soft halos behind the solid cores
   // =========================================================================
 
   void _paintNodeGlows(
@@ -635,7 +635,7 @@ class ConstellationPainter extends CustomPainter {
       final isNeighbor = neighbors.contains(node.nodeNum);
       final isDimmed = hasFocus && !isSelected && !isNeighbor;
 
-      // No glow for dimmed nodes — they become invisible background dots.
+      // No glow for dimmed nodes - they become invisible background dots.
       if (isDimmed) continue;
 
       final sigil = node.sigil ?? SigilGenerator.generate(node.nodeNum);
@@ -659,7 +659,7 @@ class ConstellationPainter extends CustomPainter {
   }
 
   // =========================================================================
-  // Node fills — solid cores
+  // Node fills - solid cores
   // =========================================================================
 
   void _paintNodeFills(
@@ -714,7 +714,7 @@ class ConstellationPainter extends CustomPainter {
   }
 
   // =========================================================================
-  // Selection ring — steady accent ring around the selected node
+  // Selection ring - steady accent ring around the selected node
   // =========================================================================
 
   void _paintSelectionRing(Canvas canvas, Map<int, Offset> positions) {
@@ -746,7 +746,7 @@ class ConstellationPainter extends CustomPainter {
   }
 
   // =========================================================================
-  // Labels — collision-detected, hard-capped at 8
+  // Labels - collision-detected, hard-capped at 8
   // =========================================================================
 
   void _paintLabels(
@@ -836,7 +836,7 @@ class ConstellationPainter extends CustomPainter {
         }
       }
 
-      // Skip if colliding — but always show the selected node's label.
+      // Skip if colliding - but always show the selected node's label.
       if (collides && node.nodeNum != selectedNodeNum) continue;
 
       occupiedRects.add(labelRect);

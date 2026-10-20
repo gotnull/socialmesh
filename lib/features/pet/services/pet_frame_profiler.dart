@@ -7,7 +7,7 @@
 // durations from SchedulerBinding.addTimingsCallback and logs to
 // AppLogging.pet every few seconds while the pet hero is mounted.
 //
-// Scope caveat: Flutter's timings callback is application-scoped — we
+// Scope caveat: Flutter's timings callback is application-scoped - we
 // can't isolate "just the pet subtree". Starting/stopping alongside
 // the pet screen's lifecycle means the logged data covers the user's
 // time on the pet screen, which is the relevant window.

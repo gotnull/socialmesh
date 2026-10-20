@@ -8,7 +8,7 @@
 /// `ProtocolService.sendSipPayload`) to wrap it in a SIP `mrrpData`
 /// envelope and transmit it.
 ///
-/// The adapter never imports [ProtocolService] directly — the sink is
+/// The adapter never imports [ProtocolService] directly - the sink is
 /// a narrow function typedef. That keeps the engine side decoupled
 /// from the broader service and keeps this file unit-testable.
 library;
@@ -28,8 +28,10 @@ import 'overlay_link_egress.dart';
 /// Takes already-encoded MRRP bytes (the SIP `payload`) plus the SIP
 /// `msg_type` to attribute the TX (used by the existing SIP counter).
 /// Returns `true` if the payload was handed to the transport.
-typedef OverlaySipSink =
-    Future<bool> Function(Uint8List mrrpBytes, SipMessageType type);
+typedef OverlaySipSink = Future<bool> Function(
+  Uint8List mrrpBytes,
+  SipMessageType type,
+);
 
 /// Egress adapter that routes link frames through the real SIP sink.
 class OverlayProtocolEgress implements OverlayLinkEgress {
@@ -47,7 +49,7 @@ class OverlayProtocolEgress implements OverlayLinkEgress {
   /// [rateLimiter] is a getter returning the shared [SipRateLimiter],
   /// or null when the limiter is not yet attached. Overlay link frames
   /// share the 1024 B / 60 s SIP airtime budget with SIP v0.1 and
-  /// MRRP v0.1 — we pre-account the on-wire size (MRRP bytes + SIP
+  /// MRRP v0.1 - we pre-account the on-wire size (MRRP bytes + SIP
   /// wrapper) before handing off to the sink, mirroring the
   /// `mrrp_providers.dart` accounting path.
   OverlayProtocolEgress({

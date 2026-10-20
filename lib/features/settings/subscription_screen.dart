@@ -870,7 +870,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
           ),
 
           // Alternative payment (secondary). Hidden once the bundle is
-          // owned — no fallback path is meaningful at that point.
+          // owned - no fallback path is meaningful at that point.
           if (!purchaseState.hasPurchased(
             RevenueCatConfig.completePackProductId,
           ))
@@ -994,7 +994,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
   //      onConnectivityChanged stream, flipping the cached state to
   //      offline until the next periodic check (~10s later).
   //
-  // Both produce false-negative "Purchase blocked — offline" snackbars
+  // Both produce false-negative "Purchase blocked - offline" snackbars
   // when the network is actually live. Force a fresh checkNow() before
   // surfacing the offline error: if the platform genuinely is down the
   // re-check stays false and we still block; if it was stale we
@@ -1417,7 +1417,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
 /// fallbacks (unlock-code redemption) get the measly text-link style.
 /// Wraps the group-licensing section header + entries. Renders nothing
 /// (header AND body) when the user has zero orgs AND no Buy tile is
-/// visible — without this guard the "YOUR GROUPS" header surfaces
+/// visible - without this guard the "YOUR GROUPS" header surfaces
 /// above an empty body, which the user flagged on 2026-05-28.
 class _GroupLicensingSection extends ConsumerWidget {
   const _GroupLicensingSection();

@@ -47,7 +47,7 @@ void main() {
     test(
       'payload_len zero with trailing bytes succeeds (trailing ignored)',
       () {
-        // Decode should still succeed — trailing bytes beyond payload are
+        // Decode should still succeed - trailing bytes beyond payload are
         // unaccounted but do not invalidate a well-formed header+payload.
         final frame = MrrpCodec.decode(MrrpFuzzCases.payloadZeroWithTrailing);
         // The current codec may accept or reject this; either is valid.
@@ -87,7 +87,7 @@ void main() {
     });
 
     test('oversized frame (216 bytes) decodes but encode rejects', () {
-      // Decode should still succeed — the frame itself is well-formed.
+      // Decode should still succeed - the frame itself is well-formed.
       final frame = MrrpCodec.decode(MrrpFuzzCases.exceedsSipMtu);
       if (frame != null) {
         // If we try to re-encode it, it should be rejected (too large).
@@ -118,8 +118,7 @@ void main() {
         expect(
           () => MrrpCodec.decode(data),
           returnsNormally,
-          reason:
-              'Fuzz case (${data.length} bytes) should not throw', // lint-allow: hardcoded-string
+          reason: 'Fuzz case (${data.length} bytes) should not throw', // lint-allow: hardcoded-string
         );
       }
     });
@@ -176,8 +175,7 @@ void main() {
           expect(
             () => MrrpCodec.decode(corrupted),
             returnsNormally,
-            reason:
-                'Corrupted byte at offset $i should not throw', // lint-allow: hardcoded-string
+            reason: 'Corrupted byte at offset $i should not throw', // lint-allow: hardcoded-string
           );
         }
       });

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
 import '../l10n/l10n_extension.dart';
@@ -57,8 +58,7 @@ class DeviceRouteObserver extends NavigatorObserver {
     final l10n = context.l10n;
     showActionSnackBar(
       context,
-      metadata?.blockedMessage ??
-          'Connect device to access this screen', // lint-allow: hardcoded-string
+      metadata?.blockedMessage ?? 'Connect device to access this screen', // lint-allow: hardcoded-string
       actionLabel: l10n.actionConnect,
       onAction: () {
         navigator?.pushNamed('/scanner');
@@ -103,7 +103,7 @@ class ProtectedRoute extends ConsumerWidget {
     // No fallback supplied → bounce to Scanner. The "Access Restricted"
     // blocking screen used to live here; it was a dead-end UI that
     // confused users (especially after a factory-reset writeChar
-    // failure dropped the BLE link mid-action). Removed entirely —
+    // failure dropped the BLE link mid-action). Removed entirely -
     // every blocked route now routes directly to the Scanner.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sigil Painter — CustomPainter that renders deterministic geometric node identity.
+// Sigil Painter - CustomPainter that renders deterministic geometric node identity.
 //
 // The sigil is a constellation-style geometric pattern built from:
 // - An outer polygon (3-8 vertices)
@@ -289,7 +289,7 @@ class SigilDisplay extends StatelessWidget {
 /// 4. Draw center dot if enabled
 /// 5. Optionally draw glow effects
 ///
-/// The painter is efficient — it avoids allocations during paint()
+/// The painter is efficient - it avoids allocations during paint()
 /// by computing geometry from the immutable SigilData parameters.
 class _SigilPainter extends CustomPainter {
   final SigilData sigil;
@@ -506,7 +506,7 @@ class _SigilPainter extends CustomPainter {
           }
         }
       } else {
-        // No inner rings, no center dot — draw star pattern on outer vertices.
+        // No inner rings, no center dot - draw star pattern on outer vertices.
         for (int i = 0; i < outerVertices.length; i++) {
           final target = (i + sigil.symmetryFold) % outerVertices.length;
           if (target != i) {

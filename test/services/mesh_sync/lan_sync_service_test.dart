@@ -15,7 +15,7 @@ import 'package:socialmesh/services/mesh_sync/lan_sync_service.dart';
 import 'package:socialmesh/services/mesh_sync/mesh_sync_session.dart';
 
 // ---------------------------------------------------------------------------
-// Fake in-memory database — mirrors existing mesh_sync_service_test pattern
+// Fake in-memory database - mirrors existing mesh_sync_service_test pattern
 // ---------------------------------------------------------------------------
 
 class _FakeSyncDb extends MeshFeedDatabase {
@@ -280,7 +280,7 @@ _runLoopbackSync({
 // ---------------------------------------------------------------------------
 
 void main() {
-  group('LAN sync — hello negotiation', () {
+  group('LAN sync - hello negotiation', () {
     test('successful hello exchange completes without error', () async {
       final a = _createPeer(0x11111111);
       final b = _createPeer(0x22222222);
@@ -402,7 +402,7 @@ void main() {
     });
   });
 
-  group('LAN sync — incremental batch exchange', () {
+  group('LAN sync - incremental batch exchange', () {
     test('peer with no cursor gets full batch', () async {
       final a = _createPeer(0xAAAAAAAA);
       final b = _createPeer(0xBBBBBBBB);
@@ -540,7 +540,7 @@ void main() {
     });
   });
 
-  group('LAN sync — cursor semantics', () {
+  group('LAN sync - cursor semantics', () {
     test('cursor survives new MeshSyncService with same DB', () async {
       final a = _createPeer(0xAAAAAAAA);
       final b = _createPeer(0xBBBBBBBB);
@@ -579,7 +579,7 @@ void main() {
     });
   });
 
-  group('LAN sync — clean close behavior', () {
+  group('LAN sync - clean close behavior', () {
     test('clean close on empty sync', () async {
       final a = _createPeer(0xAAAAAAAA);
       final b = _createPeer(0xBBBBBBBB);
@@ -596,7 +596,7 @@ void main() {
     });
   });
 
-  group('LAN sync — cross-transport dedup', () {
+  group('LAN sync - cross-transport dedup', () {
     test('same post via LoRa then LAN does not duplicate', () async {
       final a = _createPeer(0xAAAAAAAA);
       final b = _createPeer(0xBBBBBBBB);
@@ -642,7 +642,7 @@ void main() {
     });
   });
 
-  group('LAN sync — startListening + connectAndSync (direct connect)', () {
+  group('LAN sync - startListening + connectAndSync (direct connect)', () {
     test('startListening binds TCP server', () async {
       final peer = _createPeer(0xAAAAAAAA);
       await peer.service.startListening(port: 0);
@@ -756,7 +756,7 @@ void main() {
     });
   });
 
-  group('LAN sync — discovery peer management', () {
+  group('LAN sync - discovery peer management', () {
     test('discovered peer accepted', () {
       final peer = _createPeer(0xAAAAAAAA);
 
@@ -806,7 +806,7 @@ void main() {
         ),
       );
 
-      // Same nodeNum, different host — should merge (update, not duplicate).
+      // Same nodeNum, different host - should merge (update, not duplicate).
       peer.service.addDiscoveredPeerForTest(
         const DiscoveredPeer(
           host: '192.168.1.200',
@@ -946,13 +946,13 @@ void main() {
         ),
       );
 
-      // Should not throw — the failed session counts as 0.
+      // Should not throw - the failed session counts as 0.
       final synced = await client.service.syncWithDiscoveredPeers();
       expect(synced, equals(0));
     });
   });
 
-  group('LAN sync — session scheduling', () {
+  group('LAN sync - session scheduling', () {
     test('successful session prevents immediate re-initiation', () async {
       final server = _createPeer(0xAAAAAAAA);
       final client = _createPeer(0xBBBBBBBB);
@@ -1018,7 +1018,7 @@ void main() {
         ),
       );
 
-      // Set recent success — peer should be skipped.
+      // Set recent success - peer should be skipped.
       client.service.setLastSyncSuccessForTest(0xAAAAAAAA, DateTime.now());
 
       final synced = await client.service.syncWithDiscoveredPeers();
@@ -1035,7 +1035,7 @@ void main() {
       await a.repo.ingest(_makePost(0x11111111, 'Post from A'));
       await b.repo.ingest(_makePost(0x22222222, 'Post from B'));
 
-      // First sync — both exchange posts.
+      // First sync - both exchange posts.
       final result1 = await _runLoopbackSync(
         serverService: b.service,
         clientService: a.service,
@@ -1046,13 +1046,13 @@ void main() {
       // serverReceived is 2 because A ingested Post-B in Phase 2, giving
       // it a sync_seq. In Phase 3, A serves all posts (cursor was null)
       // including the just-received Post-B. This is expected for the first
-      // sync — the cursor advances afterward preventing re-sends.
+      // sync - the cursor advances afterward preventing re-sends.
       expect(result1.serverReceived, equals(2));
 
       // After sync, metadata merges happen (the posts now exist on both
       // sides with merged transports). These should NOT bump sync_seq.
 
-      // Second sync — cursors were saved by ack, so outbound sends should
+      // Second sync - cursors were saved by ack, so outbound sends should
       // decrease significantly. B still sends Post-A (received in Phase 3
       // of first sync, got a new sync_seq above B's Phase 2 cursor for A).
       // A sends 0 because A's cursor for B covers all posts.
@@ -1069,7 +1069,7 @@ void main() {
       // This is one-shot: B's cursor for A advances after this ack.
       expect(result2.serverSent, lessThanOrEqualTo(1));
 
-      // Third sync — now fully converged on both sides.
+      // Third sync - now fully converged on both sides.
       final result3 = await _runLoopbackSync(
         serverService: b.service,
         clientService: a.service,

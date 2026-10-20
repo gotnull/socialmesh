@@ -183,7 +183,7 @@ class MessageDatabase {
           //
           // v6 repaired conversation_key for misclassified broadcast
           // messages but left the channel column as NULL.  The UI filters
-          // channel messages with `m.channel == channelIndex` — in Dart,
+          // channel messages with `m.channel == channelIndex` - in Dart,
           // `null != 0`, so these rows are invisible in the Primary
           // Channel conversation even though their conversation_key is
           // correct.  Normalise NULL → 0 for all broadcast rows so the
@@ -236,7 +236,7 @@ class MessageDatabase {
           );
         }
         if (oldVersion < 10) {
-          // Nullable column — legacy rows load as realAck=null (unknown),
+          // Nullable column - legacy rows load as realAck=null (unknown),
           // which the UI renders identically to the previous "delivered"
           // state to avoid rewriting historical certainty.
           await addColumnIfMissing(
@@ -246,7 +246,7 @@ class MessageDatabase {
           AppLogging.storage('v10 migration: ensured real_ack column');
         }
         if (oldVersion < 11) {
-          // Nullable column — legacy rows load as relayNode=null (unknown),
+          // Nullable column - legacy rows load as relayNode=null (unknown),
           // which the UI simply omits (the relay row is gated on non-null).
           await addColumnIfMissing(
             'relay_node',
@@ -288,7 +288,7 @@ class MessageDatabase {
 
   Database get _database {
     if (_db == null) {
-      throw Exception('MessageDatabase not initialized — call init() first');
+      throw Exception('MessageDatabase not initialized - call init() first');
     }
     return _db!;
   }
@@ -384,7 +384,7 @@ class MessageDatabase {
   /// DM messages: `dm:<lower_node>:<higher_node>` (order-independent)
   static String conversationKey(Message message) {
     // Broadcast messages (to == 0xFFFFFFFF) are channel messages.
-    // Use the channel index as the key — including Primary Channel (index 0)
+    // Use the channel index as the key - including Primary Channel (index 0)
     // which was previously excluded by the `channel > 0` check, causing
     // Primary Channel messages to be stored under DM conversation keys.
     if (message.isBroadcast) {
@@ -696,7 +696,7 @@ class MessageDatabase {
   /// Delete every stored message for a specific channel index.
   ///
   /// Returns the number of rows removed. DM rows (where `channel` is
-  /// null) are unaffected — they live in their own conversation key.
+  /// null) are unaffected - they live in their own conversation key.
   Future<int> deleteMessagesForChannel(int channelIndex) async {
     final removed = await _database.delete(
       _tableName,
@@ -876,7 +876,7 @@ class MessageDatabase {
         await _database.rawQuery('SELECT COUNT(*) FROM $_tableName'),
       );
       if (existingCount != null && existingCount > 0) {
-        // Database already has messages — just clean up the prefs key.
+        // Database already has messages - just clean up the prefs key.
         await prefs.remove('messages');
         AppLogging.storage(
           'SharedPreferences migration skipped: database already has '
@@ -913,7 +913,7 @@ class MessageDatabase {
                   ? sanitizeExternalText(json['senderShortName'] as String)
                   : null,
               senderAvatarColor: json['senderAvatarColor'] as int?,
-              // These fields were not persisted in the old format —
+              // These fields were not persisted in the old format -
               // they'll get their defaults (MessageStatus.sent, null, null)
             ),
           );
@@ -935,7 +935,7 @@ class MessageDatabase {
       AppLogging.storage('Removed legacy SharedPreferences messages key');
     } catch (e) {
       AppLogging.storage('SharedPreferences migration failed: $e');
-      // Non-fatal — old messages may be lost but new ones will persist
+      // Non-fatal - old messages may be lost but new ones will persist
     }
   }
 }

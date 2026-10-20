@@ -60,7 +60,7 @@ Future<void> _pumpHud(
 }
 
 void main() {
-  testWidgets('idle severity renders nothing — happy-path zero footprint', (
+  testWidgets('idle severity renders nothing - happy-path zero footprint', (
     tester,
   ) async {
     await _pumpHud(tester, MeshCanvasTransmissionStatus.idle);
@@ -128,7 +128,7 @@ void main() {
 
   testWidgets(
     'I2 regression: HUD is NOT a descendant of InteractiveViewer when '
-    'used as a sibling — anchored chrome stays still under pan/zoom',
+    'used as a sibling - anchored chrome stays still under pan/zoom',
     (tester) async {
       // Mount a synthetic Stack mirroring the viewport body shape:
       // viewer transform on one branch, HUD on the other. The widget
@@ -190,7 +190,7 @@ void main() {
         interactiveAncestor,
         findsNothing,
         reason:
-            'transmission HUD must be anchored chrome — never descended '
+            'transmission HUD must be anchored chrome - never descended '
             'from InteractiveViewer, otherwise pan/zoom would move it',
       );
     },

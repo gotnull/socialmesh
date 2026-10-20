@@ -173,9 +173,9 @@ void main() {
     });
 
     test('counts emoji as multi-byte', () {
-      // 9 emoji × 4 bytes = 36 bytes — fits.
+      // 9 emoji × 4 bytes = 36 bytes - fits.
       expect(validateLongName('🎉' * 9), isNull);
-      // 10 emoji × 4 bytes = 40 bytes — exceeds 39-byte budget.
+      // 10 emoji × 4 bytes = 40 bytes - exceeds 39-byte budget.
       expect(validateLongName('🎉' * 10), 'Name must be 39 bytes or less');
     });
 

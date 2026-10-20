@@ -49,7 +49,7 @@ void main() {
       );
     });
 
-    test('escape order — 0x7D escapes do not get re-escaped', () {
+    test('escape order - 0x7D escapes do not get re-escaped', () {
       // 0x7D MUST be escaped before 0x7E. If the order were reversed,
       // the 0x7D produced by escaping 0x7E would be re-escaped on the
       // second pass and the encoding would corrupt.
@@ -71,7 +71,7 @@ void main() {
     });
   });
 
-  group('HdlcFrameDecoder — happy path', () {
+  group('HdlcFrameDecoder - happy path', () {
     test('emits a frame longer than min size in one feed', () {
       final body = Uint8List.fromList(<int>[for (var i = 0; i < 25; i++) i]);
       final wire = ReticulumTcpFraming.encodeFrame(body);
@@ -102,21 +102,18 @@ void main() {
     });
   });
 
-  group('HdlcFrameDecoder — split recv chunks (persistent buffer)', () {
-    test(
-      'feeding a single 20-byte frame one byte at a time emits exactly one frame',
-      () {
-        final body = Uint8List.fromList(List<int>.filled(20, 0xCC));
-        final wire = ReticulumTcpFraming.encodeFrame(body);
-        final dec = HdlcFrameDecoder();
-        final emitted = <Uint8List>[];
-        for (var i = 0; i < wire.length; i++) {
-          emitted.addAll(dec.feed(<int>[wire[i]]));
-        }
-        expect(emitted, hasLength(1));
-        expect(emitted.single, body);
-      },
-    );
+  group('HdlcFrameDecoder - split recv chunks (persistent buffer)', () {
+    test('feeding a single 20-byte frame one byte at a time emits exactly one frame', () {
+      final body = Uint8List.fromList(List<int>.filled(20, 0xCC));
+      final wire = ReticulumTcpFraming.encodeFrame(body);
+      final dec = HdlcFrameDecoder();
+      final emitted = <Uint8List>[];
+      for (var i = 0; i < wire.length; i++) {
+        emitted.addAll(dec.feed(<int>[wire[i]]));
+      }
+      expect(emitted, hasLength(1));
+      expect(emitted.single, body);
+    });
 
     test('split at every possible boundary always yields one frame', () {
       final body = Uint8List.fromList(<int>[
@@ -136,19 +133,18 @@ void main() {
     });
   });
 
-  group('HdlcFrameDecoder — closing flag reused as next opener', () {
+  group('HdlcFrameDecoder - closing flag reused as next opener', () {
     test('three FLAGs encoding two adjacent frames decode to two frames', () {
       // Wire layout: 7E body1 7E body2 7E
       // (the middle 7E is BOTH the close of frame 1 and the open of
-      // frame 2 — upstream's `frame_buffer = frame_buffer[end:]`
+      // frame 2 - upstream's `frame_buffer = frame_buffer[end:]`
       // semantics)
       final body1 = Uint8List.fromList(List<int>.filled(20, 0xDD));
       final body2 = Uint8List.fromList(List<int>.filled(22, 0xEE));
       final wire = Uint8List.fromList(<int>[
         ...ReticulumTcpFraming.encodeFrame(body1),
-        ...ReticulumTcpFraming.encodeFrame(
-          body2,
-        ).sublist(1), // skip leading FLAG
+        ...ReticulumTcpFraming.encodeFrame(body2)
+            .sublist(1), // skip leading FLAG
       ]);
       // Sanity: there should be exactly 3 FLAGs.
       final flags = wire.where((b) => b == hdlcFlag).length;
@@ -186,9 +182,9 @@ void main() {
     });
   });
 
-  group('HdlcFrameDecoder — malformed escape', () {
+  group('HdlcFrameDecoder - malformed escape', () {
     test('throws on ESC followed by an invalid byte', () {
-      // Payload between FLAGs: 0x7D 0x99 — invalid (0x99 is neither
+      // Payload between FLAGs: 0x7D 0x99 - invalid (0x99 is neither
       // 0x5D nor 0x5E).
       final wire = Uint8List.fromList(<int>[hdlcFlag, 0x7D, 0x99, hdlcFlag]);
       final dec = HdlcFrameDecoder();
@@ -196,7 +192,7 @@ void main() {
     });
 
     test('throws on dangling ESC at end of frame (no follower byte)', () {
-      // Payload between FLAGs: ... 0x7D — escape introduced but the
+      // Payload between FLAGs: ... 0x7D - escape introduced but the
       // following byte is the closing FLAG, so unescape has nothing
       // to consume.
       final wire = Uint8List.fromList(<int>[
@@ -212,7 +208,7 @@ void main() {
     });
   });
 
-  group('HdlcFrameDecoder — buffer hygiene', () {
+  group('HdlcFrameDecoder - buffer hygiene', () {
     test('pre-FLAG junk before the first opening FLAG is discarded', () {
       // We don't want to hold unbounded garbage in memory if the
       // remote sends bytes before we ever see a FLAG.
@@ -264,11 +260,10 @@ void main() {
     test('tcp_capture_v1.bin decodes to a single frame', () {
       // 198-byte capture from a real rnsd TCPClientInterface
       // connecting to a passive dumper on 127.0.0.1:4242. Anchor for
-      // the codec — full provenance in
+      // the codec - full provenance in
       // tools/rns_bridge/tcp_capture/FINDINGS.md.
-      final fixture = File(
-        'test/fixtures/reticulum/tcp_capture_v1.bin',
-      ).readAsBytesSync();
+      final fixture = File('test/fixtures/reticulum/tcp_capture_v1.bin')
+          .readAsBytesSync();
       expect(fixture, hasLength(198));
       expect(fixture.first, hdlcFlag);
       expect(fixture.last, hdlcFlag);
@@ -282,9 +277,8 @@ void main() {
     });
 
     test('tcp_capture_v1.bin re-encodes byte-for-byte', () {
-      final fixture = File(
-        'test/fixtures/reticulum/tcp_capture_v1.bin',
-      ).readAsBytesSync();
+      final fixture = File('test/fixtures/reticulum/tcp_capture_v1.bin')
+          .readAsBytesSync();
       final dec = HdlcFrameDecoder();
       final body = dec.feed(fixture).single;
       final reEncoded = ReticulumTcpFraming.encodeFrame(body);

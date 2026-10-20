@@ -19,13 +19,13 @@ class AppUrls {
       dotenv.env['CLOUD_FUNCTIONS_URL'] ??
       'https://us-central1-social-mesh-app.cloudfunctions.net';
 
-  /// World Mesh API URL — nodes, stats, map.
+  /// World Mesh API URL - nodes, stats, map.
   /// All APIs default to api.socialmesh.app (the unified API entry point).
   /// Override via .env for transitional Railway-direct routing.
   static String get worldMeshApiUrl =>
       dotenv.env['WORLD_MESH_API_URL'] ?? 'https://api.socialmesh.app';
 
-  /// Sigil API URL — node identity card snapshots (NodeDex backend).
+  /// Sigil API URL - node identity card snapshots (NodeDex backend).
   /// Default: api.socialmesh.app. Override via .env to Railway domain
   /// until the API gateway is deployed.
   static String get sigilApiUrl =>
@@ -34,7 +34,7 @@ class AppUrls {
   /// Sigil API key (authenticates POST requests)
   static String get sigilApiKey => dotenv.env['SIGIL_API_KEY'] ?? '';
 
-  /// Aether API URL — shared flight snapshots.
+  /// Aether API URL - shared flight snapshots.
   /// Default: api.socialmesh.app. Override via .env to Railway domain
   /// until the API gateway is deployed.
   static String get aetherApiUrl =>
@@ -43,12 +43,12 @@ class AppUrls {
   /// Aether API key (authenticates POST requests)
   static String get aetherApiKey => dotenv.env['AETHER_API_KEY'] ?? '';
 
-  /// TAK Gateway URL — CoT event streaming.
+  /// TAK Gateway URL - CoT event streaming.
   /// Default: tak.socialmesh.app (dedicated TAK subdomain).
   static String get takGatewayUrl =>
       dotenv.env['TAK_GATEWAY_URL'] ?? 'https://tak.socialmesh.app';
 
-  /// NodeBoard API URL — personal BBS boards.
+  /// NodeBoard API URL - personal BBS boards.
   /// Default: nodeboard.socialmesh.app (Nodeboard BBS)
   static String get nodeBoardApiUrl =>
       dotenv.env['NODEBOARD_API_URL'] ?? 'https://nodeboard.socialmesh.app';
@@ -96,7 +96,7 @@ class AppUrls {
   static String get deleteAccountUrlInApp =>
       '$baseUrl/delete-account?inapp=true';
 
-  // Share link URLs — these point to public web portals, never API domains.
+  // Share link URLs - these point to public web portals, never API domains.
   // Portal domains (socialmesh.app/*) serve HTML; API domains serve JSON.
   static String shareSigilUrl(String id) => 'https://socialmesh.app/sigil/$id';
   static String shareFlightUrl(String id) =>
@@ -299,7 +299,7 @@ class AppFeatureFlags {
 
   /// Whether the Voice Messages feature is enabled.
   /// Set `VOICE_MESSAGES_ENABLED=true` in `.env` to enable.
-  /// Default: false — experimental Codec2 voice messages are hidden.
+  /// Default: false - experimental Codec2 voice messages are hidden.
   static bool get isVoiceMessagesEnabled {
     try {
       final raw = dotenv.env['VOICE_MESSAGES_ENABLED']?.toLowerCase().trim();
@@ -329,7 +329,7 @@ class AppFeatureFlags {
   /// Whether the MQTT client-proxy liveness watchdog is active. When on, the
   /// proxy tracks an independent proof-of-life (PINGRESP, inbound traffic, or
   /// a fresh connect) and force-reconnects a socket that goes silent past the
-  /// stale threshold — recovering the half-open case the package's keep-alive
+  /// stale threshold - recovering the half-open case the package's keep-alive
   /// stays blind to. Default: true. Set `MQTT_PROXY_LIVENESS_WATCHDOG_ENABLED=false`
   /// in `.env` (or flip remotely) to restore package-keep-alive-only behaviour.
   static bool get isMqttProxyLivenessWatchdogEnabled {
@@ -364,7 +364,7 @@ class AppFeatureFlags {
 
   /// Whether the message timeline / week view is enabled.
   /// Set `MESSAGE_TIMELINE_ENABLED=true` in `.env` to enable.
-  /// Default: false — the experimental message timeline is hidden.
+  /// Default: false - the experimental message timeline is hidden.
   static bool get isMessageTimelineEnabled {
     try {
       final raw = dotenv.env['MESSAGE_TIMELINE_ENABLED']?.toLowerCase().trim();
@@ -376,7 +376,7 @@ class AppFeatureFlags {
 
   /// Whether the File Transfer feature is enabled.
   /// Set `FILE_TRANSFER_ENABLED=true` in `.env` to enable.
-  /// Default: false — experimental mesh file transfer is hidden.
+  /// Default: false - experimental mesh file transfer is hidden.
   static bool get isFileTransferEnabled {
     try {
       final raw = dotenv.env['FILE_TRANSFER_ENABLED']?.toLowerCase().trim();
@@ -388,7 +388,7 @@ class AppFeatureFlags {
 
   /// Whether MeshCore radios are surfaced alongside Meshtastic in the
   /// default BLE scanner filter. Set `MESHCORE_ENABLED=true` in `.env`.
-  /// Default: false — the scanner only matches the Meshtastic service UUID.
+  /// Default: false - the scanner only matches the Meshtastic service UUID.
   static bool get isMeshCoreEnabled {
     try {
       final raw = dotenv.env['MESHCORE_ENABLED']?.toLowerCase().trim();
@@ -401,7 +401,7 @@ class AppFeatureFlags {
   /// Whether map tiles route to Mapbox instead of CARTO + Esri + OpenTopoMap.
   /// Effective only when `MAPBOX_TOKEN` is also set (callers re-check via
   /// `MapConfig.isMapboxActive`). Set `MAPBOX_ENABLED=true` in `.env`.
-  /// Default: false — the base experience uses the existing tile providers.
+  /// Default: false - the base experience uses the existing tile providers.
   static bool get isMapboxEnabled {
     try {
       final raw = dotenv.env['MAPBOX_ENABLED']?.toLowerCase().trim();
@@ -424,7 +424,7 @@ class AppFeatureFlags {
 
   /// Whether the Operations participation objectives feature is enabled.
   /// Set `OPERATIONS_ENABLED=true` in `.env` to enable.
-  /// Default: false — the Operations surface is hidden until explicitly
+  /// Default: false - the Operations surface is hidden until explicitly
   /// enabled. Operations observe existing app state passively and never
   /// add RF traffic, but the UI is gated while v1 stabilizes.
   static bool get isOperationsEnabled {
@@ -438,7 +438,7 @@ class AppFeatureFlags {
 
   /// Whether the TAK Gateway feature is enabled.
   /// Set `TAK_GATEWAY_ENABLED=true` in `.env` to enable.
-  /// Default: false — all TAK features are off unless explicitly enabled.
+  /// Default: false - all TAK features are off unless explicitly enabled.
   static bool get isTakGatewayEnabled {
     try {
       final raw = dotenv.env['TAK_GATEWAY_ENABLED']?.toLowerCase().trim();
@@ -451,7 +451,7 @@ class AppFeatureFlags {
   /// Whether the per-node NodeDex Constellation view is reachable.
   /// Set `NODEDEX_CONSTELLATION_ENABLED=true` in `.env` to expose the
   /// Constellation app-bar icon on the NodeDex detail screen.
-  /// Default: false — the feature is dormant pending UX iteration.
+  /// Default: false - the feature is dormant pending UX iteration.
   static bool get isNodeDexConstellationEnabled {
     try {
       final raw = dotenv.env['NODEDEX_CONSTELLATION_ENABLED']
@@ -465,7 +465,7 @@ class AppFeatureFlags {
 
   /// Whether the TAK Mesh Bridge (on-device TAK server) is enabled.
   /// Set `TAK_MESH_BRIDGE_ENABLED=true` in `.env` to enable.
-  /// Default: false — bridge functionality is off unless explicitly enabled.
+  /// Default: false - bridge functionality is off unless explicitly enabled.
   static bool get isTakMeshBridgeEnabled {
     try {
       final raw = dotenv.env['TAK_MESH_BRIDGE_ENABLED']?.toLowerCase().trim();
@@ -477,7 +477,7 @@ class AppFeatureFlags {
 
   /// Whether the Social feature (stories, posts, profile social) is enabled.
   /// Set `SOCIAL_ENABLED=true` in `.env` to enable.
-  /// Default: false — Social Hub is hidden unless explicitly enabled.
+  /// Default: false - Social Hub is hidden unless explicitly enabled.
   static bool get isSocialEnabled {
     try {
       final raw = dotenv.env['SOCIAL_ENABLED']?.toLowerCase().trim();
@@ -578,7 +578,7 @@ class AppFeatureFlags {
   ///
   /// The individual flags (`SIP_ENABLED`, `MRRP_ENABLED`,
   /// `OVERLAY_LINK_ENABLED`, `OVERLAY_RESOURCE_ENABLED`,
-  /// `OVERLAY_SECURE_ENABLED`) still work independently — useful for
+  /// `OVERLAY_SECURE_ENABLED`) still work independently - useful for
   /// testing partial stacks. This shorthand is OR'd in: if either the
   /// shorthand OR the granular flag is on, the feature is enabled.
   static bool get isHandshakeEnabled {
@@ -608,7 +608,7 @@ class AppFeatureFlags {
 
   /// Whether the SIP (SocialMesh Identity Protocol) feature is enabled.
   /// Set `SIP_ENABLED=true` (or `HANDSHAKE_ENABLED=true`) in `.env`.
-  /// Default: false — SIP UI is hidden unless explicitly enabled.
+  /// Default: false - SIP UI is hidden unless explicitly enabled.
   ///
   /// MeshCanvas frames ride SIP-wrapped MRRP, so [isMeshCanvasEnabled]
   /// also implicitly enables SIP. The handshake/secure-DM surfaces
@@ -746,7 +746,7 @@ class AppFeatureFlags {
 
   /// Whether the Translation Pack feature UI is enabled.
   /// Set `TRANSLATION_ENABLED=true` in `.env` to enable.
-  /// Default: false — translation features are hidden until ready for release.
+  /// Default: false - translation features are hidden until ready for release.
   static bool get isTranslationEnabled {
     try {
       final raw = dotenv.env['TRANSLATION_ENABLED']?.toLowerCase().trim();
@@ -836,7 +836,7 @@ class AppFeatureFlags {
 
   /// Whether the NodeBoard (personal BBS) feature is enabled.
   /// Set `NODEBOARD_ENABLED=true` in `.env` to enable.
-  /// Default: false — NodeBoard UI is hidden until ready for release.
+  /// Default: false - NodeBoard UI is hidden until ready for release.
   static bool get isNodeBoardEnabled {
     try {
       final raw = dotenv.env['NODEBOARD_ENABLED']?.toLowerCase().trim();
@@ -848,7 +848,7 @@ class AppFeatureFlags {
 
   /// Whether the Node Pet (procedural sigil creature) feature is enabled.
   /// Set `PET_ENABLED=true` in `.env` to enable.
-  /// Default: false — owner pet UI is hidden behind the flag.
+  /// Default: false - owner pet UI is hidden behind the flag.
   static bool get isPetEnabled {
     try {
       final raw = dotenv.env['PET_ENABLED']?.toLowerCase().trim();
@@ -860,7 +860,7 @@ class AppFeatureFlags {
 
   /// Whether the Mesh Feed (store-and-forward content feed) is enabled.
   /// Set `MESH_FEED_ENABLED=true` in `.env` to enable.
-  /// Default: false — mesh feed UI is hidden until ready for release.
+  /// Default: false - mesh feed UI is hidden until ready for release.
   static bool get isMeshFeedEnabled {
     try {
       final raw = dotenv.env['MESH_FEED_ENABLED']?.toLowerCase().trim();
@@ -873,7 +873,7 @@ class AppFeatureFlags {
   /// Whether opportunistic peer sync (LAN/BLE) is enabled.
   /// Set `OPPORTUNISTIC_SYNC_ENABLED=true` in `.env` to enable.
   /// Requires [isMeshFeedEnabled] to be true.
-  /// Default: false — peer sync is off until protocol is validated.
+  /// Default: false - peer sync is off until protocol is validated.
   static bool get isOpportunisticSyncEnabled {
     if (!isMeshFeedEnabled) return false;
     try {
@@ -889,12 +889,12 @@ class AppFeatureFlags {
   /// Whether Meshtastic RF transport for mesh feed posts is enabled.
   /// Set `MESH_FEED_RF_ENABLED=true` in `.env` to enable.
   /// Requires [isMeshFeedEnabled] to be true.
-  /// Default: true when mesh feed is enabled — RF is the primary transport.
+  /// Default: true when mesh feed is enabled - RF is the primary transport.
   static bool get isMeshFeedRfEnabled {
     if (!isMeshFeedEnabled) return false;
     try {
       final raw = dotenv.env['MESH_FEED_RF_ENABLED']?.toLowerCase().trim();
-      // Default to true when mesh feed is enabled — RF is the canonical
+      // Default to true when mesh feed is enabled - RF is the canonical
       // transport. The flag exists to allow disabling RF in isolation
       // (e.g. during LAN-only testing).
       if (raw == null) return true;
@@ -906,7 +906,7 @@ class AppFeatureFlags {
 
   /// Whether the Reticulum Tunnel (Meshtastic portnum 76) UI is enabled.
   /// Set `RETICULUM_TUNNEL_ENABLED=true` in `.env` to enable.
-  /// Default: false — the Settings tile, NodeDex `RNS` activity badge,
+  /// Default: false - the Settings tile, NodeDex `RNS` activity badge,
   /// and NodeDex detail "RNS fragments" card are all hidden. The
   /// background protocol-service hook + Phase 1 pipeline still observe
   /// port-76 traffic regardless; this flag only gates user-facing UI.

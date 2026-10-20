@@ -7,7 +7,7 @@ import '../../models/meshcore_contact.dart';
 /// Localized display labels for [MeshCoreContact].
 ///
 /// The model's static [MeshCoreAdvType.label] returns ASCII strings on
-/// purpose — it's used by `toString()`, search filtering, and debug
+/// purpose - it's used by `toString()`, search filtering, and debug
 /// surfaces that must not depend on a live `BuildContext`. Use this
 /// extension whenever the label is rendered to the user.
 extension MeshCoreContactL10n on MeshCoreContact {
@@ -31,7 +31,7 @@ extension MeshCoreContactL10n on MeshCoreContact {
   /// Mirrors the structure of [MeshCoreContact.pathLabel] but resolves the
   /// human-readable copy through ARB so non-English locales render correctly.
   /// The model's [pathLabel] returns ASCII on purpose (used by `toString()`
-  /// and any non-display caller) — keep both in sync at the structural level.
+  /// and any non-display caller) - keep both in sync at the structural level.
   String localizedPathLabel(AppLocalizations l10n) {
     final override = pathOverride;
     if (override != null) {

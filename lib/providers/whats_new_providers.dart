@@ -26,7 +26,7 @@ class WhatsNewState {
   /// Used by the drawer to decide which items display a NEW chip
   /// and by the hamburger button to show a dot indicator.
   ///
-  /// These persist independently of popup dismissal — clearing them
+  /// These persist independently of popup dismissal - clearing them
   /// requires an explicit [WhatsNewNotifier.dismissBadgeKey] call,
   /// which happens when the user navigates to the corresponding
   /// drawer item.
@@ -124,7 +124,7 @@ class WhatsNewNotifier extends Notifier<WhatsNewState> {
       }
 
       // For a brand-new install (lastSeen is null AND no stored keys),
-      // do NOT seed badge keys — the popup will introduce the features.
+      // do NOT seed badge keys - the popup will introduce the features.
       // Badge keys only accumulate once the user has seen at least one
       // popup OR when new payloads add keys on a version upgrade.
 

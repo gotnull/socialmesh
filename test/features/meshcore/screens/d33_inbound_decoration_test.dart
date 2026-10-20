@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D33 — chat screen live-inbound decoration tests.
+// D33 - chat screen live-inbound decoration tests.
 //
 // Pins the gap that surfaced in the 2026-05-07 live smoke: the chat
 // screen's in-memory inbound bubble was being constructed without
@@ -30,7 +30,7 @@ void main() {
     test('plain text inbound stamps mmf with the AUTHOR (sender) prefix '
         'and leaves displayText / replyToMmf untouched', () {
       // 96458be0b1c5 = the iPhone-side test prefix from the 2026-05-07
-      // smoke. The decoration must derive `02:96458be0b1c5:<ts>` —
+      // smoke. The decoration must derive `02:96458be0b1c5:<ts>` -
       // post-0fab0026 author-prefix rule.
       final ts = DateTime.fromMillisecondsSinceEpoch(0x69fc1420 * 1000);
       final deco = meshCoreInboundContactDecoration(
@@ -64,7 +64,7 @@ void main() {
         body: 'ack',
         summary: 'TerryDev2 replied: ack',
       );
-      // Sanity: the wire body must contain the literal [mrrp] wrapper —
+      // Sanity: the wire body must contain the literal [mrrp] wrapper -
       // that's what we expect the decoration to strip.
       expect(wireBody, contains('[mrrp]'));
       expect(wireBody, contains('[/mrrp]'));
@@ -102,7 +102,7 @@ void main() {
       final deco = meshCoreInboundContactDecoration(
         text: 'hi',
         timestamp: DateTime.fromMillisecondsSinceEpoch(0x69fc1420 * 1000),
-        // 5 bytes (10 hex chars) — short of the required 6.
+        // 5 bytes (10 hex chars) - short of the required 6.
         senderPrefixHex: 'aabbccddee',
       );
       expect(deco.mmf, isNull);

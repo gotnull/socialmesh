@@ -17,7 +17,7 @@
 // Canonical wiring rules:
 //   - cache is the source of truth; widgets subscribe to its change
 //     stream (no manual ref.invalidate from the handler);
-//   - presence is mesh-scope only — local canvas (canvas_id=0) never
+//   - presence is mesh-scope only - local canvas (canvas_id=0) never
 //     emits or accepts presence (CANVAS_PRESENCE_V0_1.md P8);
 //   - heartbeat ticker is shared with cache sweep so the app pays
 //     one wake-up per 15 s, not two;
@@ -129,7 +129,7 @@ final presenceEmitCoordinatorProvider = FutureProvider<PresenceEmitCoordinator>(
     // dependency-coherent with the canvas database lifecycle, even
     // though we no longer query the repository directly from this
     // coordinator (the paint-queue gate was removed at P5 after
-    // sim verification — see _attemptEmit comment).
+    // sim verification - see _attemptEmit comment).
     await ref.watch(canvasRepositoryProvider.future);
 
     final coordinator = PresenceEmitCoordinator(
@@ -139,7 +139,7 @@ final presenceEmitCoordinatorProvider = FutureProvider<PresenceEmitCoordinator>(
       localNodeNumProvider: () => ref.read(myNodeNumProvider),
       // Participation + sharing gate
       // (CANVAS_PARTICIPATION_V0_1.md §5.4). Presence requires BOTH
-      // bits on. Participation alone is not enough — sharing is
+      // bits on. Participation alone is not enough - sharing is
       // explicitly conservative-default after Join.
       canEmit: () =>
           ref.read(meshCanvasParticipationEnabledProvider) &&
@@ -156,14 +156,14 @@ final presenceEmitCoordinatorProvider = FutureProvider<PresenceEmitCoordinator>(
 /// coordinator's tick. Lives here so the widget that owns the timer
 /// (the viewer's lifecycle host) imports just one symbol from this
 /// file. Ownership of the actual timer sits in the WIDGET, NOT in a
-/// provider — that way `State.dispose` cancels the timer
+/// provider - that way `State.dispose` cancels the timer
 /// synchronously and the flutter_test "no pending Timer" invariant
 /// holds without every viewer test having to override a provider.
 const Duration presenceHeartbeatPeriod = Duration(seconds: 15);
 
 /// One combined sweep + heartbeat tick. Called from the viewer
 /// lifecycle host's periodic timer (and once on mount). Idempotent
-/// when the coordinator has not yet resolved — in early boot we
+/// when the coordinator has not yet resolved - in early boot we
 /// silently skip the tick rather than block on it.
 Future<void> presenceLifecycleSweepAndTick(WidgetRef ref) async {
   final cache = ref.read(presenceCacheProvider);

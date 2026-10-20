@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — nav shell root scaffold owning the bottom bar; each
+// lint-allow: scaffold - nav shell root scaffold owning the bottom bar; each
 // tab brings its own GlassScaffold
 
 // Hosts NodeDex's three views behind a bottom bar.

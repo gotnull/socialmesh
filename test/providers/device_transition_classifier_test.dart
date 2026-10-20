@@ -11,7 +11,7 @@ import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 
 void main() {
-  group('classifyDeviceTransition — every matrix row', () {
+  group('classifyDeviceTransition - every matrix row', () {
     test('firstEver: no previous device persisted', () {
       final t = classifyDeviceTransition(
         newDeviceId: 'AA:BB:CC:DD:EE:01',
@@ -117,7 +117,7 @@ void main() {
 
     test('deviceSwitch: TCP A → BLE B (different radio, cross-transport)', () {
       // Classic bug scenario: previous TCP session, user taps a different
-      // physical BLE radio. Must be a destructive clear — otherwise the
+      // physical BLE radio. Must be a destructive clear - otherwise the
       // persisted (global) node cache from radio A leaks into radio B's
       // session.
       final t = classifyDeviceTransition(
@@ -164,26 +164,23 @@ void main() {
       expect(t.transportFamilyChanged, isFalse);
     });
 
-    test(
-      'sameRadioCrossTransport is NOT destructive even if lastDeviceType is null',
-      () {
-        // Legacy installs predate lastDeviceType — we still shouldn't
-        // wipe when logical identity matches. `transportFamilyChanged`
-        // is false when previousTransportType is unknown, so we fall
-        // through to `transportRebind` (still non-destructive).
-        final t = classifyDeviceTransition(
-          newDeviceId: 'tcp:meshtastic_abcd.local:4403',
-          newDeviceName: 'Meshtastic abcd',
-          newDeviceType: TransportType.network,
-          previousDeviceId: 'AA:BB:CC:DD:EE:01',
-          previousDeviceType: null,
-          lastMyNodeNum: 0x1234abcd,
-          lastDeviceName: 'Meshtastic_abcd',
-        );
-        expect(t.clearNodes, isFalse);
-        expect(t.isLogicalRebind, isTrue);
-      },
-    );
+    test('sameRadioCrossTransport is NOT destructive even if lastDeviceType is null', () {
+      // Legacy installs predate lastDeviceType - we still shouldn't
+      // wipe when logical identity matches. `transportFamilyChanged`
+      // is false when previousTransportType is unknown, so we fall
+      // through to `transportRebind` (still non-destructive).
+      final t = classifyDeviceTransition(
+        newDeviceId: 'tcp:meshtastic_abcd.local:4403',
+        newDeviceName: 'Meshtastic abcd',
+        newDeviceType: TransportType.network,
+        previousDeviceId: 'AA:BB:CC:DD:EE:01',
+        previousDeviceType: null,
+        lastMyNodeNum: 0x1234abcd,
+        lastDeviceName: 'Meshtastic_abcd',
+      );
+      expect(t.clearNodes, isFalse);
+      expect(t.isLogicalRebind, isTrue);
+    });
 
     test('repeated swap TCP A → BLE B → TCP A stays correctly classified', () {
       // Leg 1: TCP A → BLE B (deviceSwitch, destructive).
@@ -200,7 +197,7 @@ void main() {
 
       // Leg 2: BLE B → TCP A after BLE B became new "last". lastMyNodeNum
       // now belongs to node B (0x9999). TCP A's endpoint (`_abcd.local`)
-      // does NOT match — so this is a true device switch, not a rebind.
+      // does NOT match - so this is a true device switch, not a rebind.
       final leg2 = classifyDeviceTransition(
         newDeviceId: 'tcp:meshtastic_abcd.local:4403',
         newDeviceName: 'Meshtastic abcd',
@@ -215,7 +212,7 @@ void main() {
     });
   });
 
-  group('isLogicalSameRadio — cross-transport identity', () {
+  group('isLogicalSameRadio - cross-transport identity', () {
     test('TCP host contains prior BLE nodeNum suffix → same radio', () {
       expect(
         isLogicalSameRadio(
@@ -272,7 +269,7 @@ void main() {
     });
   });
 
-  group('transportTypeFromString — round-trip', () {
+  group('transportTypeFromString - round-trip', () {
     test('known values decode', () {
       expect(transportTypeFromString('ble'), TransportType.ble);
       expect(transportTypeFromString('usb'), TransportType.usb);

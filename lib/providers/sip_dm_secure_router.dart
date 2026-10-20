@@ -10,7 +10,7 @@
 /// it. It never duplicates: a message is either secure or plaintext,
 /// not both.
 ///
-/// Typing (`0x41`) is explicitly NOT routed here — it stays on the
+/// Typing (`0x41`) is explicitly NOT routed here - it stays on the
 /// existing plaintext path unconditionally per product policy.
 ///
 /// Incoming secure DM / reaction traffic is handled by
@@ -69,7 +69,7 @@ enum SipDmFallbackReason {
 
 /// Why a SIP Ink send was hard-blocked at the router (no fallback).
 ///
-/// Distinct from [SipDmFallbackReason] because these are terminal —
+/// Distinct from [SipDmFallbackReason] because these are terminal -
 /// e.g. no point falling back to plaintext when the peer has not
 /// advertised support for the type at all.
 enum SipDmInkBlockReason {
@@ -134,11 +134,11 @@ enum SipPlaySendCapabilityReason {
   lifecycleResponseAllowedByDiscoveryCapability,
 
   /// Initiating offer with no peer entry in the discovery cache.
-  /// Blocked — we have neither cap evidence nor session evidence.
+  /// Blocked - we have neither cap evidence nor session evidence.
   blockedPeerUnknown,
 
   /// Initiating offer where the peer is known but has not advertised
-  /// `dmPlayV1`. Blocked — the wire frame would be silently dropped
+  /// `dmPlayV1`. Blocked - the wire frame would be silently dropped
   /// on the peer side, wasting airtime.
   blockedNoCapability,
 }
@@ -152,7 +152,7 @@ class SipPlaySendCapabilityDecision {
 
 /// Whether [action] is a lifecycle response (rather than an
 /// initiating action). Lifecycle responses are sendable based on
-/// session evidence — the discovery cap cache is asynchronous
+/// session evidence - the discovery cap cache is asynchronous
 /// (CAP_BEACON every ~300s + jitter, or older clients that never
 /// advertise the per-DM-subtype bits at all), and refusing a response
 /// because of stale or never-populated cap data leaves the user
@@ -185,16 +185,16 @@ bool sessionHasInboundPlay(SipDmSession session) {
 ///
 /// Splits the gate by action category:
 ///
-///   * `offer` (initiating) — strict: requires the peer to have
+///   * `offer` (initiating) - strict: requires the peer to have
 ///     advertised `dmPlayV1` via the discovery cap cache. We don't
 ///     waste airtime initiating to a peer who can't decode the
 ///     unknown msg_type.
 ///   * `accept` / `decline` / `resign` / `move` (lifecycle response
-///     to an existing instance) — allowed if the session has any
+///     to an existing instance) - allowed if the session has any
 ///     inbound dmPlay envelope (session evidence) OR the discovery
 ///     cap cache already shows `dmPlayV1`. Either is sufficient.
 ///
-/// Pure helper — no `Ref`, no I/O, no clock. Caller is responsible
+/// Pure helper - no `Ref`, no I/O, no clock. Caller is responsible
 /// for reading discovery state + session messages and feeding the
 /// primitive inputs in.
 SipPlaySendCapabilityDecision evaluatePlaySendCapability({
@@ -230,7 +230,7 @@ SipPlaySendCapabilityDecision evaluatePlaySendCapability({
       SipPlaySendCapabilityReason.lifecycleResponseAllowedBySessionEvidence,
     );
   }
-  // No session evidence yet — fall back to discovery cap cache.
+  // No session evidence yet - fall back to discovery cap cache.
   if (peerKnown && peerSupportsDmPlayV1) {
     return const SipPlaySendCapabilityDecision._(
       true,
@@ -243,7 +243,7 @@ SipPlaySendCapabilityDecision evaluatePlaySendCapability({
   );
 }
 
-/// Single entry point the UI uses for DM send. Not a `Notifier` —
+/// Single entry point the UI uses for DM send. Not a `Notifier` -
 /// just a plain helper that takes a [Ref] and pulls collaborators on
 /// demand.
 class SipDmRouter {
@@ -267,7 +267,7 @@ class SipDmRouter {
 
     // T+S gate stack (in canonical order):
     //   1. hard safety gate
-    //   2. peer capability + session state (existing — handled inside
+    //   2. peer capability + session state (existing - handled inside
     //      `_evaluateGate` and the plaintext/secure send paths)
     //   3. per-peer rate gate
     //   4. global SipRateLimiter (handled inside `buildDmMessage`)
@@ -307,7 +307,7 @@ class SipDmRouter {
   ///   4. secure-when-all-true gate same as [sendText].
   ///
   /// Returns `SipDmRouterOutcome.failInk(...)` when the peer does not
-  /// support sketches — the UI should disable the Sketch tab in that
+  /// support sketches - the UI should disable the Sketch tab in that
   /// case so this branch is defence-in-depth, not the primary gate.
   Future<SipDmRouterOutcome> sendSketch({
     required int sessionTag,
@@ -323,7 +323,7 @@ class SipDmRouter {
     }
 
     // Hard peer-feature gate. Distinct from the secure gate because
-    // this is "peer can't render sketches at all" — falling back to
+    // this is "peer can't render sketches at all" - falling back to
     // plaintext over a non-supporting peer just wastes airtime.
     final discovery = _ref.read(sipDiscoveryProvider);
     if (discovery == null) {
@@ -354,7 +354,7 @@ class SipDmRouter {
       );
     }
 
-    // T+S gate stack (canonical order — see sendText for the full
+    // T+S gate stack (canonical order - see sendText for the full
     // rationale). Block check fires AFTER the peer-feature gate so
     // we don't re-leak the unsupported-peer signal to a blocked
     // peer; both terminate the send before the global limiter is
@@ -388,7 +388,7 @@ class SipDmRouter {
   ///
   /// [playPayload] must be the byte sequence produced by
   /// `SipPlayCodec.encode` (a v1 SIP Play envelope). The router enforces:
-  ///   1. capability gate — strict for offers (initiating), session-
+  ///   1. capability gate - strict for offers (initiating), session-
   ///      evidence-aware for lifecycle responses; see
   ///      [evaluatePlaySendCapability],
   ///   2. session is active and known,
@@ -415,7 +415,7 @@ class SipDmRouter {
       return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
     }
 
-    // Decode the envelope first — the action determines whether the
+    // Decode the envelope first - the action determines whether the
     // capability gate is strict (offer) or session-evidence-aware
     // (accept/decline/resign/move). A malformed envelope falls
     // through to the legacy strict gate; it'll get rejected
@@ -442,7 +442,7 @@ class SipDmRouter {
             sessionWitnessedInboundPlay: sessionWitnessedInboundPlay,
           );
 
-    // One log line per send-attempt — sendPlay is invoked from user
+    // One log line per send-attempt - sendPlay is invoked from user
     // tap handlers (offer/accept/decline/resign) or from the move
     // submit path, so the call rate is naturally tap-bounded; no
     // extra dedupe needed.
@@ -466,7 +466,7 @@ class SipDmRouter {
       );
     }
 
-    // T+S gate stack — canonical order, matches sendText/sendSketch.
+    // T+S gate stack - canonical order, matches sendText/sendSketch.
     if (_ref.read(peerSafetyGateProvider).isBlocked(session.peerNodeId)) {
       return const SipDmRouterOutcome.fail(SipDmSendError.peerBlocked);
     }
@@ -515,7 +515,7 @@ class SipDmRouter {
       return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
     }
 
-    // Hard peer-feature gate. Distinct from the secure gate — peers
+    // Hard peer-feature gate. Distinct from the secure gate - peers
     // without dmSignalV1 silently drop unknown 0x47 frames.
     final discovery = _ref.read(sipDiscoveryProvider);
     if (discovery == null) {
@@ -546,7 +546,7 @@ class SipDmRouter {
       );
     }
 
-    // T+S gate stack — canonical order, matches sendText/sendSketch/sendPlay.
+    // T+S gate stack - canonical order, matches sendText/sendSketch/sendPlay.
     if (_ref.read(peerSafetyGateProvider).isBlocked(session.peerNodeId)) {
       return const SipDmRouterOutcome.fail(SipDmSendError.peerBlocked);
     }
@@ -587,7 +587,7 @@ class SipDmRouter {
       return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
     }
 
-    // T+S gate stack — same as sendText.
+    // T+S gate stack - same as sendText.
     if (_ref.read(peerSafetyGateProvider).isBlocked(session.peerNodeId)) {
       return const SipDmRouterOutcome.fail(SipDmSendError.peerBlocked);
     }
@@ -698,7 +698,7 @@ class SipDmRouter {
 
     // Mirror plaintext bookkeeping: append to local history so the
     // sender's own timeline renders the message they just sent. Use
-    // [SipDmManager.parseReplyToText] for the quote — historically
+    // [SipDmManager.parseReplyToText] for the quote - historically
     // this branch incorrectly used `extractReplyBody`, which returns
     // the BODY (the user's reply text) and stored that as the quote,
     // making the sender's local bubble appear to reply to itself.
@@ -1133,7 +1133,7 @@ class SipDmRouter {
 }
 
 /// Provider for the router. Rebuilds only when upstream providers
-/// invalidate — the router itself is cheap to construct.
+/// invalidate - the router itself is cheap to construct.
 final sipDmRouterProvider = Provider<SipDmRouter>((ref) {
   return SipDmRouter(ref);
 });
@@ -1161,11 +1161,11 @@ class _GateFail extends _GateResult {
 /// Resolve which [SipDmSession] should receive a decrypted secure
 /// inbound DM payload.
 ///
-/// Primary path — match by the `peerNodeNum` carried on the link
+/// Primary path - match by the `peerNodeNum` carried on the link
 /// store record for the inbound `linkId`. That's the authoritative
 /// pairing when overlay link state is consistent.
 ///
-/// Recovery path — when the canonical lookup yields no session AND
+/// Recovery path - when the canonical lookup yields no session AND
 /// exactly one DM session is active, route the frame to that session
 /// and emit `secure_decrypt_recovered`. This salvages the multi-device
 /// cross-peer linkId-collision scenario where the link store's
@@ -1175,7 +1175,7 @@ class _GateFail extends _GateResult {
 /// peer the frame really came from). With 0 or 2+ sessions we refuse
 /// to guess and emit `secure_decrypt_dropped reason=no_dm_session`.
 ///
-/// This is a recovery path, NOT normal routing — the underlying
+/// This is a recovery path, NOT normal routing - the underlying
 /// poisoned link record is fixed in `OverlayLinkEngine._handleLinkOpen`
 /// (cross-peer linkId collisions are now rejected at LINK_OPEN time).
 /// Public so the regression test can pin both branches.
@@ -1241,7 +1241,7 @@ final sipSecureDmIngressProvider = FutureProvider<void>((ref) async {
 Future<void> _handleSecureDmInbound({
   required Ref ref,
   required dynamic
-  linkStore, // OverlayLinkStore — kept dynamic to avoid import circularity
+  linkStore, // OverlayLinkStore - kept dynamic to avoid import circularity
   required OverlaySecureInboundPayload payload,
 }) async {
   final dm = ref.read(sipDmManagerProvider);
@@ -1271,7 +1271,7 @@ Future<void> _handleSecureDmInbound({
   // peers. Fires AFTER `resolveSecureInboundDmSession` so the
   // recovery path (which uses the only-active-session fallback for
   // poisoned link records) has produced the authoritative peer
-  // node id. Defence-in-depth — the SipDmManager.handleInbound*
+  // node id. Defence-in-depth - the SipDmManager.handleInbound*
   // guards would also catch this, but stopping here keeps the
   // peer node id out of any `secure_decrypt_ok` log line.
   final safetyGate = ref.read(peerSafetyGateProvider);
@@ -1413,7 +1413,7 @@ Future<void> _handleSecureDmInbound({
 /// are populated; fields that aren't read (flags, headerLen,
 /// version) get sensible defaults.
 ///
-/// `nonce` MUST be a fresh random per-call value — the plaintext
+/// `nonce` MUST be a fresh random per-call value - the plaintext
 /// ingress path runs each frame through the per-session frame-nonce
 /// dedupe ring (`SipDmManager._markInboundFrameSeen`), and a fixed
 /// nonce would cause the second secure frame in a session to look
@@ -1421,7 +1421,7 @@ Future<void> _handleSecureDmInbound({
 /// reaching the engine. The overlay secure session already enforces
 /// its own replay window pre-decrypt, so by the time the synthesised
 /// frame reaches `handleInbound*`, multi-path duplicates have
-/// already been filtered upstream — the ring is harmless when the
+/// already been filtered upstream - the ring is harmless when the
 /// nonce is fresh, but catastrophic (silently drops every frame
 /// after the first) when it isn't.
 SipFrame _synthesizeDmFrame({

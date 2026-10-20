@@ -89,7 +89,7 @@ void main() {
     });
 
     test('large input is still encodable after epsilon bumps', () {
-      // 200-point near-diagonal — far above the 64-point cap.
+      // 200-point near-diagonal - far above the 64-point cap.
       final pts = List<({double x, double y})>.generate(
         200,
         (i) => (x: i * 0.3, y: i * 0.3),

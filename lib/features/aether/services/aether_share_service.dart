@@ -303,7 +303,7 @@ class AetherShareService {
   /// Fetch cached flight position from the Aether API.
   ///
   /// The server polls OpenSky in the background and caches positions.
-  /// This endpoint costs zero OpenSky credits — the server handles all
+  /// This endpoint costs zero OpenSky credits - the server handles all
   /// credit spend regardless of how many clients are polling.
   ///
   /// Returns `null` if no position is available (flight not tracked,
@@ -364,7 +364,7 @@ class AetherShareService {
 
 /// Cached flight position returned by the Aether API.
 ///
-/// The server polls OpenSky and caches positions — clients never call
+/// The server polls OpenSky and caches positions - clients never call
 /// OpenSky directly. This eliminates per-user credit burn entirely.
 class CachedFlightPosition {
   final FlightPosition position;

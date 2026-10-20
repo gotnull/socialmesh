@@ -115,7 +115,7 @@ class TakGatewayClient {
       // would either fail silently or be rejected. Surface a clear error
       // so the UI can show an auth-required state.
       if (token == null) {
-        const msg = 'Authentication required — sign in to use TAK Gateway';
+        const msg = 'Authentication required - sign in to use TAK Gateway';
         AppLogging.tak('Auth token is null, aborting connection: $msg');
         _lastError = msg;
         _setState(TakConnectionState.disconnected);

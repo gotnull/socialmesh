@@ -15,7 +15,7 @@ import 'profile_service.dart';
 
 /// Placeholder display names that are seeded automatically when no real
 /// name is available. The public-mirror uniqueness check must skip these
-/// — multiple accounts legitimately share them, and a `Guest`-named
+/// - multiple accounts legitimately share them, and a `Guest`-named
 /// account would otherwise never get a `profiles/{uid}` doc written
 /// (the check throws on the first sync and aborts mid-flight).
 @visibleForTesting
@@ -178,7 +178,7 @@ class ProfileCloudSyncService {
     return result;
   }
 
-  /// Build a public URL for a storage file (no token needed — rules allow
+  /// Build a public URL for a storage file (no token needed - rules allow
   /// public read for avatars and banners).
   ///
   /// Appends a `v` query parameter (upload epoch millis) so that each upload
@@ -315,7 +315,7 @@ class ProfileCloudSyncService {
     // Only run the uniqueness check when the display name is actually
     // changing AND is not a placeholder. A passive sync (e.g. on app
     // launch) must never throw DisplayNameTakenException for the user's
-    // own existing name — that throw used to abort the public-profile
+    // own existing name - that throw used to abort the public-profile
     // write mid-flight, leaving users/{uid} and profiles/{uid} out of
     // sync. Placeholder names like "Guest" and "New User" are seeded
     // automatically when no real name is available, so multiple users
@@ -380,7 +380,7 @@ class ProfileCloudSyncService {
 
   /// Backfill any fields that are present in the public mirror
   /// (`profiles/{uid}`) but missing from the private user doc
-  /// (`users/{uid}`). Recovers from past drift caused by partial writes —
+  /// (`users/{uid}`). Recovers from past drift caused by partial writes -
   /// e.g. the `profileToFirestoreMap` null-stomp bug that wiped users/{uid}
   /// while leaving profiles/{uid} intact.
   ///
@@ -420,7 +420,7 @@ class ProfileCloudSyncService {
   /// cloud-side `UserProfile` and the raw `profiles/{uid}` document data,
   /// return a profile whose null fields are backfilled from the public
   /// mirror. Returns the same `cloud` instance (via `identical`) when
-  /// nothing changes — callers can use `identical(out, cloud)` as a
+  /// nothing changes - callers can use `identical(out, cloud)` as a
   /// no-op signal.
   @visibleForTesting
   static UserProfile mergePublicMirrorIntoCloud(
@@ -443,7 +443,7 @@ class ProfileCloudSyncService {
             ? ProfileSocialLinks.fromJson(publicSocialLinks)
             : null);
     // displayName is intentionally NOT recovered from the public mirror.
-    // The cloud doc is the source of truth for the user's own name —
+    // The cloud doc is the source of truth for the user's own name -
     // pulling from public would clobber legitimate private edits where
     // the public mirror hadn't caught up yet. If a past null-stomp left
     // users/{uid}.displayName at an Auth-fallback shape, that needs a
@@ -601,7 +601,7 @@ class ProfileCloudSyncService {
           // Local belongs to different user - create fresh profile for this user.
           // Use the Firebase Auth display name (e.g. from Google) if available
           // so the user doesn't end up with "Guest" as their cloud name.
-          // Sanitise first — auth names contain spaces ("Simon Cusa") but
+          // Sanitise first - auth names contain spaces ("Simon Cusa") but
           // Firestore rules require ^[a-zA-Z0-9._]+$.
           final name = _sanitizeDisplayName(authDisplayName);
           AppLogging.auth(
@@ -613,7 +613,7 @@ class ProfileCloudSyncService {
               ? UserProfile.fromFirebaseUser(uid: uid, displayName: name)
               : UserProfile.guest().copyWith(id: uid, isSynced: true);
           // Public mirror first so a uniqueness throw cannot leave
-          // users/{uid} half-written. Always merge, never overwrite — if
+          // users/{uid} half-written. Always merge, never overwrite - if
           // a concurrent write or stale cache made cloudDoc appear
           // missing when it actually exists, a bare set() would wipe it.
           await _syncPublicProfile(uid, freshProfile);
@@ -773,7 +773,7 @@ class ProfileCloudSyncService {
       final ref = _avatarRef(uid);
       AppLogging.auth('ProfileSync: uploadAvatar storageRef: ${ref.fullPath}');
 
-      // Re-encode as JPEG, resize to max 1024px — iOS may provide HEIC data
+      // Re-encode as JPEG, resize to max 1024px - iOS may provide HEIC data
       AppLogging.auth(
         'ProfileSync: uploadAvatar starting image preparation...',
       );
@@ -963,7 +963,7 @@ class ProfileCloudSyncService {
       final ref = _bannerRef(uid);
       AppLogging.auth('ProfileSync: uploadBanner storageRef: ${ref.fullPath}');
 
-      // Re-encode as JPEG, resize to max 2048px — iOS may provide HEIC data
+      // Re-encode as JPEG, resize to max 2048px - iOS may provide HEIC data
       AppLogging.auth(
         'ProfileSync: uploadBanner starting image preparation...',
       );
@@ -1366,7 +1366,7 @@ class DisplayNameTakenException implements Exception {
       'The display name "$displayName" is already taken. Please choose a different name.'; // lint-allow: hardcoded-string
 }
 
-/// Singleton instance — nullable because Firebase init is async and may fail.
+/// Singleton instance - nullable because Firebase init is async and may fail.
 /// All access must go through [profileCloudSyncServiceOrNull] or the provider.
 ProfileCloudSyncService? profileCloudSyncServiceOrNull;
 

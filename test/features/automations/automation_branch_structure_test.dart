@@ -93,7 +93,7 @@ void main() {
 
   // ─── MODEL / SERIALIZATION ───────────────────────────────────────────
 
-  group('Model — branch fields', () {
+  group('Model - branch fields', () {
     test('legacy automation without branch fields', () {
       final automation = Automation(
         id: 'legacy-1',
@@ -177,7 +177,7 @@ void main() {
     });
   });
 
-  group('Model — serialization', () {
+  group('Model - serialization', () {
     test('legacy automation round-trips unchanged', () {
       final original = Automation(
         id: 'legacy-rt',
@@ -272,7 +272,7 @@ void main() {
         'triggerCount': 0,
       };
 
-      // Should throw TypeError on cast — malformed payload fails safely.
+      // Should throw TypeError on cast - malformed payload fails safely.
       expect(() => Automation.fromJson(json), throwsA(isA<TypeError>()));
     });
   });
@@ -302,7 +302,7 @@ void main() {
 
   // ─── RUNTIME BRANCH SEMANTICS ────────────────────────────────────────
 
-  group('Runtime — condition pass -> THEN executes', () {
+  group('Runtime - condition pass -> THEN executes', () {
     test('legacy automation runs actions (no conditions)', () async {
       mockRepository.addTestAutomation(
         Automation(
@@ -357,7 +357,7 @@ void main() {
     });
   });
 
-  group('Runtime — condition fail + ELSE exists -> ELSE executes', () {
+  group('Runtime - condition fail + ELSE exists -> ELSE executes', () {
     test('ELSE actions run when condition fails', () async {
       // Condition: timeRange 01:00-02:00, but event is at midnight (outside)
       mockRepository.addTestAutomation(
@@ -410,7 +410,7 @@ void main() {
     });
   });
 
-  group('Runtime — condition fail + no ELSE -> nothing executes', () {
+  group('Runtime - condition fail + no ELSE -> nothing executes', () {
     test('no execution and recorded as skip', () async {
       mockRepository.addTestAutomation(
         Automation(
@@ -476,7 +476,7 @@ void main() {
     });
   });
 
-  group('Runtime — non-selected branch actions never execute', () {
+  group('Runtime - non-selected branch actions never execute', () {
     test('THEN selected, ELSE actions never run', () async {
       mockRepository.addTestAutomation(
         Automation(
@@ -516,9 +516,9 @@ void main() {
     });
   });
 
-  group('Runtime — tree evaluated exactly once per run', () {
+  group('Runtime - tree evaluated exactly once per run', () {
     test('condition tree not re-evaluated during action execution', () async {
-      // We can verify via debug trace — only one evaluation per automation per event
+      // We can verify via debug trace - only one evaluation per automation per event
       mockRepository.addTestAutomation(
         Automation(
           id: 'single-eval',

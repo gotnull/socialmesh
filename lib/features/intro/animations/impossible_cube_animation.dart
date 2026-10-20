@@ -251,9 +251,9 @@ class _ImpossibleCubePainter extends CustomPainter {
     );
 
     // Second half with different color to show the paradox
-    final altColor = HSVColor.fromColor(
-      color,
-    ).withHue((HSVColor.fromColor(color).hue + 180) % 360).toColor();
+    final altColor = HSVColor.fromColor(color)
+        .withHue((HSVColor.fromColor(color).hue + 180) % 360)
+        .toColor();
 
     canvas.drawLine(
       offsetMid,

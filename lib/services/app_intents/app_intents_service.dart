@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
+
 import '../../core/logging.dart';
+
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -53,7 +55,7 @@ class AppIntentsService {
     // This drains any intent invocations that were queued while the engine was
     // still starting up (see AppIntentsManager.swift engine-readiness gate).
     _channel.invokeMethod<void>('engineReady').catchError((Object e) {
-      // Best-effort — if the native side doesn't recognise the call (older
+      // Best-effort - if the native side doesn't recognise the call (older
       // binary, Android) this is harmless.
       AppLogging.debug('AppIntentsService: engineReady signal failed: $e');
     });
@@ -86,8 +88,7 @@ class AppIntentsService {
       default:
         throw PlatformException(
           code: 'UNSUPPORTED',
-          message:
-              'Method ${call.method} not supported', // lint-allow: hardcoded-string
+          message: 'Method ${call.method} not supported', // lint-allow: hardcoded-string
         );
     }
   }

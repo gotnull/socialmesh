@@ -390,9 +390,9 @@ void main() {
       // Code units: A(1) B(1) \uD83D(1) \uDE03(1) C(1) D(1) = 6 total
       // Truncating at 3 would land on \uDE03 (low surrogate after high at 2)
       // But \uD83D at index 2 is a high surrogate, so truncating at 3 keeps it.
-      // Truncating at 2 would end right before the emoji — that's fine.
+      // Truncating at 2 would end right before the emoji - that's fine.
       final result = safeTruncateCodeUnits(input, 3);
-      // Position 2 is high surrogate \uD83D — backs off to 2
+      // Position 2 is high surrogate \uD83D - backs off to 2
       expect(result, 'AB');
       expect(result.length, 2);
     });
@@ -400,7 +400,7 @@ void main() {
     test('keeps complete surrogate pair when limit includes both units', () {
       const input = 'A😃B';
       // Code units: A(1) \uD83D(1) \uDE03(1) B(1) = 4
-      // Limit 3 → substring(0,3) = 'A\uD83D\uDE03' = 'A😃' — last char is low surrogate, fine
+      // Limit 3 → substring(0,3) = 'A\uD83D\uDE03' = 'A😃' - last char is low surrogate, fine
       final result = safeTruncateCodeUnits(input, 3);
       expect(result, 'A😃');
     });
@@ -476,7 +476,7 @@ void main() {
     });
 
     test('does not split astral emoji grapheme clusters', () {
-      // 📍 is a single grapheme made of a surrogate pair — taking 1 keeps it whole.
+      // 📍 is a single grapheme made of a surrogate pair - taking 1 keeps it whole.
       final result = safeInitials('📍X', 1);
       expect(_hasLoneSurrogate(result), isFalse);
       expect(result.characters.length, 1);

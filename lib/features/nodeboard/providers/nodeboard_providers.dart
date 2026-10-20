@@ -53,7 +53,7 @@ final nodeBoardRepositoryProvider = FutureProvider<NodeBoardRepository>((
 });
 
 // ==========================================================================
-// Read providers — board lists
+// Read providers - board lists
 // ==========================================================================
 
 final myNodeBoardsProvider = FutureProvider<List<NodeBoardSummary>>((
@@ -84,7 +84,7 @@ final discoverNodeBoardsProvider = FutureProvider<List<NodeBoardSummary>>((
 });
 
 // ==========================================================================
-// Read providers — board detail (FutureProvider.family by slug)
+// Read providers - board detail (FutureProvider.family by slug)
 // ==========================================================================
 
 final nodeBoardDetailProvider = FutureProvider.family<NodeBoard?, String>((
@@ -97,7 +97,7 @@ final nodeBoardDetailProvider = FutureProvider.family<NodeBoard?, String>((
 });
 
 // ==========================================================================
-// Read providers — sections (FutureProvider.family by slug)
+// Read providers - sections (FutureProvider.family by slug)
 // ==========================================================================
 
 final nodeBoardSectionsProvider =
@@ -108,7 +108,7 @@ final nodeBoardSectionsProvider =
     });
 
 // ==========================================================================
-// Read providers — threads
+// Read providers - threads
 // Typed record key: safe from delimiter injection in slug/id fields.
 // ==========================================================================
 
@@ -158,7 +158,7 @@ final nodeBoardThreadListProvider =
     });
 
 // ==========================================================================
-// Read providers — thread detail + replies
+// Read providers - thread detail + replies
 // Typed record key.
 // ==========================================================================
 
@@ -201,7 +201,7 @@ final nodeBoardThreadDetailProvider =
     });
 
 // ==========================================================================
-// Read providers — themes
+// Read providers - themes
 // ==========================================================================
 
 final nodeBoardThemesProvider = FutureProvider<List<NodeBoardTheme>>((
@@ -215,7 +215,7 @@ final nodeBoardThemesProvider = FutureProvider<List<NodeBoardTheme>>((
 });
 
 // ==========================================================================
-// NodeDex bridge — board summary for a node ID
+// NodeDex bridge - board summary for a node ID
 //
 // autoDispose: every NodeDex detail visit re-fetches instead of trusting
 // a stale `null` from an earlier fetch (before the user linked their
@@ -231,7 +231,7 @@ final nodeBoardSummaryForNodeProvider = FutureProvider.autoDispose
     });
 
 // ==========================================================================
-// Mutation provider — create board
+// Mutation provider - create board
 // ==========================================================================
 
 final nodeBoardCreateNotifierProvider =
@@ -294,7 +294,7 @@ class NodeBoardCreateNotifier extends AsyncNotifier<void> {
 }
 
 // ==========================================================================
-// Mutation provider — moderation + writes
+// Mutation provider - moderation + writes
 // ==========================================================================
 
 final nodeBoardModNotifierProvider =
@@ -535,7 +535,7 @@ class TerminalOutputLine {
 
 /// A context-aware chip action rendered above the command input bar.
 /// Tapping a chip executes its command string through the same pipeline
-/// as typed input — there is no hidden shortcut path.
+/// as typed input - there is no hidden shortcut path.
 class TerminalChipAction {
   final String label;
   final String command;
@@ -615,7 +615,7 @@ class TerminalState {
 
 /// Typed, transient result of executing a terminal command. The state
 /// notifier never uses side-channels (error strings, status flags) to
-/// signal actions — every command resolution either mutates state via
+/// signal actions - every command resolution either mutates state via
 /// explicit methods or returns one of these effect variants for the
 /// screen to handle. Effects carry the data the screen needs (like an
 /// OPEN index) directly rather than encoding it in another field.
@@ -723,7 +723,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
   }
 
   /// Apply a [BoardTone] + per-board seed to this state. Called by the
-  /// terminal screen once the board detail loads — before any render.
+  /// terminal screen once the board detail loads - before any render.
   /// Silently no-ops when the tone + seed haven't changed so the voice
   /// stays stable across rebuilds.
   void applyTone(BoardTone tone, int seed) {
@@ -732,7 +732,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
     state = state.copyWith(tone: tone, toneSeed: seed);
   }
 
-  /// Render the entry ritual — the connection sequence + welcome tagline
+  /// Render the entry ritual - the connection sequence + welcome tagline
   /// + optional activity line, phrased by the current [BoardTone].
   ///
   /// Lines are emitted in three small batches with short delays so the
@@ -752,11 +752,11 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
     final v = state.voice;
     final handshake = v.handshake(nodeHex: nodeHex, sysop: sysopName);
 
-    // Beat 1 — dialing / scanning / initializing.
+    // Beat 1 - dialing / scanning / initializing.
     appendOutput([TerminalOutputLine(handshake[0], TerminalLineStyle.dim)]);
     await Future.delayed(const Duration(milliseconds: 120));
 
-    // Beat 2 — connected, identity.
+    // Beat 2 - connected, identity.
     if (state.outputBuffer.isEmpty) return; // disposed mid-sequence
     appendOutput([
       TerminalOutputLine(handshake[1], TerminalLineStyle.accent),
@@ -766,7 +766,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
     ]);
     await Future.delayed(const Duration(milliseconds: 90));
 
-    // Beat 3 — welcome, activity, hint.
+    // Beat 3 - welcome, activity, hint.
     if (state.outputBuffer.isEmpty) return;
     final lines = <TerminalOutputLine>[
       TerminalOutputLine(boardTitle, TerminalLineStyle.header),
@@ -812,7 +812,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
   }
 
   /// Render a list of threads inside a section. Tapping an index runs
-  /// `OPEN n` — handled by the screen via openThreadByIndex().
+  /// `OPEN n` - handled by the screen via openThreadByIndex().
   void renderThreads(NodeBoardSection section, List<NodeBoardThread> threads) {
     AppLogging.nodeBoard(
       'Terminal: renderThreads section=${section.key} count=${threads.length}',
@@ -866,7 +866,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
     final lines = <TerminalOutputLine>[
       TerminalOutputLine(thread.title, TerminalLineStyle.header),
       TerminalOutputLine(
-        '— ${thread.authorDisplayName}',
+        '- ${thread.authorDisplayName}',
         TerminalLineStyle.accent,
       ),
       const TerminalOutputLine(''),
@@ -904,7 +904,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
   }
 
   /// Render a user-facing error line in the output buffer. `renderError`
-  /// is purely a display concern — it never carries control data. If a
+  /// is purely a display concern - it never carries control data. If a
   /// command needs to signal an action, it emits a [TerminalEffect]
   /// instead.
   void renderError(String message) {
@@ -947,7 +947,7 @@ class TerminalStateNotifier extends Notifier<TerminalState> {
   /// external data (sections, threads, native handoffs, navigation).
   ///
   /// This is the single dispatch path. Typed input, chip taps, and
-  /// tappable output rows all arrive here via `parseTerminalCommand` —
+  /// tappable output rows all arrive here via `parseTerminalCommand` -
   /// there are no alternate shortcut paths.
   TerminalEffect executeCommand(ParsedCommand command) {
     AppLogging.nodeBoard(

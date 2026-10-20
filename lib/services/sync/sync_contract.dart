@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sync Contract Registry — declares all syncable entity types.
+// Sync Contract Registry - declares all syncable entity types.
 //
 // Every user-created or user-curated data domain that participates
 // in Cloud Sync MUST be registered here. An automated test verifies
@@ -22,11 +22,11 @@ enum SyncType {
   /// NodeDex entry (core metrics, encounters, regions, co-seen edges, sigil).
   nodedexEntry,
 
-  /// NodeDex social tag (classification) — synced as part of the entry
+  /// NodeDex social tag (classification) - synced as part of the entry
   /// but with its own per-field timestamp for last-write-wins.
   nodedexSocialTag,
 
-  /// NodeDex user note — synced as part of the entry but with its own
+  /// NodeDex user note - synced as part of the entry but with its own
   /// per-field timestamp for last-write-wins.
   nodedexUserNote,
 
@@ -36,26 +36,26 @@ enum SyncType {
   /// User preferences (theme, haptics, animations, canned responses, etc.).
   userPreferences,
 
-  /// Automation rules — per-document sync via outbox pattern.
+  /// Automation rules - per-document sync via outbox pattern.
   ///
   /// Each automation is its own Firestore document in
   /// `users/{uid}/automations_sync/{docId}`.
   automations,
 
-  /// Custom widget schemas — per-document sync via outbox pattern.
+  /// Custom widget schemas - per-document sync via outbox pattern.
   ///
   /// Each user-created widget is its own Firestore document in
   /// `users/{uid}/widgets_sync/{docId}`.
   widgetSchemas,
 
-  /// Incident transition records — per-document sync via outbox pattern.
+  /// Incident transition records - per-document sync via outbox pattern.
   ///
   /// Each transition is synced individually. Conflict resolution uses a
   /// deterministic 5-field chain: priorityRank > timestamp >
   /// actorRoleRank > actorId > transitionId.
   incidentTransition,
 
-  /// Task transition records — per-document sync via outbox pattern.
+  /// Task transition records - per-document sync via outbox pattern.
   ///
   /// Each transition is synced individually. Conflict resolution uses
   /// 4 deterministic rules: dual-ack (first timestamp), COMPLETED beats
@@ -87,7 +87,7 @@ class SyncTypeConfig {
 
   /// Whether this type is embedded in a parent entity's JSON payload.
   ///
-  /// If true, the type does not have its own outbox entries — it travels
+  /// If true, the type does not have its own outbox entries - it travels
   /// with the parent entity.
   final bool isEmbeddedInParent;
 
@@ -166,8 +166,7 @@ const Map<SyncType, SyncTypeConfig> syncTypeConfigs = {
     usesOutbox: false,
     supportsTombstone: false,
     requiresEntitlement: false,
-    conflictPolicy:
-        'Local-first with server merge via ProfileCloudSyncService.', // lint-allow: hardcoded-string
+    conflictPolicy: 'Local-first with server merge via ProfileCloudSyncService.', // lint-allow: hardcoded-string
   ),
   SyncType.userPreferences: SyncTypeConfig(
     displayName: 'User Preferences',

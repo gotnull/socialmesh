@@ -53,7 +53,7 @@ void main() {
           inInclusiveRange(-180, 180),
           reason: '${airport.iata} lon=${airport.longitude}',
         );
-        // No (0, 0) — that's in the Gulf of Guinea, no large airports there
+        // No (0, 0) - that's in the Gulf of Guinea, no large airports there
         expect(
           airport.latitude == 0 && airport.longitude == 0,
           isFalse,

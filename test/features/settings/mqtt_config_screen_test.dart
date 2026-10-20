@@ -266,7 +266,7 @@ void main() {
     await _settle(tester);
 
     // The banner is gated on _proxyToClientEnabled; with proxy off it
-    // must be absent — even though the diagnostics section may still
+    // must be absent - even though the diagnostics section may still
     // render because MQTT itself is enabled.
     expect(find.text(_l10n.mqttProxyBannerNotConnectedTitle), findsNothing);
   });
@@ -280,7 +280,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       // Fresh install: MQTT module enabled (so the form renders) but
-      // no broker config saved yet — empty address, empty credentials.
+      // no broker config saved yet - empty address, empty credentials.
       final cached = module_pb.ModuleConfig_MQTTConfig()
         ..enabled = true
         ..root = 'msh';
@@ -306,7 +306,7 @@ void main() {
 
       // The auth section is now hidden on the default broker (Gap 5
       // parity). Switch the address back to a custom host so the auth
-      // fields re-render — at that point the controller values still
+      // fields re-render - at that point the controller values still
       // hold the autofilled public defaults.
       await tester.enterText(addressFinder, 'mqtt.example.com');
       await tester.pump();
@@ -368,14 +368,14 @@ void main() {
       await tester.pump();
 
       // …and disappear once the address resolves to the canonical
-      // broker — the auth section is hidden because the public creds
+      // broker - the auth section is hidden because the public creds
       // are already auto-filled.
       expect(usernameLabel, findsNothing);
 
       // Switch back to a custom hostname so the auth fields re-render,
       // and inspect the controllers via the now-visible TextFields. If
       // the canonical-broker transition fired correctly, the creds are
-      // now meshdev/large4cats — alice/sekret have been replaced.
+      // now meshdev/large4cats - alice/sekret have been replaced.
       await tester.enterText(addressFinder, 'mqtt.example.com');
       await tester.pump();
 

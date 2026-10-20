@@ -7,7 +7,7 @@ import '../../../core/logging.dart';
 ///
 /// Enforces the logging contract by accepting **only** metadata fields
 /// (node IDs, packet IDs, sizes, counts). No method on this class accepts
-/// `Uint8List` or any other byte-buffer type — capture files are the
+/// `Uint8List` or any other byte-buffer type - capture files are the
 /// single sanctioned destination for raw fragment payloads.
 class ReticulumSafeLog {
   const ReticulumSafeLog._();

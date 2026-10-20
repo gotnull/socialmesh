@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Terminal mode — hybrid BBS UX. Command line + context-aware chip bar
+// Terminal mode - hybrid BBS UX. Command line + context-aware chip bar
 // + tappable indexed output over the exact same providers that power
 // the native board view.
 
@@ -88,14 +88,14 @@ class _NodeBoardTerminalScreenState
   /// Single dispatch path for every command source: typed input, chip
   /// tap, and tappable-output tap all land here. The command is parsed
   /// once and the notifier returns a typed [TerminalEffect] the screen
-  /// resolves against live provider data — there are no string
+  /// resolves against live provider data - there are no string
   /// side-channels or alternate paths.
   Future<void> _onCommand(String input) async {
     AppLogging.nodeBoard('Terminal dispatch | source=command input="$input"');
     final notifier = ref.read(terminalStateProvider.notifier);
     final parsed = parseTerminalCommand(input);
 
-    // BACK at the root is a silent no-op — echoing `> BACK` and `< Back`
+    // BACK at the root is a silent no-op - echoing `> BACK` and `< Back`
     // for every tap when there's nowhere to go back just pollutes the
     // scrollback. Rapid chip taps before the chip bar rebuilds can still
     // dispatch BACK; this guard swallows them cleanly.
@@ -131,7 +131,7 @@ class _NodeBoardTerminalScreenState
   }
 
   /// Resolve `OPEN n` against the currently-visible list. Reads sections
-  /// and threads from their providers directly — no cached copies.
+  /// and threads from their providers directly - no cached copies.
   void _resolveOpenIndex(int index) {
     final state = ref.read(terminalStateProvider);
     final screen = state.currentScreen;
@@ -400,7 +400,7 @@ class _NodeBoardTerminalScreenState
     }
 
     // Entry ritual (once per board load). Runs a staggered 3-beat
-    // connection sequence — skippable in the sense that input + chip
+    // connection sequence - skippable in the sense that input + chip
     // taps never block during the ~300ms total delay.
     if (board != null && !_welcomeShown) {
       _welcomeShown = true;
@@ -426,7 +426,7 @@ class _NodeBoardTerminalScreenState
 
     // React to screen-state transitions by fetching real data. OPEN and
     // GUESTBOOK resolution happens synchronously in _onCommand via the
-    // typed TerminalEffect path — there is no state-polling side channel
+    // typed TerminalEffect path - there is no state-polling side channel
     // here.
     _maybeRenderSections(terminalState);
     _maybeRenderThreads(terminalState);
@@ -589,7 +589,7 @@ class _NodeBoardTerminalScreenState
         ThreadDetailKey(slug: widget.slug, threadId: threadId),
       ),
     );
-    // Skip stale refetch values — only render fresh data. See the matching
+    // Skip stale refetch values - only render fresh data. See the matching
     // comment in `_maybeRenderThreads` for why `whenData` alone is unsafe
     // after a mutation-driven invalidation.
     if (detailAsync.isLoading || !detailAsync.hasValue) return;

@@ -388,7 +388,7 @@ void main() {
     });
 
     test('throws when overhead exactly equals MTU', () {
-      // 98 + 23 = 121 — use MTU = 121
+      // 98 + 23 = 121 - use MTU = 121
       expect(
         () => computeStlAwareChunkSize(
           mtu: 121,

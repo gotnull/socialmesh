@@ -21,7 +21,7 @@ import 'package:socialmesh/providers/help_providers.dart';
 
 void main() {
   // ===========================================================================
-  // HelpContent — nodeDexDetail topic
+  // HelpContent - nodeDexDetail topic
   // ===========================================================================
 
   group('HelpContent.nodeDexDetail', () {
@@ -102,7 +102,7 @@ void main() {
   });
 
   // ===========================================================================
-  // HelpContent — nodeDexSectionHelp map
+  // HelpContent - nodeDexSectionHelp map
   // ===========================================================================
 
   group('HelpContent.nodeDexSectionHelp', () {
@@ -184,7 +184,7 @@ void main() {
 
       for (final key in nodeDetailKeys) {
         // pet_companion_self and pet_companion_remote both share the
-        // single tour bubble "nodedex_pet_companion" — the tour is
+        // single tour bubble "nodedex_pet_companion" - the tour is
         // generic; the info sheet is what branches on self vs remote.
         final expectedStepId = key.startsWith('pet_companion_')
             ? 'nodedex_pet_companion'
@@ -200,7 +200,7 @@ void main() {
 
     test('album section help keys are valid inline helpers', () {
       // Album section help keys are contextual inline helpers shown in
-      // tooltips or info panels. Not all have matching tour steps — keys
+      // tooltips or info panels. Not all have matching tour steps - keys
       // like album_explorer_title, album_patina, and album_cloud_sync
       // are explanatory snippets, not guided tour steps.
       final albumKeys = HelpContent.nodeDexSectionHelp.keys
@@ -277,10 +277,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview — edge cases for help content alignment
+  // ImportPreview - edge cases for help content alignment
   // ===========================================================================
 
-  group('ImportPreview — help context relevance', () {
+  group('ImportPreview - help context relevance', () {
     NodeDexEntry makeEntry({
       required int nodeNum,
       NodeSocialTag? socialTag,
@@ -304,7 +304,7 @@ void main() {
 
     test('preview detects social tag conflicts mentioned in help text', () {
       // The help text for social_tag says tags are "stored locally"
-      // and "included in NodeDex exports" — conflicts arise on import
+      // and "included in NodeDex exports" - conflicts arise on import
       final local = makeEntry(nodeNum: 1, socialTag: NodeSocialTag.contact);
       final imported = makeEntry(
         nodeNum: 1,
@@ -347,7 +347,7 @@ void main() {
 
     test('preview counts new constellation edges', () {
       // The help text for constellation says these are "nodes frequently
-      // seen in the same session" — edges are per-import enrichment
+      // seen in the same session" - edges are per-import enrichment
       final local = makeEntry(
         nodeNum: 3,
         coSeenNodes: {
@@ -385,7 +385,7 @@ void main() {
 
     test('preview counts new encounter records', () {
       // The help text for encounters says "each encounter records the
-      // timestamp, signal quality" — new records come from import
+      // timestamp, signal quality" - new records come from import
       final localEncounters = [
         EncounterRecord(timestamp: DateTime(2024, 1, 15), snr: 10, rssi: -80),
       ];
@@ -447,7 +447,7 @@ void main() {
   });
 
   // ===========================================================================
-  // MergeStrategy — alignment with help-described behavior
+  // MergeStrategy - alignment with help-described behavior
   // ===========================================================================
 
   group('MergeStrategy behavior matches help descriptions', () {
@@ -589,7 +589,7 @@ void main() {
   });
 
   // ===========================================================================
-  // EntryMergePreview — computed properties
+  // EntryMergePreview - computed properties
   // ===========================================================================
 
   group('EntryMergePreview computed properties', () {
@@ -707,7 +707,7 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview — aggregate computed properties
+  // ImportPreview - aggregate computed properties
   // ===========================================================================
 
   group('ImportPreview aggregate properties', () {
@@ -913,7 +913,7 @@ void main() {
   });
 
   // ===========================================================================
-  // FieldConflict — basic
+  // FieldConflict - basic
   // ===========================================================================
 
   group('FieldConflict', () {
@@ -980,10 +980,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build — display name resolver
+  // ImportPreview.build - display name resolver
   // ===========================================================================
 
-  group('ImportPreview.build — displayNameResolver', () {
+  group('ImportPreview.build - displayNameResolver', () {
     test('uses resolver when provided', () {
       final imported = NodeDexEntry(
         nodeNum: 0xABCD,
@@ -1035,10 +1035,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.applyMerge — edge cases
+  // ImportPreview.applyMerge - edge cases
   // ===========================================================================
 
-  group('ImportPreview.applyMerge — edge cases', () {
+  group('ImportPreview.applyMerge - edge cases', () {
     test('no-conflict entries pass through regardless of strategy', () {
       final local = NodeDexEntry(
         nodeNum: 1,
@@ -1052,7 +1052,7 @@ void main() {
         firstSeen: DateTime(2024, 1, 1),
         lastSeen: DateTime(2024, 6, 1),
         encounterCount: 5,
-        // No socialTag — no conflict
+        // No socialTag - no conflict
       );
 
       final preview = ImportPreview.build(
@@ -1192,7 +1192,7 @@ void main() {
   });
 
   // ===========================================================================
-  // HelpContent — allTopics integrity
+  // HelpContent - allTopics integrity
   // ===========================================================================
 
   group('HelpContent allTopics integrity', () {
@@ -1252,13 +1252,13 @@ void main() {
   });
 
   // ===========================================================================
-  // Companion copy — truthfulness guard.
+  // Companion copy - truthfulness guard.
   //
   // Guards against copy regressions that would mislead users about how
   // NodePet visibility works:
   //   1. No claim that pet data is never transmitted (it is, when remote
-  //      sharing is enabled — small summary via companion sharing).
-  //   2. No passive-only "only observed" framing — remote visibility
+  //      sharing is enabled - small summary via companion sharing).
+  //   2. No passive-only "only observed" framing - remote visibility
   //      depends on the peer explicitly sharing a summary.
   //   3. No protocol jargon leaks (MRRP / SIP / pet.v1 / wire / packets).
   //   4. Self copy makes it clear the companion is local-first.
@@ -1271,9 +1271,9 @@ void main() {
     // resolves through AppLocalizations at runtime; its English value is
     // pinned by the fallback map entries below (same words).
     List<String> companionCopyStrings() {
-      final tour = HelpContent.getTopic(
-        'nodedex_detail',
-      )!.steps.firstWhere((s) => s.id == 'nodedex_pet_companion').bubbleText;
+      final tour = HelpContent.getTopic('nodedex_detail')!.steps
+          .firstWhere((s) => s.id == 'nodedex_pet_companion')
+          .bubbleText;
       final selfFallback =
           HelpContent.nodeDexSectionHelp['pet_companion_self']!;
       final remoteFallback =
@@ -1293,7 +1293,7 @@ void main() {
         expect(
           copy.toLowerCase(),
           isNot(contains('no pet data')),
-          reason: 'Dropped phrase "no pet data" reintroduced — this is false.',
+          reason: 'Dropped phrase "no pet data" reintroduced - this is false.',
         );
         expect(
           copy.toLowerCase(),
@@ -1309,7 +1309,7 @@ void main() {
           copy.toLowerCase(),
           isNot(contains('only observed')),
           reason:
-              'Companion copy must not claim peer pets are "only observed" — '
+              'Companion copy must not claim peer pets are "only observed" - '
               'visibility requires the peer to share a summary.',
         );
         expect(
@@ -1348,7 +1348,7 @@ void main() {
     test('remote info copy is conservative about sharing', () {
       final remoteCopy = HelpContent.nodeDexSectionHelp['pet_companion_remote']!
           .toLowerCase();
-      // Must not over-promise — no "always"/"live" language.
+      // Must not over-promise - no "always"/"live" language.
       expect(remoteCopy, isNot(contains('always')));
       expect(remoteCopy, isNot(contains('live')));
       // Must frame remote visibility as conditional on the peer sharing.

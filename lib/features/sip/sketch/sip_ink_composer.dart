@@ -6,7 +6,7 @@
 /// Owns the local stroke buffer (the sketch draft) and the in-progress
 /// active stroke. On every gesture tick, runs the simplifier to find
 /// the largest prefix of the active stroke that still fits the
-/// airtime budget — anything past that point is the "overflow" tail
+/// airtime budget - anything past that point is the "overflow" tail
 /// rendered as a dashed red cue and discarded on stroke end.
 ///
 /// Counters reflect the committed (sendable) state. Crossing into
@@ -40,7 +40,7 @@ class SipInkComposer extends ConsumerStatefulWidget {
   /// Whether the underlying session is in a state that accepts sends.
   final bool enabled;
 
-  /// Hoisted stroke buffer — the parent passes the same list across
+  /// Hoisted stroke buffer - the parent passes the same list across
   /// rebuilds and across composer-mode toggles so the sketch draft
   /// survives a switch back to the text tab.
   final List<SipInkRawStroke> draft;
@@ -48,7 +48,7 @@ class SipInkComposer extends ConsumerStatefulWidget {
   /// Called whenever [draft] is mutated so the parent re-renders.
   final void Function() onDraftChanged;
 
-  /// Called once a sketch has been successfully sent — the parent
+  /// Called once a sketch has been successfully sent - the parent
   /// usually scrolls to the latest message.
   final VoidCallback onSent;
 
@@ -141,21 +141,21 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
   /// Updates [_committedBoundary] and the cached simplified state.
   ///
   /// Three outcomes:
-  /// 1. Candidate accepted — simplifier kept the in-progress stroke
+  /// 1. Candidate accepted - simplifier kept the in-progress stroke
   ///    in its output. Advance the boundary; cache the sketch.
   /// 2. Candidate dropped (typically a 1-point gesture-start that
   ///    fails the simplifier's `minPointsPerStroke` check) but the
-  ///    simplifier otherwise succeeded — boundary stays put, sketch
+  ///    simplifier otherwise succeeded - boundary stays put, sketch
   ///    is cached. Crucially we do NOT advance the boundary here:
   ///    the dropped candidate's points are NOT in the cached sketch,
   ///    so claiming they're committed would let `_resimplifyCommitted`
   ///    feed them back into the simplifier on the next over-budget
   ///    frame, where they can fail and null out the sketch.
-  /// 3. Real failure (`budgetExceeded` / `tooManyStrokes`) — fire
+  /// 3. Real failure (`budgetExceeded` / `tooManyStrokes`) - fire
   ///    the medium-impact haptic once per stroke and re-derive the
   ///    simplified state from completed-only strokes. The
   ///    `_overflowHapticFiredThisStroke` flag is the single source of
-  ///    truth for "user crossed the budget on this stroke" — both the
+  ///    truth for "user crossed the budget on this stroke" - both the
   ///    haptic and the red-state UI gate on it, so a candidate drop
   ///    on the first frame can't falsely trip the red banner.
   void _evaluateActiveStroke() {
@@ -207,7 +207,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
 
   void _onStrokeStart(({double x, double y}) p) {
     if (widget.draft.length >= SipInkConstants.maxStrokes) {
-      // Already at max strokes — gesture is consumed but produces no
+      // Already at max strokes - gesture is consumed but produces no
       // committed output. Visualise immediately as overflow.
       setState(() {
         _activeRaw = [p];
@@ -303,7 +303,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     final bytes = _encodedBytes;
     if (bytes == null || _sending) return;
 
-    // Capture the navigator BEFORE the await — needed to dismiss
+    // Capture the navigator BEFORE the await - needed to dismiss
     // the compose sheet on success without tripping the
     // `use_build_context_synchronously` lint or risking the context
     // having been deactivated by the time the future resolves.
@@ -340,7 +340,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     });
     widget.onDraftChanged();
     widget.onSent();
-    // Auto-dismiss the compose sheet on success — matches the
+    // Auto-dismiss the compose sheet on success - matches the
     // SIP Play offer flow. `maybePop` is a no-op if the topmost
     // route isn't the compose sheet, so this is safe to call
     // unconditionally.
@@ -354,7 +354,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
       return;
     }
     final message = switch (outcome.error) {
-      // T+S: same mapping as text DM — sketch-specific text would
+      // T+S: same mapping as text DM - sketch-specific text would
       // confuse users who muted/blocked once and now hit the same
       // gate here.
       SipDmSendError.peerBlocked => l10n.sipDmPeerBlocked,
@@ -371,7 +371,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
   // Build
   // ---------------------------------------------------------------
 
-  /// Slice of the active stroke that doesn't fit — drawn dashed in
+  /// Slice of the active stroke that doesn't fit - drawn dashed in
   /// red. Includes the boundary point so the line stays connected.
   /// The committed prefix lives in `_simplifiedSketch` (already
   /// rendered by the canvas) so we no longer paint it as raw points.
@@ -383,13 +383,13 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
 
   /// True only when the simplifier has explicitly rejected the active
   /// stroke for budget reasons on this gesture (`budgetExceeded` /
-  /// `tooManyStrokes` — see `_evaluateActiveStroke`). Tracking this
+  /// `tooManyStrokes` - see `_evaluateActiveStroke`). Tracking this
   /// via the haptic flag avoids a false-positive that the geometric
   /// `boundary < activeRaw.length - 1` predicate trips on the first
   /// point of a fresh stroke: the simplifier needs at least
   /// [SipInkConstants.minPointsPerStroke] before it can decide either
   /// way, so during gesture-start the boundary lags behind activeRaw
-  /// purely by definition — that's not "over budget".
+  /// purely by definition - that's not "over budget".
   bool get _isOverBudget =>
       _overflowHapticFiredThisStroke && _activeRaw.isNotEmpty;
 
@@ -409,7 +409,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
         ? errorColor.withValues(alpha: 0.9)
         : context.textTertiary;
 
-    // Body + sticky full-width action bar at the bottom — mirrors
+    // Body + sticky full-width action bar at the bottom - mirrors
     // the Signal composer panel for consistency. The canvas itself
     // expands to fill the available vertical slot so it doesn't
     // read as a tiny island in a sea of empty sheet. Wire output is
@@ -444,7 +444,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
                   // The canvas claims whatever vertical space remains
                   // between the hint and the action bar. `Center` +
                   // `AspectRatio(1)` keeps it square and horizontally
-                  // centred — width-limited on narrow phones,
+                  // centred - width-limited on narrow phones,
                   // height-limited when the sheet is dragged short.
                   child: Center(
                     child: AspectRatio(
@@ -479,7 +479,7 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     );
   }
 
-  /// Sticky bottom action bar — pinned to the bottom of the compose
+  /// Sticky bottom action bar - pinned to the bottom of the compose
   /// panel so Undo / Clear / Send are always reachable regardless of
   /// the canvas / chip-row vertical footprint. Mirrors the Signal
   /// composer's `_buildStickyActionBar` so the two composer modes
@@ -493,11 +493,11 @@ class _SipInkComposerState extends ConsumerState<SipInkComposer>
     required bool canSend,
   }) {
     final l10n = context.l10n;
-    // No BoxDecoration — earlier we drew a tinted background +
+    // No BoxDecoration - earlier we drew a tinted background +
     // top-divider here to visually anchor the action row to the
     // sheet's bottom edge. In a DraggableScrollableSheet the row
     // moves with the sheet on drag, and the tinted rectangle reads
-    // as a stranded box rather than a fixed bar — uglier than just
+    // as a stranded box rather than a fixed bar - uglier than just
     // letting the buttons sit transparently on the sheet's own
     // surface. Padding is symmetric and tight; the sheet's
     // safe-area inset provides the visual gap below.
@@ -629,12 +629,12 @@ class _BudgetChip extends StatelessWidget {
   }
 }
 
-/// Action-bar button tone — mirrors the Signal composer's
+/// Action-bar button tone - mirrors the Signal composer's
 /// `_IconActionTone` so the two composer panels render the same
 /// visual language (neutral / destructive / primary).
 enum _StickyActionTone { neutral, destructive, primary }
 
-/// Full-width sticky-bottom-bar action button — used by the sketch
+/// Full-width sticky-bottom-bar action button - used by the sketch
 /// composer's bottom action row. Equivalent to the same-named widget
 /// in `sip_signal_composer_panel.dart`; both composers use the same
 /// shape so Sketch and Signal feel identical when the user taps

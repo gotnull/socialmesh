@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCanvas participation — S7 integration + invariant regression
+// MeshCanvas participation - S7 integration + invariant regression
 // tests.
 //
 // Spec: docs/canvas/CANVAS_PARTICIPATION_V0_1.md §8 (hard invariants
@@ -33,8 +33,8 @@ import 'package:socialmesh/features/mesh_canvas/providers/mesh_canvas_participat
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('participation invariants — static-grep regression pins', () {
-    test('I1 — only the participation feature itself calls '
+  group('participation invariants - static-grep regression pins', () {
+    test('I1 - only the participation feature itself calls '
         'setParticipationEnabled(true) or joinMeshCanvas / chooseLocalOnly. '
         'Auto-enable from any other module is a critical regression.', () {
       final libDir = Directory('lib');
@@ -54,7 +54,7 @@ void main() {
           'lib/features/mesh_canvas/screens/mesh_canvas_overview_screen',
         )) {
           // Overview screen reads the providers but never calls
-          // the opinionated mutators — it delegates via widgets.
+          // the opinionated mutators - it delegates via widgets.
           continue;
         }
         // The notifier itself is allowed.
@@ -73,13 +73,13 @@ void main() {
         offenders,
         isEmpty,
         reason:
-            'I1 — no module outside the participation feature may call the '
+            'I1 - no module outside the participation feature may call the '
             'opt-in mutators directly. Offenders: $offenders',
       );
     });
 
     test(
-      'I6 — MeshCore shell does NOT import any participation feature file',
+      'I6 - MeshCore shell does NOT import any participation feature file',
       () {
         final meshCoreShell = File(
           'lib/features/navigation/meshcore_shell.dart',
@@ -90,22 +90,22 @@ void main() {
           src.contains('canvas_participation_'),
           isFalse,
           reason:
-              'I6 — MeshCore shell must not import any MeshCanvas '
+              'I6 - MeshCore shell must not import any MeshCanvas '
               'participation file. Feature is Meshtastic-only.',
         );
         expect(
           src.contains('mesh_canvas_participation_providers'),
           isFalse,
-          reason: 'I6 — same as above for the providers file.',
+          reason: 'I6 - same as above for the providers file.',
         );
       },
     );
   });
 
-  group('participation — end-to-end provider walk', () {
+  group('participation - end-to-end provider walk', () {
     test(
       'fresh install → Explore locally → enable participation via settings → '
-      'enable sharing — every state transition is consistent',
+      'enable sharing - every state transition is consistent',
       () async {
         SharedPreferences.setMockInitialValues(<String, Object>{});
         final container = ProviderContainer();
@@ -174,7 +174,7 @@ void main() {
           reason: 'disabling participation must force sharing off (invariant)',
         );
 
-        // Step 6: re-enable participation. Sharing remains off — the
+        // Step 6: re-enable participation. Sharing remains off - the
         // user must explicitly opt in again, prior toggle is not
         // restored.
         await container
@@ -190,7 +190,7 @@ void main() {
           isFalse,
           reason:
               're-enabling participation must NOT restore the prior sharing '
-              'state — the user explicitly disabled it, even transitively',
+              'state - the user explicitly disabled it, even transitively',
         );
       },
     );

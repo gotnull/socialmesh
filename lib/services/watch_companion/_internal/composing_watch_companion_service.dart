@@ -7,7 +7,7 @@
 // latest known snapshot so the bridge can push the current state to
 // the Watch on session activation without waiting for the next rebuild.
 //
-// handleIntent is intentionally still a no-op in Sub-step 3b — Sub-step
+// handleIntent is intentionally still a no-op in Sub-step 3b - Sub-step
 // 3c replaces this body with the real readiness-gated send dispatch.
 
 import 'dart:async';

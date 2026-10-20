@@ -65,7 +65,7 @@ void main() {
       final link = parser.parse('socialmesh://purchase-return');
       final result = router.route(link);
       expect(result.routeName, '/main');
-      // Either no args or no purchaseSessionId — either way the
+      // Either no args or no purchaseSessionId - either way the
       // manager must NOT dispatch into ExternalPurchaseService.
       expect(
         result.arguments == null ||

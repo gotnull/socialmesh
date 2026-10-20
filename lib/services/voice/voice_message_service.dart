@@ -13,9 +13,9 @@ import 'voice_recorder.dart';
 /// returns the encoded `.c2` payload ready for [FileTransferStateNotifier.sendVoiceMessage].
 ///
 /// Lifecycle:
-/// 1. [startSession] — checks permission, creates [VoiceRecorder], starts recording.
-/// 2. [stopSession] — stops recording, encodes PCM to Codec2, returns [VoiceMessageResult].
-/// 3. [cancelSession] — discards the recording with no output.
+/// 1. [startSession] - checks permission, creates [VoiceRecorder], starts recording.
+/// 2. [stopSession] - stops recording, encodes PCM to Codec2, returns [VoiceMessageResult].
+/// 3. [cancelSession] - discards the recording with no output.
 ///
 /// Only one session may be active at a time. Calling [startSession] while
 /// [isActive] is true is a no-op.

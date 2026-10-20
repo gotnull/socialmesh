@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// LAN sync protocol v1 — message models for peer-to-peer mesh feed sync.
+/// LAN sync protocol v1 - message models for peer-to-peer mesh feed sync.
 ///
 /// Wire format: line-delimited JSON over TCP. Each line is a JSON object
 /// with a `type` field discriminating the message kind.
@@ -9,21 +9,21 @@
 /// Protocol flow (after TCP connection established):
 ///
 /// ```
-/// Phase 1 — Hello:
+/// Phase 1 - Hello:
 ///   INITIATOR → hello
 ///   RESPONDER → hello
 ///
-/// Phase 2 — Initiator pulls from responder:
+/// Phase 2 - Initiator pulls from responder:
 ///   INITIATOR → syncRequest
 ///   RESPONDER → syncBatch (repeat while hasMore)
 ///   INITIATOR → syncAck (after each batch)
 ///
-/// Phase 3 — Responder pulls from initiator:
+/// Phase 3 - Responder pulls from initiator:
 ///   RESPONDER → syncRequest
 ///   INITIATOR → syncBatch (repeat while hasMore)
 ///   RESPONDER → syncAck (after each batch)
 ///
-/// Phase 4 — Close:
+/// Phase 4 - Close:
 ///   INITIATOR → close
 /// ```
 ///
@@ -128,7 +128,7 @@ class LanSyncHello extends LanSyncMessage {
   /// Protocol version (must match [lanSyncProtocolVersion]).
   final int protocolVersion;
 
-  /// Stable peer identity — `!{nodeHex}` format (e.g. `!12345678`).
+  /// Stable peer identity - `!{nodeHex}` format (e.g. `!12345678`).
   final String peerId;
 
   /// Mesh node number.
@@ -203,7 +203,7 @@ class LanSyncRequest extends LanSyncMessage {
 /// A batch of posts sent in response to a [LanSyncRequest].
 ///
 /// Posts are serialized as `MeshPost.toRow()` maps. The [lastSeqInBatch]
-/// is the sender's `local_seq` of the last post — opaque to the receiver,
+/// is the sender's `local_seq` of the last post - opaque to the receiver,
 /// echoed back in [LanSyncAck] so the sender can advance its cursor.
 class LanSyncBatch extends LanSyncMessage {
   const LanSyncBatch({
@@ -276,7 +276,7 @@ class LanSyncAck extends LanSyncMessage {
 // Error
 // ---------------------------------------------------------------------------
 
-/// Error message — sent before closing on protocol violations.
+/// Error message - sent before closing on protocol violations.
 class LanSyncError extends LanSyncMessage {
   const LanSyncError({required this.message, this.code});
 
@@ -329,7 +329,7 @@ class LanSyncClose extends LanSyncMessage {
 
 /// Build a stable peer ID from a Meshtastic node number.
 ///
-/// Format: `!{hex}` — e.g. node 0x12345678 → `!12345678`.
+/// Format: `!{hex}` - e.g. node 0x12345678 → `!12345678`.
 /// This matches Meshtastic's node identity convention and is stable
 /// across network changes (unlike `host:port`).
 String buildLanSyncPeerId(int nodeNum) => '!${nodeNum.toRadixString(16)}';

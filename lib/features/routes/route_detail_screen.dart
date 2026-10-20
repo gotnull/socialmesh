@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — delegates entirely to MapScreen, which owns the
+// lint-allow: scaffold - delegates entirely to MapScreen, which owns the
 // GlassScaffold; this screen only supplies the route overlay + stats strip.
 import 'dart:io';
 
@@ -21,7 +21,7 @@ import '../map/map_screen.dart';
 /// Route detail view: the canonical mesh [MapScreen] with the saved GPS route
 /// drawn on top, plus a compact stats strip. Reusing MapScreen means the route
 /// view inherits every map control, layer, toggle, style, clustering, waypoint
-/// and node interaction — not a stripped-down clone.
+/// and node interaction - not a stripped-down clone.
 class RouteDetailScreen extends StatelessWidget {
   final route_model.Route route;
 

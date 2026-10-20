@@ -49,9 +49,8 @@ void main() {
       },
       home: Builder(
         builder: (context) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: TextScaler.linear(scale)),
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(scale)),
           child: const Material(
             child: Align(
               alignment: Alignment.topCenter,

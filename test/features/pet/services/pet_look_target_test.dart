@@ -21,7 +21,7 @@ import 'package:socialmesh/features/pet/services/pet_look_target.dart';
 void main() {
   const resolver = PetLookTargetResolver();
 
-  group('PetLookTargetResolver — local position mapping', () {
+  group('PetLookTargetResolver - local position mapping', () {
     test('centre maps to (50, 50)', () {
       final t = resolver.resolve(
         localPointer: _p(100, 100),
@@ -97,7 +97,7 @@ void main() {
     });
   });
 
-  group('PetLookTargetResolver — idle / suppression states', () {
+  group('PetLookTargetResolver - idle / suppression states', () {
     test('no active pointer returns centre', () {
       final t = resolver.resolve(
         localPointer: null,
@@ -135,7 +135,7 @@ void main() {
     });
   });
 
-  group('PetLookTargetResolver — state-driven range modulation', () {
+  group('PetLookTargetResolver - state-driven range modulation', () {
     test('sick reduces range so edge pointer does NOT hit 0/100', () {
       final t = resolver.resolve(
         localPointer: _p(200, 200),
@@ -192,7 +192,7 @@ void main() {
       expect(nearEdgeCalling.x, greaterThan(nearEdgeHealthy.x));
     });
 
-    test('sick priority wins over calling — dampened even when calling', () {
+    test('sick priority wins over calling - dampened even when calling', () {
       final sickCalling = resolver.resolve(
         localPointer: _p(200, 100),
         size: 200,
@@ -213,7 +213,7 @@ void main() {
     });
   });
 
-  group('PetLookTarget — equality', () {
+  group('PetLookTarget - equality', () {
     test('same coords compare equal', () {
       expect(const PetLookTarget(12, 34), const PetLookTarget(12, 34));
       expect(
@@ -228,7 +228,7 @@ void main() {
     });
   });
 
-  group('PetLookSmoother — easing toward target', () {
+  group('PetLookSmoother - easing toward target', () {
     test('starts at centre', () {
       final s = PetLookSmoother();
       expect(s.currentX, 50.0);

@@ -32,7 +32,7 @@ void main() {
     });
 
     test('get falls back to built-in schemas', () {
-      // "feed.v1" is a built-in template — should resolve without put().
+      // "feed.v1" is a built-in template - should resolve without put().
       final result = cache.get(99, 'feed.v1');
       expect(result, isNotNull);
       expect(result!.serviceType, 'feed.v1');

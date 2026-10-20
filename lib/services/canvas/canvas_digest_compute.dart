@@ -6,7 +6,7 @@
 // Source of truth: docs/canvas/CANVAS_V0_1.md §6.3 + CANVAS_SYNC_V0_1.md
 // §2.1.
 //
-// Pure functions — no I/O, no Riverpod, no flutter binding. Safe to
+// Pure functions - no I/O, no Riverpod, no flutter binding. Safe to
 // call from any isolate. Two outputs derived from the canonical
 // `cell` list of one canvas:
 //
@@ -64,7 +64,7 @@ class CanvasDigestSet {
 }
 
 /// Compute global + per-tile digests from a snapshot of painted
-/// cells. Cells need not be pre-sorted — this function sorts a copy.
+/// cells. Cells need not be pre-sorted - this function sorts a copy.
 ///
 /// [widthCells] / [heightCells] only affect tile-index math; cells
 /// outside the canvas bounds are silently dropped.

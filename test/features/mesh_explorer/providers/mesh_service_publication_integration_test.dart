@@ -177,7 +177,7 @@ void main() {
         ttlMinutes: 60,
       );
       // createInstance does not automatically wire the provider's epoch bump
-      // in this isolated test — simulate it manually.
+      // in this isolated test - simulate it manually.
       container.read(meshServicesEpochProvider.notifier).bump();
 
       final updated = await container.read(meshServiceInstancesProvider.future);

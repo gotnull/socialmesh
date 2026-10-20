@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34c-A — MeshCore contact detail screen.
+// D34c-A - MeshCore contact detail screen.
 //
 // Read-only view of a single MeshCore contact's identity + routing +
 // activity + location metadata, with safe actions (Trace Path, Path
@@ -16,12 +16,12 @@
 //   - No manual N-hop entry. The only way to write an N-hop path is
 //     via the trace flow ("Save as Contact Path" in the trace
 //     result sheet, D28).
-//   - The routing card stays read-only `InfoTable` — override
+//   - The routing card stays read-only `InfoTable` - override
 //     actions live exclusively in the bottom sheet.
 //   - No log lines emit the full pubkey or the full path bytes.
 //     Pubkey is shown via the existing `<8B…8T>` redacted
 //     fingerprint; path bytes are surfaced in the UI only.
-//   - Uses canonical primitives only — `GlassScaffold`,
+//   - Uses canonical primitives only - `GlassScaffold`,
 //     `SectionTitle`, `InfoTable` / `InfoTableRow`,
 //     `AppBottomSheet.showActions`, `AppBottomSheet.showConfirm`. No
 //     hand-rolled `Row(Icon + Spacer + Text)` rows.
@@ -55,7 +55,7 @@ import 'meshcore_tools_screen.dart' show showMeshCoreTracePathSheet;
 /// Watches [meshCoreContactsProvider] for live updates so a path
 /// reset / trace-save / advert-name heal performed elsewhere is
 /// reflected immediately. Falls back to the [initialContact] when the
-/// contact is no longer in the live list (rare — only happens if the
+/// contact is no longer in the live list (rare - only happens if the
 /// contact was removed from the radio while this screen was open).
 class MeshCoreContactDetailScreen extends ConsumerWidget {
   final MeshCoreContact initialContact;
@@ -156,7 +156,7 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
               label: l10n.meshcoreContactDetailPublicKey,
               // Redacted 8-head + 8-tail fingerprint mirrors the log
               // channel's pubkey format. Tap copies the FULL pubkey
-              // to the clipboard — that's a deliberate user action,
+              // to the clipboard - that's a deliberate user action,
               // not a passive reveal.
               value: c.shortPubKeyHex,
               icon: Icons.copy_rounded,
@@ -177,9 +177,9 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
       ),
       InfoTableRow(
         label: l10n.meshcoreContactDetailHops,
-        // pathLength == -1 means flood (no fixed hop count) — show
+        // pathLength == -1 means flood (no fixed hop count) - show
         // a dash rather than a misleading negative number.
-        value: c.pathLength < 0 ? '—' : '${c.pathLength}',
+        value: c.pathLength < 0 ? '-' : '${c.pathLength}',
       ),
       // Show saved path bytes when present. These are the firmware-
       // resolved hops; never the full pubkey of any repeater.
@@ -614,9 +614,8 @@ class _ShowOnMapTile extends ConsumerWidget {
       showInfoSnackBar(context, l10n.meshcorePathOverlayNoData);
       return;
     }
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const MeshCoreMapScreen()));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const MeshCoreMapScreen()));
   }
 }
 

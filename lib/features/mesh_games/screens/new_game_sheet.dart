@@ -5,7 +5,7 @@
 ///
 /// Flow: pick a game type (RPS or TTT) + an opponent node number,
 /// create the session locally, and dispatch an outbound `CREATE`
-/// frame. Uses `AppBottomSheet.showScrollable` — no Material dialogs.
+/// frame. Uses `AppBottomSheet.showScrollable` - no Material dialogs.
 library;
 
 import 'package:flutter/material.dart';

@@ -5,7 +5,7 @@
 // shared-widget extraction. Live widget tests would need a fake
 // Cloud Functions invoker, a stubbed presence-derived
 // `licenseOrgSeatUtilizationProvider`, and a hand-built
-// ProviderScope override matrix — fragile for the small surface
+// ProviderScope override matrix - fragile for the small surface
 // area. Pinning the load-bearing invariants by text is the right
 // trade-off: layout placement, role gating, provider invalidation
 // on revoke success, idle-highlight threshold, error-state fallback.
@@ -23,18 +23,15 @@ void main() {
   late String membersSheetSrc;
 
   setUpAll(() {
-    cardSrc = File(
-      'lib/features/license_org/license_org_overview_card.dart',
-    ).readAsStringSync();
-    serviceSrc = File(
-      'lib/services/license_org/license_org_seat_service.dart',
-    ).readAsStringSync();
+    cardSrc = File('lib/features/license_org/license_org_overview_card.dart')
+        .readAsStringSync();
+    serviceSrc = File('lib/services/license_org/license_org_seat_service.dart')
+        .readAsStringSync();
     providerSrc = File(
       'lib/providers/license_org_seat_utilization_providers.dart',
     ).readAsStringSync();
-    labelHelperSrc = File(
-      'lib/features/license_org/utils/member_label.dart',
-    ).readAsStringSync();
+    labelHelperSrc = File('lib/features/license_org/utils/member_label.dart')
+        .readAsStringSync();
     revokeSheetSrc = File(
       'lib/features/license_org/widgets/revoke_seat_confirm_sheet.dart',
     ).readAsStringSync();
@@ -60,7 +57,7 @@ void main() {
         revokeSheetSrc,
         contains('class RevokeSeatConfirmSheet extends StatelessWidget'),
       );
-      // Pops bool — the action-then-confirm pattern callers depend on.
+      // Pops bool - the action-then-confirm pattern callers depend on.
       expect(revokeSheetSrc, contains('Navigator.of(context).pop(true)'));
       expect(revokeSheetSrc, contains('Navigator.of(context).pop(false)'));
     });
@@ -155,7 +152,7 @@ void main() {
 
   group('_SeatUsageSection layout + behavior', () {
     test('rendered between InfoTable and _RecentActivitySection', () {
-      // Layout placement is load-bearing — admins expect the
+      // Layout placement is load-bearing - admins expect the
       // utilization data above the audit trail. Pin the order of
       // the three widgets in the build() body.
       final infoTableIdx = cardSrc.indexOf('InfoTable(');
@@ -168,7 +165,7 @@ void main() {
       expect(recentActivityIdx, greaterThan(seatUsageIdx));
     });
 
-    test('owner / admin only — gated by role at the call site', () {
+    test('owner / admin only - gated by role at the call site', () {
       // Member role doesn't see the section AT ALL (the callable
       // would reject the read anyway). Pin the gate so a later
       // refactor doesn't accidentally surface a useless loading
@@ -215,7 +212,7 @@ void main() {
       'error state renders StatusBanner.error, NOT a hand-rolled container',
       () {
         // The "no hand-rolled error containers" rule from the
-        // visual-audit playbook applies — pin the canonical primitive.
+        // visual-audit playbook applies - pin the canonical primitive.
         final errorBuildIdx = cardSrc.indexOf('Widget _buildError(');
         expect(errorBuildIdx, greaterThan(-1));
         final body = cardSrc.substring(errorBuildIdx, errorBuildIdx + 600);

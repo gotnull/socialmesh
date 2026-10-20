@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Widget Database — SQLite schema and lifecycle management.
+// Widget Database - SQLite schema and lifecycle management.
 //
 // This file defines the database schema for custom Widget persistence
 // with Cloud Sync support via an outbox pattern.

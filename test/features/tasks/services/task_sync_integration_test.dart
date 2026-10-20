@@ -8,7 +8,7 @@
 // and TaskDatabase.applyRemoteTransitions produce deterministic
 // results when applied from either device's perspective.
 //
-// Spec: TASK_SYSTEM.md — Reconciliation Rules, Sprint 008/W4.2.
+// Spec: TASK_SYSTEM.md - Reconciliation Rules, Sprint 008/W4.2.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/tasks/models/task.dart';

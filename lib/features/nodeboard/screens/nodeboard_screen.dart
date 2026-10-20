@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeBoard detail screen — card-based layout matching NodeDex detail.
+// NodeBoard detail screen - card-based layout matching NodeDex detail.
 //
 // The screen is assembled from staggered `NodeBoardEntrance` cards:
 //   1. Premium hero card (icon tile + title + sysop + tagline + stat chips)
@@ -39,7 +39,7 @@ import 'nodeboard_compose_screen.dart';
 import 'nodeboard_terminal_screen.dart';
 import 'nodeboard_thread_screen.dart';
 
-// Hero card visual tuning — kept close to the widget tree so designers can
+// Hero card visual tuning - kept close to the widget tree so designers can
 // tune the card without threading arguments through a dozen layers.
 const double _kHeroIconTileSize = 48;
 const double _kHeroIconSize = 22;
@@ -87,7 +87,7 @@ class NodeBoardScreen extends ConsumerWidget {
 }
 
 // ----------------------------------------------------------------------------
-// Main content — watches sections and renders the card stack.
+// Main content - watches sections and renders the card stack.
 // ----------------------------------------------------------------------------
 
 class _BoardContent extends ConsumerStatefulWidget {
@@ -122,8 +122,7 @@ class _BoardContentState extends ConsumerState<_BoardContent>
   Future<void> _onShareTapped() async {
     HapticFeedback.lightImpact();
     AppLogging.nodeBoard('UI: overflow action=share slug=${widget.slug}');
-    final url =
-        'https://socialmesh.app/share/board/${widget.slug}'; // lint-allow: hardcoded-string
+    final url = 'https://socialmesh.app/share/board/${widget.slug}'; // lint-allow: hardcoded-string
     final messenger = ScaffoldMessenger.maybeOf(context);
     final copiedMessage = context.l10n.nodeboardShareCopied;
     await Clipboard.setData(ClipboardData(text: url));
@@ -261,7 +260,7 @@ class _BoardContentState extends ConsumerState<_BoardContent>
         child: _NewThreadButton(onPressed: _onComposeTapped),
       ),
       slivers: [
-        // 1. Hero card — NOT using NodeBoardCardContainer (premium hero).
+        // 1. Hero card - NOT using NodeBoardCardContainer (premium hero).
         SliverToBoxAdapter(
           child: NodeBoardEntrance(index: 0, child: _HeroCard(board: board)),
         ),
@@ -408,7 +407,7 @@ class _OverflowMenuRow extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------------
-// Error shell — used when the board fetch fails or returns null.
+// Error shell - used when the board fetch fails or returns null.
 // ----------------------------------------------------------------------------
 
 class _ErrorShell extends StatelessWidget {
@@ -461,7 +460,7 @@ class _ErrorShell extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------------
-// Hero card — a richer, bespoke card at the top of the screen. Deliberately
+// Hero card - a richer, bespoke card at the top of the screen. Deliberately
 // NOT using NodeBoardCardContainer so the icon tile, title, and stats can
 // dominate the first viewport the way NodeDex's sigil-hero does.
 // ----------------------------------------------------------------------------
@@ -570,7 +569,7 @@ class _HeroCard extends StatelessWidget {
             ),
           ],
 
-          // Activity line — tone-aware, e.g. "LAST TRANSMISSION: 2H AGO".
+          // Activity line - tone-aware, e.g. "LAST TRANSMISSION: 2H AGO".
           // Skipped for boards that have never had any activity so we don't
           // render a dead "NEVER" row on brand-new boards.
           if (board.lastActivityAt != null) ...[
@@ -662,7 +661,7 @@ class _VisibilityBadge extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------------
-// Sections picker — horizontally-scrollable chip row. Taps swap the thread
+// Sections picker - horizontally-scrollable chip row. Taps swap the thread
 // card's section without rebuilding the whole screen.
 // ----------------------------------------------------------------------------
 
@@ -746,7 +745,7 @@ class _SectionChip extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------------
-// Threads card — scoped to the currently-selected section.
+// Threads card - scoped to the currently-selected section.
 // ----------------------------------------------------------------------------
 
 class _ThreadsCard extends ConsumerWidget {

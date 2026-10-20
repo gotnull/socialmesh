@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/flip_3d_text.dart';
@@ -397,9 +399,8 @@ class _LegendItem extends StatelessWidget {
         SizedBox(width: AppTheme.spacing6),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: context.textTertiary),
         ),
       ],
     );

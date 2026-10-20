@@ -22,6 +22,7 @@ import '../providers/tak_tracking_provider.dart';
 import '../services/tak_database.dart';
 import '../utils/cot_affiliation.dart';
 import 'tak_navigate_screen.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Detail view for a single TAK/CoT event.
@@ -482,7 +483,7 @@ class _HeaderCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Position History Section — shows movement timeline from position_history DB
+// Position History Section - shows movement timeline from position_history DB
 // =============================================================================
 
 class _PositionHistorySection extends ConsumerStatefulWidget {
@@ -698,7 +699,7 @@ class _PositionHistorySectionState
 }
 
 // =============================================================================
-// Section Info Button — inline contextual help for TAK detail sections
+// Section Info Button - inline contextual help for TAK detail sections
 // =============================================================================
 
 class _TakSectionInfoButton extends StatelessWidget {
@@ -755,9 +756,8 @@ class _TakSectionInfoButton extends StatelessWidget {
             Text(
               helpText,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.7),
                 height: 1.5,
               ),
             ),

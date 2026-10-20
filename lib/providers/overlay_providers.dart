@@ -136,7 +136,7 @@ final overlayProtocolEgressProvider = Provider<OverlayLinkEgress>((ref) {
 /// engine.
 ///
 /// The manager shares the same `OverlayLinkStore` and egress sink as
-/// the engine — they must operate on identical link state or secure
+/// the engine - they must operate on identical link state or secure
 /// frames go to the wrong link.
 final overlaySecureSessionManagerProvider =
     FutureProvider<OverlaySecureSessionManager>((ref) async {
@@ -221,7 +221,7 @@ final overlayResourceEgressProvider = FutureProvider<OverlayResourceEgress>((
 ///
 /// Built once per process. Applies restore semantics on every build
 /// (idempotent on an already-restored DB). Store + engine lifecycles
-/// are independent — each has its own `ref.onDispose`.
+/// are independent - each has its own `ref.onDispose`.
 final overlayResourceEngineProvider = FutureProvider<OverlayResourceEngine>((
   ref,
 ) async {
@@ -241,7 +241,7 @@ final overlayResourceEngineProvider = FutureProvider<OverlayResourceEngine>((
 ///
 /// This provider only builds when `resourceActive` is true. When the
 /// resource flag (or the link flag it depends on) is off, reading
-/// this provider returns null — callers then fall through to legacy
+/// this provider returns null - callers then fall through to legacy
 /// transport unconditionally.
 final overlayResourceDispatcherProvider =
     FutureProvider<OverlayResourceDispatcher?>((ref) async {

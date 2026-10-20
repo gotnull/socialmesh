@@ -32,7 +32,7 @@ final timelineNowProvider = StreamProvider.autoDispose<DateTime>((ref) {
 
 /// Computes the layout positions for a list of timeline items within one day.
 ///
-/// Handles collision detection — overlapping events are split horizontally.
+/// Handles collision detection - overlapping events are split horizontally.
 /// Returns pre-computed [TimelineItemLayout] with top/height/width fractions.
 List<TimelineItemLayout> computeDayLayout(
   List<TimelineItem> items,

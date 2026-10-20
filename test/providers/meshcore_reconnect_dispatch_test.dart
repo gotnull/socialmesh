@@ -97,7 +97,7 @@ void main() {
       // layer treats it as a non-TCP MeshCore id (BLE branch). The
       // dispatcher's downstream `_startMeshCoreBackgroundConnection`
       // separately bails on a `meshcore-tcp:` prefix that fails to
-      // parse — see connection_providers.dart:1249.
+      // parse - see connection_providers.dart:1249.
       final result = routeMeshCoreReconnectForTest(
         deviceId: 'meshcore-tcp:host:0',
         lastProtocol: 'meshcore',
@@ -144,7 +144,7 @@ void main() {
     test('case-sensitive protocol match (Meshcore != meshcore)', () {
       // `lastDeviceProtocol` is persisted as the lowercase string
       // `meshcore`. A capitalisation change anywhere in the persistence
-      // chain would silently disable the MeshCore branch — pin it.
+      // chain would silently disable the MeshCore branch - pin it.
       final result = routeMeshCoreReconnectForTest(
         deviceId: 'meshcore-tcp:host:5000',
         lastProtocol: 'Meshcore',

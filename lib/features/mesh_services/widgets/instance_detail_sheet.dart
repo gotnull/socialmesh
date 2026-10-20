@@ -6,7 +6,7 @@
 //
 // Extracted from the now-removed `MyServicesScreen` so both the SIP Hub
 // "Your Services" section and any legacy call site can open the same
-// sheet. Purely presentational — business logic (stop/delete) delegates
+// sheet. Purely presentational - business logic (stop/delete) delegates
 // to `meshServiceEngineProvider`.
 library;
 

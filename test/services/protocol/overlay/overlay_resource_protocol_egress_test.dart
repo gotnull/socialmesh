@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Tests for [OverlayResourceProtocolEgress] — the production
+/// Tests for [OverlayResourceProtocolEgress] - the production
 /// adapter that wraps resource frames in LINK_DATA via
 /// [OverlayLinkEngine.sendData].
 library;

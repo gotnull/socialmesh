@@ -8,7 +8,7 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
 
 // =============================================================================
-// Test helpers — top-level so they can reference each other
+// Test helpers - top-level so they can reference each other
 // =============================================================================
 
 List<EncounterRecord> _makeEncounters({
@@ -362,7 +362,7 @@ void main() {
         );
         final result = TraitEngine.infer(entry: entry);
 
-        // 5 / 30 = 0.17 encounters/day — Ghost territory.
+        // 5 / 30 = 0.17 encounters/day - Ghost territory.
         // 2 distinct positions removes Sentinel's fixed-position bonus
         // without triggering Wanderer (needs 3+).
         // Last seen 5 days ago adds Ghost score.
@@ -391,7 +391,7 @@ void main() {
         final entry = _makeEntry(encounterCount: 100, ageDays: 5);
         final result = TraitEngine.infer(entry: entry);
 
-        // 100 encounters / 5 days = 20 encounters/day — very high.
+        // 100 encounters / 5 days = 20 encounters/day - very high.
         expect(result.primary, equals(NodeTrait.beacon));
         expect(result.confidence, greaterThan(0.5));
       });
@@ -400,7 +400,7 @@ void main() {
         final entry = _makeEntry(encounterCount: 50, ageDays: 5);
         final result = TraitEngine.infer(entry: entry);
 
-        // 50 / 5 = 10 encounters/day — above Beacon threshold of 8.
+        // 50 / 5 = 10 encounters/day - above Beacon threshold of 8.
         expect(result.primary, equals(NodeTrait.beacon));
       });
 
@@ -421,7 +421,7 @@ void main() {
         final entry = _makeEntry(encounterCount: 5, ageDays: 7);
         final result = TraitEngine.infer(entry: entry);
 
-        // 5 / 7 = 0.71 encounters/day — well below threshold.
+        // 5 / 7 = 0.71 encounters/day - well below threshold.
         expect(result.primary, isNot(equals(NodeTrait.beacon)));
       });
     });
@@ -443,7 +443,7 @@ void main() {
         );
         final result = TraitEngine.infer(entry: entry);
 
-        // 3 / 30 = 0.1 encounters/day — below Ghost threshold of 0.3.
+        // 3 / 30 = 0.1 encounters/day - below Ghost threshold of 0.3.
         // Last seen 10 days ago adds more Ghost score.
         // 3 distinct positions prevents Sentinel from winning via
         // the fixed-position bonus.
@@ -463,7 +463,7 @@ void main() {
         );
         final result = TraitEngine.infer(entry: entry);
 
-        // 4 / 14 = 0.286 encounters/day — below Ghost threshold.
+        // 4 / 14 = 0.286 encounters/day - below Ghost threshold.
         // 2 distinct positions avoids Sentinel's fixed-position bonus.
         expect(result.primary, equals(NodeTrait.ghost));
       });
@@ -485,7 +485,7 @@ void main() {
         final entry = _makeEntry(encounterCount: 50, ageDays: 5);
         final result = TraitEngine.infer(entry: entry);
 
-        // 50 / 5 = 10/day — way above Ghost threshold.
+        // 50 / 5 = 10/day - way above Ghost threshold.
         expect(result.primary, isNot(equals(NodeTrait.ghost)));
       });
     });
@@ -696,7 +696,7 @@ void main() {
         final entry = _makeEntry(encounterCount: 20, ageDays: 14);
         final result = TraitEngine.infer(entry: entry);
 
-        // 20 / 14 = 1.43 encounters/day — above Ghost threshold of 0.3.
+        // 20 / 14 = 1.43 encounters/day - above Ghost threshold of 0.3.
         expect(result.primary, isNot(equals(NodeTrait.ghost)));
       });
 
@@ -709,7 +709,7 @@ void main() {
         );
         final result = TraitEngine.infer(entry: entry);
 
-        // Moderate input — the result should be a valid trait.
+        // Moderate input - the result should be a valid trait.
         expect(NodeTrait.values, contains(result.primary));
         expect(result.confidence, greaterThan(0));
       });
@@ -772,7 +772,7 @@ void main() {
         );
         final result = TraitEngine.infer(entry: entry);
 
-        // 3 / 365 = 0.008 encounters/day — deeply Ghost.
+        // 3 / 365 = 0.008 encounters/day - deeply Ghost.
         expect(result.primary, equals(NodeTrait.ghost));
       });
 
@@ -780,7 +780,7 @@ void main() {
         final entry = _makeEntry(encounterCount: 1000, ageDays: 10);
         final result = TraitEngine.infer(entry: entry);
 
-        // 100 encounters/day — extreme Beacon.
+        // 100 encounters/day - extreme Beacon.
         expect(result.primary, equals(NodeTrait.beacon));
       });
 

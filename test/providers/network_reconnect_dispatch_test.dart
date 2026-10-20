@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Endpoint-parsing and dispatch behavior for network reconnect.
-// Network reconnect must not route through BLE scan logic — see
+// Network reconnect must not route through BLE scan logic - see
 // issue #102 for the failure mode this guards against.
 
 import 'package:flutter_test/flutter_test.dart';
@@ -98,7 +98,7 @@ void main() {
 
   group('network reconnect in-flight guard', () {
     test('sentinel is false outside a reconnect run (no real container '
-        'invocation needed — structural assertion the flag exists and '
+        'invocation needed - structural assertion the flag exists and '
         'defaults false so a crashed loop cannot poison future runs)', () {
       expect(networkReconnectInFlightForTest, isFalse);
     });

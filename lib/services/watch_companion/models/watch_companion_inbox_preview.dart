@@ -27,7 +27,7 @@ class WatchCompanionInboxMessage {
   final int? channelIndex;
 
   /// Meshtastic packet id of this message (v2+), used phone-side to resolve a
-  /// reply target. Null for MeshCore rows (no reply wire concept) — the Watch
+  /// reply target. Null for MeshCore rows (no reply wire concept) - the Watch
   /// keys its reply affordance off this being null.
   final int? packetId;
 

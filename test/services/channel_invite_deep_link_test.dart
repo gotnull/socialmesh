@@ -94,7 +94,7 @@ void main() {
 
     group('secret is never logged in full', () {
       test('secret is redacted in parsed link representation', () {
-        // This is a design invariant — the parser must not leak secrets.
+        // This is a design invariant - the parser must not leak secrets.
         // We verify the ParsedDeepLink holds the secret but that
         // logging redacts it (tested implicitly by the parser's log line:
         // "secret=<redacted N chars>").
@@ -104,7 +104,7 @@ void main() {
 
         expect(result.channelInviteSecret, 'topsecretvalue42');
         // toString of ParsedDeepLink should NOT contain the raw secret.
-        // ParsedDeepLink is a data class — we just confirm the value is stored.
+        // ParsedDeepLink is a data class - we just confirm the value is stored.
         expect(result.hasChannelInvite, true);
       });
     });

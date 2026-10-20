@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../providers/tak_filter_provider.dart';
 import '../utils/cot_affiliation.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Horizontal filter bar for TAK entities.

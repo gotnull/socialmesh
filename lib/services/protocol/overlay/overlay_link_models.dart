@@ -16,7 +16,7 @@ import 'overlay_types.dart';
 /// Captured at link-open time from the peer's capability block (§16.1)
 /// and persisted with the link row. If a peer restarts and its
 /// advertised capabilities change, the new values apply only to a new
-/// link — existing links keep their snapshot until closed.
+/// link - existing links keep their snapshot until closed.
 class OverlayLinkCapabilities {
   /// Bitset of [OverlayCapabilityFeature] bits the peer advertises.
   final int supportedFeatures;
@@ -64,7 +64,7 @@ class OverlayLinkRecord {
   /// 8-byte persona hint of the peer (matches SIP `SENDER_PUBKEY_HINT`).
   final Uint8List peerPersonaHint;
 
-  /// Meshtastic node num of the peer. Used only for egress routing —
+  /// Meshtastic node num of the peer. Used only for egress routing -
   /// not part of the overlay identity model.
   final int peerNodeNum;
 
@@ -214,10 +214,10 @@ class OverlayLinkEvent {
   final OverlayLinkRecord record;
 
   /// Payload bytes for [OverlayLinkEventKind.dataDelivered]; null
-  /// otherwise. Held by reference — consumers must not mutate.
+  /// otherwise. Held by reference - consumers must not mutate.
   final Uint8List? payload;
 
-  /// A short diagnostic reason — used for drops and restores.
+  /// A short diagnostic reason - used for drops and restores.
   final String? detail;
 
   const OverlayLinkEvent({
@@ -232,10 +232,11 @@ class OverlayLinkEvent {
 /// `LINK_OPEN`.
 ///
 /// Return `null` to accept, or an [OverlayLinkCloseReason] to decline
-/// with that reason. Must be pure and synchronous — the engine holds
+/// with that reason. Must be pure and synchronous - the engine holds
 /// its mutation lock while calling.
-typedef OverlayLinkAcceptPolicy =
-    OverlayLinkCloseReason? Function(OverlayLinkRecord incoming);
+typedef OverlayLinkAcceptPolicy = OverlayLinkCloseReason? Function(
+  OverlayLinkRecord incoming,
+);
 
 /// Default accept policy: accept every inbound LINK_OPEN. Suitable for
 /// unit tests only. Production callers MUST supply a stricter policy

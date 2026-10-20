@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Tests for [OverlayResourceIngressDispatcher] — the thin glue
+/// Tests for [OverlayResourceIngressDispatcher] - the thin glue
 /// between `OverlayLinkEngine.events.dataDelivered` and
 /// `OverlayResourceEngine.handleInbound`.
 library;
@@ -122,7 +122,7 @@ void main() {
     );
     final wire = OverlayResourceCodec.encode(offer)!;
 
-    // Inbound chunk arrives on the link — seq 1 matches rxExpectedSeq.
+    // Inbound chunk arrives on the link - seq 1 matches rxExpectedSeq.
     await _deliverLinkData(
       linkEngine: r.link,
       linkId: r.linkId,

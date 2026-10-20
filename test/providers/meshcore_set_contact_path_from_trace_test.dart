@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34c-A — `setContactPathFromTrace` provider helper regression pins.
+// D34c-A - `setContactPathFromTrace` provider helper regression pins.
 //
 // Pinned invariants:
 //   - Sends `CMD_ADD_UPDATE_CONTACT (0x09)` with `out_path_len`
@@ -63,7 +63,7 @@ class _RecordingTransport implements MeshCoreTransport {
 
   /// Inject an empty contacts-list streaming response so the post-ACK
   /// `refresh()` (which calls `session.getContacts()`) completes
-  /// quickly. We don't care about the contact entries here — the
+  /// quickly. We don't care about the contact entries here - the
   /// D34c-A invariant under test is the OUTBOUND `0x09` payload, not
   /// the post-refresh state.
   void simulateEmptyContactsList() {
@@ -139,7 +139,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       transport.simulateOk();
       // The helper then triggers `refresh()` which calls
-      // `getContacts()` — feed it an empty contacts-list stream so
+      // `getContacts()` - feed it an empty contacts-list stream so
       // the future completes promptly.
       await Future<void>.delayed(Duration.zero);
       transport.simulateEmptyContactsList();
@@ -166,7 +166,7 @@ void main() {
         reason: 'pubkey must be preserved verbatim',
       );
       expect(payload[32], equals(MeshCoreAdvType.chat));
-      // flags at 33 — helper writes 0x00 by D34c-A contract
+      // flags at 33 - helper writes 0x00 by D34c-A contract
       expect(payload[33], equals(0));
       // out_path_len at 34
       expect(
@@ -184,12 +184,12 @@ void main() {
           reason: 'path slot tail must be zero-padded at offset $i',
         );
       }
-      // Name at 99..130 — first 11 bytes of "WisMeshCore"
+      // Name at 99..130 - first 11 bytes of "WisMeshCore"
       expect(
         String.fromCharCodes(payload.sublist(99, 99 + 11)),
         equals('WisMeshCore'),
       );
-      // GPS present (143-byte payload — preserves lat+lon)
+      // GPS present (143-byte payload - preserves lat+lon)
       expect(
         payload.length,
         equals(143),
@@ -322,7 +322,7 @@ void main() {
       addTearDown(container.dispose);
 
       final notifier = container.read(meshCoreContactsProvider.notifier);
-      // No contacts seeded — lookup fails.
+      // No contacts seeded - lookup fails.
       expect(
         () => notifier.setContactPathFromTrace(
           publicKeyHex: 'aabbccdd' * 8,

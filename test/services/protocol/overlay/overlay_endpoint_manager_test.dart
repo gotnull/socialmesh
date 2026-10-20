@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Tests for [OverlayEndpointManager] — tie-break + persistence.
+/// Tests for [OverlayEndpointManager] - tie-break + persistence.
 library;
 
 import 'dart:typed_data';

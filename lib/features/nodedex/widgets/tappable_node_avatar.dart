@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// TappableNodeAvatar — `NodeAvatar` (initials variant) wrapped with the
+// TappableNodeAvatar - `NodeAvatar` (initials variant) wrapped with the
 // same tap-to-NodeDex contract as `TappableSigilAvatar`. Use this in
 // surfaces where the design choice is the initials avatar (file
 // transfer contacts, etc.). Both wrappers must keep their default tap

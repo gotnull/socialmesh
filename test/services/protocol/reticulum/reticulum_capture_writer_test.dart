@@ -9,7 +9,7 @@ import 'package:socialmesh/services/protocol/reticulum/reticulum_capture_writer.
 import 'package:socialmesh/services/protocol/reticulum/reticulum_fragment_event.dart';
 
 void main() {
-  group('ReticulumCaptureWriter — encodeRecord wire layout', () {
+  group('ReticulumCaptureWriter - encodeRecord wire layout', () {
     test('fixed header is 27 bytes', () {
       final event = ReticulumFragmentEvent(
         timestampMs: 0,
@@ -93,7 +93,7 @@ void main() {
     });
   });
 
-  group('ReticulumCaptureWriter — magic header', () {
+  group('ReticulumCaptureWriter - magic header', () {
     test('SMRC v1 magic is exactly "SMRC\\x01"', () {
       final magic = ReticulumCaptureWriter.magicHeader();
       expect(magic.length, 5);
@@ -103,7 +103,7 @@ void main() {
     });
   });
 
-  group('ReticulumCaptureWriter — file lifecycle', () {
+  group('ReticulumCaptureWriter - file lifecycle', () {
     late Directory tempDir;
 
     setUp(() async {

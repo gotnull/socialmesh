@@ -5,7 +5,7 @@
 //
 // Locks in the wire format and the safety boundary defined by
 // `docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md`. This file is the
-// authoritative byte-vector + behaviour pin for SIP v0.2 — every
+// authoritative byte-vector + behaviour pin for SIP v0.2 - every
 // assertion here corresponds to a specific section of the plan.
 
 import 'dart:typed_data';
@@ -23,7 +23,7 @@ const int _kBroadcast = SipConstants.sipTargetNodeIdBroadcast; // 0xFFFFFFFF
 
 void main() {
   group('SIP v0.2 §7.1 byte-vector round-trip', () {
-    test('HS_HELLO encode/decode round-trip — 54 B, target at offset 0', () {
+    test('HS_HELLO encode/decode round-trip - 54 B, target at offset 0', () {
       final hello = SipHsHello(
         targetNodeId: 0xB15E74DB,
         clientNonce: Uint8List(16)..fillRange(0, 16, 0xAA),
@@ -52,7 +52,7 @@ void main() {
       expect(decoded.requestedFeatures, 0x000F);
     });
 
-    test('HS_CHALLENGE — 72 B', () {
+    test('HS_CHALLENGE - 72 B', () {
       final challenge = SipHsChallenge(
         targetNodeId: 0xA1A2A3A4,
         serverNonce: Uint8List(16)..fillRange(0, 16, 0x11),
@@ -69,7 +69,7 @@ void main() {
       expect(decoded.expiresInS, 60);
     });
 
-    test('HS_RESPONSE — 40 B', () {
+    test('HS_RESPONSE - 40 B', () {
       final response = SipHsResponse(
         targetNodeId: 0xB1B2B3B4,
         echoedServerNonce: Uint8List(16)..fillRange(0, 16, 0x44),
@@ -84,7 +84,7 @@ void main() {
       expect(decoded.sessionTag, 0xDEADBEEF);
     });
 
-    test('HS_ACCEPT — 13 B', () {
+    test('HS_ACCEPT - 13 B', () {
       final accept = SipHsAccept(
         targetNodeId: 0xC1C2C3C4,
         sessionTag: 0xCAFEBABE,
@@ -100,7 +100,7 @@ void main() {
       expect(decoded.dmTtlS, 86400);
     });
 
-    test('HS_DECLINE — 21 B', () {
+    test('HS_DECLINE - 21 B', () {
       final decline = SipHsDecline(
         targetNodeId: 0xD1D2D3D4,
         echoedClientNonce: Uint8List(16)..fillRange(0, 16, 0x77),
@@ -204,7 +204,7 @@ void main() {
 
   group('SIP v0.2 §7.3a codec rejects wrong version_minor on handshake', () {
     test('version_minor=1 + hsHello → SipCodec.decode returns null', () {
-      // Build a legal-looking v0.1 wire frame (52-byte payload — anything
+      // Build a legal-looking v0.1 wire frame (52-byte payload - anything
       // would do for the version test, since the version check fires
       // before payload-length checks).
       final wire = _buildWireFrame(
@@ -266,7 +266,7 @@ void main() {
     });
   });
 
-  group('SIP v0.2 §7.4 + §7.5 + §7.6 — manager-level target checks', () {
+  group('SIP v0.2 §7.4 + §7.5 + §7.6 - manager-level target checks', () {
     test('target == myNodeNum → manager queues pendingApproval', () async {
       final replay = SipReplayCache();
       final mgr = SipHandshakeManager(
@@ -341,7 +341,7 @@ void main() {
       // somehow lands one in the wire, the receiver MUST drop too.
       final payload = Uint8List(54);
       ByteData.sublistView(payload).setUint32(0, _kBroadcast, Endian.little);
-      // Fill the rest with arbitrary bytes — the manager only inspects
+      // Fill the rest with arbitrary bytes - the manager only inspects
       // the target field for this assertion.
       payload.fillRange(4, 20, 0xAA);
       payload.fillRange(20, 52, 0xBB);

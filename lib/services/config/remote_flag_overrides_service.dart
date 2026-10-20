@@ -157,7 +157,7 @@ class RemoteFlagOverridesService {
 
   /// Subset of [allowedKeys] whose code-level default is `true` when no
   /// remote override and no `.env` value is present (opt-out flags).
-  /// The matching getter in AppFeatureFlags must agree — keep in sync.
+  /// The matching getter in AppFeatureFlags must agree - keep in sync.
   /// Without this set the admin sheet would render an unset opt-out flag
   /// as OFF and its kill-switch would read backwards.
   static const Set<String> defaultTrueKeys = <String>{
@@ -226,7 +226,7 @@ class RemoteFlagOverridesService {
 
     await _loadCachedOverrides();
 
-    // Don't await — Firestore listening must never block app startup.
+    // Don't await - Firestore listening must never block app startup.
     unawaited(_startFirestoreListener());
   }
 

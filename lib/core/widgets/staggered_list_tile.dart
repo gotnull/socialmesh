@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// StaggeredListTile — fade + subtle rise entrance animation used in
+// StaggeredListTile - fade + subtle rise entrance animation used in
 // premium list views (NodeDex co-seen list, MeshCanvas channel
 // canvases, etc.).
 //
@@ -14,7 +14,7 @@
 //     does NOT replay when it scrolls back into view.
 //
 // Use this wherever a sliver list of cards/tiles needs a polished
-// entrance. Never hand-roll the timing — pull it from here.
+// entrance. Never hand-roll the timing - pull it from here.
 library;
 
 import 'dart:math' as math;

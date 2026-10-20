@@ -3,7 +3,7 @@
 
 import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 
-// Import Preview Model — conflict detection for NodeDex import/merge UX.
+// Import Preview Model - conflict detection for NodeDex import/merge UX.
 //
 // When a user imports a NodeDex JSON file, entries may conflict with
 // existing local data. This model provides a structured preview of
@@ -201,7 +201,7 @@ class ImportPreview {
           NodeDisplayNameResolver.defaultName(imported.nodeNum);
 
       if (local == null) {
-        // New entry — no conflicts possible.
+        // New entry - no conflicts possible.
         previews.add(
           EntryMergePreview(
             nodeNum: imported.nodeNum,
@@ -216,7 +216,7 @@ class ImportPreview {
         continue;
       }
 
-      // Existing entry — check for conflicts.
+      // Existing entry - check for conflicts.
       FieldConflict<NodeSocialTag?>? tagConflict;
       if (local.socialTag != null &&
           imported.socialTag != null &&
@@ -287,7 +287,7 @@ class ImportPreview {
   /// conflict resolutions.
   ///
   /// Returns the list of final merged entries ready to be persisted.
-  /// Does not modify state — the caller is responsible for saving.
+  /// Does not modify state - the caller is responsible for saving.
   static List<NodeDexEntry> applyMerge({
     required ImportPreview preview,
     required Map<int, NodeDexEntry> localEntries,
@@ -301,7 +301,7 @@ class ImportPreview {
       final local = localEntries[entryPreview.nodeNum];
 
       if (local == null) {
-        // New entry — add directly.
+        // New entry - add directly.
         results.add(imported);
         continue;
       }
@@ -325,7 +325,7 @@ class ImportPreview {
       } else if (strategy == MergeStrategy.preferImport &&
           local.socialTag == null &&
           imported.socialTag != null) {
-        // No conflict, but import has a value local doesn't — already
+        // No conflict, but import has a value local doesn't - already
         // handled by mergeWith (fills from import when local is null).
       }
 

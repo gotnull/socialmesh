@@ -45,7 +45,7 @@ class SipInkStroke {
 
 /// A decoded sketch ready to render or re-encode.
 class SipInkSketch {
-  /// Canvas dimension in pixels — either
+  /// Canvas dimension in pixels - either
   /// [SipInkConstants.canvas64] or [SipInkConstants.canvas128].
   final int canvasSize;
 

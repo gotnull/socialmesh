@@ -526,8 +526,7 @@ class BindingSchema {
   final String path; // e.g., "node.batteryLevel", "node.temperature"
   final String? format; // Format string, e.g., "{value}%", "{value}°C"
   final String? defaultValue; // Fallback when data is null
-  final String?
-  transform; // Optional transform: "round", "floor", "ceil", "uppercase", "lowercase"
+  final String? transform; // Optional transform: "round", "floor", "ceil", "uppercase", "lowercase"
 
   const BindingSchema({
     required this.path,

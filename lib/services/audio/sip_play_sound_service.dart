@@ -4,27 +4,27 @@
 /// SIP Play + SIP Handshake short-form sound effects.
 ///
 /// Four lifetime moments in the SIP DM stack get a discrete audio
-/// cue. The service is a thin wrapper around [just_audio] —
+/// cue. The service is a thin wrapper around [just_audio] -
 /// fire-and-forget playback, asset-backed, no settings UI for v1
 /// (the system silent switch is the primary mute affordance).
 ///
 /// Trigger points:
 ///
-///   - [playGameStart]            — SIP Play game transitions to active
+///   - [playGameStart]            - SIP Play game transitions to active
 ///                                  (offer accepted by either side).
-///   - [consentRequested]         — Inbound SIP HS_HELLO arrives and
+///   - [consentRequested]         - Inbound SIP HS_HELLO arrives and
 ///                                  the Accept / Decline prompt is
 ///                                  about to appear. Plays an audible
 ///                                  cue so the user notices when busy
 ///                                  with other work.
-///   - [playConnectionSucceeded]  — SIP Handshake reaches `accepted`
+///   - [playConnectionSucceeded]  - SIP Handshake reaches `accepted`
 ///                                  state and the DM session is live.
-///   - [playConnectionFailed]     — SIP Handshake fails or times out
+///   - [playConnectionFailed]     - SIP Handshake fails or times out
 ///                                  (NOT for user-initiated cancels).
-///   - [playRejectedDeclined]     — SIP Handshake OR SIP Play offer
+///   - [playRejectedDeclined]     - SIP Handshake OR SIP Play offer
 ///                                  is declined (either direction).
 ///
-/// Each method is fire-and-forget — exceptions are swallowed and
+/// Each method is fire-and-forget - exceptions are swallowed and
 /// logged so a missing asset / disabled audio system never blocks
 /// the SIP / DM happy path.
 library;
@@ -53,7 +53,7 @@ enum SipPlaySoundCue {
 /// cancel each other mid-clip. Players are lazy-built on first
 /// playback.
 class SipPlaySoundService {
-  /// Plug for tests — when set, [play] dispatches here instead of
+  /// Plug for tests - when set, [play] dispatches here instead of
   /// touching the real audio backend.
   static SipPlaySoundCueSink? overrideSinkForTest;
 
@@ -74,7 +74,7 @@ class SipPlaySoundService {
       await player.seek(Duration.zero);
       await player.play();
     } catch (e, st) {
-      // Asset missing / audio backend unavailable — log + drop.
+      // Asset missing / audio backend unavailable - log + drop.
       // The user MUST never have a SIP / DM action blocked because
       // a sound failed to play.
       AppLogging.audio('SipPlaySoundService: cue=${cue.name} failed: $e\n$st');

@@ -262,55 +262,58 @@ void main() {
     });
 
     group('nested combinations', () {
-      test('ALL(predicate, ANY(predicate, NOT(predicate))) is deterministic', () {
-        // ALL(timeRange:pass, ANY(sunday:fail, NOT(nodeOffline:always-true)))
-        // nodeOffline with no nodeNum returns true (missing data passes)
-        // NOT(true) = false
-        // ANY(false, false) = false
-        // ALL(true, false) = false
-        const tree = AllGroup(
-          children: [
-            PredicateNode(
-              condition: AutomationCondition(
-                type: ConditionType.timeRange,
-                config: {'timeStart': '08:00', 'timeEnd': '18:00'},
-              ),
-            ),
-            AnyGroup(
-              children: [
-                PredicateNode(
-                  condition: AutomationCondition(
-                    type: ConditionType.dayOfWeek,
-                    config: {
-                      'daysOfWeek': [0],
-                    }, // Sunday
-                  ),
+      test(
+        'ALL(predicate, ANY(predicate, NOT(predicate))) is deterministic',
+        () {
+          // ALL(timeRange:pass, ANY(sunday:fail, NOT(nodeOffline:always-true)))
+          // nodeOffline with no nodeNum returns true (missing data passes)
+          // NOT(true) = false
+          // ANY(false, false) = false
+          // ALL(true, false) = false
+          const tree = AllGroup(
+            children: [
+              PredicateNode(
+                condition: AutomationCondition(
+                  type: ConditionType.timeRange,
+                  config: {'timeStart': '08:00', 'timeEnd': '18:00'},
                 ),
-                NotGroup(
-                  child: PredicateNode(
+              ),
+              AnyGroup(
+                children: [
+                  PredicateNode(
                     condition: AutomationCondition(
-                      type: ConditionType.batteryAbove,
-                      config: {'batteryThreshold': 30},
+                      type: ConditionType.dayOfWeek,
+                      config: {
+                        'daysOfWeek': [0],
+                      }, // Sunday
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        );
+                  NotGroup(
+                    child: PredicateNode(
+                      condition: AutomationCondition(
+                        type: ConditionType.batteryAbove,
+                        config: {'batteryThreshold': 30},
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
 
-        // Event at Monday 10:00 with battery 50
-        final event = AutomationEvent(
-          type: TriggerType.messageReceived,
-          nodeNum: 100,
-          batteryLevel: 50,
-          timestamp: monday10am,
-        );
-        final result = engine.evaluateConditionTree(tree, event);
-        // timeRange: pass, ANY(Sunday:fail, NOT(battery>30 with 50: true -> NOT=false)) = false
-        // ALL(true, false) = false
-        expect(result.passed, isFalse);
-      });
+          // Event at Monday 10:00 with battery 50
+          final event = AutomationEvent(
+            type: TriggerType.messageReceived,
+            nodeNum: 100,
+            batteryLevel: 50,
+            timestamp: monday10am,
+          );
+          final result = engine.evaluateConditionTree(tree, event);
+          // timeRange: pass, ANY(Sunday:fail, NOT(battery>30 with 50: true -> NOT=false)) = false
+          // ALL(true, false) = false
+          expect(result.passed, isFalse);
+        },
+      );
     });
 
     group('unsupported/stubbed conditions', () {

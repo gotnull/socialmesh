@@ -12,13 +12,13 @@
 ///     reason and the recovery path from the user.
 ///   - `SipDmSendError.peerRateLimited` MUST map to
 ///     `l10n.sipDmPeerRateLimited` (the per-peer token-bucket copy)
-///     and remain DISTINCT from `sipDmBudgetExhausted` — they're
+///     and remain DISTINCT from `sipDmBudgetExhausted` - they're
 ///     different limiters with different recovery times.
 ///   - `SipDmSendError.budgetExhausted` MUST keep mapping to the
 ///     existing `l10n.sipDmBudgetExhausted` (global airtime budget).
 ///
 /// These three error variants have to be handled by every code path
-/// that surfaces a `SipDmSendError` to the user — currently:
+/// that surfaces a `SipDmSendError` to the user - currently:
 ///
 ///   - `lib/features/sip/sip_dm_screen.dart` `_showSendError`
 ///   - `lib/features/sip/sketch/sip_ink_composer.dart` `_showSendError`
@@ -62,9 +62,8 @@ void main() {
 
     test('peerBlocked → sipDmPeerBlocked (the unblock-aware copy)', () {
       expect(
-        RegExp(
-          r'SipDmSendError\.peerBlocked\s*=>\s*l10n\.sipDmPeerBlocked',
-        ).hasMatch(body),
+        RegExp(r'SipDmSendError\.peerBlocked\s*=>\s*l10n\.sipDmPeerBlocked')
+            .hasMatch(body),
         isTrue,
         reason:
             'peerBlocked must surface the dedicated copy that points '
@@ -79,7 +78,7 @@ void main() {
         ).hasMatch(body),
         isTrue,
         reason:
-            'peerRateLimited has its own copy — distinct from the '
+            'peerRateLimited has its own copy - distinct from the '
             'global airtime budgetExhausted snackbar',
       );
     });
@@ -92,7 +91,7 @@ void main() {
         isTrue,
         reason:
             'budgetExhausted must keep mapping to the existing global '
-            'airtime budget copy — not the per-peer one',
+            'airtime budget copy - not the per-peer one',
       );
     });
 
@@ -118,20 +117,18 @@ void main() {
   });
 
   group('sip_ink_composer.dart _showSendError mapping', () {
-    final src = File(
-      'lib/features/sip/sketch/sip_ink_composer.dart',
-    ).readAsStringSync();
+    final src = File('lib/features/sip/sketch/sip_ink_composer.dart')
+        .readAsStringSync();
     final body = _extractShowSendErrorBody(src);
 
     test('peerBlocked → sipDmPeerBlocked (shared copy with text DM)', () {
       expect(
-        RegExp(
-          r'SipDmSendError\.peerBlocked\s*=>\s*l10n\.sipDmPeerBlocked',
-        ).hasMatch(body),
+        RegExp(r'SipDmSendError\.peerBlocked\s*=>\s*l10n\.sipDmPeerBlocked')
+            .hasMatch(body),
         isTrue,
         reason:
             'sketch send must use the same peerBlocked copy as text '
-            'DM — sketch-specific text would confuse users about the '
+            'DM - sketch-specific text would confuse users about the '
             'underlying state',
       );
     });
@@ -176,7 +173,7 @@ void main() {
         isTrue,
         reason:
             'budgetExhausted copy should remain the airtime/bandwidth '
-            'message — not the per-peer "slow down" one',
+            'message - not the per-peer "slow down" one',
       );
     });
   });

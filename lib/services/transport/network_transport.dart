@@ -26,7 +26,7 @@ class NetworkTransport implements DeviceTransport {
       StreamController<List<int>>.broadcast();
   StreamSubscription<List<int>>? _socketSubscription;
 
-  /// Heartbeat timer — TCP connections need periodic probing to detect
+  /// Heartbeat timer - TCP connections need periodic probing to detect
   /// silent disconnections (standard 15-second interval).
   Timer? _heartbeatTimer;
   static const Duration _heartbeatInterval = Duration(seconds: 15);

@@ -95,7 +95,7 @@ void main() {
         expect(sentFrames.length, 1);
         expect(dispatcher.pendingCount, 1);
 
-        // Advance to just before timeout — should still be pending.
+        // Advance to just before timeout - should still be pending.
         async.elapse(
           MrrpConstants.mrrpRequestTimeout - const Duration(seconds: 1),
         );
@@ -222,7 +222,7 @@ void main() {
             payload: Uint8List(0),
           ),
         );
-        // No exception — late frame silently dropped.
+        // No exception - late frame silently dropped.
       });
     });
 

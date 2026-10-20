@@ -471,7 +471,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
                 );
               },
             ),
-            // Delivery-path row. Always shown for received messages —
+            // Delivery-path row. Always shown for received messages -
             // "Unknown" is a deliberate statement (path not recorded), not
             // a missing-data state to hide.
             Padding(

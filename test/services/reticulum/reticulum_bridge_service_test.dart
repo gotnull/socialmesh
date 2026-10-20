@@ -105,7 +105,7 @@ Uint8List _body(int seed) =>
     Uint8List.fromList(List<int>.generate(40, (i) => (seed + i) & 0xFF));
 
 void main() {
-  group('ReticulumBridgeService — initial state', () {
+  group('ReticulumBridgeService - initial state', () {
     test('starts disconnected with empty counters', () {
       final svc = ReticulumBridgeService(socketFactory: _FakeFactory().connect);
       expect(svc.status.kind, ReticulumBridgeStatusKind.disconnected);
@@ -126,7 +126,7 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeService — connect lifecycle', () {
+  group('ReticulumBridgeService - connect lifecycle', () {
     test('emits connecting → connected on success', () async {
       final factory = _FakeFactory();
       factory.queueSocket(_FakeBridgeSocket());
@@ -177,7 +177,7 @@ void main() {
     );
   });
 
-  group('ReticulumBridgeService — sending frames', () {
+  group('ReticulumBridgeService - sending frames', () {
     test('sendFrame writes HDLC-encoded bytes to the socket', () async {
       final factory = _FakeFactory();
       final socket = _FakeBridgeSocket();
@@ -195,7 +195,7 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeService — bounded queue (drop-newest)', () {
+  group('ReticulumBridgeService - bounded queue (drop-newest)', () {
     test(
       '33rd send drops while drain is gated; first 32 flush after release',
       () async {
@@ -235,7 +235,7 @@ void main() {
     );
   });
 
-  group('ReticulumBridgeService — write errors', () {
+  group('ReticulumBridgeService - write errors', () {
     test(
       'write error increments droppedFramingError and fires error status',
       () async {
@@ -243,7 +243,7 @@ void main() {
         final socket = _FakeBridgeSocket()
           ..errorOnNextWrite = Exception('broken pipe');
         factory.queueSocket(socket);
-        // No reconnect target queued — so the auto-reconnect attempt
+        // No reconnect target queued - so the auto-reconnect attempt
         // will hit "no fake response queued" and emit a connect-error
         // status. We don't care about the second outcome; we care that
         // status traversed `error` after the write failure.
@@ -272,7 +272,7 @@ void main() {
     );
   });
 
-  group('ReticulumBridgeService — auto-reconnect', () {
+  group('ReticulumBridgeService - auto-reconnect', () {
     test('peer close triggers reconnect after backoff', () {
       fakeAsync((async) {
         final factory = _FakeFactory();
@@ -333,10 +333,10 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeService — backoff schedule', () {
+  group('ReticulumBridgeService - backoff schedule', () {
     test('exponential ceilings 1s, 2s, 4s, …, 60s, then capped', () {
       // Use a Random that always returns its argument minus 1, so
-      // each `nextInt(ceiling+1)` yields exactly the ceiling — gives
+      // each `nextInt(ceiling+1)` yields exactly the ceiling - gives
       // us a deterministic worst-case jitter for ceiling assertions.
       final factory = _FakeFactory();
       // Queue 8 connect errors so each retry hits a new failure.
@@ -404,7 +404,7 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeService — uptime accumulation', () {
+  group('ReticulumBridgeService - uptime accumulation', () {
     test('totalUptime grows across reconnects', () {
       fakeAsync((async) {
         final t0 = DateTime.utc(2026, 1, 1);
@@ -441,45 +441,40 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeService — auto-disable after repeated failures', () {
-    test(
-      'flips autoDisabled true after threshold consecutive errors and stops retrying',
-      () {
-        fakeAsync((async) {
-          final factory = _FakeFactory();
-          // Threshold of 3 to keep the test small.
-          for (var i = 0; i < 5; i++) {
-            factory.queueError(StateError('fail $i'));
-          }
-          final svc = ReticulumBridgeService(
-            socketFactory: factory.connect,
-            random: _MaxOutRandom(),
-            autoDisableThreshold: 3,
-          );
+  group('ReticulumBridgeService - auto-disable after repeated failures', () {
+    test('flips autoDisabled true after threshold consecutive errors and stops retrying', () {
+      fakeAsync((async) {
+        final factory = _FakeFactory();
+        // Threshold of 3 to keep the test small.
+        for (var i = 0; i < 5; i++) {
+          factory.queueError(StateError('fail $i'));
+        }
+        final svc = ReticulumBridgeService(
+          socketFactory: factory.connect,
+          random: _MaxOutRandom(),
+          autoDisableThreshold: 3,
+        );
 
-          unawaited(svc.connect('h', 1));
+        unawaited(svc.connect('h', 1));
+        async.flushMicrotasks();
+        // Drive 3 retries - each elapse fires exactly one retry.
+        for (var i = 0; i < 2; i++) {
+          async.elapse(svc.lastBackoffDelay! + const Duration(milliseconds: 1));
           async.flushMicrotasks();
-          // Drive 3 retries — each elapse fires exactly one retry.
-          for (var i = 0; i < 2; i++) {
-            async.elapse(
-              svc.lastBackoffDelay! + const Duration(milliseconds: 1),
-            );
-            async.flushMicrotasks();
-          }
+        }
 
-          expect(svc.autoDisabled, isTrue);
-          expect(svc.consecutiveConnectErrors, 3);
-          expect(svc.counters.connectAttempts, 3);
+        expect(svc.autoDisabled, isTrue);
+        expect(svc.consecutiveConnectErrors, 3);
+        expect(svc.counters.connectAttempts, 3);
 
-          // Subsequent time advances must NOT trigger a 4th attempt.
-          async.elapse(const Duration(seconds: 120));
-          async.flushMicrotasks();
-          expect(svc.counters.connectAttempts, 3);
-          // Only 3 errors were dequeued from the factory; 2 still queued.
-          expect(factory.responses.length, 2);
-        });
-      },
-    );
+        // Subsequent time advances must NOT trigger a 4th attempt.
+        async.elapse(const Duration(seconds: 120));
+        async.flushMicrotasks();
+        expect(svc.counters.connectAttempts, 3);
+        // Only 3 errors were dequeued from the factory; 2 still queued.
+        expect(factory.responses.length, 2);
+      });
+    });
 
     test('successful connect resets consecutiveConnectErrors', () {
       fakeAsync((async) {
@@ -534,12 +529,12 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeService — last forward timestamp', () {
+  group('ReticulumBridgeService - last forward timestamp', () {
     test('lastForwardAt is null until first successful forward', () async {
       final factory = _FakeFactory();
       final svc = ReticulumBridgeService(socketFactory: factory.connect);
       expect(svc.lastForwardAt, isNull);
-      // Drop a frame while disconnected — must NOT update timestamp.
+      // Drop a frame while disconnected - must NOT update timestamp.
       svc.sendFrame(_body(0));
       expect(svc.lastForwardAt, isNull);
     });
@@ -566,7 +561,7 @@ void main() {
     });
   });
 
-  group('ReticulumBridgeService — session log ring buffer', () {
+  group('ReticulumBridgeService - session log ring buffer', () {
     test('logs connect / connected lifecycle on success', () async {
       final factory = _FakeFactory();
       factory.queueSocket(_FakeBridgeSocket());
@@ -608,7 +603,7 @@ void main() {
         logCapacity: 4,
       );
       await svc.connect('h', 1);
-      // Two entries so far. Fire frame writes — those don't log
+      // Two entries so far. Fire frame writes - those don't log
       // (per design, frame-level traffic stays out of session log).
       // Force three more entries via repeated disconnect/connect.
       await svc.disconnect();
@@ -621,14 +616,14 @@ void main() {
 
       expect(svc.logEntries.length, 4);
       // First entry must NOT be the original "Connecting to tcp://h:1"
-      // — it should have been evicted as the oldest.
+      // - it should have been evicted as the oldest.
       // (Both "Connecting" and "Connected" share the same prefix; we
       // assert via total length above plus presence of the latest.)
       expect(svc.logEntries.last.message, contains('Connected to tcp://h:1'));
     });
   });
 
-  group('ReticulumBridgeService — nextRetryAt', () {
+  group('ReticulumBridgeService - nextRetryAt', () {
     test('exposes the deadline of the pending retry timer', () {
       fakeAsync((async) {
         final t0 = DateTime.utc(2026, 1, 1);
@@ -663,7 +658,7 @@ void main() {
   });
 }
 
-/// Always returns `max - 1` from `nextInt(max)` — the worst-case
+/// Always returns `max - 1` from `nextInt(max)` - the worst-case
 /// jitter so tests can assert ceiling values exactly.
 class _MaxOutRandom implements math.Random {
   @override

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Pet Home Screen — the single-tap daily touchpoint.
+// Pet Home Screen - the single-tap daily touchpoint.
 //
 // Layout (top → bottom):
 //   • Glass app bar with feature title
@@ -9,7 +9,7 @@
 //   • Centered pet creature (animated PetCreature painter)
 //   • Stage • Branch • "N days old" header line
 //   • Three stat pip rows (Energy, Mood, Stability)
-//   • Bottom action bar — conditional buttons:
+//   • Bottom action bar - conditional buttons:
 //       always:      Charge (tap) / Surge (long-press), Resonate, Sync, Inspect
 //       contextual:  Stabilise (hygiene present), Purge (sick),
 //                    Dim (in sleep window or asleep), Re-sigil (dormant)
@@ -61,13 +61,13 @@ class PetHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    // Activate the notification bridge — idempotent; the provider
+    // Activate the notification bridge - idempotent; the provider
     // installs a single ref.listen that survives rebuilds.
     ref.watch(petNotificationBridgeProvider);
     final async = ref.watch(ownPetProvider);
 
     // _PetBody owns its own GlassScaffold so it can pin the stats +
-    // action buttons into Scaffold.bottomNavigationBar — the only
+    // action buttons into Scaffold.bottomNavigationBar - the only
     // Flutter slot that's guaranteed fixed to the bottom regardless of
     // scroll, slivers, or viewport insets. The loading / error / empty
     // states wrap their own GlassScaffold to keep the app-bar styling
@@ -103,7 +103,7 @@ class PetHomeScreen extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Empty state — shown when no ownerNodeNum is bound.
+// Empty state - shown when no ownerNodeNum is bound.
 // ---------------------------------------------------------------------------
 
 class _PetEmptyState extends StatelessWidget {
@@ -155,7 +155,7 @@ class _PetEmptyState extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Core body — renders the pet + stats + actions.
+// Core body - renders the pet + stats + actions.
 // ---------------------------------------------------------------------------
 
 class _PetBody extends ConsumerStatefulWidget {
@@ -190,7 +190,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
   int? _playedOwnerNodeNum;
   DateTime? _lastPlayedEventAt;
 
-  // No-op reaction feedback — transient toast + creature bounce shown
+  // No-op reaction feedback - transient toast + creature bounce shown
   // when a tapped action resolved to capped / notNeeded / invalidInState.
   late final AnimationController _bounceController;
   late final Animation<double> _bounceScale;
@@ -200,7 +200,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
   @override
   void initState() {
     super.initState();
-    // Dev-gated frame profiler — logs build/raster durations while the
+    // Dev-gated frame profiler - logs build/raster durations while the
     // pet hero is on screen when PET_LOGGING_ENABLED=true in .env.
     // No-op for users without the flag.
     PetFrameProfiler.start();
@@ -256,7 +256,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
   void didUpdateWidget(covariant _PetBody old) {
     super.didUpdateWidget(old);
     if (old.state.ownerNodeNum != widget.state.ownerNodeNum) {
-      // Owner changed (rare — device swap, or reSigil) — reset local
+      // Owner changed (rare - device swap, or reSigil) - reset local
       // effect state so the new owner's transitions fire cleanly.
       _hatchOverlayActive = false;
       _banner = null;
@@ -267,7 +267,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
     _syncTrackerForCurrentOwner();
   }
 
-  /// Check the tracker and kick any pending effect. First-mount only —
+  /// Check the tracker and kick any pending effect. First-mount only -
   /// future transitions are detected by the [ref.listen] on
   /// [ownPetProvider] inside [build], which fires on actual stage
   /// changes. Calling this again on every [didUpdateWidget] was
@@ -276,7 +276,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
   void _syncTrackerForCurrentOwner() {
     final state = widget.state;
     if (_syncSessionNodeNum == state.ownerNodeNum) {
-      // Already synced this mount — nothing to do. The in-build
+      // Already synced this mount - nothing to do. The in-build
       // ref.listen handles new transitions from here.
       return;
     }
@@ -291,7 +291,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
 
     final age = DateTime.now().difference(unack.at);
     if (age > _freshnessWindow) {
-      // Ancient history — silently swallow all unacknowledged events.
+      // Ancient history - silently swallow all unacknowledged events.
       unawaited(tracker.acknowledgeAll(state));
       AppLogging.pet(
         '_PetBody: swallowed stale transition (age=${age.inMinutes}min)',
@@ -299,7 +299,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
       return;
     }
 
-    // Fresh event — acknowledge synchronously in-memory AND kick the
+    // Fresh event - acknowledge synchronously in-memory AND kick the
     // async disk write, then fire the effect.
     _markPlayed(state.ownerNodeNum, unack.at);
     unawaited(tracker.acknowledge(state.ownerNodeNum, unack.at));
@@ -307,7 +307,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
   }
 
   /// Called when a stage transition happens during the current mount
-  /// (via the ref.listen watch in build). No freshness window needed —
+  /// (via the ref.listen watch in build). No freshness window needed -
   /// we know the transition just fired.
   void _evaluateNewTransition() {
     final state = widget.state;
@@ -338,7 +338,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
     final kind = classifyTransitionByResultingStage(state.stage);
     final haptic = ref.read(hapticServiceProvider);
 
-    // Haptic first — it confirms the transition moment for the player
+    // Haptic first - it confirms the transition moment for the player
     // even if they look away from the screen during the overlay.
     switch (kind) {
       case PetTransitionKind.hatch:
@@ -405,7 +405,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
   void _showNoOpReaction(String? message) {
     if (!mounted) return;
     _noOpToastTimer?.cancel();
-    // Kick the creature bounce — always restart from 0 so rapid taps
+    // Kick the creature bounce - always restart from 0 so rapid taps
     // don't stack into a larger-than-intended scale swing.
     _bounceController
       ..stop()
@@ -496,7 +496,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
       inSleepWindow: inSleepWindow,
     );
 
-    // Bottom cluster — goes into Scaffold.bottomNavigationBar via the
+    // Bottom cluster - goes into Scaffold.bottomNavigationBar via the
     // GlassScaffold passthrough. This is the one Flutter slot that is
     // structurally outside the scrolling body area; it cannot move,
     // scroll, or be pushed by content.
@@ -577,7 +577,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
                 _DormantBanner(l10n: l10n),
                 const SizedBox(height: AppTheme.spacing16),
               ],
-              // Plain-language advisory — the single highest-priority
+              // Plain-language advisory - the single highest-priority
               // "what to tap right now" for a first-time user. Always
               // visible; reads "Thriving" when nothing's needed so the
               // position itself is a stable signal to rest the eye on.
@@ -590,7 +590,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Pocket-space ambience — faint horizontal scanlines
+                      // Pocket-space ambience - faint horizontal scanlines
                       // pinned behind the creature (static, no transforms
                       // follow the pet). Matches the OG NodePet backdrop.
                       const Positioned.fill(child: ScanlineOverlay()),
@@ -676,7 +676,7 @@ class _PetBodyState extends ConsumerState<_PetBody>
     );
 
     // Pass NeverScrollableScrollPhysics so GlassScaffold routes through
-    // _buildNonScrollableBody — a plain Scaffold whose `body:` is our
+    // _buildNonScrollableBody - a plain Scaffold whose `body:` is our
     // scrollBody directly (no outer CustomScrollView + SliverFillRemaining
     // wrapping). In that path the Scaffold's own `bottomNavigationBar`
     // slot is used, which is the ONLY Flutter layout contract that
@@ -1010,19 +1010,19 @@ class _DormantBanner extends StatelessWidget {
 
 /// Visibility/interactivity rules baked into this widget:
 ///
-///   * Charge  — always visible; long-press = Surge. Disabled when
+///   * Charge  - always visible; long-press = Surge. Disabled when
 ///     asleep. Dimmed when energy is at max with no hungry call.
-///   * Resonate — always visible. Disabled when asleep. Dimmed when
+///   * Resonate - always visible. Disabled when asleep. Dimmed when
 ///     mood is at max with no lonely call.
-///   * Stabilise — conditionally visible (only when a hygiene artefact
+///   * Stabilise - conditionally visible (only when a hygiene artefact
 ///     exists). Otherwise hidden.
-///   * Sync    — always visible. Dimmed when there's no active call
+///   * Sync    - always visible. Dimmed when there's no active call
 ///     AND stability is at max.
-///   * Purge   — conditionally visible (only when sick), pulsing.
-///   * Dim     — conditionally visible during the sleep window or when
+///   * Purge   - conditionally visible (only when sick), pulsing.
+///   * Dim     - conditionally visible during the sleep window or when
 ///     asleep. Dimmed when already asleep.
-///   * Inspect — always visible.
-///   * Re-sigil — only visible when dormant (replaces the live action
+///   * Inspect - always visible.
+///   * Re-sigil - only visible when dormant (replaces the live action
 ///     set entirely).
 class _ActionBar extends ConsumerWidget {
   final PetState state;
@@ -1031,7 +1031,7 @@ class _ActionBar extends ConsumerWidget {
   /// Advisory computed once at the parent level. Used to pulse the
   /// button that matches `advisory.action` so the status line's
   /// inline action name and the bottom-bar pulse reinforce each
-  /// other — user's eye follows the cue from sentence to button.
+  /// other - user's eye follows the cue from sentence to button.
   final PetAdvisory advisory;
 
   final Future<void> Function(PetActionResult result, HapticType applied)

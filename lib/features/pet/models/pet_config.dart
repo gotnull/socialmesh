@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetConfig — tunable cadences and thresholds. Immutable; swap instances for
+// PetConfig - tunable cadences and thresholds. Immutable; swap instances for
 // production vs. testing profiles. Remote-Config may override these at runtime
 // in a later phase; v1 ships with the production profile only.
 
@@ -17,7 +17,7 @@ class PetConfig {
   /// Real-time duration of one care tick. Decay is expressed in pips per tick.
   final Duration careTickDuration;
 
-  /// Foreground animation cadence — drives visual breathing/pulse, not stats.
+  /// Foreground animation cadence - drives visual breathing/pulse, not stats.
   final Duration foregroundAnimationTick;
 
   // ---- Decay rates (pips per care tick) ---------------------------------

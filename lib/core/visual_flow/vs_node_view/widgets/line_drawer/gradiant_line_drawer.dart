@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Modified: Added glow/shadow pass underneath main line for sci-fi aesthetic.
 
@@ -60,7 +60,7 @@ class GradientLinePainter extends CustomPainter {
       stops: const [0.0, 1.0],
     ).createShader(gradientRect);
 
-    // Glow pass — wider, blurred, semi-transparent
+    // Glow pass - wider, blurred, semi-transparent
     if (glowEnabled) {
       final glowColors = [
         (startColor ?? Colors.grey).withValues(alpha: glowOpacity),

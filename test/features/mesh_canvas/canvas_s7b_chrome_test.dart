@@ -10,7 +10,7 @@
 //      - selected-colour HUD pill showing the current swatch name
 //      - app-bar (i) info button that opens the canonical HelpSheet
 //   2) The HUD and identity chip live INSIDE the framed viewport but
-//      OUTSIDE the InteractiveViewer's subtree — they are chrome, not
+//      OUTSIDE the InteractiveViewer's subtree - they are chrome, not
 //      content, so they must not pan/scale with the canvas transform.
 //      This is the second leg of the S7.A interaction containment
 //      contract pinned by canvas_strip_chrome_containment_test.
@@ -21,7 +21,7 @@
 // Notes:
 //   - The HUD/identity overlays are wrapped in IgnorePointer in the
 //     host screen, but that does not change their position in the
-//     widget tree — find.ancestor still resolves through them.
+//     widget tree - find.ancestor still resolves through them.
 //   - Recents-rail behaviour is covered by recent_colors_provider_test
 //     (provider) + the palette sheet tests (sheet rendering); this
 //     file focuses on host-screen wiring, not sheet internals.
@@ -94,7 +94,7 @@ Future<void> _pumpPlaceholder(
 void main() {
   testWidgets(
     'identity chip is mounted inside the framed viewport with the local '
-    'sandbox label — first-time users see "Local Device Canvas" at a glance',
+    'sandbox label - first-time users see "Local Device Canvas" at a glance',
     (tester) async {
       await _pumpPlaceholder(tester);
 
@@ -109,7 +109,7 @@ void main() {
 
   testWidgets(
     'selected-colour HUD shows the active swatch name when a non-transparent '
-    'colour is active — "you are painting with X" without scanning the strip',
+    'colour is active - "you are painting with X" without scanning the strip',
     (tester) async {
       // Pump with Red (palette index 11) preselected so the HUD has a
       // concrete name to display.
@@ -124,7 +124,7 @@ void main() {
 
   testWidgets(
     'selected-colour HUD shows the localized eraser label when palette '
-    'index 0 (transparent / erase) is active — colour name would be '
+    'index 0 (transparent / erase) is active - colour name would be '
     'meaningless for the erase sentinel',
     (tester) async {
       await _pumpPlaceholder(tester, initialSelectedColor: 0);
@@ -135,7 +135,7 @@ void main() {
   );
 
   testWidgets(
-    'the (i) info button is in the app-bar actions slot — first-time users '
+    'the (i) info button is in the app-bar actions slot - first-time users '
     'should not have to hunt for "what is this screen"',
     (tester) async {
       await _pumpPlaceholder(tester);
@@ -147,7 +147,7 @@ void main() {
   );
 
   testWidgets(
-    'tapping the (i) opens the canonical HelpSheet — body contains the '
+    'tapping the (i) opens the canonical HelpSheet - body contains the '
     'retro intro paragraph that the dev approved',
     (tester) async {
       await _pumpPlaceholder(tester);
@@ -172,7 +172,7 @@ void main() {
 
   testWidgets(
     'identity chip and HUD overlay are NOT descendants of InteractiveViewer '
-    "— chrome must never receive the canvas transform, otherwise pinch / "
+    "- chrome must never receive the canvas transform, otherwise pinch / "
     'pan would scale them off-screen',
     (tester) async {
       await _pumpPlaceholder(tester);

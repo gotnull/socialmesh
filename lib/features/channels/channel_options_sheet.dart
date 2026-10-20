@@ -152,7 +152,7 @@ Future<void> showChannelOptionsSheet(
 }
 
 /// Confirms and deletes every locally-stored message in this
-/// channel. Local-only — does not affect any other device or
+/// channel. Local-only - does not affect any other device or
 /// the radio. Mirrors the global "Clear Messages" pattern in
 /// settings_screen.dart.
 Future<void> _clearChannelMessages(
@@ -184,7 +184,7 @@ Future<void> _clearChannelMessages(
 ///
 /// Encodes the channel settings (name, PSK, index, role) into a
 /// protobuf-serialised, base64url-encoded URL that can be scanned
-/// by any SocialMesh / Meshtastic client — fully offline.
+/// by any SocialMesh / Meshtastic client - fully offline.
 String _generateChannelUrl(ChannelConfig channel) {
   final channelSettings = channel_pb.ChannelSettings()..name = channel.name;
 
@@ -267,7 +267,7 @@ Future<void> _deleteChannel(
   );
 
   // Show an in-flight loading snackbar so the user sees that the
-  // delete is being sent — without it the row only disappears once
+  // delete is being sent - without it the row only disappears once
   // the device round-trip completes, which can take a second or two.
   final messenger = ScaffoldMessenger.maybeOf(context);
   showLoadingSnackBar(
@@ -414,9 +414,8 @@ class _EncryptionKeyContentState extends State<EncryptionKeyContent> {
                 icon: const Icon(Icons.copy, size: 20),
                 label: Text(
                   context.l10n.channelOptionsCopyButton,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ),

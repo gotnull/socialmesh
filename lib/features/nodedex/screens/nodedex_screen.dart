@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Main Screen — the mesh field journal.
+// NodeDex Main Screen - the mesh field journal.
 //
 // Displays all discovered nodes with their procedural sigils,
 // inferred traits, encounter statistics, and social tags.
@@ -12,7 +12,7 @@
 // - Pinned search bar + filter chips + sort control (matching Nodes screen)
 // - Scrollable node list with sigil avatars and metadata
 //
-// This screen is purely additive — it reads from nodeDexProvider
+// This screen is purely additive - it reads from nodeDexProvider
 // and nodesProvider without modifying any existing functionality.
 
 import 'package:flutter/material.dart';
@@ -63,7 +63,7 @@ import '../widgets/trait_badge.dart';
 import '../widgets/trust_indicator.dart';
 import 'nodedex_detail_screen.dart';
 
-/// The main NodeDex screen — a personal mesh field journal.
+/// The main NodeDex screen - a personal mesh field journal.
 ///
 /// Shows all discovered nodes enriched with procedural identity,
 /// inferred personality traits, and encounter history. Accessible
@@ -112,7 +112,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
     final galleryEntryCount = ref.watch(albumCardCountProvider);
 
-    // User-defined group filter (nodedex.db) — applied on top of the
+    // User-defined group filter (nodedex.db) - applied on top of the
     // sort/filter/search already baked into nodeDexSortedEntriesProvider.
     final groupsState = ref.watch(nodeGroupsProvider).value;
     final groupMembership =
@@ -274,7 +274,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       ];
     }
 
-    // buildAlbumSlivers returns slivers directly — no nested scroll view.
+    // buildAlbumSlivers returns slivers directly - no nested scroll view.
     return buildAlbumSlivers(
       context: context,
       ref: ref,
@@ -315,7 +315,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       // Top padding below glass app bar
       const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
 
-      // Stats summary — not pinned, sizes itself naturally
+      // Stats summary - not pinned, sizes itself naturally
       if (isLoading)
         SliverToBoxAdapter(
           child: Skeletonizer(
@@ -679,7 +679,7 @@ class _NodeDexStatsCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Explorer title — centered
+            // Explorer title - centered
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -704,7 +704,7 @@ class _NodeDexStatsCard extends StatelessWidget {
 
             const SizedBox(height: AppTheme.spacing8),
 
-            // Stats chips — full width, evenly spaced
+            // Stats chips - full width, evenly spaced
             Row(
               children: [
                 Expanded(
@@ -1221,7 +1221,7 @@ class _NodeDexListTile extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppTheme.spacing4),
 
-                    // Metadata chips — single Wrap for natural flow
+                    // Metadata chips - single Wrap for natural flow
                     Wrap(
                       spacing: AppTheme.spacing4,
                       runSpacing: AppTheme.spacing4,

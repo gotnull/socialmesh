@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sigil Evolution — deterministic visual maturity derived from patina score.
+// Sigil Evolution - deterministic visual maturity derived from patina score.
 //
 // The sigil evolution system adds subtle visual depth to a node's sigil
 // based on how much observable history it has accumulated. It does NOT
-// create a second scoring system — it derives everything from the
+// create a second scoring system - it derives everything from the
 // existing patinaScore (0–100).
 //
 // Stages:
-//   seed       (0–19)   — freshly discovered, minimal detail
-//   marked     (20–39)  — starting to accumulate history
-//   inscribed  (40–59)  — moderate history, recognizable presence
-//   heraldic   (60–79)  — rich history, distinctive character
-//   legacy     (80–100) — deeply documented, maximum detail
+//   seed       (0–19)   - freshly discovered, minimal detail
+//   marked     (20–39)  - starting to accumulate history
+//   inscribed  (40–59)  - moderate history, recognizable presence
+//   heraldic   (60–79)  - rich history, distinctive character
+//   legacy     (80–100) - deeply documented, maximum detail
 //
 // Visual effects are intentionally subtle:
 //   - lineWeightScale: 1.00 → 1.20 (barely perceptible thickening)
@@ -61,17 +61,17 @@ enum SigilStage {
 
 /// Tiny optional augment marks that can appear on evolved sigils.
 ///
-/// Augments are derived from existing trait data — no new data
+/// Augments are derived from existing trait data - no new data
 /// collection is performed. They appear as very small marks near
 /// the sigil's outer ring and are only visible at higher stages.
 enum SigilAugment {
-  /// Small directional tick — node has relay/router behavior.
+  /// Small directional tick - node has relay/router behavior.
   relayMark,
 
-  /// Tiny arc segment — node is a wanderer across regions.
+  /// Tiny arc segment - node is a wanderer across regions.
   wandererMark,
 
-  /// Faint hollow dot — node is a ghost (rarely seen).
+  /// Faint hollow dot - node is a ghost (rarely seen).
   ghostMark,
 }
 
@@ -121,7 +121,7 @@ class SigilEvolution {
   ///
   /// This is a pure function: the same inputs always produce the same
   /// output. The [patinaScore] must be 0–100 (clamped if out of range).
-  /// The optional [trait] is used only to derive augment marks — it
+  /// The optional [trait] is used only to derive augment marks - it
   /// does not affect the stage, detail tier, or scaling values.
   ///
   /// ```dart

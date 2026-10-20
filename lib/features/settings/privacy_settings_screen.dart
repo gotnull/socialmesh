@@ -131,9 +131,8 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                     Expanded(
                       child: Text(
                         context.l10n.privacySettingsInfoDescription,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.textSecondary,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: context.textSecondary),
                       ),
                     ),
                   ],

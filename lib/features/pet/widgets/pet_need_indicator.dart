@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetNeedIndicator — a floating hint above the pet that tells the user
+// PetNeedIndicator - a floating hint above the pet that tells the user
 // AT A GLANCE what it wants. Hungry → bowl, lonely → heart, sick →
 // medical cross, bedtime → crescent moon, boredom → question mark.
 // Hygiene is omitted (dirt artefacts already draw on the field).
@@ -11,7 +11,7 @@
 // indicator reads as part of the same mesh graph as the pet itself
 // rather than a glass UI sticker pasted over it.
 //
-// Pulse animation: edge glow + scale fade on a 1.2-second loop — enough
+// Pulse animation: edge glow + scale fade on a 1.2-second loop - enough
 // to catch the eye without pulling focus off the creature.
 
 import 'dart:math' as math;
@@ -23,7 +23,7 @@ import '../models/pet_enums.dart';
 
 class PetNeedIndicator extends StatefulWidget {
   /// The active call reason. When null, the widget renders `SizedBox`
-  /// and does not drive its controller — no animation cost at rest.
+  /// and does not drive its controller - no animation cost at rest.
   final CallReason? reason;
 
   /// Creature size in logical pixels. Used to position the bubble
@@ -78,7 +78,7 @@ class _PetNeedIndicatorState extends State<PetNeedIndicator>
     if (reason == null) return const SizedBox.shrink();
 
     final data = _dataFor(reason);
-    // Scale the hex marker with the creature — ~18% of creature size
+    // Scale the hex marker with the creature - ~18% of creature size
     // keeps it proportional across hero (220+) and card (96) previews.
     final markerSize = (widget.creatureSize * 0.18).clamp(32.0, 56.0);
     // Position: above + right of creature, in the classic
@@ -151,7 +151,7 @@ class _NeedVisual {
   const _NeedVisual(this.icon, this.color);
 }
 
-/// Thin hexagonal wireframe marker — mirrors the MeshNodeBrain creature's
+/// Thin hexagonal wireframe marker - mirrors the MeshNodeBrain creature's
 /// visual vocabulary (wireframe edges + glowing accent nodes) so the
 /// need hint reads as a sibling node in the same graph as the pet.
 class _HexMarkerPainter extends CustomPainter {
@@ -186,8 +186,8 @@ class _HexMarkerPainter extends CustomPainter {
       ..color = color.withValues(alpha: 0.14);
     canvas.drawPath(path, fill);
 
-    // Glow: stroke the edge twice — first a blurred wide pass, then
-    // a crisp 1px pass — matching MeshNodeBrain's line treatment.
+    // Glow: stroke the edge twice - first a blurred wide pass, then
+    // a crisp 1px pass - matching MeshNodeBrain's line treatment.
     final glowStroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.2
@@ -201,7 +201,7 @@ class _HexMarkerPainter extends CustomPainter {
       ..color = color.withValues(alpha: 0.95);
     canvas.drawPath(path, edge);
 
-    // Single "node" dot at the top vertex — completes the mesh-graph
+    // Single "node" dot at the top vertex - completes the mesh-graph
     // read (edges + node, like the creature's own wireframe).
     final topVertex = Offset(center.dx, center.dy - radius);
     canvas.drawCircle(

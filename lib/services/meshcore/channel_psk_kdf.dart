@@ -6,9 +6,9 @@
 // Two ways to populate the 16-byte (128-bit) AES PSK firmware expects on a
 // channel slot, both designed for the canonical channel edit sheet:
 //
-//   1. [randomPsk]            — `Random.secure()` 16 bytes for a one-off
+//   1. [randomPsk]            - `Random.secure()` 16 bytes for a one-off
 //                              private channel.
-//   2. [derivePskFromPassphrase] — HMAC-SHA256 of a UTF-8 passphrase under a
+//   2. [derivePskFromPassphrase] - HMAC-SHA256 of a UTF-8 passphrase under a
 //                              SocialMesh-internal label. Deterministic so two
 //                              users can agree on a passphrase out-of-band and
 //                              both derive the same PSK without exchanging hex.
@@ -85,7 +85,7 @@ Uint8List derivePskFromPassphrase(String passphrase) {
   return Uint8List.sublistView(bytes, 0, kMeshCoreChannelPskBytes);
 }
 
-/// Format a 16-byte PSK as 32 lowercase hex characters — the form the
+/// Format a 16-byte PSK as 32 lowercase hex characters - the form the
 /// channel edit sheet's PSK field, the channel-code share format, and the
 /// firmware setter all expect.
 ///

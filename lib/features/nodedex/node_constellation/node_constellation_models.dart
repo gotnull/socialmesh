@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Constellation — domain model.
+// NodeDex Constellation - domain model.
 //
 // Read-only relationship graph centred on a single NodeDex entry. The
 // graph explains why a node exists in NodeDex by surrounding the
@@ -403,9 +403,8 @@ class NodeDexGraphSortPriority {
   static int compare(NodeDexGraphNode a, NodeDexGraphNode b) {
     final typeCmp = typePriority(a.type).compareTo(typePriority(b.type));
     if (typeCmp != 0) return typeCmp;
-    final confCmp = confidencePriority(
-      a.confidence,
-    ).compareTo(confidencePriority(b.confidence));
+    final confCmp = confidencePriority(a.confidence)
+        .compareTo(confidencePriority(b.confidence));
     if (confCmp != 0) return confCmp;
     final aTs = a.timestamp;
     final bTs = b.timestamp;

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCanvas entry screen — the drawer's destination.
+// MeshCanvas entry screen - the drawer's destination.
 //
-// Information architecture (load-bearing — last reworked in S8 after
+// Information architecture (load-bearing - last reworked in S8 after
 // the dev caught an IA drift where "Primary" was leaking onto the
 // Local Device Canvas via shared cards + shared identity chip):
 //
@@ -62,7 +62,7 @@ import '../widgets/channel_canvas_thumbnail.dart';
 import 'mesh_canvas_viewer_screen.dart';
 
 /// Local vs Mesh tab discriminator. Kept private to the overview
-/// screen — it's a UI concern, not a canonical canvas property.
+/// screen - it's a UI concern, not a canonical canvas property.
 enum _OverviewTab { local, mesh }
 
 final _overviewTabProvider =
@@ -200,7 +200,7 @@ class _MeshCanvasOverviewScreenState
   }
 }
 
-/// Local mode body — renders the Local Device Canvas viewport
+/// Local mode body - renders the Local Device Canvas viewport
 /// DIRECTLY. No card, no list, no push. The Local sandbox is
 /// singular, so the chip selector + viewport is the entire UX.
 class _LocalTabContent extends ConsumerWidget {
@@ -224,12 +224,12 @@ class _LocalTabContent extends ConsumerWidget {
   }
 }
 
-/// Mesh mode body — lists channel canvases (latent or live).
+/// Mesh mode body - lists channel canvases (latent or live).
 ///
 /// IA gate (CANVAS_PARTICIPATION_V0_1.md §5.2): when the user has not
 /// opted into mesh participation, this widget renders ONLY the calm
 /// "Join mesh canvases" CTA card. No hero, no PRIMARY COMMONS, no
-/// OTHER CHANNELS — hiding the channel list entirely prevents any
+/// OTHER CHANNELS - hiding the channel list entirely prevents any
 /// tap that would surface a viewer (and therefore a presence /
 /// attach / send) before consent.
 class _MeshTabContent extends ConsumerWidget {
@@ -268,7 +268,7 @@ class _MeshTabContent extends ConsumerWidget {
           totalPaintedCells += m.cellCount;
         }
         // IA hierarchy (v0.1): Primary (channel 0) is treated as the
-        // shared commons for this mesh — visually dominant, first
+        // shared commons for this mesh - visually dominant, first
         // section, strongest CTA. All other configured channels are
         // surfaced as a secondary "OTHER CHANNELS" section so users
         // understand they're private / quieter boards, not equally
@@ -375,8 +375,8 @@ class _OverviewEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    // Only reachable when (a) Local tab has zero canvases — defensive,
-    // sandbox auto-creates in v0.1 — or (b) Mesh tab has zero
+    // Only reachable when (a) Local tab has zero canvases - defensive,
+    // sandbox auto-creates in v0.1 - or (b) Mesh tab has zero
     // Meshtastic channels configured. Copy is channel-centric so the
     // user understands the source: channels, not discovery.
     return AnimatedEmptyState(
@@ -416,14 +416,14 @@ String _relativeActivityCluster(BuildContext context, int lastOpAtMs) {
   return l.nodedexRelativeMonthsAgo(delta.inDays ~/ 30);
 }
 
-/// Dominant card for the Primary channel canvas — the "commons" for
+/// Dominant card for the Primary channel canvas - the "commons" for
 /// this mesh in v0.1.
 ///
 /// Visually dominant relative to [_LatentChannelCard]: larger
 /// thumbnail (120 px), eyebrow `COMMONS` badge, dedicated subtitle,
 /// stronger accent presence, and a CTA pill that frames the canvas
 /// as the default place to start painting. Does NOT imply a global
-/// canvas — copy is scoped to "this mesh".
+/// canvas - copy is scoped to "this mesh".
 class _PrimaryCommonsCard extends ConsumerWidget {
   final LatentChannelCanvas latent;
 
@@ -474,7 +474,7 @@ class _PrimaryCommonsCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Eyebrow badge — distinguishes the commons
+                      // Eyebrow badge - distinguishes the commons
                       // visually without claiming admin / ownership.
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -651,7 +651,7 @@ Future<void> _openLatentCanvas({
   );
 }
 
-/// Channel canvas card — the Mesh tab's primary surface.
+/// Channel canvas card - the Mesh tab's primary surface.
 ///
 /// Replaces the prior settings-list row with a canvas-artifact card:
 /// a square thumbnail of the actual board on the left, channel
@@ -675,7 +675,7 @@ class _LatentChannelCard extends ConsumerWidget {
     //   - Live channel  → _LiveThumbnail watches canvasCellsProvider.
     //   - Dormant       → static ChannelCanvasThumbnail with no cells.
     // This split avoids a conditional ref.watch inside a single
-    // ConsumerWidget — that pattern produces stale Riverpod
+    // ConsumerWidget - that pattern produces stale Riverpod
     // dependency tracking and the "_dependents.isEmpty: is not true"
     // framework assertion when the conditional flips between builds.
     final Widget thumbnail = latent.isDormant || latent.materialised == null
@@ -724,7 +724,7 @@ class _LatentChannelCard extends ConsumerWidget {
 /// Watches the per-canvas cells provider and feeds them into a
 /// [ChannelCanvasThumbnail]. Always materialised for a known
 /// `canvasLocalId`, so its `ref.watch` is consistent across rebuilds
-/// — avoids the conditional-watch bug that crashed the sim with
+/// - avoids the conditional-watch bug that crashed the sim with
 /// `_dependents.isEmpty: is not true`.
 class _LiveThumbnail extends ConsumerWidget {
   final int canvasLocalId;
@@ -791,7 +791,7 @@ class _ChannelCardText extends StatelessWidget {
   }
 }
 
-/// Dormant channel sub-row — small filled-circle bullet + the
+/// Dormant channel sub-row - small filled-circle bullet + the
 /// "Dormant · Seed first pixel" hint. The bullet is the only
 /// visible affordance, kept subtle so the user reads it as
 /// atmospheric rather than alarming.
@@ -831,7 +831,7 @@ class _DormantAffordance extends StatelessWidget {
   }
 }
 
-/// Live channel sub-row — painted-cell count + relative last-active.
+/// Live channel sub-row - painted-cell count + relative last-active.
 /// Renders as a middle-dot metadata cluster ("17 painted · 2h ago").
 class _ActiveMetadata extends StatelessWidget {
   final LatentChannelCanvas latent;
@@ -847,7 +847,7 @@ class _ActiveMetadata extends StatelessWidget {
       runSpacing: AppTheme.spacing6,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        // `Icons.grain` reads as scattered pixels — packet-radio /
+        // `Icons.grain` reads as scattered pixels - packet-radio /
         // graffiti-wall register, not enterprise stat-block.
         MetricChip(
           icon: Icons.grain,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetBaseAllele — four DNA bases that also serve as NodePet "resonance
+// PetBaseAllele - four DNA bases that also serve as NodePet "resonance
 // alleles", tying each pet's helix sequence to the existing branch
 // archetypes.
 //
@@ -12,8 +12,8 @@
 //   Calm    (C) ↔ Dimmed branch   (reserved, withdrawing)
 //
 // Complementary pairing (preserved from biological DNA):
-//   A↔T  (Aurora ↔ Tether)   — extroverted-opposite pair
-//   G↔C  (Gale ↔ Calm)       — activity-opposite pair
+//   A↔T  (Aurora ↔ Tether)   - extroverted-opposite pair
+//   G↔C  (Gale ↔ Calm)       - activity-opposite pair
 //
 // Colors intentionally cross-branch: each allele wears its archetype's
 // palette-primary hue regardless of the pet's own branch, so the helix
@@ -25,18 +25,18 @@ import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 
 /// One of the four NodePet resonance alleles. Enum ordinal is the
-/// persistent base index (0..3) used by seed-derived sequences — do
+/// persistent base index (0..3) used by seed-derived sequences - do
 /// NOT reorder.
 enum PetBaseAllele {
-  aurora, // 0 — pairs with tether
-  tether, // 1 — pairs with aurora
-  gale, // 2 — pairs with calm
-  calm, // 3 — pairs with gale
+  aurora, // 0 - pairs with tether
+  tether, // 1 - pairs with aurora
+  gale, // 2 - pairs with calm
+  calm, // 3 - pairs with gale
 }
 
 extension PetBaseAlleleX on PetBaseAllele {
   /// Single-letter code for ultra-compact displays. NOT a localizable
-  /// string — it's a fixed DNA-notation symbol.
+  /// string - it's a fixed DNA-notation symbol.
   String get code {
     switch (this) {
       case PetBaseAllele.aurora:
@@ -50,7 +50,7 @@ extension PetBaseAlleleX on PetBaseAllele {
     }
   }
 
-  /// Archetype color for this allele — the dominant hue of the branch
+  /// Archetype color for this allele - the dominant hue of the branch
   /// it corresponds to. Cross-branch by design: every pet's helix
   /// shows all 4 allele colors regardless of the pet's own branch.
   Color get archetypeColor {
@@ -89,7 +89,7 @@ PetBaseAllele alleleFromIndex(int index) => PetBaseAllele.values[index & 0x03];
 /// Derive a [length]-step allele sequence deterministically from
 /// [dnaSeed]. Stable across app launches, identical for the same seed.
 /// Uses a rolling 2-bit window with a 7-bit stride to de-correlate the
-/// sequence from local bit patterns — otherwise a low-entropy seed
+/// sequence from local bit patterns - otherwise a low-entropy seed
 /// would repeat every 16 samples.
 List<PetBaseAllele> deriveAlleleSequence(int dnaSeed, {int length = 32}) {
   final out = List<PetBaseAllele>.filled(length, PetBaseAllele.aurora);
@@ -108,7 +108,7 @@ List<PetBaseAllele> deriveAlleleSequence(int dnaSeed, {int length = 32}) {
 }
 
 /// Distribution of alleles across a sequence. Each value is the count,
-/// not the fraction — convert to `count/length` at the call site.
+/// not the fraction - convert to `count/length` at the call site.
 @immutable
 class PetAlleleDistribution {
   final int aurora;
@@ -144,7 +144,7 @@ class PetAlleleDistribution {
   }
 
   /// The most-represented allele. Ties broken by enum ordinal
-  /// (aurora > tether > gale > calm) — deterministic given the same
+  /// (aurora > tether > gale > calm) - deterministic given the same
   /// sequence, which matters for the "dominant allele" surfaced to
   /// the UI.
   PetBaseAllele get dominant {

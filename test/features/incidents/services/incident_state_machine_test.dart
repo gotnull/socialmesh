@@ -349,9 +349,8 @@ void main() {
         db: db,
         permissions: _service(Role.admin),
       );
-      final incident = _draft(
-        id: 'term-1',
-      ).copyWith(state: IncidentState.closed);
+      final incident = _draft(id: 'term-1')
+          .copyWith(state: IncidentState.closed);
       await _insertIncident(db, incident);
 
       for (final target in IncidentState.values) {
@@ -376,9 +375,8 @@ void main() {
         db: db,
         permissions: _service(Role.admin),
       );
-      final incident = _draft(
-        id: 'term-2',
-      ).copyWith(state: IncidentState.cancelled);
+      final incident = _draft(id: 'term-2')
+          .copyWith(state: IncidentState.cancelled);
       await _insertIncident(db, incident);
 
       for (final target in IncidentState.values) {
@@ -507,12 +505,11 @@ void main() {
       );
 
       // Operator is the assignee.
-      final incident = _draft(
-        id: 'role-1',
-      ).copyWith(state: IncidentState.assigned, assigneeId: 'uid-operator');
+      final incident = _draft(id: 'role-1')
+          .copyWith(state: IncidentState.assigned, assigneeId: 'uid-operator');
       await _insertIncident(db, incident);
 
-      // The actor is the assignee — Y* cell should pass.
+      // The actor is the assignee - Y* cell should pass.
       final t = await sm.transition(
         incident: incident,
         target: IncidentState.resolved,
@@ -675,9 +672,8 @@ void main() {
         // Manually insert two transitions with identical timestamps but
         // different UUIDs. rebuildProjection must return the state from
         // the transition whose id sorts lexicographically last.
-        final incident = _draft(
-          id: 'tiebreak-1',
-        ).copyWith(state: IncidentState.open);
+        final incident = _draft(id: 'tiebreak-1')
+            .copyWith(state: IncidentState.open);
         await _insertIncident(db, incident);
 
         final sameEpoch = DateTime.now().millisecondsSinceEpoch;

@@ -45,7 +45,7 @@ ProviderContainer _container(Map<int, NodeDexEntry> entries, {DateTime? now}) {
   );
 }
 
-/// Pluggable seam — the real `nodeDexProvider` reads SQLite during
+/// Pluggable seam - the real `nodeDexProvider` reads SQLite during
 /// `build()`. Tests replace the notifier with one that emits a
 /// preset map of entries (read from `_stubEntriesProvider`).
 class _StubNodeDexNotifier extends NodeDexNotifier {
@@ -61,7 +61,7 @@ final _stubEntriesProvider = Provider<Map<int, NodeDexEntry>>(
 
 void main() {
   group('nodedexMapPinsProvider', () {
-    test('middle encounter has GPS, newest does not — pin uses middle, '
+    test('middle encounter has GPS, newest does not - pin uses middle, '
         'positionedAt < lastEncounterAt', () {
       final container = _container({
         1: _entry(
@@ -92,7 +92,7 @@ void main() {
       expect(pin.hasNewerEncounterThanPosition, isTrue);
     });
 
-    test('all encounters have GPS — positionedAt == lastEncounterAt', () {
+    test('all encounters have GPS - positionedAt == lastEncounterAt', () {
       final container = _container({
         1: _entry(
           nodeNum: 1,
@@ -171,7 +171,7 @@ void main() {
               latitude: 37.0,
               longitude: -122.0,
             ),
-            // Newer but corrupt — walker should skip and fall back to
+            // Newer but corrupt - walker should skip and fall back to
             // the older finite record.
             EncounterRecord(
               timestamp: DateTime(2026, 4, 22, 14),
@@ -305,7 +305,7 @@ void main() {
         lastEncounterAt: base.subtract(const Duration(days: 7, seconds: 1)),
         encounterCount: 1,
       );
-      // inDays truncates seconds — still 7 days, not 8
+      // inDays truncates seconds - still 7 days, not 8
       expect(stalerPin.isStaleAt(base), isFalse);
 
       final staleEnoughPin = NodeDexMapPin(

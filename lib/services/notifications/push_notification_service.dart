@@ -253,7 +253,7 @@ class PushNotificationService {
     }
   }
 
-  /// Handle FCM token refresh — delete stale token before writing the new one.
+  /// Handle FCM token refresh - delete stale token before writing the new one.
   Future<void> _onTokenRefresh(String newToken) async {
     AppLogging.notifications('FCM token refreshed');
 
@@ -277,7 +277,7 @@ class PushNotificationService {
         });
       }
     } catch (e) {
-      // Best-effort — don't block the new token write
+      // Best-effort - don't block the new token write
       AppLogging.notifications('Error removing stale FCM token: $e');
     }
 
@@ -291,7 +291,7 @@ class PushNotificationService {
       'Foreground message: ${message.notification?.title}',
     );
 
-    // Redact PII before logging — text and sender names replaced with [redacted]
+    // Redact PII before logging - text and sender names replaced with [redacted]
     final redactedData = Map<String, dynamic>.from(message.data);
     for (final key in const [
       'text',
@@ -312,7 +312,7 @@ class PushNotificationService {
     // Surface a localised in-app snackbar for founder bug-report responses
     // when the app is in the foreground. The system local-notification
     // banner is suppressed in this case (return below) to avoid a double
-    // banner — the snackbar's "View" action navigates to the report and is
+    // banner - the snackbar's "View" action navigates to the report and is
     // the in-app equivalent of tapping the system banner.
     if (message.data['type'] == 'bug_report_response') {
       _showBugReportResponseSnackBar(message);
@@ -334,7 +334,7 @@ class PushNotificationService {
 
     // Respect user notification preferences for mesh message types.
     // The content refresh event above has already been emitted so the
-    // message is persisted regardless — we only suppress the visible
+    // message is persisted regardless - we only suppress the visible
     // notification here.
     final pushType = message.data['type'] as String?;
     if (pushType == 'channel_message' || pushType == 'direct_message') {
@@ -375,7 +375,7 @@ class PushNotificationService {
       AppLogging.notifications('Downloaded image to: $imagePath');
     }
 
-    // Select the appropriate channel — announcements get their own channel
+    // Select the appropriate channel - announcements get their own channel
     // so users can independently control notification preferences.
     final channel = isAnnouncement ? _announcementsChannel : _socialChannel;
 
@@ -439,7 +439,7 @@ class PushNotificationService {
     if (ctx == null) return;
 
     // Respect the user's opt-out: if they've silenced these in-app
-    // snackbars, return early — push/local notifications still fire
+    // snackbars, return early - push/local notifications still fire
     // because they're dispatched by the OS layer above this helper.
     final container = ProviderScope.containerOf(ctx, listen: false);
     final profile = container.read(userProfileProvider).value;

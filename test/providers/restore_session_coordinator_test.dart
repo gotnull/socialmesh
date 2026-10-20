@@ -15,7 +15,7 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 /// coordinator's pre-check (`transport.isConnected`) and the BLE-restore
 /// type guard (`transport is BleTransport`). The fake is intentionally
 /// NOT a [BleTransport] so the coordinator skips `refreshNotifications`
-/// and goes straight to stop/bind/start — tests assert the call order
+/// and goes straight to stop/bind/start - tests assert the call order
 /// against [_RecordingProtocol] which intercepts those.
 class _FakeTransport extends DeviceTransport {
   _FakeTransport({this.isConnectedReturn = true});
@@ -118,7 +118,7 @@ class _RecordingProtocol implements ProtocolService {
 }
 
 /// Variant whose synchronous `stop` calls `coord.invalidate(...)`. Drops
-/// us straight into the post-stop stale check before `bind`/`start` —
+/// us straight into the post-stop stale check before `bind`/`start` -
 /// the realistic mid-restore-abort scenario (user disconnects, device
 /// switches, transport disposes) lands on the same code path.
 class _InvalidatingStopProtocol extends _RecordingProtocol {
@@ -245,7 +245,7 @@ void main() {
         isUserDisconnected: () => false,
       );
 
-      // Kick off the first restore — it parks at the `startGate`.
+      // Kick off the first restore - it parks at the `startGate`.
       final first = coord.restoreSession(reason: 'first');
       // Pump microtasks so the first restore actually enters _doRestore
       // and reaches the `await start()` boundary before the second call.
@@ -340,7 +340,7 @@ void main() {
             'stale check must abort BEFORE bindSessionGeneration / start',
       );
       // Generation bumped once for the restore start, then once more by
-      // invalidate inside stop — total 2.
+      // invalidate inside stop - total 2.
       expect(coord.sessionGeneration, 2);
     });
 
@@ -459,7 +459,7 @@ void main() {
           reason: 'foreground call must reset budget and run a fresh restore',
         );
 
-        // Background again — budget should be reset, allowing the full
+        // Background again - budget should be reset, allowing the full
         // two-attempt budget once more.
         backgrounded = true;
         await coord.restoreSession(reason: 'bg_after_fg');
@@ -512,7 +512,7 @@ void main() {
         await restore;
 
         // `start()` was already running when the flag flipped, so it
-        // ran to completion — but the post-start stale check observed
+        // ran to completion - but the post-start stale check observed
         // the user-disconnect. The end-of-restore log line is the only
         // missing event; protocol.calls itself shows the full chain.
         expect(protocol.calls, contains('start.end'));

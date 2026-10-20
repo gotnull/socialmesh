@@ -69,7 +69,7 @@ class NodeBoardThreadTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppTheme.spacing6),
-                    // Metadata row — wraps naturally so long names and
+                    // Metadata row - wraps naturally so long names and
                     // timestamps never clip.
                     Wrap(
                       spacing: AppTheme.spacing8,

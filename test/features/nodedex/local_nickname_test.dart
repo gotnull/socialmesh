@@ -213,7 +213,7 @@ void main() {
   });
 
   // ===========================================================================
-  // mergeWith — last-write-wins
+  // mergeWith - last-write-wins
   // ===========================================================================
 
   group('mergeWith localNickname', () {
@@ -247,7 +247,7 @@ void main() {
       expect(merged.localNicknameUpdatedAtMs, equals(3000));
     });
 
-    test('only one side has timestamp — that side wins', () {
+    test('only one side has timestamp - that side wins', () {
       final local = makeEntry(localNickname: 'NoTimestamp');
       final remote = makeEntry(
         localNickname: 'HasTimestamp',
@@ -259,7 +259,7 @@ void main() {
       expect(merged.localNicknameUpdatedAtMs, equals(1000));
     });
 
-    test('both null timestamps — prefers local non-null', () {
+    test('both null timestamps - prefers local non-null', () {
       final local = makeEntry(localNickname: 'FallbackLocal');
       final remote = makeEntry();
       final merged = local.mergeWith(remote);

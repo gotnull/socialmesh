@@ -260,7 +260,7 @@ void main() {
           ..modemPreset =
               config_pbenum.Config_LoRaConfig_ModemPreset.LONG_MODERATE
           ..channelNum = 5
-          // Not exposed by setLoRaConfig — must survive the save.
+          // Not exposed by setLoRaConfig - must survive the save.
           ..paFanDisabled = true
           ..txEnabled = false,
       );

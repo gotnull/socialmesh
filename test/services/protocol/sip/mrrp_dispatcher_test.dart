@@ -219,7 +219,7 @@ void main() {
             payload: Uint8List(0),
           ),
         );
-        // No exception thrown — stale frame silently dropped.
+        // No exception thrown - stale frame silently dropped.
       });
 
       test('ERROR response correlates with correct status', () async {

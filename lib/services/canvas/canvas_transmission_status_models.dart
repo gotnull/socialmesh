@@ -9,7 +9,7 @@
 // limiter, and pending_op table so the UI tier can show users that
 // their paints landed locally but are still in flight on the mesh.
 //
-// Mesh-scope only — local Device Canvas never enqueues to `pending_op`
+// Mesh-scope only - local Device Canvas never enqueues to `pending_op`
 // and is structurally idle. The view model returns
 // `MeshCanvasTransmissionStatus.idle` for non-mesh inputs as a
 // defensive default so consumers don't need to branch on scope.
@@ -25,7 +25,7 @@ enum MeshCanvasTransmissionSeverity {
   /// No pending paints, no cooling. HUD is hidden entirely.
   idle,
 
-  /// At least one paint is queued but the wire is moving — the user
+  /// At least one paint is queued but the wire is moving - the user
   /// just needs to be aware it's in flight, not blocked.
   queued,
 
@@ -36,7 +36,7 @@ enum MeshCanvasTransmissionSeverity {
 
   /// Pending queue has hit the UX soft cap. New paint taps are
   /// blocked until the queue drains. NOT the hard 256 lossy-collapse
-  /// cap — the soft cap exists to keep users away from the lossy
+  /// cap - the soft cap exists to keep users away from the lossy
   /// regime entirely.
   full,
 }
@@ -55,7 +55,7 @@ class MeshCanvasTransmissionStatus {
   final int? nextAttemptAtMs;
 
   /// Canvas governor has insufficient headroom for even a single
-  /// minimal paint frame (24 bytes — the `paint` action size).
+  /// minimal paint frame (24 bytes - the `paint` action size).
   final bool isCanvasBudgetCooling;
 
   /// SIP rate limiter recently refused a canvas frame (within the
@@ -67,7 +67,7 @@ class MeshCanvasTransmissionStatus {
   /// scope only. When true, new mesh paint taps are silently rejected
   /// without enqueue or cell mutation. Separate from the airtime
   /// cooling signals because the cause is interaction pacing, not
-  /// wire pressure — but the resulting severity is the same.
+  /// wire pressure - but the resulting severity is the same.
   final bool isCadenceCooling;
 
   /// Whether the user is allowed to enqueue more mesh paints. Mirrors
@@ -89,7 +89,7 @@ class MeshCanvasTransmissionStatus {
     this.isCadenceCooling = false,
   });
 
-  /// Canonical idle state — used for local-scope viewers, empty
+  /// Canonical idle state - used for local-scope viewers, empty
   /// queues, and fallback while async providers are loading.
   static const MeshCanvasTransmissionStatus idle = MeshCanvasTransmissionStatus(
     pendingCount: 0,
@@ -110,7 +110,7 @@ class MeshCanvasTransmissionStatus {
 
   /// Minimum canvas-payload bytes the governor needs to accept one
   /// single-paint frame (action 0x0001). If headroom falls below this
-  /// the governor is "cooling" — nothing can move until the window
+  /// the governor is "cooling" - nothing can move until the window
   /// decays.
   static const int minPaintBytes = 24;
 

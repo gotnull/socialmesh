@@ -63,10 +63,10 @@ void main() {
     ) async {
       await tester.pumpWidget(buildSubject());
 
-      // Always visible — even with no text.
+      // Always visible - even with no text.
       expect(find.byIcon(Icons.send), findsOneWidget);
 
-      // Type text — the ListenableBuilder should rebuild.
+      // Type text - the ListenableBuilder should rebuild.
       await tester.enterText(find.byType(TextField), 'hello');
       await tester.pump();
 
@@ -96,7 +96,7 @@ void main() {
       await tester.enterText(find.byType(TextField), '   ');
       await tester.pump();
 
-      // Whitespace-only is treated as empty — button visible but disabled.
+      // Whitespace-only is treated as empty - button visible but disabled.
       expect(find.byIcon(Icons.send), findsOneWidget);
     });
 
@@ -123,7 +123,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'hello');
       await tester.pump();
 
-      // Press plain Enter — should NOT send.
+      // Press plain Enter - should NOT send.
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 

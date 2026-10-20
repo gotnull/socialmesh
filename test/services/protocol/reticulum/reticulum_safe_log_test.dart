@@ -5,11 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/protocol/reticulum/reticulum_safe_log.dart';
 
 void main() {
-  group('ReticulumSafeLog — payload-byte safety contract', () {
+  group('ReticulumSafeLog - payload-byte safety contract', () {
     test('public methods accept only metadata fields', () {
       // This test exists as a guard against accidental API drift. Every
       // ReticulumSafeLog method below MUST be callable using only
-      // primitives — never a Uint8List or List<int> payload buffer.
+      // primitives - never a Uint8List or List<int> payload buffer.
       // If a future change introduces a `Uint8List payload` parameter,
       // the build will fail here with a missing/changed argument.
       ReticulumSafeLog.event('observability event');

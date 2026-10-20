@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PeerPetLiveStateMapper — pure smoothing layer between a peer's
+// PeerPetLiveStateMapper - pure smoothing layer between a peer's
 // presence/wire signal and the displayed live band.
 //
 // Design rules:
-//   * No Flutter, no Riverpod, no timers — just pure functions over a
+//   * No Flutter, no Riverpod, no timers - just pure functions over a
 //     (current, incoming, pending, now) tuple. The owner of this class
 //     (the Notifier in pet_providers.dart) is responsible for
 //     scheduling a Timer when `decision.fireAt` is non-null.
-//   * Asymmetric transition rules (see rules below) — the whole reason
+//   * Asymmetric transition rules (see rules below) - the whole reason
 //     this layer exists is to suppress mood thrash from noisy peer
 //     observations and last-seen jitter.
 //   * The `unknown` band is internal only. Mapping never emits a
-//     "no-signal" label to the user — the widget layer renders nothing
+//     "no-signal" label to the user - the widget layer renders nothing
 //     for unknown.
 //
-// Transition rules (applied in order — first match wins):
+// Transition rules (applied in order - first match wins):
 //
 //   Rule 0. `incoming == current` → no emit (same-band churn).
 //
@@ -27,7 +27,7 @@
 //   Rule 2. `current` is sleepy/dormant AND `incoming` is not →
 //           IMMEDIATE only when [PeerPresenceSignal.wireExplicitlyClearsLowEnergy]
 //           is true (fresh observation, flags cleared). Otherwise
-//           schedule the downgrade cooldown — exiting a wire-
+//           schedule the downgrade cooldown - exiting a wire-
 //           authoritative low-energy band should not flap on stale or
 //           missing wire data.
 //
@@ -46,7 +46,7 @@
 // `unknown` sits between sleepy and idle so that degrading from idle
 // to unknown is treated as a downgrade (requires cooldown) and a peer
 // that was sleepy doesn't "upgrade" to unknown on a brief wire gap
-// (rule 5 applies, not rule 4 — rank tie would short-circuit but rank
+// (rule 5 applies, not rule 4 - rank tie would short-circuit but rank
 // 1 → 2 is handled by rule 2 first).
 
 import 'package:flutter/foundation.dart';
@@ -109,7 +109,7 @@ class PeerPetLiveStateMapper {
     // dormant until they re-sigil. Never freshness-gated.
     if (s.isDormantOnWire) return PeerPetLiveBand.dormant;
 
-    // Sleep is a transient flag — trust it only while the wire
+    // Sleep is a transient flag - trust it only while the wire
     // observation is fresh. A stale "was asleep" must not pin our
     // display band for hours.
     if (s.wireFlagsAuthoritative && s.isAsleepOnWire) {
@@ -132,7 +132,7 @@ class PeerPetLiveStateMapper {
 
   /// Compute a decision given the current emitted band, the freshly-
   /// resolved incoming band, and the in-flight pending downgrade (if
-  /// any). Pure — all state is passed in.
+  /// any). Pure - all state is passed in.
   ///
   /// [signal] is required so rule 2 can inspect
   /// [PeerPresenceSignal.wireExplicitlyClearsLowEnergy] for the
@@ -232,7 +232,7 @@ class PeerPetLiveStateMapper {
           fireAt: null,
         );
       }
-      // Keep waiting — re-emit the existing pending schedule so the
+      // Keep waiting - re-emit the existing pending schedule so the
       // caller doesn't start a second timer.
       return PeerPetSmoothingDecision(
         emit: null,
@@ -242,7 +242,7 @@ class PeerPetLiveStateMapper {
     }
     // New pending candidate (either fresh or replacing a different one).
     // The caller MUST cancel any existing timer before scheduling a
-    // new one — the mapper is stateless and cannot enforce that, so
+    // new one - the mapper is stateless and cannot enforce that, so
     // see PeerPetLiveStateController in pet_providers.dart for the
     // timer-cancellation discipline.
     return PeerPetSmoothingDecision(

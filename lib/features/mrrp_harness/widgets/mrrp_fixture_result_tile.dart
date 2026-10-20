@@ -169,9 +169,8 @@ class _MrrpFixtureResultTileState extends State<MrrpFixtureResultTile> {
                   ),
                   child: Text(
                     _subtitleText(l10n, r),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.textSecondary,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: context.textSecondary),
                   ),
                 ),
 
@@ -203,7 +202,7 @@ class _MrrpFixtureResultTileState extends State<MrrpFixtureResultTile> {
           : l10n.mrrpHarnessFixtureNotRejected;
     }
     if (!r.decodeSuccess) return l10n.mrrpHarnessFixtureDecodeNull;
-    return '${l10n.mrrpHarnessFixtureDecodeOk} — ${l10n.mrrpHarnessFixtureFieldsMatch(r.matchedFields, r.fields.length)}';
+    return '${l10n.mrrpHarnessFixtureDecodeOk} - ${l10n.mrrpHarnessFixtureFieldsMatch(r.matchedFields, r.fields.length)}';
   }
 }
 
@@ -256,9 +255,8 @@ class _FieldRow extends StatelessWidget {
                 if (!field.matches)
                   Text(
                     '${context.l10n.mrrpHarnessFixtureExpected}: ${field.expected} → ${context.l10n.mrrpHarnessFixtureActual}: ${field.actual}',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: SemanticColors.error,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: SemanticColors.error),
                   ),
               ],
             ),

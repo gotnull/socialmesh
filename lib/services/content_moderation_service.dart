@@ -91,8 +91,7 @@ class ContentModerationService {
                 : null,
             isPermanentlyBanned:
                 modStatus['isPermanentlyBanned'] as bool? ?? false,
-            strikes:
-                [], // Not included in snapshot, use getModerationStatus() for full data
+            strikes: [], // Not included in snapshot, use getModerationStatus() for full data
           );
         })
         .handleError((Object e) {

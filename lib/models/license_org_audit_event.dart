@@ -198,7 +198,7 @@ class LicenseOrgAuditEvent {
 
   /// Server-stamped event time. Used for ordering and relative-time
   /// labels. Null when the timestamp field is missing on a partial
-  /// write (the row still renders, with `—` for the time column).
+  /// write (the row still renders, with `-` for the time column).
   final DateTime? tsServer;
 
   /// Optional flat key/value metadata block. Limited to short

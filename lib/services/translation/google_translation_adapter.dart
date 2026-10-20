@@ -23,7 +23,7 @@ abstract class TranslationAdapter {
 /// Adapter for managed OpenAI translation via the `translateText` Cloud Function.
 ///
 /// Delegates to the existing Firebase Cloud Function which handles the
-/// OpenAI API call server-side with Application Default Credentials — no
+/// OpenAI API call server-side with Application Default Credentials - no
 /// client-side API key required.
 class ManagedTranslationAdapter implements TranslationAdapter {
   final FirebaseFunctions _functions;
@@ -84,8 +84,7 @@ class ManagedTranslationAdapter implements TranslationAdapter {
         );
         throw const TranslationError(
           type: TranslationErrorType.authenticationRequired,
-          message:
-              'Authentication required for translation', // lint-allow: hardcoded-string
+          message: 'Authentication required for translation', // lint-allow: hardcoded-string
         );
       }
       if (e.code == 'invalid-argument' &&
@@ -124,6 +123,6 @@ class ManagedTranslationAdapter implements TranslationAdapter {
 
   @override
   void dispose() {
-    // No resources to release — FirebaseFunctions is managed by Firebase.
+    // No resources to release - FirebaseFunctions is managed by Firebase.
   }
 }

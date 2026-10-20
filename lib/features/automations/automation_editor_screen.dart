@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — GestureDetector is for keyboard dismissal, not user interaction
+// lint-allow: haptic-feedback - GestureDetector is for keyboard dismissal, not user interaction
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -157,16 +158,13 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
           currentDesc.startsWith('Alert if') ||
           currentDesc.startsWith('Notify when') ||
           // Match duration-based descriptions
-          RegExp(
-            r'Alert if no activity from node for \d+ minutes',
-          ).hasMatch(currentDesc) ||
+          RegExp(r'Alert if no activity from node for \d+ minutes')
+              .hasMatch(currentDesc) ||
           // Match battery threshold descriptions
-          RegExp(
-            r'Notify when a node battery drops below \d+%',
-          ).hasMatch(currentDesc) ||
-          RegExp(
-            r'Triggered when battery drops below \d+%',
-          ).hasMatch(currentDesc);
+          RegExp(r'Notify when a node battery drops below \d+%')
+              .hasMatch(currentDesc) ||
+          RegExp(r'Triggered when battery drops below \d+%')
+              .hasMatch(currentDesc);
 
       if (shouldUpdateDesc) {
         _descriptionController.text = newDefaultDesc;
@@ -229,21 +227,18 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       if (newType == TriggerType.nodeSilent) {
         // Update if description matches the pattern "Alert if no activity..."
         if (currentDesc.startsWith('Alert if no activity') ||
-            RegExp(
-              r'Alert if no activity from node for \d+ minutes',
-            ).hasMatch(currentDesc)) {
+            RegExp(r'Alert if no activity from node for \d+ minutes')
+                .hasMatch(currentDesc)) {
           _descriptionController.text = _getDescriptionForTrigger(newTrigger);
         }
       } else if (newType == TriggerType.batteryLow) {
         // Update if description matches battery threshold pattern
         if (currentDesc.startsWith('Triggered when battery drops below') ||
             currentDesc.startsWith('Notify when a node battery drops below') ||
-            RegExp(
-              r'Triggered when battery drops below \d+%',
-            ).hasMatch(currentDesc) ||
-            RegExp(
-              r'Notify when a node battery drops below \d+%',
-            ).hasMatch(currentDesc)) {
+            RegExp(r'Triggered when battery drops below \d+%')
+                .hasMatch(currentDesc) ||
+            RegExp(r'Notify when a node battery drops below \d+%')
+                .hasMatch(currentDesc)) {
           _descriptionController.text = _getDescriptionForTrigger(newTrigger);
         }
       }
@@ -394,7 +389,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                     dotColor: AccentColors.cyan,
                   ),
 
-                  // IF (Conditions) — Phase 4
+                  // IF (Conditions) - Phase 4
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -539,9 +534,8 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.2),
+                            color: Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(
                               AppTheme.radius8,
                             ),
@@ -670,7 +664,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                       );
                     }),
 
-                  // ELSE section — Phase 4
+                  // ELSE section - Phase 4
                   if (_hasElseBranch) ...[
                     _buildFlowConnector(
                       context,
@@ -882,7 +876,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                     ),
                   ],
 
-                  // Summary preview — Phase 4
+                  // Summary preview - Phase 4
                   const SizedBox(height: AppTheme.spacing24),
                   _buildSummaryPreview(context),
 
@@ -1249,7 +1243,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       return;
     }
 
-    // Validate ELSE branch — if open, must have actions
+    // Validate ELSE branch - if open, must have actions
     if (_hasElseBranch && (_elseActions == null || _elseActions!.isEmpty)) {
       showWarningSnackBar(
         context,
@@ -1335,8 +1329,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
           context: context,
           ref: ref,
           feature: PremiumFeature.automations,
-          customDescription:
-              'Create powerful automatic alerts, smart messages, and scheduled actions that run in the background.', // lint-allow: hardcoded-string
+          customDescription: 'Create powerful automatic alerts, smart messages, and scheduled actions that run in the background.', // lint-allow: hardcoded-string
         );
         // User doesn't have premium - their config is preserved so they can try again after purchase
         return;
@@ -1360,12 +1353,12 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
     // Determine conditionTree
     ConditionNode? finalConditionTree;
     if (_conditionsModified) {
-      // User edited conditions via UI — rebuild tree as flat ALL group
+      // User edited conditions via UI - rebuild tree as flat ALL group
       finalConditionTree = hasConditions
           ? ConditionNode.fromLegacyConditions(_conditions)
           : null;
     } else {
-      // No UI edits — preserve original tree untouched
+      // No UI edits - preserve original tree untouched
       finalConditionTree = _conditionTree;
     }
 

@@ -5,10 +5,10 @@
 ///
 /// Pin two distinct collision modes inside [OverlayLinkEngine._handleLinkOpen]:
 ///
-///   1. **same peer + same linkId** — peer retransmit / duplicate
+///   1. **same peer + same linkId** - peer retransmit / duplicate
 ///      LINK_OPEN. Pre-existing behaviour (reply collision) preserved.
 ///
-///   2. **different peer + same linkId** — cross-peer collision in a
+///   2. **different peer + same linkId** - cross-peer collision in a
 ///      multi-device mesh. The engine MUST:
 ///        - reject the inbound LINK_OPEN with `linkOpenNo collision`,
 ///        - never mutate the existing record (no peerNodeNum change,
@@ -17,7 +17,7 @@
 ///
 /// The on-device manifestation of the bug this protects against:
 /// `secure_decrypt_dropped reason=no_dm_session peer=<wrong_peer>`
-/// after a successful AEAD decrypt — the link store had been
+/// after a successful AEAD decrypt - the link store had been
 /// silently re-attributed to the new peer's node id, poisoning every
 /// downstream `linkId → peerNodeNum → SipDmSession` lookup.
 library;
@@ -93,7 +93,7 @@ void main() {
         equals(peerA),
         reason:
             'cross-peer collision must NOT re-attribute the link record '
-            'to peer B — that is the exact bug that poisoned the store',
+            'to peer B - that is the exact bug that poisoned the store',
       );
       expect(
         after.state,
@@ -131,7 +131,7 @@ void main() {
       await store.close();
     });
 
-    test('rejection frame is built fresh — does not leak the existing '
+    test('rejection frame is built fresh - does not leak the existing '
         'record\'s seq/peerPersonaHint to the wrong peer', () async {
       // Defence-in-depth: even though the rejection routes via
       // _sendFrame(..., senderNodeNum), the FRAME contents should
@@ -201,7 +201,7 @@ void main() {
       await engine.handleInbound(_mkLinkOpen(linkId: linkId), peer);
       egress.sent.clear();
 
-      // SAME peer, SAME linkId — duplicate / retransmit.
+      // SAME peer, SAME linkId - duplicate / retransmit.
       await engine.handleInbound(_mkLinkOpen(linkId: linkId), peer);
 
       expect(egress.sent, hasLength(1));
@@ -225,7 +225,7 @@ void main() {
         'to proceed (the dead record is replaceable)', () async {
       // Negative test for the cross-peer rule: if the existing
       // record is in a terminal state (failed/closed), it's already
-      // dead — there's nothing to protect by rejecting. Letting the
+      // dead - there's nothing to protect by rejecting. Letting the
       // new peer open through is correct and matches pre-existing
       // semantics for terminal-record replacement.
       final store = await openInMemoryStore();
@@ -273,7 +273,7 @@ void main() {
       expect(
         after!.peerNodeNum,
         equals(peerB),
-        reason: 'terminal records are replaceable — peer B owns it now',
+        reason: 'terminal records are replaceable - peer B owns it now',
       );
       expect(after.state, equals(OverlayLinkState.active));
       // No collision rejection emitted.

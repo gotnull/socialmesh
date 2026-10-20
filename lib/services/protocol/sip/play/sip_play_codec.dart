@@ -21,13 +21,13 @@ import 'sip_play_payload.dart';
 /// 6       N     game-payload    (per-game; may be empty)
 /// ```
 ///
-/// The codec is intentionally pure — no clock, no I/O, no rate
+/// The codec is intentionally pure - no clock, no I/O, no rate
 /// limiting. Validation strictly checks the wire format. Per-game
 /// payload validation is delegated to the registered game's own
 /// codec via [SipPlayCodec.decodeGamePayload].
 abstract final class SipPlayCodec {
   /// Encode an envelope to wire bytes. Returns null when the resulting
-  /// envelope would exceed [SipPlayConstants.maxEnvelopeBytes] — the
+  /// envelope would exceed [SipPlayConstants.maxEnvelopeBytes] - the
   /// caller should treat this as a programmer error (per-game budget
   /// not being enforced upstream).
   static Uint8List? encode(SipPlayEnvelope envelope) {
@@ -75,8 +75,8 @@ abstract final class SipPlayCodec {
     return out;
   }
 
-  /// Decode wire bytes into a [SipPlayEnvelope]. Pure — no I/O, no
-  /// clock — and never throws. Every error path returns a structured
+  /// Decode wire bytes into a [SipPlayEnvelope]. Pure - no I/O, no
+  /// clock - and never throws. Every error path returns a structured
   /// [SipPlayDecodeResult.fail] so the dispatcher layer can drop+log
   /// without exception handling.
   ///
@@ -86,7 +86,7 @@ abstract final class SipPlayCodec {
   ///   3. typeAndVersion byte equals the v1 sentinel,
   ///   4. action code resolves to a known [SipPlayAction].
   ///
-  /// Game-payload validity is NOT checked here — call the registered
+  /// Game-payload validity is NOT checked here - call the registered
   /// game's codec on `result.envelope.gamePayload` for that. Unknown
   /// game-type codes deliberately decode successfully so the engine
   /// can render the safe "unsupported" fallback.

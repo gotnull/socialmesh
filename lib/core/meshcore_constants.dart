@@ -224,7 +224,7 @@ class MeshCoreCommands {
   static const int sendBinaryReq = 0x32;
 
   /// D35-A: get firmware-side stats. Second byte selects the
-  /// subtype — only `MeshCoreStatsType.radio` (1) is consumed in
+  /// subtype - only `MeshCoreStatsType.radio` (1) is consumed in
   /// this slice; CORE/PACKETS subtypes are intentionally deferred.
   /// Available on companion firmware v8 and newer; SocialMesh's
   /// pinned firmware (v1.16.0 / ver_code 13) is well past that gate.
@@ -324,7 +324,7 @@ class MeshCoreResponses {
 /// `getStats` request and the `stats` response.
 ///
 /// Only [radio] is consumed by SocialMesh today. The CORE / PACKETS
-/// subtypes are intentionally deferred — adding them later is a
+/// subtypes are intentionally deferred - adding them later is a
 /// separate slice with its own UX review.
 class MeshCoreStatsType {
   MeshCoreStatsType._();
@@ -493,7 +493,7 @@ class MeshCoreAdvertTypes {
 class MeshCoreContactFlags {
   MeshCoreContactFlags._();
 
-  /// Per-contact "favorite" marker — surfaces in the contacts list
+  /// Per-contact "favorite" marker - surfaces in the contacts list
   /// with a star badge + pins the row to the top.
   static const int favorite = 0x01;
 }
@@ -542,7 +542,7 @@ const int kMeshCoreMaxNodeNameBytes = 31;
 // (0x0E). The firmware stores `int32` and divides by `1e6` to
 // recover degrees. The same scale applies on the wire for
 // `setAdvertLatLon`. Note this is `1e6`, NOT `1e7` (Meshtastic
-// convention) — easy footgun if you derive from a Meshtastic-shaped
+// convention) - easy footgun if you derive from a Meshtastic-shaped
 // helper.
 const int kMeshCoreAdvertLatLonScale = 1000000;
 

@@ -17,7 +17,7 @@ class UserPreferences {
   final bool? notificationVibrationEnabled;
 
   /// SIP Play "your turn" notification toggle. Hard-gated upstream by
-  /// [AppFeatureFlags.isSipEnabled] — present in the model so cloud
+  /// [AppFeatureFlags.isSipEnabled] - present in the model so cloud
   /// sync round-trips the user's preference, but the UI tile only
   /// surfaces on SIP-enabled builds.
   final bool? sipPlayTurnNotificationsEnabled;
@@ -71,7 +71,7 @@ class UserPreferences {
 
   /// Suppress the in-app snackbar that fires when a founder responds to one
   /// of the user's bug reports. The push notification and local notification
-  /// still fire when true — only the foreground snackbar is silenced.
+  /// still fire when true - only the foreground snackbar is silenced.
   final bool? bugResponseSnackbarsDisabled;
 
   const UserPreferences({

@@ -28,7 +28,7 @@ void main() {
     final masterEnabled = prefs.getBool('notifications_enabled') ?? true;
     if (!masterEnabled) return false;
 
-    // Category toggles (global — no bg_ prefix keys)
+    // Category toggles (global - no bg_ prefix keys)
     if (isBroadcast) {
       final channelEnabled =
           prefs.getBool('channel_notifications_enabled') ?? true;
@@ -166,7 +166,7 @@ void main() {
       final settings = SettingsService();
       await settings.init();
 
-      // Both remain false — migration doesn't flip them to true
+      // Both remain false - migration doesn't flip them to true
       expect(settings.prefs.getBool('dm_notifications_enabled'), isFalse);
       expect(settings.prefs.getBool('channel_notifications_enabled'), isFalse);
     });
@@ -182,7 +182,7 @@ void main() {
       final settings = SettingsService();
       await settings.init();
 
-      // bg=true means user had background enabled — no reason to change global
+      // bg=true means user had background enabled - no reason to change global
       expect(settings.prefs.getBool('dm_notifications_enabled'), isFalse);
       expect(settings.prefs.getBool('channel_notifications_enabled'), isFalse);
     });
@@ -208,7 +208,7 @@ void main() {
     test('global dm key defaults to true when absent and bg=false', () async {
       SharedPreferences.setMockInitialValues({
         'bg_notify_messages': false,
-        // dm_notifications_enabled not set — defaults to true
+        // dm_notifications_enabled not set - defaults to true
       });
 
       final settings = SettingsService();
@@ -317,62 +317,47 @@ void main() {
       },
     );
 
-    test(
-      'master ON, all ON, channel muted => muted channel suppressed, others fire',
-      () async {
-        SharedPreferences.setMockInitialValues({
-          'notifications_enabled': true,
-          'dm_notifications_enabled': true,
-          'channel_notifications_enabled': true,
-          'muted_channel_indices': ['2'],
-        });
-        final prefs = await SharedPreferences.getInstance();
+    test('master ON, all ON, channel muted => muted channel suppressed, others fire', () async {
+      SharedPreferences.setMockInitialValues({
+        'notifications_enabled': true,
+        'dm_notifications_enabled': true,
+        'channel_notifications_enabled': true,
+        'muted_channel_indices': ['2'],
+      });
+      final prefs = await SharedPreferences.getInstance();
 
-        expect(
-          backgroundDispatchDecision(
-            prefs,
-            isBroadcast: true,
-            messageChannel: 2,
-          ),
-          isFalse,
-          reason: 'muted channel 2 is suppressed',
-        );
-        expect(
-          backgroundDispatchDecision(
-            prefs,
-            isBroadcast: true,
-            messageChannel: 0,
-          ),
-          isTrue,
-          reason: 'unmuted channel 0 still fires',
-        );
-        expect(
-          backgroundDispatchDecision(
-            prefs,
-            isBroadcast: true,
-            messageChannel: 5,
-          ),
-          isTrue,
-          reason: 'unmuted channel 5 still fires',
-        );
-        expect(
-          backgroundDispatchDecision(
-            prefs,
-            isBroadcast: false,
-            messageChannel: null,
-          ),
-          isTrue,
-          reason: 'DMs still fire',
-        );
-      },
-    );
+      expect(
+        backgroundDispatchDecision(prefs, isBroadcast: true, messageChannel: 2),
+        isFalse,
+        reason: 'muted channel 2 is suppressed',
+      );
+      expect(
+        backgroundDispatchDecision(prefs, isBroadcast: true, messageChannel: 0),
+        isTrue,
+        reason: 'unmuted channel 0 still fires',
+      );
+      expect(
+        backgroundDispatchDecision(prefs, isBroadcast: true, messageChannel: 5),
+        isTrue,
+        reason: 'unmuted channel 5 still fires',
+      );
+      expect(
+        backgroundDispatchDecision(
+          prefs,
+          isBroadcast: false,
+          messageChannel: null,
+        ),
+        isTrue,
+        reason: 'DMs still fire',
+      );
+    });
 
     test('master ON, DM ON, bg_notify_messages in prefs but ignored', () async {
       SharedPreferences.setMockInitialValues({
         'notifications_enabled': true,
         'dm_notifications_enabled': true,
         'channel_notifications_enabled': true,
-        'bg_notify_messages': false, // legacy key — must be ignored
+        'bg_notify_messages': false, // legacy key - must be ignored
       });
       final prefs = await SharedPreferences.getInstance();
 
@@ -383,7 +368,7 @@ void main() {
           messageChannel: null,
         ),
         isTrue,
-        reason: 'bg_notify_messages is dead — DMs fire based on global key',
+        reason: 'bg_notify_messages is dead - DMs fire based on global key',
       );
     });
 
@@ -673,7 +658,7 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
 
-      // Category OFF already blocks — mute is redundant but not harmful
+      // Category OFF already blocks - mute is redundant but not harmful
       expect(
         backgroundDispatchDecision(prefs, isBroadcast: true, messageChannel: 0),
         isFalse,
@@ -713,27 +698,20 @@ void main() {
       },
     );
 
-    test(
-      'bg_notify_channels=false does not block channels when global channel is ON',
-      () async {
-        SharedPreferences.setMockInitialValues({
-          'notifications_enabled': true,
-          'channel_notifications_enabled': true,
-          'bg_notify_channels': false,
-        });
-        final prefs = await SharedPreferences.getInstance();
+    test('bg_notify_channels=false does not block channels when global channel is ON', () async {
+      SharedPreferences.setMockInitialValues({
+        'notifications_enabled': true,
+        'channel_notifications_enabled': true,
+        'bg_notify_channels': false,
+      });
+      final prefs = await SharedPreferences.getInstance();
 
-        expect(
-          backgroundDispatchDecision(
-            prefs,
-            isBroadcast: true,
-            messageChannel: 0,
-          ),
-          isTrue,
-          reason: 'bg_notify_channels is a dead key',
-        );
-      },
-    );
+      expect(
+        backgroundDispatchDecision(prefs, isBroadcast: true, messageChannel: 0),
+        isTrue,
+        reason: 'bg_notify_channels is a dead key',
+      );
+    });
 
     test(
       'both bg keys false, both global keys ON => all notifications fire',
@@ -852,7 +830,7 @@ void main() {
         isTrue,
         reason: 'DM fires after user re-enables global key',
       );
-      // bg key still false — proves it is dead
+      // bg key still false - proves it is dead
       expect(prefs.getBool('bg_notify_messages'), isFalse);
     });
   });

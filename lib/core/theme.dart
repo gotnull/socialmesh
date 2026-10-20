@@ -1502,11 +1502,11 @@ class SemanticColors {
   static const Color scrim = Color(0x80000000);
 
   // ---------------------------------------------------------------------------
-  // Status colors (context-free — no BuildContext needed)
+  // Status colors (context-free - no BuildContext needed)
   // ---------------------------------------------------------------------------
 
   /// Success / healthy / online / approved.
-  /// Alias for AppTheme.successGreen — use in non-widget contexts.
+  /// Alias for AppTheme.successGreen - use in non-widget contexts.
   static const Color success = Color(0xFF4ADE80);
 
   /// Warning / caution / moderate / pending.

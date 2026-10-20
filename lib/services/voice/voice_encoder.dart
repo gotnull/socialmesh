@@ -14,7 +14,7 @@ import 'voice_constants.dart';
 /// ```
 /// [0xC2, modeByte, frameCountLow, frameCountHigh, frame0..frameN]
 /// ```
-/// The mode byte identifies the bitrate — see [VoiceQuality].
+/// The mode byte identifies the bitrate - see [VoiceQuality].
 abstract final class VoiceEncoder {
   /// Encodes [pcm] (16-bit mono at 8000 Hz) to the `.c2` wire format.
   ///

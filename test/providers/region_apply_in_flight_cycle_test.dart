@@ -19,14 +19,14 @@ import 'package:socialmesh/providers/app_providers.dart';
 /// reads `regionConfigProvider`, Riverpod 3.x throws
 /// `CircularDependencyError`. The leaf provider exists specifically to
 /// expose `applyStatus == applying` without participating in the
-/// dependency graph — `RegionConfigNotifier` sets it imperatively at
+/// dependency graph - `RegionConfigNotifier` sets it imperatively at
 /// the apply-start and apply-finish edges.
 ///
 /// Field evidence: an Android scan-failure branch in
 /// `DeviceConnectionNotifier.startBackgroundConnection` was reading
 /// `regionConfigProvider` directly. The throw fired on every Android
 /// scan-fail, aborting the function before the retry-timer code below
-/// it could run — leaving `autoReconnectState=failed` permanently and
+/// it could run - leaving `autoReconnectState=failed` permanently and
 /// stranding the user. The fix at `connection_providers.dart:1651`
 /// switched the read to `regionApplyInFlightProvider`. This test pins
 /// that fix (textual + structural).
@@ -51,7 +51,7 @@ void main() {
       expect(container.read(regionApplyInFlightProvider), isFalse);
     });
 
-    test('leaf provider has no upstream — reading it does not pull '
+    test('leaf provider has no upstream - reading it does not pull '
         'deviceConnectionProvider, regionConfigProvider, or any other graph '
         'node into the dependency chain', () {
       final container = ProviderContainer();
@@ -62,7 +62,7 @@ void main() {
       // by design has none, so only it exists in the container.
       container.read(regionApplyInFlightProvider);
 
-      // Cross-check by toggling — this is the imperative API
+      // Cross-check by toggling - this is the imperative API
       // RegionConfigNotifier uses at apply-start/finish. The
       // setActive call must not pull any other provider into
       // existence either.
@@ -75,9 +75,8 @@ void main() {
       'regionConfigProvider directly', () {
     test('connection_providers.dart contains no `ref.read(regionConfigProvider)` '
         'or `ref.watch(regionConfigProvider)` call', () async {
-      final source = await File(
-        'lib/providers/connection_providers.dart',
-      ).readAsString();
+      final source = await File('lib/providers/connection_providers.dart')
+          .readAsString();
 
       // Guards against revert. The cycle-creating reads are the
       // patterns Riverpod's CircularDependencyError flags. The leaf
@@ -93,13 +92,13 @@ void main() {
             'reading regionConfigProvider from inside DeviceConnectionNotifier '
             "closes a Riverpod cycle (regionConfigProvider's notifier listens "
             'to deviceConnectionProvider). Use `regionApplyInFlightProvider` '
-            'instead — it is the leaf provider designed for this exact case.',
+            'instead - it is the leaf provider designed for this exact case.',
       );
       expect(
         source.contains('ref.watch(regionConfigProvider)'),
         isFalse,
         reason:
-            'same cycle hazard as ref.read(regionConfigProvider) — '
+            'same cycle hazard as ref.read(regionConfigProvider) - '
             'use `regionApplyInFlightProvider` from inside connection notifiers.',
       );
     });
@@ -107,9 +106,8 @@ void main() {
     test('connection_providers.dart references regionApplyInFlightProvider '
         '(the cycle-safe substitute used by the scan-failure branch and '
         'the disconnect handler)', () async {
-      final source = await File(
-        'lib/providers/connection_providers.dart',
-      ).readAsString();
+      final source = await File('lib/providers/connection_providers.dart')
+          .readAsString();
 
       expect(
         source.contains('ref.read(regionApplyInFlightProvider)'),

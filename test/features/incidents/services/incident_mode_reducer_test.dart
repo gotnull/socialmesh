@@ -213,21 +213,24 @@ void main() {
       expect(p.lastRequesterStatus, IncidentQuickUpdate.cantMove);
     });
 
-    test('requester false_alarm quick code does NOT terminate the incident', () {
-      final p = IncidentReducer.project([
-        create(),
-        helpEvent(
-          type: IncidentEventType.requesterStatus,
-          sender: requester,
-          seq: 1,
-          minute: 1,
-          quickUpdate: IncidentQuickUpdate.falseAlarm,
-        ),
-      ]);
-      // Only an explicit cancel event terminates -- false_alarm is informational.
-      expect(p.isTerminal, isFalse);
-      expect(p.helpState, IncidentLifecycleState.broadcasting);
-    });
+    test(
+      'requester false_alarm quick code does NOT terminate the incident',
+      () {
+        final p = IncidentReducer.project([
+          create(),
+          helpEvent(
+            type: IncidentEventType.requesterStatus,
+            sender: requester,
+            seq: 1,
+            minute: 1,
+            quickUpdate: IncidentQuickUpdate.falseAlarm,
+          ),
+        ]);
+        // Only an explicit cancel event terminates -- false_alarm is informational.
+        expect(p.isTerminal, isFalse);
+        expect(p.helpState, IncidentLifecycleState.broadcasting);
+      },
+    );
 
     test('latest requester location is projected', () {
       final p = IncidentReducer.project([

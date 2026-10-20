@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — GestureDetector is for keyboard dismissal, not user interaction
+// lint-allow: haptic-feedback - GestureDetector is for keyboard dismissal, not user interaction
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -761,9 +761,8 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: AppTheme.spacing6),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: context.textTertiary),
         ),
       ],
     );
@@ -801,9 +800,8 @@ class _SignalQualityBar extends StatelessWidget {
         const SizedBox(width: AppTheme.spacing8),
         Text(
           '${(quality * 100).toInt()}%',
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: context.textTertiary),
         ),
       ],
     );
@@ -861,9 +859,8 @@ class _ActivityTimeline extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 4),
                     child: Text(
                       count.toString(),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: _getBucketColor(context, index),
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: _getBucketColor(context, index)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1056,9 +1053,8 @@ class _QuietMeshHint extends StatelessWidget {
           Expanded(
             child: Text(
               context.l10n.presenceQuietMesh,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: context.textSecondary),
             ),
           ),
         ],

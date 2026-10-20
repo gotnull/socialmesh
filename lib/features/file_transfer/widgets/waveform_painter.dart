@@ -89,7 +89,7 @@ class WaveformPainter extends CustomPainter {
       canvas.drawRRect(rRect, centre <= playedX ? playedPaint : unplayedPaint);
     }
 
-    // Playhead — thin vertical line.
+    // Playhead - thin vertical line.
     if (progress > 0 && progress < 1) {
       final headPaint = Paint()
         ..color = playheadColor ?? playedColor
@@ -133,7 +133,7 @@ class WaveformSkeletonPainter extends CustomPainter {
   final double borderRadius;
   final int bucketCount;
 
-  /// Seed for the deterministic fake waveform — keeps the shimmer stable.
+  /// Seed for the deterministic fake waveform - keeps the shimmer stable.
   final int seed;
 
   @override

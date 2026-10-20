@@ -331,7 +331,7 @@ void main() {
     });
 
     test('score is clamped between 0 and 1', () {
-      // Max everything — should not exceed 1.0.
+      // Max everything - should not exceed 1.0.
       final entry = makeEntry(
         encounterCount: 1000,
         firstSeen: now.subtract(const Duration(days: 365)),

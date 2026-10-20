@@ -287,7 +287,7 @@ void main() {
     test('non-forced ROLLCALL_REQ does not open scan window', () {
       expect(discovery.isDiscoverable, isFalse);
 
-      // Non-forced request (automatic scan) — should not open window.
+      // Non-forced request (automatic scan) - should not open window.
       // It will succeed because buildRollcallReq does not check
       // isDiscoverable for outbound requests.
       final req = discovery.buildRollcallReq();
@@ -302,7 +302,7 @@ void main() {
       discovery.buildRollcallReq(force: true);
       expect(discovery.isInScanWindow, isTrue);
 
-      // Beacon should still be suppressed — scan window only lifts the
+      // Beacon should still be suppressed - scan window only lifts the
       // response gate, not the beacon gate.
       final beacon = discovery.buildBeacon(force: true);
       expect(beacon, isNull);
@@ -613,12 +613,12 @@ void main() {
     test('toggle isServicingEnabled: off→on→off', () async {
       final payload = buildRequestPayload();
 
-      // Off — dropped.
+      // Off - dropped.
       engine.handleInboundFrame(0xCC01, payload);
       await Future<void>.delayed(Duration.zero);
       expect(sentFrames, isEmpty);
 
-      // On — dispatched (use different sender+reqId to avoid dedup).
+      // On - dispatched (use different sender+reqId to avoid dedup).
       engine.isServicingEnabled = true;
       final payload2 = MrrpCodec.encode(
         MrrpFrame(
@@ -638,7 +638,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(sentFrames, hasLength(1));
 
-      // Off again — dropped.
+      // Off again - dropped.
       engine.isServicingEnabled = false;
       sentFrames.clear();
       final payload3 = MrrpCodec.encode(
@@ -739,16 +739,16 @@ void main() {
     test('toggle profile sharing: off→on→off', () async {
       final req = buildProfileRequest(ProfileAction.getSummary);
 
-      // Off — rejected.
+      // Off - rejected.
       final r1 = await service.handleRequest(req, 0xBBBB);
       expect(r1.msgType, MrrpMessageType.error);
 
-      // On — succeeds.
+      // On - succeeds.
       service.isProfileSharingEnabled = true;
       final r2 = await service.handleRequest(req, 0xBBBB);
       expect(r2.msgType, MrrpMessageType.response);
 
-      // Off again — rejected.
+      // Off again - rejected.
       service.isProfileSharingEnabled = false;
       final r3 = await service.handleRequest(req, 0xBBBB);
       expect(r3.msgType, MrrpMessageType.error);

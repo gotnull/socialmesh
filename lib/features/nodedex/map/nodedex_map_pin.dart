@@ -9,7 +9,7 @@
 // have a newer encounter without GPS, captured separately as
 // `lastEncounterAt`. Keeping the two timestamps distinct prevents the
 // UI from claiming the node was at the pin's coordinates more recently
-// than it actually was — see `docs/overlay/AGENT_GUIDE.md`-style
+// than it actually was - see `docs/overlay/AGENT_GUIDE.md`-style
 // invariants for why honest timestamps matter.
 //
 // Staleness is computed against an injected clock (see
@@ -32,7 +32,7 @@ class NodeDexMapPin {
   final int nodeNum;
   final LatLng position;
 
-  /// Timestamp of the encounter that supplied [position] — the newest
+  /// Timestamp of the encounter that supplied [position] - the newest
   /// encounter on the entry that had both latitude and longitude
   /// non-null.
   final DateTime positionedAt;
@@ -60,7 +60,7 @@ class NodeDexMapPin {
   });
 
   /// True when more than [kNodeDexMapStaleAfterDays] have elapsed
-  /// between [now] and [positionedAt]. Caller threads in the clock —
+  /// between [now] and [positionedAt]. Caller threads in the clock -
   /// production passes wall-time via `nodedexMapNowProvider`; tests
   /// override it.
   bool isStaleAt(DateTime now) =>

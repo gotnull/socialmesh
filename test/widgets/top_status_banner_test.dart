@@ -66,8 +66,7 @@ void main() {
             deviceState: const DeviceConnectionState2(
               state: DevicePairingState.disconnected,
               reason: DisconnectReason.authFailed,
-              errorMessage:
-                  'Protocol configuration failed: Configuration timed out - device may require pairing or PIN was cancelled',
+              errorMessage: 'Protocol configuration failed: Configuration timed out - device may require pairing or PIN was cancelled',
             ),
           ),
         ),
@@ -83,7 +82,7 @@ void main() {
 
     // Auth failure message should be shown instead of "Device not found"
     expect(
-      find.text('Authentication failed — re-pair in Scanner'),
+      find.text('Authentication failed - re-pair in Scanner'),
       findsOneWidget,
     );
     expect(find.text('Device not found'), findsNothing);
@@ -126,7 +125,7 @@ void main() {
 
     // Auth failure message should NOT be shown
     expect(
-      find.text('Authentication failed — re-pair in Scanner'),
+      find.text('Authentication failed - re-pair in Scanner'),
       findsNothing,
     );
 

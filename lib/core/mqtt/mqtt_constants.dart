@@ -142,7 +142,7 @@ class GlobalLayerConstants {
 
 /// Preset broker configurations that users can choose from during setup.
 ///
-/// These are provided as starting points only — every field is editable
+/// These are provided as starting points only - every field is editable
 /// after selection. The presets give new users a working starting point
 /// without needing to know what MQTT is or how to find a broker.
 class BrokerPreset {
@@ -171,7 +171,7 @@ class BrokerPreset {
   ///
   /// Public brokers that publish their credentials openly (e.g. the
   /// official Meshtastic MQTT server) have them listed here. These
-  /// are NOT secrets — they are documented in the Meshtastic project.
+  /// are NOT secrets - they are documented in the Meshtastic project.
   final String defaultPassword;
 
   /// Suggested topic root for this broker.
@@ -234,7 +234,7 @@ class BrokerPreset {
 
   /// Built-in presets. Users can always override every field.
   ///
-  /// Order matters — the first non-custom preset is the recommended
+  /// Order matters - the first non-custom preset is the recommended
   /// default for new users.
   static const List<BrokerPreset> defaults = [
     // ------------------------------------------------------------------
@@ -270,15 +270,14 @@ class BrokerPreset {
       requiresAuth: false,
       suggestedRoot: GlobalLayerConstants.defaultTopicRoot,
       iconName: 'science_outlined',
-      note: 'Test broker — not for production use. May have downtime.',
+      note: 'Test broker - not for production use. May have downtime.',
     ),
     // ------------------------------------------------------------------
     // Custom / manual entry
     // ------------------------------------------------------------------
     BrokerPreset(
       name: 'Custom Broker',
-      description:
-          'Enter your own broker details manually.', // lint-allow: hardcoded-string
+      description: 'Enter your own broker details manually.', // lint-allow: hardcoded-string
       host: '',
       port: GlobalLayerConstants.defaultTlsPort,
       useTls: true,
@@ -343,24 +342,21 @@ class TopicTemplate {
     TopicTemplate(
       label: 'Chat', // lint-allow: hardcoded-string
       iconName: 'chat_bubble_outline',
-      description:
-          'Text messages exchanged between mesh nodes on a specific channel.', // lint-allow: hardcoded-string
+      description: 'Text messages exchanged between mesh nodes on a specific channel.', // lint-allow: hardcoded-string
       pattern: '{root}/chat/{channel}',
       enabledByDefault: false,
     ),
     TopicTemplate(
       label: 'Telemetry', // lint-allow: hardcoded-string
       iconName: 'monitor_heart_outlined',
-      description:
-          'Device health data such as battery level, voltage, and uptime.', // lint-allow: hardcoded-string
+      description: 'Device health data such as battery level, voltage, and uptime.', // lint-allow: hardcoded-string
       pattern: '{root}/telemetry/{nodeId}',
       enabledByDefault: false,
     ),
     TopicTemplate(
       label: 'Position', // lint-allow: hardcoded-string
       iconName: 'location_on_outlined',
-      description:
-          'GPS coordinates reported by mesh nodes (privacy-sensitive).', // lint-allow: hardcoded-string
+      description: 'GPS coordinates reported by mesh nodes (privacy-sensitive).', // lint-allow: hardcoded-string
       pattern: '{root}/position/{nodeId}',
       enabledByDefault: false,
     ),
@@ -376,8 +372,7 @@ class TopicTemplate {
     TopicTemplate(
       label: 'Map Reports', // lint-allow: hardcoded-string
       iconName: 'map_outlined',
-      description:
-          'Periodic position reports for public mesh mapping services.', // lint-allow: hardcoded-string
+      description: 'Periodic position reports for public mesh mapping services.', // lint-allow: hardcoded-string
       pattern: '{root}/map/{nodeId}',
       enabledByDefault: false,
     ),
@@ -395,7 +390,7 @@ class GlobalLayerCopy {
   static const String explainTitle =
       'What is the Global Layer?'; // lint-allow: hardcoded-string
   static const String explainBody =
-      'Your mesh radio connects nearby devices over radio waves — no ' // lint-allow: hardcoded-string
+      'Your mesh radio connects nearby devices over radio waves - no ' // lint-allow: hardcoded-string
       'internet needed. The Global Layer extends that reach by bridging ' // lint-allow: hardcoded-string
       'your local mesh to a server (called a broker) over the internet.\n\n' // lint-allow: hardcoded-string
       'Think of it as a portal: messages from your mesh can travel through ' // lint-allow: hardcoded-string
@@ -412,7 +407,7 @@ class GlobalLayerCopy {
       'Choose a Broker'; // lint-allow: hardcoded-string
   static const String brokerBody =
       'Pick a broker to connect through. Most users should start with ' // lint-allow: hardcoded-string
-      'the official Meshtastic server — it works out of the box with ' // lint-allow: hardcoded-string
+      'the official Meshtastic server - it works out of the box with ' // lint-allow: hardcoded-string
       'no setup required.'; // lint-allow: hardcoded-string
 
   /// Step 3: Topic selection

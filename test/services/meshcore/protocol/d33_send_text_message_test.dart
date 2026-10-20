@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// D33 — `MeshCoreSession.sendTextMessage` integration tests.
+// D33 - `MeshCoreSession.sendTextMessage` integration tests.
 //
 // Pins the typed text-send wrapper that gates outbound text payloads
 // via `MeshCoreSendRateLimiter` before consulting `sendAndWait`.
@@ -56,7 +56,7 @@ class _RecordingTransport implements MeshCoreTransport {
 
   void simulateSent() {
     // RESP_CODE_SENT (0x06) carries 9 bytes (expected_ack_hash +
-    // est_time_to_send) — populate with placeholders the codec will
+    // est_time_to_send) - populate with placeholders the codec will
     // accept.
     final sent = MeshCoreFrame(
       command: MeshCoreResponses.sent,
@@ -78,11 +78,15 @@ class _FakeClock {
 }
 
 void main() {
-  group('MeshCoreSession.sendTextMessage — happy paths', () {
+  group('MeshCoreSession.sendTextMessage - happy paths', () {
     test('normal short channel send: rate limit allows, firmware OK '
         'resolves to ok', () async {
+      // Frozen clock: the limiter refills proportionally, so wall time
+      // between the send and the budget assertion would return a byte.
+      final clock = _FakeClock(DateTime(2026, 5, 7, 12));
+      final limiter = MeshCoreSendRateLimiter(clock: clock.call);
       final transport = _RecordingTransport();
-      final session = MeshCoreSession(transport);
+      final session = MeshCoreSession(transport, sendRateLimiter: limiter);
       addTearDown(() async {
         await session.dispose();
         await transport.dispose();
@@ -133,7 +137,7 @@ void main() {
     });
   });
 
-  group('MeshCoreSession.sendTextMessage — rate-limit rejection', () {
+  group('MeshCoreSession.sendTextMessage - rate-limit rejection', () {
     test('over-budget request returns rateLimited and does NOT '
         'consume tokens or hit the wire', () async {
       final clock = _FakeClock(DateTime(2026, 5, 7, 12));
@@ -221,7 +225,7 @@ void main() {
     });
   });
 
-  group('MeshCoreSession.sendTextMessage — firmware timeout', () {
+  group('MeshCoreSession.sendTextMessage - firmware timeout', () {
     test('when firmware never responds, outcome is firmwareTimeout '
         '(tokens consumed because the wire send did happen)', () async {
       // Deterministic clock so the 80 ms wall-time between budget
@@ -256,7 +260,7 @@ void main() {
   });
 
   group(
-    'MeshCoreSession.sendTextMessage — guard against bypass via wrong cmd',
+    'MeshCoreSession.sendTextMessage - guard against bypass via wrong cmd',
     () {
       test('non-text command codes throw ArgumentError', () async {
         final transport = _RecordingTransport();
@@ -268,7 +272,7 @@ void main() {
 
         // setChannel (0x20) goes through the normal sendAndWait
         // path, not sendTextMessage. Routing it here would bypass
-        // the limiter — guard with a thrown ArgumentError.
+        // the limiter - guard with a thrown ArgumentError.
         expect(
           () => session.sendTextMessage(
             command: MeshCoreCommands.setChannel,

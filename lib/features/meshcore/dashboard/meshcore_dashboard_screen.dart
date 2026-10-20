@@ -273,9 +273,8 @@ class _MeshCoreDashboardScreenState
             const SizedBox(height: AppTheme.spacing8),
             Text(
               l10n.meshcoreDashboardEmptyMessage,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: AppTheme.spacing24),
@@ -523,9 +522,8 @@ class _MeshCoreAddWidgetSheet extends ConsumerWidget {
               Expanded(
                 child: Text(
                   l10n.meshcoreDashboardManageWidgetsHint,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.textSecondary),
                 ),
               ),
               Text(

@@ -245,7 +245,7 @@ void main() {
 
     test('idx_applied_dedupe uses the safe 6-column composite key', () async {
       // Regression pin against re-introducing the unsafe
-      // (canvas_id, author_node_num, op_seq) key — op_seq is u8 and
+      // (canvas_id, author_node_num, op_seq) key - op_seq is u8 and
       // rolls over every 256 paints per author, so that 3-column key
       // would treat distinct paints as duplicates.
       final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());

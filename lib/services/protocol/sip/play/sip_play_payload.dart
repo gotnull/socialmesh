@@ -7,12 +7,12 @@ import 'sip_play_constants.dart';
 
 /// Decoded representation of a SIP Play v1 envelope.
 ///
-/// Immutable. The framework never mutates an envelope after decode —
+/// Immutable. The framework never mutates an envelope after decode -
 /// the engine consumes a stream of envelopes and derives game state
 /// by pure replay (see [`sip_play_engine.dart`]).
 ///
 /// `gameType` is exposed as a raw [int] so unknown / reserved codes
-/// survive the codec layer without being silently coerced — the
+/// survive the codec layer without being silently coerced - the
 /// engine and renderers branch on whether the registry knows the id
 /// and fall back to a safe "unsupported" entry when it does not.
 class SipPlayEnvelope {
@@ -27,7 +27,7 @@ class SipPlayEnvelope {
   /// Per-(sessionTag, peer pair) game id. Big-endian u16 on the wire.
   final int instanceId;
 
-  /// Decoded action. Null on the wire is impossible — receivers
+  /// Decoded action. Null on the wire is impossible - receivers
   /// reject unknown action codes at decode time. Held as the strong
   /// enum for ergonomics in the engine layer.
   final SipPlayAction action;
@@ -61,7 +61,7 @@ class SipPlayEnvelope {
 
 /// Outcome of decoding a wire byte sequence into a [SipPlayEnvelope].
 ///
-/// The codec never throws — every error case is reported as one of
+/// The codec never throws - every error case is reported as one of
 /// the [SipPlayDecodeError] variants so receivers can drop+log
 /// silently without a `try/catch` at the dispatch layer.
 class SipPlayDecodeResult {
@@ -78,7 +78,7 @@ class SipPlayDecodeResult {
 }
 
 /// Reasons a SIP Play envelope can fail to decode. None of these
-/// conditions cause exceptions — receivers map them to drop+log
+/// conditions cause exceptions - receivers map them to drop+log
 /// outcomes and surface a safe fallback in the UI for the unsupported
 /// branches.
 enum SipPlayDecodeError {
@@ -96,7 +96,7 @@ enum SipPlayDecodeError {
   unknownAction,
 
   /// Game-payload bytes failed the per-game codec's own validation
-  /// (e.g. TTT cell out of range). The envelope header parsed fine —
+  /// (e.g. TTT cell out of range). The envelope header parsed fine -
   /// only the inner payload is invalid.
   malformedGamePayload,
 }

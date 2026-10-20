@@ -310,7 +310,7 @@ class MeshCoreSelfInfoNotifier extends Notifier<MeshCoreSelfInfoState> {
     final deviceInfo = ref.watch(meshDeviceInfoProvider);
 
     if (deviceInfo == null) {
-      // Disconnected or not yet identified — clear cache and reset
+      // Disconnected or not yet identified - clear cache and reset
       // dedupe key so the next identify re-fetches.
       _loadedForNodeId = null;
       // Defer the state-reset off-build so `state` getter is not
@@ -358,7 +358,7 @@ class MeshCoreSelfInfoNotifier extends Notifier<MeshCoreSelfInfoState> {
         state = MeshCoreSelfInfoState.loaded(selfInfo);
         // Cache the nodeId we loaded for so spurious rebuilds don't
         // re-fetch. Read the current device info (may have changed
-        // during the await — defensive).
+        // during the await - defensive).
         final info = ref.read(meshDeviceInfoProvider);
         _loadedForNodeId = info?.nodeId;
       } else {
@@ -370,7 +370,7 @@ class MeshCoreSelfInfoNotifier extends Notifier<MeshCoreSelfInfoState> {
     }
   }
 
-  /// Manual refresh path — bypasses the dedupe key so the user-tap
+  /// Manual refresh path - bypasses the dedupe key so the user-tap
   /// always hits the wire.
   Future<void> refresh() async {
     _loadedForNodeId = null;
@@ -399,7 +399,7 @@ class MeshCoreContactsState {
 
   /// Total contacts the firmware will send this sync (from the
   /// `CONTACTS_START` count), or `null` when the firmware omits it
-  /// (older firmware) — drives indeterminate vs determinate progress.
+  /// (older firmware) - drives indeterminate vs determinate progress.
   final int? syncTotal;
 
   const MeshCoreContactsState({
@@ -575,7 +575,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
   ///     advert name
   ///   - never create a placeholder contact from an advert (callers
   ///     must trigger a contacts refresh on `'no_match'` instead)
-  ///   - match by full public key only — sender prefix or partial
+  ///   - match by full public key only - sender prefix or partial
   ///     identity must NOT take this path
   String mergeAdvertName(String publicKeyHex, String advertName) {
     if (advertName.isEmpty) return 'empty_advert';
@@ -613,7 +613,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
   /// whose pubkey starts with [senderPrefixHex] (a 6-byte / 12-char prefix
   /// from the V3 inbound message frame). Returns the matched contact's
   /// full pubkey hex if updated, or null if no contact matched. Session
-  /// only — no persistence to the contact store.
+  /// only - no persistence to the contact store.
   String? recordSnrFromPrefix(String senderPrefixHex, int snrQuarter) {
     if (senderPrefixHex.isEmpty) return null;
     final prefix = senderPrefixHex.toLowerCase();
@@ -669,7 +669,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
   ///
   /// Returns `true` only when the firmware ACKed with `RESP_CODE_OK`
   /// AND the refresh completed. On failure (no session, wire error,
-  /// timeout) returns `false` and leaves local state untouched — the
+  /// timeout) returns `false` and leaves local state untouched - the
   /// caller is responsible for surfacing the error to the user.
   ///
   /// Pre-D29 this method only mutated local state, which silently
@@ -724,7 +724,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
 
   /// D46-A: broadcast OUR contact card to nearby peers via
   /// `CMD_SHARE_CONTACT 0x10`. Pulls the local device's pubkey from
-  /// [meshCoreSelfInfoProvider] — the firmware uses it to identify
+  /// [meshCoreSelfInfoProvider] - the firmware uses it to identify
   /// which self-advertisement to broadcast.
   ///
   /// Returns `true` on `RESP_CODE_OK`, `false` on no session, no
@@ -779,7 +779,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
 
   /// D46-A: parse a `meshcore://<hex>` (or legacy `<pubkeyhex>:<name>`)
   /// clipboard payload into a preview struct ready for the
-  /// confirmation sheet. Synchronous — no firmware round-trip.
+  /// confirmation sheet. Synchronous - no firmware round-trip.
   ///
   /// Returns `null` when the input matches neither format or is
   /// otherwise unparseable.
@@ -883,7 +883,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
   /// contact's stored path via `CMD_ADD_UPDATE_CONTACT` (0x09).
   ///
   /// All other contact metadata (`type`, `name`, `latitude`,
-  /// `longitude`, `flags`) is preserved verbatim — only
+  /// `longitude`, `flags`) is preserved verbatim - only
   /// `out_path_len` and `out_path` are mutated on the firmware side.
   /// Local state is NOT mutated until after the firmware ACK; on a
   /// non-OK ACK or wire failure the call returns `false` and leaves
@@ -891,7 +891,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
   /// error.
   ///
   /// `hopBytes` is the byte sequence the firmware expects to walk
-  /// when sending to this contact — typically extracted from a
+  /// when sending to this contact - typically extracted from a
   /// `MeshCoreTraceResult.hops.map((h) => h.pathByte)` after a
   /// successful Trace Path. Length must be in `[0, 64]`. An empty
   /// `hopBytes` resolves to `pathLength = 0` (direct route); 64+
@@ -1244,7 +1244,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
 
 /// D34c-B-A: user-chosen path override modes for
 /// [MeshCoreContactsNotifier.setPathOverride]. Manual N-hop entry is
-/// intentionally absent — the only way to write an N-hop path today
+/// intentionally absent - the only way to write an N-hop path today
 /// is via the trace flow ([setContactPathFromTrace]).
 enum PathOverrideMode { forceFlood, forceDirect }
 
@@ -1379,7 +1379,7 @@ class MeshCoreChannelsNotifier extends Notifier<MeshCoreChannelsState> {
   /// Add or update a channel on the device.
   ///
   /// Convenience wrapper that takes the existing [MeshCoreChannel]
-  /// model. Equivalent to [addChannel]/[editChannel] — `CMD_SET_CHANNEL`
+  /// model. Equivalent to [addChannel]/[editChannel] - `CMD_SET_CHANNEL`
   /// is overwrite-by-slot, so the firmware doesn't distinguish "add"
   /// from "edit". The intent-based aliases below exist so caller code
   /// reads naturally at the UI layer.
@@ -1417,7 +1417,7 @@ class MeshCoreChannelsNotifier extends Notifier<MeshCoreChannelsState> {
   }
 
   /// Remove a channel slot. There is no dedicated firmware delete
-  /// opcode at the pinned SHA — this overwrites the slot with empty
+  /// opcode at the pinned SHA - this overwrites the slot with empty
   /// name + zero PSK. After firmware ACK + refresh, the slot reads
   /// back as `MeshCoreChannelInfo.isEmpty` and is filtered out of
   /// `getChannels`. See `MeshCoreSession.removeChannel` for the wire
@@ -1538,7 +1538,7 @@ final meshCoreSyncProgressProvider = Provider<MeshCoreSyncProgress>((ref) {
 /// 8-char hex prefix of the connected device's public key.
 ///
 /// Used as the per-device key for [MeshCoreChannelPrefsStore]. Empty
-/// string when no MeshCore device is identified yet — the store treats
+/// string when no MeshCore device is identified yet - the store treats
 /// the empty key as "no-op" so writes never land in a global keyspace.
 ///
 /// Logging note: only this 8-char prefix is ever logged downstream;
@@ -1696,7 +1696,7 @@ class MeshCoreChannelPrefsNotifier extends Notifier<MeshCoreChannelPrefs> {
 
   /// D37-B-A: persist hide on slot [channelIndex]. Idempotent. No-op
   /// when no device is identified. Hide is independent of mute and
-  /// does NOT gate notifications — the notification gate consults
+  /// does NOT gate notifications - the notification gate consults
   /// the muted set only.
   Future<void> hide(int channelIndex) async {
     final prefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
@@ -1747,7 +1747,7 @@ class MeshCoreChannelPrefsNotifier extends Notifier<MeshCoreChannelPrefs> {
   /// forwards the call and reflects the persisted result in state.
   /// Setting order does NOT mutate the muted or hidden sets.
   ///
-  /// Log surface is intentionally count-only — the actual index list
+  /// Log surface is intentionally count-only - the actual index list
   /// is not surfaced to AppLogging so log readers can't reconstruct
   /// the user's channel curation.
   Future<void> setOrder(List<int> order) async {
@@ -2056,7 +2056,7 @@ class MeshCorePathOverlayNotifier extends Notifier<MeshCorePathOverlay?> {
   /// [inferRecentPathBytes] for the selection rule; never queries the
   /// firmware. Returns `true` iff a candidate was found AND the
   /// resulting overlay is drawable. State is not mutated on the
-  /// `false` path — existing overlays survive a failed inference
+  /// `false` path - existing overlays survive a failed inference
   /// attempt.
   Future<bool> setInferred(MeshCoreContact contact) async {
     if (!ref.mounted) return false;
@@ -2196,7 +2196,7 @@ class MeshCoreBatteryNotifier extends Notifier<MeshCoreBatteryState> {
     // connection-state stream) so the battery card hydrates
     // automatically when identify completes. Pre-D24 this notifier
     // used `ref.read(meshCoreAdapterProvider)` and was therefore
-    // captured at app-launch null state — Tools opened during connect
+    // captured at app-launch null state - Tools opened during connect
     // showed `--` until the user tapped Refresh, identical to the
     // self-info bug D24.A solved for TX Power / SF/CR. Watching the
     // adapter directly does not help: the adapter singleton's
@@ -2615,7 +2615,7 @@ final meshCoreShowBatteryVoltageProvider =
 // D34b-A1: Discovered / heard MeshCore peers (recent-heard feed).
 // =============================================================================
 
-/// One entry in the recent-heard feed. In-memory only — never persisted.
+/// One entry in the recent-heard feed. In-memory only - never persisted.
 ///
 /// Populated by `_handleAdvertPush` in [MeshCoreConversationsNotifier]:
 ///   - `PUSH_CODE_NEW_ADVERT (0x8A)` carries the full 147-byte contact
@@ -2651,7 +2651,7 @@ class HeardAdvert {
 
   /// `true` iff a `PUSH_CODE_NEW_ADVERT (0x8A)` carried the full
   /// contact descriptor at any point. `false` for entries created
-  /// purely from `PUSH_CODE_ADVERT (0x80)` re-heard pings — those
+  /// purely from `PUSH_CODE_ADVERT (0x80)` re-heard pings - those
   /// carry no name or type and the UI shows a fingerprint placeholder
   /// + "Heard" badge, not an importable card.
   final bool hasFullInfo;
@@ -2899,7 +2899,7 @@ class MeshCoreDiscoveredAdvertsNotifier extends Notifier<List<HeardAdvert>> {
   }
 
   /// Remove a single entry by its pubkey hex (lowercase, 64 chars).
-  /// Idempotent — silent no-op when the entry isn't present.
+  /// Idempotent - silent no-op when the entry isn't present.
   void remove(String pubKeyHex) {
     if (_byPubkey.remove(pubKeyHex.toLowerCase()) != null) {
       _emit();
@@ -2960,7 +2960,7 @@ final meshCoreDiscoveredAdvertsProvider =
 /// the active MeshCore session's rate limiter.
 ///
 /// Updates at 1 Hz while subscribed. Returns an empty snapshot when no
-/// session is connected. State is in-memory only — nothing is
+/// session is connected. State is in-memory only - nothing is
 /// persisted, exported, or transmitted.
 class MeshCoreChatTrafficNotifier extends Notifier<ChatTrafficSnapshot> {
   Timer? _ticker;
@@ -3820,7 +3820,7 @@ class MeshCoreTelemetryNotifier extends Notifier<MeshCoreTelemetryState> {
 String _pubkeyFingerprintHex(String publicKeyHex) {
   if (publicKeyHex.length < 8) return publicKeyHex;
   return '4B:${publicKeyHex.substring(0, 4).toLowerCase()}'
-      // lint-allow: hardcoded-string — diagnostic log payload
+      // lint-allow: hardcoded-string - diagnostic log payload
       '…${publicKeyHex.substring(publicKeyHex.length - 4).toLowerCase()}';
 }
 
@@ -3878,7 +3878,7 @@ class MeshCoreAutoAddConfigState {
 /// Loads firmware state on demand (via `refresh()`). `update()` writes
 /// new config via `CMD_SET_AUTO_ADD_CONFIG 0x3A` and, on success,
 /// updates the local snapshot. The firmware itself drives the actual
-/// auto-promote on inbound advert match — the app owns only the
+/// auto-promote on inbound advert match - the app owns only the
 /// policy toggles.
 class MeshCoreAutoAddConfigNotifier
     extends Notifier<MeshCoreAutoAddConfigState> {
@@ -3956,7 +3956,7 @@ const String kMeshCoreAutoRouteRetryTimeoutSecondsPrefKey =
 
 /// D48-A1: notifier for the auto-route rotation policy. Persists each
 /// field independently to SharedPreferences. All setter methods
-/// clamp the input to the documented range before writing — both the
+/// clamp the input to the documented range before writing - both the
 /// store and reactive state advance together so a listener never
 /// sees a value that wasn't written.
 ///

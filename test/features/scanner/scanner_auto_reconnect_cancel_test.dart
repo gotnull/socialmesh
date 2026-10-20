@@ -16,9 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   late String source;
   setUpAll(() async {
-    source = await File(
-      'lib/features/scanner/scanner_screen.dart',
-    ).readAsString();
+    source = await File('lib/features/scanner/scanner_screen.dart')
+        .readAsString();
   });
 
   group('Scanner auto-reconnect cancel', () {

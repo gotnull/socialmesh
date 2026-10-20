@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Incident Database — SQLite schema and lifecycle management.
+// Incident Database - SQLite schema and lifecycle management.
 //
 // This file defines the database schema for the incident lifecycle engine.
 // Tables: incidents, incident_transitions, incident_field_reports.
@@ -334,7 +334,7 @@ class IncidentDatabase {
   ///    winning transition's ID). Rows are never deleted.
   /// 5. Rebuilds the `incidents.state` projection from the winning sequence.
   ///
-  /// This method is idempotent — calling it again with the same transitions
+  /// This method is idempotent - calling it again with the same transitions
   /// produces the same result.
   Future<void> applyRemoteTransitions({
     required List<IncidentTransition> remoteTransitions,

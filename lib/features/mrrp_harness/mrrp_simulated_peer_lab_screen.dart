@@ -21,7 +21,7 @@ import '../../services/protocol/sip/mrrp_types.dart';
 /// Maximum simultaneous simulated peers.
 const _kMaxSimPeers = 4;
 
-/// Simulated Peer Lab — create and manage virtual MRRP peers.
+/// Simulated Peer Lab - create and manage virtual MRRP peers.
 class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
   const MrrpSimulatedPeerLabScreen({super.key});
 
@@ -31,7 +31,7 @@ class MrrpSimulatedPeerLabScreen extends ConsumerWidget {
     final simPeers = ref.watch(mrrpSimPeersProvider);
     final canCreate = simPeers.length < _kMaxSimPeers;
 
-    // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
+    // lint-allow: haptic-feedback - keyboard dismissal, not interactive action
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(

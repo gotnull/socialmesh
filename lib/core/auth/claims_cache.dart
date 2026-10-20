@@ -115,7 +115,7 @@ class ClaimsCache {
     } on PlatformException catch (e) {
       // iOS Keychain error -25308 (errSecInteractionNotAllowed) occurs when
       // the app accesses the Keychain while the device is locked or in the
-      // background. Fail silently — the next foreground launch will retry.
+      // background. Fail silently - the next foreground launch will retry.
       AppLogging.claims(
         'Claims: secure storage write failed (${e.code}: ${e.message})',
       );
@@ -125,7 +125,7 @@ class ClaimsCache {
   /// Read cached claims from secure storage.
   ///
   /// Returns null if no cache exists, if the cached data is corrupt, or if
-  /// the keychain is unavailable (e.g. device locked — iOS error -25308).
+  /// the keychain is unavailable (e.g. device locked - iOS error -25308).
   /// Corrupt entries are cleared automatically.
   Future<CachedClaims?> read() async {
     try {

@@ -129,7 +129,7 @@ class ChannelCryptoService {
       // Update metadata to reflect current channel settings so invite
       // recipients always get the latest values (uplink, downlink, role, etc.).
       // positionPrecision is deliberately set to 0 because it is a per-device
-      // preference — the sharer's position-sharing choice must not propagate
+      // preference - the sharer's position-sharing choice must not propagate
       // to recipients.
       await firestore.collection('shared_channels').doc(docId).update({
         'index': channel.index,
@@ -151,7 +151,7 @@ class ChannelCryptoService {
         'role': channel.role,
         'uplink': channel.uplink,
         'downlink': channel.downlink,
-        // Always store 0 — positionPrecision is a per-device preference and
+        // Always store 0 - positionPrecision is a per-device preference and
         // must not propagate to invite recipients.
         'positionPrecision': 0,
         'createdBy': ownerUid,
@@ -282,7 +282,7 @@ class ChannelCryptoService {
         uplink: channelData['uplink'] as bool? ?? false,
         downlink: channelData['downlink'] as bool? ?? false,
         role: channelData['role'] as String? ?? 'SECONDARY',
-        // Always 0 — positionPrecision is a per-device preference and must
+        // Always 0 - positionPrecision is a per-device preference and must
         // not propagate from the sharer to the recipient.
         positionPrecision: 0,
       );

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// Visual Flow Editor Screen — full-screen node canvas for building automations
+// Visual Flow Editor Screen - full-screen node canvas for building automations
 // visually using the vs_node_view graph editor.
 //
 // This screen provides:
@@ -56,7 +56,7 @@ const Color _kActionAccent = Color(0xFF4ADE80);
 const double _kCanvasWidth = 5000.0;
 const double _kCanvasHeight = 4000.0;
 
-/// Initial viewport offset — positions the canvas so nodes placed at
+/// Initial viewport offset - positions the canvas so nodes placed at
 /// (100, 100) are visible without panning.
 const double _kInitialViewportX = -50.0;
 const double _kInitialViewportY = -30.0;
@@ -310,9 +310,8 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                 const SizedBox(width: AppTheme.spacing8),
                 Text(
                   context.l10n.automationFlowCompilationIssues,
-                  style: Theme.of(
-                    sheetContext,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(sheetContext).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -665,9 +664,8 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
               maxLength: 100,
               controller: _nameController,
               textCapitalization: TextCapitalization.sentences,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w600),
               decoration: InputDecoration(
                 hintText: context.l10n.automationFlowNameHint,
                 hintStyle: TextStyle(color: context.textTertiary),
@@ -877,9 +875,8 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                 const SizedBox(width: AppTheme.spacing8),
                 Text(
                   context.l10n.automationFlowAddNode,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 IconButton(

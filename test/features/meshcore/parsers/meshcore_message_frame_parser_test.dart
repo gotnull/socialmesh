@@ -394,32 +394,29 @@ void main() {
       expect(result.value!.text, body);
     });
 
-    test(
-      'full contact public key matches by 6-byte prefix (NOT exact full-hex equality)',
-      () {
-        final fullPubKeyHex =
-            'a1a2a3a4a5a6'
-            '${'00' * 26}'; // 32-byte hex
-        const senderPrefixHex = 'a1a2a3a4a5a6';
-        expect(
-          MeshCoreMessageFrameParser.senderPrefixMatches(
-            contactPublicKeyHex: fullPubKeyHex,
-            senderPrefixHex: senderPrefixHex,
-          ),
-          isTrue,
-        );
+    test('full contact public key matches by 6-byte prefix (NOT exact full-hex equality)', () {
+      final fullPubKeyHex =
+          'a1a2a3a4a5a6'
+          '${'00' * 26}'; // 32-byte hex
+      const senderPrefixHex = 'a1a2a3a4a5a6';
+      expect(
+        MeshCoreMessageFrameParser.senderPrefixMatches(
+          contactPublicKeyHex: fullPubKeyHex,
+          senderPrefixHex: senderPrefixHex,
+        ),
+        isTrue,
+      );
 
-        // Different first 6 bytes; should not match.
-        const wrongPrefix = 'b1b2b3b4b5b6';
-        expect(
-          MeshCoreMessageFrameParser.senderPrefixMatches(
-            contactPublicKeyHex: fullPubKeyHex,
-            senderPrefixHex: wrongPrefix,
-          ),
-          isFalse,
-        );
-      },
-    );
+      // Different first 6 bytes; should not match.
+      const wrongPrefix = 'b1b2b3b4b5b6';
+      expect(
+        MeshCoreMessageFrameParser.senderPrefixMatches(
+          contactPublicKeyHex: fullPubKeyHex,
+          senderPrefixHex: wrongPrefix,
+        ),
+        isFalse,
+      );
+    });
 
     test('rejects payload shorter than 15 with clear reason', () {
       final frame = MeshCoreFrame(

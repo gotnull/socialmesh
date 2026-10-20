@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetTimelineRecorder — the write-through bridge between
+// PetTimelineRecorder - the write-through bridge between
 // OwnPetController's in-memory PetState and the persisted
 // pet_timeline_events table.
 //
@@ -13,12 +13,12 @@
 //      (otherwise a long-lived pet upgrading to this feature starts
 //      with an empty screen).
 //   2. On every state emission thereafter, the recorder ingests the
-//      full ring again — the repository's dedupe index (see
+//      full ring again - the repository's dedupe index (see
 //      `pet_database.dart` v2 migration) makes duplicate writes a
 //      no-op, so we don't need a separate "new events since last
 //      save" diff.
 //
-// The recorder is a thin functional facade — no state of its own.
+// The recorder is a thin functional facade - no state of its own.
 // The repository does the dedupe + cap enforcement.
 
 import '../../../core/logging.dart';
@@ -33,7 +33,7 @@ class PetTimelineRecorder {
 
   /// Record every event currently sitting in [state.recentEvents]
   /// into the timeline table. Deduped by (owner, at_ms, kind,
-  /// detail) — calling this every emission is safe and cheap.
+  /// detail) - calling this every emission is safe and cheap.
   ///
   /// Stage + branch for every event come from the pet's CURRENT
   /// state at write time. That's the correct call for transient
@@ -53,7 +53,7 @@ class PetTimelineRecorder {
   }
 
   /// Drop the timeline for [ownerNodeNum]. Called when the user
-  /// re-sigils — a new egg means a new story, the old one is
+  /// re-sigils - a new egg means a new story, the old one is
   /// retired. The new egg's own `hatched` event will re-seed the
   /// timeline on the next `ingestFromState`.
   Future<void> clearForOwner(int ownerNodeNum) async {

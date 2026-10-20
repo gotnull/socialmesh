@@ -2,8 +2,10 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'animated_mesh_node.dart';
 
 /// Emotional states for Ico, the mesh brain advisor (icosahedron mascot)
@@ -506,7 +508,7 @@ class MeshNodeBrain extends StatefulWidget {
   final bool sciFiGlitch;
 
   /// Keep the creature's eye vertices (and the mouth edge) camera-
-  /// facing — suppresses full tumble / Z-spin rotation so the face is
+  /// facing - suppresses full tumble / Z-spin rotation so the face is
   /// readable most of the time.
   ///
   /// The "face" of MeshNodeBrain isn't a stable overlay; it's two
@@ -525,10 +527,10 @@ class MeshNodeBrain extends StatefulWidget {
   ///   - Z-axis spin is suppressed to zero
   ///   - Ghost-personality squash/stretch, shell openness, node
   ///     jitter, attention offset, edge thickness, glow, pulse, and
-  ///     haptics are preserved — only rotation is locked
+  ///     haptics are preserved - only rotation is locked
   final bool preferFrontFace;
 
-  /// Enable mood-aware idle blinking — eyes briefly close at natural
+  /// Enable mood-aware idle blinking - eyes briefly close at natural
   /// intervals so the creature reads as alive between mood changes.
   /// Off by default to preserve the onboarding advisor's existing look
   /// (which blinks implicitly through mood transitions). NodePet turns
@@ -542,7 +544,7 @@ class MeshNodeBrain extends StatefulWidget {
   ///   - dormant/asleep: no idle blink (eyes already closed via
   ///     the mood's face expression)
   ///
-  /// Intervals are deterministic per-widget-instance — a per-instance
+  /// Intervals are deterministic per-widget-instance - a per-instance
   /// seed mixes the native heart-rate with the widget's identity so
   /// there's no per-frame randomness and no visible jitter race.
   final bool enableIdleBlink;
@@ -586,7 +588,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   AnimationController? _glitchController;
   int _glitchSeed = 0;
 
-  // Idle blink — runs a short close/open bell-cycle at mood-dependent
+  // Idle blink - runs a short close/open bell-cycle at mood-dependent
   // intervals when [widget.enableIdleBlink] is true. Null when the
   // feature is disabled so there's zero overhead on the advisor path.
   AnimationController? _blinkController;
@@ -694,7 +696,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   }
 
   /// Set up the blink controller + deterministic PRNG and schedule the
-  /// first blink. Idempotent — safe to call when [enableIdleBlink]
+  /// first blink. Idempotent - safe to call when [enableIdleBlink]
   /// flips on via [didUpdateWidget].
   void _initializeBlink() {
     if (_blinkController != null) return;
@@ -740,7 +742,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
   /// Pick the next blink interval based on the current mood, arm a
   /// one-shot timer, and recurse on fire. Dormant moods park the
   /// scheduler (no timer) so the eyes stay closed via the mood's
-  /// face expression — the blink system doesn't fight it.
+  /// face expression - the blink system doesn't fight it.
   void _scheduleNextBlink() {
     _blinkTimer?.cancel();
     if (!widget.enableIdleBlink) return;
@@ -824,7 +826,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     if (oldWidget.mood != widget.mood) {
       _updateAnimationsForMood(widget.mood);
       _triggerMoodHaptics(widget.mood);
-      // Mood changed — reschedule so the new mood's cadence kicks in
+      // Mood changed - reschedule so the new mood's cadence kicks in
       // immediately rather than waiting out the previous mood's timer.
       if (widget.enableIdleBlink) {
         _scheduleNextBlink();
@@ -1517,7 +1519,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
       case MeshBrainMood.dormant:
       case MeshBrainMood.tired:
       case MeshBrainMood.sad:
-        // Small sag rather than a full shrink — dormant/sleeping should
+        // Small sag rather than a full shrink - dormant/sleeping should
         // read as "at rest," not "shrunken." Prior 0.92 made NodePet
         // look noticeably smaller when asleep than awake.
         return 0.97;
@@ -1730,7 +1732,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
     double wobbleX = _wobbleX.value;
     double wobbleY = _wobbleY.value;
 
-    // Special wobble modifications — skipped when preferFrontFace is
+    // Special wobble modifications - skipped when preferFrontFace is
     // on, since they all add rotation that would swing the face away.
     if (!widget.preferFrontFace) {
       if (widget.mood == MeshBrainMood.dizzy) {
@@ -2911,7 +2913,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
 
   MeshNodeAnimationType _getMeshAnimationType() {
     // preferFrontFace pins the mesh so the eye vertices stay camera-
-    // facing. No rotation component — only breathe (scale pulse). The
+    // facing. No rotation component - only breathe (scale pulse). The
     // creature still feels alive via pulse, ghost-personality squash/
     // stretch, jitter, and glow; just without tumbling the face away.
     if (widget.preferFrontFace) {

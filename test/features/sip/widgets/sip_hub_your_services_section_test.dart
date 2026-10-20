@@ -120,7 +120,7 @@ void main() {
     testWidgets('returns no slivers when MESH_SERVICES_ENABLED is off', (
       tester,
     ) async {
-      // Override the setUp default — flag explicitly disabled here.
+      // Override the setUp default - flag explicitly disabled here.
       dotenv.loadFromString(
         envString:
             'SIP_ENABLED=true\nMRRP_ENABLED=true\nMESH_SERVICES_ENABLED=false',
@@ -138,7 +138,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Section header, CTA, and instance cards must all be hidden
-      // when the feature flag is off — even if instances exist.
+      // when the feature flag is off - even if instances exist.
       expect(find.text('YOUR SERVICES'), findsNothing);
       expect(find.text('Create Service'), findsNothing);
       expect(find.byType(MeshServiceInstanceCard), findsNothing);

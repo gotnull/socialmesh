@@ -168,7 +168,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — empty state
+  // GlobalLayerMetrics - empty state
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.empty', () {
@@ -220,7 +220,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — recording samples
+  // GlobalLayerMetrics - recording samples
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.recordSample', () {
@@ -319,7 +319,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — recording pings
+  // GlobalLayerMetrics - recording pings
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.recordPing', () {
@@ -348,7 +348,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — recording errors
+  // GlobalLayerMetrics - recording errors
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.recordError', () {
@@ -420,7 +420,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — clear errors
+  // GlobalLayerMetrics - clear errors
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.clearErrors', () {
@@ -476,7 +476,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — reconnect count
+  // GlobalLayerMetrics - reconnect count
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.incrementReconnectCount', () {
@@ -500,7 +500,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — session management
+  // GlobalLayerMetrics - session management
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.startSession', () {
@@ -555,7 +555,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — rate calculations
+  // GlobalLayerMetrics - rate calculations
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics rate calculations', () {
@@ -630,7 +630,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — message counts by topic
+  // GlobalLayerMetrics - message counts by topic
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.messageCountsByTopic', () {
@@ -688,7 +688,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — health status
+  // GlobalLayerMetrics - health status
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.isHealthy', () {
@@ -721,7 +721,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — redacted export
+  // GlobalLayerMetrics - redacted export
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.toRedactedJson', () {
@@ -756,7 +756,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — toString
+  // GlobalLayerMetrics - toString
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics.toString', () {
@@ -788,7 +788,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — immutability
+  // GlobalLayerMetrics - immutability
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics immutability', () {
@@ -869,7 +869,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // GlobalLayerMetrics — composite operations
+  // GlobalLayerMetrics - composite operations
   // ---------------------------------------------------------------------------
 
   group('GlobalLayerMetrics composite operations', () {

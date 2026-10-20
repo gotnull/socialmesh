@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
 import '../l10n/l10n_extension.dart';
@@ -51,15 +52,13 @@ class RouteRegistry {
       path: '/device-config',
       requirements: {RouteRequirement.deviceConnected},
       fallbackRoute: '/main',
-      blockedMessage:
-          'Connect device to access configuration', // lint-allow: hardcoded-string
+      blockedMessage: 'Connect device to access configuration', // lint-allow: hardcoded-string
     ),
     '/device-management': RouteMetadata(
       path: '/device-management',
       requirements: {RouteRequirement.deviceConnected},
       fallbackRoute: '/main',
-      blockedMessage:
-          'Connect device to access device management', // lint-allow: hardcoded-string
+      blockedMessage: 'Connect device to access device management', // lint-allow: hardcoded-string
     ),
     // Note: '/region-setup' is NOT a protected route - it's navigated to directly
     // from scanner to avoid route guard interference during device reboot.

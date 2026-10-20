@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// P4 — inbound presence handler integration tests.
+// P4 - inbound presence handler integration tests.
 //
 // Source of truth: docs/canvas/CANVAS_PRESENCE_V0_1.md §5 + invariants
 // P1, P2, P6, P7, P8. Uses a real sqflite database via
@@ -128,7 +128,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('P4 inbound presence — happy path', () {
+  group('P4 inbound presence - happy path', () {
     test(
       'valid viewing frame upserts cache and fires onPresenceChanged',
       () async {
@@ -243,7 +243,7 @@ void main() {
     );
   });
 
-  group('P4 inbound presence — onPresenceChanged firing rules', () {
+  group('P4 inbound presence - onPresenceChanged firing rules', () {
     test('callback fires ONLY when the cache actually mutated', () async {
       final h = await _buildHandler(label: 'mutated');
       try {
@@ -386,7 +386,7 @@ void main() {
     });
   });
 
-  group('P4 inbound presence — drops without canvas mutation', () {
+  group('P4 inbound presence - drops without canvas mutation', () {
     test('unknown canvas_id does NOT auto-create a canvas row '
         '(P6 invariant)', () async {
       final h = await _buildHandler(label: 'unknown');
@@ -604,7 +604,7 @@ void main() {
     );
   });
 
-  group('P4 inbound presence — canonical state isolation '
+  group('P4 inbound presence - canonical state isolation '
       '(P1, P2 invariants)', () {
     test('presence apply does NOT create cell rows', () async {
       final h = await _buildHandler(label: 'nocells');
@@ -614,9 +614,8 @@ void main() {
           canvasId: 0xC0DE,
           channelIndex: 0,
         );
-        final cellsBefore = (await h.repo.getCanvasCells(
-          canvas.localId,
-        )).length;
+        final cellsBefore = (await h.repo.getCanvasCells(canvas.localId))
+            .length;
 
         await h.handler.applyInbound(
           canvasPayload: _presence(
@@ -742,7 +741,7 @@ void main() {
     );
   });
 
-  group('P4 inbound presence — per-sender rate limiting', () {
+  group('P4 inbound presence - per-sender rate limiting', () {
     test('13th presence from one sender in 60 s is dropped; other senders '
         'unaffected', () async {
       final h = await _buildHandler(label: 'ratelimit');
@@ -806,7 +805,7 @@ void main() {
     });
   });
 
-  group('P4 — when no presence cache is injected (legacy/test path)', () {
+  group('P4 - when no presence cache is injected (legacy/test path)', () {
     test('inbound presence decodes and validates but is a no-op '
         'without crashing', () async {
       final db = CanvasDatabase(testDbPath: _uniqueTestDbPath('nocache'));

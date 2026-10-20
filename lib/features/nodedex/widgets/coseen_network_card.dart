@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Co-Seen Network Card — premium social context card for node detail.
+// Co-Seen Network Card - premium social context card for node detail.
 //
 // Displays an animated avatar cluster of co-seen peers in the top-right
 // of a card, with a title, subtitle, and optional "view all" CTA.

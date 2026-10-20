@@ -21,7 +21,7 @@ import 'package:socialmesh/services/storage/message_database.dart';
 /// to `null` after cancel. Otherwise the `_subscribeToStreams` skip-
 /// guard sees a cancelled-but-non-null subscription and stops re-
 /// wiring, permanently breaking incoming-message processing on the
-/// broadcast stream (broadcast streams don't buffer — missed events
+/// broadcast stream (broadcast streams don't buffer - missed events
 /// are lost forever).
 class _FakeTransport extends DeviceTransport {
   final StreamController<DeviceConnectionState> _stateCtrl =
@@ -165,7 +165,7 @@ void main() {
       sub.close();
       await Future<void>.delayed(const Duration(milliseconds: 20));
 
-      // Global subscription must still be alive — receive ingestion is
+      // Global subscription must still be alive - receive ingestion is
       // session-scoped, not screen-scoped.
       expect(
         protocol.hasListener,
@@ -203,7 +203,7 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 20));
     expect(protocol.hasListener, isTrue);
 
-    // First message — should land.
+    // First message - should land.
     protocol.emit(_msg(0x201, text: 'first'));
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(
@@ -211,7 +211,7 @@ void main() {
       isTrue,
     );
 
-    // Second message — exercises the same listener after the load
+    // Second message - exercises the same listener after the load
     // completer is satisfied.  The original bug would have left the
     // subscription cancelled-but-non-null, breaking this path.
     protocol.emit(_msg(0x202, text: 'second'));
@@ -296,7 +296,7 @@ void main() {
     expect(container.read(messagesProvider.notifier).lastInsertAt, isNotNull);
   });
 
-  test('restart simulation — re-creating the notifier reloads persisted '
+  test('restart simulation - re-creating the notifier reloads persisted '
       'channel messages from storage before processing live stream', () async {
     SharedPreferences.setMockInitialValues({});
     final storage = await _buildStorage();

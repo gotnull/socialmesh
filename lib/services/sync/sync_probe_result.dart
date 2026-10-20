@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sync Probe Result — shared result type for deterministic end-to-end
+// Sync Probe Result - shared result type for deterministic end-to-end
 // sync validation probes.
 //
 // Used by:
@@ -19,15 +19,15 @@
 /// detailed log lines for debugging sync pipeline issues.
 ///
 /// Stages:
-///   A — Entitlement check (is sync enabled?)
-///   B — Firebase auth check (is user signed in?)
-///   C — Create test entity locally (write to SQLite + outbox)
-///   D — Verify outbox contains the entry
-///   E — Drain outbox to Firestore (push)
-///   F — Verify document exists in Firestore (read-back)
-///   G — Reset watermark and pull from Firestore
-///   H — Verify entity exists locally after pull (round-trip data match)
-///   I — Clean up probe data (local + remote)
+///   A - Entitlement check (is sync enabled?)
+///   B - Firebase auth check (is user signed in?)
+///   C - Create test entity locally (write to SQLite + outbox)
+///   D - Verify outbox contains the entry
+///   E - Drain outbox to Firestore (push)
+///   F - Verify document exists in Firestore (read-back)
+///   G - Reset watermark and pull from Firestore
+///   H - Verify entity exists locally after pull (round-trip data match)
+///   I - Clean up probe data (local + remote)
 class SyncProbeResult {
   /// Whether all stages passed.
   final bool ok;
@@ -99,10 +99,10 @@ class SyncProbeResult {
   String get summary {
     final prefix = domain != null ? '[$domain] ' : '';
     if (ok) {
-      return '${prefix}PROBE OK — ${stages.length} stages passed';
+      return '${prefix}PROBE OK - ${stages.length} stages passed';
     }
     final failMsg = stages[failedStage] ?? 'unknown';
-    return '${prefix}PROBE FAIL at stage $failedStage — $failMsg';
+    return '${prefix}PROBE FAIL at stage $failedStage - $failMsg';
   }
 
   @override

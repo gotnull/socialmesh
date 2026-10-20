@@ -364,26 +364,23 @@ void main() {
       await store.close();
     });
 
-    test(
-      'buildAdvertPayload includes kMeshServicesInstanceServiceId after registration',
-      () {
-        final registered = registry.register(
-          meshHandler,
-          _meshServicesDescriptor(),
-        );
-        expect(registered, isTrue);
+    test('buildAdvertPayload includes kMeshServicesInstanceServiceId after registration', () {
+      final registered = registry.register(
+        meshHandler,
+        _meshServicesDescriptor(),
+      );
+      expect(registered, isTrue);
 
-        final payload = registry.buildAdvertPayload();
-        expect(payload, isNotNull);
+      final payload = registry.buildAdvertPayload();
+      expect(payload, isNotNull);
 
-        final decoded = MrrpMessagesAdvert.decodeAdvertPayload(payload!);
-        expect(decoded, isNotNull);
-        expect(
-          decoded!.any((d) => d.serviceId == kMeshServicesInstanceServiceId),
-          isTrue,
-        );
-      },
-    );
+      final decoded = MrrpMessagesAdvert.decodeAdvertPayload(payload!);
+      expect(decoded, isNotNull);
+      expect(
+        decoded!.any((d) => d.serviceId == kMeshServicesInstanceServiceId),
+        isTrue,
+      );
+    });
 
     test(
       'broadcastNow sends a frame encoding the registered service',
@@ -430,7 +427,7 @@ void main() {
         return true;
       };
 
-      // Do NOT call start() — broadcastNow should be no-op.
+      // Do NOT call start() - broadcastNow should be no-op.
       await advertEngine.broadcastNow();
 
       expect(sendCalled, isFalse);
@@ -578,7 +575,7 @@ void main() {
 
       expect(registry.count, MrrpConstants.mrrpServiceAdvertMaxServices);
 
-      // One more should be rejected — not silently ignored.
+      // One more should be rejected - not silently ignored.
       final rejected = registry.register(_SlotFiller(999), _appDescriptor(999));
       expect(rejected, isFalse);
       expect(registry.count, MrrpConstants.mrrpServiceAdvertMaxServices);
@@ -593,7 +590,7 @@ void main() {
       registry.register(h1, _appDescriptor(0x10));
       expect(registry.getHandler(0x10), same(h1));
 
-      // Re-register same ID — should replace, not add a new slot.
+      // Re-register same ID - should replace, not add a new slot.
       registry.register(h2, _appDescriptor(0x10));
       expect(registry.getHandler(0x10), same(h2));
       expect(registry.count, 1);

@@ -635,7 +635,7 @@ void main() {
     test('entry with null preset never matches a non-empty filter', () {
       // Filter that would match some presets.
       final filtered = applyFilter(entries, {0, 4, 6});
-      // 3 out of 4 entries match — the null one does not.
+      // 3 out of 4 entries match - the null one does not.
       expect(filtered.length, equals(3));
       expect(filtered.every((e) => e.lastObservedOnPreset != null), isTrue);
       // Specifically, node 4 (null preset) is excluded.

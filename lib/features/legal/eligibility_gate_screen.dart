@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — pre-auth gate screen, no navigation chrome
+// lint-allow: scaffold - pre-auth gate screen, no navigation chrome
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
@@ -24,8 +24,8 @@ import '../../services/haptic_service.dart';
 ///
 /// The user selects one of three age ranges (Under 13 / 13–17 / 18+).
 /// - Under 13: app exits (age requirement not met).
-/// - 13–17: confirmed as [AgeGroup.teen] — privacy-enhanced defaults apply.
-/// - 18+: confirmed as [AgeGroup.adult] — standard app experience.
+/// - 13–17: confirmed as [AgeGroup.teen] - privacy-enhanced defaults apply.
+/// - 18+: confirmed as [AgeGroup.adult] - standard app experience.
 ///
 /// This is an eligibility attestation, NOT age verification. No DOB or ID
 /// is collected.
@@ -381,7 +381,7 @@ class _EligibilityGateScreenState extends ConsumerState<EligibilityGateScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Continue button — disabled until a selection is made
+        // Continue button - disabled until a selection is made
         Semantics(
           button: true,
           label: context.l10n.legalEligibilityConfirmSemantics,

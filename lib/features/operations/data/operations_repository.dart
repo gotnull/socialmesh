@@ -23,7 +23,7 @@ class OperationsRepository {
   Future<Database> get _db async => _database.database;
 
   /// Loads every persisted progress row keyed by operationId. Missing
-  /// operations (those not yet started) are not returned — callers
+  /// operations (those not yet started) are not returned - callers
   /// reconcile against the catalog.
   Future<Map<String, OperationProgress>> loadAll() async {
     try {
@@ -86,7 +86,7 @@ class OperationsRepository {
     }
   }
 
-  /// Append a record to the event log. Failures here are non-fatal — the
+  /// Append a record to the event log. Failures here are non-fatal - the
   /// log is best-effort observability, not the source of truth.
   Future<void> appendEvent({
     required String operationId,

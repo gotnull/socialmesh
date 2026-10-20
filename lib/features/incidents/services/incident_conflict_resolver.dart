@@ -14,7 +14,7 @@ import '../models/incident_transition.dart';
 /// Outside this window, the earlier timestamp wins outright.
 /// Inside this window, the full 5-field tie-break chain is applied.
 ///
-/// Spec: INCIDENT_LIFECYCLE.md — Conflict Resolution, item 2.
+/// Spec: INCIDENT_LIFECYCLE.md - Conflict Resolution, item 2.
 const int conflictWindowMs = 5000;
 
 // ---------------------------------------------------------------------------
@@ -51,18 +51,18 @@ class ConflictResolution {
 /// When two devices transition the same incident offline, this resolver
 /// applies a 5-field tie-break chain to determine a unique winner:
 ///
-/// 1. **priorityRank** — transition type ordered highest-first:
+/// 1. **priorityRank** - transition type ordered highest-first:
 ///    escalate (5) > cancel (4) > assign (3) > resolve (2) > submit (1).
-/// 2. **timestamp** — earlier epoch-ms wins.
-/// 3. **actorRoleRank** — Admin (4) > Supervisor (3) > Operator (2) >
+/// 2. **timestamp** - earlier epoch-ms wins.
+/// 3. **actorRoleRank** - Admin (4) > Supervisor (3) > Operator (2) >
 ///    Observer (1).
-/// 4. **actorId** — lexicographic string comparison.
-/// 5. **transitionId** — UUID lexicographic comparison (final tie-breaker).
+/// 4. **actorId** - lexicographic string comparison.
+/// 5. **transitionId** - UUID lexicographic comparison (final tie-breaker).
 ///
 /// Transitions outside the 5-second conflict window are resolved purely by
 /// timestamp (earlier wins).
 ///
-/// Spec: INCIDENT_LIFECYCLE.md — Conflict Resolution section.
+/// Spec: INCIDENT_LIFECYCLE.md - Conflict Resolution section.
 class IncidentConflictResolver {
   const IncidentConflictResolver();
 
@@ -74,7 +74,7 @@ class IncidentConflictResolver {
   ///
   /// Higher rank wins in conflict resolution.
   ///
-  /// Spec: INCIDENT_LIFECYCLE.md — escalate (5) > cancel (4) > assign (3) >
+  /// Spec: INCIDENT_LIFECYCLE.md - escalate (5) > cancel (4) > assign (3) >
   /// resolve (2) > submit (1).
   static int transitionTypeRank(IncidentState toState) {
     return switch (toState) {
@@ -125,24 +125,24 @@ class IncidentConflictResolver {
 
     // Within 5-second window: full chain.
 
-    // 1. priorityRank — higher wins (descending).
+    // 1. priorityRank - higher wins (descending).
     final prA = transitionTypeRank(a.toState);
     final prB = transitionTypeRank(b.toState);
     if (prA != prB) return prB - prA;
 
-    // 2. timestamp — earlier wins (ascending).
+    // 2. timestamp - earlier wins (ascending).
     if (tsA != tsB) return tsA.compareTo(tsB);
 
-    // 3. actorRoleRank — higher wins (descending).
+    // 3. actorRoleRank - higher wins (descending).
     final arA = actorRoleRank(a.actorRole);
     final arB = actorRoleRank(b.actorRole);
     if (arA != arB) return arB - arA;
 
-    // 4. actorId — lexicographic (ascending).
+    // 4. actorId - lexicographic (ascending).
     final aidCmp = a.actorId.compareTo(b.actorId);
     if (aidCmp != 0) return aidCmp;
 
-    // 5. transitionId — lexicographic (ascending, final tie-breaker).
+    // 5. transitionId - lexicographic (ascending, final tie-breaker).
     return a.id.compareTo(b.id);
   }
 
@@ -151,26 +151,26 @@ class IncidentConflictResolver {
   /// Used within [resolveConflicts] for groups whose time span is within the
   /// conflict window. Priority rank is the primary sort key.
   static int compareFullChain(IncidentTransition a, IncidentTransition b) {
-    // 1. priorityRank — higher wins (descending).
+    // 1. priorityRank - higher wins (descending).
     final prA = transitionTypeRank(a.toState);
     final prB = transitionTypeRank(b.toState);
     if (prA != prB) return prB - prA;
 
-    // 2. timestamp — earlier wins (ascending).
+    // 2. timestamp - earlier wins (ascending).
     final tsA = a.timestamp.millisecondsSinceEpoch;
     final tsB = b.timestamp.millisecondsSinceEpoch;
     if (tsA != tsB) return tsA.compareTo(tsB);
 
-    // 3. actorRoleRank — higher wins (descending).
+    // 3. actorRoleRank - higher wins (descending).
     final arA = actorRoleRank(a.actorRole);
     final arB = actorRoleRank(b.actorRole);
     if (arA != arB) return arB - arA;
 
-    // 4. actorId — lexicographic (ascending).
+    // 4. actorId - lexicographic (ascending).
     final aidCmp = a.actorId.compareTo(b.actorId);
     if (aidCmp != 0) return aidCmp;
 
-    // 5. transitionId — lexicographic (ascending).
+    // 5. transitionId - lexicographic (ascending).
     return a.id.compareTo(b.id);
   }
 
@@ -179,26 +179,26 @@ class IncidentConflictResolver {
   /// Used within [resolveConflicts] for groups whose time span exceeds the
   /// conflict window. Timestamp is the primary sort key.
   static int compareByTimestamp(IncidentTransition a, IncidentTransition b) {
-    // 1. timestamp — earlier wins (ascending).
+    // 1. timestamp - earlier wins (ascending).
     final tsA = a.timestamp.millisecondsSinceEpoch;
     final tsB = b.timestamp.millisecondsSinceEpoch;
     if (tsA != tsB) return tsA.compareTo(tsB);
 
-    // 2. priorityRank — higher wins (descending).
+    // 2. priorityRank - higher wins (descending).
     final prA = transitionTypeRank(a.toState);
     final prB = transitionTypeRank(b.toState);
     if (prA != prB) return prB - prA;
 
-    // 3. actorRoleRank — higher wins (descending).
+    // 3. actorRoleRank - higher wins (descending).
     final arA = actorRoleRank(a.actorRole);
     final arB = actorRoleRank(b.actorRole);
     if (arA != arB) return arB - arA;
 
-    // 4. actorId — lexicographic (ascending).
+    // 4. actorId - lexicographic (ascending).
     final aidCmp = a.actorId.compareTo(b.actorId);
     if (aidCmp != 0) return aidCmp;
 
-    // 5. transitionId — lexicographic (ascending).
+    // 5. transitionId - lexicographic (ascending).
     return a.id.compareTo(b.id);
   }
 

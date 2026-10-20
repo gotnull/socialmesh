@@ -102,7 +102,7 @@ void main() {
     });
   });
 
-  group('SettingsService — bottomTabOrder key', () {
+  group('SettingsService - bottomTabOrder key', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -141,7 +141,7 @@ void main() {
     });
   });
 
-  group('BottomTabOrderNotifier — behaviour', () {
+  group('BottomTabOrderNotifier - behaviour', () {
     // SharedPreferences' mock keeps its in-memory state across
     // `setMockInitialValues({})` calls because a previously-cached
     // singleton instance survives the call. To guarantee per-test
@@ -221,7 +221,7 @@ void main() {
     });
   });
 
-  group('BottomNavEditModeNotifier — behaviour', () {
+  group('BottomNavEditModeNotifier - behaviour', () {
     test('starts disabled and toggles via enter/exit', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -408,7 +408,7 @@ void main() {
       //
       // The banner is mounted INSIDE the body Stack (positioned
       // flush against the body's bottom edge) so its transparent
-      // top edge reveals real body content — that is the only
+      // top edge reveals real body content - that is the only
       // shape that produces a visible chip-row-style soft fade.
       // Mounting it in the bottomNavigationBar slot was the first
       // cut and did not fade (no body content behind the slot).
@@ -488,7 +488,7 @@ void main() {
         source.contains('buildDefaultDragHandles: false'),
         true,
         reason:
-            'Default drag handles must be off — the whole tab is the '
+            'Default drag handles must be off - the whole tab is the '
             'drag target via the custom delayed listener.',
       );
     });

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../l10n/l10n_extension.dart';
 import '../node_color.dart';
 import '../theme.dart';
@@ -61,7 +62,7 @@ class _RemoteAdminSelectorSheetState
   // Frozen display order (node numbers), captured once on first build so rows
   // stay put while the sheet is open. The list watches live mesh + presence
   // state and the sort key includes active status, so without a stable order it
-  // re-sorts on every inbound packet — a row could shift out from under the
+  // re-sorts on every inbound packet - a row could shift out from under the
   // user's finger between render and tap, selecting the wrong node.
   List<int>? _frozenOrder;
 
@@ -253,9 +254,8 @@ class _RemoteAdminSelectorSheetState
                 const Spacer(),
                 Text(
                   context.l10n.remoteAdminNodesAvailable(nodes.length),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ],
             ),

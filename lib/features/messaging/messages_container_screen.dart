@@ -3,9 +3,11 @@
 import 'dart:async';
 
 import '../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/transport.dart';
+
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
@@ -51,7 +53,7 @@ class _MessagesContainerScreenState
 
   // Set true while we drive the TabController programmatically (an
   // auto-switch to the unread sub-tab). Guards `_persistTabIndexIfChanged`
-  // so an auto-switch never overwrites the user's chosen default sub-tab —
+  // so an auto-switch never overwrites the user's chosen default sub-tab -
   // only user-driven swipes persist a new default.
   bool _suppressDefaultPersist = false;
 

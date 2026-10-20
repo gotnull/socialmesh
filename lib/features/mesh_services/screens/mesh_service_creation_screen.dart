@@ -45,7 +45,7 @@ const _minPollOptions = 2;
 /// Service creation screen for a canonical service capability.
 ///
 /// When [embedded] is `true` the screen strips its own scaffold and publish
-/// button, rendering only the form content — designed to live inside a
+/// button, rendering only the form content - designed to live inside a
 /// parent wizard's [PageView].
 class MeshServiceCreationScreen extends ConsumerStatefulWidget {
   final MeshServiceType canonicalType;

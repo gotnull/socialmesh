@@ -134,7 +134,7 @@ void main() {
 
     test('safeMoveAndRotate skips non-finite inputs', () {
       final controller = MapController();
-      // Should not throw — we only assert it does not call into flutter_map
+      // Should not throw - we only assert it does not call into flutter_map
       // with bad inputs. A unit-level check on the guard is sufficient here;
       // integration-level behavior is covered by widget tests.
       expect(() => controller.safeMoveAndRotate(null, 10, 0), returnsNormally);
@@ -167,9 +167,9 @@ void main() {
     );
 
     Future<List<TileUpdateEvent>> through(List<TileUpdateEvent> events) =>
-        Stream.fromIterable(
-          events,
-        ).transform(finiteCameraTileUpdateTransformer).toList();
+        Stream.fromIterable(events)
+            .transform(finiteCameraTileUpdateTransformer)
+            .toList();
 
     test('passes events with a finite camera pose', () async {
       final out = await through([moveEvent(camera())]);

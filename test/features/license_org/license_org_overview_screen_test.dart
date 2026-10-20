@@ -269,7 +269,7 @@ void main() {
       // (which renders a StatusBanner.error in tests without
       // Firebase init) the first owner card is ~600px tall and the
       // default 800x600 test viewport leaves the second card
-      // unbuilt — `find.byType(LicenseOrgOverviewCard)` then sees
+      // unbuilt - `find.byType(LicenseOrgOverviewCard)` then sees
       // only 1 widget and the ordering assertion can never reach
       // it. A taller viewport mounts both cards directly without
       // forcing scroll. Restored after the test in tearDown.

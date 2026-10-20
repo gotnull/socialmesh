@@ -294,7 +294,7 @@ void main() {
     // D-Q4: "Sort" and "Unread" entries dropped from this guard
     // because the sort-mode chip selector now legitimately surfaces
     // them on the channels screen. "Reorder", "Pin Channel", and
-    // "Mark as read" stay banned — they were never D37-B-A surfaces
+    // "Mark as read" stay banned - they were never D37-B-A surfaces
     // and remain deferred.
     for (final banned in const ['Reorder', 'Pin Channel', 'Mark as read']) {
       expect(

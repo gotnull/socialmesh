@@ -78,11 +78,11 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen>
         // `currentUserLicenseOrgIdsProvider` and
         // `currentUserSeatAllocationsProvider`, but the entitlement
         // docs themselves only land in the local cache via a callable
-        // refresh — without this kick the user sees price labels
+        // refresh - without this kick the user sees price labels
         // until the next launch. Failure is swallowed by the helper
         // (it never throws), so error-pathing the snackbar isn't
         // needed. Idempotent replays (already-a-member retries) hit
-        // the same refresh — cheap and keeps the cache hot in case
+        // the same refresh - cheap and keeps the cache hot in case
         // the user signed in on a fresh device.
         unawaited(refreshExternalEntitlements(ref));
         // Idempotent replay: tap on a stranger's link by an existing

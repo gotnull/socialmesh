@@ -15,7 +15,7 @@ import '../providers/node_groups_provider.dart';
 // Single-select node-group filter shared by the Nodes tab and the NodeDex
 // list. Lives under nodedex/ (groups are NodeDex-native, and the nodes
 // feature already imports nodedex). Non-destructive (UI-only) and orthogonal
-// to the presence / role filters — callers apply each in series. Membership
+// to the presence / role filters - callers apply each in series. Membership
 // lives in nodedex.db (see nodeGroupsProvider).
 
 /// Sentinel that represents "no group filter applied".

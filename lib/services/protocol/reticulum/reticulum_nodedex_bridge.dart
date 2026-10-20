@@ -3,14 +3,16 @@
 
 import 'reticulum_fragment_event.dart';
 
-typedef ReticulumEncounterRecorder =
-    void Function(int nodeId, DateTime timestamp);
+typedef ReticulumEncounterRecorder = void Function(
+  int nodeId,
+  DateTime timestamp,
+);
 
 /// Idempotency-guarded NodeDex encounter recorder for port-76 fragment
 /// activity.
 ///
 /// Mirrors the dedup window used by the existing message-driven NodeDex
-/// hook — a single inbound fragment can be observed multiple times via
+/// hook - a single inbound fragment can be observed multiple times via
 /// rebroadcast routing, and we don't want each replay to count as a
 /// separate encounter.
 class ReticulumNodeDexBridge {
@@ -47,7 +49,7 @@ class ReticulumNodeDexBridge {
     recordEncounter(event.fromNode, eventTime);
   }
 
-  /// Pure key derivation — exposed for tests.
+  /// Pure key derivation - exposed for tests.
   static String keyForEvent(ReticulumFragmentEvent event) {
     if (event.packetId != 0) {
       return 'pid:${event.fromNode}:${event.packetId}';

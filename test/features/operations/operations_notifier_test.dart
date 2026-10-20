@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Integration coverage for OperationsNotifier — the slice of the feature
+// Integration coverage for OperationsNotifier - the slice of the feature
 // that wires repository + engine + state into a Riverpod provider.
 //
 // Tests use the public ingest() API to drive events directly. NodeDex and
@@ -218,7 +218,7 @@ void main() {
   });
 
   test(
-    'completion is idempotent — second completion ingest is a no-op',
+    'completion is idempotent - second completion ingest is a no-op',
     () async {
       final h = await makeContainer();
       addTearDown(() async {
@@ -297,7 +297,7 @@ void main() {
         .claimedAt;
     expect(firstClaim, isNotNull);
 
-    // Second call is a no-op — claimedAt does not move.
+    // Second call is a no-op - claimedAt does not move.
     await h.container
         .read(operationsProvider.notifier)
         .markRewardClaimed(OperationIds.firstContact);

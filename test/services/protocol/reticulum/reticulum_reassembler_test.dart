@@ -9,7 +9,7 @@ import 'package:socialmesh/services/protocol/reticulum/reticulum_frame.dart';
 import 'package:socialmesh/services/protocol/reticulum/reticulum_reassembler.dart';
 
 /// Build a fragment-event whose payload is `[index, position, ...body]`.
-/// `position` is a signed int8 — pass it directly; the helper handles
+/// `position` is a signed int8 - pass it directly; the helper handles
 /// the byte-encoding.
 ReticulumFragmentEvent _frag({
   required int fromNode,

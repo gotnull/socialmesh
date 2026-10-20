@@ -331,52 +331,49 @@ void main() {
       expect(presence.isBackNearby, isFalse);
     });
 
-    test(
-      'isBackNearby requires previous encounter history to detect reappearance',
-      () {
-        // This tests that without encounter history, isBackNearby is false
-        // The actual reappearance detection happens in _compute when:
-        // 1. confidence == active
-        // 2. previousEncounter != null
-        // 3. _backNearbyShown does not contain the node
-        // 4. now.difference(previousEncounter.lastSeen).inHours > 48
+    test('isBackNearby requires previous encounter history to detect reappearance', () {
+      // This tests that without encounter history, isBackNearby is false
+      // The actual reappearance detection happens in _compute when:
+      // 1. confidence == active
+      // 2. previousEncounter != null
+      // 3. _backNearbyShown does not contain the node
+      // 4. now.difference(previousEncounter.lastSeen).inHours > 48
 
-        var now = DateTime(2026, 1, 24, 12, 0, 0);
-        final container = ProviderContainer(
-          overrides: [
-            nodesProvider.overrideWith(_TestNodesNotifier.new),
-            iftttServiceProvider.overrideWithValue(IftttService()),
-            automationEngineProvider.overrideWithValue(_noopAutomationEngine()),
-            presenceClockProvider.overrideWithValue(() => now),
-          ],
-        );
-        addTearDown(container.dispose);
+      var now = DateTime(2026, 1, 24, 12, 0, 0);
+      final container = ProviderContainer(
+        overrides: [
+          nodesProvider.overrideWith(_TestNodesNotifier.new),
+          iftttServiceProvider.overrideWithValue(IftttService()),
+          automationEngineProvider.overrideWithValue(_noopAutomationEngine()),
+          presenceClockProvider.overrideWithValue(() => now),
+        ],
+      );
+      addTearDown(container.dispose);
 
-        final nodesNotifier =
-            container.read(nodesProvider.notifier) as _TestNodesNotifier;
+      final nodesNotifier =
+          container.read(nodesProvider.notifier) as _TestNodesNotifier;
 
-        // Node that was last heard 50 hours ago but has no prior encounter record
-        final lastHeard = now.subtract(const Duration(hours: 50));
-        nodesNotifier.setNodes({1: MeshNode(nodeNum: 1, lastHeard: lastHeard)});
-        container.read(presenceMapProvider.notifier).recomputeNow();
+      // Node that was last heard 50 hours ago but has no prior encounter record
+      final lastHeard = now.subtract(const Duration(hours: 50));
+      nodesNotifier.setNodes({1: MeshNode(nodeNum: 1, lastHeard: lastHeard)});
+      container.read(presenceMapProvider.notifier).recomputeNow();
 
-        // Node is unknown/stale
-        expect(
-          container.read(presenceMapProvider)[1]!.confidence,
-          isNot(PresenceConfidence.active),
-        );
+      // Node is unknown/stale
+      expect(
+        container.read(presenceMapProvider)[1]!.confidence,
+        isNot(PresenceConfidence.active),
+      );
 
-        // Now node becomes active
-        nodesNotifier.setNodes({1: MeshNode(nodeNum: 1, lastHeard: now)});
-        container.read(presenceMapProvider.notifier).recomputeNow();
+      // Now node becomes active
+      nodesNotifier.setNodes({1: MeshNode(nodeNum: 1, lastHeard: now)});
+      container.read(presenceMapProvider.notifier).recomputeNow();
 
-        final presence = container.read(presenceMapProvider)[1]!;
-        expect(presence.confidence, PresenceConfidence.active);
+      final presence = container.read(presenceMapProvider)[1]!;
+      expect(presence.confidence, PresenceConfidence.active);
 
-        // Without prior encounter history, isBackNearby should be false
-        expect(presence.isBackNearby, isFalse);
-      },
-    );
+      // Without prior encounter history, isBackNearby should be false
+      expect(presence.isBackNearby, isFalse);
+    });
   });
 
   group('encounter familiarity', () {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Detail screen — self vs remote presentation regression tests.
+// NodeDex Detail screen - self vs remote presentation regression tests.
 //
 // Pins the self-node presentation contract:
 //   1. Self node renders the "This Device" card (no archetype framing).
@@ -11,7 +11,7 @@
 //   4. Remote node still renders archetype/trait copy and the standard
 //      Encounters/Messages discovery rows.
 //
-// Backed by nodeDexIsSelfProvider as the single authority — never compare
+// Backed by nodeDexIsSelfProvider as the single authority - never compare
 // nodeNum to myNodeNum inline. Provider-level coverage lives in
 // nodedex_provider_test.dart.
 
@@ -160,7 +160,7 @@ Widget _wrap({
       // Static map → no async storage init, no periodic timers, screen sees
       // the entry on first build instead of racing against the async load.
       nodeDexProvider.overrideWith(() => _StaticNodeDexNotifier(entries)),
-      // The activity timeline provider hits SQL via nodeDexStoreProvider —
+      // The activity timeline provider hits SQL via nodeDexStoreProvider -
       // override to a synchronous empty list so no sqflite timer leaks past
       // tearDown. The timeline UI is not under test here.
       nodeActivityTimelineProvider(
@@ -205,7 +205,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
     NodeDexNotifier.encounterCooldownOverride = Duration.zero;
     // Long enough that the periodic co-seen flush timer never fires during
-    // the test — leaving it on a 50ms tick wedges the pending-timer guard
+    // the test - leaving it on a 50ms tick wedges the pending-timer guard
     // at tearDown.
     NodeDexNotifier.coSeenFlushIntervalOverride = const Duration(hours: 1);
   });
@@ -237,7 +237,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
   }
 
-  group('NodeDexDetailScreen — self mode', () {
+  group('NodeDexDetailScreen - self mode', () {
     testWidgets(
       'renders the "This Device" card and not the trait/Ghost framing',
       (tester) async {
@@ -248,7 +248,7 @@ void main() {
         );
         await _settle(tester);
 
-        // SectionTitle uppercases its title — assert against the rendered
+        // SectionTitle uppercases its title - assert against the rendered
         // uppercased form rather than the raw ARB value.
         expect(
           find.text(_l10n.nodedexSelfDeviceTitle.toUpperCase()),
@@ -308,7 +308,7 @@ void main() {
     });
   });
 
-  group('NodeDexDetailScreen — remote mode (regression)', () {
+  group('NodeDexDetailScreen - remote mode (regression)', () {
     testWidgets('still renders Encounters and Messages discovery rows', (
       tester,
     ) async {
@@ -368,7 +368,7 @@ void main() {
   // fields set, so the rows must never appear there.
   // ===========================================================================
 
-  group('NodeDexDetailScreen — connection-identity rows', () {
+  group('NodeDexDetailScreen - connection-identity rows', () {
     testWidgets(
       'self mode renders First used + Last used rows when fields are set',
       (tester) async {

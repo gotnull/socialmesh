@@ -26,7 +26,7 @@ void main() {
     });
 
     test('rolls up rather than printing a full unit of the smaller one', () {
-      // 1048570 B is 1023.99 KB — rounding to one decimal would otherwise
+      // 1048570 B is 1023.99 KB - rounding to one decimal would otherwise
       // print "1024.0 KB".
       expect(formatByteSize(1048570), '1.0 MB');
     });

@@ -4,7 +4,7 @@
 // Single Mesh-canvas viewer screen.
 //
 // Scope: one MESH canvas. The Local Device Canvas does NOT use this
-// screen — it renders inline inside the overview's Local tab so the
+// screen - it renders inline inside the overview's Local tab so the
 // IA never confuses Local sandbox state with channel-bound canvas
 // state (Mesh-only screens like this one keep the app bar title set
 // to the CHANNEL name, never "Local Device Canvas").
@@ -12,7 +12,7 @@
 // Layout contract:
 //
 //   1) App bar title = canvas.name (the channel name). No "Local
-//      Device Canvas" framing here — this screen is mesh-only.
+//      Device Canvas" framing here - this screen is mesh-only.
 //   2) The outer CustomScrollView MUST be non-scrollable so a drag
 //      that escapes the InteractiveViewer cannot rubber-band the
 //      body. Passing [NeverScrollableScrollPhysics] disables that

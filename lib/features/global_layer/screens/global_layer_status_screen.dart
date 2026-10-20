@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Global Layer Status Screen — always-accessible dashboard for the
+/// Global Layer Status Screen - always-accessible dashboard for the
 /// Global Layer (MQTT) connection.
 ///
 /// Shows:
@@ -413,9 +413,8 @@ class _ConnectionStateHero extends StatelessWidget {
             // Status description
             Text(
               connectionState.displayDescription,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -575,9 +574,8 @@ class _InfoRow extends StatelessWidget {
           width: 110,
           child: Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.textTertiary),
           ),
         ),
         Expanded(
@@ -899,9 +897,7 @@ class _HealthMetricsCard extends StatelessWidget {
                           metrics.lastError!.type.displayLabel,
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
-                                color: const Color(
-                                  0xFFEF4444,
-                                ).withValues(alpha: 0.7),
+                                color: AppTheme.errorRed.withValues(alpha: 0.7),
                               ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -938,10 +934,8 @@ class _HealthBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -969,10 +963,8 @@ class _MetricTile extends StatelessWidget {
           children: [
             Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: context.textTertiary,
-                fontSize: 9,
-              ),
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: context.textTertiary, fontSize: 9),
             ),
             Text(
               value,
@@ -1110,9 +1102,8 @@ class _PrivacyToggleRow extends StatelessWidget {
               ),
               Text(
                 description,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: context.textTertiary),
               ),
             ],
           ),
@@ -1211,18 +1202,16 @@ class _TransitionTile extends StatelessWidget {
                   if (transition.reason != null)
                     Text(
                       transition.reason!,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: context.textTertiary,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: context.textTertiary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   if (transition.errorMessage != null)
                     Text(
                       transition.errorMessage!,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppTheme.errorRed,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: AppTheme.errorRed),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1233,9 +1222,8 @@ class _TransitionTile extends StatelessWidget {
             // Timestamp
             Text(
               _formatAge(transition.age, context.l10n),
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: context.textTertiary),
             ),
           ],
         ),

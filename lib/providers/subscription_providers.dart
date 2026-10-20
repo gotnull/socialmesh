@@ -49,8 +49,8 @@ final purchaseStateProvider =
 /// Why the merge happens HERE instead of just in the derived providers
 /// (`hasFeatureProvider`, `hasPurchasedProvider`, `effectiveEntitlementsProvider`):
 /// the codebase has 30+ widget call sites that read the model directly
-/// — `purchaseState.hasFeature(feature)` / `purchaseState.hasPurchased(productId)`
-/// — bypassing the derived providers. Merging at the source ensures every
+/// - `purchaseState.hasFeature(feature)` / `purchaseState.hasPurchased(productId)`
+/// - bypassing the derived providers. Merging at the source ensures every
 /// consumer (provider-based AND direct-method-based) sees the same
 /// unified entitlement set without sweeping every call site.
 ///
@@ -112,7 +112,7 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
         state = _computeMerged();
       });
 
-      // Initial read of external — may be AsyncLoading at first call.
+      // Initial read of external - may be AsyncLoading at first call.
       _external = ref
           .read(externalEntitlementsProvider)
           .maybeWhen(data: (set) => set, orElse: () => const <String>{});
@@ -226,7 +226,7 @@ bool _setEquals<T>(Set<T> a, Set<T> b) {
 /// Exposed for testing so the merge contract can be pinned without
 /// booting the full Notifier + service stack. Both
 /// [PurchaseStateNotifier._computeMerged] and the test suite call this
-/// directly — keeps the two in lockstep.
+/// directly - keeps the two in lockstep.
 @visibleForTesting
 PurchaseState mergePurchaseStateForTest(
   PurchaseState rc,
@@ -250,7 +250,7 @@ PurchaseState mergePurchaseStateForTest(
 ///
 /// UI gates depend on this provider directly. Adding a new entitlement
 /// source means extending the merge in [effectiveEntitlementsProvider]
-/// — no changes are needed here.
+/// - no changes are needed here.
 final hasFeatureProvider = Provider.family<bool, PremiumFeature>((
   ref,
   feature,
@@ -325,7 +325,7 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
 
   // Capture notifier references up front. WidgetRef becomes invalid when the
   // calling widget unmounts (e.g. sheet dismissed mid-purchase), but the
-  // underlying notifiers live in the ProviderContainer and survive — so the
+  // underlying notifiers live in the ProviderContainer and survive - so the
   // finally block can always clear loading state.
   final SubscriptionLoadingNotifier loadingNotifier;
   final SubscriptionErrorNotifier errorNotifier;
@@ -388,7 +388,7 @@ Future<bool> restorePurchases(WidgetRef ref) async {
   );
   AppLogging.subscriptions('[RestorePurchases] Provider function called');
 
-  // Capture notifier references up front — see purchaseProduct for rationale.
+  // Capture notifier references up front - see purchaseProduct for rationale.
   final SubscriptionLoadingNotifier loadingNotifier;
   final SubscriptionErrorNotifier errorNotifier;
   try {
@@ -423,7 +423,7 @@ Future<bool> restorePurchases(WidgetRef ref) async {
     AppLogging.subscriptions('[RestorePurchases] Restore completed');
 
     // Mirror restored purchases into Firestore so the admin panel and the
-    // cloud-sync entitlement service see them. Skipped when signed out —
+    // cloud-sync entitlement service see them. Skipped when signed out -
     // there's no Firestore document to mirror into. Non-fatal: a failure
     // here MUST NOT revoke RC-backed access (RC is the source of truth).
     // The result is logged with a stable MIRROR_SYNC_FAILED prefix on
@@ -529,8 +529,8 @@ Future<bool> restorePurchases(WidgetRef ref) async {
 ///
 /// The mirror is intentionally a soft dependency: a failure here MUST NOT
 /// revoke RC-backed access. Callers ignore [success] for the purposes of
-/// reporting restore success to the user — RevenueCat is the source of
-/// truth — but the result is logged with a stable `MIRROR_SYNC_FAILED`
+/// reporting restore success to the user - RevenueCat is the source of
+/// truth - but the result is logged with a stable `MIRROR_SYNC_FAILED`
 /// prefix so failures are observable in logs and Crashlytics, and tests
 /// can assert behavior deterministically.
 class FirestoreMirrorSyncResult {
@@ -629,7 +629,7 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
       }
 
       // Mirror purchases into Firestore. See _syncPurchasesToFirestoreSafe
-      // for failure semantics — failures are observable but never fatal.
+      // for failure semantics - failures are observable but never fatal.
       await _syncPurchasesToFirestoreSafe('SyncRevenueCat');
 
       AppLogging.subscriptions('[SyncRevenueCat] Sync complete');

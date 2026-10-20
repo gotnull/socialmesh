@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Progressive Disclosure — threshold-based visibility for field journal elements.
+// Progressive Disclosure - threshold-based visibility for field journal elements.
 //
 // Controls what information is revealed about a node based on how
 // much observable history has accumulated. New nodes start sparse:
 // only a sigil and basic metadata. As encounters, time, and data
 // accumulate, additional layers are progressively unlocked.
 //
-// This creates a sense of "earned knowledge" — patina is not
+// This creates a sense of "earned knowledge" - patina is not
 // decoration, it is the visible result of genuine observation.
 //
 // Disclosure tiers:
-//   Tier 0 (Trace)    — Sigil + name + hex ID only
-//   Tier 1 (Noted)    — Primary trait badge visible
-//   Tier 2 (Logged)   — Trait evidence + field note visible
-//   Tier 3 (Inked)    — Full trait list + patina stamp visible
-//   Tier 4 (Etched)   — Identity overlay at full density
+//   Tier 0 (Trace)    - Sigil + name + hex ID only
+//   Tier 1 (Noted)    - Primary trait badge visible
+//   Tier 2 (Logged)   - Trait evidence + field note visible
+//   Tier 3 (Inked)    - Full trait list + patina stamp visible
+//   Tier 4 (Etched)   - Identity overlay at full density
 //
 // All methods are pure functions. No state, no side effects.
 // The same inputs always produce the same disclosure level.
@@ -53,7 +53,7 @@ enum DisclosureTier {
 /// detail screen and list tile. The UI reads these flags to decide
 /// what to render, keeping disclosure logic out of widget code.
 class DisclosureState {
-  /// Always true — the sigil is always visible.
+  /// Always true - the sigil is always visible.
   final bool showSigil;
 
   /// Whether the primary trait badge is visible.
@@ -201,27 +201,27 @@ class ProgressiveDisclosure {
     final ageDays = ageHours ~/ 24;
     final encounters = entry.encounterCount;
 
-    // Tier 4: Etched — deep history
+    // Tier 4: Etched - deep history
     if (encounters >= _tier4MinEncounters && ageDays >= _tier4MinAgeDays) {
       return DisclosureTier.etched;
     }
 
-    // Tier 3: Inked — substantial history
+    // Tier 3: Inked - substantial history
     if (encounters >= _tier3MinEncounters && ageDays >= _tier3MinAgeDays) {
       return DisclosureTier.inked;
     }
 
-    // Tier 2: Logged — moderate history
+    // Tier 2: Logged - moderate history
     if (encounters >= _tier2MinEncounters && ageDays >= _tier2MinAgeDays) {
       return DisclosureTier.logged;
     }
 
-    // Tier 1: Noted — minimal viable history
+    // Tier 1: Noted - minimal viable history
     if (encounters >= _tier1MinEncounters && ageHours >= _tier1MinAgeHours) {
       return DisclosureTier.noted;
     }
 
-    // Tier 0: Trace — just discovered
+    // Tier 0: Trace - just discovered
     return DisclosureTier.trace;
   }
 

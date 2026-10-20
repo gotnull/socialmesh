@@ -5,7 +5,7 @@
 ///
 /// Each test writes a record directly to the store, then calls
 /// `engine.restore()` and asserts the post-restore state. The engine
-/// never "resurrects" a session — active/stale/draining are always
+/// never "resurrects" a session - active/stale/draining are always
 /// downgraded to `stale`, `opening` is abandoned to `failed`, terminal
 /// rows are untouched, and expired rows become `failed`.
 library;

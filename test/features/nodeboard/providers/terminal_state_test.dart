@@ -97,7 +97,7 @@ void main() {
     test('GUESTBOOK → OpenGuestbookEffect (screen resolves section)', () {
       final effect = _dispatch(notifier, 'GUESTBOOK');
       expect(effect, isA<OpenGuestbookEffect>());
-      // Does NOT mutate section/screen state inline — that's the
+      // Does NOT mutate section/screen state inline - that's the
       // screen's job after resolving the guestbook section key against
       // provider data.
       final state = container.read(terminalStateProvider);
@@ -108,7 +108,7 @@ void main() {
       final effect = _dispatch(notifier, 'POST');
       expect(effect, isA<NoEffect>());
       final buf = container.read(terminalStateProvider).outputBuffer;
-      // Voice layer — neutral tone defaults to "Open a SECTION first".
+      // Voice layer - neutral tone defaults to "Open a SECTION first".
       // Assert behaviour (an error line mentioning "section" was emitted)
       // rather than an exact string so tone variants don't break this.
       expect(
@@ -173,7 +173,7 @@ void main() {
       expect(container.read(terminalStateProvider).currentScreen, before);
       final buf = container.read(terminalStateProvider).outputBuffer;
       // Voice echoes the raw command + a HELP hint. Phrasing varies per
-      // tone — just assert the raw command comes through and a HELP hint
+      // tone - just assert the raw command comes through and a HELP hint
       // exists somewhere on the buffer.
       expect(buf.any((l) => l.text.contains('FLARG')), isTrue);
       expect(buf.any((l) => l.text.toUpperCase().contains('HELP')), isTrue);
@@ -255,7 +255,7 @@ void main() {
         // Typed input goes through parseTerminalCommand → executeCommand.
         final typed = _dispatch(notifier, 'OPEN 2');
         // Chip taps dispatch the chip's command through the exact same
-        // call site in the screen — simulate by calling the same path.
+        // call site in the screen - simulate by calling the same path.
         final chip = _dispatch(notifier, 'OPEN 2');
         expect(typed.runtimeType, chip.runtimeType);
         expect(

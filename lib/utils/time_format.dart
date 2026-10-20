@@ -21,7 +21,7 @@ import '../services/accessibility_preferences_service.dart';
 /// [monthDay], [numericDate], or the date+time combos rather than constructing
 /// raw [DateFormat] patterns, so every surface stays consistent.
 ///
-/// Usage in widget build methods (preferred — reactive to setting changes):
+/// Usage in widget build methods (preferred - reactive to setting changes):
 /// ```dart
 /// final fmt = AppTimeFormat.timeOnly(context);
 /// Text(fmt.format(timestamp));
@@ -85,7 +85,7 @@ abstract final class AppTimeFormat {
   static String _localeName(BuildContext context) =>
       Localizations.localeOf(context).toString();
 
-  /// Full date with month name and year, ordered per the user's preference —
+  /// Full date with month name and year, ordered per the user's preference -
   /// e.g. "Jan 3, 2026", "3 Jan 2026", or "2026 Jan 3". For
   /// [DateFormatMode.system] the order follows the active locale.
   static String fullDatePattern(BuildContext context) {
@@ -101,7 +101,7 @@ abstract final class AppTimeFormat {
     }
   }
 
-  /// Month name and day without year, ordered per preference —
+  /// Month name and day without year, ordered per preference -
   /// e.g. "Jan 3" or "3 Jan".
   static String monthDayPattern(BuildContext context) {
     switch (dateMode()) {
@@ -115,7 +115,7 @@ abstract final class AppTimeFormat {
     }
   }
 
-  /// All-numeric date, ordered per preference —
+  /// All-numeric date, ordered per preference -
   /// e.g. "01/03/2026", "03/01/2026", or "2026-01-03".
   static String numericDatePattern(BuildContext context) {
     switch (dateMode()) {
@@ -142,7 +142,7 @@ abstract final class AppTimeFormat {
   static DateFormat numericDate(BuildContext context) =>
       DateFormat(numericDatePattern(context), _localeName(context));
 
-  /// Weekday name + date, ordered per preference —
+  /// Weekday name + date, ordered per preference -
   /// e.g. "Friday, Jan 3, 2026" or "Friday, 3 Jan 2026". Pass
   /// `withYear: false` for a weekday + month/day label without the year.
   static DateFormat weekdayDate(BuildContext context, {bool withYear = true}) {
@@ -156,7 +156,7 @@ abstract final class AppTimeFormat {
   // Time-only patterns
   // ---------------------------------------------------------------------------
 
-  /// Time without seconds — e.g. "2:30 PM" or "14:30".
+  /// Time without seconds - e.g. "2:30 PM" or "14:30".
   static DateFormat timeOnly(BuildContext context) {
     return is24Hour(context) ? DateFormat('HH:mm') : DateFormat('h:mm a');
   }
@@ -168,7 +168,7 @@ abstract final class AppTimeFormat {
         : DateFormat('h:mm a');
   }
 
-  /// Time with seconds — e.g. "2:30:15 PM" or "14:30:15".
+  /// Time with seconds - e.g. "2:30:15 PM" or "14:30:15".
   static DateFormat timeWithSeconds(BuildContext context) {
     return is24Hour(context) ? DateFormat('HH:mm:ss') : DateFormat('h:mm:ss a');
   }
@@ -205,7 +205,7 @@ abstract final class AppTimeFormat {
     );
   }
 
-  /// Full date + time with bullet separator —
+  /// Full date + time with bullet separator -
   /// e.g. "Jan 5, 2025 • 2:30 PM" or "Jan 5, 2025 • 14:30".
   static DateFormat fullDateBulletTime(BuildContext context) {
     return DateFormat(
@@ -237,12 +237,12 @@ abstract final class AppTimeFormat {
   // Raw pattern helpers
   // ---------------------------------------------------------------------------
 
-  /// Returns just the time pattern string — "HH:mm" or "h:mm a".
+  /// Returns just the time pattern string - "HH:mm" or "h:mm a".
   static String timePattern(BuildContext context) {
     return is24Hour(context) ? 'HH:mm' : 'h:mm a';
   }
 
-  /// Returns the time-with-seconds pattern — "HH:mm:ss" or "h:mm:ss a".
+  /// Returns the time-with-seconds pattern - "HH:mm:ss" or "h:mm:ss a".
   static String timeWithSecondsPattern(BuildContext context) {
     return is24Hour(context) ? 'HH:mm:ss' : 'h:mm:ss a';
   }

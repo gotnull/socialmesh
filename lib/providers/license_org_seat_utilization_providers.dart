@@ -3,7 +3,7 @@
 //
 // Provider for the per-org Seat Usage section on the License Org
 // Overview card. Wraps [LicenseOrgSeatService.getSeatUtilization]
-// in a Riverpod 3.x AsyncNotifier.family — one notifier instance per
+// in a Riverpod 3.x AsyncNotifier.family - one notifier instance per
 // orgId, keyed for cache reuse across rebuilds.
 //
 // Invalidated by the revoke / reinstate flows on success (so the

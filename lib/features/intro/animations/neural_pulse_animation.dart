@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:socialmesh/core/theme.dart';
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -116,9 +117,8 @@ class _NeuralPulsePainter extends CustomPainter {
               Offset(from.x, from.y),
               Offset(to.x, to.y),
               Paint()
-                ..color = const Color(
-                  0xFF304060,
-                ).withValues(alpha: 0.1 + signalStrength * 0.2)
+                ..color = const Color(0xFF304060)
+                    .withValues(alpha: 0.1 + signalStrength * 0.2)
                 ..strokeWidth = 0.5,
             );
 
@@ -128,9 +128,8 @@ class _NeuralPulsePainter extends CustomPainter {
                 Offset(pulseX, pulseY),
                 2 + signalStrength * 2,
                 Paint()
-                  ..color = const Color(
-                    0xFF60a0ff,
-                  ).withValues(alpha: signalStrength * 0.6),
+                  ..color = const Color(0xFF60a0ff)
+                      .withValues(alpha: signalStrength * 0.6),
               );
             }
           }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Radio Compatibility Helper — pure derivation of a NodeDex entry's
+// Radio Compatibility Helper - pure derivation of a NodeDex entry's
 // reachability status from local LoRa config + persisted observation
 // metadata + live MeshNode fallback.
 //
@@ -35,7 +35,7 @@ enum NodeDexReachabilityStatus {
   differentFrequencyOffset,
 
   /// Latest observation arrived via MQTT, or with hops > 0. Describes the
-  /// latest observation, not a permanent reachability claim — the node
+  /// latest observation, not a permanent reachability claim - the node
   /// may still be directly reachable later, or may have been before.
   indirectOrMqttObservation,
 
@@ -88,12 +88,12 @@ class NodeDexRadioCompatibilitySummary {
   /// observed, in Hz. Null for legacy entries or zero offset.
   final double? lastObservedFrequencyOffset;
 
-  /// Effective observation source — either the persisted value on the
+  /// Effective observation source - either the persisted value on the
   /// entry or the live-MeshNode fallback. Null only when neither is
   /// available.
   final ObservationSource? observationSource;
 
-  /// Effective hop count — either persisted on the entry or from the
+  /// Effective hop count - either persisted on the entry or from the
   /// live MeshNode. Null when neither is available.
   final int? hopsAway;
 
@@ -132,7 +132,7 @@ const double _kFrequencyOffsetEpsilonHz = 1.0;
 /// 4. Resolve `effectiveHops` = `entry.lastHopsAway ?? liveFallback?.hopCount`.
 /// 5. If `effectiveSource == mqtt` OR `effectiveHops != null && effectiveHops > 0`
 ///    → [NodeDexReachabilityStatus.indirectOrMqttObservation]. This
-///    short-circuits even if presets match — the node may still be
+///    short-circuits even if presets match - the node may still be
 ///    reachable directly later, but the latest observation says "indirect".
 /// 6. If `entry.lastObservedOnPreset == null` → [NodeDexReachabilityStatus.unknown].
 /// 7. If `entry.lastObservedOnPreset != localConfig.modemPreset.value`

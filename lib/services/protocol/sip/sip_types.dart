@@ -61,7 +61,7 @@ enum SipMessageType {
     return null;
   }
 
-  /// SIP v0.2 handshake message types — the five payloads that carry
+  /// SIP v0.2 handshake message types - the five payloads that carry
   /// `target_node_id` at offset 0 and require the strict per-handler
   /// target check (see `docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md` §5.2).
   /// Forward-compat: this set is closed; an opcode in
@@ -82,7 +82,7 @@ enum SipMessageType {
 
 /// True if [code] is a handshake opcode the current build knows how
 /// to decode. Anything in the handshake range (0x13..0x17) that is
-/// not on this list MUST be rejected at the codec layer — the
+/// not on this list MUST be rejected at the codec layer - the
 /// handshake surface is closed by default to forward-compat
 /// surprises and corrupted frames.
 bool isKnownHandshakeOpcode(int code) {
@@ -195,7 +195,7 @@ abstract final class SipFeatureBits {
   /// inside an existing accepted SIP DM session. Builds without
   /// this bit drop unknown 0x46 frames silently. Senders MUST gate
   /// `dmPlay` transmission on the peer advertising this bit. The
-  /// game catalogue is local-only — adding a new game does not
+  /// game catalogue is local-only - adding a new game does not
   /// bump this bit; an unsupported `gameType` value is rendered as
   /// a safe unsupported fallback by the receiver.
   static const int dmPlayV1 = 1 << 12;
@@ -203,7 +203,7 @@ abstract final class SipFeatureBits {
   /// SIP Signal v1 musical-phrase + Morse signal frames
   /// (DM_SIGNAL / 0x47) supported. Carries a compact binary phrase
   /// or Morse envelope; the receiver synthesizes the actual audio
-  /// locally — NO audio samples are ever placed on the wire.
+  /// locally - NO audio samples are ever placed on the wire.
   /// Builds without this bit drop unknown 0x47 frames silently.
   /// Senders MUST gate `dmSignal` transmission on the peer
   /// advertising this bit.

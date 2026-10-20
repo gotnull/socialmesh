@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — immersive compass calibration overlay
+// lint-allow: scaffold - immersive compass calibration overlay
 import 'package:socialmesh/core/theme.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -246,9 +247,8 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                         borderRadius: BorderRadius.circular(AppTheme.radius8),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(
-                              0xFF00E5FF,
-                            ).withValues(alpha: 0.3),
+                            color: const Color(0xFF00E5FF)
+                                .withValues(alpha: 0.3),
                             blurRadius: 20,
                             spreadRadius: 2,
                           ),

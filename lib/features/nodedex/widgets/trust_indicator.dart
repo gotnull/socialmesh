@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 
 import 'package:flutter/material.dart';
 
@@ -10,13 +10,13 @@ import '../services/trust_score.dart';
 
 /// Size variants for the trust indicator.
 enum TrustIndicatorSize {
-  /// Dot only — 10px colored circle. For avatar overlays.
+  /// Dot only - 10px colored circle. For avatar overlays.
   dot,
 
-  /// Compact pill — icon + label. For list tile badges.
+  /// Compact pill - icon + label. For list tile badges.
   compact,
 
-  /// Standard pill — icon + label + description. For detail screens.
+  /// Standard pill - icon + label + description. For detail screens.
   standard,
 }
 
@@ -24,7 +24,7 @@ enum TrustIndicatorSize {
 ///
 /// Renders as a colored dot, compact pill, or expanded badge
 /// depending on the [size] parameter. The trust level determines
-/// the color and label — see [TrustLevel] for the color mapping.
+/// the color and label - see [TrustLevel] for the color mapping.
 ///
 /// This indicator shows *computed* trust, not user-assigned tags.
 /// It must always be visually distinct from [SocialTagBadge].

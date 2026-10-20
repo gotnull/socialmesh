@@ -10,7 +10,7 @@ import 'package:socialmesh/utils/presence_utils.dart';
 // Pins the user-facing copy contract for the 10-60 minute band
 // (PresenceConfidence.stale). The historical label was "Inactive", which
 // users read as "offline / dead" even when the node was heard only
-// minutes ago. The new label is "Quiet" — same threshold, softer word.
+// minutes ago. The new label is "Quiet" - same threshold, softer word.
 //
 // Reported via user feedback on v1.40.0 (178): two nodes heard 17 min
 // and 46 min before the report anchor were grouped under "Inactive",

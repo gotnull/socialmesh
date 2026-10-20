@@ -5,7 +5,7 @@
 ///
 /// This defines all possible states of the Global Layer connection,
 /// valid transitions between them, and display helpers for the UI.
-/// The state machine enforces correctness — invalid transitions are
+/// The state machine enforces correctness - invalid transitions are
 /// rejected and logged rather than silently accepted.
 library;
 
@@ -73,22 +73,15 @@ enum GlobalLayerConnectionState {
 
   /// Short description shown below the status label.
   String get displayDescription => switch (this) {
-    disabled =>
-      'Complete setup to connect your mesh to the wider world.', // lint-allow: hardcoded-string
-    disconnected =>
-      'The Global Layer is configured but not active.', // lint-allow: hardcoded-string
-    connecting =>
-      'Establishing a connection to the broker\u2026', // lint-allow: hardcoded-string
-    connected =>
-      'Your mesh is bridged to the Global Layer.', // lint-allow: hardcoded-string
-    degraded =>
-      'Connected with issues. Some data may not be flowing.', // lint-allow: hardcoded-string
-    reconnecting =>
-      'Connection lost. Attempting to reconnect\u2026', // lint-allow: hardcoded-string
+    disabled => 'Complete setup to connect your mesh to the wider world.', // lint-allow: hardcoded-string
+    disconnected => 'The Global Layer is configured but not active.', // lint-allow: hardcoded-string
+    connecting => 'Establishing a connection to the broker\u2026', // lint-allow: hardcoded-string
+    connected => 'Your mesh is bridged to the Global Layer.', // lint-allow: hardcoded-string
+    degraded => 'Connected with issues. Some data may not be flowing.', // lint-allow: hardcoded-string
+    reconnecting => 'Connection lost. Attempting to reconnect\u2026', // lint-allow: hardcoded-string
     disconnecting =>
       'Closing the connection\u2026', // lint-allow: hardcoded-string
-    error =>
-      'Something went wrong. Check diagnostics for details.', // lint-allow: hardcoded-string
+    error => 'Something went wrong. Check diagnostics for details.', // lint-allow: hardcoded-string
   };
 
   /// Material icon for the status indicator.
@@ -153,7 +146,7 @@ enum GlobalLayerConnectionState {
 
 /// Validates and documents transitions in the Global Layer state machine.
 ///
-/// This class is intentionally stateless — it operates on a
+/// This class is intentionally stateless - it operates on a
 /// (current, target) pair and returns whether the transition is valid.
 /// The actual state is held by the provider layer.
 class GlobalLayerStateMachine {

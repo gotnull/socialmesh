@@ -510,7 +510,7 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
 }
 
 /// Riverpod provider for the coordinator. Kept alive for the lifetime
-/// of the app — the state machine has terminal states but the user
+/// of the app - the state machine has terminal states but the user
 /// can re-enter onboarding (factory-reset cycle, device replacement)
 /// without disposing the underlying signal listeners.
 final meshtasticOnboardingFlowProvider =

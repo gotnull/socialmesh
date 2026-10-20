@@ -132,13 +132,13 @@ class MeshCoreContact {
 
   /// User-facing display name with a deterministic, non-localized
   /// fallback when the firmware contact entry has an empty name field
-  /// (D23 — auto-added contacts from inbound adverts that did not
+  /// (D23 - auto-added contacts from inbound adverts that did not
   /// carry a friendly name). Order:
   ///
   /// 1. [name] if non-empty
   /// 2. [shortPubKeyHex] (`<79426d8d…0831782b>`) when the public key
   ///    is large enough to fingerprint
-  /// 3. empty string — caller is expected to fall through to a
+  /// 3. empty string - caller is expected to fall through to a
   ///    localized "Unknown" placeholder
   ///
   /// Never exposes the full 64-char public-key hex; the bracketed
@@ -258,7 +258,7 @@ class MeshCoreContact {
 ///
 /// Pre-D34c-A this was an out-of-date inline parser that read a
 /// phantom `[pubkey][adv_type][path_len][lastmod-u16][lat][lon][name]`
-/// shape — the actual firmware layout is `[pubkey][type][flags]
+/// shape - the actual firmware layout is `[pubkey][type][flags]
 /// [out_path_len][out_path×64][name×32][last_advert_ts][lat][lon][lastmod]`.
 /// The legacy body returned `path = Uint8List(0)` unconditionally,
 /// silently dropping the firmware's path bytes. D34c-A delegates to
@@ -292,7 +292,7 @@ MeshCoreContact? parseContact(Uint8List payload) {
 /// Still used by:
 ///   - the discovery screen's "copy code" affordance (a heard advert
 ///     isn't yet in the firmware roster, so `CMD_EXPORT_CONTACT` is
-///     not available — the stub-only legacy form is the honest
+///     not available - the stub-only legacy form is the honest
 ///     fallback).
 ///   - the typed-contact-code paste sheet on the contacts screen
 ///     (one-release backwards-compat for users with saved codes).
@@ -306,7 +306,7 @@ String generateContactCode(MeshCoreContact contact) {
 
 /// D46-A: paired legacy parser. See [generateContactCode] for the
 /// deprecation note. New code paths should call `previewContactImport`
-/// on `meshCoreContactsProvider` — it accepts both `meshcore://<hex>`
+/// on `meshCoreContactsProvider` - it accepts both `meshcore://<hex>`
 /// and the legacy `<pubkeyhex>:<name>` form and surfaces a typed
 /// preview suitable for a confirmation sheet.
 MeshCoreContact? parseContactCode(String code) {

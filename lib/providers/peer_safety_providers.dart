@@ -16,7 +16,7 @@
 /// HARD RULES:
 /// - Caches and DB are local-only. They never enter any wire frame
 ///   or backend payload.
-/// - The hot-path getters (`isBlocked` etc.) MUST stay sync — they
+/// - The hot-path getters (`isBlocked` etc.) MUST stay sync - they
 ///   run on every inbound SIP frame and every outbound DM call.
 library;
 
@@ -111,7 +111,7 @@ class PeerSafetyManager extends AsyncNotifier<PeerSafetyManagerState> {
   // These run on every inbound SIP frame and every outbound DM call.
   // Reading from `state.value` is O(1); during the brief
   // initial-load window (before `build()` resolves) the caches are
-  // empty and these all return false / null — i.e. "treat as not
+  // empty and these all return false / null - i.e. "treat as not
   // blocked", which is the safe default.
   // ---------------------------------------------------------------
 
@@ -154,7 +154,7 @@ class PeerSafetyManager extends AsyncNotifier<PeerSafetyManagerState> {
       _bumpState(
         (s) => s.copyWith(
           blockedNodeIds: {...s.blockedNodeIds, peerNodeId},
-          // Block trumps mute — a blocked peer is definitionally
+          // Block trumps mute - a blocked peer is definitionally
           // "no notifications + no content surface", so leave the
           // mute set untouched but block masks it everywhere.
         ),
@@ -248,7 +248,7 @@ class PeerSafetyManager extends AsyncNotifier<PeerSafetyManagerState> {
   }
 
   /// Mark [peerNodeId] as having completed at least one handshake
-  /// Accept. Used to gate the first-contact warning UX. Idempotent —
+  /// Accept. Used to gate the first-contact warning UX. Idempotent -
   /// only the FIRST timestamp is preserved so the marker reads
   /// "user has consented to private comms before".
   Future<void> markFirstHandshake(int peerNodeId, int timestampMs) {
@@ -381,7 +381,7 @@ class PeerSafetyManagerGateAdapter implements PeerSafetyGate {
       return _readNotifier().isBlocked(peerNodeId);
     } catch (_) {
       // Provider container disposed mid-call (e.g. test teardown)
-      // — fall back to the default-safe answer rather than crashing
+      // - fall back to the default-safe answer rather than crashing
       // the hot path.
       return false;
     }
@@ -398,7 +398,7 @@ class PeerSafetyManagerGateAdapter implements PeerSafetyGate {
 }
 
 /// Sync gate consumed by Ref-less protocol-layer code. Always
-/// available — falls back to a no-op when the manager hasn't loaded
+/// available - falls back to a no-op when the manager hasn't loaded
 /// yet (cold start, tests).
 final peerSafetyGateProvider = Provider<PeerSafetyGate>((ref) {
   return PeerSafetyManagerGateAdapter(
@@ -419,17 +419,17 @@ final peerRateLimiterProvider = Provider<PeerRateLimiter>((ref) {
 /// Watches [peerSafetyManagerProvider] so the SIP Hub Blocked section
 /// rebuilds the moment Block / Unblock fires anywhere in the app.
 /// Returns `const <int>[]` while the manager is still loading (cold
-/// start) — the SIP Hub then renders no Blocked section, which is the
+/// start) - the SIP Hub then renders no Blocked section, which is the
 /// safer default.
 ///
 /// **Render-layer use only.** Filtering active lists against this set
 /// or rendering the Blocked section MUST NOT mutate any protocol or
-/// session state — list rendering is a pure read.
+/// session state - list rendering is a pure read.
 final blockedPeerNodeIdsProvider = Provider<List<int>>((ref) {
   final state = ref.watch(peerSafetyManagerProvider);
   final blocked = state.value?.blockedNodeIds ?? const <int>{};
   // Sort numerically so the Blocked section's row order is stable
-  // across rebuilds — without this, a Set→List conversion would
+  // across rebuilds - without this, a Set→List conversion would
   // produce hash-order which jumps around when peers are added.
   final sorted = blocked.toList()..sort();
   return sorted;
@@ -447,7 +447,7 @@ const String _kFirstContactBannerDismissedPrefsKey =
 /// Local-only UI state: which peers' first-contact banners the user
 /// has explicitly dismissed.
 ///
-/// IMPORTANT: This is purely a UI affordance — dismissing the banner
+/// IMPORTANT: This is purely a UI affordance - dismissing the banner
 /// does NOT mutate any protocol state, does NOT call
 /// `markFirstHandshake`, does NOT downgrade any safety state. It only
 /// hides the banner for that specific peer next time the DM screen
@@ -472,7 +472,7 @@ class FirstContactBannerDismissals extends AsyncNotifier<Set<int>> {
   }
 
   /// Sync hot-path query. Returns false until the prefs load
-  /// completes — the banner stays visible during the brief async gap,
+  /// completes - the banner stays visible during the brief async gap,
   /// which is the safer default.
   bool isDismissed(int peerNodeId) {
     final s = state.value;
@@ -480,7 +480,7 @@ class FirstContactBannerDismissals extends AsyncNotifier<Set<int>> {
     return s.contains(peerNodeId);
   }
 
-  /// Persist a dismissal. Idempotent — re-tapping after dismiss is a
+  /// Persist a dismissal. Idempotent - re-tapping after dismiss is a
   /// no-op. Local-only; never enters any wire frame.
   Future<void> dismiss(int peerNodeId) async {
     final current = state.value ?? <int>{};

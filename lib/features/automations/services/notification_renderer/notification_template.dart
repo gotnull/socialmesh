@@ -41,13 +41,13 @@ class NotificationTemplateTier {
 
 /// Tier levels ordered from richest to most compact.
 enum TemplateTierLevel {
-  /// Full detail — all context variables included.
+  /// Full detail - all context variables included.
   full,
 
-  /// Shortened — drops optional fields like snippet / location.
+  /// Shortened - drops optional fields like snippet / location.
   short,
 
-  /// Minimal — just the core fact (who + what happened).
+  /// Minimal - just the core fact (who + what happened).
   minimal,
 }
 

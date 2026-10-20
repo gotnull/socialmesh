@@ -7,7 +7,7 @@
 /// Encodes the SPP v0.2 frame to wire bytes and hands them to
 /// [OverlayLinkEngine.sendData], which wraps them in a LINK_DATA frame
 /// and transmits through the existing SIP → MRRP → Meshtastic pipeline.
-/// The adapter never imports [ProtocolService] — the layering rule
+/// The adapter never imports [ProtocolService] - the layering rule
 /// from P4 is preserved: resources ride exclusively inside LINK_DATA.
 ///
 /// Failure semantics:
@@ -34,7 +34,7 @@ class OverlayResourceProtocolEgress implements OverlayResourceEgress {
   final OverlayFeatureFlags Function() _flags;
 
   /// Construct the adapter. [_flags] is a getter so the adapter re-
-  /// reads the flag on each send — a runtime toggle (future phase)
+  /// reads the flag on each send - a runtime toggle (future phase)
   /// takes effect immediately without rebuilding the engine.
   OverlayResourceProtocolEgress({
     required this._linkEngine,

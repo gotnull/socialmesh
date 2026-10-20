@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Patina Score — deterministic digital history score.
+// Patina Score - deterministic digital history score.
 //
 // Patina is NOT fake damage or cosmetic aging. It is a numerical
 // measure of how much observable history a node has accumulated
@@ -14,12 +14,12 @@
 // fields that already exist. No randomness, no side effects.
 //
 // Axes:
-//   1. Tenure       (20%) — how long the node has been known
-//   2. Encounters   (20%) — how many times seen
-//   3. Reach        (15%) — geographic spread (regions + positions)
-//   4. Signal depth (15%) — quality of signal records collected
-//   5. Social       (15%) — co-seen relationships and messages
-//   6. Recency      (15%) — how recently active (rewards liveness)
+//   1. Tenure       (20%) - how long the node has been known
+//   2. Encounters   (20%) - how many times seen
+//   3. Reach        (15%) - geographic spread (regions + positions)
+//   4. Signal depth (15%) - quality of signal records collected
+//   5. Social       (15%) - co-seen relationships and messages
+//   6. Recency      (15%) - how recently active (rewards liveness)
 //
 // Each axis uses a logarithmic or asymptotic curve so that early
 // gains are meaningful but diminishing returns prevent runaway scores.
@@ -76,7 +76,7 @@ class PatinaScore {
   PatinaScore._();
 
   // ---------------------------------------------------------------------------
-  // Axis weights — must sum to 1.0
+  // Axis weights - must sum to 1.0
   // ---------------------------------------------------------------------------
 
   static const double _wTenure = 0.20;
@@ -87,7 +87,7 @@ class PatinaScore {
   static const double _wRecency = 0.15;
 
   // ---------------------------------------------------------------------------
-  // Saturation constants — the input value at which the axis reaches ~90%
+  // Saturation constants - the input value at which the axis reaches ~90%
   // ---------------------------------------------------------------------------
 
   /// Days known before tenure axis saturates.
@@ -172,7 +172,7 @@ class PatinaScore {
   }
 
   // ---------------------------------------------------------------------------
-  // Axis scoring functions — each returns 0.0 to 1.0
+  // Axis scoring functions - each returns 0.0 to 1.0
   // ---------------------------------------------------------------------------
 
   /// Tenure: how long this node has been known.
@@ -201,7 +201,7 @@ class PatinaScore {
         .clamp(0.0, 1.0);
   }
 
-  /// Reach: geographic spread — regions and distinct positions.
+  /// Reach: geographic spread - regions and distinct positions.
   ///
   /// Blends region count (60%) and position count (40%).
   static double _scoreReach(NodeDexEntry entry) {

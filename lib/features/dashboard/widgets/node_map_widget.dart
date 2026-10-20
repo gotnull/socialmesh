@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../core/map_config.dart';
 import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
@@ -209,9 +210,8 @@ class NodeMapContent extends ConsumerWidget {
           SizedBox(height: AppTheme.spacing4),
           Text(
             'Nodes will appear when\nthey report position', // lint-allow: hardcoded-string
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: context.textTertiary),
             textAlign: TextAlign.center,
           ),
         ],

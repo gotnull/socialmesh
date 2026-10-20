@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// chat-meta.v1 envelope codec — D33 (replies only).
+// chat-meta.v1 envelope codec - D33 (replies only).
 //
 // Encodes and decodes a small SocialMesh-internal envelope that
 // rides INSIDE the plaintext text body of an ordinary MeshCore
@@ -83,7 +83,7 @@ class ChatMetaOps {
   static const int hello = 0x00;
 
   /// Future emoji reaction (D34, NOT implemented in D33). Decoders
-  /// must reject this op in v0.1 — encoders never emit it.
+  /// must reject this op in v0.1 - encoders never emit it.
   static const int reactionReservedD34 = 0x01;
 
   /// D33 reply to an existing message. See [ChatMetaReplyPayload].
@@ -122,7 +122,7 @@ class MmfScope {
   static const int channel = 0x01;
 
   /// Contact scope: `[scope:0x02][author_pubkey_prefix:6B][target_ts:u32_LE]`
-  /// = 11 B. The 6-byte prefix is the **author's** public-key prefix —
+  /// = 11 B. The 6-byte prefix is the **author's** public-key prefix -
   /// i.e. self's prefix when stamping an outbound message, and the
   /// wire frame's `senderPrefix` when stamping an inbound one. Both
   /// ends of a conversation thus derive `02:<author>:<ts>` for the
@@ -195,7 +195,7 @@ class MeshCoreMmf {
   }
 
   /// Build a contact-scope MMF. [peerPubkeyPrefix] must be exactly
-  /// 6 bytes — the first 6 bytes of the OTHER party's public key.
+  /// 6 bytes - the first 6 bytes of the OTHER party's public key.
   factory MeshCoreMmf.contact({
     required Uint8List peerPubkeyPrefix,
     required int targetTimestampS,
@@ -475,7 +475,7 @@ class ChatMetaDecodeResult {
   }) : isPlainText = false;
 }
 
-/// The chat-meta envelope codec — encode + decode helpers.
+/// The chat-meta envelope codec - encode + decode helpers.
 class ChatMetaEnvelopeCodec {
   ChatMetaEnvelopeCodec._();
 
@@ -537,7 +537,7 @@ class ChatMetaEnvelopeCodec {
   /// On a recognised envelope: extracts the structured payload and
   /// returns `ChatMetaDecodeResult.envelope(...)` with `displayText`
   /// set to the trimmed-and-stripped string the receiver should
-  /// render (typically empty for replies — the caller pulls the
+  /// render (typically empty for replies - the caller pulls the
   /// reply body out of the envelope payload itself).
   ///
   /// On a malformed envelope (bad version, bad svc, bad len, etc.)
@@ -592,7 +592,7 @@ class ChatMetaEnvelopeCodec {
   }
 
   // -------------------------------------------------------------------
-  // Internal — pack / unpack the inner envelope (magic..payload)
+  // Internal - pack / unpack the inner envelope (magic..payload)
   // -------------------------------------------------------------------
 
   /// Internal helper: build the inner envelope bytes (everything
@@ -662,7 +662,7 @@ class ChatMetaEnvelopeCodec {
     }
 
     // D33 v0.1 only knows HELLO and REPLY. REACTION (0x01) is reserved
-    // for D34 — reject explicitly so an early-shipping reaction frame
+    // for D34 - reject explicitly so an early-shipping reaction frame
     // doesn't mis-render.
     if (op == ChatMetaOps.reactionReservedD34) {
       AppLogging.meshcore(
@@ -688,7 +688,7 @@ class ChatMetaEnvelopeCodec {
   }
 
   // -------------------------------------------------------------------
-  // Internal — fallback wrapper
+  // Internal - fallback wrapper
   // -------------------------------------------------------------------
 
   static String _wrapFallback(Uint8List inner, String summary) {
@@ -715,7 +715,7 @@ class ChatMetaEnvelopeCodec {
   static String _trimSummary(String s) {
     final encoded = utf8.encode(s);
     if (encoded.length <= kChatMetaSummaryMaxBytes) return s;
-    // Truncate at byte boundary that respects UTF-8 — find the last
+    // Truncate at byte boundary that respects UTF-8 - find the last
     // safe break.
     var cut = kChatMetaSummaryMaxBytes;
     while (cut > 0 && (encoded[cut] & 0xC0) == 0x80) {

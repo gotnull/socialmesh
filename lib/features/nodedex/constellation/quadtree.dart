@@ -90,7 +90,7 @@ class QRect {
   String toString() => 'QRect($x, $y, $width, $height)';
 }
 
-/// A quadtree node — either a leaf holding items, or a branch with four
+/// A quadtree node - either a leaf holding items, or a branch with four
 /// children (NW, NE, SW, SE).
 class _QuadNode<T> {
   final QRect bounds;
@@ -341,7 +341,7 @@ class Quadtree<T> {
 
   /// Query all items within [searchRect].
   ///
-  /// Used for viewport culling — pass the visible canvas rect to get
+  /// Used for viewport culling - pass the visible canvas rect to get
   /// only the nodes that need rendering.
   List<QuadtreeItem<T>> queryRect(QRect searchRect) {
     final results = <QuadtreeItem<T>>[];
@@ -360,7 +360,7 @@ class Quadtree<T> {
 
   /// Find the nearest item to [point] within [maxDistance].
   ///
-  /// Takes item radius into account — an item is "hit" if the point
+  /// Takes item radius into account - an item is "hit" if the point
   /// is within (center distance - item radius). Returns null if nothing
   /// is close enough.
   ///

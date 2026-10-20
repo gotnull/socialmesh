@@ -851,7 +851,7 @@ class _IcosahedronPainter extends CustomPainter {
         final t = centroidX / size.width;
         final color = _getGradientColor(t);
 
-        // === FACE-NORMAL DISPLACEMENT — mechanical / biological pulse ===
+        // === FACE-NORMAL DISPLACEMENT - mechanical / biological pulse ===
         //
         // Why this approach:
         //   Each face is displaced along its own 3D face normal, computed
@@ -860,9 +860,9 @@ class _IcosahedronPainter extends CustomPainter {
         //   offsets and touch-deformation survive untouched.
         //
         // Params (tune here):
-        //   _pulseAmp  — max outward displacement in normalised sphere units
-        //   _pulseFreq — rad per seed-tick (100 ms each)
-        //   _mechMix   — blend of slow breath vs. sharp mechanical sub-beat
+        //   _pulseAmp  - max outward displacement in normalised sphere units
+        //   _pulseFreq - rad per seed-tick (100 ms each)
+        //   _mechMix   - blend of slow breath vs. sharp mechanical sub-beat
         //
         // Golden-angle phase spread guarantees no two faces peak together.
         Color drawColor = color;
@@ -887,7 +887,7 @@ class _IcosahedronPainter extends CustomPainter {
           const goldenAngle = 2.399963; // ≈ 2π / φ²
           final facePhase = faceIdx * goldenAngle;
 
-          // GATE — limits active faces to ~3-4 out of 20 at any moment.
+          // GATE - limits active faces to ~3-4 out of 20 at any moment.
           // _glitchSeed increments at ~60 Hz (addListener fires every frame).
           // Gate cycle target: ~25 s → 2π / (25 × 60) ≈ 0.0042 rad/tick.
           // 18% duty → each face active ~4.5 s every 25 s.
@@ -897,7 +897,7 @@ class _IcosahedronPainter extends CustomPainter {
           const gateThreshold =
               0.93; // open for top 7% → ~1.75 s per activation
           if (gateRaw < gateThreshold) {
-            // Face is idle — draw at baseline opacity, no displacement
+            // Face is idle - draw at baseline opacity, no displacement
             final baseAlpha = (faceOpacity * depthFactor * 255).round().clamp(
               0,
               255,
@@ -919,26 +919,26 @@ class _IcosahedronPainter extends CustomPainter {
           }
           // Smooth 0→1 ramp from threshold to 1.0
           final gateT = (gateRaw - gateThreshold) / (1.0 - gateThreshold);
-          // Ease-in the gate so faces don't pop — cubic ramp
+          // Ease-in the gate so faces don't pop - cubic ramp
           final gateTEased = gateT * gateT * (3.0 - 2.0 * gateT);
 
           // === CINEMATIC MULTI-LAYER ENVELOPE ===
           // Three independent oscillators combine to produce an irregular,
-          // living rhythm — no two activation windows ever feel the same.
+          // living rhythm - no two activation windows ever feel the same.
 
-          // Layer 1 — PRIMARY: ~5s cycle, compressed so it "snaps" through
+          // Layer 1 - PRIMARY: ~5s cycle, compressed so it "snaps" through
           // zero and spends more time near the extremes (pod-bay-door feel).
           final t1 = sciFiGlitchSeed * 0.021;
           final s1raw = math.sin(facePhase + t1);
-          // pow(|x|, 0.42) * sign(x) — flattens mid-range, sharpens crossings
+          // pow(|x|, 0.42) * sign(x) - flattens mid-range, sharpens crossings
           final primary = math.pow(s1raw.abs(), 0.42).toDouble() * s1raw.sign;
 
-          // Layer 2 — INHARMONIC DRIFT: golden-ratio frequency offset (~2s)
+          // Layer 2 - INHARMONIC DRIFT: golden-ratio frequency offset (~2s)
           // Never locks to L1 so the pattern never exactly repeats.
           final t2 = sciFiGlitchSeed * 0.052; // ~2s cycle
           final drift = 0.28 * math.sin(facePhase * 1.6180 + t2);
 
-          // Layer 3 — HIGH-FREQ SHIMMER: very fast (~0.25s), tiny amplitude.
+          // Layer 3 - HIGH-FREQ SHIMMER: very fast (~0.25s), tiny amplitude.
           // Gives a "vibrating actuator" micro-texture when extended.
           final t3 = sciFiGlitchSeed * 0.41; // ~0.25s cycle
           final shimmer = 0.06 * math.sin(facePhase + t3);
@@ -1000,7 +1000,7 @@ class _IcosahedronPainter extends CustomPainter {
         );
         if (faceAlpha <= 0) continue;
 
-        // Hard-edged polygonal fill — no blur, no bloom
+        // Hard-edged polygonal fill - no blur, no bloom
         final facePath = Path()
           ..moveTo(dfp0.dx, dfp0.dy)
           ..lineTo(dfp1.dx, dfp1.dy)
@@ -1549,7 +1549,7 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
 
   /// Velocity magnitude below which the physics loop self-suspends to avoid
   /// burning 60 fps of setState calls while the mesh node is visually static.
-  /// 0.0005 rad/frame ≈ 0.03 deg/frame — imperceptible on screen.
+  /// 0.0005 rad/frame ≈ 0.03 deg/frame - imperceptible on screen.
   static const double _velocityThreshold = 0.0005;
 
   static final double _phi = (1 + math.sqrt(5)) / 2;
@@ -1565,7 +1565,7 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Physics loop — starts on demand and self-suspends when velocities are
+    // Physics loop - starts on demand and self-suspends when velocities are
     // below threshold, eliminating ~60 setState/sec while the node is static.
     _physicsController = AnimationController(
       vsync: this,
@@ -1573,7 +1573,7 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
     )..addListener(_physicsLoop);
     _ensurePhysicsRunning();
 
-    // Start accelerometer listener — guarded: CMMotionManager is unavailable
+    // Start accelerometer listener - guarded: CMMotionManager is unavailable
     // on macOS / Mac Catalyst and causes NSInternalInconsistencyException.
     if (defaultTargetPlatform != TargetPlatform.macOS) {
       _startAccelerometer();
@@ -1715,7 +1715,7 @@ class _AccelerometerMeshNodeState extends State<AccelerometerMeshNode>
       final dist = math.sqrt(dx * dx + dy * dy);
 
       if (dist < 0.01) {
-        // Close enough — snap to original and clear
+        // Close enough - snap to original and clear
         _dragPosition = null;
         _originalVertexPosition = null;
         _springBackVertexIndex = -1;

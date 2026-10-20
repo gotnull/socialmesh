@@ -133,23 +133,18 @@ void main() {
       },
     );
 
-    test(
-      'meshtastic-filter automation routes sendMessage with protocol=meshtastic',
-      () async {
-        repo.add(
-          sendMessageAutomation(filter: TriggerProtocolFilter.meshtastic),
-        );
+    test('meshtastic-filter automation routes sendMessage with protocol=meshtastic', () async {
+      repo.add(sendMessageAutomation(filter: TriggerProtocolFilter.meshtastic));
 
-        await engine.processMessage(
-          AutomationMessage(from: 123, text: 'ping', channel: null),
-          senderName: 'mt-peer',
-          protocol: TriggerProtocol.meshtastic,
-        );
+      await engine.processMessage(
+        AutomationMessage(from: 123, text: 'ping', channel: null),
+        senderName: 'mt-peer',
+        protocol: TriggerProtocol.meshtastic,
+      );
 
-        expect(sentMessages, hasLength(1));
-        expect(sentMessages.first.$3, TriggerProtocol.meshtastic);
-      },
-    );
+      expect(sentMessages, hasLength(1));
+      expect(sentMessages.first.$3, TriggerProtocol.meshtastic);
+    });
 
     test(
       'any-filter automation carries event.protocol through to the callback',
@@ -194,22 +189,19 @@ void main() {
       },
     );
 
-    test(
-      'legacy callsites (no protocol arg) default to meshtastic on the callback',
-      () async {
-        repo.add(sendMessageAutomation());
+    test('legacy callsites (no protocol arg) default to meshtastic on the callback', () async {
+      repo.add(sendMessageAutomation());
 
-        // Mirrors the existing app_providers.dart hook that doesn't
-        // pass a protocol arg. The Phase 0 default flows through to
-        // the callback, so the routing layer never sees a null tag.
-        await engine.processMessage(
-          AutomationMessage(from: 555, text: 'legacy', channel: null),
-          senderName: 'peer',
-        );
+      // Mirrors the existing app_providers.dart hook that doesn't
+      // pass a protocol arg. The Phase 0 default flows through to
+      // the callback, so the routing layer never sees a null tag.
+      await engine.processMessage(
+        AutomationMessage(from: 555, text: 'legacy', channel: null),
+        senderName: 'peer',
+      );
 
-        expect(sentMessages, hasLength(1));
-        expect(sentMessages.first.$3, TriggerProtocol.meshtastic);
-      },
-    );
+      expect(sentMessages, hasLength(1));
+      expect(sentMessages.first.$3, TriggerProtocol.meshtastic);
+    });
   });
 }

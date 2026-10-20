@@ -32,7 +32,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('MeshCanvasParticipationNotifier — defaults', () {
+  group('MeshCanvasParticipationNotifier - defaults', () {
     test('initial build returns (false, false, false)', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -52,7 +52,7 @@ void main() {
     });
   });
 
-  group('MeshCanvasParticipationNotifier — onboarding transitions', () {
+  group('MeshCanvasParticipationNotifier - onboarding transitions', () {
     test('chooseLocalOnly persists (true, false, false)', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -72,7 +72,7 @@ void main() {
     });
 
     test(
-      'joinMeshCanvas persists (true, true, false) — sharing stays off',
+      'joinMeshCanvas persists (true, true, false) - sharing stays off',
       () async {
         final container = ProviderContainer();
         addTearDown(container.dispose);
@@ -124,7 +124,7 @@ void main() {
     );
   });
 
-  group('MeshCanvasParticipationNotifier — mutation invariants', () {
+  group('MeshCanvasParticipationNotifier - mutation invariants', () {
     test('setParticipationEnabled(false) forces presenceSharing off', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -172,7 +172,7 @@ void main() {
       },
     );
 
-    test('setParticipationEnabled(true) does NOT auto-enable presenceSharing — '
+    test('setParticipationEnabled(true) does NOT auto-enable presenceSharing - '
         'sharing requires a separate explicit opt-in', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -190,7 +190,7 @@ void main() {
     });
   });
 
-  group('MeshCanvasParticipationNotifier — persistence across containers', () {
+  group('MeshCanvasParticipationNotifier - persistence across containers', () {
     test('second container reads the decision a first one wrote', () async {
       final containerA = ProviderContainer();
       addTearDown(containerA.dispose);
@@ -211,7 +211,7 @@ void main() {
     });
   });
 
-  group('MeshCanvasParticipationNotifier — selector reactivity', () {
+  group('MeshCanvasParticipationNotifier - selector reactivity', () {
     test('flipping participation triggers selector emit', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);

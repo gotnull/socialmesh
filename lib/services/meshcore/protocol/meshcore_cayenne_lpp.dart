@@ -195,7 +195,7 @@ const Map<int, int> _lppKnownSizes = <int, int>{
 /// stop the parse but don't drop earlier readings).
 ///
 /// Returns `null` only when [bytes] itself is empty AND
-/// [allowEmptyInput] is false — most callers want the same response
+/// [allowEmptyInput] is false - most callers want the same response
 /// shape regardless and pass an empty buffer through. The session
 /// helper accepts an empty wire as "the contact has nothing to
 /// share" rather than a parse error.

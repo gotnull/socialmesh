@@ -424,10 +424,8 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
             padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
             child: Text(
               context.l10n.meshcoreAddContact,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
           _buildOptionTile(

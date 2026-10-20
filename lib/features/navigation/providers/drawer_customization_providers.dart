@@ -129,7 +129,7 @@ final drawerCustomizationProvider =
 
 /// Transient in-memory flag: are we currently in long-press edit mode?
 ///
-/// Not persisted — edit mode exits when the drawer closes or the user
+/// Not persisted - edit mode exits when the drawer closes or the user
 /// taps Done. We keep it on its own provider so the rest of the drawer
 /// can read it cheaply without rebuilding when the persisted
 /// customization state changes.
@@ -157,7 +157,7 @@ final drawerEditModeProvider = NotifierProvider<DrawerEditModeNotifier, bool>(
 );
 
 /// Applies the hidden-items filter from [state] to [defaultList].
-/// Reordering is intentionally NOT applied here — section-aware
+/// Reordering is intentionally NOT applied here - section-aware
 /// ordering lives in the drawer renderer (see `main_shell.dart`), which
 /// groups by intrinsic section membership before sorting within each
 /// section by `state.customOrder`. Doing the sort in this pure helper
@@ -212,7 +212,7 @@ List<DrawerMenuItem> applyDrawerCustomization(
 /// section header land in the unnamed section (`''`).
 ///
 /// Section identity is intentionally decoupled from physical position
-/// in the rendered list — once a user starts reordering, the item
+/// in the rendered list - once a user starts reordering, the item
 /// that originally bore a `sectionHeader` may end up elsewhere in its
 /// section. Using this map for grouping keeps the section a stable
 /// concept (every item knows the section it was born into) so a

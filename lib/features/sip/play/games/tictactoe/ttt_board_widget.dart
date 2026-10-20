@@ -3,7 +3,7 @@
 
 /// Renders a Tic-Tac-Toe board for one [SipPlayInstanceState].
 ///
-/// Pure renderer — every tap dispatches up to a supplied
+/// Pure renderer - every tap dispatches up to a supplied
 /// `onCellTap(cell)` callback. The widget itself never sends a frame
 /// or mutates engine state; the parent [_BoardSection] is responsible
 /// for the optimistic-pending overlay, the interaction lock, and the
@@ -58,7 +58,7 @@ class TttBoardWidget extends StatefulWidget {
   /// user taps a legal cell; once the engine state catches up
   /// (board.cells[cell] == mark) the parent clears it. While set,
   /// the indicated cell renders the ghost mark and all other cells
-  /// are non-interactive — UI consistency without touching the
+  /// are non-interactive - UI consistency without touching the
   /// authoritative state.
   final TttMove? pendingMove;
 
@@ -201,7 +201,7 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
   late final AnimationController _press;
 
   /// Draw-in 0 → 1 the first time a mark resolves into this cell.
-  /// Reset whenever the mark changes (rare — only on engine resets).
+  /// Reset whenever the mark changes (rare - only on engine resets).
   late final AnimationController _drawIn;
 
   TttMark? _renderedMark;
@@ -275,7 +275,7 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing2),
       child: Listener(
-        // Raw pointer-down observer — fires regardless of _canTap.
+        // Raw pointer-down observer - fires regardless of _canTap.
         // Lets us prove a tap physically reached the cell even when
         // the gesture detector below has its callbacks nulled out.
         // Behaviour-neutral: Listener does not consume the event.
@@ -316,7 +316,7 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
                 builder: (context, _) {
                   // CustomPaint with no child takes Size.zero by default
                   // and the parent Container's `alignment: center` hands
-                  // it loose constraints — without a SizedBox.expand the
+                  // it loose constraints - without a SizedBox.expand the
                   // painter renders at 0×0 and the X/O strokes are
                   // invisible. Wrapping forces it to fill the cell's
                   // padded inner box.
@@ -347,7 +347,7 @@ class _CellState extends State<_Cell> with TickerProviderStateMixin {
                     );
                   }
                   if (mark == null) return const SizedBox.shrink();
-                  // Pass the raw 0..1 timeline — the painter owns the
+                  // Pass the raw 0..1 timeline - the painter owns the
                   // scale / alpha / halo envelopes so the curves stay
                   // co-located with the rendering.
                   return Semantics(
@@ -413,7 +413,7 @@ class _CellSurface extends StatelessWidget {
 /// (saveLayer was running on every animation tick).
 ///
 /// Pass `t = 1.0` for a static rendered mark with no animation
-/// (used by the pending-overlay branch — the parent's pulse
+/// (used by the pending-overlay branch - the parent's pulse
 /// controller modulates alpha on the mark colour itself).
 class _TttMarkPainter extends CustomPainter {
   final TttMark mark;
@@ -489,11 +489,11 @@ class _TttMarkPainter extends CustomPainter {
     // Composite both diagonals through a transient layer so the
     // crossing point doesn't double-blend the stroke alpha. Two
     // overlapping translucent strokes at alpha=0.85 would otherwise
-    // composite to ~0.978 alpha at the intersection — visibly darker
+    // composite to ~0.978 alpha at the intersection - visibly darker
     // than the surrounding strokes. Inside the layer we draw at full
     // opacity, then the layer composites onto the canvas once at the
     // original alpha. Cheap now that we're not lerp'ing endpoints
-    // per frame — saveLayer runs at most ~10 times across the whole
+    // per frame - saveLayer runs at most ~10 times across the whole
     // animation instead of every frame.
     final layerRect = Offset.zero & size;
     final compositePaint = Paint()

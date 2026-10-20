@@ -50,12 +50,12 @@ class SettingsSectionHeader extends StatelessWidget {
 /// optional trailing widget (typically a `ThemedSwitch` or chevron).
 ///
 /// When [onTap] is non-null, the tile becomes tappable with an InkWell
-/// ripple — use this shape for navigation/action rows (e.g. "Reboot
+/// ripple - use this shape for navigation/action rows (e.g. "Reboot
 /// device", "Send advertisement"). When [onTap] is null, the tile is a
-/// passive container — use this shape for toggle rows whose interactive
+/// passive container - use this shape for toggle rows whose interactive
 /// element is a [trailing] [ThemedSwitch].
 ///
-/// Pair with `ThemedSwitch` for toggles — never raw `Switch`. Gold-
+/// Pair with `ThemedSwitch` for toggles - never raw `Switch`. Gold-
 /// standard call sites: `lib/features/settings/mqtt_config_screen.dart`
 /// (toggles) and the MeshCore settings screen (action tiles).
 class SettingsTile extends StatelessWidget {

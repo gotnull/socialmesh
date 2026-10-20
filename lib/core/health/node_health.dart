@@ -11,13 +11,13 @@ import '../../utils/timestamp_validation.dart';
 /// (active / fading / stale / unknown) and does not change any presence
 /// behaviour, labels, chips, filters, or sorting.
 enum NodeHealthState {
-  /// Reporting normally — heard within [PresenceThresholds.freshWindow].
+  /// Reporting normally - heard within [PresenceThresholds.freshWindow].
   fresh,
 
-  /// Overdue — heard within the 2 h online window but past the fresh window.
+  /// Overdue - heard within the 2 h online window but past the fresh window.
   stale,
 
-  /// No signal — not heard beyond the 2 h online window. This is INFERRED, not
+  /// No signal - not heard beyond the 2 h online window. This is INFERRED, not
   /// confirmed: LoRa has no offline signal, so the node may be down, out of
   /// range, asleep, or simply idle. Surfaced as "No signal", never "Offline".
   offline,

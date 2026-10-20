@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Incremental peer sync service — cursor-driven batch sync for mesh feed.
+/// Incremental peer sync service - cursor-driven batch sync for mesh feed.
 ///
 /// Uses monotonic [MeshPost.localSeq] for clock-skew-safe ordering.
 /// Deterministic tiebreak on canonical post ID ensures no skipped or
@@ -13,7 +13,7 @@
 ///   3. Posts are transferred
 ///   4. [acknowledgeSyncBatch] advances the cursor on confirmed delivery
 ///
-/// Cursor is only advanced on acknowledgement — not on selection.
+/// Cursor is only advanced on acknowledgement - not on selection.
 library;
 
 import '../../core/logging.dart';
@@ -48,7 +48,7 @@ class SyncBatch {
 
 /// Service coordinating incremental peer sync using monotonic cursors.
 ///
-/// This service does not own the transport — it provides the data contract
+/// This service does not own the transport - it provides the data contract
 /// that BLE/WiFi sync sessions use for efficient, resumable sync.
 class MeshSyncService {
   MeshSyncService({required MeshFeedDatabase database}) : _db = database;
@@ -83,8 +83,8 @@ class MeshSyncService {
   /// by `(sync_seq ASC, id ASC)`. A peer with no cursor (first sync)
   /// gets the first batch from the beginning.
   ///
-  /// Uses `sync_seq` — only bumped on INSERT, not metadata merges.
-  /// The cursor is NOT advanced here — only on [acknowledgeSyncBatch].
+  /// Uses `sync_seq` - only bumped on INSERT, not metadata merges.
+  /// The cursor is NOT advanced here - only on [acknowledgeSyncBatch].
   Future<SyncBatch> getPostsForPeer(String peerId, {int batchSize = 50}) async {
     final cursorSeq = await _db.getSyncCursorSeq(peerId);
 
@@ -110,7 +110,7 @@ class MeshSyncService {
   /// Acknowledge successful delivery of a sync batch, advancing the cursor.
   ///
   /// [cursorSeq] must be the [SyncBatch.cursorSeq] value from the
-  /// delivered batch. Only advance — never regress.
+  /// delivered batch. Only advance - never regress.
   Future<void> acknowledgeSyncBatch(String peerId, int cursorSeq) async {
     // Safety: only advance, never regress.
     final current = await _db.getSyncCursorSeq(peerId);

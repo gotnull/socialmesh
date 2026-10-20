@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Horizontally scrollable bar of context-aware terminal action chips.
-// Each chip maps 1:1 to a typed command — tapping a chip executes the
+// Each chip maps 1:1 to a typed command - tapping a chip executes the
 // exact same pipeline as typing the command.
 //
 // Styled in SocialMesh's canonical chip pattern: accent @ 12% fill,

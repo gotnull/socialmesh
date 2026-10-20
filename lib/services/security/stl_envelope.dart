@@ -327,7 +327,7 @@ class StlEnvelope {
   ///
   /// STL envelopes start with [0x01][flags] where flags has signed bit set.
   /// SPP packets start with [(version<<4)|kind] where version >= 1 gives
-  /// byte values >= 0x10 — no collision with STL version 0x01.
+  /// byte values >= 0x10 - no collision with STL version 0x01.
   static bool isStlWrapped(Uint8List data) {
     if (data.length < StlOverhead.signedOnly) return false;
     final firstByte = data[0];

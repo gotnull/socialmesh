@@ -133,9 +133,8 @@ void main() {
     ProviderContainer withDevices(List<LicenseOrgFleetDevice> devices) {
       final container = ProviderContainer(
         overrides: [
-          licenseOrgFleetProvider(
-            _org,
-          ).overrideWith((ref) => Stream.value(_snapshot(devices))),
+          licenseOrgFleetProvider(_org)
+              .overrideWith((ref) => Stream.value(_snapshot(devices))),
         ],
       );
       addTearDown(container.dispose);
@@ -231,9 +230,8 @@ void main() {
           licenseOrgFleetServiceProvider.overrideWithValue(
             _StubService(result),
           ),
-          licenseOrgFleetProvider(
-            _org,
-          ).overrideWith((ref) => Stream.value(_snapshot(const []))),
+          licenseOrgFleetProvider(_org)
+              .overrideWith((ref) => Stream.value(_snapshot(const []))),
         ],
       );
       addTearDown(container.dispose);
@@ -311,9 +309,8 @@ void main() {
       final c = ProviderContainer(
         overrides: [
           licenseOrgFleetServiceProvider.overrideWithValue(service),
-          licenseOrgFleetProvider(
-            _org,
-          ).overrideWith((ref) => Stream.value(_snapshot(const []))),
+          licenseOrgFleetProvider(_org)
+              .overrideWith((ref) => Stream.value(_snapshot(const []))),
         ],
       );
       addTearDown(c.dispose);
@@ -389,9 +386,8 @@ void main() {
 
     test('an unknown role is blocked', () {
       expect(
-        withRole(
-          LicenseOrgMemberRole.unknown,
-        ).read(fleetWriteBlockProvider(_org)),
+        withRole(LicenseOrgMemberRole.unknown)
+            .read(fleetWriteBlockProvider(_org)),
         FleetWriteBlock.notAdmin,
       );
     });
@@ -401,9 +397,8 @@ void main() {
       // fleet snapshot holds, including stale cached rows.
       final c = ProviderContainer(
         overrides: [
-          licenseOrgRoleProvider(
-            _org,
-          ).overrideWithValue(LicenseOrgMemberRole.member),
+          licenseOrgRoleProvider(_org)
+              .overrideWithValue(LicenseOrgMemberRole.member),
           isOnlineProvider.overrideWithValue(false),
           licenseOrgFleetProvider(_org).overrideWith(
             (ref) => Stream.value(

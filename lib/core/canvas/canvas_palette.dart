@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// lint-allow: hardcoded-color — this file IS the palette source of
+// lint-allow: hardcoded-color - this file IS the palette source of
 // truth. The 64 Color() literals below are not decorative chrome that
 // should route through AppTheme / AccentColors; they are the wire-
 // format palette identified by `palette_id = 1` in CANVAS_V0_1.md §11.
@@ -11,7 +11,7 @@
 //
 // Spec anchor: docs/canvas/CANVAS_V0_1.md §11 "Palette" and §S0.ux.15.
 // 64 entries indexed 0..63. Index 0 is the "default / unpainted"
-// sentinel — receivers render it as fully transparent so the screen
+// sentinel - receivers render it as fully transparent so the screen
 // background shows through. Indices 1..63 are 63 curated colours.
 //
 // Changing any of these values is a spec break: the wire format
@@ -44,9 +44,9 @@ abstract final class SocialMeshPalette {
   /// 1..63 are curated palette entries grouped by hue family for
   /// quick mental access in the future full palette sheet.
   static const List<Color> colors = <Color>[
-    // 0..0 — sentinel
+    // 0..0 - sentinel
     Color(0x00000000), // 0 transparent / unpainted
-    // 1..8 — neutrals + black/white spine
+    // 1..8 - neutrals + black/white spine
     Color(0xFFFFFFFF), // 1 white
     Color(0xFFE5E7EB), // 2 fog
     Color(0xFFD1D5DB), // 3 light grey
@@ -55,7 +55,7 @@ abstract final class SocialMeshPalette {
     Color(0xFF374151), // 6 dark slate
     Color(0xFF1F2937), // 7 graphite
     Color(0xFF000000), // 8 black
-    // 9..15 — reds
+    // 9..15 - reds
     Color(0xFFFFC1B4), // 9 blush
     Color(0xFFFF7373), // 10 coral
     Color(0xFFFF4D4D), // 11 red
@@ -63,7 +63,7 @@ abstract final class SocialMeshPalette {
     Color(0xFFB91C1C), // 13 brick
     Color(0xFF7F1D1D), // 14 maroon
     Color(0xFF4C0519), // 15 oxblood
-    // 16..22 — oranges + browns
+    // 16..22 - oranges + browns
     Color(0xFFFFD7B5), // 16 peach
     Color(0xFFFFAA66), // 17 apricot
     Color(0xFFFF8A1F), // 18 orange
@@ -71,7 +71,7 @@ abstract final class SocialMeshPalette {
     Color(0xFFB45309), // 20 amber-bark
     Color(0xFF7C2D12), // 21 chestnut
     Color(0xFF44260B), // 22 espresso
-    // 23..29 — yellows + olives
+    // 23..29 - yellows + olives
     Color(0xFFFFF3B0), // 23 vanilla
     Color(0xFFFFE066), // 24 cream
     Color(0xFFFACC15), // 25 yellow
@@ -79,7 +79,7 @@ abstract final class SocialMeshPalette {
     Color(0xFFA16207), // 27 mustard
     Color(0xFF65A30D), // 28 olive
     Color(0xFF3F6212), // 29 deep olive
-    // 30..36 — greens
+    // 30..36 - greens
     Color(0xFFBBF7D0), // 30 mint
     Color(0xFF86EFAC), // 31 spring
     Color(0xFF22C55E), // 32 green
@@ -87,7 +87,7 @@ abstract final class SocialMeshPalette {
     Color(0xFF15803D), // 34 forest
     Color(0xFF166534), // 35 pine
     Color(0xFF14532D), // 36 deep forest
-    // 37..43 — teals + cyans
+    // 37..43 - teals + cyans
     Color(0xFFA5F3FC), // 37 ice
     Color(0xFF67E8F9), // 38 sky
     Color(0xFF06B6D4), // 39 cyan
@@ -95,7 +95,7 @@ abstract final class SocialMeshPalette {
     Color(0xFF0E7490), // 41 deep teal
     Color(0xFF155E75), // 42 lagoon
     Color(0xFF164E63), // 43 trench
-    // 44..50 — blues
+    // 44..50 - blues
     Color(0xFFBFDBFE), // 44 powder
     Color(0xFF93C5FD), // 45 sky blue
     Color(0xFF60A5FA), // 46 azure
@@ -103,7 +103,7 @@ abstract final class SocialMeshPalette {
     Color(0xFF1D4ED8), // 48 royal
     Color(0xFF1E3A8A), // 49 navy
     Color(0xFF172554), // 50 midnight
-    // 51..57 — violets + magentas
+    // 51..57 - violets + magentas
     Color(0xFFDDD6FE), // 51 lilac
     Color(0xFFA78BFA), // 52 lavender
     Color(0xFF8B5CF6), // 53 purple
@@ -111,7 +111,7 @@ abstract final class SocialMeshPalette {
     Color(0xFF4C1D95), // 55 deep violet
     Color(0xFFD946EF), // 56 magenta
     Color(0xFFA21CAF), // 57 plum
-    // 58..63 — pinks + bright accents (the "graffiti" tail)
+    // 58..63 - pinks + bright accents (the "graffiti" tail)
     Color(0xFFFBCFE8), // 58 rose
     Color(0xFFF472B6), // 59 hot pink
     Color(0xFFEC4899), // 60 pink
@@ -205,7 +205,7 @@ abstract final class SocialMeshPalette {
   ];
 
   /// Look up a colour by palette index. Returns [Colors.transparent]
-  /// for out-of-range values rather than throwing — the renderer must
+  /// for out-of-range values rather than throwing - the renderer must
   /// remain crash-safe under any cell row from the wire.
   static Color colorOf(int index) {
     if (index < 0 || index >= colors.length) return const Color(0x00000000);

@@ -9,7 +9,7 @@ import 'morse_table.dart';
 import 'sip_signal_constants.dart';
 import 'sip_signal_payload.dart';
 
-/// SIP Signal v1 binary codec — phrase OR Morse, single envelope.
+/// SIP Signal v1 binary codec - phrase OR Morse, single envelope.
 ///
 /// Wire layout:
 ///
@@ -36,14 +36,14 @@ import 'sip_signal_payload.dart';
 /// 7       N     utf8Uppercase[charCount]   (A-Z 0-9 ' .,?!/@')
 /// ```
 ///
-/// The codec is pure — no I/O, no clock, no audio. Validation is
+/// The codec is pure - no I/O, no clock, no audio. Validation is
 /// strict: out-of-range fields, unsupported instruments / kinds /
 /// chars all yield typed [SipSignalDecodeError]s rather than
 /// exceptions or silent fixups.
 abstract final class SipSignalCodec {
   /// Encode a phrase into wire bytes. Returns null when the resulting
   /// envelope would exceed [SipSignalConstants.maxEnvelopeBytes] or
-  /// any field is out of range — caller should treat null as a
+  /// any field is out of range - caller should treat null as a
   /// programmer error (UI-level validation gates ranges before
   /// reaching this surface).
   static Uint8List? encodePhrase({
@@ -164,7 +164,7 @@ abstract final class SipSignalCodec {
     return out;
   }
 
-  /// Decode wire bytes into a [SipSignalEnvelope]. Pure — no I/O —
+  /// Decode wire bytes into a [SipSignalEnvelope]. Pure - no I/O -
   /// and never throws. Every error is reported via
   /// [SipSignalDecodeResult.fail] so the dispatcher drops+logs
   /// without `try/catch`.
@@ -346,7 +346,7 @@ abstract final class SipSignalCodec {
     }
     final upper = text.toUpperCase();
     if (upper != text) {
-      // Receivers reject lowercase / mixed case — uppercase
+      // Receivers reject lowercase / mixed case - uppercase
       // normalisation is the sender's job.
       return const SipSignalDecodeResult.fail(
         SipSignalDecodeError.unsupportedMorseChar,

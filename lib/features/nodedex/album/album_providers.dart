@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Album Providers — state management for the Collector Album system.
+// Album Providers - state management for the Collector Album system.
 //
 // Manages:
 //   - View mode toggle (list vs album grid)
@@ -22,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
 import '../widgets/sigil_card.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 // =============================================================================
@@ -138,7 +139,7 @@ final albumGroupingProvider =
 
 /// Immutable snapshot of overall collection progress.
 ///
-/// Derived entirely from NodeDex data — no additional storage.
+/// Derived entirely from NodeDex data - no additional storage.
 /// Used by the album cover dashboard and progress indicators.
 class CollectionProgress {
   /// Total unique nodes discovered.
@@ -207,7 +208,7 @@ class CollectionProgress {
 
 /// Computes [CollectionProgress] from live NodeDex data.
 ///
-/// This is a derived provider — it recomputes automatically whenever
+/// This is a derived provider - it recomputes automatically whenever
 /// the underlying nodeDex entries or stats change. No manual refresh
 /// needed.
 final collectionProgressProvider = Provider<CollectionProgress>((ref) {
@@ -224,7 +225,7 @@ final collectionProgressProvider = Provider<CollectionProgress>((ref) {
   final regionBreakdown = <String, int>{};
 
   for (final entry in entries.values) {
-    // Rarity requires trait — compute it.
+    // Rarity requires trait - compute it.
     final traitResult = ref.read(nodeDexTraitProvider(entry.nodeNum));
     final trait = traitResult.primary;
 
@@ -277,7 +278,7 @@ final collectionProgressProvider = Provider<CollectionProgress>((ref) {
 // Album page data
 // =============================================================================
 
-/// A single album page — a named group of node entries.
+/// A single album page - a named group of node entries.
 ///
 /// Pages are assembled by the grouping provider and rendered as
 /// sticky-header sections in the album grid view.

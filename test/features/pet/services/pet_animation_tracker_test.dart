@@ -33,7 +33,7 @@ Future<PetAnimationTracker> _newTracker() async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('PetAnimationTracker — watermark mechanics', () {
+  group('PetAnimationTracker - watermark mechanics', () {
     test('ackedAt returns epoch-0 on a fresh install', () async {
       final t = await _newTracker();
       expect(t.ackedAt(_ownerNodeNum), DateTime.fromMillisecondsSinceEpoch(0));

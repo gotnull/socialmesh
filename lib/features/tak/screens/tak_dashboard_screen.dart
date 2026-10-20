@@ -165,9 +165,8 @@ class _ForceCountCell extends ConsumerWidget {
         final notifier = ref.read(takFilterProvider.notifier);
         notifier.clearAll();
         notifier.toggleAffiliation(affiliation);
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute<void>(builder: (_) => const TakScreen()));
+        Navigator.of(context)
+            .push(MaterialPageRoute<void>(builder: (_) => const TakScreen()));
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),

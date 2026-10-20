@@ -75,7 +75,7 @@ void main() {
       );
     });
 
-    test('cross-transport dedup — same content from different transports', () {
+    test('cross-transport dedup - same content from different transports', () {
       final loraPost = MeshPost(
         authorNodeNum: 42,
         createdAtMs: 1700000000000,
@@ -118,9 +118,8 @@ void main() {
         content: 'test',
         ttl: MeshPostTtl.hours1,
       );
-      final expected = DateTime.fromMillisecondsSinceEpoch(
-        now,
-      ).add(const Duration(hours: 1));
+      final expected = DateTime.fromMillisecondsSinceEpoch(now)
+          .add(const Duration(hours: 1));
       expect(post.expiresAt, equals(expected));
     });
 

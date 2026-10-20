@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Offline Download Sheet — region tile pre-download UI. Lets the user pick a
+// Offline Download Sheet - region tile pre-download UI. Lets the user pick a
 // detail level for the current map viewport, shows a tile-count + storage
 // estimate, and runs the download with live progress.
 
@@ -172,7 +172,7 @@ class _OfflineDownloadSheetState extends ConsumerState<_OfflineDownloadSheet>
               subtitle: context.l10n.offlineDownloadLargeSubtitle,
             ),
           ],
-          // Storage location picker — Android with a mounted removable SD
+          // Storage location picker - Android with a mounted removable SD
           // card only; every other platform/device renders nothing here.
           const OfflineStorageSection(),
           SizedBox(height: AppTheme.spacing20),

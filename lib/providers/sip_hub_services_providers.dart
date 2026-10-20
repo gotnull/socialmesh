@@ -39,14 +39,14 @@ const int peerServicePreviewMax = 3;
 /// Summary of the local user's active services. Watched by the SIP Hub
 /// "Your Services" section header.
 ///
-/// Emits `AsyncValue<List<MeshServiceInstance>>` — the UI layer handles
+/// Emits `AsyncValue<List<MeshServiceInstance>>` - the UI layer handles
 /// loading/error gracefully and renders an empty section when the
 /// feature is disabled or the list is empty.
 final localServicesSummaryProvider = FutureProvider<List<MeshServiceInstance>>((
   ref,
 ) async {
   // Reuses the authoritative mesh-services provider. No duplicate
-  // subscription — this is just a re-surfacing for the SIP Hub UI.
+  // subscription - this is just a re-surfacing for the SIP Hub UI.
   return ref.watch(meshServiceActiveInstancesProvider.future);
 });
 

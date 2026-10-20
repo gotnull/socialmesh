@@ -160,8 +160,7 @@ class MeshCoreBleTransport implements MeshTransport {
       MeshCoreBleDebugLogStore.instance.append(
         severity: MeshCoreBleDebugLogSeverity.info,
         category: MeshCoreBleDebugLogCategory.connect,
-        message:
-            'Connected (${redactMacFingerprint(device.id)})', // lint-allow: hardcoded-string
+        message: 'Connected (${redactMacFingerprint(device.id)})', // lint-allow: hardcoded-string
       );
     } catch (e) {
       AppLogging.ble('MeshCore: Connection error: $e');
@@ -223,8 +222,7 @@ class MeshCoreBleTransport implements MeshTransport {
       MeshCoreBleDebugLogStore.instance.append(
         severity: MeshCoreBleDebugLogSeverity.error,
         category: MeshCoreBleDebugLogCategory.discover,
-        message:
-            'Nordic UART service not found on device', // lint-allow: hardcoded-string
+        message: 'Nordic UART service not found on device', // lint-allow: hardcoded-string
       );
       throw MeshCoreServiceNotFoundException(
         'MeshCore Nordic UART service (${MeshCoreBleUuids.serviceUuid}) not found. '
@@ -311,8 +309,7 @@ class MeshCoreBleTransport implements MeshTransport {
         MeshCoreBleDebugLogStore.instance.append(
           severity: MeshCoreBleDebugLogSeverity.error,
           category: MeshCoreBleDebugLogCategory.notify,
-          message:
-              'Notify stream error: ${e.runtimeType}', // lint-allow: hardcoded-string
+          message: 'Notify stream error: ${e.runtimeType}', // lint-allow: hardcoded-string
         );
       },
     );
@@ -321,8 +318,7 @@ class MeshCoreBleTransport implements MeshTransport {
     MeshCoreBleDebugLogStore.instance.append(
       severity: MeshCoreBleDebugLogSeverity.info,
       category: MeshCoreBleDebugLogCategory.notify,
-      message:
-          'Subscribed to RX notifications (Nordic UART)', // lint-allow: hardcoded-string
+      message: 'Subscribed to RX notifications (Nordic UART)', // lint-allow: hardcoded-string
     );
   }
 

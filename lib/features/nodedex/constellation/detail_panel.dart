@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 
-// Constellation detail panel — fixed bottom bar showing selected node info.
+// Constellation detail panel - fixed bottom bar showing selected node info.
 //
 // Two states:
 // 1. Default: summary stats (node count, edge count, density label)
@@ -27,12 +27,12 @@ import '../widgets/sigil_painter.dart';
 // Edge density display
 // =============================================================================
 
-/// Visual density preset — controls which edges are visible.
+/// Visual density preset - controls which edges are visible.
 ///
 /// Each preset maps to a percentile threshold: edges with weight
 /// below that percentile are hidden. Higher percentile = fewer edges.
 enum EdgeDensity {
-  /// Stars only — zero background edges. Selection edges still appear.
+  /// Stars only - zero background edges. Selection edges still appear.
   none(1.0, 'Stars', Icons.auto_awesome),
 
   /// Top ~20% of edges shown very faintly.
@@ -47,7 +47,7 @@ enum EdgeDensity {
   /// All edges shown.
   all(0.0, 'All', Icons.all_inclusive);
 
-  /// The weight percentile threshold — edges below this are hidden.
+  /// The weight percentile threshold - edges below this are hidden.
   final double percentile;
 
   /// Human-readable label for the density level.
@@ -154,7 +154,7 @@ class ConstellationDetailPanel extends ConsumerWidget {
 }
 
 // =============================================================================
-// Default content — summary stats
+// Default content - summary stats
 // =============================================================================
 
 class _DefaultContent extends StatelessWidget {
@@ -236,7 +236,7 @@ class _DefaultContent extends StatelessWidget {
 }
 
 // =============================================================================
-// Selected content — node avatar, name, trait, actions
+// Selected content - node avatar, name, trait, actions
 // =============================================================================
 
 class _SelectedContent extends ConsumerWidget {

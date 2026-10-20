@@ -3,13 +3,13 @@
 
 /// Shared validation for node timestamps (e.g. lastHeard) before display.
 ///
-/// Rejects timestamps that are clearly invalid — epoch zero, pre-2020,
-/// or absurdly far in the future — so the UI can show a safe fallback
+/// Rejects timestamps that are clearly invalid - epoch zero, pre-2020,
+/// or absurdly far in the future - so the UI can show a safe fallback
 /// instead of a misleading date.
 ///
 /// Constants mirror ProtocolService._minPlausibleEpoch / _maxFutureSlack.
 abstract final class TimestampValidation {
-  /// 2020-01-01 00:00:00 UTC — timestamps before this are treated as invalid.
+  /// 2020-01-01 00:00:00 UTC - timestamps before this are treated as invalid.
   static const int minPlausibleEpochSeconds = 1577836800;
 
   /// Maximum allowed future skew: 24 hours (86 400 seconds).

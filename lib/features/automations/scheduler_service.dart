@@ -110,8 +110,9 @@ class _ScheduleEntry implements Comparable<_ScheduleEntry> {
 }
 
 /// Callback for persisting schedule state
-typedef SchedulePersistCallback =
-    Future<void> Function(List<ScheduleSpec> schedules);
+typedef SchedulePersistCallback = Future<void> Function(
+  List<ScheduleSpec> schedules,
+);
 
 /// Callback for loading schedule state
 typedef ScheduleLoadCallback = Future<List<ScheduleSpec>> Function();
@@ -635,7 +636,7 @@ class InAppScheduler implements Scheduler {
     _ScheduleEntry? after,
   }) {
     if (!spec.enabled) return null;
-    // Check endAt boundary but NOT startAt — for repeating schedules,
+    // Check endAt boundary but NOT startAt - for repeating schedules,
     // startAt defines the anchor / earliest fire time, not an activation
     // gate. The scheduler must still enqueue future entries whose
     // computed fire time is ≥ startAt even when now < startAt.
@@ -676,13 +677,13 @@ class InAppScheduler implements Scheduler {
             nextFireTime = startTime.add(spec.every! * intervalCount);
           }
         } else {
-          // Fresh start — if a startAt anchor exists, align to it so that
+          // Fresh start - if a startAt anchor exists, align to it so that
           // fire times are deterministic (e.g. 09:00 + N*60min = 10:00,
           // 11:00, …) instead of drifting relative to the registration time.
           if (spec.startAt != null) {
             final elapsed = now.difference(spec.startAt!);
             if (elapsed.isNegative) {
-              // startAt is in the future — first fire is startAt + every
+              // startAt is in the future - first fire is startAt + every
               nextFireTime = spec.startAt!.add(spec.every!);
               intervalCount = 1;
             } else {

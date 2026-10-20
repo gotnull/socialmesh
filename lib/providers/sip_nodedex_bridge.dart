@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// SIP-NodeDex Bridge — connects SIP identity data to NodeDex entries.
+// SIP-NodeDex Bridge - connects SIP identity data to NodeDex entries.
 //
 // When SIP discovers a peer or verifies an identity claim, this bridge
 // updates the corresponding NodeDex entry with SIP-specific fields:

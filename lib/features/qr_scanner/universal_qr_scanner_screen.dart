@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — camera feed, glass blur would obscure scanner
+// lint-allow: scaffold - camera feed, glass blur would obscure scanner
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -595,7 +595,7 @@ class _UniversalQrScannerScreenState
       if (mounted) {
         Navigator.pop(context);
         // Meshtastic firmware stores Primary (index 0) with an empty
-        // `name` field by convention — empty name + AQ== PSK = the
+        // `name` field by convention - empty name + AQ== PSK = the
         // canonical default LongFast channel. Showing the literal `""`
         // in the snackbar is jarring; fall back to the localized
         // "Primary Channel" label (or `Channel <index>` for unnamed
@@ -613,7 +613,7 @@ class _UniversalQrScannerScreenState
       return;
     }
 
-    // Name collision with a DIFFERENT PSK — the user is scanning a QR
+    // Name collision with a DIFFERENT PSK - the user is scanning a QR
     // for an existing channel but the encryption key has drifted (or
     // the QR is from a different device). Silently appending at the
     // next free index produces ghost duplicates ("RnsHarness" at slot
@@ -638,7 +638,7 @@ class _UniversalQrScannerScreenState
         }
         return;
       }
-      // User opted to replace — overwrite at the existing index, keep
+      // User opted to replace - overwrite at the existing index, keep
       // the existing role/uplink/downlink so we don't silently flip
       // any side settings the user already configured locally.
       // `scannedName` is provably non-empty here (we entered this
@@ -876,7 +876,7 @@ class _UniversalQrScannerScreenState
   /// Meshtastic iOS app enforces in `AccessoryManager.saveChannelSet`
   /// (Add mode rejects duplicate names with "Channel already exists";
   /// Replace All wipes the channel set). We surface the equivalent
-  /// choice as Replace / Cancel — appropriate for the per-channel QR
+  /// choice as Replace / Cancel - appropriate for the per-channel QR
   /// shape SocialMesh uses today.
   Future<bool?> _showChannelNameCollisionSheet({
     required ChannelConfig existing,

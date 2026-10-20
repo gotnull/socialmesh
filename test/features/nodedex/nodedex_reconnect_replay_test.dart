@@ -213,7 +213,7 @@ void main() {
   // Stale device-DB sync replay must NOT inflate encounter statistics
   // ===========================================================================
 
-  group('reconnect replay — stale node updates do not inflate stats', () {
+  group('reconnect replay - stale node updates do not inflate stats', () {
     test('stale node DB sync record (>2 min old) does not increment '
         'encounter count on first discovery', () async {
       final ctx = _createTestContainer(preInitStore: preInitStore);
@@ -221,7 +221,7 @@ void main() {
       await _initProvider(ctx.container);
 
       // Simulate a NodeInfo replay during reconnect: the device says
-      // "I last heard this node 30 minutes ago" — the protocol layer
+      // "I last heard this node 30 minutes ago" - the protocol layer
       // surfaces that as `node.lastHeard = now - 30min`.
       final now = clock.now();
       final staleNode = _makeNode(
@@ -238,10 +238,10 @@ void main() {
       expect(state[1001], isNotNull, reason: 'Entry should be created');
       // Discovery creates the entry with the historical timestamp. The
       // critical assertions are:
-      //   1. encounterCount stays at the discovery default (1) — no
+      //   1. encounterCount stays at the discovery default (1) - no
       //      live-encounter bump on top of the seed.
       //   2. lastSeen reflects the firmware's lastHeard (30 min ago),
-      //      not DateTime.now() — that was the field-bug symptom.
+      //      not DateTime.now() - that was the field-bug symptom.
       //   3. The single discovery EncounterRecord is timestamped at the
       //      historical receive time, so the activity histogram does
       //      not get a fresh bucket "at the reconnect moment".
@@ -249,21 +249,18 @@ void main() {
       expect(
         entry.encounterCount,
         equals(1),
-        reason:
-            'Stale node-DB sync must not bump encounterCount beyond discovery default',
+        reason: 'Stale node-DB sync must not bump encounterCount beyond discovery default',
       );
       final lastSeenAge = now.difference(entry.lastSeen);
       expect(
         lastSeenAge.inMinutes,
         greaterThanOrEqualTo(29),
-        reason:
-            'lastSeen must mirror the firmware lastHeard (~30 min ago), not now',
+        reason: 'lastSeen must mirror the firmware lastHeard (~30 min ago), not now',
       );
       expect(
         entry.encounters.length,
         equals(1),
-        reason:
-            'Discovery seeds exactly one historical encounter — sync replay must not pile on more',
+        reason: 'Discovery seeds exactly one historical encounter - sync replay must not pile on more',
       );
       final activityBucketAge = now.difference(
         entry.encounters.first.timestamp,
@@ -271,8 +268,7 @@ void main() {
       expect(
         activityBucketAge.inMinutes,
         greaterThanOrEqualTo(29),
-        reason:
-            'Activity bucket must reflect the historical receive time, not the reconnect moment',
+        reason: 'Activity bucket must reflect the historical receive time, not the reconnect moment',
       );
     });
 
@@ -300,7 +296,7 @@ void main() {
       final encountersBefore = beforeEntry!.encounterCount;
       final encounterRecordsBefore = beforeEntry.encounters.length;
 
-      // Step 2: simulate reconnect replay — the device delivers the same
+      // Step 2: simulate reconnect replay - the device delivers the same
       // node, but `lastHeard` is 30 minutes ago (sync replay, not live).
       final now = clock.now();
       ctx2.nodesNotifier.setNodes({
@@ -323,110 +319,109 @@ void main() {
       expect(
         afterEntry.encounters.length,
         equals(encounterRecordsBefore),
-        reason:
-            'Reconnect with stale lastHeard must not append a new encounter record (activity histogram bucket)',
+        reason: 'Reconnect with stale lastHeard must not append a new encounter record (activity histogram bucket)',
       );
     });
 
-    test('reconnect sequence: existing node lastSeen 30 min ago stays '
-        'unchanged — encounter statistics not inflated by sync replay', () async {
-      final ctx = _createTestContainer(preInitStore: preInitStore);
-      addTearDown(ctx.container.dispose);
-      await _initProvider(ctx.container);
+    test(
+      'reconnect sequence: existing node lastSeen 30 min ago stays '
+      'unchanged - encounter statistics not inflated by sync replay',
+      () async {
+        final ctx = _createTestContainer(preInitStore: preInitStore);
+        addTearDown(ctx.container.dispose);
+        await _initProvider(ctx.container);
 
-      // Step 1: live sighting establishes the baseline.
-      final t0 = clock.now();
-      ctx.nodesNotifier.setNodes({
-        3003: _makeNode(3003, lastHeard: t0, snr: 10),
-      });
-      await _pumpEventQueue();
+        // Step 1: live sighting establishes the baseline.
+        final t0 = clock.now();
+        ctx.nodesNotifier.setNodes({
+          3003: _makeNode(3003, lastHeard: t0, snr: 10),
+        });
+        await _pumpEventQueue();
 
-      final baseline = ctx.container.read(nodeDexProvider)[3003];
-      expect(baseline, isNotNull);
-      final encountersBaseline = baseline!.encounterCount;
-      final encounterRecordsBaseline = baseline.encounters.length;
+        final baseline = ctx.container.read(nodeDexProvider)[3003];
+        expect(baseline, isNotNull);
+        final encountersBaseline = baseline!.encounterCount;
+        final encounterRecordsBaseline = baseline.encounters.length;
 
-      // Step 2: reconnect — node update arrives with lastHeard 30 min
-      // ago. This is the firmware's authoritative receive time, not now,
-      // so it must classify as deviceDbSync, not livePacket.
-      ctx.nodesNotifier.setNodes({
-        3003: _makeNode(
-          3003,
-          lastHeard: t0.subtract(const Duration(minutes: 30)),
-          firstHeard: baseline.firstSeen,
-          snr: 8,
-        ),
-      });
-      await _pumpEventQueue();
+        // Step 2: reconnect - node update arrives with lastHeard 30 min
+        // ago. This is the firmware's authoritative receive time, not now,
+        // so it must classify as deviceDbSync, not livePacket.
+        ctx.nodesNotifier.setNodes({
+          3003: _makeNode(
+            3003,
+            lastHeard: t0.subtract(const Duration(minutes: 30)),
+            firstHeard: baseline.firstSeen,
+            snr: 8,
+          ),
+        });
+        await _pumpEventQueue();
 
-      final afterReconnect = ctx.container.read(nodeDexProvider)[3003];
-      expect(afterReconnect, isNotNull);
-      expect(
-        afterReconnect!.encounterCount,
-        equals(encountersBaseline),
-        reason:
-            'Reconnect replay must leave encounterCount untouched (no fake encounter)',
-      );
-      expect(
-        afterReconnect.encounters.length,
-        equals(encounterRecordsBaseline),
-        reason: 'Reconnect replay must leave the activity histogram unchanged',
-      );
-    });
+        final afterReconnect = ctx.container.read(nodeDexProvider)[3003];
+        expect(afterReconnect, isNotNull);
+        expect(
+          afterReconnect!.encounterCount,
+          equals(encountersBaseline),
+          reason: 'Reconnect replay must leave encounterCount untouched (no fake encounter)',
+        );
+        expect(
+          afterReconnect.encounters.length,
+          equals(encounterRecordsBaseline),
+          reason:
+              'Reconnect replay must leave the activity histogram unchanged',
+        );
+      },
+    );
   });
 
   // ===========================================================================
   // Live packets DO record encounters
   // ===========================================================================
 
-  group('reconnect replay — live packets still record encounters', () {
-    test(
-      'live inbound packet (lastHeard within 2 min of now) records an encounter',
-      () async {
-        final ctx = _createTestContainer(preInitStore: preInitStore);
-        addTearDown(ctx.container.dispose);
-        await _initProvider(ctx.container);
+  group('reconnect replay - live packets still record encounters', () {
+    test('live inbound packet (lastHeard within 2 min of now) records an encounter', () async {
+      final ctx = _createTestContainer(preInitStore: preInitStore);
+      addTearDown(ctx.container.dispose);
+      await _initProvider(ctx.container);
 
-        final initialEntry = NodeDexEntry.discovered(
-          nodeNum: 4004,
-          timestamp: clock.now().subtract(const Duration(days: 1)),
-        );
-        await preInitStore.saveEntryImmediate(initialEntry);
+      final initialEntry = NodeDexEntry.discovered(
+        nodeNum: 4004,
+        timestamp: clock.now().subtract(const Duration(days: 1)),
+      );
+      await preInitStore.saveEntryImmediate(initialEntry);
 
-        ctx.container.dispose();
-        final ctx2 = _createTestContainer(preInitStore: preInitStore);
-        addTearDown(ctx2.container.dispose);
-        await _initProvider(ctx2.container);
+      ctx.container.dispose();
+      final ctx2 = _createTestContainer(preInitStore: preInitStore);
+      addTearDown(ctx2.container.dispose);
+      await _initProvider(ctx2.container);
 
-        final beforeEntry = ctx2.container.read(nodeDexProvider)[4004];
-        expect(beforeEntry, isNotNull);
+      final beforeEntry = ctx2.container.read(nodeDexProvider)[4004];
+      expect(beforeEntry, isNotNull);
 
-        final now = clock.now();
-        ctx2.nodesNotifier.setNodes({
-          4004: _makeNode(
-            4004,
-            lastHeard: now.subtract(const Duration(seconds: 5)),
-            firstHeard: beforeEntry!.firstSeen,
-            snr: 12,
-            rssi: -80,
-          ),
-        });
-        await _pumpEventQueue();
+      final now = clock.now();
+      ctx2.nodesNotifier.setNodes({
+        4004: _makeNode(
+          4004,
+          lastHeard: now.subtract(const Duration(seconds: 5)),
+          firstHeard: beforeEntry!.firstSeen,
+          snr: 12,
+          rssi: -80,
+        ),
+      });
+      await _pumpEventQueue();
 
-        final afterEntry = ctx2.container.read(nodeDexProvider)[4004];
-        expect(afterEntry, isNotNull);
-        expect(
-          afterEntry!.encounterCount,
-          greaterThan(beforeEntry.encounterCount),
-          reason: 'Live inbound packet must increment encounterCount',
-        );
-        expect(
-          afterEntry.encounters.length,
-          greaterThan(beforeEntry.encounters.length),
-          reason: 'Live inbound packet must append an activity bucket',
-        );
-      },
-    );
+      final afterEntry = ctx2.container.read(nodeDexProvider)[4004];
+      expect(afterEntry, isNotNull);
+      expect(
+        afterEntry!.encounterCount,
+        greaterThan(beforeEntry.encounterCount),
+        reason: 'Live inbound packet must increment encounterCount',
+      );
+      expect(
+        afterEntry.encounters.length,
+        greaterThan(beforeEntry.encounters.length),
+        reason: 'Live inbound packet must append an activity bucket',
+      );
+    });
 
     test(
       'live encounter timestamp tracks node.lastHeard, not DateTime.now()',
@@ -446,7 +441,7 @@ void main() {
         addTearDown(ctx2.container.dispose);
         await _initProvider(ctx2.container);
 
-        // Live sighting where node.lastHeard is 30 seconds ago — within
+        // Live sighting where node.lastHeard is 30 seconds ago - within
         // the live window, so it counts as a fresh encounter, but the
         // encounter timestamp must reflect the actual heard time, not now.
         final now = clock.now();
@@ -472,8 +467,7 @@ void main() {
         expect(
           delta,
           lessThanOrEqualTo(1000),
-          reason:
-              'Encounter timestamp must reflect node.lastHeard (the actual receive time), not DateTime.now()',
+          reason: 'Encounter timestamp must reflect node.lastHeard (the actual receive time), not DateTime.now()',
         );
       },
     );
@@ -517,8 +511,7 @@ void main() {
       expect(
         entry.encounters.length,
         equals(initialEntry.encounters.length),
-        reason:
-            'Init seed pass must not append activity buckets — encounter count and activity history come from storage, not the seed walk',
+        reason: 'Init seed pass must not append activity buckets - encounter count and activity history come from storage, not the seed walk',
       );
     });
   });

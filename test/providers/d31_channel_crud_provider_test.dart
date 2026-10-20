@@ -14,7 +14,7 @@
 //   3. add/edit/setChannel converge on the same wire op (firmware's
 //      `CMD_SET_CHANNEL` is overwrite-by-slot).
 //   4. removeChannel emits the same byte vector as setChannel(idx,
-//      "", zeros) — no dedicated delete opcode at the pinned SHA.
+//      "", zeros) - no dedicated delete opcode at the pinned SHA.
 //   5. Firmware-error (no OK ack) returns false and does NOT mutate
 //      local state.
 
@@ -189,7 +189,7 @@ void main() {
       final container = _buildContainer(session: session);
       addTearDown(container.dispose);
 
-      // No OK simulated — the underlying setChannel times out.
+      // No OK simulated - the underlying setChannel times out.
       // Provider must return false; no refresh fires (empty Sent at
       // most has the 1 SET_CHANNEL we just attempted).
       final notifier = container.read(meshCoreChannelsProvider.notifier);

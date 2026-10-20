@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../utils/time_format.dart';
+
 import 'package:share_plus/share_plus.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -60,7 +61,7 @@ class _AetherFlightDetailScreenState
             .where((f) => f.id == widget.flight.id)
             .firstOrNull ??
         widget.flight;
-    // Ownership check — you cannot report a reception on your own flight.
+    // Ownership check - you cannot report a reception on your own flight.
     // Compare Firebase UID (for Firestore flights) and node hex ID (for
     // API-shared flights where userId is empty).
     final currentUser = ref.watch(currentUserProvider);
@@ -83,7 +84,7 @@ class _AetherFlightDetailScreenState
             (liveFlight.isActive && !liveFlight.isUpcoming));
 
     // Only hit OpenSky when the flight could actually be in the air.
-    // Past and upcoming flights have no live position — skip the API call
+    // Past and upcoming flights have no live position - skip the API call
     // entirely so the screen loads instantly.
     final bool shouldTrackPosition =
         liveFlight.isInFlight ||
@@ -124,7 +125,7 @@ class _AetherFlightDetailScreenState
       slivers: [
         // Route header - airport codes and distance
         SliverToBoxAdapter(child: _buildRouteHeader(context)),
-        // Route map — dark-themed map with great-circle arc
+        // Route map - dark-themed map with great-circle arc
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.only(top: 12),
@@ -731,7 +732,7 @@ class _AetherFlightDetailScreenState
   }
 
   void _reportReception(BuildContext context) {
-    // Gate on auth — navigate to account screen if not signed in.
+    // Gate on auth - navigate to account screen if not signed in.
     final user = ref.read(currentUserProvider);
     if (user == null) {
       Navigator.of(context).pushNamed('/account');
@@ -1014,7 +1015,7 @@ const int _maxReportNotesLength = 500;
 
 /// Bottom sheet for reporting a reception.
 ///
-/// Auto-detects RSSI, SNR, location, and distance from the mesh — no
+/// Auto-detects RSSI, SNR, location, and distance from the mesh - no
 /// manual input required. The user just taps "Submit" to confirm.
 class _ReportBottomSheet extends ConsumerStatefulWidget {
   final AetherFlight flight;
@@ -1407,7 +1408,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet>
             ),
             const SizedBox(height: AppTheme.spacing16),
 
-            // Optional notes — matches NodeDex _UserNoteCard pattern
+            // Optional notes - matches NodeDex _UserNoteCard pattern
             if (!_showNotes)
               Center(
                 child: GestureDetector(

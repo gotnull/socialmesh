@@ -75,7 +75,7 @@ PetTimelineView _project({
 }
 
 void main() {
-  group('importanceForKind — policy covers every CareEventKind', () {
+  group('importanceForKind - policy covers every CareEventKind', () {
     test('every kind has a deterministic tier', () {
       for (final k in CareEventKind.values) {
         final tier = importanceForKind(k);
@@ -145,7 +145,7 @@ void main() {
     });
   });
 
-  group('origin block — always present', () {
+  group('origin block - always present', () {
     test('empty records: origin populated from PetState', () {
       final state = _stateAt(
         stage: PetStage.juvenile,
@@ -164,7 +164,7 @@ void main() {
     });
   });
 
-  group('sections — stage bucketing', () {
+  group('sections - stage bucketing', () {
     test('empty records → single section for current stage', () {
       final state = _stateAt(
         stage: PetStage.juvenile,
@@ -231,7 +231,7 @@ void main() {
     });
   });
 
-  group('grouping — minor events within the window', () {
+  group('grouping - minor events within the window', () {
     test('three charges in 5 minutes collapse to one grouped entry', () {
       final state = _stateAt(
         stage: PetStage.juvenile,
@@ -403,7 +403,7 @@ void main() {
     });
   });
 
-  group('upcoming — next stage ETA', () {
+  group('upcoming - next stage ETA', () {
     test('juvenile pet → upcoming adolescent with remaining time', () {
       final state = _stateAt(
         stage: PetStage.juvenile,
@@ -436,7 +436,7 @@ void main() {
     });
   });
 
-  group('determinism — same inputs → same outputs', () {
+  group('determinism - same inputs → same outputs', () {
     test('view-model equality holds across two projections', () {
       final state = _stateAt(
         stage: PetStage.juvenile,
@@ -458,7 +458,7 @@ void main() {
     });
   });
 
-  group('evictOldestMinorsToCap — majors never lost', () {
+  group('evictOldestMinorsToCap - majors never lost', () {
     test('under cap: list returned unchanged', () {
       final records = [_rec(at: _hatched, kind: CareEventKind.charged)];
       final kept = evictOldestMinorsToCap(records, 10);
@@ -476,7 +476,7 @@ void main() {
         _rec(
           at: t0.add(const Duration(minutes: 2)),
           kind: CareEventKind.hatched,
-        ), // MAJOR — must survive
+        ), // MAJOR - must survive
         _rec(
           at: t0.add(const Duration(minutes: 3)),
           kind: CareEventKind.charged,
@@ -514,7 +514,7 @@ void main() {
     });
   });
 
-  group('buildRecordFromEvent — stamps current state context', () {
+  group('buildRecordFromEvent - stamps current state context', () {
     test('stage + branch come from PetState at write time', () {
       final state = _stateAt(stage: PetStage.adult, branch: PetBranch.volatile);
       final event = CareEvent(

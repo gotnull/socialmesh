@@ -85,7 +85,7 @@ void main() {
         widgetSource.contains('EnvironmentMetricsLogScreen()'),
         true,
         reason:
-            'Widget must navigate to EnvironmentMetricsLogScreen — that is '
+            'Widget must navigate to EnvironmentMetricsLogScreen - that is '
             'the entire point of the quick-access tile.',
       );
     });

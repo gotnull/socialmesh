@@ -88,7 +88,7 @@ void main() {
     test(
       'returns false if the frame encode itself fails (codec validation)',
       () async {
-        // Frame with linkFrame flag unset — codec rejects it.
+        // Frame with linkFrame flag unset - codec rejects it.
         final bad = OverlayLinkFrame(
           msgType: OverlayLinkMsgType.linkPing,
           flags: 0,

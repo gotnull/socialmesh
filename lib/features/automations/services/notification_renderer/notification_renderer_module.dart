@@ -8,7 +8,7 @@
 /// ```dart
 /// final spec = NotificationSpec.fromUserTemplate(
 ///   titleTemplate: '{{node.name}} Alert',
-///   bodyTemplate: '{{node.name}} battery at {{battery}} — {{location}}',
+///   bodyTemplate: '{{node.name}} battery at {{battery}} - {{location}}',
 /// );
 ///
 /// final result = NotificationRenderer.render(

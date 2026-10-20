@@ -104,7 +104,7 @@ class _NetworkConnectionSectionState
     }
   }
 
-  /// Existing Meshtastic TCP path — wired through `deviceConnectionProvider`
+  /// Existing Meshtastic TCP path - wired through `deviceConnectionProvider`
   /// and `transportTypeProvider`. Behaviour unchanged from the
   /// pre-protocol-selector flow.
   Future<void> _connectMeshtasticEndpoint(
@@ -136,7 +136,7 @@ class _NetworkConnectionSectionState
     widget.onConnectionSuccess?.call(deviceInfo);
   }
 
-  /// Dev/debug MeshCore TCP path — bypasses the Meshtastic transport
+  /// Dev/debug MeshCore TCP path - bypasses the Meshtastic transport
   /// stack entirely and drives [ConnectionCoordinator.connectMeshCoreTcp].
   /// Endpoint persistence is the same as Meshtastic, but the connect
   /// flow has no provider/transport overlap.
@@ -148,7 +148,7 @@ class _NetworkConnectionSectionState
     NetworkEndpoint endpoint,
     AppLocalizations l10n,
   ) async {
-    // Capture providers before any await — ref invalidation is safe
+    // Capture providers before any await - ref invalidation is safe
     // here because we re-check `mounted` after each await boundary.
     final coordinator = ref.read(connectionCoordinatorProvider);
     final endpointsNotifier = ref.read(networkEndpointsProvider.notifier);
@@ -559,7 +559,7 @@ class _AddEndpointFormState extends ConsumerState<_AddEndpointForm>
 
   /// Default the port (and clear it from any previous default) when the
   /// user toggles the protocol chip. Only changes the field if it
-  /// currently holds the *other* protocol's default — never overrides a
+  /// currently holds the *other* protocol's default - never overrides a
   /// user-entered custom value.
   void _setProtocol(NetworkEndpointProtocol next) {
     if (_protocol == next) return;

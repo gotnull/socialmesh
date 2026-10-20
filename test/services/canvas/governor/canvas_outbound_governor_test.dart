@@ -18,7 +18,7 @@ class _FakeClock {
 }
 
 void main() {
-  group('CanvasOutboundGovernor — basic budget', () {
+  group('CanvasOutboundGovernor - basic budget', () {
     test('starts with full remaining budget', () {
       final g = CanvasOutboundGovernor();
       expect(g.remainingBytes, CanvasOutboundGovernor.budgetBytes);
@@ -56,7 +56,7 @@ void main() {
     });
   });
 
-  group('CanvasOutboundGovernor — sliding window', () {
+  group('CanvasOutboundGovernor - sliding window', () {
     test('events outside the trailing 60 s are pruned', () {
       final clock = _FakeClock(0);
       final g = CanvasOutboundGovernor(nowMs: clock.now);
@@ -91,7 +91,7 @@ void main() {
     });
   });
 
-  group('CanvasOutboundGovernor — tryConsume atomicity', () {
+  group('CanvasOutboundGovernor - tryConsume atomicity', () {
     test('tryConsume returns true and charges budget on success', () {
       final clock = _FakeClock(0);
       final g = CanvasOutboundGovernor(nowMs: clock.now);
@@ -116,7 +116,7 @@ void main() {
     });
   });
 
-  group('CanvasOutboundGovernor — defensive recordSend', () {
+  group('CanvasOutboundGovernor - defensive recordSend', () {
     test('recordSend silently ignores invalid byte counts', () {
       final g = CanvasOutboundGovernor();
       g.recordSend(0);

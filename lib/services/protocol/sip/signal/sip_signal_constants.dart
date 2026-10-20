@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// SIP Signal v1 — wire constants for the musical-phrase + Morse
+// SIP Signal v1 - wire constants for the musical-phrase + Morse
 // signal layer that rides inside accepted SIP Handshake DM sessions.
 //
 // Two signal kinds share one envelope:
 //
 //   Phrase (kind=0x01): a 1..8 note musical phrase. Each note is a
-//   `(midiNote, durationTicks, velocity)` triple — the receiver
+//   `(midiNote, durationTicks, velocity)` triple - the receiver
 //   synthesizes audio LOCALLY using `SipSignalSynthService`. No audio
 //   samples are ever placed on the wire.
 //
@@ -65,7 +65,7 @@ abstract final class SipSignalConstants {
   /// Keeps the bubble readable + the wire payload bounded.
   static const int maxMorseChars = 40;
 
-  /// Morse: default speed (Words Per Minute). Standard SOS speed —
+  /// Morse: default speed (Words Per Minute). Standard SOS speed -
   /// well within human-hand sending range.
   static const int defaultMorseWpm = 15;
 
@@ -104,19 +104,19 @@ enum SipSignalKind {
 
 /// Built-in instruments. Each maps to a specific synthesis envelope
 /// inside `SipSignalSynthService`. The wire only carries the byte
-/// code — the synth implementation is local and can evolve.
+/// code - the synth implementation is local and can evolve.
 enum SipSignalInstrument {
   /// Pure sine wave with simple ADSR.
   sine(0x01),
 
-  /// Bell — sine with fast attack + long exponential decay.
+  /// Bell - sine with fast attack + long exponential decay.
   bell(0x02),
 
-  /// Pluck — short noise burst into a low-pass filter (Karplus-Strong
+  /// Pluck - short noise burst into a low-pass filter (Karplus-Strong
   /// style approximation in v1).
   pluck(0x03),
 
-  /// Chirp — frequency sweep around the target note for an alert /
+  /// Chirp - frequency sweep around the target note for an alert /
   /// "hey listen" feel.
   chirp(0x04);
 

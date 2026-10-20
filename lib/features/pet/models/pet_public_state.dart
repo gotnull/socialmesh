@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetPublicState — the ≤8-byte mesh-visible summary of another node's pet.
+// PetPublicState - the ≤8-byte mesh-visible summary of another node's pet.
 // Published via MRRP service pet.v1. Cached locally in pet.db's
 // remote_pet_cache table.
 //
@@ -15,7 +15,7 @@ import 'pet_enums.dart';
 @immutable
 class PetPublicState {
   /// Full 32-bit deterministic seed. Enough entropy for the remote renderer
-  /// to differentiate morphology within the same branch — no extra variant
+  /// to differentiate morphology within the same branch - no extra variant
   /// bits needed.
   final int dnaSeed;
   final PetStage stage;

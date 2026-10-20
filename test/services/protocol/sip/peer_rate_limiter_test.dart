@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// [PeerRateLimiter] tests — per-kind defaults, burst behaviour,
+/// [PeerRateLimiter] tests - per-kind defaults, burst behaviour,
 /// per-peer isolation, refill, idle eviction, never-bypass-global
 /// (covered by absence of any global state in the limiter).
 library;
@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/protocol/sip/peer_rate_limiter.dart';
 
 void main() {
-  group('PeerRateLimiter — defaults', () {
+  group('PeerRateLimiter - defaults', () {
     test('text: burst of 6 then a rate-limit hit', () {
       var nowMs = 1700000000000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
@@ -19,7 +19,7 @@ void main() {
       for (var i = 0; i < 6; i++) {
         expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
       }
-      // 7th immediate acquire is denied — burst is 6, refill not in.
+      // 7th immediate acquire is denied - burst is 6, refill not in.
       expect(
         limiter.tryAcquire(peer, PeerRateKind.text),
         isFalse,
@@ -38,7 +38,7 @@ void main() {
         limiter.tryAcquire(peer, PeerRateKind.sketch),
         isFalse,
         reason:
-            'sketch burst is 2 — kept tight (vs. text=6) because ink '
+            'sketch burst is 2 - kept tight (vs. text=6) because ink '
             'frames are much larger on the wire',
       );
     });
@@ -55,7 +55,7 @@ void main() {
     });
   });
 
-  group('PeerRateLimiter — refill', () {
+  group('PeerRateLimiter - refill', () {
     test('text refills proportionally over the window', () {
       var nowMs = 1000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
@@ -84,7 +84,7 @@ void main() {
       expect(limiter.tryAcquire(peer, PeerRateKind.sketch), isTrue);
       expect(limiter.canSend(peer, PeerRateKind.sketch), isFalse);
 
-      nowMs += 10 * 1000; // half a refill — still under 1 full token
+      nowMs += 10 * 1000; // half a refill - still under 1 full token
       expect(limiter.canSend(peer, PeerRateKind.sketch), isFalse);
 
       nowMs += 11 * 1000; // total +21s → 1 full token replenished
@@ -98,13 +98,13 @@ void main() {
 
       // Idle for hours; capacity is still capped at burst (6 for text).
       nowMs += 60 * 60 * 1000;
-      // Idle eviction window is 5 minutes — after an hour of inactivity
+      // Idle eviction window is 5 minutes - after an hour of inactivity
       // the bucket is gone, so we get a fresh one at full capacity (6).
       expect(limiter.tokensFor(peer, PeerRateKind.text), equals(6.0));
     });
   });
 
-  group('PeerRateLimiter — peer isolation', () {
+  group('PeerRateLimiter - peer isolation', () {
     test('peers do not share buckets', () {
       var nowMs = 1000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
@@ -135,7 +135,7 @@ void main() {
     });
   });
 
-  group('PeerRateLimiter — eviction + reset', () {
+  group('PeerRateLimiter - eviction + reset', () {
     test('idle bucket is evicted after idleEvictionMs', () {
       var nowMs = 1000;
       final limiter = PeerRateLimiter(
@@ -147,7 +147,7 @@ void main() {
       expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
       expect(limiter.bucketCount, equals(1));
       nowMs += 5 * 1000;
-      // Touch any bucket — eviction sweeps run inline.
+      // Touch any bucket - eviction sweeps run inline.
       limiter.canSend(peer, PeerRateKind.sketch);
       expect(
         limiter.bucketCount,
@@ -180,7 +180,7 @@ void main() {
     });
   });
 
-  group('PeerRateLimiter — canSend / recordSend separation', () {
+  group('PeerRateLimiter - canSend / recordSend separation', () {
     test('canSend is non-mutating; recordSend deducts', () {
       var nowMs = 1000;
       final limiter = PeerRateLimiter(clock: () => nowMs);

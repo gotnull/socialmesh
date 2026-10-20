@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // D49-D2: per-contact toggle for "fire `clock sync` automatically on
-// successful admin login". Storage-only — no wire side. The admin
+// successful admin login". Storage-only - no wire side. The admin
 // settings screen reads + writes this toggle; the next admin login
 // pipeline reads it before deciding whether to dispatch a `clock
 // sync` CLI command alongside the standard `sendLogin`.

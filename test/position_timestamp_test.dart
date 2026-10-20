@@ -7,7 +7,7 @@
 // the standard Meshtastic timestamp fallback order:
 //   1. position.timestamp (GPS solution time)
 //   2. position.time (phone-provided time)
-//   3. the packet heard-time fallback (rx_time / monotonic last-heard) — NOT
+//   3. the packet heard-time fallback (rx_time / monotonic last-heard) - NOT
 //      the local wall clock, so a stale or relayed fix with no embedded GPS
 //      time cannot masquerade as a fresh position stamped "now".
 
@@ -33,7 +33,7 @@ const int _maxFutureSlack = 86400;
 /// Follows the standard Meshtastic timestamp fallback order:
 ///   1. position.timestamp (GPS solution time, field 7)
 ///   2. position.time (phone-provided time, field 4)
-///   3. [fallback] (the packet heard-time — rx_time / monotonic last-heard)
+///   3. [fallback] (the packet heard-time - rx_time / monotonic last-heard)
 DateTime positionSourceTimestamp(
   pb.Position position, {
   required DateTime fallback,
@@ -67,10 +67,10 @@ void main() {
 
   // A fixed "weeks ago" heard-time stands in for the resolved packet rx_time
   // that production passes as the fallback. Any test exercising the fallback
-  // branch must come back with exactly this value — never a fresh "now".
+  // branch must come back with exactly this value - never a fresh "now".
   final weeksAgoFallback = DateTime.utc(2024, 6, 1, 8, 0);
 
-  group('positionSourceTimestamp — timestamp selection', () {
+  group('positionSourceTimestamp - timestamp selection', () {
     test('uses position.timestamp when valid', () {
       // 2024-06-15 12:00:00 UTC
       const gpsEpoch = 1718452800;
@@ -137,7 +137,7 @@ void main() {
       expect(result, weeksAgoFallback);
     });
 
-    test('rejects timestamp before 2020 — falls back to time', () {
+    test('rejects timestamp before 2020 - falls back to time', () {
       const oldEpoch = 100; // year 1970 (device uptime)
       const phoneEpoch = 1718452800;
       final position = pb.Position(timestamp: oldEpoch, time: phoneEpoch);
@@ -149,7 +149,7 @@ void main() {
       expect(result, DateTime.fromMillisecondsSinceEpoch(phoneEpoch * 1000));
     });
 
-    test('rejects both before 2020 — returns heard-time fallback', () {
+    test('rejects both before 2020 - returns heard-time fallback', () {
       final position = pb.Position(timestamp: 100, time: 200);
 
       final result = positionSourceTimestamp(
@@ -173,7 +173,7 @@ void main() {
     });
 
     test(
-      'rejects both future beyond tolerance — returns heard-time fallback',
+      'rejects both future beyond tolerance - returns heard-time fallback',
       () {
         final farFuture =
             (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 172800;
@@ -199,31 +199,28 @@ void main() {
       expect(result, DateTime.fromMillisecondsSinceEpoch(nearFuture * 1000));
     });
 
-    test(
-      'stale fix with no embedded time keeps the weeks-ago heard-time, never now',
-      () {
-        // The headline regression: a stationary node that lost GPS lock sends
-        // a Position with both time fields zero. With a heard-time of 21 days
-        // ago, the entry must carry that old time — not a fresh "now" stamp
-        // that would make it appear in Today / This Week.
-        final heardAt = DateTime.now().subtract(const Duration(days: 21));
-        final position = pb.Position(timestamp: 0, time: 0);
+    test('stale fix with no embedded time keeps the weeks-ago heard-time, never now', () {
+      // The headline regression: a stationary node that lost GPS lock sends
+      // a Position with both time fields zero. With a heard-time of 21 days
+      // ago, the entry must carry that old time - not a fresh "now" stamp
+      // that would make it appear in Today / This Week.
+      final heardAt = DateTime.now().subtract(const Duration(days: 21));
+      final position = pb.Position(timestamp: 0, time: 0);
 
-        final result = positionSourceTimestamp(position, fallback: heardAt);
-        expect(result, heardAt);
-        expect(
-          DateTime.now().difference(result).inDays,
-          greaterThanOrEqualTo(20),
-        );
-      },
-    );
+      final result = positionSourceTimestamp(position, fallback: heardAt);
+      expect(result, heardAt);
+      expect(
+        DateTime.now().difference(result).inDays,
+        greaterThanOrEqualTo(20),
+      );
+    });
   });
 
   // -------------------------------------------------------------------------
   // PositionLog model timestamp propagation
   // -------------------------------------------------------------------------
 
-  group('PositionLog — explicit timestamp', () {
+  group('PositionLog - explicit timestamp', () {
     test('constructor accepts explicit timestamp', () {
       final ts = DateTime(2024, 6, 15, 12, 0);
       final log = PositionLog(
@@ -272,7 +269,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // Position-log timestamp resolution — telemetry logger write rule
+  // Position-log timestamp resolution - telemetry logger write rule
   //
   // The telemetry logger writes
   //   PositionLog(timestamp: node.positionTimestamp ?? node.lastHeard)
@@ -328,7 +325,7 @@ void main() {
   // Database round-trip with explicit timestamp
   // -------------------------------------------------------------------------
 
-  group('TelemetryDatabase — PositionLog timestamp propagation', () {
+  group('TelemetryDatabase - PositionLog timestamp propagation', () {
     late TelemetryDatabase db;
 
     setUp(() async {
@@ -410,7 +407,7 @@ void main() {
 
       final csv = await db.exportPositionLogsCsv(42);
       // CSV export normalises timestamps to UTC ISO-8601 for unambiguous,
-      // timezone-independent output — verify the underlying epoch round-trips
+      // timezone-independent output - verify the underlying epoch round-trips
       // and the CSV carries the UTC-formatted representation.
       final logs = await db.getPositionLogs(42);
       expect(

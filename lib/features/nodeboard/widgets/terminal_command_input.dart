@@ -86,7 +86,7 @@ class _TerminalCommandInputState extends State<TerminalCommandInput> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Leading `>` glyph — mirrors the ChatComposer `leading` slot
+            // Leading `>` glyph - mirrors the ChatComposer `leading` slot
             // (e.g. quick-responses button in messaging_screen.dart).
             Padding(
               padding: const EdgeInsets.only(top: AppTheme.spacing10),

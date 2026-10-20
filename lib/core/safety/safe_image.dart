@@ -300,7 +300,7 @@ class SafeImage extends StatelessWidget {
 
   /// Computes an optimal cache width from display dimensions.
   ///
-  /// Only cacheWidth is auto-computed — never cacheHeight — because setting
+  /// Only cacheWidth is auto-computed - never cacheHeight - because setting
   /// both forces Flutter to decode non-square source images into that exact
   /// pixel buffer, squishing them. With only cacheWidth set, Flutter computes
   /// height proportionally (preserving aspect ratio).

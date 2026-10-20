@@ -21,38 +21,32 @@ void main() {
   });
 
   group('v13 schema migration', () {
-    test(
-      'fresh schema exposes v13 identity columns and the identity_changes table',
-      () async {
-        final database = NodeDexDatabase(dbPathOverride: inMemoryDatabasePath);
-        final store = NodeDexSqliteStore(database);
-        await store.init();
-        addTearDown(store.dispose);
+    test('fresh schema exposes v13 identity columns and the identity_changes table', () async {
+      final database = NodeDexDatabase(dbPathOverride: inMemoryDatabasePath);
+      final store = NodeDexSqliteStore(database);
+      await store.init();
+      addTearDown(store.dispose);
 
-        final db = database.database;
-        final entryCols = await db.rawQuery(
-          'PRAGMA table_info(${NodeDexTables.entries})',
-        );
-        final entryColNames = entryCols.map((r) => r['name'] as String).toSet();
-        expect(entryColNames, contains(NodeDexTables.colIdentityPubkey));
-        expect(entryColNames, contains(NodeDexTables.colIdentityObservedAtMs));
-        expect(entryColNames, contains(NodeDexTables.colIdentityChangeCount));
-        expect(
-          entryColNames,
-          contains(NodeDexTables.colLastIdentityChangeAtMs),
-        );
+      final db = database.database;
+      final entryCols = await db.rawQuery(
+        'PRAGMA table_info(${NodeDexTables.entries})',
+      );
+      final entryColNames = entryCols.map((r) => r['name'] as String).toSet();
+      expect(entryColNames, contains(NodeDexTables.colIdentityPubkey));
+      expect(entryColNames, contains(NodeDexTables.colIdentityObservedAtMs));
+      expect(entryColNames, contains(NodeDexTables.colIdentityChangeCount));
+      expect(entryColNames, contains(NodeDexTables.colLastIdentityChangeAtMs));
 
-        final changesTable = await db.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-          [NodeDexTables.identityChanges],
-        );
-        expect(
-          changesTable,
-          hasLength(1),
-          reason: 'identity_changes table must be created on fresh schema v13.',
-        );
-      },
-    );
+      final changesTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+        [NodeDexTables.identityChanges],
+      );
+      expect(
+        changesTable,
+        hasLength(1),
+        reason: 'identity_changes table must be created on fresh schema v13.',
+      );
+    });
 
     test('NodeDexEntry round-trips identity fields cleanly', () async {
       final database = NodeDexDatabase(dbPathOverride: inMemoryDatabasePath);

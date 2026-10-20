@@ -359,7 +359,7 @@ class AppLogging {
     return _uiGatesLoggingEnabled!;
   }
 
-  /// Cloud Sync logging — always enabled by default for debugging sync issues.
+  /// Cloud Sync logging - always enabled by default for debugging sync issues.
   /// Disable with SYNC_LOGGING_ENABLED=false if needed.
   static bool get syncLoggingEnabled {
     _syncLoggingEnabled ??=
@@ -404,12 +404,12 @@ class AppLogging {
   /// Short fingerprint for a PSK / public-key byte string suitable for
   /// log lines.
   ///
-  /// Format: `<len>B:aabbccdd…eeff0011` — the byte length, a colon, and
+  /// Format: `<len>B:aabbccdd…eeff0011` - the byte length, a colon, and
   /// the first 4 + last 4 bytes in lowercase hex. Empty/null PSKs
   /// render as `0B:none`. Single-byte PSKs (the canonical default
   /// LongFast `AQ==`) render as `1B:01`.
   ///
-  /// Never log the full PSK — channel keys are user secrets. The
+  /// Never log the full PSK - channel keys are user secrets. The
   /// fingerprint is enough to spot mismatches between sent / saved /
   /// re-read keys without leaking the encryption material.
   static String pskFingerprint(List<int>? psk) {
@@ -686,7 +686,7 @@ class AppLogging {
     if (taskSyncLoggingEnabled) debugPrint('TaskSync: $message');
   }
 
-  // Operations system observability — passive participation objectives
+  // Operations system observability - passive participation objectives
   // (encounter-based, traceroute-based, etc.). Sparse, transition-based
   // events: ingest, dedupe-skipped, progress-updated, objective-completed,
   // operation-completed, persist-failed, disabled.
@@ -703,7 +703,7 @@ class AppLogging {
   }
 
   /// Admin diagnostic harness logging.
-  /// Always enabled — diagnostic sessions are explicit user actions.
+  /// Always enabled - diagnostic sessions are explicit user actions.
   static bool get adminDiagLoggingEnabled {
     _adminDiagLoggingEnabled ??=
         _safeGetEnv('ADMIN_DIAG_LOGGING_ENABLED')?.toLowerCase() != 'false';
@@ -730,7 +730,7 @@ class AppLogging {
   /// SIP / SIP Ink / SIP Play / SIP Signal / Overlay / MRRP debug.
   /// Set `HANDSHAKE_LOGGING_ENABLED=true` in `.env` to enable the whole
   /// bundle with one switch instead of toggling each flag. Granular
-  /// flags still work independently — this shorthand is OR'd in.
+  /// flags still work independently - this shorthand is OR'd in.
   static bool get handshakeLoggingEnabled {
     _handshakeLoggingEnabled ??=
         _safeGetEnv('HANDSHAKE_LOGGING_ENABLED')?.toLowerCase() == 'true';
@@ -787,7 +787,7 @@ class AppLogging {
 
   /// SIP Signal (musical phrase + Morse) observability logging.
   /// Enable with SIP_SIGNAL_LOGGING_ENABLED=true in .env file.
-  /// Never log waveform samples — only structural events (compose,
+  /// Never log waveform samples - only structural events (compose,
   /// encode size, send attempts, dedupe drops, decode failures).
   static bool get sipSignalLoggingEnabled {
     _sipSignalLoggingEnabled ??=
@@ -853,7 +853,7 @@ class AppLogging {
     if (meshExplorerDebugEnabled) debugPrint('MESH_EXPLORER: $message');
   }
 
-  /// Mesh Capacity Advisor logging — snapshot generation, recommendation
+  /// Mesh Capacity Advisor logging - snapshot generation, recommendation
   /// changes, and card lifecycle (shown / dismissed / explanation opened /
   /// radio settings opened from advisor). Enable with
   /// MESH_CAPACITY_LOGGING_ENABLED=true in .env file.
@@ -928,7 +928,7 @@ class AppLogging {
     if (stlLoggingEnabled) debugPrint('STL: $message');
   }
 
-  /// SocialMesh Overlay v0.2 logging — link state, resource transfer,
+  /// SocialMesh Overlay v0.2 logging - link state, resource transfer,
   /// persistence, capability negotiation. Enable with
   /// `OVERLAY_LOGGING_ENABLED=true` in the .env file.
   static bool get overlayLoggingEnabled {
@@ -942,7 +942,7 @@ class AppLogging {
     if (overlayLoggingEnabled) debugPrint('Overlay: $message');
   }
 
-  /// Mesh Feed logging — ingest, replay protection, propagation, sync.
+  /// Mesh Feed logging - ingest, replay protection, propagation, sync.
   /// Enable with MESH_FEED_LOGGING_ENABLED=true in .env file.
   static bool get meshFeedLoggingEnabled {
     _meshFeedLoggingEnabled ??=
@@ -954,7 +954,7 @@ class AppLogging {
     if (meshFeedLoggingEnabled) debugPrint('MeshFeed: $message');
   }
 
-  /// Mesh Games logging — session lifecycle (create/join/complete/abandon).
+  /// Mesh Games logging - session lifecycle (create/join/complete/abandon).
   /// Enable with MESH_GAMES_LOGGING_ENABLED=true in .env file.
   static bool get meshGamesLoggingEnabled {
     _meshGamesLoggingEnabled ??=
@@ -966,7 +966,7 @@ class AppLogging {
     if (meshGamesLoggingEnabled) debugPrint('MeshGames: $message');
   }
 
-  /// Mesh Games transport logging — encode/decode of game wire frames.
+  /// Mesh Games transport logging - encode/decode of game wire frames.
   static bool get meshGameTransportLoggingEnabled {
     _meshGameTransportLoggingEnabled ??=
         _safeGetEnv('MESH_GAME_TRANSPORT_LOGGING_ENABLED')?.toLowerCase() ==
@@ -980,7 +980,7 @@ class AppLogging {
     }
   }
 
-  /// Mesh Games session logging — persistence + state transitions.
+  /// Mesh Games session logging - persistence + state transitions.
   static bool get meshGameSessionLoggingEnabled {
     _meshGameSessionLoggingEnabled ??=
         _safeGetEnv('MESH_GAME_SESSION_LOGGING_ENABLED')?.toLowerCase() ==
@@ -994,7 +994,7 @@ class AppLogging {
     }
   }
 
-  /// Mesh Games UI logging — user actions + screen transitions.
+  /// Mesh Games UI logging - user actions + screen transitions.
   static bool get meshGameUiLoggingEnabled {
     _meshGameUiLoggingEnabled ??=
         _safeGetEnv('MESH_GAME_UI_LOGGING_ENABLED')?.toLowerCase() == 'true';
@@ -1036,8 +1036,8 @@ class AppLogging {
   /// Sparse, transition-based events for the MeshCore protocol stack
   /// (TCP/BLE transports, adapter, session, providers, screens).
   /// Always sink-routes to [AppLogger] so they show up in the in-app
-  /// "Share MeshCore Diagnostics" export — even if the console flag is
-  /// off — because dual-device E2E debugging needs the events to reach
+  /// "Share MeshCore Diagnostics" export - even if the console flag is
+  /// off - because dual-device E2E debugging needs the events to reach
   /// the developer.
   ///
   /// Default flag: enabled in debug builds, disabled in release. Override
@@ -1052,7 +1052,7 @@ class AppLogging {
   }
 
   /// Whether [coordRedact] is permitted to emit coarse coordinates.
-  /// Off by default — even rounded coordinates are PII, so callers must
+  /// Off by default - even rounded coordinates are PII, so callers must
   /// opt in explicitly via `MESHCORE_LOGGING_LOCATION_ENABLED=true`.
   static bool get meshcoreLoggingLocationEnabled {
     _meshcoreLoggingLocationEnabled ??=
@@ -1107,11 +1107,11 @@ class AppLogging {
 
   /// Short fingerprint for a public-key byte string suitable for log
   /// lines. Format: `<lenB:first4…last4hex>`. Empty/null renders as
-  /// `0B:none`. Keys ≤8 bytes are emitted in full hex (still safe — too
+  /// `0B:none`. Keys ≤8 bytes are emitted in full hex (still safe - too
   /// short to identify rotation material). Larger keys get head/tail
   /// only.
   ///
-  /// Never log a full public key — even though pks are not strictly
+  /// Never log a full public key - even though pks are not strictly
   /// secret, the fingerprint is enough to correlate sender/receiver
   /// across logs without leaking the canonical identity for downstream
   /// joins.
@@ -1138,7 +1138,7 @@ class AppLogging {
   /// [meshcoreLoggingLocationEnabled] is true. Disabled callers get the
   /// fixed string `redacted`.
   ///
-  /// Never log raw GPS coordinates — even rounded coords are PII; the
+  /// Never log raw GPS coordinates - even rounded coords are PII; the
   /// flag is opt-in for lab triage and should never be on for shipped
   /// builds.
   static String coordRedact(double? lat, double? lon) {
@@ -1151,7 +1151,7 @@ class AppLogging {
 
   /// Bounded preview of a frame's leading bytes for malformed-frame
   /// diagnostics. Format: `len=NNN head=AA BB CC …`. Caller must NEVER
-  /// pass plaintext or post-decryption payloads — preview is for
+  /// pass plaintext or post-decryption payloads - preview is for
   /// codec-layer error paths only (oversize, undersized, decode failed).
   ///
   /// [max] caps the head length at 32 bytes regardless of input.

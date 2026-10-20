@@ -214,7 +214,7 @@ void main() {
           3,
           _buildCanvasSipFrame(canvasPayload: canvasPayload),
         );
-        // unawaited handler — wait one tick
+        // unawaited handler - wait one tick
         await Future<void>.delayed(Duration.zero);
 
         expect(captured, hasLength(1));
@@ -228,7 +228,7 @@ void main() {
   );
 
   test(
-    'canvas frames bypass MRRP engine — 5+ from same sender still hit hook',
+    'canvas frames bypass MRRP engine - 5+ from same sender still hit hook',
     () async {
       // The MRRP engine global per-sender cap is 4 / 60 s. If canvas
       // were going through the engine path, the 5th frame would be
@@ -236,7 +236,7 @@ void main() {
       // reach the hook.
       await _withTempDb((_) async {
         final protocol = await _openProtocol();
-        // Deliberately do NOT attach the MRRP engine — demonstrating
+        // Deliberately do NOT attach the MRRP engine - demonstrating
         // that canvas frames work without it.
         final captured = <int>[];
         protocol.attachCanvasInbound((sender, channel, payload) async {
@@ -276,7 +276,7 @@ void main() {
   test('canvas frames drop silently when no hook attached', () async {
     await _withTempDb((_) async {
       final protocol = await _openProtocol();
-      // No attachCanvasInbound call. Drive directly — must not throw.
+      // No attachCanvasInbound call. Drive directly - must not throw.
       protocol.injectMrrpFrameForTest(
         0x30,
         0,
@@ -314,7 +314,7 @@ void main() {
       );
       final encoded = MrrpCodec.encode(mrrp)!;
       // Truncate to header-only: payloadLen field still claims real
-      // length, but actual buffer is shorter — MrrpCodec.decode rejects.
+      // length, but actual buffer is shorter - MrrpCodec.decode rejects.
       final truncated = Uint8List.fromList(
         encoded.sublist(0, MrrpConstants.mrrpHeaderMin),
       );

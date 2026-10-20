@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../theme.dart';
 import 'auto_scroll_text.dart';
 
@@ -180,7 +181,7 @@ class AppBottomSheet extends StatelessWidget {
             width: double.infinity,
             decoration: BoxDecoration(
               // Sheet shell uses `context.background` (darker) so the
-              // entire sheet — drag pill, body, button area — is one
+              // entire sheet - drag pill, body, button area - is one
               // consistent dark surface. Nested cards (`context.card`,
               // lighter) and `InfoTable`-style read-only blocks (`context
               // .background` + border) both delineate naturally on top.
@@ -278,9 +279,8 @@ class AppBottomSheet extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
-                color: sheetContext.textSecondary,
-              ),
+              style: Theme.of(sheetContext).textTheme.bodyMedium
+                  ?.copyWith(color: sheetContext.textSecondary),
             ),
             const SizedBox(height: AppTheme.spacing24),
             Row(
@@ -621,9 +621,8 @@ class BottomSheetHeader extends StatelessWidget {
             const SizedBox(height: AppTheme.spacing8),
             Text(
               subtitle!,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: context.textSecondary),
             ),
           ],
         ],
@@ -667,9 +666,8 @@ class BottomSheetHeader extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacing4),
                 Text(
                   subtitle!,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ],
             ],

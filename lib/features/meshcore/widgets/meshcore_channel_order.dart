@@ -35,7 +35,7 @@ import '../../../models/meshcore_channel.dart';
 ///   - never adds or removes channels; output length == input length.
 ///   - empty [userOrder] returns [firmwareSorted] unchanged.
 ///   - missing slot indices in [userOrder] are silently dropped at
-///     render time (no error logged — the prefs store may carry stale
+///     render time (no error logged - the prefs store may carry stale
 ///     entries from before a channel was removed).
 ///   - duplicate slot indices in [userOrder] are deduped (first wins).
 List<MeshCoreChannel> applyChannelOrder(

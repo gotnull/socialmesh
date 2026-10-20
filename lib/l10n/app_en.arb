@@ -2736,7 +2736,7 @@
   },
   "automationScreenRunSuccess": "Ran \"{name}\" - conditions bypassed, THEN executed",
   "@automationScreenRunSuccess": {
-    "description": "Success snackbar after manual run — clarifies conditions were bypassed",
+    "description": "Success snackbar after manual run - clarifies conditions were bypassed",
     "placeholders": {
       "name": {
         "type": "String"
@@ -4747,11 +4747,11 @@
   },
   "networkProtocolMeshtastic": "Meshtastic",
   "@networkProtocolMeshtastic": {
-    "description": "Protocol chip label — Meshtastic TCP. Brand name; do not translate."
+    "description": "Protocol chip label - Meshtastic TCP. Brand name; do not translate."
   },
   "networkProtocolMeshcoreDev": "MeshCore",
   "@networkProtocolMeshcoreDev": {
-    "description": "Protocol chip label — MeshCore TCP. Debug-only path; brand name plus a (dev) suffix indicating non-production status."
+    "description": "Protocol chip label - MeshCore TCP. Debug-only path; brand name plus a (dev) suffix indicating non-production status."
   },
   "debugScreenExportFailed": "Export failed: {error}",
   "@debugScreenExportFailed": {
@@ -5696,7 +5696,7 @@
   "@drawerBadgeTryIt": {
     "description": "Badge label for premium features available to try in the drawer."
   },
-  "nodedexIdentityChangePubkeyFromUnknown": "— → {newKey}",
+  "nodedexIdentityChangePubkeyFromUnknown": "- → {newKey}",
   "nodedexIdentityChangePubkeyPair": "{previous} → {newKey}",
   "nodedexIdentityChangedBannerTitle": "{count, plural, =1{Identity changed once} other{Identity changed {count} times}}",
   "nodedexIdentityChangedViewChangesAction": "View identity changes",
@@ -6497,19 +6497,19 @@
   },
   "fileTransferStatusPreparing": "Preparing…",
   "@fileTransferStatusPreparing": {
-    "description": "Transfer card status — created, not yet sent"
+    "description": "Transfer card status - created, not yet sent"
   },
   "fileTransferStatusOfferSent": "Offer sent, waiting…",
   "@fileTransferStatusOfferSent": {
-    "description": "Transfer card status — offer sent to remote node"
+    "description": "Transfer card status - offer sent to remote node"
   },
   "fileTransferStatusOfferPending": "Incoming file - tap to review",
   "@fileTransferStatusOfferPending": {
-    "description": "Transfer card status — inbound offer waiting for user acceptance"
+    "description": "Transfer card status - inbound offer waiting for user acceptance"
   },
   "fileTransferStatusSending": "Sending {pct}%",
   "@fileTransferStatusSending": {
-    "description": "Transfer card status — outbound transfer in progress",
+    "description": "Transfer card status - outbound transfer in progress",
     "placeholders": {
       "pct": {
         "type": "String"
@@ -6518,7 +6518,7 @@
   },
   "fileTransferStatusReceiving": "Receiving {pct}%",
   "@fileTransferStatusReceiving": {
-    "description": "Transfer card status — inbound transfer in progress",
+    "description": "Transfer card status - inbound transfer in progress",
     "placeholders": {
       "pct": {
         "type": "String"
@@ -6527,55 +6527,55 @@
   },
   "fileTransferStatusRecovering": "Recovering missing chunks…",
   "@fileTransferStatusRecovering": {
-    "description": "Transfer card status — NACK recovery phase"
+    "description": "Transfer card status - NACK recovery phase"
   },
   "fileTransferStatusComplete": "Complete",
   "@fileTransferStatusComplete": {
-    "description": "Transfer card status — transfer complete and verified"
+    "description": "Transfer card status - transfer complete and verified"
   },
   "fileTransferStatusCancelled": "Cancelled",
   "@fileTransferStatusCancelled": {
-    "description": "Transfer card status — transfer cancelled"
+    "description": "Transfer card status - transfer cancelled"
   },
   "fileTransferStatusAwaitingAccept": "Awaiting Accept",
   "@fileTransferStatusAwaitingAccept": {
-    "description": "Transfer card status — outbound offer sent, waiting for receiver to accept"
+    "description": "Transfer card status - outbound offer sent, waiting for receiver to accept"
   },
   "fileTransferStatusFailed": "Failed",
   "@fileTransferStatusFailed": {
-    "description": "Transfer card status — generic failure"
+    "description": "Transfer card status - generic failure"
   },
   "fileTransferFailReasonOversized": "File too large for mesh transfer",
   "@fileTransferFailReasonOversized": {
-    "description": "Transfer fail reason — file exceeded mesh size limit"
+    "description": "Transfer fail reason - file exceeded mesh size limit"
   },
   "fileTransferFailReasonTimeout": "Transfer timed out",
   "@fileTransferFailReasonTimeout": {
-    "description": "Transfer fail reason — no response within timeout"
+    "description": "Transfer fail reason - no response within timeout"
   },
   "fileTransferFailReasonInvalid": "Invalid data received",
   "@fileTransferFailReasonInvalid": {
-    "description": "Transfer fail reason — malformed chunk data"
+    "description": "Transfer fail reason - malformed chunk data"
   },
   "fileTransferFailReasonRateLimited": "Rate limited - try again later",
   "@fileTransferFailReasonRateLimited": {
-    "description": "Transfer fail reason — airtime rate limiter fired"
+    "description": "Transfer fail reason - airtime rate limiter fired"
   },
   "fileTransferFailReasonHashMismatch": "File verification failed",
   "@fileTransferFailReasonHashMismatch": {
-    "description": "Transfer fail reason — SHA-256 mismatch"
+    "description": "Transfer fail reason - SHA-256 mismatch"
   },
   "fileTransferFailReasonMaxRetries": "Max retries exceeded",
   "@fileTransferFailReasonMaxRetries": {
-    "description": "Transfer fail reason — too many NACK rounds"
+    "description": "Transfer fail reason - too many NACK rounds"
   },
   "fileTransferFailReasonExpired": "Transfer expired",
   "@fileTransferFailReasonExpired": {
-    "description": "Transfer fail reason — transfer TTL exceeded"
+    "description": "Transfer fail reason - transfer TTL exceeded"
   },
   "fileTransferMetaNodeTo": "to {nodeName}",
   "@fileTransferMetaNodeTo": {
-    "description": "Transfer card metadata — destination node display name or short hex",
+    "description": "Transfer card metadata - destination node display name or short hex",
     "placeholders": {
       "nodeName": {
         "type": "String"
@@ -6584,7 +6584,7 @@
   },
   "fileTransferMetaNodeFrom": "from {nodeName}",
   "@fileTransferMetaNodeFrom": {
-    "description": "Transfer card metadata — source node display name or short hex",
+    "description": "Transfer card metadata - source node display name or short hex",
     "placeholders": {
       "nodeName": {
         "type": "String"
@@ -6593,11 +6593,11 @@
   },
   "fileTransferTimeJustNow": "just now",
   "@fileTransferTimeJustNow": {
-    "description": "Transfer card relative time — less than one minute ago"
+    "description": "Transfer card relative time - less than one minute ago"
   },
   "fileTransferTimeMinutesAgo": "{count}m ago",
   "@fileTransferTimeMinutesAgo": {
-    "description": "Transfer card relative time — N minutes ago",
+    "description": "Transfer card relative time - N minutes ago",
     "placeholders": {
       "count": {
         "type": "int"
@@ -6606,7 +6606,7 @@
   },
   "fileTransferTimeHoursAgo": "{count}h ago",
   "@fileTransferTimeHoursAgo": {
-    "description": "Transfer card relative time — N hours ago",
+    "description": "Transfer card relative time - N hours ago",
     "placeholders": {
       "count": {
         "type": "int"
@@ -6615,7 +6615,7 @@
   },
   "fileTransferTimeDaysAgo": "{count}d ago",
   "@fileTransferTimeDaysAgo": {
-    "description": "Transfer card relative time — N days ago",
+    "description": "Transfer card relative time - N days ago",
     "placeholders": {
       "count": {
         "type": "int"
@@ -9101,7 +9101,7 @@
   "@mapTracerouteNoGpsTitle": {
     "description": "Banner shown on the map when 'Show on Map' was tapped for a traceroute whose hops report no valid GPS coordinates."
   },
-  "mapTracerouteNoGpsSubtitle": "None of the hops on this traceroute reported a position. The map is centered on your location instead — open the route again once any hop reports GPS.",
+  "mapTracerouteNoGpsSubtitle": "None of the hops on this traceroute reported a position. The map is centered on your location instead - open the route again once any hop reports GPS.",
   "@mapTracerouteNoGpsSubtitle": {
     "description": "Subtitle for the no-GPS traceroute banner. Explains the fallback behaviour so the user is not confused by a blank map."
   },
@@ -10683,51 +10683,51 @@
   },
   "meshcoreChannelEditRandomPskTooltip": "Generate random key",
   "@meshcoreChannelEditRandomPskTooltip": {
-    "description": "D34d — accessibility tooltip for the dice button in the PSK input that fills the field with a random 16-byte (128-bit) PSK"
+    "description": "D34d - accessibility tooltip for the dice button in the PSK input that fills the field with a random 16-byte (128-bit) PSK"
   },
   "meshcoreChannelEditRandomPskGenerated": "Random key generated",
   "@meshcoreChannelEditRandomPskGenerated": {
-    "description": "D34d — short snackbar shown after the dice button generates a random PSK"
+    "description": "D34d - short snackbar shown after the dice button generates a random PSK"
   },
   "meshcoreChannelEditDeriveFromPassphrase": "Generate from passphrase",
   "@meshcoreChannelEditDeriveFromPassphrase": {
-    "description": "D34d — title of the action tile that opens the passphrase-to-PSK derivation sheet"
+    "description": "D34d - title of the action tile that opens the passphrase-to-PSK derivation sheet"
   },
   "meshcoreChannelEditDeriveFromPassphraseSubtitle": "Creates a repeatable 128-bit channel key from a passphrase",
   "@meshcoreChannelEditDeriveFromPassphraseSubtitle": {
-    "description": "D34d — subtitle on the passphrase-to-PSK action tile explaining the deterministic derivation"
+    "description": "D34d - subtitle on the passphrase-to-PSK action tile explaining the deterministic derivation"
   },
   "meshcoreChannelEditPassphraseSheetTitle": "Generate from passphrase",
   "@meshcoreChannelEditPassphraseSheetTitle": {
-    "description": "D34d — header of the passphrase-to-PSK bottom sheet"
+    "description": "D34d - header of the passphrase-to-PSK bottom sheet"
   },
   "meshcoreChannelEditPassphraseSheetHint": "Type the same passphrase on every device that should join this channel. The same passphrase always produces the same key.",
   "@meshcoreChannelEditPassphraseSheetHint": {
-    "description": "D34d — sub-header explainer above the passphrase input, calling out the deterministic property"
+    "description": "D34d - sub-header explainer above the passphrase input, calling out the deterministic property"
   },
   "meshcoreChannelEditPassphraseLabel": "Passphrase",
   "@meshcoreChannelEditPassphraseLabel": {
-    "description": "D34d — label of the passphrase TextField"
+    "description": "D34d - label of the passphrase TextField"
   },
   "meshcoreChannelEditPassphraseHint": "e.g. orange-bicycle-thunder",
   "@meshcoreChannelEditPassphraseHint": {
-    "description": "D34d — placeholder text for the passphrase TextField"
+    "description": "D34d - placeholder text for the passphrase TextField"
   },
   "meshcoreChannelEditPassphraseHelper": "Your passphrase is never stored or sent anywhere. Only the derived key is written to the radio.",
   "@meshcoreChannelEditPassphraseHelper": {
-    "description": "D34d — privacy reassurance shown beneath the passphrase TextField"
+    "description": "D34d - privacy reassurance shown beneath the passphrase TextField"
   },
   "meshcoreChannelEditPassphraseRequired": "Enter a passphrase",
   "@meshcoreChannelEditPassphraseRequired": {
-    "description": "D34d — validation error when the user tries to generate a PSK with an empty or whitespace-only passphrase"
+    "description": "D34d - validation error when the user tries to generate a PSK with an empty or whitespace-only passphrase"
   },
   "meshcoreChannelEditPassphraseGenerate": "Generate key",
   "@meshcoreChannelEditPassphraseGenerate": {
-    "description": "D34d — primary button on the passphrase sheet that performs the HMAC-SHA256 derivation and returns the 16-byte PSK"
+    "description": "D34d - primary button on the passphrase sheet that performs the HMAC-SHA256 derivation and returns the 16-byte PSK"
   },
   "meshcoreChannelEditPassphrasePskGenerated": "Key generated from passphrase",
   "@meshcoreChannelEditPassphrasePskGenerated": {
-    "description": "D34d — short snackbar shown after the passphrase sheet successfully derives and fills the PSK field"
+    "description": "D34d - short snackbar shown after the passphrase sheet successfully derives and fills the PSK field"
   },
   "meshcoreChannelEditNameHint": "e.g. #public, #squad",
   "@meshcoreChannelEditNameHint": {
@@ -10843,11 +10843,11 @@
   },
   "meshcoreChatActionReply": "Reply",
   "@meshcoreChatActionReply": {
-    "description": "D33 — long-press menu action that opens the composer in reply mode targeting this message"
+    "description": "D33 - long-press menu action that opens the composer in reply mode targeting this message"
   },
   "meshcoreChatComposerReplyingTo": "Replying to {name}",
   "@meshcoreChatComposerReplyingTo": {
-    "description": "D33 — header line of the composer reply chip; {name} is the target sender's display name (or 'You' for own outbound messages)",
+    "description": "D33 - header line of the composer reply chip; {name} is the target sender's display name (or 'You' for own outbound messages)",
     "placeholders": {
       "name": {
         "type": "String",
@@ -10857,19 +10857,19 @@
   },
   "meshcoreChatComposerCancelReply": "Cancel reply",
   "@meshcoreChatComposerCancelReply": {
-    "description": "D33 — accessibility label / tooltip for the [×] button on the composer reply chip"
+    "description": "D33 - accessibility label / tooltip for the [×] button on the composer reply chip"
   },
   "meshcoreChatReplyMissingTarget": "Reply to a message you don't have",
   "@meshcoreChatReplyMissingTarget": {
-    "description": "D33 — fallback row shown above a reply bubble when the target message isn't in local history"
+    "description": "D33 - fallback row shown above a reply bubble when the target message isn't in local history"
   },
   "meshcoreChatReplyYou": "You",
   "@meshcoreChatReplyYou": {
-    "description": "D33 — sender label used in the composer chip + reply quote preview when the target is the user's own outbound message"
+    "description": "D33 - sender label used in the composer chip + reply quote preview when the target is the user's own outbound message"
   },
   "meshcoreChatReplyRateLimited": "Too much radio traffic. Try again in {seconds}s.",
   "@meshcoreChatReplyRateLimited": {
-    "description": "D33 — snackbar shown when MeshCoreSendRateLimiter rejects a reply (or any text) send. {seconds} is the suggested retry delay rounded to whole seconds.",
+    "description": "D33 - snackbar shown when MeshCoreSendRateLimiter rejects a reply (or any text) send. {seconds} is the suggested retry delay rounded to whole seconds.",
     "placeholders": {
       "seconds": {
         "type": "int",
@@ -10963,7 +10963,7 @@
   },
   "meshcoreChatHistoryEnd": "No older messages",
   "@meshcoreChatHistoryEnd": {
-    "description": "D43-A3 - Footer rendered above the oldest loaded message when paging exhausts the stored history (real bottom of history OR the 500-message trim wall — indistinguishable)"
+    "description": "D43-A3 - Footer rendered above the oldest loaded message when paging exhausts the stored history (real bottom of history OR the 500-message trim wall - indistinguishable)"
   },
   "meshcoreChatQuoteJumpUnavailable": "Source message not available",
   "@meshcoreChatQuoteJumpUnavailable": {
@@ -11921,23 +11921,23 @@
   },
   "meshcoreRadioSettingsRegionSectionHeader": "REGION",
   "@meshcoreRadioSettingsRegionSectionHeader": {
-    "description": "D26 — Section header for region preset row at top of MeshCore radio settings sheet"
+    "description": "D26 - Section header for region preset row at top of MeshCore radio settings sheet"
   },
   "meshcoreRadioSettingsRegionTileTitle": "Region preset",
   "@meshcoreRadioSettingsRegionTileTitle": {
-    "description": "D26 — Title of the row that opens the region preset picker"
+    "description": "D26 - Title of the row that opens the region preset picker"
   },
   "meshcoreRadioSettingsRegionPickerTitle": "Choose region preset",
   "@meshcoreRadioSettingsRegionPickerTitle": {
-    "description": "D26 — Title of the modal sheet that lists region presets"
+    "description": "D26 - Title of the modal sheet that lists region presets"
   },
   "meshcoreRadioSettingsRegionCustom": "Custom",
   "@meshcoreRadioSettingsRegionCustom": {
-    "description": "D26 — Sentinel label for a manually-edited radio config that does not match any preset"
+    "description": "D26 - Sentinel label for a manually-edited radio config that does not match any preset"
   },
   "meshcoreRadioSettingsRegionCustomSubtitle": "Keep your current values",
   "@meshcoreRadioSettingsRegionCustomSubtitle": {
-    "description": "D26 — Subtitle of the Custom row in the region preset picker"
+    "description": "D26 - Subtitle of the Custom row in the region preset picker"
   },
   "meshcoreRegionPresetAuDefault": "Australia",
   "@meshcoreRegionPresetAuDefault": {
@@ -13090,43 +13090,43 @@
   },
   "meshcoreApplying": "Applying…",
   "@meshcoreApplying": {
-    "description": "D26 — In-flight subtitle while a settings tile is dispatching a command (e.g. set location)"
+    "description": "D26 - In-flight subtitle while a settings tile is dispatching a command (e.g. set location)"
   },
   "meshcoreLocationSheetTitle": "Set node location",
   "@meshcoreLocationSheetTitle": {
-    "description": "D26 — Title of the lat/lon editor sheet"
+    "description": "D26 - Title of the lat/lon editor sheet"
   },
   "meshcoreLocationSheetPrivacyHint": "Your location may be broadcast to nearby nodes in your next advertisement.",
   "@meshcoreLocationSheetPrivacyHint": {
-    "description": "D26 — Privacy hint shown in the lat/lon editor sheet"
+    "description": "D26 - Privacy hint shown in the lat/lon editor sheet"
   },
   "meshcoreLocationLatLabel": "Latitude",
   "@meshcoreLocationLatLabel": {
-    "description": "D26 — Label for the latitude TextFormField"
+    "description": "D26 - Label for the latitude TextFormField"
   },
   "meshcoreLocationLatHint": "-90 to 90",
   "@meshcoreLocationLatHint": {
-    "description": "D26 — Range hint for the latitude TextFormField"
+    "description": "D26 - Range hint for the latitude TextFormField"
   },
   "meshcoreLocationLatRangeError": "Latitude must be between -90 and 90",
   "@meshcoreLocationLatRangeError": {
-    "description": "D26 — Validation error when latitude is out of range or unparseable"
+    "description": "D26 - Validation error when latitude is out of range or unparseable"
   },
   "meshcoreLocationLonLabel": "Longitude",
   "@meshcoreLocationLonLabel": {
-    "description": "D26 — Label for the longitude TextFormField"
+    "description": "D26 - Label for the longitude TextFormField"
   },
   "meshcoreLocationLonHint": "-180 to 180",
   "@meshcoreLocationLonHint": {
-    "description": "D26 — Range hint for the longitude TextFormField"
+    "description": "D26 - Range hint for the longitude TextFormField"
   },
   "meshcoreLocationLonRangeError": "Longitude must be between -180 and 180",
   "@meshcoreLocationLonRangeError": {
-    "description": "D26 — Validation error when longitude is out of range or unparseable"
+    "description": "D26 - Validation error when longitude is out of range or unparseable"
   },
   "meshcoreLocationApplyAction": "Apply",
   "@meshcoreLocationApplyAction": {
-    "description": "D26 — Apply button on the lat/lon editor sheet"
+    "description": "D26 - Apply button on the lat/lon editor sheet"
   },
   "meshcoreLocationClearAction": "Clear",
   "@meshcoreLocationClearAction": {
@@ -13142,19 +13142,19 @@
   },
   "meshcoreLocationUpdated": "Location updated",
   "@meshcoreLocationUpdated": {
-    "description": "D26 — Success snackbar after applying a non-zero location"
+    "description": "D26 - Success snackbar after applying a non-zero location"
   },
   "meshcoreLocationCleared": "Location cleared",
   "@meshcoreLocationCleared": {
-    "description": "D26 — Success snackbar after clearing the stored location"
+    "description": "D26 - Success snackbar after clearing the stored location"
   },
   "meshcoreFailedToSetLocation": "Failed to set location",
   "@meshcoreFailedToSetLocation": {
-    "description": "D26 — Error snackbar when the radio rejects a setAdvertLatLon command"
+    "description": "D26 - Error snackbar when the radio rejects a setAdvertLatLon command"
   },
   "meshcoreSyncTimeRejected": "Device clock is already ahead - sync skipped",
   "@meshcoreSyncTimeRejected": {
-    "description": "D26 — Error snackbar when the firmware rejects setDeviceTime because device time is already ahead of the phone (firmware is forward-only)"
+    "description": "D26 - Error snackbar when the firmware rejects setDeviceTime because device time is already ahead of the phone (firmware is forward-only)"
   },
   "meshcoreLocationSetting": "Location",
   "@meshcoreLocationSetting": {
@@ -15354,7 +15354,7 @@
   },
   "meshCanvasHelpIntro": "A shared pixel canvas painted live by everyone on your Meshtastic channel. Each tap sends one tiny radio frame to nearby devices, who paint the same pixel on their own canvas. No servers, no accounts, no admins; just LoRa radios and pixels.",
   "@meshCanvasHelpIntro": {
-    "description": "Opening paragraph of the MeshCanvas help sheet. Frames MeshCanvas as r/place adapted to LoRa: channel-scoped, slow, no central authority. Mesh-only — the Local Device Canvas is a developer / debug surface and is intentionally not surfaced in user-facing help."
+    "description": "Opening paragraph of the MeshCanvas help sheet. Frames MeshCanvas as r/place adapted to LoRa: channel-scoped, slow, no central authority. Mesh-only - the Local Device Canvas is a developer / debug surface and is intentionally not surfaced in user-facing help."
   },
   "meshCanvasHelpMeshCanvasTitle": "Mesh canvases",
   "@meshCanvasHelpMeshCanvasTitle": {
@@ -15482,7 +15482,7 @@
   },
   "meshCanvasOnboardingActionExplore": "Explore locally",
   "@meshCanvasOnboardingActionExplore": {
-    "description": "Secondary action on the MeshCanvas onboarding sheet. Opts into Local Device Canvas only — no mesh participation, no presence sharing."
+    "description": "Secondary action on the MeshCanvas onboarding sheet. Opts into Local Device Canvas only - no mesh participation, no presence sharing."
   },
   "meshCanvasOnboardingActionJoin": "Join MeshCanvas",
   "@meshCanvasOnboardingActionJoin": {
@@ -15725,15 +15725,15 @@
   },
   "meshCanvasOverviewEmptyTitlePrefix": "No",
   "@meshCanvasOverviewEmptyTitlePrefix": {
-    "description": "Plain prefix of the Mesh empty-state title. The widget's pad() helper inserts a single space before the gradient keyword — do NOT add a trailing space here or the gradient WidgetSpan will render a visible double-space gap. Empty-state fires only when zero Meshtastic channels are configured; once channels exist the latent-channel list renders instead."
+    "description": "Plain prefix of the Mesh empty-state title. The widget's pad() helper inserts a single space before the gradient keyword - do NOT add a trailing space here or the gradient WidgetSpan will render a visible double-space gap. Empty-state fires only when zero Meshtastic channels are configured; once channels exist the latent-channel list renders instead."
   },
   "meshCanvasOverviewEmptyTitleKeyword": "channels",
   "@meshCanvasOverviewEmptyTitleKeyword": {
-    "description": "Gradient-animated keyword of the Mesh empty-state title. Single word only — multi-word keywords render with baseline-gap artifacts inside the gradient WidgetSpan."
+    "description": "Gradient-animated keyword of the Mesh empty-state title. Single word only - multi-word keywords render with baseline-gap artifacts inside the gradient WidgetSpan."
   },
   "meshCanvasOverviewEmptyTitleSuffix": "yet",
   "@meshCanvasOverviewEmptyTitleSuffix": {
-    "description": "Plain suffix after the gradient keyword. No leading space — the widget pad() helper handles spacing."
+    "description": "Plain suffix after the gradient keyword. No leading space - the widget pad() helper handles spacing."
   },
   "meshCanvasOverviewEmptyTagline1": "Bring a Meshtastic channel online and its canvas wakes up.",
   "@meshCanvasOverviewEmptyTagline1": {
@@ -15741,7 +15741,7 @@
   },
   "meshCanvasOverviewEmptyTagline2": "Channel is canvas. No cloud, no admins, no global wall.",
   "@meshCanvasOverviewEmptyTagline2": {
-    "description": "Second cycling tagline. Names the v0.1 architecture in one beat — no central anything, the channel is the artifact."
+    "description": "Second cycling tagline. Names the v0.1 architecture in one beat - no central anything, the channel is the artifact."
   },
   "meshCanvasOverviewEmptyTagline3": "One radio frame, one pixel.",
   "@meshCanvasOverviewEmptyTagline3": {
@@ -15793,7 +15793,7 @@
   },
   "meshCanvasViewerEmptyMeshHydratingTitle": "Looking for paint from nearby devices…",
   "@meshCanvasViewerEmptyMeshHydratingTitle": {
-    "description": "Centered atmospheric prompt shown on a mesh canvas with zero painted cells WHILE sync work is in progress (hydration state recovering or syncing). Replaces the 'Tap to seed' copy so we don't lie to the user that the board is dormant when pixels may land in seconds. The viewport is still tappable underneath — this is just an honest holding message."
+    "description": "Centered atmospheric prompt shown on a mesh canvas with zero painted cells WHILE sync work is in progress (hydration state recovering or syncing). Replaces the 'Tap to seed' copy so we don't lie to the user that the board is dormant when pixels may land in seconds. The viewport is still tappable underneath - this is just an honest holding message."
   },
   "meshCanvasViewerEmptyMeshHydratingSubtitle": "If anyone else has painted this canvas, their pixels will appear in a moment.",
   "@meshCanvasViewerEmptyMeshHydratingSubtitle": {
@@ -15801,7 +15801,7 @@
   },
   "meshCanvasViewerEmptyLocalTitle": "Tap to paint",
   "@meshCanvasViewerEmptyLocalTitle": {
-    "description": "Centered atmospheric prompt shown on the Local Device Canvas when it has zero painted cells. Local-only register — no channel / mesh language."
+    "description": "Centered atmospheric prompt shown on the Local Device Canvas when it has zero painted cells. Local-only register - no channel / mesh language."
   },
   "meshCanvasViewerEmptyLocalSubtitle": "Stays on this device",
   "@meshCanvasViewerEmptyLocalSubtitle": {
@@ -19060,7 +19060,7 @@
   },
   "nodedexFirstUsedLabel": "First used",
   "@nodedexFirstUsedLabel": {
-    "description": "NodeDex self-mode discovery row label. The first time this app connected to this nodeNum as the user's local radio. Connection-identity semantics, not mesh-observation — distinct from 'First Discovered' which records when the entry first appeared in the mesh from this phone's POV."
+    "description": "NodeDex self-mode discovery row label. The first time this app connected to this nodeNum as the user's local radio. Connection-identity semantics, not mesh-observation - distinct from 'First Discovered' which records when the entry first appeared in the mesh from this phone's POV."
   },
   "nodedexGalleryHint": "Tap card to flip • Swipe to browse",
   "@nodedexGalleryHint": {
@@ -19411,7 +19411,7 @@
   },
   "nodedexLastSeen": "Last encounter",
   "@nodedexLastSeen": {
-    "description": "NodeDex 'last presence-active encounter' label. Distinct from the device-level 'Last heard' (= time we last received any packet from the node) — encounter only updates when presence transitions to active, so it can lag the radio's last_heard by hours or days."
+    "description": "NodeDex 'last presence-active encounter' label. Distinct from the device-level 'Last heard' (= time we last received any packet from the node) - encounter only updates when presence transitions to active, so it can lag the radio's last_heard by hours or days."
   },
   "nodedexLastSeenStatLabel": "Last encounter",
   "@nodedexLastSeenStatLabel": {
@@ -20050,7 +20050,7 @@
   },
   "nodedexSortLastSeen": "Last encounter",
   "@nodedexSortLastSeen": {
-    "description": "NodeDex sort order — sorts by the encounter timestamp, not the radio last_heard."
+    "description": "NodeDex sort order - sorts by the encounter timestamp, not the radio last_heard."
   },
   "nodedexSortLongestRange": "Longest Range",
   "@nodedexSortLongestRange": {
@@ -21309,11 +21309,11 @@
   },
   "openLinkOpenAction": "Open",
   "@openLinkOpenAction": {
-    "description": "Primary button label on the open-link confirm sheet — launches the URL in the browser."
+    "description": "Primary button label on the open-link confirm sheet - launches the URL in the browser."
   },
   "openLinkCancelAction": "Cancel",
   "@openLinkCancelAction": {
-    "description": "Secondary button label on the open-link confirm sheet — dismisses without launching."
+    "description": "Secondary button label on the open-link confirm sheet - dismisses without launching."
   },
   "openLinkLaunchFailed": "Could not open link",
   "@openLinkLaunchFailed": {
@@ -23254,7 +23254,7 @@
   },
   "scannerPairingRefreshTitle": "Pairing needs to be refreshed",
   "@scannerPairingRefreshTitle": {
-    "description": "Title of the recovery card shown when the saved BLE pairing no longer matches the device. Reset-aware wording — does not blame the phone."
+    "description": "Title of the recovery card shown when the saved BLE pairing no longer matches the device. Reset-aware wording - does not blame the phone."
   },
   "scannerPairingRefreshBody": "This can happen after a factory reset or region/device reset. The radio may have cleared its Bluetooth identity, so your phone's saved pairing no longer matches this device.\n\nRemove the old pairing from your phone's Bluetooth settings, then pair with the device again.",
   "@scannerPairingRefreshBody": {
@@ -23262,11 +23262,11 @@
   },
   "scannerPairingRefreshOpenBluetoothSettings": "Open Bluetooth Settings",
   "@scannerPairingRefreshOpenBluetoothSettings": {
-    "description": "Primary action on the pairing-refresh card — opens the OS Bluetooth Settings so the user can forget the stale pairing."
+    "description": "Primary action on the pairing-refresh card - opens the OS Bluetooth Settings so the user can forget the stale pairing."
   },
   "scannerPairingRefreshScanAgain": "Scan again",
   "@scannerPairingRefreshScanAgain": {
-    "description": "Secondary action on the pairing-refresh card — re-runs the BLE scan after the user has forgotten the stale pairing in Bluetooth Settings."
+    "description": "Secondary action on the pairing-refresh card - re-runs the BLE scan after the user has forgotten the stale pairing in Bluetooth Settings."
   },
   "scannerScanStackErrorTitle": "Bluetooth scanning failed",
   "@scannerScanStackErrorTitle": {
@@ -25786,47 +25786,47 @@
   },
   "taskPriorityImmediate": "immediate",
   "@taskPriorityImmediate": {
-    "description": "Task priority label for 'immediate' — displayed via enum .name in badges/UI"
+    "description": "Task priority label for 'immediate' - displayed via enum .name in badges/UI"
   },
   "taskPriorityPriority": "priority",
   "@taskPriorityPriority": {
-    "description": "Task priority label for 'priority' — displayed via enum .name in badges/UI"
+    "description": "Task priority label for 'priority' - displayed via enum .name in badges/UI"
   },
   "taskPriorityRoutine": "routine",
   "@taskPriorityRoutine": {
-    "description": "Task priority label for 'routine' — displayed via enum .name in badges/UI"
+    "description": "Task priority label for 'routine' - displayed via enum .name in badges/UI"
   },
   "taskStateAcknowledged": "acknowledged",
   "@taskStateAcknowledged": {
-    "description": "Task state label for 'acknowledged' — displayed via enum .name in badges/UI"
+    "description": "Task state label for 'acknowledged' - displayed via enum .name in badges/UI"
   },
   "taskStateAssigned": "assigned",
   "@taskStateAssigned": {
-    "description": "Task state label for 'assigned' — displayed via enum .name in badges/UI"
+    "description": "Task state label for 'assigned' - displayed via enum .name in badges/UI"
   },
   "taskStateCancelled": "cancelled",
   "@taskStateCancelled": {
-    "description": "Task state label for 'cancelled' — displayed via enum .name in badges/UI"
+    "description": "Task state label for 'cancelled' - displayed via enum .name in badges/UI"
   },
   "taskStateCompleted": "completed",
   "@taskStateCompleted": {
-    "description": "Task state label for 'completed' — displayed via enum .name in badges/UI"
+    "description": "Task state label for 'completed' - displayed via enum .name in badges/UI"
   },
   "taskStateCreated": "created",
   "@taskStateCreated": {
-    "description": "Task state label for 'created' — displayed via enum .name in badges/UI"
+    "description": "Task state label for 'created' - displayed via enum .name in badges/UI"
   },
   "taskStateFailed": "failed",
   "@taskStateFailed": {
-    "description": "Task state label for 'failed' — displayed via enum .name in badges/UI"
+    "description": "Task state label for 'failed' - displayed via enum .name in badges/UI"
   },
   "taskStateInProgress": "inProgress",
   "@taskStateInProgress": {
-    "description": "Task state label for 'in progress' — displayed via enum .name in badges/UI (camelCase, needs human-readable form)"
+    "description": "Task state label for 'in progress' - displayed via enum .name in badges/UI (camelCase, needs human-readable form)"
   },
   "taskStateReassigned": "reassigned",
   "@taskStateReassigned": {
-    "description": "Task state label for 'reassigned' — displayed via enum .name in badges/UI"
+    "description": "Task state label for 'reassigned' - displayed via enum .name in badges/UI"
   },
   "telemetryAirQualityNoData": "No air quality data recorded yet",
   "@telemetryAirQualityNoData": {
@@ -29956,7 +29956,7 @@
   },
   "openBuyMeACoffee": "Open Buy Me a Coffee",
   "@openBuyMeACoffee": {
-    "description": "Primary CTA in the BMC handoff sheet — opens the external checkout URL."
+    "description": "Primary CTA in the BMC handoff sheet - opens the external checkout URL."
   },
   "expectedAmountLabel": "Amount: {amount}",
   "@expectedAmountLabel": {
@@ -32548,7 +32548,7 @@
   },
   "bgConnLiveActivityDestTitle": "Destination",
   "@bgConnLiveActivityDestTitle": {
-    "description": "Title of the Live Activity destination picker — what the lock-screen route's right side shows"
+    "description": "Title of the Live Activity destination picker - what the lock-screen route's right side shows"
   },
   "bgConnLiveActivityDestMesh": "Mesh",
   "@bgConnLiveActivityDestMesh": {
@@ -37820,7 +37820,7 @@
   },
   "dashboardEnvironmentMetricsOpenLog": "Open log",
   "@dashboardEnvironmentMetricsOpenLog": {
-    "description": "Button on the dashboard Environment Metrics widget shown when there are no readings yet — opens the full environment metrics log screen."
+    "description": "Button on the dashboard Environment Metrics widget shown when there are no readings yet - opens the full environment metrics log screen."
   },
   "dashboardEnvironmentMetricsUpdated": "Updated {time} ago",
   "@dashboardEnvironmentMetricsUpdated": {
@@ -37903,7 +37903,7 @@
   },
   "dashboardOwnerDiscoverySubtitle": "{count} ready to add: environment, mesh health, map, and more",
   "@dashboardOwnerDiscoverySubtitle": {
-    "description": "Subtitle on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets — promotes opening the picker.",
+    "description": "Subtitle on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets - promotes opening the picker.",
     "placeholders": {
       "count": {
         "type": "int"
@@ -39271,7 +39271,7 @@
   "@helpTracerouteCooldownBubble": {
     "description": "Help bubble text for step traceroute_cooldown"
   },
-  "helpTracerouteResultsBubble": "Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" — the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.",
+  "helpTracerouteResultsBubble": "Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" - the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.",
   "@helpTracerouteResultsBubble": {
     "description": "Help bubble text for step traceroute_results"
   },
@@ -39681,7 +39681,7 @@
   },
   "helpNodeDexSectionPetCompanionRemote": "If this node shares a companion summary, it can appear here. Full companion state stays local to its owner.",
   "@helpNodeDexSectionPetCompanionRemote": {
-    "description": "Info-sheet copy for the Companion card when viewing a remote peer. Keeps expectations conservative while remote companion sharing is still alpha — avoids promising live updates or protocol details."
+    "description": "Info-sheet copy for the Companion card when viewing a remote peer. Keeps expectations conservative while remote companion sharing is still alpha - avoids promising live updates or protocol details."
   },
   "helpNodeDexSectionMrrpServices": "MRRP (Mesh Request-Response Protocol) services this node advertises. Each service ID represents a capability the node exposes over the mesh, such as a message board, profile exchange, or meetup coordination. Tap any ID to learn more about that specific service.",
   "@helpNodeDexSectionMrrpServices": {
@@ -40668,7 +40668,7 @@
   },
   "automationHistoryOutcomeManual": "Ran THEN manually",
   "@automationHistoryOutcomeManual": {
-    "description": "History label when automation was manually triggered — clarifies THEN was forced"
+    "description": "History label when automation was manually triggered - clarifies THEN was forced"
   },
   "automationHistoryOutcomeFailed": "Failed",
   "@automationHistoryOutcomeFailed": {
@@ -40844,7 +40844,7 @@
   },
   "automationCardLastRunManual": "Last: Manual test",
   "@automationCardLastRunManual": {
-    "description": "Brief last run outcome on card when run was manual — distinct from auto success"
+    "description": "Brief last run outcome on card when run was manual - distinct from auto success"
   },
   "authErrorGoogleSignInCancelled": "Google sign in was cancelled",
   "@authErrorGoogleSignInCancelled": {
@@ -40892,7 +40892,7 @@
   },
   "connectionErrorBondForgotten": "This device was removed from Android Bluetooth settings. Re-pair it from Scanner.",
   "@connectionErrorBondForgotten": {
-    "description": "Banner copy shown when SocialMesh detects on Android that the saved Meshtastic device is no longer in the system bonded list. Routes the user to Scanner so the OS pairing PIN flow runs again. Android-only — iOS does not expose pre-connection bond state."
+    "description": "Banner copy shown when SocialMesh detects on Android that the saved Meshtastic device is no longer in the system bonded list. Routes the user to Scanner so the OS pairing PIN flow runs again. Android-only - iOS does not expose pre-connection bond state."
   },
   "countdownTracerouteTo": "Traceroute to {displayName}",
   "@countdownTracerouteTo": {
@@ -41613,7 +41613,7 @@
   },
   "sipDmBudgetExhausted": "Sending paused - mesh bandwidth limit reached. Try again shortly.",
   "@sipDmBudgetExhausted": {
-    "description": "Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting — this is the shared mesh budget."
+    "description": "Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting - this is the shared mesh budget."
   },
   "sipDmPeerBlocked": "You've blocked this node - unblock from SIP Hub to send messages again.",
   "@sipDmPeerBlocked": {
@@ -41643,7 +41643,7 @@
   },
   "sipDmMenuMute": "Mute notifications",
   "@sipDmMenuMute": {
-    "description": "Overflow menu item that silences notifications for this peer's messages. Inbound DMs still arrive and are stored — only the system notification is suppressed. Reversible toggle."
+    "description": "Overflow menu item that silences notifications for this peer's messages. Inbound DMs still arrive and are stored - only the system notification is suppressed. Reversible toggle."
   },
   "sipDmMenuUnmute": "Unmute notifications",
   "@sipDmMenuUnmute": {
@@ -41659,7 +41659,7 @@
   },
   "sipDmMenuRemove": "Remove conversation",
   "@sipDmMenuRemove": {
-    "description": "Overflow menu item that wipes the local DM history with this peer and tears down the local session. Emits no wire frame — peer is not notified. Local-only."
+    "description": "Overflow menu item that wipes the local DM history with this peer and tears down the local session. Emits no wire frame - peer is not notified. Local-only."
   },
   "sipDmBlockConfirmTitle": "Block this node?",
   "@sipDmBlockConfirmTitle": {
@@ -41739,7 +41739,7 @@
   },
   "sipPlayPanelTitle": "Play a game",
   "@sipPlayPanelTitle": {
-    "description": "Header inside the Play composer panel — the panel shown when the user selects the Play tab."
+    "description": "Header inside the Play composer panel - the panel shown when the user selects the Play tab."
   },
   "sipPlayPanelSubtitle": "Tiny turn-based games sent as mesh-safe moves.",
   "@sipPlayPanelSubtitle": {
@@ -41751,7 +41751,7 @@
   },
   "sipPlayPanelTttSizeBadge": "Tiny moves • ~7 bytes",
   "@sipPlayPanelTttSizeBadge": {
-    "description": "Optional badge on the Tic-Tac-Toe card calling out how compact each move is on the wire. Phrased as user-facing value (compact mesh moves) rather than internal metric — earlier 'B' shorthand read like a glitch."
+    "description": "Optional badge on the Tic-Tac-Toe card calling out how compact each move is on the wire. Phrased as user-facing value (compact mesh moves) rather than internal metric - earlier 'B' shorthand read like a glitch."
   },
   "sipPlayPanelC4Supporting": "Drop discs into a column. First to four-in-a-row wins.",
   "@sipPlayPanelC4Supporting": {
@@ -41759,7 +41759,7 @@
   },
   "sipPlayPanelC4SizeBadge": "Tiny moves • ~7 bytes",
   "@sipPlayPanelC4SizeBadge": {
-    "description": "Optional badge on the Connect Four card calling out how compact each move is on the wire. C4 moves are 1 byte (column only — landing row is derived) so the envelope is the same 7 bytes as TTT."
+    "description": "Optional badge on the Connect Four card calling out how compact each move is on the wire. C4 moves are 1 byte (column only - landing row is derived) so the envelope is the same 7 bytes as TTT."
   },
   "sipPlayPanelGameInProgressTitle": "Game in progress",
   "@sipPlayPanelGameInProgressTitle": {
@@ -41811,7 +41811,7 @@
   },
   "sipPlayMalformedTitle": "Game data unreadable",
   "@sipPlayMalformedTitle": {
-    "description": "Title of the bubble shown when a SIP Play envelope fails to decode (truncated, version mismatch, etc.). State is unchanged — the bubble is informational only."
+    "description": "Title of the bubble shown when a SIP Play envelope fails to decode (truncated, version mismatch, etc.). State is unchanged - the bubble is informational only."
   },
   "sipPlayOfferOutgoingTitle": "You offered {game}",
   "@sipPlayOfferOutgoingTitle": {
@@ -41905,11 +41905,11 @@
   },
   "sipDmComposerModeSignal": "Signal",
   "@sipDmComposerModeSignal": {
-    "description": "Signal tab label in the DM composer mode switcher. Visible only when the peer supports SIP Signal v1 and is not blocked. Signal is musical-phrase + Morse — 'Close Encounters over LoRa.'"
+    "description": "Signal tab label in the DM composer mode switcher. Visible only when the peer supports SIP Signal v1 and is not blocked. Signal is musical-phrase + Morse - 'Close Encounters over LoRa.'"
   },
   "sipDmComposerSheetTitle": "Compose",
   "@sipDmComposerSheetTitle": {
-    "description": "Header at the top of the rich-composer bottom sheet — houses the Sketch / Play / Signal tabs separately from the always-on text input."
+    "description": "Header at the top of the rich-composer bottom sheet - houses the Sketch / Play / Signal tabs separately from the always-on text input."
   },
   "sipDmComposerSheetTooltip": "Open compose options",
   "@sipDmComposerSheetTooltip": {
@@ -41917,7 +41917,7 @@
   },
   "sipDmComposerSheetTooltipPending": "Checking peer capabilities…",
   "@sipDmComposerSheetTooltipPending": {
-    "description": "Tooltip shown on the rich-composer trigger when the peer's CAP_BEACON / CAP_RESP / handshake-derived feature row hasn't arrived yet. Distinguishes the brief pending placeholder state from the unsupported / hidden state — the trigger is rendered greyed-out so the input bar's leading slot stays visually stable, then snaps to the regular tooltip the moment caps land."
+    "description": "Tooltip shown on the rich-composer trigger when the peer's CAP_BEACON / CAP_RESP / handshake-derived feature row hasn't arrived yet. Distinguishes the brief pending placeholder state from the unsupported / hidden state - the trigger is rendered greyed-out so the input bar's leading slot stays visually stable, then snaps to the regular tooltip the moment caps land."
   },
   "sipSignalPanelTitle": "Send a signal",
   "@sipSignalPanelTitle": {
@@ -42051,7 +42051,7 @@
   },
   "sipSignalMorseTapBackspace": "Back",
   "@sipSignalMorseTapBackspace": {
-    "description": "Label for the tap-Morse backspace key — removes the most recent symbol or separator."
+    "description": "Label for the tap-Morse backspace key - removes the most recent symbol or separator."
   },
   "sipSignalMorseTapInvalidNote": "Unknown sequences are shown as ? - they're skipped on send.",
   "@sipSignalMorseTapInvalidNote": {
@@ -42067,7 +42067,7 @@
   },
   "sipDmSignalReplyPlaceholder": "📡 Signal",
   "@sipDmSignalReplyPlaceholder": {
-    "description": "Placeholder shown in the reply quote when replying to a SIP Signal entry. Mirrors how sketch replies use sipDmInkReplyPlaceholder — Signal envelopes carry no plaintext body to quote."
+    "description": "Placeholder shown in the reply quote when replying to a SIP Signal entry. Mirrors how sketch replies use sipDmInkReplyPlaceholder - Signal envelopes carry no plaintext body to quote."
   },
   "sipDmConversationPreviewPhrase": "🎵 Tone",
   "@sipDmConversationPreviewPhrase": {
@@ -42103,7 +42103,7 @@
   },
   "sipSignalBubbleMalformed": "Signal can't be read",
   "@sipSignalBubbleMalformed": {
-    "description": "Fallback bubble title when an inbound Signal envelope fails to decode. State is informational only — never crashes ingest."
+    "description": "Fallback bubble title when an inbound Signal envelope fails to decode. State is informational only - never crashes ingest."
   },
   "sipInkComposerHint": "Draw a quick sketch - kept tiny so it fits on the mesh.",
   "@sipInkComposerHint": {
@@ -42111,7 +42111,7 @@
   },
   "sipInkComposerHintOver": "Strokes past the dashed line won't fit on the mesh and won't be sent.",
   "@sipInkComposerHintOver": {
-    "description": "Hint replacing sipInkComposerHint when the user has drawn past the SIP Ink budget — explains that overflow strokes are visible but will be dropped on send."
+    "description": "Hint replacing sipInkComposerHint when the user has drawn past the SIP Ink budget - explains that overflow strokes are visible but will be dropped on send."
   },
   "sipInkPointBudget": "{points} / {maxPoints} points",
   "@sipInkPointBudget": {
@@ -42151,11 +42151,11 @@
   },
   "sipInkSend": "Send",
   "@sipInkSend": {
-    "description": "Tooltip on the SIP Ink composer's Send button — fires when the user dispatches the encoded sketch as a DM_INK frame."
+    "description": "Tooltip on the SIP Ink composer's Send button - fires when the user dispatches the encoded sketch as a DM_INK frame."
   },
   "sipDmInkReplyPlaceholder": "🎨 Sketch",
   "@sipDmInkReplyPlaceholder": {
-    "description": "Quoted text shown when a user replies to a sketch — ink has no plaintext body, so this placeholder stands in for the quote in both the local reply indicator and the recipient's wire-encoded quote prefix."
+    "description": "Quoted text shown when a user replies to a sketch - ink has no plaintext body, so this placeholder stands in for the quote in both the local reply indicator and the recipient's wire-encoded quote prefix."
   },
   "sipInkUnsupportedPeer": "This peer can't receive sketches yet.",
   "@sipInkUnsupportedPeer": {
@@ -42454,7 +42454,7 @@
   },
   "sipHubBlock": "Block",
   "@sipHubBlock": {
-    "description": "Block button label on the incoming handshake request card. Blocking silently drops the pending request and persists a local block — no HS_DECLINE is sent on the wire."
+    "description": "Block button label on the incoming handshake request card. Blocking silently drops the pending request and persists a local block - no HS_DECLINE is sent on the wire."
   },
   "sipHubConsentBody": "Accepting lets this node send you encrypted direct messages and sketches over the mesh. You can mute, block, or remove the conversation at any time.",
   "@sipHubConsentBody": {
@@ -42522,7 +42522,7 @@
   },
   "meshCapacityLearnMore": "Learn more",
   "@meshCapacityLearnMore": {
-    "description": "Secondary button label on the recommendation card — opens the explanation sheet."
+    "description": "Secondary button label on the recommendation card - opens the explanation sheet."
   },
   "meshCapacityRecommendationBodyBusy": "Your mesh is starting to fill up. Long-range presets trade capacity for reach, which is fine for sparse deployments. Keep an eye on responsiveness.",
   "@meshCapacityRecommendationBodyBusy": {
@@ -42808,11 +42808,11 @@
   },
   "meshCapacitySheetIntro": "Meshtastic radio presets are a tradeoff between range and capacity. Long-range presets are useful when the network is sparse or you are trying to discover other nodes. In dense areas, the same settings can consume too much airtime, causing delays, missed messages, and unreliable routing.",
   "@meshCapacitySheetIntro": {
-    "description": "Intro paragraph in the Mesh Capacity explanation sheet — frames presets as a tradeoff."
+    "description": "Intro paragraph in the Mesh Capacity explanation sheet - frames presets as a tradeoff."
   },
   "meshCapacitySheetTradeoff": "Faster presets reduce range but allow the local mesh to carry more traffic. Dense urban areas and large events usually need faster presets to stay responsive. Sparser, exploratory deployments still benefit from long-range presets.",
   "@meshCapacitySheetTradeoff": {
-    "description": "Second paragraph in the Mesh Capacity explanation sheet — explains the capacity vs range tradeoff."
+    "description": "Second paragraph in the Mesh Capacity explanation sheet - explains the capacity vs range tradeoff."
   },
   "meshCapacitySheetSnapshotHeader": "Local mesh snapshot",
   "@meshCapacitySheetSnapshotHeader": {
@@ -42856,15 +42856,15 @@
   },
   "meshCapacitySheetRiskBody": "Changing presets affects who you can communicate with. Your group should move together, or you may stop hearing nodes that remain on the old preset. SocialMesh never changes radio settings on its own.",
   "@meshCapacitySheetRiskBody": {
-    "description": "Risk paragraph in the Mesh Capacity explanation sheet — warns the user that compatibility is impacted."
+    "description": "Risk paragraph in the Mesh Capacity explanation sheet - warns the user that compatibility is impacted."
   },
   "meshCapacitySheetOpenSettings": "Open radio settings",
   "@meshCapacitySheetOpenSettings": {
-    "description": "Primary action button label in the Mesh Capacity explanation sheet — navigates to the existing Radio Configuration screen so the user can change settings themselves."
+    "description": "Primary action button label in the Mesh Capacity explanation sheet - navigates to the existing Radio Configuration screen so the user can change settings themselves."
   },
   "meshCapacitySheetClose": "Close",
   "@meshCapacitySheetClose": {
-    "description": "Secondary action button label in the Mesh Capacity explanation sheet — dismisses the sheet without navigating."
+    "description": "Secondary action button label in the Mesh Capacity explanation sheet - dismisses the sheet without navigating."
   },
   "meshCapacityPressureUnknown": "Unknown",
   "@meshCapacityPressureUnknown": {
@@ -45144,7 +45144,7 @@
   },
   "voiceRecordingCancelButton": "Cancel",
   "@voiceRecordingCancelButton": {
-    "description": "Cancel button in the voice recording overlay — discards the recording"
+    "description": "Cancel button in the voice recording overlay - discards the recording"
   },
   "voiceRecordingDiscardTitle": "Discard recording?",
   "@voiceRecordingDiscardTitle": {
@@ -45160,7 +45160,7 @@
   },
   "voiceRecordingRetakeButton": "Retake",
   "@voiceRecordingRetakeButton": {
-    "description": "Retake button in the voice recording overlay — discards and restarts the recording"
+    "description": "Retake button in the voice recording overlay - discards and restarts the recording"
   },
   "voiceRecordingReadyToSend": "Ready to send",
   "@voiceRecordingReadyToSend": {
@@ -47241,35 +47241,35 @@
   },
   "petActionCharge": "Feed",
   "@petActionCharge": {
-    "description": "Primary action label — replenishes the pet's energy."
+    "description": "Primary action label - replenishes the pet's energy."
   },
   "petActionSurge": "Overfeed",
   "@petActionSurge": {
-    "description": "Secondary action label — hold-to-surge charges faster but raises instability."
+    "description": "Secondary action label - hold-to-surge charges faster but raises instability."
   },
   "petActionResonate": "Play",
   "@petActionResonate": {
-    "description": "Action label — brief premium interaction that raises mood."
+    "description": "Action label - brief premium interaction that raises mood."
   },
   "petActionStabilise": "Clean",
   "@petActionStabilise": {
-    "description": "Action label — clears a distortion artefact (hygiene analogue)."
+    "description": "Action label - clears a distortion artefact (hygiene analogue)."
   },
   "petActionPurge": "Medicine",
   "@petActionPurge": {
-    "description": "Action label — medicine analogue; only valid while the pet is sick."
+    "description": "Action label - medicine analogue; only valid while the pet is sick."
   },
   "petActionDim": "Sleep",
   "@petActionDim": {
-    "description": "Action label — puts the pet to sleep during the sleep window."
+    "description": "Action label - puts the pet to sleep during the sleep window."
   },
   "petActionInspect": "Status",
   "@petActionInspect": {
-    "description": "Action label — opens a sheet with detailed pet stats."
+    "description": "Action label - opens a sheet with detailed pet stats."
   },
   "petActionReSigil": "Revive",
   "@petActionReSigil": {
-    "description": "Action label — restart a dormant pet from a fresh sigil seed."
+    "description": "Action label - restart a dormant pet from a fresh sigil seed."
   },
   "petOnboardingPage1Title": "Meet your pet",
   "@petOnboardingPage1Title": {
@@ -47281,11 +47281,11 @@
   },
   "petOnboardingPage2Title": "The status line tells you what to do",
   "@petOnboardingPage2Title": {
-    "description": "Title of the second onboarding card — introduces the plain-language advisory line above the pet."
+    "description": "Title of the second onboarding card - introduces the plain-language advisory line above the pet."
   },
   "petOnboardingPage2Body": "Above your pet, a single status line says exactly what it needs and names the button to tap - Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can't miss it.",
   "@petOnboardingPage2Body": {
-    "description": "Body of the second onboarding card — explains the status line + pulsing-button cue."
+    "description": "Body of the second onboarding card - explains the status line + pulsing-button cue."
   },
   "petOnboardingPage3Title": "Check in anytime",
   "@petOnboardingPage3Title": {
@@ -47377,23 +47377,23 @@
   },
   "petBranchUnborn": "Unborn",
   "@petBranchUnborn": {
-    "description": "Evolution branch name — pre-hatch placeholder."
+    "description": "Evolution branch name - pre-hatch placeholder."
   },
   "petBranchLuminous": "Luminous",
   "@petBranchLuminous": {
-    "description": "Evolution branch name — pristine-care adult form."
+    "description": "Evolution branch name - pristine-care adult form."
   },
   "petBranchSteady": "Steady",
   "@petBranchSteady": {
-    "description": "Evolution branch name — moderate-care adult form."
+    "description": "Evolution branch name - moderate-care adult form."
   },
   "petBranchVolatile": "Volatile",
   "@petBranchVolatile": {
-    "description": "Evolution branch name — high-surge adult form."
+    "description": "Evolution branch name - high-surge adult form."
   },
   "petBranchDimmed": "Dimmed",
   "@petBranchDimmed": {
-    "description": "Evolution branch name — neglect-path adult form."
+    "description": "Evolution branch name - neglect-path adult form."
   },
   "petStatEnergy": "Energy",
   "@petStatEnergy": {
@@ -47478,43 +47478,43 @@
   },
   "petInspectSectionIdentity": "Identity",
   "@petInspectSectionIdentity": {
-    "description": "Inspect sheet section — identity block."
+    "description": "Inspect sheet section - identity block."
   },
   "petInspectSectionStats": "Stats",
   "@petInspectSectionStats": {
-    "description": "Inspect sheet section — visible stats block."
+    "description": "Inspect sheet section - visible stats block."
   },
   "petInspectSectionRecent": "Recent",
   "@petInspectSectionRecent": {
-    "description": "Inspect sheet section — recent events block."
+    "description": "Inspect sheet section - recent events block."
   },
   "petInspectRowDnaSeed": "DNA seed",
   "@petInspectRowDnaSeed": {
-    "description": "Inspect row label — shows the deterministic seed (hex)."
+    "description": "Inspect row label - shows the deterministic seed (hex)."
   },
   "petInspectRowOwnerNode": "Owner node",
   "@petInspectRowOwnerNode": {
-    "description": "Inspect row label — shows the owning node number."
+    "description": "Inspect row label - shows the owning node number."
   },
   "petInspectRowStage": "Stage",
   "@petInspectRowStage": {
-    "description": "Inspect row label — current life-cycle stage."
+    "description": "Inspect row label - current life-cycle stage."
   },
   "petInspectRowBranch": "Branch",
   "@petInspectRowBranch": {
-    "description": "Inspect row label — current evolution branch."
+    "description": "Inspect row label - current evolution branch."
   },
   "petInspectRowHatched": "Hatched",
   "@petInspectRowHatched": {
-    "description": "Inspect row label — hatch timestamp."
+    "description": "Inspect row label - hatch timestamp."
   },
   "petInspectRowInStage": "In stage",
   "@petInspectRowInStage": {
-    "description": "Inspect row label — elapsed time since the pet entered the current stage."
+    "description": "Inspect row label - elapsed time since the pet entered the current stage."
   },
   "petDnaViewerTitle": "DNA Blueprint",
   "@petDnaViewerTitle": {
-    "description": "Title for the dedicated DNA Viewer sheet — shows the structural genome derived from the pet's dnaSeed."
+    "description": "Title for the dedicated DNA Viewer sheet - shows the structural genome derived from the pet's dnaSeed."
   },
   "petDnaViewerOpenAction": "View DNA blueprint",
   "@petDnaViewerOpenAction": {
@@ -47522,39 +47522,39 @@
   },
   "petDnaSectionIdentity": "Identity",
   "@petDnaSectionIdentity": {
-    "description": "DNA Viewer section header — identity block (seed, stage, branch)."
+    "description": "DNA Viewer section header - identity block (seed, stage, branch)."
   },
   "petDnaSectionDecoded": "Decoded traits",
   "@petDnaSectionDecoded": {
-    "description": "DNA Viewer section header — structural trait breakdown."
+    "description": "DNA Viewer section header - structural trait breakdown."
   },
   "petDnaTraitSymmetry": "Symmetry",
   "@petDnaTraitSymmetry": {
-    "description": "DNA Viewer decoded trait — core polygon symmetry class."
+    "description": "DNA Viewer decoded trait - core polygon symmetry class."
   },
   "petDnaTraitOrbitals": "Orbital complexity",
   "@petDnaTraitOrbitals": {
-    "description": "DNA Viewer decoded trait — petal/orbital count."
+    "description": "DNA Viewer decoded trait - petal/orbital count."
   },
   "petDnaTraitResonance": "Resonance",
   "@petDnaTraitResonance": {
-    "description": "DNA Viewer decoded trait — twist cycles."
+    "description": "DNA Viewer decoded trait - twist cycles."
   },
   "petDnaTraitStrands": "Strand configuration",
   "@petDnaTraitStrands": {
-    "description": "DNA Viewer decoded trait — strand count (Monad / Dyad / Triad)."
+    "description": "DNA Viewer decoded trait - strand count (Monad / Dyad / Triad)."
   },
   "petDnaTraitVolatility": "Volatility markers",
   "@petDnaTraitVolatility": {
-    "description": "DNA Viewer decoded trait — number of broken strand segments."
+    "description": "DNA Viewer decoded trait - number of broken strand segments."
   },
   "petDnaTraitAnomaly": "Anomaly",
   "@petDnaTraitAnomaly": {
-    "description": "DNA Viewer decoded trait — anomaly bit flag."
+    "description": "DNA Viewer decoded trait - anomaly bit flag."
   },
   "petDnaTraitSignatureRotation": "Signature rotation",
   "@petDnaTraitSignatureRotation": {
-    "description": "DNA Viewer decoded trait — seed-derived body rotation angle in degrees."
+    "description": "DNA Viewer decoded trait - seed-derived body rotation angle in degrees."
   },
   "petDnaAnomalyPresent": "Present",
   "@petDnaAnomalyPresent": {
@@ -47674,7 +47674,7 @@
   },
   "petCompanionRemoteNotSharing": "This node isn't sharing its companion.",
   "@petCompanionRemoteNotSharing": {
-    "description": "Remote Companion empty-state shown when the node responded but declined to share or has no companion bound (covers both error responses and empty payloads — they look the same to the user)."
+    "description": "Remote Companion empty-state shown when the node responded but declined to share or has no companion bound (covers both error responses and empty payloads - they look the same to the user)."
   },
   "petCompanionObservedRelative": "Observed {age} ago",
   "@petCompanionObservedRelative": {
@@ -47752,7 +47752,7 @@
   },
   "petDnaAlleleRatioValue": "{letter}  {percent}%",
   "@petDnaAlleleRatioValue": {
-    "description": "Value format for an allele ratio row — the base letter, two spaces, percentage, percent sign. E.g. 'A  34%'.",
+    "description": "Value format for an allele ratio row - the base letter, two spaces, percentage, percent sign. E.g. 'A  34%'.",
     "placeholders": {
       "letter": {
         "type": "String"
@@ -48819,7 +48819,7 @@
   },
   "reticulumBridgeHostHint": "rnsd host or IP",
   "@reticulumBridgeHostHint": {
-    "description": "Placeholder for the host input field. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files."
+    "description": "Placeholder for the host input field. Avoid embedding the literal loopback IP - the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files."
   },
   "reticulumBridgePortLabel": "Port",
   "@reticulumBridgePortLabel": {
@@ -49043,7 +49043,7 @@
   },
   "rnsCompanionSettingsHostHint": "laptop IP or hostname",
   "@rnsCompanionSettingsHostHint": {
-    "description": "Placeholder for the host input. Avoid embedding the literal loopback IP — the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files."
+    "description": "Placeholder for the host input. Avoid embedding the literal loopback IP - the codebase audit forbids hardcoded 127.0.0.1 in source, including ARB-derived generated files."
   },
   "rnsCompanionSettingsPortLabel": "Port",
   "@rnsCompanionSettingsPortLabel": {
@@ -50192,7 +50192,7 @@
   },
   "licenseOrgInviteRegenerateAction": "Regenerate link",
   "@licenseOrgInviteRegenerateAction": {
-    "description": "Secondary action on the rendered invite link tile that mints a fresh URL. Replaces the current link — anyone holding the previous URL will see 'this invite was cancelled'."
+    "description": "Secondary action on the rendered invite link tile that mints a fresh URL. Replaces the current link - anyone holding the previous URL will see 'this invite was cancelled'."
   },
   "licenseOrgInviteRegenerateConfirmTitle": "Generate a new link?",
   "@licenseOrgInviteRegenerateConfirmTitle": {

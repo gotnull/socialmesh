@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// accept an optional `nodeNum` and scope their provider watches + header
 /// subtitle when it is supplied.
 ///
-/// These are source-level invariants — the feature depends on them so
+/// These are source-level invariants - the feature depends on them so
 /// per-node navigation from NodeDetailScreen can open a filtered view.
 void main() {
   group('DeviceMetricsLogScreen nodeNum scoping', () {

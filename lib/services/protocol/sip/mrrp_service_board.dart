@@ -137,15 +137,13 @@ class MrrpServiceBoard implements MrrpServiceHandler {
     builder.addByte(limitedPosts.length);
     for (final post in limitedPosts) {
       final postIdBytes = Uint8List(4);
-      ByteData.sublistView(
-        postIdBytes,
-      ).setUint32(0, post.postId, Endian.little);
+      ByteData.sublistView(postIdBytes)
+          .setUint32(0, post.postId, Endian.little);
       builder.add(postIdBytes);
 
       final nodeIdBytes = Uint8List(4);
-      ByteData.sublistView(
-        nodeIdBytes,
-      ).setUint32(0, post.authorNodeId, Endian.little);
+      ByteData.sublistView(nodeIdBytes)
+          .setUint32(0, post.authorNodeId, Endian.little);
       builder.add(nodeIdBytes);
 
       builder.addByte(post.text.length);
@@ -166,15 +164,15 @@ class MrrpServiceBoard implements MrrpServiceHandler {
   // post_short
   // ---------------------------------------------------------------------------
 
-  /// Request payload: ttl_s(2, LE) + text(N) — min 3 bytes.
+  /// Request payload: ttl_s(2, LE) + text(N) - min 3 bytes.
   MrrpFrame _handlePostShort(MrrpFrame request, int senderNodeId) {
     if (request.payload.length < 3) {
       return _buildError(request, MrrpStatusCode.invalid);
     }
 
-    final ttlS = ByteData.sublistView(
-      request.payload,
-    ).getUint16(0, Endian.little).clamp(1, _maxPostTtlS);
+    final ttlS = ByteData.sublistView(request.payload)
+        .getUint16(0, Endian.little)
+        .clamp(1, _maxPostTtlS);
     final text = Uint8List.sublistView(request.payload, 2);
 
     if (text.length < _minPostTextBytes || text.length > _maxPostTextBytes) {
@@ -233,9 +231,8 @@ class MrrpServiceBoard implements MrrpServiceHandler {
       return _buildError(request, MrrpStatusCode.invalid);
     }
 
-    final postId = ByteData.sublistView(
-      request.payload,
-    ).getUint32(0, Endian.little);
+    final postId = ByteData.sublistView(request.payload)
+        .getUint32(0, Endian.little);
     final post = _posts[postId];
     if (post == null || post.isExpiredAt(_now())) {
       return _buildError(request, MrrpStatusCode.notFound);

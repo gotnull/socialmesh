@@ -461,7 +461,7 @@ void main() {
       final events = <OverlayLinkEvent>[];
       final sub = engine.events.listen(events.add);
 
-      // Pre-seed a stale canonical record for peerNodeNum=42 — the
+      // Pre-seed a stale canonical record for peerNodeNum=42 - the
       // pattern `restore()` produces for non-terminal rows after an
       // app restart.
       final stale = OverlayLinkRecord(

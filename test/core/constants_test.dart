@@ -205,7 +205,7 @@ void main() {
     });
 
     test('pet feature stays disabled when PET_ENABLED is unset', () {
-      // Sibling flag set but not PET_ENABLED — isPetEnabled must remain
+      // Sibling flag set but not PET_ENABLED - isPetEnabled must remain
       // false so partial env configs don't accidentally flip it on.
       dotenv.loadFromString(
         envString: 'TEST_MODE=true\nMESSAGE_TIMELINE_ENABLED=true',

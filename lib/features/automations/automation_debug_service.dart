@@ -27,13 +27,13 @@ enum SkipReason {
 
 /// Which branch was selected for execution after condition evaluation.
 enum BranchSelection {
-  /// Condition passed — THEN actions execute.
+  /// Condition passed - THEN actions execute.
   thenBranch('then'),
 
-  /// Condition failed and ELSE actions exist — ELSE actions execute.
+  /// Condition failed and ELSE actions exist - ELSE actions execute.
   elseBranch('else'),
 
-  /// Condition failed and no ELSE actions — nothing executes.
+  /// Condition failed and no ELSE actions - nothing executes.
   none('none');
 
   final String jsonValue;

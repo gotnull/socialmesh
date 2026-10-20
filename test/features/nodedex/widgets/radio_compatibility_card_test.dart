@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// RadioCompatibilityCard widget tests — direct rendering coverage.
+// RadioCompatibilityCard widget tests - direct rendering coverage.
 //
 // Pins the card's status -> localized-label mapping so a future ARB key
 // rename or a status-table edit is caught at the widget layer instead of
@@ -45,9 +45,8 @@ NodeDexRadioCompatibilitySummary _summary(
 Widget _wrap({required NodeDexRadioCompatibilitySummary? summary}) {
   return ProviderScope(
     overrides: [
-      nodeDexRadioCompatibilityProvider(
-        _testNodeNum,
-      ).overrideWith((ref) => summary),
+      nodeDexRadioCompatibilityProvider(_testNodeNum)
+          .overrideWith((ref) => summary),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -68,7 +67,7 @@ void main() {
     debugLastLoggedStatus.clear();
   });
 
-  group('RadioCompatibilityCard — visible statuses', () {
+  group('RadioCompatibilityCard - visible statuses', () {
     final visibleCases = <(NodeDexReachabilityStatus, String)>[
       (
         NodeDexReachabilityStatus.likelyReachableOnRf,
@@ -119,7 +118,7 @@ void main() {
     }
   });
 
-  group('RadioCompatibilityCard — hidden cases', () {
+  group('RadioCompatibilityCard - hidden cases', () {
     testWidgets('selfNode hides the entire card', (tester) async {
       await tester.pumpWidget(
         _wrap(
@@ -155,7 +154,7 @@ void main() {
     });
   });
 
-  group('RadioCompatibilityCard — auxiliary rows', () {
+  group('RadioCompatibilityCard - auxiliary rows', () {
     testWidgets(
       'renders observation source and hops rows when summary carries them',
       (tester) async {

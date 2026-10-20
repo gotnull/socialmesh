@@ -70,8 +70,8 @@ final manualScanActiveProvider =
 /// 1. `beginSession()` increments the counter and returns the new id.
 ///    Caller stores it as `_activeManualSession` and sets
 ///    `autoReconnectStateProvider == manualConnecting`.
-/// 2. On any terminal outcome — success / failure / disconnect /
-///    timeout / scanner dispose — the caller invokes
+/// 2. On any terminal outcome - success / failure / disconnect /
+///    timeout / scanner dispose - the caller invokes
 ///    `clearIfCurrent(myToken)` which only clears the latch when
 ///    `myToken == current`. If a newer `_connect` tap incremented
 ///    the counter mid-attempt, the stale clear is logged as

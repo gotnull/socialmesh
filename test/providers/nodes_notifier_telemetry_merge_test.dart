@@ -162,67 +162,64 @@ void main() {
       },
     );
 
-    test(
-      'stream listener preserves existing battery when non-telemetry event arrives',
-      () async {
-        final container = createContainer();
-        addTearDown(container.dispose);
+    test('stream listener preserves existing battery when non-telemetry event arrives', () async {
+      final container = createContainer();
+      addTearDown(container.dispose);
 
-        await container.read(nodeStorageProvider.future);
-        await container.read(deviceFavoritesProvider.future);
-        await container.read(nodeIdentityStoreProvider.future);
+      await container.read(nodeStorageProvider.future);
+      await container.read(deviceFavoritesProvider.future);
+      await container.read(nodeIdentityStoreProvider.future);
 
-        // Initialize the nodes provider
-        container.read(nodesProvider);
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+      // Initialize the nodes provider
+      container.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
-        // Add a node WITH battery data directly to state
-        container
-            .read(nodesProvider.notifier)
-            .addOrUpdateNode(
-              MeshNode(
-                nodeNum: 99,
-                longName: 'RemoteNode',
-                batteryLevel: 80,
-                voltage: 4.1,
-                channelUtilization: 5.0,
-                airUtilTx: 0.8,
-                uptimeSeconds: 7200,
-                temperature: 22.5,
-                humidity: 45.0,
-              ),
-            );
+      // Add a node WITH battery data directly to state
+      container
+          .read(nodesProvider.notifier)
+          .addOrUpdateNode(
+            MeshNode(
+              nodeNum: 99,
+              longName: 'RemoteNode',
+              batteryLevel: 80,
+              voltage: 4.1,
+              channelUtilization: 5.0,
+              airUtilTx: 0.8,
+              uptimeSeconds: 7200,
+              temperature: 22.5,
+              humidity: 45.0,
+            ),
+          );
 
-        final beforeNode = container.read(nodesProvider)[99];
-        expect(beforeNode?.batteryLevel, 80);
+      final beforeNode = container.read(nodesProvider)[99];
+      expect(beforeNode?.batteryLevel, 80);
 
-        // Simulate a non-telemetry node event (e.g., position update or
-        // lastHeard) that arrives WITHOUT battery fields. This mimics what
-        // _updateNodeLastHeard emits when an early placeholder was in _nodes.
-        // Use addOrUpdateNode which goes through the same merge path.
-        container
-            .read(nodesProvider.notifier)
-            .addOrUpdateNode(
-              MeshNode(
-                nodeNum: 99,
-                longName: 'RemoteNode',
-                lastHeard: DateTime.now(),
-                // No battery fields!
-              ),
-            );
+      // Simulate a non-telemetry node event (e.g., position update or
+      // lastHeard) that arrives WITHOUT battery fields. This mimics what
+      // _updateNodeLastHeard emits when an early placeholder was in _nodes.
+      // Use addOrUpdateNode which goes through the same merge path.
+      container
+          .read(nodesProvider.notifier)
+          .addOrUpdateNode(
+            MeshNode(
+              nodeNum: 99,
+              longName: 'RemoteNode',
+              lastHeard: DateTime.now(),
+              // No battery fields!
+            ),
+          );
 
-        // The node should still have battery data from the previous state
-        // because addOrUpdateNode replaces (doesn't merge from existing).
-        // The stream listener path is what needs to preserve these.
-        // With our fix, the stream listener explicitly preserves telemetry.
-        final afterNode = container.read(nodesProvider)[99];
-        expect(afterNode, isNotNull);
-        // Note: addOrUpdateNode does a direct state replace, not a merge.
-        // The real fix is in the stream listener. But we verify the node
-        // is still accessible.
-        expect(afterNode?.longName, 'RemoteNode');
-      },
-    );
+      // The node should still have battery data from the previous state
+      // because addOrUpdateNode replaces (doesn't merge from existing).
+      // The stream listener path is what needs to preserve these.
+      // With our fix, the stream listener explicitly preserves telemetry.
+      final afterNode = container.read(nodesProvider)[99];
+      expect(afterNode, isNotNull);
+      // Note: addOrUpdateNode does a direct state replace, not a merge.
+      // The real fix is in the stream listener. But we verify the node
+      // is still accessible.
+      expect(afterNode?.longName, 'RemoteNode');
+    });
 
     test(
       '_init merge preserves batteryLevel from storage over null protocol node',

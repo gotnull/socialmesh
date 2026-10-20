@@ -64,7 +64,7 @@ extension DeviceArchitectureX on DeviceArchitecture {
 /// Resolves via [DeviceHardwareCatalog], which loads the upstream meshtastic
 /// hardware table at boot. Returns [DeviceArchitecture.unknown] for any
 /// hwModel not covered (including all hwModels if the catalog has not been
-/// loaded yet — see `lib/main.dart`).
+/// loaded yet - see `lib/main.dart`).
 DeviceArchitecture architectureFromHwModel(int? hwModelValue) {
   return DeviceHardwareCatalog.instance.architectureFor(hwModelValue);
 }
@@ -81,7 +81,7 @@ Set<int> get mappedHwModelValues =>
 /// inside the architecture zip. e.g., `rak4631` for files named
 /// `firmware-rak4631-2.7.15.567b8ea.zip`.
 ///
-/// Returns `null` for unmapped hardware models. Hand-curated below — entries
+/// Returns `null` for unmapped hardware models. Hand-curated below - entries
 /// are only added once verified against an actual GitHub firmware release
 /// asset, otherwise users get 404s during OTA. Do not source this from the
 /// upstream JSON's `platformioTarget` field without per-entry verification.

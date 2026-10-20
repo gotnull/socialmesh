@@ -17,8 +17,8 @@
 // the shape is unrecognised so the caller can fall back to the raw
 // reply.
 //
-// The shape is deliberately permissive — different upstream firmware
-// versions reflow whitespace and order — so we trim, drop empty
+// The shape is deliberately permissive - different upstream firmware
+// versions reflow whitespace and order - so we trim, drop empty
 // lines, and accept either a leading `>` prompt-style line or a
 // `key: value` line. The whole-reply fallback covers single-token
 // replies like `"on"` or `"42"`.
@@ -107,7 +107,7 @@ class MeshCoreCliReplyParser {
   // happens in [extractValue] before the CSV split; the value-portion
   // we operate on is the CSV itself.
   //
-  // Range validation lives at the UI layer — this helper is purely
+  // Range validation lives at the UI layer - this helper is purely
   // structural so the caller can surface "firmware returned an
   // out-of-range value" separately from "firmware returned a garbled
   // reply".

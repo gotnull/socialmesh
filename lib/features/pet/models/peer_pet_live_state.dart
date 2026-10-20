@@ -6,16 +6,16 @@
 // Three explicit layers separate concerns so the display band is
 // deterministic, testable, and resistant to noisy wire updates:
 //
-//   1. [PeerPetRawObservation] — thin wrapper over the decoded wire
+//   1. [PeerPetRawObservation] - thin wrapper over the decoded wire
 //      public state and its observedAt timestamp. Never touched by UI
 //      directly; exists so the freshness signal can be extracted
 //      without coupling to the cache row shape.
 //
-//   2. [PeerPresenceSignal] — the inputs to the mapping function.
+//   2. [PeerPresenceSignal] - the inputs to the mapping function.
 //      Purely durations + booleans; no Flutter, no Riverpod. This is
 //      what the smoothing layer reasons about.
 //
-//   3. [PeerPetLiveState] — the smoothed, display-ready band. Equal-
+//   3. [PeerPetLiveState] - the smoothed, display-ready band. Equal-
 //      by-value so `.select`-style consumers short-circuit on no-op
 //      emissions. Never persisted; recomputed from the two inputs
 //      above whenever either changes.
@@ -47,7 +47,7 @@ class PeerPetRawObservation {
   int get hashCode => Object.hash(state, observedAt);
 }
 
-/// Inputs to the live-state mapper. Purely numeric / boolean — no Flutter,
+/// Inputs to the live-state mapper. Purely numeric / boolean - no Flutter,
 /// no Riverpod. Derived once per mapping pass from the raw observation
 /// and the peer's last-seen timestamp.
 @immutable
@@ -71,7 +71,7 @@ class PeerPresenceSignal {
     required this.isDormantOnWire,
   });
 
-  /// Empty signal — no observation, no last-seen. Resolves to [PeerPetLiveBand.unknown].
+  /// Empty signal - no observation, no last-seen. Resolves to [PeerPetLiveBand.unknown].
   static const PeerPresenceSignal absent = PeerPresenceSignal(
     sinceLastSeen: null,
     sinceObserved: null,
@@ -89,7 +89,7 @@ class PeerPresenceSignal {
 
   /// The "wire explicitly clears it" escape hatch from the exit rule
   /// for sleepy/dormant (see mapper rule 2). True only when we have a
-  /// VERY fresh observation where both low-energy flags are clear —
+  /// VERY fresh observation where both low-energy flags are clear -
   /// i.e. the peer has recently, explicitly said "awake and lively."
   static const Duration wireExplicitClearanceWindow = Duration(seconds: 10);
 
@@ -125,7 +125,7 @@ class PeerPresenceSignal {
 /// Priority ladder (high → low energy):
 ///   active > calm > idle > sleepy > dormant
 ///
-/// [unknown] sits outside the ladder — it means "no signal." The UI
+/// [unknown] sits outside the ladder - it means "no signal." The UI
 /// renders no band line for [unknown]; do NOT surface it as a
 /// user-facing label. The internal representation is preserved so
 /// mapper logic can treat "band we chose to show nothing" distinctly
@@ -141,7 +141,7 @@ class PeerPetLiveState {
 
   const PeerPetLiveState({required this.band, required this.emittedAt});
 
-  /// Initial state for a freshly-mounted peer — unknown, no emission yet.
+  /// Initial state for a freshly-mounted peer - unknown, no emission yet.
   factory PeerPetLiveState.initial(DateTime now) =>
       PeerPetLiveState(band: PeerPetLiveBand.unknown, emittedAt: now);
 

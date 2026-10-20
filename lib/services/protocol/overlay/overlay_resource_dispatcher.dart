@@ -21,7 +21,7 @@
 ///     not capable, or capability unknown); the caller SHOULD route
 ///     via the legacy `SM_FILE_TRANSFER` v1 system if the product
 ///     flow expects a file send. The dispatcher itself never calls
-///     into v1 — decoupling is deliberate.
+///     into v1 - decoupling is deliberate.
 ///   - `rejected`: the dispatcher declined and no fallback is
 ///     meaningful (e.g., a hard policy or payload validation failure).
 ///
@@ -62,7 +62,7 @@ enum OverlayResourceDispatchReason {
   /// `OVERLAY_RESOURCE_ENABLED` is off.
   resourceDisabled,
 
-  /// Peer has no capability record — explicitly not a "try and see".
+  /// Peer has no capability record - explicitly not a "try and see".
   peerCapabilityUnknown,
 
   /// Peer's capability record says overlay link is not supported.
@@ -71,7 +71,7 @@ enum OverlayResourceDispatchReason {
   /// Payload is empty or exceeds the resource cap.
   badPayload,
 
-  /// Underlying engine rejected the offer (rare — covers engine
+  /// Underlying engine rejected the offer (rare - covers engine
   /// invariant violations such as duplicate openings).
   engineRejected,
 }

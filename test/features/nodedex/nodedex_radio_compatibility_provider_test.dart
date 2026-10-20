@@ -121,7 +121,7 @@ void main() {
 
   test('local preset change flips status to differentPreset', () async {
     final preset = config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST.value;
-    // Start with a stream we can drive — emit two successive configs.
+    // Start with a stream we can drive - emit two successive configs.
     final controller = StreamController<config_pb.Config_LoRaConfig?>();
     addTearDown(controller.close);
 
@@ -182,7 +182,7 @@ void main() {
         entry: _entry(lastObservedOnPreset: preset),
         isSelf: false,
         localConfig: _loraConfig(),
-        // No live node — provider falls back to "no fallback".
+        // No live node - provider falls back to "no fallback".
       );
       addTearDown(container.dispose);
 
@@ -270,7 +270,7 @@ void main() {
 
   test('returns null when entry does not exist', () async {
     // Build a container that never provides an entry override for the
-    // requested node — nodeDexEntryProvider falls back to the real
+    // requested node - nodeDexEntryProvider falls back to the real
     // family provider which returns null for an unknown node.
     final nodesNotifier = _TestNodesNotifier(const {});
     final container = ProviderContainer(

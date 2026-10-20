@@ -43,8 +43,7 @@ class OneTimePurchases {
   static OneTimePurchase get themePack => OneTimePurchase(
     id: ProductCatalog.themePack.id,
     name: ProductCatalog.themePack.name,
-    description:
-        'Unlock 12 stunning accent colors to personalize every screen, button, and highlight throughout the app — make it truly yours', // lint-allow: hardcoded-string
+    description: 'Unlock 12 stunning accent colors to personalize every screen, button, and highlight throughout the app - make it truly yours', // lint-allow: hardcoded-string
     price: ProductCatalog.themePack.priceUsd,
     productId: RevenueCatConfig.themePackProductId,
     unlocksFeature: PremiumFeature.premiumThemes,
@@ -53,8 +52,7 @@ class OneTimePurchases {
   static OneTimePurchase get ringtonePack => OneTimePurchase(
     id: ProductCatalog.ringtonePack.id,
     name: ProductCatalog.ringtonePack.name,
-    description:
-        'Access a massive searchable library of thousands of RTTTL ringtones — from classic melodies to TV themes, movie scores, and video game soundtracks', // lint-allow: hardcoded-string
+    description: 'Access a massive searchable library of thousands of RTTTL ringtones - from classic melodies to TV themes, movie scores, and video game soundtracks', // lint-allow: hardcoded-string
     price: ProductCatalog.ringtonePack.priceUsd,
     productId: RevenueCatConfig.ringtonePackProductId,
     unlocksFeature: PremiumFeature.customRingtones,
@@ -63,8 +61,7 @@ class OneTimePurchases {
   static OneTimePurchase get widgetPack => OneTimePurchase(
     id: ProductCatalog.widgetPack.id,
     name: ProductCatalog.widgetPack.name,
-    description:
-        'Build your own custom dashboard widgets with live data bindings, real-time charts, gauges, graphs, and status indicators — monitor battery, telemetry, environment sensors, and more at a glance', // lint-allow: hardcoded-string
+    description: 'Build your own custom dashboard widgets with live data bindings, real-time charts, gauges, graphs, and status indicators - monitor battery, telemetry, environment sensors, and more at a glance', // lint-allow: hardcoded-string
     price: ProductCatalog.widgetPack.priceUsd,
     productId: RevenueCatConfig.widgetPackProductId,
     unlocksFeature: PremiumFeature.homeWidgets,
@@ -73,8 +70,7 @@ class OneTimePurchases {
   static OneTimePurchase get automationsPack => OneTimePurchase(
     id: ProductCatalog.automationsPack.id,
     name: ProductCatalog.automationsPack.name,
-    description:
-        'Create powerful automation rules: auto-reply to messages, schedule broadcasts at specific times, trigger actions based on location or device events, and set up custom notification flows', // lint-allow: hardcoded-string
+    description: 'Create powerful automation rules: auto-reply to messages, schedule broadcasts at specific times, trigger actions based on location or device events, and set up custom notification flows', // lint-allow: hardcoded-string
     price: ProductCatalog.automationsPack.priceUsd,
     productId: RevenueCatConfig.automationsPackProductId,
     unlocksFeature: PremiumFeature.automations,
@@ -83,8 +79,7 @@ class OneTimePurchases {
   static OneTimePurchase get iftttPack => OneTimePurchase(
     id: ProductCatalog.iftttPack.id,
     name: ProductCatalog.iftttPack.name,
-    description:
-        'Connect your mesh network to 700+ apps and services — trigger smart home devices, log events to spreadsheets, send Slack notifications, post to social media, and integrate with virtually anything', // lint-allow: hardcoded-string
+    description: 'Connect your mesh network to 700+ apps and services - trigger smart home devices, log events to spreadsheets, send Slack notifications, post to social media, and integrate with virtually anything', // lint-allow: hardcoded-string
     price: ProductCatalog.iftttPack.priceUsd,
     productId: RevenueCatConfig.iftttPackProductId,
     unlocksFeature: PremiumFeature.iftttIntegration,
@@ -93,8 +88,7 @@ class OneTimePurchases {
   static OneTimePurchase get translationPack => OneTimePurchase(
     id: ProductCatalog.translationPack.id,
     name: ProductCatalog.translationPack.name,
-    description:
-        'Unlock on-demand message translation with smart caching and privacy controls — includes a managed allowance, or bring your own API key for extended use', // lint-allow: hardcoded-string
+    description: 'Unlock on-demand message translation with smart caching and privacy controls - includes a managed allowance, or bring your own API key for extended use', // lint-allow: hardcoded-string
     price: ProductCatalog.translationPack.priceUsd,
     productId: RevenueCatConfig.translationPackProductId,
     unlocksFeature: PremiumFeature.translation,

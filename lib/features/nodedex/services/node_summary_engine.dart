@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Node Summary Engine — deterministic insight generation from encounter data.
+// Node Summary Engine - deterministic insight generation from encounter data.
 //
 // Computes time-bucketed activity patterns, streaks, busiest days, and
 // a one-line natural-language summary from a NodeDexEntry's encounter

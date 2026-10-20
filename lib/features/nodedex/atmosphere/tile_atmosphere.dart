@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Tile Atmosphere — per-tile micro particle effects for NodeDex list tiles.
+// Tile Atmosphere - per-tile micro particle effects for NodeDex list tiles.
 //
 // Each tile gets a small, contained atmosphere effect driven by the node's
 // primary trait and patina score. Effects are:
@@ -15,7 +15,7 @@
 //   - Wanderer nodes → twinkling stars with faint warmth
 //   - Unknown/other  → very faint starlight
 //
-// All particles are deterministic — seeded by nodeNum — so they produce
+// All particles are deterministic - seeded by nodeNum - so they produce
 // consistent patterns regardless of scroll position or widget lifecycle.
 // Animation is driven by a shared AnimationController from the parent
 // screen, so there is only ONE ticker for the entire list.
@@ -55,13 +55,13 @@ import '../models/nodedex_entry.dart';
 /// )
 /// ```
 class TileAtmosphere extends StatelessWidget {
-  /// The node number — used as the deterministic seed for particle layout.
+  /// The node number - used as the deterministic seed for particle layout.
   final int nodeNum;
 
-  /// The node's primary trait — determines which effect type to render.
+  /// The node's primary trait - determines which effect type to render.
   final NodeTrait trait;
 
-  /// The node's patina score (0–100) — modulates effect intensity.
+  /// The node's patina score (0–100) - modulates effect intensity.
   final double patinaScore;
 
   /// Shared animation that drives the painting. Should be a repeating
@@ -135,7 +135,7 @@ int _particleCount(NodeTrait trait, double patina) {
 }
 
 /// Maximum alpha for tile atmosphere effects. Much lower than the
-/// full-screen atmosphere — these need to be barely perceptible.
+/// full-screen atmosphere - these need to be barely perceptible.
 const double _kMaxAlpha = 0.12;
 
 // =============================================================================
@@ -199,7 +199,7 @@ List<Color> _palette(NodeTrait trait, bool isDark) {
 ///
 /// Renders 2-7 particles per tile based on the node's trait and patina.
 /// All particle positions and animations are derived from the nodeNum
-/// seed and elapsed time — no state, no allocation, fully deterministic.
+/// seed and elapsed time - no state, no allocation, fully deterministic.
 class _TileAtmospherePainter extends CustomPainter {
   final int nodeNum;
   final NodeTrait trait;
@@ -297,7 +297,7 @@ class _TileAtmospherePainter extends CustomPainter {
   }
 
   // ---------------------------------------------------------------------------
-  // Ember — rising glowing dots with gentle horizontal wander
+  // Ember - rising glowing dots with gentle horizontal wander
   // ---------------------------------------------------------------------------
 
   void _drawEmber(
@@ -348,7 +348,7 @@ class _TileAtmospherePainter extends CustomPainter {
   }
 
   // ---------------------------------------------------------------------------
-  // Mist — large soft drifting blobs
+  // Mist - large soft drifting blobs
   // ---------------------------------------------------------------------------
 
   void _drawMist(
@@ -397,7 +397,7 @@ class _TileAtmospherePainter extends CustomPainter {
   }
 
   // ---------------------------------------------------------------------------
-  // Rain — thin vertical streaks falling down
+  // Rain - thin vertical streaks falling down
   // ---------------------------------------------------------------------------
 
   void _drawRain(
@@ -438,7 +438,7 @@ class _TileAtmospherePainter extends CustomPainter {
   }
 
   // ---------------------------------------------------------------------------
-  // Star — stationary twinkling points
+  // Star - stationary twinkling points
   // ---------------------------------------------------------------------------
 
   void _drawStar(
@@ -452,7 +452,7 @@ class _TileAtmospherePainter extends CustomPainter {
     double radius,
     double intensity,
   ) {
-    // Stars are stationary — they just twinkle in place.
+    // Stars are stationary - they just twinkle in place.
     final x = size.width * baseX;
     final y = size.height * baseY;
 

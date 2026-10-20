@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Radio Compatibility Provider — derived view that joins the
+// NodeDex Radio Compatibility Provider - derived view that joins the
 // canonical NodeDex entry, the local radio's current LoRa config, the
 // live MeshNode (for fallback transport classification), and the
 // "is this self?" identity provider into a single

@@ -138,8 +138,7 @@ void main() {
         final session = FakeClientSession();
         final result = await bridge.handleTakGeoChat(
           session: session,
-          cotXml:
-              '<event version="2.0" type="a-f-G-U-C" uid="x"><point lat="0" lon="0" hae="0" ce="0" le="0"/><detail/></event>',
+          cotXml: '<event version="2.0" type="a-f-G-U-C" uid="x"><point lat="0" lon="0" hae="0" ce="0" le="0"/><detail/></event>',
         );
         expect(result, isNull);
       });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// LoRa propagation policy — determines whether a [MeshPost] is eligible
+/// LoRa propagation policy - determines whether a [MeshPost] is eligible
 /// for rebroadcast over constrained transports.
 ///
 /// Design principles:
@@ -24,22 +24,22 @@ enum PropagationDecision {
   /// Post is eligible for LoRa propagation.
   eligible,
 
-  /// Denied — post has expired.
+  /// Denied - post has expired.
   deniedExpired,
 
-  /// Denied — already rebroadcast from this device.
+  /// Denied - already rebroadcast from this device.
   deniedAlreadyRebroadcast,
 
-  /// Denied — propagation policy is localOnly.
+  /// Denied - propagation policy is localOnly.
   deniedLocalOnly,
 
-  /// Denied — content exceeds LoRa wire budget.
+  /// Denied - content exceeds LoRa wire budget.
   deniedOverBudget,
 
-  /// Denied — post is too old relative to its TTL.
+  /// Denied - post is too old relative to its TTL.
   deniedTooOld,
 
-  /// Denied — conservative policy, constrained transport not preferred.
+  /// Denied - conservative policy, constrained transport not preferred.
   deniedConservative,
 }
 
@@ -124,7 +124,7 @@ class MeshPropagationPolicy {
       return PropagationDecision.deniedOverBudget;
     }
 
-    // 6. Too old — past maxAgeFraction of its TTL.
+    // 6. Too old - past maxAgeFraction of its TTL.
     final createdAt = DateTime.fromMillisecondsSinceEpoch(post.createdAtMs);
     final ttlMs = post.ttl.duration.inMilliseconds;
     final ageMs = timestamp.difference(createdAt).inMilliseconds;

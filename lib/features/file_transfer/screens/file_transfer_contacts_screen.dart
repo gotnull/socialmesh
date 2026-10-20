@@ -55,7 +55,7 @@ enum _RecordingAction { send, cancel }
 // Contact model
 // ---------------------------------------------------------------------------
 
-/// Unified contact model — includes presence + transfer stats.
+/// Unified contact model - includes presence + transfer stats.
 class _Contact {
   final int nodeNum;
   final String displayName;
@@ -575,7 +575,7 @@ class _FileTransferContactsScreenState
     }
 
     // Check microphone permission before showing the overlay. The overlay
-    // starts in idle state — recording only begins when the user taps record.
+    // starts in idle state - recording only begins when the user taps record.
     final micStatus = await VoicePermissionService.requestMicrophoneStatus();
     if (!micStatus.isGranted && !micStatus.isLimited) {
       AppLogging.voice('_sendVoiceToContact: microphone permission denied');
@@ -777,7 +777,7 @@ class _ContactAccumulator {
 }
 
 // ---------------------------------------------------------------------------
-// Contact tile — mirrors Messages _ContactTile exactly
+// Contact tile - mirrors Messages _ContactTile exactly
 // ---------------------------------------------------------------------------
 
 class _ContactTile extends StatelessWidget {

@@ -21,7 +21,7 @@ const int _seedA = 0xD9BAB777;
 const int _seedB = 0x12345678;
 
 void main() {
-  group('PetDnaGeometry — determinism', () {
+  group('PetDnaGeometry - determinism', () {
     test('same identity produces identical render key + structure', () {
       final a = PetDnaGeometry.forIdentity(
         dnaSeed: _seedA,
@@ -86,7 +86,7 @@ void main() {
     });
   });
 
-  group('PetDnaGeometry — bounded complexity', () {
+  group('PetDnaGeometry - bounded complexity', () {
     test('anchors list is bounded at a small fixed count', () {
       for (var i = 0; i < 32; i++) {
         final g = PetDnaGeometry.forIdentity(
@@ -122,7 +122,7 @@ void main() {
     });
   });
 
-  group('PetDnaGeometry — stage / branch influence', () {
+  group('PetDnaGeometry - stage / branch influence', () {
     test('egg stage has the shortest vertical span', () {
       final egg = PetDnaGeometry.forIdentity(
         dnaSeed: _seedA,
@@ -166,7 +166,7 @@ void main() {
     });
   });
 
-  group('PetDnaGeometry — full matrix smoke', () {
+  group('PetDnaGeometry - full matrix smoke', () {
     test('builds without errors across all stage × branch pairs', () {
       for (final stage in PetStage.values) {
         for (final branch in PetBranch.values) {

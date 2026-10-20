@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34b-A1 — MeshCore discovered/heard nodes screen.
+// D34b-A1 - MeshCore discovered/heard nodes screen.
 //
 // Recent-heard feed driven by `meshCoreDiscoveredAdvertsProvider`. Lists
 // every peer we've heard via `PUSH_CODE_NEW_ADVERT (0x8A)` or
@@ -11,7 +11,7 @@
 //
 // Hard rules carried forward from the slice spec:
 //   - No firmware autoadd toggle UI (separate D34b-B slice).
-//   - No persisted heard-list — buffer is in-memory and lost on app
+//   - No persisted heard-list - buffer is in-memory and lost on app
 //     restart by design.
 //   - Self pubkey is filtered out at the notifier layer.
 //   - No log line surfaces full pubkey, path bytes, or message

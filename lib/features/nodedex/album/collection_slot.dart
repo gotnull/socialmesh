@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Collection Slot — filled mini card preview and empty mystery slot.
+// Collection Slot - filled mini card preview and empty mystery slot.
 //
 // Two visual states for a single position in the album grid:
 //
-// 1. FilledSlot — a compact card preview showing:
+// 1. FilledSlot - a compact card preview showing:
 //    - Rarity-colored border with optional glow
 //    - Centered sigil at reduced size
 //    - Node name (truncated) and hex ID
@@ -14,7 +14,7 @@
 //    - Press feedback (scale animation)
 //    - Tap callback to open detail/gallery
 //
-// 2. MysterySlot — an empty placeholder suggesting undiscovered nodes:
+// 2. MysterySlot - an empty placeholder suggesting undiscovered nodes:
 //    - Dashed border in muted theme color
 //    - Faint "?" icon centered
 //    - Very subtle pulse animation (respects reduce-motion)
@@ -24,7 +24,7 @@
 // and border radius so they align cleanly in the album grid.
 //
 // Design constraints:
-//   - No widget-per-particle or heavy effects — these appear in grids
+//   - No widget-per-particle or heavy effects - these appear in grids
 //     of 12-30+ simultaneously visible slots
 //   - All sizing is relative to slot width for responsive scaling
 //   - Colors come from theme extensions and rarity system, never hardcoded
@@ -45,7 +45,7 @@ import 'album_constants.dart';
 import 'holographic_effect.dart';
 
 // =============================================================================
-// Filled Slot — compact card preview for a discovered node
+// Filled Slot - compact card preview for a discovered node
 // =============================================================================
 
 /// A compact card preview for a single discovered node in the album grid.
@@ -434,7 +434,7 @@ class _PressScaleWrapperState extends State<_PressScaleWrapper>
 }
 
 // =============================================================================
-// Mystery Slot — empty placeholder for undiscovered nodes
+// Mystery Slot - empty placeholder for undiscovered nodes
 // =============================================================================
 
 /// An empty placeholder slot suggesting more nodes to discover.
@@ -500,7 +500,7 @@ class MysterySlot extends StatelessWidget {
 ///   - Opacity breathes between 0.3 and 0.8
 ///   - Scale breathes between 0.9 and 1.05
 ///
-/// No glow containers, no box shadows — just a simple, elegant
+/// No glow containers, no box shadows - just a simple, elegant
 /// breathing effect that hints at undiscovered content.
 class _PulsingMysteryIcon extends StatefulWidget {
   final Color color;

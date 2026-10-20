@@ -18,7 +18,7 @@ void main() {
   PetRepository newRepo() =>
       PetRepository(PetDatabase(dbPathOverride: inMemoryDatabasePath));
 
-  group('PetRepository — own pet CRUD', () {
+  group('PetRepository - own pet CRUD', () {
     test('loadOwnPet returns null for unknown owner', () async {
       final repo = newRepo();
       await repo.init();
@@ -43,7 +43,7 @@ void main() {
       await repo.close();
     });
 
-    test('save is idempotent — repeated saves replace prior row', () async {
+    test('save is idempotent - repeated saves replace prior row', () async {
       final repo = newRepo();
       await repo.init();
       final s = PetState.egg(ownerNodeNum: 1, hatchedAt: DateTime(2026, 1, 1));
@@ -65,7 +65,7 @@ void main() {
     });
   });
 
-  group('PetRepository — remote pet cache', () {
+  group('PetRepository - remote pet cache', () {
     PetPublicState publicState({
       int seed = 0xABCD1234,
       PetStage stage = PetStage.adult,
@@ -136,7 +136,7 @@ void main() {
       final repo = newRepo();
       await repo.init();
       // `recentRemotePets` cuts off against real `DateTime.now()`, so
-      // the test's observed timestamps MUST be anchored to real now —
+      // the test's observed timestamps MUST be anchored to real now -
       // using a fixed wall-clock date makes this test silently rot as
       // real time drifts past the hardcoded window.
       final now = DateTime.now();

@@ -143,7 +143,7 @@ final takNavigationProvider = Provider.family<TakNavigationState, String>((
   final target = events.where((e) => e.uid == targetUid).firstOrNull;
 
   if (target == null) {
-    // Entity no longer active — return a placeholder.
+    // Entity no longer active - return a placeholder.
     return TakNavigationState(
       target: TakEvent(
         uid: targetUid,

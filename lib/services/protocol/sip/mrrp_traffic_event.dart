@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// MRRP traffic event — protocol-level data class for recording
+/// MRRP traffic event - protocol-level data class for recording
 /// inbound/outbound frame activity in the harness traffic console.
 library;
 

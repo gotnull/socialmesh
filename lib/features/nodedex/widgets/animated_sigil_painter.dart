@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Animated Sigil Painter — rich CustomPainter with animation parameters.
+// Animated Sigil Painter - rich CustomPainter with animation parameters.
 //
 // This painter extends the static sigil rendering concept with animation
 // parameters that are driven externally by AnimationControllers. The
-// painter itself is stateless — it receives animation values and renders
+// painter itself is stateless - it receives animation values and renders
 // a single frame. This keeps the painting pure and efficient.
 //
 // Animation layers (all optional, composable):
@@ -34,7 +34,7 @@
 //    leaving a short luminous trail. Evokes data traversing the
 //    mesh network.
 //
-// The painter works with ANY SigilData — the animation is orthogonal
+// The painter works with ANY SigilData - the animation is orthogonal
 // to the identity. Same animations, different geometry and colors.
 
 import 'dart:math' as math;
@@ -616,7 +616,7 @@ class AnimatedSigilPainter extends CustomPainter {
           }
         }
 
-        // Stagger pulse across rings — offset by ring index.
+        // Stagger pulse across rings - offset by ring index.
         final globalIndex = (ring + 1) * sigil.vertices + i;
         final pulseFactor = _vertexPulseFactor(
           globalIndex,
@@ -636,7 +636,7 @@ class AnimatedSigilPainter extends CustomPainter {
       }
     }
 
-    // Center dot — appears last in reveal sequence.
+    // Center dot - appears last in reveal sequence.
     if (sigil.centerDot) {
       final centerRevealThreshold = 0.85;
       final centerVisible = revealProgress >= centerRevealThreshold;
@@ -702,7 +702,7 @@ class AnimatedSigilPainter extends CustomPainter {
     return math.sin((pulsePhase + stagger) * math.pi * 2.0);
   }
 
-  /// Compute center dot pulse — uses a slightly different frequency.
+  /// Compute center dot pulse - uses a slightly different frequency.
   double _centerPulseFactor() {
     return math.sin(pulsePhase * math.pi * 2.0 * 1.3 + 0.5);
   }

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/routing/conversation_routes.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -144,7 +145,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
       }).toList();
     }
 
-    // Build the body content — use CustomScrollView with a pinned sliver
+    // Build the body content - use CustomScrollView with a pinned sliver
     // header so the search bar + filter chips never overflow on compact
     // screens (previously caused a 22px bottom overflow in the Column).
     final textScaler = MediaQuery.textScalerOf(context);

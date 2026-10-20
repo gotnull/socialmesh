@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Remote Badge — compact indicator for nodes discovered via the
+/// Remote Badge - compact indicator for nodes discovered via the
 /// Global Layer MQTT broker.
 ///
 /// This widget displays a small "Remote" or "Mixed" badge next to
@@ -114,11 +114,11 @@ class RemoteBadge extends StatelessWidget {
     );
   }
 
-  /// Teal-ish blue for remote-only nodes — visually distinct from
+  /// Teal-ish blue for remote-only nodes - visually distinct from
   /// the green "online" indicator and the purple accent.
   static const Color _remoteColor = Color(0xFF38BDF8);
 
-  /// Amber for mixed-source nodes — signals dual discovery without
+  /// Amber for mixed-source nodes - signals dual discovery without
   /// alarm. Distinct from warning yellow by being slightly cooler.
   static const Color _mixedColor = AppTheme.warningYellow;
 }

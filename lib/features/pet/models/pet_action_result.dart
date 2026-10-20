@@ -26,7 +26,7 @@ enum PetActionOutcome {
   /// The action cannot be performed in the pet's current state (e.g.
   /// Charge while asleep, ReSigil while still alive). The corresponding
   /// button should generally be hidden or disabled so this outcome is
-  /// rarely surfaced — but it exists so the engine can safely refuse
+  /// rarely surfaced - but it exists so the engine can safely refuse
   /// any tap.
   invalidInState,
 }
@@ -34,16 +34,16 @@ enum PetActionOutcome {
 /// A machine-readable reason attached to non-[PetActionOutcome.applied]
 /// outcomes. Maps to l10n keys in the UI layer.
 enum PetActionReason {
-  // Capped — a stat hit its ceiling.
+  // Capped - a stat hit its ceiling.
   fullyCharged,
   moodAlreadyFull,
   stabilityAlreadyFull,
 
-  // Not needed — no pending work for this action.
+  // Not needed - no pending work for this action.
   nothingToClean,
   alreadyAsleep,
 
-  // Invalid — the pet's state forbids this action.
+  // Invalid - the pet's state forbids this action.
   asleep,
   egg,
   dormant,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D24.B — `parseContact` byte-layout regression pins.
+// D24.B - `parseContact` byte-layout regression pins.
 //
 // Pre-D24 the parser read a phantom layout (`pub_key + adv_type +
 // path_len + lastmod(uint16) + lat + lon + name`) that did not
@@ -40,7 +40,7 @@ import 'package:socialmesh/services/meshcore/protocol/meshcore_messages.dart';
 /// Build a fully valid 147-byte CONTACT response payload
 /// (`RESP_CODE_CONTACT` / `PUSH_CODE_NEW_ADVERT`) with the given
 /// name, pubkey, adv_type, and path_len. All other fields default
-/// to zero. The leading code byte is NOT included — `parseContact`
+/// to zero. The leading code byte is NOT included - `parseContact`
 /// expects the payload after the codec strips it.
 Uint8List _buildPayload({
   required Uint8List pubKey,
@@ -117,8 +117,8 @@ void main() {
     test('empty name slot returns empty string (not garbage path bytes)', () {
       // Pre-D24 with an empty path the parser read offset 44 as
       // the start of the name and got '' (because path[0]=0). Now
-      // it reads offset 99 — also '' because the slot is zero-
-      // padded — but for the RIGHT reason. Pin so a regression
+      // it reads offset 99 - also '' because the slot is zero-
+      // padded - but for the RIGHT reason. Pin so a regression
       // that "shifts" the name offset stays caught.
       final pub = Uint8List.fromList(List.generate(32, (i) => 0xaa));
       final payload = _buildPayload(pubKey: pub, name: '');

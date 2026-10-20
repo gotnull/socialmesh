@@ -14,7 +14,7 @@
 ///       * disables note pads (and only note pads) at the cap so the
 ///         user can never wedge.
 ///
-/// Grep-based — same approach as `sip_signal_wiring_test.dart`. The
+/// Grep-based - same approach as `sip_signal_wiring_test.dart`. The
 /// composer is heavy on Riverpod / haptics / l10n so a full widget
 /// pump would be a maintenance liability for what is fundamentally a
 /// shape-pinning test.
@@ -39,7 +39,7 @@ void main() {
           MorseTable.letterForToken(entry.value),
           entry.key,
           reason:
-              'inverse must round-trip every charToCode entry — '
+              'inverse must round-trip every charToCode entry - '
               '${entry.key} → ${entry.value} → ${entry.key}',
         );
       }
@@ -52,7 +52,7 @@ void main() {
     });
 
     test('inverse is stable across calls (cached map)', () {
-      // Two consecutive lookups must hit the same memoised map — pinned
+      // Two consecutive lookups must hit the same memoised map - pinned
       // because the panel decodes per keystroke and a hot rebuild of
       // the inverse would cost a few microseconds per tap.
       final first = MorseTable.letterForToken('...');
@@ -61,7 +61,7 @@ void main() {
     });
   });
 
-  group('Composer panel — defaults + stuck-state + live-bytes', () {
+  group('Composer panel - defaults + stuck-state + live-bytes', () {
     final panelSrc = File(
       'lib/features/sip/signal/sip_signal_composer_panel.dart',
     ).readAsStringSync();
@@ -72,7 +72,7 @@ void main() {
         isTrue,
         reason:
             'Per the v1 product brief, Signal lands on the message-passing '
-            'sub-mode by default — Tone is the alternate.',
+            'sub-mode by default - Tone is the alternate.',
       );
     });
 
@@ -80,7 +80,7 @@ void main() {
       expect(
         panelSrc.contains('_MorseInputMode _morseInput = _MorseInputMode.tap;'),
         isTrue,
-        reason: 'Tap-Morse is the primary input surface — Type is the helper.',
+        reason: 'Tap-Morse is the primary input surface - Type is the helper.',
       );
     });
 
@@ -112,7 +112,7 @@ void main() {
     );
 
     test('tap-Morse word gap uses MorseTable.wordSeparator', () {
-      // Single source of truth — when the separator changes, the live
+      // Single source of truth - when the separator changes, the live
       // preview, render output, and decode stay in lock-step.
       expect(
         panelSrc.contains('MorseTable.wordSeparator'),
@@ -127,11 +127,11 @@ void main() {
     test(
       'phrase-full state disables note pads but keeps Clear / Preview / Send',
       () {
-        // Pad rows pass `enabled: !isFull` — pads disable when the
+        // Pad rows pass `enabled: !isFull` - pads disable when the
         // phrase reaches the cap.
         expect(panelSrc.contains('enabled: !isFull'), isTrue);
         // The Clear button gates on `_hasDraftToClear`, which is
-        // independent of the phrase-full state — it stays enabled as
+        // independent of the phrase-full state - it stays enabled as
         // long as the draft is non-empty.
         expect(
           panelSrc.contains('onPressed: hasContent ? _onClear : null'),
@@ -141,7 +141,7 @@ void main() {
               'including at the phrase-full cap (the original stuck-state).',
         );
         // Preview / Send gate on `_canSend`, which checks the encoded
-        // envelope size — at-cap drafts encode under budget, so both
+        // envelope size - at-cap drafts encode under budget, so both
         // remain active.
         expect(
           panelSrc.contains('onPressed: canSend ? _onPreview : null'),

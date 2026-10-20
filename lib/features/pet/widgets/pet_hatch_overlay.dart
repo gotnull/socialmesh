@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetHatchOverlay — 2-second one-shot animation layered over the pet
+// PetHatchOverlay - 2-second one-shot animation layered over the pet
 // creature at hatch or evolution moments.
 //
 // Phases (normalized 0..1 over the controller's duration):
@@ -13,7 +13,7 @@
 //                the resolved creature visible underneath.
 //
 // The overlay paints absolutely nothing once the controller completes
-// and [onComplete] has fired — the parent is expected to remove the
+// and [onComplete] has fired - the parent is expected to remove the
 // widget from the tree after that.
 //
 // Determinism & allocations: all positions derive from the [dnaSeed]
@@ -27,7 +27,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 
 class PetHatchOverlay extends StatefulWidget {
-  /// Full 32-bit seed — drives crack angles and pip positions so the
+  /// Full 32-bit seed - drives crack angles and pip positions so the
   /// animation feels specific to this pet.
   final int dnaSeed;
 

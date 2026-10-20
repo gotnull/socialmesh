@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetTimelineRepository — CRUD over the `pet_timeline_events` table.
+// PetTimelineRepository - CRUD over the `pet_timeline_events` table.
 //
 // Responsibilities:
 //   * Insert new records (idempotent via the dedupe unique index)
@@ -12,7 +12,7 @@
 //
 // The recorder (`pet_timeline_recorder.dart`) is the only layer that
 // writes through during normal operation. The repository is pure DB
-// glue — no state diffing, no domain logic.
+// glue - no state diffing, no domain logic.
 
 import 'package:sqflite/sqflite.dart';
 
@@ -32,7 +32,7 @@ class PetTimelineRepository {
   /// Insert [records] for a single owner. Uses the dedupe unique
   /// index (owner, at_ms, kind, IFNULL(detail, '')) via
   /// `ConflictAlgorithm.ignore` so the same event written twice is a
-  /// no-op — the recorder can safely re-ingest the whole
+  /// no-op - the recorder can safely re-ingest the whole
   /// `recentEvents` ring buffer on every controller emission.
   ///
   /// After insertion, enforces the per-owner cap by evicting the

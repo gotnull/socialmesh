@@ -18,12 +18,11 @@ void main() {
   late String src;
 
   setUpAll(() {
-    src = File(
-      'lib/providers/external_purchase_providers.dart',
-    ).readAsStringSync();
+    src = File('lib/providers/external_purchase_providers.dart')
+        .readAsStringSync();
   });
 
-  group('externalPurchaseServiceProvider — cache isolation on auth flip', () {
+  group('externalPurchaseServiceProvider - cache isolation on auth flip', () {
     test('listens to currentUserProvider with fireImmediately', () {
       // The listen needs to observe ALL emissions including the
       // initial steady-state, otherwise the cold-start branch would

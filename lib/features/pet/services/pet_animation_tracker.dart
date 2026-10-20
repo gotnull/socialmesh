@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetAnimationTracker — durable "last acknowledged transition" bookkeeping
+// PetAnimationTracker - durable "last acknowledged transition" bookkeeping
 // per ownerNodeNum. Keeps one-shot hatch / evolution effects from
 // replaying on widget rebuild, app resume, or unrelated provider
 // invalidation.
@@ -42,12 +42,12 @@ class PetAnimationTracker {
   /// The most recent unacknowledged stage transition in [state], or null
   /// if every transition is acknowledged. We return the latest (not the
   /// earliest) because [PetState.stage] always reflects the most-recent
-  /// transition — playing the effect for that transition matches what
+  /// transition - playing the effect for that transition matches what
   /// the user currently sees on screen.
   ///
   /// "Stage transition" here means either [CareEventKind.stageAdvanced]
   /// (every transition except egg→juvenile) OR [CareEventKind.hatched]
-  /// (the egg→juvenile case, which emits ONLY `hatched` — see
+  /// (the egg→juvenile case, which emits ONLY `hatched` - see
   /// PetCareEngine._applyStageTransition).
   /// [CareEventKind.branchResolved] and [CareEventKind.dormantEntered]
   /// are sibling events fired at the same instant and are identified by

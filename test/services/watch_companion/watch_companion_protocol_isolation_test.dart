@@ -232,7 +232,7 @@ String _stripCommentsAndStrings(String source) {
   out = out.replaceAll(RegExp(r'/\*.*?\*/', dotAll: true), '');
 
   // Strip line comments. Walk line-by-line so we don't accidentally chop
-  // a `//` that appears inside a string literal — but since we strip
+  // a `//` that appears inside a string literal - but since we strip
   // string literals next, line comments inside strings are inert anyway.
   out = out
       .split('\n')

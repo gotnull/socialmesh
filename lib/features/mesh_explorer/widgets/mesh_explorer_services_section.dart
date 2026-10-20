@@ -47,7 +47,7 @@ class MeshExplorerServicesSection extends StatelessWidget {
   }
 }
 
-/// A rich service discovery card — the primary UI element of Mesh Explorer.
+/// A rich service discovery card - the primary UI element of Mesh Explorer.
 class _ServiceDiscoveryCard extends ConsumerWidget {
   final MeshExplorerServiceInfo service;
 
@@ -204,7 +204,7 @@ class _ServiceDiscoveryCard extends ConsumerWidget {
               // Bottom row: creator + freshness + CTA
               Row(
                 children: [
-                  // Creator identity — sigil tap jumps to NodeDex.
+                  // Creator identity - sigil tap jumps to NodeDex.
                   // Anonymous creators (seed = ambient ID) stay inert.
                   TappableSigilAvatar(
                     nodeNum: service.creatorSigilSeed,

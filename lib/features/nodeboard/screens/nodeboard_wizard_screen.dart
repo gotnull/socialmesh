@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeBoard creation wizard — multi-step board setup.
+// NodeBoard creation wizard - multi-step board setup.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -321,16 +321,14 @@ class _NodeBoardWizardScreenState extends ConsumerState<NodeBoardWizardScreen>
         BottomSheetTextField(
           controller: _taglineController,
           label: 'Tagline', // lint-allow: hardcoded-string
-          hint:
-              'A short description for your board', // lint-allow: hardcoded-string
+          hint: 'A short description for your board', // lint-allow: hardcoded-string
           maxLength: 140,
         ),
         const SizedBox(height: AppTheme.spacing12),
         BottomSheetTextField(
           controller: _descriptionController,
           label: 'Description', // lint-allow: hardcoded-string
-          hint:
-              'Full description of your board...', // lint-allow: hardcoded-string
+          hint: 'Full description of your board...', // lint-allow: hardcoded-string
           maxLength: 5000,
           maxLines: 6,
         ),

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // TCP bridge service that forwards reassembled Reticulum frames from
-// the local Phase 2 RX stream to a host-side rnsd. Pure service —
+// the local Phase 2 RX stream to a host-side rnsd. Pure service -
 // owns no providers, no UI, no real-network coupling. Tests inject a
 // fake socket factory; production injects one that wraps dart:io
 // `Socket.connect`.
@@ -20,7 +20,7 @@ import 'dart:typed_data';
 import 'reticulum_tcp_framing.dart';
 
 /// Bounded outbound queue depth. The 33rd frame waiting to flush is
-/// dropped (drop-newest policy) — preserves in-flight order to the
+/// dropped (drop-newest policy) - preserves in-flight order to the
 /// downstream rnsd. Documented invariant; do not bump without
 /// updating the bridge UI's queue gauge in Phase 3.4.
 const int kReticulumBridgeQueueDepth = 32;
@@ -123,8 +123,10 @@ abstract class BridgeSocket {
   Future<void> get done;
 }
 
-typedef BridgeSocketFactory =
-    Future<BridgeSocket> Function(String host, int port);
+typedef BridgeSocketFactory = Future<BridgeSocket> Function(
+  String host,
+  int port,
+);
 
 /// Production socket factory backed by `dart:io` `Socket.connect`.
 /// The provider layer wires this in by default; tests inject fakes.
@@ -289,7 +291,7 @@ class ReticulumBridgeService {
     return _clock().difference(_sessionStart!);
   }
 
-  /// Begin connecting to [host]:[port]. Idempotent — if already
+  /// Begin connecting to [host]:[port]. Idempotent - if already
   /// connecting / connected, returns without effect. To switch
   /// endpoints, call [disconnect] first.
   Future<void> connect(String host, int port) async {
@@ -454,13 +456,13 @@ class ReticulumBridgeService {
     final dest = _host == null || _port == null ? '?' : 'tcp://$_host:$_port';
     final raw = underlying.toString();
     // Strip the misleading "address = ..., port = ..." suffix that
-    // SocketException appends — those are the LOCAL bind, not the
+    // SocketException appends - those are the LOCAL bind, not the
     // destination, and they confuse users.
     final cleaned = raw.replaceAll(
       RegExp(r',\s*address\s*=\s*[^,)]+,\s*port\s*=\s*\d+'),
       '',
     );
-    return '$dest — $cleaned';
+    return '$dest - $cleaned';
   }
 
   void _onSocketClosed(String reason) {

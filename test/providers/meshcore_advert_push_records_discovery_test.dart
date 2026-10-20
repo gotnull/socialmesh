@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34b-A1 — integration test: advert push frames flowing through the
+// D34b-A1 - integration test: advert push frames flowing through the
 // `MeshCoreConversationsNotifier._handleAdvertPush` path land in the
 // `meshCoreDiscoveredAdvertsProvider` recent-heard feed.
 //

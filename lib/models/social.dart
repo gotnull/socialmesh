@@ -236,7 +236,7 @@ class PostAuthorSnapshot {
 
   /// The user's primary Meshtastic node number for correct sigil rendering.
   /// When present, SigilAvatar is rendered with this real node number.
-  /// When absent, UserAvatar is used instead — a SigilAvatar must never be
+  /// When absent, UserAvatar is used instead - a SigilAvatar must never be
   /// rendered without a real node number.
   final int? nodeNum;
 

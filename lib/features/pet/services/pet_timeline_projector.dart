@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetTimelineProjector — pure function that turns a persisted record
+// PetTimelineProjector - pure function that turns a persisted record
 // list + the current PetState + PetConfig into an immutable
 // [PetTimelineView] for the screen to render.
 //
@@ -14,7 +14,7 @@
 //      tweak still render correctly.
 //   2. Build one [PetTimelineSection] per stage the pet has actually
 //      entered. Stage boundaries come from `hatched`/`stageAdvanced`
-//      events in the record list — no separate stage-time table
+//      events in the record list - no separate stage-time table
 //      needed because the engine stamps `stage_at_event` for every
 //      row.
 //   3. Compress same-kind minor events inside a short window into a
@@ -26,7 +26,7 @@
 //   5. Synthesize the [PetTimelineOrigin] from PetState fields that
 //      don't depend on the record list.
 //
-// Purity: no Flutter, no Riverpod, no DateTime.now() — takes `now`
+// Purity: no Flutter, no Riverpod, no DateTime.now() - takes `now`
 // explicitly. Every side-effect-free step is independently testable.
 
 import '../models/care_event.dart';
@@ -41,7 +41,7 @@ import '../models/pet_timeline_view.dart';
 /// window are collapsed into a single [PetTimelineGroupedEntry].
 const Duration kPetTimelineGroupingWindow = Duration(minutes: 10);
 
-/// Importance policy — single source of truth. The recorder stamps
+/// Importance policy - single source of truth. The recorder stamps
 /// this at write time; the projector falls back to it on read. Any
 /// change here should be accompanied by a re-stamp pass OR the
 /// understanding that old rows will render with the old importance
@@ -86,7 +86,7 @@ PetTimelineImportance importanceForKind(CareEventKind kind) {
 
 /// Kinds whose minor-tier entries are ALLOWED to be grouped. Some
 /// minor events (e.g. `sleepEntered`) are singular per sleep cycle
-/// and wouldn't make sense collapsed — but in practice the grouping
+/// and wouldn't make sense collapsed - but in practice the grouping
 /// window is short enough that they'd never match. Allowing grouping
 /// on all minor kinds keeps the logic simple.
 bool _canGroup(CareEventKind kind) =>
@@ -151,7 +151,7 @@ List<PetTimelineSection> _buildSections(
 
   // Group records by stage in the order the pet actually entered
   // each stage. The stage-at-event field on each record is
-  // authoritative — the pet's CURRENT stage is only used for the
+  // authoritative - the pet's CURRENT stage is only used for the
   // "isCurrent" flag + to include the trailing current stage even if
   // no events have fired yet inside it.
   final byStage = <PetStage, List<PetTimelineRecord>>{};
@@ -163,7 +163,7 @@ List<PetTimelineSection> _buildSections(
     byStage.putIfAbsent(r.stageAtEvent, () => <PetTimelineRecord>[]).add(r);
   }
   // Ensure the pet's current stage has its own section even if nothing
-  // has been recorded for it yet — the user opened the screen right
+  // has been recorded for it yet - the user opened the screen right
   // after the transition, for instance.
   if (!byStage.containsKey(state.stage)) {
     stageOrder.add(state.stage);
@@ -210,7 +210,7 @@ List<PetTimelineEntry> _buildEntriesForStage(List<PetTimelineRecord> records) {
   void flush() {
     if (groupKind == null) return;
     if (groupCount == 1) {
-      // A lone minor event — emit it as a plain single entry so it
+      // A lone minor event - emit it as a plain single entry so it
       // keeps a dedicated timestamp line instead of rendering as
       // "Charged 1×".
       out.add(
@@ -264,7 +264,7 @@ List<PetTimelineEntry> _buildEntriesForStage(List<PetTimelineRecord> records) {
       groupLastAt = r.at;
       continue;
     }
-    // Different kind or window exceeded — flush + start a fresh group.
+    // Different kind or window exceeded - flush + start a fresh group.
     flush();
     groupKind = r.kind;
     groupFirstAt = r.at;
@@ -366,7 +366,7 @@ PetTimelineRecord buildRecordFromEvent({
 /// evicted. Returns the filtered list in original order.
 ///
 /// This runs locally in the repository on the full per-owner row set
-/// after each write batch — SQLite's own LIMIT can't do the
+/// after each write batch - SQLite's own LIMIT can't do the
 /// importance-aware filter cleanly.
 List<PetTimelineRecord> evictOldestMinorsToCap(
   List<PetTimelineRecord> records,
@@ -391,5 +391,5 @@ List<PetTimelineRecord> evictOldestMinorsToCap(
 
 /// The hard cap on total persisted timeline rows per owner. Soft in
 /// the sense that majors + importants are never evicted even if the
-/// effective row count exceeds this — see [evictOldestMinorsToCap].
+/// effective row count exceeds this - see [evictOldestMinorsToCap].
 const int kPetTimelineMaxRowsPerOwner = 500;

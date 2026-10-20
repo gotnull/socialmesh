@@ -4307,7 +4307,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodedexIdentityChangePubkeyFromUnknown(String newKey) {
-    return '— → $newKey';
+    return '- → $newKey';
   }
 
   @override
@@ -6779,7 +6779,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapTracerouteNoGpsSubtitle =>
-      'None of the hops on this traceroute reported a position. The map is centered on your location instead — open the route again once any hop reports GPS.';
+      'None of the hops on this traceroute reported a position. The map is centered on your location instead - open the route again once any hop reports GPS.';
 
   @override
   String get mapShowPositionHistory => 'Show position history';
@@ -29448,7 +29448,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpTracerouteResultsBubble =>
-      'Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" — the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.';
+      'Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" - the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.';
 
   @override
   String get helpTracerouteHistoryBubble =>

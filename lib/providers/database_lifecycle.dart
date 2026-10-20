@@ -109,7 +109,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
 
   // NOTE: Provider invalidation is deliberately NOT done here.
   // Invalidating triggers dependent providers (e.g. TelemetryLoggerNotifier)
-  // to rebuild immediately — which re-opens the same database files that
+  // to rebuild immediately - which re-opens the same database files that
   // LocalDataWipeService is about to delete. That causes "vnode unlinked
   // while in use" integrity errors and a "disk I/O error" (6922) storm.
   //
@@ -121,7 +121,7 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
 ///
 /// Call this AFTER database files have been deleted from disk. Calling it
 /// before deletion triggers dependent provider rebuilds that re-open the
-/// same files — which then get unlinked while in use.
+/// same files - which then get unlinked while in use.
 void invalidateAllDatabaseProviders(WidgetRef ref) {
   ref.invalidate(messageStorageProvider);
   ref.invalidate(telemetryStorageProvider);

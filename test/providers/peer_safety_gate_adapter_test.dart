@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Tests for [PeerSafetyManagerGateAdapter] — the bridge that lets
+/// Tests for [PeerSafetyManagerGateAdapter] - the bridge that lets
 /// Ref-less protocol-layer code consult the live safety state.
 ///
 /// Pins the contract:
@@ -79,7 +79,7 @@ void main() {
       final c = _newContainer();
       // Read the gate WITHOUT awaiting the manager's build.
       final gate = c.read(peerSafetyGateProvider);
-      // Manager state is AsyncLoading at this point — caches are
+      // Manager state is AsyncLoading at this point - caches are
       // empty by definition; gate must return false everywhere.
       expect(gate.isBlocked(0x1234), isFalse);
       expect(gate.isMuted(0x1234), isFalse);
@@ -95,7 +95,7 @@ void main() {
     test('adapter survives provider container disposal mid-call', () async {
       final c = _newContainer();
       // Build the manager, capture the adapter, dispose the container,
-      // then call the adapter — it should NOT crash; the catch block
+      // then call the adapter - it should NOT crash; the catch block
       // returns the default-safe answer.
       await c.read(peerSafetyManagerProvider.future);
       final gate = c.read(peerSafetyGateProvider);

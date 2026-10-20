@@ -41,8 +41,11 @@ class GeoChatSendResult {
 }
 
 /// Callback for sending mesh text messages.
-typedef MeshTextSendCallback =
-    Future<int> Function(String text, {int channelIndex, int? destination});
+typedef MeshTextSendCallback = Future<int> Function(
+  String text, {
+  int channelIndex,
+  int? destination,
+});
 
 /// Callback for resolving a callsign to a mesh node number.
 typedef CallsignResolver = int? Function(String callsign);

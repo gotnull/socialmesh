@@ -350,9 +350,8 @@ class _NodeQuickActionsHeader extends StatelessWidget {
                         node.nodeNum.toRadixString(16),
                       )
                     : subtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: context.textTertiary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

@@ -211,8 +211,7 @@ void main() {
         expect(
           node?.lastHeard,
           priorLastHeard,
-          reason:
-              'Missing nodeInfo.lastHeard must not overwrite prior lastHeard with now',
+          reason: 'Missing nodeInfo.lastHeard must not overwrite prior lastHeard with now',
         );
       },
     );
@@ -235,7 +234,7 @@ void main() {
       );
 
       // Now feed a buffered position packet whose rxTime says it was
-      // received 30 minutes ago — this is the reconnect-replay scenario.
+      // received 30 minutes ago - this is the reconnect-replay scenario.
       final thirtyMinutesAgoEpoch = nowEpoch - (30 * 60);
       await protocol.handleIncomingPacket(
         _buildPositionPacket(
@@ -299,8 +298,7 @@ void main() {
         expect(
           node?.lastHeard,
           initialLastHeard,
-          reason:
-              'Monotonic guard must reject older rxTime and preserve the newer stored value',
+          reason: 'Monotonic guard must reject older rxTime and preserve the newer stored value',
         );
       },
     );

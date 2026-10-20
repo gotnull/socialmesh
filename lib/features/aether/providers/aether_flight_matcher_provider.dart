@@ -118,7 +118,7 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
 
     // Watch myNodeNum so self-flight filtering rechecks when identity arrives.
     // On cold start, myNodeNum may be null while cached nodes are already
-    // loaded — without this listener a self-flight match could slip through
+    // loaded - without this listener a self-flight match could slip through
     // and fire a spurious notification before BLE syncs our node number.
     ref.listen(myNodeNumProvider, (previous, next) {
       if (previous != next) {
@@ -240,14 +240,14 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
     for (final flight in allFlights.values) {
       if (flight.nodeId.isEmpty) continue;
 
-      // Skip the current user's own flights — they already know about them.
+      // Skip the current user's own flights - they already know about them.
       if (currentUid != null &&
           flight.userId.isNotEmpty &&
           flight.userId == currentUid) {
         continue;
       }
 
-      // Skip flights whose own node is this device — can't receive yourself.
+      // Skip flights whose own node is this device - can't receive yourself.
       final normalizedFlightNode = _normalizeNodeId(flight.nodeId);
       if (myNodeHex != null && normalizedFlightNode == myNodeHex) {
         continue;
@@ -291,7 +291,7 @@ class AetherFlightMatcherNotifier extends Notifier<AetherFlightMatcherState> {
       }
 
       // ---- Time-based grace period (fallback when GPS unavailable) ----
-      // Skip flights activated less than 10 min ago — the plane is likely
+      // Skip flights activated less than 10 min ago - the plane is likely
       // still taxiing and the flight node could be in LoRa range.
       final airborneAt = flight.scheduledDeparture;
       if (now.difference(airborneAt) < _kMinAirborneGrace) {

@@ -220,9 +220,8 @@ class _DuneSandwormPainter extends CustomPainter {
           Offset(sprayX, sprayY),
           1 + sprayRandom.nextDouble() * 2,
           Paint()
-            ..color = const Color(
-              0xFFd0a060,
-            ).withValues(alpha: sprayAlpha.clamp(0.0, 0.4)),
+            ..color = const Color(0xFFd0a060)
+                .withValues(alpha: sprayAlpha.clamp(0.0, 0.4)),
         );
       }
     }

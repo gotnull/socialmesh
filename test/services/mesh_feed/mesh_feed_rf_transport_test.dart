@@ -163,7 +163,7 @@ void main() {
       final decoded = MeshPost.decodeFromLora(encoded, 1);
 
       // Decoded timestamp will be rounded to seconds (1700000000000)
-      // so the IDs WILL differ. This is by design — the original
+      // so the IDs WILL differ. This is by design - the original
       // post's ms-precision ID is the canonical one and will be used
       // for DB insertion. The RF-received version with truncated ms
       // generates a different ID. This test documents this behavior.

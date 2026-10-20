@@ -14,7 +14,7 @@ import '../../../core/logging.dart';
 import 'sip_ink_constants.dart';
 import 'sip_ink_payload.dart';
 
-/// Reasons an encode can fail. Caller should treat these as terminal —
+/// Reasons an encode can fail. Caller should treat these as terminal -
 /// the simplifier is what knows how to retry within a tighter budget.
 enum SipInkEncodeError {
   empty,

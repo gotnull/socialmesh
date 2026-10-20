@@ -8,7 +8,7 @@
 // mute, hide, archive, ordering metadata, or notification preferences.
 // Every UX feature in that family must therefore live entirely client-
 // side. This store persists those preferences keyed by the firmware
-// slot index — the only stable non-secret identifier available.
+// slot index - the only stable non-secret identifier available.
 //
 // Why the slot index and not the channel name or PSK:
 //   - PSK is secret. Using it as a storage key would leak material into
@@ -19,12 +19,12 @@
 //     overwrites slot N in place).
 //
 // Consequence: deleting the channel in slot N and creating a fresh
-// channel in the same slot inherits the prefs. This is acceptable —
+// channel in the same slot inherits the prefs. This is acceptable -
 // the slot IS the identity at the firmware boundary. The alternative
 // (any key derived from PSK/code) would either leak secrets or break
 // on every edit.
 //
-// Schema (v0, forward-compatible — JSON can grow without migration):
+// Schema (v0, forward-compatible - JSON can grow without migration):
 //   {
 //     "muted":  [<int>, <int>...],   // sorted, deduped slot indices
 //     "hidden": [],                  // reserved for D37-B
@@ -168,7 +168,7 @@ class MeshCoreChannelPrefsStore {
   /// Returns [MeshCoreChannelPrefs.empty] on:
   ///   - empty [devicePubKeyPrefix] (no device identified yet),
   ///   - missing key (never written), or
-  ///   - corrupt JSON (defensive: never throw to the caller — the
+  ///   - corrupt JSON (defensive: never throw to the caller - the
   ///     notification gate must fail-open).
   ///
   /// Corrupt blobs are NOT auto-removed; we leave them so a future bug
@@ -209,7 +209,7 @@ class MeshCoreChannelPrefsStore {
   }
 
   /// Convenience: add a single channel index to the muted set and
-  /// persist. Idempotent — repeated mutes are a no-op.
+  /// persist. Idempotent - repeated mutes are a no-op.
   Future<MeshCoreChannelPrefs> mute(
     String devicePubKeyPrefix,
     int channelIndex,
@@ -224,7 +224,7 @@ class MeshCoreChannelPrefsStore {
   }
 
   /// Convenience: remove a single channel index from the muted set and
-  /// persist. Idempotent — repeated unmutes are a no-op.
+  /// persist. Idempotent - repeated unmutes are a no-op.
   Future<MeshCoreChannelPrefs> unmute(
     String devicePubKeyPrefix,
     int channelIndex,
@@ -240,7 +240,7 @@ class MeshCoreChannelPrefsStore {
   }
 
   /// D37-B-A: add a single channel index to the hidden set and persist.
-  /// Hide is independent of mute — a channel can be hidden + muted,
+  /// Hide is independent of mute - a channel can be hidden + muted,
   /// hidden + unmuted, muted + visible, or neither. Hide only affects
   /// the channel list's default visibility; it never gates
   /// notifications or in-app message persistence. Idempotent.
@@ -285,7 +285,7 @@ class MeshCoreChannelPrefsStore {
   ///   - any other non-int entry is impossible to reach here (statically
   ///     typed `List<int>`), so no runtime type check.
   ///
-  /// Idempotent — passing the same order back is a cheap no-op.
+  /// Idempotent - passing the same order back is a cheap no-op.
   Future<MeshCoreChannelPrefs> setOrder(
     String devicePubKeyPrefix,
     List<int> order,

@@ -167,9 +167,8 @@ void main() {
     });
 
     test('applied when an artefact is on the field', () {
-      final s = _stateAt(
-        PetStage.juvenile,
-      ).copyWith(hygieneArtefacts: [t.subtract(const Duration(hours: 3))]);
+      final s = _stateAt(PetStage.juvenile)
+          .copyWith(hygieneArtefacts: [t.subtract(const Duration(hours: 3))]);
       final r = _engine.applyAction(s, CareAction.stabilise, t);
       expect(r.outcome, PetActionOutcome.applied);
       expect(r.state.hygieneArtefacts, isEmpty);
@@ -185,9 +184,8 @@ void main() {
     });
 
     test('applied when sick', () {
-      final s = _stateAt(
-        PetStage.juvenile,
-      ).copyWith(isSick: true, instability: 8);
+      final s = _stateAt(PetStage.juvenile)
+          .copyWith(isSick: true, instability: 8);
       final r = _engine.applyAction(s, CareAction.purge, t);
       expect(r.outcome, PetActionOutcome.applied);
       expect(r.state.isSick, isFalse);

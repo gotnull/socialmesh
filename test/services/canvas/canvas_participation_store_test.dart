@@ -30,12 +30,12 @@ void main() {
       store = MeshCanvasParticipationStore(prefs);
     });
 
-    test('defaults — missing keys read as (false, false, false)', () {
+    test('defaults - missing keys read as (false, false, false)', () {
       expect(store.readSettings(), MeshCanvasParticipationSettings.initial);
     });
 
     test(
-      'writeSettings round-trips (true, false, false) — local-only',
+      'writeSettings round-trips (true, false, false) - local-only',
       () async {
         const next = MeshCanvasParticipationSettings(
           onboardingSeen: true,
@@ -48,7 +48,7 @@ void main() {
     );
 
     test(
-      'writeSettings round-trips (true, true, false) — joined, no sharing',
+      'writeSettings round-trips (true, true, false) - joined, no sharing',
       () async {
         const next = MeshCanvasParticipationSettings(
           onboardingSeen: true,
@@ -61,7 +61,7 @@ void main() {
     );
 
     test(
-      'writeSettings round-trips (true, true, true) — joined + sharing',
+      'writeSettings round-trips (true, true, true) - joined + sharing',
       () async {
         const next = MeshCanvasParticipationSettings(
           onboardingSeen: true,
@@ -74,7 +74,7 @@ void main() {
     );
 
     test(
-      'reset() removes every key — readSettings returns initial again',
+      'reset() removes every key - readSettings returns initial again',
       () async {
         await store.writeSettings(
           const MeshCanvasParticipationSettings(

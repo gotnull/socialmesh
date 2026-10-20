@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetDnaPainter — DNA Blueprint renderer for the DNA Viewer.
+// PetDnaPainter - DNA Blueprint renderer for the DNA Viewer.
 //
 // Design intent:
 //   - Proper double-helix archetype. Two intertwined cylindrical
-//     strands with classic base-pair rungs — no ornamental "glyph
+//     strands with classic base-pair rungs - no ornamental "glyph
 //     bonds", no ritual-artifact decoration.
 //   - Seed-derived A/T/G/C base coloring per node. Every pet has a
 //     deterministic unique sequence along its helix, and the four
 //     base colors give the visual the liveliness a monotone helix
 //     can never have.
 //   - Depth-scaled bead nodes at every sample point are what sell
-//     the 3D perspective — near beads larger than far beads, sorted
+//     the 3D perspective - near beads larger than far beads, sorted
 //     back-to-front so crossovers resolve naturally.
 //   - Backbone rendered as thick round-capped stroked lines between
 //     beads. Stroke width IS the tube diameter; no ribbon geometry,
 //     no shaders. Technique borrowed from
 //     Devkumar755/MyCodeDemos/dna_helix.dart as the user-requested
 //     reference.
-//   - No atmospheric clutter — soft branch-tinted radial backdrop
+//   - No atmospheric clutter - soft branch-tinted radial backdrop
 //     only. The old chamber haze, containment pillars, central
 //     spine, core support arms, mutation nodes, and rune markers
 //     were competing with the helix and have been removed.
@@ -105,7 +105,7 @@ class PetDnaPainter extends CustomPainter {
   }
 
   // ------------------------------------------------------------------
-  // Helix — the premium double-helix render at the heart of the viewer.
+  // Helix - the premium double-helix render at the heart of the viewer.
   //
   // Previously this was split into two passes (_drawStrandsPass +
   // _drawBondsPass) with per-pass depth binary splits at the core
@@ -117,7 +117,7 @@ class PetDnaPainter extends CustomPainter {
   //   * Always renders at least 2 strands. The pet's decoded
   //     strand-config trait (Monad/Dyad/Triad) still shows in the
   //     Identity panel, but the viewer ALWAYS depicts the DNA
-  //     archetype — a helix with ≥ 2 intertwined strands.
+  //     archetype - a helix with ≥ 2 intertwined strands.
   //   * Bumps the visible twist count to at least 4 so the helix is
   //     unambiguous at a glance regardless of the pet's "resonance"
   //     trait (which can go as low as 2).
@@ -125,7 +125,7 @@ class PetDnaPainter extends CustomPainter {
   //     run off-frame and clip at the canvas edge instead of
   //     tapering to a point mid-canvas. Requires [canvas.clipRect]
   //     in paint() to prevent bleed into neighbouring widgets.
-  //   * Draws classic DNA rungs — thin depth-shaded perpendicular
+  //   * Draws classic DNA rungs - thin depth-shaded perpendicular
   //     lines between adjacent strand samples at 3-per-twist cadence.
   //     Shader-free alpha by midpoint depth; readable and cheap.
   //   * Global painter's-algorithm z-sort across all strand micro-
@@ -144,10 +144,10 @@ class PetDnaPainter extends CustomPainter {
     required double minSide,
     required VoidCallback drawCoreLayerCallback,
   }) {
-    // Always 2-strand visual — Monad/Dyad/Triad lives in the decoded
+    // Always 2-strand visual - Monad/Dyad/Triad lives in the decoded
     // panel, but the DNA Blueprint archetype is universally a helix.
     const visualStrandCount = 2;
-    // 3 twist cycles — fewer than before so each twist has breathing
+    // 3 twist cycles - fewer than before so each twist has breathing
     // room and crossovers are unambiguous at a glance.
     const visualTwistCycles = 3;
     final baseAngle = geometry.anchors.first.angleA;
@@ -158,7 +158,7 @@ class PetDnaPainter extends CustomPainter {
     const samplesPerTwist = 14;
     const totalSamples = samplesPerTwist * visualTwistCycles;
 
-    // Rendering proportions — thick, bold, dominant. These are the
+    // Rendering proportions - thick, bold, dominant. These are the
     // bumps the user explicitly asked for over the previous slim
     // cord look.
     final backboneStrokeWidth = (radius * 0.075).clamp(7.0, 16.0);
@@ -184,7 +184,7 @@ class PetDnaPainter extends CustomPainter {
     final strand0Backbone = _deepen(dominant.archetypeColor, 0.20);
     // Strand 1 backbone = dominant's COMPLEMENT's archetype color. If
     // the pet is Aurora-dominant, strand 0 is yellow-gold and strand 1
-    // is steady-emerald — always a high-contrast pair. This is also
+    // is steady-emerald - always a high-contrast pair. This is also
     // what ties the viewer's visual identity to the pet's allele
     // profile: Gale-dominant pets look orange/lavender; Tether-
     // dominant pets look emerald/gold; etc.
@@ -194,12 +194,12 @@ class PetDnaPainter extends CustomPainter {
     PetBaseAllele alleleAtIndex(int i) => sequence[i % sequence.length];
 
     // Weak perspective projection. Previously x was cos(angle)*radius
-    // which is the orthographic side view of a cylinder — mathematically
+    // which is the orthographic side view of a cylinder - mathematically
     // a cylinder, so the result read as one. Treating sin(angle) as the
     // z depth (already computed for sort order) and dividing the x
     // coordinate by a focal-length ratio makes near-side samples spread
     // further from the central axis than far-side samples. Focal 3.5
-    // gives nearest beads ~40% more spread than farthest — enough to
+    // gives nearest beads ~40% more spread than farthest - enough to
     // read as a genuine 3D molecule without cartoonish distortion.
     const perspectiveFocal = 3.5;
 
@@ -234,7 +234,7 @@ class PetDnaPainter extends CustomPainter {
       }
     }
 
-    // End-fade factor per sample index — alpha tapers smoothly to 0
+    // End-fade factor per sample index - alpha tapers smoothly to 0
     // over the outermost ~20% of samples at each end. The wider window
     // (was ~8%) lets the strand visibly dissolve into the backdrop
     // instead of popping at 90% alpha right at the canvas edge.
@@ -248,17 +248,17 @@ class PetDnaPainter extends CustomPainter {
     }
 
     // Build z-sorted draw ops. Three kinds:
-    //   1. Backbone segment — a round-capped stroked line between
+    //   1. Backbone segment - a round-capped stroked line between
     //      consecutive samples on the same strand. The stroke width
     //      IS the tube diameter; no ribbon geometry, no shader.
-    //   2. Rung — a stroked line between the two strands' samples at
+    //   2. Rung - a stroked line between the two strands' samples at
     //      every other index. Depth-alpha shaded.
-    //   3. Node bead — a filled circle at each sample, depth-scaled
+    //   3. Node bead - a filled circle at each sample, depth-scaled
     //      (near beads bigger than far beads) which is what sells the
     //      perspective / "round tube" illusion.
     final ops = <({double depth, VoidCallback draw})>[];
 
-    // Backbones — round-capped stroked lines between consecutive
+    // Backbones - round-capped stroked lines between consecutive
     // samples on each strand. Each strand wears its own distinctive
     // color (dominant-allele and its complement) so crossovers are
     // immediately readable. Hard back/front alpha contrast: back
@@ -298,7 +298,7 @@ class PetDnaPainter extends CustomPainter {
       }
     }
 
-    // Rungs — every other sample, TWO-TONE by allele pair. Each half
+    // Rungs - every other sample, TWO-TONE by allele pair. Each half
     // of the rung is the archetype color of that strand's allele, so
     // every rung literally reads as "aurora↔tether" or "gale↔calm".
     //
@@ -344,7 +344,7 @@ class PetDnaPainter extends CustomPainter {
                 0.0,
                 1.0,
               );
-          // Butt caps (not round) — round caps extend past the bead
+          // Butt caps (not round) - round caps extend past the bead
           // endpoint by half the stroke width, which was reading as a
           // stub poking out of the bead. Butt terminates flush.
           final paint = Paint()
@@ -365,16 +365,16 @@ class PetDnaPainter extends CustomPainter {
       ));
     }
 
-    // Node beads — every OTHER sample (rung cadence), every strand.
+    // Node beads - every OTHER sample (rung cadence), every strand.
     // Density halved from "every sample" so adjacent same-strand beads
-    // are no longer 7px apart in y with wildly different depths —
+    // are no longer 7px apart in y with wildly different depths -
     // that configuration guaranteed visible z-sort swaps as the helix
     // rotated. Rung endpoints now land exactly on beads (DNA-accurate
     // base-pair nucleotides), and the remaining swaps are spaced far
     // enough apart that they read as gentle orbit motion rather than
     // pop-flickering.
     //
-    // Scale 0.35..1.25 and alpha 0.10..1.0 — back beads are genuinely
+    // Scale 0.35..1.25 and alpha 0.10..1.0 - back beads are genuinely
     // dust-mote faint; their sort-order flips are invisible because
     // they're barely there. White rim + dark halo are gated to the
     // front half only (decorPulse) so back beads don't carry 20% of
@@ -392,8 +392,8 @@ class PetDnaPainter extends CustomPainter {
             final alpha = ((0.10 + 0.90 * depthNorm) * fade).clamp(0.0, 1.0);
             final beadColor = sample.allele.archetypeColor;
             // Decoration (rim + halo) fades in only for front-half
-            // beads. Back beads are bare colored dots — no rim, no
-            // halo — so their depth-sort order is visually irrelevant.
+            // beads. Back beads are bare colored dots - no rim, no
+            // halo - so their depth-sort order is visually irrelevant.
             final decorPulse = _smoothstep(0.40, 0.75, depthNorm);
             if (decorPulse > 0) {
               canvas.drawCircle(
@@ -432,7 +432,7 @@ class PetDnaPainter extends CustomPainter {
 
     ops.sort((a, b) => a.depth.compareTo(b.depth));
 
-    // Interleave the core layer at the depth=0 seam — back-facing
+    // Interleave the core layer at the depth=0 seam - back-facing
     // helix elements draw first, then the sigil core, then front-
     // facing elements on top.
     var coreDrawn = false;
@@ -447,7 +447,7 @@ class PetDnaPainter extends CustomPainter {
   }
 
   // ------------------------------------------------------------------
-  // Core genome glyph — the pet's identity sigil. Smaller than before
+  // Core genome glyph - the pet's identity sigil. Smaller than before
   // so it reads as a jewel inside the helix rather than competing
   // with it.
   // creature's "identity sigil" at the centre of the artifact.
@@ -457,11 +457,11 @@ class PetDnaPainter extends CustomPainter {
 
     // Bigger than the old version (0.065 → 0.11). Also rendered with
     // an outer glow ring, inner inscription, and bright edges.
-    // Smaller than before (was 0.11) — the helix is the subject now,
+    // Smaller than before (was 0.11) - the helix is the subject now,
     // and the sigil sits inside it as a jewel, not a competing disc.
     final coreR = minSide * 0.07;
 
-    // Outer glow — large soft disc.
+    // Outer glow - large soft disc.
     final glowRect = Rect.fromCircle(center: center, radius: coreR * 2.2);
     final glowPaint = Paint()
       ..shader = RadialGradient(
@@ -495,7 +495,7 @@ class PetDnaPainter extends CustomPainter {
       ..color = palette.accent.withValues(alpha: 0.90);
     canvas.drawPath(outerPath, outline);
 
-    // Inner inscription — smaller concentric polygon, rotated, provides
+    // Inner inscription - smaller concentric polygon, rotated, provides
     // structural etching on the core.
     final innerR = coreR * 0.52;
     final rotatedAngles = angles
@@ -508,7 +508,7 @@ class PetDnaPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.55);
     canvas.drawPath(innerPath, innerPaint);
 
-    // Seed mark — tiny filled pip at exact centre.
+    // Seed mark - tiny filled pip at exact centre.
     final centrePaint = Paint()
       ..style = PaintingStyle.fill
       ..color = Colors.white.withValues(alpha: 0.85);
@@ -539,7 +539,7 @@ class PetDnaPainter extends CustomPainter {
   }
 
   /// Hermite smoothstep in [edge0, edge1]. Returns a value in [0, 1]
-  /// with zero first-derivative at both endpoints — the classic
+  /// with zero first-derivative at both endpoints - the classic
   /// GLSL smoothstep. Used for the rung clear-zone around the pet so
   /// the fade reads as a soft dissolve rather than a linear ramp.
   double _smoothstep(double edge0, double edge1, double x) {
@@ -566,7 +566,7 @@ class PetDnaPainter extends CustomPainter {
   }
 }
 
-/// Short label rendered over the painter — e.g. "luminous · adult".
+/// Short label rendered over the painter - e.g. "luminous · adult".
 /// Not drawn by the painter itself; UI layer places it above/below.
 String petDnaStageBranchLabel(PetStage stage, PetBranch branch) {
   return '${branch.name} · ${stage.name}';

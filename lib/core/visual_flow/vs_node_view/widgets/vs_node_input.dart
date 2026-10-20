@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Modified: Enlarged touch targets for mobile usability (min 44dp hit area).
 // Modified: Added minimum drag distance threshold before accepting connections
@@ -11,11 +11,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../flow_node_l10n.dart';
+
 import 'package:socialmesh/core/l10n/l10n_extension.dart';
+
 import '../common.dart';
 import '../data/vs_interface.dart';
 import '../data/vs_node_data_provider.dart';
 import '../special_nodes/vs_list_node.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Minimum touch target size for mobile usability (Material Design guideline).
@@ -88,7 +91,7 @@ class _VSNodeInputState extends State<VSNodeInput> {
                     List<dynamic> rejected,
                   ) {
                     return GestureDetector(
-                      // Tap to disconnect — uses the enlarged parent hit area.
+                      // Tap to disconnect - uses the enlarged parent hit area.
                       onTap: () {
                         HapticFeedback.lightImpact();
                         updateConnectedNode(null);

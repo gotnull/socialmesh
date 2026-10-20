@@ -102,14 +102,14 @@ class AppInitNotifier extends Notifier<AppInitState> {
   /// Guard to prevent _initializeBackgroundServices() from running more than
   /// once. Without this, each call to initialize() (onboarding, terms
   /// acceptance, etc.) fires a new background-services pass that eventually
-  /// calls startBackgroundConnection() — which can disconnect an already-live
+  /// calls startBackgroundConnection() - which can disconnect an already-live
   /// connection and create a cascade of reconnect cycles.
   bool _backgroundServicesStarted = false;
 
   /// Device-connection init completion, tracked separately from
   /// [_backgroundServicesStarted]. One-time services must never re-run,
   /// but a device-connection init that threw must stay retryable on the
-  /// next initialize() call — otherwise a transient failure here kills
+  /// next initialize() call - otherwise a transient failure here kills
   /// auto-reconnect for the entire session. Set only after the init block
   /// completes without throwing (the already-connected skip and the
   /// autoReconnect-disabled path both count as successful completion).
@@ -177,7 +177,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
       final settings = await ref.read(settingsServiceProvider.future);
       BootTimeline.instance.mark('appInit_settings');
 
-      // Check age eligibility FIRST — must confirm 16+ before anything else
+      // Check age eligibility FIRST - must confirm 16+ before anything else
       final ageState = await ref.read(ageEligibilityProvider.future);
       BootTimeline.instance.mark('appInit_age');
       if (ageState.needsConfirmation) {
@@ -197,7 +197,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
         return;
       }
 
-      // Terms acceptance is NOT checked here — it is gated in _AppRouter
+      // Terms acceptance is NOT checked here - it is gated in _AppRouter
       // when state is ready, so that terms appear AFTER device setup
       // (scanner + region select) but BEFORE the main shell. Returning
       // users with a terms version bump will hit the gate there.
@@ -208,7 +208,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
       // Restore transport type from persisted lastDeviceType BEFORE any
       // auto-reconnect path fires. On cold start transportTypeProvider
-      // defaults to BLE — a TCP last-device would otherwise route
+      // defaults to BLE - a TCP last-device would otherwise route
       // through the BLE scan loop looking for a `tcp:...` id and spin
       // at "Connecting…" indefinitely. This sync does NOT classify or
       // clear anything; it simply aligns the transport provider with
@@ -219,7 +219,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
       // Phase 2: Background services (can complete after UI shows)
       // These run in parallel but don't block app ready state.
-      // Guarded so only the first initialize() call triggers them —
+      // Guarded so only the first initialize() call triggers them -
       // subsequent calls (e.g. from terms acceptance) skip this to
       // avoid duplicate startBackgroundConnection() disrupting an
       // already-active connection.
@@ -306,7 +306,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
     try {
       // Eagerly activate the file transfer engine FIRST, before any
       // async work. The engine wires a stream listener on the protocol
-      // service's broadcast StreamController — if this runs late (after
+      // service's broadcast StreamController - if this runs late (after
       // slow DB opens below), incoming file-transfer packets are silently
       // dropped because broadcast streams discard events with no listener.
       // This MUST be synchronous (ref.read, not await) and at the top.
@@ -378,7 +378,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
           'count=${store.count})',
         );
 
-        // Resolve the storage service BEFORE starting sync — this runs
+        // Resolve the storage service BEFORE starting sync - this runs
         // the one-time SharedPreferences → SQLite migration which calls
         // enqueueAllForSync(), ensuring migrated widgets are in the outbox
         // before the first sync cycle drains it.
@@ -422,7 +422,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
 
       AppLogging.debug('Background services initialized');
     } catch (e) {
-      // Non-critical, log but don't fail — device connection below still runs.
+      // Non-critical, log but don't fail - device connection below still runs.
       AppLogging.debug('Background service init error: $e');
     }
 
@@ -443,7 +443,7 @@ class AppInitNotifier extends Notifier<AppInitState> {
   // Device connection: runs OUTSIDE the storage/sync try-catch so that a
   // failed DB open or hanging platform channel can never silently prevent
   // auto-reconnect. This is the #1 user-visible consequence of the old
-  // structure — the user stays on "Disconnected" with no reconnect attempt.
+  // structure - the user stays on "Disconnected" with no reconnect attempt.
   //
   // This block only reads the device-connection notifier; it never
   // re-registers stream listeners or re-creates one-time services, so a
@@ -680,7 +680,7 @@ final premiumFeatureGateProvider = Provider.family<bool, String>((
   ref,
   featureKey,
 ) {
-  // Translation Pack is sold separately (not part of Complete Pack) —
+  // Translation Pack is sold separately (not part of Complete Pack) -
   // it uses a standard price badge, not the "Try It" upsell flow.
   if (featureKey == 'translation') return false;
 
@@ -988,13 +988,13 @@ bool _transportSupported(TransportType type, PlatformCapabilities caps) {
   }
 }
 
-/// Dedicated BLE scanner — always a `BleTransport`, independent of the
+/// Dedicated BLE scanner - always a `BleTransport`, independent of the
 /// session's active [transportTypeProvider]. Scanner UI uses this so a
 /// BLE scan works even while the session transport is pinned to
 /// network (e.g. user just disconnected from a TCP radio and opened the
 /// scanner to pick a BLE device). Without it, `transportProvider.scan()`
-/// would return `NetworkTransport.scan()` — an immediately-empty stream
-/// — and the scanner would spin forever at "Looking for devices…".
+/// would return `NetworkTransport.scan()` - an immediately-empty stream
+/// - and the scanner would spin forever at "Looking for devices…".
 ///
 /// Not used for connect: the connect path goes through
 /// [prepareForDeviceTransition] which flips [transportTypeProvider]
@@ -1075,12 +1075,12 @@ final unifiedConnectionStateProvider = Provider<DeviceConnectionState>((ref) {
 
 /// Stream of [OperationalReadiness] transitions for the Meshtastic
 /// protocol service. Distinct from [unifiedConnectionStateProvider] which
-/// reflects raw transport (BLE/TCP/USB) link state — readiness only
+/// reflects raw transport (BLE/TCP/USB) link state - readiness only
 /// reaches `ready` when the two-phase handshake completes in the current
 /// session generation. UI banners and TX guards should observe this
 /// rather than transport state.
 ///
-/// MeshCore is unaffected — it has its own connection coordinator.
+/// MeshCore is unaffected - it has its own connection coordinator.
 final meshtasticReadinessProvider = StreamProvider<OperationalReadiness>((ref) {
   final protocol = ref.watch(protocolServiceProvider);
   return protocol.readinessStream;
@@ -1114,13 +1114,13 @@ final meshtasticOperationalProvider = Provider<bool>((ref) {
 });
 
 /// Banner-friendly classification of the Meshtastic protocol state.
-/// Keeps `unifiedConnectionStateProvider` untouched globally — only
+/// Keeps `unifiedConnectionStateProvider` untouched globally - only
 /// presentation surfaces that explicitly opt-in (currently
 /// `TopStatusBanner`) consume this.
 enum MeshtasticBannerState {
   /// Either MeshCore is the active protocol, or readiness is `ready`,
   /// or the readiness stream has not delivered a value yet.
-  /// **Banner falls through to its existing logic in this case** —
+  /// **Banner falls through to its existing logic in this case** -
   /// no Configuring/Recovering override.
   passthrough,
 
@@ -1130,7 +1130,7 @@ enum MeshtasticBannerState {
   /// Banner shows "Configuring SocialMesh…" and suppresses dismiss.
   configuring,
 
-  /// Readiness is `degraded` — phase-2 timed out or a transport blip
+  /// Readiness is `degraded` - phase-2 timed out or a transport blip
   /// hit mid-handshake. Banner shows the recovering CTA.
   recovering,
 }
@@ -1160,7 +1160,7 @@ final meshtasticBannerStateProvider = Provider<MeshtasticBannerState>((ref) {
     // The brief `ready -> idle -> linkConnected` window during a
     // restore: keep showing Configuring instead of flashing
     // Disconnected. If the transport is also down, the protocol is
-    // genuinely stopped — pass through to existing Disconnected logic.
+    // genuinely stopped - pass through to existing Disconnected logic.
     final transport = ref.watch(transportProvider);
     return transport.isConnected
         ? MeshtasticBannerState.configuring
@@ -1681,15 +1681,15 @@ bool _isDeviceSwitch(String? previousDeviceId, String? newDeviceId) {
 
 /// Classifies whether connecting to a device whose raw BLE UUID differs
 /// from the last-persisted one is actually a **transport rebind** of the
-/// same physical radio (BLE peripheral UUID rotated — common on ESP32 /
+/// same physical radio (BLE peripheral UUID rotated - common on ESP32 /
 /// nRF hardware) rather than a genuine switch to a different radio.
 ///
 /// Logical identity is derived from stable Meshtastic identifiers that
 /// survive BLE UUID rotation:
-///   * `lastMyNodeNum`  — firmware node number; its last 4 hex digits
+///   * `lastMyNodeNum`  - firmware node number; its last 4 hex digits
 ///                        appear as the suffix in default Meshtastic BLE
 ///                        names (`Meshtastic_XXXX`). Strongest signal.
-///   * `lastDeviceName` — full advertised BLE name. Medium signal; used
+///   * `lastDeviceName` - full advertised BLE name. Medium signal; used
 ///                        when the node-number suffix check is unavailable
 ///                        or the name has been customised.
 ///
@@ -1705,9 +1705,9 @@ bool isLogicalTransportRebind({
   required int? lastMyNodeNum,
   required String? lastDeviceName,
 }) {
-  // No prior connection — nothing to rebind to.
+  // No prior connection - nothing to rebind to.
   if (previousDeviceId == null) return false;
-  // Raw ID already matches — not a rebind, just a normal reconnect. The
+  // Raw ID already matches - not a rebind, just a normal reconnect. The
   // caller's `_isDeviceSwitch` check will also return false here.
   if (newDeviceId == previousDeviceId) return false;
 
@@ -1770,7 +1770,7 @@ bool isLogicalSameRadio({
 }
 
 /// Parse the persisted `last_device_type` string back to [TransportType].
-/// Returns `null` when the stored value is missing or unrecognised — the
+/// Returns `null` when the stored value is missing or unrecognised - the
 /// caller must treat that as "transport family unknown".
 TransportType? transportTypeFromString(String? stored) {
   switch (stored) {
@@ -1796,13 +1796,13 @@ String _transportTypeToString(TransportType type) {
 }
 
 /// Canonical taxonomy of active-device transitions. A single source of
-/// truth for "preserve vs clear vs rehydrate" — consumed by every connect
+/// truth for "preserve vs clear vs rehydrate" - consumed by every connect
 /// entrypoint via [prepareForDeviceTransition].
 enum DeviceTransitionKind {
-  /// No prior device persisted — first connect after install / reset.
+  /// No prior device persisted - first connect after install / reset.
   firstEver,
 
-  /// Raw ids identical — ordinary reconnect to same physical device on
+  /// Raw ids identical - ordinary reconnect to same physical device on
   /// the same transport.
   sameDevice,
 
@@ -1811,12 +1811,12 @@ enum DeviceTransitionKind {
   transportRebind,
 
   /// Raw ids differ but logical identity matches AND transport family
-  /// CHANGED (same radio reached over a different transport — e.g. BLE
+  /// CHANGED (same radio reached over a different transport - e.g. BLE
   /// to TCP). Persisted node cache is preserved, but session-scoped
   /// state must be reset and the new session must run a fresh hydrate.
   sameRadioCrossTransport,
 
-  /// Different physical radio — destructive switch. Nodes cleared.
+  /// Different physical radio - destructive switch. Nodes cleared.
   deviceSwitch,
 }
 
@@ -1838,14 +1838,14 @@ class ActiveDeviceTransition {
   /// Destructive clear of persisted node cache. Only `deviceSwitch`.
   bool get clearNodes => kind == DeviceTransitionKind.deviceSwitch;
 
-  /// Logical identity matches — suppress `_isDeviceSwitch` auto-clear
+  /// Logical identity matches - suppress `_isDeviceSwitch` auto-clear
   /// inside [clearDeviceDataBeforeConnectRef]. Covers both same-family
   /// rebinds and same-radio cross-transport.
   bool get isLogicalRebind =>
       kind == DeviceTransitionKind.transportRebind ||
       kind == DeviceTransitionKind.sameRadioCrossTransport;
 
-  /// Transport family changed — the transportTypeProvider must be
+  /// Transport family changed - the transportTypeProvider must be
   /// flipped so the next protocolServiceProvider rebuild instantiates
   /// the right transport.
   bool get transportFamilyChanged =>
@@ -1858,7 +1858,7 @@ class ActiveDeviceTransition {
       kind == DeviceTransitionKind.sameRadioCrossTransport;
 }
 
-/// Pure classifier — no side effects. Consumed by [prepareForDeviceTransition]
+/// Pure classifier - no side effects. Consumed by [prepareForDeviceTransition]
 /// and by unit tests that pin the matrix row-by-row.
 @visibleForTesting
 ActiveDeviceTransition classifyDeviceTransition({
@@ -1930,7 +1930,7 @@ ActiveDeviceTransition classifyDeviceTransition({
 /// right answer when this connect reaches that same radio: the same device
 /// id, a rotated BLE UUID, or the same radio over another transport. On a
 /// genuine switch it names the *other* radio, and returning it would point
-/// the new radio at the previous one's data — exactly the leak scoping
+/// the new radio at the previous one's data - exactly the leak scoping
 /// exists to close.
 @visibleForTesting
 int? scopeNodeNumForTransition(
@@ -1954,7 +1954,7 @@ int? _scopeNodeNumForTransition(
 }
 
 /// Central pre-connect preparation. **Must** be called before
-/// `ref.read(transportProvider)` in every connect entrypoint — it
+/// `ref.read(transportProvider)` in every connect entrypoint - it
 /// decides the transition kind, clears state in the correct order to
 /// avoid the NodesNotifier `_init` hydration race, persists the new
 /// identity, and only then flips `transportTypeProvider`.
@@ -1999,12 +1999,12 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
     protocol: deviceProtocol,
   );
 
-  // Clear — ordering is critical: this runs while transportTypeProvider
+  // Clear - ordering is critical: this runs while transportTypeProvider
   // still points at the OLD transport so the OLD NodesNotifier is the
   // one whose state is reset + whose epoch is bumped. If we flipped
   // transport type first, the provider rebuild would spawn a fresh
   // NodesNotifier whose `_init` would immediately `await loadNodes()`
-  // on still-populated storage — and any write back via its async
+  // on still-populated storage - and any write back via its async
   // resumption would resurrect the old nodes we're trying to clear.
   await clearDeviceDataBeforeConnectRef(
     ref,
@@ -2033,7 +2033,7 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
   // clean. clearDeviceDataBeforeConnectRef already clears channels and
   // the new-nodes badge. The NodesNotifier rebuild (triggered by the
   // transport type flip below) will re-`_init` against preserved
-  // storage — that's the fresh hydrate.
+  // storage - that's the fresh hydrate.
   if (transition.forceFreshHydration) {
     AppLogging.connection(
       'DEVICE TRANSITION: forceFreshHydration - preserving persisted '
@@ -2077,7 +2077,7 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
 /// persisted device is a network endpoint so the rebuilt `NetworkTransport`
 /// binds to the right address.
 ///
-/// This is distinct from [prepareForDeviceTransitionRef] — it does NOT
+/// This is distinct from [prepareForDeviceTransitionRef] - it does NOT
 /// classify, clear, or persist anything. It is a pure read-from-settings
 /// → write-to-transport-providers sync.
 void restoreTransportTypeFromSettings(Ref ref, SettingsService settings) {
@@ -2313,7 +2313,7 @@ Future<ActiveDeviceTransition> prepareForDeviceTransition(
 /// Pass [isTransportRebind] as `true` when the caller has already
 /// determined (e.g. via `_tryLogicalDeviceMatch` or [isLogicalRebindForTest])
 /// that the new BLE UUID belongs to the SAME physical radio as the last
-/// one — BLE peripheral UUIDs rotate on ESP32 / nRF hardware. When true,
+/// one - BLE peripheral UUIDs rotate on ESP32 / nRF hardware. When true,
 /// the raw-UUID mismatch auto-reset is suppressed so a same-radio reconnect
 /// keeps the mesh on screen.
 Future<void> clearDeviceDataBeforeConnect(
@@ -2387,7 +2387,7 @@ Future<void> clearDeviceDataBeforeConnect(
   // explicitly forgetting the current one.
   // In-memory only. The persisted stores are radio-scoped, so the previous
   // radio's nodes, telemetry and routes stay in its own scope rather than
-  // being deleted — see [RadioScope]. What has to go is the in-memory view,
+  // being deleted - see [RadioScope]. What has to go is the in-memory view,
   // which still holds the previous radio's mesh until the new one hydrates.
   nodesNotifier?.clearNodesInMemory();
   channelsNotifier.clearChannels();
@@ -2404,7 +2404,7 @@ Future<void> clearDeviceDataBeforeConnect(
 
 /// Ref-based version for use in providers (non-widget contexts).
 /// See [clearDeviceDataBeforeConnect] for the device-switch auto-clear
-/// and [isTransportRebind] semantics — they apply identically here.
+/// and [isTransportRebind] semantics - they apply identically here.
 Future<void> clearDeviceDataBeforeConnectRef(
   Ref ref, {
   bool clearNodeData = false,
@@ -2449,7 +2449,7 @@ Future<void> clearDeviceDataBeforeConnectRef(
   // explicitly forgetting the current one.
   // In-memory only. The persisted stores are radio-scoped, so the previous
   // radio's nodes, telemetry and routes stay in its own scope rather than
-  // being deleted — see [RadioScope]. What has to go is the in-memory view,
+  // being deleted - see [RadioScope]. What has to go is the in-memory view,
   // which still holds the previous radio's mesh until the new one hydrates.
   if (clearNodeData) {
     ref.read(nodesProvider.notifier).clearNodesInMemory();
@@ -2625,7 +2625,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
         }
 
         // If the active transport is network, Bluetooth coming back on
-        // is irrelevant — do not restart a BLE scan loop behind the
+        // is irrelevant - do not restart a BLE scan loop behind the
         // user's back. The network reconnect path is driven by the
         // autoReconnectManagerProvider listener on transport state.
         final dispatchTransport = ref.read(transportProvider);
@@ -2648,7 +2648,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
 
         // D27: route through the protocol-aware dispatcher even though
         // the MeshCore guard above already returned early. Defence in
-        // depth — a future regression in the early-return logic must
+        // depth - a future regression in the early-return logic must
         // not be able to reintroduce a BLE scan for a saved MeshCore
         // peer.
         dispatchReconnectMeshCoreAware(ref, lastDeviceId);
@@ -2676,7 +2676,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
         ref.read(rebootExpectedProvider.notifier).setRebootExpected(true);
       });
     } catch (_) {
-      // Protocol service may not be initialized yet — that's fine,
+      // Protocol service may not be initialized yet - that's fine,
       // the listener will be set up on next connection.
     }
   }
@@ -2692,7 +2692,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
     if (next != null) {
       AppLogging.connection('Storing device ID for reconnect: ${next.id}');
       ref.read(_lastConnectedDeviceIdProvider.notifier).setId(next.id);
-      // Clear reboot-expected flag on successful connect — the reboot
+      // Clear reboot-expected flag on successful connect - the reboot
       // cycle is complete and the new connection is established.
       ref.read(rebootExpectedProvider.notifier).setRebootExpected(false);
       // Re-subscribe to config writes on new connection (protocol service
@@ -2815,7 +2815,7 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
 /// USB is scan-based via the existing path.
 ///
 /// Kept as a single call-site helper so neither path can race the other
-/// — a previous regression reset `transportTypeProvider` back to BLE on
+/// - a previous regression reset `transportTypeProvider` back to BLE on
 /// disconnect which caused network peers to silently fall into a BLE
 /// scan loop. See `DeviceConnectionNotifier._handleDisconnect` for the
 /// transport-type preservation rule.
@@ -2890,8 +2890,8 @@ void _dispatchReconnect(Ref ref, String deviceId) {
 /// gate entry, but several lifecycle paths can race: transport
 /// disconnect listener, connectivity-restored listener, BLE-on listener
 /// (guarded for network), app-resume. A stuck state transition between
-/// those guards — e.g. state still `scanning` from a previous run that
-/// got abandoned mid-async — would let two callers both land in
+/// those guards - e.g. state still `scanning` from a previous run that
+/// got abandoned mid-async - would let two callers both land in
 /// `_performNetworkReconnect` and each call `transport.connect(...)`.
 /// A single bool locked for the lifetime of the retry loop is cheap
 /// belt-and-suspenders that fails closed regardless of state.
@@ -2904,7 +2904,7 @@ bool get networkReconnectInFlightForTest => _networkReconnectInFlight;
 ///
 /// The BLE `_performReconnect` loop scans for BLE peripherals, which is
 /// meaningless for a TCP peer. Network reconnect is an address-based
-/// `connect()` with bounded backoff — no scanning, no logical matching,
+/// `connect()` with bounded backoff - no scanning, no logical matching,
 /// no BLE cleanup.
 ///
 /// Invariants:
@@ -3048,7 +3048,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
     );
 
     try {
-      // Central transition prep — for NET RECONNECT this is almost
+      // Central transition prep - for NET RECONNECT this is almost
       // always `sameDevice` (we're reconnecting to the persisted TCP
       // endpoint), so no destructive clear fires. Still routed through
       // the helper so the preserve-vs-clear-vs-rehydrate decision
@@ -3078,7 +3078,7 @@ Future<void> _runNetworkReconnect(Ref ref, String deviceId) async {
       // Restored: NET RECONNECT awaits protocol.start() so it doesn't
       // return AutoReconnectState.success until config has actually been
       // received. Removing this for the "single-owner" experiment broke
-      // TCP — the transport-state listener fired its own start() in
+      // TCP - the transport-state listener fired its own start() in
       // parallel and the unawaited NET RECONNECT path turned the
       // connection over before config completed, producing endless
       // "Transport disconnected during configuration" loops. The
@@ -3258,7 +3258,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       // CRITICAL: If the user started manually connecting (tapped a device
       // in Scanner), abort the background reconnect immediately. Continuing
       // would find the OLD device and call transport.connect(), which
-      // disconnects the user's chosen device — creating a reconnect loop.
+      // disconnects the user's chosen device - creating a reconnect loop.
       if (loopState == AutoReconnectState.manualConnecting) {
         AppLogging.connection(
           '_performReconnect ABORTED in loop (attempt $attempt): '
@@ -3279,7 +3279,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
       // CRITICAL: If the transport is already connected (user connected
       // to a device via Scanner while we were scanning), do NOT proceed
-      // — calling transport.connect() on a different device would
+      // - calling transport.connect() on a different device would
       // disconnect the live connection.
       final transportState = ref.read(transportProvider).state;
       if (transportState == DeviceConnectionState.connected ||
@@ -3434,7 +3434,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
       AppLogging.connection('After scan. foundDevice: ${foundDevice != null}');
 
       if (foundDevice != null) {
-        // CRITICAL: Final guard before connecting — if the user manually
+        // CRITICAL: Final guard before connecting - if the user manually
         // connected to a different device while we were scanning, do NOT
         // call transport.connect() because it would disconnect their device.
         final preConnectState = ref.read(autoReconnectStateProvider);
@@ -3532,7 +3532,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Restart protocol service
           AppLogging.connection('Starting protocol service...');
 
-          // Central transition prep — single source of truth for the
+          // Central transition prep - single source of truth for the
           // preserve-vs-clear-vs-rehydrate decision. The classifier
           // inside will detect a same-radio BLE UUID rotation as
           // `transportRebind` (no clear) via lastMyNodeNum / name
@@ -3590,7 +3590,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           // Final check - if we're still connected, declare success.
           // (Note: prepareForDeviceTransitionRef above already persisted
           // the new BLE id to settings, so no REBIND COMPLETE write is
-          // needed here — the prep runs pre-clear specifically so the
+          // needed here - the prep runs pre-clear specifically so the
           // new id survives even if protocol start subsequently fails.)
           if (transport.state == DeviceConnectionState.connected) {
             ref
@@ -3646,7 +3646,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
           'Device not found in attempt $attempt, waiting 5s...',
         );
 
-        // During reboot recovery, do NOT report missing device — the
+        // During reboot recovery, do NOT report missing device - the
         // node is expected to be offline while regenerating its SSL
         // certificate and restarting. Without this guard,
         // reportMissingSavedDevice() fires invalidation after just 3
@@ -3675,7 +3675,7 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 
     // All retries exhausted
     AppLogging.connection('Failed to reconnect after $maxRetries attempts');
-    // Clear reboot recovery flag — we gave it our best shot.
+    // Clear reboot recovery flag - we gave it our best shot.
     ref.read(rebootExpectedProvider.notifier).setRebootExpected(false);
     ref
         .read(autoReconnectStateProvider.notifier)
@@ -3707,10 +3707,10 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
 /// flash and is stable across reboots.
 ///
 /// Matching tiers:
-///   Strong — BLE name suffix matches the last 4 hex digits of
+///   Strong - BLE name suffix matches the last 4 hex digits of
 ///            `lastMyNodeNum` (persisted from the previous session).
-///   Medium — BLE advertised name exactly matches `lastDeviceName`.
-///   Weak   — any single Meshtastic device (never auto-matched).
+///   Medium - BLE advertised name exactly matches `lastDeviceName`.
+///   Weak   - any single Meshtastic device (never auto-matched).
 ///
 /// Only strong matches are used for automatic rebind. Medium matches
 /// are logged but not auto-bound (future: could present a chooser).
@@ -3789,7 +3789,7 @@ DeviceInfo? _tryLogicalDeviceMatch(
         'bleId=${match.id} - name matches lastDeviceName. '
         'Auto-binding (single candidate with exact name).',
       );
-      // Single device with exact same name — safe to rebind.
+      // Single device with exact same name - safe to rebind.
       // This handles cases where lastMyNodeNum was cleared or unknown
       // but the device name is distinctive enough.
       return match;
@@ -3982,7 +3982,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   //
   // Gated by AppFeatureFlags.isReticulumTunnelEnabled. When the flag
   // is off (default), no providers are instantiated and no
-  // subscription is created — the broadcast controller in ProtocolService
+  // subscription is created - the broadcast controller in ProtocolService
   // exists but never has any listeners, and its handler is short-
   // circuited at the switch in _handleMeshPacket. Net cost when off:
   // a single boolean comparison per port-76 packet.
@@ -3999,7 +3999,7 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
         ref.read(reticulumNodeDexBridgeProvider).onFragment(event);
         ref.read(reticulumStatsProvider.notifier).recordFragment(event);
         // Phase 2: feed the reassembler when the per-user toggle is
-        // on. This is independent of the build-time env flag — the
+        // on. This is independent of the build-time env flag - the
         // env flag gates the entire subsystem; this gates only the
         // reassembly layer (since it produces RNS-frame events that
         // a future Phase 3 bridge would consume).
@@ -4048,7 +4048,7 @@ final deviceLogStreamProvider = StreamProvider<mesh_pb.LogRecord>((ref) {
   return const Stream.empty();
 });
 
-// Phone position publish governor — centralized rate-limiting and distance
+// Phone position publish governor - centralized rate-limiting and distance
 // gating for all phone-GPS-to-mesh publish paths. Shared across
 // LocationService, SharePositionCommand, WidgetActionHandler, and dashboard
 // quick actions. Enforces minInterval (300s auto / 60s manual) and
@@ -4145,7 +4145,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   static const _coalesceInterval = Duration(seconds: 2);
   bool _streamDirty = false;
 
-  /// Ring buffer of recent BLE RSSI samples — feeds the lock-screen aurora
+  /// Ring buffer of recent BLE RSSI samples - feeds the lock-screen aurora
   /// curve. Oldest first, newest last. Capped at [_signalHistoryCap] entries
   /// to keep UserDefaults writes small and the SwiftUI Path render cheap.
   final List<int> _signalHistory = <int>[];
@@ -4349,7 +4349,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       // to the native Live Activity bridge every 2 seconds.
       _startCoalesceTimer();
 
-      // Set up BLE RSSI listener — accumulates into the coalesce window
+      // Set up BLE RSSI listener - accumulates into the coalesce window
       // instead of crossing the native bridge on every poll event. Also
       // feeds the signal-history ring buffer that the lock-screen aurora
       // curve renders from.
@@ -4367,7 +4367,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
         _streamDirty = true;
       });
 
-      // Set up SNR listener — accumulates into the coalesce window.
+      // Set up SNR listener - accumulates into the coalesce window.
       _snrSubscription?.cancel();
       _snrSubscription = protocol.snrStream.listen((snr) {
         if (!_liveActivityService.isActive) return;
@@ -4375,7 +4375,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
         _streamDirty = true;
       });
 
-      // Set up telemetry listener for channel utilization — accumulates
+      // Set up telemetry listener for channel utilization - accumulates
       // into the coalesce window.
       _channelUtilSubscription?.cancel();
       _channelUtilSubscription = protocol.channelUtilStream.listen((
@@ -4543,7 +4543,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     }
   }
 
-  /// Mesh-wide destination — uses "MESH" as the label and the most
+  /// Mesh-wide destination - uses "MESH" as the label and the most
   /// recent lastHeard timestamp from any non-self node as the freshness
   /// signal. Empty mesh → idle.
   _DestinationData _meshDestination(Map<int, MeshNode> nodes, int? myNodeNum) {
@@ -4568,7 +4568,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     );
   }
 
-  /// Strongest-signal online peer — by `MeshNode.rssi` (mesh-layer
+  /// Strongest-signal online peer - by `MeshNode.rssi` (mesh-layer
   /// RSSI as observed by the local radio when the peer last spoke).
   /// `null` if no peer has a valid RSSI reading.
   MeshNode? _findBestPeer(Map<int, MeshNode> nodes, int? myNodeNum) {
@@ -4588,7 +4588,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     return best;
   }
 
-  /// Most-recently-active DM peer — picks the SipDmSession with the
+  /// Most-recently-active DM peer - picks the SipDmSession with the
   /// freshest message (or createdAtMs if no messages yet) and looks up
   /// the matching MeshNode. `null` if no active sessions or the peer
   /// isn't in the node table.
@@ -4668,7 +4668,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
   }
 }
 
-/// Resolved "destination" half of the Live Activity route row — what
+/// Resolved "destination" half of the Live Activity route row - what
 /// the user picked in settings, materialized into displayable strings
 /// + age fields the SwiftUI side can render directly.
 class _DestinationData {
@@ -4704,13 +4704,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// recipient ack can upgrade `realAck` false → true.
   ///
   /// [_ackUpgradeWindow] is a *UX-bound truth window*, not a protocol-derived
-  /// bound — the mesh protocol does not guarantee an explicit ack will arrive
+  /// bound - the mesh protocol does not guarantee an explicit ack will arrive
   /// in any particular interval (long multi-hop paths, heavy duty-cycle
   /// restrictions in EU868/AU915, or sleeping/intermittent nodes can
   /// theoretically delay an explicit ack by several minutes). The window
   /// encodes how long the app still cares about upgrading certainty before
   /// the user has moved on. Late-arriving explicit acks after eviction land
-  /// in the "untracked packet" log branch — safe; the message stays
+  /// in the "untracked packet" log branch - safe; the message stays
   /// delivered with `realAck=false`.
   final Map<int, DateTime> _implicitAckedAt = {};
   static const Duration _ackUpgradeWindow = Duration(minutes: 5);
@@ -4746,7 +4746,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// [build] re-runs (triggered by [messageStorageProvider] resolution)
   /// do not cancel in-flight stream subscriptions unnecessarily.
   ///
-  /// ## Invariant (CRITICAL — do not break)
+  /// ## Invariant (CRITICAL - do not break)
   ///
   /// This field and all `StreamSubscription` fields (`_messageSubscription`,
   /// `_deliverySubscription`, `_pushSubscription`) MUST be set to `null` in
@@ -4794,7 +4794,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     // Set up disposal for stream subscriptions.
     //
-    // CRITICAL — MUST null every reference after cancelling.
+    // CRITICAL - MUST null every reference after cancelling.
     //
     // Riverpod calls ref.onDispose() between build() cycles (e.g. when
     // messageStorageProvider transitions AsyncLoading → AsyncData).  The
@@ -4802,7 +4802,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // `_messageSubscription != null`.  If we cancel without nulling, the
     // guard sees a non-null *cancelled* subscription and skips, leaving
     // the broadcast stream listener permanently dead.  Broadcast streams
-    // do NOT buffer — missed events are lost forever.
+    // do NOT buffer - missed events are lost forever.
     //
     // This exact bug shipped in 78b6a52b (8 Apr 2026) and silently broke
     // ALL incoming message processing (no UI, no notifications, no DB
@@ -4827,7 +4827,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     // Load persisted messages asynchronously.
     // Wrapped in error handler to ensure _storageLoadCompleter always
-    // completes — an unhandled exception here would permanently block
+    // completes - an unhandled exception here would permanently block
     // every incoming message that awaits the completer.
     _loadFromStorage().catchError((Object e, StackTrace s) {
       AppLogging.messages('_loadFromStorage failed: $e\n$s');
@@ -4987,7 +4987,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// The guard below skips re-subscription when the protocol instance has
   /// not changed AND the subscription reference is non-null (meaning it
   /// was not disposed).  This relies on [ref.onDispose] nulling
-  /// `_messageSubscription` and `_subscribedProtocol` — see the dispose
+  /// `_messageSubscription` and `_subscribedProtocol` - see the dispose
   /// block in [build] and the doc comment on [_subscribedProtocol] for
   /// why this invariant matters.
   ///
@@ -5213,7 +5213,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
     final notificationBody = message.text;
 
     // Check if it's a channel message (broadcast) or direct message.
-    // Use isBroadcast — the `to` field — as the discriminator. The channel
+    // Use isBroadcast - the `to` field - as the discriminator. The channel
     // index alone is not sufficient because both DMs and broadcasts on the
     // Primary Channel have channel == 0.
     final isChannelMessage = message.isBroadcast;
@@ -5372,7 +5372,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     // Drop tracking entries that have lingered past the window in which an
     // explicit recipient ack can still usefully upgrade realAck. Runs
-    // lazily on each delivery event — no timer, no extra subscriptions.
+    // lazily on each delivery event - no timer, no extra subscriptions.
     _sweepExpiredImplicitAcks();
 
     final messageId = _packetToMessageId[update.packetId];
@@ -5396,13 +5396,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     // DM-only gate for realAck, mirroring meshtastic-ios (`toUser != nil`).
     // Broadcast/channel messages cannot carry a meaningful "recipient"
-    // acknowledgement — any raw realAck signal on a broadcast is discarded
+    // acknowledgement - any raw realAck signal on a broadcast is discarded
     // here as defence in depth, even though broadcast sends normally use
     // wantAck=false and therefore never enter _packetToMessageId.
     final rawRealAck = update.realAck && message.isDirect;
 
     // If message is already delivered, ignore subsequent updates (especially
-    // failures — this handles the case where we get ACK followed by a
+    // failures - this handles the case where we get ACK followed by a
     // timeout/error packet). The one exception is a weak→strong ack upgrade:
     // an implicit mesh ack (realAck == false) can legitimately be superseded
     // by a later explicit recipient ack (realAck == true). Never downgrade.
@@ -5421,7 +5421,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       );
     }
 
-    // A broadcast cannot carry a routing failure addressed back to us — its
+    // A broadcast cannot carry a routing failure addressed back to us - its
     // only meaningful signal is the implicit mesh ack (heard/repeated). Should
     // a stray routing error ever arrive for a tracked broadcast packet, leave
     // the message at "sent to radio" rather than flipping it to "failed".
@@ -5434,7 +5434,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
     Message updatedMessage;
     if (update.isSuccess) {
-      // Confirmed — clear all retry state; the message is delivered.
+      // Confirmed - clear all retry state; the message is delivered.
       // realAck is forward-only: true wins over false/null; false does not
       // overwrite an earlier true. Broadcasts cannot gain realAck=true.
       final nextRealAck = !message.isDirect
@@ -5477,7 +5477,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       _implicitAckedAt.remove(update.packetId);
       AppLogging.debug('Message delivered, stopped tracking: $messageId');
     } else if (update.isSuccess) {
-      // Implicit ack (or a non-DM success) — record the timestamp so we can
+      // Implicit ack (or a non-DM success) - record the timestamp so we can
       // evict the tracking entry if no explicit ack ever follows. Overwrites
       // any prior stamp so a duplicate implicit ack refreshes the window.
       _implicitAckedAt[update.packetId] = DateTime.now();
@@ -5491,7 +5491,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
   void trackPacket(int packetId, String messageId) {
     _packetToMessageId[packetId] = messageId;
-    // Fresh tracking — drop any stale implicit-ack timestamp carried over
+    // Fresh tracking - drop any stale implicit-ack timestamp carried over
     // from a reused packet id in the unlikely event of wraparound.
     _implicitAckedAt.remove(packetId);
     AppLogging.debug('Tracking packet $packetId -> message $messageId');
@@ -5601,10 +5601,10 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Catches push-to-device replays where the push-delivered message has a
     // deterministic SHA1 id and the device-delivered copy has a random UUID,
     // so layers 1-3 miss it once the signature window expires.
-    // Skip for user-sent messages — the user deliberately resending the same
+    // Skip for user-sent messages - the user deliberately resending the same
     // text is intentional, not a duplicate. Skip canonical tapbacks too:
     // state only ever holds non-tapback rows, so a content match against it
-    // can never be the same physical reaction — only a regular message that
+    // can never be the same physical reaction - only a regular message that
     // happens to share the emoji text.
     if (!message.sent &&
         !message.isCanonicalTapback &&
@@ -5636,13 +5636,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
       if (m.from != message.from) continue;
       if (m.text != message.text) continue;
       // Normalize channels: treat null as -1 so that null != 0 (Primary
-      // Channel) — they are semantically different (unknown vs index 0).
+      // Channel) - they are semantically different (unknown vs index 0).
       final mCh = m.channel ?? -1;
       final msgCh = message.channel ?? -1;
       if (mCh != msgCh) continue;
       // For DM messages (channel is null / -1), also compare the recipient
       // to prevent DMs to different nodes from being falsely deduped.
-      // For channel messages (channel >= 0), skip the `to` comparison —
+      // For channel messages (channel >= 0), skip the `to` comparison -
       // push notifications may set `to` to the local node num while the
       // mesh packet uses 0xFFFFFFFF (broadcast).
       if (mCh < 0 && m.to != message.to) continue;
@@ -5659,14 +5659,14 @@ class MessagesNotifier extends Notifier<List<Message>> {
   ///
   /// Policy: the first locally observed delivery path wins. A stored
   /// message with a known transport (`viaMqtt` non-null) is never
-  /// overwritten — a later MQTT copy of a packet first heard over RF (or
+  /// overwritten - a later MQTT copy of a packet first heard over RF (or
   /// vice versa) must not rewrite history. Only the unknown → known
   /// direction is filled in, which covers copies that arrived without
   /// radio metadata (push-delivered or legacy background rows) being
   /// upgraded by the real packet. The same fill-if-absent rule is applied
   /// to the other receive-path fields carried by the packet.
   ///
-  /// Matching is restricted to packet identity (message id or packetId) —
+  /// Matching is restricted to packet identity (message id or packetId) -
   /// content-fingerprint duplicates are too fuzzy to attribute metadata to.
   void _mergeDuplicateRxMetadata(Message incoming) {
     if (incoming.viaMqtt == null &&
@@ -5716,7 +5716,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
   /// Timestamp of the last message added to the in-memory state. Used by
   /// the BLE receive-pipeline diagnostics to distinguish failure class C
-  /// (DB insert / state add stopped) from earlier classes — if the
+  /// (DB insert / state add stopped) from earlier classes - if the
   /// protocol service's `lastTextMessageEmittedAt` is recent but
   /// `lastInsertAt` is stale, the stall is between the message stream
   /// emit and the state add.
@@ -5737,7 +5737,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
   /// [_nodeDexHookDedupWindow]) keyed on packet identity rather than
   /// row identity. The foreground `_isDuplicateMessage` path catches
   /// most duplicates before they reach this hook, but
-  /// [mergeBackgroundMessages] only checks id + 60s content dedup —
+  /// [mergeBackgroundMessages] only checks id + 60s content dedup -
   /// missing the `packetId` axis on purpose, since push payloads can
   /// lack `packetId` and a `null == null` match would over-suppress
   /// distinct messages. So a foreground UUID copy and a later
@@ -5849,7 +5849,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   void updateMessage(String messageId, Message updatedMessage) {
-    // Guard: never regress from delivered — a late status update
+    // Guard: never regress from delivered - a late status update
     // (e.g. pending→sent arriving after ACK already set delivered)
     // must not overwrite the terminal delivered state.
     if (updatedMessage.status != MessageStatus.delivered) {
@@ -6065,7 +6065,7 @@ final messageTimelineEpochProvider =
 ///
 /// Kept alive by [MessagesNotifier] which watches this provider in its
 /// [build] method, so the coordinator runs for the full lifetime of the
-/// messages provider — even when no conversation screen is open.
+/// messages provider - even when no conversation screen is open.
 ///
 /// The coordinator is foreground-only: the internal [Timer] only fires
 /// while the app process is active.  On app restart the coordinator will
@@ -6340,7 +6340,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // isIgnored is still managed by DeviceFavoritesService (protocol service
     // does not read it from NodeInfo yet). isFavorite follows the iOS pattern:
     // it lives directly on the persisted MeshNode record and is updated from
-    // NodeInfo packets — no separate cache layer.
+    // NodeInfo packets - no separate cache layer.
     final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
     // Explicit user unfavorites the device has not confirmed yet. While a
     // node is tombstoned, neither a stored record nor a device-reported
@@ -6367,7 +6367,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           'clearNodes() fired during storage await '
           '(epoch $initEpoch -> $_clearEpoch); starting empty',
         );
-        // Do not write `state = nodeMap(...)` — state was already set
+        // Do not write `state = nodeMap(...)` - state was already set
         // to {} by clearNodes(). Proceed to the protocol-merge step
         // using the current (empty) state as the base.
         stateReadable = true;
@@ -6418,7 +6418,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // listener below. There is no separate "favorites sidecar" to reconcile.
 
     // After a storage await, state may contain nodes added by
-    // addOrUpdateNode() during the async gap — use it.  On the
+    // addOrUpdateNode() during the async gap - use it.  On the
     // synchronous path (_storage == null) state is uninitialised,
     // so start from an empty map.
     final baseNodes = stateReadable ? state : <int, MeshNode>{};
@@ -6600,7 +6600,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
               (node.isFavorite || existing.isFavorite) &&
               !currentTombstones.contains(node.nodeNum),
           isIgnored: currentIgnored.contains(node.nodeNum),
-          // Preserve firstHeard — always keep the earliest value
+          // Preserve firstHeard - always keep the earliest value
           firstHeard: existing.firstHeard ?? node.firstHeard,
           // Preserve telemetry from existing state when incoming node
           // lacks it (e.g. placeholder emissions, _updateNodeLastHeard
@@ -6846,13 +6846,13 @@ final nodesProvider = NotifierProvider<NodesNotifier, Map<int, MeshNode>>(
 ///
 /// Exists so features outside `lib/features/nodes/` (e.g. NodePet's
 /// peer live-state derivation) can observe peer presence freshness
-/// without importing another feature module — the module boundary
+/// without importing another feature module - the module boundary
 /// rule forbids `features/pet/` from importing `features/nodedex/`
 /// or `features/nodes/`, and `lib/providers/` is the sanctioned
 /// shared root.
 ///
 /// Returns null when the node is not yet in the nodes map. Consumers
-/// treat null as "never seen" — rendered as the [PeerPetLiveBand.unknown]
+/// treat null as "never seen" - rendered as the [PeerPetLiveBand.unknown]
 /// band downstream.
 final peerLastSeenProvider = Provider.family<DateTime?, int>((ref, nodeNum) {
   return ref.watch(nodesProvider)[nodeNum]?.lastHeard;
@@ -7133,7 +7133,7 @@ class RemoteAdminNotifier extends Notifier<RemoteAdminState> {
   ///
   /// Pre-warm failures are intentionally swallowed: the next user-initiated
   /// admin packet will simply send without a passkey (the existing
-  /// `_applySessionPasskey` no-op fallback) — same behaviour as before this
+  /// `_applySessionPasskey` no-op fallback) - same behaviour as before this
   /// change, so a failed pre-warm never regresses callers.
   void setTarget(int nodeNum, String? nodeName) {
     state = RemoteAdminState(
@@ -7220,7 +7220,7 @@ final hasUnreadMessagesProvider = Provider<bool>((ref) {
   return ref.watch(unreadMessagesCountProvider) > 0;
 });
 
-/// Unread DM count — only direct messages, excludes broadcasts/channels.
+/// Unread DM count - only direct messages, excludes broadcasts/channels.
 /// Used by the Contacts tab badge so it only lights up for DM unreads.
 final unreadDmCountProvider = Provider<int>((ref) {
   final messages = ref.watch(messagesProvider);
@@ -7245,7 +7245,7 @@ final hasUnreadDmProvider = Provider<bool>((ref) {
   return ref.watch(unreadDmCountProvider) > 0;
 });
 
-/// Unread channel/broadcast message count — excludes DMs.
+/// Unread channel/broadcast message count - excludes DMs.
 /// Used by the Channels tab badge.
 final unreadChannelCountProvider = Provider<int>((ref) {
   final messages = ref.watch(messagesProvider);
@@ -7275,7 +7275,7 @@ final channelUnreadCountsProvider = Provider<Map<int, int>>((ref) {
 
   final counts = <int, int>{};
   for (final m in messages) {
-    // Skip tapback emoji reactions — they are metadata, not messages
+    // Skip tapback emoji reactions - they are metadata, not messages
     if (m.isCanonicalTapback) continue;
     if (m.received && m.from != myNodeNum && !m.read && m.isBroadcast) {
       final ch = m.channel ?? 0;
@@ -7447,7 +7447,7 @@ class NodeDiscoveryCooldownNotifier
   /// node-db reset the radio rebuilds its NodeDB from neighbour
   /// broadcasts, which trickle in over the next few minutes. Restarting
   /// the cooldown gives the Nodes screen a bounded "Discovering"
-  /// window — without this, the unbounded shimmer at
+  /// window - without this, the unbounded shimmer at
   /// `nodes_screen.dart` (the `nodesList.isEmpty + isConnected`
   /// branch) renders skeleton cards forever because the radio's TCP
   /// connection stays up across the reset and the cooldown never
@@ -7806,7 +7806,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       rethrow;
     } finally {
       // Always clear the in-flight flag at the end of an apply
-      // attempt — regardless of success / failure / early return —
+      // attempt - regardless of success / failure / early return -
       // so `_handleDisconnect` can resume normal scanner-routing
       // behaviour as soon as the apply has settled.
       if (ref.mounted) {
@@ -7915,7 +7915,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       }
 
       // Track reconnect identity. Don't complete here unless live
-      // protocol readiness is already ready — the readiness arm owns
+      // protocol readiness is already ready - the readiness arm owns
       // completion when it transitions to ready. We sync-read
       // `protocol.readiness` instead of trusting a cached
       // `readinessReady` flag because Riverpod can replay a STALE
@@ -8088,7 +8088,7 @@ final regionConfigProvider =
 /// `deviceConnectionProvider`, so reading `regionConfigProvider` from
 /// `DeviceConnectionNotifier._handleDisconnect` would close the cycle
 /// and Riverpod 3.x throws `CircularDependencyError`. This provider has
-/// no upstream dependencies — it's set/cleared imperatively by
+/// no upstream dependencies - it's set/cleared imperatively by
 /// `RegionConfigNotifier` at the apply-start and apply-finish edges.
 class RegionApplyInFlightNotifier extends Notifier<bool> {
   @override
@@ -8416,7 +8416,7 @@ class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
       return;
     }
 
-    // Re-check category settings — they may have changed since enqueue
+    // Re-check category settings - they may have changed since enqueue
     final filteredMessages = messages.where((msg) {
       if (msg.isChannelMessage) return channelEnabled;
       return dmEnabled;
@@ -8512,7 +8512,7 @@ final notificationBatchProvider =
 /// Snapshot of the BLE / protocol receive pipeline used by support and
 /// debug surfaces. Re-reads the protocol service on every watch, so
 /// individual fields reflect the latest counters/timestamps. Pure read
-/// — does not register subscriptions on its own.
+/// - does not register subscriptions on its own.
 final bleReceivePipelineDiagnosticsProvider =
     Provider<ReceivePipelineDiagnostics>((ref) {
       final protocol = ref.watch(protocolServiceProvider);

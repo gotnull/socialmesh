@@ -26,7 +26,7 @@ import 'package:flutter_test/flutter_test.dart';
 ///   after the connection log line, BEFORE state mutation and BEFORE
 ///   the coordinator restore.
 /// - Opportunistic restore paths (auto-reconnect, lifecycle resume)
-///   stay guarded — only the explicit user-tap path is exempted.
+///   stay guarded - only the explicit user-tap path is exempted.
 ///
 /// These tests pin both the source-level ordering contract and the
 /// behavior. A full integration test that drives `_connectToDevice`
@@ -37,9 +37,8 @@ void main() {
   group('manual-connect clears _userDisconnected (source pin)', () {
     late String source;
     setUpAll(() async {
-      source = await File(
-        'lib/providers/connection_providers.dart',
-      ).readAsString();
+      source = await File('lib/providers/connection_providers.dart')
+          .readAsString();
     });
 
     test('_connectToDevice contains clearUserDisconnected()', () {

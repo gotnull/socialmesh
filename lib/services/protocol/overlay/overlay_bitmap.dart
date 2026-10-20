@@ -10,7 +10,7 @@
 ///
 /// See `docs/sip/OVERLAY_V0_2.md` §11.4 for the wire definition and
 /// byte-budget rationale (a 64 KiB resource at 128 B chunks produces
-/// a 64 B bitmap — fits comfortably in one LoRa packet).
+/// a 64 B bitmap - fits comfortably in one LoRa packet).
 library;
 
 import 'dart:typed_data';

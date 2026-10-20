@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34a — `MeshCoreSession.sendTextMessage` send-kind attribution.
+// D34a - `MeshCoreSession.sendTextMessage` send-kind attribution.
 //
 // Pins:
 //   - explicit `sendKind` is honoured verbatim (no inference).
@@ -102,7 +102,7 @@ Future<void> _drive(
 }
 
 void main() {
-  group('D34a — sendTextMessage send-kind attribution', () {
+  group('D34a - sendTextMessage send-kind attribution', () {
     test('explicit sendKind is honoured even when payload looks like a '
         'reply', () async {
       final tx = _RecordingTransport();

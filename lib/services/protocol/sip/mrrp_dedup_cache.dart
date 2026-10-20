@@ -119,7 +119,7 @@ class MrrpDedupCache {
       return null;
     }
 
-    // New request — record it.
+    // New request - record it.
     _evictIfNeeded(_requestCache, MrrpConstants.mrrpDedupCacheSize);
     _requestCache[key] = _DedupEntry(insertedAt: DateTime.now());
 
@@ -222,16 +222,14 @@ MrrpDedupKey buildDedupKey(MrrpFrame frame, int senderNodeId) {
 
   final pubkeyTlv = frame.findExtension(MrrpTlvType.senderPubkeyHint);
   if (pubkeyTlv != null && pubkeyTlv.value.length >= 4) {
-    pubkeyHint = ByteData.sublistView(
-      pubkeyTlv.value,
-    ).getUint32(0, Endian.little);
+    pubkeyHint = ByteData.sublistView(pubkeyTlv.value)
+        .getUint32(0, Endian.little);
   }
 
   final sessionTlv = frame.findExtension(MrrpTlvType.sessionTagHint);
   if (sessionTlv != null && sessionTlv.value.length >= 4) {
-    sessionTag = ByteData.sublistView(
-      sessionTlv.value,
-    ).getUint32(0, Endian.little);
+    sessionTag = ByteData.sublistView(sessionTlv.value)
+        .getUint32(0, Endian.little);
   }
 
   return MrrpDedupKey(

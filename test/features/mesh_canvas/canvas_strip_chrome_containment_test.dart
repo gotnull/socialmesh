@@ -12,7 +12,7 @@
 // both sat inside the same widget subtree as the InteractiveViewer.
 // When the user dragged the canvas, gestures that the InteractiveViewer
 // did not claim could bubble up to the CustomScrollView and rubber-
-// band the entire sliver body — strip included — making the chrome
+// band the entire sliver body - strip included - making the chrome
 // feel attached to the canvas transform.
 //
 // The fix: pass NeverScrollableScrollPhysics to GlassScaffold AND
@@ -63,9 +63,8 @@ Future<void> _pumpPlaceholder(WidgetTester tester) async {
     ProviderScope(
       overrides: [
         localDeviceCanvasProvider.overrideWith((ref) async => fakeCanvas),
-        canvasCellsProvider(
-          1,
-        ).overrideWith((ref) async => const <CanvasCell>[]),
+        canvasCellsProvider(1)
+            .overrideWith((ref) async => const <CanvasCell>[]),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -84,7 +83,7 @@ Future<void> _pumpPlaceholder(WidgetTester tester) async {
 
 void main() {
   testWidgets(
-    'CanvasColorStrip is NOT a descendant of InteractiveViewer — the strip '
+    'CanvasColorStrip is NOT a descendant of InteractiveViewer - the strip '
     'is chrome and must never receive the canvas transform',
     (tester) async {
       await _pumpPlaceholder(tester);
@@ -100,7 +99,7 @@ void main() {
         findsNothing,
         reason:
             'If this expectation flips, the strip has been moved inside the '
-            "viewer's gesture/transform tree — it would visually pan, zoom, "
+            "viewer's gesture/transform tree - it would visually pan, zoom, "
             'or jitter with the canvas, failing S7.A interaction acceptance.',
       );
     },
@@ -128,7 +127,7 @@ void main() {
   );
 
   testWidgets(
-    'a drag inside the canvas viewport does NOT fire onTapPaint — the '
+    'a drag inside the canvas viewport does NOT fire onTapPaint - the '
     "InteractiveViewer's pan recognizer claims the gesture before the "
     "tap recogniser fires, so the user can pan without painting a streak",
     (tester) async {
@@ -144,7 +143,7 @@ void main() {
       // The fake canvas provider's cells list is invalidated on each
       // accepted paint. The provider override keeps cells empty. If a
       // drag had painted, the repository would have been touched, but
-      // we have no repository at all in this test — so this is a
+      // we have no repository at all in this test - so this is a
       // structural pin: the test would otherwise throw on null repo.
       // Nothing to assert beyond "no exception during the drag."
     },

@@ -11,10 +11,10 @@ import 'certificate_manager.dart';
 /// Builds TAK data packages (.zip) for ATAK/iTAK server connection import.
 ///
 /// The data package contains:
-/// - `manifest.xml` — ATAK data package manifest
-/// - `certs/truststore-root.p12` — CA certificate in PKCS#12 container
-/// - `certs/user.p12` — Client certificate and key in PKCS#12 container
-/// - `preference.pref` — Server connection preferences
+/// - `manifest.xml` - ATAK data package manifest
+/// - `certs/truststore-root.p12` - CA certificate in PKCS#12 container
+/// - `certs/user.p12` - Client certificate and key in PKCS#12 container
+/// - `preference.pref` - Server connection preferences
 class TakDataPackageBuilder {
   final TakCertificateManager _certManager;
 

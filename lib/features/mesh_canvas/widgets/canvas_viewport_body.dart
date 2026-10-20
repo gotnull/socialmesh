@@ -5,13 +5,13 @@
 // HUD overlays + bottom colour strip in a stable shell. Used by:
 //
 //   - [MeshCanvasOverviewScreen]'s Local tab (renders the Local
-//     Device Canvas inline — there is no card list / push step
+//     Device Canvas inline - there is no card list / push step
 //     because the local sandbox is singular).
 //   - [MeshCanvasViewerScreen] (renders ONE mesh canvas after the
 //     overview's channel list pushes the screen).
 //
 // IA invariant: the identity-chip overlay is shown ONLY for the
-// Local Device Canvas. Mesh canvases get NO identity chip — the
+// Local Device Canvas. Mesh canvases get NO identity chip - the
 // channel name lives in the app bar on [MeshCanvasViewerScreen],
 // and adding a redundant chip ("Local Device Canvas" leaking onto
 // a mesh canvas) was the AI-slop drift that triggered the S8 IA
@@ -113,7 +113,7 @@ class CanvasViewportBody extends ConsumerWidget {
       //      CanvasCadence.meshTapInterval per canvas.
       //   2. Queue full: at most 32 (softQueueCap) outstanding
       //      pending_op rows.
-      // Both checks are silent rejections — no enqueue, no cell
+      // Both checks are silent rejections - no enqueue, no cell
       // mutation, light haptic. The HUD pill is the user-facing
       // explanation. The periodic drain timer in
       // _PresenceLifecycleHost is the deadlock backstop for the
@@ -121,7 +121,7 @@ class CanvasViewportBody extends ConsumerWidget {
       // viewer, the next drain tick will work through the queue.
       // Capture cadence here BEFORE any await so the post-enqueue
       // `recordTap` call doesn't reach back through `ref` after the
-      // `await repo.enqueuePaint(...)` below — async-safety lint
+      // `await repo.enqueuePaint(...)` below - async-safety lint
       // forbids that pattern.
       final cadence = ref.read(meshCanvasPaintCadenceProvider);
       if (cadence.isCoolingDown(canvas.localId)) {
@@ -147,7 +147,7 @@ class CanvasViewportBody extends ConsumerWidget {
       }
       // Mesh Canvas: enqueue into `pending_op` AND apply to local
       // `cell` / `applied_op` in one transaction. The local node_num
-      // is the real author for mesh canvases — receivers use it for
+      // is the real author for mesh canvases - receivers use it for
       // LWW conflict resolution.
       final authorNodeNum = ref.read(myNodeNumProvider);
       if (authorNodeNum == null) {
@@ -172,7 +172,7 @@ class CanvasViewportBody extends ConsumerWidget {
         // not consume a cadence slot. Uses the `cadence` captured
         // before the await so we don't touch `ref` post-await.
         cadence.recordTap(canvas.localId);
-        // Kick the send coordinator — it respects both the canvas
+        // Kick the send coordinator - it respects both the canvas
         // governor and the SIP rate limiter, so worst case is the
         // row sits in pending_op until the next drain.
         final coordinator = await ref.read(
@@ -185,7 +185,7 @@ class CanvasViewportBody extends ConsumerWidget {
       }
     }
     if (accepted) {
-      // The toggle haptic is the lightest in the catalog — picked
+      // The toggle haptic is the lightest in the catalog - picked
       // because every cell tap fires one and a heavier pulse would
       // get tiring fast on a long paint session.
       ref.haptics.toggle();
@@ -219,7 +219,7 @@ class CanvasViewportBody extends ConsumerWidget {
     );
   }
 
-  /// Presence-emitter helper. Mesh-scope only — local canvas never
+  /// Presence-emitter helper. Mesh-scope only - local canvas never
   /// emits presence (P8). Resolves the coordinator and notifies
   /// painting; if the coordinator is not ready (link not up, etc.),
   /// fail silently.
@@ -278,7 +278,7 @@ class CanvasViewportBody extends ConsumerWidget {
 
     // Mesh-scope: pending cells render at reduced opacity so users
     // see which paints are still in flight on the wire. Local-scope
-    // viewers never enqueue so the set is structurally empty —
+    // viewers never enqueue so the set is structurally empty -
     // gated upstream by passing `const <int>{}` for the local case.
     final pendingCells = canvas.scope == CanvasScope.mesh
         ? (ref
@@ -309,7 +309,7 @@ class CanvasViewportBody extends ConsumerWidget {
     const surfaceRing = Color(0xCCAEB3BD);
 
     // Identity chip is intentionally Local-only. Mesh canvases carry
-    // their identity in the app bar title (the channel name) — adding
+    // their identity in the app bar title (the channel name) - adding
     // a chip would imply the mesh canvas is somehow "owned by Local",
     // which it isn't.
     final showLocalIdentityChip = canvas.scope == CanvasScope.local;
@@ -317,7 +317,7 @@ class CanvasViewportBody extends ConsumerWidget {
 
     final column = Column(
       children: [
-        // Canvas vitals header — mirrors the channel card's stat
+        // Canvas vitals header - mirrors the channel card's stat
         // density into the viewer surface. Anchored chrome (not a
         // floating chip), small-caps monospace, accent rail on the
         // left. Bridges the visual identity between the overview
@@ -339,7 +339,7 @@ class CanvasViewportBody extends ConsumerWidget {
               AppTheme.spacing16,
               AppTheme.spacing12,
             ),
-            // Canvas frame chrome — same gradient-border + depth-
+            // Canvas frame chrome - same gradient-border + depth-
             // blend as the Mesh tab channel cards (consistency
             // across the feature). Accent presence is the bridge
             // between the channel card and the live board.
@@ -430,7 +430,7 @@ class CanvasViewportBody extends ConsumerWidget {
                       // frame, mirroring the presence strip on the
                       // left. Hidden when severity is idle (zero
                       // pending paints, no cooling). Mesh-scope only
-                      // — local canvas never enqueues so the HUD
+                      // - local canvas never enqueues so the HUD
                       // would be structurally meaningless.
                       if (canvas.scope == CanvasScope.mesh)
                         Positioned(
@@ -440,7 +440,7 @@ class CanvasViewportBody extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Hydration pill on top — surfaces the
+                              // Hydration pill on top - surfaces the
                               // peer-discovery + tile-sync state that
                               // CanvasSyncCoordinator drives. Hidden
                               // when idle (zero footprint on the
@@ -456,7 +456,7 @@ class CanvasViewportBody extends ConsumerWidget {
                           ),
                         ),
                       // Atmospheric "first paint wakes the board"
-                      // prompt — center of the canvas frame, visible
+                      // prompt - center of the canvas frame, visible
                       // only while there are zero painted cells.
                       // Disappears the moment a real cell lands.
                       // IgnorePointer so the tap goes through to the
@@ -470,7 +470,7 @@ class CanvasViewportBody extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      // (Floating gesture-hint chip strip removed —
+                      // (Floating gesture-hint chip strip removed -
                       // four ambient chips at varying positions read
                       // as clutter, not affordance. The app bar (i)
                       // icon + empty-canvas prompt + help sheet are
@@ -497,7 +497,7 @@ class CanvasViewportBody extends ConsumerWidget {
             ),
           ),
         ),
-        // CanvasColorStrip is a SIBLING of Expanded — chrome, NOT
+        // CanvasColorStrip is a SIBLING of Expanded - chrome, NOT
         // under InteractiveViewer. The strip MUST stay perfectly
         // still during pan / pinch / zoom; regression-pinned by
         // canvas_strip_chrome_containment_test.
@@ -514,7 +514,7 @@ class CanvasViewportBody extends ConsumerWidget {
 
     // Wrap the column in the presence lifecycle host for mesh
     // canvases. Wrapping (rather than mounting inside the Stack)
-    // keeps the host OUT of the canvas hit-test path — even
+    // keeps the host OUT of the canvas hit-test path - even
     // a 0-size Stack child can subtly disrupt InteractiveViewer
     // gesture routing, which broke S8 paint dispatch tests during
     // P5 bring-up.
@@ -538,7 +538,7 @@ class CanvasViewportBody extends ConsumerWidget {
 ///
 /// Renders [child] unchanged. By WRAPPING the viewer column instead
 /// of mounting as a separate Stack child, we keep this host out of
-/// the canvas hit-test path — early P5 bring-up showed that even a
+/// the canvas hit-test path - early P5 bring-up showed that even a
 /// 0-size sibling in the canvas Stack can subtly disrupt the
 /// InteractiveViewer's tap routing.
 class _PresenceLifecycleHost extends ConsumerStatefulWidget {
@@ -601,7 +601,7 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
       // Immediately kick the send coordinator on mount so any stale
       // `pending_op` rows left over from a prior session start
       // draining. Then schedule a 5 s periodic so the queue keeps
-      // moving while the user is on this canvas — even if they
+      // moving while the user is on this canvas - even if they
       // never paint another cell.
       if (!mounted) return;
       _kickDrain();
@@ -635,7 +635,7 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
     }
     // Resume any sender-side raw-band jobs whose subsequent bands
     // were governor-deferred on the prior tick. CANVAS_SYNC_V0_1
-    // §11.2 — bands ship across drain cycles instead of being
+    // §11.2 - bands ship across drain cycles instead of being
     // silently dropped after band 0.
     final asyncSync = ref.read(canvasSyncCoordinatorProvider);
     final syncCoord = asyncSync.asData?.value;
@@ -674,7 +674,7 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
 /// painted cells. /r/place principle 5 ("dormant space implies
 /// opportunity") + principle 18 ("empty states must feel latent,
 /// not dead"). Mounted as an IgnorePointer child of the canvas
-/// Stack so it never blocks a tap — the first tap drops a pixel
+/// Stack so it never blocks a tap - the first tap drops a pixel
 /// and the prompt vanishes by data.
 ///
 /// Mesh-scope copy is hydration-aware: while the sync coordinator is
@@ -773,7 +773,7 @@ class _CanvasEmptyPrompt extends ConsumerWidget {
 ///
 /// Composition (left to right):
 ///   - Scope rail: a thin accent bar + uppercase scope badge
-///     (MESH CANVAS / LOCAL SANDBOX). Identity tier — answers
+///     (MESH CANVAS / LOCAL SANDBOX). Identity tier - answers
 ///     "what surface am I on?" without duplicating the app bar's
 ///     channel name.
 ///   - Dimensions stat: "128 × 128" in tertiary monospace.
@@ -786,7 +786,7 @@ class _CanvasEmptyPrompt extends ConsumerWidget {
 ///     the strip never looks broken on an idle canvas.
 ///
 /// All copy is uppercased small-caps JetBrainsMono, letter-spaced
-/// for status-line readability. Anchored chrome — never floats.
+/// for status-line readability. Anchored chrome - never floats.
 class _CanvasVitalsBar extends ConsumerWidget {
   final CanvasSummary canvas;
   final int paintedCount;

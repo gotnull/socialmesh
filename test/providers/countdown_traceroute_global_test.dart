@@ -48,7 +48,7 @@ void main() {
         targetNodeNum: 111,
       );
 
-      // The cooldown is now globally active — the firmware rate-limits
+      // The cooldown is now globally active - the firmware rate-limits
       // traceroute device-wide, so every button must see it regardless of
       // which node it represents.
       expect(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Field Note Generator — deterministic single-line observations.
+// Field Note Generator - deterministic single-line observations.
 //
 // Generates a short, evocative field-journal-style note for a node
 // based on its identity seed (nodeNum), primary trait, and history.
@@ -43,9 +43,9 @@ class FieldNoteGenerator {
   /// The note is a single line of text suitable for display in the
   /// NodeDex detail header. It reads like a field journal observation.
   ///
-  /// [entry] — the NodeDex entry with encounter history.
-  /// [trait] — the primary inferred trait for template selection.
-  /// [l10n] — localization strings for the current locale.
+  /// [entry] - the NodeDex entry with encounter history.
+  /// [trait] - the primary inferred trait for template selection.
+  /// [l10n] - localization strings for the current locale.
   ///
   /// Returns a non-empty string. Always deterministic.
   static String generate({

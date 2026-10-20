@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Widget Sync Providers — Riverpod providers for widget Cloud Sync infrastructure.
+// Widget Sync Providers - Riverpod providers for widget Cloud Sync infrastructure.
 //
 // Provider hierarchy:
 //
 // widgetDatabaseProvider (Provider)
 //   └── widgetSqliteStoreProvider (FutureProvider)
-//         ├── widgetSyncServiceProvider (Provider) — enabled by entitlement
-//         └── widgetStorageServiceProvider (FutureProvider) — initialized service
+//         ├── widgetSyncServiceProvider (Provider) - enabled by entitlement
+//         └── widgetStorageServiceProvider (FutureProvider) - initialized service
 //
 // The store is initialized once and shared across all providers.
 // Screens should use [widgetStorageServiceProvider] instead of creating
@@ -228,7 +228,7 @@ class WidgetBuilderListNotifier extends AsyncNotifier<List<WidgetSchema>> {
     AppLogging.widgets(
       'build() entered (notifier id=${identityHashCode(this)})',
     );
-    // Sync pull callback refreshes in-place — no flip to loading, so the UI
+    // Sync pull callback refreshes in-place - no flip to loading, so the UI
     // does not blink to Quick Start templates while the new data arrives.
     ref.listen<WidgetSyncService?>(widgetSyncServiceProvider, (prev, next) {
       AppLogging.widgets(

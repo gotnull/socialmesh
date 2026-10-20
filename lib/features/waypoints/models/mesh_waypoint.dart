@@ -4,14 +4,14 @@ import '../../../services/protocol/protocol_service.dart'
     show MeshWaypointEvent;
 import '../../../utils/text_sanitizer.dart' show isValidUnicodeScalar;
 
-// A shared Meshtastic waypoint (POI) — the in-app representation of the
+// A shared Meshtastic waypoint (POI) - the in-app representation of the
 // firmware `Waypoint` proto (PortNum WAYPOINT_APP). Coordinates are stored as
 // decimal degrees (the wire carries 1e7-scaled sfixed32, converted at the
 // protocol boundary). The feature layer never touches the generated proto; the
 // protocol layer hands us a plain [MeshWaypointEvent] and accepts plain fields
 // on send.
 class MeshWaypoint {
-  // Wire `id` (u32). Stable across edits — the upsert key.
+  // Wire `id` (u32). Stable across edits - the upsert key.
   final int id;
 
   // Decimal degrees (= latitude_i / 1e7, longitude_i / 1e7).
@@ -20,7 +20,7 @@ class MeshWaypoint {
 
   // Expiry as Unix epoch seconds. 0 = never expires. 1 is the firmware
   // "delete for everyone" sentinel (a broadcast forcing immediate expiry),
-  // never a real expiry time — see [isExpired] / [hasExpiry].
+  // never a real expiry time - see [isExpired] / [hasExpiry].
   final int expire;
 
   // Node number permitted to edit. 0 = open to any mesh member; otherwise
@@ -46,7 +46,7 @@ class MeshWaypoint {
   // Local receipt (or creation) time.
   final DateTime receivedAt;
 
-  // True when [sourceNodeNum] is our node — drives "delete for everyone" and
+  // True when [sourceNodeNum] is our node - drives "delete for everyone" and
   // edit affordances.
   final bool isMine;
 

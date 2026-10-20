@@ -183,7 +183,7 @@ abstract final class MeshServiceSchemas {
       MeshServiceType.poll => poll,
       MeshServiceType.signal => signal,
       MeshServiceType.sensor => sensor,
-      // Games have no generic schema surface — the GameDetailScreen
+      // Games have no generic schema surface - the GameDetailScreen
       // owns rendering; returning null falls through to the bespoke
       // game UI instead of the generic service renderer.
       MeshServiceType.game => null,

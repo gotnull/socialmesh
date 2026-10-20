@@ -42,7 +42,7 @@ enum MeshCorePathOverlaySource {
 
   /// D42-B-A: inferred from the newest valid app-local evidence
   /// (D39 saved entries + persisted inbound message paths). Never
-  /// auto-activated — the user explicitly opted in via the Contact
+  /// auto-activated - the user explicitly opted in via the Contact
   /// Detail "Show inferred path" action.
   inferred,
 }
@@ -331,7 +331,7 @@ class MeshCorePathOverlay {
 /// Provenance of an inferred path candidate. Surfaced from the pure
 /// helper so tests (and any future diagnostics surface) can pin which
 /// evidence source the winning bytes came from. Not rendered in the
-/// UI in this slice — the map only consumes the resulting overlay.
+/// UI in this slice - the map only consumes the resulting overlay.
 enum MeshCoreInferenceEvidence {
   /// The winning bytes came from a D39 saved-path history entry.
   savedHistory,
@@ -342,7 +342,7 @@ enum MeshCoreInferenceEvidence {
 }
 
 /// Pure return shape of [inferRecentPathBytes]. Carries the winning
-/// hop bytes plus the timestamp + evidence source that made it win —
+/// hop bytes plus the timestamp + evidence source that made it win -
 /// enough for tests to assert provenance without rebuilding an
 /// overlay.
 class MeshCoreInferredPath {
@@ -359,7 +359,7 @@ class MeshCoreInferredPath {
   @override
   String toString() =>
       'MeshCoreInferredPath(hops=${hopBytes.length}, '
-      // lint-allow: hardcoded-string — diagnostic only, never user-visible.
+      // lint-allow: hardcoded-string - diagnostic only, never user-visible.
       'asOf=$asOf, evidence=${evidence.name})';
 }
 

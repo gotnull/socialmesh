@@ -41,9 +41,8 @@ void main() {
       final events = StreamController<MeshBeaconEvent>.broadcast();
       final protocol = _Protocol();
       when(() => protocol.recentMeshBeacons).thenAnswer((_) => List.of(recent));
-      when(
-        () => protocol.meshBeaconEventStream,
-      ).thenAnswer((_) => events.stream);
+      when(() => protocol.meshBeaconEventStream)
+          .thenAnswer((_) => events.stream);
       final container = ProviderContainer(
         overrides: [
           protocolServiceProvider.overrideWithValue(protocol),

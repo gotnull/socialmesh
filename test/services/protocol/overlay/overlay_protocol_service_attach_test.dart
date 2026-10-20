@@ -16,7 +16,7 @@
 /// `overlay_providers_lifecycle_test.dart`. Driving raw SIP bytes
 /// through the real `ProtocolService._handleSipPacket` from a unit
 /// test would require adding a debug helper, which would violate the
-/// P2 "thin integration only" rule — so we stay within the public
+/// P2 "thin integration only" rule - so we stay within the public
 /// attach API here.
 library;
 

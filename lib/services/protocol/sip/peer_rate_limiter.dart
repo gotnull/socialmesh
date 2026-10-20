@@ -13,27 +13,27 @@
 ///   2. peer capability gate      (existing)
 ///   3. session state gate        (existing)
 ///   4. per-peer rate gate        ← THIS layer
-///   5. global SipRateLimiter     (existing — authoritative airtime)
+///   5. global SipRateLimiter     (existing - authoritative airtime)
 ///   6. send
 ///
 /// The per-peer limiter NEVER bypasses the global limiter. The global
 /// is the spec-bound airtime authority.
 ///
 /// Policy (T+S brief baseline, relaxed once for real-conversation
-/// pacing — the original 6/60s text caps pinched normal chat threads
+/// pacing - the original 6/60s text caps pinched normal chat threads
 /// where users naturally burst 4-6 messages while finishing a
 /// thought):
 ///   - text DM:    12 / 60s, burst 6
-///   - sketch:     3  / 60s, burst 2   (small bump — ink eats real
+///   - sketch:     3  / 60s, burst 2   (small bump - ink eats real
 ///                                      airtime, can't be too lenient)
 ///   - reaction:   12 / 60s, burst 6
 ///   - play:       12 / 60s, burst 6
 ///   - signal:     6  / 60s, burst 3
-///   - typing:     not gated here — already 1/10s internally in
+///   - typing:     not gated here - already 1/10s internally in
 ///                                   `SipDmManager.buildTypingIndicator`.
 ///
 /// Headroom against the global SIP airtime ceiling (1024 bytes/60s):
-/// 12 text × ~50B = 600B — leaves ~400B/60s for reactions, sketches,
+/// 12 text × ~50B = 600B - leaves ~400B/60s for reactions, sketches,
 /// and protocol overhead, so the per-peer caps still stay strictly
 /// below the global cap and the global remains authoritative.
 ///
@@ -62,7 +62,7 @@ class PeerRatePolicy {
   final int sketchPerWindow;
 
   /// Burst capacity for sketches. Kept tight (2) relative to text
-  /// because each sketch frame is much larger on the wire — see
+  /// because each sketch frame is much larger on the wire - see
   /// file header for the airtime-headroom math.
   final int sketchBurst;
 
@@ -73,7 +73,7 @@ class PeerRatePolicy {
   final int reactionBurst;
 
   /// Sustained allowance per [windowMs] for SIP Play game actions
-  /// (offer/accept/decline/move/resign). Same shape as text DMs —
+  /// (offer/accept/decline/move/resign). Same shape as text DMs -
   /// a move is a single tap so users can't naturally exceed text
   /// rates, but we keep a dedicated bucket so a flurry of moves
   /// doesn't starve text DM and vice versa.
@@ -85,7 +85,7 @@ class PeerRatePolicy {
   /// Sustained allowance per [windowMs] for SIP Signal sends
   /// (musical phrase + Morse). Tighter than text/play because
   /// signal payloads are slightly larger AND each send produces
-  /// audible output on the receiver — bursts of multiple signals
+  /// audible output on the receiver - bursts of multiple signals
   /// in seconds would feel spammy.
   final int signalPerWindow;
 
@@ -163,7 +163,7 @@ class _Bucket {
 
 /// Per-peer × per-kind token-bucket limiter.
 ///
-/// Thread model: same as `SipRateLimiter` — Dart isolate-local, no
+/// Thread model: same as `SipRateLimiter` - Dart isolate-local, no
 /// concurrency. All methods are sync.
 class PeerRateLimiter {
   final PeerRatePolicy policy;
@@ -182,7 +182,7 @@ class PeerRateLimiter {
   }) : _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   /// True when [peerNodeId] is allowed to send [kind] right now.
-  /// This is a non-mutating check — call [recordSend] after the gate
+  /// This is a non-mutating check - call [recordSend] after the gate
   /// passes to actually deduct a token.
   bool canSend(int peerNodeId, PeerRateKind kind) {
     final bucket = _refilledBucket(peerNodeId, kind);
@@ -191,7 +191,7 @@ class PeerRateLimiter {
 
   /// Deduct one token for [peerNodeId] × [kind]. Caller MUST have
   /// observed `canSend == true` first; this method does NOT re-check
-  /// (that's the SipRateLimiter pattern too — `canSend` then
+  /// (that's the SipRateLimiter pattern too - `canSend` then
   /// `recordSend`).
   void recordSend(int peerNodeId, PeerRateKind kind) {
     final bucket = _refilledBucket(peerNodeId, kind);
@@ -202,7 +202,7 @@ class PeerRateLimiter {
     bucket.lastActivityMs = _clock();
   }
 
-  /// Diagnostic — count of tracked peer × kind buckets.
+  /// Diagnostic - count of tracked peer × kind buckets.
   int get bucketCount {
     var n = 0;
     for (final m in _buckets.values) {
@@ -211,7 +211,7 @@ class PeerRateLimiter {
     return n;
   }
 
-  /// Diagnostic — current token count for a peer × kind. Returns the
+  /// Diagnostic - current token count for a peer × kind. Returns the
   /// capacity when no bucket has been allocated yet.
   double tokensFor(int peerNodeId, PeerRateKind kind) {
     final m = _buckets[peerNodeId];
@@ -234,7 +234,7 @@ class PeerRateLimiter {
 
   /// Drop buckets that have been idle longer than
   /// [PeerRatePolicy.idleEvictionMs]. Caller should invoke this
-  /// periodically (or on every `canSend`) — to keep things simple,
+  /// periodically (or on every `canSend`) - to keep things simple,
   /// we run it inline on every `_refilledBucket` call.
   void _evictIdleLocked(int now) {
     final toRemove = <(int, PeerRateKind)>[];

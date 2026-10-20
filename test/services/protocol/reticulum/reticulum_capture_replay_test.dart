@@ -10,7 +10,7 @@ import 'package:socialmesh/services/protocol/reticulum/reticulum_capture_writer.
 import 'package:socialmesh/services/protocol/reticulum/reticulum_fragment_event.dart';
 
 void main() {
-  group('ReticulumCaptureReplay — decodeAll', () {
+  group('ReticulumCaptureReplay - decodeAll', () {
     test('throws UnsupportedCaptureVersion on missing magic', () {
       final junk = Uint8List.fromList([0, 1, 2, 3, 4]);
       expect(
@@ -102,13 +102,13 @@ void main() {
       final builder = BytesBuilder()
         ..add(ReticulumCaptureWriter.magicHeader())
         ..add(ReticulumCaptureWriter.encodeRecord(event))
-        ..add(Uint8List(10)); // partial header — not a full record
+        ..add(Uint8List(10)); // partial header - not a full record
       final decoded = ReticulumCaptureReplay.decodeAll(builder.toBytes());
       expect(decoded, hasLength(1));
     });
   });
 
-  group('ReticulumCaptureReplay — step mode', () {
+  group('ReticulumCaptureReplay - step mode', () {
     late Directory tempDir;
     late File captureFile;
 
@@ -173,7 +173,7 @@ void main() {
       );
       addTearDown(replay.stop);
       await replay.load();
-      // 5 records — first 4 returns true (more remaining), 5th returns false.
+      // 5 records - first 4 returns true (more remaining), 5th returns false.
       for (var i = 0; i < 4; i++) {
         expect(replay.stepOne(), isTrue, reason: 'after step ${i + 1}');
       }
@@ -192,7 +192,7 @@ void main() {
     });
   });
 
-  group('ReticulumCaptureReplay — accelerated mode', () {
+  group('ReticulumCaptureReplay - accelerated mode', () {
     late Directory tempDir;
     late File captureFile;
 

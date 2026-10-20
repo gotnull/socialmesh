@@ -7,7 +7,7 @@
 //
 // Without the gate bypass + `_routingProtocol` helper introduced in
 // Slice E, a `protocolFilter=meshcore` scheduled automation would
-// never fire — the gate would reject because the scheduled event
+// never fire - the gate would reject because the scheduled event
 // carries the default `protocol=meshtastic` placeholder. Slice E
 // makes the gate skip the protocol check for scheduled events and
 // derives the dispatch protocol from the automation's own filter
@@ -138,54 +138,48 @@ void main() {
 
         // The action's protocol arg comes from the automation's
         // filter (not from event.protocol which defaults to
-        // meshtastic) — that's the Slice E override.
+        // meshtastic) - that's the Slice E override.
         expect(sentMessages.first.$3, TriggerProtocol.meshcore);
       },
     );
 
-    test(
-      'meshtastic-pinned scheduled action routes with TriggerProtocol.meshtastic',
-      () async {
-        repo.add(
-          _scheduledAutomation(
-            id: 'sched-mt',
-            filter: TriggerProtocolFilter.meshtastic,
-          ),
-        );
+    test('meshtastic-pinned scheduled action routes with TriggerProtocol.meshtastic', () async {
+      repo.add(
+        _scheduledAutomation(
+          id: 'sched-mt',
+          filter: TriggerProtocolFilter.meshtastic,
+        ),
+      );
 
-        final event = AutomationEvent(
-          type: TriggerType.scheduled,
-          scheduleId: 'sched-mt',
-          slotKey: 'daily:2026-05-20T09:00+10:00',
-        );
-        await engine.executeAutomationManually(repo.automations.first, event);
+      final event = AutomationEvent(
+        type: TriggerType.scheduled,
+        scheduleId: 'sched-mt',
+        slotKey: 'daily:2026-05-20T09:00+10:00',
+      );
+      await engine.executeAutomationManually(repo.automations.first, event);
 
-        expect(sentMessages.first.$3, TriggerProtocol.meshtastic);
-      },
-    );
+      expect(sentMessages.first.$3, TriggerProtocol.meshtastic);
+    });
 
-    test(
-      'any-filter scheduled action keeps the event.protocol default (back-compat)',
-      () async {
-        repo.add(
-          _scheduledAutomation(
-            id: 'sched-any',
-            filter: TriggerProtocolFilter.any,
-          ),
-        );
+    test('any-filter scheduled action keeps the event.protocol default (back-compat)', () async {
+      repo.add(
+        _scheduledAutomation(
+          id: 'sched-any',
+          filter: TriggerProtocolFilter.any,
+        ),
+      );
 
-        final event = AutomationEvent(
-          type: TriggerType.scheduled,
-          scheduleId: 'sched-any',
-          slotKey: 'daily:2026-05-20T09:00+10:00',
-        );
-        await engine.executeAutomationManually(repo.automations.first, event);
+      final event = AutomationEvent(
+        type: TriggerType.scheduled,
+        scheduleId: 'sched-any',
+        slotKey: 'daily:2026-05-20T09:00+10:00',
+      );
+      await engine.executeAutomationManually(repo.automations.first, event);
 
-        // any-filter falls through to event.protocol. The default
-        // (meshtastic) preserves legacy behaviour for scheduled
-        // automations created before Slice E.
-        expect(sentMessages.first.$3, TriggerProtocol.meshtastic);
-      },
-    );
+      // any-filter falls through to event.protocol. The default
+      // (meshtastic) preserves legacy behaviour for scheduled
+      // automations created before Slice E.
+      expect(sentMessages.first.$3, TriggerProtocol.meshtastic);
+    });
   });
 }

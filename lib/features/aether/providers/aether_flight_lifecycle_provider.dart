@@ -159,7 +159,7 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
       final shouldBeActive = _shouldBeActive(flight, now);
 
       if (shouldBeActive && !flight.isActive) {
-        // Flight should be active but isn't — activate it.
+        // Flight should be active but isn't - activate it.
         if (deactivatedIds.contains(flight.id)) {
           // We already deactivated this flight, don't re-activate.
           continue;
@@ -170,7 +170,7 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
           FlightLifecycleEvent(flight: flight, activated: true, timestamp: now),
         );
       } else if (!shouldBeActive && flight.isActive) {
-        // Flight should no longer be active — deactivate it.
+        // Flight should no longer be active - deactivate it.
         await _deactivateFlight(updater, flight);
         activatedIds = {...activatedIds}..remove(flight.id);
         deactivatedIds = {...deactivatedIds, flight.id};
@@ -203,10 +203,10 @@ class AetherFlightLifecycleNotifier extends Notifier<FlightLifecycleState> {
         flight.scheduledArrival ??
         flight.scheduledDeparture.add(_maxFlightDuration);
 
-    // Past arrival — no longer active.
+    // Past arrival - no longer active.
     if (now.isAfter(effectiveArrival)) return false;
 
-    // Between departure and arrival — should be active.
+    // Between departure and arrival - should be active.
     return true;
   }
 

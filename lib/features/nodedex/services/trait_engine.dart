@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Trait Engine — passive personality trait inference from real metrics.
+// Trait Engine - passive personality trait inference from real metrics.
 //
 // Traits are never user-editable. They are always derived from
 // observable data: encounter patterns, position history, uptime,
@@ -10,22 +10,22 @@
 // a NodeTrait classification.
 //
 // Trait hierarchy (evaluated in priority order):
-// 1. Relay — role is ROUTER or ROUTER_CLIENT with high throughput
-// 2. Wanderer — seen across multiple distinct positions or regions
-// 3. Sentinel — fixed position, long-lived, high encounter count
-// 4. Beacon — always active, very frequent encounters
-// 5. Ghost — rarely seen relative to age
-// 6. Courier — high message volume relative to encounters
-// 7. Anchor — persistent hub with many co-seen connections
-// 8. Drifter — irregular timing, unpredictable appearance pattern
-// 9. Unknown — insufficient data to classify
+// 1. Relay - role is ROUTER or ROUTER_CLIENT with high throughput
+// 2. Wanderer - seen across multiple distinct positions or regions
+// 3. Sentinel - fixed position, long-lived, high encounter count
+// 4. Beacon - always active, very frequent encounters
+// 5. Ghost - rarely seen relative to age
+// 6. Courier - high message volume relative to encounters
+// 7. Anchor - persistent hub with many co-seen connections
+// 8. Drifter - irregular timing, unpredictable appearance pattern
+// 9. Unknown - insufficient data to classify
 //
 // Each trait has a confidence score (0.0 to 1.0) so the UI can
 // optionally show how strongly a node matches its classification.
 //
 // The engine provides two APIs:
-// - infer() — returns a single primary + optional secondary (legacy)
-// - inferAll() — returns all scored traits with evidence lines
+// - infer() - returns a single primary + optional secondary (legacy)
+// - inferAll() - returns all scored traits with evidence lines
 
 import 'package:socialmesh/l10n/app_localizations.dart';
 
@@ -149,16 +149,16 @@ class TraitEngine {
   };
 
   // ---------------------------------------------------------------------------
-  // Public API — convenience methods (use DateTime.now() internally)
+  // Public API - convenience methods (use DateTime.now() internally)
   // ---------------------------------------------------------------------------
 
   /// Infer the trait for a node.
   ///
-  /// [entry] — the NodeDex encounter history for this node.
-  /// [role] — the node's configured role (from MeshNode.role), if known.
-  /// [uptimeSeconds] — the node's reported uptime, if known.
-  /// [channelUtilization] — the node's channel utilization %, if known.
-  /// [airUtilTx] — the node's airtime TX utilization %, if known.
+  /// [entry] - the NodeDex encounter history for this node.
+  /// [role] - the node's configured role (from MeshNode.role), if known.
+  /// [uptimeSeconds] - the node's reported uptime, if known.
+  /// [channelUtilization] - the node's channel utilization %, if known.
+  /// [airUtilTx] - the node's airtime TX utilization %, if known.
   ///
   /// Returns a TraitResult with the primary trait and confidence.
   static TraitResult infer({
@@ -230,7 +230,7 @@ class TraitEngine {
   }
 
   // ---------------------------------------------------------------------------
-  // Public API — deterministic *At variants (accept explicit DateTime)
+  // Public API - deterministic *At variants (accept explicit DateTime)
   // ---------------------------------------------------------------------------
 
   /// Infer the trait at a specific reference time.
@@ -244,7 +244,7 @@ class TraitEngine {
     double? channelUtilization,
     double? airUtilTx,
   }) {
-    // Not enough data — return Unknown.
+    // Not enough data - return Unknown.
     if (!_hasEnoughData(entry, now)) {
       return const TraitResult(primary: NodeTrait.unknown, confidence: 1.0);
     }
@@ -322,9 +322,7 @@ class TraitEngine {
           confidence: 1.0,
           evidence: [
             TraitEvidence(
-              observation:
-                  l10n?.nodedexEvidenceInsufficientData ??
-                  'Insufficient data to classify', // lint-allow: hardcoded-string
+              observation: l10n?.nodedexEvidenceInsufficientData ?? 'Insufficient data to classify', // lint-allow: hardcoded-string
               weight: 1.0,
             ),
           ],
@@ -431,7 +429,7 @@ class TraitEngine {
       score += 0.2 * (airUtilTx / 30.0).clamp(0.0, 1.0);
     }
 
-    // High encounter count boosts relay score slightly — relays are
+    // High encounter count boosts relay score slightly - relays are
     // seen frequently because they are always on.
     if (entry.encounterCount > 20) {
       score += 0.1;
@@ -598,7 +596,7 @@ class TraitEngine {
       score += 0.3 * (entry.messageCount / 50.0).clamp(0.0, 1.0);
     }
 
-    // Mobility + messages — a true courier moves AND carries data.
+    // Mobility + messages - a true courier moves AND carries data.
     if (entry.distinctPositionCount >= 2 && entry.messageCount >= 5) {
       score += 0.2;
     }
@@ -621,17 +619,17 @@ class TraitEngine {
       score += 0.2 * (entry.historicalCoSeenCount / 5.0).clamp(0.0, 1.0);
     }
 
-    // Long tenure supports Anchor — hubs are persistent.
+    // Long tenure supports Anchor - hubs are persistent.
     if (age.inDays >= 7) {
       score += 0.2 * (age.inDays / 30.0).clamp(0.0, 1.0);
     }
 
-    // Low position diversity — anchors tend to stay put.
+    // Low position diversity - anchors tend to stay put.
     if (entry.distinctPositionCount <= 1) {
       score += 0.15;
     }
 
-    // High encounter count — anchors are reliably present.
+    // High encounter count - anchors are reliably present.
     if (entry.encounterCount >= 15) {
       score += 0.15 * (entry.encounterCount / 40.0).clamp(0.0, 1.0);
     }
@@ -641,7 +639,7 @@ class TraitEngine {
 
   /// Score Drifter trait.
   ///
-  /// High score when the node appears irregularly — not ghostly
+  /// High score when the node appears irregularly - not ghostly
   /// (which implies rarity) but with unpredictable timing between
   /// encounters.
   static double _scoreDrifter(NodeDexEntry entry, DateTime now) {
@@ -683,7 +681,7 @@ class TraitEngine {
     // Secondary signals only amplify when irregular timing is present.
     // A node with perfectly regular timing should never be a "drifter."
     if (score > 0) {
-      // Moderate encounter rate — not a ghost, but not a beacon either.
+      // Moderate encounter rate - not a ghost, but not a beacon either.
       final encounterRate = _encounterRatePerDay(entry, now);
       if (encounterRate > _ghostEncounterRateThreshold &&
           encounterRate < _beaconEncounterRateThreshold) {
@@ -846,9 +844,7 @@ class TraitEngine {
       score += 0.3;
       evidence.add(
         TraitEvidence(
-          observation:
-              l10n?.nodedexEvidenceFixedPosition ??
-              'Fixed position (single location)', // lint-allow: hardcoded-string
+          observation: l10n?.nodedexEvidenceFixedPosition ?? 'Fixed position (single location)', // lint-allow: hardcoded-string
           weight: 0.3,
         ),
       );

@@ -184,7 +184,7 @@ void main() {
 
       // Now simulate the same message arriving via the device protocol path.
       // The protocol creates messages with Uuid().v4() ids and a fresh
-      // packetId — both differ from the push copy.
+      // packetId - both differ from the push copy.
       final deviceMessage = Message(
         // id defaults to a new UUID (different from pushMessage.id)
         from: 10,
@@ -229,7 +229,7 @@ void main() {
       final t1 = DateTime.now().subtract(const Duration(seconds: 30));
       final t2 = DateTime.now();
 
-      // Message A arrives first (older timestamp — out of order).
+      // Message A arrives first (older timestamp - out of order).
       final msgA = Message(
         from: 10,
         to: 20,
@@ -268,7 +268,7 @@ void main() {
       expect(replayA.id, isNot(equals(msgA.id)));
       notifier.addMessage(replayA);
 
-      // Still only two messages — the replay was rejected.
+      // Still only two messages - the replay was rejected.
       final state2 = h.container.read(messagesProvider);
       expect(state2.length, 2);
       expect(state2.where((m) => m.text == 'Message A').length, 1);
@@ -309,7 +309,7 @@ void main() {
       notifier.addMessage(msg1);
       notifier.addMessage(msg2);
 
-      // Both should exist — the content-dedupe window is 60s but these are
+      // Both should exist - the content-dedupe window is 60s but these are
       // 5 minutes apart so they are genuinely distinct.
       final state = h.container.read(messagesProvider);
       expect(state.length, 2);
@@ -350,7 +350,7 @@ void main() {
       notifier.addMessage(msg1);
       notifier.addMessage(msg2);
 
-      // Should be deduped — channel null == channel 0.
+      // Should be deduped - channel null == channel 0.
       expect(h.container.read(messagesProvider).length, 1);
     },
   );
@@ -576,7 +576,7 @@ void main() {
       received: true,
       packetId: 4242,
     );
-    // Default Message ids are fresh UUIDs — must genuinely differ for
+    // Default Message ids are fresh UUIDs - must genuinely differ for
     // this to exercise the post-id-dedup race.
     expect(foreground.id, isNot(equals(backgroundCopy.id)));
 
@@ -696,7 +696,7 @@ void main() {
     // foreground and background copies disagree on channel for the same
     // packetId, that disagreement is itself a sign that one of them was
     // constructed from a partial payload. Counting both is the
-    // conservative choice — better to over-count than to suppress an
+    // conservative choice - better to over-count than to suppress an
     // observation we cannot prove is a duplicate.
     final h = await _createTestHarness();
     addTearDown(h.container.dispose);

@@ -4,7 +4,7 @@
 // Operations domain models.
 //
 // SocialMesh Operations are time-bound or evergreen passive participation
-// objectives. They derive progress from observed app state only — they
+// objectives. They derive progress from observed app state only - they
 // never send packets, touch transports, or generate RF traffic.
 //
 // This file owns the data contracts. The catalog lives in
@@ -16,19 +16,19 @@ import 'dart:convert';
 
 /// Coarse classification used by the UI to group operations.
 enum OperationCategory {
-  /// Discovery — encounter and discover nodes on the mesh.
+  /// Discovery - encounter and discover nodes on the mesh.
   discovery,
 
-  /// Connectivity — traceroutes, multi-hop paths, link health.
+  /// Connectivity - traceroutes, multi-hop paths, link health.
   connectivity,
 
-  /// Coverage — geographic and signal reach (deferred in v1).
+  /// Coverage - geographic and signal reach (deferred in v1).
   coverage,
 
-  /// Endurance — long-running active participation (deferred in v1).
+  /// Endurance - long-running active participation (deferred in v1).
   endurance,
 
-  /// Community — event and seasonal operations (future).
+  /// Community - event and seasonal operations (future).
   community,
 }
 
@@ -54,7 +54,7 @@ enum OperationRewardKind { badge, patch, sigilTrait, themeToken, title }
 
 /// Lifecycle state for an operation derived from its persisted progress.
 enum OperationCompletionState {
-  /// No persisted progress yet — counters at zero.
+  /// No persisted progress yet - counters at zero.
   notStarted,
 
   /// At least one objective has progress > 0 but the operation is not

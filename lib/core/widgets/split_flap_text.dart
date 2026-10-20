@@ -3,6 +3,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+
 import '../theme.dart';
 
 /// Default brand gradient colors (used when no accent color specified)

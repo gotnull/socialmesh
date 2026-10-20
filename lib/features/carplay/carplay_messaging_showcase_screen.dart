@@ -17,7 +17,7 @@ import '../../services/haptic_service.dart';
 
 /// A polished, animated feature reveal for CarPlay mesh messaging, opened from
 /// the What's New registry (`/carplay`). Pure announcement UI: it links to no
-/// live CarPlay wiring, it just showcases the capability. Accurate by design —
+/// live CarPlay wiring, it just showcases the capability. Accurate by design -
 /// SiriKit-driven short-form messaging + the CarPlay channels/DMs list, framed
 /// around Apple's CarPlay communication model (not VoIP, not a custom
 /// dashboard).
@@ -149,11 +149,11 @@ class _CarPlayMessagingShowcaseScreenState
   }
 }
 
-// Accent for the whole surface — CarPlay blue (named constant lives in theme).
+// Accent for the whole surface - CarPlay blue (named constant lives in theme).
 const Color _kCarPlayAccent = AppTheme.carPlayBlue;
 
 // ===========================================================================
-// Entrance reveal — staggered fade + rise driven by a shared controller.
+// Entrance reveal - staggered fade + rise driven by a shared controller.
 // ===========================================================================
 
 class _Reveal extends StatelessWidget {
@@ -194,7 +194,7 @@ class _Reveal extends StatelessWidget {
 }
 
 // ===========================================================================
-// Hero panel — pulsing CarPlay glyph over a soft radial glow.
+// Hero panel - pulsing CarPlay glyph over a soft radial glow.
 // ===========================================================================
 
 class _HeroPanel extends StatelessWidget {
@@ -330,7 +330,7 @@ class _Pill extends StatelessWidget {
 }
 
 // ===========================================================================
-// Flow rail — four stages connected by a line with a travelling pulse.
+// Flow rail - four stages connected by a line with a travelling pulse.
 // ===========================================================================
 
 class _FlowRail extends StatelessWidget {
@@ -561,14 +561,14 @@ class _FeatureCard extends StatelessWidget {
 }
 
 // ===========================================================================
-// How it works — SiriKit intent chips.
+// How it works - SiriKit intent chips.
 // ===========================================================================
 
 class _HowItWorks extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    // Intent names are Apple API identifiers — verbatim, never localized.
+    // Intent names are Apple API identifiers - verbatim, never localized.
     const intents = [
       'INSendMessageIntent',
       'INSearchForMessagesIntent',
@@ -630,7 +630,7 @@ class _HowItWorks extends StatelessWidget {
 }
 
 // ===========================================================================
-// Reality check — what this is NOT.
+// Reality check - what this is NOT.
 // ===========================================================================
 
 class _RealityCheck extends StatelessWidget {

@@ -286,7 +286,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(state.currentFrontIndex, 1);
 
-      // Shrink items to 2 — front index 1 is still valid (< 2).
+      // Shrink items to 2 - front index 1 is still valid (< 2).
       await tester.pumpWidget(
         _wrap(
           AnimatedAvatarStack(
@@ -323,7 +323,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(AnimatedAvatarStack(items: _items(6), maxVisible: 3)),
       );
-      // Default showOverflowCount is false — no "+N" text.
+      // Default showOverflowCount is false - no "+N" text.
       expect(find.text('+3'), findsNothing);
     });
 
@@ -371,7 +371,7 @@ void main() {
           ),
         ),
       );
-      // Exactly at capacity — no overflow.
+      // Exactly at capacity - no overflow.
       expect(find.text('+0'), findsNothing);
       expect(find.byType(Positioned), findsNWidgets(4));
     });

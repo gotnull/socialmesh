@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Offline Tile Storage — resolves where the offline tile cache lives.
+// Offline Tile Storage - resolves where the offline tile cache lives.
 //
 // Android supports app-specific directories on removable SD cards
 // (Context.getExternalFilesDirs), which need no runtime permissions and are
@@ -51,7 +51,7 @@ class OfflineTileStorage {
   final bool _isAndroid;
 
   /// Cache root on the first mounted removable volume, or null when the
-  /// platform has none (iOS, SD-less devices, adoptable-formatted cards —
+  /// platform has none (iOS, SD-less devices, adoptable-formatted cards -
   /// those are merged into internal storage and are not separate volumes).
   Future<String?> removableRoot() async {
     if (!_isAndroid) return null;

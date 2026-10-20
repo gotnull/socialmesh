@@ -32,7 +32,7 @@ Widget _harness(PermissionService service, Widget child) {
 
 void main() {
   // -------------------------------------------------------------------
-  // PermissionGate — hidden mode
+  // PermissionGate - hidden mode
   // -------------------------------------------------------------------
   group('PermissionGate (hidden mode)', () {
     testWidgets('shows child when admin has createIncident', (tester) async {
@@ -187,7 +187,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // PermissionGate — disabled mode
+  // PermissionGate - disabled mode
   // -------------------------------------------------------------------
   group('PermissionGate (disabled mode)', () {
     testWidgets('renders disabled control when permission denied', (
@@ -385,7 +385,7 @@ void main() {
   // -------------------------------------------------------------------
   group('Gates react to claims changes', () {
     testWidgets('PermissionGate updates when role changes', (tester) async {
-      // Start as operator — assignIncident denied
+      // Start as operator - assignIncident denied
       final container = ProviderContainer(
         overrides: [
           permissionServiceProvider.overrideWithValue(
@@ -409,7 +409,7 @@ void main() {
       );
       expect(find.text('Assign'), findsNothing);
 
-      // Upgrade to supervisor — assignIncident allowed
+      // Upgrade to supervisor - assignIncident allowed
       container.updateOverrides([
         permissionServiceProvider.overrideWithValue(
           _buildService(Role.supervisor),
@@ -445,7 +445,7 @@ void main() {
       );
       expect(find.text('Supervisor Only'), findsNothing);
 
-      // Upgrade to admin — above supervisor threshold
+      // Upgrade to admin - above supervisor threshold
       container.updateOverrides([
         permissionServiceProvider.overrideWithValue(_buildService(Role.admin)),
       ]);
@@ -457,7 +457,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // Observer role — sees data, no actions
+  // Observer role - sees data, no actions
   // -------------------------------------------------------------------
   group('Observer sees data but not actions', () {
     testWidgets('observer can view team incidents', (tester) async {
@@ -553,7 +553,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------
-  // Operator visibility — create/escalate yes, assign/close no
+  // Operator visibility - create/escalate yes, assign/close no
   // -------------------------------------------------------------------
   group('Operator visibility', () {
     testWidgets('operator sees createIncident', (tester) async {

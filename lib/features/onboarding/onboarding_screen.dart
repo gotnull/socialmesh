@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — pre-auth onboarding flow, no app bar
+// lint-allow: scaffold - pre-auth onboarding flow, no app bar
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -223,7 +223,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final protocol = ref.read(protocolServiceProvider);
     var region = protocol.currentRegion;
 
-    // Region config may not have arrived yet — wait briefly for the stream
+    // Region config may not have arrived yet - wait briefly for the stream
     if (region == null ||
         region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
       AppLogging.app('Onboarding: Waiting for LoRa config...');
@@ -254,7 +254,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       // The region apply causes a device reboot (expected disconnect).
       // The autoReconnectManager needs to handle that reconnect, but it
       // blocks when manualConnecting is set. Scanner's manual connection
-      // is done at this point — device is paired and protocol configured.
+      // is done at this point - device is paired and protocol configured.
       // Hand off reconnect responsibility so the reboot cycle works
       // instead of waiting for the 60s hard timeout.
       ref
@@ -272,7 +272,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         ),
       );
     } else {
-      // Region already set — mark as configured
+      // Region already set - mark as configured
       final settings = await ref.read(settingsServiceProvider.future);
       if (mounted) {
         await settings.setRegionConfigured(true);
@@ -1080,7 +1080,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(height: compact ? AppTheme.spacing8 : AppTheme.spacing14),
-          // Sigil placeholder — hexagon icon
+          // Sigil placeholder - hexagon icon
           Container(
             width: sigilSize,
             height: sigilSize,

@@ -438,14 +438,14 @@ void main() {
           tokenExpiry: 1700003600000,
         );
 
-        // Should not throw — error is swallowed gracefully
+        // Should not throw - error is swallowed gracefully
         await expectLater(cache.write(claims), completes);
       });
 
       test('clear does not throw when keychain is locked', () async {
         fakeStorage.throwOnDelete = true;
 
-        // Should not throw — error is swallowed gracefully
+        // Should not throw - error is swallowed gracefully
         await expectLater(cache.clear(), completes);
       });
     });
@@ -494,7 +494,7 @@ class _TestableClaimsCache {
       final json = jsonEncode(claims.toJson());
       await _storage.write(key: _storageKey, value: json);
     } on PlatformException catch (_) {
-      // Keychain locked — silently skip write
+      // Keychain locked - silently skip write
     }
   }
 
@@ -510,7 +510,7 @@ class _TestableClaimsCache {
       }
       return CachedClaims.fromJson(json);
     } on PlatformException catch (_) {
-      // iOS Keychain error (e.g. -25308 errSecInteractionNotAllowed) —
+      // iOS Keychain error (e.g. -25308 errSecInteractionNotAllowed) -
       // device locked or app in background. Return null gracefully
       // without attempting clear() (which would also fail).
       return null;
@@ -524,7 +524,7 @@ class _TestableClaimsCache {
     try {
       await _storage.delete(key: _storageKey);
     } on PlatformException catch (_) {
-      // Keychain locked — silently skip clear
+      // Keychain locked - silently skip clear
     }
   }
 }

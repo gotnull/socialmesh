@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Widget tests for FileTransferCard — verifies state rendering, animated
+// Widget tests for FileTransferCard - verifies state rendering, animated
 // progress presence, voice badge, and action visibility across transfer states.
 
 import 'dart:typed_data';
@@ -68,7 +68,7 @@ FileTransferState _makeTransfer({
 // =============================================================================
 
 void main() {
-  group('FileTransferCard — state rendering', () {
+  group('FileTransferCard - state rendering', () {
     testWidgets('shows filename in full layout', (tester) async {
       final transfer = _makeTransfer(filename: 'mesh_data.json');
       await tester.pumpWidget(_wrap(FileTransferCard(transfer: transfer)));
@@ -103,7 +103,7 @@ void main() {
     ) async {
       final transfer = _makeTransfer(state: TransferState.waitingMissing);
       await tester.pumpWidget(_wrap(FileTransferCard(transfer: transfer)));
-      // Use pump() — not pumpAndSettle() — because an indeterminate
+      // Use pump() - not pumpAndSettle() - because an indeterminate
       // LinearProgressIndicator loops forever and will never settle.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -123,7 +123,7 @@ void main() {
       await tester.pumpWidget(_wrap(FileTransferCard(transfer: transfer)));
       await tester.pumpAndSettle();
 
-      // The Voice badge chip contains the mic icon — presence confirms routing.
+      // The Voice badge chip contains the mic icon - presence confirms routing.
       expect(find.byIcon(Icons.mic), findsOneWidget);
     });
 
@@ -191,7 +191,7 @@ void main() {
     });
   });
 
-  group('FileTransferCard — _AnimatedTransferProgress interpolation', () {
+  group('FileTransferCard - _AnimatedTransferProgress interpolation', () {
     testWidgets('progress bar value starts at initial progress', (
       tester,
     ) async {
@@ -201,7 +201,7 @@ void main() {
         chunkCount: 10,
       );
       await tester.pumpWidget(_wrap(FileTransferCard(transfer: transfer)));
-      // Pump one frame — animation not yet complete.
+      // Pump one frame - animation not yet complete.
       await tester.pump();
 
       final indicator = tester.widget<LinearProgressIndicator>(

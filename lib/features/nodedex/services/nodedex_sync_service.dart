@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Cloud Sync Service — syncs NodeDex data across devices.
+// NodeDex Cloud Sync Service - syncs NodeDex data across devices.
 //
 // Uses an outbox pattern:
 // - Local mutations write to SQLite and enqueue outbox records
@@ -111,7 +111,7 @@ class NodeDexSyncService {
   /// local store. The argument is the number of entries applied.
   ///
   /// The NodeDex notifier sets this so it can reload its in-memory
-  /// state after remote data arrives — without this, pulled data
+  /// state after remote data arrives - without this, pulled data
   /// sits in SQLite but never reaches the UI until app restart.
   void Function(int appliedCount)? onPullApplied;
 
@@ -153,7 +153,7 @@ class NodeDexSyncService {
   /// Trigger a one-shot sync cycle (drain outbox + pull updates).
   Future<void> syncNow() async {
     if (!_enabled) {
-      _syncLog('syncNow: skipped — sync not enabled');
+      _syncLog('syncNow: skipped - sync not enabled');
       return;
     }
     _syncLog('syncNow: triggering manual sync cycle');
@@ -174,18 +174,18 @@ class NodeDexSyncService {
   /// outbox entries and uploading them to Firestore multiple times.
   Future<void> drainOutboxNow() async {
     if (!_enabled) {
-      _syncLog('drainOutboxNow: skipped — sync not enabled');
+      _syncLog('drainOutboxNow: skipped - sync not enabled');
       return;
     }
 
     if (_isDraining) {
-      _syncLog('drainOutboxNow: skipped — drain already in progress');
+      _syncLog('drainOutboxNow: skipped - drain already in progress');
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _syncLog('drainOutboxNow: skipped — no authenticated user');
+      _syncLog('drainOutboxNow: skipped - no authenticated user');
       return;
     }
 
@@ -224,7 +224,7 @@ class NodeDexSyncService {
   /// Run a single sync cycle: drain outbox then pull.
   Future<void> _runSyncCycle() async {
     if (_isSyncing) {
-      _syncLog('_runSyncCycle: skipped — already syncing', verbose: true);
+      _syncLog('_runSyncCycle: skipped - already syncing', verbose: true);
       return;
     }
     _isSyncing = true;
@@ -235,7 +235,7 @@ class NodeDexSyncService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        _syncLog('Sync cycle: no authenticated user — aborting');
+        _syncLog('Sync cycle: no authenticated user - aborting');
         return;
       }
 
@@ -265,7 +265,7 @@ class NodeDexSyncService {
   /// Drain pending outbox entries to Firestore.
   Future<void> _drainOutbox(String userId) async {
     if (_isDraining) {
-      _syncLog('Drain: skipped — another drain already in progress');
+      _syncLog('Drain: skipped - another drain already in progress');
       return;
     }
     _isDraining = true;
@@ -282,7 +282,7 @@ class NodeDexSyncService {
     final outboxEntries = await _store.readOutbox(limit: _outboxDrainBatchSize);
 
     if (outboxEntries.isEmpty) {
-      _syncLog('Drain: outbox empty — nothing to push', verbose: true);
+      _syncLog('Drain: outbox empty - nothing to push', verbose: true);
       return;
     }
 
@@ -313,7 +313,7 @@ class NodeDexSyncService {
       if (attemptCount >= _maxOutboxRetries) {
         _syncLog(
           'Drain: SKIPPING outbox[$id] $entityType/$entityId ' // lint-allow: hardcoded-string
-          '— max retries ($attemptCount) reached', // lint-allow: hardcoded-string
+          '- max retries ($attemptCount) reached', // lint-allow: hardcoded-string
         );
         await _store.removeOutboxEntry(id);
         skippedCount++;
@@ -389,7 +389,7 @@ class NodeDexSyncService {
     }
 
     _syncLog(
-      'Drain: complete — ' // lint-allow: hardcoded-string
+      'Drain: complete - ' // lint-allow: hardcoded-string
       'success=$successCount fail=$failCount skipped=$skippedCount',
     );
   }
@@ -457,7 +457,7 @@ class NodeDexSyncService {
 
         if (deleted) {
           deletedCount++;
-          // Handle remote deletions — not implemented for entries
+          // Handle remote deletions - not implemented for entries
           // since we use soft-delete locally. The merge will handle it.
           _syncLog('Pull: skipping deleted doc=${doc.id}', verbose: true);
           continue;
@@ -486,13 +486,13 @@ class NodeDexSyncService {
             }
           } else {
             _syncLog(
-              'Pull: doc=${doc.id} has null data field — skipping', // lint-allow: hardcoded-string
+              'Pull: doc=${doc.id} has null data field - skipping', // lint-allow: hardcoded-string
               verbose: true,
             );
           }
         } else {
           _syncLog(
-            'Pull: unknown entity_type=$entityType in doc=${doc.id} — skipping', // lint-allow: hardcoded-string
+            'Pull: unknown entity_type=$entityType in doc=${doc.id} - skipping', // lint-allow: hardcoded-string
             verbose: true,
           );
         }
@@ -524,7 +524,7 @@ class NodeDexSyncService {
       await _store.setSyncState(wmKey, maxPullMs.toString());
 
       _syncLog(
-        'Pull: complete — ${remoteEntries.length} entries applied, ' // lint-allow: hardcoded-string
+        'Pull: complete - ${remoteEntries.length} entries applied, ' // lint-allow: hardcoded-string
         'new watermark=$maxPullMs', // lint-allow: hardcoded-string
       );
     } catch (e, stack) {
@@ -534,7 +534,7 @@ class NodeDexSyncService {
   }
 
   // ---------------------------------------------------------------------------
-  // Sync Probe — deterministic end-to-end sync validation
+  // Sync Probe - deterministic end-to-end sync validation
   // ---------------------------------------------------------------------------
 
   /// Run a deterministic end-to-end sync probe.
@@ -561,7 +561,7 @@ class NodeDexSyncService {
     // Stage 1: Check entitlement
     probeLog('Stage A: Checking entitlement...');
     if (!_enabled) {
-      probeLog('Stage A: FAIL — sync not enabled (entitlement=$_enabled)');
+      probeLog('Stage A: FAIL - sync not enabled (entitlement=$_enabled)');
       stages['A'] = 'FAIL: sync not enabled';
       return SyncProbeResult(
         ok: false,
@@ -578,7 +578,7 @@ class NodeDexSyncService {
     probeLog('Stage B: Checking Firebase auth...');
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      probeLog('Stage B: FAIL — no authenticated user');
+      probeLog('Stage B: FAIL - no authenticated user');
       stages['B'] = 'FAIL: no authenticated user';
       return SyncProbeResult(
         ok: false,
@@ -589,7 +589,7 @@ class NodeDexSyncService {
     }
     final uid = user.uid;
     stages['B'] = 'OK: uid=${uid.substring(0, 8)}...';
-    probeLog('Stage B: OK — uid=${uid.substring(0, 8)}...');
+    probeLog('Stage B: OK - uid=${uid.substring(0, 8)}...');
 
     // Stage 3: Create test entry locally
     probeLog('Stage C: Creating test entry node=$probeNodeNum...');
@@ -606,9 +606,9 @@ class NodeDexSyncService {
       );
       await _store.saveEntryImmediate(probeEntry);
       stages['C'] = 'OK: entry saved to SQLite';
-      probeLog('Stage C: OK — entry saved');
+      probeLog('Stage C: OK - entry saved');
     } catch (e) {
-      probeLog('Stage C: FAIL — $e');
+      probeLog('Stage C: FAIL - $e');
       stages['C'] = 'FAIL: $e';
       return SyncProbeResult(
         ok: false,
@@ -624,18 +624,18 @@ class NodeDexSyncService {
       final outboxCount = await _store.outboxCount;
       if (outboxCount == 0) {
         probeLog(
-          'Stage D: WARN — outbox empty after save. ' // lint-allow: hardcoded-string
+          'Stage D: WARN - outbox empty after save. ' // lint-allow: hardcoded-string
           'syncEnabled=${_store.syncEnabled}', // lint-allow: hardcoded-string
         );
         stages['D'] = 'WARN: outbox empty (syncEnabled=${_store.syncEnabled})';
-        // Not a hard failure — the entry might have been deduped or
+        // Not a hard failure - the entry might have been deduped or
         // syncEnabled was false during save.
       } else {
         stages['D'] = 'OK: outbox has $outboxCount entries';
-        probeLog('Stage D: OK — $outboxCount entries in outbox');
+        probeLog('Stage D: OK - $outboxCount entries in outbox');
       }
     } catch (e) {
-      probeLog('Stage D: FAIL — $e');
+      probeLog('Stage D: FAIL - $e');
       stages['D'] = 'FAIL: $e';
     }
 
@@ -645,9 +645,9 @@ class NodeDexSyncService {
       await _drainOutbox(uid);
       final remainingOutbox = await _store.outboxCount;
       stages['E'] = 'OK: drain complete, remaining=$remainingOutbox';
-      probeLog('Stage E: OK — remaining outbox=$remainingOutbox');
+      probeLog('Stage E: OK - remaining outbox=$remainingOutbox');
     } catch (e) {
-      probeLog('Stage E: FAIL — $e');
+      probeLog('Stage E: FAIL - $e');
       stages['E'] = 'FAIL: $e';
       return SyncProbeResult(
         ok: false,
@@ -670,7 +670,7 @@ class NodeDexSyncService {
       final docSnapshot = await docRef.get();
 
       if (!docSnapshot.exists) {
-        probeLog('Stage F: FAIL — doc not found at $docPath');
+        probeLog('Stage F: FAIL - doc not found at $docPath');
         stages['F'] = 'FAIL: doc not found at $docPath';
         return SyncProbeResult(
           ok: false,
@@ -683,13 +683,13 @@ class NodeDexSyncService {
       final docData = docSnapshot.data()!;
       final remoteData = docData['data'] as Map<String, dynamic>?;
       probeLog(
-        'Stage F: OK — doc exists at $docPath ' // lint-allow: hardcoded-string
+        'Stage F: OK - doc exists at $docPath ' // lint-allow: hardcoded-string
         'updated_at_ms=${docData['updated_at_ms']} '
         'has_data=${remoteData != null}',
       );
       stages['F'] = 'OK: doc exists at $docPath';
     } catch (e) {
-      probeLog('Stage F: FAIL — $e');
+      probeLog('Stage F: FAIL - $e');
       stages['F'] = 'FAIL: $e';
       return SyncProbeResult(
         ok: false,
@@ -708,7 +708,7 @@ class NodeDexSyncService {
       stages['G'] = 'OK: pull complete';
       probeLog('Stage G: OK');
     } catch (e) {
-      probeLog('Stage G: FAIL — $e');
+      probeLog('Stage G: FAIL - $e');
       stages['G'] = 'FAIL: $e';
       return SyncProbeResult(
         ok: false,
@@ -723,7 +723,7 @@ class NodeDexSyncService {
     try {
       final localEntry = await _store.getEntry(probeNodeNum);
       if (localEntry == null) {
-        probeLog('Stage H: FAIL — entry not found in local store');
+        probeLog('Stage H: FAIL - entry not found in local store');
         stages['H'] = 'FAIL: entry not in local store after pull';
         return SyncProbeResult(
           ok: false,
@@ -736,7 +736,7 @@ class NodeDexSyncService {
       final tagMatch = localEntry.socialTag == probeTag;
       final noteMatch = localEntry.userNote == probeNote;
       probeLog(
-        'Stage H: local entry found — ' // lint-allow: hardcoded-string
+        'Stage H: local entry found - ' // lint-allow: hardcoded-string
         'socialTag=${localEntry.socialTag?.name} (match=$tagMatch) ' // lint-allow: hardcoded-string
         'userNote=${localEntry.userNote} (match=$noteMatch)', // lint-allow: hardcoded-string
       );
@@ -753,7 +753,7 @@ class NodeDexSyncService {
 
       stages['H'] = 'OK: entry verified locally';
     } catch (e) {
-      probeLog('Stage H: FAIL — $e');
+      probeLog('Stage H: FAIL - $e');
       stages['H'] = 'FAIL: $e';
       return SyncProbeResult(
         ok: false,
@@ -774,11 +774,11 @@ class NodeDexSyncService {
           .doc(docId);
       await cleanupDocRef.delete();
       stages['I'] = 'OK: cleaned up';
-      probeLog('Stage I: OK — probe data cleaned up');
+      probeLog('Stage I: OK - probe data cleaned up');
     } catch (e) {
-      // Non-fatal — probe succeeded even if cleanup fails
+      // Non-fatal - probe succeeded even if cleanup fails
       stages['I'] = 'WARN: cleanup failed: $e';
-      probeLog('Stage I: WARN — cleanup failed: $e');
+      probeLog('Stage I: WARN - cleanup failed: $e');
     }
 
     probeLog('=== SYNC PROBE COMPLETE: ALL STAGES PASSED ===');
@@ -814,7 +814,7 @@ class NodeDexSyncService {
     _syncLog('Disposing sync service...');
     _stopPeriodicSync();
 
-    // Best-effort drain before shutdown — if the user just set a social
+    // Best-effort drain before shutdown - if the user just set a social
     // tag or note and then signed out, this ensures the outbox is pushed.
     if (_enabled) {
       try {

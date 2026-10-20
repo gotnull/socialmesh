@@ -9,7 +9,7 @@
 // IA invariant: when participation is OFF, the Mesh tab MUST hide
 // the channel list entirely (locked decision from spec §5.2) and
 // render only this single card. No hero, no PRIMARY COMMONS section,
-// no OTHER CHANNELS — those surfaces would invite a tap that triggers
+// no OTHER CHANNELS - those surfaces would invite a tap that triggers
 // participation as a side-effect, which is the bug this entire
 // feature is built to prevent.
 //

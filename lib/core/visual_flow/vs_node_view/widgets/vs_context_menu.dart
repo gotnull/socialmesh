@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Modified: Replaced plain Card with glass morphism styled container matching
 // SocialMesh sci-fi aesthetic.
@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/vs_node_data_provider.dart';
+
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/core/visual_flow/flow_node_l10n.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -133,7 +134,7 @@ class _VSContextMenuState extends State<VSContextMenu> {
       final l10n = AppLocalizations.of(context);
 
       if (entry.value is Map) {
-        // Subgroup — show with category icon and chevron.
+        // Subgroup - show with category icon and chevron.
         children.add(
           _ContextMenuItem(
             onTap: () =>
@@ -169,7 +170,7 @@ class _VSContextMenuState extends State<VSContextMenu> {
           ),
         );
       } else {
-        // Leaf node builder — tappable to create the node.
+        // Leaf node builder - tappable to create the node.
         children.add(
           _ContextMenuItem(
             onTap: () {
@@ -198,7 +199,7 @@ class _VSContextMenuState extends State<VSContextMenu> {
       }
     }
 
-    // Empty state — shouldn't happen in practice but handles gracefully.
+    // Empty state - shouldn't happen in practice but handles gracefully.
     if (children.isEmpty) {
       children.add(
         Padding(

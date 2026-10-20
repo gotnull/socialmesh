@@ -81,7 +81,7 @@ void main() {
       '200 response with no body still flows to the decoder layer',
       () async {
         // Pinpoints that the safe wrapper only catches socket-level
-        // failures, not response-decode errors — those stay caller-owned.
+        // failures, not response-decode errors - those stay caller-owned.
         final service = NodeBoardApiService(
           client: MockClient((request) async => http.Response('not-json', 200)),
           getIdToken: () async => null,

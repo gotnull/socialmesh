@@ -9,6 +9,7 @@ import '../../../core/safe_lat_lng.dart';
 import '../models/tak_event.dart';
 import '../utils/cot_affiliation.dart';
 import 'tak_map_marker.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Marker threshold: when the total number of visible TAK entities exceeds
@@ -27,7 +28,7 @@ const _clusterThreshold = 20;
 ///
 /// This is a [StatefulWidget] that caches the built marker list and the
 /// event-by-UID index between rebuilds. The expensive marker creation and
-/// clustering setup only runs when the input data actually changes — not on
+/// clustering setup only runs when the input data actually changes - not on
 /// every parent `setState` that doesn't affect TAK entities.
 class TakMapLayer extends StatefulWidget {
   /// Active TAK events to render.
@@ -81,7 +82,7 @@ class _TakMapLayerState extends State<TakMapLayer> {
     );
 
     if (_fingerprint != null && _fingerprint == newFingerprint) {
-      // Data is unchanged — skip the expensive marker rebuild.
+      // Data is unchanged - skip the expensive marker rebuild.
       return;
     }
 
@@ -94,7 +95,7 @@ class _TakMapLayerState extends State<TakMapLayer> {
     final markers = <Marker>[];
 
     for (final event in widget.events) {
-      // Skip entities at (0, 0) — invalid position
+      // Skip entities at (0, 0) - invalid position
       if (event.lat == 0.0 && event.lon == 0.0) {
         AppLogging.tak('Skipping marker for uid=${event.uid}: position is 0,0');
         continue;
@@ -190,7 +191,7 @@ class _TakMapLayerState extends State<TakMapLayer> {
     if (affiliationCounts.length == 1) {
       clusterColor = affiliationCounts.keys.first.color;
     } else if (affiliationCounts.isNotEmpty) {
-      // Multiple affiliations — use majority if > 60 %, else caution yellow.
+      // Multiple affiliations - use majority if > 60 %, else caution yellow.
       final sorted = affiliationCounts.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
       final majorityRatio = sorted.first.value / count;

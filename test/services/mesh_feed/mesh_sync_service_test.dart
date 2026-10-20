@@ -485,7 +485,7 @@ void main() {
         transport: MeshTransportType.blePeerSync,
       );
 
-      // Insert a new post — gets both localSeq and syncSeq.
+      // Insert a new post - gets both localSeq and syncSeq.
       await db.upsertPost(_makePost(1, 'Original post'));
 
       // Initial batch should contain the post.
@@ -496,7 +496,7 @@ void main() {
       // Acknowledge the batch.
       await syncService.acknowledgeSyncBatch('peer-1', batch1.cursorSeq!);
 
-      // Metadata-only merge — add a new transport (simulates provenance
+      // Metadata-only merge - add a new transport (simulates provenance
       // update from LAN peer sync).
       final post = batch1.posts.first;
       await db.upsertPost(
@@ -535,7 +535,7 @@ void main() {
         ),
       );
 
-      // Insert post B — should get a new syncSeq.
+      // Insert post B - should get a new syncSeq.
       await db.upsertPost(_makePost(2, 'Post B'));
 
       // Batch should contain ONLY post B (not the merged post A).
@@ -594,7 +594,7 @@ void main() {
         await db.upsertPost(_makePost(2, 'B'));
         await db.upsertPost(_makePost(3, 'C'));
 
-        // First batch — cursor=none, gets all 3.
+        // First batch - cursor=none, gets all 3.
         final batch1 = await syncService.getPostsForPeer('peer-1');
         expect(batch1.posts.length, equals(3));
         expect(batch1.cursorSeq, isNotNull);
@@ -608,7 +608,7 @@ void main() {
           transport: MeshTransportType.lanPeerSync,
         );
 
-        // Next batch — cursor should be reused, not reset to none.
+        // Next batch - cursor should be reused, not reset to none.
         final batch2 = await syncService.getPostsForPeer('peer-1');
         expect(batch2.posts, isEmpty);
         expect(batch2.cursorSeq, isNull);
@@ -692,7 +692,7 @@ void main() {
         final cursorAfter2 = await syncService.getCursorForPeer(peerId);
         expect(cursorAfter2, equals(cursorAfter1));
 
-        // Serve — should get 0 posts (all already acked).
+        // Serve - should get 0 posts (all already acked).
         final batch2 = await syncService.getPostsForPeer(peerId);
         expect(batch2.posts, isEmpty);
 

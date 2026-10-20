@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — immersive camera scanner with transparent AppBar
+// lint-allow: scaffold - immersive camera scanner with transparent AppBar
 import 'dart:async';
 
 import '../../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
@@ -140,7 +142,7 @@ class _MeshCoreQrScannerScreenState
     }
 
     // Pre-D46-A SocialMesh QR format `socialmesh://contact/<base64>`
-    // and `meshcore://contact/<base64>` — different from the canonical
+    // and `meshcore://contact/<base64>` - different from the canonical
     // `meshcore://<hex>` shape; preserved one release for back-compat.
     final contact = parseContactCode(code);
     if (contact != null) {

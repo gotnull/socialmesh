@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34c-B-A — `MeshCoreContactDetailScreen` path-override sheet flow.
+// D34c-B-A - `MeshCoreContactDetailScreen` path-override sheet flow.
 //
 // Pinned invariants (this file):
 //   - The "Path override" tile opens an action sheet exposing
@@ -9,7 +9,7 @@
 //   - Force Direct fires a confirmation sheet with the warning copy
 //     before applying.
 //   - Manual N-hop entry / raw path-byte editor UI never surfaces.
-//   - The routing card is read-only — there is no override-write
+//   - The routing card is read-only - there is no override-write
 //     entry point inside it; tapping the path label does nothing.
 //   - Rendered text never leaks raw payload bytes, full pubkeys,
 //     channel names, MMFs, or `[mrrp]` envelope content.
@@ -52,14 +52,14 @@ Widget _wrap(MeshCoreContact contact) {
 }
 
 /// Patterns that MUST NEVER appear in any rendered text node on this
-/// screen — the override flow does not need to display message
+/// screen - the override flow does not need to display message
 /// content, full pubkeys, channel names, MMFs, or envelope bytes.
 final List<RegExp> _bannedRenderTextPatterns = [
   RegExp(r'\[mrrp\]'),
   RegExp(r'\[/mrrp\]'),
   RegExp(r'02:[0-9a-f]{12}:'),
   RegExp(r'01:[0-9a-f]{2}:'),
-  // 32-byte hex pubkey (any case) — the screen only ever shows the
+  // 32-byte hex pubkey (any case) - the screen only ever shows the
   // redacted <8B…8T> fingerprint.
   RegExp(r'[0-9a-fA-F]{64}'),
   // Long base64-ish runs (envelope content).
@@ -117,7 +117,7 @@ void main() {
   });
 
   testWidgets('Force Direct opens a confirmation sheet with the warning '
-      'message — cancel is a no-op (no wire write happens)', (tester) async {
+      'message - cancel is a no-op (no wire write happens)', (tester) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -166,13 +166,13 @@ void main() {
     expect(find.textContaining('Manual'), findsNothing);
     expect(find.textContaining('N-hop'), findsNothing);
     expect(find.textContaining('Edit path'), findsNothing);
-    // No TextField / TextFormField in the sheet — D34c-B-A is
+    // No TextField / TextFormField in the sheet - D34c-B-A is
     // tap-only.
     expect(find.byType(TextField), findsNothing);
     expect(find.byType(TextFormField), findsNothing);
   });
 
-  testWidgets('routing card stays read-only — tapping the Path row '
+  testWidgets('routing card stays read-only - tapping the Path row '
       'does NOT open the override sheet', (tester) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;

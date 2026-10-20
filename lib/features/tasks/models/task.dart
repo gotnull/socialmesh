@@ -6,7 +6,7 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 /// Task lifecycle states.
 ///
 /// 8 states forming the task state machine.
-/// [completed], [cancelled], and [reassigned] are terminal — no further
+/// [completed], [cancelled], and [reassigned] are terminal - no further
 /// transitions allowed.
 ///
 /// Spec: TASK_SYSTEM.md (Sprint 007/W3.1).

@@ -34,7 +34,7 @@ class _FakeInvoker implements InviteCallableInvoker {
 }
 
 void main() {
-  group('LicenseOrgSettingsService.updateName — validation', () {
+  group('LicenseOrgSettingsService.updateName - validation', () {
     test('rejects empty name without hitting the network', () async {
       final invoker = _FakeInvoker(
         (_, _) async => throw StateError('should not be called'),
@@ -93,7 +93,7 @@ void main() {
     });
   });
 
-  group('LicenseOrgSettingsService.updateName — success branches', () {
+  group('LicenseOrgSettingsService.updateName - success branches', () {
     test('reports noChange=false when stored name differs', () async {
       final invoker = _FakeInvoker(
         (_, _) async => {
@@ -130,7 +130,7 @@ void main() {
     });
   });
 
-  group('LicenseOrgSettingsService.updateName — error mapping', () {
+  group('LicenseOrgSettingsService.updateName - error mapping', () {
     test(
       'permission-denied -> permissionDenied (admins are rejected)',
       () async {

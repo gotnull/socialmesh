@@ -243,9 +243,8 @@ class MrrpServiceIncident implements MrrpServiceHandler {
       return _buildError(request, MrrpStatusCode.invalid);
     }
 
-    final caseId = ByteData.sublistView(
-      request.payload,
-    ).getUint32(0, Endian.little);
+    final caseId = ByteData.sublistView(request.payload)
+        .getUint32(0, Endian.little);
 
     AppLogging.protocol(
       'MRRP_SERVICE: incident.v1 query case=$caseId '

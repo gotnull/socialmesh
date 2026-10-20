@@ -273,32 +273,29 @@ void main() {
     },
   );
 
-  test(
-    'routing failure on pending DM yields failed status and leaves realAck null',
-    () async {
-      final h = await _makeHarness();
-      final notifier = h.container.read(messagesProvider.notifier);
-      notifier.addMessage(_pendingDm(id: 'm6', packetId: 606));
-      notifier.trackPacket(606, 'm6');
+  test('routing failure on pending DM yields failed status and leaves realAck null', () async {
+    final h = await _makeHarness();
+    final notifier = h.container.read(messagesProvider.notifier);
+    notifier.addMessage(_pendingDm(id: 'm6', packetId: 606));
+    notifier.trackPacket(606, 'm6');
 
-      h.protocol.emit(
-        MessageDeliveryUpdate(
-          packetId: 606,
-          delivered: false,
-          realAck: false,
-          error: RoutingError.noRoute,
-        ),
-      );
-      await _pump(h.container);
+    h.protocol.emit(
+      MessageDeliveryUpdate(
+        packetId: 606,
+        delivered: false,
+        realAck: false,
+        error: RoutingError.noRoute,
+      ),
+    );
+    await _pump(h.container);
 
-      final out = h.container
-          .read(messagesProvider)
-          .firstWhere((m) => m.id == 'm6');
-      expect(out.status, MessageStatus.failed);
-      expect(out.realAck, isNull);
-      h.container.dispose();
-    },
-  );
+    final out = h.container
+        .read(messagesProvider)
+        .firstWhere((m) => m.id == 'm6');
+    expect(out.status, MessageStatus.failed);
+    expect(out.realAck, isNull);
+    h.container.dispose();
+  });
 
   test(
     'broadcast never gains realAck=true even if routing ack carries realAck',
@@ -404,13 +401,13 @@ void main() {
       );
       await _pump(h.container);
 
-      // Force sweep with a clock 10 minutes in the future — well past the
+      // Force sweep with a clock 10 minutes in the future - well past the
       // 5-minute upgrade window.
       final future = DateTime.now().add(const Duration(minutes: 10));
       notifier.debugSweepExpiredImplicitAcks(now: future);
 
       // A subsequent explicit ack now finds no tracking entry and is logged
-      // as an untracked packet — realAck stays at false.
+      // as an untracked packet - realAck stays at false.
       h.protocol.emit(
         MessageDeliveryUpdate(packetId: 808, delivered: true, realAck: true),
       );
@@ -438,7 +435,7 @@ void main() {
       );
       await _pump(h.container);
 
-      // Sweep with a clock only 1 minute in the future — inside the window.
+      // Sweep with a clock only 1 minute in the future - inside the window.
       final inWindow = DateTime.now().add(const Duration(minutes: 1));
       notifier.debugSweepExpiredImplicitAcks(now: inWindow);
 
@@ -468,11 +465,11 @@ void main() {
       );
       await _pump(h.container);
 
-      // A far-future sweep is a no-op — entries were cleared on explicit ack.
+      // A far-future sweep is a no-op - entries were cleared on explicit ack.
       final far = DateTime.now().add(const Duration(hours: 1));
       notifier.debugSweepExpiredImplicitAcks(now: far);
 
-      // Late duplicate explicit ack lands as untracked — state unchanged.
+      // Late duplicate explicit ack lands as untracked - state unchanged.
       h.protocol.emit(
         MessageDeliveryUpdate(packetId: 1010, delivered: true, realAck: true),
       );

@@ -139,7 +139,7 @@ class MeshHealthNotifier extends Notifier<MeshHealthState> {
     _startInternal();
   }
 
-  /// Internal start — shared by [startMonitoring] and [_autoStartIfUserEnabled].
+  /// Internal start - shared by [startMonitoring] and [_autoStartIfUserEnabled].
   void _startInternal() {
     if (state.isMonitoring) return;
 
@@ -209,7 +209,7 @@ class MeshHealthNotifier extends Notifier<MeshHealthState> {
   void reset() {
     final wasMonitoring = state.isMonitoring;
     // Use persistPreference: false to avoid clearing the user opt-in
-    // during a reset — the user wants to clear data, not disable monitoring.
+    // during a reset - the user wants to clear data, not disable monitoring.
     if (wasMonitoring) stopMonitoring(persistPreference: false);
     ref.read(meshHealthAnalyzerProvider).reset();
     state = const MeshHealthState();

@@ -395,8 +395,7 @@ void main() {
           expect(
             MrrpStatusCode.fromCode(tlv!.value[0]),
             status,
-            reason:
-                '${status.name} should survive round-trip', // lint-allow: hardcoded-string
+            reason: '${status.name} should survive round-trip', // lint-allow: hardcoded-string
           );
         }
       });
@@ -463,9 +462,8 @@ void main() {
 
       test('request with session tag hint', () {
         final sessionTag = Uint8List(4);
-        ByteData.sublistView(
-          sessionTag,
-        ).setUint32(0, 0xDEADBEEF, Endian.little);
+        ByteData.sublistView(sessionTag)
+            .setUint32(0, 0xDEADBEEF, Endian.little);
 
         final frame = MrrpFrame(
           versionMajor: 0,

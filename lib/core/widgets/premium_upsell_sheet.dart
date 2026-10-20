@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../l10n/l10n_extension.dart';
 import '../safety/lifecycle_mixin.dart';
 import '../../models/subscription_models.dart';
@@ -304,8 +305,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
     );
 
     final displayPrice =
-        storePrice ??
-        '\$${purchase?.price.toStringAsFixed(2) ?? "3.99"}'; // lint-allow: hardcoded-string
+        storePrice ?? '\$${purchase?.price.toStringAsFixed(2) ?? "3.99"}'; // lint-allow: hardcoded-string
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
@@ -374,9 +374,8 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   Text(
                     _headline,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
 
                   const SizedBox(height: AppTheme.spacing8),
@@ -385,9 +384,8 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
                   Text(
                     _subtitle,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: context.textSecondary,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: context.textSecondary),
                   ),
 
                   const SizedBox(height: AppTheme.spacing24),

@@ -26,14 +26,12 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final screenSrc = File(
-    'lib/features/sip/sip_dm_screen.dart',
-  ).readAsStringSync();
-  final bubbleSrc = File(
-    'lib/features/sip/play/sip_play_bubble.dart',
-  ).readAsStringSync();
+  final screenSrc = File('lib/features/sip/sip_dm_screen.dart')
+      .readAsStringSync();
+  final bubbleSrc = File('lib/features/sip/play/sip_play_bubble.dart')
+      .readAsStringSync();
 
-  group('Play composer panel — Focus mode', () {
+  group('Play composer panel - Focus mode', () {
     test('Focus-mode early-return renders only the resume banner', () {
       // The panel build must short-circuit on hasActiveInstance and
       // return the GameInProgressBanner-only layout. We pin both
@@ -73,7 +71,7 @@ void main() {
       expect(screenSrc.contains('l10n.sipPlayPanelTitle'), isTrue);
       expect(screenSrc.contains('l10n.sipPlayPanelSubtitle'), isTrue);
       // The panel iterates SipPlayRegistry.games and renders one
-      // _GameOfferCard per descriptor — no single TTT-specific card,
+      // _GameOfferCard per descriptor - no single TTT-specific card,
       // no intermediate picker sheet.
       expect(screenSrc.contains('_GameOfferCard('), isTrue);
       expect(screenSrc.contains('SipPlayRegistry.games'), isTrue);
@@ -84,9 +82,9 @@ void main() {
       // Pure-replay invariant: the panel does NOT maintain its own
       // "is there a game running" flag. It reads SipPlayInstanceState
       // off the provider and decides from `state.status`. The exact
-      // predicate has tightened over time — initially `!isTerminal`,
+      // predicate has tightened over time - initially `!isTerminal`,
       // now `status == active` so a pending offer (peer hasn't
-      // accepted yet) doesn't surface "Game in progress" — but the
+      // accepted yet) doesn't surface "Game in progress" - but the
       // wiring contract is "engine state, not a UI flag", which the
       // assertions below pin.
       expect(
@@ -105,7 +103,7 @@ void main() {
     });
   });
 
-  group('Active board — optimistic move + interaction lock', () {
+  group('Active board - optimistic move + interaction lock', () {
     test('_BoardSection holds local pendingMove + interactionLock', () {
       expect(
         bubbleSrc.contains('TttMove? _pendingMove'),
@@ -183,27 +181,27 @@ void main() {
     test('engine determinism preserved: _pendingMove is NEVER written '
         'to the entry log', () {
       // Defensive: the only writes to the entry log come from
-      // sipDmRouterProvider.sendPlay — never from a pending-overlay
+      // sipDmRouterProvider.sendPlay - never from a pending-overlay
       // mutation. Pin by absence: nothing in the bubble file should
       // append to history directly.
       expect(
         bubbleSrc.contains('messages.add'),
         isFalse,
         reason:
-            'only SipDmManager builds entries — bubble code must '
+            'only SipDmManager builds entries - bubble code must '
             'never append to the entry log directly',
       );
     });
   });
 
-  group('Inbound offer — responding state + logging', () {
+  group('Inbound offer - responding state + logging', () {
     test('_IncomingOfferRow holds local _responding flag', () {
       expect(bubbleSrc.contains('bool _responding ='), isTrue);
       expect(bubbleSrc.contains('bool _respondingAccept'), isTrue);
     });
 
     test('Accept / Decline buttons disable while responding', () {
-      // The disabled check is a short circuit in onPressed — we pin
+      // The disabled check is a short circuit in onPressed - we pin
       // the predicate `disabled = peerBlocked || _responding`.
       expect(
         bubbleSrc.contains(

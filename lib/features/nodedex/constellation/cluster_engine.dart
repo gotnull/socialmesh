@@ -16,6 +16,7 @@ import 'dart:ui';
 
 import '../providers/nodedex_providers.dart';
 import '../services/sigil_generator.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// A cluster of nearby constellation nodes.
@@ -30,10 +31,10 @@ class NodeCluster {
   /// The nodes contained in this cluster.
   final List<ConstellationNode> nodes;
 
-  /// The dominant color — derived from the highest-connection node's sigil.
+  /// The dominant color - derived from the highest-connection node's sigil.
   final Color dominantColor;
 
-  /// The secondary color — blended average of all node colors.
+  /// The secondary color - blended average of all node colors.
   final Color blendedColor;
 
   /// Total connection count across all nodes in the cluster.
@@ -100,7 +101,7 @@ class ClusterResult {
 /// Engine that computes node clusters for the constellation view.
 ///
 /// Clustering uses grid-based spatial hashing for O(n) performance.
-/// The grid cell size is derived from zoom level — smaller cells at
+/// The grid cell size is derived from zoom level - smaller cells at
 /// higher zoom, larger cells when zoomed out.
 ///
 /// Usage:
@@ -119,7 +120,7 @@ class ClusterEngine {
   /// Below this threshold, nodes begin to aggregate.
   static const double clusterZoomThreshold = 0.65;
 
-  /// Minimum zoom level — maximum clustering at this point.
+  /// Minimum zoom level - maximum clustering at this point.
   static const double minZoom = 0.1;
 
   /// Minimum number of nodes to trigger clustering.
@@ -142,7 +143,7 @@ class ClusterEngine {
   /// Returns [ClusterResult.disabled] if zoom is above threshold or
   /// node count is below [minNodesForClustering].
   ///
-  /// The result is cached — repeated calls with the same zoom level
+  /// The result is cached - repeated calls with the same zoom level
   /// and node count return the cached result instantly.
   ClusterResult compute({
     required List<ConstellationNode> nodes,
@@ -154,7 +155,7 @@ class ClusterEngine {
       return ClusterResult.disabled;
     }
 
-    // Cache hit check — same zoom band and same node count.
+    // Cache hit check - same zoom band and same node count.
     final quantizedZoom = (zoomLevel * 20).roundToDouble() / 20;
     if (_cached != null &&
         _cachedZoom == quantizedZoom &&

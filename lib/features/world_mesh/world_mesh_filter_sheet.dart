@@ -13,7 +13,7 @@ import '../../providers/world_mesh_map_provider.dart';
 import 'world_mesh_filters.dart';
 
 /// Bottom sheet for filtering world mesh nodes. Hosted inside
-/// `AppBottomSheet.showScrollable` — the parent provides the drag
+/// `AppBottomSheet.showScrollable` - the parent provides the drag
 /// pill, rounded background, and `DraggableScrollableSheet`. The
 /// passed-in [scrollController] MUST be wired into the body
 /// `ListView`, otherwise drag-to-dismiss breaks (gray-area bug).

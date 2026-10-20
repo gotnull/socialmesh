@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — navigation shell root scaffold with drawer and bottom nav
+// lint-allow: scaffold - navigation shell root scaffold with drawer and bottom nav
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/navigation.dart';
@@ -207,7 +207,7 @@ class HamburgerMenuButton extends ConsumerWidget {
     );
 
     if (totalBadgeCount > 0) {
-      // Count badge — uses Flutter's Badge for correct positioning
+      // Count badge - uses Flutter's Badge for correct positioning
       menuIcon = Badge(
         label: Text(
           totalBadgeCount > 99 ? '99+' : '$totalBadgeCount',
@@ -221,7 +221,7 @@ class HamburgerMenuButton extends ConsumerWidget {
         child: menuIcon,
       );
     } else if (hasUnseenWhatsNew) {
-      // Gradient dot — small indicator for unseen What's New
+      // Gradient dot - small indicator for unseen What's New
       menuIcon = Badge(
         smallSize: 10,
         backgroundColor: context.accentColor,
@@ -325,7 +325,7 @@ class DeviceStatusButton extends ConsumerWidget {
 /// The pushed route is tagged with [routeName] (defaulting to
 /// `screen.runtimeType.toString()`). This lets push-from-notification
 /// handlers (in `main.dart`) detect when the destination screen is
-/// already on top of the stack and skip the duplicate push — without
+/// already on top of the stack and skip the duplicate push - without
 /// it, tapping a notification while the corresponding screen is
 /// already visible stacks an identical second copy on top, requiring
 /// two back taps to return to the previous context.
@@ -383,7 +383,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
         // Trigger What's New popup if there is an unseen payload.
         // This runs after the first frame so the navigator is ready.
-        // GUARD: Skip if region setup is still needed — the inline
+        // GUARD: Skip if region setup is still needed - the inline
         // RegionSelectionScreen would be visible and What's New would
         // overlay on top of it, creating a confusing UX.
         final needsRegion = ref.read(needsRegionSetupProvider);
@@ -491,7 +491,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Widget _buildScreen(int index) {
-    // Scanner is the sole destination when disconnected — no inline
+    // Scanner is the sole destination when disconnected - no inline
     // "No Device Connected" wrapper needed. MainShell's TopStatusBanner
     // handles the reconnecting/disconnected banner at the top.
     switch (index) {
@@ -576,7 +576,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       });
     });
 
-    // Aether flight detection and lifecycle — only when feature is enabled.
+    // Aether flight detection and lifecycle - only when feature is enabled.
     if (AppFeatureFlags.isAetherEnabled) {
       // Cross-reference mesh nodes with active flights and alert the user
       // when a match is found so they can report their reception immediately.
@@ -686,8 +686,8 @@ class _MainShellState extends ConsumerState<MainShell> {
     // Build the main scaffold with Drawer
     // Determine if we should show the reconnection banner (only as a banner, never replaces screen)
     //
-    // STABILITY GUARD: Tie banner visibility to "fully connected" — i.e.
-    // transport connected AND auto-reconnect not actively cycling — so a
+    // STABILITY GUARD: Tie banner visibility to "fully connected" - i.e.
+    // transport connected AND auto-reconnect not actively cycling - so a
     // brief transport.state==connected window during a TCP retry (where
     // the socket comes up but protocol.start() then times out) does NOT
     // toggle the banner off and on. Without this guard, every TCP-conflict
@@ -702,11 +702,11 @@ class _MainShellState extends ConsumerState<MainShell> {
     // Cancel, device-sheet Disconnect, factory reset) unmount MainShell,
     // so in production the banner is never seen in the idle/manual-
     // disconnected state. The `!userDisconnected` clause keeps the
-    // formula correct as a pure invariant — any future code path that
+    // formula correct as a pure invariant - any future code path that
     // leaves the user on MainShell while `userDisconnected=true` will
     // not resurrect a stale "Disconnected" banner.
     //
-    // NOTE: `ref.read` (not `ref.watch`) — the disconnect flow mutates
+    // NOTE: `ref.read` (not `ref.watch`) - the disconnect flow mutates
     // `userDisconnectedProvider` synchronously alongside other writes
     // (`autoReconnectStateProvider`, `appInitProvider`) inside a single
     // callback that ends with `pushNamedAndRemoveUntil('/app', …)`. A
@@ -748,7 +748,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       },
       body: Column(
         children: [
-          // Reconnection status banner — sits above content when
+          // Reconnection status banner - sits above content when
           // disconnected after having paired before. Always in the tree
           // so it can animate in/out; visibility is driven by [visible].
           TopStatusBanner(
@@ -803,7 +803,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
           // Main content (fills remaining space below banner)
           // Users can fully interact with cached data while
-          // reconnecting — app bars, drawers, and nav all work.
+          // reconnecting - app bars, drawers, and nav all work.
           Expanded(
             // Smoothly transition the top inset as the banner animates
             // in/out so the app bar doesn't jump when safe-area padding
@@ -818,7 +818,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                     : MediaQuery.of(context).padding.top,
               ),
               child: MediaQuery(
-                // Always strip the framework-level top inset — we
+                // Always strip the framework-level top inset - we
                 // manage it ourselves via the AnimatedPadding above.
                 // The shell Scaffold already consumed the keyboard inset.
                 // Do not restore it from the context above that Scaffold.
@@ -850,7 +850,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                         child: _buildScreen(ref.watch(mainShellIndexProvider)),
                       ),
                     ),
-                    // Aether flight match floating overlay — flush to bottom
+                    // Aether flight match floating overlay - flush to bottom
                     if (AppFeatureFlags.isAetherEnabled)
                       const Positioned(
                         left: 0,
@@ -860,7 +860,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                       ),
                     // Bottom-nav reorder banner. Renders here, INSIDE
                     // the body Stack, so its transparent top edge
-                    // reveals actual body content underneath — which
+                    // reveals actual body content underneath - which
                     // is the only way to get the chip-row-style soft
                     // fade in a Scaffold without `extendBody: true`
                     // (the bottomNavigationBar slot has no body
@@ -886,7 +886,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Global countdown banner — sits just above the bottom nav bar
+          // Global countdown banner - sits just above the bottom nav bar
           // so it is visible regardless of which tab/screen is active
           // without obstructing app bar content (search fields, filters, etc.).
           if (ref.watch(hasActiveCountdownsProvider)) const CountdownBanner(),
@@ -1029,7 +1029,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     //     misbehaves: the scrollable measures itself against the
     //     ancestor Column's incoming constraints, which are
     //     unbounded in the bottom-nav slot, and the resulting
-    //     viewport tries to consume infinite height — pushing
+    //     viewport tries to consume infinite height - pushing
     //     siblings (including the AppBar) off-screen.
     //
     // Both of those failure modes manifest as "tabs gone" or
@@ -1162,7 +1162,7 @@ class _BottomTabWiggleState extends State<_BottomTabWiggle>
 ///
 /// Two earlier attempts that did NOT work, kept here as a warning
 /// to future-me:
-///   * `EdgeFade.top` wrapping the banner — paints scaffold-bg ON
+///   * `EdgeFade.top` wrapping the banner - paints scaffold-bg ON
 ///     TOP of the banner from a sibling Positioned. In the
 ///     bottomNavigationBar slot there is nothing painted behind
 ///     the banner, so the fade darkens an already-dark top edge
@@ -1771,7 +1771,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
             },
     );
 
-    // Outer long-press detector — entry point to drawer edit mode for
+    // Outer long-press detector - entry point to drawer edit mode for
     // any customizable item. Once edit mode is active the inner
     // DrawerMenuTile suppresses its own tap and surfaces the remove
     // badge + drag handle instead. Non-customizable items still
@@ -1816,8 +1816,8 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
         DrawerCustomizationState.empty;
     final defaultItems = _buildDrawerMenuItems(l10n);
 
-    // Section membership is intrinsic — derived from default position
-    // — not positional in the rendered list. This decoupling is the
+    // Section membership is intrinsic - derived from default position
+    // - not positional in the rendered list. This decoupling is the
     // whole point of the reorder model: once a user moves an item,
     // its section membership is preserved, so it can't end up
     // visually orphaned in the section above.
@@ -2060,7 +2060,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
     }
 
     return Material(
-      color: Colors.transparent, // lint-allow: no-hardcoded-color — transparent is not a color literal
+      color: Colors.transparent, // lint-allow: no-hardcoded-color - transparent is not a color literal
       child: InkWell(
         onTap: () {
           ref.haptics.tabChange();
@@ -2142,7 +2142,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
 
   @override
   Widget build(BuildContext context) {
-    // lint-allow: no-hardcoded-color — Colors.transparent is not a color literal
+    // lint-allow: no-hardcoded-color - Colors.transparent is not a color literal
     final theme = Theme.of(context);
     final currentMode = ref.watch(themeModeProvider);
     final isDark =

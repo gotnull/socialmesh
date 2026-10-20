@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Aether Main Screen — track Meshtastic nodes at altitude.
+// Aether Main Screen - track Meshtastic nodes at altitude.
 //
 // Enables users to schedule flights with their mesh nodes, track active flights,
 // view reception reports, and compete on a leaderboard for longest range contacts.
@@ -20,7 +20,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../utils/time_format.dart';
+
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -93,7 +95,7 @@ extension AetherFilterLabel on AetherFilter {
 // Main Screen
 // =============================================================================
 
-/// Main Aether screen — browse and track Meshtastic nodes in the sky.
+/// Main Aether screen - browse and track Meshtastic nodes in the sky.
 class AetherScreen extends ConsumerStatefulWidget {
   const AetherScreen({super.key});
 

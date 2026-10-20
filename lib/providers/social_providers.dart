@@ -391,7 +391,7 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
           .updateFollowState(targetUserId, currentState);
       // Revert count adjustments
       if (currentState.isFollowing) {
-        // We decremented on optimistic — re-increment
+        // We decremented on optimistic - re-increment
         if (targetProfile != null) {
           ref
               .read(profileCountAdjustmentsProvider.notifier)
@@ -525,7 +525,7 @@ Future<void> declineFollowRequest(WidgetRef ref, String requesterId) async {
   return queue.enqueue<void>(
     key: 'follow-request:$requesterId',
     optimisticApply: () {
-      // No optimistic state change — request just disappears
+      // No optimistic state change - request just disappears
     },
     execute: () => service.declineFollowRequest(requesterId),
     commitApply: (_) {
@@ -1244,7 +1244,7 @@ class ExploreNotifier extends Notifier<ExploreState> {
       return const ExploreState(isLoading: false);
     }
 
-    // Explore shows public posts — works without auth, but we still need
+    // Explore shows public posts - works without auth, but we still need
     // Firebase to be initialized for Firestore access.
     AppLogging.social(
       '[ExploreNotifier] build() - Firebase ready, '
@@ -2024,7 +2024,7 @@ Future<void> blockUser(WidgetRef ref, String userId) async {
   return queue.enqueue<void>(
     key: 'block:$userId',
     optimisticApply: () {
-      // No optimistic state — blocking UI is confirmation-gated
+      // No optimistic state - blocking UI is confirmation-gated
     },
     execute: () => service.blockUser(userId),
     commitApply: (_) {
@@ -2046,7 +2046,7 @@ Future<void> unblockUser(WidgetRef ref, String userId) async {
   return queue.enqueue<void>(
     key: 'block:$userId',
     optimisticApply: () {
-      // No optimistic state — unblocking UI is confirmation-gated
+      // No optimistic state - unblocking UI is confirmation-gated
     },
     execute: () => service.unblockUser(userId),
     commitApply: (_) {

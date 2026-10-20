@@ -197,7 +197,7 @@ void main() {
           '1747654920123',
           reason:
               'Pending outbound (no packetId) must sort *after* a settled '
-              'inbound at the same timestamp — matching user intent that '
+              'inbound at the same timestamp - matching user intent that '
               'their freshly-sent message lands at the end of the list',
         );
       },

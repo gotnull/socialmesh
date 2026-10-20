@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Node Groups state — reactive layer over NodeGroupsStore (nodedex.db).
+// Node Groups state - reactive layer over NodeGroupsStore (nodedex.db).
 //
 // Exposes the list of user-defined groups plus the node->group membership
 // map, and mutation methods (create / update / delete / assign). Mirrors the

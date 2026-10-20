@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// SIP Hub Screen — SocialMesh peer discovery and ephemeral DM hub.
+// SIP Hub Screen - SocialMesh peer discovery and ephemeral DM hub.
 //
 // Design patterns used (matching the rest of the app):
 // - GlassScaffold with slivers and SectionHeaderDelegates
@@ -59,10 +59,10 @@ import 'sip_peer_detail_sheet.dart';
 import 'widgets/peer_service_preview_row.dart';
 import 'widgets/sip_hub_your_services_section.dart';
 
-/// SIP Hub — discover nearby SocialMesh peers, handshake, and chat.
+/// SIP Hub - discover nearby SocialMesh peers, handshake, and chat.
 ///
 /// Entry point for all SIP UI. Gated behind SIP_ENABLED feature flag
-/// at the drawer level — this screen assumes SIP is enabled.
+/// at the drawer level - this screen assumes SIP is enabled.
 class SipHubScreen extends ConsumerStatefulWidget {
   const SipHubScreen({super.key});
 
@@ -82,7 +82,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   String _lastLogSignature = '';
 
   // Rotates while a scan is in flight (manual or auto-scan tick).
-  // Idle between ticks even when auto-scan is on — green tint signals "armed".
+  // Idle between ticks even when auto-scan is on - green tint signals "armed".
   late final AnimationController _radarController;
 
   @override
@@ -107,8 +107,8 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         _startAutoScanTimer();
         // Screen-restore scan: NOT user-initiated (the user is just
         // navigating back into the hub with auto-scan already on).
-        // force=false so the resume-suppression window — which fires
-        // for ~10s after the app/screen comes to foreground —
+        // force=false so the resume-suppression window - which fires
+        // for ~10s after the app/screen comes to foreground -
         // actually does its job. The periodic timer will pick up
         // within 60s.
         _performScan(force: false);
@@ -166,7 +166,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     _autoScanTimer = Timer.periodic(_kAutoScanInterval, (_) {
       // Periodic background ticks must NOT use `force: true`. That
       // flag is for explicit user taps and bypasses the resume-
-      // suppression window + the cooldown jitter — both of which
+      // suppression window + the cooldown jitter - both of which
       // exist precisely to keep automatic emissions airtime-clean.
       // Letting the periodic tick honour the soft gates means it
       // skips ticks during congestion / the 10s post-resume window
@@ -179,7 +179,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
   void _onScan() {
     ref.read(hapticServiceProvider).trigger(HapticType.light);
-    // User-initiated taps are explicit intent — bypass the cooldown
+    // User-initiated taps are explicit intent - bypass the cooldown
     // / resume-suppression so the request goes out promptly. The
     // hard byte budget still gates this.
     _performScan(force: true);
@@ -228,10 +228,10 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     _radarController.reset();
   }
 
-  /// Called from build — checks if peers arrived since scan started.
+  /// Called from build - checks if peers arrived since scan started.
   void _checkScanComplete(int currentEpoch) {
     if (_scanning && currentEpoch > _scanStartEpoch) {
-      // Peers have arrived — cancel the scan window poll and stop scanning
+      // Peers have arrived - cancel the scan window poll and stop scanning
       // after a brief delay for perceived smoothness.
       _scanTimeoutTimer?.cancel();
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -251,7 +251,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     final sessions = dm?.activeSessions ?? [];
     final existing = sessions.where((s) => s.peerNodeId == peer.nodeId);
     if (existing.isNotEmpty) {
-      // Already have a conversation — open it directly.
+      // Already have a conversation - open it directly.
       Navigator.of(localContext).push(
         MaterialPageRoute<void>(
           builder: (_) => SipDmScreen(sessionTag: existing.first.sessionTag),
@@ -262,24 +262,24 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 
     final handshake = ref.read(sipHandshakeProvider);
     if (handshake == null) {
-      // No snackbar — the per-peer chip is the single source of truth for
+      // No snackbar - the per-peer chip is the single source of truth for
       // handshake state. A redundant "Could not connect" overlay on top of
       // the same red chip just adds noise.
       return;
     }
 
-    // Already handshaking — let the chip show progress, don't interrupt.
+    // Already handshaking - let the chip show progress, don't interrupt.
     //
     // pendingApproval is NOT a tile-tap shortcut: the dedicated
     // `_IncomingRequestTile` above the peer list owns Accept / Decline
     // as explicit, deliberate buttons. Tapping the peer tile must not
-    // stand in for consent — the mandatory ACCEPT / REJECT rule
+    // stand in for consent - the mandatory ACCEPT / REJECT rule
     // requires a direct user action on the consent UI.
     final currentState = handshake.getState(peer.nodeId);
     if (currentState == SipHandshakeState.pendingApproval) {
       return;
     }
-    // Accepted but no DM session yet — open the peer detail sheet so
+    // Accepted but no DM session yet - open the peer detail sheet so
     // the user can review capabilities / advertised services and start
     // a conversation on their own terms.
     if (currentState == SipHandshakeState.accepted) {
@@ -290,13 +290,13 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         currentState != SipHandshakeState.declined &&
         currentState != SipHandshakeState.failed &&
         currentState != SipHandshakeState.timedOut) {
-      // In-progress states — don't interrupt. Show detail sheet so the
+      // In-progress states - don't interrupt. Show detail sheet so the
       // user can see what's happening and the status chip in context.
       SipPeerDetailSheet.show(localContext, peer);
       return;
     }
 
-    // Explicit user retry from a terminal state — override the
+    // Explicit user retry from a terminal state - override the
     // 120s post-failure cooldown so the tap actually does something.
     // The cooldown exists to throttle automatic retransmits, not to
     // lock the user out for two minutes when they deliberately tap
@@ -313,7 +313,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     if (frame == null) {
       // Defence-in-depth: even with the override the manager can still
       // refuse (DM not available, lingering session entry). The chip
-      // remains in its current state — a snackbar layered on top would
+      // remains in its current state - a snackbar layered on top would
       // duplicate that signal and was reported as "extremely annoying"
       // during the simultaneous-open retry flow.
       return;
@@ -327,7 +327,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     final protocol = ref.read(protocolServiceProvider);
     protocol.sendSipGated(encoded, SipMessageType.hsHello);
     ref.read(sipCountersProvider).recordHandshakeInitiated();
-    // No snackbar — the handshake chip updates in real-time via epoch.
+    // No snackbar - the handshake chip updates in real-time via epoch.
   }
 
   void _showCounters() {
@@ -376,7 +376,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       }
     }
 
-    // Filter out peers that already have an active DM session —
+    // Filter out peers that already have an active DM session -
     // those appear under Conversations only (issue 3).
     final sessionNodeIds = sessions.map((s) => s.peerNodeId).toSet();
 
@@ -385,7 +385,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     // Discovered peers). They surface only inside the collapsed
     // Blocked section, which exposes an explicit Unblock affordance.
     //
-    // This is a pure render filter — no protocol or session state
+    // This is a pure render filter - no protocol or session state
     // is mutated here. The protocol layer already silently drops
     // future inbound HELLO / DM / MRRP frames from blocked peers
     // (Phase 6/7), so blocked entries shouldn't normally appear in
@@ -418,7 +418,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         !hasPendingRequests &&
         !hasBlocked;
 
-    // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
+    // lint-allow: haptic-feedback - keyboard dismissal, not interactive action
     return HelpTourController(
       topicId: 'sip_hub_overview',
       stepKeys: const {},
@@ -427,7 +427,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         child: GlassScaffold(
           title: l10n.sipHubTitle,
           actions: [
-            // Radar — single primary action: tap toggles auto-discovery.
+            // Radar - single primary action: tap toggles auto-discovery.
             // Always visible. Color tracks auto-scan state; rotation tracks
             // an in-flight scan (manual or auto-scan tick).
             IconButton(
@@ -546,7 +546,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   }
 
   // ---------------------------------------------------------------------------
-  // Empty state — icon + headline + description + scan button
+  // Empty state - icon + headline + description + scan button
   // ---------------------------------------------------------------------------
 
   List<Widget> _buildEmptySlivers(BuildContext context) {
@@ -614,7 +614,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     return [
       const SliverToBoxAdapter(child: SizedBox(height: AppTheme.spacing8)),
 
-      // Incoming handshake requests — shown first, require user action.
+      // Incoming handshake requests - shown first, require user action.
       // Hidden when user is a confirmed minor (contact restriction).
       if (pendingRequestNodeIds.isNotEmpty && !shouldRestrict) ...[
         SliverPersistentHeader(
@@ -637,7 +637,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         ),
       ],
 
-      // Your Services — local service instances + Create CTA. Always
+      // Your Services - local service instances + Create CTA. Always
       // rendered so the Create affordance is discoverable even when the
       // user has no services yet.
       ...buildYourServicesSlivers(context, ref),
@@ -708,7 +708,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
           ),
       ],
 
-      // Blocked section — collapsed by default, last in the list.
+      // Blocked section - collapsed by default, last in the list.
       // Render-layer only: tapping rows here only exposes Unblock,
       // never re-opens a session or sends a wire frame.
       if (blockedPeerNodeIds.isNotEmpty)
@@ -733,7 +733,7 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
 }
 
 // =============================================================================
-// Incoming Request Tile — Accept / Decline card for pending handshake requests
+// Incoming Request Tile - Accept / Decline card for pending handshake requests
 // =============================================================================
 
 class _IncomingRequestTile extends ConsumerWidget {
@@ -770,7 +770,7 @@ class _IncomingRequestTile extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Live header strip — pulsing dot + uppercase label
+            // Live header strip - pulsing dot + uppercase label
             Row(
               children: [
                 _LivePulseDot(color: accent),
@@ -788,7 +788,7 @@ class _IncomingRequestTile extends ConsumerWidget {
             ),
             const SizedBox(height: AppTheme.spacing12),
 
-            // Identity row — sigil avatar + name/hex/subtitle stack
+            // Identity row - sigil avatar + name/hex/subtitle stack
             Row(
               children: [
                 _buildAvatar(context, entry, patinaResult, traitResult),
@@ -838,7 +838,7 @@ class _IncomingRequestTile extends ConsumerWidget {
             ),
             const SizedBox(height: AppTheme.spacing12),
 
-            // Consent body — explains what tapping Accept enables. The
+            // Consent body - explains what tapping Accept enables. The
             // user must understand this is a privacy-bearing decision,
             // not a "friend request."
             Text(
@@ -869,7 +869,7 @@ class _IncomingRequestTile extends ConsumerWidget {
                           .acceptSipHandshake(peerNodeId);
                       // T+S: mark first-contact ONLY when the local
                       // user explicitly taps Accept. NOT on inbound
-                      // HELLO / DECLINE / ACCEPT alone — those don't
+                      // HELLO / DECLINE / ACCEPT alone - those don't
                       // carry consent. The mark gates the
                       // first-contact warning banner so it doesn't
                       // re-pop on subsequent re-handshakes.
@@ -930,7 +930,7 @@ class _IncomingRequestTile extends ConsumerWidget {
                     // suppresses future inbound consent). Keeps red
                     // as the strongest severity signal in the trio.
                     // Was previously SemanticColors.error which is
-                    // the same hex as AccentColors.red — same colour
+                    // the same hex as AccentColors.red - same colour
                     // as Decline, indistinguishable.
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AccentColors.red,
@@ -958,7 +958,7 @@ class _IncomingRequestTile extends ConsumerWidget {
     PatinaResult patinaResult,
     TraitResult traitResult,
   ) {
-    // Always render a sigil — `SigilAvatar` falls back to
+    // Always render a sigil - `SigilAvatar` falls back to
     // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
     // peer with no stored NodeDex entry yet (brand-new install, just-
     // discovered peer) still gets the constellation pattern. Matches
@@ -977,7 +977,7 @@ class _IncomingRequestTile extends ConsumerWidget {
   Future<void> _onBlock(BuildContext context, WidgetRef ref) async {
     // Capture every ref-derived reference before the first await.
     // This avoids any "ref used after await without mounted check"
-    // class of bug — ref is a long-lived ConsumerWidget handle, but
+    // class of bug - ref is a long-lived ConsumerWidget handle, but
     // the lint rule is mechanical and flags any post-await read.
     ref.read(hapticServiceProvider).trigger(HapticType.heavy);
     final manager = ref.read(peerSafetyManagerProvider.notifier);
@@ -1003,7 +1003,7 @@ class _IncomingRequestTile extends ConsumerWidget {
     // and is silently dropped before reaching consent UI again.
     await manager.block(peerNodeId, reasonCode: 'consent_block');
     // Silently clear the pending consent prompt without sending
-    // HS_DECLINE — the peer must see no wire-level confirmation
+    // HS_DECLINE - the peer must see no wire-level confirmation
     // that we exist or saw the request.
     protocol.cancelSipHandshake(peerNodeId);
   }
@@ -1071,7 +1071,7 @@ class _LivePulseDotState extends State<_LivePulseDot>
 }
 
 // =============================================================================
-// Peer tile — card container + BouncyTap with shake animation on decline
+// Peer tile - card container + BouncyTap with shake animation on decline
 // =============================================================================
 
 class _PeerTile extends ConsumerStatefulWidget {
@@ -1167,7 +1167,7 @@ class _PeerTileState extends ConsumerState<_PeerTile>
     final hexId =
         '!${widget.peer.nodeId.toRadixString(16).toUpperCase().padLeft(4, '0')}';
 
-    // Block taps while handshake is in-progress (not pendingApproval —
+    // Block taps while handshake is in-progress (not pendingApproval -
     // that requires user action so the card stays tappable) AND while
     // the per-peer fail cooldown is active. Tapping during cooldown
     // would silently no-op at the manager (`SIP_HS: ... blocked by
@@ -1257,14 +1257,14 @@ class _PeerTileState extends ConsumerState<_PeerTile>
                           _LastSeenChip(lastSeenMs: widget.peer.lastSeenMs),
                         ],
                       ),
-                      // Advertised services preview — empty-collapses
+                      // Advertised services preview - empty-collapses
                       // when the peer has no public MRRP adverts yet.
                       PeerServicePreviewRow(peerNodeId: widget.peer.nodeId),
                     ],
                   ),
                 ),
 
-                // Chevron — chat icon when DM session exists
+                // Chevron - chat icon when DM session exists
                 const SizedBox(width: AppTheme.spacing4),
                 Icon(
                   hasDmSession
@@ -1289,7 +1289,7 @@ class _PeerTileState extends ConsumerState<_PeerTile>
     PatinaResult patinaResult,
     TraitResult traitResult,
   ) {
-    // Always render a sigil — `SigilAvatar` falls back to
+    // Always render a sigil - `SigilAvatar` falls back to
     // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
     // peer with no stored NodeDex entry yet (brand-new install, just-
     // discovered peer) still gets the constellation pattern. Matches
@@ -1319,7 +1319,7 @@ class _PeerTileState extends ConsumerState<_PeerTile>
 }
 
 // =============================================================================
-// Handshake chip — styled container badge with pulse animation for in-progress
+// Handshake chip - styled container badge with pulse animation for in-progress
 // =============================================================================
 
 class _HandshakeChip extends StatefulWidget {
@@ -1328,7 +1328,7 @@ class _HandshakeChip extends StatefulWidget {
 
   /// Live per-peer fail-cooldown countdown in seconds, or 0 when no
   /// cooldown is active. When > 0 (and the peer has no DM session
-  /// yet), the chip switches to a disabled cooldown variant — the
+  /// yet), the chip switches to a disabled cooldown variant - the
   /// `_PeerTile` also gates taps to match.
   final int cooldownSeconds;
 
@@ -1373,7 +1373,7 @@ class _HandshakeChipState extends State<_HandshakeChip>
   bool get _isCoolingDown => !widget.hasDmSession && widget.cooldownSeconds > 0;
 
   void _syncAnimation() {
-    // Cooldown chip is intentionally static — the gate is by design,
+    // Cooldown chip is intentionally static - the gate is by design,
     // not an in-flight error. Pulse only for in-progress / negative
     // states without a DM session.
     if (!widget.hasDmSession &&
@@ -1419,7 +1419,7 @@ class _HandshakeChipState extends State<_HandshakeChip>
 
     // If a DM session exists, show "Connected" regardless of handshake state.
     // Cooldown takes precedence over the failed/declined chip when there's
-    // no DM session yet — the user wants to see how long until retry, not
+    // no DM session yet - the user wants to see how long until retry, not
     // a stale "Could not connect" badge that they can't act on.
     final (label, color, icon) = widget.hasDmSession
         ? (l10n.sipHubConnected, AccentColors.green, Icons.chat_bubble_outline)
@@ -1500,7 +1500,7 @@ class _HandshakeChipState extends State<_HandshakeChip>
   /// Compact "1m 50s" / "50s" formatter for the cooldown chip. Kept
   /// here rather than in a global util because the SIP fail cooldown
   /// is the only place this exact format is needed (the traceroute
-  /// cooldown chip uses bare seconds — a 30 s window doesn't need the
+  /// cooldown chip uses bare seconds - a 30 s window doesn't need the
   /// minute split). Output is plain digits + 'm'/'s' so it's
   /// understood without translation; surrounding ARB copy is the
   /// translatable surface.
@@ -1515,7 +1515,7 @@ class _HandshakeChipState extends State<_HandshakeChip>
 }
 
 // =============================================================================
-// Last seen chip — styled like handshake chip
+// Last seen chip - styled like handshake chip
 // =============================================================================
 
 class _LastSeenChip extends StatelessWidget {
@@ -1564,7 +1564,7 @@ class _LastSeenChip extends StatelessWidget {
 }
 
 // =============================================================================
-// Conversation tile — card container with last message + timestamp
+// Conversation tile - card container with last message + timestamp
 // =============================================================================
 
 class _ConversationTile extends ConsumerWidget {
@@ -1660,7 +1660,7 @@ class _ConversationTile extends ConsumerWidget {
                           ),
                       ],
                     ),
-                    // Last message preview — only when there IS a
+                    // Last message preview - only when there IS a
                     // message. The italic "No messages yet" line was
                     // adding a near-invisible row of vertical space
                     // that made empty conversations look bloated;
@@ -1714,7 +1714,7 @@ class _ConversationTile extends ConsumerWidget {
     PatinaResult patinaResult,
     TraitResult traitResult,
   ) {
-    // Always render a sigil — `SigilAvatar` falls back to
+    // Always render a sigil - `SigilAvatar` falls back to
     // `SigilGenerator.generate(nodeNum)` when `sigil` is null, so a
     // peer with no stored NodeDex entry yet (brand-new install, just-
     // discovered peer) still gets the constellation pattern. Matches
@@ -1823,7 +1823,7 @@ class _ConversationTile extends ConsumerWidget {
   // empty and produced a hollow row beneath the peer name. Substitute
   // a localised emoji label per content type. For signal we peek the
   // envelope's `signalKind` byte directly (offset 1) rather than
-  // running the full codec — the preview only needs a coarse label
+  // running the full codec - the preview only needs a coarse label
   // and we want to stay safe on truncated/malformed payloads.
   static String _previewForLastMessage(
     BuildContext context,
@@ -1854,7 +1854,7 @@ class _ConversationTile extends ConsumerWidget {
 }
 
 // =============================================================================
-// Debug counters — shown in a modal bottom sheet (not inline)
+// Debug counters - shown in a modal bottom sheet (not inline)
 // =============================================================================
 
 class _SipCountersSheet extends ConsumerWidget {
@@ -1961,7 +1961,7 @@ class _SipCountersSheet extends ConsumerWidget {
 }
 
 // =============================================================================
-// Shimmer placeholder — shown while scanning / waiting for peers
+// Shimmer placeholder - shown while scanning / waiting for peers
 // =============================================================================
 
 class _ShimmerPeerPlaceholder extends StatefulWidget {
@@ -2076,7 +2076,7 @@ class _ShimmerPeerPlaceholderState extends State<_ShimmerPeerPlaceholder>
 }
 
 // =============================================================================
-// Blocked peers section — collapsed by default, exposes Unblock only.
+// Blocked peers section - collapsed by default, exposes Unblock only.
 //
 // Hard rules (Phase 10):
 //   - Render-layer only: building this section MUST NOT mutate any
@@ -2113,7 +2113,7 @@ class _BlockedPeersSection extends ConsumerWidget {
           hoverColor: Colors.transparent,
         ),
         child: ExpansionTile(
-          // initiallyExpanded false per spec — section is collapsed
+          // initiallyExpanded false per spec - section is collapsed
           // by default to avoid drawing attention to blocked peers
           // every time the user opens SIP Hub.
           tilePadding: const EdgeInsets.symmetric(
@@ -2281,7 +2281,7 @@ class _BlockedPeerTile extends ConsumerWidget {
   }
 
   Future<void> _onUnblock(BuildContext context, WidgetRef ref) async {
-    // Capture every ref-derived reference before the first await —
+    // Capture every ref-derived reference before the first await -
     // satisfies the async-safety lint and keeps the unblock path
     // robust against widget unmount mid-confirm.
     ref.read(hapticServiceProvider).trigger(HapticType.medium);
@@ -2293,7 +2293,7 @@ class _BlockedPeerTile extends ConsumerWidget {
       message: l10n.sipHubUnblockConfirmBody,
       confirmLabel: l10n.sipHubUnblockConfirmAction,
       cancelLabel: l10n.sipHubUnblockConfirmCancel,
-      // Unblocking is non-destructive — it re-opens the safety gate
+      // Unblocking is non-destructive - it re-opens the safety gate
       // and restores the peer's ability to reach the user. The
       // confirm sheet exists for review, not warning.
       isDestructive: false,

@@ -10,10 +10,13 @@ import '../theme.dart';
 import '../../services/protocol/text_message_payload_budget.dart';
 import 'chat_formatting_toolbar.dart';
 
-typedef ChatComposerBudgetResolver =
-    TextMessagePayloadBudget Function(String text);
-typedef ChatComposerBudgetLabelBuilder =
-    String Function(BuildContext context, TextMessagePayloadBudget budget);
+typedef ChatComposerBudgetResolver = TextMessagePayloadBudget Function(
+  String text,
+);
+typedef ChatComposerBudgetLabelBuilder = String Function(
+  BuildContext context,
+  TextMessagePayloadBudget budget,
+);
 
 /// Blocks edits that would push the field past [maxBytes] UTF-8 bytes.
 ///

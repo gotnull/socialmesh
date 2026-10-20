@@ -82,7 +82,7 @@ abstract final class FileOfferFlags {
 }
 
 // ---------------------------------------------------------------------------
-// FILE_OFFER — manifest packet
+// FILE_OFFER - manifest packet
 // ---------------------------------------------------------------------------
 
 /// A file transfer manifest announcing file metadata.
@@ -373,7 +373,7 @@ class SmFileOffer {
 }
 
 // ---------------------------------------------------------------------------
-// FILE_CHUNK — payload fragment
+// FILE_CHUNK - payload fragment
 // ---------------------------------------------------------------------------
 
 /// A single chunk of a file transfer.
@@ -484,7 +484,7 @@ class SmFileChunk {
 }
 
 // ---------------------------------------------------------------------------
-// FILE_NACK — missing chunk request
+// FILE_NACK - missing chunk request
 // ---------------------------------------------------------------------------
 
 /// Request for retransmission of missing chunks.
@@ -571,7 +571,7 @@ class SmFileNack {
 }
 
 // ---------------------------------------------------------------------------
-// FILE_ACK — completion confirmation
+// FILE_ACK - completion confirmation
 // ---------------------------------------------------------------------------
 
 /// File transfer acknowledgement status.

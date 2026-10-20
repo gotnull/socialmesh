@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// LAN peer sync service — direct TCP connect for mesh feed sync, with
+/// LAN peer sync service - direct TCP connect for mesh feed sync, with
 /// optional mDNS discovery.
 ///
 /// First-cut mode uses direct connect only: [startListening] + [connectAndSync].
@@ -33,18 +33,18 @@ import '../mesh_feed/mesh_sync_service.dart';
 import 'lan_sync_protocol.dart';
 import 'mesh_sync_session.dart';
 
-/// LAN peer sync service — TCP direct-connect + optional mDNS discovery.
+/// LAN peer sync service - TCP direct-connect + optional mDNS discovery.
 ///
 /// Two operating modes (not mutually exclusive):
 ///
 ///   **Direct connect** (first-cut, minimal risk):
-///     1. [startListening] — bind TCP server for incoming sync connections
-///     2. [connectAndSync] — connect to a known peer by host:port
+///     1. [startListening] - bind TCP server for incoming sync connections
+///     2. [connectAndSync] - connect to a known peer by host:port
 ///
 ///   **mDNS discovery** (optional, added later):
-///     1. [startAdvertising] — mDNS broadcast + TCP listener
-///     2. [startDiscovery]   — scan for peers via mDNS
-///     3. [syncWithPeer]     — sync with a discovered [DiscoveredPeer]
+///     1. [startAdvertising] - mDNS broadcast + TCP listener
+///     2. [startDiscovery]   - scan for peers via mDNS
+///     3. [syncWithPeer]     - sync with a discovered [DiscoveredPeer]
 ///
 /// All sync operations are wired through [MeshSyncService] for cursor
 /// management and [MeshFeedRepository] for post ingest. This ensures
@@ -60,7 +60,7 @@ class LanSyncService {
   }) : _feedRepo = feedRepository,
        _localPeerId = buildLanSyncPeerId(localNodeNum);
 
-  /// Local mesh node number — identifies this peer.
+  /// Local mesh node number - identifies this peer.
   final int localNodeNum;
 
   /// Local display name for mDNS announcements.
@@ -104,7 +104,7 @@ class LanSyncService {
   List<DiscoveredPeer> get currentPeers => _peers.values.toList();
 
   // -------------------------------------------------------------------------
-  // Direct connect — TCP listener + outbound connect (no mDNS)
+  // Direct connect - TCP listener + outbound connect (no mDNS)
   // -------------------------------------------------------------------------
 
   /// Whether the TCP listener is active.
@@ -115,10 +115,10 @@ class LanSyncService {
 
   /// Start listening for incoming sync connections on [port].
   ///
-  /// This binds a TCP server only — no mDNS advertisement. Peers must
+  /// This binds a TCP server only - no mDNS advertisement. Peers must
   /// know the host:port to connect directly via [connectAndSync].
   ///
-  /// Safe to call multiple times — subsequent calls are no-ops.
+  /// Safe to call multiple times - subsequent calls are no-ops.
   Future<void> startListening({int port = lanSyncDefaultPort}) async {
     if (_server != null) return;
 
@@ -133,10 +133,10 @@ class LanSyncService {
 
   /// Connect directly to a peer at [host]:[port] and run a full sync.
   ///
-  /// This is the preferred path for the first cut — no mDNS discovery
+  /// This is the preferred path for the first cut - no mDNS discovery
   /// needed. The peer must be listening via [startListening].
   ///
-  /// [nodeNum] is optional — if unknown, the hello exchange will reveal
+  /// [nodeNum] is optional - if unknown, the hello exchange will reveal
   /// the remote peer's identity. Providing it enables a stable initial
   /// session peer ID.
   Future<MeshSyncSession> connectAndSync(
@@ -195,7 +195,7 @@ class LanSyncService {
   }
 
   // -------------------------------------------------------------------------
-  // mDNS advertising + discovery (optional — adds Bonsoir dependency)
+  // mDNS advertising + discovery (optional - adds Bonsoir dependency)
   // -------------------------------------------------------------------------
 
   /// Start advertising this device as available for sync via mDNS.
@@ -675,7 +675,7 @@ class LanSyncService {
       // Ingest each post through the repository path.
       for (final postRow in batch.posts) {
         try {
-          // Strip is_local from the wire — the sender's local flag must not
+          // Strip is_local from the wire - the sender's local flag must not
           // propagate to the receiver. Authorship is determined by
           // authorNodeNum at display time.
           postRow['is_local'] = 0;
@@ -914,7 +914,7 @@ class LanSyncService {
 }
 
 // ---------------------------------------------------------------------------
-// Sync channel — structured I/O over line-delimited JSON
+// Sync channel - structured I/O over line-delimited JSON
 // ---------------------------------------------------------------------------
 
 /// Wraps a [Socket] for typed message send/receive with timeout.

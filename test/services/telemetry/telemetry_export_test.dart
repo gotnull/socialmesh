@@ -44,7 +44,7 @@ void main() {
     });
   });
 
-  group('csvColumns — stable, documented headers in order', () {
+  group('csvColumns - stable, documented headers in order', () {
     test('device_metrics header', () {
       expect(TelemetryExport.csvColumns(TelemetryType.deviceMetrics), [
         'schema_version',

@@ -14,7 +14,7 @@
 //   2. Driving a sendChannelTxtMsg through the session causes a TX
 //      debugPrint that does NOT contain the message plaintext hex.
 //   3. Driving a non-sensitive command (getBattAndStorage) still emits
-//      a full payload preview — sanity check we didn't over-redact.
+//      a full payload preview - sanity check we didn't over-redact.
 
 import 'dart:async';
 import 'dart:typed_data';
@@ -63,7 +63,7 @@ Future<List<String>> captureDebugPrints(Future<void> Function() body) async {
 }
 
 void main() {
-  group('D4 — sensitive payload denylists', () {
+  group('D4 - sensitive payload denylists', () {
     test('TX denylist contains all known body/identity-bearing commands', () {
       // Spot-check: regressions here mean a new sensitive code was added
       // to MeshCoreCommands without joining the denylist.
@@ -98,7 +98,7 @@ void main() {
     });
 
     test(
-      'safe commands are NOT on the denylist (sanity — we did not over-redact)',
+      'safe commands are NOT on the denylist (sanity - we did not over-redact)',
       () {
         expect(
           MeshCoreSession.sensitiveTxPayloadCodes,
@@ -120,7 +120,7 @@ void main() {
     );
   });
 
-  group('D4 — runtime redaction in kDebugMode TX/RX dump', () {
+  group('D4 - runtime redaction in kDebugMode TX/RX dump', () {
     test(
       'sendChannelTxtMsg TX dump never contains the message plaintext hex',
       () async {
@@ -188,7 +188,7 @@ void main() {
       final session = MeshCoreSession(transport);
 
       final captured = await captureDebugPrints(() async {
-        // getBattAndStorage is a 1-byte command (no payload) — we just
+        // getBattAndStorage is a 1-byte command (no payload) - we just
         // want to verify it does NOT get redacted.
         await session.sendFrame(
           MeshCoreFrame.simple(MeshCoreCommands.getBattAndStorage),
@@ -224,7 +224,7 @@ void main() {
       builder.addByte(0x16); // role
       builder.addByte(0x16); // txPower
       builder.add(fakePk); // 32-byte pk
-      // pad to >=35 bytes minimum — selfInfo parser requires it
+      // pad to >=35 bytes minimum - selfInfo parser requires it
       builder.add(Uint8List(48));
       final payload = builder.toBytes();
 

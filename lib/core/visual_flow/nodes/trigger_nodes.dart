@@ -7,7 +7,7 @@
 // - Emits an EventSignalOutputData carrying the trigger config downstream
 // - Serializes/deserializes its configuration via VSWidgetNode's getValue/setValue
 //
-// Trigger nodes are source nodes — they have no inputs and exactly one output.
+// Trigger nodes are source nodes - they have no inputs and exactly one output.
 // They sit on the left edge of the automation graph canvas.
 
 import 'package:flutter/material.dart';
@@ -16,13 +16,14 @@ import '../interfaces/event_signal_interface.dart';
 import '../vs_node_view/common.dart';
 import '../vs_node_view/data/vs_subgroup.dart';
 import '../vs_node_view/special_nodes/vs_widget_node.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/// Node width for trigger nodes — wider than the default to accommodate
+/// Node width for trigger nodes - wider than the default to accommodate
 /// configuration widgets with proper padding.
 const double _kTriggerNodeWidth = 220.0;
 
@@ -685,7 +686,7 @@ VSNodeDataBuilder _buildTriggerNodeBuilder(String triggerType) {
       };
 
     default:
-      // Fallback for unknown trigger types — produces a simple event node.
+      // Fallback for unknown trigger types - produces a simple event node.
       return (Offset offset, _) {
         return VSWidgetNode(
           type: triggerType,

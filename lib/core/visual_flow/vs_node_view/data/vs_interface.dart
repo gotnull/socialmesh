@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Modified: Icon sizes increased from 15dp to 24dp for mobile touch targets.
 
@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'standard_interfaces/vs_dynamic_interface.dart';
 import 'vs_node_data.dart';
 
-/// Interface icon size — enlarged from upstream 15dp for mobile usability.
+/// Interface icon size - enlarged from upstream 15dp for mobile usability.
 const double kInterfaceIconSize = 24.0;
 
 /// Base interface class.

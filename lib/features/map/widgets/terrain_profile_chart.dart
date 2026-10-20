@@ -123,7 +123,7 @@ class TerrainProfileChart extends StatelessWidget {
         ),
       );
 
-      // Fresnel lower bound — fills below-band area with transparent color
+      // Fresnel lower bound - fills below-band area with transparent color
       // so fl_chart's belowBarData from the upper bound is clipped.
       bars.add(
         LineChartBarData(

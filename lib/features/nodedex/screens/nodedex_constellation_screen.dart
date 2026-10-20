@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Constellation Screen — minimal mesh graph visualization.
+// NodeDex Constellation Screen - minimal mesh graph visualization.
 //
 // Renders co-seen node relationships as a calm, star-chart-style graph.
 // Force-directed layout computed by nodeDexConstellationProvider.
@@ -136,7 +136,7 @@ class _NodeDexConstellationScreenState
             ? _buildEmptyState(context)
             : Column(
                 children: [
-                  // Main canvas — takes all available space
+                  // Main canvas - takes all available space
                   Expanded(
                     child: Stack(
                       children: [
@@ -202,7 +202,7 @@ class _NodeDexConstellationScreenState
                     ),
                   ),
 
-                  // Fixed bottom bar — always present, content changes
+                  // Fixed bottom bar - always present, content changes
                   _BottomInfoBar(
                     selectedNodeNum: _selectedNodeNum,
                     nodeCount: constellation.nodeCount,
@@ -260,7 +260,7 @@ class _NodeDexConstellationScreenState
         _selectedNodeNum = _selectedNodeNum == nearest ? null : nearest;
       });
     } else {
-      // Tapped empty space — deselect
+      // Tapped empty space - deselect
       if (_selectedNodeNum != null) {
         setState(() => _selectedNodeNum = null);
       }
@@ -363,7 +363,7 @@ class _NodeDexConstellationScreenState
 }
 
 // =============================================================================
-// Constellation Painter — clean, no pulsing, no trait rings
+// Constellation Painter - clean, no pulsing, no trait rings
 // =============================================================================
 
 class _ConstellationPainter extends CustomPainter {
@@ -655,7 +655,7 @@ class _ConstellationPainter extends CustomPainter {
 }
 
 // =============================================================================
-// Bottom Info Bar — fixed height, stable layout
+// Bottom Info Bar - fixed height, stable layout
 // =============================================================================
 
 class _BottomInfoBar extends ConsumerWidget {

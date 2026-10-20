@@ -6,14 +6,14 @@
 //
 // Root cause: clearDeviceDataBeforeConnect[Ref] ran telemetryStorage
 // .clearAllData() (and routeStorage.clearAllRoutes()) on EVERY connection,
-// unconditionally — not gated behind clearNodeData the way persistent node
+// unconditionally - not gated behind clearNodeData the way persistent node
 // storage already was. Reopening the app triggers an auto-reconnect to the
 // same radio, so all collected device metrics, position logs, and sensor
 // data were wiped on restart even though nothing was switched.
 //
 // Fix: the connect path no longer deletes persisted stores at all. Telemetry
 // survives every reconnect, and cross-radio isolation comes from storage
-// scoping instead — each radio's telemetry lives in its own scope, so a
+// scoping instead - each radio's telemetry lives in its own scope, so a
 // switch swaps the dataset rather than erasing the previous radio's history.
 
 import 'dart:io';
@@ -184,38 +184,35 @@ void main() {
   }
 
   group('Telemetry reconnect persistence (regression)', () {
-    test(
-      'same-device reconnect (clearNodeData: false) preserves telemetry history',
-      () async {
-        await seedTelemetry();
-        expect(await telemetry.getAllDeviceMetrics(), isNotEmpty);
+    test('same-device reconnect (clearNodeData: false) preserves telemetry history', () async {
+      await seedTelemetry();
+      expect(await telemetry.getAllDeviceMetrics(), isNotEmpty);
 
-        // Reopening the app reconnects to the same radio — same device id,
-        // clearNodeData defaults to false.
-        await clearDeviceDataBeforeConnectRef(
-          capturedRef,
-          clearNodeData: false,
-          previousDeviceId: 'AA:BB:CC:DD:EE:01',
-          newDeviceId: 'AA:BB:CC:DD:EE:01',
-        );
+      // Reopening the app reconnects to the same radio - same device id,
+      // clearNodeData defaults to false.
+      await clearDeviceDataBeforeConnectRef(
+        capturedRef,
+        clearNodeData: false,
+        previousDeviceId: 'AA:BB:CC:DD:EE:01',
+        newDeviceId: 'AA:BB:CC:DD:EE:01',
+      );
 
-        expect(
-          await telemetry.getAllDeviceMetrics(),
-          isNotEmpty,
-          reason: 'device metrics must survive a same-device reconnect',
-        );
-        expect(
-          await telemetry.getAllEnvironmentMetrics(),
-          isNotEmpty,
-          reason: 'sensor data must survive a same-device reconnect',
-        );
-        expect(
-          await telemetry.getAllPositionLogs(),
-          isNotEmpty,
-          reason: 'location history must survive a same-device reconnect',
-        );
-      },
-    );
+      expect(
+        await telemetry.getAllDeviceMetrics(),
+        isNotEmpty,
+        reason: 'device metrics must survive a same-device reconnect',
+      );
+      expect(
+        await telemetry.getAllEnvironmentMetrics(),
+        isNotEmpty,
+        reason: 'sensor data must survive a same-device reconnect',
+      );
+      expect(
+        await telemetry.getAllPositionLogs(),
+        isNotEmpty,
+        reason: 'location history must survive a same-device reconnect',
+      );
+    });
 
     test(
       'a device switch does not delete the previous radio\'s telemetry',

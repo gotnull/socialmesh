@@ -57,7 +57,7 @@ void main() {
     });
 
     test('rejects out-of-range cell encoded into the byte', () {
-      // 0xFF: cell nibble = 0xF (=15) > 8 — invalid.
+      // 0xFF: cell nibble = 0xF (=15) > 8 - invalid.
       expect(TttCodec.decodeMove(Uint8List.fromList([0xFF])), isNull);
     });
 
@@ -68,7 +68,7 @@ void main() {
 
     test('never throws on garbage', () {
       for (final byte in <int>[0x00, 0x18, 0xFE, 0xAB, 0x7F]) {
-        // Either Some or null — but never an exception. The
+        // Either Some or null - but never an exception. The
         // `decodeMove` contract is no-throw.
         expect(
           () => TttCodec.decodeMove(Uint8List.fromList([byte])),

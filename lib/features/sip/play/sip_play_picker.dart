@@ -4,7 +4,7 @@
 // Public helper for sending a SIP Play `offer` envelope. The Play
 // composer panel now renders one card per registered game directly
 // (no intermediate picker bottom sheet), so this file is a single
-// dispatch function — the per-game cards each call this on tap.
+// dispatch function - the per-game cards each call this on tap.
 //
 // Caller is responsible for verifying that:
 //   - the session is active,
@@ -86,7 +86,7 @@ Future<void> sendSipPlayOffer({
 
   await haptics.trigger(HapticType.medium);
 
-  // u16 instance id — random per offer, scoped to (sessionTag, peer).
+  // u16 instance id - random per offer, scoped to (sessionTag, peer).
   // Collisions are statistically negligible at conversation timescales
   // and the engine ignores envelopes whose instanceId doesn't match
   // an offer it has already locked, so a freak collision drops cleanly.

@@ -111,6 +111,6 @@ String safeTruncateAtWord(
     return '${prefix.substring(0, lastSpace)}$suffix';
   }
 
-  // No good word boundary — hard cut at grapheme boundary
+  // No good word boundary - hard cut at grapheme boundary
   return '$prefix$suffix';
 }

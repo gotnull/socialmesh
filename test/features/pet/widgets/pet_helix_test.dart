@@ -20,10 +20,10 @@ import 'package:socialmesh/features/pet/models/pet_enums.dart';
 import 'package:socialmesh/features/pet/widgets/pet_render_model.dart';
 import 'package:socialmesh/features/pet/widgets/pet_sigil_painter.dart';
 
-/// Seed with presence bit 23 SET — helix enabled when branch/stage allow.
+/// Seed with presence bit 23 SET - helix enabled when branch/stage allow.
 const int _seedWithHelix = 0x00800000;
 
-/// Seed with presence bit 23 CLEAR — helix disabled even at adult.
+/// Seed with presence bit 23 CLEAR - helix disabled even at adult.
 const int _seedWithoutHelix = 0x00000000;
 
 PetHelixSpec _specFor({
@@ -37,7 +37,7 @@ PetHelixSpec _specFor({
 ).helix;
 
 void main() {
-  group('PetHelixSpec — determinism', () {
+  group('PetHelixSpec - determinism', () {
     test('same identity produces identical spec fields', () {
       final a = _specFor(
         seed: _seedWithHelix,
@@ -83,7 +83,7 @@ void main() {
     });
   });
 
-  group('PetHelixSpec — presence gating', () {
+  group('PetHelixSpec - presence gating', () {
     test('egg stage → disabled regardless of seed or branch', () {
       for (final branch in PetBranch.values) {
         final spec = _specFor(
@@ -150,7 +150,7 @@ void main() {
     });
   });
 
-  group('PetHelixSpec — bounded complexity', () {
+  group('PetHelixSpec - bounded complexity', () {
     test('strandCount ∈ {1, 2, 3} across a seed sweep', () {
       for (var i = 0; i < 256; i++) {
         final seed = _seedWithHelix | i;
@@ -170,7 +170,7 @@ void main() {
       }
     });
 
-    test('segmentCount is bounded (≤ 24 — helix is cheap)', () {
+    test('segmentCount is bounded (≤ 24 - helix is cheap)', () {
       final spec = _specFor(
         seed: _seedWithHelix,
         stage: PetStage.adult,
@@ -261,9 +261,9 @@ void main() {
     });
   });
 
-  group('PetHelixSpec — branch style influence', () {
+  group('PetHelixSpec - branch style influence', () {
     test('volatile produces non-zero brokenness mask', () {
-      // Try a sweep since the mask derives from dnaSeed — most seeds
+      // Try a sweep since the mask derives from dnaSeed - most seeds
       // should produce at least one broken segment on volatile.
       var foundBroken = false;
       for (var i = 0; i < 32; i++) {
@@ -300,7 +300,7 @@ void main() {
     });
 
     test('dimmed has collapsed radius vs luminous', () {
-      // Pinned for the same seed — luminous reaches further.
+      // Pinned for the same seed - luminous reaches further.
       final seed = _seedWithHelix | 0xA5;
       final luminous = _specFor(
         seed: seed,
@@ -344,7 +344,7 @@ void main() {
     });
   });
 
-  group('Paint smoke — full matrix including helix', () {
+  group('Paint smoke - full matrix including helix', () {
     testWidgets('every stage × branch × mood paints with helix enabled', (
       tester,
     ) async {

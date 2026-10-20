@@ -4,10 +4,10 @@
 /// Riverpod 3.x providers for the Global Layer (MQTT) feature.
 ///
 /// These providers manage the reactive state for:
-/// - [GlobalLayerConfig] — broker settings, privacy toggles, topics
-/// - [GlobalLayerConnectionState] — connection state machine
-/// - [GlobalLayerMetrics] — health metrics and throughput
-/// - [GlobalLayerSecureStorage] — persistence layer
+/// - [GlobalLayerConfig] - broker settings, privacy toggles, topics
+/// - [GlobalLayerConnectionState] - connection state machine
+/// - [GlobalLayerMetrics] - health metrics and throughput
+/// - [GlobalLayerSecureStorage] - persistence layer
 ///
 /// All providers follow Riverpod 3.x patterns:
 /// - [Notifier] / [AsyncNotifier] instead of StateNotifier
@@ -392,7 +392,7 @@ final globalLayerMetricsProvider =
 
 /// Notifier that manages the diagnostics report state.
 ///
-/// The diagnostics flow is driven by the UI — each check is executed
+/// The diagnostics flow is driven by the UI - each check is executed
 /// sequentially, and results are pushed into this provider. The
 /// actual network checks are performed by a service layer, not here.
 class GlobalLayerDiagnosticsNotifier extends Notifier<DiagnosticReport?> {
@@ -499,7 +499,7 @@ final globalLayerActiveErrorCountProvider = Provider<int>((ref) {
   return metrics.activeErrorCount;
 });
 
-/// Health status derived from metrics — used for the status indicator.
+/// Health status derived from metrics - used for the status indicator.
 final globalLayerIsHealthyProvider = Provider<bool>((ref) {
   final connectionState = ref.watch(globalLayerConnectionStateProvider);
   if (!connectionState.isActive) return false;

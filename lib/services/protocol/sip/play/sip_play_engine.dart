@@ -16,7 +16,7 @@ import 'sip_play_payload.dart';
 import 'sip_play_registry.dart';
 
 /// Direction of the entry as the engine sees it. The engine doesn't
-/// know about the SIP DM session model directly — callers tag every
+/// know about the SIP DM session model directly - callers tag every
 /// envelope they hand in with the local-side perspective so mark
 /// assignment + "is it my turn?" work without further context.
 enum SipPlayEntryDirection {
@@ -63,7 +63,7 @@ enum SipPlayInstanceStatus {
   /// Game ended in a draw (board full, no winner).
   draw,
 
-  /// Receiver doesn't recognise this gameType — terminal, no further
+  /// Receiver doesn't recognise this gameType - terminal, no further
   /// state changes applied. Renderer shows the safe fallback UX.
   unsupported,
 }
@@ -75,7 +75,7 @@ enum SipPlayInstanceStatus {
 /// subclasses ([TttInstanceState], future C4InstanceState, ...) or
 /// the catch-all [UnsupportedInstanceState] for unknown game-type
 /// codes. Consumers use Dart 3 sealed-switch to destructure on the
-/// runtime type — the compiler enforces exhaustiveness so adding a
+/// runtime type - the compiler enforces exhaustiveness so adding a
 /// new game can't silently miss a render path.
 sealed class SipPlayInstanceState {
   /// Wire game-type byte. Held as raw int so unsupported codes can
@@ -100,7 +100,7 @@ sealed class SipPlayInstanceState {
   });
 
   /// Convenience: is the local user the side whose turn it is?
-  /// Game-specific — each subclass compares its own turn-marker
+  /// Game-specific - each subclass compares its own turn-marker
   /// against its own localMark/localDisc/etc.
   bool get isLocalTurn;
 
@@ -215,7 +215,7 @@ class UnsupportedInstanceState extends SipPlayInstanceState {
 /// Pure-replay SIP Play engine.
 ///
 /// Hard invariants (locked by the user before implementation):
-///   - State is ALWAYS derived from the entry log — no hidden flags,
+///   - State is ALWAYS derived from the entry log - no hidden flags,
 ///     no timers, no side-channel mutation. Re-running [replay] over
 ///     the same log produces an identical [SipPlayInstanceState].
 ///   - Strict seq enforcement: an inbound `move` envelope must have
@@ -247,9 +247,9 @@ class SipPlayEngine {
   /// game.
   static SipPlayInstanceState replay(List<SipPlayEntry> entries) {
     if (entries.isEmpty) {
-      // Pre-offer placeholder. Callers shouldn't normally hit this —
+      // Pre-offer placeholder. Callers shouldn't normally hit this -
       // they hold an instance only after the offer envelope has been
-      // appended — but the engine has to return something safe.
+      // appended - but the engine has to return something safe.
       return _emptyState(0, 0);
     }
 
@@ -261,7 +261,7 @@ class SipPlayEngine {
     final instanceId = first.instanceId;
     final gameTypeCode = first.gameTypeCode;
 
-    // Unknown gameType is a hard terminal — receivers do not interact
+    // Unknown gameType is a hard terminal - receivers do not interact
     // beyond rendering the unsupported fallback.
     if (!SipPlayRegistry.isSupported(gameTypeCode)) {
       AppLogging.sipPlay(
@@ -552,7 +552,7 @@ class SipPlayEngine {
   }
 
   /// Defensive placeholder for the empty-entries edge case (callers
-  /// shouldn't normally hit this — they hold an instance only after
+  /// shouldn't normally hit this - they hold an instance only after
   /// the offer envelope has been appended). Returns a TTT state in
   /// the pendingOffer status with an empty board because TTT is the
   /// default game type when the engine has no envelope to lock from.
@@ -574,7 +574,7 @@ class SipPlayEngine {
   /// log order within each group. UI providers use this to derive
   /// per-instance views from one session's full play-entry stream.
   ///
-  /// Pure helper — no I/O, no clock.
+  /// Pure helper - no I/O, no clock.
   static Map<int, List<SipPlayEntry>> groupByInstance(
     List<SipPlayEntry> entries,
   ) {
@@ -589,8 +589,8 @@ class SipPlayEngine {
 
   /// Whether the given DM-play entry log contains any non-terminal
   /// instance (`pendingOffer` or `active`) for [gameTypeCode]. Used by
-  /// the offer paths — both the sender (`sendSipPlayOffer`) and the
-  /// receiver (`SipDmManager.handleInboundPlay`) — to refuse a second
+  /// the offer paths - both the sender (`sendSipPlayOffer`) and the
+  /// receiver (`SipDmManager.handleInboundPlay`) - to refuse a second
   /// concurrent offer for the same game in the same session.
   ///
   /// Groups entries by instanceId; each group is matched against
@@ -603,7 +603,7 @@ class SipPlayEngine {
   ///    or earlier replay context is missing. Without this, a
   ///    truncated history (offer entry lost, only the decline
   ///    surviving) replays back to `pendingOffer` and blocks every
-  ///    future offer for that gameType forever — see SocialMesh issue
+  ///    future offer for that gameType forever - see SocialMesh issue
   ///    where the picker stuck on "A game offer is already in
   ///    progress" after a peer declined.
   /// 2. **Replay fallback.** When no terminal envelope is present, run
@@ -613,7 +613,7 @@ class SipPlayEngine {
   ///
   /// When a group carries a terminal envelope but replay still lands
   /// on a non-terminal status, that's a real history-coherence bug
-  /// upstream — log it (not deduped at the engine level — callers
+  /// upstream - log it (not deduped at the engine level - callers
   /// invoke this rarely, on offer-tap or offer-receive) so the lost
   /// entry can be investigated, but do not block the user.
   static bool hasNonTerminalInstanceForGameType({
@@ -697,7 +697,7 @@ enum _LifecycleOutcome {
   /// skips to the next entry.
   dropped,
 
-  /// The entry is a `move`. Lifecycle has nothing to say — the caller
+  /// The entry is a `move`. Lifecycle has nothing to say - the caller
   /// must decode the per-game move payload and apply it.
   delegate,
 }

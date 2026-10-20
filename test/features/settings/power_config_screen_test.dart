@@ -231,7 +231,7 @@ void main() {
 
     expect(find.text(_l10n.powerConfigAdcMultiplierRangeError), findsOneWidget);
 
-    // Tap Save — should be a silent no-op because the button is disabled.
+    // Tap Save - should be a silent no-op because the button is disabled.
     await tester.tap(find.text(_l10n.powerConfigSave));
     await _settle(tester);
     expect(protocol.savedConfigs, isEmpty);

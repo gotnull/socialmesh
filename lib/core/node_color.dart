@@ -85,11 +85,11 @@ String nodeMarkerLabel(MeshNode node) {
   final shortName = node.shortName;
   if (shortName != null && shortName.isNotEmpty) {
     // safeInitials sanitizes (repairs lone surrogates / strips controls) then
-    // takes up to 4 grapheme clusters — grapheme-aware for emoji + accents.
+    // takes up to 4 grapheme clusters - grapheme-aware for emoji + accents.
     final initials = safeInitials(shortName, 4);
     if (initials.isNotEmpty) return initials;
   }
-  // Last 4 hex digits — matches the canonical short-form id used
+  // Last 4 hex digits - matches the canonical short-form id used
   // elsewhere in the app for nodes without a self-reported name.
   final hex = node.nodeNum.toRadixString(16).padLeft(8, '0');
   return hex.substring(hex.length - 4).toUpperCase();

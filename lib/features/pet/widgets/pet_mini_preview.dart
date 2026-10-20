@@ -57,7 +57,7 @@ class PetMiniPreview extends ConsumerWidget {
   }
 }
 
-/// Same renderer but takes the decoded state directly — useful for
+/// Same renderer but takes the decoded state directly - useful for
 /// screens that already have the observation (e.g. the Companion section
 /// in NodeDex detail).
 class PetPreviewFromState extends StatelessWidget {
@@ -82,7 +82,7 @@ class PetPreviewFromState extends StatelessWidget {
         observedAt: DateTime.now(),
       ),
       isStale: isStale,
-      // Card-sized preview — richer than a list row but without the
+      // Card-sized preview - richer than a list row but without the
       // home screen's interactive parallax.
       mode: PetRenderMode.card,
     );

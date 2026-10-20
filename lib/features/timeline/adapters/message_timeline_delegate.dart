@@ -66,7 +66,7 @@ class MessageTimelineDelegate extends TimelineInteractionDelegate {
             accentColor: _accentColor,
             onOpenChat: (detailContext) {
               // Pop detail screen, then push ChatScreen from the timeline's
-              // navigator using MaterialPageRoute — matching the standard
+              // navigator using MaterialPageRoute - matching the standard
               // navigation pattern used by the messaging contacts list.
               Navigator.of(detailContext).pop();
               Navigator.of(context).push(

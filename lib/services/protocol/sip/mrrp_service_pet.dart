@@ -5,7 +5,7 @@
 ///
 /// Serves an opt-in, ≤8-byte public summary of the owner's Node Pet
 /// (stage, branch, mood class, age, flags). The handler itself is a pure
-/// responder — it takes a byte-provider callback and returns the bytes
+/// responder - it takes a byte-provider callback and returns the bytes
 /// on request. Owner state resolution and codec live in the feature
 /// layer (`lib/features/pet/`), preserving the protocol directory's
 /// no-features-imports invariant.

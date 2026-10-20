@@ -44,7 +44,7 @@ void main() {
         sheetSource.contains('showModalBottomSheet'),
         false,
         reason:
-            'Legacy showModalBottomSheet usage was the original bug — must '
+            'Legacy showModalBottomSheet usage was the original bug - must '
             'stay out of this file.',
       );
     });
@@ -69,7 +69,7 @@ void main() {
       }
     });
 
-    test('reuses existing providers — no parallel local state', () {
+    test('reuses existing providers - no parallel local state', () {
       // Sprint 2 moved the provider plumbing into the shared
       // node_actions.dart helper. The sheet itself must delegate to it
       // (not run its own protocol round-trip) and must still read the
@@ -134,7 +134,7 @@ void main() {
       // Sheet-side markers cover sheet lifecycle (open, action picked,
       // dismissed). Action-side markers (favorite toggled, mute toggled,
       // traceroute requested/denied) moved into node_actions.dart in
-      // Sprint 2 and now carry the [NodeActions] prefix — those are
+      // Sprint 2 and now carry the [NodeActions] prefix - those are
       // pinned by the node_actions_consolidation_test.dart sibling.
       const sheetSideMarkers = [
         '[QuickActions] sheet opened',
@@ -204,7 +204,7 @@ void main() {
         ),
         true,
         reason:
-            'Long-press must be exposed for all nodes — the old myNode-only '
+            'Long-press must be exposed for all nodes - the old myNode-only '
             'gate is gone.',
       );
     });

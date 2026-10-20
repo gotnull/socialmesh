@@ -155,12 +155,10 @@ class _OverlayCard extends StatelessWidget {
                           Flexible(
                             child: Builder(
                               builder: (context) {
-                                final depCity = lookupAirport(
-                                  flight.departure,
-                                )?.city;
-                                final arrCity = lookupAirport(
-                                  flight.arrival,
-                                )?.city;
+                                final depCity = lookupAirport(flight.departure)
+                                    ?.city;
+                                final arrCity = lookupAirport(flight.arrival)
+                                    ?.city;
                                 final route = depCity != null && arrCity != null
                                     ? '${flight.departure} ($depCity) → ${flight.arrival} ($arrCity)'
                                     : '${flight.departure} → ${flight.arrival}';

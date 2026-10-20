@@ -8,7 +8,7 @@
 // (SharedPreferences sidecar) rather than living directly on the persisted
 // MeshNode record. During NodesNotifier._init(), replaceAllFavorites() was
 // called with whatever protocol.nodes contained at that moment. Because BLE
-// streams the NodeDB incrementally, this snapshot was often PARTIAL — nodes
+// streams the NodeDB incrementally, this snapshot was often PARTIAL - nodes
 // whose NodeInfo hadn't arrived yet were simply absent, so their favourite
 // status was silently wiped from the cache. The stream listener also ignored
 // the device's authoritative isFavorite flag, always deferring to the cache.
@@ -24,7 +24,7 @@
 //     preserve isFavorite via copyWith) never clobber a stored favourite.
 //   • ProtocolService: immediately updates _nodes on set/removeFavoriteNode
 //     so subsequent stream emissions carry the correct flag.
-//   • No replaceAllFavorites call — there is no separate cache to reconcile.
+//   • No replaceAllFavorites call - there is no separate cache to reconcile.
 
 import 'dart:async';
 
@@ -199,7 +199,7 @@ void main() {
     test(
       'cached favourite survives when its NodeInfo has not arrived yet',
       () async {
-        // AL_C_GT (0xA1C1) was a favourite last session — persisted directly
+        // AL_C_GT (0xA1C1) was a favourite last session - persisted directly
         // on the MeshNode in NodeStorageService (iOS CoreData pattern).
         const gatewayNum = 0xA1C1;
         const otherNum = 0xB2B2;
@@ -226,7 +226,7 @@ void main() {
           isFavorite: false,
         );
 
-        // Boot NodesNotifier — this triggers _init. Because isFavorite now
+        // Boot NodesNotifier - this triggers _init. Because isFavorite now
         // lives on the stored MeshNode (not in a separate cache), the
         // gateway's favourite status is preserved even though its NodeInfo
         // has not arrived yet.
@@ -296,42 +296,39 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('late-arriving NodeInfo favourite sync (iOS CoreData pattern)', () {
-    test(
-      'NodeInfo with isFavorite=true arriving after init adds node to favourites',
-      () async {
-        const gatewayNum = 0xA1C1;
-        const earlyNum = 0xE0E0;
+    test('NodeInfo with isFavorite=true arriving after init adds node to favourites', () async {
+      const gatewayNum = 0xA1C1;
+      const earlyNum = 0xE0E0;
 
-        final env = await _buildContainer(
-          storedNodes: [MeshNode(nodeNum: earlyNum, longName: 'EarlyNode')],
-        );
-        addTearDown(env.container.dispose);
+      final env = await _buildContainer(
+        storedNodes: [MeshNode(nodeNum: earlyNum, longName: 'EarlyNode')],
+      );
+      addTearDown(env.container.dispose);
 
-        // Boot NodesNotifier with no favourites at all.
-        env.container.read(nodesProvider);
-        await Future<void>.delayed(const Duration(milliseconds: 50));
+      // Boot NodesNotifier with no favourites at all.
+      env.container.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
 
-        // Now the gateway's NodeInfo arrives late (as happens when the device
-        // sends NodeDB entries after the initial snapshot was taken).
-        await _injectNodeInfo(
-          env.protocol,
-          nodeNum: gatewayNum,
-          longName: 'AL_C-GT',
-          shortName: 'ALGT',
-          isFavorite: true,
-        );
+      // Now the gateway's NodeInfo arrives late (as happens when the device
+      // sends NodeDB entries after the initial snapshot was taken).
+      await _injectNodeInfo(
+        env.protocol,
+        nodeNum: gatewayNum,
+        longName: 'AL_C-GT',
+        shortName: 'ALGT',
+        isFavorite: true,
+      );
 
-        final gatewayNode = env.container.read(nodesProvider)[gatewayNum];
-        expect(gatewayNode, isNotNull, reason: 'Node must be registered.');
-        expect(
-          gatewayNode?.isFavorite,
-          isTrue,
-          reason:
-              'Node arriving late with isFavorite=true must appear in '
-              'the Favourites section.',
-        );
-      },
-    );
+      final gatewayNode = env.container.read(nodesProvider)[gatewayNum];
+      expect(gatewayNode, isNotNull, reason: 'Node must be registered.');
+      expect(
+        gatewayNode?.isFavorite,
+        isTrue,
+        reason:
+            'Node arriving late with isFavorite=true must appear in '
+            'the Favourites section.',
+      );
+    });
 
     test(
       'NodeInfo with isFavorite=false does not add node to favourites',
@@ -434,7 +431,7 @@ void main() {
       );
       await protocol.handleIncomingPacket(myFromRadio.writeToBuffer());
 
-      // Call removeFavoriteNode — the fix ensures _nodes is updated instantly.
+      // Call removeFavoriteNode - the fix ensures _nodes is updated instantly.
       await protocol.removeFavoriteNode(nodeNum);
 
       expect(
@@ -494,7 +491,7 @@ void main() {
       // --- Session setup ---
       // The user has gateway nodes marked favourite from a previous session.
       // They are stored in NodeStorage with isFavorite=true on the MeshNode
-      // itself (iOS CoreData pattern — no separate cache).
+      // itself (iOS CoreData pattern - no separate cache).
 
       const gatewayA = 0xA1C0; // "AL_C-GT"
       const gatewayB = 0xA1C2; // "ALC1-GW"
@@ -521,7 +518,7 @@ void main() {
       // Boot NodesNotifier. With the old code _init would call
       // replaceAllFavorites({}) wiping the gateway favourites.
       // With the iOS CoreData pattern the stored MeshNode.isFavorite
-      // is the source of truth — no separate cache to corrupt.
+      // is the source of truth - no separate cache to corrupt.
       env.container.read(nodesProvider);
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
@@ -566,7 +563,7 @@ void main() {
       // protocol.nodes is completely empty. With the old replaceAllFavorites
       // approach the favourites cache would NOT be wiped (guard:
       // protocolNodes.isNotEmpty), but with the iOS pattern we don't rely
-      // on that guard at all — stored MeshNode.isFavorite is the truth.
+      // on that guard at all - stored MeshNode.isFavorite is the truth.
 
       const gatewayNum = 0xA1C0;
 
@@ -598,7 +595,7 @@ void main() {
   group('isFavorite is independent of DeviceFavoritesService cache', () {
     test('node stored with isFavorite=true shows as favourite even when '
         'DeviceFavoritesService cache is empty', () async {
-      // The cache is intentionally empty — proving that the stored
+      // The cache is intentionally empty - proving that the stored
       // MeshNode.isFavorite is the sole source of truth.
       const nodeNum = 0xAAAA;
 
@@ -626,7 +623,7 @@ void main() {
     test('node stored with isFavorite=false stays non-favourite even when '
         'DeviceFavoritesService cache says favourite', () async {
       // The cache says favourite, but the MeshNode says not favourite.
-      // MeshNode is the source of truth — cache should be ignored.
+      // MeshNode is the source of truth - cache should be ignored.
       const nodeNum = 0xBBBB;
 
       final env = await _buildContainer(

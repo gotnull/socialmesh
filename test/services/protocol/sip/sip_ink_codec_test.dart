@@ -322,7 +322,7 @@ void main() {
           0x00,
           0x01,
           0x02,
-          0x01, // width only — missing point_count, first_x, first_y
+          0x01, // width only - missing point_count, first_x, first_y
         ]),
       );
       expect(r.error, equals(SipInkDecodeError.underflow));

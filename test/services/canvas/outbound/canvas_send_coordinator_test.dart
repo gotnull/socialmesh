@@ -458,9 +458,8 @@ void main() {
           expect(framesSent, 0);
           expect(h.channel.sent, isEmpty);
 
-          final row = (await h.repo.getPendingOpsForCanvas(
-            mesh.localId,
-          )).single;
+          final row = (await h.repo.getPendingOpsForCanvas(mesh.localId))
+              .single;
           expect(row.state, PendingOpState.queued);
           expect(row.attempts, 0);
           expect(
@@ -499,9 +498,8 @@ void main() {
           expect(h.governor.remainingBytes, CanvasOutboundGovernor.budgetBytes);
 
           // Row is back to queued (not inFlight), attempts unchanged.
-          final row = (await h.repo.getPendingOpsForCanvas(
-            mesh.localId,
-          )).single;
+          final row = (await h.repo.getPendingOpsForCanvas(mesh.localId))
+              .single;
           expect(row.state, PendingOpState.queued);
           expect(row.attempts, 0);
           expect(
@@ -540,9 +538,8 @@ void main() {
           expect(framesSent, 0);
 
           // First-failure attempt counter = 1, backoff = 1 s.
-          final row = (await h.repo.getPendingOpsForCanvas(
-            mesh.localId,
-          )).single;
+          final row = (await h.repo.getPendingOpsForCanvas(mesh.localId))
+              .single;
           expect(row.attempts, 1);
           expect(row.state, PendingOpState.queued);
           expect(row.lastError, 'transport-down');
@@ -616,7 +613,7 @@ void main() {
         await h.coordinator.drain();
         expect(h.channel.sent, hasLength(1));
 
-        // Drain again immediately — next_attempt_at_ms is in the
+        // Drain again immediately - next_attempt_at_ms is in the
         // future, so getQueuedReadyOps returns an empty set.
         final framesSent = await h.coordinator.drain();
         expect(framesSent, 0);

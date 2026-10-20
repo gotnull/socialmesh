@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Node Activity Timeline — unified chronological event feed.
+// Node Activity Timeline - unified chronological event feed.
 //
 // Renders a scrollable list of all observable events for a single
 // node: encounters, messages, presence transitions, signals, and
@@ -18,6 +18,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../utils/time_format.dart';
 
 import '../../../core/constants.dart';
@@ -231,7 +232,7 @@ class _TimelineEventTile extends StatelessWidget {
             width: 32,
             child: Column(
               children: [
-                // Top connector — collapsed to 0 on the first tile so
+                // Top connector - collapsed to 0 on the first tile so
                 // its content sits flush with the body's top padding.
                 Container(
                   width: 1.5,

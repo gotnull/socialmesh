@@ -11,7 +11,7 @@
 //     communicates solitude; we do NOT render an "alone" string.
 //   - HIDDEN entirely on Local Device Canvas (mount site enforces).
 //   - Avatar cluster is the canonical `AnimatedAvatarStack` from
-//     `lib/core/widgets/animated_avatar_stack.dart` — same primitive
+//     `lib/core/widgets/animated_avatar_stack.dart` - same primitive
 //     NodeDex co-seen uses. ClipOval + per-avatar border + dark-aware
 //     fill = the crisp NodeDex aesthetic. We pass `animationEnabled:
 //     false` to suppress its 5 s cycling because §7.6 bans persistent
@@ -118,7 +118,7 @@ class _StripBody extends ConsumerWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        // Standard tap haptic — same as palette swatch select and
+        // Standard tap haptic - same as palette swatch select and
         // every other one-tap UI affordance. The P9 / §7.6 ban on
         // haptics applies to presence-change events (inbound frames,
         // state transitions), not to a deliberate user tap on a UI
@@ -191,8 +191,8 @@ class _StripBody extends ConsumerWidget {
 /// Wrapper that maps the presence entries into the canonical
 /// [AnimatedAvatarStack] used by NodeDex co-seen. Cycling animation
 /// is disabled to comply with §7.6 (no persistent motion in this
-/// surface), but the visual contract — bordered ClipOval, dark-aware
-/// fill, +N overflow — comes for free.
+/// surface), but the visual contract - bordered ClipOval, dark-aware
+/// fill, +N overflow - comes for free.
 class _AvatarCluster extends StatelessWidget {
   final List<PresenceEntry> entries;
 

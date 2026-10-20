@@ -10,7 +10,7 @@ import '../scanner/widgets/network_connection_section.dart';
 
 /// Settings screen for managing saved network (TCP/IP) endpoints.
 ///
-/// mDNS discovery lives in the scanner screen only — this screen
+/// mDNS discovery lives in the scanner screen only - this screen
 /// is for CRUD on manually saved host:port endpoints.
 class NetworkEndpointsScreen extends ConsumerWidget {
   const NetworkEndpointsScreen({super.key});

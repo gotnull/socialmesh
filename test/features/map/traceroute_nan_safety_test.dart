@@ -24,7 +24,7 @@ import 'package:socialmesh/features/map/map_screen.dart';
 
 void main() {
   group('traceroute pipeline rejects non-finite hop coordinates', () {
-    test('all hops NaN — pipeline produces no segments', () {
+    test('all hops NaN - pipeline produces no segments', () {
       final route = <LatLng?>[
         safeLatLng(double.nan, double.nan),
         safeLatLng(double.nan, double.nan),
@@ -34,7 +34,7 @@ void main() {
       expect(tracerouteSegmentsFor(route), isEmpty);
     });
 
-    test('origin valid, every hop and target invalid — pipeline produces no '
+    test('origin valid, every hop and target invalid - pipeline produces no '
         'segments (need at least two known points)', () {
       final route = <LatLng?>[
         safeLatLng(37.0, -122.0),
@@ -47,7 +47,7 @@ void main() {
       expect(tracerouteSegmentsFor(route), isEmpty);
     });
 
-    test('origin valid, one mid-hop valid, target invalid — pipeline yields '
+    test('origin valid, one mid-hop valid, target invalid - pipeline yields '
         'one solid segment between origin and the valid hop', () {
       final route = <LatLng?>[
         safeLatLng(37.0, -122.0),
@@ -59,7 +59,7 @@ void main() {
       expect(segments.single.dashed, isFalse);
     });
 
-    test('origin and target valid, mid-hop NaN — single dashed segment '
+    test('origin and target valid, mid-hop NaN - single dashed segment '
         'bridges the invalid hop', () {
       final route = <LatLng?>[
         safeLatLng(37.0, -122.0),

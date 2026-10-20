@@ -14,20 +14,20 @@ import 'text_measurement.dart';
 ///
 /// ## Rendering pipeline
 ///
-/// 1. **Variable pre-trim** — each variable value is capped per its
+/// 1. **Variable pre-trim** - each variable value is capped per its
 ///    [VariablePolicy.maxGraphemes]. Missing or empty values get their
 ///    configured fallback.
 ///
-/// 2. **Tier walk** — starting from the richest tier, resolve all
+/// 2. **Tier walk** - starting from the richest tier, resolve all
 ///    `{{variable}}` placeholders. If the result fits the policy, return it.
 ///
-/// 3. **Deterministic reduction** — if the resolved text exceeds the policy:
+/// 3. **Deterministic reduction** - if the resolved text exceeds the policy:
 ///    a. Drop optional variables (lowest priority first) by replacing them
 ///       with empty strings.
 ///    b. Apply per-field truncation ([safeTruncateAtWord]).
 ///    c. Move to the next tier.
 ///
-/// 4. **Safe fallback** — if all tiers fail, emit the spec's hard-coded
+/// 4. **Safe fallback** - if all tiers fail, emit the spec's hard-coded
 ///    fallback message (guaranteed to fit any policy).
 ///
 /// The deep-link and data payload are always preserved regardless of text
@@ -74,7 +74,7 @@ class NotificationRenderer {
       }
 
       // Step 2b: Try per-field truncation BEFORE dropping any variables.
-      // This preserves all content — just trimmed — instead of losing
+      // This preserves all content - just trimmed - instead of losing
       // entire variable values.
       final truncTitle = _truncateField(title, policy.title);
       final truncBody = _truncateField(body, policy.body);
@@ -97,7 +97,7 @@ class NotificationRenderer {
         );
       }
 
-      // Step 3a: Deterministic reduction — drop lowest-priority vars first
+      // Step 3a: Deterministic reduction - drop lowest-priority vars first
       final reduced = _applyReduction(
         tier: tier,
         variables: trimmedVars,
@@ -115,10 +115,10 @@ class NotificationRenderer {
         );
       }
 
-      // This tier can't fit even after reduction — try next tier
+      // This tier can't fit even after reduction - try next tier
     }
 
-    // Step 4: All tiers exhausted — emit safe fallback
+    // Step 4: All tiers exhausted - emit safe fallback
     final fallbackTitle = _truncateField(spec.fallbackTitle, policy.title);
     final fallbackBody = _truncateField(spec.fallbackBody, policy.body);
 
@@ -130,7 +130,7 @@ class NotificationRenderer {
             ? _resolveTemplate(spec.deepLinkTemplate!, trimmedVars)
             : null,
       ),
-      tierUsed: null, // fallback — no tier
+      tierUsed: null, // fallback - no tier
       reductionApplied: true,
     );
   }
@@ -253,7 +253,7 @@ class NotificationRenderer {
         return NotificationParts(title: title, body: body, subtitle: subtitle);
       }
 
-      // Try per-field truncation after this drop — preserves remaining
+      // Try per-field truncation after this drop - preserves remaining
       // variable content instead of dropping more variables entirely.
       final truncTitle = _truncateField(title, policy.title);
       final truncBody = _truncateField(body, policy.body);
@@ -270,7 +270,7 @@ class NotificationRenderer {
       }
     }
 
-    // All variables dropped — try per-field truncation as last resort
+    // All variables dropped - try per-field truncation as last resort
     final title = _truncateField(
       _resolveTemplate(tier.titleTemplate, currentVars),
       policy.title,

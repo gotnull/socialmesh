@@ -132,7 +132,7 @@ abstract class DeviceTransport {
   bool get requiresFraming;
 
   /// Whether this transport needs the 32-byte `0xC3` wake preamble sent
-  /// ahead of the first `wantConfigId`. This is a serial-link quirk —
+  /// ahead of the first `wantConfigId`. This is a serial-link quirk -
   /// framed traffic alone does NOT imply the device needs waking.
   ///
   /// BLE: false (no serial link beneath)
@@ -140,7 +140,7 @@ abstract class DeviceTransport {
   /// Network/TCP: false (firmware-side PhoneAPI, not a UART)
   bool get requiresWakeSequence => false;
 
-  /// How this transport recovers from disconnect — used by the reconnect
+  /// How this transport recovers from disconnect - used by the reconnect
   /// coordinator to pick scan-based vs direct-endpoint reconnect logic.
   TransportReconnectMode get reconnectMode => TransportReconnectMode.scanBased;
 
@@ -209,7 +209,7 @@ abstract class DeviceTransport {
 /// Optional capability interface for transports that can surface
 /// receive-pipeline diagnostic counters.
 ///
-/// Only BLE transports implement this — USB / TCP / test fakes don't,
+/// Only BLE transports implement this - USB / TCP / test fakes don't,
 /// and the protocol-layer stall detector falls back to safe defaults
 /// (`null` / `0`) when the active transport isn't a
 /// `ReceiveDiagnosticsSupport`. Keeps every existing
@@ -237,7 +237,7 @@ abstract class ReceiveDiagnosticsSupport {
 
   /// Diagnostic counter: number of `refreshNotifications` failures.
   /// A failure either preserves the prior subscription or transitions
-  /// to disconnected — never silently leaves the transport in a
+  /// to disconnected - never silently leaves the transport in a
   /// "connected, no subscription" state.
   int get refreshNotificationsFailureCount;
 

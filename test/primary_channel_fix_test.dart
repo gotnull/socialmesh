@@ -9,7 +9,7 @@
 //    and wrong dedup behaviour.
 // 2. `_storageLoadCompleter` completed prematurely when `_storage` was
 //    null, allowing stream listeners to add messages before DB load
-//    finished — then `state = resetMessages` overwrote them.
+//    finished - then `state = resetMessages` overwrote them.
 // 3. Content dedup must still work when push notifications set
 //    `to = localNodeNum` while mesh packets use `to = 0xFFFFFFFF`.
 
@@ -154,7 +154,7 @@ void main() {
   // Conversation key tests
   // -----------------------------------------------------------------------
 
-  group('conversationKey — Primary Channel', () {
+  group('conversationKey - Primary Channel', () {
     test('broadcast on channel 0 gets conversation key channel:0', () {
       final msg = Message(
         from: 10,
@@ -285,7 +285,7 @@ void main() {
   // Content dedup across push / mesh paths
   // -----------------------------------------------------------------------
 
-  group('content dedup — Primary Channel', () {
+  group('content dedup - Primary Channel', () {
     test(
       'broadcast message on channel 0 from push, then mesh → deduped',
       () async {
@@ -294,7 +294,7 @@ void main() {
 
         final now = DateTime.now();
 
-        // Push notification arrives first — channel 0, broadcast.
+        // Push notification arrives first - channel 0, broadcast.
         final pushMsg = Message(
           from: 10,
           to: 0xFFFFFFFF,
@@ -327,7 +327,7 @@ void main() {
 
         h.container.read(messagesProvider.notifier).addMessage(meshMsg);
 
-        // Still one copy — content dedup caught it.
+        // Still one copy - content dedup caught it.
         expect(
           h.container
               .read(messagesProvider)
@@ -403,7 +403,7 @@ void main() {
       );
       h.container.read(messagesProvider.notifier).addMessage(ch1Msg);
 
-      // Both should exist — different channels.
+      // Both should exist - different channels.
       expect(
         h.container
             .read(messagesProvider)
@@ -430,7 +430,7 @@ void main() {
       );
       h.container.read(messagesProvider.notifier).addMessage(dmA);
 
-      // DM to me from node 30 — different sender, same text.
+      // DM to me from node 30 - different sender, same text.
       final dmB = Message(
         from: 30,
         to: 20,
@@ -441,7 +441,7 @@ void main() {
       );
       h.container.read(messagesProvider.notifier).addMessage(dmB);
 
-      // Both should exist — different senders.
+      // Both should exist - different senders.
       expect(
         h.container
             .read(messagesProvider)
@@ -456,7 +456,7 @@ void main() {
   // Storage persistence for Primary Channel
   // -----------------------------------------------------------------------
 
-  group('storage — Primary Channel persistence', () {
+  group('storage - Primary Channel persistence', () {
     test(
       'Primary Channel message persisted and loaded with correct key',
       () async {
@@ -560,7 +560,7 @@ void main() {
   // Unread counts for Primary Channel
   // -----------------------------------------------------------------------
 
-  group('unread counts — Primary Channel', () {
+  group('unread counts - Primary Channel', () {
     test('unread channel count includes channel 0 messages', () async {
       final h = await _createTestHarness(myNodeNum: 20);
       addTearDown(h.container.dispose);
@@ -609,7 +609,7 @@ void main() {
   // Trimming stability after migration
   // -----------------------------------------------------------------------
 
-  group('trimming — post-migration stability', () {
+  group('trimming - post-migration stability', () {
     test('saving new message on channel:0 trims oldest beyond limit', () async {
       final storage = MessageDatabase(testDbPath: _uniqueTestDbPath());
       await storage.init();
@@ -630,7 +630,7 @@ void main() {
         );
       }
 
-      // Save one more — should trim the oldest.
+      // Save one more - should trim the oldest.
       await storage.saveMessage(
         Message(
           id: 'trim-new',

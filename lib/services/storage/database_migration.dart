@@ -13,7 +13,7 @@ import '../../core/logging.dart';
 /// magic means the file is already encrypted (or does not exist / is empty).
 final List<int> _sqliteMagic = [...utf8.encode('SQLite format 3'), 0];
 
-/// Returns true when [path] is an existing, unencrypted SQLite database — i.e.
+/// Returns true when [path] is an existing, unencrypted SQLite database - i.e.
 /// it still needs to be migrated to an encrypted file.
 Future<bool> isPlaintextSqlite(String path) async {
   final file = File(path);
@@ -75,7 +75,7 @@ String _sqlQuote(String value) => "'${value.replaceAll("'", "''")}'";
 ///
 /// Throws on failure WITHOUT touching the original plaintext file, so the
 /// caller can fall back to an unencrypted open this session and retry the
-/// migration on the next launch — user data is never lost.
+/// migration on the next launch - user data is never lost.
 Future<void> migratePlaintextToEncrypted({
   required String path,
   required String key,

@@ -7,7 +7,7 @@
 // Distinct from D44's app-wide log viewer and D28's frame log; this
 // is transport-only.
 //
-// In-memory only. No persistence, no export-to-file path — the
+// In-memory only. No persistence, no export-to-file path - the
 // D-Q6 diagnostics bundle remains the canonical export surface.
 
 import 'package:flutter/material.dart';
@@ -237,8 +237,7 @@ class _EntryTile extends StatelessWidget {
       onTap: () async {
         await Clipboard.setData(
           ClipboardData(
-            text:
-                '${entry.category.name}: ${entry.message}', // lint-allow: hardcoded-string
+            text: '${entry.category.name}: ${entry.message}', // lint-allow: hardcoded-string
           ),
         );
         if (!context.mounted) return;

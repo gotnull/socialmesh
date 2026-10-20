@@ -4,7 +4,7 @@
 /// Shared CustomPainter for SIP Ink sketches.
 ///
 /// Used by both the live composer canvas and the inline message
-/// bubble — same rendering, same scaling, same stroke caps. The
+/// bubble - same rendering, same scaling, same stroke caps. The
 /// composer additionally feeds in an "in-budget" active stroke and an
 /// optional overflow tail that is rendered as a dashed cue to signal
 /// "drawn but won't be sent".
@@ -19,7 +19,7 @@ import '../../../services/protocol/sip/sip_ink_payload.dart';
 /// Renders a [SipInkSketch] plus optional in-progress active and
 /// overflow tails into the available paint area.
 class SipInkPainter extends CustomPainter {
-  /// Decoded sketch — committed strokes that will be sent. Null = none.
+  /// Decoded sketch - committed strokes that will be sent. Null = none.
   final SipInkSketch? sketch;
 
   /// Committed prefix of the in-progress stroke. Same colour as the

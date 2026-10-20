@@ -19,11 +19,11 @@ enum IdentityResolutionSource {
   localNickname,
 
   /// Resolved from live mesh node data (nodesProvider).
-  /// Best case — the node is currently visible on the mesh.
+  /// Best case - the node is currently visible on the mesh.
   liveMesh,
 
   /// Resolved from NodeDex cached name (lastKnownName in local SQLite).
-  /// Good case — node was seen before and name was persisted locally.
+  /// Good case - node was seen before and name was persisted locally.
   nodeDexCached,
 
   /// Fell back to hex ID (e.g. "!81C42D94").
@@ -92,7 +92,7 @@ class IdentityResolutionTelemetry {
         _hexFallbackCount++;
     }
 
-    // Periodic summary — avoids log spam while still providing visibility.
+    // Periodic summary - avoids log spam while still providing visibility.
     if (_totalResolutions % _logInterval == 0) {
       AppLogging.nodeDex(
         'IdentityResolution telemetry '
@@ -134,14 +134,14 @@ class IdentityResolutionTelemetry {
 /// 3. Cached name from NodeDex [lastKnownName]
 /// 4. Default name fallback (e.g. "Meshtastic 5ED6")
 ///
-/// This function is fully offline — it never makes network requests.
+/// This function is fully offline - it never makes network requests.
 /// All data sources are local: live mesh telemetry and local SQLite.
 ///
 /// Use this everywhere a mesh node name is displayed to ensure
 /// consistency across Activity, Signals, NodeDex, and any other
 /// screen that shows node identities.
 String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
-  // 0. User-assigned local nickname — always wins when set.
+  // 0. User-assigned local nickname - always wins when set.
   final entry = ref.watch(nodeDexEntryProvider(nodeNum));
   if (entry?.localNickname != null) {
     IdentityResolutionTelemetry.record(
@@ -151,7 +151,7 @@ String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
     return entry!.localNickname!;
   }
 
-  // 1. Live node — most accurate, real-time from the mesh.
+  // 1. Live node - most accurate, real-time from the mesh.
   // Use NodeDisplayNameResolver.sanitizeName to filter out placeholder
   // names (hex IDs, firmware defaults, BLE advertising names).
   final nodes = ref.watch(nodesProvider);
@@ -175,7 +175,7 @@ String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
     }
   }
 
-  // 2. NodeDex cached name — persisted from a previous session.
+  // 2. NodeDex cached name - persisted from a previous session.
   // Fully local (SQLite), works offline and without sign-in.
   if (entry?.lastKnownName != null) {
     IdentityResolutionTelemetry.record(
@@ -185,7 +185,7 @@ String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
     return entry!.lastKnownName!;
   }
 
-  // 3. Default name fallback — matches official Meshtastic app convention.
+  // 3. Default name fallback - matches official Meshtastic app convention.
   IdentityResolutionTelemetry.record(
     IdentityResolutionSource.hexFallback,
     nodeNum,
@@ -198,9 +198,9 @@ String resolveMeshNodeName(WidgetRef ref, int nodeNum) {
 /// Same resolution chain as [resolveMeshNodeName] but returns
 /// structured data so callers can make decisions based on source.
 ///
-/// This function is fully offline — it never makes network requests.
+/// This function is fully offline - it never makes network requests.
 MeshIdentity resolveMeshIdentity(WidgetRef ref, int nodeNum) {
-  // 0. User-assigned local nickname — always wins when set.
+  // 0. User-assigned local nickname - always wins when set.
   final entry = ref.watch(nodeDexEntryProvider(nodeNum));
   if (entry?.localNickname != null) {
     IdentityResolutionTelemetry.record(

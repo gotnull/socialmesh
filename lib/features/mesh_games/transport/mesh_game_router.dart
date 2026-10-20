@@ -130,7 +130,7 @@ class MeshGameRouter {
     } on FormatException {
       return MeshGameRouterResult.error(MrrpStatusCode.invalid).ackPayload;
     }
-    // V1: remote-initiated CREATE is rejected — slice 1 only supports
+    // V1: remote-initiated CREATE is rejected - slice 1 only supports
     // locally-initiated games. Router will accept remote CREATE in
     // a later slice once channel/DM flows are designed.
     AppLogging.meshGames(

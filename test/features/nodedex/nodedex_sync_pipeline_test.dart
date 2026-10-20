@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sync Pipeline Integration Tests — verifies end-to-end sync behavior,
+// Sync Pipeline Integration Tests - verifies end-to-end sync behavior,
 // specifically the bugs identified in the Cloud Sync debug audit:
 //
 // BUG #1: applySyncPull was re-enqueuing pulled entries to the outbox,
@@ -80,7 +80,7 @@ void main() {
       // Enable sync so outbox enqueuing would normally happen
       store.syncEnabled = true;
 
-      // Save a local entry — this SHOULD create an outbox entry
+      // Save a local entry - this SHOULD create an outbox entry
       final localEntry = makeEntry(
         nodeNum: 100,
         socialTag: NodeSocialTag.contact,
@@ -121,7 +121,7 @@ void main() {
         outboxAfterPull,
         0,
         reason:
-            'applySyncPull must NOT enqueue pulled entries to outbox — '
+            'applySyncPull must NOT enqueue pulled entries to outbox - '
             'this was the sync loop bug. Found $outboxAfterPull entries.',
       );
     });
@@ -152,7 +152,7 @@ void main() {
         final remoteEntry = makeEntry(
           nodeNum: 300,
           socialTag: NodeSocialTag.trustedNode,
-          socialTagUpdatedAtMs: 5000, // Later timestamp — remote wins
+          socialTagUpdatedAtMs: 5000, // Later timestamp - remote wins
           userNote: 'Remote updated note',
           userNoteUpdatedAtMs: 5000,
         );
@@ -174,7 +174,7 @@ void main() {
           reason: 'Remote userNote should win (later timestamp)',
         );
 
-        // Outbox must still be empty — merged result must not be re-enqueued
+        // Outbox must still be empty - merged result must not be re-enqueued
         final outboxAfterPull = await store.outboxCount;
         expect(
           outboxAfterPull,
@@ -213,7 +213,7 @@ void main() {
       // Verify outbox is empty after pull
       expect(await store.outboxCount, 0);
 
-      // Now do a local save — this SHOULD create an outbox entry
+      // Now do a local save - this SHOULD create an outbox entry
       final localUpdate = makeEntry(
         nodeNum: 500,
         socialTag: NodeSocialTag.knownRelay,
@@ -328,7 +328,7 @@ void main() {
     });
 
     test('all states that should allow write access', () {
-      // These states must all permit writes — verified against
+      // These states must all permit writes - verified against
       // _resolveEntitlementFromCustomerInfo behavior
       const writeStates = [
         CloudSyncEntitlementState.active,
@@ -448,9 +448,9 @@ void main() {
       );
 
       // The latest payload should reflect the second save
-      final payload =
-          jsonDecode(node900Entries.first['payload_json'] as String)
-              as Map<String, dynamic>;
+      final payload = jsonDecode(
+        node900Entries.first['payload_json'] as String,
+      ) as Map<String, dynamic>;
       final reconstructed = NodeDexEntry.fromJson(payload);
       expect(reconstructed.socialTag, NodeSocialTag.knownRelay);
     });
@@ -515,13 +515,13 @@ void main() {
       // User A syncs and stores a watermark
       await store.setSyncState(userA, '1770461507955');
 
-      // User B signs in — their watermark must be null (first pull)
+      // User B signs in - their watermark must be null (first pull)
       final userBWatermark = await store.getSyncState(userB);
       expect(
         userBWatermark,
         isNull,
         reason:
-            'User B must NOT inherit User A\'s watermark — '
+            'User B must NOT inherit User A\'s watermark - '
             'this was the cross-user watermark leak bug. '
             'If User B gets a non-null watermark, they will skip '
             'all their data older than User A\'s last pull timestamp.',
@@ -547,7 +547,7 @@ void main() {
 
       await store.setSyncState(globalKey, '999999');
 
-      // Per-uid key must be null — no inheritance from global key
+      // Per-uid key must be null - no inheritance from global key
       final perUidValue = await store.getSyncState(perUidKey);
       expect(
         perUidValue,
@@ -789,7 +789,7 @@ void main() {
       // Import is via the sync service file which exposes the functions
       // This test verifies the toggle exists and can be called
       // (actual logging output is not captured in unit tests)
-      expect(true, isTrue); // Placeholder — the real test is that it compiles
+      expect(true, isTrue); // Placeholder - the real test is that it compiles
     });
   });
 }

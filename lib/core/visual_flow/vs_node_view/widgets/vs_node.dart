@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Modified: Replaced plain Card with glass morphism styled container matching
 // SocialMesh sci-fi aesthetic.
@@ -18,9 +18,10 @@ import '../data/vs_node_data_provider.dart';
 import 'vs_node_input.dart';
 import 'vs_node_output.dart';
 import 'vs_node_title.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
-/// Default width of a node card — increased from upstream 125 to 180 for
+/// Default width of a node card - increased from upstream 125 to 180 for
 /// mobile readability.
 const double _kDefaultNodeWidth = 180.0;
 
@@ -106,7 +107,7 @@ class _VSNodeState extends State<VSNode> {
       interfaceWidgets.add(VSNodeOutput(data: value));
     }
 
-    // Glass morphism card — semi-transparent surface with blur-like layering
+    // Glass morphism card - semi-transparent surface with blur-like layering
     // and a subtle border. On selection, the border glows with the accent
     // color. While being dragged, the card is ghosted to indicate it is
     // in-flight (the preview ghost on the canvas shows the landing spot).
@@ -156,7 +157,7 @@ class _VSNodeState extends State<VSNode> {
           final delta = (details.globalPosition - _panStartGlobal!).distance;
           if (delta < _kMinDragDistance) return;
 
-          // Drag is now active — notify the provider so the canvas can start
+          // Drag is now active - notify the provider so the canvas can start
           // rendering the snap-preview ghost.
           _isDragActive = true;
           nodeProvider.startNodeDrag(widget.data, nodeSize: _measureSelf());
@@ -169,14 +170,14 @@ class _VSNodeState extends State<VSNode> {
 
       onPanEnd: (details) {
         if (!_isDragActive) {
-          // The user panned less than the threshold — treat as no-op.
+          // The user panned less than the threshold - treat as no-op.
           _panStartGlobal = null;
           return;
         }
 
         // Commit the drop at the last snapped preview position.
         // endNodeDrag uses dragPreviewOffset set by the most recent
-        // updateNodeDrag call — no global offset needed.
+        // updateNodeDrag call - no global offset needed.
         nodeProvider.endNodeDrag();
 
         _panStartGlobal = null;
@@ -216,12 +217,12 @@ class _GlassNodeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Surface color — semi-transparent for the glass effect.
+    // Surface color - semi-transparent for the glass effect.
     final surfaceColor = isDark
         ? colorScheme.surface.withValues(alpha: 0.85)
         : colorScheme.surface.withValues(alpha: 0.92);
 
-    // Border color — accent glow on selection, subtle outline otherwise.
+    // Border color - accent glow on selection, subtle outline otherwise.
     final borderColor = isSelected
         ? colorScheme.primary.withValues(alpha: 0.8)
         : (isDark

@@ -300,7 +300,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
               // Filter the Active Members list to uids that ALSO hold
               // an active seat row. Manual revoke flips the seat row
               // to 'revoked' but leaves the membership doc `active`
-              // per the backend spec — without this filter the same
+              // per the backend spec - without this filter the same
               // uid surfaces in BOTH Active and Revoked sections,
               // which is the confusing UX we saw on the 2026-05-28
               // sim verify. The seat-uid provider yields an empty
@@ -320,7 +320,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
               // Without this filter, a revoked-then-reinstated
               // member surfaces in BOTH Active AND Revoked, which
               // is the residual UX issue from the 2026-05-28 sim
-              // verify. The audit log itself is append-only — the
+              // verify. The audit log itself is append-only - the
               // historical revoke event is preserved in the full
               // Audit Log screen; the roster surface just shows
               // CURRENT state per uid.
@@ -352,8 +352,8 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
               // ListView with active members first (alphabetical-ish
               // by membership insertion order) followed by revoked
               // entries (most recent revoke first). The categorical
-              // signal lives in tile styling — bright accent avatar
-              // for active, dim person-off icon for revoked — not in
+              // signal lives in tile styling - bright accent avatar
+              // for active, dim person-off icon for revoked - not in
               // section headings. Earlier slices ran a dual-section
               // layout (Active / Revoked); that was clear but added
               // visual noise on a small roster, and the headings
@@ -398,7 +398,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                     //   - the tile is NOT another owner (owners
                     //     aren't in the members subcollection by
                     //     design, but legacy seeded data can carry
-                    //     OWNER role on a member doc — defensive
+                    //     OWNER role on a member doc - defensive
                     //     guard here).
                     final canRevoke =
                         !isCurrentUser &&
@@ -966,7 +966,7 @@ class _RevokedTile extends StatelessWidget {
     // `targetId` on a seat_revoked_manual audit row is the full
     // allocation doc id: `<orgId>__<uid>__<productId>` (mirrors the
     // backend's `seatAllocationDocId`). The opaque member label
-    // wants the uid (middle segment) — using the whole targetId
+    // wants the uid (middle segment) - using the whole targetId
     // here surfaced `#CLEANR` (the first 6 chars of the orgId
     // prefix) on first sim verification, 2026-05-28.
     final revokedUid = licenseOrgUidFromAllocationId(event.targetId ?? '');

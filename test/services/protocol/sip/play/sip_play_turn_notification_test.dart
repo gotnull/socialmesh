@@ -3,7 +3,7 @@
 
 /// Pins the `onPlayMoveYourTurn` hook on [SipDmManager]:
 ///
-/// Field-test request — when an inbound SIP Play move arrives and the
+/// Field-test request - when an inbound SIP Play move arrives and the
 /// per-instance replay shows the local side is now the active player,
 /// the manager must fire `onPlayMoveYourTurn(peerNodeId, sessionTag,
 /// gameTypeCode, instanceId)` exactly once. The provider layer wires
@@ -74,7 +74,7 @@ SipFrame _frame({required int nonce, required Uint8List payload}) {
 }
 
 void main() {
-  group('SipDmManager.onPlayMoveYourTurn — fast-path field-test request', () {
+  group('SipDmManager.onPlayMoveYourTurn - fast-path field-test request', () {
     test('fires once when an inbound move flips turn back to the local '
         'side (offerer = X, opponent O moves first after our X)', () {
       final dm = _newDm();
@@ -87,7 +87,7 @@ void main() {
 
       // 1. Local offers (outbound seq=0). Bytes pre-built and
       //    routed through `buildPlayMessage` so the entry lands in
-      //    the session history with `outbound` direction — the
+      //    the session history with `outbound` direction - the
       //    offerer becomes X by the engine's mark assignment rule.
       final offerResult = dm.buildPlayMessage(
         sessionTag: _kSessionTag,
@@ -96,7 +96,7 @@ void main() {
       expect(offerResult.isOk, isTrue);
 
       // 2. Remote accepts (inbound seq=1). Local turn = X (local
-      //    plays first). No callback fired yet — accept is not a
+      //    plays first). No callback fired yet - accept is not a
       //    `move`.
       dm.handleInboundPlay(
         _frame(
@@ -125,7 +125,7 @@ void main() {
       );
 
       // 4. Remote moves cell 0 (O, seq=3). Turn flips back to
-      //    local — hook MUST fire exactly once with the right args.
+      //    local - hook MUST fire exactly once with the right args.
       dm.handleInboundPlay(
         _frame(
           nonce: 2,
@@ -147,7 +147,7 @@ void main() {
       expect(fired.single.$4, equals(_kInstanceId));
     });
 
-    test('does NOT fire on inbound offer / accept / decline / resign — '
+    test('does NOT fire on inbound offer / accept / decline / resign - '
         'only on inbound `move` actions', () {
       final dm = _newDm();
       dm.createSession(sessionTag: _kSessionTag, peerNodeId: _kPeerNodeId);
@@ -175,7 +175,7 @@ void main() {
       );
       expect(acceptResult.isOk, isTrue);
 
-      // Inbound resign — terminal action, must not fire hook.
+      // Inbound resign - terminal action, must not fire hook.
       dm.handleInboundPlay(
         _frame(
           nonce: 11,
@@ -186,7 +186,7 @@ void main() {
     });
 
     test('inbound move that does NOT flip turn to local does not fire '
-        '— defence against false positives if engine decoded as drop', () {
+        '- defence against false positives if engine decoded as drop', () {
       final dm = _newDm();
       dm.createSession(sessionTag: _kSessionTag, peerNodeId: _kPeerNodeId);
 
@@ -204,7 +204,7 @@ void main() {
           payload: _envelopeBytes(action: SipPlayAction.accept, seq: 1),
         ),
       );
-      // Local plays cell 4 — turn now remote.
+      // Local plays cell 4 - turn now remote.
       dm.buildPlayMessage(
         sessionTag: _kSessionTag,
         playPayload: _envelopeBytes(
@@ -263,7 +263,7 @@ void main() {
         ),
       );
 
-      // Inbound move that flips turn — the throwing hook is invoked
+      // Inbound move that flips turn - the throwing hook is invoked
       // but the manager's path must complete without propagating.
       final result = dm.handleInboundPlay(
         _frame(

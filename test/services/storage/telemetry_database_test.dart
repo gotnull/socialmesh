@@ -24,7 +24,7 @@ void main() {
     await db.close();
   });
 
-  group('TelemetryDatabase — DeviceMetrics', () {
+  group('TelemetryDatabase - DeviceMetrics', () {
     test('getDeviceMetrics returns empty list initially', () async {
       final metrics = await db.getDeviceMetrics(12345);
       expect(metrics, isEmpty);
@@ -153,7 +153,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — EnvironmentMetrics', () {
+  group('TelemetryDatabase - EnvironmentMetrics', () {
     test('stores and retrieves environment metrics', () async {
       await db.addEnvironmentMetrics(
         EnvironmentMetricsLog(
@@ -182,7 +182,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — PowerMetrics', () {
+  group('TelemetryDatabase - PowerMetrics', () {
     test('stores and retrieves power metrics', () async {
       await db.addPowerMetrics(
         PowerMetricsLog(
@@ -201,7 +201,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — AirQualityMetrics', () {
+  group('TelemetryDatabase - AirQualityMetrics', () {
     test('stores and retrieves air quality metrics', () async {
       await db.addAirQualityMetrics(
         AirQualityMetricsLog(nodeNum: 12345, pm25Standard: 12, co2: 400),
@@ -214,7 +214,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — PositionLog', () {
+  group('TelemetryDatabase - PositionLog', () {
     test('stores and retrieves position logs', () async {
       await db.addPositionLog(
         PositionLog(
@@ -235,7 +235,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — PaxCounter', () {
+  group('TelemetryDatabase - PaxCounter', () {
     test('stores and retrieves pax counter logs', () async {
       await db.addPaxCounterLog(
         PaxCounterLog(nodeNum: 12345, wifi: 10, ble: 5, uptime: 3600),
@@ -249,7 +249,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — DetectionSensor', () {
+  group('TelemetryDatabase - DetectionSensor', () {
     test('stores and retrieves detection sensor logs', () async {
       await db.addDetectionSensorLog(
         DetectionSensorLog(
@@ -268,7 +268,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — Traceroute', () {
+  group('TelemetryDatabase - Traceroute', () {
     test('stores traceroute with hops', () async {
       await db.addTraceRouteLog(
         TraceRouteLog(
@@ -321,7 +321,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — clearLogsForNode', () {
+  group('TelemetryDatabase - clearLogsForNode', () {
     test('clears all metric types for a node', () async {
       await db.addDeviceMetrics(
         DeviceMetricsLog(nodeNum: 12345, batteryLevel: 85),
@@ -349,7 +349,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — clearAllData', () {
+  group('TelemetryDatabase - clearAllData', () {
     test('clears everything', () async {
       await db.addDeviceMetrics(
         DeviceMetricsLog(nodeNum: 111, batteryLevel: 85),
@@ -367,7 +367,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — trimming', () {
+  group('TelemetryDatabase - trimming', () {
     test('trims entries beyond maxLogEntries per node per type', () async {
       // Insert more than maxLogEntries
       for (var i = 0; i < TelemetryDatabase.maxLogEntries + 50; i++) {
@@ -388,7 +388,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — CSV export', () {
+  group('TelemetryDatabase - CSV export', () {
     test('exportDeviceMetricsCsv generates valid CSV', () async {
       await db.addDeviceMetrics(
         DeviceMetricsLog(
@@ -438,7 +438,7 @@ void main() {
     });
   });
 
-  group('TelemetryDatabase — NaN/Infinity handling', () {
+  group('TelemetryDatabase - NaN/Infinity handling', () {
     test('NaN voltage is stored as null and retrieved cleanly', () async {
       await db.addDeviceMetrics(
         DeviceMetricsLog(nodeNum: 12345, voltage: double.nan, batteryLevel: 50),

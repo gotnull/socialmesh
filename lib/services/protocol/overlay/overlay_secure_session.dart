@@ -36,7 +36,7 @@ enum OverlaySecureSessionState {
 
   /// Initiator received a valid ACK; keys installed.
   // (alias kept separate from responder's `established` only for
-  //  log clarity — both roles behave identically after this point).
+  //  log clarity - both roles behave identically after this point).
   active,
 
   /// Terminal: handshake failed (signature, length, timeout, etc.).
@@ -73,7 +73,7 @@ class OverlaySecureWrapResult {
   const OverlaySecureWrapResult({required this.payload, required this.seq});
 }
 
-/// Outcome of an `unwrap` call — either cleartext or a reason bucket
+/// Outcome of an `unwrap` call - either cleartext or a reason bucket
 /// the caller can surface to counters.
 enum OverlaySecureUnwrapReason {
   /// Session is not yet established.
@@ -85,7 +85,7 @@ enum OverlaySecureUnwrapReason {
   /// Subtype byte was outside the known set. Strictly dropped.
   unknownSubtype,
 
-  /// AEAD tag failed — tampered, wrong key, or AAD mismatch.
+  /// AEAD tag failed - tampered, wrong key, or AAD mismatch.
   tamper,
 
   /// `seq` was a duplicate or older than the sliding window.
@@ -174,7 +174,7 @@ class OverlaySecureSession {
       _state == OverlaySecureSessionState.active ||
       _state == OverlaySecureSessionState.established;
 
-  // Ephemeral keypair — generated on start.
+  // Ephemeral keypair - generated on start.
   SimpleKeyPair? _myEphemeralKp;
   Uint8List? _myX25519Pub;
   Uint8List? _peerX25519Pub;
@@ -442,7 +442,7 @@ class OverlaySecureSession {
   }
 
   /// Decrypt an inbound `LINK_SECURE_DATA` payload. Every failure path
-  /// surfaces a reason — callers increment the matching counter and
+  /// surfaces a reason - callers increment the matching counter and
   /// MUST NOT close the link.
   Future<OverlaySecureUnwrapResult> unwrap(Uint8List dataPayload) async {
     if (!isEstablished) {

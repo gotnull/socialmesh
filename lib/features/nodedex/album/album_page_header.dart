@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Album Page Header — sticky section header for album grid pages.
+// Album Page Header - sticky section header for album grid pages.
 //
 // Each album page (a group of nodes by trait, rarity, or region) gets
 // a sticky header that pins at the top of the scroll view as the user
@@ -16,7 +16,7 @@
 //   - Uses theme-aware colors from context extensions
 //   - Spacing follows the 8dp grid
 //   - Ornamental details are subtle (thin lines, small icons)
-//   - No protocol-specific logic — purely presentational
+//   - No protocol-specific logic - purely presentational
 //
 // The header adapts its icon based on the groupKey provided by the
 // album providers. Trait groups get the trait's conceptual icon;
@@ -413,7 +413,7 @@ class _TrailingOrnamentPainter extends CustomPainter {
 /// border color. Region keys use the app's accent color. Unknown keys
 /// fall back to textTertiary.
 ///
-/// This is a pure function — no side effects, no state.
+/// This is a pure function - no side effects, no state.
 Color accentColorForGroup(String groupKey, BuildContext context) {
   // Check trait names first.
   for (final trait in NodeTrait.values) {
@@ -425,7 +425,7 @@ Color accentColorForGroup(String groupKey, BuildContext context) {
     if (rarity.name == groupKey) return rarity.borderColor;
   }
 
-  // Region or unknown — use app accent.
+  // Region or unknown - use app accent.
   if (groupKey == 'region') return context.accentColor;
 
   return context.textTertiary;

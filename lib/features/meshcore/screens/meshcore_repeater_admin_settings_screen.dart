@@ -513,8 +513,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (_repeat != _initialRepeat) {
       commands.add(
         _SetCommand(
-          text:
-              'set repeat ${_repeat ? 'on' : 'off'}', // lint-allow: hardcoded-string
+          text: 'set repeat ${_repeat ? 'on' : 'off'}', // lint-allow: hardcoded-string
           onSuccess: () => _initialRepeat = _repeat,
         ),
       );
@@ -522,8 +521,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (_allowReadOnly != _initialAllowReadOnly) {
       commands.add(
         _SetCommand(
-          text:
-              'set allow.read.only ${_allowReadOnly ? 'on' : 'off'}', // lint-allow: hardcoded-string
+          text: 'set allow.read.only ${_allowReadOnly ? 'on' : 'off'}', // lint-allow: hardcoded-string
           onSuccess: () => _initialAllowReadOnly = _allowReadOnly,
         ),
       );
@@ -541,8 +539,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (flood != null && flood != _initialFloodAdvertInterval) {
       commands.add(
         _SetCommand(
-          text:
-              'set flood.advert.interval $flood', // lint-allow: hardcoded-string
+          text: 'set flood.advert.interval $flood', // lint-allow: hardcoded-string
           onSuccess: () => _initialFloodAdvertInterval = flood,
         ),
       );
@@ -560,8 +557,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         final bwText = _formatBwLabel(bw);
         commands.add(
           _SetCommand(
-            text:
-                'set radio $freq $bwText $sf $cr', // lint-allow: hardcoded-string
+            text: 'set radio $freq $bwText $sf $cr', // lint-allow: hardcoded-string
             onSuccess: () {
               _initialFrequencyMHz = freq;
               _initialBandwidthKhz = bw;
@@ -623,8 +619,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (_privacyMode != _initialPrivacyMode) {
       commands.add(
         _SetCommand(
-          text:
-              'set privacy ${_privacyMode ? 'on' : 'off'}', // lint-allow: hardcoded-string
+          text: 'set privacy ${_privacyMode ? 'on' : 'off'}', // lint-allow: hardcoded-string
           onSuccess: () => _initialPrivacyMode = _privacyMode,
         ),
       );

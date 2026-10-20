@@ -43,12 +43,12 @@ void main() {
         // false for everything else (timeout).
         final gateway = _FakeGateway();
 
-        // Initial snapshot — empty.
+        // Initial snapshot - empty.
         gateway.snapshotData = const DeviceConfigSnapshot(myNodeNum: 42);
 
         gateway.onRefresh = (section) async {
           if (section == DeviceConfigSection.lora) {
-            // Lora arrives — patch the snapshot.
+            // Lora arrives - patch the snapshot.
             gateway.snapshotData = DeviceConfigSnapshot(
               myNodeNum: 42,
               lora: config_pb.Config_LoRaConfig()
@@ -80,7 +80,7 @@ void main() {
 
   group('DeviceConfigBackupService.restore', () {
     test(
-      'respects RestoreSelection — sections set to false are not applied',
+      'respects RestoreSelection - sections set to false are not applied',
       () async {
         final gateway = _FakeGateway();
         final service = DeviceConfigBackupService(

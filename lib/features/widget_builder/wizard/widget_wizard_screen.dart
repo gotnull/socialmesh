@@ -3,8 +3,10 @@
 import 'dart:async';
 
 import '../../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
@@ -1252,8 +1254,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       _WidgetTemplate(
         id: 'status',
         name: 'Status Display',
-        description:
-            'Show values with labels and optional progress bars', // lint-allow: hardcoded-string
+        description: 'Show values with labels and optional progress bars', // lint-allow: hardcoded-string
         icon: Icons.speed,
         color: ChartColors.green,
         suggestedBindings: [
@@ -1265,8 +1266,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       _WidgetTemplate(
         id: 'info',
         name: 'Info Card',
-        description:
-            'Display text information in a clean layout', // lint-allow: hardcoded-string
+        description: 'Display text information in a clean layout', // lint-allow: hardcoded-string
         icon: Icons.info_outline,
         color: ChartColors.categoryNode,
         suggestedBindings: [
@@ -1278,8 +1278,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       _WidgetTemplate(
         id: 'gauge',
         name: 'Gauge Widget',
-        description:
-            'Big visual gauge with a single value', // lint-allow: hardcoded-string
+        description: 'Big visual gauge with a single value', // lint-allow: hardcoded-string
         icon: Icons.data_usage,
         color: ChartColors.yellow,
         suggestedBindings: ['node.batteryLevel'],
@@ -1287,8 +1286,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       _WidgetTemplate(
         id: 'actions',
         name: 'Quick Actions',
-        description:
-            'Tap buttons to send messages, share location, etc.', // lint-allow: hardcoded-string
+        description: 'Tap buttons to send messages, share location, etc.', // lint-allow: hardcoded-string
         icon: Icons.flash_on,
         color: ChartColors.pink,
         suggestedBindings: [],
@@ -1305,8 +1303,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       _WidgetTemplate(
         id: 'environment',
         name: 'Weather & Environment',
-        description:
-            'Temperature, humidity, and sensor readings', // lint-allow: hardcoded-string
+        description: 'Temperature, humidity, and sensor readings', // lint-allow: hardcoded-string
         icon: Icons.thermostat,
         color: ChartColors.cyan,
         suggestedBindings: [
@@ -1318,8 +1315,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       _WidgetTemplate(
         id: 'graph',
         name: 'Graph Widget',
-        description:
-            'Line, area, or bar charts for tracking data over time', // lint-allow: hardcoded-string
+        description: 'Line, area, or bar charts for tracking data over time', // lint-allow: hardcoded-string
         icon: Icons.show_chart,
         color: ChartColors.orange,
         suggestedBindings: ['node.rssi', 'node.snr'],
@@ -1338,8 +1334,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
       _WidgetTemplate(
         id: 'blank',
         name: 'Start from Scratch',
-        description:
-            'Empty canvas - build exactly what you want', // lint-allow: hardcoded-string
+        description: 'Empty canvas - build exactly what you want', // lint-allow: hardcoded-string
         icon: Icons.add_box_outlined,
         color: context.textSecondary,
         suggestedBindings: [],

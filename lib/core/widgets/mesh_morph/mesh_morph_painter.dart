@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
 // CustomPainter for MeshMorphWidget. Renders each ball as a vector-shaded
-// 3D sphere using a RadialGradient — no rasterized sprites, no pixelation
+// 3D sphere using a RadialGradient - no rasterized sprites, no pixelation
 // at any size.
 //
 // The 6 brightness levels and the lit-sphere look match the Equinox
@@ -21,6 +21,7 @@
 //      original sprite art's fixed light direction.
 
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'mesh_shape.dart';
@@ -53,11 +54,11 @@ class MeshMorphPainter extends CustomPainter {
     this.clusterScale = 0.85,
   });
 
-  // Pre-computed bucket palettes — extracted once from kVectorballSprite +
+  // Pre-computed bucket palettes - extracted once from kVectorballSprite +
   // kVectorballPaletteRGB. Index = brightness bucket (0 dimmest .. 5 brightest).
   static final List<_BucketColors> _buckets = _buildBucketColors();
 
-  // Reused scratch — survives across frames, never re-allocated.
+  // Reused scratch - survives across frames, never re-allocated.
   final List<double> _sx = <double>[];
   final List<double> _sy = <double>[];
   final List<double> _sz = <double>[];
@@ -120,7 +121,7 @@ class MeshMorphPainter extends CustomPainter {
       if (z3 > zMax) zMax = z3;
     }
 
-    // Back-to-front painter's order — sort indices, not balls.
+    // Back-to-front painter's order - sort indices, not balls.
     final order = List<int>.generate(n, (i) => i);
     order.sort((a, b) => _sz[b].compareTo(_sz[a]));
 
@@ -130,12 +131,12 @@ class MeshMorphPainter extends CustomPainter {
     const lastBucket = kVectorballBrightnessLevels - 1;
 
     // Highlight position in upper-left, matching the original sprite art.
-    // Alignment is relative to the ball's bounding rect — same offset for
+    // Alignment is relative to the ball's bounding rect - same offset for
     // every ball so the cluster reads as lit from a single source.
     const highlightAlign = Alignment(-0.45, -0.45);
 
     for (final i in order) {
-      // Continuous bucket interpolation — was discrete .round() to one of
+      // Continuous bucket interpolation - was discrete .round() to one of
       // 6 buckets, which made balls visibly "pop" between brightness
       // levels as they crossed bucket boundaries. Lerping between the two
       // adjacent buckets gives a smooth ramp instead of a step staircase.
@@ -161,7 +162,7 @@ class MeshMorphPainter extends CustomPainter {
       final centre = Offset(_sx[i], _sy[i]);
       final ballRect = Rect.fromCircle(center: centre, radius: ballRadius);
 
-      // Fresh shader per ball — RadialGradient.createShader is cheap
+      // Fresh shader per ball - RadialGradient.createShader is cheap
       // (no rasterization happens until canvas.drawCircle below).
       final shader = RadialGradient(
         center: highlightAlign,
@@ -186,8 +187,8 @@ class MeshMorphPainter extends CustomPainter {
   // -------------------------------------------------------------------------
   // Bucket palette extraction. Each of the 6 sprite stamps in
   // kVectorballSprite uses a range of palette indices to fake a 3D-lit
-  // sphere. We sample three points from each sprite — brightest pixel,
-  // median pixel, and dimmest visible pixel — to build a 3-stop gradient
+  // sphere. We sample three points from each sprite - brightest pixel,
+  // median pixel, and dimmest visible pixel - to build a 3-stop gradient
   // that reproduces the sprite's overall colour ramp.
   // -------------------------------------------------------------------------
 
@@ -225,7 +226,7 @@ class MeshMorphPainter extends CustomPainter {
   static const double _paletteLightenAmount = 0.22;
 
   // Per-ball alpha. Slight transparency lets overlapping balls bleed into
-  // each other instead of forming hard stacked discs — sells the "cloud
+  // each other instead of forming hard stacked discs - sells the "cloud
   // of marbles" feel rather than "deck of stickers".
   static const int _ballAlpha = 224; // ~0.88
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// D33 P2 — MeshCoreSendRateLimiter unit tests.
+// D33 P2 - MeshCoreSendRateLimiter unit tests.
 //
 // Pins the token-bucket invariants the chat-meta envelope (and
 // future reaction frames) rely on for fair airtime sharing.
@@ -19,7 +19,7 @@ class _FakeClock {
 }
 
 void main() {
-  group('MeshCoreSendRateLimiter — token bucket basics', () {
+  group('MeshCoreSendRateLimiter - token bucket basics', () {
     test('starts with full bucket at default capacity 1024 B', () {
       final clock = _FakeClock(DateTime(2026, 5, 7, 12));
       final lim = MeshCoreSendRateLimiter(clock: clock.call);
@@ -51,7 +51,7 @@ void main() {
       lim.tryAcquire(974);
       expect(lim.remainingBytes, 50);
 
-      // Request 100 bytes — over budget.
+      // Request 100 bytes - over budget.
       final rejected = lim.tryAcquire(100);
       expect(rejected.allowed, isFalse);
       expect(
@@ -94,7 +94,7 @@ void main() {
     });
   });
 
-  group('MeshCoreSendRateLimiter — proportional refill', () {
+  group('MeshCoreSendRateLimiter - proportional refill', () {
     test('partial-window elapsed time refills proportionally', () {
       final clock = _FakeClock(DateTime(2026, 5, 7, 12));
       final lim = MeshCoreSendRateLimiter(clock: clock.call);
@@ -154,13 +154,13 @@ void main() {
     });
   });
 
-  group('MeshCoreSendRateLimiter — nextSendIn estimate', () {
+  group('MeshCoreSendRateLimiter - nextSendIn estimate', () {
     test('nextSendIn equals the time required to refill the shortfall', () {
       final clock = _FakeClock(DateTime(2026, 5, 7, 12));
       final lim = MeshCoreSendRateLimiter(clock: clock.call);
 
       lim.tryAcquire(1000); // 24 left
-      // Request 124 bytes — short by 100.
+      // Request 124 bytes - short by 100.
       final rejected = lim.tryAcquire(124);
       expect(rejected.allowed, isFalse);
 
@@ -183,7 +183,7 @@ void main() {
     });
   });
 
-  group('MeshCoreSendRateLimiter — reset', () {
+  group('MeshCoreSendRateLimiter - reset', () {
     test('reset() restores capacity and resets refill clock', () {
       final clock = _FakeClock(DateTime(2026, 5, 7, 12));
       final lim = MeshCoreSendRateLimiter(clock: clock.call);
@@ -204,7 +204,7 @@ void main() {
     });
   });
 
-  group('MeshCoreSendRateLimiter — custom config', () {
+  group('MeshCoreSendRateLimiter - custom config', () {
     test('honours injected capacity / window', () {
       final clock = _FakeClock(DateTime(2026, 5, 7, 12));
       final lim = MeshCoreSendRateLimiter(

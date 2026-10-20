@@ -5,7 +5,7 @@
 /// logs:
 ///
 /// 1. The secure-DM router stored `replyToText` as the BODY of a
-///    quote-formatted message instead of the QUOTE — making the
+///    quote-formatted message instead of the QUOTE - making the
 ///    sender's local bubble appear to "reply to itself" with the
 ///    user's own typed text in the quote box. The receiver's view
 ///    was correct because the receiver path runs through
@@ -33,7 +33,7 @@ void main() {
       expect(SipDmManager.parseReplyToText(reply), equals('🎨 Sketch'));
       expect(SipDmManager.extractReplyBody(reply), equals('Hi'));
       // The two helpers must NEVER agree on a reply-formatted message
-      // — if they ever do, someone has confused them again.
+      // - if they ever do, someone has confused them again.
       expect(
         SipDmManager.parseReplyToText(reply),
         isNot(equals(SipDmManager.extractReplyBody(reply))),
@@ -80,7 +80,7 @@ void main() {
       // The fix: key on the entry instance. Distinct identities ⇒
       // distinct keys.
       expect(GlobalObjectKey(entryA), isNot(equals(GlobalObjectKey(entryB))));
-      // The old approach (key on timestampMs) WOULD have collided —
+      // The old approach (key on timestampMs) WOULD have collided -
       // pinning that as a regression cue.
       expect(
         GlobalObjectKey(entryA.timestampMs),
@@ -96,7 +96,7 @@ void main() {
         direction: SipDmDirection.outbound,
       );
       // Multiple GlobalObjectKey instances built around the same
-      // entry instance are equal — required for ensureVisible to
+      // entry instance are equal - required for ensureVisible to
       // resolve the registered widget when the lookup happens later.
       expect(GlobalObjectKey(entry), equals(GlobalObjectKey(entry)));
     });

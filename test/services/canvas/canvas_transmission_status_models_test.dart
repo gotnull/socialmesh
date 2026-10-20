@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/canvas/canvas_transmission_status_models.dart';
 
 void main() {
-  group('MeshCanvasTransmissionStatus.derive — severity precedence', () {
+  group('MeshCanvasTransmissionStatus.derive - severity precedence', () {
     test('empty queue + healthy budgets → idle', () {
       final status = MeshCanvasTransmissionStatus.derive(
         pendingCount: 0,
@@ -85,7 +85,7 @@ void main() {
     });
 
     test('pendingCount >= softQueueCap (32) → full, regardless of budget state '
-        '— blocks new paint taps', () {
+        '- blocks new paint taps', () {
       final status = MeshCanvasTransmissionStatus.derive(
         pendingCount: 32,
         oldestPendingAtMs: 999_000,
@@ -102,7 +102,7 @@ void main() {
       );
     });
 
-    test('full has precedence over cooling — block before showing cooling', () {
+    test('full has precedence over cooling - block before showing cooling', () {
       final status = MeshCanvasTransmissionStatus.derive(
         pendingCount: 50,
         oldestPendingAtMs: 999_000,
@@ -118,7 +118,7 @@ void main() {
     });
   });
 
-  group('MeshCanvasTransmissionStatus — identity + idle constant', () {
+  group('MeshCanvasTransmissionStatus - identity + idle constant', () {
     test('idle constant is the conservative empty state', () {
       const i = MeshCanvasTransmissionStatus.idle;
       expect(i.severity, MeshCanvasTransmissionSeverity.idle);

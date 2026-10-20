@@ -24,7 +24,7 @@ class SipSignalNote {
     required this.velocity,
   });
 
-  /// Frequency in Hz. Pure helper — no I/O.
+  /// Frequency in Hz. Pure helper - no I/O.
   /// Standard MIDI-to-frequency: `freq = 440 * 2^((midi - 69) / 12)`.
   double get frequencyHz =>
       440.0 * math.pow(2, (midiNote - 69) / 12.0).toDouble();
@@ -47,10 +47,10 @@ class SipSignalEnvelope {
   /// `(direction, sequenceId)` pairs to drop retransmits.
   final int sequenceId;
 
-  /// Phrase body — null when [kind] is [SipSignalKind.morse].
+  /// Phrase body - null when [kind] is [SipSignalKind.morse].
   final SipSignalPhraseBody? phrase;
 
-  /// Morse body — null when [kind] is [SipSignalKind.phrase].
+  /// Morse body - null when [kind] is [SipSignalKind.phrase].
   final SipSignalMorseBody? morse;
 
   const SipSignalEnvelope({
@@ -73,7 +73,7 @@ class SipSignalPhraseBody {
 }
 
 /// Morse-kind body: original text + speed + tone instrument. The
-/// dot/dash pattern is regenerated on the receiver from [text] —
+/// dot/dash pattern is regenerated on the receiver from [text] -
 /// the wire deliberately doesn't carry it.
 class SipSignalMorseBody {
   final int speedWpm;
@@ -93,7 +93,7 @@ class SipSignalMorseBody {
   int get charCount => text.length;
 }
 
-/// Outcome of [SipSignalCodec.decode]. The codec never throws —
+/// Outcome of [SipSignalCodec.decode]. The codec never throws -
 /// every error path returns a typed [SipSignalDecodeError] so
 /// receivers drop+log without exception handling.
 class SipSignalDecodeResult {
@@ -116,10 +116,10 @@ class SipSignalDecodeResult {
 /// verbatim.
 enum SipSignalDecodeError {
   /// Fewer than [SipSignalConstants.envelopeHeaderBytes] bytes
-  /// provided — couldn't even read the header.
+  /// provided - couldn't even read the header.
   truncatedHeader,
 
-  /// Total bytes exceed [SipSignalConstants.maxEnvelopeBytes] —
+  /// Total bytes exceed [SipSignalConstants.maxEnvelopeBytes] -
   /// either a malformed sender or a future-version envelope we
   /// can't interpret.
   payloadTooLarge,
@@ -142,7 +142,7 @@ enum SipSignalDecodeError {
   truncatedNotes,
 
   /// Phrase body: a note had midiNote > 127 or velocity > 127. v1
-  /// rejects these — receivers MUST NOT clamp silently.
+  /// rejects these - receivers MUST NOT clamp silently.
   invalidNoteFields,
 
   /// Morse body: speedWpm out of range or tone instrument unknown.
@@ -161,7 +161,7 @@ enum SipSignalDecodeError {
 }
 
 /// Helper used by encode/decode + receivers. Computes a stable
-/// payload hash for dedupe — combined with `(direction, sequenceId)`
+/// payload hash for dedupe - combined with `(direction, sequenceId)`
 /// it lets the manager drop retransmitted signals without false
 /// positives across distinct phrases.
 int payloadHashForDedupe(Uint8List bytes) {

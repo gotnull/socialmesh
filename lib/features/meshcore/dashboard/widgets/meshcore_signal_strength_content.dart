@@ -187,9 +187,8 @@ class _SignalStat extends StatelessWidget {
         ),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: context.textTertiary),
         ),
       ],
     );

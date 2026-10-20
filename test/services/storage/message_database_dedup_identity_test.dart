@@ -3,7 +3,7 @@
 
 // Pins the two message-identity dedup layers:
 // - id-level: re-saving the same Message (stable id) replaces, never
-//   duplicates — this is what protects locally-generated messages,
+//   duplicates - this is what protects locally-generated messages,
 //   whose packet_id is NULL and which therefore never hit the unique
 //   packet-identity index;
 // - packet-level: two DIFFERENT Message instances carrying the same

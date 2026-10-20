@@ -96,9 +96,9 @@ class IncidentModeStore {
   /// Allocates the next per-sender sequence number for [localNodeId] within
   /// [incidentId] (monotonic; 0 for the first local event).
   Future<int> nextLocalSeq(int incidentId, int localNodeId) async {
-    final mine = (await _db.getIncidentEvents(
-      incidentId,
-    )).where((e) => e.senderNodeId == localNodeId).map((e) => e.seq);
+    final mine = (await _db.getIncidentEvents(incidentId))
+        .where((e) => e.senderNodeId == localNodeId)
+        .map((e) => e.seq);
     if (mine.isEmpty) return 0;
     return mine.reduce((a, b) => a > b ? a : b) + 1;
   }

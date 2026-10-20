@@ -11,7 +11,7 @@ import 'translation_models.dart';
 
 /// Configuration for OpenAI translation.
 ///
-/// Defaults to `gpt-4o-mini` — the cheapest suitable model for
+/// Defaults to `gpt-4o-mini` - the cheapest suitable model for
 /// short, high-volume translation requests on mesh networks.
 class OpenAiTranslationConfig {
   final String model;
@@ -106,7 +106,7 @@ class OpenAiTranslationAdapter implements TranslationAdapter {
         throw TranslationError(
           type: TranslationErrorType.byoKeyMissing,
           message: isMissingScope
-              ? 'API key missing required permissions — check scopes on platform.openai.com' // lint-allow: hardcoded-string
+              ? 'API key missing required permissions - check scopes on platform.openai.com' // lint-allow: hardcoded-string
               : 'Invalid OpenAI API key', // lint-allow: hardcoded-string
         );
       }

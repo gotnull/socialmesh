@@ -25,7 +25,7 @@ class ChunkDefinition {
 
 /// Splits a payload into MTU-safe chunks.
 ///
-/// This class is stateless — it produces deterministic chunk definitions
+/// This class is stateless - it produces deterministic chunk definitions
 /// from payload length and chunk size parameters without holding the
 /// payload bytes itself.
 class PayloadChunker {

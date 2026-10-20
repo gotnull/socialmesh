@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../core/logging.dart';
 import '../../../services/notifications/notification_service.dart';
 import '../models/tak_event.dart';
@@ -76,7 +77,7 @@ class TakStaleMonitor {
       final isStale = now > event.staleUtcMs;
 
       if (isStale && !_notifiedUids.contains(uid)) {
-        // Newly stale — fire notification.
+        // Newly stale - fire notification.
         AppLogging.tak(
           'StaleMonitor: entity $uid (${event.displayName}) '
           'transitioned to stale',
@@ -84,7 +85,7 @@ class TakStaleMonitor {
         _notifiedUids.add(uid);
         _fireNotification(event);
       } else if (!isStale && _notifiedUids.contains(uid)) {
-        // Entity recovered — reset dedup.
+        // Entity recovered - reset dedup.
         AppLogging.tak(
           'StaleMonitor: entity $uid (${event.displayName}) '
           'recovered from stale, resetting dedup',

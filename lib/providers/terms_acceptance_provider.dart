@@ -49,7 +49,7 @@ class TermsAcceptanceNotifier extends AsyncNotifier<TermsAcceptanceState> {
 
   /// Whether the user needs to accept (or re-accept) the current terms.
   ///
-  /// Safe to call even while the provider is loading — returns true when
+  /// Safe to call even while the provider is loading - returns true when
   /// the state is not yet available (erring on the side of gating).
   bool get needsAcceptance {
     final current = state.asData?.value;
@@ -84,7 +84,7 @@ class TermsAcceptanceNotifier extends AsyncNotifier<TermsAcceptanceState> {
   /// remote) so that server-side version bumps are correctly recorded.
   ///
   /// AWAITS the remote versions provider rather than reading its sync
-  /// snapshot — otherwise a user who taps Accept before Firestore
+  /// snapshot - otherwise a user who taps Accept before Firestore
   /// resolves stores the hardcoded floor, and gets re-prompted on the
   /// next cold launch once the higher remote value arrives. The
   /// provider has its own 5s timeout and falls back to the cached or

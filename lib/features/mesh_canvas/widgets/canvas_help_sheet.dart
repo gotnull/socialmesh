@@ -3,7 +3,7 @@
 
 // "What is this?" sheet for the MeshCanvas viewer.
 //
-// Spec anchor: dev S7.B productization brief — "concise, retro,
+// Spec anchor: dev S7.B productization brief - "concise, retro,
 // hacker, community-oriented explainer; no onboarding modal spam,
 // no enterprise dashboard chrome." Surfaces via the (i) icon in the
 // viewer's app bar.
@@ -13,7 +13,7 @@
 // every other in-app help sheet (Settings, Signals, NodeDex, etc.).
 // HelpSheet handles the title, optional intro paragraph, and a
 // vertical list of icon-tagged title/body rows in a glass bottom
-// sheet — exactly the shape this feature needs.
+// sheet - exactly the shape this feature needs.
 //
 // Tone rules: retro / BBS voice, no corporate hedging. Four
 // interaction rows + one community-philosophy row keep the sheet
@@ -27,7 +27,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/help_sheet.dart';
 
 /// Open the MeshCanvas help sheet as a content-heavy glass bottom
-/// sheet. The sheet is purely informational — it does not return a
+/// sheet. The sheet is purely informational - it does not return a
 /// value and dismisses on drag-down / tap-outside.
 Future<void> showCanvasHelpSheet({required BuildContext context}) {
   return AppBottomSheet.showScrollable<void>(
@@ -51,13 +51,13 @@ Future<void> showCanvasHelpSheet({required BuildContext context}) {
             title: l.meshCanvasHelpMeshCanvasTitle,
             description: l.meshCanvasHelpMeshCanvasBody,
           ),
-          // First paint wakes the board — /r/place dormancy.
+          // First paint wakes the board - /r/place dormancy.
           HelpSheetItem(
             icon: Icons.bolt_outlined,
             title: l.meshCanvasHelpFirstPaintTitle,
             description: l.meshCanvasHelpFirstPaintBody,
           ),
-          // Gestures — primary then secondary.
+          // Gestures - primary then secondary.
           HelpSheetItem(
             icon: Icons.touch_app_outlined,
             title: l.meshCanvasHelpTapToPaintTitle,
@@ -68,13 +68,13 @@ Future<void> showCanvasHelpSheet({required BuildContext context}) {
             title: l.meshCanvasHelpPanZoomTitle,
             description: l.meshCanvasHelpPanZoomBody,
           ),
-          // Tempo — set expectations about LoRa pace.
+          // Tempo - set expectations about LoRa pace.
           HelpSheetItem(
             icon: Icons.timer_outlined,
             title: l.meshCanvasHelpTempoTitle,
             description: l.meshCanvasHelpTempoBody,
           ),
-          // Overwrites — /r/place conflict philosophy.
+          // Overwrites - /r/place conflict philosophy.
           HelpSheetItem(
             icon: Icons.layers_outlined,
             title: l.meshCanvasHelpOverwriteTitle,
@@ -86,7 +86,7 @@ Future<void> showCanvasHelpSheet({required BuildContext context}) {
             title: l.meshCanvasHelpCommunityTitle,
             description: l.meshCanvasHelpCommunityBody,
           ),
-          // Status pill explainer — covers every hydration +
+          // Status pill explainer - covers every hydration +
           // transmission HUD label so the user has a mental model
           // for the chrome that appears while painting.
           HelpSheetItem(

@@ -16,7 +16,7 @@ import 'hardware_architecture.dart' show DeviceArchitecture;
 // The bundled table does not cover every HardwareModel value in our
 // protobufs (stm32, rp2350, specials such as PORTDUINO/PRIVATE_HW, and
 // any HardwareModel added after the last upstream refresh). Those live
-// in `_supplement` below. JSON entries always win when both exist —
+// in `_supplement` below. JSON entries always win when both exist -
 // enforced by `test/services/firmware/hardware_architecture_test.dart`.
 //
 // `load()` must be awaited before `runApp` (see `lib/main.dart`).
@@ -53,7 +53,7 @@ class DeviceHardwareCatalog {
 
   // Entries not covered by the upstream JSON catalog. Carries the
   // architecture values that the previous hand-maintained map asserted for
-  // these hwModels — not authoritatively verified against upstream, but
+  // these hwModels - not authoritatively verified against upstream, but
   // preserved to avoid regressions until the upstream JSON catches up.
   // Shrink this table when upstream adds coverage; the parity test will
   // flag any supplement entry that the JSON now covers.
@@ -113,7 +113,7 @@ class DeviceHardwareCatalog {
     // to sit on these numbers.
     27: DeviceArchitecture.unknown, // MAKERFABS_TRACKER
     28: DeviceArchitecture.unknown, // MAKERFABS_RESERVED
-    // Elecrow CrowPanel Advance P4 — ESP32-P4, an architecture meshtastic
+    // Elecrow CrowPanel Advance P4 - ESP32-P4, an architecture meshtastic
     // firmware does not yet publish a release asset for. Mapped to unknown so
     // the update flow reports "not supported" instead of routing to a
     // nonexistent firmware-esp32p4- archive (404 on OTA).

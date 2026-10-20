@@ -236,7 +236,7 @@ void main() {
         await protocol.handleIncomingPacket(packet);
         await Future<void>.delayed(const Duration(milliseconds: 20));
         // Either the message was emitted with replacement chars or
-        // dropped — the test only asserts no crash and at most one
+        // dropped - the test only asserts no crash and at most one
         // outcome.
         expect(messages.length, lessThanOrEqualTo(1));
       } finally {

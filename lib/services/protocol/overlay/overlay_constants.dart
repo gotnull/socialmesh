@@ -62,7 +62,7 @@ abstract final class OverlayLinkConstants {
   /// Minimum LINK_PING cadence in seconds (§10.4).
   static const int pingCadenceSecMin = 270;
 
-  /// Maximum LINK_PING cadence in seconds (§10.4) — nominal target
+  /// Maximum LINK_PING cadence in seconds (§10.4) - nominal target
   /// 300 s with jitter up to 30 s.
   static const int pingCadenceSecMax = 330;
 
@@ -78,7 +78,7 @@ abstract final class OverlayLinkConstants {
   /// LINK_OPEN maximum retry count.
   static const int openMaxTries = 4;
 
-  /// Handshake window in seconds — mirrors `SipConstants.handshakeTimeout`
+  /// Handshake window in seconds - mirrors `SipConstants.handshakeTimeout`
   /// (60 s per SIP v0.1 §).
   static const int handshakeWindowSec = 60;
 
@@ -105,7 +105,7 @@ abstract final class OverlayResourceConstants {
 
   /// Chunk payload ceiling through a signed SIP wrapper:
   /// 121 - 10 = 111 B. Signed chunks are permitted by the codec but
-  /// forbidden at the policy layer per §11 — chunks are always sent
+  /// forbidden at the policy layer per §11 - chunks are always sent
   /// unsigned; integrity is end-to-end via COMPLETE SHA-256.
   static const int chunkPayloadCeilSigned =
       OverlayLinkConstants.payloadCeilSigned - headerLen; // 111
@@ -118,7 +118,7 @@ abstract final class OverlayResourceConstants {
   /// (§12.2).
   static const int chunkSizeSecure = 96;
 
-  /// Maximum chunk index — u16 limit. `chunkCount` at max = 65 536.
+  /// Maximum chunk index - u16 limit. `chunkCount` at max = 65 536.
   static const int maxChunkIndex = 0xFFFF;
 
   /// Maximum resource size in bytes (v0.2 cap per §11.7).

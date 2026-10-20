@@ -167,7 +167,7 @@ class ExternalPurchaseService {
   ///
   /// **Always** includes `deviceInstallId`, regardless of Firebase auth
   /// state. External entitlements are intentionally device-scoped
-  /// (same model as native iOS/Android IAP — purchases live on the
+  /// (same model as native iOS/Android IAP - purchases live on the
   /// install, not the account). Skipping the uid path entirely
   /// eliminates a class of bugs where Firebase Anonymous Auth
   /// completes between sequential calls and the backend resolves a
@@ -252,7 +252,7 @@ class ExternalPurchaseService {
   }
 
   /// Pull the latest entitlements from the backend and replace the
-  /// local cache. Failures are logged and swallowed — the cache stays
+  /// local cache. Failures are logged and swallowed - the cache stays
   /// authoritative offline.
   Future<List<ExternalEntitlement>> refreshEntitlements() async {
     AppLogging.purchase('[ExternalPurchaseService] refreshEntitlements');
@@ -262,7 +262,7 @@ class ExternalPurchaseService {
       // The cloud_functions plugin decodes nested JSON objects as
       // `Map<Object?, Object?>`, NOT `Map<String, dynamic>`. A naive
       // `whereType<Map<String, dynamic>>()` would silently drop every
-      // entitlement and return 0 — which is exactly the bug we hit
+      // entitlement and return 0 - which is exactly the bug we hit
       // with Simon's redemption (server granted, server returned 1
       // entitlement, but the client cast filtered it out and the UI
       // never showed the unlock). Use `Map<String, dynamic>.from(...)`
@@ -423,7 +423,7 @@ class ExternalPurchaseService {
   // ---------------------------------------------------------------------------
 
   /// Entry point from the deep-link router. The redirect alone never
-  /// unlocks anything — this just kicks off the polling loop that
+  /// unlocks anything - this just kicks off the polling loop that
   /// queries the backend until the webhook has flipped the session.
   void handleDeepLink(String sessionId) {
     if (sessionId.isEmpty) {

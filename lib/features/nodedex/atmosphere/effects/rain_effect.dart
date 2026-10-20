@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Rain Effect — vertical streak particles driven by mesh activity.
+// Rain Effect - vertical streak particles driven by mesh activity.
 //
 // Rain density is tied to packet activity and node count. More active
 // networks produce denser rainfall. The effect uses thin vertical
@@ -18,7 +18,7 @@
 //
 // The rain effect is the most data-responsive of the four atmosphere
 // effects. At low activity it produces a gentle drizzle; at peak
-// activity it becomes a steady shower (but never a downpour — the
+// activity it becomes a steady shower (but never a downpour - the
 // ceiling is calibrated to remain ambient).
 
 import 'dart:math' as math;
@@ -41,7 +41,7 @@ class RainSpawnStrategy extends ParticleSpawnStrategy {
 
   @override
   void initParticle(Particle p, Size canvasSize, bool isDark) {
-    // Randomise speed within range — faster particles appear closer.
+    // Randomise speed within range - faster particles appear closer.
     final speed = randomRange(
       AtmosphereTiming.rainSpeedMin,
       AtmosphereTiming.rainSpeedMax,
@@ -121,7 +121,7 @@ class RainPainter extends CustomPainter {
   /// Global intensity multiplier (0.0-1.0).
   final double intensity;
 
-  /// Cached paint object — reused every frame.
+  /// Cached paint object - reused every frame.
   final Paint _paint = Paint()
     ..isAntiAlias = true
     ..strokeCap = StrokeCap.round
@@ -136,7 +136,7 @@ class RainPainter extends CustomPainter {
     for (final p in pool.particles) {
       if (!p.alive) continue;
 
-      // Quick bounds check — skip particles fully outside viewport.
+      // Quick bounds check - skip particles fully outside viewport.
       if (p.y > size.height + p.size2 || p.y < -p.size2 - 10) continue;
       if (p.x < -10 || p.x > size.width + 10) continue;
 

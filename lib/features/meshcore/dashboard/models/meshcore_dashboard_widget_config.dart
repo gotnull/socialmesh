@@ -111,15 +111,13 @@ class MeshCoreWidgetRegistry {
     MeshCoreWidgetTypeInfo(
       type: MeshCoreDashboardWidgetType.quickActions,
       name: 'Quick Actions', // lint-allow: hardcoded-string
-      description:
-          'Send advert, refresh contacts, sync time', // lint-allow: hardcoded-string
+      description: 'Send advert, refresh contacts, sync time', // lint-allow: hardcoded-string
       icon: Icons.flash_on_rounded,
     ),
     MeshCoreWidgetTypeInfo(
       type: MeshCoreDashboardWidgetType.nearbyContacts,
       name: 'Nearby Contacts', // lint-allow: hardcoded-string
-      description:
-          'Top contacts by recent activity and signal', // lint-allow: hardcoded-string
+      description: 'Top contacts by recent activity and signal', // lint-allow: hardcoded-string
       icon: Icons.near_me_outlined,
     ),
     MeshCoreWidgetTypeInfo(
@@ -132,8 +130,7 @@ class MeshCoreWidgetRegistry {
     MeshCoreWidgetTypeInfo(
       type: MeshCoreDashboardWidgetType.signalStrength,
       name: 'Signal Strength', // lint-allow: hardcoded-string
-      description:
-          'Network-wide SNR aggregate across recent contact adverts', // lint-allow: hardcoded-string
+      description: 'Network-wide SNR aggregate across recent contact adverts', // lint-allow: hardcoded-string
       icon: Icons.signal_cellular_alt_rounded,
     ),
     MeshCoreWidgetTypeInfo(
@@ -146,15 +143,13 @@ class MeshCoreWidgetRegistry {
     MeshCoreWidgetTypeInfo(
       type: MeshCoreDashboardWidgetType.meshHealth,
       name: 'Mesh Health', // lint-allow: hardcoded-string
-      description:
-          'Overall MeshCore mesh status and quality score', // lint-allow: hardcoded-string
+      description: 'Overall MeshCore mesh status and quality score', // lint-allow: hardcoded-string
       icon: Icons.favorite_rounded,
     ),
     MeshCoreWidgetTypeInfo(
       type: MeshCoreDashboardWidgetType.nodeMap,
       name: 'Node Map', // lint-allow: hardcoded-string
-      description:
-          'Compact map view of contacts with location', // lint-allow: hardcoded-string
+      description: 'Compact map view of contacts with location', // lint-allow: hardcoded-string
       icon: Icons.map_outlined,
     ),
   ];

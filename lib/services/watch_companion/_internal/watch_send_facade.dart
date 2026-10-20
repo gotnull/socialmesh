@@ -62,22 +62,20 @@ import 'watch_readiness_facade.dart';
 /// Function signature for issuing a Meshtastic channel-broadcast text
 /// send. Allows tests to override the send call without standing up a
 /// real ProtocolService instance.
-typedef MeshtasticChannelSend =
-    Future<int> Function({
-      required String text,
-      required int channelIndex,
-      int? replyId,
-    });
+typedef MeshtasticChannelSend = Future<int> Function({
+  required String text,
+  required int channelIndex,
+  int? replyId,
+});
 
 /// Function signature for issuing a MeshCore channel-broadcast text
 /// send. Returns the full `MeshCoreTextSendResult` so the facade can
 /// translate rate-limited / firmware-timeout outcomes into structured
 /// diagnostic reasons.
-typedef MeshCoreChannelSend =
-    Future<MeshCoreTextSendResult> Function({
-      required String text,
-      required int channelIndex,
-    });
+typedef MeshCoreChannelSend = Future<MeshCoreTextSendResult> Function({
+  required String text,
+  required int channelIndex,
+});
 
 /// Default Meshtastic channel-send. Reads [protocolServiceProvider] and
 /// invokes the same `ProtocolService.sendMessage` entry point the phone
@@ -244,7 +242,7 @@ class WatchSendFacade {
 
       case ActiveProtocol.meshtastic:
         // Resolve an optional reply target. Unresolvable ids degrade to a
-        // plain broadcast (replyId null) rather than failing the send — the
+        // plain broadcast (replyId null) rather than failing the send - the
         // user's canned message still goes out, only the threading is lost.
         final replyId = _resolveReplyId(intent.payload.replyToMessageId);
         if (intent.payload.replyToMessageId != null && replyId == null) {
@@ -277,7 +275,7 @@ class WatchSendFacade {
 
       case ActiveProtocol.meshcore:
         // MeshCore has no wire-level reply concept. A reply intent degrades
-        // to a normal channel broadcast — never fake threading via text.
+        // to a normal channel broadcast - never fake threading via text.
         if (intent.payload.replyToMessageId != null) {
           AppLogging.watchCompanion(
             'reply_dropped_meshcore: id=${intent.payload.replyToMessageId} '

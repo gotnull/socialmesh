@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34c-A — model-level `parseContact` adapter regression pins.
+// D34c-A - model-level `parseContact` adapter regression pins.
 //
 // The model-level [parseContact] in `lib/models/meshcore_contact.dart` is a
 // thin adapter over the canonical byte-layout parser at
@@ -17,7 +17,7 @@
 //   - pathLength > 0  → exactly N bytes copied into MeshCoreContact.path
 //   - pathLength == 0 → MeshCoreContact.path is empty
 //   - pathLength == 0xFF → maps to -1 (flood sentinel) and path is empty
-//   - GPS lat==0 && lon==0 means "no real location" — both null on the model
+//   - GPS lat==0 && lon==0 means "no real location" - both null on the model
 //   - name and adv_type pass through correctly (D24.B layout)
 //
 // Wire-byte layout pinning lives in

@@ -19,7 +19,7 @@ import '../../../services/mesh_health/mesh_health_models.dart';
 import '../../../services/mesh_health/mesh_health_providers.dart';
 import 'mesh_health_battery_reminder.dart';
 
-/// SharedPreferences key — when true the back-button reminder is suppressed.
+/// SharedPreferences key - when true the back-button reminder is suppressed.
 const _backReminderDismissedKey = 'mesh_health_back_reminder_dismissed';
 
 /// Main mesh health dashboard widget

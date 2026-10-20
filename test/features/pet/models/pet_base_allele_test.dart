@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/pet/models/pet_base_allele.dart';
 
 void main() {
-  group('PetBaseAllele — codes & complement pairing', () {
+  group('PetBaseAllele - codes & complement pairing', () {
     test('single-letter codes are A/T/G/C in enum order', () {
       expect(PetBaseAllele.aurora.code, 'A');
       expect(PetBaseAllele.tether.code, 'T');
@@ -47,7 +47,7 @@ void main() {
   });
 
   group('deriveAlleleSequence', () {
-    test('is deterministic — same seed produces same sequence', () {
+    test('is deterministic - same seed produces same sequence', () {
       final a = deriveAlleleSequence(0x8FDDC077);
       final b = deriveAlleleSequence(0x8FDDC077);
       expect(a, equals(b));
@@ -123,7 +123,7 @@ void main() {
     });
 
     test('dominant ties break by enum ordinal', () {
-      // Aurora (0) and Tether (1) tied — aurora wins by earlier ordinal.
+      // Aurora (0) and Tether (1) tied - aurora wins by earlier ordinal.
       final seq = [PetBaseAllele.aurora, PetBaseAllele.tether];
       expect(PetAlleleDistribution.from(seq).dominant, PetBaseAllele.aurora);
     });

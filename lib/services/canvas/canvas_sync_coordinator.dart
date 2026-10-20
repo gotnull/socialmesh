@@ -7,7 +7,7 @@
 //
 // Owns the per-peer-per-tile state machine for tile-sync hydration.
 // All wire I/O routes through the existing CanvasOutboundChannel +
-// CanvasOutboundGovernor + SIP rate limiter — sync NEVER bypasses
+// CanvasOutboundGovernor + SIP rate limiter - sync NEVER bypasses
 // airtime fairness.
 //
 // Surface:
@@ -52,7 +52,7 @@ enum MeshCanvasHydrationState {
   recovering,
 
   /// At least one sync_response band has arrived recently and is
-  /// being applied — visually distinct so the user sees the canvas
+  /// being applied - visually distinct so the user sees the canvas
   /// "filling in" cause-and-effect.
   syncing,
 
@@ -83,7 +83,7 @@ class _PeerRequestWindow {
   _PeerRequestWindow(this.peerNodeNum);
 }
 
-/// One in-flight raw-band response job. Sender-side state — the 8
+/// One in-flight raw-band response job. Sender-side state - the 8
 /// pre-encoded band payloads sit here until they each successfully
 /// pass the governor + SIP limiter on their way out. Bands ship in
 /// order; `nextBandIndex` advances after each success. A successive
@@ -113,7 +113,7 @@ class _RawBandJob {
   bool get complete => nextBandIndex >= bandPayloads.length;
 }
 
-/// One in-flight raw-band reception set. Receiver-side state — a
+/// One in-flight raw-band reception set. Receiver-side state - a
 /// bitmask of which bands have landed, the first-band-arrived
 /// timestamp, and a retry timer that fires if the set is still
 /// incomplete after 30 s.
@@ -227,7 +227,7 @@ class CanvasSyncCoordinator {
   /// HUD drops back toward idle.
   static const Duration syncingActivityWindow = Duration(seconds: 10);
 
-  /// Sync_request timeout — if no response after this, clear the
+  /// Sync_request timeout - if no response after this, clear the
   /// pending state so we may re-request later (e.g. after the peer
   /// re-emits a digest).
   static const Duration requestTimeout = Duration(seconds: 60);
@@ -235,7 +235,7 @@ class CanvasSyncCoordinator {
   /// Receiver-side raw-band reception timeout. If a band set hasn't
   /// completed within this window of the first band landing, the
   /// receiver re-emits one sync_request for the tile (and gives up
-  /// after that one retry — the next viewer mount picks up any
+  /// after that one retry - the next viewer mount picks up any
   /// further missing bands via the digest cycle). Spec §11.3.
   static const Duration rawBandReceiveTimeout = Duration(seconds: 30);
 
@@ -417,7 +417,7 @@ class CanvasSyncCoordinator {
       }
       final pending = _pendingTiles(canvas.localId);
       if (pending.containsKey(tile)) {
-        // Already waiting on this tile from someone — skip duplicate.
+        // Already waiting on this tile from someone - skip duplicate.
         continue;
       }
       final tileX = tile % CanvasGeometry.tilesPerRow;
@@ -711,7 +711,7 @@ class CanvasSyncCoordinator {
     return shipped;
   }
 
-  /// Public drain entry point — the viewer lifecycle host calls
+  /// Public drain entry point - the viewer lifecycle host calls
   /// this on its periodic 5 s tick alongside the send coordinator's
   /// own drain. Iterates every canvas with pending raw-band jobs.
   Future<int> drainRawBands() async {
@@ -725,7 +725,7 @@ class CanvasSyncCoordinator {
 
   /// Re-attempt sync_requests for tiles that were stashed when the
   /// per-peer 4-per-minute cap closed. Called on the lifecycle host's
-  /// periodic tick. Respects the cap — only emits when a cap slot
+  /// periodic tick. Respects the cap - only emits when a cap slot
   /// has aged out of the 60 s window. Returns the number of new
   /// sync_requests sent.
   Future<int> drainDeferredSyncRequests() async {
@@ -794,7 +794,7 @@ class CanvasSyncCoordinator {
         ),
       );
       if (reqPayload == null) {
-        // Encoding failure is permanent — drop from queue.
+        // Encoding failure is permanent - drop from queue.
         continue;
       }
       if (!_governor.canSend(reqPayload.length)) {
@@ -931,7 +931,7 @@ class CanvasSyncCoordinator {
     for (var i = 0; i < reconstructed.length; i++) {
       final entry = reconstructed[i];
       if (entry.color == 0) {
-        // color 0 is the unpainted sentinel — sync_response uses it
+        // color 0 is the unpainted sentinel - sync_response uses it
         // to mean "no cell at this position in the peer's state".
         continue;
       }
@@ -980,7 +980,7 @@ class CanvasSyncCoordinator {
     }
     if (body is! CanvasSyncResponseRawBandBody) return;
 
-    // Raw band — update bitmask, retry on incomplete after 30 s.
+    // Raw band - update bitmask, retry on incomplete after 30 s.
     _registerRawBandReceived(
       canvas: canvas,
       senderNodeId: senderNodeId,
@@ -1033,7 +1033,7 @@ class CanvasSyncCoordinator {
       if (sets.isEmpty) {
         _rawBandReceiveByCanvas.remove(canvas.localId);
       }
-      // Now the tile is genuinely done — release pending state.
+      // Now the tile is genuinely done - release pending state.
       final pending = _pendingTiles(canvas.localId);
       final tileIdx = op.tileY * CanvasGeometry.tilesPerRow + op.tileX;
       pending.remove(tileIdx);
@@ -1056,7 +1056,7 @@ class CanvasSyncCoordinator {
         'received=${liveSet.receivedCount}/8 '
         'peer=0x${senderNodeId.toRadixString(16)}',
       );
-      // Whole-tile re-request — wire spec doesn't carry per-band
+      // Whole-tile re-request - wire spec doesn't carry per-band
       // re-request. Sender's job dedupes if a pending one exists.
       final reqPayload = CanvasCodec.encodeSyncRequest(
         CanvasSyncRequestOp(
@@ -1100,13 +1100,13 @@ class CanvasSyncCoordinator {
         lastBand != null &&
         (now - lastBand) <= syncingActivityWindow.inMilliseconds;
     // `syncing` wins when bands are actively landing (recent activity)
-    // — gives the user the "ink arriving" feedback.
+    // - gives the user the "ink arriving" feedback.
     if (actively) return MeshCanvasHydrationState.syncing;
     // `recovering` covers every other in-flight category: tile
     // requests waiting on a first response, sender-side raw-band
     // jobs still queued, and receiver-side raw-band sets still
     // incomplete. Showing `quiet` while any of these are live would
-    // lie to the user — sync work IS in progress, the wire just
+    // lie to the user - sync work IS in progress, the wire just
     // hasn't ticked into the last 10 s window.
     final deferred = _deferredByCanvas[canvasLocalId];
     final hasDeferred = deferred != null && deferred.isNotEmpty;

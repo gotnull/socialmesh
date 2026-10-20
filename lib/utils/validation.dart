@@ -78,7 +78,7 @@ String truncateUtf8(String s, int maxBytes) {
   final buf = StringBuffer();
   var bytes = 0;
   for (final rune in s.runes) {
-    // lint-allow: no-raw-from-char-codes — String.runes yields valid scalars (pairs already decoded)
+    // lint-allow: no-raw-from-char-codes - String.runes yields valid scalars (pairs already decoded)
     final ch = String.fromCharCodes([rune]);
     final w = utf8ByteLength(ch);
     if (bytes + w > maxBytes) break;
@@ -109,7 +109,7 @@ String? validateLongName(String name) {
 }
 
 /// Sanitize a user short name: truncate to [maxShortNameLength] UTF-8 bytes.
-/// No case conversion or charset filter — emojis and lowercase are allowed
+/// No case conversion or charset filter - emojis and lowercase are allowed
 /// to match the official Meshtastic-Apple companion app.
 String sanitizeShortName(String name) => truncateUtf8(name, maxShortNameLength);
 

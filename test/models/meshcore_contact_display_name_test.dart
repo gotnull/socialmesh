@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D23 — `MeshCoreContact.displayName` fallback regression pins.
+// D23 - `MeshCoreContact.displayName` fallback regression pins.
 //
 // The chat header and Contacts list previously rendered the literal
 // localized "Unknown" string for any firmware contact entry whose
@@ -41,7 +41,7 @@ void main() {
     test('empty name falls back to redacted public-key fingerprint', () {
       // Realistic Radio-A pubkey shape: 32 bytes. Fingerprint must
       // mirror `shortPubKeyHex` (`<8hex>…<8hex>`) so the UI fallback
-      // and the structured log fingerprint are the same shape — one
+      // and the structured log fingerprint are the same shape - one
       // format users learn once.
       final pubKey = Uint8List.fromList([
         0x79, 0x42, 0x6d, 0x8d, // head
@@ -99,7 +99,7 @@ void main() {
       expect(c.displayName, contains('…'));
       expect(c.displayName.contains(fullHex), isFalse);
       // Spot-check: the head and tail 8 chars are present (and only
-      // those — no contiguous 16+ hex run).
+      // those - no contiguous 16+ hex run).
       expect(c.displayName, contains('a0a1a2a3'));
       expect(c.displayName, contains('bcbdbebf'));
       expect(c.displayName.length, equals('<a0a1a2a3…bcbdbebf>'.length));

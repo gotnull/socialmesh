@@ -20,7 +20,7 @@ import 'package:socialmesh/utils/text_sanitizer.dart';
 ///   inside scrollable_positioned_list viewport
 ///
 /// Each test feeds malformed bytes through a real decode path, puts the result
-/// into a widget tree with Text/TextSpan, and pumps — proving the sanitization
+/// into a widget tree with Text/TextSpan, and pumps - proving the sanitization
 /// prevents the crash.
 void main() {
   group('E2E: malformed text → decode → render (paragraph builder crash)', () {
@@ -60,7 +60,7 @@ void main() {
                           text: message.text,
                           children: [
                             TextSpan(
-                              text: ' — from node ${message.from}',
+                              text: ' - from node ${message.from}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -86,7 +86,7 @@ void main() {
     testWidgets('message with null bytes from protocol renders without crash', (
       tester,
     ) async {
-      // Simulate bytes that come from a mesh radio containing null bytes —
+      // Simulate bytes that come from a mesh radio containing null bytes -
       // the exact pattern that caused the production crash.
       final protocolBytes = Uint8List.fromList([
         0x48, 0x65, 0x6C, 0x6C, 0x6F, // Hello
@@ -124,7 +124,7 @@ void main() {
     testWidgets('mesh service schema with control chars renders without crash', (
       tester,
     ) async {
-      // Build a schema with control characters embedded in field names —
+      // Build a schema with control characters embedded in field names -
       // simulates a firmware bug or malicious peer.
       final schemaBytes = _buildSchemaWithControlChars();
       final schema = ServiceSchemaCodec.decode(schemaBytes);
@@ -202,7 +202,7 @@ void main() {
                     text: messages[index],
                     children: const [
                       TextSpan(
-                        text: ' — sender',
+                        text: ' - sender',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -271,7 +271,7 @@ MeshPost? _decodeMeshPostWithCorruptContent() {
   // Header byte: SPP version 1, kind 0x0B (mesh post).
   builder.addByte((1 << 4) | 0x0B);
 
-  // Created at (uint32 big-endian) — recent timestamp.
+  // Created at (uint32 big-endian) - recent timestamp.
   final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   final ts = ByteData(4)..setUint32(0, now, Endian.big);
   builder.add(ts.buffer.asUint8List());

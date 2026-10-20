@@ -1470,8 +1470,7 @@ void main() {
             type: ActionType.sendMessage,
             config: {
               'targetNodeNum': 999,
-              'messageText':
-                  'Node: {{node.name}}, ID: {{node.num}}, Battery: {{battery}}, Location: {{location}}, Time: {{time}}',
+              'messageText': 'Node: {{node.name}}, ID: {{node.num}}, Battery: {{battery}}, Location: {{location}}, Time: {{time}}',
             },
           ),
         ],
@@ -2581,8 +2580,7 @@ void main() {
 
       final nodeLow = MeshNode(
         nodeNum: 123,
-        batteryLevel:
-            25, // Below trigger threshold (30) AND below condition threshold (50)
+        batteryLevel: 25, // Below trigger threshold (30) AND below condition threshold (50)
         lastHeard: DateTime.now(),
       );
       await engine.processNodeUpdate(nodeLow);
@@ -2925,8 +2923,7 @@ void main() {
             type: ActionType.sendMessage,
             config: {
               'targetNodeNum': 999,
-              'messageText':
-                  '|name={{node.name}}|num={{node.num}}|bat={{battery}}|loc={{location}}|msg={{message}}|sensor={{sensor.name}}|state={{sensor.state}}|',
+              'messageText': '|name={{node.name}}|num={{node.num}}|bat={{battery}}|loc={{location}}|msg={{message}}|sensor={{sensor.name}}|state={{sensor.state}}|',
             },
           ),
         ],
@@ -3323,14 +3320,13 @@ void main() {
               type: ActionType.sendMessage,
               config: {
                 'targetNodeNum': 999,
-                'messageText':
-                    '|name={{node.name}}|num={{node.num}}|bat={{battery}}|loc={{location}}|',
+                'messageText': '|name={{node.name}}|num={{node.num}}|bat={{battery}}|loc={{location}}|',
               },
             ),
           ],
         );
 
-        // Bare event — no pre-populated fields (like the real UI does)
+        // Bare event - no pre-populated fields (like the real UI does)
         final event = AutomationEvent(type: TriggerType.manual);
         await engine.executeAutomationManually(automation, event);
 

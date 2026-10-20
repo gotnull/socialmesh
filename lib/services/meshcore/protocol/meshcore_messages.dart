@@ -766,7 +766,7 @@ class MeshCoreTraceHop {
 ///
 /// Receivers MUST verify that [tag] matches the tag they sent in
 /// `CMD_SEND_TRACE_PATH (0x24)` before treating the result as the
-/// response to their request — multiple traces can race.
+/// response to their request - multiple traces can race.
 class MeshCoreTraceResult {
   /// Correlation tag from the original request.
   final int tag;
@@ -1041,7 +1041,7 @@ class MeshCoreContactInfo {
   /// SharedPreferences entries.
   final int? latitude;
 
-  /// Longitude (raw int32, divide by 1e7 for degrees — see scale
+  /// Longitude (raw int32, divide by 1e7 for degrees - see scale
   /// caveat above on [latitude]).
   final int? longitude;
 

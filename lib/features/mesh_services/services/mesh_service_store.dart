@@ -19,7 +19,7 @@ const int _maxInstances = 50;
 
 /// SQLite store for [MeshServiceInstance].
 class MeshServiceStore {
-  /// Optional path override — used by tests to inject in-memory paths.
+  /// Optional path override - used by tests to inject in-memory paths.
   final String? _dbPathOverride;
 
   Database? _db;

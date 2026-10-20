@@ -8,7 +8,7 @@
 // preset), and exposes a single "Open radio settings" entry point so
 // the user can change the preset themselves with the existing tested
 // confirmation flow on RadioConfigScreen. The sheet never writes to
-// the device — it only navigates.
+// the device - it only navigates.
 
 import 'package:flutter/material.dart';
 

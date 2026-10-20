@@ -151,7 +151,7 @@ CotAffiliation parseAffiliation(String cotType) {
 /// The CoT type format is `a-X-D-F-...`:
 ///   - Atom 0: `a` (atom category)
 ///   - Atom 1: affiliation (f/h/n/u/a/s)
-///   - Atom 2: dimension — G (Ground), A (Air), S (Sea Surface),
+///   - Atom 2: dimension - G (Ground), A (Air), S (Sea Surface),
 ///             U (Subsurface), P (Space), F (SOF), E (Electronic Warfare)
 ///   - Atom 3+: function codes refining the entity type
 ///

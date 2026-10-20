@@ -78,6 +78,6 @@ void main() {
     });
 
     // Note: Integration tests for ManagedTranslationAdapter (Cloud Function)
-    // require Firebase initialization — covered by integration test suite.
+    // require Firebase initialization - covered by integration test suite.
   });
 }

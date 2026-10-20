@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeBoard theme model — controls visual style of a board.
+// NodeBoard theme model - controls visual style of a board.
 
 import 'nodeboard_enums.dart';
 

@@ -5,7 +5,7 @@
 //
 // The pet uses ONE layered painter scaled by [PetRenderMode]. The same
 // painter backs tiny NodeDex-row previews, card-sized companion
-// renderings, and the owner home screen — by reading the mode flag the
+// renderings, and the owner home screen - by reading the mode flag the
 // painter decides which depth layers to include and how rich the motion
 // may be.
 //
@@ -25,7 +25,7 @@ import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../models/pet_enums.dart';
 
-/// Rendering mode — governs which depth layers and motion flourishes the
+/// Rendering mode - governs which depth layers and motion flourishes the
 /// painter produces. One painter scales across all three.
 enum PetRenderMode {
   /// NodeDex row / avatar miniature (~32 px). Minimal layers, no
@@ -37,12 +37,12 @@ enum PetRenderMode {
   /// shards + soft pseudo-lighting. No interactive parallax.
   card,
 
-  /// Owner home screen (~220–320 px). Full treatment — all layers, scanlines,
+  /// Owner home screen (~220–320 px). Full treatment - all layers, scanlines,
   /// edge highlights, interactive touch parallax supported.
   home,
 }
 
-/// Seed-derived palette for a pet. Independent of mode — the painter dims
+/// Seed-derived palette for a pet. Independent of mode - the painter dims
 /// or tints at render time via alpha/opacity, not via palette variants.
 @immutable
 class PetRenderPalette {
@@ -79,7 +79,7 @@ enum PetHelixPresence { none, hint, full }
 /// once from `(dnaSeed, stage, branch)` inside the geometry cache; the
 /// painter reads it without doing any seed/trig work per frame.
 ///
-/// The helix is NOT a universal feature — [enabled] gates roughly 55 %
+/// The helix is NOT a universal feature - [enabled] gates roughly 55 %
 /// of dnaSeeds in. When disabled, presence is always [PetHelixPresence.none]
 /// and the painter skips the layer outright.
 @immutable
@@ -87,7 +87,7 @@ class PetHelixSpec {
   /// Whether this identity expresses a helix at all.
   final bool enabled;
 
-  /// [none] / [hint] / [full] — combines the seed-level [enabled] with
+  /// [none] / [hint] / [full] - combines the seed-level [enabled] with
   /// stage-level visibility rules.
   final PetHelixPresence presence;
 
@@ -116,7 +116,7 @@ class PetHelixSpec {
   /// Base angular offset of strand 0, derived from the dnaSeed.
   final double baseAngle;
 
-  /// Seed bitmask of segments skipped from drawing — gives a
+  /// Seed bitmask of segments skipped from drawing - gives a
   /// deterministic "broken" / discontinuous look for volatile / sick
   /// expressions. Bit `i` set means segment starting at point `i` is
   /// hidden.
@@ -124,7 +124,7 @@ class PetHelixSpec {
 
   /// Cross-link rung count between the two strands. Only populated
   /// when `strandCount == 2` (1 and 3 strand anomalies have no rungs).
-  /// Rungs are THE readability win — without them the helix reads as
+  /// Rungs are THE readability win - without them the helix reads as
   /// orbit lines.
   final int rungCount;
 
@@ -142,7 +142,7 @@ class PetHelixSpec {
     required this.rungCount,
   });
 
-  /// Disabled spec — painter skips the layer when it reads this.
+  /// Disabled spec - painter skips the layer when it reads this.
   static const PetHelixSpec disabled = PetHelixSpec._(
     enabled: false,
     presence: PetHelixPresence.none,
@@ -167,10 +167,10 @@ class PetSigilGeometry {
   final PetStage stage;
   final PetBranch branch;
 
-  /// Unit-angle list for the core body polygon — length [coreVertexCount].
+  /// Unit-angle list for the core body polygon - length [coreVertexCount].
   final List<double> coreAngles;
 
-  /// Base angles for the petal orbit — length [petalCount].
+  /// Base angles for the petal orbit - length [petalCount].
   final List<double> petalAngles;
 
   /// Seed-rotated global orientation for the body polygon.
@@ -181,7 +181,7 @@ class PetSigilGeometry {
 
   final PetRenderPalette palette;
 
-  /// Seed-derived ceremonial double-helix trait — rare, deterministic,
+  /// Seed-derived ceremonial double-helix trait - rare, deterministic,
   /// threaded through the creature's space. See [PetHelixSpec] + §9.12.
   final PetHelixSpec helix;
 
@@ -238,7 +238,7 @@ class PetRenderContext {
   /// outside [PetRenderMode.home] or when no touch is active.
   final Offset parallaxNormalized;
 
-  /// Normalized raw stat values in [0, 1]. OPTIONAL — these drive a
+  /// Normalized raw stat values in [0, 1]. OPTIONAL - these drive a
   /// subtle secondary modulation of breath amplitude, idle drift
   /// buoyancy, branch-aura intensity, and wobble-flourish amplitude
   /// WITHIN the active mood bucket. The primary visual contract remains
@@ -269,7 +269,7 @@ class PetRenderContext {
     this.stabilityNorm = 1.0,
   });
 
-  /// Composite health scalar in [0, 1] — mean of the three stat norms.
+  /// Composite health scalar in [0, 1] - mean of the three stat norms.
   /// The painter feeds this into breath / buoyancy / wobble modulation
   /// helpers so their per-mood baselines are nudged slightly up (high
   /// vitality) or down (low vitality) without crossing bucket lines.
@@ -292,7 +292,7 @@ class PetRenderContext {
 // Raw-stat modulation helpers
 // ---------------------------------------------------------------------------
 //
-// Pure functions — free-standing so they're testable without constructing
+// Pure functions - free-standing so they're testable without constructing
 // a painter. The painter delegates to them so modulation policy lives in
 // exactly one place.
 //
@@ -323,7 +323,7 @@ double _moodBaseBreath(PetMood mood, PetStage stage) {
 }
 
 /// Breath amplitude with vitality modulation. Band is 0.90× (vitality=0)
-/// to 1.10× (vitality=1) of the mood baseline — deliberately tight. The
+/// to 1.10× (vitality=1) of the mood baseline - deliberately tight. The
 /// ±10% band is the widest value for which the closest baseline gap
 /// (hungry/sad=0.03 → sleeping=0.04) is still strictly preserved at
 /// extremal vitality. A wider band would let a max-stat hungry pet
@@ -348,7 +348,7 @@ double petAuraIntensityScale(double stabilityNorm) {
 }
 
 /// Wobble-flourish peak-angle multiplier. Very subtle band (0.85..1.05)
-/// — the wobble is already state-gated at the scheduler level; this
+/// - the wobble is already state-gated at the scheduler level; this
 /// only modulates peak amplitude within "the pet decided to wobble".
 double petWobbleAmplitudeScale(double vitality) {
   return 0.85 + 0.20 * vitality.clamp(0.0, 1.0);
@@ -409,7 +409,7 @@ class _PetGeometryCache {
     final petalCount = 3 + ((dnaSeed >> 17) & 0x07); // 3..10
     final bodyRotation = ((dnaSeed >> 13) & 0xFFFF) / 0xFFFF * math.pi * 2;
 
-    // Core angles — evenly distributed ring, pre-offset by -π/2 so the
+    // Core angles - evenly distributed ring, pre-offset by -π/2 so the
     // first vertex sits at the top. Keeps downstream trig simple.
     final coreAngles = List<double>.generate(
       coreVertexCount,
@@ -445,7 +445,7 @@ class _PetGeometryCache {
   }
 
   /// Seed- and identity-derived helix spec. Rules:
-  ///   - egg stage: always [PetHelixSpec.disabled] — no helix in shell.
+  ///   - egg stage: always [PetHelixSpec.disabled] - no helix in shell.
   ///   - unborn branch: same.
   ///   - dnaSeed bit 23 is the coarse presence roll (~50%). When unset,
   ///     no helix regardless of branch / stage (preserves rarity).
@@ -463,7 +463,7 @@ class _PetGeometryCache {
     if (stage == PetStage.egg) return PetHelixSpec.disabled;
     if (branch == PetBranch.unborn) return PetHelixSpec.disabled;
 
-    // ~50 % presence gate — keeps the helix feeling special.
+    // ~50 % presence gate - keeps the helix feeling special.
     final hasHelix = ((dnaSeed >> 23) & 0x01) == 1;
     if (!hasHelix) return PetHelixSpec.disabled;
 
@@ -507,7 +507,7 @@ class _PetGeometryCache {
         break;
     }
 
-    // Vertical span — helix is sized so it clearly exceeds the body
+    // Vertical span - helix is sized so it clearly exceeds the body
     // (body diameter ≈ 0.56·minSide) and reads as a tall structural
     // wrap. Extends from above the head to below the lower body.
     double verticalSpanFactor;
@@ -519,7 +519,7 @@ class _PetGeometryCache {
         verticalSpanFactor = 0.60; // fossilised remnant
         break;
       case PetStage.juvenile:
-        verticalSpanFactor = 0.70; // hint — shorter
+        verticalSpanFactor = 0.70; // hint - shorter
         break;
       default:
         verticalSpanFactor = 0.85; // adolescent / adult default
@@ -571,7 +571,7 @@ class _PetGeometryCache {
         brokennessMask = 0;
     }
 
-    // Rung count — cross-links between strands are what make the
+    // Rung count - cross-links between strands are what make the
     // helix read as structural DNA rather than two orbit lines. Only
     // the 2-strand form gets them; 1-strand has no pair, 3-strand is
     // an anomaly that doesn't rung cleanly.

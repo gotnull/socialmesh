@@ -8,14 +8,14 @@ import 'package:socialmesh/services/voice/voice_constants.dart';
 import 'package:socialmesh/services/voice/voice_encoder.dart';
 
 void main() {
-  group('VoiceEncoder.encode — edge cases (no native library required)', () {
+  group('VoiceEncoder.encode - edge cases (no native library required)', () {
     test('returns null for empty PCM input', () async {
       final result = await VoiceEncoder.encode(Int16List(0));
       expect(result, isNull);
     });
   });
 
-  group('VoiceEncoder — wire format header spec', () {
+  group('VoiceEncoder - wire format header spec', () {
     // These tests verify the *expected* header layout by building a synthetic
     // payload following the spec, then asserting the byte positions match.
     // They do not call VoiceEncoder.encode() with real PCM (that requires the
@@ -60,18 +60,15 @@ void main() {
       expect(decoded, 1364);
     });
 
-    test(
-      'max payload size (including header) is headerSize + maxFrames * bytesPerFrame',
-      () {
-        final expected =
-            VoiceConstants.headerSize +
-            VoiceConstants.maxFrames * VoiceConstants.bytesPerFrame;
-        expect(VoiceConstants.maxPayloadBytes, expected);
-      },
-    );
+    test('max payload size (including header) is headerSize + maxFrames * bytesPerFrame', () {
+      final expected =
+          VoiceConstants.headerSize +
+          VoiceConstants.maxFrames * VoiceConstants.bytesPerFrame;
+      expect(VoiceConstants.maxPayloadBytes, expected);
+    });
   });
 
-  group('VoiceEncoder — multi-mode header spec', () {
+  group('VoiceEncoder - multi-mode header spec', () {
     test('each quality mode has a unique wire mode byte', () {
       final bytes = VoiceQuality.values.map((q) => q.wireModeByte).toSet();
       expect(bytes.length, VoiceQuality.values.length);

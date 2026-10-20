@@ -76,7 +76,7 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
     }
 
     // Check whether the underlying service hit PaymentPendingError during
-    // this restore — the store may have a receipt the user thinks of as a
+    // this restore - the store may have a receipt the user thinks of as a
     // valid purchase but RevenueCat has not yet accepted. Surface a helpful
     // message instead of the misleading "no purchases found" fallback.
     bool hadPendingPayment = false;
@@ -84,14 +84,14 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
       final service = await ref.read(subscriptionServiceProvider.future);
       hadPendingPayment = service.lastRestoreHadPendingPayment;
     } on Object {
-      // ref may be disposed or the provider unavailable — fall through
+      // ref may be disposed or the provider unavailable - fall through
       // with hadPendingPayment = false.
     }
 
     // External (Stripe / Buy Me a Coffee) packs are keyed to a Firebase
     // uid, not the App Store / Google Play account. Anonymous or
     // signed-out users won't get those back from the platform restore
-    // alone — surface the sign-in path as the action when there's
+    // alone - surface the sign-in path as the action when there's
     // nothing to celebrate from the IAP side.
     final firebaseUser = FirebaseAuth.instance.currentUser;
     final needsSignInForExternal =
@@ -106,13 +106,13 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
         // Purchases exist but none were new
         showInfoSnackBar(context, context.l10n.restorePurchasesAlreadyActive);
       } else if (hadPendingPayment) {
-        // Store has a pending receipt — explain rather than say "none".
+        // Store has a pending receipt - explain rather than say "none".
         AppLogging.subscriptions(
           '[RestorePurchases] Showing pending-payment message to user',
         );
         showInfoSnackBar(context, context.l10n.restorePurchasesPending);
       } else if (needsSignInForExternal) {
-        // No store purchases found AND signed out — they may still have
+        // No store purchases found AND signed out - they may still have
         // Stripe / Buy Me a Coffee packs bound to their email. The
         // backend's claimEntitlementsToAccount auto-matches verified
         // Firebase Auth email to buyer email at sign-in time.

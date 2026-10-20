@@ -201,7 +201,7 @@ enum ReinstateSeatReason {
   orgSuspended,
 
   /// Reinstating would push the org past its `seatCapacity`. Owner
-  /// sees a distinct message: "Group is at the seat cap — revoke
+  /// sees a distinct message: "Group is at the seat cap - revoke
   /// someone else first."
   overCapacity,
   generic,
@@ -227,7 +227,7 @@ ReinstateSeatReason _mapReinstateReason(FirebaseFunctionsException e) {
     case 'failed-precondition':
       // Backend uses the same code for both "org suspended" and
       // "over capacity". Discriminate by the message substring the
-      // backend emits — preferred over a side-channel because the
+      // backend emits - preferred over a side-channel because the
       // wire shape is small and we already pin the message in the
       // backend source-text tests.
       final msg = (e.message ?? '').toLowerCase();
@@ -327,7 +327,7 @@ extension LicenseOrgSeatServiceUtilization on LicenseOrgSeatService {
   /// Owner / admin read. Returns the per-seat utilization snapshot for
   /// the org. Backend gates on `isLicenseOrgAdminOrOwner` and rejects
   /// anonymous callers; the failure case maps both rejection codes to
-  /// a generic [GetSeatUtilizationFailure] (the surface is read-only —
+  /// a generic [GetSeatUtilizationFailure] (the surface is read-only -
   /// the UI just shows an error state without forking on the reason).
   Future<GetSeatUtilizationResult> getSeatUtilization({
     required String licenseOrgId,

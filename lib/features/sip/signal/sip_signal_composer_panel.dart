@@ -58,7 +58,7 @@ class SipSignalComposerPanel extends ConsumerStatefulWidget {
 
 class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     with LifecycleSafeMixin {
-  // Default sub-mode is Morse (tap-first), per the v1 product brief —
+  // Default sub-mode is Morse (tap-first), per the v1 product brief -
   // the ritual / message-passing surface gets the prime slot, with Tone
   // as the alternate phrase composer.
   _SignalSubMode _subMode = _SignalSubMode.morse;
@@ -73,7 +73,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
 
   // Morse draft (Type sub-mode).
   final TextEditingController _morseController = TextEditingController();
-  // v1: instrument + WPM are fixed sane defaults — chip + speed
+  // v1: instrument + WPM are fixed sane defaults - chip + speed
   // pickers are deferred to v2 without changing the wire.
   final SipSignalInstrument _morseInstrument = SipSignalInstrument.sine;
   final int _morseWpm = SipSignalConstants.defaultMorseWpm;
@@ -94,7 +94,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   // (row 3) so the historical "home" octave is one tap away while
   // both lower (C3..B3) and upper (C5..B5) ranges are reachable by
   // scroll. `_padMinMidi` / `_padCols` / `_padRowCount` are the
-  // single source of truth for the pad layout — see `_padMidiAt`.
+  // single source of truth for the pad layout - see `_padMidiAt`.
   final ScrollController _padScrollController = ScrollController();
 
   @override
@@ -134,7 +134,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     // The previous `ConstrainedBox(maxHeight: screen * 0.6)` was a
     // relic from when the panel sat in the Scaffold's
     // `bottomNavigationBar` slot. In the new sheet host that cap
-    // truncated the panel below the sheet's actual bottom edge — the
+    // truncated the panel below the sheet's actual bottom edge - the
     // sticky action row appeared mid-sheet with dead empty space
     // below it. Removed.
     return Column(
@@ -268,12 +268,12 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   // 36 notes / 4 cols = 9 rows.
   static const int _padRowCount =
       ((_padMaxMidi - _padMinMidi + 1) + _padCols - 1) ~/ _padCols;
-  // Per-row pixel height — `_PadButton` is 38 px tall, `EdgeInsets.all(2)`
+  // Per-row pixel height - `_PadButton` is 38 px tall, `EdgeInsets.all(2)`
   // adds 4 px and the row separator below adds another 4 px. Pinned as
   // a constant so the initial-scroll math in [initState] stays in sync
   // with the actual rendered geometry.
   static const double _padRowPx = 38 + 4 + 4;
-  // Visible window — ~3.4 rows, leaves room above and below the
+  // Visible window - ~3.4 rows, leaves room above and below the
   // current octave so the scroll affordance is obvious.
   static const double _padScrollWindowPx = _padRowPx * 3.4;
 
@@ -282,7 +282,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   /// Vertically scrolling pad grid with top + bottom edge fades. The
   /// fade is implemented via a `ShaderMask` with `BlendMode.dstIn` so
   /// the transparent gradient stops cut into the alpha of the cells
-  /// themselves — gives a clean scroll affordance without a visible
+  /// themselves - gives a clean scroll affordance without a visible
   /// scrollbar or hard clip.
   Widget _buildPadScroller(BuildContext context, bool isFull) {
     return SizedBox(
@@ -337,7 +337,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
       key: const ValueKey('signal-tone-body'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Phrase strip — visualises current draft. Animated insertion
+        // Phrase strip - visualises current draft. Animated insertion
         // when a pad is tapped.
         AnimatedSize(
           duration: const Duration(milliseconds: 180),
@@ -375,7 +375,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
                             ),
                           ),
                           const SizedBox(width: AppTheme.spacing6),
-                          // Universal-music symbol — language-neutral.
+                          // Universal-music symbol - language-neutral.
                           GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: _loadCloseEncountersExample,
@@ -434,7 +434,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
           ),
         ),
         const SizedBox(height: AppTheme.spacing8),
-        // Vertically scrolling pad grid — 3 chromatic octaves
+        // Vertically scrolling pad grid - 3 chromatic octaves
         // (C3..B5). Edge fades hint at scroll affordance without
         // drawing a hard scrollbar. Pads disable when phrase is full;
         // Clear / Preview / Send remain active so the user can never
@@ -479,7 +479,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
 
   void _onPadTap(int midi) {
     if (_phraseDraft.length >= SipSignalConstants.maxPhraseNotes) {
-      // Full — defence-in-depth. The pad button itself goes disabled
+      // Full - defence-in-depth. The pad button itself goes disabled
       // when isFull is true; this guard catches a stale tap that
       // raced the rebuild. Clear / Preview / Send remain active so
       // the user can never wedge here.
@@ -492,7 +492,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     AppLogging.sipSignal(
       'note_appended midi=$midi count=${_phraseDraft.length}',
     );
-    // Audible feedback — route through the low-latency tap pool so
+    // Audible feedback - route through the low-latency tap pool so
     // rapid drumming on the pads doesn't queue behind the main
     // playPhrase player and so the cached WAV bypass kicks in for
     // repeat-same-note taps.
@@ -500,28 +500,28 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     synth.playToneTap(
       midi: midi,
       instrument: _phraseInstrument,
-      durationTicks: 12, // ~240 ms — short, audible chirp
+      durationTicks: 12, // ~240 ms - short, audible chirp
     );
   }
 
   /// MIDI notes for the iconic 5-note "Close Encounters of the Third
   /// Kind" motif. Williams scored the second Do an octave below the
   /// first (Curwen hand-signal style), and Sol resolves a perfect
-  /// fifth above the octave-displaced C — that distinctive
+  /// fifth above the octave-displaced C - that distinctive
   /// "skywards-then-deep-then-resolve" shape is what makes the motif
   /// recognisable.
   ///
   /// The composer's pad row only renders C4..C5, but `playToneTap`
   /// and `playPhrase` happily synthesise any MIDI note, so the
   /// example surfaces the lower-octave Do and Sol below the visible
-  /// keyboard. The phrase chips render as `C3` and `G3` — a little
+  /// keyboard. The phrase chips render as `C3` and `G3` - a little
   /// hint that the pitch range goes deeper than the eight pads imply.
   static const List<int> _closeEncountersMidi = [
-    62, // D4 — Re
-    64, // E4 — Mi
-    60, // C4 — Do
-    48, // C3 — Do, an octave below per the Williams original
-    55, // G3 — Sol, perfect fifth above the octave-displaced Do
+    62, // D4 - Re
+    64, // E4 - Mi
+    60, // C4 - Do
+    48, // C3 - Do, an octave below per the Williams original
+    55, // G3 - Sol, perfect fifth above the octave-displaced Do
   ];
 
   /// Replace the current draft with the Close Encounters motif and
@@ -547,7 +547,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
           for (final m in _closeEncountersMidi)
             SipSignalNote(
               midiNote: m,
-              durationTicks: 24, // ~480 ms each — sing it out
+              durationTicks: 24, // ~480 ms each - sing it out
               velocity: 100,
             ),
         ],
@@ -649,7 +649,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
       key: const ValueKey('signal-morse-tap-body'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Decoded text — what the receiver will see.
+        // Decoded text - what the receiver will see.
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppTheme.spacing10),
@@ -720,7 +720,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
           children: [
             Expanded(
               child: _TapKey(
-                // Universal Morse glyph — not localised.
+                // Universal Morse glyph - not localised.
                 label: '·', // lint-allow: hardcoded-string
                 tooltip: l10n.sipSignalMorseTapDot,
                 onTap: () => _appendTapSymbol('.'),
@@ -730,8 +730,8 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
             const SizedBox(width: AppTheme.spacing6),
             Expanded(
               child: _TapKey(
-                // Universal Morse glyph — not localised.
-                label: '—', // lint-allow: hardcoded-string
+                // Universal Morse glyph - not localised.
+                label: '-', // lint-allow: hardcoded-string
                 tooltip: l10n.sipSignalMorseTapDash,
                 onTap: () => _appendTapSymbol('-'),
                 emphasised: true,
@@ -810,7 +810,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
           maxLength: SipSignalConstants.maxMorseChars,
           textCapitalization: TextCapitalization.characters,
           inputFormatters: [
-            // Soft filter — keep printable ASCII; the encoder does
+            // Soft filter - keep printable ASCII; the encoder does
             // the strict charset check before send.
             FilteringTextInputFormatter.deny(RegExp('[\n\r\t]')),
           ],
@@ -870,7 +870,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   // Actions
   // ---------------------------------------------------------------
 
-  /// Sticky bottom action bar — pinned to the bottom edge of the
+  /// Sticky bottom action bar - pinned to the bottom edge of the
   /// compose panel so the user can always see and tap Clear / Preview
   /// / Send regardless of how tall the inner body grows. Three full-
   /// width tap targets, equal weight, with the live byte badge
@@ -882,7 +882,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     final bytes = _liveEncodedBytes();
     final canSend = _canSend();
     final hasContent = _hasDraftToClear();
-    // No BoxDecoration — see SipInkComposer's sticky bar for the
+    // No BoxDecoration - see SipInkComposer's sticky bar for the
     // rationale (tinted bg + divider read as a stranded rectangle
     // when the sheet is dragged). Plain padding only.
     return Padding(
@@ -945,7 +945,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   /// produce a valid envelope, OR a sentinel value larger than
   /// [SipSignalConstants.maxEnvelopeBytes] when the draft exceeds the
   /// budget. Sized buffer use is unconditional because the encoder
-  /// already returns null for over-budget input — to surface "too
+  /// already returns null for over-budget input - to surface "too
   /// large" copy without reaching for a separate count we resize to
   /// the cap when the encoder rejects.
   int? _liveEncodedBytes() {
@@ -993,7 +993,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
   }
 
   /// Whether the local draft has anything to clear. Drives the Clear
-  /// button enabled state — must stay true even when the phrase is at
+  /// button enabled state - must stay true even when the phrase is at
   /// the hard cap so the user can never get stuck.
   bool _hasDraftToClear() {
     switch (_subMode) {
@@ -1089,7 +1089,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
       _morseController.clear();
       _tapMorsePattern = '';
     });
-    // Auto-dismiss the compose sheet on success — matches the
+    // Auto-dismiss the compose sheet on success - matches the
     // sketch + Play offer flows for consistent send-and-close UX.
     navigator.maybePop();
   }
@@ -1112,7 +1112,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     );
   }
 
-  /// Finalise the in-progress letter — append a single space so the
+  /// Finalise the in-progress letter - append a single space so the
   /// next dot/dash starts a new token. No-op if the buffer already
   /// ends in a separator (avoids double letter-gaps).
   void _appendTapLetterGap() {
@@ -1142,7 +1142,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     AppLogging.sipSignal('tap_morse_word_gap');
   }
 
-  /// Backspace — peel off the most recent symbol or separator.
+  /// Backspace - peel off the most recent symbol or separator.
   /// Keeps the model symmetric with the input keys: one word
   /// separator, one letter gap, or one dot/dash per press.
   void _tapBackspace() {
@@ -1190,7 +1190,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
             for (final n in _phraseDraft)
               SipSignalNote(
                 midiNote: n.midi,
-                durationTicks: 18, // ~360 ms per note — pleasant default
+                durationTicks: 18, // ~360 ms per note - pleasant default
                 velocity: 100,
               ),
           ],
@@ -1226,7 +1226,7 @@ class _SipSignalComposerPanelState extends ConsumerState<SipSignalComposerPanel>
     );
   }
 
-  /// Pseudo-random u16 — collisions are dedupe-window-bound and harmless
+  /// Pseudo-random u16 - collisions are dedupe-window-bound and harmless
   /// across distinct phrases.
   int _generateSequenceId() {
     final rng = math.Random.secure();
@@ -1443,7 +1443,7 @@ class _TapKeyState extends State<_TapKey> with SingleTickerProviderStateMixin {
 
 /// Subtle "phrase full" hint shown above the disabled note pads. Sits
 /// inline so the user instantly correlates the locked pads with the
-/// reason — no scroll, no toast.
+/// reason - no scroll, no toast.
 class _PhraseFullBadge extends StatelessWidget {
   final String text;
   const _PhraseFullBadge({required this.text});

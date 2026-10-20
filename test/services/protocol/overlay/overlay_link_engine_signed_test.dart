@@ -4,7 +4,7 @@
 /// Integration tests for the P3 signed-handshake flow through
 /// [OverlayLinkEngine].
 ///
-/// These tests spin up two engines — a signer and a verifier — and
+/// These tests spin up two engines - a signer and a verifier - and
 /// drive the LINK_OPEN handshake end-to-end, covering:
 ///   - signed LINK_OPEN accepted + endpoint persisted
 ///   - tampered signature rejected with authFailure
@@ -187,7 +187,7 @@ void main() {
     final responder = await _buildSignedEngine();
     await responder.engine.handleInbound(sent, 9);
 
-    // Accepted even though unsigned — no endpoint persisted.
+    // Accepted even though unsigned - no endpoint persisted.
     expect(responder.egress.sent, hasLength(1));
     expect(
       responder.egress.sent.single.frame.msgType,

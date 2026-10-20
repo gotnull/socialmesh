@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -15,13 +15,13 @@ import 'edge_fade.dart';
 /// (the "CONNECTION DETAILS" / "QUICK ACTIONS" / "CURRENT VERSION" style).
 ///
 /// When [helpSheetBuilder] is provided, a small (i) icon is rendered on
-/// the same header line, immediately after the title — never inside the
+/// the same header line, immediately after the title - never inside the
 /// card or table below. Tapping it opens an [AppBottomSheet] whose child
 /// is the result of calling the builder. This mirrors NodeDex's
-/// `_SectionInfoButton` pattern — the widget owns the sheet, callers just
+/// `_SectionInfoButton` pattern - the widget owns the sheet, callers just
 /// declare what goes inside.
 ///
-/// Do not use this for sticky sliver list headers — use [SectionHeader]
+/// Do not use this for sticky sliver list headers - use [SectionHeader]
 /// for those.
 ///
 /// Usage:

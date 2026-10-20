@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Automation SQLite Store — CRUD operations with Cloud Sync outbox support.
+// Automation SQLite Store - CRUD operations with Cloud Sync outbox support.
 //
 // This store manages automations in SQLite and maintains a sync outbox
 // for the Cloud Sync pipeline. It follows the same pattern as
@@ -106,7 +106,7 @@ class AutomationSqliteStore {
   ///
   /// Used to decide whether the user has ever stored an automation on this
   /// device. A non-zero count of tombstones means the user has used the
-  /// app and deleted things — the stale profile-blob (`automationsJson`)
+  /// app and deleted things - the stale profile-blob (`automationsJson`)
   /// must not be re-imported, or those deletions get resurrected.
   Future<bool> hasAnyRows() async {
     final rows = await _db.rawQuery(
@@ -188,7 +188,7 @@ class AutomationSqliteStore {
   // ---------------------------------------------------------------------------
 
   /// Import automations from a list, typically from SharedPreferences
-  /// migration. Does NOT enqueue outbox entries — the sync service
+  /// migration. Does NOT enqueue outbox entries - the sync service
   /// will handle the initial push after migration.
   ///
   /// Returns the number of automations imported.
@@ -442,7 +442,7 @@ class AutomationSqliteStore {
 
   /// Parse a JSON string into a list of automations.
   ///
-  /// Does not modify the store — use [bulkImport] to persist.
+  /// Does not modify the store - use [bulkImport] to persist.
   static List<Automation> parseJson(String jsonString) {
     final list = jsonDecode(jsonString) as List;
     return list

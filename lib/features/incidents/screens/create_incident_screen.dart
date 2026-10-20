@@ -23,7 +23,7 @@ import '../providers/incident_providers.dart';
 import '../services/incident_state_machine.dart';
 import 'incident_detail_screen.dart';
 
-/// Create incident screen — form to create a new incident.
+/// Create incident screen - form to create a new incident.
 ///
 /// Fields: title (maxLength 200, required), description (maxLength 2000),
 /// priority picker (default routine), classification picker (default

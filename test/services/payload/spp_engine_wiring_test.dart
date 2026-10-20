@@ -249,7 +249,7 @@ void main() {
       final idHex = fileIdToHex(offer.fileId);
       expect(engine.getTransfer(idHex), isNotNull);
 
-      // Route the same offer again — should be a no-op.
+      // Route the same offer again - should be a no-op.
       final countBefore = engine.transfers.length;
       routeV1Offer(offer, sourceNodeNum: 1);
       expect(engine.transfers.length, countBefore);
@@ -643,7 +643,7 @@ void main() {
     test(
       'outbound offer stays in awaitingAccept when receiver never responds',
       () async {
-        // Verifies the timeout mechanism is armed — the transfer stays in
+        // Verifies the timeout mechanism is armed - the transfer stays in
         // awaitingAccept until either ACCEPT/DECLINE arrives or the 60s timer
         // fires. We can't wait 60s in a unit test, so we verify state doesn't
         // change prematurely and that the transfer remains gated.
@@ -675,7 +675,7 @@ void main() {
         expect(engine.getTransfer(idHex)!.state, TransferState.awaitingAccept);
 
         // After a short delay (well within 60s timeout), should still be
-        // awaitingAccept — no premature state change.
+        // awaitingAccept - no premature state change.
         await Future<void>.delayed(const Duration(milliseconds: 50));
         expect(
           engine.getTransfer(idHex)!.state,
@@ -822,7 +822,7 @@ void main() {
       negotiation.handleIncomingAccept(SppAccept(payloadId: transfer.fileId));
       await Future<void>.delayed(Duration.zero);
 
-      // Now in chunking state — the transfer is unblocked.
+      // Now in chunking state - the transfer is unblocked.
       final updated = engine.getTransfer(idHex);
       expect(
         updated!.state,

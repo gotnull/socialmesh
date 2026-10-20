@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Automation Database — SQLite schema and lifecycle management.
+// Automation Database - SQLite schema and lifecycle management.
 //
 // This file defines the database schema for Automation persistence
 // with Cloud Sync support via an outbox pattern.

@@ -112,7 +112,7 @@ void main() {
         final capture = await _writeCaptureFile(tempDir, 'persist.bin', [
           _event(fromNode: 0x01, seq: 0, payload: _harnessPayload()),
         ]);
-        // First list — sidecar gets created.
+        // First list - sidecar gets created.
         await library.list();
         final sidecar = ReticulumCaptureLibrary.sidecarFor(capture);
         expect(await sidecar.exists(), isTrue);
@@ -157,7 +157,7 @@ void main() {
     });
   });
 
-  group('importFromFile — happy path + duplicate dedupe', () {
+  group('importFromFile - happy path + duplicate dedupe', () {
     late Directory sourceDir;
 
     setUp(() async {
@@ -237,7 +237,7 @@ void main() {
       'imported file uniquifies destination on filename collision',
       () async {
         // Two distinct source dirs hold files with the same basename
-        // but different bytes — checksums differ so neither is a
+        // but different bytes - checksums differ so neither is a
         // duplicate of the other. Both must land in imported/ at
         // distinct paths.
         final dirA = await Directory.systemTemp.createTemp(

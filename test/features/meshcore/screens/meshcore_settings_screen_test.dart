@@ -145,7 +145,7 @@ void main() {
       // important thing is no exceptions were thrown reaching this point:
       // a regression in the disabled wrapper would surface a render error.
       // D29 dropped the "Send Advertisement" action tile from this
-      // screen — the same affordance lives on the Tools tab now, so
+      // screen - the same affordance lives on the Tools tab now, so
       // the settings list keeps the irreversible-radio-state actions
       // (Sync Time, Reboot Device) plus the editor entries.
       expect(find.text(_l10n.meshcoreSyncTime), findsOneWidget);

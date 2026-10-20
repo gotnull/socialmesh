@@ -472,9 +472,9 @@ void main() {
       expect(afterTrait.filters.first.field, 'trait');
 
       // Second filter: online (using first filter's output as upstream)
-      final afterOnline =
-          evaluateOutput(onlineNode, {'node_list_in': afterTrait})
-              as NodeListPayload;
+      final afterOnline = evaluateOutput(onlineNode, {
+        'node_list_in': afterTrait,
+      }) as NodeListPayload;
       expect(afterOnline.filters.length, 2);
       expect(afterOnline.filters[0].field, 'trait');
       expect(afterOnline.filters[1].field, 'online');
@@ -497,12 +497,12 @@ void main() {
           .firstWhere((n) => n.type == NodeDexQueryTypes.encounterFilter);
 
       final afterTrait = evaluateOutput(traitNode, {}) as NodeListPayload;
-      final afterDistance =
-          evaluateOutput(distanceNode, {'node_list_in': afterTrait})
-              as NodeListPayload;
-      final afterEncounter =
-          evaluateOutput(encounterNode, {'node_list_in': afterDistance})
-              as NodeListPayload;
+      final afterDistance = evaluateOutput(distanceNode, {
+        'node_list_in': afterTrait,
+      }) as NodeListPayload;
+      final afterEncounter = evaluateOutput(encounterNode, {
+        'node_list_in': afterDistance,
+      }) as NodeListPayload;
 
       expect(afterEncounter.filters.length, 3);
       expect(afterEncounter.filters[0].field, 'trait');
@@ -523,12 +523,12 @@ void main() {
           .firstWhere((n) => n.type == NodeDexQueryTypes.limitNodes);
 
       final afterTrait = evaluateOutput(traitNode, {}) as NodeListPayload;
-      final afterSort =
-          evaluateOutput(sortNode, {'node_list_in': afterTrait})
-              as NodeListPayload;
-      final afterLimit =
-          evaluateOutput(limitNode, {'node_list_in': afterSort})
-              as NodeListPayload;
+      final afterSort = evaluateOutput(sortNode, {
+        'node_list_in': afterTrait,
+      }) as NodeListPayload;
+      final afterLimit = evaluateOutput(limitNode, {
+        'node_list_in': afterSort,
+      }) as NodeListPayload;
 
       expect(afterLimit.filters.length, 1);
       expect(afterLimit.filters.first.field, 'trait');
@@ -939,9 +939,9 @@ void main() {
       final filterNode = builders
           .map((b) => b(testOffset, null))
           .firstWhere((n) => n.type == NodeDexQueryTypes.traitFilter);
-      final result =
-          evaluateOutput(filterNode, {'node_list_in': upstream})
-              as NodeListPayload;
+      final result = evaluateOutput(filterNode, {
+        'node_list_in': upstream,
+      }) as NodeListPayload;
       expect(result.sortField, 'encounters');
       expect(result.sortAscending, true);
     });
@@ -952,9 +952,9 @@ void main() {
       final filterNode = builders
           .map((b) => b(testOffset, null))
           .firstWhere((n) => n.type == NodeDexQueryTypes.batteryFilter);
-      final result =
-          evaluateOutput(filterNode, {'node_list_in': upstream})
-              as NodeListPayload;
+      final result = evaluateOutput(filterNode, {
+        'node_list_in': upstream,
+      }) as NodeListPayload;
       expect(result.limit, 5);
     });
 
@@ -969,9 +969,9 @@ void main() {
       final sortNode = builders
           .map((b) => b(testOffset, null))
           .firstWhere((n) => n.type == NodeDexQueryTypes.sortNodes);
-      final result =
-          evaluateOutput(sortNode, {'node_list_in': upstream})
-              as NodeListPayload;
+      final result = evaluateOutput(sortNode, {
+        'node_list_in': upstream,
+      }) as NodeListPayload;
       expect(result.filters.length, 1);
       expect(result.filters.first.field, 'trait');
     });
@@ -989,9 +989,9 @@ void main() {
       final limitNode = builders
           .map((b) => b(testOffset, null))
           .firstWhere((n) => n.type == NodeDexQueryTypes.limitNodes);
-      final result =
-          evaluateOutput(limitNode, {'node_list_in': upstream})
-              as NodeListPayload;
+      final result = evaluateOutput(limitNode, {
+        'node_list_in': upstream,
+      }) as NodeListPayload;
       expect(result.filters.length, 1);
       expect(result.sortField, 'lastSeen');
       expect(result.sortAscending, false);

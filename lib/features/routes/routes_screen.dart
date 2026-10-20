@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: keyboard-dismissal — text inputs are only in bottom sheet sub-widget
+// lint-allow: keyboard-dismissal - text inputs are only in bottom sheet sub-widget
 import 'dart:io';
 import 'dart:async';
 
@@ -9,10 +9,13 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../utils/text_sanitizer.dart';
 import '../../utils/time_format.dart';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+
 import '../../core/theme.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';

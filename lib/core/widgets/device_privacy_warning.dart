@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../generated/meshtastic/config.pb.dart';
 import '../l10n/l10n_extension.dart';
 import 'app_bottom_sheet.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Action taken by user in device privacy warning dialog

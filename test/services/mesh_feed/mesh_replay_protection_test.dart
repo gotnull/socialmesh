@@ -230,7 +230,7 @@ void main() {
         repo.clearReplayCache();
         expect(repo.replayCacheSize, equals(0));
 
-        // Re-ingest the same post — should go through full path (merged).
+        // Re-ingest the same post - should go through full path (merged).
         final result = await repo.ingest(post);
         expect(result, equals(IngestResult.merged));
         expect(db.posts.length, equals(1));

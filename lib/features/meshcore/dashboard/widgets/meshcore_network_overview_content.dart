@@ -112,9 +112,8 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: AppTheme.spacing2),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: context.textTertiary),
           textAlign: TextAlign.center,
         ),
       ],

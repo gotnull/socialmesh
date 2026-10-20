@@ -171,7 +171,7 @@ class PhonePositionGovernor {
     }
 
     // Gate 3: distance threshold (automatic reasons only).
-    // Manual actions bypass distance gate — the user explicitly wants to share.
+    // Manual actions bypass distance gate - the user explicitly wants to share.
     if (!_isManualReason(reason) &&
         _lastPublishedLat != null &&
         _lastPublishedLon != null) {
@@ -194,7 +194,7 @@ class PhonePositionGovernor {
       }
     }
 
-    // All gates passed — publish.
+    // All gates passed - publish.
     await _protocolService.sendPosition(
       latitude: latitude,
       longitude: longitude,

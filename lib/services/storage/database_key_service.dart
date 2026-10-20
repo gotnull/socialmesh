@@ -32,7 +32,7 @@ class DatabaseKeyUnavailableException implements Exception {
 /// databases (messages, signals, routes, waypoints, peer_safety, nodedex).
 ///
 /// The key is generated once with a cryptographically secure RNG and stored in
-/// the platform keystore via [FlutterSecureStorage] — iOS Keychain / Android
+/// the platform keystore via [FlutterSecureStorage] - iOS Keychain / Android
 /// Keystore-backed encrypted shared preferences. iOS accessibility is
 /// [KeychainAccessibility.first_unlock] (NOT `whenUnlocked`) so background
 /// writes (the foreground BLE service / notification handlers persisting an
@@ -120,7 +120,7 @@ class DatabaseKeyService {
         return existing;
       }
     } on PlatformException catch (e) {
-      // Keystore locked (iOS -25308). Do NOT generate — an encrypted database
+      // Keystore locked (iOS -25308). Do NOT generate - an encrypted database
       // keyed with the real passphrase may already exist on disk; clobbering
       // the key would make it permanently unreadable. Surface it; the retry
       // ladder above owns whether to try again, and owns clearing the memo so

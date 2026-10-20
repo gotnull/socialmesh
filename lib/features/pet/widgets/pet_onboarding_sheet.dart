@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetOnboardingSheet — three-page welcome flow shown on first launch
+// PetOnboardingSheet - three-page welcome flow shown on first launch
 // of the pet home screen. Visually aligned with the main onboarding
 // flow: Ico the mesh-brain advisor narrates each page via a sci-fi
 // speech bubble, ShaderMask gradient titles, glowing gradient page
@@ -89,7 +89,7 @@ class _PetOnboardingSheetState extends ConsumerState<PetOnboardingSheet>
       padding: const EdgeInsets.only(top: AppTheme.spacing8),
       child: Column(
         children: [
-          // Skip button — top-right, mirrors main onboarding.
+          // Skip button - top-right, mirrors main onboarding.
           SizedBox(
             height: 40,
             child: Padding(
@@ -285,7 +285,7 @@ class _GradientPageDots extends StatelessWidget {
   }
 }
 
-/// A small visual hint — a styled help-icon chip + label — used on page
+/// A small visual hint - a styled help-icon chip + label - used on page
 /// 3 of the pet onboarding to point users at the help sheet they can
 /// open from the pet home screen. Replaces the plain "?" character in
 /// body copy with a proper chip so the reference is visually unmistakable.

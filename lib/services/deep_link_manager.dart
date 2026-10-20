@@ -405,7 +405,7 @@ class DeepLinkManager {
 
       // External-purchase return: never navigates; hands the sessionId
       // to ExternalPurchaseService which kicks off webhook polling.
-      // The redirect alone does NOT unlock anything — only a webhook-
+      // The redirect alone does NOT unlock anything - only a webhook-
       // confirmed entitlement will flip the cache.
       if (link.type == DeepLinkType.purchaseReturn) {
         await _handlePurchaseReturn(link);
@@ -451,7 +451,7 @@ class DeepLinkManager {
   /// Handle node deep links specially (may need Firestore fetch).
   /// Hand a purchase-return sessionId off to ExternalPurchaseService.
   ///
-  /// Never throws — provider read failures (e.g. service hasn't been
+  /// Never throws - provider read failures (e.g. service hasn't been
   /// initialised yet) are logged and dropped, since this is a
   /// best-effort wakeup. The user can also hit the Refresh affordance
   /// in the confirmation overlay to retry.

@@ -151,7 +151,7 @@ String safeTruncateCodeUnits(String input, int maxCodeUnits) {
 /// Grapheme-safe truncation that never splits emoji or combining characters.
 ///
 /// Returns at most [maxLength] visible grapheme clusters from [input].
-/// No suffix is appended — use this at data boundaries where the exact
+/// No suffix is appended - use this at data boundaries where the exact
 /// length constraint matters (e.g., protocol field size limits).
 String safeTruncate(String input, int maxLength) {
   if (input.isEmpty || maxLength <= 0) return '';
@@ -178,7 +178,7 @@ String safeSubstring(String input, int maxLength) {
 /// Sanitizes [input] first (repairing unpaired UTF-16 surrogates and stripping
 /// control characters that crash Flutter's paragraph builder), then takes at
 /// most [count] grapheme clusters and uppercases the result. Returns an empty
-/// string when [input] is null, empty, or sanitizes to nothing — callers can
+/// string when [input] is null, empty, or sanitizes to nothing - callers can
 /// fall back to a placeholder rather than rendering malformed text.
 ///
 /// Use this at every place that derives avatar/marker initials from a peer- or

@@ -64,7 +64,7 @@ void main() {
     ];
   });
 
-  group('NodeFilter — All', () {
+  group('NodeFilter - All', () {
     test('returns full list when no transport filter is applied', () {
       final result = applyTransportFilter(
         testNodes,
@@ -83,7 +83,7 @@ void main() {
     });
   });
 
-  group('NodeFilter — RF only', () {
+  group('NodeFilter - RF only', () {
     test('returns only RF nodes (viaMqtt == false)', () {
       final result = applyTransportFilter(
         testNodes,
@@ -139,7 +139,7 @@ void main() {
     });
   });
 
-  group('NodeFilter — MQTT only', () {
+  group('NodeFilter - MQTT only', () {
     test('returns only MQTT nodes (viaMqtt == true)', () {
       final result = applyTransportFilter(
         testNodes,
@@ -196,7 +196,7 @@ void main() {
     });
   });
 
-  group('NodeFilter — does not mutate source', () {
+  group('NodeFilter - does not mutate source', () {
     test('RF filter does not modify the original list', () {
       final originalLength = testNodes.length;
       final originalNodeNums = testNodes.map((n) => n.nodeNum).toList();
@@ -218,7 +218,7 @@ void main() {
     });
   });
 
-  group('NodeFilter — viaMqtt default', () {
+  group('NodeFilter - viaMqtt default', () {
     test('nodes default to viaMqtt=false (RF) when not specified', () {
       final node = MeshNode(nodeNum: 99);
       expect(node.viaMqtt, isFalse);
@@ -249,7 +249,7 @@ void main() {
     });
   });
 
-  group('NodeFilter — large lists', () {
+  group('NodeFilter - large lists', () {
     test('filters 500+ nodes without error', () {
       final largeList = List.generate(
         600,
@@ -282,7 +282,7 @@ void main() {
     });
   });
 
-  group('NodeFilter — RF + MQTT partition', () {
+  group('NodeFilter - RF + MQTT partition', () {
     test('RF and MQTT filters are a complete partition of all nodes', () {
       final rfResult = applyTransportFilter(
         testNodes,
@@ -321,7 +321,7 @@ void main() {
     });
   });
 
-  group('MeshNode.copyWith — viaMqtt and hopCount', () {
+  group('MeshNode.copyWith - viaMqtt and hopCount', () {
     test('copyWith preserves viaMqtt when not overridden', () {
       final node = MeshNode(nodeNum: 1, viaMqtt: true);
       final copy = node.copyWith(longName: 'Updated');

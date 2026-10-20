@@ -20,7 +20,7 @@ class AgeSafetyPolicy {
 
   const AgeSafetyPolicy({required this.ageGroup, required this.source});
 
-  /// Conservative safe defaults — used while the eligibility state is
+  /// Conservative safe defaults - used while the eligibility state is
   /// loading or whenever the age group is indeterminate.
   static const AgeSafetyPolicy safe = AgeSafetyPolicy(
     ageGroup: AgeGroup.unknown,

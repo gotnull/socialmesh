@@ -183,7 +183,7 @@ void main() {
     });
 
     test('unsupported character rejected at encode', () {
-      // Unicode emoji — outside the supported subset.
+      // Unicode emoji - outside the supported subset.
       expect(
         SipSignalCodec.encodeMorse(
           sequenceId: 0,
@@ -334,7 +334,7 @@ void main() {
         Uint8List.fromList([0xFF, 0xFF, 0xFF, 0xFF]),
         Uint8List.fromList([0x21, 0x99, 0xAA, 0xBB]),
       ]) {
-        // Either ok or a typed fail — never an exception.
+        // Either ok or a typed fail - never an exception.
         expect(() => SipSignalCodec.decode(bytes), returnsNormally);
       }
     });

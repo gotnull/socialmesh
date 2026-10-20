@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
-// Modified: Completely rewritten for mobile — replaced desktop Alt-key based
+// Modified: Completely rewritten for mobile - replaced desktop Alt-key based
 // selection with two-finger drag gesture. On mobile, users perform a
 // two-finger pan to draw a selection rectangle. A single-finger pan is
 // reserved for canvas panning (handled by InteractiveViewer), so there is
@@ -19,6 +19,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/vs_node_data_provider.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 class VSSelectionArea extends StatefulWidget {
@@ -109,7 +110,7 @@ class _VSSelectionAreaState extends State<VSSelectionArea> {
   Widget build(BuildContext context) {
     final List<Widget> layers = [];
 
-    // Selection rectangle overlay — painted below the node layer but above
+    // Selection rectangle overlay - painted below the node layer but above
     // the canvas background.
     if (_isSelecting && _topLeft != null && _bottomRight != null) {
       final theme = Theme.of(context);

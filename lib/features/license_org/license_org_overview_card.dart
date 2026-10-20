@@ -8,7 +8,7 @@
 // the InfoTable cells** rather than as a SectionTitle trailing badge.
 // This keeps both pills on the same vertical grid as the table values
 // (right-aligned to the InfoTable's internal cell padding), which was
-// the alignment ambiguity the first ship had — a Spacer-pushed
+// the alignment ambiguity the first ship had - a Spacer-pushed
 // trailing chip in the SectionTitle never aligned correctly with the
 // InfoTable border below.
 //
@@ -50,7 +50,7 @@ import 'widgets/revoke_seat_confirm_sheet.dart';
 
 /// Session-scoped set of orgIds the auto-prompt has already fired for
 /// in this app launch. An owner who dismisses the prompt with "Not
-/// yet" is not nagged again until next launch — the edit-name icon
+/// yet" is not nagged again until next launch - the edit-name icon
 /// remains available for a manual rename. Stored as a module-level
 /// Set rather than a Riverpod provider because: (a) this state is
 /// purely UI-ephemeral, (b) it must survive widget tear-downs (the
@@ -149,7 +149,7 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
       children: [
         SectionTitle(
           // Community names are user-generated and can be up to 50
-          // chars — well past the title's natural width on small
+          // chars - well past the title's natural width on small
           // devices. Marquee instead of fading so the owner doesn't
           // lose the tail of their own name.
           title: displayName,
@@ -249,7 +249,7 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
           // InfoTable and Recent Activity. Member role sees neither
           // the seat-utilization data nor the inline revoke action,
           // so the section is suppressed entirely below the role
-          // gate — the backend rejects the callable for non-admins
+          // gate - the backend rejects the callable for non-admins
           // anyway, but suppressing client-side avoids a useless
           // loading spinner.
           if (role == LicenseOrgMemberRole.owner ||
@@ -601,9 +601,9 @@ class _RecentActivitySection extends ConsumerWidget {
               ],
               Divider(color: context.border, height: 1),
               InkWell(
-                onTap: () => Navigator.of(
-                  context,
-                ).push(LicenseOrgAuditLogScreen.route(orgId)),
+                onTap: () =>
+                    Navigator.of(context)
+                        .push(LicenseOrgAuditLogScreen.route(orgId)),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(AppTheme.radius12),
                   bottomRight: Radius.circular(AppTheme.radius12),
@@ -667,7 +667,7 @@ class _SeatUsageSection extends ConsumerWidget {
   /// Above this threshold (days), the row's last-active label is
   /// rendered in the error / amber color so admins scan idle
   /// candidates first. Below it the row uses the standard
-  /// `textTertiary` color — present without screaming.
+  /// `textTertiary` color - present without screaming.
   static const int _idleHighlightDays = 30;
 
   @override
@@ -1175,7 +1175,7 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
         });
       case GetActiveInviteNone():
       case GetActiveInviteFailure():
-        // No existing invite (or read failed) — owner needs to
+        // No existing invite (or read failed) - owner needs to
         // mint a fresh one. The error case degrades silently to
         // the empty state since the mint call can still succeed.
         setState(() => _loading = false);
@@ -1441,7 +1441,7 @@ class _RegenerateConfirmSheet extends StatelessWidget {
 ///
 /// [orgId] is passed explicitly because [BuildContext.findAncestorWidgetOfExactType]
 /// walks UP from the calling element and EXCLUDES the starting element
-/// — so calling it with the card's own context would skip the card
+/// - so calling it with the card's own context would skip the card
 /// and either grab a wrong ancestor (multiple cards in a list) or
 /// return null. The earlier attempt to use the ancestor lookup
 /// resolved to `''` and the backend rejected with `invalid-argument`,

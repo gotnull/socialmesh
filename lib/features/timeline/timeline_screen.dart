@@ -98,7 +98,7 @@ final timelineEventsProvider = Provider.autoDispose<List<TimelineEvent>>((ref) {
 
   // Add message events
   for (final message in messages) {
-    // Skip tapback emoji reactions — they are metadata, not messages
+    // Skip tapback emoji reactions - they are metadata, not messages
     if (message.isCanonicalTapback) continue;
     final fromNode = nodes[message.from];
     final toNode = nodes[message.to];
@@ -167,8 +167,7 @@ final timelineEventsProvider = Provider.autoDispose<List<TimelineEvent>>((ref) {
             timestamp: lastHeard,
             nodeNum: node.nodeNum,
             nodeName: node.shortName,
-            title:
-                '${node.shortName ?? _formatNodeId(node.nodeNum)} is active', // lint-allow: hardcoded-string
+            title: '${node.shortName ?? _formatNodeId(node.nodeNum)} is active', // lint-allow: hardcoded-string
             subtitle: _formatSignalInfo(node),
             metadata: {'rssi': node.rssi, 'snr': node.snr},
           ),
@@ -186,8 +185,7 @@ final timelineEventsProvider = Provider.autoDispose<List<TimelineEvent>>((ref) {
             nodeName: node.shortName,
             title:
                 'Weak signal from ${node.shortName ?? _formatNodeId(node.nodeNum)}', // lint-allow: hardcoded-string
-            subtitle:
-                'SNR: ${node.snr?.toStringAsFixed(1)} dB', // lint-allow: hardcoded-string
+            subtitle: 'SNR: ${node.snr?.toStringAsFixed(1)} dB', // lint-allow: hardcoded-string
             metadata: {'rssi': node.rssi, 'snr': node.snr},
           ),
         );
@@ -206,8 +204,7 @@ final timelineEventsProvider = Provider.autoDispose<List<TimelineEvent>>((ref) {
           nodeName: node.shortName,
           title:
               '${node.shortName ?? _formatNodeId(node.nodeNum)} became inactive', // lint-allow: hardcoded-string
-          subtitle:
-              'Last heard ${_formatTimeAgo(lastHeardTime)}', // lint-allow: hardcoded-string
+          subtitle: 'Last heard ${_formatTimeAgo(lastHeardTime)}', // lint-allow: hardcoded-string
         ),
       );
     }
@@ -579,7 +576,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         ),
       );
 
-      // Event cards for this date — index resets per group
+      // Event cards for this date - index resets per group
       slivers.add(
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

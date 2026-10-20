@@ -8,7 +8,7 @@
 // (covers wire frames). This is transport-only.
 //
 // Capacity is 500 entries; older entries are evicted FIFO. Persistence
-// is intentionally not provided — the log resets on each session so
+// is intentionally not provided - the log resets on each session so
 // the buffer never grows past a bounded RAM cost. Export to disk is
 // out of scope (D-Q6's diagnostics bundle can pull a snapshot if
 // extended later).

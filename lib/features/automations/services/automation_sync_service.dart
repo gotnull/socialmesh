@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Automation Cloud Sync Service — syncs automations across devices.
+// Automation Cloud Sync Service - syncs automations across devices.
 //
 // Uses the same outbox + watermark pattern proven in NodeDexSyncService:
 // - Local mutations write to SQLite and enqueue outbox records
@@ -126,7 +126,7 @@ class AutomationSyncService {
   /// Trigger a one-shot sync cycle (drain outbox + pull updates).
   Future<void> syncNow() async {
     if (!_enabled) {
-      _syncLog('syncNow: skipped — sync not enabled');
+      _syncLog('syncNow: skipped - sync not enabled');
       return;
     }
     _syncLog('syncNow: triggering manual sync cycle');
@@ -144,18 +144,18 @@ class AutomationSyncService {
   /// outbox entries and uploading them to Firestore multiple times.
   Future<void> drainOutboxNow() async {
     if (!_enabled) {
-      _syncLog('drainOutboxNow: skipped — sync not enabled');
+      _syncLog('drainOutboxNow: skipped - sync not enabled');
       return;
     }
 
     if (_isDraining) {
-      _syncLog('drainOutboxNow: skipped — drain already in progress');
+      _syncLog('drainOutboxNow: skipped - drain already in progress');
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _syncLog('drainOutboxNow: skipped — no authenticated user');
+      _syncLog('drainOutboxNow: skipped - no authenticated user');
       return;
     }
 
@@ -203,7 +203,7 @@ class AutomationSyncService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        _syncLog('Sync cycle: no authenticated user — aborting');
+        _syncLog('Sync cycle: no authenticated user - aborting');
         return;
       }
 
@@ -222,7 +222,7 @@ class AutomationSyncService {
         final existingWm = await _store.getSyncState(wmKey);
         if (existingWm != null) {
           await _store.deleteSyncState(wmKey);
-          _syncLog('Blob import detected — watermark cleared for full re-pull');
+          _syncLog('Blob import detected - watermark cleared for full re-pull');
         }
       }
 
@@ -259,7 +259,7 @@ class AutomationSyncService {
   /// Those saves had [syncEnabled] = false, so no outbox entries were created.
   /// This method detects that situation and enqueues everything once.
   ///
-  /// Skips when a blob import was detected — in that case, the pull must
+  /// Skips when a blob import was detected - in that case, the pull must
   /// reconcile deletion markers first (see [_reconcileBlobImportAfterPull]).
   Future<void> _ensureInitialPushIfNeeded(String userId) async {
     final wmKey = _watermarkKey(userId);
@@ -278,7 +278,7 @@ class AutomationSyncService {
     final blobFlag = await _store.getSyncState(blobImportedSyncKey);
     if (blobFlag == 'true') {
       _syncLog(
-        'Initial push: skipped — data was blob-imported, ' // lint-allow: hardcoded-string
+        'Initial push: skipped - data was blob-imported, ' // lint-allow: hardcoded-string
         'waiting for pull to reconcile', // lint-allow: hardcoded-string
       );
       return;
@@ -286,7 +286,7 @@ class AutomationSyncService {
 
     _syncLog(
       'Initial push: first sync for uid=${userId.substring(0, 8)}... ' // lint-allow: hardcoded-string
-      '— enqueuing $localCount local automations to outbox', // lint-allow: hardcoded-string
+      '- enqueuing $localCount local automations to outbox', // lint-allow: hardcoded-string
     );
 
     final enqueued = await _store.enqueueAllForSync();
@@ -333,7 +333,7 @@ class AutomationSyncService {
   /// Drain pending outbox entries to Firestore.
   Future<void> _drainOutbox(String userId) async {
     if (_isDraining) {
-      _syncLog('Drain: skipped — another drain already in progress');
+      _syncLog('Drain: skipped - another drain already in progress');
       return;
     }
     _isDraining = true;
@@ -377,7 +377,7 @@ class AutomationSyncService {
       if (attemptCount >= _maxOutboxRetries) {
         _syncLog(
           'Drain: SKIPPING outbox[$id] $entityType/$entityId ' // lint-allow: hardcoded-string
-          '— max retries ($attemptCount) reached', // lint-allow: hardcoded-string
+          '- max retries ($attemptCount) reached', // lint-allow: hardcoded-string
         );
         await _store.removeOutboxEntry(id);
         skippedCount++;
@@ -438,7 +438,7 @@ class AutomationSyncService {
     }
 
     _syncLog(
-      'Drain: complete — ' // lint-allow: hardcoded-string
+      'Drain: complete - ' // lint-allow: hardcoded-string
       'success=$successCount fail=$failCount skipped=$skippedCount',
     );
   }
@@ -552,7 +552,7 @@ class AutomationSyncService {
       await _store.setSyncState(wmKey, maxPullMs.toString());
 
       _syncLog(
-        'Pull: complete — ${remoteAutomations.length} upserts, ' // lint-allow: hardcoded-string
+        'Pull: complete - ${remoteAutomations.length} upserts, ' // lint-allow: hardcoded-string
         '${remoteDeletedIds.length} deletions, '
         'new watermark=$maxPullMs', // lint-allow: hardcoded-string
       );
@@ -563,7 +563,7 @@ class AutomationSyncService {
   }
 
   // ---------------------------------------------------------------------------
-  // Sync Probe — deterministic end-to-end sync validation
+  // Sync Probe - deterministic end-to-end sync validation
   // ---------------------------------------------------------------------------
 
   /// Run a deterministic end-to-end sync probe for Automations.
@@ -590,7 +590,7 @@ class AutomationSyncService {
     // Stage A: Check entitlement
     probeLog('Stage A: Checking entitlement...');
     if (!_enabled) {
-      probeLog('Stage A: FAIL — sync not enabled (entitlement=$_enabled)');
+      probeLog('Stage A: FAIL - sync not enabled (entitlement=$_enabled)');
       stages['A'] = 'FAIL: sync not enabled';
       return SyncProbeResult.failed(
         stage: 'A',
@@ -608,7 +608,7 @@ class AutomationSyncService {
     probeLog('Stage B: Checking Firebase auth...');
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      probeLog('Stage B: FAIL — no authenticated user');
+      probeLog('Stage B: FAIL - no authenticated user');
       stages['B'] = 'FAIL: no authenticated user';
       return SyncProbeResult.failed(
         stage: 'B',
@@ -620,7 +620,7 @@ class AutomationSyncService {
     }
     final uid = user.uid;
     stages['B'] = 'OK: uid=${uid.substring(0, 8)}...';
-    probeLog('Stage B: OK — uid=${uid.substring(0, 8)}...');
+    probeLog('Stage B: OK - uid=${uid.substring(0, 8)}...');
 
     // Stage C: Create test automation locally
     probeLog('Stage C: Creating test automation id=$probeId...');
@@ -635,9 +635,9 @@ class AutomationSyncService {
       );
       await _store.save(probeAutomation);
       stages['C'] = 'OK: automation saved to SQLite';
-      probeLog('Stage C: OK — automation saved');
+      probeLog('Stage C: OK - automation saved');
     } catch (e) {
-      probeLog('Stage C: FAIL — $e');
+      probeLog('Stage C: FAIL - $e');
       stages['C'] = 'FAIL: $e';
       return SyncProbeResult.failed(
         stage: 'C',
@@ -654,16 +654,16 @@ class AutomationSyncService {
       final outboxCount = await _store.outboxCount;
       if (outboxCount == 0) {
         probeLog(
-          'Stage D: WARN — outbox empty after save. ' // lint-allow: hardcoded-string
+          'Stage D: WARN - outbox empty after save. ' // lint-allow: hardcoded-string
           'syncEnabled=${_store.syncEnabled}', // lint-allow: hardcoded-string
         );
         stages['D'] = 'WARN: outbox empty (syncEnabled=${_store.syncEnabled})';
       } else {
         stages['D'] = 'OK: outbox has $outboxCount entries';
-        probeLog('Stage D: OK — $outboxCount entries in outbox');
+        probeLog('Stage D: OK - $outboxCount entries in outbox');
       }
     } catch (e) {
-      probeLog('Stage D: FAIL — $e');
+      probeLog('Stage D: FAIL - $e');
       stages['D'] = 'FAIL: $e';
     }
 
@@ -673,9 +673,9 @@ class AutomationSyncService {
       await _drainOutbox(uid);
       final remainingOutbox = await _store.outboxCount;
       stages['E'] = 'OK: drain complete, remaining=$remainingOutbox';
-      probeLog('Stage E: OK — remaining outbox=$remainingOutbox');
+      probeLog('Stage E: OK - remaining outbox=$remainingOutbox');
     } catch (e) {
-      probeLog('Stage E: FAIL — $e');
+      probeLog('Stage E: FAIL - $e');
       stages['E'] = 'FAIL: $e';
       return SyncProbeResult.failed(
         stage: 'E',
@@ -699,7 +699,7 @@ class AutomationSyncService {
       final docSnapshot = await docRef.get();
 
       if (!docSnapshot.exists) {
-        probeLog('Stage F: FAIL — doc not found at $docPath');
+        probeLog('Stage F: FAIL - doc not found at $docPath');
         stages['F'] = 'FAIL: doc not found at $docPath';
         return SyncProbeResult.failed(
           stage: 'F',
@@ -713,13 +713,13 @@ class AutomationSyncService {
       final docData = docSnapshot.data()!;
       final remoteData = docData['data'] as Map<String, dynamic>?;
       probeLog(
-        'Stage F: OK — doc exists at $docPath ' // lint-allow: hardcoded-string
+        'Stage F: OK - doc exists at $docPath ' // lint-allow: hardcoded-string
         'updated_at_ms=${docData['updated_at_ms']} '
         'has_data=${remoteData != null}',
       );
       stages['F'] = 'OK: doc exists at $docPath';
     } catch (e) {
-      probeLog('Stage F: FAIL — $e');
+      probeLog('Stage F: FAIL - $e');
       stages['F'] = 'FAIL: $e';
       return SyncProbeResult.failed(
         stage: 'F',
@@ -738,7 +738,7 @@ class AutomationSyncService {
       stages['G'] = 'OK: pull complete';
       probeLog('Stage G: OK');
     } catch (e) {
-      probeLog('Stage G: FAIL — $e');
+      probeLog('Stage G: FAIL - $e');
       stages['G'] = 'FAIL: $e';
       return SyncProbeResult.failed(
         stage: 'G',
@@ -754,7 +754,7 @@ class AutomationSyncService {
     try {
       final localAutomation = _store.getById(probeId);
       if (localAutomation == null) {
-        probeLog('Stage H: FAIL — automation not found in local store');
+        probeLog('Stage H: FAIL - automation not found in local store');
         stages['H'] = 'FAIL: automation not in local store after pull';
         return SyncProbeResult.failed(
           stage: 'H',
@@ -768,7 +768,7 @@ class AutomationSyncService {
       final nameMatch = localAutomation.name == probeName;
       final descMatch = localAutomation.description == probeDescription;
       probeLog(
-        'Stage H: local automation found — ' // lint-allow: hardcoded-string
+        'Stage H: local automation found - ' // lint-allow: hardcoded-string
         'name=${localAutomation.name} (match=$nameMatch) '
         'description=${localAutomation.description} (match=$descMatch)',
       );
@@ -786,7 +786,7 @@ class AutomationSyncService {
 
       stages['H'] = 'OK: automation verified locally';
     } catch (e) {
-      probeLog('Stage H: FAIL — $e');
+      probeLog('Stage H: FAIL - $e');
       stages['H'] = 'FAIL: $e';
       return SyncProbeResult.failed(
         stage: 'H',
@@ -808,10 +808,10 @@ class AutomationSyncService {
           .doc(docId);
       await cleanupDocRef.delete();
       stages['I'] = 'OK: cleaned up';
-      probeLog('Stage I: OK — probe data cleaned up');
+      probeLog('Stage I: OK - probe data cleaned up');
     } catch (e) {
       stages['I'] = 'WARN: cleanup failed: $e';
-      probeLog('Stage I: WARN — cleanup failed: $e');
+      probeLog('Stage I: WARN - cleanup failed: $e');
     }
 
     probeLog('=== AUTOMATION SYNC PROBE COMPLETE: ALL STAGES PASSED ===');

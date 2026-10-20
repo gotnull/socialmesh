@@ -5,8 +5,8 @@
 ///
 /// The wire codec lives in `overlay_resource_codec.dart` (P0). The
 /// state-machine enum lives in `overlay_types.dart` (P0). This file
-/// adds the persistence model — the record shape we keep in
-/// `overlay_transfers.db` — and the event types the engine publishes.
+/// adds the persistence model - the record shape we keep in
+/// `overlay_transfers.db` - and the event types the engine publishes.
 ///
 /// Per the P4 locked principle: resources bind **primarily to the
 /// stable peer endpoint identity**, with `linkId` as an advisory
@@ -40,11 +40,11 @@ enum OverlayResourceRole {
   }
 }
 
-/// Immutable row of `overlay_transfers.db` — one per active or
+/// Immutable row of `overlay_transfers.db` - one per active or
 /// recently-terminal transfer.
 ///
 /// Composite primary key: `(peer_endpoint_hint, resource_id)`. This
-/// mirrors the semantics the spec §11.5 describes — a record is
+/// mirrors the semantics the spec §11.5 describes - a record is
 /// scoped to the peer you're talking to. The engine never tries to
 /// merge records across peers.
 class OverlayResourceRecord {
@@ -55,7 +55,7 @@ class OverlayResourceRecord {
   /// records, this is the receiver; for receiver records, the sender.
   final Uint8List peerEndpointHint;
 
-  /// Meshtastic node num of the peer. Ephemeral hint only — not a
+  /// Meshtastic node num of the peer. Ephemeral hint only - not a
   /// truth key. The engine refreshes this opportunistically.
   final int peerNodeNum;
 
@@ -200,7 +200,7 @@ class OverlayResourceRecord {
   }
 
   /// True if [state] is one the engine may resume from on startup.
-  /// Matches spec §11.8 — only `receiving` (receiver) and
+  /// Matches spec §11.8 - only `receiving` (receiver) and
   /// `transferring` (sender) qualify; everything else either is
   /// terminal or was in a mid-handshake state that cannot safely
   /// resume mid-flight.

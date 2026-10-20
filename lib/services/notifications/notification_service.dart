@@ -391,7 +391,7 @@ class NotificationService {
   ///
   /// When the app is started from a terminated state by tapping a local
   /// notification, the tap is NOT delivered through
-  /// [_onNotificationResponse] — the plugin surfaces it exactly once via the
+  /// [_onNotificationResponse] - the plugin surfaces it exactly once via the
   /// launch details instead. Returns the tap payload the first time it is
   /// called after such a launch and null on every later call ("take"
   /// semantics), so a resume can never re-route an already-handled tap.
@@ -507,12 +507,12 @@ class NotificationService {
   }
 
   // ---------------------------------------------------------------------
-  // Node Pet — disciplined notification set.
+  // Node Pet - disciplined notification set.
   // ---------------------------------------------------------------------
   //
   // Two channels:
-  //   pet_milestones  — hatch / evolution / dormant (low-frequency, big).
-  //   pet_care        — sickness onset + attention calls (actionable).
+  //   pet_milestones  - hatch / evolution / dormant (low-frequency, big).
+  //   pet_care        - sickness onset + attention calls (actionable).
   // Dedupe is handled upstream by PetNotificationDispatcher; these
   // methods are pure dispatch. Payloads route taps into the Pet home
   // screen via the same navigation hook the other pet-aware surfaces
@@ -632,7 +632,7 @@ class NotificationService {
       case PetStage.dormant:
         return _l10n.notificationPetDormantTitle;
       case PetStage.egg:
-        // Unreachable — egg is never a transition target.
+        // Unreachable - egg is never a transition target.
         return _l10n.notificationPetEvolvedTitle;
     }
   }
@@ -723,7 +723,7 @@ class NotificationService {
       id: notificationId,
       title: _l10n.notificationAetherFlightTitle,
       body:
-          '$nodeName is airborne on $flightNumber ($route) — report your reception!',
+          '$nodeName is airborne on $flightNumber ($route) - report your reception!',
       notificationDetails: notificationDetails,
       payload: 'aether:$flightNumber',
     );
@@ -964,7 +964,7 @@ class NotificationService {
       title: _l10n.notificationEntityStaleTitle(callsign),
       body:
           'Last position: ${lat.toStringAsFixed(4)}, ' // lint-allow: hardcoded-string
-          '${lon.toStringAsFixed(4)} — $timeAgo',
+          '${lon.toStringAsFixed(4)} - $timeAgo',
       notificationDetails: notificationDetails,
       payload: 'tak:$uid',
     );
@@ -1250,15 +1250,15 @@ class NotificationService {
   ///
   /// Mirrors [showNewMessageNotification] but keys the notification id +
   /// payload off the MeshCore contact's full pubkey hex (no synthesized
-  /// "fake nodeNum" — MeshCore identities are pubkeys, not 32-bit ints,
+  /// "fake nodeNum" - MeshCore identities are pubkeys, not 32-bit ints,
   /// and contorting them into the Meshtastic shape would round-trip-break
   /// the payload tap-handler). Reuses the same Android channel
   /// (`direct_messages`) so the user's existing notification preferences
   /// (sound, vibration, channel disable) apply uniformly across
   /// protocols.
   ///
-  /// Logs only the sender display name and message length — never the
-  /// pubkey, never the message body — so the structured log channel
+  /// Logs only the sender display name and message length - never the
+  /// pubkey, never the message body - so the structured log channel
   /// stays redaction-safe.
   Future<void> showMeshCoreContactMessageNotification({
     required String senderName,
@@ -1604,7 +1604,7 @@ class NotificationService {
   /// tray) and then calls the native [_badgeChannel] to set the badge count
   /// to 0. The native call is necessary because [UIApplication
   /// .applicationIconBadgeNumber] is a separate counter from the notification
-  /// centre — [cancelAll] alone does not reset it.
+  /// centre - [cancelAll] alone does not reset it.
   Future<void> clearBadge() async {
     if (!_initialized) return;
     _badgeCounter.reset();
@@ -2331,7 +2331,7 @@ class NotificationService {
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       groupKey: 'sip_play_turn',
-      // Quiet by default — same posture as peer-found / handshake-
+      // Quiet by default - same posture as peer-found / handshake-
       // request notifications. Users opt into game-turn pings via
       // system Settings; the SFX is the in-app cue.
       playSound: false,

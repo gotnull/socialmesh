@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:socialmesh/core/theme.dart';
 
@@ -109,10 +110,8 @@ class _Flip3DTextState extends State<Flip3DText>
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = Theme.of(context).textTheme.headlineLarge?.copyWith(
-      fontWeight: FontWeight.bold,
-      color: SemanticColors.onBrand,
-    );
+    final defaultStyle = Theme.of(context).textTheme.headlineLarge
+        ?.copyWith(fontWeight: FontWeight.bold, color: SemanticColors.onBrand);
     final effectiveStyle = widget.style ?? defaultStyle;
 
     return AnimatedBuilder(

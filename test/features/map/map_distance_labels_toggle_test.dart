@@ -18,7 +18,7 @@ import 'package:socialmesh/services/storage/storage_service.dart';
 // hides the layer without affecting range circles or connection
 // lines.
 void main() {
-  group('SettingsService — mapShowDistanceLabels', () {
+  group('SettingsService - mapShowDistanceLabels', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -40,7 +40,7 @@ void main() {
     });
   });
 
-  group('map_screen distance-labels wiring — source pins', () {
+  group('map_screen distance-labels wiring - source pins', () {
     final mapFile = File('lib/features/map/map_screen.dart');
     late String source;
 

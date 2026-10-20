@@ -22,7 +22,7 @@ class OpenSkyService {
       'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
   static const String _apiBaseUrl = 'https://opensky-network.org/api';
 
-  // OAuth2 credentials — loaded from .env, never hardcoded
+  // OAuth2 credentials - loaded from .env, never hardcoded
   static String get _clientId =>
       dotenv.env['OPENSKY_CLIENT_ID'] ?? 'gotnull-api-client';
   static String get _clientSecret => dotenv.env['OPENSKY_CLIENT_SECRET'] ?? '';
@@ -114,7 +114,7 @@ class OpenSkyService {
 
   /// Search for active flights matching a query string.
   ///
-  /// Calls the Aether API server-side search cache — the server polls
+  /// Calls the Aether API server-side search cache - the server polls
   /// OpenSky /states/all every 15 minutes and caches all flights.
   /// Client searches are free: zero OpenSky credits consumed regardless
   /// of how many users or searches happen.
@@ -332,14 +332,14 @@ class OpenSkyService {
   /// Look up the current route for a specific aircraft by its ICAO24
   /// transponder address.
   ///
-  /// Calls the Aether API server-side route cache — the server caches
+  /// Calls the Aether API server-side route cache - the server caches
   /// OpenSky /flights/aircraft responses for 30 minutes. Cache hits
   /// cost zero OpenSky credits. Cache misses cost 4 credits on the
   /// server side (not the client).
   ///
   /// Returns the most recent [OpenSkyFlight] for the aircraft, or null
   /// if no route data is available (common for flights that just departed
-  /// — OpenSky batch-processes route data with some delay).
+  /// - OpenSky batch-processes route data with some delay).
   Future<OpenSkyFlight?> lookupAircraftRoute(String icao24) async {
     AppLogging.aether(
       '[OpenSky] lookupAircraftRoute() via Aether API - icao24=$icao24',
@@ -656,7 +656,7 @@ class OpenSkyService {
     }
   }
 
-  /// Lightweight position-only fetch — returns just the state vector.
+  /// Lightweight position-only fetch - returns just the state vector.
   ///
   /// Unlike [validateFlightByCallsign], this does NOT call
   /// [lookupAircraftRoute], saving 1 credit per invocation.

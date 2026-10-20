@@ -92,7 +92,7 @@ class TranslationPolicyService {
 
   /// Whether cached results may be read for this request.
   bool shouldReadCache({required TranslationPrivacyMode privacyMode}) {
-    // Always allow reading cache — if it was stored, it was permitted at that time
+    // Always allow reading cache - if it was stored, it was permitted at that time
     return privacyMode != TranslationPrivacyMode.strict;
   }
 

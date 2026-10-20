@@ -101,41 +101,36 @@ void main() {
       },
     );
 
-    test(
-      'strong match: multiple candidates with same suffix → ambiguous, no auto-rebind',
-      () {
-        const lastNodeNum = 0x0000ABCD;
-        final expectedSuffix = lastNodeNum
-            .toRadixString(16)
-            .padLeft(4, '0')
-            .substring(
-              lastNodeNum.toRadixString(16).padLeft(4, '0').length - 4,
-            );
-        expect(expectedSuffix, equals('abcd'));
+    test('strong match: multiple candidates with same suffix → ambiguous, no auto-rebind', () {
+      const lastNodeNum = 0x0000ABCD;
+      final expectedSuffix = lastNodeNum
+          .toRadixString(16)
+          .padLeft(4, '0')
+          .substring(lastNodeNum.toRadixString(16).padLeft(4, '0').length - 4);
+      expect(expectedSuffix, equals('abcd'));
 
-        final candidates = {
-          'UUID-1': DeviceInfo(
-            id: 'UUID-1',
-            name: 'Meshtastic_abcd',
-            type: TransportType.ble,
-            address: 'UUID-1',
-          ),
-          'UUID-2': DeviceInfo(
-            id: 'UUID-2',
-            name: 'ClonedNode_abcd',
-            type: TransportType.ble,
-            address: 'UUID-2',
-          ),
-        };
+      final candidates = {
+        'UUID-1': DeviceInfo(
+          id: 'UUID-1',
+          name: 'Meshtastic_abcd',
+          type: TransportType.ble,
+          address: 'UUID-1',
+        ),
+        'UUID-2': DeviceInfo(
+          id: 'UUID-2',
+          name: 'ClonedNode_abcd',
+          type: TransportType.ble,
+          address: 'UUID-2',
+        ),
+      };
 
-        final strongMatches = candidates.values.where((device) {
-          return bleNameMatchesNodeNum(device.name, expectedSuffix);
-        }).toList();
+      final strongMatches = candidates.values.where((device) {
+        return bleNameMatchesNodeNum(device.name, expectedSuffix);
+      }).toList();
 
-        // Ambiguous — should NOT auto-rebind
-        expect(strongMatches.length, equals(2));
-      },
-    );
+      // Ambiguous - should NOT auto-rebind
+      expect(strongMatches.length, equals(2));
+    });
 
     test('medium match: single candidate with exact name → auto-rebind', () {
       const lastDeviceName = 'Meshtastic_5678';
@@ -163,52 +158,46 @@ void main() {
       expect(nameMatches.first.id, equals('NEW-UUID'));
     });
 
-    test(
-      'weak match: single Meshtastic device but no nodeNum/name → no auto-rebind',
-      () {
-        // When we have no lastNodeNum and lastDeviceName doesn't match,
-        // we should NOT auto-rebind even if there's only one candidate.
-        const lastDeviceName = 'Meshtastic_5678';
+    test('weak match: single Meshtastic device but no nodeNum/name → no auto-rebind', () {
+      // When we have no lastNodeNum and lastDeviceName doesn't match,
+      // we should NOT auto-rebind even if there's only one candidate.
+      const lastDeviceName = 'Meshtastic_5678';
 
-        final candidates = {
-          'SOME-UUID': DeviceInfo(
-            id: 'SOME-UUID',
-            name: 'Meshtastic_9abc',
-            type: TransportType.ble,
-            address: 'SOME-UUID',
-          ),
-        };
+      final candidates = {
+        'SOME-UUID': DeviceInfo(
+          id: 'SOME-UUID',
+          name: 'Meshtastic_9abc',
+          type: TransportType.ble,
+          address: 'SOME-UUID',
+        ),
+      };
 
-        // No strong match (no lastNodeNum)
-        // No medium match (name doesn't match)
-        final nameMatches = candidates.values.where((device) {
-          return device.name == lastDeviceName;
-        }).toList();
+      // No strong match (no lastNodeNum)
+      // No medium match (name doesn't match)
+      final nameMatches = candidates.values.where((device) {
+        return device.name == lastDeviceName;
+      }).toList();
 
-        expect(nameMatches, isEmpty);
-        // Result: null — no safe match
-      },
-    );
+      expect(nameMatches, isEmpty);
+      // Result: null - no safe match
+    });
 
-    test(
-      'nRF52 device (stable BLE UUID) should be found by exact ID — no logical matching needed',
-      () {
-        const savedDeviceId = 'RAK-STABLE-UUID';
+    test('nRF52 device (stable BLE UUID) should be found by exact ID - no logical matching needed', () {
+      const savedDeviceId = 'RAK-STABLE-UUID';
 
-        final candidates = {
-          savedDeviceId: DeviceInfo(
-            id: savedDeviceId,
-            name: 'Meshtastic_1234',
-            type: TransportType.ble,
-            address: savedDeviceId,
-          ),
-        };
+      final candidates = {
+        savedDeviceId: DeviceInfo(
+          id: savedDeviceId,
+          name: 'Meshtastic_1234',
+          type: TransportType.ble,
+          address: savedDeviceId,
+        ),
+      };
 
-        // Exact ID match (fast path) — logical matching is never reached
-        expect(candidates.containsKey(savedDeviceId), isTrue);
-        expect(candidates[savedDeviceId]!.id, equals(savedDeviceId));
-      },
-    );
+      // Exact ID match (fast path) - logical matching is never reached
+      expect(candidates.containsKey(savedDeviceId), isTrue);
+      expect(candidates[savedDeviceId]!.id, equals(savedDeviceId));
+    });
 
     test('node number suffix extraction handles various hex lengths', () {
       // 1-digit node number: 0xF → suffix "000f"
@@ -274,7 +263,7 @@ void main() {
     test('reboot recovery should suppress pairing invalidation', () {
       // Design verification: when rebootExpected is true,
       // reportMissingSavedDevice() is NOT called in the scan loop.
-      // Without this, invalidation fires after 3 misses (45s) —
+      // Without this, invalidation fires after 3 misses (45s) -
       // well before the 8-retry scan loop completes.
 
       const maxInvalidationAttempts = 3;

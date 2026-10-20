@@ -4,7 +4,7 @@
 /// Riverpod providers for the SIP Play layer.
 ///
 /// State is derived purely from the SIP DM session's history-entry
-/// stream — see `sip_play_engine.dart` for the replay invariants.
+/// stream - see `sip_play_engine.dart` for the replay invariants.
 /// These providers never mutate game state; they observe the entry
 /// log and re-derive on each rebuild.
 library;
@@ -44,7 +44,7 @@ final sipSignalSynthServiceProvider = Provider<SipSignalSynthService>((ref) {
 /// for the given instance.
 ///
 /// **Pure read.** Building this provider does not mutate any state in
-/// the engine or the DM manager — see "engine must be pure replay" in
+/// the engine or the DM manager - see "engine must be pure replay" in
 /// the Phase-12 review.
 final sipPlayInstanceStateProvider =
     Provider.family<SipPlayInstanceState?, ({int sessionTag, int instanceId})>((
@@ -53,7 +53,7 @@ final sipPlayInstanceStateProvider =
     ) {
       // Watching `sipDmEpochProvider` so the derived state recomputes on
       // any DM history change (matches how text/sketch UI follows the
-      // session). Cheap — the engine replay is O(N) over a small log.
+      // session). Cheap - the engine replay is O(N) over a small log.
       final epoch = ref.watch(sipDmEpochProvider);
 
       final dm = ref.read(sipDmManagerProvider);
@@ -171,7 +171,7 @@ final sipPlayInstanceIdsProvider = Provider.family<List<int>, int>((
 
 /// Best-effort mapping from a SIP DM history entry's payload to the
 /// `(instanceId, action, seq)` triple it carries. Returns null when
-/// the payload is not a valid SIP Play envelope — bubbles that hit
+/// the payload is not a valid SIP Play envelope - bubbles that hit
 /// this null branch render the `sipPlayMalformedTitle` fallback.
 ({int instanceId, SipPlayAction action, int seq, int gameTypeCode})?
 parsePlayHeaderForUi(Uint8List payload) {

@@ -24,7 +24,7 @@ import 'subscription_providers.dart';
 // Translation settings state
 // =============================================================================
 
-/// Translation settings — persisted via SharedPreferences.
+/// Translation settings - persisted via SharedPreferences.
 class TranslationSettings {
   final TranslationProviderMode providerMode;
   final TranslationPrivacyMode privacyMode;
@@ -277,7 +277,7 @@ final activeTranslationAdapterProvider = FutureProvider<TranslationAdapter?>((
   }
 });
 
-/// Single shared [TranslationService] — the main entry point for translation.
+/// Single shared [TranslationService] - the main entry point for translation.
 final translationServiceProvider = FutureProvider<TranslationService?>((
   ref,
 ) async {
@@ -359,7 +359,7 @@ class MessageTranslationsNotifier
       return;
     }
 
-    // 0. Check disk cache first — restores translations after app restart
+    // 0. Check disk cache first - restores translations after app restart
     //    without needing entitlement/key/quota checks.
     final settings = ref.read(translationSettingsProvider);
     final policyService = ref.read(translationPolicyServiceProvider);
@@ -391,11 +391,11 @@ class MessageTranslationsNotifier
           return;
         }
       } catch (_) {
-        // Cache miss or init error — fall through to normal flow
+        // Cache miss or init error - fall through to normal flow
       }
     }
 
-    // 1. Check entitlement — await the subscription service directly to avoid
+    // 1. Check entitlement - await the subscription service directly to avoid
     //    the race where purchaseStateProvider hasn't received _init() yet.
     final purchaseService = await ref.read(subscriptionServiceProvider.future);
     final hasEntitlement = purchaseService.currentState.hasFeature(
@@ -577,7 +577,7 @@ class MessageTranslationsNotifier
         state = {...state, messageId: MessageTranslationState(result: cached)};
       }
     } catch (_) {
-      // Silently ignore — cache miss or init failure
+      // Silently ignore - cache miss or init failure
     }
   }
 

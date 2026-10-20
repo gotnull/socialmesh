@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -102,9 +102,8 @@ class MarqueeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     final effectiveSubtitleStyle =
         subtitleStyle ??
-        Theme.of(
-          context,
-        ).textTheme.labelSmall?.copyWith(color: context.textTertiary);
+        Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: context.textTertiary);
 
     // Determine if we should show back button
     final shouldShowBack = showBackButton ?? (leading == null);
@@ -242,9 +241,8 @@ class MarqueeAppBarWithAvatar extends StatelessWidget
 
     final effectiveSubtitleStyle =
         subtitleStyle ??
-        Theme.of(
-          context,
-        ).textTheme.labelSmall?.copyWith(color: context.textTertiary);
+        Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: context.textTertiary);
 
     return AppBar(
       backgroundColor: bgColor,

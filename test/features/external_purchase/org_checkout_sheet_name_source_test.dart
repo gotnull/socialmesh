@@ -23,12 +23,11 @@ void main() {
   late String src;
 
   setUpAll(() {
-    src = File(
-      'lib/features/external_purchase/org_checkout_sheet.dart',
-    ).readAsStringSync();
+    src = File('lib/features/external_purchase/org_checkout_sheet.dart')
+        .readAsStringSync();
   });
 
-  group('Buy sheet — mandatory name field', () {
+  group('Buy sheet - mandatory name field', () {
     test('declares a separate _nameController + _nameFocusNode', () {
       // Two TextEditingController instances total: one for the
       // display Name, one for the Group ID slug. Sharing a single

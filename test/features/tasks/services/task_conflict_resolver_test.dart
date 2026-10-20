@@ -62,7 +62,7 @@ void main() {
   const resolver = TaskConflictResolver();
 
   // =========================================================================
-  // Rule 1: Dual acknowledgement — first timestamp wins
+  // Rule 1: Dual acknowledgement - first timestamp wins
   // =========================================================================
 
   group('Rule 1: Dual acknowledgement', () {
@@ -117,7 +117,7 @@ void main() {
       expect(result.reason, contains('local timestamp'));
     });
 
-    test('equal timestamps — local wins (no-op)', () {
+    test('equal timestamps - local wins (no-op)', () {
       final localTask = _task(state: TaskState.acknowledged);
       final localAck = _transition(
         id: 'tx-local-ack',
@@ -143,7 +143,7 @@ void main() {
   });
 
   // =========================================================================
-  // Rule 2: COMPLETED vs CANCELLED — COMPLETED wins
+  // Rule 2: COMPLETED vs CANCELLED - COMPLETED wins
   // =========================================================================
 
   group('Rule 2: COMPLETED vs CANCELLED', () {
@@ -233,7 +233,7 @@ void main() {
   });
 
   // =========================================================================
-  // Rule 3: Reassignment during completion — both survive
+  // Rule 3: Reassignment during completion - both survive
   // =========================================================================
 
   group('Rule 3: Reassignment during completion', () {
@@ -295,7 +295,7 @@ void main() {
   });
 
   // =========================================================================
-  // Rule 4: Duplicate creation — both survive (different UUIDs)
+  // Rule 4: Duplicate creation - both survive (different UUIDs)
   // =========================================================================
 
   group('Rule 4: Duplicate creation', () {

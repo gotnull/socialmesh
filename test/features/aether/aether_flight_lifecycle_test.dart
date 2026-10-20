@@ -13,7 +13,7 @@ import 'package:socialmesh/features/aether/providers/aether_providers.dart';
 
 /// Minimal fake that records [updateFlightStatus] calls.
 ///
-/// Does NOT depend on Firebase — we override
+/// Does NOT depend on Firebase - we override
 /// [aetherFlightStatusUpdaterProvider] instead of [aetherServiceProvider].
 class _FakeUpdateTracker {
   final List<({String id, bool isActive})> updateCalls = [];
@@ -379,7 +379,7 @@ void main() {
       expect(tracker.updateCalls, hasLength(1));
       expect(tracker.updateCalls.first.isActive, false);
 
-      // Now simulate the flight state updating in Firestore — still has
+      // Now simulate the flight state updating in Firestore - still has
       // isActive: true because Firestore hasn't reflected yet, but the
       // provider remembers it was deactivated. This tests the deactivatedIds
       // guard.

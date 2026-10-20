@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Field Note Widget — displays a deterministic field journal observation.
+// Field Note Widget - displays a deterministic field journal observation.
 //
 // Renders the auto-generated field note for a node as a subtle,
 // italic text block that reads like a naturalist's journal entry.
@@ -28,7 +28,7 @@ import 'nodedex_card.dart';
 ///
 /// The note is generated from the node's identity seed and primary
 /// trait using [FieldNoteGenerator]. The same inputs always produce
-/// the same note — no randomness, no network, no side effects.
+/// the same note - no randomness, no network, no side effects.
 ///
 /// Usage:
 /// ```dart

@@ -68,7 +68,7 @@ class PacketFramer {
       packets.add(packet);
     }
 
-    // Prevent buffer from growing indefinitely — cap at max packet + header
+    // Prevent buffer from growing indefinitely - cap at max packet + header
     if (_buffer.length > _maxPacketSize + _headerSize) {
       _bufferOverflowCount++;
       _totalBytesDiscarded += _buffer.length;

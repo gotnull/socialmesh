@@ -6,7 +6,7 @@
 /// Each mode trades encoding quality against maximum recording duration
 /// within the 8192-byte SIP file transfer limit.
 enum VoiceQuality {
-  /// 1200 bps — longest recording (≈55 s), HF radio quality.
+  /// 1200 bps - longest recording (≈55 s), HF radio quality.
   extended(
     wireModeByte: 0x04,
     cApiMode: 5,
@@ -15,7 +15,7 @@ enum VoiceQuality {
     bitRate: 1200,
   ),
 
-  /// 2400 bps — balanced quality and duration (≈27 s).
+  /// 2400 bps - balanced quality and duration (≈27 s).
   standard(
     wireModeByte: 0x05,
     cApiMode: 1,
@@ -24,7 +24,7 @@ enum VoiceQuality {
     bitRate: 2400,
   ),
 
-  /// 3200 bps — best quality, shortest recording (≈20 s).
+  /// 3200 bps - best quality, shortest recording (≈20 s).
   high(
     wireModeByte: 0x06,
     cApiMode: 0,
@@ -102,7 +102,7 @@ enum VoiceQuality {
 /// ```
 /// [0xC2, modeByte, frameCountLow, frameCountHigh, frame0..frameN]
 /// ```
-/// The mode byte identifies the Codec2 bitrate — see [VoiceQuality].
+/// The mode byte identifies the Codec2 bitrate - see [VoiceQuality].
 abstract final class VoiceConstants {
   /// Magic byte that starts every `.c2` container frame stream.
   static const int magicByte = 0xC2;

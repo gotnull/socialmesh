@@ -9,7 +9,7 @@ import '../services/notifications/channel_mute_prefs.dart';
 /// Persists the set of channel indices whose notifications are muted.
 ///
 /// Uses the same optimistic-empty / lazy-load pattern as
-/// [HiddenSignalsNotifier] — the state starts as an empty set and is
+/// [HiddenSignalsNotifier] - the state starts as an empty set and is
 /// populated from SharedPreferences on first build, so callers never
 /// have to await anything.
 class MutedChannelsNotifier extends Notifier<Set<int>> {
@@ -68,7 +68,7 @@ final mutedChannelsProvider = NotifierProvider<MutedChannelsNotifier, Set<int>>(
   MutedChannelsNotifier.new,
 );
 
-/// Convenience provider — returns `true` while the given channel index
+/// Convenience provider - returns `true` while the given channel index
 /// has notifications muted.
 final isChannelMutedProvider = Provider.family<bool, int>((ref, channelIndex) {
   return ref.watch(mutedChannelsProvider).contains(channelIndex);

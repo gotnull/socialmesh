@@ -67,7 +67,7 @@ class DeviceConfigCapture {
 
   /// Section keys that were null in the cache and did not arrive within the
   /// refresh timeout. Surfaced to the UI so the user knows the bundle is
-  /// partial — usually means the device hasn't sent that config since boot.
+  /// partial - usually means the device hasn't sent that config since boot.
   final List<String> missingSections;
 
   const DeviceConfigCapture({
@@ -155,7 +155,7 @@ class DeviceConfigSnapshot {
 /// Gateway interface for [DeviceConfigBackupService]. Production code uses
 /// [ProtocolServiceBackupGateway]; tests use an in-memory fake.
 ///
-/// All methods that talk to the wire are async — they complete when the
+/// All methods that talk to the wire are async - they complete when the
 /// transport has accepted the bytes, not when the device has applied the
 /// change. [waitForSection] is the way to confirm a section actually came
 /// back from the device.
@@ -379,7 +379,7 @@ class ProtocolServiceBackupGateway implements DeviceConfigBackupGateway {
 /// section that's null it fires the matching `get*` admin request and waits
 /// up to [refreshTimeout] for the corresponding stream to emit. Sections
 /// that don't respond within the timeout are reported in
-/// [DeviceConfigCapture.missingSections] but the bundle is still returned —
+/// [DeviceConfigCapture.missingSections] but the bundle is still returned -
 /// partial backups are better than no backup.
 ///
 /// Restore applies sections sequentially via the gateway. Each section is
@@ -635,7 +635,7 @@ class DeviceConfigBackupService {
       }
     }
 
-    // Owner first — minimally invasive (no reboot required for setOwner).
+    // Owner first - minimally invasive (no reboot required for setOwner).
     if (selection.owner) {
       if (bundle.owner != null) {
         await trySection('owner', () => gateway.applyOwner(bundle.owner!));
@@ -712,7 +712,7 @@ class DeviceConfigBackupService {
         report.skipped.add('bluetooth');
       }
       // Note: SecurityConfig is the device's *security* config (admin keys,
-      // managed mode, etc.) — distinct from the DM private key. We don't
+      // managed mode, etc.) - distinct from the DM private key. We don't
       // restore it by default because applying admin-key changes against an
       // un-paired device can lock the user out. Always skipped for now;
       // surface in a future "advanced" toggle if requested.
@@ -739,7 +739,7 @@ class DeviceConfigBackupService {
       }
     }
 
-    // Channels last — each is its own admin send + 300ms gap so the
+    // Channels last - each is its own admin send + 300ms gap so the
     // firmware admin queue isn't overrun. setChannel internally also does
     // a getChannel verify, so the gap is conservative.
     if (selection.channels) {

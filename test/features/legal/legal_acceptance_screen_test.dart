@@ -23,7 +23,7 @@ Widget _buildTestApp({TermsAcceptanceState? termsState}) {
     overrides: [
       // Override haptic service so it doesn't try to read real settings.
       // HapticService's trigger() will just return early because settings
-      // are not loaded — no need for a custom subclass.
+      // are not loaded - no need for a custom subclass.
       hapticServiceProvider.overrideWith((ref) => HapticService(ref)),
       termsAcceptanceProvider.overrideWith(() {
         return _FakeTermsNotifier(state);

@@ -121,7 +121,7 @@ Iterable<int> _sentWantConfigNonces(_FakeTransport transport) sync* {
         yield toRadio.wantConfigId;
       }
     } catch (_) {
-      // Not a ToRadio frame — skip.
+      // Not a ToRadio frame - skip.
     }
   }
 }
@@ -252,9 +252,8 @@ void main() {
           );
           await Future<void>.delayed(const Duration(milliseconds: 10));
 
-          final nonceCountAfterHandshake = _sentWantConfigNonces(
-            transport,
-          ).length;
+          final nonceCountAfterHandshake = _sentWantConfigNonces(transport)
+              .length;
 
           // Stray repeated completions (spurious nonce, double drain, etc.)
           await protocol.handleIncomingPacket(_configCompleteFrame(0xDEADBEEF));
@@ -397,7 +396,7 @@ void main() {
           // per-attempt timeout from outside, so we just wait long
           // enough for at least 2 attempts (3s each) to fire and
           // assert retry observability.
-          // NB: this test takes ~7 seconds — kept fast by not waiting
+          // NB: this test takes ~7 seconds - kept fast by not waiting
           // for the full 3-attempt exhaustion.
           await protocol.sendInitialConfigRequestForTest();
           transport.sent.clear();
@@ -420,7 +419,7 @@ void main() {
             wantConfigIdFrames.length,
             greaterThanOrEqualTo(2),
             reason:
-                'When phase-2 ack is missing, queue-drain must retry — '
+                'When phase-2 ack is missing, queue-drain must retry - '
                 'expected at least 2 wantConfigId(69421) frames, got '
                 '${wantConfigIdFrames.length}',
           );
@@ -442,7 +441,7 @@ void main() {
   // We verify this through an observable proxy: phase 1 must fire the
   // queue-drain wantConfigId AND nothing else on the wire (no admin
   // mesh packets) before phase 2 completes.
-  test('phase-1 fires only the queue-drain wantConfigId — admin requests are '
+  test('phase-1 fires only the queue-drain wantConfigId - admin requests are '
       'deferred until phase-2 completes', () async {
     await _withTempDirectory((dir) async {
       final transport = _FakeTransport();
@@ -481,7 +480,7 @@ void main() {
           reason: 'Phase 1 must fire the queue-drain request',
         );
 
-        // Phase-1 already unblocks the UI / start() — assert it.
+        // Phase-1 already unblocks the UI / start() - assert it.
         expect(
           protocol.configurationComplete,
           isTrue,
@@ -615,9 +614,9 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 500));
 
           expect(
-            _sentWantConfigNonces(
-              transport,
-            ).where((n) => n == _nonceInitialConfig).length,
+            _sentWantConfigNonces(transport)
+                .where((n) => n == _nonceInitialConfig)
+                .length,
             1,
             reason:
                 'A slow-but-flowing config dump must not trigger the '
@@ -665,9 +664,9 @@ void main() {
             // by the completed wait.
             await Future<void>.delayed(const Duration(milliseconds: 600));
             expect(
-              _sentWantConfigNonces(
-                transport,
-              ).where((n) => n == _nonceInitialConfig).length,
+              _sentWantConfigNonces(transport)
+                  .where((n) => n == _nonceInitialConfig)
+                  .length,
               1,
               reason:
                   'A handshake that completes before the early retry '
@@ -739,9 +738,10 @@ void main() {
       Duration(milliseconds: 50),
     ];
 
-    int drainSendCount(_FakeTransport transport) => _sentWantConfigNonces(
-      transport,
-    ).where((n) => n == _nonceQueueDrain).length;
+    int drainSendCount(_FakeTransport transport) =>
+        _sentWantConfigNonces(transport)
+            .where((n) => n == _nonceQueueDrain)
+            .length;
 
     test('exhaustion surfaces degraded readiness and stops sending', () async {
       await _withTempDirectory((dir) async {

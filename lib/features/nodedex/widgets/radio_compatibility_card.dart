@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Radio Compatibility Card — NodeDex detail-screen surface that compares
+// Radio Compatibility Card - NodeDex detail-screen surface that compares
 // the local radio's current preset / frequency offset against the values
 // stamped on the entry's last observation, plus surfaces the latest
 // observation's transport classification (direct RF, MQTT, relayed).
@@ -62,7 +62,7 @@ class RadioCompatibilityCard extends ConsumerWidget {
   ) {
     final rows = <InfoTableRow>[];
 
-    // Reachability is always present — even when comparison is
+    // Reachability is always present - even when comparison is
     // impossible we surface an explicit row so the user gets feedback
     // rather than wondering why nothing rendered.
     rows.add(
@@ -74,14 +74,13 @@ class RadioCompatibilityCard extends ConsumerWidget {
       ),
     );
 
-    // Local radio preset (right now) — only meaningful when a radio is
+    // Local radio preset (right now) - only meaningful when a radio is
     // connected. Skipped for localRadioUnknown so the card doesn't
     // claim a preset we don't have.
     if (summary.localPresetNow != null) {
       final localPresetLabel =
-          ObservedRadioPreset.fromProtobufValue(
-            summary.localPresetNow,
-          )?.label(l10n) ??
+          ObservedRadioPreset.fromProtobufValue(summary.localPresetNow)
+              ?.label(l10n) ??
           l10n.nodedexRadioPresetUnknown;
       rows.add(
         InfoTableRow(
@@ -92,14 +91,13 @@ class RadioCompatibilityCard extends ConsumerWidget {
       );
     }
 
-    // Last observed on preset — the local preset that was active when
+    // Last observed on preset - the local preset that was active when
     // we last heard this node. Different from "your radio preset" only
     // when the local radio has changed since the last observation.
     if (summary.lastObservedOnPreset != null) {
       final observedPresetLabel =
-          ObservedRadioPreset.fromProtobufValue(
-            summary.lastObservedOnPreset,
-          )?.label(l10n) ??
+          ObservedRadioPreset.fromProtobufValue(summary.lastObservedOnPreset)
+              ?.label(l10n) ??
           l10n.nodedexRadioPresetUnknown;
       rows.add(
         InfoTableRow(

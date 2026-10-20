@@ -11,7 +11,7 @@
 ///      tie-break (§24.1.4 of the spec).
 ///
 /// Consumers never touch [OverlayEndpointStore] or
-/// [OverlayIdentityKeypair] directly — they call into the manager,
+/// [OverlayIdentityKeypair] directly - they call into the manager,
 /// which serialises all mutations via a single async mutex so concurrent
 /// observations never race against each other or against `openLocal`.
 library;
@@ -67,7 +67,7 @@ class OverlayEndpointManager {
     final id = _cachedLocalEndpointId;
     if (id == null) {
       throw StateError(
-        'OverlayEndpointManager not initialized — call ensureInitialized()',
+        'OverlayEndpointManager not initialized - call ensureInitialized()',
       );
     }
     return id;
@@ -78,7 +78,7 @@ class OverlayEndpointManager {
     final h = _cachedLocalPersonaHint;
     if (h == null) {
       throw StateError(
-        'OverlayEndpointManager not initialized — call ensureInitialized()',
+        'OverlayEndpointManager not initialized - call ensureInitialized()',
       );
     }
     return h;

@@ -34,7 +34,7 @@ const String kMeshCoreCommunityPublicTag = '__public__';
 
 /// Upstream-defined HMAC derivation prefix. PSK = HMAC-SHA256(secret,
 /// `${kMeshCoreCommunityHmacPrefix}${tag}`)[:16]. Frozen by wire spec
-/// — do not change without bumping the payload version.
+/// - do not change without bumping the payload version.
 const String kMeshCoreCommunityHmacPrefix = 'channel:v1:';
 
 /// Parsed community QR payload. `secret` is the raw 32-byte community

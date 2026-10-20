@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Mesh Explorer home screen — the primary service-discovery hub.
+/// Mesh Explorer home screen - the primary service-discovery hub.
 ///
 /// Service-first layout: discoverable community services are the primary
 /// content. Nearby peers are supporting context, not the headline.
@@ -49,7 +49,7 @@ class _MeshExplorerScreenState extends ConsumerState<MeshExplorerScreen>
   @override
   void initState() {
     super.initState();
-    // User is now looking at the screen — clear unseen peer badge.
+    // User is now looking at the screen - clear unseen peer badge.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(newMeshPeerCountProvider.notifier).clear();

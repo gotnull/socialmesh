@@ -499,7 +499,7 @@ void main() {
   });
 
   group('sync_request (action 0x0004)', () {
-    test('byte-exact for tile (1,1) — bottom-right of v0.1 64×64 grid', () {
+    test('byte-exact for tile (1,1) - bottom-right of v0.1 64×64 grid', () {
       const canvasId = 0xAA55AA55AA55AA55;
       const op = CanvasSyncRequestOp(canvasId: canvasId, tileX: 1, tileY: 1);
       final encoded = CanvasCodec.encodeSyncRequest(op)!;
@@ -584,7 +584,7 @@ void main() {
     });
   });
 
-  group('sync_response (action 0x0005) — RLE encoding 0', () {
+  group('sync_response (action 0x0005) - RLE encoding 0', () {
     test('byte-exact happy path: 3 runs', () {
       const canvasId = 0x33;
       final op = CanvasSyncResponseOp(
@@ -690,7 +690,7 @@ void main() {
   });
 
   group(
-    'sync_response (action 0x0005) — raw band encoding 1 (deterministic)',
+    'sync_response (action 0x0005) - raw band encoding 1 (deterministic)',
     () {
       test('byte-exact band-0 header', () {
         const canvasId = 0x44;

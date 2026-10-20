@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetCareEngine — pure state-transition functions for the pet care loop.
+// PetCareEngine - pure state-transition functions for the pet care loop.
 //
 // Key invariants:
 // - Every public method returns a fresh PetState; the input is never mutated.
-// - No IO, no timers, no DateTime.now() — every time-dependent call takes
+// - No IO, no timers, no DateTime.now() - every time-dependent call takes
 //   [now] explicitly. This is what makes the engine trivially testable and
 //   deterministic.
 // - Clamping is applied here so state-layer code can trust the bounds.
@@ -90,7 +90,7 @@ class PetCareEngine {
   // Stage transitions are time-exact: each stage has a configured duration
   // and fires at `stageStartedAt + duration`, independent of the 30-minute
   // care-tick cadence. Care ticks only drive decay, hygiene spawns,
-  // sickness, and call lifecycle — the care-loop rhythm. To honour both
+  // sickness, and call lifecycle - the care-loop rhythm. To honour both
   // rhythms at once we interleave the two event streams in chronological
   // order, firing whichever boundary comes first each iteration.
 
@@ -120,7 +120,7 @@ class PetCareEngine {
       }
     }
 
-    // Partial sub-tick between the last event and now — lets sleep/wake
+    // Partial sub-tick between the last event and now - lets sleep/wake
     // edge transitions and call expiry fire even when no full care tick
     // or stage boundary was crossed. CRITICAL: do NOT bump lastTickAt
     // here. `lastTickAt` must only advance when a real care tick fires,
@@ -146,7 +146,7 @@ class PetCareEngine {
     var next = s;
     next = _applyTimeOnlyTransitions(next, tickTime);
 
-    // Stat decay — pet still decays during sleep but slower; when asleep,
+    // Stat decay - pet still decays during sleep but slower; when asleep,
     // only energy drifts. This matches Gen1 "pet rests but still gets
     // hungry eventually".
     if (!next.isAsleep) {
@@ -207,14 +207,14 @@ class PetCareEngine {
       next = next.copyWith(instability: math.max(0, next.instability - 1));
     }
 
-    // Call lifecycle — start / expire.
+    // Call lifecycle - start / expire.
     next = _evaluateAttentionCall(next, tickTime);
 
     // Advance lastTickAt to this tick's instant.
     next = next.copyWith(lastTickAt: tickTime);
 
     // Stage transitions are handled by the outer _advanceExact loop
-    // at their exact configured boundaries, not here — see
+    // at their exact configured boundaries, not here - see
     // _advanceExact / _applyStageTransition.
 
     return next;
@@ -309,7 +309,7 @@ class PetCareEngine {
 
   /// Transition [s] to the next stage at [transitionAt]. Resolves the
   /// branch, resets stage accumulators, and appends the transition
-  /// events. No time guard — the caller must have already verified that
+  /// events. No time guard - the caller must have already verified that
   /// [transitionAt] is at or after the current stage's duration boundary
   /// (see [_advanceExact] and [_advanceBounded]).
   ///
@@ -371,7 +371,7 @@ class PetCareEngine {
       state.hygieneArtefacts.length + days,
     );
     // Synthetic artefacts must land between `state.lastTickAt` and
-    // `now` — a previous bug used `i + 1` (full list index) as the
+    // `now` - a previous bug used `i + 1` (full list index) as the
     // day offset, which pushed high-index synthetics past `now` when
     // there were pre-existing artefacts. Artefacts dated in the
     // future never satisfy the stale check, so sickness would never
@@ -450,7 +450,7 @@ class PetCareEngine {
   ///   - **dim**: invalid outside the sleep window; notNeeded when
   ///     already asleep.
   ///   - **inspect**: always applied (opens the detail sheet).
-  ///   - **reSigil**: invalid unless dormant — the controller layer
+  ///   - **reSigil**: invalid unless dormant - the controller layer
   ///     handles the actual replacement because it needs to mint a new
   ///     PetState from scratch.
   PetActionResult applyAction(PetState state, CareAction action, DateTime now) {
@@ -712,7 +712,7 @@ class PetCareEngine {
   }
 
   /// Deterministic [0, 1) PRNG seeded on (dnaSeed, timestamp). Keeps the
-  /// engine pure — no Random instances, no system entropy.
+  /// engine pure - no Random instances, no system entropy.
   double _deterministicUnit(int seed, DateTime at) {
     final ms = at.toUtc().millisecondsSinceEpoch;
     int h = (seed ^ ms) & 0xFFFFFFFF;

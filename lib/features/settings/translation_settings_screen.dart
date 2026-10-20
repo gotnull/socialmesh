@@ -568,7 +568,7 @@ class _TranslationSettingsScreenState
         type: SnackBarType.success,
       );
     } catch (_) {
-      // Fail silently — cache clear is best-effort
+      // Fail silently - cache clear is best-effort
     }
   }
 }

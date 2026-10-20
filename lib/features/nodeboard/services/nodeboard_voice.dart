@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeBoard personality layer — the system's voice.
+// NodeBoard personality layer - the system's voice.
 //
 // Every piece of user-facing text on a board (empty states, connection
 // sequences, actions, errors, activity labels) flows through this
@@ -52,7 +52,7 @@ enum BoardTone {
 /// (or different phrase categories on the same board) vary.
 ///
 /// Everything user-facing in NodeBoard's terminal + empty states should
-/// be funneled through this class — no ad-hoc string literals.
+/// be funneled through this class - no ad-hoc string literals.
 class NodeBoardVoice {
   const NodeBoardVoice({this.tone = BoardTone.neutral, this.seed = 0});
 
@@ -68,7 +68,7 @@ class NodeBoardVoice {
 
   /// Multi-line handshake shown as the entry ritual when a board opens.
   /// The terminal screen emits these lines with small staggered delays
-  /// to sell the "connecting" feel. Keep each line short — the rhythm
+  /// to sell the "connecting" feel. Keep each line short - the rhythm
   /// matters more than the words.
   List<String> handshake({required String nodeHex, required String sysop}) =>
       switch (tone) {
@@ -260,7 +260,7 @@ class NodeBoardVoice {
   // ---------------------------------------------------------------------------
 
   String outOfRange(String kind, int index) => switch (tone) {
-    BoardTone.hacker => 'NO $kind [$index] — OUT OF RANGE',
+    BoardTone.hacker => 'NO $kind [$index] - OUT OF RANGE',
     BoardTone.wasteland => 'no $kind at [$index]',
     BoardTone.corporate => 'INVALID $kind INDEX: $index',
     BoardTone.chaotic => 'uhh there is no $kind $index',
@@ -309,7 +309,7 @@ class NodeBoardVoice {
   String failedTo(String what, Object error) => switch (tone) {
     BoardTone.hacker => 'FAILED TO $what: $error',
     BoardTone.wasteland => "couldn't $what: $error",
-    BoardTone.corporate => 'OPERATION FAILED: $what — $error',
+    BoardTone.corporate => 'OPERATION FAILED: $what - $error',
     BoardTone.chaotic => "uhh $what didn't work: $error",
     BoardTone.minimal => 'FAIL: $error',
     BoardTone.neutral => 'Failed to $what: $error',
@@ -329,7 +329,7 @@ class NodeBoardVoice {
       '  (crickets)',
       '  (nobody home)',
     ],
-    BoardTone.minimal => const ['  —'],
+    BoardTone.minimal => const ['  -'],
     BoardTone.neutral => const ['  (no threads yet)'],
   });
 
@@ -371,7 +371,7 @@ class NodeBoardVoice {
     BoardTone.wasteland => const ['no visitors', 'nobody\'s stopped by'],
     BoardTone.corporate => const ['GUESTBOOK EMPTY'],
     BoardTone.chaotic => const ['no one\'s signed in yet'],
-    BoardTone.minimal => const ['—'],
+    BoardTone.minimal => const ['-'],
     BoardTone.neutral => const ['NO ENTRIES YET'],
   });
 
@@ -390,8 +390,8 @@ class NodeBoardVoice {
     BoardTone.wasteland => const ['(silence)', '(nobody bit)'],
     BoardTone.corporate => const ['(no responses)'],
     BoardTone.chaotic => const ['(no takers yet)'],
-    BoardTone.minimal => const ['—'],
-    BoardTone.neutral => const ['No replies yet — be the first.'],
+    BoardTone.minimal => const ['-'],
+    BoardTone.neutral => const ['No replies yet - be the first.'],
   });
 
   // ---------------------------------------------------------------------------
@@ -408,7 +408,7 @@ class NodeBoardVoice {
 }
 
 // ---------------------------------------------------------------------------
-// Activity formatting — used for the "LAST ENTRY: 2h ago" header line.
+// Activity formatting - used for the "LAST ENTRY: 2h ago" header line.
 // Kept here so the terminal and native surfaces share a voice-agnostic
 // relative-time shape; the [NodeBoardVoice] supplies the label prefix.
 // ---------------------------------------------------------------------------

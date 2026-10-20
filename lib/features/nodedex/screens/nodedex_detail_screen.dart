@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Detail Screen — full node profile view.
+// NodeDex Detail Screen - full node profile view.
 //
 // Displays the complete NodeDex profile for a single discovered node:
 // - Large sigil display with procedural identity
@@ -133,7 +133,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     // Single source of truth for "is this the user's local node?". Drives the
     // self-presentation branch (no archetype, no field note, renamed/hidden
     // discovery rows) so remote-peer copy never appears for the user's own
-    // device. Never compare nodeNum to myNodeNum inline elsewhere — consume
+    // device. Never compare nodeNum to myNodeNum inline elsewhere - consume
     // this provider.
     final isSelf = ref.watch(nodeDexIsSelfProvider(widget.nodeNum));
     if (isSelf && !_loggedSelfPresentation) {
@@ -270,7 +270,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-            // Auto summary card — computed encounter insights.
+            // Auto summary card - computed encounter insights.
             // Skipped for self: encounter-driven copy ("Most active in the
             // night", "Spotted on N of the last M days") implies third-party
             // observation and is misleading for the user's own device.
@@ -292,7 +292,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // NodeBoard bridge — shows the node's personal BBS if it has one.
+            // NodeBoard bridge - shows the node's personal BBS if it has one.
             // Feature-flag gated; NodeBoardNodeCard itself renders nothing when
             // the node has no associated board, so this is safe to always mount.
             if (AppFeatureFlags.isNodeBoardEnabled)
@@ -304,7 +304,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Pet companion card — local companion when viewing own node,
+            // Pet companion card - local companion when viewing own node,
             // cached peer observation otherwise. The info sheet copy and
             // empty-state copy both branch on this distinction; see
             // PetCompanionContent + helpNodeDexSectionPetCompanion{Self,Remote}.
@@ -324,7 +324,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Co-seen network card — animated avatar cluster with social context
+            // Co-seen network card - animated avatar cluster with social context
             if (recentCoSeenLinks.isNotEmpty)
               SliverToBoxAdapter(
                 child: _DetailEntrance(
@@ -337,7 +337,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Trait card — replaced by a self-device card for the user's own
+            // Trait card - replaced by a self-device card for the user's own
             // node (no archetype/Ghost/Familiar/etc. for self).
             if (isSelf)
               SliverToBoxAdapter(
@@ -356,7 +356,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Trait evidence bullets — skipped for self (no archetype to back).
+            // Trait evidence bullets - skipped for self (no archetype to back).
             if (!isSelf &&
                 disclosure.showTraitEvidence &&
                 scoredTraits.isNotEmpty)
@@ -381,7 +381,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Field note — skipped for self (uses third-party-observation copy
+            // Field note - skipped for self (uses third-party-observation copy
             // like "spotted on N of the last M days" that is misleading for
             // the user's own device).
             if (!isSelf && disclosure.showFieldNote)
@@ -401,7 +401,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Observation timeline strip — encounter-density visual, skipped
+            // Observation timeline strip - encounter-density visual, skipped
             // for self (self never accumulates encounters; see the !isOwnNode
             // guard in NodeDexNotifier._handleNodesUpdate).
             if (!isSelf && disclosure.showTimeline)
@@ -431,7 +431,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
 
             // All scored traits list (progressive: only at Tier 3+).
-            // Skipped for self — same reason as the primary trait card.
+            // Skipped for self - same reason as the primary trait card.
             if (!isSelf && disclosure.showAllTraits && scoredTraits.length > 1)
               SliverToBoxAdapter(
                 child: _DetailEntrance(
@@ -449,7 +449,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Identity-rotated banner — surfaces when a firmware reset
+            // Identity-rotated banner - surfaces when a firmware reset
             // (factory wipe or pubkey rotation) was detected for this
             // node_num. The pre-rotation stats are archived to
             // nodedex_identity_history and accessible via the "View
@@ -499,7 +499,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-            // Device info (from live MeshNode data) — placed near signal records
+            // Device info (from live MeshNode data) - placed near signal records
             if (node != null)
               SliverToBoxAdapter(
                 child: _DetailEntrance(
@@ -520,7 +520,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Classification + Note — rendered as full-width rows in
+            // Classification + Note - rendered as full-width rows in
             // one InfoTable so both share a single card outline and
             // form one cohesive identity block.
             SliverToBoxAdapter(
@@ -591,7 +591,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 ),
               ),
 
-            // Encounter activity — pinned header + body
+            // Encounter activity - pinned header + body
             if (entry.encounters.isNotEmpty) ...[
               SliverPadding(
                 padding: const EdgeInsets.only(top: 4),
@@ -613,7 +613,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ],
 
-            // Co-seen nodes — pinned header + body
+            // Co-seen nodes - pinned header + body
             if (recentCoSeenLinks.isNotEmpty) ...[
               SliverPadding(
                 padding: const EdgeInsets.only(top: 4),
@@ -635,7 +635,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ],
 
-            // Node activity timeline — unified chronological feed
+            // Node activity timeline - unified chronological feed
             SliverPadding(
               padding: const EdgeInsets.only(top: 4),
               sliver: SliverPersistentHeader(
@@ -1425,7 +1425,7 @@ class _TraitCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Self Device Card — replaces _TraitCard for the user's own connected node
+// Self Device Card - replaces _TraitCard for the user's own connected node
 // =============================================================================
 
 class _SelfDeviceCard extends StatelessWidget {
@@ -1480,7 +1480,7 @@ class _DiscoveryStatsCard extends ConsumerWidget {
   //    reflects the local connection's last update, not a remote-peer
   //    encounter.
   //  - "First used" and "Last used" rows are added when the corresponding
-  //    fields are set; hidden when null (no em-dash placeholder — see
+  //    fields are set; hidden when null (no em-dash placeholder - see
   //    docs/.. and the plan rationale: empty would feel broken on entries
   //    that were self before the feature shipped).
   final bool isSelf;
@@ -1508,7 +1508,7 @@ class _DiscoveryStatsCard extends ConsumerWidget {
     // Canonical "last received any packet" timestamp from the live
     // MeshNode model. Distinct from `entry.lastSeen` which is the
     // NodeDex encounter tracker's record of the last time presence
-    // transitioned to active — encounter only updates on transition,
+    // transitioned to active - encounter only updates on transition,
     // so it can lag the radio's last_heard by hours or days.
     final liveLastHeard = node?.lastHeard;
     final liveLastHeardLabel =
@@ -1710,7 +1710,7 @@ class _SignalRecordsCard extends StatelessWidget {
 /// structure from Node Details (classification = 2-column row with
 /// SocialTagBadge / "+ Classify" chip in the value cell, note =
 /// full-width row below). Passes [InfoTable.showBorder] = false so
-/// the outer border is dropped — NodeDex detail's sliver column
+/// the outer border is dropped - NodeDex detail's sliver column
 /// already provides ambient padding between sections.
 class _ClassificationAndNoteCard extends StatelessWidget {
   final NodeDexEntry entry;
@@ -2014,7 +2014,7 @@ class _RegionListCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Encounter Activity Card — visual encounter chart + compact recent list
+// Encounter Activity Card - visual encounter chart + compact recent list
 // =============================================================================
 
 /// Encounter activity visualization card.
@@ -2104,7 +2104,7 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
         _selectedDate = picked;
         _currentPage = 0;
         if (!hasEncounters) {
-          // Keep the filter set — user will see "No encounters on this date"
+          // Keep the filter set - user will see "No encounters on this date"
         }
       });
     }
@@ -2359,7 +2359,7 @@ class _EncounterBarChart extends StatelessWidget {
       );
     }
 
-    // Fill gaps — include days with zero encounters so the chart shows
+    // Fill gaps - include days with zero encounters so the chart shows
     // the full timeline without misleading compressed gaps.
     final allDays = <DateTime>[];
     var current = sortedDays.first;
@@ -2384,7 +2384,7 @@ class _EncounterBarChart extends StatelessWidget {
     final barChartHeight = 80.0;
     final dayFormat = AppTimeFormat.monthDay(context);
 
-    // Label positions — show first, last, and middle.
+    // Label positions - show first, last, and middle.
     final labelIndices = <int>{};
     labelIndices.addAll([0, displayDays.length - 1]);
     if (displayDays.length > 4) {
@@ -2888,7 +2888,7 @@ class _SparklinePainter extends CustomPainter {
   }
 }
 
-/// Compact row for a recent encounter — one line with date and metrics.
+/// Compact row for a recent encounter - one line with date and metrics.
 class _CompactEncounterRow extends StatelessWidget {
   final EncounterRecord encounter;
   final DateFormat dateFormat;
@@ -3014,7 +3014,7 @@ class _CompactMetric extends StatelessWidget {
 
 /// Body content for constellation links, used below the pinned header.
 ///
-/// Pagination is self-contained — controls render at the bottom of the list.
+/// Pagination is self-contained - controls render at the bottom of the list.
 class _CoSeenNodesBody extends ConsumerStatefulWidget {
   final NodeDexEntry entry;
 
@@ -3441,7 +3441,7 @@ class _MrrpServicesCard extends StatelessWidget {
 // =============================================================================
 
 // =============================================================================
-// Sticky Card Header Delegate — pinned header for long scrollable sections
+// Sticky Card Header Delegate - pinned header for long scrollable sections
 // =============================================================================
 
 /// Persistent header delegate for NodeDex detail sections that can be long
@@ -3537,7 +3537,7 @@ class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 // =============================================================================
-// Sticky Card Body — content below a pinned header
+// Sticky Card Body - content below a pinned header
 // =============================================================================
 
 /// Container for card body content that pairs with [_NodeDexStickyHeaderDelegate].
@@ -3589,7 +3589,7 @@ class _StickyCardBody extends StatelessWidget {
 /// not replay. When [reduceMotion] is true, the child renders instantly
 /// with no animation.
 class _DetailEntrance extends StatefulWidget {
-  /// Stagger index — controls the delay before this section animates in.
+  /// Stagger index - controls the delay before this section animates in.
   final int index;
 
   /// Whether to skip animation entirely.

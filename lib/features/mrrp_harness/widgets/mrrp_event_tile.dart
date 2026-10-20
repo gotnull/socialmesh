@@ -101,8 +101,7 @@ class MrrpEventTile extends StatelessWidget {
                       ),
                     if (event.requestId != null)
                       _DetailChip(
-                        label:
-                            'req=0x${event.requestId!.toRadixString(16)}', // lint-allow: hardcoded-string
+                        label: 'req=0x${event.requestId!.toRadixString(16)}', // lint-allow: hardcoded-string
                       ),
                     if (event.peerNodeId != null)
                       _DetailChip(

@@ -33,7 +33,7 @@ void main() {
       expect(adminMsg.hasSetTimeOnly(), isTrue);
       expect(adminMsg.setTimeOnly, timestamp);
 
-      // Serialize and deserialize — the field must survive the round-trip.
+      // Serialize and deserialize - the field must survive the round-trip.
       final bytes = adminMsg.writeToBuffer();
       expect(bytes, isNotEmpty);
 
@@ -46,7 +46,7 @@ void main() {
       // wire type 5 for fixed32 → (43 << 3) | 5 = 349 → but setTimeOnly
       // is OF3 (signed int32), wire type 0 → (43 << 3) | 0 = 344.
       // 344 encoded as varint: 0xD8 0x02.
-      // Just confirm the message round-trips correctly — the field tag
+      // Just confirm the message round-trips correctly - the field tag
       // presence is already proven by hasSetTimeOnly() above.
     });
 
@@ -104,7 +104,7 @@ void main() {
         packetId: 99,
       );
 
-      // Local admin packets MUST NOT set wantAck — it would cause the
+      // Local admin packets MUST NOT set wantAck - it would cause the
       // firmware to route through the mesh instead of processing locally.
       expect(packet.wantAck, isFalse);
 
@@ -185,7 +185,7 @@ void main() {
         );
         expect(chNull.isBroadcast, isTrue);
 
-        // DM with channel 0 — NOT broadcast
+        // DM with channel 0 - NOT broadcast
         final dm = Message(
           from: 0x11,
           to: 0x22,
@@ -214,7 +214,7 @@ void main() {
       final uiFilterMatch = msg.channel == 0 && msg.isBroadcast;
       expect(uiFilterMatch, isTrue);
 
-      // Both must agree — the message selected by the UI filter must have
+      // Both must agree - the message selected by the UI filter must have
       // the matching conversation key.
       expect(uiFilterMatch, isTrue);
       expect(key, 'channel:0');

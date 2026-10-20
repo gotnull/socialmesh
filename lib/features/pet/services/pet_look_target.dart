@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetLookTargetResolver — pure-Dart mapping from a local widget-space
+// PetLookTargetResolver - pure-Dart mapping from a local widget-space
 // pointer offset + current pet state flags to the bounded (0..100)
 // look targets the Rive state machine consumes via `lookX` / `lookY`.
 //
 // Kept separate from the widget so:
 //   1. The math is unit-testable without mounting the Rive runtime.
-//   2. Raw pointer coordinates never reach the Rive layer — only the
+//   2. Raw pointer coordinates never reach the Rive layer - only the
 //      normalised, range-scaled, clamped output does.
 //
 // State-driven modulation (behaviour rules, see assets/pet/README.md):
 //
-//   - dormant  : suppressed — always (50, 50).
-//   - asleep   : suppressed — always (50, 50).
+//   - dormant  : suppressed - always (50, 50).
+//   - asleep   : suppressed - always (50, 50).
 //   - sick     : reduced range around centre (sluggish, dampened).
 //   - calling  : slightly stronger range (more alert).
 //   - content  : full range (default).
@@ -32,7 +32,7 @@ class PetLookTarget {
 
   const PetLookTarget(this.x, this.y);
 
-  /// Neutral centre — the documented idle default for `lookX`/`lookY`.
+  /// Neutral centre - the documented idle default for `lookX`/`lookY`.
   static const PetLookTarget center = PetLookTarget(50.0, 50.0);
 
   @override
@@ -49,7 +49,7 @@ class PetLookTarget {
 }
 
 /// Computes the look target from a local pointer offset and the current
-/// pet state flags. Pure — no Flutter widgets, no Rive runtime.
+/// pet state flags. Pure - no Flutter widgets, no Rive runtime.
 class PetLookTargetResolver {
   const PetLookTargetResolver();
 
@@ -64,7 +64,7 @@ class PetLookTargetResolver {
   ///
   /// [localPointer] is the pointer position in the creature widget's
   /// own coordinate space (top-left origin). Pass `null` when there is
-  /// no active pointer (idle) — the resolver returns centre.
+  /// no active pointer (idle) - the resolver returns centre.
   ///
   /// [size] is the creature widget's extent; both axes use the same
   /// bound. Non-positive sizes short-circuit to centre.
@@ -76,7 +76,7 @@ class PetLookTargetResolver {
     required bool isCalling,
     required PetStage stage,
   }) {
-    // Suppression states — ignore the pointer entirely.
+    // Suppression states - ignore the pointer entirely.
     if (stage == PetStage.dormant) return PetLookTarget.center;
     if (isAsleep) return PetLookTarget.center;
     if (size <= 0) return PetLookTarget.center;
@@ -113,7 +113,7 @@ class PetLookSmoother {
   /// reads as responsive but not twitchy.
   static const double _baseLerp = 0.18;
 
-  /// Sick/dormant easing back to centre is slower — sluggish feel.
+  /// Sick/dormant easing back to centre is slower - sluggish feel.
   static const double _sluggishLerp = 0.08;
 
   /// How much the current and target must differ (on the 0..100 scale)
@@ -127,7 +127,7 @@ class PetLookSmoother {
   double get currentX => _currentX;
   double get currentY => _currentY;
 
-  /// Reset to centre without easing — used when the controller rebinds.
+  /// Reset to centre without easing - used when the controller rebinds.
   void resetToCenter() {
     _currentX = 50.0;
     _currentY = 50.0;
@@ -145,7 +145,7 @@ class PetLookSmoother {
     final material =
         (_currentX - prevX).abs() >= _materialEpsilon ||
         (_currentY - prevY).abs() >= _materialEpsilon ||
-        // Snap when we cross the epsilon to exact target — prevents
+        // Snap when we cross the epsilon to exact target - prevents
         // the lerp from asymptoting below the write threshold and
         // stranding the Rive value a hair off centre.
         ((target.x - _currentX).abs() < _materialEpsilon &&

@@ -20,7 +20,7 @@ final class Codec2Bindings {
   static bool? _available;
 
   /// Returns true if the Codec2 native library is loaded and contains the
-  /// expected symbols. Safe to call at any time — never throws.
+  /// expected symbols. Safe to call at any time - never throws.
   static bool get isAvailable {
     if (_available != null) return _available!;
     try {
@@ -40,7 +40,7 @@ final class Codec2Bindings {
     } else if (Platform.isIOS) {
       _lib = DynamicLibrary.process();
     } else if (Platform.isMacOS) {
-      // Test runner only — not shipped in any release build.
+      // Test runner only - not shipped in any release build.
       // Resolve relative to the test binary's working directory.
       final candidates = [
         'macos/codec2/libcodec2.dylib',
@@ -77,7 +77,7 @@ final class Codec2Bindings {
   // Public static API
   // ---------------------------------------------------------------------------
 
-  /// Calls `codec2_create(mode)` — returns an opaque CODEC2 context pointer.
+  /// Calls `codec2_create(mode)` - returns an opaque CODEC2 context pointer.
   static Pointer<Void> codec2Create(int mode) {
     _codec2Create ??= library
         .lookupFunction<_Codec2CreateNative, _Codec2CreateDart>(
@@ -165,31 +165,27 @@ typedef _Codec2SamplesPerFrameDart = int Function(Pointer<Void> c2);
 typedef _Codec2BytesPerFrameNative = Int32 Function(Pointer<Void> c2);
 typedef _Codec2BytesPerFrameDart = int Function(Pointer<Void> c2);
 
-typedef _Codec2EncodeNative =
-    Void Function(
-      Pointer<Void> c2,
-      Pointer<Uint8> bits,
-      Pointer<Int16> speechIn,
-    );
-typedef _Codec2EncodeDart =
-    void Function(
-      Pointer<Void> c2,
-      Pointer<Uint8> bits,
-      Pointer<Int16> speechIn,
-    );
+typedef _Codec2EncodeNative = Void Function(
+  Pointer<Void> c2,
+  Pointer<Uint8> bits,
+  Pointer<Int16> speechIn,
+);
+typedef _Codec2EncodeDart = void Function(
+  Pointer<Void> c2,
+  Pointer<Uint8> bits,
+  Pointer<Int16> speechIn,
+);
 
-typedef _Codec2DecodeNative =
-    Void Function(
-      Pointer<Void> c2,
-      Pointer<Int16> speechOut,
-      Pointer<Uint8> bits,
-    );
-typedef _Codec2DecodeDart =
-    void Function(
-      Pointer<Void> c2,
-      Pointer<Int16> speechOut,
-      Pointer<Uint8> bits,
-    );
+typedef _Codec2DecodeNative = Void Function(
+  Pointer<Void> c2,
+  Pointer<Int16> speechOut,
+  Pointer<Uint8> bits,
+);
+typedef _Codec2DecodeDart = void Function(
+  Pointer<Void> c2,
+  Pointer<Int16> speechOut,
+  Pointer<Uint8> bits,
+);
 
 typedef _Codec2DestroyNative = Void Function(Pointer<Void> c2);
 typedef _Codec2DestroyDart = void Function(Pointer<Void> c2);

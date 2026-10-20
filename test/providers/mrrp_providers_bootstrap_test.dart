@@ -138,53 +138,49 @@ pb.MeshPacket _makePacket(int senderNodeId) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test(
-    'reading mrrpEngineProvider also attaches SIP discovery and drains early SIP frames',
-    () async {
-      SharedPreferences.setMockInitialValues({});
-      final settings = SettingsService();
-      await settings.init();
+  test('reading mrrpEngineProvider also attaches SIP discovery and drains early SIP frames', () async {
+    SharedPreferences.setMockInitialValues({});
+    final settings = SettingsService();
+    await settings.init();
 
-      final protocol = _SpyProtocolService();
+    final protocol = _SpyProtocolService();
 
-      // Simulate the real failure mode: a SIP packet arrives before any SIP
-      // UI screen has forced sipDiscoveryProvider to build.
-      protocol.injectSipPacketForTest(
-        _makePacket(0x11223344),
-        _buildBeaconPayload(),
-      );
-      expect(protocol.sipStartupBufferLength, 1);
+    // Simulate the real failure mode: a SIP packet arrives before any SIP
+    // UI screen has forced sipDiscoveryProvider to build.
+    protocol.injectSipPacketForTest(
+      _makePacket(0x11223344),
+      _buildBeaconPayload(),
+    );
+    expect(protocol.sipStartupBufferLength, 1);
 
-      final container = ProviderContainer(
-        overrides: [
-          protocolServiceProvider.overrideWithValue(protocol),
-          settingsServiceProvider.overrideWithValue(AsyncValue.data(settings)),
-        ],
-      );
-      addTearDown(container.dispose);
+    final container = ProviderContainer(
+      overrides: [
+        protocolServiceProvider.overrideWithValue(protocol),
+        settingsServiceProvider.overrideWithValue(AsyncValue.data(settings)),
+      ],
+    );
+    addTearDown(container.dispose);
 
-      container.read(sipEnabledProvider.notifier).setEnabled(true);
-      container.read(mrrpEnabledProvider.notifier).setEnabled(true);
+    container.read(sipEnabledProvider.notifier).setEnabled(true);
+    container.read(mrrpEnabledProvider.notifier).setEnabled(true);
 
-      final engine = container.read(mrrpEngineProvider);
-      expect(engine, isNotNull);
+    final engine = container.read(mrrpEngineProvider);
+    expect(engine, isNotNull);
 
-      // attachSipDiscovery and attachMrrpEngine both schedule startup drains
-      // in microtasks.
-      await Future<void>.delayed(Duration.zero);
+    // attachSipDiscovery and attachMrrpEngine both schedule startup drains
+    // in microtasks.
+    await Future<void>.delayed(Duration.zero);
 
-      expect(
-        protocol.sipDiscoveryAttachCount,
-        1,
-        reason: 'MRRP bootstrap must not depend on a SIP UI screen',
-      );
-      expect(protocol.mrrpEngineAttachCount, 1);
-      expect(
-        protocol.sipStartupBufferLength,
-        0,
-        reason:
-            'early SIP frames must be drained once mrrpEngineProvider builds',
-      );
-    },
-  );
+    expect(
+      protocol.sipDiscoveryAttachCount,
+      1,
+      reason: 'MRRP bootstrap must not depend on a SIP UI screen',
+    );
+    expect(protocol.mrrpEngineAttachCount, 1);
+    expect(
+      protocol.sipStartupBufferLength,
+      0,
+      reason: 'early SIP frames must be drained once mrrpEngineProvider builds',
+    );
+  });
 }

@@ -6,14 +6,14 @@
 // Covers:
 //   * empty state (no observation) renders the "unknown" text
 //   * observation + active band renders the band pip with label
-//   * observation + unknown band renders NO band line (by design —
+//   * observation + unknown band renders NO band line (by design -
 //     "unknown" is internal-only, never a user-facing label)
 //   * observation + sleepy band renders its label
 //
 // We override:
-//   * peerPetObservationProvider(nodeNum) — sync-derived observation
-//   * peerLastSeenProvider(nodeNum) — presence freshness
-//   * petRemoteClientProvider — null (suppress the broadcast fetch)
+//   * peerPetObservationProvider(nodeNum) - sync-derived observation
+//   * peerLastSeenProvider(nodeNum) - presence freshness
+//   * petRemoteClientProvider - null (suppress the broadcast fetch)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,7 +78,7 @@ void main() {
         _harness(nodeNum: 101, observation: null, lastSeen: null),
       );
       // pumpAndSettle() hangs because PetCreature's animation ticker
-      // never stops — pump a few discrete frames instead so the
+      // never stops - pump a few discrete frames instead so the
       // FutureProvider override resolves and the widget paints once.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 16));
@@ -194,7 +194,7 @@ void main() {
       ),
     );
     // pumpAndSettle() hangs because PetCreature's animation ticker
-    // never stops — pump a few discrete frames instead so the
+    // never stops - pump a few discrete frames instead so the
     // FutureProvider override resolves and the widget paints once.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 16));
@@ -223,7 +223,7 @@ void main() {
         ),
       );
       // pumpAndSettle() hangs because PetCreature's animation ticker
-      // never stops — pump a few discrete frames instead so the
+      // never stops - pump a few discrete frames instead so the
       // FutureProvider override resolves and the widget paints once.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 16));
@@ -255,7 +255,7 @@ void main() {
       ),
     );
     // pumpAndSettle() hangs because PetCreature's animation ticker
-    // never stops — pump a few discrete frames instead so the
+    // never stops - pump a few discrete frames instead so the
     // FutureProvider override resolves and the widget paints once.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 16));
@@ -279,7 +279,7 @@ void main() {
       ),
     );
     // pumpAndSettle() hangs because PetCreature's animation ticker
-    // never stops — pump a few discrete frames instead so the
+    // never stops - pump a few discrete frames instead so the
     // FutureProvider override resolves and the widget paints once.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 16));
@@ -288,7 +288,7 @@ void main() {
   });
 
   // ==========================================================================
-  // Self branch — the Companion card must distinguish the user's OWN node
+  // Self branch - the Companion card must distinguish the user's OWN node
   // from remote peers and source from local providers, not the remote cache.
   // ==========================================================================
 
@@ -356,7 +356,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 16));
 
         // Local preview is rendered from petPublicStateProvider (not the
-        // remote cache — that was the original bug).
+        // remote cache - that was the original bug).
         expect(find.byType(PetPreviewFromState), findsOneWidget);
 
         // The "Open NodePet" action must be present.
@@ -428,7 +428,7 @@ void main() {
         // Remote preview is rendered from the cache.
         expect(find.byType(PetPreviewFromState), findsOneWidget);
 
-        // No Open NodePet action on remote nodes — they are view-only.
+        // No Open NodePet action on remote nodes - they are view-only.
         expect(find.text('Open NodePet'), findsNothing);
       },
     );

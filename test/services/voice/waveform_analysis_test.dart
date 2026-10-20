@@ -19,7 +19,7 @@ Uint8List _buildC2Payload({
   data[1] = quality.wireModeByte;
   data[2] = frameCount & 0xFF;
   data[3] = (frameCount >> 8) & 0xFF;
-  // Frame bytes remain 0 — valid (all-silence) encoded content.
+  // Frame bytes remain 0 - valid (all-silence) encoded content.
   return data;
 }
 
@@ -173,9 +173,9 @@ void main() {
       final a2 = await WaveformAnalyser.analyse(payload, cacheKey: keyA);
       final b2 = await WaveformAnalyser.analyse(payload, cacheKey: keyB);
 
-      // A was invalidated — new instance.
+      // A was invalidated - new instance.
       expect(identical(a1, a2), isFalse);
-      // B was not invalidated — same cached instance.
+      // B was not invalidated - same cached instance.
       expect(identical(b1, b2), isTrue);
     });
 
@@ -191,7 +191,7 @@ void main() {
         payload,
         cacheKey: 'stability_2', // different key, same payload → same seed
       );
-      // Seed = payload.length ^ frameCount — consistent for same payload size.
+      // Seed = payload.length ^ frameCount - consistent for same payload size.
       expect(first!.peaks.length, second!.peaks.length);
     });
   });

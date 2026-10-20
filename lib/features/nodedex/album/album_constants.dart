@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Album Constants — layout grid, animation durations, and slot dimensions.
+// Album Constants - layout grid, animation durations, and slot dimensions.
 //
 // Centralizes all magic numbers for the Collector Album system.
 // Every spacing value, duration, and dimension used by album
@@ -20,7 +20,7 @@ import 'package:socialmesh/core/theme.dart';
 
 /// Layout, timing, and visual constants for the Collector Album.
 ///
-/// All values are static constants — no state, no computation.
+/// All values are static constants - no state, no computation.
 /// Widgets read these directly; providers do not depend on them.
 class AlbumConstants {
   AlbumConstants._();

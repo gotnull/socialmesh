@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Task Conflict Resolver — deterministic offline reconciliation.
+// Task Conflict Resolver - deterministic offline reconciliation.
 //
 // Implements the 4 reconciliation rules from TASK_SYSTEM.md:
 //   1. Dual acknowledgement: first timestamp wins, second is no-op.
@@ -31,13 +31,13 @@ enum TaskConflictOutcome {
   /// Remote transition is a no-op (duplicate or superseded).
   noOp,
 
-  /// COMPLETED wins over CANCELLED — local or remote COMPLETED preserved.
+  /// COMPLETED wins over CANCELLED - local or remote COMPLETED preserved.
   completedWins,
 
-  /// Reassignment coexists with completion — both records survive.
+  /// Reassignment coexists with completion - both records survive.
   coexist,
 
-  /// Duplicate task creation — both survive with different UUIDs.
+  /// Duplicate task creation - both survive with different UUIDs.
   duplicateCreation,
 }
 
@@ -70,13 +70,13 @@ class TaskConflictResult {
 /// Deterministic conflict resolver for the task system.
 ///
 /// Applies the 4 reconciliation rules defined in TASK_SYSTEM.md.
-/// All decisions are deterministic — given the same inputs, the same
+/// All decisions are deterministic - given the same inputs, the same
 /// output is produced regardless of device or ordering.
 ///
 /// This resolver is stateless. It receives the current local task state
 /// and transitions, plus a remote transition, and determines the outcome.
 ///
-/// Spec: TASK_SYSTEM.md — Reconciliation Rules, Sprint 008/W4.2.
+/// Spec: TASK_SYSTEM.md - Reconciliation Rules, Sprint 008/W4.2.
 class TaskConflictResolver {
   const TaskConflictResolver();
 
@@ -94,7 +94,7 @@ class TaskConflictResolver {
     required TaskTransition remoteTransition,
   }) {
     // -----------------------------------------------------------------------
-    // Rule 4: Duplicate creation — both tasks survive (different UUIDs).
+    // Rule 4: Duplicate creation - both tasks survive (different UUIDs).
     //
     // If the task doesn't exist locally and the remote transition is a
     // creation (fromState == created), this is either a new task or a
@@ -134,7 +134,7 @@ class TaskConflictResolver {
     }
 
     // -----------------------------------------------------------------------
-    // Rule 1: Dual acknowledgement — first timestamp wins.
+    // Rule 1: Dual acknowledgement - first timestamp wins.
     //
     // If both local and remote have an acknowledge transition for the same
     // task, the one with the earlier timestamp wins. The other is a no-op.
@@ -149,7 +149,7 @@ class TaskConflictResolver {
         final remoteTs = remoteTransition.timestamp.millisecondsSinceEpoch;
 
         if (remoteTs < localTs) {
-          // Remote is earlier — remote wins.
+          // Remote is earlier - remote wins.
           AppLogging.taskSync(
             'conflict detected on ${remoteTransition.taskId}: '
             'local=acknowledged@$localTs, '
@@ -168,7 +168,7 @@ class TaskConflictResolver {
             resolvedState: TaskState.acknowledged,
           );
         } else {
-          // Local is earlier or equal — local wins, remote is no-op.
+          // Local is earlier or equal - local wins, remote is no-op.
           AppLogging.taskSync(
             'conflict detected on ${remoteTransition.taskId}: '
             'local=acknowledged@$localTs, '
@@ -189,7 +189,7 @@ class TaskConflictResolver {
     }
 
     // -----------------------------------------------------------------------
-    // Rule 2: COMPLETED vs CANCELLED — COMPLETED wins.
+    // Rule 2: COMPLETED vs CANCELLED - COMPLETED wins.
     //
     // If one device completed and the other cancelled, COMPLETED always wins.
     // Completion outcome takes precedence over admin action.
@@ -296,7 +296,7 @@ class TaskConflictResolver {
     // If the remote transition's fromState matches the local task's current
     // state, it is a valid forward progression.
     // If it doesn't match, the transition is stale (task has moved past
-    // the expected state) — store it but don't change projection.
+    // the expected state) - store it but don't change projection.
     // -----------------------------------------------------------------------
     if (remoteTransition.fromState == localTask.state) {
       AppLogging.taskSync(
@@ -312,7 +312,7 @@ class TaskConflictResolver {
       );
     }
 
-    // Remote transition references a past state — stale but still stored
+    // Remote transition references a past state - stale but still stored
     // for audit trail completeness.
     AppLogging.taskSync(
       'stale remote transition on ${remoteTransition.taskId}: '

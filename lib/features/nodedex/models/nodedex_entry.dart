@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Entry — the core data model for the mesh field journal.
+// NodeDex Entry - the core data model for the mesh field journal.
 //
 // Each discovered Meshtastic node gets a NodeDexEntry that tracks
 // discovery history, encounter statistics, social tags, and the
 // data needed to derive procedural identity (sigils and traits).
 //
-// This model is independent of MeshNode — it reads from node data
+// This model is independent of MeshNode - it reads from node data
 // but persists its own enrichment layer.
 
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
+
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/features/nodedex/models/observation_source.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -24,16 +25,16 @@ import 'package:socialmesh/utils/text_sanitizer.dart';
 /// These are user-driven labels that add meaning to discovered nodes.
 /// A node can have at most one social tag.
 enum NodeSocialTag {
-  /// A known person — someone the user communicates with.
+  /// A known person - someone the user communicates with.
   contact,
 
-  /// A trusted infrastructure node — verified relay or gateway.
+  /// A trusted infrastructure node - verified relay or gateway.
   trustedNode,
 
-  /// A known relay — a node that forwards traffic reliably.
+  /// A known relay - a node that forwards traffic reliably.
   knownRelay,
 
-  /// A frequent peer — regularly co-seen on the mesh.
+  /// A frequent peer - regularly co-seen on the mesh.
   frequentPeer;
 
   String displayLabel(AppLocalizations l10n) {
@@ -61,7 +62,7 @@ enum NodeSocialTag {
 /// real metrics: encounter patterns, position history, uptime,
 /// role, and activity frequency.
 enum NodeTrait {
-  /// Seen across multiple regions or positions — a mobile node.
+  /// Seen across multiple regions or positions - a mobile node.
   wanderer,
 
   /// Always active, high uptime, frequently heard.
@@ -76,13 +77,13 @@ enum NodeTrait {
   /// High throughput role (ROUTER, ROUTER_CLIENT), forwarding traffic.
   relay,
 
-  /// High message volume relative to encounters — carries data.
+  /// High message volume relative to encounters - carries data.
   courier,
 
   /// Persistent fixed infrastructure with high co-seen connectivity.
   anchor,
 
-  /// Intermittent presence with irregular timing — appears and fades.
+  /// Intermittent presence with irregular timing - appears and fades.
   drifter,
 
   /// Recently discovered, not enough data to classify.
@@ -132,7 +133,7 @@ enum NodeTrait {
   }
 }
 
-/// A single encounter record — one observation of a node at a point in time.
+/// A single encounter record - one observation of a node at a point in time.
 ///
 /// Encounter records are kept in a rolling window (most recent N entries)
 /// to avoid unbounded storage growth while preserving useful history.
@@ -233,7 +234,7 @@ class EncounterRecord {
 /// Deterministic sigil data derived from a node's identity.
 ///
 /// The sigil is a geometric visual identity generated from the node's
-/// numeric ID. It never changes for a given node — the same nodeNum
+/// numeric ID. It never changes for a given node - the same nodeNum
 /// always produces the same sigil.
 class SigilData {
   /// Number of vertices in the outer polygon (3-8).
@@ -307,10 +308,10 @@ class SigilData {
 /// A coarse-grid region (~1°x1°) attached to a node, either as the
 /// remote node's broadcast position (entry.seenRegions) or as the
 /// local radio's position at the time the remote node was observed
-/// (entry.observedFromRegions). Same shape for both — the meaning
+/// (entry.observedFromRegions). Same shape for both - the meaning
 /// is determined by which list the value lives in.
 class SeenRegion {
-  /// Region identifier — either a geohash prefix or LoRa region code.
+  /// Region identifier - either a geohash prefix or LoRa region code.
   final String regionId;
 
   /// Human-readable region label.
@@ -383,7 +384,7 @@ class SeenRegion {
 
 /// Explorer prestige title derived from real discovery data.
 ///
-/// Titles are earned through actual mesh exploration — node count,
+/// Titles are earned through actual mesh exploration - node count,
 /// region diversity, distance records, and encounter breadth.
 /// No grinding, no gamification. Just recognition of real activity.
 enum ExplorerTitle {
@@ -449,7 +450,7 @@ enum ExplorerTitle {
 ///
 /// Two nodes are "co-seen" when they appear in the same session.
 /// This rich relationship model tracks the full history of the
-/// co-occurrence — when it started, when it was last observed,
+/// co-occurrence - when it started, when it was last observed,
 /// how many times they have been seen together, and how many
 /// messages were exchanged while both were present.
 ///
@@ -598,7 +599,7 @@ class CoSeenRelationship {
 /// It tracks discovery history, encounter statistics, user-assigned
 /// social tags, and derived data for procedural identity.
 class NodeDexEntry {
-  /// Meshtastic node number — primary key, matches MeshNode.nodeNum.
+  /// Meshtastic node number - primary key, matches MeshNode.nodeNum.
   final int nodeNum;
 
   /// When this node was first discovered by the user.
@@ -768,7 +769,7 @@ class NodeDexEntry {
   /// First time this app connected to this nodeNum as the local radio.
   ///
   /// **Connection-identity semantics**, not mesh-observation. Stamped from
-  /// `myNodeNumProvider` emissions only — never from `_handleNodesUpdate`
+  /// `myNodeNumProvider` emissions only - never from `_handleNodesUpdate`
   /// ingest, which would falsely advance from sync-replay NodeDB data.
   /// Null for entries that have never been the user's connected device
   /// (i.e. all remote nodes, and self-entries persisted before this field
@@ -1611,7 +1612,7 @@ class NodeDexEntry {
     required T? remoteValue,
     required int? remoteTimestamp,
   }) {
-    // Both timestamps null: legacy fallback — prefer non-null, favor local.
+    // Both timestamps null: legacy fallback - prefer non-null, favor local.
     if (localTimestamp == null && remoteTimestamp == null) {
       return _MergeResult(
         value: localValue ?? remoteValue,
@@ -1620,7 +1621,7 @@ class NodeDexEntry {
       );
     }
 
-    // Only one side has a timestamp — that side wins.
+    // Only one side has a timestamp - that side wins.
     if (localTimestamp == null) {
       return _MergeResult(
         value: remoteValue,
@@ -1636,7 +1637,7 @@ class NodeDexEntry {
       );
     }
 
-    // Both have timestamps — compare.
+    // Both have timestamps - compare.
     final diff = (localTimestamp - remoteTimestamp).abs();
     final valuesMatch = localValue == remoteValue;
     final isConflict = diff <= conflictWindowMs && !valuesMatch;
@@ -1675,7 +1676,7 @@ class NodeDexEntry {
       // User-editable clearable fields are emitted unconditionally (as explicit
       // null when cleared) so that Firestore set(merge: true) actually clears
       // the cloud value instead of resurrecting the prior value on the next
-      // pull. The *_ms timestamps stay conditional — they only appear once the
+      // pull. The *_ms timestamps stay conditional - they only appear once the
       // user has touched the field.
       'st': socialTag?.index,
       if (socialTagUpdatedAtMs != null) 'st_ms': socialTagUpdatedAtMs,

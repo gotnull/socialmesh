@@ -4,15 +4,15 @@
 /// Riverpod providers for the mesh feed and peer sync features.
 ///
 /// Provider graph:
-///   meshFeedDatabaseProvider (FutureProvider — opens DB)
+///   meshFeedDatabaseProvider (FutureProvider - opens DB)
 ///     ↓
-///   meshFeedRepositoryProvider (Provider — wraps DB + ranking)
+///   meshFeedRepositoryProvider (Provider - wraps DB + ranking)
 ///     ↓
-///   meshFeedNotifierProvider (NotifierProvider — manages feed state)
+///   meshFeedNotifierProvider (NotifierProvider - manages feed state)
 ///     ↓
-///   lanSyncServiceProvider (Provider — LAN mDNS discovery + TCP sync)
+///   lanSyncServiceProvider (Provider - LAN mDNS discovery + TCP sync)
 ///     ↓
-///   meshFeedRfTransportProvider (Provider — LoRa send/receive wiring)
+///   meshFeedRfTransportProvider (Provider - LoRa send/receive wiring)
 ///     ↓
 ///   UI: MeshFeedScreen watches meshFeedNotifierProvider
 library;
@@ -65,7 +65,7 @@ final meshFeedDatabaseProvider = FutureProvider<MeshFeedDatabase>((ref) async {
 // Repository
 // ---------------------------------------------------------------------------
 
-/// Mesh feed repository — coordinates ingest, dedup, ranking.
+/// Mesh feed repository - coordinates ingest, dedup, ranking.
 final meshFeedRepositoryProvider = Provider<MeshFeedRepository>((ref) {
   final dbAsync = ref.watch(meshFeedDatabaseProvider);
   final db = dbAsync.value;
@@ -86,7 +86,7 @@ final meshFeedRepositoryProvider = Provider<MeshFeedRepository>((ref) {
 // Sync service
 // ---------------------------------------------------------------------------
 
-/// Mesh sync service — cursor-based incremental peer sync.
+/// Mesh sync service - cursor-based incremental peer sync.
 final meshSyncServiceProvider = Provider<MeshSyncService>((ref) {
   final dbAsync = ref.watch(meshFeedDatabaseProvider);
   final db = dbAsync.value;
@@ -100,7 +100,7 @@ final meshSyncServiceProvider = Provider<MeshSyncService>((ref) {
 // Feed state
 // ---------------------------------------------------------------------------
 
-/// Feed state — the current ranked list of posts.
+/// Feed state - the current ranked list of posts.
 class MeshFeedState {
   const MeshFeedState({
     this.posts = const [],
@@ -136,13 +136,13 @@ class MeshFeedState {
   }
 }
 
-/// Feed state notifier — manages the reactive feed.
+/// Feed state notifier - manages the reactive feed.
 class MeshFeedNotifier extends Notifier<MeshFeedState> {
   StreamSubscription<List<RankedPost>>? _feedSub;
 
   @override
   MeshFeedState build() {
-    // Watch the database async value — re-runs build when DB becomes ready.
+    // Watch the database async value - re-runs build when DB becomes ready.
     final dbAsync = ref.watch(meshFeedDatabaseProvider);
 
     // Cancel previous subscription on rebuild.
@@ -158,7 +158,7 @@ class MeshFeedNotifier extends Notifier<MeshFeedState> {
       loading: () => const MeshFeedState(isLoading: true),
       error: (e, _) => MeshFeedState(error: e.toString()),
       data: (_) {
-        // DB is ready — schedule async setup after build() returns.
+        // DB is ready - schedule async setup after build() returns.
         Future.microtask(_setupFeed);
         return const MeshFeedState(isLoading: true);
       },
@@ -231,16 +231,16 @@ final meshFeedNotifierProvider =
 // LAN peer sync
 // ---------------------------------------------------------------------------
 
-/// LAN sync service — manages mDNS advertising, discovery, and TCP sync.
+/// LAN sync service - manages mDNS advertising, discovery, and TCP sync.
 ///
 /// Automatically starts mDNS advertising, discovery, and periodic
 /// sync when both `MESH_FEED_ENABLED` and `OPPORTUNISTIC_SYNC_ENABLED`
 /// are true and a connected node number is available.
 ///
 /// Discovery lifecycle:
-///   1. [LanSyncService.startAdvertising] — TCP listener + mDNS broadcast
-///   2. [LanSyncService.startDiscovery] — scan for peers via mDNS
-///   3. Periodic timer (60 s) — [syncWithDiscoveredPeers] for each peer
+///   1. [LanSyncService.startAdvertising] - TCP listener + mDNS broadcast
+///   2. [LanSyncService.startDiscovery] - scan for peers via mDNS
+///   3. Periodic timer (60 s) - [syncWithDiscoveredPeers] for each peer
 final lanSyncServiceProvider = Provider<LanSyncService?>((ref) {
   final feedEnabled = ref.watch(meshFeedEnabledProvider);
   final syncEnabled = ref.watch(opportunisticSyncEnabledProvider);
@@ -322,7 +322,7 @@ final meshFeedRfEnabledProvider = Provider<bool>((ref) {
 });
 
 // ---------------------------------------------------------------------------
-// Meshtastic RF transport — send/receive wiring
+// Meshtastic RF transport - send/receive wiring
 // ---------------------------------------------------------------------------
 
 /// Wires MeshPost RF send (outbound) and receive (inbound) into the

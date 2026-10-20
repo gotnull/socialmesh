@@ -7,14 +7,14 @@
 // Source of truth: docs/canvas/CANVAS_PARTICIPATION_V0_1.md §4.
 //
 // Public surface:
-//   - meshCanvasParticipationStoreProvider — opens SharedPreferences
+//   - meshCanvasParticipationStoreProvider - opens SharedPreferences
 //     and wraps it in the typed store.
-//   - meshCanvasParticipationProvider — AsyncNotifier holding the
+//   - meshCanvasParticipationProvider - AsyncNotifier holding the
 //     three-boolean state. Exposes opinionated transitions
 //     (chooseLocalOnly / joinMeshCanvas / markOnboardingSeen /
 //     setParticipationEnabled / setPresenceSharingEnabled) so callers
 //     can't accidentally violate the mutation invariants.
-//   - Three cheap Provider<bool> selectors — let widgets read just
+//   - Three cheap Provider<bool> selectors - let widgets read just
 //     the bit they need without re-running on unrelated flips.
 //     Selectors return `false` while the underlying notifier is
 //     loading (conservative default == "not opted in").
@@ -100,7 +100,7 @@ class MeshCanvasParticipationNotifier
   }
 
   /// Flip onboarding to `true` without touching the other bits.
-  /// Idempotent — repeated calls are no-ops once the flag is set.
+  /// Idempotent - repeated calls are no-ops once the flag is set.
   /// Used for cases where the user lands on the onboarding sheet via
   /// "Replay onboarding" and dismisses without picking a CTA: we
   /// still record that the sheet has been seen at least once.
@@ -129,7 +129,7 @@ class MeshCanvasParticipationNotifier
 
   /// Set the presence sharing toggle. When the current state has
   /// participation off, enabling sharing is silently dropped (logged
-  /// at debug) — the UI prevents this combination but defence in
+  /// at debug) - the UI prevents this combination but defence in
   /// depth rejects programmatic mistakes.
   Future<void> setPresenceSharingEnabled(bool enabled) async {
     final current = state.asData?.value;
@@ -172,7 +172,7 @@ final meshCanvasParticipationProvider =
 
 /// True iff the first-run onboarding sheet has been shown. Returns
 /// `false` while the underlying notifier is loading; this is
-/// intentional — the overview screen treats "loading" as "not yet
+/// intentional - the overview screen treats "loading" as "not yet
 /// seen" and waits for the AsyncData before deciding whether to
 /// surface the sheet (avoids a flicker where the screen renders the
 /// channel list before onboarding fires).
@@ -182,7 +182,7 @@ final meshCanvasOnboardingSeenProvider = Provider<bool>((ref) {
 });
 
 /// True iff the user has opted into mesh participation. Returns
-/// `false` while loading — conservative default, matches the
+/// `false` while loading - conservative default, matches the
 /// CANVAS_PARTICIPATION_V0_1.md §4 selector rule.
 final meshCanvasParticipationEnabledProvider = Provider<bool>((ref) {
   final asyncSettings = ref.watch(meshCanvasParticipationProvider);

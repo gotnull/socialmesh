@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeBoard list screen — "My Boards" and "Discover" tabs. Premium design
+// NodeBoard list screen - "My Boards" and "Discover" tabs. Premium design
 // matching Signals / Aether / NodeDex: GlassScaffold host, cycling animated
 // empty states, staggered card entrances, haptic-armed taps.
 
@@ -67,9 +67,8 @@ class NodeBoardListScreen extends ConsumerWidget {
 void _openWizard(BuildContext context, String logReason) {
   AppLogging.nodeBoard(logReason);
   HapticFeedback.lightImpact();
-  Navigator.of(
-    context,
-  ).push(MaterialPageRoute(builder: (_) => const NodeBoardWizardScreen()));
+  Navigator.of(context)
+      .push(MaterialPageRoute(builder: (_) => const NodeBoardWizardScreen()));
 }
 
 class _MyBoardsTab extends ConsumerWidget {

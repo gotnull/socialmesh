@@ -17,7 +17,7 @@ import 'buy_me_a_coffee_handoff_sheet.dart';
 ///
 /// Visual contract:
 ///   - Coffee icon (12pt) + underlined "Alternative payment" label,
-///     both in `context.textSecondary`. Never the accent color — that
+///     both in `context.textSecondary`. Never the accent color - that
 ///     would compete with the primary CTA.
 ///   - Left-aligned, with shrink-wrapped tap target.
 ///
@@ -33,7 +33,7 @@ class AlternativePaymentLink extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Hard kill switch — the tap-target opens the BMC handoff sheet,
+    // Hard kill switch - the tap-target opens the BMC handoff sheet,
     // so this link is gated specifically on the BMC flag rather than
     // the umbrella external-purchase flag. Stripe will get its own
     // link primitive when Chunk C lands. Returning a zero-sized

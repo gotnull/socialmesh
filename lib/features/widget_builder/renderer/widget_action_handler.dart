@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../models/widget_schema.dart';
 
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -80,7 +82,7 @@ class WidgetActionHandler {
 
     // Show node selector to choose who to share location with.
     // The governor handles the providePhoneLocation gate, so we no longer
-    // need a manual check here — it will deny with blockedDisabled.
+    // need a manual check here - it will deny with blockedDisabled.
     final selection = await NodeSelectorSheet.show(
       context,
       title: context.l10n.widgetBuilderShareLocationWith,
@@ -196,7 +198,7 @@ class WidgetActionHandler {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.requestAllPositions();
 
-      // Start global position request countdown — banner persists
+      // Start global position request countdown - banner persists
       // across navigation and sets expectations for trickle-in time.
       notifier.startPositionRequestCountdown();
     } catch (e) {

@@ -89,8 +89,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.presenceConfidence',
       label: 'Presence Confidence', // lint-allow: hardcoded-string
-      description:
-          'Inferred presence: active, fading, stale, unknown', // lint-allow: hardcoded-string
+      description: 'Inferred presence: active, fading, stale, unknown', // lint-allow: hardcoded-string
       category: BindingCategory.node,
       valueType: String,
     ),
@@ -105,8 +104,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.role',
       label: 'Node Role', // lint-allow: hardcoded-string
-      description:
-          'Role in the mesh (CLIENT, ROUTER, etc.)', // lint-allow: hardcoded-string
+      description: 'Role in the mesh (CLIENT, ROUTER, etc.)', // lint-allow: hardcoded-string
       category: BindingCategory.node,
       valueType: String,
     ),
@@ -208,8 +206,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.channelUtilization',
       label: 'Channel Utilization', // lint-allow: hardcoded-string
-      description:
-          'Current channel utilization percentage', // lint-allow: hardcoded-string
+      description: 'Current channel utilization percentage', // lint-allow: hardcoded-string
       category: BindingCategory.device,
       valueType: double,
       unit: '%',
@@ -222,8 +219,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'device.channelUtilization',
       label: 'Channel Utilization', // lint-allow: hardcoded-string
-      description:
-          'Current channel utilization percentage', // lint-allow: hardcoded-string
+      description: 'Current channel utilization percentage', // lint-allow: hardcoded-string
       category: BindingCategory.device,
       valueType: double,
       unit: '%',
@@ -235,8 +231,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'device.channelUtil',
       label: 'Channel Util', // lint-allow: hardcoded-string
-      description:
-          'Current channel utilization percentage', // lint-allow: hardcoded-string
+      description: 'Current channel utilization percentage', // lint-allow: hardcoded-string
       category: BindingCategory.device,
       valueType: double,
       unit: '%',
@@ -532,8 +527,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.numTxDropped',
       label: 'Packets TX Dropped', // lint-allow: hardcoded-string
-      description:
-          'Packets dropped due to full TX queue', // lint-allow: hardcoded-string
+      description: 'Packets dropped due to full TX queue', // lint-allow: hardcoded-string
       category: BindingCategory.network,
       valueType: int,
     ),
@@ -558,8 +552,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.numOnlineNodes',
       label: 'Nodes Heard (2h)', // lint-allow: hardcoded-string
-      description:
-          'Meshtastic metric: nodes heard in the last 2 hours', // lint-allow: hardcoded-string
+      description: 'Meshtastic metric: nodes heard in the last 2 hours', // lint-allow: hardcoded-string
       category: BindingCategory.network,
       valueType: int,
     ),
@@ -592,8 +585,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'network.onlineNodes',
       label: 'Online Mesh Nodes (legacy)', // lint-allow: hardcoded-string
-      description:
-          'Alias for online node count (back-compat)', // lint-allow: hardcoded-string
+      description: 'Alias for online node count (back-compat)', // lint-allow: hardcoded-string
       category: BindingCategory.network,
       valueType: int,
     ),
@@ -607,8 +599,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'network.hardwareModelDistribution',
       label: 'Hardware Model Distribution', // lint-allow: hardcoded-string
-      description:
-          'Node count grouped by hardware model', // lint-allow: hardcoded-string
+      description: 'Node count grouped by hardware model', // lint-allow: hardcoded-string
       category: BindingCategory.network,
       valueType: Map<String, int>,
     ),
@@ -630,8 +621,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.displayName',
       label: 'Display Name', // lint-allow: hardcoded-string
-      description:
-          'Node display name (long name or short name)', // lint-allow: hardcoded-string
+      description: 'Node display name (long name or short name)', // lint-allow: hardcoded-string
       category: BindingCategory.node,
       valueType: String,
     ),
@@ -640,8 +630,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.hopCount',
       label: 'Hop Count', // lint-allow: hardcoded-string
-      description:
-          'Number of hops from this node (0 = direct neighbor)', // lint-allow: hardcoded-string
+      description: 'Number of hops from this node (0 = direct neighbor)', // lint-allow: hardcoded-string
       category: BindingCategory.node,
       valueType: int,
       minValue: 0,
@@ -650,8 +639,7 @@ class BindingRegistry {
     BindingDefinition(
       path: 'node.viaMqtt',
       label: 'Via MQTT', // lint-allow: hardcoded-string
-      description:
-          'Whether this node was last heard via MQTT transport', // lint-allow: hardcoded-string
+      description: 'Whether this node was last heard via MQTT transport', // lint-allow: hardcoded-string
       category: BindingCategory.node,
       valueType: bool,
     ),
@@ -1231,18 +1219,18 @@ class DataBindingEngine {
   ///
   /// These represent the BLE connection to the radio (RSSI, SNR) and
   /// radio-level telemetry (channel utilization). They are NOT the same
-  /// as per-node LoRa signal metrics on [MeshNode] — do not fall back
+  /// as per-node LoRa signal metrics on [MeshNode] - do not fall back
   /// to node model fields here.
   dynamic _resolveDevicePath(String field) {
     switch (field) {
       case 'rssi':
-        // BLE RSSI from protocol polling — phone↔radio signal strength.
+        // BLE RSSI from protocol polling - phone↔radio signal strength.
         // Do NOT fall back to _currentNode?.rssi which is per-node LoRa
         // RSSI (a completely different measurement).
         return _deviceRssi;
       case 'snr':
         // SNR from last received mesh packet.
-        // Do NOT fall back to _currentNode?.snr — the device-level SNR
+        // Do NOT fall back to _currentNode?.snr - the device-level SNR
         // stream is the authoritative source for the connected radio.
         return _deviceSnr;
       case 'channelUtil':
@@ -1507,7 +1495,7 @@ class DataBindingEngine {
     final visible = sorted.sublist(0, maxItems - 1);
     final overflow = sorted.sublist(maxItems - 1);
 
-    // Pull Unknown out of overflow if present — it should stay visible.
+    // Pull Unknown out of overflow if present - it should stay visible.
     MapEntry<String, int>? unknownEntry;
     var otherTotal = 0;
     for (final entry in overflow) {

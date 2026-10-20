@@ -43,9 +43,9 @@ const int _maxFlightNumberLength = 10;
 /// Regex pattern for valid flight numbers and ICAO callsigns.
 ///
 /// Accepts:
-///   IATA style  — UA123, BA2490, DL1, 9W4567, AA100A
-///   ICAO style  — UAL123, BAW2490, EXS49MY, T7MYC, RYR1862
-///   General     — 2-10 alphanumeric chars starting with a letter or digit+letter
+///   IATA style  - UA123, BA2490, DL1, 9W4567, AA100A
+///   ICAO style  - UAL123, BAW2490, EXS49MY, T7MYC, RYR1862
+///   General     - 2-10 alphanumeric chars starting with a letter or digit+letter
 ///
 /// OpenSky returns ICAO callsigns which can have multi-character suffixes
 /// (e.g., EXS49MY, FMY8050) so the pattern must be permissive.
@@ -383,7 +383,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   void _populateFromValidation(FlightValidationResult result) {
     if (!result.isValid) return;
 
-    // OpenSky's lastSeen is the most recent tracking ping — for active
+    // OpenSky's lastSeen is the most recent tracking ping - for active
     // flights this is essentially "right now", NOT the actual arrival time.
     // Only populate arrival time for completed / verified flights.
     final isActive = result.status == FlightValidationStatus.active;
@@ -784,7 +784,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                     ),
                     const SizedBox(height: AppTheme.spacing16),
 
-                    // Tips — right below the intro card
+                    // Tips - right below the intro card
                     _buildTipsCard(),
                     const SizedBox(height: AppTheme.spacing16),
 
@@ -1342,7 +1342,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       );
     }
 
-    // Valid route — show distance + estimated flight time
+    // Valid route - show distance + estimated flight time
     return _buildRouteChip(
       icon: Icons.route,
       color: context.accentColor,
@@ -1555,7 +1555,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
   }
 
   /// Fetches route info (airports + times) for a flight selected from search.
-  /// Runs in background so the UI doesn't block — fields populate when ready.
+  /// Runs in background so the UI doesn't block - fields populate when ready.
   Future<void> _lookupRouteForSearchResult(String icao24) async {
     AppLogging.aether('Schedule: looking up route for icao24=$icao24');
     try {
@@ -1576,7 +1576,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
       // Determine whether lastSeen is a real arrival or just "now".
       // If lastSeen is within 10 minutes of the current time, the flight is
-      // still being tracked — lastSeen is NOT an arrival time.
+      // still being tracked - lastSeen is NOT an arrival time.
       final bool lastSeenIsRecentTracking;
       if (routeInfo.lastSeen != null) {
         final lastSeenDt = DateTime.fromMillisecondsSinceEpoch(
@@ -1766,7 +1766,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
             suffixIcon: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Validate button — only visible when there's text
+                // Validate button - only visible when there's text
                 if (hasFlightNumber)
                   _buildInlineAction(
                     icon: Icons.verified_outlined,
@@ -1779,7 +1779,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
                         ? context.l10n.aetherScheduleAlreadyValidatedTooltip
                         : context.l10n.aetherScheduleValidateFlightTooltip,
                   ),
-                // Search button — gradient pill, always visible
+                // Search button - gradient pill, always visible
                 _buildSearchPill(),
                 const SizedBox(width: AppTheme.spacing8),
               ],
@@ -1844,7 +1844,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
     return child;
   }
 
-  /// Gradient pill button for flight search — eye-catching and tappable.
+  /// Gradient pill button for flight search - eye-catching and tappable.
   Widget _buildSearchPill() {
     final gradientColors = AccentColors.gradientFor(context.accentColor);
     final gradient = LinearGradient(
@@ -2188,7 +2188,7 @@ class _AirportOptionsOverlay extends StatelessWidget {
 
 /// Frosted-glass sticky header that slides in from the top as the user scrolls
 /// past the flight info section. Shows live flight data (altitude, speed,
-/// route, country) in a compact bar — same pattern as the Signals feed's
+/// route, country) in a compact bar - same pattern as the Signals feed's
 /// _ActiveAuthorsHeader.
 class _LiveFlightStickyHeader extends StatefulWidget {
   const _LiveFlightStickyHeader({

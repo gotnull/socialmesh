@@ -26,12 +26,10 @@ void main() {
     late String enterpriseSection;
 
     setUpAll(() {
-      mainShell = File(
-        'lib/features/navigation/main_shell.dart',
-      ).readAsStringSync();
-      meshCoreShell = File(
-        'lib/features/navigation/meshcore_shell.dart',
-      ).readAsStringSync();
+      mainShell = File('lib/features/navigation/main_shell.dart')
+          .readAsStringSync();
+      meshCoreShell = File('lib/features/navigation/meshcore_shell.dart')
+          .readAsStringSync();
       enterpriseSection = File(
         'lib/features/navigation/widgets/drawer_enterprise_section.dart',
       ).readAsStringSync();

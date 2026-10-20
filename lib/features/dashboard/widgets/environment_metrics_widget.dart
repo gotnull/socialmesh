@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/units/temperature_format.dart';
@@ -11,7 +12,7 @@ import '../../../providers/telemetry_providers.dart';
 import '../../telemetry/environment_metrics_log_screen.dart';
 import 'dashboard_widget.dart';
 
-/// Environment Metrics Widget — quick-access tile showing the most recent
+/// Environment Metrics Widget - quick-access tile showing the most recent
 /// environmental readings (temperature, humidity, pressure) across the mesh,
 /// tapping anywhere opens the full environment metrics log screen.
 class EnvironmentMetricsContent extends ConsumerWidget {

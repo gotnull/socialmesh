@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// RequiresConnectionGuard — wraps a node-required screen with a
+// RequiresConnectionGuard - wraps a node-required screen with a
 // debounced disconnect handler. Brief transport blips (BLE/USB/TCP)
 // during an active session show an inline "reconnecting…" banner and
 // stay on the screen. Persistent disconnects past a grace window pop
-// the user back to the parent route with the existing snackbar — same
+// the user back to the parent route with the existing snackbar - same
 // safety net we had before, just with a cushion for the common iOS BLE
 // hiccup.
 //
@@ -40,7 +40,7 @@ const Duration kRequiresConnectionGuardGraceWindow = Duration(seconds: 10);
 /// The guard listens to [connectionStateProvider] and reacts only on
 /// the *transition* from connected → not-connected. A screen that
 /// opens while the device is already in a transitional state (e.g.
-/// reconnecting) doesn't get popped immediately — only an actual loss
+/// reconnecting) doesn't get popped immediately - only an actual loss
 /// of an established connection triggers the redirect.
 class RequiresConnectionGuard extends ConsumerStatefulWidget {
   const RequiresConnectionGuard({super.key, required this.child});
@@ -57,7 +57,7 @@ class _RequiresConnectionGuardState
     extends ConsumerState<RequiresConnectionGuard> {
   /// Whether we observed an established connection at any point during
   /// this widget's lifetime. The pop-on-disconnect rule only fires
-  /// after we've actually been connected — opening the screen during
+  /// after we've actually been connected - opening the screen during
   /// a reconnect loop shouldn't trigger an immediate redirect.
   bool _wasConnected = false;
 
@@ -89,7 +89,7 @@ class _RequiresConnectionGuardState
 
     setState(() => _showBanner = true);
 
-    // Capture navigator/messenger references before the async gap —
+    // Capture navigator/messenger references before the async gap -
     // defensive pattern from CLAUDE.md async-safety rules.
     final navigator = Navigator.of(context);
     final l10n = context.l10n;

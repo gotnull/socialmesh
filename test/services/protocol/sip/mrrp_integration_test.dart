@@ -80,7 +80,7 @@ void main() {
       );
       final encoded = MrrpCodec.encode(frame)!;
 
-      // Engine not started — should silently drop.
+      // Engine not started - should silently drop.
       engine.handleInboundFrame(0xABCD1234, encoded);
       expect(sentPayloads, isEmpty);
     });
@@ -362,7 +362,7 @@ void main() {
       engine.start();
 
       // Simulate a peer cancelling a request they sent. This is
-      // informational only — dispatcher logs and ignores.
+      // informational only - dispatcher logs and ignores.
       final cancel = MrrpFrame(
         versionMajor: 0,
         versionMinor: 1,

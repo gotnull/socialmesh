@@ -213,7 +213,7 @@ class SipDiscovery {
   ///
   /// Set by the provider layer from the mesh privacy discoverable setting.
   /// When false, outbound CAP_BEACON and ROLLCALL_RESP are suppressed
-  /// (unless a scan window is active — see [_scanWindowExpiresMs]).
+  /// (unless a scan window is active - see [_scanWindowExpiresMs]).
   /// Inbound processing (caching discovered peers) continues regardless.
   bool isDiscoverable = false;
 
@@ -225,7 +225,7 @@ class SipDiscovery {
   /// Device A scans → Device B (also scanning) receives the request and
   /// responds, even if its persistent privacy toggle is off.
   ///
-  /// The beacon gate is NOT bypassed — beacons remain suppressed when
+  /// The beacon gate is NOT bypassed - beacons remain suppressed when
   /// not discoverable, as they are unsolicited background broadcasts.
   int _scanWindowExpiresMs = 0;
 
@@ -796,7 +796,7 @@ class SipDiscovery {
   ///     stay at zero until a real CAP frame fills them in.
   ///
   /// **Asymmetry caveat.** Only fires on the *responder* side of the
-  /// handshake — HS_HELLO is the only handshake message that carries
+  /// handshake - HS_HELLO is the only handshake message that carries
   /// `requested_features` on the wire. The initiator side keeps
   /// using the slower CAP_BEACON / ROLLCALL_RESP fallback. UI gates
   /// hold the disabled "pending" placeholder for that side.
@@ -807,7 +807,7 @@ class SipDiscovery {
     if (existing != null) {
       final merged = existing.features | features;
       if (merged == existing.features) {
-        // No new bits — just bump lastSeen so the entry doesn't get
+        // No new bits - just bump lastSeen so the entry doesn't get
         // evicted out from under us.
         existing.lastSeenMs = nowMs;
         return;
@@ -834,7 +834,7 @@ class SipDiscovery {
       return;
     }
 
-    // No entry exists yet — insert a minimal one. The real
+    // No entry exists yet - insert a minimal one. The real
     // `mtuHint`, `rxWindowS`, etc. will fill in on the next CAP
     // frame.
     if (_cache.length >= maxPeers) {

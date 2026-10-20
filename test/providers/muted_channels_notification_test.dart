@@ -18,7 +18,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // MutedChannelsNotifier — provider layer
+  // MutedChannelsNotifier - provider layer
   // ---------------------------------------------------------------------------
 
   group('MutedChannelsNotifier', () {
@@ -155,7 +155,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Notification gate logic — the isChannelMessage heuristic bug
+  // Notification gate logic - the isChannelMessage heuristic bug
   // ---------------------------------------------------------------------------
 
   group('Channel 0 mute gate (root cause)', () {
@@ -256,14 +256,14 @@ void main() {
 
       final notifier = container.read(mutedChannelsProvider.notifier);
 
-      // Initially unmuted — notification allowed
+      // Initially unmuted - notification allowed
       expect(container.read(mutedChannelsProvider).contains(0), isFalse);
 
-      // Mute — notification blocked immediately
+      // Mute - notification blocked immediately
       await notifier.toggleMute(0);
       expect(container.read(mutedChannelsProvider).contains(0), isTrue);
 
-      // Unmute — notification allowed immediately
+      // Unmute - notification allowed immediately
       await notifier.toggleMute(0);
       expect(container.read(mutedChannelsProvider).contains(0), isFalse);
     });
@@ -373,7 +373,7 @@ void main() {
     test(
       'channelIndex == 0 IS classified as channel message (Primary Channel)',
       () {
-        // Primary Channel (index 0) is a channel message — the old `> 0`
+        // Primary Channel (index 0) is a channel message - the old `> 0`
         // heuristic was a bug. Fixed: isChannelMessage = channelIndex != null.
         final msg = PendingMessageNotification(
           senderName: 'Test',
@@ -411,7 +411,7 @@ void main() {
       // Master toggle
       if (!notificationsEnabled) return false;
 
-      // Per-channel mute — the fix: runs for ALL channels including 0
+      // Per-channel mute - the fix: runs for ALL channels including 0
       if (messageChannel != null && mutedChannels.contains(messageChannel)) {
         return false;
       }
@@ -520,14 +520,14 @@ void main() {
 
   group('Persistence across app restart', () {
     test('mute survives container disposal and recreation', () async {
-      // First "app session" — mute channel 0
+      // First "app session" - mute channel 0
       SharedPreferences.setMockInitialValues({});
       final container1 = ProviderContainer();
       await container1.read(mutedChannelsProvider.notifier).toggleMute(0);
       await container1.read(mutedChannelsProvider.notifier).toggleMute(3);
       container1.dispose();
 
-      // Second "app session" — should restore muted channels from prefs
+      // Second "app session" - should restore muted channels from prefs
       final container2 = ProviderContainer();
       addTearDown(container2.dispose);
 
@@ -592,37 +592,33 @@ void main() {
     // persisted value via isChannelMutedInPrefs(settings.prefs, ...), which is
     // correct even before the provider hydrates.
 
-    test(
-      'provider is still empty in the hydration window but prefs is muted',
-      () async {
-        SharedPreferences.setMockInitialValues({
-          mutedChannelsPrefKey: ['3'],
-        });
+    test('provider is still empty in the hydration window but prefs is muted', () async {
+      SharedPreferences.setMockInitialValues({
+        mutedChannelsPrefKey: ['3'],
+      });
 
-        final container = ProviderContainer();
-        addTearDown(container.dispose);
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-        // First synchronous read kicks off the async _loadFromPrefs and returns
-        // the optimistic empty set — this is the race window.
-        final providerState = container.read(mutedChannelsProvider);
-        expect(
-          providerState,
-          isEmpty,
-          reason:
-              'provider has not hydrated yet — reading it would under-report',
-        );
+      // First synchronous read kicks off the async _loadFromPrefs and returns
+      // the optimistic empty set - this is the race window.
+      final providerState = container.read(mutedChannelsProvider);
+      expect(
+        providerState,
+        isEmpty,
+        reason: 'provider has not hydrated yet - reading it would under-report',
+      );
 
-        // The fixed gate reads prefs directly and correctly suppresses.
-        final prefs = await SharedPreferences.getInstance();
-        expect(
-          isChannelMutedInPrefs(prefs, 3),
-          isTrue,
-          reason:
-              'authoritative read suppresses the muted channel in the hydration '
-              'window',
-        );
-      },
-    );
+      // The fixed gate reads prefs directly and correctly suppresses.
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        isChannelMutedInPrefs(prefs, 3),
+        isTrue,
+        reason:
+            'authoritative read suppresses the muted channel in the hydration '
+            'window',
+      );
+    });
 
     // Mirrors the gate: message.channel ?? (isBroadcast ? 0 : null).
     int? muteIndexFor(int? messageChannel, {required bool isBroadcast}) =>

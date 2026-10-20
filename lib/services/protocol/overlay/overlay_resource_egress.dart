@@ -16,7 +16,7 @@ import 'dart:typed_data';
 import 'overlay_resource_codec.dart';
 
 /// Outbound delivery surface. Implementations may drop frames (rate
-/// limit, offline, link expired) and return `false` — the engine
+/// limit, offline, link expired) and return `false` - the engine
 /// tracks this and retries via its own backoff policy.
 abstract class OverlayResourceEgress {
   /// Send [frame] to the peer identified by [peerEndpointHint].
@@ -25,7 +25,7 @@ abstract class OverlayResourceEgress {
   /// implementation may use it to pick an existing link, or fall
   /// back to endpoint-hint lookup.
   ///
-  /// [peerNodeNum] is the ephemeral transport address — used by the
+  /// [peerNodeNum] is the ephemeral transport address - used by the
   /// production adapter when no link is active.
   Future<bool> sendFrame({
     required OverlayResourceFrame frame,

@@ -171,12 +171,12 @@ void main() {
       expect(helloFrame!.msgType, SipMessageType.hsHello);
       expect(initiator.getState(nodeB), SipHandshakeState.helloSent);
 
-      // Step 2: Responder receives HS_HELLO — queued for consent.
+      // Step 2: Responder receives HS_HELLO - queued for consent.
       responder.handleHello(nodeA, helloFrame);
       expect(responder.getState(nodeA), SipHandshakeState.pendingApproval);
       expect(responder.pendingRequestNodeIds, contains(nodeA));
 
-      // User accepts — responder sends HS_CHALLENGE.
+      // User accepts - responder sends HS_CHALLENGE.
       final challengeFrame = responder.acceptHandshake(nodeA);
       expect(challengeFrame, isNotNull);
       expect(challengeFrame!.msgType, SipMessageType.hsChallenge);
@@ -246,7 +246,7 @@ void main() {
       // Second call with same nonce should be rejected.
       mgr.reset();
       mgr.handleHello(0xAAAA, helloFrame);
-      // Replay check fires — no pending request queued.
+      // Replay check fires - no pending request queued.
       expect(
         mgr.pendingRequestNodeIds,
         isEmpty,
@@ -373,7 +373,7 @@ void main() {
     test('simultaneous-open: higher nodeId wins initiator role', () async {
       // Both nodes initiate at the same time. Node A (0xAAAA) has higher ID
       // than node B (0x5555), so A keeps initiator and B becomes responder.
-      // B still goes through user consent — initiating does not grant
+      // B still goes through user consent - initiating does not grant
       // consent on the incoming HELLO (privacy boundary).
       const nodeA = 0xAAAA;
       const nodeB = 0x5555;
@@ -399,7 +399,7 @@ void main() {
       expect(mgrA.getState(nodeB), SipHandshakeState.helloSent);
       expect(mgrB.getState(nodeA), SipHandshakeState.helloSent);
 
-      // A receives B's HELLO — A has higher nodeId, so A ignores it (wins).
+      // A receives B's HELLO - A has higher nodeId, so A ignores it (wins).
       mgrA.handleHello(nodeB, helloFromB!);
       expect(
         mgrA.getState(nodeB),
@@ -407,7 +407,7 @@ void main() {
         reason: 'A wins tie-break, keeps initiator session',
       );
 
-      // B receives A's HELLO — B has lower nodeId, so B yields and becomes
+      // B receives A's HELLO - B has lower nodeId, so B yields and becomes
       // responder. B queues the request for user consent.
       mgrB.handleHello(nodeA, helloFromA!);
       expect(
@@ -476,7 +476,7 @@ void main() {
           final helloFromB = mgrB.initiateHandshake(nodeA);
           expect(helloFromB, isNotNull);
 
-          // A receives B's HELLO — tie-break WIN.
+          // A receives B's HELLO - tie-break WIN.
           mgrA.handleHello(nodeB, helloFromB!);
           expect(
             mgrA.getState(nodeB),
@@ -609,7 +609,7 @@ void main() {
       expect(mgr.getState(0xAAAA), SipHandshakeState.pendingApproval);
       mgr.declineHandshake(0xAAAA);
 
-      // Immediately initiate to the same peer — must not be blocked.
+      // Immediately initiate to the same peer - must not be blocked.
       final hello = mgr.initiateHandshake(0xAAAA);
       expect(hello, isNotNull, reason: 'decline must not set a fail-cooldown');
       expect(hello!.msgType, SipMessageType.hsHello);
@@ -744,12 +744,12 @@ void main() {
 
       final mgrA = SipHandshakeManager(
         replayCache: replayCacheA,
-        localNodeId: 0x1111, // lower — yields on simultaneous-open
+        localNodeId: 0x1111, // lower - yields on simultaneous-open
       );
       mgrA.isDmAvailable = true;
       final mgrB = SipHandshakeManager(
         replayCache: replayCacheB,
-        localNodeId: 0x2222, // higher — wins on simultaneous-open
+        localNodeId: 0x2222, // higher - wins on simultaneous-open
       );
       mgrB.isDmAvailable = true;
 
@@ -758,7 +758,7 @@ void main() {
       mgrB.handleHello(0x1111, helloFromA);
       expect(mgrB.getState(0x1111), SipHandshakeState.pendingApproval);
 
-      // B initiates to A; A is currently in helloSent — A yields (lower ID),
+      // B initiates to A; A is currently in helloSent - A yields (lower ID),
       // discards its initiator session, and queues B's request for consent.
       final helloFromB = mgrB.initiateHandshake(0x1111)!;
       mgrA.handleHello(0x2222, helloFromB);
@@ -851,7 +851,7 @@ void main() {
     test('stalled helloSent session auto-fails at handshakeTimeout', () {
       // Without the per-session expiry timer, an initiator session that
       // never receives HS_CHALLENGE (peer disappears, consent never
-      // tapped) sits in helloSent forever — chip stuck on "Connecting…".
+      // tapped) sits in helloSent forever - chip stuck on "Connecting…".
       FakeAsync().run((fake) {
         final mgr = SipHandshakeManager(
           replayCache: SipReplayCache(),
@@ -894,11 +894,11 @@ void main() {
       // After a handshake fails (timeout, in this case), the manager
       // arms a per-peer cooldown for `handshakeCooldownPerPeer`. The
       // SIP Hub peer-tile chip reads `cooldownRemaining` to render a
-      // live countdown and to disable the tap target — without this
+      // live countdown and to disable the tap target - without this
       // accessor the gate was UI-invisible and taps silently no-opped
       // into a `SIP_HS: ... blocked by cooldown` log line.
       FakeAsync().run((fake) {
-        // Inject `clock.now` from package:clock — `fake_async` runs
+        // Inject `clock.now` from package:clock - `fake_async` runs
         // inside a `withClock` zone where `clock.now()` advances with
         // `fake.elapse()`. Plain `DateTime.now()` is wallclock and
         // would make `cooldownRemaining` look frozen at the full
@@ -947,7 +947,7 @@ void main() {
         expect(mid, greaterThan(Duration.zero));
         expect(mgr.isInCooldown(0x5555), isTrue);
 
-        // Past the cooldown window — accessor returns Duration.zero
+        // Past the cooldown window - accessor returns Duration.zero
         // (not a negative value) and isInCooldown flips to false.
         fake.elapse(SipConstants.handshakeCooldownPerPeer);
         expect(mgr.cooldownRemaining(0x5555), Duration.zero);
@@ -961,7 +961,7 @@ void main() {
     test('duplicate HELLO refreshes the pending consent and keeps the request '
         'visible to the user', () {
       // Each retransmit from the peer should keep the consent prompt
-      // alive — without this, the responder silently drops the prompt
+      // alive - without this, the responder silently drops the prompt
       // mid-window even though the peer is still asking.
       final mgr = SipHandshakeManager(
         replayCache: SipReplayCache(),
@@ -983,7 +983,7 @@ void main() {
         reason: 'duplicate HELLO must not clear the pending entry',
       );
 
-      // The pending request remains acceptable — late Accept tap
+      // The pending request remains acceptable - late Accept tap
       // succeeds, returning a HS_CHALLENGE frame.
       final challenge = mgr.acceptHandshake(peerId);
       expect(
@@ -1051,7 +1051,7 @@ void main() {
   // Cap-cache fast path: HS_HELLO surfaces the peer's `requestedFeatures`
   // through the `onPeerFeaturesObserved` hook so SIP discovery can
   // upgrade the `features=sip0` placeholder without waiting on the
-  // next CAP_BEACON / ROLLCALL_RESP. Responder side only — HS_RESPONSE
+  // next CAP_BEACON / ROLLCALL_RESP. Responder side only - HS_RESPONSE
   // / HS_CHALLENGE / HS_ACCEPT do not carry features on the wire, so
   // the initiator side keeps the slow fallback. See
   // `docs/engineering/SIP_MRRP_ARCHITECTURE.md` §"Cap-cache placeholder
@@ -1115,7 +1115,7 @@ void main() {
         equals(fullFeatures),
         reason:
             'fast path must hand the discovery cache the wire bits, not '
-            'a placeholder — anything else collapses back to the ~60–300s '
+            'a placeholder - anything else collapses back to the ~60–300s '
             'CAP_BEACON / ROLLCALL_RESP wait that motivated the fix',
       );
     });
@@ -1130,7 +1130,7 @@ void main() {
       var fireCount = 0;
       mgr.onPeerFeaturesObserved = (_, _) => fireCount++;
 
-      // DM unavailable — silently ignored, no callback.
+      // DM unavailable - silently ignored, no callback.
       mgr.isDmAvailable = false;
       mgr.handleHello(
         0xAAAA,
@@ -1138,7 +1138,7 @@ void main() {
       );
       expect(fireCount, equals(0), reason: 'DM unavailable path');
 
-      // SIP v0.2 target mismatch — silently dropped, no callback.
+      // SIP v0.2 target mismatch - silently dropped, no callback.
       mgr.isDmAvailable = true;
       mgr.handleHello(
         0xAAAA,
@@ -1156,7 +1156,7 @@ void main() {
       mgr.onPeerFeaturesObserved = (_, _) =>
           throw StateError('fake provider crash');
 
-      // Should not throw — and the handshake should still reach
+      // Should not throw - and the handshake should still reach
       // pendingApproval.
       mgr.handleHello(
         0xAAAA,

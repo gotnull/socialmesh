@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Portal View — animated visualization of local mesh → broker → remote mesh
+/// Portal View - animated visualization of local mesh → broker → remote mesh
 /// traffic flow for the Global Layer feature.
 ///
 /// Shows three columns:
-/// - Local Mesh (left) — your connected mesh nodes
-/// - Broker Portal (center) — the MQTT broker relay
-/// - Remote Meshes (right) — other meshes connected to the same broker
+/// - Local Mesh (left) - your connected mesh nodes
+/// - Broker Portal (center) - the MQTT broker relay
+/// - Remote Meshes (right) - other meshes connected to the same broker
 ///
 /// Animated particles flow between the columns to represent message
 /// traffic. Respects Reduce Motion preference with a static fallback.
@@ -241,7 +241,7 @@ class _PortalViewState extends ConsumerState<PortalView>
 }
 
 // =============================================================================
-// Portal Node — icon + label column
+// Portal Node - icon + label column
 // =============================================================================
 
 class _PortalNode extends StatelessWidget {
@@ -327,7 +327,7 @@ class _PortalNode extends StatelessWidget {
 }
 
 // =============================================================================
-// Connection Line — dashed line between nodes with directional animation
+// Connection Line - dashed line between nodes with directional animation
 // =============================================================================
 
 class _ConnectionLine extends StatelessWidget {
@@ -469,7 +469,7 @@ class _AnimatedDashedLinePainter extends CustomPainter {
 }
 
 // =============================================================================
-// Flow Particles — animated dots flowing between columns
+// Flow Particles - animated dots flowing between columns
 // =============================================================================
 
 class _FlowParticles extends StatelessWidget {
@@ -489,9 +489,8 @@ class _FlowParticles extends StatelessWidget {
             progress: flowController.value,
             outboundCount: metrics.totalOutbound.clamp(0, 5),
             inboundCount: metrics.totalInbound.clamp(0, 5),
-            accentColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.6),
+            accentColor: Theme.of(context).colorScheme.primary
+                .withValues(alpha: 0.6),
             inboundColor: const Color(0xFF60A5FA).withValues(alpha: 0.6),
           ),
         );
@@ -610,7 +609,7 @@ class _FlowParticlesPainter extends CustomPainter {
 }
 
 // =============================================================================
-// Static Flow Indicators — for Reduce Motion preference
+// Static Flow Indicators - for Reduce Motion preference
 // =============================================================================
 
 class _StaticFlowIndicators extends StatelessWidget {
@@ -687,7 +686,7 @@ class _StaticArrowPainter extends CustomPainter {
 }
 
 // =============================================================================
-// Portal Background — subtle gradient backdrop
+// Portal Background - subtle gradient backdrop
 // =============================================================================
 
 class _PortalBackground extends StatelessWidget {
@@ -743,7 +742,7 @@ class _PortalBackground extends StatelessWidget {
 }
 
 // =============================================================================
-// Throughput Bar — shows message rates at the bottom
+// Throughput Bar - shows message rates at the bottom
 // =============================================================================
 
 class _ThroughputBar extends StatelessWidget {

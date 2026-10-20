@@ -342,7 +342,7 @@ void main() {
     });
   });
 
-  group('profileToFirestoreMap — null stripping', () {
+  group('profileToFirestoreMap - null stripping', () {
     test('omits null optional fields entirely', () {
       // Regression: previously the map emitted explicit nulls for
       // unset optionals. Combined with SetOptions(merge: true), this
@@ -363,7 +363,7 @@ void main() {
       expect(map.containsKey('linkedNodeIds'), isTrue);
       expect(map.containsKey('createdAt'), isTrue);
       expect(map.containsKey('updatedAt'), isTrue);
-      // Null optionals must NOT appear as keys — that's what caused
+      // Null optionals must NOT appear as keys - that's what caused
       // SetOptions(merge: true) to overwrite cloud fields with null.
       expect(map.containsKey('bio'), isFalse);
       expect(map.containsKey('callsign'), isFalse);
@@ -413,7 +413,7 @@ void main() {
 
       final map = ProfileCloudSyncService.profileToFirestoreMap(profile);
 
-      // Local paths never appear in the Firestore payload — sanitizer
+      // Local paths never appear in the Firestore payload - sanitizer
       // returns null, and the null-stripping omits the key.
       expect(map.containsKey('avatarUrl'), isFalse);
     });
@@ -429,7 +429,7 @@ void main() {
     test('contains Guest and New User', () {
       // Both names are seeded by UserProfile.guest() and
       // UserProfile.fromFirebaseUser() respectively. The public-mirror
-      // uniqueness check must skip them — many accounts share these
+      // uniqueness check must skip them - many accounts share these
       // placeholders and the check would otherwise throw on the very
       // first sync, leaving profiles/{uid} permanently missing and the
       // Account screen showing the "Error" sync badge.
@@ -438,7 +438,7 @@ void main() {
     });
   });
 
-  group('mergePublicMirrorIntoCloud — drift recovery', () {
+  group('mergePublicMirrorIntoCloud - drift recovery', () {
     test('returns identical cloud profile when public mirror is empty', () {
       final cloud = _createProfile(
         id: 'uid',
@@ -460,7 +460,7 @@ void main() {
       () {
         // Mirrors the developer's incident: users/{uid} wiped to nulls,
         // profiles/{uid} still holds the curated values. Note that
-        // displayName is intentionally NOT recovered — see the
+        // displayName is intentionally NOT recovered - see the
         // "displayName is never recovered" test below.
         final cloud = _createProfile(
           id: 'uid',

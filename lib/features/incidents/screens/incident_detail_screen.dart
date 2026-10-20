@@ -21,7 +21,7 @@ import '../models/incident.dart';
 import '../providers/incident_providers.dart';
 import '../widgets/transition_timeline.dart';
 
-/// Incident detail screen — shows header info and full transition timeline.
+/// Incident detail screen - shows header info and full transition timeline.
 ///
 /// Action buttons are RBAC-gated and only shown for valid transitions
 /// from the current state. Terminal states show no actions.

@@ -59,7 +59,7 @@ class MeshCoreReconnectGateOutcome {
 /// rules can be exercised in unit tests without a live `ProviderContainer`,
 /// `SettingsService`, or `ConnectionCoordinator`.
 ///
-/// All inputs are plain values — the live provider reads them inside
+/// All inputs are plain values - the live provider reads them inside
 /// [meshCoreLifecycleProvider] and forwards them here. Order of checks
 /// mirrors the live path so test cases pin which reason fires for a
 /// given input combination.

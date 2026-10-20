@@ -303,7 +303,7 @@ void main() {
 
     group('Mapbox tile provider', () {
       // dotenv is not loaded in unit tests, so AppFeatureFlags.isMapboxEnabled
-      // returns false by default — Mapbox is inactive. These tests pin that
+      // returns false by default - Mapbox is inactive. These tests pin that
       // contract so the rest of the app cannot accidentally start hitting the
       // Mapbox endpoint just because the feature was wired in.
       test('inactive by default in tests (no dotenv loaded)', () {
@@ -333,7 +333,7 @@ void main() {
     });
 
     group('MapTiler terrain provider', () {
-      // dotenv is not loaded in unit tests, so AppUrls.maptilerToken is empty —
+      // dotenv is not loaded in unit tests, so AppUrls.maptilerToken is empty -
       // MapTiler is inactive and terrain falls back to OpenTopoMap. These tests
       // pin that contract and the resolver/attribution wiring.
       test('inactive by default in tests (no dotenv loaded)', () {

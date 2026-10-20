@@ -14,7 +14,7 @@
 //   - The empty-history placeholder renders when no applied_op rows
 //     exist for the inspected coordinates.
 //
-// We don't reach for the real sqlite-FFI here — the repository
+// We don't reach for the real sqlite-FFI here - the repository
 // behaviour is already exhaustively covered by
 // canvas_repository_test.dart. This file pins the SHEET's contract:
 // "given the repo returns X, render Y." A FakeCanvasRepository (real
@@ -163,7 +163,7 @@ Future<void> _pumpInspector(
 }
 
 void main() {
-  group('CanvasTileInspectorSheet — S7.D acceptance', () {
+  group('CanvasTileInspectorSheet - S7.D acceptance', () {
     testWidgets('empty cell renders the "Empty cell" placeholder and omits the '
         'last-painter / last-painted rows', (tester) async {
       final repo = _FakeCanvasRepository(cells: const [], history: const {});
@@ -221,7 +221,7 @@ void main() {
         expect(find.text('RECENT HISTORY'), findsOneWidget);
         expect(find.text('No history yet for this cell.'), findsNothing);
         // Local-canvas convention: every painter label resolves to
-        // "You (local)" — the current-cell row + 2 history rows = 3+
+        // "You (local)" - the current-cell row + 2 history rows = 3+
         // hits.
         expect(find.text('You (local)'), findsWidgets);
       },

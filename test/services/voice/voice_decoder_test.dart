@@ -24,7 +24,7 @@ Uint8List _buildHeader({
 
 void main() {
   group(
-    'VoiceDecoder.decode — header validation (no native library required)',
+    'VoiceDecoder.decode - header validation (no native library required)',
     () {
       test('returns null for empty input', () async {
         final result = await VoiceDecoder.decode(Uint8List(0));
@@ -54,7 +54,7 @@ void main() {
         () async {
           // Header says 1 frame but no frame bytes follow.
           final payload = _buildHeader(frames: 1);
-          // payload is exactly 4 bytes — no frame data appended
+          // payload is exactly 4 bytes - no frame data appended
           final result = await VoiceDecoder.decode(payload);
           expect(result, isNull);
         },
@@ -65,19 +65,16 @@ void main() {
         expect(result, isNull);
       });
 
-      test(
-        'header-only payload with correct magic/mode but zero frame bytes returns null',
-        () async {
-          // 4-byte header: [0xC2, 0x04, 1, 0] but no frame bytes follow.
-          final payload = _buildHeader(
-            magic: VoiceConstants.magicByte,
-            mode: VoiceConstants.wireMode1200,
-            frames: 1,
-          );
-          final result = await VoiceDecoder.decode(payload);
-          expect(result, isNull);
-        },
-      );
+      test('header-only payload with correct magic/mode but zero frame bytes returns null', () async {
+        // 4-byte header: [0xC2, 0x04, 1, 0] but no frame bytes follow.
+        final payload = _buildHeader(
+          magic: VoiceConstants.magicByte,
+          mode: VoiceConstants.wireMode1200,
+          frames: 1,
+        );
+        final result = await VoiceDecoder.decode(payload);
+        expect(result, isNull);
+      });
 
       test('accepts all known wire mode bytes in header', () async {
         for (final q in VoiceQuality.values) {
@@ -94,20 +91,23 @@ void main() {
     },
   );
 
-  group('VoiceDecoder — frame count parsing', () {
-    test('little-endian 16-bit frame count parses above 255 correctly', () async {
-      // Construct a payload with frame count = 256 (0x00 0x01 in LE) but no body.
-      const frames = 256;
-      final payload = Uint8List(VoiceConstants.headerSize);
-      payload[0] = VoiceConstants.magicByte;
-      payload[1] = VoiceConstants.wireMode1200;
-      payload[2] = frames & 0xFF; // low byte = 0
-      payload[3] = (frames >> 8) & 0xFF; // high byte = 1
+  group('VoiceDecoder - frame count parsing', () {
+    test(
+      'little-endian 16-bit frame count parses above 255 correctly',
+      () async {
+        // Construct a payload with frame count = 256 (0x00 0x01 in LE) but no body.
+        const frames = 256;
+        final payload = Uint8List(VoiceConstants.headerSize);
+        payload[0] = VoiceConstants.magicByte;
+        payload[1] = VoiceConstants.wireMode1200;
+        payload[2] = frames & 0xFF; // low byte = 0
+        payload[3] = (frames >> 8) & 0xFF; // high byte = 1
 
-      // With no frame body the decoder returns null — but it must at least
-      // not throw (frame-count overflow / index errors).
-      final result = await VoiceDecoder.decode(payload);
-      expect(result, isNull); // expected: no data to decode
-    });
+        // With no frame body the decoder returns null - but it must at least
+        // not throw (frame-count overflow / index errors).
+        final result = await VoiceDecoder.decode(payload);
+        expect(result, isNull); // expected: no data to decode
+      },
+    );
   });
 }

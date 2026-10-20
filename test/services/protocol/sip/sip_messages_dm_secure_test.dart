@@ -78,7 +78,7 @@ void main() {
     });
 
     test('rejects body that sanitizes to empty (control chars only)', () {
-      // timestamp + a single 0x00 byte — UTF-8 decodes to "\x00" which
+      // timestamp + a single 0x00 byte - UTF-8 decodes to "\x00" which
       // sanitizeExternalText strips to "". decodeDm must reject so that
       // no blank-bodied SipDmMessage propagates downstream.
       final controlOnly = Uint8List.fromList(<int>[0, 0, 0, 1, 0x00]);

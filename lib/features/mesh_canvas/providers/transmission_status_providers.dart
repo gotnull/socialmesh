@@ -44,7 +44,7 @@ final meshCanvasPaintCadenceProvider = Provider<CanvasPaintCadence>((ref) {
 
 /// Fallback heartbeat. The cadence singleton intentionally does NOT
 /// schedule its own cooldown-expiry Timer (it would trip
-/// flutter_test's "Timer still pending" invariant — see
+/// flutter_test's "Timer still pending" invariant - see
 /// [CanvasPaintCadence.recordTap]), so this heartbeat is the path
 /// that lets `cooling` decay to `idle` when no other event fires.
 /// 5 s is 2x the cadence cooldown window (2.5 s), so the HUD stays
@@ -91,11 +91,10 @@ final meshCanvasTransmissionStatusProvider =
       final cadenceSub = cadence.changes
           .where((id) => id == canvasLocalId)
           .listen(wake);
-      final fallbackSub = Stream<void>.periodic(_kStatusFallbackPeriod).listen((
-        _,
-      ) {
-        if (!trigger.isClosed) trigger.add(null);
-      });
+      final fallbackSub = Stream<void>.periodic(_kStatusFallbackPeriod)
+          .listen((_) {
+            if (!trigger.isClosed) trigger.add(null);
+          });
       ref.onDispose(() {
         repoSub.cancel();
         cadenceSub.cancel();

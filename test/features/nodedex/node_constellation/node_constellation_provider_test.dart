@@ -85,7 +85,7 @@ NodeDexConstellation _build({
 }
 
 void main() {
-  group('buildNodeDexConstellation — sparse data', () {
+  group('buildNodeDexConstellation - sparse data', () {
     test('node with no entry and no live mesh node returns missingEntry', () {
       final c = _build(centerNodeNum: 0x9999);
       expect(c.isEmpty, isTrue);
@@ -103,7 +103,7 @@ void main() {
         expect(c.centerNode, isNotNull);
         expect(c.centerNode!.type, NodeDexGraphNodeType.identity);
         // No messages/encounters: only identity card + the always-on
-        // action cards (message, favourite, inspect — no map without
+        // action cards (message, favourite, inspect - no map without
         // coordinates).
         final actionTypes = c.nodes
             .where((n) => n.type == NodeDexGraphNodeType.action)

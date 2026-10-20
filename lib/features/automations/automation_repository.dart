@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/logging.dart';
+
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -13,7 +15,7 @@ import 'services/automation_sqlite_store.dart';
 /// Sync state key used to mark that automations were imported from the
 /// stale profile blob (`automationsJson`). The sync service checks this
 /// flag to reset the pull watermark and prevent resurrecting deleted
-/// automations. **Transient** — cleared by the sync service after the
+/// automations. **Transient** - cleared by the sync service after the
 /// reconciliation pull completes.
 const String blobImportedSyncKey = 'automations_blob_imported';
 
@@ -23,7 +25,7 @@ const String blobImportedSyncKey = 'automations_blob_imported';
 /// is transient (the sync service clears it after the reconciliation
 /// pull). Without a permanent flag, a user who imported the blob, synced,
 /// then deleted everything would resurrect their deleted automations on
-/// the next cold start — `_store.count` returns 0 for tombstones, and the
+/// the next cold start - `_store.count` returns 0 for tombstones, and the
 /// transient flag has already been cleared, so the count-based gate would
 /// happily re-import the stale blob.
 const String blobConsumedSyncKey = 'automations_blob_consumed';
@@ -133,7 +135,7 @@ class AutomationRepository extends ChangeNotifier {
   /// One-time safety net for users who synced automations via the old
   /// profile-blob approach. Gated by the [blobImportedSyncKey] flag rather
   /// than by `_store.count`, because tombstoned (deleted) rows return 0
-  /// from `count` — if we only checked count, a user who imported the
+  /// from `count` - if we only checked count, a user who imported the
   /// blob, then deleted everything, would resurrect the deleted entries
   /// on the next cold start. Per-document sync is authoritative the moment
   /// the blob has been imported once, deletions included.
@@ -143,7 +145,7 @@ class AutomationRepository extends ChangeNotifier {
       return;
     }
 
-    // Permanent gate — once consumed, never re-import. This is the load-
+    // Permanent gate - once consumed, never re-import. This is the load-
     // bearing check: without it, a user who imports the blob, syncs, then
     // deletes their automations would resurrect the deletions on every
     // cold start (tombstones return 0 from `count`, and the transient
@@ -164,7 +166,7 @@ class AutomationRepository extends ChangeNotifier {
     // If the user has ever stored an automation on this device (live OR
     // tombstoned), do NOT import. Per-document sync is authoritative.
     // The previous gate checked only `_store.count`, which excludes
-    // tombstones — that's exactly how the deletion-resurrection blip
+    // tombstones - that's exactly how the deletion-resurrection blip
     // slipped through.
     if (await _store!.hasAnyRows()) {
       AppLogging.automations(
@@ -567,8 +569,7 @@ class AutomationRepository extends ChangeNotifier {
       case 'low_battery_alert':
         return Automation(
           name: 'Low Battery Alert', // lint-allow: hardcoded-string
-          description:
-              'Notify when a node battery drops below 20%', // lint-allow: hardcoded-string
+          description: 'Notify when a node battery drops below 20%', // lint-allow: hardcoded-string
           trigger: const AutomationTrigger(
             type: TriggerType.batteryLow,
             config: {'batteryThreshold': 20},
@@ -604,8 +605,7 @@ class AutomationRepository extends ChangeNotifier {
       case 'geofence_exit':
         return Automation(
           name: 'Geofence Exit Alert', // lint-allow: hardcoded-string
-          description:
-              'Alert when a node leaves a designated area', // lint-allow: hardcoded-string
+          description: 'Alert when a node leaves a designated area', // lint-allow: hardcoded-string
           trigger: const AutomationTrigger(
             type: TriggerType.geofenceExit,
             config: {'geofenceRadius': 500},
@@ -624,8 +624,7 @@ class AutomationRepository extends ChangeNotifier {
       case 'sos_response':
         return Automation(
           name: 'SOS Auto-Response', // lint-allow: hardcoded-string
-          description:
-              'Auto-reply when receiving SOS message', // lint-allow: hardcoded-string
+          description: 'Auto-reply when receiving SOS message', // lint-allow: hardcoded-string
           trigger: const AutomationTrigger(
             type: TriggerType.messageContains,
             config: {'keyword': 'SOS'},
@@ -645,8 +644,7 @@ class AutomationRepository extends ChangeNotifier {
       case 'dead_mans_switch':
         return Automation(
           name: 'Dead Man\'s Switch', // lint-allow: hardcoded-string
-          description:
-              'Alert if no activity from node for 30 minutes', // lint-allow: hardcoded-string
+          description: 'Alert if no activity from node for 30 minutes', // lint-allow: hardcoded-string
           trigger: const AutomationTrigger(
             type: TriggerType.nodeSilent,
             config: {'silentMinutes': 30},
@@ -656,8 +654,7 @@ class AutomationRepository extends ChangeNotifier {
               type: ActionType.pushNotification,
               config: {
                 'notificationTitle': 'Node Silent',
-                'notificationBody':
-                    '{{node.name}} hasn\'t been heard from in {{silent.duration}}.',
+                'notificationBody': '{{node.name}} hasn\'t been heard from in {{silent.duration}}.',
               },
             ),
           ],
@@ -666,8 +663,7 @@ class AutomationRepository extends ChangeNotifier {
       case 'far_message_alert':
         return Automation(
           name: 'Hop Distance Alert', // lint-allow: hardcoded-string
-          description:
-              'Show how many hops each incoming message travelled', // lint-allow: hardcoded-string
+          description: 'Show how many hops each incoming message travelled', // lint-allow: hardcoded-string
           trigger: const AutomationTrigger(type: TriggerType.messageReceived),
           actions: const [
             AutomationAction(
@@ -727,8 +723,7 @@ class AutomationRepository extends ChangeNotifier {
       (
         id: 'low_battery_alert',
         name: 'Low Battery Alert', // lint-allow: hardcoded-string
-        description:
-            'Notify when battery drops below 20%', // lint-allow: hardcoded-string
+        description: 'Notify when battery drops below 20%', // lint-allow: hardcoded-string
         icon: Icons.battery_alert,
       ),
       (
@@ -741,8 +736,7 @@ class AutomationRepository extends ChangeNotifier {
       (
         id: 'geofence_exit',
         name: 'Geofence Exit Alert', // lint-allow: hardcoded-string
-        description:
-            'Alert when leaving a designated area', // lint-allow: hardcoded-string
+        description: 'Alert when leaving a designated area', // lint-allow: hardcoded-string
         icon: Icons.location_off,
       ),
       (
@@ -762,8 +756,7 @@ class AutomationRepository extends ChangeNotifier {
       (
         id: 'far_message_alert',
         name: 'Hop Distance Alert', // lint-allow: hardcoded-string
-        description:
-            'Show how many hops a message travelled', // lint-allow: hardcoded-string
+        description: 'Show how many hops a message travelled', // lint-allow: hardcoded-string
         icon: Icons.route,
       ),
     ];

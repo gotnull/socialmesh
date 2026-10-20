@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Mesh service engine — bridges user-created instances to MRRP runtime.
+/// Mesh service engine - bridges user-created instances to MRRP runtime.
 ///
 /// Responsible for:
 /// - Loading active instances from the store on startup
@@ -284,7 +284,7 @@ class MeshServicesHandler implements MrrpServiceHandler {
       if (payload[i] == 0) break;
       chars.add(payload[i]);
     }
-    // lint-allow: no-raw-from-char-codes — payload bytes (0-255), id key for matching not rendered text
+    // lint-allow: no-raw-from-char-codes - payload bytes (0-255), id key for matching not rendered text
     return String.fromCharCodes(chars);
   }
 
@@ -308,12 +308,11 @@ class MeshServicesHandler implements MrrpServiceHandler {
 /// inbound MRRP `interact` requests targeting a game instance are routed
 /// into the dedicated router. Keeps the games feature out of the engine's
 /// hard dependencies.
-typedef MeshGameInteractionHandler =
-    Future<Uint8List?> Function(
-      MeshServiceInstance instance,
-      int senderNodeId,
-      Uint8List interactionPayload,
-    );
+typedef MeshGameInteractionHandler = Future<Uint8List?> Function(
+  MeshServiceInstance instance,
+  int senderNodeId,
+  Uint8List interactionPayload,
+);
 
 /// Engine managing instance lifecycle and interaction routing.
 class MeshServiceEngine {

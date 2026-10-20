@@ -5,19 +5,19 @@
 //
 // Canonical inner-settings UI for adding or editing a channel slot
 // on a connected MeshCore companion radio. Wraps a single firmware
-// command (`CMD_SET_CHANNEL` = 0x20) — there is no separate edit-vs-add
+// command (`CMD_SET_CHANNEL` = 0x20) - there is no separate edit-vs-add
 // opcode at the pinned SHA, so this sheet is reused for both flows
 // via the [mode] flag.
 //
 // PSK input modes:
 //   - paste hex (32 hex chars = 16 raw bytes)                           [D31]
-//   - paste full channel code (`name:pskHex`) — the share/import        [D31]
+//   - paste full channel code (`name:pskHex`) - the share/import        [D31]
 //     format already used by D29's QR share/import. The "Paste from
 //     channel code" button surfaces this without forcing the user to
 //     split it manually.
 //   - dice / random key generator (16 cryptographically-random bytes)  [D34d]
 //   - derive from a passphrase (HMAC-SHA256 under SocialMesh-internal  [D34d]
-//     label — see `lib/services/meshcore/channel_psk_kdf.dart`)
+//     label - see `lib/services/meshcore/channel_psk_kdf.dart`)
 //
 // Out of scope (still deferred):
 //   - QR scan-and-fill (existing scanner already lands at the
@@ -555,7 +555,7 @@ class _MeshCoreChannelEditSheetState
 
 /// D34d passphrase-derive sheet. Returns the derived 16-byte PSK on
 /// confirm or `null` on cancel. The passphrase value never leaves the
-/// `_passphraseController` — the parent sheet receives bytes only.
+/// `_passphraseController` - the parent sheet receives bytes only.
 class _PassphraseDeriveSheet extends ConsumerStatefulWidget {
   final ScrollController scrollController;
 

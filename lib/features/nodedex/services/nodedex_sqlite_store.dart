@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex SQLite Store — persistent local storage backed by SQLite.
+// NodeDex SQLite Store - persistent local storage backed by SQLite.
 //
 // Provides structured SQLite tables for query performance, relational
 // integrity, and Cloud Sync support via an outbox pattern.
@@ -254,7 +254,7 @@ class NodeDexSqliteStore {
   ///   is returned untouched.
   /// - [IdentityResolutionOutcome.backfilled]: the row had no recorded
   ///   pubkey and is now stamped with the observed one. Stats are
-  ///   preserved. No DB write here — the caller's normal save
+  ///   preserved. No DB write here - the caller's normal save
   ///   pipeline will pick up the change.
   /// - [IdentityResolutionOutcome.rotated]: the observed pubkey differs
   ///   from the recorded one. The active row's pubkey column is updated
@@ -1105,7 +1105,7 @@ class NodeDexSqliteStore {
   Future<int> applySyncPull(List<NodeDexEntry> remoteEntries) async {
     if (remoteEntries.isEmpty) return 0;
 
-    // Disable outbox enqueuing during pull — pulled data must NOT be
+    // Disable outbox enqueuing during pull - pulled data must NOT be
     // re-enqueued, otherwise it creates an infinite push/pull loop:
     //   pull → enqueue → drain (new timestamp) → pull again → ...
     // This mirrors the same guard used by bulkInsert().
@@ -1196,7 +1196,7 @@ class NodeDexSqliteStore {
   /// Load presence transitions for a specific node, newest first.
   ///
   /// When [limit] is non-null it caps the result set size.
-  /// [beforeMs] enables keyset pagination — pass the oldest timestamp
+  /// [beforeMs] enables keyset pagination - pass the oldest timestamp
   /// from the previous page to fetch the next page.
   Future<List<Map<String, dynamic>>> loadPresenceTransitions({
     required int nodeNum,

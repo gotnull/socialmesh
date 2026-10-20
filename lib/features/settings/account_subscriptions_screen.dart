@@ -523,7 +523,7 @@ class _AccountSubscriptionsScreenState
           borderColor = AccentColors.green.withValues(alpha: 0.3);
           badgeText = context.l10n.accountSubBadgeActive;
         } else if (hasAccess && !isSignedIn) {
-          // Subscription is active (billing) but user signed out — sync
+          // Subscription is active (billing) but user signed out - sync
           // cannot function without a Firebase user.
           subtitle = context.l10n.accountSubSignInToSyncShort;
           subtitleColor = AccentColors.orange;
@@ -1935,7 +1935,7 @@ class _LoadingCard extends StatelessWidget {
   }
 }
 
-/// Button showing 2FA status inline — active (green shield) or not enabled.
+/// Button showing 2FA status inline - active (green shield) or not enabled.
 class _MFAStatusButton extends ConsumerWidget {
   final VoidCallback onTap;
 
@@ -2169,7 +2169,7 @@ class _SyncStatusBadge extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isOnline = ref.watch(isOnlineProvider);
 
-    // When idle and online, don't show a badge — nothing interesting to report
+    // When idle and online, don't show a badge - nothing interesting to report
     if (status == SyncStatus.idle && isOnline) {
       return const SizedBox.shrink();
     }
@@ -2826,7 +2826,7 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
           ),
           SizedBox(height: AppTheme.spacing24),
 
-          // Features — list actual premium sync types
+          // Features - list actual premium sync types
           _FeatureRow(
             icon: Icons.hexagon_outlined,
             text: context.l10n.accountSubFeatureNodedex,

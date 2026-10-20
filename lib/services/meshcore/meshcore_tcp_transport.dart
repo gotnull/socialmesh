@@ -15,11 +15,11 @@ import 'meshcore_usb_framing.dart';
 /// The MeshCore reference firmware uses the same `<` / `>` direction-marker
 /// + 2-byte little-endian length wire format on TCP as it does on USB-CDC.
 /// This transport reuses [MeshCoreUsbEncoder] / [MeshCoreUsbDecoder]
-/// verbatim — the only thing that differs from USB is the byte source.
+/// verbatim - the only thing that differs from USB is the byte source.
 ///
 /// [dataStream] emits **decoded payloads** (post-deframing). Each emitted
 /// chunk is one complete MeshCore message ready for [MeshCoreDecoder] in
-/// the session — exactly the same shape as [MeshCoreBleTransport]
+/// the session - exactly the same shape as [MeshCoreBleTransport]
 /// (where each BLE notification is a complete payload).
 ///
 /// Currently used as a dev/simulator path: the simulator build can connect

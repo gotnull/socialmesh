@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Remote Sighting model — privacy-first minimal metadata for nodes
+/// Remote Sighting model - privacy-first minimal metadata for nodes
 /// discovered via the Global Layer (MQTT) broker.
 ///
 /// A [RemoteSighting] represents a node that was observed by a remote
@@ -50,8 +50,7 @@ enum NodeDiscoverySource {
       'Discovered via your local mesh radio.', // lint-allow: hardcoded-string
     remote =>
       'Discovered via the Global Layer broker.', // lint-allow: hardcoded-string
-    mixed =>
-      'Seen both locally and via the Global Layer.', // lint-allow: hardcoded-string
+    mixed => 'Seen both locally and via the Global Layer.', // lint-allow: hardcoded-string
   };
 
   /// Serialization key for JSON storage.

@@ -206,40 +206,29 @@ void main() {
         }
       });
 
-      test(
-        'same nodeNum with different encounter counts produces same template selection',
-        () {
-          // The template selection is based on the nodeNum hash, not encounter data.
-          // Changing encounter count may change interpolated values but the template
-          // structure should be driven by the node identity.
-          final entry1 = _makeEntry(
-            nodeNum: 999,
-            encounterCount: 5,
-            ageDays: 7,
-          );
-          final entry2 = _makeEntry(
-            nodeNum: 999,
-            encounterCount: 50,
-            ageDays: 7,
-          );
+      test('same nodeNum with different encounter counts produces same template selection', () {
+        // The template selection is based on the nodeNum hash, not encounter data.
+        // Changing encounter count may change interpolated values but the template
+        // structure should be driven by the node identity.
+        final entry1 = _makeEntry(nodeNum: 999, encounterCount: 5, ageDays: 7);
+        final entry2 = _makeEntry(nodeNum: 999, encounterCount: 50, ageDays: 7);
 
-          final note1 = FieldNoteGenerator.generate(
-            entry: entry1,
-            trait: NodeTrait.beacon,
-            l10n: _l10n,
-          );
-          final note2 = FieldNoteGenerator.generate(
-            entry: entry2,
-            trait: NodeTrait.beacon,
-            l10n: _l10n,
-          );
+        final note1 = FieldNoteGenerator.generate(
+          entry: entry1,
+          trait: NodeTrait.beacon,
+          l10n: _l10n,
+        );
+        final note2 = FieldNoteGenerator.generate(
+          entry: entry2,
+          trait: NodeTrait.beacon,
+          l10n: _l10n,
+        );
 
-          // The template structure should be the same; only interpolated values differ.
-          // Both should be non-empty and well-formed.
-          expect(note1.isNotEmpty, isTrue);
-          expect(note2.isNotEmpty, isTrue);
-        },
-      );
+        // The template structure should be the same; only interpolated values differ.
+        // Both should be non-empty and well-formed.
+        expect(note1.isNotEmpty, isTrue);
+        expect(note2.isNotEmpty, isTrue);
+      });
     });
 
     // -------------------------------------------------------------------------
@@ -683,60 +672,57 @@ void main() {
     });
 
     // -------------------------------------------------------------------------
-    // Stability — small input changes cause small output changes
+    // Stability - small input changes cause small output changes
     // -------------------------------------------------------------------------
 
     group('stability', () {
-      test(
-        'same node with slightly different encounter count produces similar note',
-        () {
-          // Template selection is based on nodeNum hash, so the same node
-          // with similar data should produce the same template, just with
-          // slightly different interpolated values.
-          final entry1 = _makeEntry(
-            nodeNum: 500,
-            encounterCount: 20,
-            ageDays: 14,
-            regionCount: 3,
-          );
-          final entry2 = _makeEntry(
-            nodeNum: 500,
-            encounterCount: 21,
-            ageDays: 14,
-            regionCount: 3,
-          );
+      test('same node with slightly different encounter count produces similar note', () {
+        // Template selection is based on nodeNum hash, so the same node
+        // with similar data should produce the same template, just with
+        // slightly different interpolated values.
+        final entry1 = _makeEntry(
+          nodeNum: 500,
+          encounterCount: 20,
+          ageDays: 14,
+          regionCount: 3,
+        );
+        final entry2 = _makeEntry(
+          nodeNum: 500,
+          encounterCount: 21,
+          ageDays: 14,
+          regionCount: 3,
+        );
 
-          final note1 = FieldNoteGenerator.generate(
-            entry: entry1,
-            trait: NodeTrait.wanderer,
-            l10n: _l10n,
-          );
-          final note2 = FieldNoteGenerator.generate(
-            entry: entry2,
-            trait: NodeTrait.wanderer,
-            l10n: _l10n,
-          );
+        final note1 = FieldNoteGenerator.generate(
+          entry: entry1,
+          trait: NodeTrait.wanderer,
+          l10n: _l10n,
+        );
+        final note2 = FieldNoteGenerator.generate(
+          entry: entry2,
+          trait: NodeTrait.wanderer,
+          l10n: _l10n,
+        );
 
-          // Both should be non-empty and well-formed.
-          expect(note1.isNotEmpty, isTrue);
-          expect(note2.isNotEmpty, isTrue);
+        // Both should be non-empty and well-formed.
+        expect(note1.isNotEmpty, isTrue);
+        expect(note2.isNotEmpty, isTrue);
 
-          // The notes should be very similar (same template, different numbers).
-          // Check if the template structure is preserved (first 10 chars should match
-          // or the notes should share common words).
-          final words1 = note1.split(' ').toSet();
-          final words2 = note2.split(' ').toSet();
-          final commonWords = words1.intersection(words2);
+        // The notes should be very similar (same template, different numbers).
+        // Check if the template structure is preserved (first 10 chars should match
+        // or the notes should share common words).
+        final words1 = note1.split(' ').toSet();
+        final words2 = note2.split(' ').toSet();
+        final commonWords = words1.intersection(words2);
 
-          expect(
-            commonWords.length,
-            greaterThan(words1.length ~/ 3),
-            reason:
-                'Notes for similar entries should share most words.\n'
-                'Note1: "$note1"\nNote2: "$note2"',
-          );
-        },
-      );
+        expect(
+          commonWords.length,
+          greaterThan(words1.length ~/ 3),
+          reason:
+              'Notes for similar entries should share most words.\n'
+              'Note1: "$note1"\nNote2: "$note2"',
+        );
+      });
 
       test('changing trait changes the note but does not crash', () {
         final entry = _makeEntry(
@@ -845,7 +831,7 @@ void main() {
         }
 
         // If no wanderer template happened to use {distance} for these
-        // particular node hashes, that is acceptable — the templates are
+        // particular node hashes, that is acceptable - the templates are
         // deterministic based on the hash.
         // This test verifies formatting IF the template is selected.
         // foundKmNote may be false if no template used {distance}.
@@ -876,7 +862,7 @@ void main() {
           }
         }
 
-        // Same caveat as above — formatting correctness is verified if
+        // Same caveat as above - formatting correctness is verified if
         // a template that uses {distance} is selected.
         // foundMeterNote may be false if no template used {distance}.
         expect(foundMeterNote || !foundMeterNote, isTrue);

@@ -12,7 +12,7 @@ sealed class ReassemblyResult {
   const ReassemblyResult();
 }
 
-/// Reassembly succeeded — payload verified and complete.
+/// Reassembly succeeded - payload verified and complete.
 class ReassemblySuccess extends ReassemblyResult {
   /// The reassembled payload bytes.
   final Uint8List payload;
@@ -20,7 +20,7 @@ class ReassemblySuccess extends ReassemblyResult {
   const ReassemblySuccess(this.payload);
 }
 
-/// Reassembly is still in progress — not all chunks received yet.
+/// Reassembly is still in progress - not all chunks received yet.
 class ReassemblyIncomplete extends ReassemblyResult {
   /// Number of chunks received so far.
   final int receivedCount;
@@ -38,7 +38,7 @@ class ReassemblyIncomplete extends ReassemblyResult {
   });
 }
 
-/// Reassembly failed — integrity check did not pass.
+/// Reassembly failed - integrity check did not pass.
 class ReassemblyFailed extends ReassemblyResult {
   /// Human-readable reason for failure.
   final String reason;

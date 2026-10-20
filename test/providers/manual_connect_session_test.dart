@@ -81,7 +81,7 @@ void main() {
         container.read(autoReconnectStateProvider),
         AutoReconnectState.idle,
         reason:
-            'Failed manual connect must release the latch — leaving '
+            'Failed manual connect must release the latch - leaving '
             'it set blocks _initializeProtocolAfterAutoReconnect, '
             'startBackgroundConnection, and APP RESUMED recovery.',
       );
@@ -131,7 +131,7 @@ void main() {
       );
     });
 
-    test('T4: stale session cannot clear a newer manualConnecting session — '
+    test('T4: stale session cannot clear a newer manualConnecting session - '
         '_handleDisconnect-style stale clear is rejected', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -145,17 +145,17 @@ void main() {
           .setState(AutoReconnectState.manualConnecting);
       expect(s1, 1);
 
-      // User taps another device — session 2 starts. Latch is
+      // User taps another device - session 2 starts. Latch is
       // re-asserted (still manualConnecting) but with a NEW token.
       final s2 = container
           .read(manualConnectSessionProvider.notifier)
           .beginSession();
-      // (Production sets it again here; we leave it — it's
+      // (Production sets it again here; we leave it - it's
       // idempotent for the test's purpose.)
       expect(s2, 2);
 
       // Now session 1's stale catch path fires (an orphaned future
-      // resolved late). It must NOT clear the latch — session 2
+      // resolved late). It must NOT clear the latch - session 2
       // still owns it.
       clearIfCurrent(container, s1);
 

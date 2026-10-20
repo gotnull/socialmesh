@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34a — MeshCore chat-traffic diagnostics card.
+// D34a - MeshCore chat-traffic diagnostics card.
 //
 // Surfaces the in-memory `ChatTrafficSnapshot` from the live MeshCore
 // session's rate limiter. Used inside the MeshCore Tools screen as a
@@ -90,7 +90,7 @@ class MeshCoreChatTrafficCard extends ConsumerWidget {
     );
 
     // Reply / reaction byte totals are not tracked separately at the
-    // window level — D34a tracks only `currentWindowSentBytes` (sum
+    // window level - D34a tracks only `currentWindowSentBytes` (sum
     // across all kinds) plus per-kind send counts. We reconstruct
     // per-kind bytes by attributing the remainder of sent bytes to
     // replies (reactions stay zero by spec).

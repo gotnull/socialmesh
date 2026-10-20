@@ -146,7 +146,7 @@ class WorldMeshFilters {
 
   /// Apply filters to a list of nodes in a single pass.
   ///
-  /// Combined predicate evaluation — one allocation, one walk. Replaces a
+  /// Combined predicate evaluation - one allocation, one walk. Replaces a
   /// previous chain of nine `.where(...).toList()` calls that materialised an
   /// intermediate list per filter and dominated frame time on 19k+ nodes.
   List<WorldMeshNode> apply(List<WorldMeshNode> nodes) {

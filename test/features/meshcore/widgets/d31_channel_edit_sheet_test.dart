@@ -3,8 +3,8 @@
 //
 // D31 Part C: widget tests for `MeshCoreChannelEditSheet`.
 //
-// Pins the canonical UX shape — slot picker, name field, PSK paste
-// field, channel-code import affordance — and the validation
+// Pins the canonical UX shape - slot picker, name field, PSK paste
+// field, channel-code import affordance - and the validation
 // behaviour. Wire-level concerns (`CMD_SET_CHANNEL` byte layout,
 // post-ACK refresh) are pinned by the session and provider tests
 // elsewhere; these tests only exercise the sheet surface.

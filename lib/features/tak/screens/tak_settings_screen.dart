@@ -463,7 +463,7 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
 }
 
 // =============================================================================
-// Private widgets — mirroring the pattern from settings_screen.dart
+// Private widgets - mirroring the pattern from settings_screen.dart
 // =============================================================================
 
 /// Compact interval selector that shows the current value and opens a menu.

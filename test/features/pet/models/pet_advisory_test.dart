@@ -47,10 +47,10 @@ PetState _fixture({
 const _config = PetConfig();
 
 void main() {
-  group('computePrimaryAdvisory — priority ladder', () {
+  group('computePrimaryAdvisory - priority ladder', () {
     test('dormant stage overrides everything, including sickness', () {
       // Even a sick, call-firing pet in dormant should surface the
-      // dormant / re-sigil advisory — dormancy is terminal.
+      // dormant / re-sigil advisory - dormancy is terminal.
       final s = _fixture(
         stage: PetStage.dormant,
         isSick: true,
@@ -94,7 +94,7 @@ void main() {
     });
 
     test('active hungry call → Charge (not Sync)', () {
-      // Sync is deliberately never the primary hint — the underlying
+      // Sync is deliberately never the primary hint - the underlying
       // need has its own dedicated action.
       final s = _fixture(
         activeCall: AttentionCall(
@@ -218,7 +218,7 @@ void main() {
     });
   });
 
-  group('priority — sickness call outranks passive low stats', () {
+  group('priority - sickness call outranks passive low stats', () {
     // Passive stats can be low AND a call can be firing at the same
     // time. The active call wins because its deadline is running.
     test('sick call beats low-energy passive nudge', () {

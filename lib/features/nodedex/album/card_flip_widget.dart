@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 
-// Card Flip Widget — 3D Y-axis flip animation for collectible cards.
+// Card Flip Widget - 3D Y-axis flip animation for collectible cards.
 //
 // Provides a smooth 3D rotation around the vertical axis to reveal
 // a card's back side. The front shows the full SigilCard; the back
@@ -23,7 +23,7 @@
 //
 // Performance:
 //   - Single AnimationController per card
-//   - No rebuilds during animation — uses AnimatedBuilder
+//   - No rebuilds during animation - uses AnimatedBuilder
 //   - Transform applied via Matrix4, not multiple nested transforms
 
 import 'dart:math' as math;
@@ -269,7 +269,7 @@ class _FlipFace extends StatelessWidget {
 }
 
 // =============================================================================
-// Card Back — stats summary
+// Card Back - stats summary
 // =============================================================================
 
 /// The back face of a collectible card showing stats and patina breakdown.
@@ -553,7 +553,7 @@ class _StatsSection extends ConsumerWidget {
     final units = ref.watch(measurementUnitsProvider);
 
     // Prefer the live MeshNode.lastHeard when the device still knows
-    // about this node — that's the canonical "any packet receipt"
+    // about this node - that's the canonical "any packet receipt"
     // signal used by the node-detail "Last seen" pill and the nodes
     // list bucketing. The encounter timestamp on the entry only
     // updates when presence transitions to active (with cooldown), so

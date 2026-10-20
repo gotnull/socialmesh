@@ -111,7 +111,7 @@ void main() {
       service.getOrCreateKey(),
       throwsA(isA<DatabaseKeyUnavailableException>()),
     );
-    // The real key must survive — no write happened.
+    // The real key must survive - no write happened.
     expect(storage.writeCount, 0);
     expect(storage.store[DatabaseKeyService.storageKey], existing);
 

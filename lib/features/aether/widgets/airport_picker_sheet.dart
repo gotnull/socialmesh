@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Airport Picker Screen — searchable full-screen airport selector.
+// Airport Picker Screen - searchable full-screen airport selector.
 //
 // Full-screen route (same pattern as FlightSearchSheet).
 // Displays all 1,173 large airports from the OurAirports dataset.

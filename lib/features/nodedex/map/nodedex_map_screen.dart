@@ -7,8 +7,8 @@
 // `nodedexMode: true`. In that mode MapScreen swaps its marker source
 // from the live `nodesProvider` to `nodedexMapPinsProvider` and
 // synthesizes a `MeshNode` per pin so that every existing MapScreen
-// feature — filtering, search, layer toggles, compass, recenter,
-// fit-all, info card with "Open in NodeDex", traceroute support — keeps
+// feature - filtering, search, layer toggles, compass, recenter,
+// fit-all, info card with "Open in NodeDex", traceroute support - keeps
 // working unchanged. This file owns only the entry-point function;
 // there is intentionally no parallel NodeDex map screen.
 

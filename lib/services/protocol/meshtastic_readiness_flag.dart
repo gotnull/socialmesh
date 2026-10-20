@@ -31,7 +31,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 @immutable
 class MeshtasticReadinessFlags {
   /// Gate for the readiness watchdog auto-rebuild. The readiness state
-  /// machine itself is NOT gated by this flag — it always runs, always
+  /// machine itself is NOT gated by this flag - it always runs, always
   /// logs, and always drives UI; only the auto session-rebuild
   /// side-effect is flagged.
   final bool watchdogEnabled;

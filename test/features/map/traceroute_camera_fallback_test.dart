@@ -11,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Pre-fix: when a traceroute had zero valid GPS hops,
 /// `_tracerouteBounds` returned null and the `else if` chain that
 /// would have fallen back to the user's location was guarded by the
-/// outer `if (widget.tracerouteLog != null)` — so the camera landed at
+/// outer `if (widget.tracerouteLog != null)` - so the camera landed at
 /// `LatLng(0, 0)` (the Gulf of Guinea). The fix introduces a
 /// `centerResolved` flag and gates the standard fallback chain on
 /// `!centerResolved` so both traceroute-success and traceroute-fail
@@ -34,7 +34,7 @@ void main() {
           flat.contains('LatLng center = const LatLng(0, 0);'),
           true,
           reason:
-              'The 0,0 default stays as a last-resort sentinel — the fix is '
+              'The 0,0 default stays as a last-resort sentinel - the fix is '
               'about not landing there, not about renaming the default.',
         );
         expect(
@@ -65,35 +65,32 @@ void main() {
       );
     });
 
-    test(
-      'locationOnly + nodesWithPosition fallbacks both check !centerResolved',
-      () {
-        final flat = source.replaceAll(RegExp(r'\s+'), ' ');
-        expect(
-          flat.contains(
-            'if (!centerResolved && widget.locationOnlyMode && '
-            'widget.initialLatitude != null && widget.initialLongitude != null)',
-          ),
-          true,
-          reason:
-              'The locationOnlyMode branch must be guarded by !centerResolved '
-              'so a successful traceroute fit is not overwritten by the '
-              'initial-location override.',
-        );
-        expect(
-          flat.contains(
-            'else if (!centerResolved && nodesWithPosition.isNotEmpty)',
-          ),
-          true,
-          reason:
-              'The nodes-with-position branch must also be guarded by '
-              '!centerResolved so a successful traceroute fit survives this '
-              'branch. Equally important, when traceroute bounds were null, '
-              'this branch must NOW run (it would not have pre-fix because '
-              'the outer else-if guarded against it).',
-        );
-      },
-    );
+    test('locationOnly + nodesWithPosition fallbacks both check !centerResolved', () {
+      final flat = source.replaceAll(RegExp(r'\s+'), ' ');
+      expect(
+        flat.contains(
+          'if (!centerResolved && widget.locationOnlyMode && '
+          'widget.initialLatitude != null && widget.initialLongitude != null)',
+        ),
+        true,
+        reason:
+            'The locationOnlyMode branch must be guarded by !centerResolved '
+            'so a successful traceroute fit is not overwritten by the '
+            'initial-location override.',
+      );
+      expect(
+        flat.contains(
+          'else if (!centerResolved && nodesWithPosition.isNotEmpty)',
+        ),
+        true,
+        reason:
+            'The nodes-with-position branch must also be guarded by '
+            '!centerResolved so a successful traceroute fit survives this '
+            'branch. Equally important, when traceroute bounds were null, '
+            'this branch must NOW run (it would not have pre-fix because '
+            'the outer else-if guarded against it).',
+      );
+    });
 
     test('traceroute success path still sets centerResolved = true', () {
       expect(

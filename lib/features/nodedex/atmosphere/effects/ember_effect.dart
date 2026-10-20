@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Ember Effect — rising warm spark particles driven by patina and relay data.
+// Ember Effect - rising warm spark particles driven by patina and relay data.
 //
 // Embers rise gently from the bottom of the viewport, wandering
 // horizontally with a sinusoidal oscillation and pulsing in brightness.
 // The effect intensity is tied to average patina scores and the fraction
-// of relay/router nodes in the mesh — a network with deeply documented,
+// of relay/router nodes in the mesh - a network with deeply documented,
 // high-contribution nodes glows warmer.
 //
 // Visual characteristics:
@@ -14,7 +14,7 @@
 //   - Warm amber-orange-copper palette, low alpha
 //   - Rise upward with gentle horizontal sinusoidal wander
 //   - Brightness pulses via phase-offset sine wave
-//   - Slower and more organic than rain — meditative, not urgent
+//   - Slower and more organic than rain - meditative, not urgent
 //   - Particles spawn below the viewport and fade out near the top
 //
 // The ember effect is the most emotionally evocative of the four
@@ -45,7 +45,7 @@ class EmberSpawnStrategy extends ParticleSpawnStrategy {
   @override
   double get spawnInterval {
     if (intensity <= 0) return double.infinity;
-    // Embers spawn less frequently than rain — they are sparse and
+    // Embers spawn less frequently than rain - they are sparse and
     // precious. At full intensity, one every ~120ms. At low intensity,
     // one every ~2s.
     final baseInterval = 0.12;
@@ -54,7 +54,7 @@ class EmberSpawnStrategy extends ParticleSpawnStrategy {
 
   @override
   void initParticle(Particle p, Size canvasSize, bool isDark) {
-    // Rise speed — embers float upward gently.
+    // Rise speed - embers float upward gently.
     final speed = randomRange(
       AtmosphereTiming.emberSpeedMin,
       AtmosphereTiming.emberSpeedMax,
@@ -72,14 +72,14 @@ class EmberSpawnStrategy extends ParticleSpawnStrategy {
         : AtmosphereColors.emberLight;
     final baseColor = randomColor(palette);
 
-    // Ember size — small core dot.
+    // Ember size - small core dot.
     final coreRadius = randomRange(1.0, 2.5);
 
     // Phase offset for sinusoidal wander and brightness pulse.
     // Each ember gets a unique phase so they don't oscillate in sync.
     final wanderPhase = rng.nextDouble() * math.pi * 2;
 
-    // Spawn position — across the bottom edge with some horizontal spread.
+    // Spawn position - across the bottom edge with some horizontal spread.
     // Allow spawning slightly outside the horizontal bounds so embers
     // can drift in from the sides.
     final spawnMargin = canvasSize.width * 0.1;
@@ -127,7 +127,7 @@ class EmberPainter extends CustomPainter {
   /// Elapsed time in seconds, used for wander and pulse animation.
   final double elapsed;
 
-  /// Cached paint objects — reused every frame.
+  /// Cached paint objects - reused every frame.
   final Paint _glowPaint = Paint()..isAntiAlias = true;
   final Paint _corePaint = Paint()
     ..isAntiAlias = true
@@ -164,7 +164,7 @@ class EmberPainter extends CustomPainter {
         continue;
       }
 
-      // Brightness pulsation — sine wave modulates opacity.
+      // Brightness pulsation - sine wave modulates opacity.
       final pulseFactor =
           0.6 +
           0.4 *
@@ -203,7 +203,7 @@ class EmberPainter extends CustomPainter {
         _glowPaint.shader = null;
       }
 
-      // Draw ember core — slightly brighter than the base color.
+      // Draw ember core - slightly brighter than the base color.
       final coreAlpha = (effectiveAlpha * AtmosphereColors.emberCoreBrightness)
           .clamp(0.0, 1.0);
       _corePaint.color = p.color.withValues(alpha: coreAlpha);

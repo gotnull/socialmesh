@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// SIP Peer Detail Sheet — bottom sheet showing peer info + handshake action.
+// SIP Peer Detail Sheet - bottom sheet showing peer info + handshake action.
 //
 // Redesigned to match NodeDex edge_detail_sheet pattern:
 // - Sigil avatar header with resolved name + hex ID
@@ -106,7 +106,7 @@ class SipPeerDetailSheet extends ConsumerWidget {
 
         const SizedBox(height: AppTheme.spacing20),
 
-        // Info rows — user-friendly fields visible by default
+        // Info rows - user-friendly fields visible by default
         _InfoRow(
           label: l10n.sipPeerDetailDeviceClass,
           value: deviceClassName(context, peer.deviceClass),
@@ -164,7 +164,7 @@ class SipPeerDetailSheet extends ConsumerWidget {
 
         const SizedBox(height: AppTheme.spacing8),
 
-        // Expert details — protocol-level info behind toggle
+        // Expert details - protocol-level info behind toggle
         ExpertDetailsExpander(
           label: l10n.sipPeerDetailExpertToggle,
           expandedBuilder: (context) => Column(
@@ -270,7 +270,7 @@ class SipPeerDetailSheet extends ConsumerWidget {
 }
 
 // =============================================================================
-// Info row — consistent with NodeDex detail screen pattern
+// Info row - consistent with NodeDex detail screen pattern
 // =============================================================================
 
 class _InfoRow extends StatelessWidget {
@@ -358,7 +358,7 @@ class _CapChip extends StatelessWidget {
 }
 
 // =============================================================================
-// Handshake button — reflects current handshake state
+// Handshake button - reflects current handshake state
 // =============================================================================
 
 class _HandshakeButton extends ConsumerWidget {
@@ -384,7 +384,7 @@ class _HandshakeButton extends ConsumerWidget {
     }
 
     // pendingApproval is owned by the dedicated Incoming Requests tile
-    // above the peer list — do not stand in for the Accept/Decline
+    // above the peer list - do not stand in for the Accept/Decline
     // buttons here (mandatory consent gate, SIP_HANDSHAKE_CONSENT.md).
     if (hsState == SipHandshakeState.pendingApproval) {
       return const SizedBox.shrink();
@@ -452,7 +452,7 @@ class _HandshakeButton extends ConsumerWidget {
 
     final handshake = ref.read(sipHandshakeProvider);
     if (handshake == null) {
-      // Chip is the single source of truth — no redundant snackbar.
+      // Chip is the single source of truth - no redundant snackbar.
       return;
     }
 

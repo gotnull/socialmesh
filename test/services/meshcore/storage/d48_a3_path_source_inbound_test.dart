@@ -53,23 +53,20 @@ void main() {
       );
     });
 
-    test(
-      'entry recorded with source=inbound round-trips through SharedPreferences',
-      () async {
-        final bytes = Uint8List.fromList([0x10, 0x20, 0x30]);
-        await store.record(
-          devicePubKeyPrefix: _device,
-          contactPubKeyPrefix: _contact,
-          bytes: bytes,
-          source: MeshCorePathSource.inbound,
-          now: DateTime.utc(2026, 5, 14),
-        );
+    test('entry recorded with source=inbound round-trips through SharedPreferences', () async {
+      final bytes = Uint8List.fromList([0x10, 0x20, 0x30]);
+      await store.record(
+        devicePubKeyPrefix: _device,
+        contactPubKeyPrefix: _contact,
+        bytes: bytes,
+        source: MeshCorePathSource.inbound,
+        now: DateTime.utc(2026, 5, 14),
+      );
 
-        final reloaded = await store.load(_device, _contact);
-        expect(reloaded, hasLength(1));
-        expect(reloaded.single.source, equals(MeshCorePathSource.inbound));
-        expect(reloaded.single.bytes, equals(bytes));
-      },
-    );
+      final reloaded = await store.load(_device, _contact);
+      expect(reloaded, hasLength(1));
+      expect(reloaded.single.source, equals(MeshCorePathSource.inbound));
+      expect(reloaded.single.bytes, equals(bytes));
+    });
   });
 }

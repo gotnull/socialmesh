@@ -11,7 +11,7 @@
 ///   - malformed inbound: drop without crashing.
 ///   - **Dedupe**: identical envelope received twice (same sequenceId
 ///     and bytes) appends the entry exactly once. The second copy is
-///     silently dropped — replays / MQTT-bridge echoes can't double-
+///     silently dropped - replays / MQTT-bridge echoes can't double-
 ///     play.
 library;
 
@@ -73,7 +73,7 @@ Uint8List _phraseBytes({int seq = 0x0001}) {
 }
 
 void main() {
-  group('SipDmManager.handleInboundSignal — block guard', () {
+  group('SipDmManager.handleInboundSignal - block guard', () {
     test('blocked peer DM_SIGNAL is silently dropped, no history mutation', () {
       final gate = _MutableSafetyGate();
       final dm = _newDm(gate: gate);
@@ -118,7 +118,7 @@ void main() {
     });
   });
 
-  group('SipDmManager.handleInboundSignal — dedupe', () {
+  group('SipDmManager.handleInboundSignal - dedupe', () {
     test('duplicate inbound (same seq + same bytes) appends exactly once', () {
       final dm = _newDm();
       dm.createSession(sessionTag: 0xAA, peerNodeId: 0xBEEF);
@@ -133,7 +133,7 @@ void main() {
         second,
         isNull,
         reason:
-            'duplicate inbound must be silently dropped — retransmits / '
+            'duplicate inbound must be silently dropped - retransmits / '
             'MQTT bridge echoes cannot double-play',
       );
       expect(
@@ -147,14 +147,14 @@ void main() {
       final dm = _newDm();
       dm.createSession(sessionTag: 0xAA, peerNodeId: 0xBEEF);
 
-      // Same sender, different sequenceId — distinct phrases.
+      // Same sender, different sequenceId - distinct phrases.
       dm.handleInboundSignal(_frame(0xAA, _phraseBytes(seq: 0x0001)));
       dm.handleInboundSignal(_frame(0xAA, _phraseBytes(seq: 0x0002)));
       expect(dm.getHistory(0xAA)!.length, equals(2));
     });
   });
 
-  group('SipDmManager.buildSignalMessage — outbound gates', () {
+  group('SipDmManager.buildSignalMessage - outbound gates', () {
     test('blocked peer returns peerBlocked, no entry, no rate-limit '
         'consumption', () {
       final gate = _MutableSafetyGate();
@@ -189,7 +189,7 @@ void main() {
       expect(history.first.direction, equals(SipDmDirection.outbound));
     });
 
-    test('global airtime budget remains authoritative — outbound blocked '
+    test('global airtime budget remains authoritative - outbound blocked '
         'when limiter is starved', () {
       final limiter = SipRateLimiter();
       // Drain the limiter fully.

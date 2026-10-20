@@ -298,13 +298,13 @@ void main() {
 
   group('SigilEvolution augments', () {
     test('no augments below inscribed stage', () {
-      // Seed (0-19) — no augments regardless of trait.
+      // Seed (0-19) - no augments regardless of trait.
       for (int score = 0; score < 20; score += 5) {
         final evo = SigilEvolution.fromPatina(score, trait: NodeTrait.relay);
         expect(evo.augments, isEmpty, reason: 'seed should have no augments');
       }
 
-      // Marked (20-39) — no augments regardless of trait.
+      // Marked (20-39) - no augments regardless of trait.
       for (int score = 20; score < 40; score += 5) {
         final evo = SigilEvolution.fromPatina(score, trait: NodeTrait.wanderer);
         expect(evo.augments, isEmpty, reason: 'marked should have no augments');

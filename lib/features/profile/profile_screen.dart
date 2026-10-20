@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — GestureDetector is for keyboard dismissal, not user interaction
+// lint-allow: haptic-feedback - GestureDetector is for keyboard dismissal, not user interaction
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -1015,7 +1015,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection>
       final authService = ref.read(authServiceProvider);
       await authService.signOut();
 
-      // Pop back from the profile screen — the signed-out user should not
+      // Pop back from the profile screen - the signed-out user should not
       // remain on a screen that renders a stale Guest profile with avatar
       // and "Edit Profile". The drawer's Account screen is the correct
       // entry point for unauthenticated users.
@@ -1066,7 +1066,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection>
 
     try {
       final authService = ref.read(authServiceProvider);
-      // Capture notifiers and services BEFORE the async gap — the widget's
+      // Capture notifiers and services BEFORE the async gap - the widget's
       // ref may become invalid if the widget is disposed while awaiting.
       final appInitNotifier = ref.read(appInitProvider.notifier);
       final deviceConnection = ref.read(deviceConnectionProvider.notifier);

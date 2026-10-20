@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/core/units/distance_format.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -863,9 +864,8 @@ class ARHudPainter extends CustomPainter {
     double signalQuality,
     double opacity,
   ) {
-    final color = _getSignalColor(
-      signalQuality,
-    ).withValues(alpha: opacity * 0.8);
+    final color = _getSignalColor(signalQuality)
+        .withValues(alpha: opacity * 0.8);
     final arcRadius = radius + 6;
     final sweepAngle =
         signalQuality * math.pi * 1.5; // 0-270 degrees based on quality

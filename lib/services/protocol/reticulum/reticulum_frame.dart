@@ -3,7 +3,7 @@
 
 import 'dart:typed_data';
 
-/// A fully reassembled RNS frame — the byte-stream that
+/// A fully reassembled RNS frame - the byte-stream that
 /// `landandair/RNS_Over_Meshtastic`'s `PacketHandler.split_data()`
 /// was originally handed by RNS, before fragmentation.
 ///

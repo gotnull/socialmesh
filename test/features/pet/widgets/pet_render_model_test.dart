@@ -40,7 +40,7 @@ PetRenderContext _context({
   );
 }
 
-/// Paint-count spy — extends CustomPaint's test hook to run a real paint
+/// Paint-count spy - extends CustomPaint's test hook to run a real paint
 /// pass on a PictureRecorder. Returns the number of successfully
 /// completed paints (throws count here as a smoke assertion).
 void _smokeCheckGeometry(PetCreature widget) {
@@ -58,7 +58,7 @@ void _smokeCheckGeometry(PetCreature widget) {
 }
 
 void main() {
-  group('PetRenderMode — layer policy', () {
+  group('PetRenderMode - layer policy', () {
     test('tiny mode skips expensive layers', () {
       final ctx = _context(mode: PetRenderMode.tiny);
       expect(ctx.includesScanlines(), isFalse);
@@ -94,7 +94,7 @@ void main() {
     });
   });
 
-  group('PetSigilGeometry — determinism', () {
+  group('PetSigilGeometry - determinism', () {
     test('same (seed, stage, branch) yields equal render keys', () {
       final a = PetSigilGeometry.forIdentity(
         dnaSeed: _seedA,
@@ -166,7 +166,7 @@ void main() {
         stage: PetStage.adult,
         branch: PetBranch.dimmed,
       );
-      // Core morphology derived purely from the seed — stable across
+      // Core morphology derived purely from the seed - stable across
       // branch changes.
       expect(luminous.coreVertexCount, dimmed.coreVertexCount);
       expect(luminous.petalCount, dimmed.petalCount);
@@ -188,7 +188,7 @@ void main() {
     });
   });
 
-  group('Paint smoke — full stage/branch/mood matrix', () {
+  group('Paint smoke - full stage/branch/mood matrix', () {
     test('every combination builds a geometry without throwing', () {
       for (final stage in PetStage.values) {
         for (final branch in PetBranch.values) {
@@ -235,7 +235,7 @@ void main() {
     });
   });
 
-  group('PetCreature widget — paints across overlay states', () {
+  group('PetCreature widget - paints across overlay states', () {
     testWidgets('renders tiny mode without throwing for each state flag', (
       tester,
     ) async {

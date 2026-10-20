@@ -17,7 +17,7 @@ void main() {
       expect(transport.requiresFraming, isTrue);
     });
 
-    test('requiresWakeSequence is false — TCP speaks directly to PhoneAPI, '
+    test('requiresWakeSequence is false - TCP speaks directly to PhoneAPI, '
         'no serial UART to wake with 0xC3 preamble', () {
       final transport = NetworkTransport(host: '127.0.0.1', port: 4403);
       expect(transport.requiresWakeSequence, isFalse);

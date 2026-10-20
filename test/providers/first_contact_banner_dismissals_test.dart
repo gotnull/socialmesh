@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// [FirstContactBannerDismissals] tests — local UI-only persistence
+/// [FirstContactBannerDismissals] tests - local UI-only persistence
 /// of which peers' first-contact banners the user has dismissed.
 ///
 /// Hard rules pinned by these tests:
@@ -10,7 +10,7 @@
 ///     `dismiss(peerId)` must not flip the corresponding peer's
 ///     `hasFirstContact`, must not call `markFirstHandshake`, must
 ///     not emit any wire frame. Only the dismissals set changes.
-///   - `isDismissed` is a sync hot-path getter — safe to call from
+///   - `isDismissed` is a sync hot-path getter - safe to call from
 ///     `build()`. Returns `false` until the prefs load completes.
 ///   - `dismiss` is idempotent: re-tapping after dismiss is a no-op.
 ///   - The set is persisted across container re-init (simulates app
@@ -52,7 +52,7 @@ void main() {
       expect(notifier.isDismissed(0xBBBB), isFalse);
     });
 
-    test('dismiss is idempotent — re-tapping is a no-op', () async {
+    test('dismiss is idempotent - re-tapping is a no-op', () async {
       final c = _newContainer();
       await c.read(firstContactBannerDismissalsProvider.future);
       final notifier = c.read(firstContactBannerDismissalsProvider.notifier);
@@ -105,7 +105,7 @@ void main() {
         '(banner is pure UI affordance)', () async {
       // Defence-in-depth: confirm the dismissal pathway is fully
       // decoupled from PeerSafetyManager. We don't override
-      // peerSafetyStoreProvider here — if `dismiss` ever called into
+      // peerSafetyStoreProvider here - if `dismiss` ever called into
       // it, this test would fail with a provider-not-overridden /
       // missing-store error.
       final c = _newContainer();

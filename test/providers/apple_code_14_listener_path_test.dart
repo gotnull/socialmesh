@@ -27,9 +27,8 @@ void main() {
   group('BleTransport.lastDisconnectError contract', () {
     late String source;
     setUpAll(() async {
-      source = await File(
-        'lib/services/transport/ble_transport.dart',
-      ).readAsString();
+      source = await File('lib/services/transport/ble_transport.dart')
+          .readAsString();
     });
 
     test('exposes a public lastDisconnectError getter', () {
@@ -85,9 +84,8 @@ void main() {
   group('_handleDisconnect routes apple-code 14 to pairing invalidation', () {
     late String source;
     setUpAll(() async {
-      source = await File(
-        'lib/providers/connection_providers.dart',
-      ).readAsString();
+      source = await File('lib/providers/connection_providers.dart')
+          .readAsString();
     });
 
     test('reads transport.lastDisconnectError and consults '

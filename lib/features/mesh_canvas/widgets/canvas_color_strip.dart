@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// lint-allow: haptic-feedback — the strip is a pure selection surface;
+// lint-allow: haptic-feedback - the strip is a pure selection surface;
 // haptics are gated by the host screen via `ref.haptics.itemSelect()`
 // (which respects the user's settings) on the `onSelect` callback.
 // Inline `HapticFeedback.lightImpact()` would bypass that preference
@@ -9,7 +9,7 @@
 
 // Minimal 8-swatch bottom strip for the MeshCanvas viewer.
 //
-// Spec anchor: docs/canvas/CANVAS_V0_1.md §S0.ux.15 — "active palette
+// Spec anchor: docs/canvas/CANVAS_V0_1.md §S0.ux.15 - "active palette
 // swatch is one tap away (bottom strip or quick-access)". S7.A scope
 // is explicitly 8 colours only; the full 64-colour AppBottomSheet
 // surface lands in S7.B.

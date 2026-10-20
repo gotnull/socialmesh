@@ -255,7 +255,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   }
 
   /// Handle the TX-enabled toggle, confirming before disabling TX on a remote
-  /// node — that makes it stop transmitting and stop acknowledging admin
+  /// node - that makes it stop transmitting and stop acknowledging admin
   /// commands over the mesh (it can still receive a re-enable).
   Future<void> _onTxEnabledChanged(bool value) async {
     HapticFeedback.selectionClick();
@@ -929,7 +929,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                     decimal: true,
                   ),
                   // Restrict to digits + a single decimal separator
-                  // (dot OR comma — locale-aware parse normalises on
+                  // (dot OR comma - locale-aware parse normalises on
                   // commit).
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),

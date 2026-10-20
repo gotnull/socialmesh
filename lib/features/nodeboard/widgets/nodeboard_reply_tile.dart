@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Reply tile — structurally identical to the Messages inbound bubble
+// Reply tile - structurally identical to the Messages inbound bubble
 // (see lib/features/messaging/messaging_screen.dart:3292–3396), but
 // the left avatar is the node's deterministic SigilWidget glyph (the
 // same rendering NodeDex uses), NOT a text-initials circle. Tapping
@@ -46,7 +46,7 @@ class NodeBoardReplyTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final realNodeNum = _authorNodeNum;
-    // Sigil requires an int — fall back to a hashed display name when
+    // Sigil requires an int - fall back to a hashed display name when
     // we don't have a real node num, so legacy / unlinked posts still
     // render a glyph rather than a placeholder.
     final sigilSeed = realNodeNum ?? reply.authorDisplayName.hashCode.abs();
@@ -68,7 +68,7 @@ class NodeBoardReplyTile extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Deterministic node sigil — tappable when we know the real
+              // Deterministic node sigil - tappable when we know the real
               // node num; falls back to a hash-seeded sigil for legacy /
               // unlinked posts so there's always a glyph, never a blank
               // initials circle.
@@ -88,7 +88,7 @@ class NodeBoardReplyTile extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Sender metadata — Wraps so long display names,
+                    // Sender metadata - Wraps so long display names,
                     // node hex IDs, and timestamps never clip.
                     Wrap(
                       spacing: AppTheme.spacing8,
@@ -161,7 +161,7 @@ class NodeBoardReplyTile extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers — shared with the thread tile (identity rendering is the same).
+// Helpers - shared with the thread tile (identity rendering is the same).
 // ---------------------------------------------------------------------------
 
 int? _parseNodeHex(String? hexId) {

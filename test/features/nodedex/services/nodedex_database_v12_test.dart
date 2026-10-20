@@ -21,32 +21,29 @@ void main() {
   });
 
   group('v12 schema migration', () {
-    test(
-      'fresh schema (no upgrade) exposes the v12 columns and round-trips values',
-      () async {
-        final database = NodeDexDatabase(dbPathOverride: inMemoryDatabasePath);
-        final store = NodeDexSqliteStore(database);
-        await store.init();
-        addTearDown(store.dispose);
+    test('fresh schema (no upgrade) exposes the v12 columns and round-trips values', () async {
+      final database = NodeDexDatabase(dbPathOverride: inMemoryDatabasePath);
+      final store = NodeDexSqliteStore(database);
+      await store.init();
+      addTearDown(store.dispose);
 
-        // Round-trip an entry with both new fields populated.
-        final entry = NodeDexEntry(
-          nodeNum: 0xACB22B4,
-          firstSeen: DateTime(2026, 5, 1),
-          lastSeen: DateTime(2026, 5, 8),
-          sigil: SigilGenerator.generate(0xACB22B4),
-          lastObservationSource: ObservationSource.mqtt,
-          lastHopsAway: 2,
-        );
-        await store.saveEntryImmediate(entry);
+      // Round-trip an entry with both new fields populated.
+      final entry = NodeDexEntry(
+        nodeNum: 0xACB22B4,
+        firstSeen: DateTime(2026, 5, 1),
+        lastSeen: DateTime(2026, 5, 8),
+        sigil: SigilGenerator.generate(0xACB22B4),
+        lastObservationSource: ObservationSource.mqtt,
+        lastHopsAway: 2,
+      );
+      await store.saveEntryImmediate(entry);
 
-        // Reload and verify.
-        final reloaded = await store.loadAll();
-        expect(reloaded, hasLength(1));
-        expect(reloaded.first.lastObservationSource, ObservationSource.mqtt);
-        expect(reloaded.first.lastHopsAway, 2);
-      },
-    );
+      // Reload and verify.
+      final reloaded = await store.loadAll();
+      expect(reloaded, hasLength(1));
+      expect(reloaded.first.lastObservationSource, ObservationSource.mqtt);
+      expect(reloaded.first.lastHopsAway, 2);
+    });
 
     test('null observation context round-trips as null, not "unknown"', () async {
       final database = NodeDexDatabase(dbPathOverride: inMemoryDatabasePath);
@@ -130,7 +127,7 @@ void main() {
         options: OpenDatabaseOptions(
           version: 11,
           onCreate: (db, version) async {
-            // Minimal v11 schema — only the columns this test relies on.
+            // Minimal v11 schema - only the columns this test relies on.
             await db.execute('''
               CREATE TABLE ${NodeDexTables.entries} (
                 ${NodeDexTables.colNodeNum} INTEGER PRIMARY KEY,

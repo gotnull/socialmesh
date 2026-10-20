@@ -10,7 +10,7 @@ import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/services/messaging/dm_retry_coordinator.dart';
 
 // ---------------------------------------------------------------------------
-// Minimal in-memory MessagesNotifier — bypasses DB entirely
+// Minimal in-memory MessagesNotifier - bypasses DB entirely
 // ---------------------------------------------------------------------------
 
 class _InMemoryMessagesNotifier extends MessagesNotifier {
@@ -250,15 +250,15 @@ void main() {
 
     test('copyWith updates autoRetryEnabled', () {
       expect(
-        _makeDm(
-          autoRetryEnabled: false,
-        ).copyWith(autoRetryEnabled: true).autoRetryEnabled,
+        _makeDm(autoRetryEnabled: false)
+            .copyWith(autoRetryEnabled: true)
+            .autoRetryEnabled,
         isTrue,
       );
     });
   });
 
-  group('DmRetryCoordinator — start / dispose', () {
+  group('DmRetryCoordinator - start / dispose', () {
     test('start() is idempotent', () {
       final (container, coordinator) = _makeContainer([]);
       addTearDown(container.dispose);
@@ -275,7 +275,7 @@ void main() {
     });
   });
 
-  group('DmRetryCoordinator — start() does not reset retrying', () {
+  group('DmRetryCoordinator - start() does not reset retrying', () {
     test('retrying messages are unchanged after start', () {
       final retrying = _makeDm(status: MessageStatus.retrying);
       final (container, coordinator) = _makeContainer([retrying]);
@@ -314,7 +314,7 @@ void main() {
     });
   });
 
-  group('DmRetryCoordinator — enableAutoRetry / disableAutoRetry', () {
+  group('DmRetryCoordinator - enableAutoRetry / disableAutoRetry', () {
     test('enableAutoRetry sets autoRetryEnabled to true', () {
       final msg = _makeDm(status: MessageStatus.unconfirmed);
       final (container, coordinator) = _makeContainer([msg]);
@@ -391,7 +391,7 @@ void main() {
     });
   });
 
-  group('DmRetryCoordinator — ineligibility guards', () {
+  group('DmRetryCoordinator - ineligibility guards', () {
     test('delivered messages are not touched by start', () {
       final delivered = _makeDm(status: MessageStatus.delivered);
       final (container, coordinator) = _makeContainer([delivered]);
@@ -445,7 +445,7 @@ void main() {
     });
   });
 
-  group('DmRetryCoordinator — scheduleResend guards', () {
+  group('DmRetryCoordinator - scheduleResend guards', () {
     test('scheduleResend is no-op after dispose', () async {
       final msg = _makeDm(status: MessageStatus.unconfirmed);
       final (container, coordinator) = _makeContainer([msg]);
@@ -490,7 +490,7 @@ void main() {
         // start() no longer resets stale retrying messages (that logic moved
         // to MessagesNotifier._loadFromStorage()). scheduleResend is called
         // with the original message object (status == retrying) so the guard
-        // fires early — the message stays retrying because no reset happened.
+        // fires early - the message stays retrying because no reset happened.
         final msg = _makeDm(status: MessageStatus.retrying);
         final (container, coordinator) = _makeContainer([msg]);
         addTearDown(() {
@@ -499,7 +499,7 @@ void main() {
         });
         coordinator.start();
 
-        // Pass the stale retrying message — guard fires, scheduleResend is a no-op
+        // Pass the stale retrying message - guard fires, scheduleResend is a no-op
         await coordinator.scheduleResend(msg);
 
         // The stored status remains retrying since start() no longer resets it.

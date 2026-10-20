@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Canonical replicated mesh post — the atomic unit of the mesh feed.
+/// Canonical replicated mesh post - the atomic unit of the mesh feed.
 ///
 /// Every [MeshPost] has a deterministic ID derived from its canonical material
 /// (author node number, creation timestamp, and content). The same post
@@ -12,7 +12,7 @@
 /// ```
 /// [header:1] [createdAtSec:4] [flags:1] [contentLen:1] [content:0-200]
 ///
-/// header: version(4 bits) | kind(4 bits) — kind = 0x0B (SM_FEED_POST)
+/// header: version(4 bits) | kind(4 bits) - kind = 0x0B (SM_FEED_POST)
 /// flags:  ttlClass(3 bits) | propagationClass(2 bits) | reserved(3 bits)
 /// ```
 ///
@@ -27,21 +27,21 @@ import 'package:crypto/crypto.dart';
 
 import '../../utils/text_sanitizer.dart';
 
-/// TTL class for mesh posts — longer-lived than ephemeral signals.
+/// TTL class for mesh posts - longer-lived than ephemeral signals.
 enum MeshPostTtl {
-  /// 1 hour — quick local announcement.
+  /// 1 hour - quick local announcement.
   hours1(Duration(hours: 1)),
 
-  /// 6 hours — short-lived post.
+  /// 6 hours - short-lived post.
   hours6(Duration(hours: 6)),
 
-  /// 24 hours — standard post (default).
+  /// 24 hours - standard post (default).
   hours24(Duration(hours: 24)),
 
-  /// 3 days — persistent announcement.
+  /// 3 days - persistent announcement.
   days3(Duration(hours: 72)),
 
-  /// 7 days — long-lived bulletin.
+  /// 7 days - long-lived bulletin.
   days7(Duration(hours: 168));
 
   const MeshPostTtl(this.duration);
@@ -59,15 +59,15 @@ enum MeshPostTtl {
   }
 }
 
-/// Propagation policy — controls how aggressively this post is forwarded.
+/// Propagation policy - controls how aggressively this post is forwarded.
 enum MeshPostPropagation {
-  /// Normal propagation — eligible for all transports.
+  /// Normal propagation - eligible for all transports.
   normal(0),
 
-  /// Conservative — prefer opportunistic transports (BLE/WiFi), limited LoRa.
+  /// Conservative - prefer opportunistic transports (BLE/WiFi), limited LoRa.
   conservative(1),
 
-  /// Local only — never forwarded beyond direct peers.
+  /// Local only - never forwarded beyond direct peers.
   localOnly(2);
 
   const MeshPostPropagation(this.wireIndex);
@@ -84,16 +84,16 @@ enum MeshPostPropagation {
 
 /// Transport via which a post was received.
 enum MeshTransportType {
-  /// LoRa radio — constrained, long-range.
+  /// LoRa radio - constrained, long-range.
   lora,
 
-  /// BLE peer sync — opportunistic, short-range.
+  /// BLE peer sync - opportunistic, short-range.
   blePeerSync,
 
-  /// LAN/WiFi peer sync — opportunistic, high-bandwidth.
+  /// LAN/WiFi peer sync - opportunistic, high-bandwidth.
   lanPeerSync,
 
-  /// Locally authored — created on this device.
+  /// Locally authored - created on this device.
   local,
 }
 
@@ -124,7 +124,7 @@ class MeshPost {
        lastSeenAt = lastSeenAt ?? DateTime.now(),
        _id = _computeCanonicalId(authorNodeNum, createdAtMs, content);
 
-  /// Deterministic canonical ID — hex-encoded SHA-256 prefix (32 chars = 16 bytes).
+  /// Deterministic canonical ID - hex-encoded SHA-256 prefix (32 chars = 16 bytes).
   String get id => _id;
   final String _id;
 
@@ -167,11 +167,11 @@ class MeshPost {
   /// Sync eligibility state.
   final MeshPostSyncState syncState;
 
-  /// Monotonic local sequence — assigned by the database on insert/update.
+  /// Monotonic local sequence - assigned by the database on insert/update.
   /// Used for deterministic, clock-skew-safe sync cursor ordering.
   final int? localSeq;
 
-  /// Monotonic sync sequence — assigned only on INSERT (new content).
+  /// Monotonic sync sequence - assigned only on INSERT (new content).
   /// Metadata-only merges do NOT bump this. Used for outbound sync cursor.
   final int? syncSeq;
 
@@ -205,19 +205,19 @@ class MeshPost {
   ) {
     final buffer = BytesBuilder(copy: false);
 
-    // Author node number — 4 bytes LE
+    // Author node number - 4 bytes LE
     final nodeBytes = Uint8List(4);
     final nodeData = ByteData.sublistView(nodeBytes);
     nodeData.setUint32(0, authorNodeNum, Endian.little);
     buffer.add(nodeBytes);
 
-    // Creation timestamp — 8 bytes LE
+    // Creation timestamp - 8 bytes LE
     final tsBytes = Uint8List(8);
     final tsData = ByteData.sublistView(tsBytes);
     tsData.setInt64(0, createdAtMs, Endian.little);
     buffer.add(tsBytes);
 
-    // Content — UTF-8
+    // Content - UTF-8
     buffer.add(utf8.encode(content));
 
     final hash = sha256.convert(buffer.toBytes());
@@ -353,7 +353,7 @@ class MeshPost {
   /// Encode for LoRa wire (portnum 264).
   ///
   /// Returns null if content exceeds LoRa budget (200 bytes UTF-8).
-  /// Author node number is NOT included — it comes from the Meshtastic
+  /// Author node number is NOT included - it comes from the Meshtastic
   /// packet envelope `from` field.
   Uint8List? encodeForLora() {
     final contentBytes = utf8.encode(content);
@@ -366,7 +366,7 @@ class MeshPost {
     final flags =
         (ttl.wireIndex & 0x07) | ((propagation.wireIndex & 0x03) << 3);
 
-    // Created at — seconds since epoch, 4 bytes BE
+    // Created at - seconds since epoch, 4 bytes BE
     final createdAtSec = createdAtMs ~/ 1000;
 
     final size = 1 + 4 + 1 + 1 + contentBytes.length;
@@ -447,7 +447,7 @@ enum MeshPostSyncState {
   /// Already synced to at least one peer.
   synced(1),
 
-  /// Expired — no longer eligible for propagation.
+  /// Expired - no longer eligible for propagation.
   expired(2);
 
   const MeshPostSyncState(this.value);

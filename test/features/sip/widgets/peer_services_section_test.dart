@@ -46,9 +46,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            peerServicesFullProvider(
-              42,
-            ).overrideWith((_) => const <MrrpCachedService>[]),
+            peerServicesFullProvider(42)
+                .overrideWith((_) => const <MrrpCachedService>[]),
           ],
           child: _app(const PeerServicesSection(peerNodeId: 42)),
         ),

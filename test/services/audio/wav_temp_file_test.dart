@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/audio/wav_temp_file.dart';
 
 /// Minimal valid WAV header (44 bytes) with zero audio samples.
-/// RIFF + fmt chunk + empty data chunk — enough for file-level tests
+/// RIFF + fmt chunk + empty data chunk - enough for file-level tests
 /// that don't require actual audio playback.
 Uint8List _minimalWav() {
   final buffer = ByteData(44);

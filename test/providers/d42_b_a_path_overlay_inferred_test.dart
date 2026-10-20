@@ -276,7 +276,7 @@ void main() {
       final c = _container(contacts: [target], selfInfo: self);
       addTearDown(c.dispose);
 
-      // Outbound message — ignored.
+      // Outbound message - ignored.
       await _seedInboundMessage(
         target,
         id: 'o1',
@@ -285,7 +285,7 @@ void main() {
         timestamp: DateTime.utc(2026, 5, 12, 9),
         isOutgoing: true,
       );
-      // Flood (pathLength = -1) — ignored.
+      // Flood (pathLength = -1) - ignored.
       await _seedInboundMessage(
         target,
         id: 'i-flood',
@@ -293,7 +293,7 @@ void main() {
         pathLength: -1,
         timestamp: DateTime.utc(2026, 5, 12, 10),
       );
-      // Empty pathBytes — ignored.
+      // Empty pathBytes - ignored.
       await _seedInboundMessage(
         target,
         id: 'i-empty',

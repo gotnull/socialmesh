@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Elemental Atmosphere — barrel export.
+// Elemental Atmosphere - barrel export.
 //
 // The Elemental Atmosphere is an optional ambient visual system that
 // renders data-driven particle effects behind NodeDex and map views.
@@ -10,10 +10,10 @@
 // auto-throttles on low-end devices.
 //
 // Four effect types:
-//   Rain      — vertical streaks tied to packet activity / node count
-//   Embers    — rising sparks tied to patina scores / relay contribution
-//   Mist      — drifting fog tied to sparse data regions
-//   Starlight — ambient twinkling background particles
+//   Rain      - vertical streaks tied to packet activity / node count
+//   Embers    - rising sparks tied to patina scores / relay contribution
+//   Mist      - drifting fog tied to sparse data regions
+//   Starlight - ambient twinkling background particles
 //
 // Quick start:
 //

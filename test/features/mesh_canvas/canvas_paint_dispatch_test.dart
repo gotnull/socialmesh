@@ -4,15 +4,15 @@
 // S8 paint-dispatch acceptance tests for the MeshCanvas viewer.
 //
 // What this file pins:
-//   1) Local canvas taps go through CanvasRepository.paintLocal —
+//   1) Local canvas taps go through CanvasRepository.paintLocal -
 //      never enqueuePaint. Local Device Canvas paints MUST NOT
 //      leak into the outbound queue (per spec §S0.rate.7: relaxed
 //      / never broadcast).
-//   2) Mesh canvas taps go through CanvasRepository.enqueuePaint —
+//   2) Mesh canvas taps go through CanvasRepository.enqueuePaint -
 //      never paintLocal. The real author_node_num is wired through
 //      from myNodeNumProvider so receivers can run LWW correctly.
 //   3) If myNodeNumProvider returns null on a mesh canvas (link not
-//      connected), the paint is silently skipped — no broken op in
+//      connected), the paint is silently skipped - no broken op in
 //      pending_op, no rejected wire frame.
 library;
 
@@ -91,7 +91,7 @@ class _RecordingCanvasRepository extends CanvasRepository {
       const <CanvasCell>[];
 
   // The mesh-canvas branch fires a CanvasSendCoordinator.drain() after
-  // enqueueing. The coordinator immediately calls getQueuedReadyOps —
+  // enqueueing. The coordinator immediately calls getQueuedReadyOps -
   // override to short-circuit so the drain finds nothing and exits
   // without touching the never-initialised fake CanvasDatabase the
   // super constructor required.
@@ -157,9 +157,8 @@ Future<_RecordingCanvasRepository> _pumpViewer(
   final container = ProviderContainer(
     overrides: [
       canvasRepositoryProvider.overrideWith((ref) async => repo),
-      canvasCellsProvider(
-        canvas.localId,
-      ).overrideWith((ref) async => const <CanvasCell>[]),
+      canvasCellsProvider(canvas.localId)
+          .overrideWith((ref) async => const <CanvasCell>[]),
       myNodeNumProvider.overrideWith(
         () => _StubMyNodeNumNotifier(initial: myNodeNum),
       ),
@@ -208,7 +207,7 @@ class _StubMyNodeNumNotifier extends MyNodeNumNotifier {
 }
 
 void main() {
-  group('viewer paint dispatch — S8 acceptance', () {
+  group('viewer paint dispatch - S8 acceptance', () {
     testWidgets(
       'Local Device Canvas tap goes through paintLocal, never enqueuePaint',
       (tester) async {
@@ -243,7 +242,7 @@ void main() {
 
     testWidgets(
       'Mesh Canvas tap with unknown myNodeNum (link not connected) is '
-      'silently skipped — no enqueue happens',
+      'silently skipped - no enqueue happens',
       (tester) async {
         final repo = await _pumpViewer(
           tester,
@@ -258,13 +257,13 @@ void main() {
       },
     );
 
-    // S4 participation gate — defence in depth. The Mesh tab in the
+    // S4 participation gate - defence in depth. The Mesh tab in the
     // overview hides the channel list while participation is off, but
     // a deep-link / programmatic push could otherwise surface this
     // viewer. The paint handler MUST silently skip the enqueue.
     // Spec: docs/canvas/CANVAS_PARTICIPATION_V0_1.md §5.3 + §8 I4.
     testWidgets(
-      'Mesh Canvas tap with participation disabled is silently blocked — '
+      'Mesh Canvas tap with participation disabled is silently blocked - '
       'no enqueue happens even if the viewer is somehow surfaced',
       (tester) async {
         final repo = await _pumpViewer(
@@ -284,11 +283,11 @@ void main() {
       },
     );
 
-    // I2 Local Canvas immunity — Local paint MUST work even when
+    // I2 Local Canvas immunity - Local paint MUST work even when
     // participation is off. The Local sandbox is private + offline
     // and must remain available regardless of participation settings.
     testWidgets(
-      'Local Device Canvas tap with participation disabled still works — '
+      'Local Device Canvas tap with participation disabled still works - '
       'Local sandbox is independent of participation settings (I2)',
       (tester) async {
         final repo = await _pumpViewer(
@@ -313,7 +312,7 @@ void main() {
     // is the deadlock backstop. Spec: anti-spam brief item 2
     // ("Queue-aware paint blocking").
     testWidgets(
-      'Mesh Canvas tap with transmission severity=full is silently rejected — '
+      'Mesh Canvas tap with transmission severity=full is silently rejected - '
       'no enqueue, no cell mutation; HUD pill explains why',
       (tester) async {
         final repo = await _pumpViewer(
@@ -344,11 +343,11 @@ void main() {
     );
 
     // Local Canvas paths remain unaffected by mesh transmission
-    // state (I2 — Local Canvas immunity). Confirms the local code
+    // state (I2 - Local Canvas immunity). Confirms the local code
     // path never even reads the transmission selector.
     testWidgets(
       'Local Canvas paint with severity=full transmission state still works '
-      '— Local sandbox is independent of mesh transmission state',
+      '- Local sandbox is independent of mesh transmission state',
       (tester) async {
         final repo = await _pumpViewer(
           tester,

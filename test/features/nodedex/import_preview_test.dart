@@ -48,10 +48,10 @@ void main() {
   }
 
   // ===========================================================================
-  // ImportPreview.build() — basic structure
+  // ImportPreview.build() - basic structure
   // ===========================================================================
 
-  group('ImportPreview.build() — basic structure', () {
+  group('ImportPreview.build() - basic structure', () {
     test('empty imported list produces empty preview', () {
       final preview = ImportPreview.build(
         importedEntries: [],
@@ -147,10 +147,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — display name resolution
+  // ImportPreview.build() - display name resolution
   // ===========================================================================
 
-  group('ImportPreview.build() — display names', () {
+  group('ImportPreview.build() - display names', () {
     test('uses displayNameResolver when provided', () {
       final imported = [makeEntry(nodeNum: 0xABCD)];
 
@@ -198,10 +198,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — socialTag conflict detection
+  // ImportPreview.build() - socialTag conflict detection
   // ===========================================================================
 
-  group('ImportPreview.build() — socialTag conflicts', () {
+  group('ImportPreview.build() - socialTag conflicts', () {
     test(
       'detects conflict when both local and imported have different tags',
       () {
@@ -289,10 +289,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — userNote conflict detection
+  // ImportPreview.build() - userNote conflict detection
   // ===========================================================================
 
-  group('ImportPreview.build() — userNote conflicts', () {
+  group('ImportPreview.build() - userNote conflicts', () {
     test(
       'detects conflict when both local and imported have different notes',
       () {
@@ -362,10 +362,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — dual conflict detection
+  // ImportPreview.build() - dual conflict detection
   // ===========================================================================
 
-  group('ImportPreview.build() — dual conflicts', () {
+  group('ImportPreview.build() - dual conflicts', () {
     test('detects both socialTag and userNote conflicts simultaneously', () {
       final local = {
         42: makeEntry(
@@ -447,10 +447,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — metadata flags
+  // ImportPreview.build() - metadata flags
   // ===========================================================================
 
-  group('ImportPreview.build() — metadata flags', () {
+  group('ImportPreview.build() - metadata flags', () {
     test('importHasNewerData is true when imported lastSeen is later', () {
       final local = {
         42: makeEntry(nodeNum: 42, lastSeen: DateTime(2024, 6, 1)),
@@ -531,10 +531,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — co-seen edge counting
+  // ImportPreview.build() - co-seen edge counting
   // ===========================================================================
 
-  group('ImportPreview.build() — newCoSeenEdges', () {
+  group('ImportPreview.build() - newCoSeenEdges', () {
     test('counts edges present in import but not in local', () {
       final now = DateTime(2024, 6, 1);
       final local = {
@@ -637,10 +637,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — encounter record counting
+  // ImportPreview.build() - encounter record counting
   // ===========================================================================
 
-  group('ImportPreview.build() — newEncounterRecords', () {
+  group('ImportPreview.build() - newEncounterRecords', () {
     test('counts encounter records not present locally by timestamp', () {
       final t1 = DateTime.fromMillisecondsSinceEpoch(1700000000000);
       final t2 = DateTime.fromMillisecondsSinceEpoch(1700010000000);
@@ -741,10 +741,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — region counting
+  // ImportPreview.build() - region counting
   // ===========================================================================
 
-  group('ImportPreview.build() — newRegions', () {
+  group('ImportPreview.build() - newRegions', () {
     test('counts regions present in import but not locally', () {
       final local = {
         42: makeEntry(
@@ -870,10 +870,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — hasChanges detection
+  // ImportPreview.build() - hasChanges detection
   // ===========================================================================
 
-  group('ImportPreview.build() — hasChanges', () {
+  group('ImportPreview.build() - hasChanges', () {
     test('hasChanges is true for new entry', () {
       final imported = [makeEntry(nodeNum: 42)];
 
@@ -1022,10 +1022,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — aggregate conflict counts
+  // ImportPreview.build() - aggregate conflict counts
   // ===========================================================================
 
-  group('ImportPreview.build() — aggregate counts', () {
+  group('ImportPreview.build() - aggregate counts', () {
     test('conflictCount counts entries with any conflict', () {
       final local = {
         1: makeEntry(nodeNum: 1, socialTag: NodeSocialTag.contact),
@@ -1120,10 +1120,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.build() — complex scenario
+  // ImportPreview.build() - complex scenario
   // ===========================================================================
 
-  group('ImportPreview.build() — complex scenario', () {
+  group('ImportPreview.build() - complex scenario', () {
     test('multi-entry preview with mixed new, merge, and conflict entries', () {
       final now = DateTime(2024, 6, 1);
       final t1 = DateTime.fromMillisecondsSinceEpoch(1700000000000);
@@ -1226,10 +1226,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.applyMerge() — MergeStrategy.keepLocal
+  // ImportPreview.applyMerge() - MergeStrategy.keepLocal
   // ===========================================================================
 
-  group('ImportPreview.applyMerge() — keepLocal strategy', () {
+  group('ImportPreview.applyMerge() - keepLocal strategy', () {
     test('new entries are added directly regardless of strategy', () {
       final imported = [
         makeEntry(
@@ -1358,7 +1358,7 @@ void main() {
         strategy: MergeStrategy.keepLocal,
       );
 
-      // No conflict — mergeWith should fill from import
+      // No conflict - mergeWith should fill from import
       expect(results.first.socialTag, equals(NodeSocialTag.knownRelay));
     });
 
@@ -1461,10 +1461,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.applyMerge() — MergeStrategy.preferImport
+  // ImportPreview.applyMerge() - MergeStrategy.preferImport
   // ===========================================================================
 
-  group('ImportPreview.applyMerge() — preferImport strategy', () {
+  group('ImportPreview.applyMerge() - preferImport strategy', () {
     test('uses imported socialTag on conflict', () {
       final local = {
         42: makeEntry(nodeNum: 42, socialTag: NodeSocialTag.contact),
@@ -1553,7 +1553,7 @@ void main() {
         strategy: MergeStrategy.preferImport,
       );
 
-      // No conflict — mergeWith prefers local (this), so local tag stays
+      // No conflict - mergeWith prefers local (this), so local tag stays
       expect(results.first.socialTag, equals(NodeSocialTag.contact));
     });
 
@@ -1574,7 +1574,7 @@ void main() {
         strategy: MergeStrategy.preferImport,
       );
 
-      // No conflict — mergeWith fills from other when local is null
+      // No conflict - mergeWith fills from other when local is null
       expect(results.first.socialTag, equals(NodeSocialTag.knownRelay));
     });
 
@@ -1604,10 +1604,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.applyMerge() — MergeStrategy.reviewConflicts
+  // ImportPreview.applyMerge() - MergeStrategy.reviewConflicts
   // ===========================================================================
 
-  group('ImportPreview.applyMerge() — reviewConflicts strategy', () {
+  group('ImportPreview.applyMerge() - reviewConflicts strategy', () {
     test('uses per-entry resolution to pick imported socialTag', () {
       final local = {
         42: makeEntry(
@@ -1786,7 +1786,7 @@ void main() {
         localEntries: local,
       );
 
-      // No resolutions provided — reviewConflicts without overrides
+      // No resolutions provided - reviewConflicts without overrides
       // defaults to keepLocal behavior (useSocialTagFromImport is null,
       // strategy != preferImport, so the default mergeWith local-wins
       // behavior is kept)
@@ -1839,11 +1839,11 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.applyMerge() — per-entry resolutions on multiple entries
+  // ImportPreview.applyMerge() - per-entry resolutions on multiple entries
   // ===========================================================================
 
   group(
-    'ImportPreview.applyMerge() — multiple entries with mixed resolutions',
+    'ImportPreview.applyMerge() - multiple entries with mixed resolutions',
     () {
       test('different resolutions for different entries', () {
         final local = {
@@ -1924,10 +1924,10 @@ void main() {
   );
 
   // ===========================================================================
-  // ImportPreview.applyMerge() — empty preview
+  // ImportPreview.applyMerge() - empty preview
   // ===========================================================================
 
-  group('ImportPreview.applyMerge() — empty preview', () {
+  group('ImportPreview.applyMerge() - empty preview', () {
     test('returns empty list for empty preview', () {
       const preview = ImportPreview(entries: [], totalImported: 0);
 
@@ -1942,10 +1942,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.applyMerge() — co-seen and region merging
+  // ImportPreview.applyMerge() - co-seen and region merging
   // ===========================================================================
 
-  group('ImportPreview.applyMerge() — sub-collection merging', () {
+  group('ImportPreview.applyMerge() - sub-collection merging', () {
     test('co-seen relationships are merged via mergeWith', () {
       final now = DateTime(2024, 6, 1);
       final local = {
@@ -2108,10 +2108,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.applyMerge() — strategy comparison
+  // ImportPreview.applyMerge() - strategy comparison
   // ===========================================================================
 
-  group('ImportPreview.applyMerge() — strategy comparison', () {
+  group('ImportPreview.applyMerge() - strategy comparison', () {
     test('same conflict resolved differently by each strategy', () {
       final local = {
         42: makeEntry(
@@ -2188,7 +2188,7 @@ void main() {
         final imported = [
           makeEntry(
             nodeNum: 42,
-            // No socialTag or userNote — no conflicts
+            // No socialTag or userNote - no conflicts
             encounterCount: 10,
             coSeenNodes: {
               100: CoSeenRelationship(
@@ -2240,10 +2240,10 @@ void main() {
   });
 
   // ===========================================================================
-  // ImportPreview.applyMerge() — sigil merging
+  // ImportPreview.applyMerge() - sigil merging
   // ===========================================================================
 
-  group('ImportPreview.applyMerge() — sigil handling', () {
+  group('ImportPreview.applyMerge() - sigil handling', () {
     test('preserves local sigil when import has none', () {
       const sigil = SigilData(
         vertices: 5,
@@ -2309,7 +2309,7 @@ void main() {
   // EntryMergePreview helper getters
   // ===========================================================================
 
-  group('EntryMergePreview — helper getters', () {
+  group('EntryMergePreview - helper getters', () {
     test('isNew is true when localEntry is null', () {
       final preview = EntryMergePreview(
         nodeNum: 42,
@@ -2440,7 +2440,7 @@ void main() {
   // ImportPreview aggregate properties
   // ===========================================================================
 
-  group('ImportPreview — aggregate properties', () {
+  group('ImportPreview - aggregate properties', () {
     test('isEmpty is true for empty entries list', () {
       const preview = ImportPreview(entries: [], totalImported: 0);
 

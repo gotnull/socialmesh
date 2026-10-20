@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../core/logging.dart';
 import '../../../services/notifications/notification_service.dart';
 import '../models/tak_event.dart';
@@ -99,7 +100,7 @@ class TakProximityMonitor {
 
       if (distKm < radiusKm) {
         if (!wasInside) {
-          // Entity just entered the radius — fire alert.
+          // Entity just entered the radius - fire alert.
           _insideRadius.add(event.uid);
           AppLogging.tak(
             'ProximityMonitor: ${event.callsign ?? event.uid} at '
@@ -118,7 +119,7 @@ class TakProximityMonitor {
         }
       } else {
         if (wasInside) {
-          // Entity exited the radius — reset dedup.
+          // Entity exited the radius - reset dedup.
           _insideRadius.remove(event.uid);
           AppLogging.tak(
             'ProximityMonitor: ${event.callsign ?? event.uid} at '

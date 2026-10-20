@@ -11,7 +11,7 @@ import '../../core/logging.dart';
 /// Falls back here when `FirebaseAuth.currentUser?.uid` is null. The id is
 /// generated once on first read, persisted to `SharedPreferences`, and
 /// returned for the lifetime of the install. It survives logout/login,
-/// app updates, and Riverpod container resets — only an app uninstall or
+/// app updates, and Riverpod container resets - only an app uninstall or
 /// explicit clear-app-data wipes it.
 ///
 /// This is the only persistent identity exposed to the external purchase
@@ -24,7 +24,7 @@ class DeviceInstallId {
   /// Read or lazily mint the device install id.
   ///
   /// Returns the same value on every call within an install. Never
-  /// throws — a SharedPreferences failure logs and falls back to an
+  /// throws - a SharedPreferences failure logs and falls back to an
   /// in-memory UUID, which keeps the current session working but will
   /// regenerate on cold start.
   static Future<String> read(SharedPreferences prefs) async {

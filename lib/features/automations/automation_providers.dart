@@ -337,13 +337,13 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
       'build() entered (notifier id=${identityHashCode(this)})',
     );
     // Repository is now lifetime-stable (see automationRepositoryProvider).
-    // build() runs once per notifier lifetime — no churn on store / sync /
+    // build() runs once per notifier lifetime - no churn on store / sync /
     // entitlement resolution. That keeps the UI from flashing Quick Start
     // templates while the cold-start providers settle.
     final repository = ref.read(automationRepositoryProvider);
     repository.addListener(_onRepositoryChanged);
 
-    // Sync service is wired via listen, not watch — its rebuilds (entitlement
+    // Sync service is wired via listen, not watch - its rebuilds (entitlement
     // changes, store resolution) must not retrigger AutomationsNotifier.build.
     ref.listen<AutomationSyncService?>(automationSyncServiceProvider, (
       prev,

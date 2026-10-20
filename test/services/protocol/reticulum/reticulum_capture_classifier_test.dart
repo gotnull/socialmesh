@@ -45,7 +45,7 @@ Uint8List _opaquePayload({int len = 32}) {
 }
 
 void main() {
-  group('classifyBytes — file-magic guards', () {
+  group('classifyBytes - file-magic guards', () {
     test('rejects file that is not SMRC at all → invalid', () {
       final result = _classifier.classifyBytes(
         Uint8List.fromList('NOTAREAL'.codeUnits),
@@ -72,7 +72,7 @@ void main() {
     });
   });
 
-  group('classifyBytes — payload kind detection', () {
+  group('classifyBytes - payload kind detection', () {
     test('all-SHRN payloads → harness', () {
       final bytes = _smrcBytesFor([
         _event(fromNode: 0xAABB, seq: 0, payload: _harnessPayload()),
@@ -94,7 +94,7 @@ void main() {
       ]);
       final result = _classifier.classifyBytes(bytes);
       expect(result.kind, ReticulumCaptureKind.realCandidate);
-      // Mixed file still flags that it contained harness records — useful
+      // Mixed file still flags that it contained harness records - useful
       // for excluding those specific records during Phase 2 derivation.
       expect(result.containsHarnessMagic, isTrue);
       expect(result.recordCount, 3);
@@ -132,7 +132,7 @@ void main() {
     });
   });
 
-  group('classifyBytes — first/last seen + distinct sources', () {
+  group('classifyBytes - first/last seen + distinct sources', () {
     test('firstSeenMs/lastSeenMs reflect record extremes', () {
       final bytes = _smrcBytesFor([
         ReticulumFragmentEvent(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// D33 — cross-device contact-MMF symmetry tests.
+// D33 - cross-device contact-MMF symmetry tests.
 //
 // Pinned invariant (2026-05-07 fix):
 //
@@ -22,7 +22,7 @@
 // and they exercise both the iPhone-authored and sim-authored
 // directions because the bug needed BOTH ends to round-trip cleanly.
 //
-// They do NOT pump the chat screen — outbound MMF derivation at
+// They do NOT pump the chat screen - outbound MMF derivation at
 // SEND time is exercised separately via `_outboundMmfFor` in
 // `meshcore_chat_screen.dart` (covered by widget + integration
 // tests). The on-disk persistence path is what the field-test
@@ -73,9 +73,9 @@ void main() {
     test('iPhone outbound MMF = 02:<iphone-prefix>:<ts>', () async {
       final iphoneFull = padTo32(iphonePrefix);
       // Partition: recipient pubkey hex = SIM's full pubkey hex.
-      final simPubkeyHex = (padTo32(
-        simPrefix,
-      )).map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      final simPubkeyHex = (padTo32(simPrefix))
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .join();
       const wireTsMs = 1700000000000;
 
       SharedPreferences.setMockInitialValues(
@@ -144,9 +144,9 @@ void main() {
   group('sim-authored DM: both ends store the same MMF', () {
     test('sim outbound MMF = 02:<sim-prefix>:<ts>', () async {
       final simFull = padTo32(simPrefix);
-      final iphonePubkeyHex = (padTo32(
-        iphonePrefix,
-      )).map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      final iphonePubkeyHex = (padTo32(iphonePrefix))
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .join();
       const wireTsMs = 1700000004000;
 
       SharedPreferences.setMockInitialValues(
@@ -212,7 +212,7 @@ void main() {
     // This is the bug the field test surfaced, mechanically pinned:
     // an iPhone-authored message goes into both stores with the same
     // MMF; a sim reply that embeds the iPhone-author MMF as `target`
-    // can be resolved by the iPhone via that exact MMF string — no
+    // can be resolved by the iPhone via that exact MMF string - no
     // missing-target fallback.
     test('sim reply embedding iPhone-author MMF resolves to the '
         'iPhone-authored bubble in iPhone\'s local store', () async {
@@ -248,7 +248,7 @@ void main() {
         originalMmf,
         reason:
             'iPhone-side stored MMF must equal the MMF a remote '
-            'sender will embed when replying — that is the entire '
+            'sender will embed when replying - that is the entire '
             'point of the symmetry contract.',
       );
 
@@ -271,7 +271,7 @@ void main() {
       expect(simRecords.first.mmf, originalMmf);
       // Sim therefore embeds `originalMmf` in its reply envelope.
       // iPhone receives the reply, decodes target=originalMmf, and
-      // looks up via _findMessageByMmf — the lookup hits
+      // looks up via _findMessageByMmf - the lookup hits
       // `iphoneRecords.first` because both sides share the same MMF
       // string. No fallback. End-to-end symmetry confirmed.
     });

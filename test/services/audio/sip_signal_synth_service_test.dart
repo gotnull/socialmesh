@@ -47,12 +47,12 @@ void main() {
     );
 
     test('rapid taps record one cue per call (no debounce / drop)', () async {
-      // Eight pads on the composer keypad — fire all of them
+      // Eight pads on the composer keypad - fire all of them
       // back-to-back without awaiting in between. The override sink
       // captures synchronously so the order is deterministic.
       const padMidi = [60, 62, 64, 65, 67, 69, 71, 72];
       for (final m in padMidi) {
-        // Fire-and-forget — composer pad-tap doesn't await.
+        // Fire-and-forget - composer pad-tap doesn't await.
         unawaited(
           service.playToneTap(midi: m, instrument: SipSignalInstrument.sine),
         );

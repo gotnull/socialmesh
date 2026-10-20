@@ -28,7 +28,7 @@ ReticulumCaptureMetadata _sampleMetadata() {
 }
 
 void main() {
-  group('ReticulumCaptureMetadata — JSON round-trip', () {
+  group('ReticulumCaptureMetadata - JSON round-trip', () {
     test('toJson then fromJson preserves all fields', () {
       final original = _sampleMetadata();
       final restored = ReticulumCaptureMetadata.fromJson(original.toJson());
@@ -81,7 +81,7 @@ void main() {
     });
   });
 
-  group('ReticulumCaptureMetadata — payload-byte safety contract', () {
+  group('ReticulumCaptureMetadata - payload-byte safety contract', () {
     test('toJson never carries a payload field, however named', () {
       final original = _sampleMetadata();
       final j = original.toJson();

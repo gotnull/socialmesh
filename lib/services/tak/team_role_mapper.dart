@@ -90,7 +90,7 @@ abstract final class TeamRoleMapper {
     MemberRole.K9: 'K9',
   };
 
-  // Reverse lookups — later entries win, so Cyan beats Unspecifed_Color
+  // Reverse lookups - later entries win, so Cyan beats Unspecifed_Color
   // and TeamMember beats Unspecifed.
   static final _teamByName = <String, Team>{
     for (final entry in _teamNames.entries)

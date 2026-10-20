@@ -100,36 +100,29 @@ void main() {
       );
     });
 
-    test(
-      'Node Detail wraps the helpers with busy-flag UI but does not duplicate logic',
-      () {
-        expect(detailSource.contains("import 'node_actions.dart';"), true);
-        expect(
-          detailSource.contains(
-            'await toggleNodeFavorite(context, ref, node);',
-          ),
-          true,
-          reason:
-              'Node Detail _toggleFavorite must delegate to the shared helper, '
-              'not duplicate the protocol round-trip locally.',
-        );
-        expect(
-          detailSource.contains('await toggleNodeMute(context, ref, node);'),
-          true,
-        );
-        expect(
-          detailSource.contains(
-            'await sendNodeTraceroute(context, ref, node);',
-          ),
-          true,
-        );
-        // The screen still owns its busy flags (these drive inline button
-        // spinners that the sheet does not need).
-        expect(detailSource.contains('_isTogglingFavorite'), true);
-        expect(detailSource.contains('_isTogglingMute'), true);
-        expect(detailSource.contains('_isSendingTraceroute'), true);
-      },
-    );
+    test('Node Detail wraps the helpers with busy-flag UI but does not duplicate logic', () {
+      expect(detailSource.contains("import 'node_actions.dart';"), true);
+      expect(
+        detailSource.contains('await toggleNodeFavorite(context, ref, node);'),
+        true,
+        reason:
+            'Node Detail _toggleFavorite must delegate to the shared helper, '
+            'not duplicate the protocol round-trip locally.',
+      );
+      expect(
+        detailSource.contains('await toggleNodeMute(context, ref, node);'),
+        true,
+      );
+      expect(
+        detailSource.contains('await sendNodeTraceroute(context, ref, node);'),
+        true,
+      );
+      // The screen still owns its busy flags (these drive inline button
+      // spinners that the sheet does not need).
+      expect(detailSource.contains('_isTogglingFavorite'), true);
+      expect(detailSource.contains('_isTogglingMute'), true);
+      expect(detailSource.contains('_isSendingTraceroute'), true);
+    });
 
     test('async safety: refs captured before awaits in the helper', () {
       // Pre-capture pattern: the cooldown notifier is read once into a
@@ -145,19 +138,13 @@ void main() {
       );
     });
 
-    test(
-      'logs use the [NodeActions] marker (not [QuickActions]) inside the helper',
-      () {
-        // Logs inside the shared helper should be attributed to NodeActions
-        // so future incident triage can tell sheet vs detail callers apart
-        // from the marker on the call-site side.
-        expect(helperSource.contains('[NodeActions] favorite toggled'), true);
-        expect(helperSource.contains('[NodeActions] mute toggled'), true);
-        expect(
-          helperSource.contains('[NodeActions] traceroute requested'),
-          true,
-        );
-      },
-    );
+    test('logs use the [NodeActions] marker (not [QuickActions]) inside the helper', () {
+      // Logs inside the shared helper should be attributed to NodeActions
+      // so future incident triage can tell sheet vs detail callers apart
+      // from the marker on the call-site side.
+      expect(helperSource.contains('[NodeActions] favorite toggled'), true);
+      expect(helperSource.contains('[NodeActions] mute toggled'), true);
+      expect(helperSource.contains('[NodeActions] traceroute requested'), true);
+    });
   });
 }

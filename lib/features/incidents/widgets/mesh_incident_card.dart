@@ -121,7 +121,7 @@ class MeshIncidentCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Badge widgets — matching NodeDex / Aether badge pattern:
+// Badge widgets - matching NodeDex / Aether badge pattern:
 // color.withValues(alpha: 0.10-0.15) fill, 0.25-0.3 border, 0.5 border width
 // ---------------------------------------------------------------------------
 

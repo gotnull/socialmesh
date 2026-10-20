@@ -7,11 +7,11 @@
 //
 // Coverage:
 //   - I1 Local Canvas immunity (static-grep): the HUD widget is
-//     never mounted on local-scope viewers — confirmed by source
+//     never mounted on local-scope viewers - confirmed by source
 //     inspection of the viewport body's Stack children.
 //   - I3 Queue-full block leaves pending_op untouched: paint a row
 //     into a real DB at the soft cap, attempt one more paint via
-//     the recording fake — assert no row was added.
+//     the recording fake - assert no row was added.
 //   - I4 Cooling decay: governor saturation lifts after the window
 //     drains; the snapshot transitions cooling → queued → idle.
 library;
@@ -63,7 +63,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('I1 — Local Canvas immunity (static surface guarantees)', () {
+  group('I1 - Local Canvas immunity (static surface guarantees)', () {
     test('CanvasTransmissionStatusHud is only mounted under a mesh-scope '
         'branch in canvas_viewport_body.dart', () {
       final body = File(
@@ -82,7 +82,7 @@ void main() {
         1,
         reason:
             'transmission HUD should appear exactly once in the viewport '
-            'body — any new mount site must be reviewed for scope gating',
+            'body - any new mount site must be reviewed for scope gating',
       );
       // Find the byte offset of the HUD mount and ensure the most
       // recent `CanvasScope.mesh` guard appears before it.
@@ -101,10 +101,10 @@ void main() {
     });
   });
 
-  group('I3 — Soft-cap is informative, not a hard block', () {
+  group('I3 - Soft-cap is informative, not a hard block', () {
     test(
       'severity=full snapshot still has accurate pending count + cap '
-      'reference — the HUD pill can read both to render queue chrome',
+      'reference - the HUD pill can read both to render queue chrome',
       () async {
         final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
         await db.init();
@@ -155,7 +155,7 @@ void main() {
     );
   });
 
-  group('I4 — Cooling decay', () {
+  group('I4 - Cooling decay', () {
     test(
       'governor saturation lifts after the 60-second window drains; '
       'snapshot transitions cooling → queued → idle (queue drained)',

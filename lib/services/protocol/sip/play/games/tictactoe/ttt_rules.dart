@@ -3,7 +3,7 @@
 
 import 'ttt_payload.dart';
 
-/// Pure Tic-Tac-Toe rules. No I/O, no clock, no logging side effects —
+/// Pure Tic-Tac-Toe rules. No I/O, no clock, no logging side effects -
 /// a [TttBoard] is just a 9-cell value type that gets transformed by
 /// `apply` and queried by `winner` / `isDraw` / `isLegalMove`.
 ///

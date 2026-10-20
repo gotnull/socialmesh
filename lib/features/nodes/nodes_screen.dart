@@ -118,7 +118,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     return presenceMap[node.nodeNum]?.confidence ?? node.presenceConfidence;
   }
 
-  /// Whether a node is **online** — heard within the Meshtastic firmware
+  /// Whether a node is **online** - heard within the Meshtastic firmware
   /// online window (2 h).  Much broader than [PresenceConfidence.isActive]
   /// (2 min) and matches what the device screen reports as "online".
   bool _isOnlineNode(Map<int, NodePresence> presenceMap, MeshNode node) {
@@ -191,12 +191,12 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     // Apply filter
     nodesList = _applyFilter(nodesList, myNodeNum, linkedNodeIds, presenceMap);
 
-    // Apply role filter — orthogonal to the presence filter; large-mesh
+    // Apply role filter - orthogonal to the presence filter; large-mesh
     // users typically pair "Active" + "Client" to silence routers and
     // repeaters from the contact-style list.
     nodesList = applyRoleFilter(nodesList, _activeRoleFilter).toList();
 
-    // Apply group filter — user-defined groups (nodedex.db). Orthogonal to
+    // Apply group filter - user-defined groups (nodedex.db). Orthogonal to
     // presence + role; membership comes from the groups provider.
     final groupsState = ref.watch(nodeGroupsProvider).value;
     final groupMembership =
@@ -575,7 +575,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 ),
               )
             else ...[
-              // Aether Flights Nearby — show matched active flights
+              // Aether Flights Nearby - show matched active flights
               // above the regular node list so they're impossible to miss.
               if (AppFeatureFlags.isAetherEnabled)
                 ..._buildAetherFlightSlivers(context),
@@ -645,7 +645,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     }
 
     // Disable section headers when viewing favorites filter since all
-    // visible nodes are already favorites — status grouping is misleading.
+    // visible nodes are already favorites - status grouping is misleading.
     final showHeaders =
         _showSectionHeaders && _activeFilter != NodeFilter.favorites;
 
@@ -1765,9 +1765,8 @@ class _NodeCard extends ConsumerWidget {
                   SizedBox(width: AppTheme.spacing4),
                   Text(
                     context.l10n.nodesScreenLogsLabel,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: context.textTertiary),
                   ),
                   SizedBox(width: AppTheme.spacing8),
                   Icon(Icons.message, size: 14, color: context.textTertiary),
@@ -1849,7 +1848,7 @@ class _NodeCard extends ConsumerWidget {
                           ),
                         ],
                       ),
-                    // Transport badge — own node shows direct link
+                    // Transport badge - own node shows direct link
                     // (TCP / BLE / USB); other nodes show mesh path
                     // (MQTT / RF).
                     _TransportBadge(
@@ -1865,7 +1864,7 @@ class _NodeCard extends ConsumerWidget {
             ],
           ),
         ),
-        // Status icons & chevron — fixed width so trailing column never
+        // Status icons & chevron - fixed width so trailing column never
         // shifts the content area.
         SizedBox(
           width: 28,
@@ -2020,7 +2019,7 @@ class _CompactNodeTile extends StatelessWidget {
                             );
                           }),
                         ),
-                      // Hop count — graphical numbered dots
+                      // Hop count - graphical numbered dots
                       if (node.hopCount != null)
                         _CompactHopIndicator(hopCount: node.hopCount!),
                       // Transport badge (RF / MQTT)
@@ -2112,7 +2111,7 @@ class _CompactHopIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Direct neighbour — single accent dot with "D"
+    // Direct neighbour - single accent dot with "D"
     if (hopCount == 0) {
       return _hopDot(
         context,

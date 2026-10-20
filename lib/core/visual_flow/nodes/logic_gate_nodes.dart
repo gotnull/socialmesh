@@ -11,7 +11,7 @@
 // allowing users to wire in as many upstream condition/trigger signals as
 // needed. The NOT gate has a single input.
 //
-// All logic gates output an EventSignalOutputData — they act as filters
+// All logic gates output an EventSignalOutputData - they act as filters
 // on the event signal flow, not as boolean data sources. This keeps the
 // wire type consistent through the graph: amber EventSignal wires flow
 // from triggers through conditions and logic gates into actions.
@@ -36,7 +36,7 @@ import '../vs_node_view/special_nodes/vs_list_node.dart';
 // Constants
 // ---------------------------------------------------------------------------
 
-/// Node width for logic gate nodes — compact since they have minimal UI.
+/// Node width for logic gate nodes - compact since they have minimal UI.
 const double _kGateNodeWidth = 160.0;
 
 /// Logic gate type identifiers.
@@ -90,7 +90,7 @@ class _DelayConfig {
 }
 
 // ---------------------------------------------------------------------------
-// AND gate — VSListNode with dynamic EventSignal inputs
+// AND gate - VSListNode with dynamic EventSignal inputs
 // ---------------------------------------------------------------------------
 
 /// Builds an AND logic gate node.
@@ -100,7 +100,7 @@ class _DelayConfig {
 /// for the output signal to be considered "passed" at compile time.
 ///
 /// At runtime, AND semantics are achieved by the automation engine's
-/// existing condition evaluation — all conditions in the Automation.conditions
+/// existing condition evaluation - all conditions in the Automation.conditions
 /// list are AND-gated.
 VSNodeDataBuilder _buildAndGateBuilder() {
   return (Offset offset, VSOutputData? ref) {
@@ -150,7 +150,7 @@ VSNodeDataBuilder _buildAndGateBuilder() {
 }
 
 // ---------------------------------------------------------------------------
-// OR gate — VSListNode with dynamic EventSignal inputs
+// OR gate - VSListNode with dynamic EventSignal inputs
 // ---------------------------------------------------------------------------
 
 /// Builds an OR logic gate node.
@@ -160,7 +160,7 @@ VSNodeDataBuilder _buildAndGateBuilder() {
 /// pass for the output signal to be considered "passed" at compile time.
 ///
 /// At runtime, OR semantics are achieved by the compiler emitting multiple
-/// Automation objects — one for each upstream path through the OR gate.
+/// Automation objects - one for each upstream path through the OR gate.
 /// This is a design-time tool; the engine does not evaluate OR at runtime.
 VSNodeDataBuilder _buildOrGateBuilder() {
   return (Offset offset, VSOutputData? ref) {
@@ -210,7 +210,7 @@ VSNodeDataBuilder _buildOrGateBuilder() {
 }
 
 // ---------------------------------------------------------------------------
-// NOT gate — single EventSignal input, inverted output
+// NOT gate - single EventSignal input, inverted output
 // ---------------------------------------------------------------------------
 
 /// Builds a NOT logic gate node.
@@ -257,7 +257,7 @@ VSNodeDataBuilder _buildNotGateBuilder() {
 }
 
 // ---------------------------------------------------------------------------
-// Delay gate — single EventSignal input with configurable delay
+// Delay gate - single EventSignal input with configurable delay
 // ---------------------------------------------------------------------------
 
 /// Builds a Delay logic gate node.
@@ -365,7 +365,7 @@ List<VSNodeDataBuilder> allLogicGateNodeBuilders() {
 // Gate node custom rendering
 //
 // Logic gate nodes use a custom nodeBuilder in the VSNodeView to render
-// a distinctive visual style — a compact symbol-centric card with the
+// a distinctive visual style - a compact symbol-centric card with the
 // gate icon prominently displayed and a minimal interface layout.
 //
 // This builder is registered via the VSNodeView.nodeBuilder parameter

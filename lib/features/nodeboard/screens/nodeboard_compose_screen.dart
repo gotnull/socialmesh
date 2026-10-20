@@ -111,7 +111,7 @@ class _NodeBoardComposeScreenState extends ConsumerState<NodeBoardComposeScreen>
     safeSetState(() {});
   }
 
-  /// The field the character counter should track — the currently-focused
+  /// The field the character counter should track - the currently-focused
   /// one, falling back to the body (the primary field) when neither is
   /// focused.
   bool get _counterTracksTitle => _isThread && _titleFocus.hasFocus;
@@ -295,7 +295,7 @@ class _NodeBoardComposeScreenState extends ConsumerState<NodeBoardComposeScreen>
 }
 
 // ---------------------------------------------------------------------------
-// Title field — borderless, 20px bold, lives inside the gradient container.
+// Title field - borderless, 20px bold, lives inside the gradient container.
 // ---------------------------------------------------------------------------
 
 class _TitleField extends StatelessWidget {
@@ -353,7 +353,7 @@ class _TitleField extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Body field — borderless multi-line text area, 16px regular.
+// Body field - borderless multi-line text area, 16px regular.
 // ---------------------------------------------------------------------------
 
 class _BodyField extends StatelessWidget {
@@ -405,7 +405,7 @@ class _BodyField extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Bottom action row inside the gradient container — circular character
+// Bottom action row inside the gradient container - circular character
 // counter. Colors follow the same thresholds as Signals.
 // ---------------------------------------------------------------------------
 
@@ -470,7 +470,7 @@ class _ComposeActionBar extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Info banner — shield icon + muted text, matches Signals info rows.
+// Info banner - shield icon + muted text, matches Signals info rows.
 // ---------------------------------------------------------------------------
 
 class _InfoBanner extends StatelessWidget {
@@ -501,7 +501,7 @@ class _InfoBanner extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Gradient submit button — full-width, matches Create Signal pattern.
+// Gradient submit button - full-width, matches Create Signal pattern.
 // ---------------------------------------------------------------------------
 
 class _SubmitButton extends StatelessWidget {

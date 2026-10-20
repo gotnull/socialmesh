@@ -6,15 +6,15 @@
 // Spec anchor: docs/canvas/CANVAS_SYNC_V0_1.md §6.1.
 //
 // Small anchored pill in the canvas viewer's top-right area,
-// stacked above the transmission HUD. Mesh-scope only — the host
+// stacked above the transmission HUD. Mesh-scope only - the host
 // viewport gates by `canvas.scope == CanvasScope.mesh` before
 // mounting this widget.
 //
 // Labels (lowercase, mesh-native):
-//   - idle        — hidden entirely (zero footprint)
-//   - recovering  — accent-tinted "recovering paint" + brush icon
-//   - syncing     — accent-tinted "syncing tiles" + waves icon
-//   - quiet       — tertiary "mesh quiet" + ear icon
+//   - idle        - hidden entirely (zero footprint)
+//   - recovering  - accent-tinted "recovering paint" + brush icon
+//   - syncing     - accent-tinted "syncing tiles" + waves icon
+//   - quiet       - tertiary "mesh quiet" + ear icon
 //
 // Anchored chrome: mounted as a sibling of CanvasViewer in the
 // Stack so it never receives pan/zoom transforms.
@@ -87,7 +87,7 @@ class _HydrationPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final accent = context.accentColor;
-    // recovering + syncing both use the accent tint — they're both
+    // recovering + syncing both use the accent tint - they're both
     // "the radio is carrying ink to us". quiet uses tertiary text
     // because it's "nothing heard yet", a calmer signal.
     final isAccent =

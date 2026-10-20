@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/legal/legal_constants.dart';
 import '../../core/logging.dart';
@@ -209,7 +210,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   bool _downlinkEnabled = false;
   bool _positionEnabled = false;
 
-  // Key management — controller is wizard-owned so the manual-entry
+  // Key management - controller is wizard-owned so the manual-entry
   // text can be committed into _generatedKey before navigating to
   // Review or saving the channel.
   final _keyController = TextEditingController();
@@ -241,7 +242,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   void _onKeyControllerChanged() {
     if (!mounted) return;
     setState(() {
-      // Clear any stale commit error once the user resumes typing —
+      // Clear any stale commit error once the user resumes typing -
       // the live validity check in canProceed takes over.
       if (_keyCommitError != null) _keyCommitError = null;
     });
@@ -306,7 +307,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   /// Trim/validate the live text in the key controller and persist it
   /// into the wizard draft. Returns false (and sets [_keyCommitError])
   /// when the controller text is not valid base64 for the current
-  /// privacy level — callers must block navigation in that case.
+  /// privacy level - callers must block navigation in that case.
   ///
   /// Open renders no key field and commits an empty key; every other
   /// level validates the typed base64 against its byte size.
@@ -543,10 +544,8 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
             const SizedBox(height: AppTheme.spacing20),
             Text(
               stepHelp.content(l10n),
-              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
-                color: sheetContext.textSecondary,
-                height: 1.5,
-              ),
+              style: Theme.of(sheetContext).textTheme.bodyMedium
+                  ?.copyWith(color: sheetContext.textSecondary, height: 1.5),
             ),
             const SizedBox(height: AppTheme.spacing16),
             InkWell(

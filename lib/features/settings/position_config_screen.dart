@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -10,8 +12,10 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/status_banner.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
@@ -269,7 +273,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
       _smartBroadcastEnabled = config.positionBroadcastSmartEnabled;
       _fixedPosition = config.fixedPosition;
 
-      // Preserve 0 from the device — it means "firmware default".
+      // Preserve 0 from the device - it means "firmware default".
       // Snap to the nearest allowed discrete value for broadcast interval.
       _positionBroadcastSecs = _snapToNearest(
         config.positionBroadcastSecs > 0 ? config.positionBroadcastSecs : 3600,

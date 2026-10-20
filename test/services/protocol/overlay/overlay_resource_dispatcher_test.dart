@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Tests for [OverlayResourceDispatcher] — the capability-gated
+/// Tests for [OverlayResourceDispatcher] - the capability-gated
 /// entry point with deterministic fallback policy.
 ///
 /// Locked P5 flag matrix:
@@ -117,7 +117,7 @@ void main() {
         result.reason,
         OverlayResourceDispatchReason.peerCapabilityUnknown,
       );
-      // Engine never got an offerLocal call — tick is a no-op.
+      // Engine never got an offerLocal call - tick is a no-op.
       await r.engine.tick();
       await r.engine.dispose();
     },

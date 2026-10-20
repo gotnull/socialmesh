@@ -19,7 +19,7 @@
 //
 //   I1.LWW.modSeq
 //     The third clause uses an unsigned 8-bit "forward window" of
-//     [1..127] — values outside that window are rejected. This makes
+//     [1..127] - values outside that window are rejected. This makes
 //     op_seq rollover safe within a single wall-clock second.
 //
 // Do NOT inline or duplicate this comparator. Tests pin its behaviour

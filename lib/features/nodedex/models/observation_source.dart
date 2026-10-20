@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Observation Source — how a NodeDex observation reached the local radio.
+// Observation Source - how a NodeDex observation reached the local radio.
 //
 // Stamped at ingest from MeshPacket / MeshNode metadata (via_mqtt + hops).
 // Persisted on the canonical NodeDex entry as the latest observation's
 // classification. Encounter-level history of this value is intentionally
-// not persisted yet — see the v12 migration in nodedex_database.dart.
+// not persisted yet - see the v12 migration in nodedex_database.dart.
 
 import 'package:socialmesh/l10n/app_localizations.dart';
 
@@ -25,13 +25,13 @@ enum ObservationSource {
   indirectRf,
 
   /// Came from the device's NodeDB sync at reconnect, not a fresh
-  /// live observation. Reserved — currently the live-encounter ingest
+  /// live observation. Reserved - currently the live-encounter ingest
   /// path is the only writer, so this value is a placeholder for a
   /// future deviceDbSync stamping pass.
   nodeDb,
 
   /// via_mqtt was not present (legacy firmware) or other case where
-  /// the path could not be classified. Honest fallback — never used
+  /// the path could not be classified. Honest fallback - never used
   /// to mean "we guessed RF".
   unknown;
 

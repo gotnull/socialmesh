@@ -72,8 +72,7 @@ class PermissionGate extends ConsumerWidget {
 
     if (mode == PermissionGateMode.disabled) {
       final tooltip =
-          deniedTooltip ??
-          'Requires ${_humanReadable(permission.name)}'; // lint-allow: hardcoded-string
+          deniedTooltip ?? 'Requires ${_humanReadable(permission.name)}'; // lint-allow: hardcoded-string
       AppLogging.uiGates(
         'disabled button: ${permission.name} '
         '(role=$roleName, requires ${_requiredRoleHint(permission)})',

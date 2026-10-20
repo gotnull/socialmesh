@@ -14,12 +14,12 @@ import 'reticulum_safe_log.dart';
 /// `RETICULUM_TUNNEL_V0_1.md` §11.6.2 + §12.1.
 ///
 /// Reassembly key is `(fromNode, index)`. Out-of-order delivery is
-/// supported — fragments are stored by `abs(position)` (1-indexed).
+/// supported - fragments are stored by `abs(position)` (1-indexed).
 /// A frame emits the moment the last fragment (`position < 0`) is
 /// received AND every position `1..N` is present, where `N = abs(position)`
 /// of that last fragment.
 ///
-/// Hard limits — values from the original Phase 2 sprint spec:
+/// Hard limits - values from the original Phase 2 sprint spec:
 ///   * `kMaxConcurrentBuffers   = 64`
 ///   * `kMaxFragmentsPerBuffer  = 64`
 ///   * `kMaxFrameSizeBytes      = 16 * 1024`
@@ -128,7 +128,7 @@ class ReticulumReassembler {
         _evictOldest('overflow_buffers');
       }
       // Drop oldest while the new fragment wouldn't fit in the global
-      // memory budget. We only drop other buffers — never the new
+      // memory budget. We only drop other buffers - never the new
       // arrival itself; if even an empty buffer can't accept this
       // fragment, the global cap is set too small.
       while (_globalBytes + bodyLen > _globalMemoryCapBytes &&
@@ -263,7 +263,7 @@ class ReticulumReassembler {
       _dropBuffer(k, buf, 'timeout_inactivity');
       _emitStats(droppedTimeoutInactivity: 1);
     }
-    // Emit a fresh snapshot regardless of whether anything dropped —
+    // Emit a fresh snapshot regardless of whether anything dropped -
     // keeps `framesPerSecond` decaying toward zero on the UI when
     // emissions stop, and keeps `activeBuffers` / `bufferedBytes`
     // gauges fresh under the 1 Hz Timer that drives this method.
@@ -284,7 +284,7 @@ class ReticulumReassembler {
   // ── internals ──────────────────────────────────────────────────────
 
   /// Pack `(fromNode, index)` into a single int key. fromNode is
-  /// uint32, index is uint8 — fits comfortably in Dart's int.
+  /// uint32, index is uint8 - fits comfortably in Dart's int.
   static int _bufferKey(int fromNode, int index) {
     return (fromNode << 8) | (index & 0xFF);
   }

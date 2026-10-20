@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Mesh Capacity Advisor — dedicated screen.
+// Mesh Capacity Advisor - dedicated screen.
 //
 // Drawer-level surface that explains how the local mesh's density relates
 // to the active modem preset. Visual language mirrors Signals (gradient
@@ -60,7 +60,7 @@ class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
     super.initState();
     // One-shot "screen opened" telemetry. The advisor's actual state
     // transitions are logged inside [MeshCapacitySnapshotNotifier] using
-    // a stable dedupe key — logging from build() here would spam every
+    // a stable dedupe key - logging from build() here would spam every
     // time the activity histogram rebuilt.
     AppLogging.meshCapacity('screen opened sourceSurface=mesh_capacity_screen');
   }
@@ -75,7 +75,7 @@ class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
     FocusScope.of(context).unfocus();
   }
 
-  /// All nodes considered RF-active for the screen — direct radio
+  /// All nodes considered RF-active for the screen - direct radio
   /// observations (not MQTT-bridged), excluding self, heard within the
   /// last 60 minutes (the broadest window the advisor reasons about).
   /// This is the candidate set; window/search filters are applied on
@@ -260,7 +260,7 @@ class _MeshCapacityScreenState extends ConsumerState<MeshCapacityScreen>
             const SliverToBoxAdapter(child: _ActivitySection()),
 
             // Pinned search + window filter chips for the RF-active
-            // node list — same primitive as Presence/NodeDex/Signals.
+            // node list - same primitive as Presence/NodeDex/Signals.
             SliverPersistentHeader(
               pinned: true,
               delegate: SearchFilterHeaderDelegate(
@@ -1180,7 +1180,7 @@ class _SuggestedPresetTile extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Activity timeline (last-heard histogram) — Presence-style 5 buckets.
+// Activity timeline (last-heard histogram) - Presence-style 5 buckets.
 // ---------------------------------------------------------------------------
 
 class _ActivitySection extends ConsumerWidget {

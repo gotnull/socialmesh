@@ -79,7 +79,7 @@ abstract final class SmPacketKind {
   /// SPP_ABORT (SPP v1 cancel).
   static const int sppAbort = 0x0A;
 
-  /// SM_FEED_POST — mesh feed post broadcast.
+  /// SM_FEED_POST - mesh feed post broadcast.
   static const int feedPost = 0x0B;
 }
 
@@ -204,7 +204,7 @@ abstract final class SmFileTransferLimits {
   /// Maximum number of missing chunk indexes in a NACK.
   static const int maxNackIndexes = 16;
 
-  /// Transfer TTL — partial transfers expire after this duration.
+  /// Transfer TTL - partial transfers expire after this duration.
   static const Duration transferTtl = Duration(hours: 24);
 
   /// Maximum allowed filename length in bytes (UTF-8).

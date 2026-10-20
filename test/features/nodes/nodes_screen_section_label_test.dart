@@ -26,7 +26,7 @@ const _expectedQuietSection = <String, String>{
 
 // Words that, if they appear as the *whole* value for either renamed
 // key, indicate a regression to the old "Inactive" wording. Loose
-// matches like "calma" (es) intentionally allowed — the banned list is
+// matches like "calma" (es) intentionally allowed - the banned list is
 // for the literal pre-rename strings.
 const _bannedExactValues = <String>{
   'Inactive',
@@ -44,7 +44,7 @@ const _bannedExactValues = <String>{
 };
 
 void main() {
-  group('nodesScreenSectionQuiet — section header for stale band', () {
+  group('nodesScreenSectionQuiet - section header for stale band', () {
     for (final entry in _expectedQuietSection.entries) {
       test('${entry.key} resolves to "${entry.value}"', () async {
         final l = await _load(Locale(entry.key));
@@ -54,7 +54,7 @@ void main() {
     }
   });
 
-  group('presenceStatusQuiet — per-card sub-label for stale band', () {
+  group('presenceStatusQuiet - per-card sub-label for stale band', () {
     for (final entry in _expectedQuietSection.entries) {
       test('${entry.key} resolves to "${entry.value}"', () async {
         final l = await _load(Locale(entry.key));

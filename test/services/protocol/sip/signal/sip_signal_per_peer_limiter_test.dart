@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/protocol/sip/peer_rate_limiter.dart';
 
 void main() {
-  group('PeerRateLimiter — PeerRateKind.signal', () {
+  group('PeerRateLimiter - PeerRateKind.signal', () {
     test('starts with burst capacity 3, refuses fourth', () {
       var nowMs = 1700000000000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
@@ -26,7 +26,7 @@ void main() {
       expect(
         limiter.tryAcquire(peer, PeerRateKind.signal),
         isFalse,
-        reason: 'burst is 3 — fourth attempt must fail',
+        reason: 'burst is 3 - fourth attempt must fail',
       );
     });
 

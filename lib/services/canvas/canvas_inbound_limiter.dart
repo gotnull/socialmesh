@@ -5,7 +5,7 @@
 //
 // Lives ONLY inside `MrrpServiceCanvas`. The global MRRP per-sender cap
 // (`MrrpConstants.mrrpMaxInboundRequestsPerSenderPer60s`) is intentionally
-// not changed — the global default stays conservative for every other
+// not changed - the global default stays conservative for every other
 // service. The canvas decoder-side cap is service-private per
 // CANVAS_V0_1.md §2.
 //
@@ -57,7 +57,7 @@ class CanvasInboundLimiter {
     return true;
   }
 
-  /// Test seam — current count of admissions inside the window for
+  /// Test seam - current count of admissions inside the window for
   /// [senderNodeId]. Returns 0 for senders we have never seen.
   int debugAdmissionsFor(int senderNodeId) {
     final queue = _bySender[senderNodeId];
@@ -71,6 +71,6 @@ class CanvasInboundLimiter {
     return count;
   }
 
-  /// Test seam — number of senders currently tracked.
+  /// Test seam - number of senders currently tracked.
   int get debugTrackedSenders => _bySender.length;
 }

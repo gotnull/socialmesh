@@ -498,7 +498,7 @@ void main() {
 
       test('device.snr resolves to snr', () {
         // device.snr is the BLE/protocol-level SNR, set via setDeviceSignal
-        // — it does NOT fall back to node.snr (which is per-node LoRa SNR)
+        // - it does NOT fall back to node.snr (which is per-node LoRa SNR)
         engine.setDeviceSignal(snr: 8.0);
         final binding = BindingSchema(path: 'device.snr');
         final value = engine.resolveBinding(binding);
@@ -507,7 +507,7 @@ void main() {
 
       test('device.rssi resolves to rssi', () {
         // device.rssi is the BLE RSSI from protocol polling, set via
-        // setDeviceSignal — it does NOT fall back to node.rssi (which is
+        // setDeviceSignal - it does NOT fall back to node.rssi (which is
         // per-node LoRa RSSI, a completely different measurement)
         engine.setDeviceSignal(rssi: -95);
         final binding = BindingSchema(path: 'device.rssi');
@@ -708,7 +708,7 @@ void main() {
       });
 
       test('distribution sort is deterministic: count desc then label asc', () {
-        // Three models with count 2 each — should sort alphabetically
+        // Three models with count 2 each - should sort alphabetically
         // (case-insensitive), then Unknown last.
         final nodes = <int, MeshNode>{
           1: MeshNode(

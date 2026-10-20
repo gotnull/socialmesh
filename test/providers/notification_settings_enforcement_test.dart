@@ -737,7 +737,7 @@ void main() {
       ];
 
       // When settings are not loaded (null), defaults should be true
-      // (permissive) — this matches the ?? true pattern in the code
+      // (permissive) - this matches the ?? true pattern in the code
       final dispatched = applyFlushGate(
         queued: queued,
         masterEnabled: true,

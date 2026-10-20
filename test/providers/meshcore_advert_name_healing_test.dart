@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D24.B — `MeshCoreContactsNotifier.mergeAdvertName` regression
+// D24.B - `MeshCoreContactsNotifier.mergeAdvertName` regression
 // pins for the safe-merge contract.
 //
 // When the firmware emits `PUSH_CODE_NEW_ADVERT` (0x8A) the payload

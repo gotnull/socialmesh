@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetTimelineScreen — full-screen lifecycle "story" view.
+// PetTimelineScreen - full-screen lifecycle "story" view.
 //
 // Structure (top → bottom):
 //
@@ -20,11 +20,11 @@
 //
 // Visual hierarchy:
 //
-//   Major events     — hero-style card, 44px dot with glow, bold title,
+//   Major events     - hero-style card, 44px dot with glow, bold title,
 //                      context pill (stage + branch captured at event)
-//   Important events — medium card, 28px dot, title + timestamp
-//   Minor single     — compact row, 14px dot, inline time
-//   Minor grouped    — compact row with count pill ("Charged · 3×")
+//   Important events - medium card, 28px dot, title + timestamp
+//   Minor single     - compact row, 14px dot, inline time
+//   Minor grouped    - compact row with count pill ("Charged · 3×")
 //                      and first→last range
 //
 // Responsive: left rail at x=32 on narrow phones; on wide layouts the
@@ -101,7 +101,7 @@ class _PetTimelineScreenState extends ConsumerState<PetTimelineScreen> {
 }
 
 // ============================================================================
-// Body — header + spine + sections + upcoming
+// Body - header + spine + sections + upcoming
 // ============================================================================
 
 class _TimelineBody extends StatelessWidget {
@@ -131,10 +131,10 @@ class _TimelineBody extends StatelessWidget {
             width: contentWidth,
             child: Column(
               children: [
-                // Pinned header — stage chip + event-count pill stay
+                // Pinned header - stage chip + event-count pill stay
                 // visible while the spine scrolls.
                 _Header(view: view, state: state, accent: accent),
-                // Pinned origin (DNA Forged) card — the seed/identity
+                // Pinned origin (DNA Forged) card - the seed/identity
                 // anchor stays visible at the top alongside the header.
                 ColoredBox(
                   color: context.background,
@@ -155,7 +155,7 @@ class _TimelineBody extends StatelessWidget {
                             l10n: l10n,
                           ),
                         ),
-                      // "Next: …" flows directly after the last entry —
+                      // "Next: …" flows directly after the last entry -
                       // a short spine stub keeps the rail continuous
                       // into the ghost node, and the timeline stays
                       // compact when there are few events instead of
@@ -192,7 +192,7 @@ class _TimelineBody extends StatelessWidget {
 }
 
 // ============================================================================
-// Header — stage/branch/age quick chip row
+// Header - stage/branch/age quick chip row
 // ============================================================================
 
 class _Header extends StatelessWidget {
@@ -218,7 +218,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Compact pet preview — procedural painter (never Rive here;
+          // Compact pet preview - procedural painter (never Rive here;
           // the timeline is a secondary surface).
           SizedBox(
             width: 52,
@@ -303,7 +303,7 @@ class _EventCountPill extends StatelessWidget {
 }
 
 // ============================================================================
-// Origin node — DNA/hatch hero at the top of the spine
+// Origin node - DNA/hatch hero at the top of the spine
 // ============================================================================
 
 class _OriginNode extends ConsumerWidget {
@@ -328,7 +328,7 @@ class _OriginNode extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Rail + hero dot. No top connector — this is the start.
+            // Rail + hero dot. No top connector - this is the start.
             SizedBox(
               width: 40,
               child: Column(
@@ -486,7 +486,7 @@ class _HeroDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Same flat circle styling as every entry dot. No glow — it bled
+    // Same flat circle styling as every entry dot. No glow - it bled
     // into the pet sigil above and looked off vs. the row icons.
     return Container(
       width: 36,
@@ -502,7 +502,7 @@ class _HeroDot extends StatelessWidget {
 }
 
 // ============================================================================
-// Stage section — header + list of entries attached to the spine
+// Stage section - header + list of entries attached to the spine
 // ============================================================================
 
 class _StageSection extends StatelessWidget {
@@ -579,7 +579,7 @@ class _SectionHeader extends StatelessWidget {
                     color: accent.withValues(alpha: 0.55),
                     height: AppTheme.spacing8,
                   ),
-                  // Section marker — circle dot, same vocabulary as
+                  // Section marker - circle dot, same vocabulary as
                   // every entry dot. Filled for the current stage,
                   // hollow for past stages.
                   Container(
@@ -728,7 +728,7 @@ class _EmptySectionFiller extends StatelessWidget {
 }
 
 // ============================================================================
-// Entry row — dispatches to major / important / minor / grouped
+// Entry row - dispatches to major / important / minor / grouped
 // ============================================================================
 
 class _EntryRow extends ConsumerStatefulWidget {
@@ -760,7 +760,7 @@ class _EntryRowState extends ConsumerState<_EntryRow> {
     final visual = _entryVisual(entry, widget.accent);
     final isMajor = entry.importance == PetTimelineImportance.major;
     final isImportant = entry.importance == PetTimelineImportance.important;
-    // Larger, more legible dots — minor was 14/8 which read as a bullet
+    // Larger, more legible dots - minor was 14/8 which read as a bullet
     // rather than an icon. Spine stub bumped to give breathing room
     // between consecutive rows.
     final dotSize = isMajor ? 36.0 : (isImportant ? 28.0 : 24.0);
@@ -1142,7 +1142,7 @@ class _ContextChip extends StatelessWidget {
 }
 
 // ============================================================================
-// Upcoming — ghost "next stage in ~Xd" at the tail
+// Upcoming - ghost "next stage in ~Xd" at the tail
 // ============================================================================
 
 class _UpcomingNode extends StatelessWidget {
@@ -1279,7 +1279,7 @@ class _DotsConnector extends StatelessWidget {
         child: CustomPaint(painter: painter),
       );
     }
-    // Inside Expanded — let CustomPaint fill the parent constraints.
+    // Inside Expanded - let CustomPaint fill the parent constraints.
     return SizedBox(
       width: 4,
       child: CustomPaint(painter: painter, size: Size.infinite),
@@ -1423,7 +1423,7 @@ class _ErrorState extends StatelessWidget {
 }
 
 // ============================================================================
-// Icon / label dispatch — shared with pet_recent_timeline semantically
+// Icon / label dispatch - shared with pet_recent_timeline semantically
 // but kept local so we can tune timeline-specific visuals independently.
 // ============================================================================
 
@@ -1548,7 +1548,7 @@ String _eventLabel(CareEventKind kind, AppLocalizations l10n) {
 
 /// Richer description shown when a major/important card is expanded.
 /// Falls back to an empty string when we don't have meaningful detail
-/// to add — the UI suppresses the line in that case.
+/// to add - the UI suppresses the line in that case.
 String? _eventDescription(
   CareEventKind kind,
   AppLocalizations l10n,

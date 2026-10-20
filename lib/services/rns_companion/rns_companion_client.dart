@@ -7,7 +7,7 @@
 // `http://127.0.0.1:8787` by default. SocialMesh consumes its
 // read-only JSON API to surface RNS / NomadNet visibility on the
 // phone. Per the companion's scope: NO posting, NO TX, NO mutation
-// — every method here is a GET.
+// - every method here is a GET.
 
 import 'dart:async';
 import 'dart:io' show SocketException;
@@ -16,7 +16,7 @@ import 'package:http/http.dart' as http;
 
 import 'rns_companion_models.dart';
 
-/// Default host the client targets — loopback. Concatenated to keep
+/// Default host the client targets - loopback. Concatenated to keep
 /// the literal IP out of the codebase audit
 /// (`test/codebase_audit_test.dart`), which forbids hardcoded
 /// 127.0.0.1 / localhost outside dotenv-driven contexts. This is a
@@ -40,7 +40,7 @@ const String kRnsCompanionDefaultBaseUrl =
 const Duration kRnsCompanionDefaultTimeout = Duration(seconds: 5);
 
 /// Base for every companion-client failure surface. Everything
-/// thrown out of the client is one of these subtypes — UI / provider
+/// thrown out of the client is one of these subtypes - UI / provider
 /// layers can switch on the type to render targeted error states.
 sealed class RnsCompanionError implements Exception {
   const RnsCompanionError(this.message);

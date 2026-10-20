@@ -5,12 +5,12 @@
 //
 // Takes a single normalized event + the current persisted progress for
 // one operation and returns either:
-//   - the same progress (event ignored — wrong kind, wrong window, or
+//   - the same progress (event ignored - wrong kind, wrong window, or
 //     already counted), or
 //   - new progress (event counted, dedupe key recorded, completedAt set
 //     if every objective is now full).
 //
-// No I/O, no providers, no DateTime.now() — `now` is a parameter so the
+// No I/O, no providers, no DateTime.now() - `now` is a parameter so the
 // engine is fully deterministic and trivially testable.
 
 import '../models/operation_event.dart';
@@ -49,7 +49,7 @@ enum OperationsEngineSkipReason {
   alreadyComplete,
 
   /// The operation's catalog version no longer matches persisted progress
-  /// — caller should re-seed from the catalog before applying events.
+  /// - caller should re-seed from the catalog before applying events.
   versionMismatch,
 
   /// The event's dedupe key is already counted for this operation.

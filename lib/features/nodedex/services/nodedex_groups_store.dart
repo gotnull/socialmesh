@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Groups Store — local persistence for user-defined node groups.
+// NodeDex Groups Store - local persistence for user-defined node groups.
 //
 // Shares the nodedex.db database handle (NodeDexDatabase) with
 // NodeDexSqliteStore. Groups and their membership are a local organisation

@@ -32,7 +32,7 @@ class StlUnwrapResult {
 /// A verified STL payload that has passed signature verification.
 ///
 /// This type exists so downstream handlers can only accept payloads
-/// that have been cryptographically verified — it cannot be constructed
+/// that have been cryptographically verified - it cannot be constructed
 /// outside this library, preventing callers from forging verified status.
 class VerifiedStlPayload {
   /// The inner payload bytes (after STL envelope was stripped and verified).
@@ -41,7 +41,7 @@ class VerifiedStlPayload {
   /// Sender's Ed25519 public key (32 bytes).
   final Uint8List senderPubKey;
 
-  /// Private constructor — only [StlMiddleware.verifyAndUnwrap] can create.
+  /// Private constructor - only [StlMiddleware.verifyAndUnwrap] can create.
   const VerifiedStlPayload._({
     required this.payload,
     required this.senderPubKey,
@@ -57,7 +57,7 @@ typedef StlSignFunction = Future<Uint8List> Function(Uint8List data);
 /// Outbound: wraps encoded SPP packets with Ed25519 signature.
 /// Inbound: detects STL envelopes, verifies signature, extracts inner payload.
 ///
-/// This service is stateless — it delegates to [StlSigningService] for
+/// This service is stateless - it delegates to [StlSigningService] for
 /// verification and accepts a signing callback for outbound operations.
 class StlMiddleware {
   final StlSigningService _signingService;

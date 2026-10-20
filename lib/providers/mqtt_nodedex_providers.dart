@@ -4,10 +4,10 @@
 /// Riverpod 3.x providers for MQTT ↔ NodeDex integration.
 ///
 /// These providers manage:
-/// - [RemoteSighting] state — opt-in records of nodes seen via the broker
-/// - [RemoteSightingStats] — aggregate statistics for the status panel
-/// - [NodeDiscoverySource] filtering — Local/Remote/Mixed filters
-/// - Remote badge visibility — controls the "Remote" badge on node cards
+/// - [RemoteSighting] state - opt-in records of nodes seen via the broker
+/// - [RemoteSightingStats] - aggregate statistics for the status panel
+/// - [NodeDiscoverySource] filtering - Local/Remote/Mixed filters
+/// - Remote badge visibility - controls the "Remote" badge on node cards
 ///
 /// All remote sighting recording is gated behind the Global Layer
 /// privacy setting [GlobalLayerPrivacySettings.allowInboundGlobal].
@@ -279,7 +279,7 @@ final remoteSightingsEnabledProvider = Provider<bool>((ref) {
 // Remote Sighting Count Badge
 // ---------------------------------------------------------------------------
 
-/// The number of unique remote nodes sighted — used for badge displays
+/// The number of unique remote nodes sighted - used for badge displays
 /// in the NodeDex and Global Layer status screen.
 final remoteSightingCountProvider = Provider<int>((ref) {
   final stats = ref.watch(remoteSightingStatsProvider);

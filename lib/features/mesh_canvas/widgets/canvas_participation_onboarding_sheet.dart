@@ -16,7 +16,7 @@
 //   - "Join MeshCanvas" (filled gradient, primary) → joinMeshCanvas().
 //     Persists onboardingSeen=true + participation=true; sharing
 //     stays off until the user enables it in the settings sheet (per
-//     spec §5.5 — keeps the first-run flow cleanest).
+//     spec §5.5 - keeps the first-run flow cleanest).
 //
 // Sheet uses AppBottomSheet.showScrollable (content-heavy variant).
 // Title + footer are pinned by AppBottomSheet itself; the body is
@@ -53,7 +53,7 @@ Future<void> showCanvasParticipationOnboardingSheet({
     // Footer pins the action row at the sheet bottom so both CTAs sit
     // exactly above the home indicator. Buttons share identical
     // height + radius + typography so the pair reads as a balanced
-    // primary/secondary action — never a "one big, one small".
+    // primary/secondary action - never a "one big, one small".
     footer: const _CanvasParticipationOnboardingFooter(),
     builder: (controller) =>
         _CanvasParticipationOnboardingSheet(scrollController: controller),
@@ -121,7 +121,7 @@ class _CanvasParticipationOnboardingSheet extends StatelessWidget {
 
 /// Pinned footer: balanced action pair. Both buttons share the same
 /// height, border radius, typography, and weight so they read as a
-/// secondary/primary CHOICE — never "one big, one small". The
+/// secondary/primary CHOICE - never "one big, one small". The
 /// secondary button is a flat surface fill (not an outline) because
 /// outline buttons next to filled gradient buttons always read
 /// lighter visually regardless of equal padding.
@@ -172,7 +172,7 @@ class _CanvasParticipationOnboardingFooter extends ConsumerWidget {
 }
 
 /// Secondary action whose footprint matches [PrimaryGradientButton]
-/// exactly — same vertical padding (spacing16), same border radius
+/// exactly - same vertical padding (spacing16), same border radius
 /// (radius16), same font size (15 / w700). The fill is a faint card
 /// surface instead of the accent gradient so it reads as the calmer
 /// option without shrinking the touch target.

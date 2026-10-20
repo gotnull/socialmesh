@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Flight Search Screen — search OpenSky for active flights.
+// Flight Search Screen - search OpenSky for active flights.
 //
 // Full-screen route (same pattern as UserSearchScreen / SignalFeedScreen).
-// Single debounced search path — no duplicate calls, no race conditions.
+// Single debounced search path - no duplicate calls, no race conditions.
 
 import 'dart:math' as math;
 
@@ -55,7 +55,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   List<ActiveFlightInfo> _results = [];
   String _errorMessage = '';
 
-  /// Monotonic counter — incremented on every text change. Async search
+  /// Monotonic counter - incremented on every text change. Async search
   /// results are discarded when they arrive for an outdated generation,
   /// preventing stale partial-match results from overwriting newer state.
   int _searchGeneration = 0;
@@ -76,10 +76,10 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   }
 
   // ---------------------------------------------------------------------------
-  // Search logic — explicit submit only (no auto-search on typing)
+  // Search logic - explicit submit only (no auto-search on typing)
   // ---------------------------------------------------------------------------
 
-  /// Called on every keystroke — only updates UI state (clear button, idle
+  /// Called on every keystroke - only updates UI state (clear button, idle
   /// reset). Does NOT trigger a search. The user must press Enter / Search.
   void _onTextChanged(String text) {
     // Rebuild so the clear button appears/disappears
@@ -122,7 +122,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
       final results = await _openSky.searchActiveFlights(query, limit: 30);
       if (!mounted) return;
 
-      // Discard stale results — a newer query has been issued while we waited
+      // Discard stale results - a newer query has been issued while we waited
       // for the OpenSky response. Without this guard, slow responses for
       // partial queries (e.g. "MH") overwrite results for the final query
       // (e.g. "MH370").
@@ -147,7 +147,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
         _fetchRoutes(results.take(10).toList());
       }
     } catch (e) {
-      // Also check generation for error state — don't show errors for
+      // Also check generation for error state - don't show errors for
       // superseded queries.
       if (generation != _searchGeneration) return;
       AppLogging.aether('FlightSearch: error - $e');
@@ -254,7 +254,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
                         ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Search button — visible tap target
+                              // Search button - visible tap target
                               IconButton(
                                 icon: Icon(
                                   Icons.search,
@@ -294,7 +294,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
             ),
           ),
 
-          // Content — driven entirely by _state enum
+          // Content - driven entirely by _state enum
           ..._buildContent(),
         ],
       ),
@@ -499,12 +499,12 @@ class _FlightTile extends StatelessWidget {
               ),
               const SizedBox(width: AppTheme.spacing12),
 
-              // Info — vertical stack, no truncation
+              // Info - vertical stack, no truncation
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Callsign — own row, full width
+                    // Callsign - own row, full width
                     Text(
                       flight.callsign,
                       style: TextStyle(
@@ -515,7 +515,7 @@ class _FlightTile extends StatelessWidget {
                       ),
                     ),
 
-                    // Route — own row (with loading skeleton)
+                    // Route - own row (with loading skeleton)
                     if (hasRoute) ...[
                       const SizedBox(height: AppTheme.spacing4),
                       AnimatedSwitcher(
@@ -549,7 +549,7 @@ class _FlightTile extends StatelessWidget {
                       _RouteSkeletonLine(),
                     ],
 
-                    // Metadata chips — wrapping, never truncated
+                    // Metadata chips - wrapping, never truncated
                     const SizedBox(height: AppTheme.spacing6),
                     Wrap(
                       spacing: 6,

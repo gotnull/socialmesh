@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// TappableSigilAvatar — `SigilAvatar` wrapper that defaults to navigating
+// TappableSigilAvatar - `SigilAvatar` wrapper that defaults to navigating
 // to `NodeDexDetailScreen` for the given node when tapped. Every node
 // sigil/avatar in the app should be a portal to that node's NodeDex
 // detail; making that the default of a single reusable widget is the

@@ -17,7 +17,7 @@ void main() {
       expect(container.read(nodeDexSearchProvider), 'foo');
 
       sub.close();
-      // autoDispose runs at the end of the current frame — simulate by pumping.
+      // autoDispose runs at the end of the current frame - simulate by pumping.
       return Future<void>.delayed(Duration.zero).then((_) {
         expect(
           container.read(nodeDexSearchProvider),
@@ -47,29 +47,23 @@ void main() {
       });
     });
 
-    test(
-      'nodeDexRadioPresetFilterProvider resets to empty when no listeners remain',
-      () {
-        final container = ProviderContainer();
-        addTearDown(container.dispose);
+    test('nodeDexRadioPresetFilterProvider resets to empty when no listeners remain', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-        final sub = container.listen(
-          nodeDexRadioPresetFilterProvider,
-          (_, _) {},
+      final sub = container.listen(nodeDexRadioPresetFilterProvider, (_, _) {});
+      container.read(nodeDexRadioPresetFilterProvider.notifier).toggle(3);
+      expect(container.read(nodeDexRadioPresetFilterProvider), {3});
+
+      sub.close();
+      return Future<void>.delayed(Duration.zero).then((_) {
+        expect(
+          container.read(nodeDexRadioPresetFilterProvider),
+          isEmpty,
+          reason:
+              'autoDispose must reset preset filter when the screen unmounts',
         );
-        container.read(nodeDexRadioPresetFilterProvider.notifier).toggle(3);
-        expect(container.read(nodeDexRadioPresetFilterProvider), {3});
-
-        sub.close();
-        return Future<void>.delayed(Duration.zero).then((_) {
-          expect(
-            container.read(nodeDexRadioPresetFilterProvider),
-            isEmpty,
-            reason:
-                'autoDispose must reset preset filter when the screen unmounts',
-          );
-        });
-      },
-    );
+      });
+    });
   });
 }

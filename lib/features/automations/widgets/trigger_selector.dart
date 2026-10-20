@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
@@ -1226,9 +1226,8 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               height: 40,
               decoration: BoxDecoration(
                 color: type == widget.trigger.type
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.2)
+                    ? Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.2)
                     : context.card,
                 borderRadius: BorderRadius.circular(AppTheme.radius10),
               ),

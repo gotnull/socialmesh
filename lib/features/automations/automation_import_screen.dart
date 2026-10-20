@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/logging.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -349,9 +351,8 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                   const SizedBox(height: AppTheme.spacing8),
                   Text(
                     context.l10n.automationImportTrigger,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: context.accentColor,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(color: context.accentColor),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   Text(automation.trigger.type.displayName),
@@ -362,9 +363,8 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                     context.l10n.automationImportThenActions(
                       automation.effectiveThenActions.length,
                     ),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppTheme.successGreen,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(color: AppTheme.successGreen),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   ...automation.effectiveThenActions.map(
@@ -397,9 +397,8 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                       context.l10n.automationImportElseActions(
                         automation.effectiveElseActions!.length,
                       ),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: AppTheme.errorRed,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(color: AppTheme.errorRed),
                     ),
                     const SizedBox(height: AppTheme.spacing4),
                     ...automation.effectiveElseActions!.map(
@@ -431,9 +430,8 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
                       context.l10n.automationImportConditionsCount(
                         automation.conditions!.length,
                       ),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: context.accentColor,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(color: context.accentColor),
                     ),
                     const SizedBox(height: AppTheme.spacing4),
                     Text(

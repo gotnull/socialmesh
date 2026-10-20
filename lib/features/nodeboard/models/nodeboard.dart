@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeBoard domain model — a personal BBS.
+// NodeBoard domain model - a personal BBS.
 
 import '../../../utils/text_sanitizer.dart';
 import 'nodeboard_enums.dart';

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 // NodeDex query node builders for the SocialMesh visual automation flow builder.
 //
 // These nodes allow users to build dynamic node list pipelines on the visual
@@ -18,7 +18,7 @@
 // At runtime, the automation engine re-evaluates the query against live
 // NodeDex data on each trigger event.
 //
-// Wire color: Purple (kNodeListColor) — visually distinct from amber
+// Wire color: Purple (kNodeListColor) - visually distinct from amber
 // trigger, cyan condition, and green action wires.
 
 import 'package:flutter/material.dart';
@@ -29,13 +29,14 @@ import '../vs_node_view/data/vs_interface.dart';
 import '../vs_node_view/data/vs_node_data.dart';
 import '../vs_node_view/data/vs_subgroup.dart';
 import '../vs_node_view/special_nodes/vs_widget_node.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/// Node width for query nodes — slightly wider to accommodate filter config.
+/// Node width for query nodes - slightly wider to accommodate filter config.
 const double _kQueryNodeWidth = 220.0;
 
 /// Purple accent for NodeDex query node headers.
@@ -253,7 +254,7 @@ NodeListPayload _chainFilter(
 }
 
 // ---------------------------------------------------------------------------
-// All Nodes — source node (no input, outputs all nodes)
+// All Nodes - source node (no input, outputs all nodes)
 // ---------------------------------------------------------------------------
 
 VSNodeDataBuilder _buildAllNodesBuilder() {
@@ -550,7 +551,7 @@ VSNodeDataBuilder _buildLimitBuilder() {
 // Custom node data classes
 // ---------------------------------------------------------------------------
 
-/// Filter node — has one NodeList input, one NodeList output, and a
+/// Filter node - has one NodeList input, one NodeList output, and a
 /// configurable filter that is appended to the upstream filter chain.
 class _QueryFilterNode extends VSNodeData {
   _QueryFilterNode({
@@ -599,7 +600,7 @@ class _QueryFilterNode extends VSNodeData {
   }
 }
 
-/// Sort node — has one NodeList input, one NodeList output, applies sort
+/// Sort node - has one NodeList input, one NodeList output, applies sort
 /// metadata to the upstream payload.
 class _QuerySortNode extends VSNodeData {
   _QuerySortNode({
@@ -659,7 +660,7 @@ class _QuerySortNode extends VSNodeData {
   }
 }
 
-/// Limit node — has one NodeList input, one NodeList output, applies a
+/// Limit node - has one NodeList input, one NodeList output, applies a
 /// result count limit to the upstream payload.
 class _QueryLimitNode extends VSNodeData {
   _QueryLimitNode({
@@ -786,7 +787,7 @@ Map<String, dynamic>? getNodeDexQueryConfig(VSNodeData data) {
 // Config widget wrappers
 // ---------------------------------------------------------------------------
 
-/// Wrapper widget for query node configuration — provides consistent styling
+/// Wrapper widget for query node configuration - provides consistent styling
 /// with the NodeDex purple accent.
 class _QueryConfigWidget extends StatelessWidget {
   final IconData icon;
@@ -1353,7 +1354,7 @@ class _LimitConfigWidgetState extends State<_LimitConfigWidget> {
 }
 
 // ---------------------------------------------------------------------------
-// Compact toggle widget — reused across config widgets
+// Compact toggle widget - reused across config widgets
 // ---------------------------------------------------------------------------
 
 class _CompactToggle extends StatelessWidget {

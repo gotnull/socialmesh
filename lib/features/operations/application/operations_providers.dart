@@ -82,7 +82,7 @@ class OperationsState {
     final existing = progress[def.id];
     if (existing == null) return OperationProgress.empty(def, now: now);
     if (existing.version != def.version) {
-      // Persisted progress predates the current definition shape — start
+      // Persisted progress predates the current definition shape - start
       // fresh. The engine will refuse to advance a mismatched version, so
       // returning a fresh empty record here lets recovery happen on the
       // next event without losing future progress.
@@ -175,14 +175,14 @@ class OperationsNotifier extends AsyncNotifier<OperationsState> {
 
     // NodeDex ingestion. `fireImmediately: true` so the very first build
     // counts any nodes the user has already encountered before the
-    // notifier was constructed (idempotent — engine dedupe blocks repeat
+    // notifier was constructed (idempotent - engine dedupe blocks repeat
     // counting on subsequent rebuilds).
     ref.listen<Map<int, NodeDexEntry>>(nodeDexProvider, (prev, next) {
       _ingestNodeDex(next);
     }, fireImmediately: true);
 
     // Traceroute ingestion. We deliberately do NOT seed from the
-    // repository on init — Operations should only credit traceroutes the
+    // repository on init - Operations should only credit traceroutes the
     // user runs while the feature is active, not retroactively count
     // history that predated enrollment.
     ref.listen(operationsTracerouteEventProvider, (prev, next) {

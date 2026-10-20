@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Mesh sync session model — peer-to-peer sync over opportunistic transports.
+/// Mesh sync session model - peer-to-peer sync over opportunistic transports.
 ///
 /// A sync session encapsulates the state of an object exchange between two
 /// SocialMesh peers over BLE or LAN. Sessions are explicit (not firehose),
@@ -71,7 +71,7 @@ class SyncCapabilities {
   };
 }
 
-/// Summary of an object for sync negotiation — only ID and timestamp,
+/// Summary of an object for sync negotiation - only ID and timestamp,
 /// no payload. Peers exchange summaries to determine what needs transfer.
 class SyncObjectSummary {
   const SyncObjectSummary({required this.objectId, required this.createdAtMs});

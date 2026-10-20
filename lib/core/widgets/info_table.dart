@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
+
 import '../theme.dart';
 import 'app_bottom_sheet.dart';
 
@@ -266,7 +267,7 @@ class _FullWidthRow extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// InfoTableSheet — reusable scrollable sheet wrapping an InfoTable
+// InfoTableSheet - reusable scrollable sheet wrapping an InfoTable
 // ---------------------------------------------------------------------------
 
 /// A standardised bottom sheet that renders an [InfoTable] inside a scrollable

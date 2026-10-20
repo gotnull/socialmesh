@@ -5,7 +5,7 @@
 /// retransmits.
 ///
 /// The handshake path was previously bypassing `SipRateLimiter`
-/// entirely — every retransmit (72 B × up to three attempts = 216 B)
+/// entirely - every retransmit (72 B × up to three attempts = 216 B)
 /// blew through the 1024 B / 60 s SIP budget without any accounting.
 /// The fix attaches the shared `SipRateLimiter` to `ProtocolService`
 /// via `attachSipRateLimiter`, and the `onHelloRetransmit` callback
@@ -14,8 +14,8 @@
 /// These tests cover two regression surfaces:
 ///   1. The ProtocolService attach/detach surface exists and is
 ///      null-safe (catches accidental removal of the plumbing).
-///   2. The rate limiter's `canSend` / `recordSend` contract — which
-///      the retransmit closure depends on — continues to behave as
+///   2. The rate limiter's `canSend` / `recordSend` contract - which
+///      the retransmit closure depends on - continues to behave as
 ///      the fix expects when the budget is exhausted.
 library;
 
@@ -25,7 +25,7 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 import 'package:socialmesh/services/protocol/sip/sip_constants.dart';
 import 'package:socialmesh/services/protocol/sip/sip_rate_limiter.dart';
 
-/// Null transport stub — enough for constructing ProtocolService
+/// Null transport stub - enough for constructing ProtocolService
 /// without triggering BLE/USB paths.
 class _NullTransport implements DeviceTransport {
   @override
@@ -71,7 +71,7 @@ void main() {
         limiter.canSend(frameSize),
         isFalse,
         reason:
-            'once remaining < frameSize, canSend must return false — '
+            'once remaining < frameSize, canSend must return false - '
             'the retransmit gate relies on this',
       );
     });

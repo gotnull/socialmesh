@@ -24,7 +24,7 @@ class AgeSignalResult {
 
 /// Abstraction over platform-provided age signals.
 ///
-/// Currently scaffolded — always returns [AgeSignalResult.unknown].
+/// Currently scaffolded - always returns [AgeSignalResult.unknown].
 ///
 /// Android integration path (when ready):
 /// 1. Add `com.google.android.libraries.childrenssafety:age-verification`

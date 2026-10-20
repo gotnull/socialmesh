@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Pins the `waypointNotificationsEnabled` field on [UserPreferences] — the
+/// Pins the `waypointNotificationsEnabled` field on [UserPreferences] - the
 /// user-level toggle that gates the inbound shared-waypoint notification.
 ///
 /// The provider-layer gate (in `WaypointsNotifier`) reads this preference via
@@ -32,7 +32,7 @@ void main() {
         json.containsKey('waypointNotificationsEnabled'),
         isFalse,
         reason:
-            'sparse encoding — null preferences must not be written so '
+            'sparse encoding - null preferences must not be written so '
             'older clients reading the document only see fields the '
             'newer client explicitly set',
       );

@@ -13,7 +13,7 @@ import '../../services/haptic_service.dart';
 import 'mrrp_request_composer_screen.dart';
 import 'widgets/mrrp_peer_tile.dart';
 
-/// Live peer inspector — shows discovered MRRP-capable peers with
+/// Live peer inspector - shows discovered MRRP-capable peers with
 /// their advertised services, SIP state, and action buttons.
 class MrrpPeerInspectorScreen extends ConsumerStatefulWidget {
   const MrrpPeerInspectorScreen({super.key});
@@ -41,7 +41,7 @@ class _MrrpPeerInspectorScreenState
     final peerIds = cachedServices.keys.toList()..sort();
     final isEmpty = peerIds.isEmpty;
 
-    // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
+    // lint-allow: haptic-feedback - keyboard dismissal, not interactive action
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(

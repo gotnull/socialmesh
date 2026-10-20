@@ -13,7 +13,7 @@
 ///   - unsupported game type   → safe fallback
 ///   - malformed envelope      → informational fallback (no state)
 ///
-/// Render-layer only — no protocol or session mutation here. All
+/// Render-layer only - no protocol or session mutation here. All
 /// outbound moves flow through `sipDmRouterProvider.sendPlay`.
 library;
 
@@ -97,7 +97,7 @@ class SipPlayBubble extends ConsumerWidget {
     }
 
     // We only render a bubble for the FIRST entry of an instance
-    // (the offer). Subsequent moves don't get their own bubble —
+    // (the offer). Subsequent moves don't get their own bubble -
     // they update the offer bubble's state in place via the engine.
     if (header.action != SipPlayAction.offer) {
       return const SizedBox.shrink();
@@ -117,7 +117,7 @@ class SipPlayBubble extends ConsumerWidget {
     // transitions from pendingOffer to active or declinedByRemote,
     // surface a one-shot snackbar. ref.listen fires once per state
     // change rather than on every rebuild, so the snackbar doesn't
-    // duplicate. We restrict to outbound offers — the receiver
+    // duplicate. We restrict to outbound offers - the receiver
     // already has visible UI feedback (the offer card morphs into
     // the board for accept, into a decline card for decline).
     ref.listen<SipPlayInstanceState?>(sipPlayInstanceStateProvider(stateKey), (
@@ -147,7 +147,7 @@ class SipPlayBubble extends ConsumerWidget {
     final state = ref.watch(sipPlayInstanceStateProvider(stateKey));
     if (state == null) {
       // Race: history entry exists but engine hasn't seen it. Render
-      // the malformed fallback rather than blanking — the user gets
+      // the malformed fallback rather than blanking - the user gets
       // a hint something is off without a crash.
       AppLogging.sipPlay(
         'BUBBLE_FALLBACK reason=stateNull '
@@ -236,7 +236,7 @@ class _DispatchBody extends ConsumerWidget {
     };
   }
 
-  /// Pendingoffer rows are game-agnostic — they only access fields on
+  /// Pendingoffer rows are game-agnostic - they only access fields on
   /// the sealed base. Both [_dispatchTtt] and [_dispatchC4] use them.
   Widget _pendingOfferRow(
     BuildContext context,
@@ -315,7 +315,7 @@ class _DispatchBody extends ConsumerWidget {
 }
 
 /// Localised game name for an envelope's `gameTypeCode`. Falls back
-/// to the TTT name for unknown codes — the unsupported fallback path
+/// to the TTT name for unknown codes - the unsupported fallback path
 /// renders elsewhere, this is just defensive copy.
 String _gameNameFor(AppLocalizations l10n, int gameTypeCode) {
   return switch (SipPlayGameType.fromCode(gameTypeCode)) {
@@ -338,7 +338,7 @@ IconData _iconForGameType(int gameTypeCode) {
 /// Was the offer envelope for [instanceId] sent by the local user?
 ///
 /// The engine doesn't expose offer direction on
-/// [SipPlayInstanceState] directly — it only matters during the
+/// [SipPlayInstanceState] directly - it only matters during the
 /// brief pendingOffer window so the UI can decide between the
 /// "you offered" and "they offered" variants. We re-scan the raw
 /// session history (cheap: only the first matching entry is
@@ -423,13 +423,13 @@ class _OutgoingOfferRow extends StatelessWidget {
 ///     and surfaces an inline spinner (`_responding` flag),
 ///   - on success the engine state advances pendingOffer → active
 ///     (or → declinedByLocal) and the parent dispatcher swaps in the
-///     board section — no flicker because the bubble's outer
+///     board section - no flicker because the bubble's outer
 ///     container is unchanged,
 ///   - on failure the flag clears, both buttons re-enable, and we
 ///     surface a snackbar with the typed error.
 class _IncomingOfferRow extends ConsumerStatefulWidget {
   // Game-agnostic: only reads `gameTypeCode`, `instanceId`, and
-  // `lastAppliedSeq` from the base class — the offer-response
+  // `lastAppliedSeq` from the base class - the offer-response
   // envelope it builds is the same shape for every game.
   final SipPlayInstanceState state;
   final int sessionTag;
@@ -452,7 +452,7 @@ class _IncomingOfferRowState extends ConsumerState<_IncomingOfferRow>
   /// buttons disable and a spinner replaces the active button's icon.
   /// Cleared on send completion (parent rebuild handles the success
   /// case implicitly because the dispatcher routes elsewhere when
-  /// status flips — this State is unmounted then).
+  /// status flips - this State is unmounted then).
   bool _responding = false;
 
   /// True when the LAST attempt was an Accept. Drives which button
@@ -641,7 +641,7 @@ class _IncomingOfferRowState extends ConsumerState<_IncomingOfferRow>
           : 'PLAY_DECLINE_SUCCESS peer=$peerHex '
                 'instance=0x${widget.state.instanceId.toRadixString(16)}',
     );
-    // Don't clear _responding — the engine state has flipped to
+    // Don't clear _responding - the engine state has flipped to
     // active (or declinedByLocal), the dispatcher will swap _BoardSection
     // in on the next rebuild and this State is disposed cleanly.
   }
@@ -656,7 +656,7 @@ class _IncomingOfferRowState extends ConsumerState<_IncomingOfferRow>
 ///   - `_interactionLock`: while a pending move is in flight no
 ///     further taps register, preventing double-sends.
 ///
-/// **The pending overlay never enters the entry log** — it's pure
+/// **The pending overlay never enters the entry log** - it's pure
 /// UI. The instant the engine state advances and the cell shows the
 /// expected mark, `didUpdateWidget` clears the overlay. If the send
 /// fails the overlay clears too because the engine never saw it.
@@ -680,7 +680,7 @@ class _TttBoardSection extends ConsumerStatefulWidget {
 
 class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
     with LifecycleSafeMixin {
-  /// Optimistic-overlay move. Never mutated by the engine — set when
+  /// Optimistic-overlay move. Never mutated by the engine - set when
   /// the user taps a legal cell, cleared when the engine state
   /// advances OR a send-error returns.
   TttMove? _pendingMove;
@@ -696,7 +696,7 @@ class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
     super.didUpdateWidget(oldWidget);
 
     // Audio cues on lifecycle transitions. The engine state is the
-    // authoritative trigger — we compare the previous frame's status
+    // authoritative trigger - we compare the previous frame's status
     // with the current frame's, so each cue fires exactly once per
     // transition regardless of how many rebuilds happen between.
     final prevStatus = oldWidget.state.status;
@@ -733,7 +733,7 @@ class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
 
     final pending = _pendingMove;
     if (pending == null) return;
-    // Engine state caught up — the cell now holds the expected mark.
+    // Engine state caught up - the cell now holds the expected mark.
     // Clear the overlay so the confirmed glyph renders normally.
     final boardCell = widget.state.board.cells[pending.cell];
     if (boardCell == pending.mark) {
@@ -1019,7 +1019,7 @@ class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
         'move_blocked reason=${outcome.error?.name} '
         'instance=0x${state.instanceId.toRadixString(16)} cell=$cell',
       );
-      // Send failed — engine state never advanced, so the pending
+      // Send failed - engine state never advanced, so the pending
       // overlay must be cleared explicitly here. didUpdateWidget
       // would clear it on a successful send because the cell flips
       // to the target mark; a failure leaves the cell empty so the
@@ -1086,7 +1086,7 @@ class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
 }
 
 /// Active / terminal Connect Four board view with optimistic move
-/// handling. Mirrors [_TttBoardSection]'s lifecycle 1:1 — same audio
+/// handling. Mirrors [_TttBoardSection]'s lifecycle 1:1 - same audio
 /// cues, same pending-overlay + interaction-lock pattern, same
 /// dismiss + resign affordances. Differences are confined to the
 /// inner board widget (column-tap C4 grid instead of cell-tap TTT
@@ -1150,7 +1150,7 @@ class _C4BoardSectionState extends ConsumerState<_C4BoardSection>
 
     final pending = _pendingMove;
     if (pending == null) return;
-    // Engine state caught up — the disc with our pending colour has
+    // Engine state caught up - the disc with our pending colour has
     // landed somewhere in the targeted column. Find the topmost disc
     // there: if it's our pending mark, the move resolved.
     final topRow = _topFilledRow(widget.state.board, pending.column);

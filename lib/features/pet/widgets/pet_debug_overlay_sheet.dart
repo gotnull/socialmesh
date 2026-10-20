@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: hardcoded-string — dev-only debug sheet, kDebugMode-gated;
+// lint-allow: hardcoded-string - dev-only debug sheet, kDebugMode-gated;
 // strings never reach end users so ARB translations are not required.
 
 // Dev-only pet state scrubber. Exposes every PetCreature visual
-// permutation — stage, branch, mood, asleep, sick, call reason, and
-// preferFrontFace — as overrides that drive the real pet hero widget
+// permutation - stage, branch, mood, asleep, sick, call reason, and
+// preferFrontFace - as overrides that drive the real pet hero widget
 // live. Only reachable from the pet-home overflow menu when
 // kDebugMode is true; compiles to dead code in release.
 
@@ -110,8 +110,7 @@ class PetDebugOverlaySheet extends ConsumerWidget {
           onChanged: notifier.setIsSick,
         ),
         _TriStateRow(
-          title:
-              'Face forward (preferFrontFace)', // lint-allow: hardcoded-string - kDebugMode only
+          title: 'Face forward (preferFrontFace)', // lint-allow: hardcoded-string - kDebugMode only
           value: overrides.preferFrontFace,
           onChanged: notifier.setPreferFrontFace,
         ),

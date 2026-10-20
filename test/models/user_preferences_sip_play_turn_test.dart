@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 /// Pins the `sipPlayTurnNotificationsEnabled` field on
-/// [UserPreferences] — the user-level toggle that gates the SIP
+/// [UserPreferences] - the user-level toggle that gates the SIP
 /// Play "your turn" local notification.
 ///
 /// The provider-layer gate (in `sipDmManagerProvider`) reads this
@@ -33,7 +33,7 @@ void main() {
         json.containsKey('sipPlayTurnNotificationsEnabled'),
         isFalse,
         reason:
-            'sparse encoding — null preferences must not be written so '
+            'sparse encoding - null preferences must not be written so '
             'older clients reading the document only see fields the '
             'newer client explicitly set',
       );

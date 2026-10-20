@@ -38,7 +38,7 @@ void main() {
         await tester.enterText(finder, input);
         await tester.pump();
 
-        // Verify the full string is present — not truncated to 1 char
+        // Verify the full string is present - not truncated to 1 char
         final field = tester.widget<TextFormField>(finder);
         final controller = (field.controller) as TextEditingController;
         expect(controller.text, input);
@@ -66,7 +66,7 @@ void main() {
         await tester.tap(tzFieldFinder);
         await tester.pump();
 
-        // Type a single character — the broken key pattern triggers rebuild
+        // Type a single character - the broken key pattern triggers rebuild
         await tester.enterText(tzFieldFinder, 'E');
         await tester.pump();
 
@@ -244,17 +244,17 @@ void main() {
       await tester.tap(finder);
       await tester.pump();
 
-      // Type — should become dirty
+      // Type - should become dirty
       await tester.enterText(finder, 'E');
       await tester.pump();
       expect(find.text('dirty: true'), findsOneWidget);
 
-      // Clear — should go back to not dirty
+      // Clear - should go back to not dirty
       await tester.enterText(finder, '');
       await tester.pump();
       expect(find.text('dirty: false'), findsOneWidget);
 
-      // Type full string — dirty again
+      // Type full string - dirty again
       await tester.enterText(finder, 'EST5EDT,M3.2.0,M11.1.0');
       await tester.pump();
       expect(find.text('dirty: true'), findsOneWidget);
@@ -368,7 +368,7 @@ void main() {
       );
       state.markHasChanges();
 
-      // External config arrives — should NOT overwrite user's edit
+      // External config arrives - should NOT overwrite user's edit
       state.simulateConfigUpdate('UTC0');
       await tester.pump();
 
@@ -397,15 +397,14 @@ void main() {
         await tester.enterText(buttonFinder, '39');
         await tester.pump();
 
-        // Verify full number is present — not truncated to first digit
+        // Verify full number is present - not truncated to first digit
         final field = tester.widget<TextFormField>(buttonFinder);
         final controller = (field.controller) as TextEditingController;
         expect(controller.text, '39');
 
         // Verify focus is still on the GPIO field
-        final focusNode = FocusScope.of(
-          tester.element(buttonFinder),
-        ).focusedChild;
+        final focusNode = FocusScope.of(tester.element(buttonFinder))
+            .focusedChild;
         expect(focusNode, isNotNull);
       },
     );
@@ -423,7 +422,7 @@ void main() {
         await tester.tap(gpioFinder);
         await tester.pump();
 
-        // Type '3' — broken key causes widget recreation
+        // Type '3' - broken key causes widget recreation
         await tester.enterText(gpioFinder, '3');
         await tester.pump();
 
@@ -443,7 +442,7 @@ void main() {
       await tester.tap(buttonFinder);
       await tester.pump();
 
-      // Enter text with digits — formatter should keep them
+      // Enter text with digits - formatter should keep them
       await tester.enterText(buttonFinder, '12');
       await tester.pump();
 
@@ -503,18 +502,18 @@ void main() {
       await tester.tap(buttonFinder);
       await tester.pump();
 
-      // Type — should become dirty
+      // Type - should become dirty
       await tester.enterText(buttonFinder, '39');
       await tester.pump();
       expect(find.text('dirty: true'), findsOneWidget);
 
-      // Clear — should go back to not dirty (parsed as 0, matches original)
+      // Clear - should go back to not dirty (parsed as 0, matches original)
       await tester.enterText(buttonFinder, '');
       await tester.pump();
       expect(find.text('dirty: false'), findsOneWidget);
     });
 
-    testWidgets('focus stays on button GPIO — does not jump to buzzer GPIO', (
+    testWidgets('focus stays on button GPIO - does not jump to buzzer GPIO', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -697,7 +696,7 @@ void main() {
       );
       state.markHasChanges();
 
-      // External config arrives — should NOT overwrite
+      // External config arrives - should NOT overwrite
       state.simulateConfigUpdate(10, 20);
       await tester.pump();
 
@@ -787,7 +786,7 @@ class _BrokenTimezoneWidgetState extends State<_BrokenTimezoneWidget> {
         ),
         if (_hasChanges) const Text('Has changes'),
         TextFormField(
-          // BUG: key depends on current value — changes on every keystroke
+          // BUG: key depends on current value - changes on every keystroke
           key: ValueKey('tzdef_${_tzdef.hashCode}'),
           initialValue: _tzdef,
           onChanged: (value) {
@@ -852,7 +851,7 @@ class _MultiFieldFixedWidgetState extends State<_MultiFieldFixedWidget> {
   }
 }
 
-/// Widget that tracks dirty state — matches _checkForChanges() pattern
+/// Widget that tracks dirty state - matches _checkForChanges() pattern
 class _DirtyTrackingWidget extends StatefulWidget {
   const _DirtyTrackingWidget();
 
@@ -1255,7 +1254,7 @@ class _GpioExternalUpdateWidgetState extends State<_GpioExternalUpdateWidget> {
     super.dispose();
   }
 
-  /// Simulates _applyDeviceConfig — only overwrites when !_hasChanges
+  /// Simulates _applyDeviceConfig - only overwrites when !_hasChanges
   void simulateConfigUpdate(int buttonGpio, int buzzerGpio) {
     setState(() {
       if (!_hasChanges) {

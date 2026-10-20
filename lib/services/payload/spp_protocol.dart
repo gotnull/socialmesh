@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import '../protocol/socialmesh/sm_file_transfer.dart';
 import 'spp_constants.dart';
 
-/// SPP v1 ACCEPT packet — receiver accepts an offered transfer.
+/// SPP v1 ACCEPT packet - receiver accepts an offered transfer.
 ///
 /// Wire format:
 /// ```
@@ -43,7 +43,7 @@ class SppAccept {
   String get payloadIdHex => fileIdToHex(payloadId);
 }
 
-/// SPP v1 DECLINE packet — receiver rejects an offered transfer.
+/// SPP v1 DECLINE packet - receiver rejects an offered transfer.
 ///
 /// Wire format:
 /// ```
@@ -87,7 +87,7 @@ class SppDecline {
   String get payloadIdHex => fileIdToHex(payloadId);
 }
 
-/// SPP v1 ABORT packet — cancel an in-progress transfer.
+/// SPP v1 ABORT packet - cancel an in-progress transfer.
 ///
 /// Wire format:
 /// ```

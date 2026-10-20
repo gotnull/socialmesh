@@ -3,7 +3,7 @@
 
 /// Persistent Ed25519 identity for the SocialMesh Overlay v0.2 stack.
 ///
-/// A **separate** keypair from `SipKeypair` — per the P3 locked
+/// A **separate** keypair from `SipKeypair` - per the P3 locked
 /// principle that user identity, transport identity, and overlay
 /// endpoint identity must not be commingled. The private key lives in
 /// [FlutterSecureStorage] and never touches SQLite. Storage keys are
@@ -123,7 +123,7 @@ class OverlayIdentityKeypair {
     final pk = _cachedPublicKey;
     if (pk == null) {
       throw StateError(
-        'OverlayIdentityKeypair not initialized — call ensureInitialized()',
+        'OverlayIdentityKeypair not initialized - call ensureInitialized()',
       );
     }
     return pk;
@@ -139,7 +139,7 @@ class OverlayIdentityKeypair {
     final kp = _cachedKeyPair;
     if (kp == null) {
       throw StateError(
-        'OverlayIdentityKeypair not initialized — call ensureInitialized()',
+        'OverlayIdentityKeypair not initialized - call ensureInitialized()',
       );
     }
     final sig = await _algorithm.sign(data, keyPair: kp);

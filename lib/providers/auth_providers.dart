@@ -54,8 +54,8 @@ final firebaseReadyProvider = FutureProvider<bool>((ref) async {
 /// Watches [firebaseReadyProvider] so it re-evaluates when Firebase finishes
 /// initializing. Before Firebase is ready, this provider throws (putting
 /// [authStateProvider] into error/loading state). Once Firebase is ready,
-/// the entire auth chain — authStateProvider -> currentUserProvider ->
-/// isSignedInProvider — re-evaluates automatically.
+/// the entire auth chain - authStateProvider -> currentUserProvider ->
+/// isSignedInProvider - re-evaluates automatically.
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   final isReady =
       ref.watch(firebaseReadyProvider).whenOrNull(data: (v) => v) ?? false;
@@ -190,7 +190,7 @@ class AuthService {
   /// Why this matters: every install gets an anonymous Firebase uid at
   /// app launch (see `_ensureAnonymousAuth` in main.dart). When the user
   /// later signs in with a real provider, calling `signInWithCredential`
-  /// directly would discard the anonymous uid and produce a fresh one —
+  /// directly would discard the anonymous uid and produce a fresh one -
   /// orphaning any data keyed on the previous uid (profile prefs, bug
   /// history, RevenueCat alias chain, app-state Firestore docs).
   /// `linkWithCredential` preserves the uid through the upgrade.
@@ -199,14 +199,14 @@ class AuthService {
   /// real account (different person previously signed up with the same
   /// email/Google/Apple identity), the link operation fails with
   /// `credential-already-in-use` or `email-already-in-use`. In that
-  /// case we fall back to a plain sign-in — the anon data is orphaned,
+  /// case we fall back to a plain sign-in - the anon data is orphaned,
   /// but successfully signing the user into their existing real
   /// account is a stronger requirement than preserving anon state.
   ///
   /// Marked `@visibleForTesting` so the helper can be exercised
   /// directly without spinning up the upstream OAuth flows
   /// (GoogleSignIn, AppleSignIn, etc.) that the public sign-in
-  /// methods wrap. NOT a public API surface — call only from tests
+  /// methods wrap. NOT a public API surface - call only from tests
   /// or from the sign-in methods on this class.
   @visibleForTesting
   Future<UserCredential> linkAnonOrSignInWithCredential(
@@ -292,7 +292,7 @@ class AuthService {
   /// Create a new account with email and password.
   ///
   /// If the user is currently anonymous, upgrades the anon account in
-  /// place by linking the email credential — preserves the uid and any
+  /// place by linking the email credential - preserves the uid and any
   /// data tied to it. Conflict (`email-already-in-use`) is NOT
   /// silently downgraded to a sign-in: the caller explicitly asked to
   /// CREATE an account, so a conflict should surface as an error and
@@ -577,7 +577,7 @@ class AuthService {
   /// Limitation: This only protects users who are re-authenticating (already
   /// signed in with MFA). It cannot protect the cold-sign-in case where a
   /// signed-out user tries to sign in with GitHub/Twitter and their account
-  /// happens to have MFA — that scenario will still crash on iOS until
+  /// happens to have MFA - that scenario will still crash on iOS until
   /// the firebase_auth plugin is fixed upstream.
   Future<void> _guardSignInWithProviderOnIOS(String providerLabel) async {
     if (!Platform.isIOS) return;
@@ -773,7 +773,7 @@ class AuthService {
 
     // Step 2b: Verify the selected Google account matches the signed-in user.
     // This MUST happen before reauthenticateWithCredential because Firebase
-    // checks MFA before user-mismatch — if the wrong account also has MFA,
+    // checks MFA before user-mismatch - if the wrong account also has MFA,
     // we'd get second-factor-required instead of user-mismatch, leading to
     // the user completing MFA for the wrong account and corrupting the session.
     final linkedGoogleEmail = user.providerData
@@ -903,7 +903,7 @@ class AuthService {
   /// 5. Removes FCM token.
   /// 6. Deletes Firebase Auth user (with re-auth if needed).
   ///
-  /// Sprint 006 W2.2 — closes R-03 (account deletion cascade).
+  /// Sprint 006 W2.2 - closes R-03 (account deletion cascade).
   Future<void> deleteAccount({
     Future<void> Function()? closeLocalDatabases,
   }) async {
@@ -915,7 +915,7 @@ class AuthService {
     }
 
     // Step 1: Server-side cascade via Cloud Function.
-    // If this fails, we abort — do NOT delete Auth user with orphaned data.
+    // If this fails, we abort - do NOT delete Auth user with orphaned data.
     AppLogging.auth('deleteAccount - Calling deleteUserData CF...');
     try {
       final callable = FirebaseFunctions.instance.httpsCallable(
@@ -1024,7 +1024,7 @@ class AuthService {
     AppLogging.mfa('enrollMFA - START for phone=$phoneNumber');
 
     try {
-      // Start phone verification session — may require recent auth
+      // Start phone verification session - may require recent auth
       MultiFactorSession session;
       try {
         session = await user.multiFactor.getSession();
@@ -1038,7 +1038,7 @@ class AuthService {
           try {
             await reauthenticate();
           } on FirebaseAuthMultiFactorException {
-            // Re-auth itself needs MFA — propagate to UI
+            // Re-auth itself needs MFA - propagate to UI
             AppLogging.mfa(
               'enrollMFA - Re-auth requires MFA verification, '
               'propagating to UI',
@@ -1074,7 +1074,7 @@ class AuthService {
 
       return true;
     } on FirebaseAuthMultiFactorException {
-      // Re-auth required MFA — let the UI layer handle it
+      // Re-auth required MFA - let the UI layer handle it
       rethrow;
     } on FirebaseAuthException catch (e) {
       AppLogging.mfa('enrollMFA - AUTH ERROR: code=${e.code}');
@@ -1148,7 +1148,7 @@ class AuthService {
               'enrollMFA - Re-auth requires MFA verification '
               '(verificationFailed path, hints=${mfaEx.resolver.hints.length})',
             );
-            // Cannot propagate via throw from async callback — call onError
+            // Cannot propagate via throw from async callback - call onError
             // with a special code so the UI knows MFA re-auth is needed.
             onError('second-factor-required');
           } catch (retryErr) {
@@ -1319,7 +1319,7 @@ class AuthService {
   ///
   /// Reloads the user first to ensure we read server-side state,
   /// not stale local cache. [getEnrolledFactors] is a local-only
-  /// read — without reload it can return empty after MFA sign-in
+  /// read - without reload it can return empty after MFA sign-in
   /// or stale data after unenroll.
   Future<List<MultiFactorInfo>> getEnrolledMFAFactors() async {
     final user = currentUser;

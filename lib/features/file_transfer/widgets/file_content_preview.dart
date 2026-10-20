@@ -66,7 +66,7 @@ class FileContentPreview {
         if (hasBytes) {
           return _resolveViewer(transfer)(scrollController);
         }
-        // Bytes not in memory — load from disk asynchronously.
+        // Bytes not in memory - load from disk asynchronously.
         return _DiskFileLoader(
           path: transfer.savedFilePath!,
           mimeType: transfer.mimeType,
@@ -146,7 +146,7 @@ class FileContentPreview {
         transfer: transfer,
       );
     } catch (_) {
-      // Fall through — file may have been deleted.
+      // Fall through - file may have been deleted.
     }
   }
 }

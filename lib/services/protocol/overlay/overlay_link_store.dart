@@ -57,7 +57,7 @@ class OverlayLinkStore {
       // meaningful inside one mesh. Two radios on different meshes can hand
       // out the same node number for different people, and the canonical-
       // link-per-peer lookup would then bridge them. Endpoint identity and
-      // resource transfers stay unscoped — they are bound to the peer's
+      // resource transfers stay unscoped - they are bound to the peer's
       // persona, not to the mesh it was reached over.
       dbPath = await RadioScope.instance.databasePath(_dbName);
     }
@@ -76,7 +76,7 @@ class OverlayLinkStore {
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         AppLogging.storage('Upgrading links.db v$oldVersion -> v$newVersion');
-        // No migrations yet — schema v1 is the baseline.
+        // No migrations yet - schema v1 is the baseline.
       },
     );
   }
@@ -120,7 +120,7 @@ class OverlayLinkStore {
   Database get _database {
     final db = _db;
     if (db == null || !db.isOpen) {
-      throw StateError('OverlayLinkStore not initialized — call init() first');
+      throw StateError('OverlayLinkStore not initialized - call init() first');
     }
     return db;
   }

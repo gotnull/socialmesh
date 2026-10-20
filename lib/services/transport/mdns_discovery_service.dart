@@ -22,7 +22,7 @@ class MdnsDeviceInfo {
 
   /// Protocol the device speaks. Bonjour service type determines this:
   /// `_meshtastic._tcp` → meshtastic. Reserved for future MeshCore mDNS
-  /// service-type discovery — UI groups and badges keys off this value.
+  /// service-type discovery - UI groups and badges keys off this value.
   final MeshProtocolType protocol;
 
   MdnsDeviceInfo({
@@ -84,7 +84,7 @@ class MeshtasticMdnsDiscovery {
   final _devices = <String, MdnsDeviceInfo>{};
   final _controller = StreamController<List<MdnsDeviceInfo>>.broadcast();
 
-  /// Pending removal timers — cancelled if the service reappears within
+  /// Pending removal timers - cancelled if the service reappears within
   /// the grace period, preventing flicker from mDNS cache refresh cycles.
   final _pendingRemovals = <String, Timer>{};
 
@@ -104,7 +104,7 @@ class MeshtasticMdnsDiscovery {
 
     AppLogging.protocol('mDNS: Starting discovery for $_serviceType');
 
-    // Keep existing devices — they will be updated/removed via events.
+    // Keep existing devices - they will be updated/removed via events.
     // Only stopDiscovery() clears the list.
     _discovery = BonsoirDiscovery(type: _serviceType, printLogs: false);
 
@@ -156,7 +156,7 @@ class MeshtasticMdnsDiscovery {
         AppLogging.protocol('mDNS: Discovery started');
 
       case BonsoirDiscoveryServiceFoundEvent():
-        // Service found but not yet resolved — resolve to get host/port/TXT.
+        // Service found but not yet resolved - resolve to get host/port/TXT.
         // Cancel any pending removal: the service is back before the grace
         // period expired, so don't let the timer remove it.
         _pendingRemovals.remove(_serviceKey(event.service))?.cancel();
@@ -175,7 +175,7 @@ class MeshtasticMdnsDiscovery {
       case BonsoirDiscoveryServiceLostEvent():
         final key = _serviceKey(event.service);
         if (_devices.containsKey(key)) {
-          // Defer removal — mDNS cache refreshes cause transient lost events.
+          // Defer removal - mDNS cache refreshes cause transient lost events.
           // If the service reappears within the grace period the timer is
           // cancelled and the device stays in the list without UI flicker.
           _pendingRemovals[key]?.cancel();
@@ -267,7 +267,7 @@ class MeshtasticMdnsDiscovery {
     );
 
     final key = _serviceKey(service);
-    // Cancel any pending removal — service reappeared before grace expired.
+    // Cancel any pending removal - service reappeared before grace expired.
     _pendingRemovals.remove(key)?.cancel();
     _devices[key] = device;
     _emitDevices();

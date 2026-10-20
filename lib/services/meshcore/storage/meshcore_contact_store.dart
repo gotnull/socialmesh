@@ -19,7 +19,7 @@ class MeshCoreContactStore {
   /// D38-A: per-channel unread count keyspace.
   ///
   /// Shape: `meshcore_channel_unread_<devicePubKeyPrefix>_<idx>`.
-  /// Device-scoped because the firmware slot index is positional —
+  /// Device-scoped because the firmware slot index is positional -
   /// two radios share `slot 0 = "Public"`, so without the device
   /// prefix the unread count would bleed across radios.
   ///

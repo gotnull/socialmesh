@@ -131,7 +131,7 @@ class MrrpDeliveryTracker {
   /// Stream of delivery state changes.
   ///
   /// Uses a synchronous broadcast controller so that listeners receive
-  /// events inline during [_emit] — this makes phase transitions
+  /// events inline during [_emit] - this makes phase transitions
   /// deterministic and observable without microtask flushing.
   Stream<MrrpDeliveryState> get stateChanges => _controller.stream;
   final _controller = StreamController<MrrpDeliveryState>.broadcast(sync: true);
@@ -216,7 +216,7 @@ class MrrpDeliveryTracker {
         break;
       }
 
-      // Success or definitive error — stop retrying.
+      // Success or definitive error - stop retrying.
       if (lastResult.status != MrrpStatusCode.timeout) {
         AppLogging.mrrp(
           'MRRP_DELIVERY: $deliveryId attempt $attempt '
@@ -230,7 +230,7 @@ class MrrpDeliveryTracker {
         'timed out', // lint-allow: hardcoded-string
       );
 
-      // Timeout — retry if attempts remain.
+      // Timeout - retry if attempts remain.
       if (attempt < maxAttempts) {
         final delay = MrrpRetryConfig.delayForRetry(attempt);
         AppLogging.mrrp(

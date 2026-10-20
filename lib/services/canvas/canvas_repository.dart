@@ -420,8 +420,7 @@ class CanvasRepository {
       final dupe = await txn.query(
         CanvasTables.appliedOp,
         columns: const ['id'],
-        where:
-            'canvas_id = ? AND author_node_num = ? AND op_ts = ? AND op_seq = ? AND x = ? AND y = ?',
+        where: 'canvas_id = ? AND author_node_num = ? AND op_ts = ? AND op_seq = ? AND x = ? AND y = ?',
         whereArgs: [
           canvasLocalId,
           op.authorNodeNum,

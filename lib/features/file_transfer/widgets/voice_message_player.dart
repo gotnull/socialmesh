@@ -12,7 +12,7 @@ import '../../../services/voice/voice_player.dart';
 /// Inline widget that plays a Codec2 voice message from raw `.c2` payload bytes.
 ///
 /// Shows a play/stop toggle with a duration label. Manages its own [VoicePlayer]
-/// lifecycle — the player is disposed when the widget is removed from the tree.
+/// lifecycle - the player is disposed when the widget is removed from the tree.
 class VoiceMessagePlayer extends StatefulWidget {
   const VoiceMessagePlayer({super.key, required this.c2Payload});
 

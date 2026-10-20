@@ -8,7 +8,7 @@
 /// deduped, and the payload is available), attempts to decode the
 /// payload as an SPP v0.2 frame. Valid frames are handed to
 /// [OverlayResourceEngine.handleInbound]. Non-resource payloads and
-/// malformed resource payloads are dropped silently — the link state
+/// malformed resource payloads are dropped silently - the link state
 /// has already been mutated by the link engine, so dropping here
 /// cannot poison link behavior.
 ///
@@ -27,7 +27,7 @@ import 'overlay_resource_engine.dart';
 /// Subscribe / unsubscribe lifecycle for the inbound resource glue.
 ///
 /// One instance per provider build. Attach + detach via `start()` /
-/// `stop()` — the owning provider's `ref.onDispose` MUST call
+/// `stop()` - the owning provider's `ref.onDispose` MUST call
 /// `stop()` so the subscription reference is nulled.
 class OverlayResourceIngressDispatcher {
   final OverlayLinkEngine _linkEngine;

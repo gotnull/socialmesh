@@ -584,7 +584,7 @@ class _FileTransfersScreenState extends ConsumerState<FileTransfersScreen>
         return;
       }
     }
-    // No previewable content — fall back to the detail sheet.
+    // No previewable content - fall back to the detail sheet.
     _showInfoSheet(transfer);
   }
 

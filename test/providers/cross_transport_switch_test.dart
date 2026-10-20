@@ -4,7 +4,7 @@
 // Integration pins for RC-CROSS-TRANSPORT: end-to-end behaviour of
 // [prepareForDeviceTransitionRef] for every row of the preserve /
 // clear / rehydrate matrix. The classifier already has unit tests in
-// device_transition_classifier_test.dart — this file verifies that
+// device_transition_classifier_test.dart - this file verifies that
 // the helper actually writes through the correct side effects
 // (settings.lastDevice, nodes state, nodes storage, transportType).
 //
@@ -208,7 +208,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('prepareForDeviceTransitionRef — cross-transport matrix', () {
+  group('prepareForDeviceTransitionRef - cross-transport matrix', () {
     test(
       'TCP A → BLE A (same logical radio, cross-transport) preserves cache, '
       'forces fresh hydrate, flips transport type, persists new id',
@@ -240,7 +240,7 @@ void main() {
         expect(transition.forceFreshHydration, isTrue);
         expect(transition.transportFamilyChanged, isTrue);
 
-        // Persisted NodeDB is preserved — this is the key invariant
+        // Persisted NodeDB is preserved - this is the key invariant
         // from the revised scenario D ruling.
         final stored = await h.nodeStorage.loadNodes();
         expect(
@@ -265,7 +265,7 @@ void main() {
       },
     );
 
-    test('TCP A → BLE B (different logical radio) is destructive — nodes and '
+    test('TCP A → BLE B (different logical radio) is destructive - nodes and '
         'storage wiped, transport flipped, new id persisted', () async {
       final h = await _makeHarness(
         lastDeviceId: 'tcp:meshtastic_abcd.local:4403',
@@ -346,7 +346,7 @@ void main() {
       },
     );
 
-    test('BLE A → BLE A (sameDevice) is a no-op — no clear, no persist churn, '
+    test('BLE A → BLE A (sameDevice) is a no-op - no clear, no persist churn, '
         'no transport flip', () async {
       final h = await _makeHarness(
         lastDeviceId: 'AA:BB:CC:DD:EE:01',
@@ -434,7 +434,7 @@ void main() {
         'NOT resurrect stale nodes when the await resolves', () async {
       // This pins the bug where NodesNotifier._init captures the
       // stored node list BEFORE clearNodes fires, then resumes
-      // AFTER and writes `state = nodeMap(oldNodes)` — resurrecting
+      // AFTER and writes `state = nodeMap(oldNodes)` - resurrecting
       // the very nodes we just cleared. The `_clearEpoch` guard
       // must detect the clear and abandon the stale writeback.
       final h = await _makeHarness(
@@ -452,7 +452,7 @@ void main() {
         _node(0x1003),
       ]);
 
-      // Trigger NodesNotifier.build() — kicks off the async _init
+      // Trigger NodesNotifier.build() - kicks off the async _init
       // load from storage.
       h.container.read(nodesProvider);
 

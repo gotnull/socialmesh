@@ -9,17 +9,17 @@
 ///     Signal live exclusively in `_RichComposerSheet`.
 ///   - The rich-composer trigger appears only when at least one rich
 ///     tab is reachable (peer caps, T+S block, session active).
-///   - The sheet's tab visibility mirrors the trigger's gating —
+///   - The sheet's tab visibility mirrors the trigger's gating -
 ///     hidden caps drop their tab from the row inside the sheet.
 ///   - The Play panel inside the sheet still routes through
-///     `sendSipPlayOffer` + per-game `_GameOfferCard` widgets —
+///     `sendSipPlayOffer` + per-game `_GameOfferCard` widgets -
 ///     no fork of the offer surface.
 ///   - Drafts that survive sheet open/close must be lifted to screen
 ///     scope: `_sketchDraft` is the canonical example. `_textController`
 ///     is unaffected by the sheet (text is inline).
 ///   - The empty-state body copy mentions text, sketches, and games.
 ///   - The standalone `_PlayComposerCta` (pre-integration helper)
-///     must NOT exist — Play is exclusively reached via the sheet.
+///     must NOT exist - Play is exclusively reached via the sheet.
 library;
 
 import 'dart:io';
@@ -30,7 +30,7 @@ void main() {
   final src = File('lib/features/sip/sip_dm_screen.dart').readAsStringSync();
 
   group('Sheet host architecture', () {
-    test('rich-composer tab enum carries sketch, play, signal — no text', () {
+    test('rich-composer tab enum carries sketch, play, signal - no text', () {
       expect(
         RegExp(
           r'enum\s+_RichComposerTab\s*\{\s*sketch\s*,\s*play\s*,\s*signal\s*\}',
@@ -38,7 +38,7 @@ void main() {
         isTrue,
         reason:
             'the rich-composer sheet hosts only the three attachment '
-            'modes — text is the always-on inline composer and is '
+            'modes - text is the always-on inline composer and is '
             'intentionally absent from this enum.',
       );
     });
@@ -71,17 +71,20 @@ void main() {
   });
 
   group('Tab gating', () {
-    test('Play tab visibility = enabled && peerSupportsPlay && !peerBlocked', () {
-      expect(
-        RegExp(
-          r'showPlayTab\s*=\s*enabled\s*&&\s*peerSupportsPlay\s*&&\s*!peerBlocked',
-        ).hasMatch(src),
-        isTrue,
-        reason:
-            'Play tab visibility must combine session-active, peer '
-            'capability, and the T+S block check',
-      );
-    });
+    test(
+      'Play tab visibility = enabled && peerSupportsPlay && !peerBlocked',
+      () {
+        expect(
+          RegExp(
+            r'showPlayTab\s*=\s*enabled\s*&&\s*peerSupportsPlay\s*&&\s*!peerBlocked',
+          ).hasMatch(src),
+          isTrue,
+          reason:
+              'Play tab visibility must combine session-active, peer '
+              'capability, and the T+S block check',
+        );
+      },
+    );
 
     test('peerSupportsPlay reads supportsDmPlayV1 from discovery', () {
       expect(
@@ -107,7 +110,7 @@ void main() {
           src.contains('class _PlayComposerCta'),
           isFalse,
           reason:
-              'the standalone CTA was replaced by the tab + panel — '
+              'the standalone CTA was replaced by the tab + panel - '
               'leaving it would create two competing entry points',
         );
       },
@@ -139,9 +142,8 @@ void main() {
       // The screen owns _sketchDraft and passes it into both the
       // sheet host and the SipInkComposer inside.
       expect(
-        RegExp(
-          r'List<SipInkRawStroke>\s+_sketchDraft\s*=\s*\[\]',
-        ).hasMatch(src),
+        RegExp(r'List<SipInkRawStroke>\s+_sketchDraft\s*=\s*\[\]')
+            .hasMatch(src),
         isTrue,
       );
       expect(src.contains('sketchDraft: _sketchDraft'), isTrue);
@@ -172,9 +174,8 @@ void main() {
   group('Empty state', () {
     test('body copy mentions text, sketches, and games', () {
       final arb = File('lib/l10n/app_en.arb').readAsStringSync();
-      final match = RegExp(
-        r'"sipDmEmptyDescription"\s*:\s*"([^"]+)"',
-      ).firstMatch(arb);
+      final match = RegExp(r'"sipDmEmptyDescription"\s*:\s*"([^"]+)"')
+          .firstMatch(arb);
       expect(match, isNotNull);
       final body = match!.group(1)!.toLowerCase();
       expect(body.contains('text'), isTrue);

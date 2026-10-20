@@ -207,7 +207,7 @@ class TakEvent {
   ///
   /// Unlike [operator ==] (which only compares identity keys uid+type+timeUtcMs
   /// for Set/Map membership), this method compares every field that could
-  /// trigger a UI rebuild — position, staleness, motion data, and callsign.
+  /// trigger a UI rebuild - position, staleness, motion data, and callsign.
   /// Used by persistence notifiers to skip redundant state emissions.
   bool contentEquals(TakEvent other) =>
       uid == other.uid &&

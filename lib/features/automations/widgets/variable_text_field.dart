@@ -489,7 +489,7 @@ class VariableTextFieldState extends State<VariableTextField>
     final newText =
         text.substring(0, insertAt) + insertText + text.substring(insertAt);
 
-    // Enforce maxLength — don't insert if it would exceed the limit
+    // Enforce maxLength - don't insert if it would exceed the limit
     if (newText.length > widget.maxLength) {
       _triggerShake();
       return;
@@ -623,16 +623,14 @@ class VariableChipPicker extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.15)
+                        ? Theme.of(context).colorScheme.primary
+                              .withValues(alpha: 0.15)
                         : context.card,
                     borderRadius: BorderRadius.circular(AppTheme.radius8),
                     border: Border.all(
                       color: isActive
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.4)
+                          ? Theme.of(context).colorScheme.primary
+                                .withValues(alpha: 0.4)
                           : context.border,
                     ),
                   ),

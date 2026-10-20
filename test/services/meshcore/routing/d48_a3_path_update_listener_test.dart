@@ -190,41 +190,38 @@ void main() {
       expect(recorder.calls, isEmpty);
     });
 
-    test(
-      'bursts of 0x81 for the same pubkey collapse to one fetch (in-flight dedup)',
-      () async {
-        // Gate the fetch with a completer so we can issue a second
-        // 0x81 while the first is still in flight.
-        final gate = Completer<MeshCoreContactInfo?>();
-        var fetchCount = 0;
-        final listener = MeshCorePathUpdateListener.forTest(
-          frameStream: frames.stream,
-          getContactByKey:
-              ({required Uint8List pubKey, required Duration timeout}) {
-                fetchCount += 1;
-                return gate.future;
-              },
-          recorder: recorder.call,
-        );
-        addTearDown(listener.dispose);
+    test('bursts of 0x81 for the same pubkey collapse to one fetch (in-flight dedup)', () async {
+      // Gate the fetch with a completer so we can issue a second
+      // 0x81 while the first is still in flight.
+      final gate = Completer<MeshCoreContactInfo?>();
+      var fetchCount = 0;
+      final listener = MeshCorePathUpdateListener.forTest(
+        frameStream: frames.stream,
+        getContactByKey:
+            ({required Uint8List pubKey, required Duration timeout}) {
+              fetchCount += 1;
+              return gate.future;
+            },
+        recorder: recorder.call,
+      );
+      addTearDown(listener.dispose);
 
-        frames.add(_pathUpdatedFrame(_contactPubKey));
-        frames.add(_pathUpdatedFrame(_contactPubKey));
-        frames.add(_pathUpdatedFrame(_contactPubKey));
-        await Future<void>.delayed(const Duration(milliseconds: 30));
+      frames.add(_pathUpdatedFrame(_contactPubKey));
+      frames.add(_pathUpdatedFrame(_contactPubKey));
+      frames.add(_pathUpdatedFrame(_contactPubKey));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
 
-        expect(
-          fetchCount,
-          1,
-          reason: 'in-flight dedup must collapse the burst to one fetch',
-        );
-        // Resolve the gate so the listener cleans up.
-        gate.complete(_contactInfoWithPath([0x99]));
-        await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(
+        fetchCount,
+        1,
+        reason: 'in-flight dedup must collapse the burst to one fetch',
+      );
+      // Resolve the gate so the listener cleans up.
+      gate.complete(_contactInfoWithPath([0x99]));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
 
-        expect(recorder.calls, hasLength(1));
-      },
-    );
+      expect(recorder.calls, hasLength(1));
+    });
 
     test('dispose cancels the upstream subscription', () async {
       var fetchCount = 0;

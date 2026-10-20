@@ -15,7 +15,7 @@ import '../../services/protocol/sip/mrrp_advert_engine.dart';
 import 'mrrp_request_composer_screen.dart';
 import 'widgets/mrrp_service_tile.dart';
 
-/// Service directory browser — shows all cached MRRP services grouped
+/// Service directory browser - shows all cached MRRP services grouped
 /// by peer node ID with expandable raw hex and launch-to-composer actions.
 class MrrpServiceBrowserScreen extends ConsumerWidget {
   const MrrpServiceBrowserScreen({super.key});
@@ -35,7 +35,7 @@ class MrrpServiceBrowserScreen extends ConsumerWidget {
     final peerIds = cachedServices.keys.toList()..sort();
     final isEmpty = peerIds.isEmpty;
 
-    // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
+    // lint-allow: haptic-feedback - keyboard dismissal, not interactive action
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(

@@ -9,7 +9,7 @@ import '../core/theme.dart';
 import '../core/widgets/glass_scaffold.dart';
 import '../providers/app_providers.dart';
 
-/// Shown when [AppInitNotifier] enters [AppInitState.error] — bootstrap
+/// Shown when [AppInitNotifier] enters [AppInitState.error] - bootstrap
 /// failed (Firebase init, settings load, etc.). Tap to retry.
 class ErrorScreen extends ConsumerWidget {
   const ErrorScreen({super.key});

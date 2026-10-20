@@ -235,7 +235,7 @@ class MeshCoreMessageStore {
   /// D33 records with an existing `mmf` are not mutated.
   ///
   /// [contactKeyHex] is the FULL 32-byte contact pubkey hex (the
-  /// store's per-contact partition key) — used as the recipient
+  /// store's per-contact partition key) - used as the recipient
   /// prefix for outbound MMFs in the backfill.
   Future<List<MeshCoreStoredMessage>> loadContactMessages(
     String contactKeyHex,
@@ -296,7 +296,7 @@ class MeshCoreMessageStore {
   ///
   /// D33: pre-D33 records get an MMF backfilled at parse time when
   /// `channelIndex` and `timestamp` (firmware-supplied seconds) are
-  /// present — the same fields the receiver-side D19 deterministic
+  /// present - the same fields the receiver-side D19 deterministic
   /// id is derived from, so this is exactly the cross-device-stable
   /// data the MMF needs. Idempotent: post-D33 records with an
   /// existing `mmf` are not mutated.
@@ -466,7 +466,7 @@ class MeshCoreMessageStore {
   ///
   /// [peerPubkeyPrefixHex] is the OTHER party's first 6 bytes (12
   /// hex chars). For inbound records we use `senderKey`; for
-  /// outbound records we use the partition's `contactKeyHex` —
+  /// outbound records we use the partition's `contactKeyHex` -
   /// both ends of the conversation see the same MMF.
   static String? _contactMmfString({
     required String peerPubkeyPrefixHex,
@@ -505,7 +505,7 @@ class MeshCoreMessageStore {
   /// enough stable fields.
   ///
   /// **Author-prefix rule** (post-2026-05-07 fix): both inbound and
-  /// outbound records derive the MMF from `senderKey` — the chat
+  /// outbound records derive the MMF from `senderKey` - the chat
   /// surface persists `senderKey` as the AUTHOR's pubkey for both
   /// directions (inbound: contact who wrote it; outbound: self via
   /// `selfInfo.pubKey`). This guarantees both ends of a conversation

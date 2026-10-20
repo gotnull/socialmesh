@@ -3,8 +3,8 @@
 
 // Mesh Capacity Advisor domain models.
 //
-// The advisor inspects the locally observed mesh — recently-heard RF nodes
-// and the device's current modem preset — and produces a deterministic
+// The advisor inspects the locally observed mesh - recently-heard RF nodes
+// and the device's current modem preset - and produces a deterministic
 // snapshot describing how saturated the airtime is for the active preset.
 // It never mutates radio state. It produces an advisory recommendation
 // that the UI surfaces as a card.
@@ -20,14 +20,14 @@ enum MeshCapacityPressureLevel {
   /// Mesh is comfortably under the preset's capacity envelope.
   healthy,
 
-  /// Mesh is starting to fill up — informational, no advisory needed.
+  /// Mesh is starting to fill up - informational, no advisory needed.
   busy,
 
-  /// Mesh is dense for the active preset — advisory card recommended.
+  /// Mesh is dense for the active preset - advisory card recommended.
   congested,
 
   /// Mesh is at or beyond the preset's safe capacity for reliable
-  /// delivery — strong advisory.
+  /// delivery - strong advisory.
   capacityLimited,
 }
 
@@ -56,7 +56,7 @@ enum MeshCapacityReasonCode {
   /// Medium-range preset in a dense local mesh.
   slowPresetDenseMesh,
 
-  /// Density is event-scale — only ShortFast/Turbo can sustain it.
+  /// Density is event-scale - only ShortFast/Turbo can sustain it.
   veryDenseEventLikeMesh,
 }
 
@@ -70,7 +70,7 @@ class MeshCapacityRecommendation {
     this.suggestedPreset,
   });
 
-  /// Empty recommendation — no card, healthy state.
+  /// Empty recommendation - no card, healthy state.
   const MeshCapacityRecommendation.none()
     : severity = MeshCapacityRecommendationSeverity.none,
       reasonCode = MeshCapacityReasonCode.healthyForPreset,
@@ -93,7 +93,7 @@ class MeshCapacityRecommendation {
 ///
 /// This is a pure value object. It is regenerated whenever the inputs
 /// (nodes / modem preset) change. It is the single artifact the UI
-/// consumes — there is no separate "current preset" or "node count"
+/// consumes - there is no separate "current preset" or "node count"
 /// for the advisor card.
 class MeshCapacitySnapshot {
   const MeshCapacitySnapshot({
@@ -112,7 +112,7 @@ class MeshCapacitySnapshot {
     this.duplicatePacketRate,
   });
 
-  /// Empty snapshot — used before the device is connected or any
+  /// Empty snapshot - used before the device is connected or any
   /// nodes have been observed.
   factory MeshCapacitySnapshot.empty(DateTime now) => MeshCapacitySnapshot(
     activeRfNodes5m: 0,
@@ -159,7 +159,7 @@ class MeshCapacitySnapshot {
   /// Whether enough signal evidence exists to make a meaningful
   /// recommendation. Currently means: at least one node has a non-null
   /// `lastHeard` within the 60-minute window. This is the cleanest
-  /// approximation available without a packet-history database — see
+  /// approximation available without a packet-history database - see
   /// docs/architecture/MESH_RULES.md and the advisor unit tests for the
   /// exact rule.
   final bool hasSufficientSignalData;

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
@@ -156,14 +157,12 @@ class _MeshBrainEmotionTestScreenState
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: _getCategoryColor(
-                        _selectedMood.category,
-                      ).withValues(alpha: 0.2),
+                      color: _getCategoryColor(_selectedMood.category)
+                          .withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(AppTheme.radius10),
                       border: Border.all(
-                        color: _getCategoryColor(
-                          _selectedMood.category,
-                        ).withValues(alpha: 0.5),
+                        color: _getCategoryColor(_selectedMood.category)
+                            .withValues(alpha: 0.5),
                       ),
                     ),
                     child: Text(
@@ -215,9 +214,8 @@ class _MeshBrainEmotionTestScreenState
                   _selectedCategory = category;
                 });
               },
-              backgroundColor: _getCategoryColor(
-                category,
-              ).withValues(alpha: 0.1),
+              backgroundColor: _getCategoryColor(category)
+                  .withValues(alpha: 0.1),
               selectedColor: _getCategoryColor(category).withValues(alpha: 0.3),
               labelStyle: TextStyle(
                 color: isSelected
@@ -263,9 +261,8 @@ class _MeshBrainEmotionTestScreenState
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: _getCategoryColor(
-                      mood.category,
-                    ).withValues(alpha: 0.3),
+                    color: _getCategoryColor(mood.category)
+                        .withValues(alpha: 0.3),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),

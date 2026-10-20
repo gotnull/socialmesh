@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../l10n/l10n_extension.dart';
 import '../safety/lifecycle_mixin.dart';
 import '../theme.dart';
@@ -148,7 +149,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
 
       if (!mounted) return;
 
-      // Read current state — ACK may have arrived during the async send.
+      // Read current state - ACK may have arrived during the async send.
       // Build from current message to avoid overwriting delivered status.
       final currentMessages = widget.ref.read(messagesProvider);
       final currentMsg = currentMessages.firstWhereOrNull(
@@ -933,7 +934,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
       showGlobalSuccessSnackBar(tracerouteSentMsg);
 
       if (!mounted) {
-        // Sheet was dismissed during the await — still pop with the result
+        // Sheet was dismissed during the await - still pop with the result
         // so the parent can pick it up if it's still alive.
         return;
       }

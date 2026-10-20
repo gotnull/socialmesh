@@ -29,7 +29,7 @@ Widget _wrap(Widget child, {NavigatorObserver? observer}) {
 }
 
 /// Silence widget-build errors from the pushed destination
-/// `NodeDexDetailScreen` — it depends on Riverpod providers that are
+/// `NodeDexDetailScreen` - it depends on Riverpod providers that are
 /// not exhaustively stubbed in this unit test. We only verify that the
 /// wrapper *pushes* a route, not that the destination renders.
 void _swallowDestinationErrors() {
@@ -70,7 +70,7 @@ void main() {
       final initialPushes = observer.pushCount;
 
       await tester.tap(find.byType(SigilAvatar));
-      // Don't pumpAndSettle — the destination NodeDexDetailScreen
+      // Don't pumpAndSettle - the destination NodeDexDetailScreen
       // depends on Riverpod providers that aren't fully stubbed here.
       // We only verify the push happened.
       await tester.pump();

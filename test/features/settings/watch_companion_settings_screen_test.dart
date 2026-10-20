@@ -25,7 +25,7 @@ Future<SettingsService> _settingsServiceWithMocks([
   return s;
 }
 
-/// Default test channel set — three channels covering the common
+/// Default test channel set - three channels covering the common
 /// "Meshtastic radio with Primary + a couple of named channels"
 /// scenario. Tests that need a specific shape (empty, single-channel,
 /// non-zero indices) pass an explicit override to [_wrap].
@@ -129,7 +129,7 @@ void main() {
       expect(find.text('Default channel'), findsOneWidget);
 
       // Each chip's label is the channel's actual name (Primary,
-      // admin, mesh-AU) — driven by the available-channels provider
+      // admin, mesh-AU) - driven by the available-channels provider
       // override in _wrap, not by index-generated "Channel N".
       for (final channel in _defaultTestChannels) {
         expect(
@@ -248,7 +248,7 @@ void main() {
         // Mirrors the production scenario where no protocol is active
         // (or the active radio has not advertised channel config yet).
         // The user should see helpful guidance instead of an empty
-        // ChipSelector or — worse — a list of channel indices that
+        // ChipSelector or - worse - a list of channel indices that
         // do not exist on their radio.
         final settings = await _settingsServiceWithMocks();
         await tester.pumpWidget(

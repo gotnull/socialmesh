@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Atmosphere Data Adapter — converts mesh metrics to effect intensities.
+// Atmosphere Data Adapter - converts mesh metrics to effect intensities.
 //
 // This is the bridge between live mesh data and the atmospheric visual
 // system. It reads from existing Riverpod providers (nodeDexStats,
 // trait distributions, patina scores) and produces a single immutable
 // snapshot of intensity values for each atmospheric effect.
 //
-// The adapter is a pure function layer — no state, no side effects,
+// The adapter is a pure function layer - no state, no side effects,
 // no subscriptions. Providers call [AtmosphereDataAdapter.compute]
 // with current mesh metrics and receive an [AtmosphereIntensities]
 // record that the overlay widgets consume directly.
@@ -65,7 +65,7 @@ class AtmosphereIntensities {
     required this.starlight,
   });
 
-  /// All effects at zero — used when the atmosphere system is disabled
+  /// All effects at zero - used when the atmosphere system is disabled
   /// or when there is no mesh data.
   static const zero = AtmosphereIntensities(
     rain: 0.0,
@@ -158,7 +158,7 @@ class MeshAtmosphereMetrics {
     this.regionCount = 0,
   });
 
-  /// Empty metrics — no mesh data available.
+  /// Empty metrics - no mesh data available.
   static const empty = MeshAtmosphereMetrics();
 
   /// Fraction of nodes classified as relay (0.0–1.0).
@@ -173,7 +173,7 @@ class MeshAtmosphereMetrics {
   double get unknownFraction =>
       totalNodes > 0 ? unknownNodeCount / totalNodes : 0.0;
 
-  /// Combined "sparse data" fraction — ghost + unknown nodes.
+  /// Combined "sparse data" fraction - ghost + unknown nodes.
   double get sparseFraction =>
       totalNodes > 0 ? (ghostNodeCount + unknownNodeCount) / totalNodes : 0.0;
 
@@ -322,7 +322,7 @@ class AtmosphereDataAdapter {
 
   /// Compute mist intensity from sparse data regions.
   ///
-  /// Mist represents the unknown — nodes that are poorly documented,
+  /// Mist represents the unknown - nodes that are poorly documented,
   /// rarely seen, or too new to classify. A mesh full of ghosts and
   /// newcomers is shrouded in fog. As the user explores and documents
   /// their mesh, the fog lifts.
@@ -338,7 +338,7 @@ class AtmosphereDataAdapter {
       AtmosphereIntensity.mistSparseFractionSaturation,
     );
 
-    // Inverse relationship with patina — high average patina
+    // Inverse relationship with patina - high average patina
     // reduces mist because the mesh is well-documented.
     final patinaReduction =
         _logSaturate(metrics.averagePatinaScore / 100.0, 0.5) * 0.3;
@@ -354,7 +354,7 @@ class AtmosphereDataAdapter {
 
   /// Compute starlight intensity.
   ///
-  /// Starlight is the ambient baseline — always gently present
+  /// Starlight is the ambient baseline - always gently present
   /// when the atmosphere system is enabled. It scales mildly with
   /// total node count so that larger meshes have a slightly richer
   /// starfield, but the effect is never zero (even an empty mesh
@@ -372,7 +372,7 @@ class AtmosphereDataAdapter {
       100.0, // saturates slowly
     );
 
-    // Region diversity adds a small bonus — more explored = more stars.
+    // Region diversity adds a small bonus - more explored = more stars.
     final regionBonus =
         _logSaturate(metrics.regionCount.toDouble(), 10.0) * 0.15;
 

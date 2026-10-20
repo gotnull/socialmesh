@@ -67,9 +67,8 @@ class ReticulumActivityDetail extends ConsumerWidget {
     final hit = stats.topSources.where((s) => s.nodeId == nodeNum).toList();
     if (hit.isEmpty) return const SizedBox.shrink();
     final source = hit.first;
-    final lastSeen = DateTime.fromMillisecondsSinceEpoch(
-      source.lastSeenMs,
-    ).toLocal();
+    final lastSeen = DateTime.fromMillisecondsSinceEpoch(source.lastSeenMs)
+        .toLocal();
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacing16,

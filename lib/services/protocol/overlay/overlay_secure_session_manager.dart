@@ -8,14 +8,14 @@
 /// When attached (via the engine's `secureSessionManager` argument),
 /// the engine forwards three lifecycle hooks:
 ///
-/// - [onLinkActivated] — fired after `LINK_OPEN_OK` installs an
+/// - [onLinkActivated] - fired after `LINK_OPEN_OK` installs an
 ///   active link. On the initiator side, if policy + capability
 ///   permit, the manager emits a `LINK_SECURE_INIT` and starts
 ///   awaiting the peer's `LINK_SECURE_ACK`.
-/// - [onSecureInbound] — the engine forwards every
+/// - [onSecureInbound] - the engine forwards every
 ///   `linkSecureInit / linkSecureAck / linkSecureData` frame here.
 ///   Fail-closed: failures do not propagate to the link state.
-/// - [onLinkTerminated] — called on any terminal transition
+/// - [onLinkTerminated] - called on any terminal transition
 ///   (`failed`/`closed`). The manager discards the session and its
 ///   in-memory key material.
 ///
@@ -126,7 +126,7 @@ class OverlaySecureSessionManager {
     final record = await _store.getByLinkId(frame.linkId);
     // Accept secure traffic on any non-terminal link. A `stale`
     // canonical record (restored from a prior run, §21.1) is still a
-    // valid identity anchor — the arrival of an inbound secure frame
+    // valid identity anchor - the arrival of an inbound secure frame
     // is fresh proof of peer reachability, which is semantically the
     // same signal the link layer uses to un-stale records. Rejecting
     // stale here would break the reuse path where both sides restore
@@ -171,7 +171,7 @@ class OverlaySecureSessionManager {
   /// Drops the in-memory session entry (and its ephemeral X25519 keys
   /// + tx/rx counters) so the next outbound `sendEncrypted` for the
   /// same link triggers a fresh re-negotiation via `onLinkActivated`.
-  /// The link record itself stays intact — plaintext overlay
+  /// The link record itself stays intact - plaintext overlay
   /// features (resource transfer etc.) keep flowing on the same
   /// canonical linkId.
   ///

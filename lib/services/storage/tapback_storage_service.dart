@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../models/tapback.dart';
 
 /// Storage service for message tapbacks
@@ -15,7 +17,7 @@ class TapbackStorageService {
 
   /// One-time cleanup: remove duplicate tapbacks that accumulated
   /// before the write-side dedup was added. Safe to call multiple
-  /// times — it no-ops after the first successful run.
+  /// times - it no-ops after the first successful run.
   Future<void> purgeExistingDuplicates() async {
     if (_prefs.getBool(_dedupCleanupDoneKey) == true) return;
 

@@ -80,20 +80,17 @@ void main() {
       expect(ts, sentinel);
     });
 
-    test(
-      'rxTime below _minPlausibleEpoch with chronological fallback returns sentinel',
-      () {
-        // Pre-2020 epoch (e.g. radio uptime-second since boot).
-        final packet = _textPacket(from: 1, packetId: 4, rxTime: 12345);
+    test('rxTime below _minPlausibleEpoch with chronological fallback returns sentinel', () {
+      // Pre-2020 epoch (e.g. radio uptime-second since boot).
+      final packet = _textPacket(from: 1, packetId: 4, rxTime: 12345);
 
-        final ts = ProtocolService.debugPlausibleTimestamp(
-          packet,
-          useChronologicalFallback: true,
-        );
+      final ts = ProtocolService.debugPlausibleTimestamp(
+        packet,
+        useChronologicalFallback: true,
+      );
 
-        expect(ts, sentinel);
-      },
-    );
+      expect(ts, sentinel);
+    });
 
     test(
       'rxTime far in the future with chronological fallback returns sentinel',

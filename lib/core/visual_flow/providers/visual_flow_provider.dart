@@ -176,7 +176,7 @@ class VisualFlowNotifier extends Notifier<VisualFlowState> {
   ///
   /// The visual editor widget should access this to create a local
   /// VSNodeDataProvider. Do NOT expose the VSNodeDataProvider through
-  /// this provider — it is a ChangeNotifier that belongs to the widget tree.
+  /// this provider - it is a ChangeNotifier that belongs to the widget tree.
   VSNodeManager? get nodeManager => _nodeManager;
 
   /// The registered node builders for the context menu.
@@ -489,7 +489,7 @@ class VisualFlowNotifier extends Notifier<VisualFlowState> {
   List<VSNodeDataBuilder> _buildAdditionalNodeBuilders() {
     // The subgroup builders already register themselves. Additional builders
     // are only needed for node types that exist outside the subgroups.
-    // For now, return an empty list — all node types are covered by the
+    // For now, return an empty list - all node types are covered by the
     // subgroups.
     return [];
   }

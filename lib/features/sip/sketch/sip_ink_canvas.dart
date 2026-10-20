@@ -3,7 +3,7 @@
 
 /// Drawing surface for the SIP Ink composer.
 ///
-/// Stateless w.r.t. stroke buffers — the parent owns the active /
+/// Stateless w.r.t. stroke buffers - the parent owns the active /
 /// committed / overflow point lists and feeds them in via props.
 /// Gestures bubble up via [onStrokeStart], [onStrokeUpdate], and
 /// [onStrokeEnd]. The canvas only handles screen→canvas-space
@@ -18,7 +18,7 @@ import 'sip_ink_painter.dart';
 
 class SipInkCanvas extends StatelessWidget {
   /// Live simplified sketch. Includes both the finalised draft and
-  /// the committed prefix of any in-progress stroke — i.e. exactly
+  /// the committed prefix of any in-progress stroke - i.e. exactly
   /// what would travel on the wire if the user stopped drawing right
   /// now. WYSIWYG: the user sees the real wire-truth, not the raw
   /// finger trace.
@@ -34,7 +34,7 @@ class SipInkCanvas extends StatelessWidget {
   /// and switches the surrounding hint copy.
   final bool isOverBudget;
 
-  /// Wire-level canvas dimension (matches the spec — typically 64).
+  /// Wire-level canvas dimension (matches the spec - typically 64).
   final int canvasSize;
 
   /// Width to use when starting a new stroke.
@@ -90,7 +90,7 @@ class SipInkCanvas extends StatelessWidget {
           // vertical-drag gesture in the gesture arena. Without this,
           // when the canvas is hosted inside a DraggableScrollableSheet
           // (the rich-composer bottom sheet), every stroke is captured
-          // by the sheet's drag-handle and the user can't draw —
+          // by the sheet's drag-handle and the user can't draw -
           // they just drag the sheet around. The Listener inside still
           // fires regardless of arena outcome (it's a low-level
           // pointer hook, not a gesture recogniser), so drawing works.
@@ -104,7 +104,7 @@ class SipInkCanvas extends StatelessWidget {
             onHorizontalDragEnd: (_) {},
             child: Listener(
               // Raw pointer events instead of GestureDetector pan
-              // recognisers — a single tap (no movement) needs to land
+              // recognisers - a single tap (no movement) needs to land
               // a dot, which onPanStart alone doesn't reliably catch
               // because of gesture-arena resolution. Listener fires
               // pointerDown/Move/Up regardless and never competes for
@@ -139,7 +139,7 @@ class SipInkCanvas extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radius12),
                   child: CustomPaint(
                     painter: SipInkPainter(
-                      // Paint the simplified (sendable) state directly —
+                      // Paint the simplified (sendable) state directly -
                       // not the raw finger trace. This is the WYSIWYG
                       // promise: the user sees what would go on the
                       // wire, including how aggressive the simplifier

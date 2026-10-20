@@ -282,7 +282,7 @@ void main() {
     test('unknown subtype is strictly rejected before AEAD', () async {
       final s = await pair();
       // Craft a frame with subtype 0xEF using the real tag from the
-      // real session — still fails, but via unknownSubtype (checked
+      // real session - still fails, but via unknownSubtype (checked
       // first).
       final wrapped = await s.i.wrap(cleartext: Uint8List.fromList(<int>[0]));
       final mangled = Uint8List.fromList(wrapped.payload);
@@ -438,7 +438,7 @@ void main() {
       final payload1 = await runSession();
       final payload2 = await runSession();
 
-      // Both are well-formed and the same seq (0) — but AEAD tags and
+      // Both are well-formed and the same seq (0) - but AEAD tags and
       // ciphertexts MUST differ because ephemeral keys + nonces
       // differ. Otherwise we'd have forward-secrecy loss.
       expect(payload1, isNot(equals(payload2)));

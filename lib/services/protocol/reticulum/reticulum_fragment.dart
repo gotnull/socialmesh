@@ -31,7 +31,7 @@ class ReticulumFragmentHeader {
   /// frame (1-indexed on the wire).
   final int position;
 
-  /// Body bytes — the slice of the underlying RNS frame this fragment
+  /// Body bytes - the slice of the underlying RNS frame this fragment
   /// carries.
   final Uint8List body;
 

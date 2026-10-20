@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+
 import '../theme.dart';
 
 /// Centralized skeleton configuration for consistent loading states.
@@ -73,7 +74,7 @@ class SkeletonNodeCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar skeleton — fixed 74px leading column matching _NodeCard
+          // Avatar skeleton - fixed 74px leading column matching _NodeCard
           const SizedBox(
             width: 74,
             child: Center(child: Bone.circle(size: 56)),

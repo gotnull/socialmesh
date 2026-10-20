@@ -91,33 +91,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'channel_intro',
-        bubbleText:
-            "Let's make a **channel**! It's like a walkie-talkie. Only your friends who know the secret can listen in.",
+        bubbleText: "Let's make a **channel**! It's like a walkie-talkie. Only your friends who know the secret can listen in.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'channel_name',
-        bubbleText:
-            "First, pick a **name** for your channel. Something easy to remember, like 'Family' or 'Hiking Buddies'.",
+        bubbleText: "First, pick a **name** for your channel. Something easy to remember, like 'Family' or 'Hiking Buddies'.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'privacy_level',
-        bubbleText:
-            "How secret should your channel be?\n\n**OPEN**: Anyone can listen in.\n**SHARED**: Like a password everyone knows.\n**PRIVATE**: Only friends you invite.\n**MAXIMUM**: Super duper secret!",
+        bubbleText: "How secret should your channel be?\n\n**OPEN**: Anyone can listen in.\n**SHARED**: Like a password everyone knows.\n**PRIVATE**: Only friends you invite.\n**MAXIMUM**: Super duper secret!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'encryption_key',
-        bubbleText:
-            "I made a **secret key** for you! It scrambles your messages so only your friends can read them. Like a secret code!",
+        bubbleText: "I made a **secret key** for you! It scrambles your messages so only your friends can read them. Like a secret code!",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'channel_complete',
-        bubbleText:
-            "All done! Show your friends the **QR code** and they can join your channel. Easy peasy!",
+        bubbleText: "All done! Show your friends the **QR code** and they can join your channel. Easy peasy!",
         icoMood: MeshBrainMood.celebrating,
         canSkip: false,
       ),
@@ -138,27 +133,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'encryption_intro',
-        bubbleText:
-            "Let me explain **encryption levels**. It's like choosing how secret your messages are!",
+        bubbleText: "Let me explain **encryption levels**. It's like choosing how secret your messages are!",
         icoMood: MeshBrainMood.curious,
         canGoBack: false,
       ),
       HelpStep(
         id: 'default_key',
-        bubbleText:
-            "**DEFAULT KEY** means everyone in the mesh can read your messages. It's public! Use this for general announcements or testing.",
+        bubbleText: "**DEFAULT KEY** means everyone in the mesh can read your messages. It's public! Use this for general announcements or testing.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'psk_encryption',
-        bubbleText:
-            "**PSK** (Pre-Shared Key) means you generate a random secret key. Only people with this exact key can decode your messages. Much more private!",
+        bubbleText: "**PSK** (Pre-Shared Key) means you generate a random secret key. Only people with this exact key can decode your messages. Much more private!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'psk_sharing',
-        bubbleText:
-            "Share your PSK via **QR code**! When someone scans it, they get the key and channel settings. Easy peasy!",
+        bubbleText: "Share your PSK via **QR code**! When someone scans it, they get the key and channel settings. Easy peasy!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -178,27 +169,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'routing_intro',
-        bubbleText:
-            "Want to see how I work? When you send a message, I **bounce it from node to node** like a game of hot potato!",
+        bubbleText: "Want to see how I work? When you send a message, I **bounce it from node to node** like a game of hot potato!",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'routing_hops',
-        bubbleText:
-            "Each **hop** is when a node receives your message and forwards it. Most messages need **1-3 hops** to reach their destination!",
+        bubbleText: "Each **hop** is when a node receives your message and forwards it. Most messages need **1-3 hops** to reach their destination!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'routing_router_role',
-        bubbleText:
-            "**ROUTER** nodes are the mesh superheroes - they relay messages for everyone! **CLIENT** nodes only send/receive their own messages.",
+        bubbleText: "**ROUTER** nodes are the mesh superheroes - they relay messages for everyone! **CLIENT** nodes only send/receive their own messages.",
         icoMood: MeshBrainMood.proud,
       ),
       HelpStep(
         id: 'routing_store_forward',
-        bubbleText:
-            "**Store & Forward** is awesome! If the recipient hasn't been heard recently, I'll hold onto the message and deliver it when a packet arrives.",
+        bubbleText: "**Store & Forward** is awesome! If the recipient hasn't been heard recently, I'll hold onto the message and deliver it when a packet arrives.",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -218,33 +205,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'nodes_intro',
-        bubbleText:
-            "This is your **mesh network**! Every device you see here is a node that can talk to you.",
+        bubbleText: "This is your **mesh network**! Every device you see here is a node that can talk to you.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'nodes_status',
-        bubbleText:
-            "**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.",
+        bubbleText: "**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal-status is inferred.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'nodes_info',
-        bubbleText:
-            "Each card shows the node's **name**, **battery level**, and **signal strength**. Tap any node to see more details!",
+        bubbleText: "Each card shows the node's **name**, **battery level**, and **signal strength**. Tap any node to see more details!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodes_filters',
-        bubbleText:
-            "Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.",
+        bubbleText: "Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'nodes_actions',
-        bubbleText:
-            "Tap a node to **send a message**, see their **location on the map**, or check their **telemetry data**!",
+        bubbleText: "Tap a node to **send a message**, see their **location on the map**, or check their **telemetry data**!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -264,33 +246,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'roles_intro',
-        bubbleText:
-            "**Node roles** determine how your device helps the mesh. Let me break it down for you!",
+        bubbleText: "**Node roles** determine how your device helps the mesh. Let me break it down for you!",
         icoMood: MeshBrainMood.curious,
         canGoBack: false,
       ),
       HelpStep(
         id: 'role_client',
-        bubbleText:
-            "**CLIENT**: Your device sends and receives messages but doesn't relay for others. Great for **battery life**!",
+        bubbleText: "**CLIENT**: Your device sends and receives messages but doesn't relay for others. Great for **battery life**!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'role_router',
-        bubbleText:
-            "**ROUTER**: You're a mesh superhero! You relay messages for everyone. Uses more battery but makes the mesh stronger!",
+        bubbleText: "**ROUTER**: You're a mesh superhero! You relay messages for everyone. Uses more battery but makes the mesh stronger!",
         icoMood: MeshBrainMood.proud,
       ),
       HelpStep(
         id: 'role_router_late',
-        bubbleText:
-            "**ROUTER LATE**: Rebroadcasts after other routers. Extends coverage without taking priority hops. Great for backup relays!",
+        bubbleText: "**ROUTER LATE**: Rebroadcasts after other routers. Extends coverage without taking priority hops. Great for backup relays!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'role_client_base',
-        bubbleText:
-            "**CLIENT BASE**: Base station for your favorited nodes. Routes their packets like a router, handles everything else like a client!",
+        bubbleText: "**CLIENT BASE**: Base station for your favorited nodes. Routes their packets like a router, handles everything else like a client!",
         icoMood: MeshBrainMood.energized,
       ),
     ],
@@ -310,27 +287,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'region_intro',
-        bubbleText:
-            "This is important! Your **region** determines which radio frequencies you can legally use.",
+        bubbleText: "This is important! Your **region** determines which radio frequencies you can legally use.",
         icoMood: MeshBrainMood.alert,
         canGoBack: false,
       ),
       HelpStep(
         id: 'region_legal',
-        bubbleText:
-            "Each country has different rules. Using the **wrong frequency** can be illegal! Always match your physical location.",
+        bubbleText: "Each country has different rules. Using the **wrong frequency** can be illegal! Always match your physical location.",
         icoMood: MeshBrainMood.nervous,
       ),
       HelpStep(
         id: 'region_bands',
-        bubbleText:
-            "Most regions use **915MHz** (Americas) or **868MHz** (Europe). Some use **433MHz**. Your device's hardware must support the frequency!",
+        bubbleText: "Most regions use **915MHz** (Americas) or **868MHz** (Europe). Some use **433MHz**. Your device's hardware must support the frequency!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'region_warning',
-        bubbleText:
-            "Wrong region = **can't communicate** with others! Make sure everyone in your mesh uses the same region setting.",
+        bubbleText: "Wrong region = **can't communicate** with others! Make sure everyone in your mesh uses the same region setting.",
         icoMood: MeshBrainMood.nervous,
       ),
     ],
@@ -350,39 +323,33 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'connection_intro',
-        bubbleText:
-            "Let's connect your Meshtastic device! There are two ways: **Bluetooth** or **USB**.",
+        bubbleText: "Let's connect your Meshtastic device! There are two ways: **Bluetooth** or **USB**.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'connection_ble',
-        bubbleText:
-            "**BLUETOOTH** (BLE): Wireless! Your device shows up as **Meshtastic_XXXX**. Just tap to connect. Works while device is in your pocket!",
+        bubbleText: "**BLUETOOTH** (BLE): Wireless! Your device shows up as **Meshtastic_XXXX**. Just tap to connect. Works while device is in your pocket!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'connection_usb',
-        bubbleText:
-            "**USB**: Plug in with a cable. More reliable, charges your device, slightly faster. Great for configuration!",
+        bubbleText: "**USB**: Plug in with a cable. More reliable, charges your device, slightly faster. Great for configuration!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'connection_pairing',
-        bubbleText:
-            "First time? Your device needs to be in **pairing mode**. Check for a Bluetooth icon on the screen or press the button!",
+        bubbleText: "First time? Your device needs to be in **pairing mode**. Check for a Bluetooth icon on the screen or press the button!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'connection_troubleshoot',
-        bubbleText:
-            "Can't find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn't connected elsewhere\n- You're close enough (under 10m)",
+        bubbleText: "Can't find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn't connected elsewhere\n- You're close enough (under 10m)",
         icoMood: MeshBrainMood.thinking,
       ),
       HelpStep(
         id: 'connection_disconnect',
-        bubbleText:
-            "Keep getting **disconnected**? Common causes:\n- **Another app** (e.g. Meshtastic app) is already connected to this node\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\n- Try closing other apps or disconnecting other devices first",
+        bubbleText: "Keep getting **disconnected**? Common causes:\n- **Another app** (e.g. Meshtastic app) is already connected to this node\n- On **TCP/IP (ESP devices)**, only one client can connect at a time\n- Try closing other apps or disconnecting other devices first",
         icoMood: MeshBrainMood.thinking,
       ),
     ],
@@ -402,27 +369,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'gps_intro',
-        bubbleText:
-            "**GPS** lets others see where you are on the map! Let me explain how it works.",
+        bubbleText: "**GPS** lets others see where you are on the map! Let me explain how it works.",
         icoMood: MeshBrainMood.curious,
         canGoBack: false,
       ),
       HelpStep(
         id: 'gps_broadcast',
-        bubbleText:
-            "Your device broadcasts **position updates** every few minutes. Other nodes see you appear on their map!",
+        bubbleText: "Your device broadcasts **position updates** every few minutes. Other nodes see you appear on their map!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'gps_privacy',
-        bubbleText:
-            "Privacy matters! You can **disable GPS** or set update intervals. Turn it off when you want to stay hidden!",
+        bubbleText: "Privacy matters! You can **disable GPS** or set update intervals. Turn it off when you want to stay hidden!",
         icoMood: MeshBrainMood.inviting,
       ),
       HelpStep(
         id: 'gps_battery',
-        bubbleText:
-            "GPS uses **battery**! Longer update intervals = better battery life. Balance privacy and utility!",
+        bubbleText: "GPS uses **battery**! Longer update intervals = better battery life. Balance privacy and utility!",
         icoMood: MeshBrainMood.thinking,
       ),
     ],
@@ -442,27 +405,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'metrics_intro',
-        bubbleText:
-            "Let's decode those signal numbers! They tell you how good your connection is.",
+        bubbleText: "Let's decode those signal numbers! They tell you how good your connection is.",
         icoMood: MeshBrainMood.curious,
         canGoBack: false,
       ),
       HelpStep(
         id: 'metrics_rssi',
-        bubbleText:
-            "**RSSI** (Received Signal Strength): How loud the signal is. Higher is better! **-50 dBm** = excellent, **-120 dBm** = barely hanging on.",
+        bubbleText: "**RSSI** (Received Signal Strength): How loud the signal is. Higher is better! **-50 dBm** = excellent, **-120 dBm** = barely hanging on.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'metrics_snr',
-        bubbleText:
-            "**SNR** (Signal-to-Noise Ratio): How clear the signal is. Positive = good, negative = noisy! **+10 dB** = great, **-10 dB** = struggling.",
+        bubbleText: "**SNR** (Signal-to-Noise Ratio): How clear the signal is. Positive = good, negative = noisy! **+10 dB** = great, **-10 dB** = struggling.",
         icoMood: MeshBrainMood.thinking,
       ),
       HelpStep(
         id: 'metrics_practical',
-        bubbleText:
-            "In practice: **Green** = excellent, **yellow** = okay, **red** = poor. Move closer or find higher ground to improve!",
+        bubbleText: "In practice: **Green** = excellent, **yellow** = okay, **red** = poor. Move closer or find higher ground to improve!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -482,33 +441,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'map_intro',
-        bubbleText:
-            "Welcome to the **Mesh Map**! Every dot you see is a node with GPS. They're all part of your network!",
+        bubbleText: "Welcome to the **Mesh Map**! Every dot you see is a node with GPS. They're all part of your network!",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'map_markers',
-        bubbleText:
-            "**Tap any marker** to see who it is. You can send them a message, check their battery, or see when they were last heard!",
+        bubbleText: "**Tap any marker** to see who it is. You can send them a message, check their battery, or see when they were last heard!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'map_features',
-        bubbleText:
-            "Try the **heatmap** to see where nodes cluster, or **connection lines** to see who can talk to who!",
+        bubbleText: "Try the **heatmap** to see where nodes cluster, or **connection lines** to see who can talk to who!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'map_measure',
-        bubbleText:
-            "Use **measure mode** to check distances between points. Great for planning where to put a new node!",
+        bubbleText: "Use **measure mode** to check distances between points. Great for planning where to put a new node!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'map_filters',
-        bubbleText:
-            "Use **filters** to show only **Online** nodes, or nodes with GPS. Helps when your map gets crowded!",
+        bubbleText: "Use **filters** to show only **Online** nodes, or nodes with GPS. Helps when your map gets crowded!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -528,33 +482,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'channels_intro',
-        bubbleText:
-            "These are your **channels**! Think of them like different radio frequencies. Each one is a separate conversation.",
+        bubbleText: "These are your **channels**! Think of them like different radio frequencies. Each one is a separate conversation.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'channels_primary',
-        bubbleText:
-            "The **Primary** channel is special. It's always slot 0 and can't be deleted. Most mesh traffic goes here!",
+        bubbleText: "The **Primary** channel is special. It's always slot 0 and can't be deleted. Most mesh traffic goes here!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'channels_secondary',
-        bubbleText:
-            "**Secondary channels** are for private groups. Create one for your family, hiking club, or emergency team!",
+        bubbleText: "**Secondary channels** are for private groups. Create one for your family, hiking club, or emergency team!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'channels_encryption',
-        bubbleText:
-            "See the **lock icon**? That means the channel is encrypted. Only people with the key can read messages!",
+        bubbleText: "See the **lock icon**? That means the channel is encrypted. Only people with the key can read messages!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'channels_share',
-        bubbleText:
-            "Tap a channel to see its **QR code**. Friends can scan it to join instantly with the right settings!",
+        bubbleText: "Tap a channel to see its **QR code**. Friends can scan it to join instantly with the right settings!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -574,33 +523,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'automations_intro',
-        bubbleText:
-            "**Automations** make your mesh smarter! Set up rules and I'll do things automatically for you.",
+        bubbleText: "**Automations** make your mesh smarter! Set up rules and I'll do things automatically for you.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'automations_triggers',
-        bubbleText:
-            "Every automation starts with a **trigger**. Like when a node becomes inactive, battery gets low, or you enter an area!",
+        bubbleText: "Every automation starts with a **trigger**. Like when a node becomes inactive, battery gets low, or you enter an area!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'automations_actions',
-        bubbleText:
-            "Then pick an **action**! Send a message, play a sound, show a notification, or even trigger IFTTT!",
+        bubbleText: "Then pick an **action**! Send a message, play a sound, show a notification, or even trigger IFTTT!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'automations_examples',
-        bubbleText:
-            "Example: **Alert me when Dad's battery drops below 20%**. Or **Send 'I'm home!' when I enter my geofence**!",
+        bubbleText: "Example: **Alert me when Dad's battery drops below 20%**. Or **Send 'I'm home!' when I enter my geofence**!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'automations_toggle',
-        bubbleText:
-            "Use the **toggle switch** to enable or disable automations. Test them out before going live!",
+        bubbleText: "Use the **toggle switch** to enable or disable automations. Test them out before going live!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -620,27 +564,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'dashboard_intro',
-        bubbleText:
-            "Welcome to your **Dashboard**! This is your personalized command center. Everything you need, at a glance!",
+        bubbleText: "Welcome to your **Dashboard**! This is your personalized command center. Everything you need, at a glance!",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'dashboard_widgets',
-        bubbleText:
-            "Each card is a **widget**. They show live data from your mesh - battery levels, messages, weather, and more!",
+        bubbleText: "Each card is a **widget**. They show live data from your mesh - battery levels, messages, weather, and more!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'dashboard_reorder',
-        bubbleText:
-            "**Long-press and drag** to rearrange widgets. Put your favorites at the top! Tap **Edit** to add or remove them.",
+        bubbleText: "**Long-press and drag** to rearrange widgets. Put your favorites at the top! Tap **Edit** to add or remove them.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'dashboard_tap',
-        bubbleText:
-            "**Tap any widget** to see more details or take action. Try tapping a node widget to see all their info!",
+        bubbleText: "**Tap any widget** to see more details or take action. Try tapping a node widget to see all their info!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -660,27 +600,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'builder_intro',
-        bubbleText:
-            "Welcome to the **Widget Builder**! Here you can create your own custom widgets from scratch!",
+        bubbleText: "Welcome to the **Widget Builder**! Here you can create your own custom widgets from scratch!",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'builder_templates',
-        bubbleText:
-            "Start with a **template** or build from blank. Templates give you gauges, charts, and status cards ready to customize!",
+        bubbleText: "Start with a **template** or build from blank. Templates give you gauges, charts, and status cards ready to customize!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'builder_bindings',
-        bubbleText:
-            "The magic is in **data bindings**! Connect any element to live mesh data - battery, GPS, temperature, signal strength!",
+        bubbleText: "The magic is in **data bindings**! Connect any element to live mesh data - battery, GPS, temperature, signal strength!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'builder_preview',
-        bubbleText:
-            "Use **Preview** to see how your widget looks with real data before saving. Tweak until it's perfect!",
+        bubbleText: "Use **Preview** to see how your widget looks with real data before saving. Tweak until it's perfect!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -700,33 +636,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'signals_intro',
-        bubbleText:
-            "Welcome to **Signals**! Broadcast moments to your mesh. Signals are **ephemeral** - you choose how long they last, from **15 minutes** up to **24 hours**.",
+        bubbleText: "Welcome to **Signals**! Broadcast moments to your mesh. Signals are **ephemeral** - you choose how long they last, from **15 minutes** up to **24 hours**.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'signals_create',
-        bubbleText:
-            "Tap the **sensor icon** to go active! Add text, a photo, or your location. Choose your TTL - shorter times work great for quick check-ins.",
+        bubbleText: "Tap the **sensor icon** to go active! Add text, a photo, or your location. Choose your TTL - shorter times work great for quick check-ins.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'signals_proximity',
-        bubbleText:
-            "Signals show **proximity badges** - how many hops away the sender is. **Nearby** signals (0-1 hops) appear first!",
+        bubbleText: "Signals show **proximity badges** - how many hops away the sender is. **Nearby** signals (0-1 hops) appear first!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'signals_filters',
-        bubbleText:
-            "Use **filters** to focus on what matters: nearby signals, mesh-only, or content with media. Toggle between **list** and **grid** views!",
+        bubbleText: "Use **filters** to focus on what matters: nearby signals, mesh-only, or content with media. Toggle between **list** and **grid** views!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'signals_privacy',
-        bubbleText:
-            "Signals are **mesh-first** - they travel through the radio network. When they fade, they're gone. True ephemeral, off-grid content!",
+        bubbleText: "Signals are **mesh-first** - they travel through the radio network. When they fade, they're gone. True ephemeral, off-grid content!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -747,7 +678,7 @@ class HelpContent {
       HelpStep(
         id: 'create_intro',
         bubbleText:
-            "Time to **Go Active**! A signal is an ephemeral broadcast — "
+            "Time to **Go Active**! A signal is an ephemeral broadcast - "
             "it lives on the mesh for a set time, then fades away. Let me "
             "walk you through it.",
         icoMood: MeshBrainMood.excited,
@@ -756,7 +687,7 @@ class HelpContent {
       HelpStep(
         id: 'create_text',
         bubbleText:
-            "Type your message in the main field — up to **280 characters**. "
+            "Type your message in the main field - up to **280 characters**. "
             "The circular counter in the corner shows how many you have left.",
         icoMood: MeshBrainMood.speaking,
       ),
@@ -764,7 +695,7 @@ class HelpContent {
         id: 'create_image',
         bubbleText:
             "Tap the **image icon** to attach a photo. Images are uploaded "
-            "via cloud when you are online — they are not available in "
+            "via cloud when you are online - they are not available in "
             "mesh-only mode.",
         icoMood: MeshBrainMood.curious,
       ),
@@ -779,7 +710,7 @@ class HelpContent {
       HelpStep(
         id: 'create_ttl',
         bubbleText:
-            "The **timer icon** sets your TTL — how long the signal stays "
+            "The **timer icon** sets your TTL - how long the signal stays "
             "alive. Choose from **15 minutes** up to **24 hours**. Shorter "
             "times work great for quick check-ins.",
         icoMood: MeshBrainMood.approving,
@@ -787,7 +718,7 @@ class HelpContent {
       HelpStep(
         id: 'create_intent',
         bubbleText:
-            "Pick a **Presence Intent** to tell the mesh what you are up to — "
+            "Pick a **Presence Intent** to tell the mesh what you are up to - "
             "exploring, monitoring, helping, or just listening. It adds "
             "context without extra words.",
         icoMood: MeshBrainMood.playful,
@@ -887,27 +818,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'world_intro',
-        bubbleText:
-            "Welcome to **World Mesh**! See the entire global Meshtastic network. Every dot is a node sharing its location!",
+        bubbleText: "Welcome to **World Mesh**! See the entire global Meshtastic network. Every dot is a node sharing its location!",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'world_scope',
-        bubbleText:
-            "Zoom out to see the **worldwide mesh**, or zoom in to explore local clusters. It's amazing how many nodes exist!",
+        bubbleText: "Zoom out to see the **worldwide mesh**, or zoom in to explore local clusters. It's amazing how many nodes exist!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'world_data',
-        bubbleText:
-            "Data comes from **MQTT** - nodes that opted to share their position publicly. Your local nodes appear too!",
+        bubbleText: "Data comes from **MQTT** - nodes that opted to share their position publicly. Your local nodes appear too!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'world_filters',
-        bubbleText:
-            "Use **filters** to show specific regions or time ranges. Find active meshes near places you're visiting!",
+        bubbleText: "Use **filters** to show specific regions or time ranges. Find active meshes near places you're visiting!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -927,27 +854,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'routes_intro',
-        bubbleText:
-            "**Routes** lets you record your journeys! Perfect for hikes, bike rides, or any adventure off the grid.",
+        bubbleText: "**Routes** lets you record your journeys! Perfect for hikes, bike rides, or any adventure off the grid.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'routes_record',
-        bubbleText:
-            "Tap **Record** to start tracking. I'll save your GPS points as you move. Works even without cell signal!",
+        bubbleText: "Tap **Record** to start tracking. I'll save your GPS points as you move. Works even without cell signal!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'routes_gpx',
-        bubbleText:
-            "**Import GPX files** to follow existing trails. Export your routes to share with others or use in other apps!",
+        bubbleText: "**Import GPX files** to follow existing trails. Export your routes to share with others or use in other apps!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'routes_share',
-        bubbleText:
-            "Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favorite trails.",
+        bubbleText: "Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favorite trails.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -967,45 +890,38 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'position_intro',
-        bubbleText:
-            "**Position History** records every GPS position broadcast by nodes on your mesh. Think of it as a flight recorder for location data!",
+        bubbleText: "**Position History** records every GPS position broadcast by nodes on your mesh. Think of it as a flight recorder for location data!",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'position_list_map',
-        bubbleText:
-            "Switch between **list view** and **map view** using the overflow menu. The map draws colour-coded trails per node so you can visualise movement over time.",
+        bubbleText: "Switch between **list view** and **map view** using the overflow menu. The map draws colour-coded trails per node so you can visualise movement over time.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'position_filters',
-        bubbleText:
-            "Use **filter chips** to narrow results: today, this week, good GPS fix, or just your own node. Combine with a **custom date range** for precise slicing.",
+        bubbleText: "Use **filter chips** to narrow results: today, this week, good GPS fix, or just your own node. Combine with a **custom date range** for precise slicing.",
         icoMood: MeshBrainMood.thinking,
       ),
       HelpStep(
         id: 'position_search',
-        bubbleText:
-            "The **search bar** filters by node name. Handy when you have dozens of nodes and want to track a specific one.",
+        bubbleText: "The **search bar** filters by node name. Handy when you have dozens of nodes and want to track a specific one.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'position_map_nodes',
-        bubbleText:
-            "In map view, tap the **node list** button to pick a single node. Each node gets its own colour trail with distance calculations between points.",
+        bubbleText: "In map view, tap the **node list** button to pick a single node. Each node gets its own colour trail with distance calculations between points.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'position_export',
-        bubbleText:
-            "**Export as CSV** from the overflow menu for analysis in spreadsheets or GIS tools. Great for documenting coverage tests!",
+        bubbleText: "**Export as CSV** from the overflow menu for analysis in spreadsheets or GIS tools. Great for documenting coverage tests!",
         icoMood: MeshBrainMood.excited,
       ),
       HelpStep(
         id: 'position_good_fix',
-        bubbleText:
-            "The **Good Fix** filter shows only positions with 6+ satellites. This helps you ignore noisy indoor fixes and focus on reliable outdoor data.",
+        bubbleText: "The **Good Fix** filter shows only positions with 6+ satellites. This helps you ignore noisy indoor fixes and focus on reliable outdoor data.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1025,27 +941,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'settings_intro',
-        bubbleText:
-            "Welcome to **Settings**! Here you can customize everything about your app and connected device.",
+        bubbleText: "Welcome to **Settings**! Here you can customize everything about your app and connected device.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'settings_device',
-        bubbleText:
-            "**Device settings** let you configure your Meshtastic radio - name, region, power levels, and modules!",
+        bubbleText: "**Device settings** let you configure your Meshtastic radio - name, region, power levels, and modules!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'settings_app',
-        bubbleText:
-            "**App settings** control themes, notifications, privacy options, and how the app behaves.",
+        bubbleText: "**App settings** control themes, notifications, privacy options, and how the app behaves.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'settings_cloud',
-        bubbleText:
-            "**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** — if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.",
+        bubbleText: "**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** - if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -1065,27 +977,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'profile_intro',
-        bubbleText:
-            "This is **your profile**! Customize your mesh identity with a display name, callsign, and avatar.",
+        bubbleText: "This is **your profile**! Customize your mesh identity with a display name, callsign, and avatar.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'profile_customize',
-        bubbleText:
-            "Your profile is **optional and private by default**. Customize it to stand out on the mesh!",
+        bubbleText: "Your profile is **optional and private by default**. Customize it to stand out on the mesh!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'profile_share',
-        bubbleText:
-            "Add a **callsign**, **avatar**, and **links** to make your profile yours.",
+        bubbleText: "Add a **callsign**, **avatar**, and **links** to make your profile yours.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'profile_cloud',
-        bubbleText:
-            "**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data — if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.",
+        bubbleText: "**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data - if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -1105,21 +1013,18 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'timeline_intro',
-        bubbleText:
-            "The **Timeline** shows everything happening on your mesh. Messages, node changes, telemetry - all in order!",
+        bubbleText: "The **Timeline** shows everything happening on your mesh. Messages, node changes, telemetry - all in order!",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'timeline_filter',
-        bubbleText:
-            "Use **filters** to focus on specific event types. Just messages? Only node joins? You control the view!",
+        bubbleText: "Use **filters** to focus on specific event types. Just messages? Only node joins? You control the view!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'timeline_tap',
-        bubbleText:
-            "**Tap any event** to see full details. Great for debugging or understanding what's happening on your network!",
+        bubbleText: "**Tap any event** to see full details. Great for debugging or understanding what's happening on your network!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1139,21 +1044,18 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'offline_intro',
-        bubbleText:
-            "**Offline Maps** let you use the map without internet! Essential for adventures off the grid.",
+        bubbleText: "**Offline Maps** let you use the map without internet! Essential for adventures off the grid.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'offline_download',
-        bubbleText:
-            "**Select a region** and zoom level, then tap download. I'll save all the map tiles to your device!",
+        bubbleText: "**Select a region** and zoom level, then tap download. I'll save all the map tiles to your device!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'offline_manage',
-        bubbleText:
-            "Manage your downloads here - see storage used and **delete** old regions you don't need anymore.",
+        bubbleText: "Manage your downloads here - see storage used and **delete** old regions you don't need anymore.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1173,27 +1075,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'radio_intro',
-        bubbleText:
-            "**Radio settings** control how your device transmits. Region, power, and modem preset are key!",
+        bubbleText: "**Radio settings** control how your device transmits. Region, power, and modem preset are key!",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'radio_region',
-        bubbleText:
-            "Your **region** determines legal frequencies. Set this wrong and you could interfere with other services!",
+        bubbleText: "Your **region** determines legal frequencies. Set this wrong and you could interfere with other services!",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'radio_modem',
-        bubbleText:
-            "**Modem preset** balances range vs speed. Long-range = slower but further. Short-fast = quick but closer.",
+        bubbleText: "**Modem preset** balances range vs speed. Long-range = slower but further. Short-fast = quick but closer.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'radio_power',
-        bubbleText:
-            "Higher **TX power** means more range but uses more battery. Find the sweet spot for your needs!",
+        bubbleText: "Higher **TX power** means more range but uses more battery. Find the sweet spot for your needs!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1213,33 +1111,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'presence_intro',
-        bubbleText:
-            "**Presence** shows which nodes are active, recently seen, or inactive on your mesh network.",
+        bubbleText: "**Presence** shows which nodes are active, recently seen, or inactive on your mesh network.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'presence_active',
-        bubbleText:
-            "**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.",
+        bubbleText: "**Online** nodes (green) were heard within the last 2 hours - matching the Meshtastic firmware definition of online.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'presence_recent',
-        bubbleText:
-            "**Recently seen** nodes (yellow) were heard a few minutes ago. Probably still around.",
+        bubbleText: "**Recently seen** nodes (yellow) were heard a few minutes ago. Probably still around.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'presence_inactive',
-        bubbleText:
-            "**Offline** nodes (gray) haven't been heard from in over 2 hours. They might be out of range or powered off.",
+        bubbleText: "**Offline** nodes (gray) haven't been heard from in over 2 hours. They might be out of range or powered off.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'presence_chart',
-        bubbleText:
-            "The **activity chart** shows recent node activity over time. Watch the mesh come alive!",
+        bubbleText: "The **activity chart** shows recent node activity over time. Watch the mesh come alive!",
         icoMood: MeshBrainMood.excited,
       ),
     ],
@@ -1259,33 +1152,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'reachability_intro',
-        bubbleText:
-            "**Reachability** estimates how likely you are to reach each node. This is based on passively observed mesh data.",
+        bubbleText: "**Reachability** estimates how likely you are to reach each node. This is based on passively observed mesh data.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'reachability_beta',
-        bubbleText:
-            "This is **BETA** - we don't send test packets! Everything is estimated from messages we see flowing through the mesh.",
+        bubbleText: "This is **BETA** - we don't send test packets! Everything is estimated from messages we see flowing through the mesh.",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'reachability_high',
-        bubbleText:
-            "**High** reachability (bright) means we've seen lots of communication with that node. Messages will probably get through!",
+        bubbleText: "**High** reachability (bright) means we've seen lots of communication with that node. Messages will probably get through!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'reachability_medium',
-        bubbleText:
-            "**Medium** reachability (dimmer) means some communication but not consistent. Messages might make it.",
+        bubbleText: "**Medium** reachability (dimmer) means some communication but not consistent. Messages might make it.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'reachability_low',
-        bubbleText:
-            "**Low** reachability (very dim) means we rarely see communication. The node might be too far or behind obstacles.",
+        bubbleText: "**Low** reachability (very dim) means we rarely see communication. The node might be too far or behind obstacles.",
         icoMood: MeshBrainMood.speaking,
       ),
     ],
@@ -1305,39 +1193,33 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'health_intro',
-        bubbleText:
-            "**Mesh Health** monitors your network for issues like congestion, packet loss, and problematic nodes.",
+        bubbleText: "**Mesh Health** monitors your network for issues like congestion, packet loss, and problematic nodes.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'health_status',
-        bubbleText:
-            "The **status indicator** shows overall mesh health. Green = healthy, yellow = issues detected, red = critical problems.",
+        bubbleText: "The **status indicator** shows overall mesh health. Green = healthy, yellow = issues detected, red = critical problems.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'health_metrics',
-        bubbleText:
-            "**Metrics** show packet counts, retransmissions, and hop counts. Watch for high retransmit rates!",
+        bubbleText: "**Metrics** show packet counts, retransmissions, and hop counts. Watch for high retransmit rates!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'health_utilization',
-        bubbleText:
-            "The **utilization chart** shows how busy your mesh is over time. Spikes might indicate problems.",
+        bubbleText: "The **utilization chart** shows how busy your mesh is over time. Spikes might indicate problems.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'health_issues',
-        bubbleText:
-            "**Issues** section highlights specific problems and suggests fixes. Check here if things seem slow!",
+        bubbleText: "**Issues** section highlights specific problems and suggests fixes. Check here if things seem slow!",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'health_monitoring',
-        bubbleText:
-            "Use the **pause** button to stop monitoring if you want to save battery. Hit **reset** to clear the data and start fresh!",
+        bubbleText: "Use the **pause** button to stop monitoring if you want to save battery. Hit **reset** to clear the data and start fresh!",
         icoMood: MeshBrainMood.excited,
       ),
     ],
@@ -1357,51 +1239,43 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'traceroute_intro',
-        bubbleText:
-            "**Traceroute** discovers the actual path your packets take to reach another node. It reveals which relays are forwarding your data.",
+        bubbleText: "**Traceroute** discovers the actual path your packets take to reach another node. It reveals which relays are forwarding your data.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'traceroute_how',
-        bubbleText:
-            "When you send a traceroute, each relay along the route adds itself to the packet. The destination sends it back so you can see **both directions**.",
+        bubbleText: "When you send a traceroute, each relay along the route adds itself to the packet. The destination sends it back so you can see **both directions**.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'traceroute_send',
-        bubbleText:
-            "Send a traceroute from a **node's detail sheet** (tap the route icon) or from **Dashboard Quick Actions** where you can pick any known node.",
+        bubbleText: "Send a traceroute from a **node's detail sheet** (tap the route icon) or from **Dashboard Quick Actions** where you can pick any known node.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'traceroute_cooldown',
-        bubbleText:
-            "There is a **30-second cooldown** between traceroutes to respect airtime fairness. A visible countdown shows the remaining time.",
+        bubbleText: "There is a **30-second cooldown** between traceroutes to respect airtime fairness. A visible countdown shows the remaining time.",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'traceroute_results',
-        bubbleText:
-            "Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" — the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.",
+        bubbleText: "Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" - the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'traceroute_history',
-        bubbleText:
-            "All traceroutes are saved to **Traceroute History** (Settings > Telemetry Logs). Filter by response status, search by node name, and compare runs over time.",
+        bubbleText: "All traceroutes are saved to **Traceroute History** (Settings > Telemetry Logs). Filter by response status, search by node name, and compare runs over time.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'traceroute_export',
-        bubbleText:
-            "Export your traceroute history as **CSV** for trend analysis or documentation. Use the overflow menu on the history screen.",
+        bubbleText: "Export your traceroute history as **CSV** for trend analysis or documentation. Use the overflow menu on the history screen.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'traceroute_tips',
-        bubbleText:
-            "**Pro tip:** Run traceroutes after repositioning nodes, changing antennas, or adjusting channels to validate your changes with real route data!",
+        bubbleText: "**Pro tip:** Run traceroutes after repositioning nodes, changing antennas, or adjusting channels to validate your changes with real route data!",
         icoMood: MeshBrainMood.excited,
       ),
     ],
@@ -1421,57 +1295,48 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'nodedex_intro',
-        bubbleText:
-            "Welcome to the **NodeDex** — your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.",
+        bubbleText: "Welcome to the **NodeDex** - your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'nodedex_sigils',
-        bubbleText:
-            "Each node gets a **procedural Sigil** — a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!",
+        bubbleText: "Each node gets a **procedural Sigil** - a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_traits',
-        bubbleText:
-            "Nodes earn **Traits** based on real behavior — **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.",
+        bubbleText: "Nodes earn **Traits** based on real behavior - **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'nodedex_filters',
-        bubbleText:
-            "Use the **filter chips** to show only specific traits, recently discovered nodes, or nodes you have tagged. The **search bar** finds nodes by name or hex ID.",
+        bubbleText: "Use the **filter chips** to show only specific traits, recently discovered nodes, or nodes you have tagged. The **search bar** finds nodes by name or hex ID.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'nodedex_field_journal',
-        bubbleText:
-            "As you observe more nodes, your **field journal** fills in — each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!",
+        bubbleText: "As you observe more nodes, your **field journal** fills in - each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'nodedex_album_mode',
-        bubbleText:
-            "Tap the **view toggle** in the app bar to switch to **Album mode** — a collector-style card grid grouped by trait, rarity, or region. Each card shows the node's sigil with a holographic shimmer based on rarity!",
+        bubbleText: "Tap the **view toggle** in the app bar to switch to **Album mode** - a collector-style card grid grouped by trait, rarity, or region. Each card shows the node's sigil with a holographic shimmer based on rarity!",
         icoMood: MeshBrainMood.excited,
       ),
       HelpStep(
         id: 'nodedex_atmosphere',
-        bubbleText:
-            "Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** — rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!",
+        bubbleText: "Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** - rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_cloud_sync',
-        bubbleText:
-            "Your NodeDex is stored locally in SQLite and survives app restarts — but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal — sigils, encounters, social tags, notes, and co-seen links — backs up to the cloud and **restores automatically** on any device you sign into.",
+        bubbleText: "Your NodeDex is stored locally in SQLite and survives app restarts - but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal - sigils, encounters, social tags, notes, and co-seen links - backs up to the cloud and **restores automatically** on any device you sign into.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'nodedex_export',
-        bubbleText:
-            "Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you — even without Cloud Sync!",
+        bubbleText: "Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you - even without Cloud Sync!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1491,117 +1356,98 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'nodedex_sigil',
-        bubbleText:
-            "This is the node's **Sigil** — a unique procedural glyph generated from its identity. No two nodes share the same sigil. It's like a visual fingerprint!",
+        bubbleText: "This is the node's **Sigil** - a unique procedural glyph generated from its identity. No two nodes share the same sigil. It's like a visual fingerprint!",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'nodedex_trait',
-        bubbleText:
-            "The **Trait** is an inferred personality based on how this node behaves — movement patterns, signal consistency, encounter frequency. Confidence grows with more data.",
+        bubbleText: "The **Trait** is an inferred personality based on how this node behaves - movement patterns, signal consistency, encounter frequency. Confidence grows with more data.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_auto_summary',
-        bubbleText:
-            "**Auto-Summary** computes insights from encounter history — time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.",
+        bubbleText: "**Auto-Summary** computes insights from encounter history - time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_observation_timeline',
-        bubbleText:
-            "The **Observation Timeline** visualizes this node's encounter density over time, with relative labels showing how recently each observation was recorded.",
+        bubbleText: "The **Observation Timeline** visualizes this node's encounter density over time, with relative labels showing how recently each observation was recorded.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'nodedex_discovery',
-        bubbleText:
-            "**Discovery Stats** show when you first and last saw this node, how many encounters you've had, and the closest range recorded. These update automatically.",
+        bubbleText: "**Discovery Stats** show when you first and last saw this node, how many encounters you've had, and the closest range recorded. These update automatically.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'nodedex_signal',
-        bubbleText:
-            "**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality — higher SNR and less negative RSSI mean stronger signals.",
+        bubbleText: "**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality - higher SNR and less negative RSSI mean stronger signals.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'nodedex_social_tag',
-        bubbleText:
-            "The **Social Tag** is a label you assign to categorize this node — friend, relay, base station, or anything else. It's your personal metadata, never shared over the mesh.",
+        bubbleText: "The **Social Tag** is a label you assign to categorize this node - friend, relay, base station, or anything else. It's your personal metadata, never shared over the mesh.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'nodedex_note',
-        bubbleText:
-            "**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type — whatever helps you.",
+        bubbleText: "**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type - whatever helps you.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'nodedex_regions',
-        bubbleText:
-            "**Region History** records every regulatory region where this node has been observed. Useful for tracking mobile nodes across different areas.",
+        bubbleText: "**Region History** records every regulatory region where this node has been observed. Useful for tracking mobile nodes across different areas.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_encounters',
-        bubbleText:
-            "**Recent Encounters** is a timeline of when this node appeared on your mesh. Each entry shows the timestamp, signal quality, and range if GPS was available.",
+        bubbleText: "**Recent Encounters** is a timeline of when this node appeared on your mesh. Each entry shows the timestamp, signal quality, and range if GPS was available.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'nodedex_activity_timeline',
-        bubbleText:
-            "The **Activity Timeline** is a unified chronological feed of everything observed about this node — encounters, messages, presence changes, signals, and milestones.",
+        bubbleText: "The **Activity Timeline** is a unified chronological feed of everything observed about this node - encounters, messages, presence changes, signals, and milestones.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_coseen',
-        bubbleText:
-            "**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship — shared encounters, message counts, and connection strength.",
+        bubbleText: "**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship - shared encounters, message counts, and connection strength.",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'nodedex_device',
-        bubbleText:
-            "**Device Info** shows live telemetry — battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.",
+        bubbleText: "**Device Info** shows live telemetry - battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'nodedex_trait_evidence',
-        bubbleText:
-            "**Trait Evidence** surfaces the concrete observations behind the primary trait — co-seen count, tenure, mobility, signal consistency, timing. These are the signals that drove the confidence score.",
+        bubbleText: "**Trait Evidence** surfaces the concrete observations behind the primary trait - co-seen count, tenure, mobility, signal consistency, timing. These are the signals that drove the confidence score.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_additional_traits',
-        bubbleText:
-            "**Additional Traits** show other archetypes that also scored for this node. Nodes rarely fit a single archetype perfectly — secondary traits reveal nuance.",
+        bubbleText: "**Additional Traits** show other archetypes that also scored for this node. Nodes rarely fit a single archetype perfectly - secondary traits reveal nuance.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_pet_companion',
-        bubbleText:
-            "**Pet Companion** — your own NodePet lives locally with your node. Other nodes can appear here when they share a small companion summary.",
+        bubbleText: "**Pet Companion** - your own NodePet lives locally with your node. Other nodes can appear here when they share a small companion summary.",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'nodedex_mrrp_services',
-        bubbleText:
-            "**MRRP Services** are the capabilities this node advertises over the mesh — boards, profiles, meetups, and more. Each ID is a specific service the peer exposes.",
+        bubbleText: "**MRRP Services** are the capabilities this node advertises over the mesh - boards, profiles, meetups, and more. Each ID is a specific service the peer exposes.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'nodedex_field_note',
-        bubbleText:
-            "The **Field Note** is a short, deterministic journal entry generated from the node's identity and primary trait. The same node always produces the same note — and it never travels over the mesh.",
+        bubbleText: "The **Field Note** is a short, deterministic journal entry generated from the node's identity and primary trait. The same node always produces the same note - and it never travels over the mesh.",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'nodedex_radio_compatibility',
-        bubbleText:
-            "**Radio Compatibility** compares your local radio's current preset and frequency against the values stamped on this node's last observation. Use it to spot mismatches that prevent direct RF reachability.",
+        bubbleText: "**Radio Compatibility** compares your local radio's current preset and frequency against the values stamped on this node's last observation. Use it to spot mismatches that prevent direct RF reachability.",
         icoMood: MeshBrainMood.curious,
       ),
     ],
@@ -1614,7 +1460,7 @@ class HelpContent {
   static const Map<String, String> nodeDexSectionHelp = {
     'sigil':
         'A unique procedural glyph generated from this node\'s identity. '
-        'The shape, symmetry, and color palette are deterministic — the same '
+        'The shape, symmetry, and color palette are deterministic - the same '
         'node always produces the same sigil. Think of it as a visual fingerprint.',
     'trait':
         'An inferred personality archetype derived from behavioral signals: '
@@ -1663,7 +1509,7 @@ class HelpContent {
         'expand to show the complete history.',
     'coseen':
         'Nodes that are frequently observed in the same session as this node. '
-        'A higher count means these nodes tend to appear together — they may '
+        'A higher count means these nodes tend to appear together - they may '
         'be co-located, part of the same deployment, or carried by the same '
         'person. Tap any link to see the full edge detail including shared '
         'encounter history and message activity.',
@@ -1674,17 +1520,17 @@ class HelpContent {
     'trait_evidence':
         'The observations that most strongly support the primary trait '
         'assigned above. Each bullet is a concrete signal drawn from encounter '
-        'history — co-seen connections, tenure, mobility, signal consistency, '
+        'history - co-seen connections, tenure, mobility, signal consistency, '
         'and timing. These are the inputs that drove the confidence score.',
     'additional_traits':
         'Other behavioral archetypes that also scored for this node, ranked '
-        'by confidence. A node rarely fits a single archetype perfectly — '
+        'by confidence. A node rarely fits a single archetype perfectly - '
         'secondary traits reveal nuance, like an Anchor that also acts as a '
         'Beacon, or a Drifter with Sentinel-like stretches.',
     // Fallback copies for the [SectionInfoButton] existence check. The
     // user-visible text comes from the ARB-backed resolver below; these
-    // strings are never displayed. Two keys — one per self-vs-remote
-    // branch — so [SectionInfoButton] opens the sheet in either case.
+    // strings are never displayed. Two keys - one per self-vs-remote
+    // branch - so [SectionInfoButton] opens the sheet in either case.
     'pet_companion_self':
         'Your NodePet lives with your node and evolves locally from your '
         'care and mesh activity.',
@@ -1698,7 +1544,7 @@ class HelpContent {
         'coordination. Tap any ID to learn more about that specific service.',
     'field_note':
         'A short, deterministic journal entry generated from this node\'s '
-        'identity and primary trait — like a naturalist\'s field observation. '
+        'identity and primary trait - like a naturalist\'s field observation. '
         'The same node always produces the same note; it never changes, and '
         'it never travels over the mesh.',
     'radio_compatibility':
@@ -1727,12 +1573,12 @@ class HelpContent {
         'respects your reduce-motion preference.',
     'album_patina':
         'Patina is a composite score reflecting how deeply you have observed '
-        'a node — encounter frequency, signal quality, co-seen connections, '
+        'a node - encounter frequency, signal quality, co-seen connections, '
         'and time since first discovery all contribute. Higher patina means '
         'richer visual detail on the card.',
     'album_cloud_sync':
         'With a Cloud Sync subscription, your entire NodeDex album backs up '
-        'to the cloud and syncs across devices — sigils, encounters, social '
+        'to the cloud and syncs across devices - sigils, encounters, social '
         'tags, notes, co-seen links, and collection progress. If you delete '
         'the app or get a new phone, everything restores when you sign back '
         'in. Without Cloud Sync, your collection exists only on this device '
@@ -1754,51 +1600,43 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'album_intro',
-        bubbleText:
-            "Welcome to the **Collector Album** — a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.",
+        bubbleText: "Welcome to the **Collector Album** - a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'album_cover',
-        bubbleText:
-            "The **Album Cover** is your dashboard — it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!",
+        bubbleText: "The **Album Cover** is your dashboard - it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'album_grouping',
-        bubbleText:
-            "Use the **group chips** to organize cards by **Trait** (Beacon, Relay, Ghost...), **Rarity** (Common through Legendary), or **Region** (geographic area). Each group gets its own album page.",
+        bubbleText: "Use the **group chips** to organize cards by **Trait** (Beacon, Relay, Ghost...), **Rarity** (Common through Legendary), or **Region** (geographic area). Each group gets its own album page.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'album_rarity',
-        bubbleText:
-            "Cards earn **rarity tiers** based on encounter count and trait. **Common** nodes are newly seen, while **Legendary** cards combine rare traits with deep observation history. Rarity drives the border glow and holographic shimmer!",
+        bubbleText: "Cards earn **rarity tiers** based on encounter count and trait. **Common** nodes are newly seen, while **Legendary** cards combine rare traits with deep observation history. Rarity drives the border glow and holographic shimmer!",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'album_interactions',
-        bubbleText:
-            "**Tap** a card to open the node's full profile. **Long-press** to open the **Card Gallery** — a full-screen carousel where you can swipe through cards and tap to flip them over for stats!",
+        bubbleText: "**Tap** a card to open the node's full profile. **Long-press** to open the **Card Gallery** - a full-screen carousel where you can swipe through cards and tap to flip them over for stats!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'album_gallery',
-        bubbleText:
-            "In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it — the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.",
+        bubbleText: "In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it - the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'album_holographic',
-        bubbleText:
-            "Higher-rarity cards shimmer with a **holographic effect** — the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.",
+        bubbleText: "Higher-rarity cards shimmer with a **holographic effect** - the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'album_persistence',
-        bubbleText:
-            "Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection — sigils, encounters, tags, notes — backs up and syncs across all your devices. Delete the app, get a new phone — your collection is safe and restores on sign-in.",
+        bubbleText: "Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection - sigils, encounters, tags, notes - backs up and syncs across all your devices. Delete the app, get a new phone - your collection is safe and restores on sign-in.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1818,45 +1656,38 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'constellation_intro',
-        bubbleText:
-            "Welcome to the **Constellation** — a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** — nodes observed in the same session.",
+        bubbleText: "Welcome to the **Constellation** - a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** - nodes observed in the same session.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'constellation_layout',
-        bubbleText:
-            "The layout is **force-directed** — nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.",
+        bubbleText: "The layout is **force-directed** - nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'constellation_interactions',
-        bubbleText:
-            "**Tap** a node to highlight its connections. **Double-tap** to zoom into a cluster. **Long-press** to open the node's full profile. **Pinch** to zoom in and out of the star map.",
+        bubbleText: "**Tap** a node to highlight its connections. **Double-tap** to zoom into a cluster. **Long-press** to open the node's full profile. **Pinch** to zoom in and out of the star map.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'constellation_edges',
-        bubbleText:
-            "Use the **edge density** button in the app bar to control how many connections are shown. **Sparse** shows only the strongest links, **All** shows everything. The right density depends on your network size.",
+        bubbleText: "Use the **edge density** button in the app bar to control how many connections are shown. **Sparse** shows only the strongest links, **All** shows everything. The right density depends on your network size.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'constellation_search',
-        bubbleText:
-            "The **search** icon lets you find a specific node by name or hex ID. The view automatically zooms and pans to center the matching node with a pulse highlight.",
+        bubbleText: "The **search** icon lets you find a specific node by name or hex ID. The view automatically zooms and pans to center the matching node with a pulse highlight.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'constellation_atmosphere',
-        bubbleText:
-            "The constellation has its own **Elemental Atmosphere** — subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.",
+        bubbleText: "The constellation has its own **Elemental Atmosphere** - subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'constellation_data',
-        bubbleText:
-            "Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally — but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.",
+        bubbleText: "Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally - but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1876,39 +1707,33 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'cloud_sync_intro',
-        bubbleText:
-            "**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices — and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.",
+        bubbleText: "**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices - and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'cloud_sync_what_syncs',
-        bubbleText:
-            "Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device — your entire mesh identity restores automatically.",
+        bubbleText: "Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device - your entire mesh identity restores automatically.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'cloud_sync_offline_first',
-        bubbleText:
-            "The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically — no manual sync needed.",
+        bubbleText: "The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically - no manual sync needed.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'cloud_sync_conflict',
-        bubbleText:
-            "If you edit the same node on two devices, Cloud Sync uses **last-write-wins** conflict resolution with per-field timestamps. Social tags and notes resolve independently so you never lose both edits.",
+        bubbleText: "If you edit the same node on two devices, Cloud Sync uses **last-write-wins** conflict resolution with per-field timestamps. Social tags and notes resolve independently so you never lose both edits.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'cloud_sync_subscription',
-        bubbleText:
-            "Cloud Sync is available as a **monthly** or **yearly** subscription. You can subscribe from **Settings > Account & Subscription**. Cancelled subscriptions keep working until the billing period ends.",
+        bubbleText: "Cloud Sync is available as a **monthly** or **yearly** subscription. You can subscribe from **Settings > Account & Subscription**. Cancelled subscriptions keep working until the billing period ends.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'cloud_sync_without',
-        bubbleText:
-            "Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore — but the app works fully offline without it.",
+        bubbleText: "Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore - but the app works fully offline without it.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1928,39 +1753,33 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'aether_intro',
-        bubbleText:
-            "**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** — far beyond typical ground-level range.",
+        bubbleText: "**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** - far beyond typical ground-level range.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'aether_schedule',
-        bubbleText:
-            "**Schedule a flight** before you fly. Enter your flight number, airports, departure time, and your node's ID. Other mesh enthusiasts can then track your journey and try to receive your signal.",
+        bubbleText: "**Schedule a flight** before you fly. Enter your flight number, airports, departure time, and your node's ID. Other mesh enthusiasts can then track your journey and try to receive your signal.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'aether_active',
-        bubbleText:
-            "**Active flights** show live position data from the OpenSky Network API. You'll see altitude, speed, heading, and estimated coverage radius based on radio horizon calculations.",
+        bubbleText: "**Active flights** show live position data from the OpenSky Network API. You'll see altitude, speed, heading, and estimated coverage radius based on radio horizon calculations.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'aether_reports',
-        bubbleText:
-            "**Reception reports** let ground stations report when they receive your signal. Reports include distance, RSSI, and SNR. All reports are saved to the **global leaderboard**.",
+        bubbleText: "**Reception reports** let ground stations report when they receive your signal. Reports include distance, RSSI, and SNR. All reports are saved to the **global leaderboard**.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'aether_leaderboard',
-        bubbleText:
-            "The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!",
+        bubbleText: "The **leaderboard is global and persistent** - stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'aether_tips',
-        bubbleText:
-            "**Tips**: Window seats help. Turn off airplane mode briefly during cruise altitude (where permitted). Ground stations with elevated antennas have better odds. Good luck!",
+        bubbleText: "**Tips**: Window seats help. Turn off airplane mode briefly during cruise altitude (where permitted). Ground stations with elevated antennas have better odds. Good luck!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -1998,7 +1817,7 @@ class HelpContent {
       HelpStep(
         id: 'tak_affiliations',
         bubbleText:
-            "Every entity is colored by **standard affiliation** — "
+            "Every entity is colored by **standard affiliation** - "
             "blue for friendly, red for hostile, green for neutral, "
             "yellow for unknown. The icon changes by dimension too: "
             "ground, air, sea, or space.",
@@ -2015,7 +1834,7 @@ class HelpContent {
       HelpStep(
         id: 'tak_detail',
         bubbleText:
-            "Tap any entity to open its **detail screen** — full CoT "
+            "Tap any entity to open its **detail screen** - full CoT "
             "fields, coordinates, speed, course, and raw XML. Use the "
             "map icon to jump straight to its position on the map.",
         icoMood: MeshBrainMood.curious,
@@ -2104,7 +1923,7 @@ class HelpContent {
   // LEGAL & COMPLIANCE
   // ============================================================================
 
-  /// Radio compliance help — linked from Channel Wizard screen.
+  /// Radio compliance help - linked from Channel Wizard screen.
   static final HelpTopic radioCompliance = HelpTopic(
     id: 'radio_compliance',
     title: 'Radio Rules & Your Responsibilities',
@@ -2115,39 +1934,34 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'radio_intro',
-        bubbleText:
-            "Mesh radios operate on **regulated frequencies**. That means there are rules about where, when, and how you can transmit.",
+        bubbleText: "Mesh radios operate on **regulated frequencies**. That means there are rules about where, when, and how you can transmit.",
         icoMood: MeshBrainMood.focused,
         canGoBack: false,
       ),
       HelpStep(
         id: 'radio_responsibility',
-        bubbleText:
-            "**You** are responsible for making sure your radio equipment is legal in your country and that you operate within permitted frequency bands and power limits.",
+        bubbleText: "**You** are responsible for making sure your radio equipment is legal in your country and that you operate within permitted frequency bands and power limits.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'radio_licence',
-        bubbleText:
-            "Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority — for example, ACMA in Australia or FCC in the US.",
+        bubbleText: "Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority - for example, ACMA in Australia or FCC in the US.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'radio_interference',
-        bubbleText:
-            "Never interfere with **emergency communications** or licensed services. Violations can result in fines or criminal penalties.",
+        bubbleText: "Never interfere with **emergency communications** or licensed services. Violations can result in fines or criminal penalties.",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'radio_terms_link',
-        bubbleText:
-            "For full details, check the **Radio and Legal Compliance** section in our Terms of Service. You can find it in Settings under Terms of Service.",
+        bubbleText: "For full details, check the **Radio and Legal Compliance** section in our Terms of Service. You can find it in Settings under Terms of Service.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
   );
 
-  /// Acceptable use help — linked from Automations screen.
+  /// Acceptable use help - linked from Automations screen.
   static final HelpTopic acceptableUse = HelpTopic(
     id: 'acceptable_use',
     title: 'Acceptable Use & Prohibited Activities',
@@ -2158,39 +1972,34 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'use_intro',
-        bubbleText:
-            "SocialMesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!",
+        bubbleText: "SocialMesh is a powerful tool - automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!",
         icoMood: MeshBrainMood.focused,
         canGoBack: false,
       ),
       HelpStep(
         id: 'use_lawful',
-        bubbleText:
-            "Use the App only for **lawful purposes**. Do not transmit harmful, threatening, or abusive content over the mesh network.",
+        bubbleText: "Use the App only for **lawful purposes**. Do not transmit harmful, threatening, or abusive content over the mesh network.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'use_automations',
-        bubbleText:
-            "Automations are great for alerts and notifications, but do not use them to **spam the mesh** or flood other users with unwanted messages.",
+        bubbleText: "Automations are great for alerts and notifications, but do not use them to **spam the mesh** or flood other users with unwanted messages.",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'use_impersonation',
-        bubbleText:
-            "Do not **impersonate** other people or entities on the mesh network. Be yourself!",
+        bubbleText: "Do not **impersonate** other people or entities on the mesh network. Be yourself!",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'use_terms_link',
-        bubbleText:
-            "The full list of prohibited activities is in the **Use of the Service** section of our Terms. You can review it anytime in Settings.",
+        bubbleText: "The full list of prohibited activities is in the **Use of the Service** section of our Terms. You can review it anytime in Settings.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
   );
 
-  /// User responsibility help — linked from Signals / Create Signal screen.
+  /// User responsibility help - linked from Signals / Create Signal screen.
   static final HelpTopic userResponsibility = HelpTopic(
     id: 'user_responsibility',
     title: 'Your Data, Your Responsibility',
@@ -2201,33 +2010,28 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'responsibility_intro',
-        bubbleText:
-            "SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.",
+        bubbleText: "SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device - we do not store them on any server.",
         icoMood: MeshBrainMood.focused,
         canGoBack: false,
       ),
       HelpStep(
         id: 'responsibility_signals',
-        bubbleText:
-            "When you create a **Signal**, it is broadcast over the mesh network. Anyone within range can receive it. Think of it like a public radio broadcast.",
+        bubbleText: "When you create a **Signal**, it is broadcast over the mesh network. Anyone within range can receive it. Think of it like a public radio broadcast.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'responsibility_content',
-        bubbleText:
-            "You are responsible for **everything you transmit**. Do not share personal information, sensitive data, or content that could harm others.",
+        bubbleText: "You are responsible for **everything you transmit**. Do not share personal information, sensitive data, or content that could harm others.",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'responsibility_third_party',
-        bubbleText:
-            "Some features use **third-party services** like RevenueCat for purchases and Firebase for crash reports. These have their own privacy policies.",
+        bubbleText: "Some features use **third-party services** like RevenueCat for purchases and Firebase for crash reports. These have their own privacy policies.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'responsibility_terms_link',
-        bubbleText:
-            "For complete details, review our **Terms of Service** and **Privacy Policy** in Settings. They explain exactly what data stays local and what is shared.",
+        bubbleText: "For complete details, review our **Terms of Service** and **Privacy Policy** in Settings. They explain exactly what data stays local and what is shared.",
         icoMood: MeshBrainMood.approving,
       ),
     ],
@@ -2247,39 +2051,33 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'ft_intro',
-        bubbleText:
-            "**File Transfers** let you send small files — text, configs, coordinates — directly over LoRa radio. No internet, no servers.",
+        bubbleText: "**File Transfers** let you send small files - text, configs, coordinates - directly over LoRa radio. No internet, no servers.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'ft_how',
-        bubbleText:
-            "Files are split into **~200-byte chunks** and sent one at a time over the mesh. The receiver reassembles them automatically.",
+        bubbleText: "Files are split into **~200-byte chunks** and sent one at a time over the mesh. The receiver reassembles them automatically.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'ft_nack',
-        bubbleText:
-            "Missed a chunk? No problem. The receiver sends a **NACK** (negative acknowledgement) to request retransmission of exactly the missing pieces.",
+        bubbleText: "Missed a chunk? No problem. The receiver sends a **NACK** (negative acknowledgement) to request retransmission of exactly the missing pieces.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'ft_limit',
-        bubbleText:
-            "Files are capped at **8 KB**. LoRa is a slow, shared, low-power radio — a single transfer can occupy the channel for up to a minute at long-range settings.",
+        bubbleText: "Files are capped at **8 KB**. LoRa is a slow, shared, low-power radio - a single transfer can occupy the channel for up to a minute at long-range settings.",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'ft_beta',
-        bubbleText:
-            "This feature is **BETA**. Both nodes must be running SocialMesh on the same mesh channel. Standard Meshtastic nodes cannot receive these transfers.",
+        bubbleText: "This feature is **BETA**. Both nodes must be running SocialMesh on the same mesh channel. Standard Meshtastic nodes cannot receive these transfers.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'ft_contacts',
-        bubbleText:
-            "Use the **Contacts** tab to choose a node, then tap **Send File**. The Contacts tab shows every node your device has seen on the mesh.",
+        bubbleText: "Use the **Contacts** tab to choose a node, then tap **Send File**. The Contacts tab shows every node your device has seen on the mesh.",
         icoMood: MeshBrainMood.speaking,
       ),
     ],
@@ -2295,39 +2093,33 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'ftl_shared',
-        bubbleText:
-            "LoRa channels are **shared and slow**. Every byte you send is airtime stolen from every other node in range. Treat it like a walkie-talkie frequency, not Wi-Fi.",
+        bubbleText: "LoRa channels are **shared and slow**. Every byte you send is airtime stolen from every other node in range. Treat it like a walkie-talkie frequency, not Wi-Fi.",
         icoMood: MeshBrainMood.alert,
         canGoBack: false,
       ),
       HelpStep(
         id: 'ftl_toa',
-        bubbleText:
-            "**Time on Air** per chunk depends on Spreading Factor (SF). SF7 (fast, short range): ~30 ms/chunk. SF12 (slow, long range): ~1,500 ms/chunk.",
+        bubbleText: "**Time on Air** per chunk depends on Spreading Factor (SF). SF7 (fast, short range): ~30 ms/chunk. SF12 (slow, long range): ~1,500 ms/chunk.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'ftl_math',
-        bubbleText:
-            "8 KB ÷ 200 bytes/chunk = **41 chunks**. At SF7: ~1.2 seconds total. At SF12: **~62 seconds** of continuous radio transmission.",
+        bubbleText: "8 KB ÷ 200 bytes/chunk = **41 chunks**. At SF7: ~1.2 seconds total. At SF12: **~62 seconds** of continuous radio transmission.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'ftl_duty',
-        bubbleText:
-            "EU868 and similar bands impose a **1% duty cycle** — your radio can only transmit for 36 seconds per hour. At SF12, one 8 KB transfer nearly exhausts that entire budget.",
+        bubbleText: "EU868 and similar bands impose a **1% duty cycle** - your radio can only transmit for 36 seconds per hour. At SF12, one 8 KB transfer nearly exhausts that entire budget.",
         icoMood: MeshBrainMood.alert,
       ),
       HelpStep(
         id: 'ftl_cap',
-        bubbleText:
-            "8 KB is the **safest ceiling** that keeps transfers survivable at worst-case spreading factors without violating duty cycle regulations or blocking the mesh for minutes.",
+        bubbleText: "8 KB is the **safest ceiling** that keeps transfers survivable at worst-case spreading factors without violating duty cycle regulations or blocking the mesh for minutes.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'ftl_usb',
-        bubbleText:
-            "BLE and USB-connected transfers carry no radio duty-cycle risk. In a future release, higher limits will be unlocked for direct wired connections.",
+        bubbleText: "BLE and USB-connected transfers carry no radio duty-cycle risk. In a future release, higher limits will be unlocked for direct wired connections.",
         icoMood: MeshBrainMood.speaking,
       ),
     ],
@@ -2347,27 +2139,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'sip_hub_intro',
-        bubbleText:
-            "Welcome to **SocialMesh**! This is your peer discovery hub. Nearby devices running SocialMesh appear here once they beacon or respond to a rollcall.",
+        bubbleText: "Welcome to **SocialMesh**! This is your peer discovery hub. Nearby devices running SocialMesh appear here once they beacon or respond to a rollcall.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'sip_hub_scan',
-        bubbleText:
-            "Tap the **scan icon** to send a rollcall request. Nearby peers will respond within seconds. Auto-scan fires every 60 seconds in the background.",
+        bubbleText: "Tap the **scan icon** to send a rollcall request. Nearby peers will respond within seconds. Auto-scan fires every 60 seconds in the background.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'sip_hub_handshake',
-        bubbleText:
-            "Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.",
+        bubbleText: "Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM - no servers, no accounts.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'sip_hub_privacy',
-        bubbleText:
-            "All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.",
+        bubbleText: "All discovery is **anonymous by default**. Peers only reveal a rotating 4-byte ambient ID until you mutually agree to a handshake.",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -2387,27 +2175,23 @@ class HelpContent {
     steps: [
       HelpStep(
         id: 'mesh_explorer_intro',
-        bubbleText:
-            "Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.",
+        bubbleText: "Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly - no handshake needed.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'mesh_explorer_peers',
-        bubbleText:
-            "Each tile shows a **peer's ambient sigil** and capabilities. Tap a peer to view details or initiate a **SIP handshake** for identity exchange.",
+        bubbleText: "Each tile shows a **peer's ambient sigil** and capabilities. Tap a peer to view details or initiate a **SIP handshake** for identity exchange.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'mesh_explorer_services',
-        bubbleText:
-            "The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.",
+        bubbleText: "The **Services** section shows what nearby peers are offering - Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'mesh_explorer_scan',
-        bubbleText:
-            "Tap the **sensor icon** to broadcast a rollcall to the mesh. Peers respond within seconds. The explorer refreshes automatically when new peers are heard.",
+        bubbleText: "Tap the **sensor icon** to broadcast a rollcall to the mesh. Peers respond within seconds. The explorer refreshes automatically when new peers are heard.",
         icoMood: MeshBrainMood.approving,
       ),
     ],

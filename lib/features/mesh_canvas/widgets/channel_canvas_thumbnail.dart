@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// lint-allow: hardcoded-color — the thumbnail mirrors the live
+// lint-allow: hardcoded-color - the thumbnail mirrors the live
 // canvas viewer's surface/lattice/ring palette one-to-one so a
 // dormant channel card and the eventual painted board read as the
 // same artifact. Theming would break that visual identity.
@@ -10,8 +10,8 @@
 //
 // Renders ONE canvas's contents as a square thumbnail with the same
 // surface tone, 32-cell chunk lattice, and border ring as the live
-// viewer (CanvasGridPainter). When the channel is dormant — no
-// painted cells yet — the thumbnail shows a single faint seed dot
+// viewer (CanvasGridPainter). When the channel is dormant - no
+// painted cells yet - the thumbnail shows a single faint seed dot
 // in the centre, suggesting "the first paint goes here." When cells
 // exist, they render scaled to thumbnail space so the user gets a
 // real glimpse of the channel's collaborative state without opening
@@ -47,10 +47,10 @@ const Color _dormantSeedColor = Color(0x33FFFFFF);
 
 class ChannelCanvasThumbnail extends StatelessWidget {
   /// Painted cells to render at thumbnail scale. Pass empty list for
-  /// dormant channels — the thumbnail will draw a seed marker instead.
+  /// dormant channels - the thumbnail will draw a seed marker instead.
   final List<CanvasCell> cells;
 
-  /// Whether to render the dormant seed dot. Caller decides — usually
+  /// Whether to render the dormant seed dot. Caller decides - usually
   /// `cells.isEmpty` but the caller might suppress the marker (e.g.
   /// while loading cells from the repository).
   final bool isDormant;
@@ -68,7 +68,7 @@ class ChannelCanvasThumbnail extends StatelessWidget {
 
   /// Corner radius applied to the outer clip AND the inner surface
   /// ring. Picked to sit between the surrounding card radius (16) and
-  /// the previous sharp 8 — close enough to the card that the corners
+  /// the previous sharp 8 - close enough to the card that the corners
   /// stop reading as a mismatch.
   static const double _thumbnailCornerRadius = 12;
 
@@ -159,7 +159,7 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
       final cellScale = surfaceRect.width / CanvasGeometry.width;
       // Cells are at minimum 1px so they actually paint at thumbnail
       // scale (a 96pt thumbnail of a 64-cell board gives ~1.4 logical
-      // px per cell — sub-pixel rendering would lose them).
+      // px per cell - sub-pixel rendering would lose them).
       final cellPx = cellScale < 1 ? 1.0 : cellScale;
       // Inset = 15% of cell size, capped so we never invert the rect
       // on very small cellPx values.
@@ -188,7 +188,7 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
     // Layer 4: dormant seed marker. A faint 3pt dot in the centre of
     // the board, telling the user "this is where the first pixel
     // could go." Only rendered when the channel really has no cells
-    // — never co-occurs with painted cells.
+    // - never co-occurs with painted cells.
     if (isDormant) {
       final center = surfaceRect.center;
       canvas.drawCircle(center, 3, Paint()..color = _dormantSeedColor);

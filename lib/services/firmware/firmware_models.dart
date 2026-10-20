@@ -77,7 +77,7 @@ class DfuTransferring extends DfuState {
   });
 }
 
-/// DFU completed successfully — device is rebooting with new firmware.
+/// DFU completed successfully - device is rebooting with new firmware.
 class DfuComplete extends DfuState {
   const DfuComplete();
 }

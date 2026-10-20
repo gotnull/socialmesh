@@ -7,9 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('MQTT TLS does not override certificate validation', () {
-    final source = File(
-      'lib/services/mqtt/mqtt_client_proxy_service.dart',
-    ).readAsStringSync();
+    final source = File('lib/services/mqtt/mqtt_client_proxy_service.dart')
+        .readAsStringSync();
     expect(source, isNot(matches(RegExp(r'\.onBadCertificate\s*='))));
   });
 

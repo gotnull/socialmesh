@@ -9,11 +9,11 @@ import 'push_notification_service.dart';
 /// Parses a local-notification tap [payload] into a [NotificationNavigation].
 ///
 /// Two payload conventions exist:
-///   1. `type|deepLink` — used by FCM payloads converted into local
+///   1. `type|deepLink` - used by FCM payloads converted into local
 ///      notifications (announcements, etc.). The deep link itself can contain
 ///      `:` (e.g. `https://...`), so the `|` separator is what splits type
 ///      from link.
-///   2. `type:targetId[:more]` — the historical NotificationService
+///   2. `type:targetId[:more]` - the historical NotificationService
 ///      convention for DM / channel / MeshCore / SIP handshake / peer-found /
 ///      pet / aether / TAK / firmware notifications. First segment is the
 ///      type, rest is the target identifier.

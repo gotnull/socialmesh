@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// lint-allow: scaffold — transient loader widgets, visible for milliseconds only
+// lint-allow: scaffold - transient loader widgets, visible for milliseconds only
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -290,7 +290,7 @@ Future<void> main() async {
   // Reconfigure flutter_map's built-in tile cache to a DURABLE directory with
   // a long freshness window, BEFORE any map renders (the cache singleton's
   // config is fixed on first use). Without this, cached/pre-downloaded tiles
-  // live in the OS-evictable cache dir and expire on their HTTP headers —
+  // live in the OS-evictable cache dir and expire on their HTTP headers -
   // unusable for off-grid trips. Web noops; never block boot on failure.
   //
   // Started here and joined just before runApp: its directory lookup is the
@@ -350,7 +350,7 @@ Future<void> main() async {
   }
   BootTimeline.instance.mark('stripe');
 
-  // Initialize Firebase core BEFORE runApp — per Google's official docs.
+  // Initialize Firebase core BEFORE runApp - per Google's official docs.
   // This is a local operation (reads google-services.json), no network needed.
   // Auth is available immediately once this completes.
   try {
@@ -372,24 +372,24 @@ Future<void> main() async {
       unawaited(RemoteFlagOverridesService.instance.initialise());
     }
 
-    // Gate telemetry — disabled by default until consent is verified in
+    // Gate telemetry - disabled by default until consent is verified in
     // _initializeFirebaseServices(). This ensures zero collection between
     // Firebase.initializeApp() and the consent check.
     try {
       await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
     } catch (_) {
-      // Best-effort — if this fails, _initializeFirebaseServices will retry.
+      // Best-effort - if this fails, _initializeFirebaseServices will retry.
     }
 
     // iOS simulator cannot receive silent APN pushes, so Firebase Phone
-    // Auth falls back to reCAPTCHA via SFSafariViewController — which
+    // Auth falls back to reCAPTCHA via SFSafariViewController - which
     // cascades our Flutter bottom sheet out of the visible view when it
     // dismisses (UIKit unwinds the modal stack). Firebase's
     // appVerificationDisabledForTesting skips both silent APN and
     // reCAPTCHA when the phone is whitelisted in Firebase Console as a
     // test number. Release builds strip this block entirely because
-    // kDebugMode is false — so shipped App Store binaries always run
+    // kDebugMode is false - so shipped App Store binaries always run
     // real APN + real reCAPTCHA + real SMS.
     if (kDebugMode && !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       try {
@@ -428,7 +428,7 @@ Future<void> main() async {
   BootTimeline.instance.mark('firebase_auth');
 
   // Ancillary services (Firestore settings, Analytics, Push, etc.)
-  // run in background — they must never block app startup or sign-in.
+  // run in background - they must never block app startup or sign-in.
   // The catchError guard prevents any escaping async error from surfacing
   // as a PlatformDispatcher error (the "_handlePlatformError" spike).
   unawaited(
@@ -470,7 +470,7 @@ Future<void> main() async {
 /// `signInAnonymously`. Best-effort: logs and returns on any failure so
 /// startup is never blocked. The next foreground-to-background-to-
 /// foreground cycle will re-run this through normal app lifecycle if
-/// it failed (no explicit retry plumbing — keeping it simple).
+/// it failed (no explicit retry plumbing - keeping it simple).
 ///
 /// Why we need it:
 ///   - Several Cloud Function callables (`reportBug`, future tightened
@@ -488,7 +488,7 @@ Future<void> main() async {
 /// Production rollout note:
 ///   Once the app version that ships this helper is broadly deployed,
 ///   the backend can be tightened to require `request.auth` on
-///   `reportBug` (currently it accepts unauthenticated calls — see
+///   `reportBug` (currently it accepts unauthenticated calls - see
 ///   [backend/functions/src/index.ts] reportBug, line ~2510). Don't
 ///   tighten the backend before this client change has rolled out, or
 ///   older clients break.
@@ -611,7 +611,7 @@ Future<void> _initializeFirebaseServices() async {
     AppLogging.storage('Firestore logging config failed: $e');
   }
 
-  // Mark init as "in progress" — cleared to true after success.
+  // Mark init as "in progress" - cleared to true after success.
   // If the app crashes during the block below, the flag stays false and
   // the next startup will call _repairFirestoreCacheIfNeeded().
   SharedPreferences? prefs;
@@ -644,7 +644,7 @@ Future<void> _initializeFirebaseServices() async {
   // will run _repairFirestoreCacheIfNeeded() before retrying.
   //
   // Without this probe the flag was set to true immediately after Settings
-  // assignment, but LevelDB only opens on the first real query — by which
+  // assignment, but LevelDB only opens on the first real query - by which
   // point the flag was already true, so a crash there would never trigger
   // repair on the next launch.
   try {
@@ -655,13 +655,13 @@ Future<void> _initializeFirebaseServices() async {
         .timeout(const Duration(seconds: 5));
     AppLogging.storage('Firestore LevelDB probe succeeded');
   } catch (e) {
-    // A "not found in cache" error is fine — it means LevelDB opened.
+    // A "not found in cache" error is fine - it means LevelDB opened.
     // Only a LevelDB / LOCK error is a real problem, and in that case
     // the fatal assertion already crashed the process (flag stays false).
     AppLogging.storage('Firestore probe completed with expected error: $e');
   }
 
-  // Firestore initialized successfully — mark flag so next startup
+  // Firestore initialized successfully - mark flag so next startup
   // skips the cache repair step.
   try {
     prefs ??= await SharedPreferences.getInstance();
@@ -745,7 +745,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       // fully offline, independent of Firebase availability.
       _initializeLocalNotificationTapRouting();
       // A tap that launched the app from a terminated state arrives via the
-      // plugin's launch details, not the tap stream — route it once ready.
+      // plugin's launch details, not the tap stream - route it once ready.
       _dispatchColdStartNotificationTap();
       // Initialize push notification navigation (FCM, Firebase-gated)
       _initializePushNotificationNavigation();
@@ -796,7 +796,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       _resumeProtocolPolling();
       _resumeLocationUpdates();
       // Clear the app icon badge whenever the user brings the app to the
-      // foreground — they are now actively using it and any unread count
+      // foreground - they are now actively using it and any unread count
       // shown on the icon is stale.
       NotificationService().clearBadge();
     } else if (state == AppLifecycleState.paused) {
@@ -821,13 +821,13 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       _syncScheduledAutomationsToPlatform();
       // Pause RSSI polling to conserve battery. BLE readRssi() every 2s
       // wakes the Bluetooth stack and triggers Live Activity UserDefaults
-      // writes — ~14,400 unnecessary BLE round-trips over an 8-hour night.
+      // writes - ~14,400 unnecessary BLE round-trips over an 8-hour night.
       _pauseProtocolPolling();
       _pauseLocationUpdates();
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
       // Mark lifecycle as inactive but do NOT enable the background message
-      // processor — the foreground ProtocolService is still handling data.
+      // processor - the foreground ProtocolService is still handling data.
       ref.read(lifecycleCommandManagerProvider).setAppActive(false);
       // Also set the badge on `inactive`: iOS sends `inactive` before
       // `paused` and sometimes never reaches `paused` at all (app switcher,
@@ -850,7 +850,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     try {
       ref.read(protocolServiceProvider).pauseRssiPolling();
     } catch (_) {
-      // Protocol service may not be initialized yet — safe to ignore.
+      // Protocol service may not be initialized yet - safe to ignore.
     }
   }
 
@@ -859,7 +859,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     try {
       ref.read(protocolServiceProvider).resumeRssiPolling();
     } catch (_) {
-      // Protocol service may not be initialized yet — safe to ignore.
+      // Protocol service may not be initialized yet - safe to ignore.
     }
   }
 
@@ -867,17 +867,17 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   ///
   /// The location service sends the phone's GPS position to the mesh every
   /// 30 seconds. Each tick wakes the GPS radio, computes a fix, serializes a
-  /// protobuf, and sends it over BLE — all for a position update that nobody
+  /// protobuf, and sends it over BLE - all for a position update that nobody
   /// is looking at. Pausing eliminates this entirely; the mesh retains the
   /// last-known position on the lock screen / Live Activity.
   void _pauseLocationUpdates() {
     try {
       final locationService = ref.read(locationServiceProvider);
-      if (!locationService.isRunning) return; // Already stopped — skip noise.
+      if (!locationService.isRunning) return; // Already stopped - skip noise.
       locationService.stopLocationUpdates();
       AppLogging.app('Location updates paused (app backgrounded)');
     } catch (_) {
-      // Location service may not be initialized yet — safe to ignore.
+      // Location service may not be initialized yet - safe to ignore.
     }
   }
 
@@ -893,7 +893,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         AppLogging.app('Location updates resumed (app foregrounded)');
       }
     } catch (_) {
-      // Location service may not be initialized yet — safe to ignore.
+      // Location service may not be initialized yet - safe to ignore.
     }
   }
 
@@ -1024,15 +1024,15 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // the protocol has not reached `ready`. The coordinator's
     // user-disconnect / in-flight / transport-disconnected pre-checks
     // make this safe; we only call it when there is a real wedge to
-    // recover from. MeshCore is unaffected — it has its own coordinator.
+    // recover from. MeshCore is unaffected - it has its own coordinator.
     if (protocol != 'meshcore' && isLinkConnected && !userDisconnected) {
       final readiness = ref
           .read(meshtasticReadinessProvider)
           .maybeWhen(data: (r) => r, orElse: () => null);
       // `idle` is the no-active-session case (cold start before any
-      // protocol.start() has run) — leave it to the existing
+      // protocol.start() has run) - leave it to the existing
       // disconnected-with-saved-device branch below to drive a fresh
-      // connect. `ready` means the session is healthy — don't disturb.
+      // connect. `ready` means the session is healthy - don't disturb.
       // We only restore from the in-between wedged states.
       final isWedged =
           readiness != null &&
@@ -1054,7 +1054,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         }
         // Whether the restore succeeded or aborted (stale, in-flight,
         // user-disconnect race), the existing branches below still need
-        // to run their checks — fall through.
+        // to run their checks - fall through.
       }
     }
 
@@ -1085,7 +1085,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
 
     // If user is manually connecting from Scanner (tapped a device),
     // don't trigger resume-reconnect to the OLD saved device. Scanner
-    // owns the connection flow while manualConnecting is set — it will
+    // owns the connection flow while manualConnecting is set - it will
     // clear this state on success, retry, or dispose.
     if (autoReconnectState == AutoReconnectState.manualConnecting) {
       AppLogging.connection(
@@ -1229,7 +1229,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       final lastProtocol = settings.lastDeviceProtocol;
 
       // Restore transport type from persisted lastDeviceType. At cold
-      // start transportTypeProvider defaults to BLE — without this, a
+      // start transportTypeProvider defaults to BLE - without this, a
       // resume for a previously-connected TCP device would run
       // `transport.scan()` against BleTransport and never find its
       // endpoint. The rest of the resume path reads transportProvider
@@ -1320,7 +1320,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         );
         if (!mounted) return;
 
-        // Re-read transport after prep — transportTypeProvider may have
+        // Re-read transport after prep - transportTypeProvider may have
         // been flipped to the correct family.
         final connectTransport = ref.read(transportProvider);
         await connectTransport.connect(foundDevice);
@@ -1442,7 +1442,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   /// Subscribes to local notification taps (mesh DM / channel / MeshCore /
   /// SIP / pet / TAK / firmware). Registered unconditionally from initState:
   /// these notifications are produced on-device and their taps must route
-  /// with Firebase unavailable — coupling this to [firebaseReady] previously
+  /// with Firebase unavailable - coupling this to [firebaseReady] previously
   /// meant offline sessions never routed taps at all. Payload normalisation
   /// lives in [parseLocalNotificationPayload].
   void _initializeLocalNotificationTapRouting() {
@@ -1467,7 +1467,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       switch (state) {
         case AppInitState.uninitialized:
         case AppInitState.initializing:
-          return false; // Still booting — keep waiting.
+          return false; // Still booting - keep waiting.
         case AppInitState.ready:
           unawaited(_routeColdStartNotificationTap());
           return true;
@@ -1571,7 +1571,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           // (request) and declined-handshake state on the peer card
           // (declined). Skip the push when already on the hub so
           // back-tapping doesn't reveal a stack of duplicate hubs.
-          // Consent is still a manual tap — never auto-accepted.
+          // Consent is still a manual tap - never auto-accepted.
           if (!isTopRouteNamed(navigator, _kSipHubRouteName)) {
             navigator.push(
               MaterialPageRoute(
@@ -1746,7 +1746,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           break;
 
         case 'batched_dm':
-          // Summary of several DMs from different peers — no single
+          // Summary of several DMs from different peers - no single
           // thread to open, so land on the conversation list.
           pushNamedUnlessOnTop(navigator, '/messages');
           break;
@@ -1880,7 +1880,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   }
 
   /// Open the TAK event detail for a `tak:` payload. No-op when the event
-  /// has aged out of the active set — there is nothing to show.
+  /// has aged out of the active set - there is nothing to show.
   void _routeToTakEvent(NavigatorState navigator, String? targetId) {
     final uid = targetId;
     if (uid == null || uid.isEmpty) return;
@@ -2062,7 +2062,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
 
   /// Resolve the SIP DM session for [peerNodeIdStr] and push
   /// `SipDmScreen`. Falls back to `SipHubScreen` when the peer ID is
-  /// missing or no active session matches — the hub is always a safe
+  /// missing or no active session matches - the hub is always a safe
   /// landing.
   void _routeToSipHandshakeCompleted(
     NavigatorState navigator,
@@ -2716,7 +2716,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   /// Previously returned a "Device Required" blocking screen on
   /// disconnect. That screen was a dead-end UI that confused users
   /// (especially after a factory-reset writeCharacteristic failure
-  /// dropped the BLE link mid-action). It's been removed entirely —
+  /// dropped the BLE link mid-action). It's been removed entirely -
   /// disconnects on a protected route now route directly to the
   /// Scanner so the user can pick a device and reconnect.
   Widget _buildProtectedRoute(
@@ -2925,7 +2925,7 @@ class _ChannelImportLoader extends ConsumerWidget {
           }
 
           // Navigate to channel form for import.
-          // Zero out positionPrecision — it is a per-device preference and
+          // Zero out positionPrecision - it is a per-device preference and
           // must not propagate from the sharer to the recipient.
           final importChannel = channel.copyWith(positionPrecision: 0);
 
@@ -2991,7 +2991,7 @@ class _ChannelInviteRedeemerState extends ConsumerState<_ChannelInviteRedeemer>
       if (!canUpdateUI) return;
 
       if (result.alreadyMember) {
-        // Check if the channel actually exists locally — user may have
+        // Check if the channel actually exists locally - user may have
         // deleted it from the device but their Firestore membership remains.
         final localChannels = ref.read(channelsProvider);
         final stillLocal = localChannels.any(
@@ -3013,7 +3013,7 @@ class _ChannelInviteRedeemerState extends ConsumerState<_ChannelInviteRedeemer>
           });
           return;
         }
-        // Channel was deleted locally — fall through to re-add it
+        // Channel was deleted locally - fall through to re-add it
       }
 
       // Fetch the decrypted channel (key blob was written by the server)
@@ -3028,7 +3028,7 @@ class _ChannelInviteRedeemerState extends ConsumerState<_ChannelInviteRedeemer>
       }
 
       // Navigate to channel form.
-      // Zero out positionPrecision — it is a per-device preference and must
+      // Zero out positionPrecision - it is a per-device preference and must
       // not propagate from the sharer to the recipient.
       final importChannel = channel.copyWith(positionPrecision: 0);
 

@@ -847,7 +847,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       rows: [
         InfoTableRow(
           label: context.l10n.nodeAnalyticsLongName,
-          value: node.longName.isNotEmpty ? node.longName : '—',
+          value: node.longName.isNotEmpty ? node.longName : '-',
         ),
         InfoTableRow(
           label: context.l10n.nodeAnalyticsShortName,
@@ -857,13 +857,13 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         ),
         InfoTableRow(
           label: context.l10n.nodeAnalyticsRole,
-          value: node.role != 'UNKNOWN' ? _formatRole(node.role) : '—',
+          value: node.role != 'UNKNOWN' ? _formatRole(node.role) : '-',
         ),
         InfoTableRow(
           label: context.l10n.nodeAnalyticsHardware,
           value: node.hwModel.isNotEmpty && node.hwModel != 'UNKNOWN'
               ? node.hwModel
-              : '—',
+              : '-',
         ),
         if (node.latitude != 0 && node.longitude != 0) ...[
           InfoTableRow(

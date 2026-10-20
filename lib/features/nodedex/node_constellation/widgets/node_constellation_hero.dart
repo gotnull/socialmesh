@@ -93,7 +93,7 @@ class NodeConstellationHero extends StatelessWidget {
               ),
             ),
             // Corner peer-peek: up to 3 co-seen sigils fanning out
-            // of the top-right corner — mirrors the NFT-profile
+            // of the top-right corner - mirrors the NFT-profile
             // "View Collection" effect.
             if (peerNodeNums.isNotEmpty)
               Positioned(

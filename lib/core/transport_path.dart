@@ -10,9 +10,9 @@ import '../l10n/app_localizations.dart';
 /// metadata injected by firmware.
 ///
 /// Classification rules:
-///   - `rf`  — `via_mqtt` is explicitly **false** on the packet.
-///   - `mqtt` — `via_mqtt` is explicitly **true** on the packet.
-///   - `unknown` — No `via_mqtt` field present (legacy firmware, sent
+///   - `rf`  - `via_mqtt` is explicitly **false** on the packet.
+///   - `mqtt` - `via_mqtt` is explicitly **true** on the packet.
+///   - `unknown` - No `via_mqtt` field present (legacy firmware, sent
 ///     messages, or packets where the field wasn't populated).
 ///
 /// There is no "likelyMqtt" heuristic: Meshtastic firmware provides a

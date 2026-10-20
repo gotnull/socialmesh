@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetCompanionCard — NodeDex detail integration point for NodePet.
+// PetCompanionCard - NodeDex detail integration point for NodePet.
 //
 // This widget has two branches, chosen by comparing [nodeNum] against
 // `myNodeNumProvider`:
@@ -11,7 +11,7 @@
 //     [petPublicStateProvider]. Shows a compact preview and an
 //     "Open NodePet" action that pushes [PetHomeScreen]. This is the
 //     only user-facing access point for NodePet now that it has been
-//     removed from the drawer — discovery happens through NodeDex.
+//     removed from the drawer - discovery happens through NodeDex.
 //
 //   Remote branch (nodeNum != myNodeNum):
 //     Renders the peer's cached observation from [remotePetProvider]
@@ -21,7 +21,7 @@
 // On first mount of the remote branch (and whenever the cached
 // observation is stale or missing) the widget broadcasts a
 // pet.v1/get_summary REQUEST via [petRemoteClientProvider]. The self
-// branch never triggers a remote fetch — the owner state is always
+// branch never triggers a remote fetch - the owner state is always
 // authoritative locally.
 
 import 'package:flutter/material.dart';
@@ -185,7 +185,7 @@ class _PetCompanionContentState extends ConsumerState<PetCompanionContent>
   }
 }
 
-/// Self branch — renders the user's local NodePet using the authoritative
+/// Self branch - renders the user's local NodePet using the authoritative
 /// [ownPetProvider] and offers an action to open [PetHomeScreen]. No
 /// remote fetch is triggered; the owner state is local truth.
 class _SelfBranch extends ConsumerWidget {
@@ -198,7 +198,7 @@ class _SelfBranch extends ConsumerWidget {
     final ownState = async.value;
     final publicState = ref.watch(petPublicStateProvider);
 
-    // No pet state yet — first launch before OwnPetController has loaded,
+    // No pet state yet - first launch before OwnPetController has loaded,
     // or rare degenerate path. Offer a direct entry point anyway: the
     // home screen handles its own loading/empty state.
     if (ownState == null || publicState == null) {
@@ -355,7 +355,7 @@ String _branchLabel(PetBranch b, AppLocalizations l10n) {
 }
 
 /// Render the smoothed live-band pip, or null when the band is
-/// [PeerPetLiveBand.unknown] (we render nothing — the absence of the
+/// [PeerPetLiveBand.unknown] (we render nothing - the absence of the
 /// line IS the "no recent activity" signal).
 Widget? _liveBandLine(
   BuildContext context,
@@ -377,7 +377,7 @@ Widget? _liveBandLine(
     PeerPetLiveBand.idle => context.textSecondary,
     PeerPetLiveBand.sleepy => context.textTertiary,
     PeerPetLiveBand.dormant => context.textTertiary,
-    // Unreachable — handled above.
+    // Unreachable - handled above.
     PeerPetLiveBand.unknown => context.textTertiary,
   };
   return Row(

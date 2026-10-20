@@ -109,22 +109,17 @@ void main() {
         },
       );
 
-      test(
-        'Unknown device with unrelated service UUID does not route to Meshtastic',
-        () {
-          final device = createDevice(
-            'Heart Rate Monitor',
-            serviceUuids: [
-              '0000180d-0000-1000-8000-00805f9b34fb',
-            ], // Heart Rate
-          );
+      test('Unknown device with unrelated service UUID does not route to Meshtastic', () {
+        final device = createDevice(
+          'Heart Rate Monitor',
+          serviceUuids: ['0000180d-0000-1000-8000-00805f9b34fb'], // Heart Rate
+        );
 
-          final detection = device.detectProtocol();
+        final detection = device.detectProtocol();
 
-          expect(detection.protocolType, equals(MeshProtocolType.unknown));
-          // Scanner should NOT call Meshtastic connect for non-mesh devices
-        },
-      );
+        expect(detection.protocolType, equals(MeshProtocolType.unknown));
+        // Scanner should NOT call Meshtastic connect for non-mesh devices
+      });
     });
 
     group('MeshCore Nordic UART UUIDs', () {

@@ -18,7 +18,7 @@ import 'package:socialmesh/services/firmware/hardware_architecture.dart';
 /// `device_hardware_catalog.dart`.
 ///
 /// When the upstream JSON catches up to a HardwareModel that the supplement
-/// also defines, the "no stale supplement entry" test fails — remove the
+/// also defines, the "no stale supplement entry" test fails - remove the
 /// supplement entry to defer to the (authoritative) JSON.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -44,7 +44,7 @@ void main() {
       reason:
           'The following HardwareModel values lack an architecture mapping. '
           'Either the upstream catalog (assets/device_hardware.json) needs '
-          'a refresh — run scripts/fetch_device_hardware.sh — or add them '
+          'a refresh - run scripts/fetch_device_hardware.sh - or add them '
           'to the _supplement map in device_hardware_catalog.dart:\n'
           '${_describeValues(unmapped)}',
     );
@@ -65,45 +65,42 @@ void main() {
     );
   });
 
-  test(
-    'every catalog architecture agrees with the upstream JSON entry',
-    () async {
-      final raw = await rootBundle.loadString('assets/device_hardware.json');
-      final entries = (json.decode(raw) as List).cast<Map<String, dynamic>>();
-      final disagreements = <String>[];
+  test('every catalog architecture agrees with the upstream JSON entry', () async {
+    final raw = await rootBundle.loadString('assets/device_hardware.json');
+    final entries = (json.decode(raw) as List).cast<Map<String, dynamic>>();
+    final disagreements = <String>[];
 
-      for (final entry in entries) {
-        final hwModel = entry['hwModel'] as int?;
-        final archStr = entry['architecture'] as String?;
-        if (hwModel == null || archStr == null) continue;
-        final expected = _expectFromArchString(archStr);
-        if (expected == null) {
-          disagreements.add(
-            '$hwModel (${entry['hwModelSlug']}): JSON architecture '
-            '"$archStr" has no mapping in DeviceHardwareCatalog._archFromString',
-          );
-          continue;
-        }
-        final actual = architectureFromHwModel(hwModel);
-        if (actual != expected) {
-          disagreements.add(
-            '$hwModel (${entry['hwModelSlug']}): JSON says $expected, '
-            'catalog returned $actual',
-          );
-        }
+    for (final entry in entries) {
+      final hwModel = entry['hwModel'] as int?;
+      final archStr = entry['architecture'] as String?;
+      if (hwModel == null || archStr == null) continue;
+      final expected = _expectFromArchString(archStr);
+      if (expected == null) {
+        disagreements.add(
+          '$hwModel (${entry['hwModelSlug']}): JSON architecture '
+          '"$archStr" has no mapping in DeviceHardwareCatalog._archFromString',
+        );
+        continue;
       }
+      final actual = architectureFromHwModel(hwModel);
+      if (actual != expected) {
+        disagreements.add(
+          '$hwModel (${entry['hwModelSlug']}): JSON says $expected, '
+          'catalog returned $actual',
+        );
+      }
+    }
 
-      expect(
-        disagreements,
-        isEmpty,
-        reason:
-            'Catalog disagrees with the bundled upstream JSON for these '
-            'HardwareModels. Either the supplement is overriding (and should '
-            'be removed) or the JSON has an architecture string the catalog '
-            'does not recognise:\n  ${disagreements.join('\n  ')}',
-      );
-    },
-  );
+    expect(
+      disagreements,
+      isEmpty,
+      reason:
+          'Catalog disagrees with the bundled upstream JSON for these '
+          'HardwareModels. Either the supplement is overriding (and should '
+          'be removed) or the JSON has an architecture string the catalog '
+          'does not recognise:\n  ${disagreements.join('\n  ')}',
+    );
+  });
 
   test('architectureFromHwModel returns unknown for null', () {
     expect(architectureFromHwModel(null), DeviceArchitecture.unknown);

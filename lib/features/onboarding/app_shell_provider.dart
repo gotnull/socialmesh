@@ -30,7 +30,7 @@ enum AppShell {
   /// Pre-init splash (`AppInitState.uninitialized` / `initializing`).
   splash,
 
-  /// Hard error from boot — surfaces an error screen with retry.
+  /// Hard error from boot - surfaces an error screen with retry.
   error,
 
   /// Age-gating: user has not confirmed 16+ for the current policy.
@@ -102,7 +102,7 @@ final appShellProvider = Provider<AppShellResolution>((ref) {
   // route the user to MainShell while the app's source of truth
   // says they should be on Scanner. Only ACTIVELY in-flight flow
   // states (connecting / checkingConfig / regionRequired and the
-  // four reboot-window phases) get to override needsScanner — those
+  // four reboot-window phases) get to override needsScanner - those
   // are part of the current onboarding cycle and need their own
   // shell render.
   final bool flowIsTerminalOrIdle =

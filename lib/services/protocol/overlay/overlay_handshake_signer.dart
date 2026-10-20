@@ -17,7 +17,7 @@
 /// ```
 ///
 /// Total: 110 bytes. The signature covers bytes 0..45 only (not the
-/// MRRP header, not the outer frame) — `linkId` is already bound
+/// MRRP header, not the outer frame) - `linkId` is already bound
 /// through the MRRP header on the receive path.
 library;
 
@@ -118,7 +118,7 @@ abstract final class OverlayHandshakeCodec {
     return Uint8List.fromList(body.sublist(0, signedRegionLength));
   }
 
-  /// Build the byte range that a signer signs over — given the
+  /// Build the byte range that a signer signs over - given the
   /// pre-signature components. Deterministic; tests use this to
   /// build golden vectors.
   static Uint8List buildSignedRegion({

@@ -38,7 +38,7 @@ class MeshCoreBatteryChemistryNotifier
   }
 
   /// Synchronous override lookup. Returns `auto` when not yet
-  /// hydrated or when no override exists for [pubKeyHex] — both
+  /// hydrated or when no override exists for [pubKeyHex] - both
   /// cases want the firmware-default LiPo curve.
   MeshCoreBatteryChemistry lookup(String pubKeyHex) {
     final current = state.value;

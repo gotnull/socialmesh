@@ -6,7 +6,7 @@
 // Spec anchor: docs/canvas/CANVAS_TRANSMISSION_STATUS_V0_1.md §3.1.
 //
 // A small anchored pill rendered at the top-right of the canvas frame
-// (mirroring the presence strip at top-left). Mesh-scope only — the
+// (mirroring the presence strip at top-left). Mesh-scope only - the
 // host viewport gates by `canvas.scope == CanvasScope.mesh` before
 // mounting; this widget assumes that gate is already in place.
 //
@@ -87,7 +87,7 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final accent = context.accentColor;
-    // Amber for cooling / full — these are "ink waiting" states; the
+    // Amber for cooling / full - these are "ink waiting" states; the
     // colour cue is calm, not error-shaped. Queued uses the accent
     // because it is the normal in-flight state.
     final isWarning =

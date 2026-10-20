@@ -10,7 +10,7 @@
 // [meshCapacityDismissalProvider].
 //
 // The widget never mutates radio state. It can navigate to the radio
-// settings screen — that path lives in the explanation sheet, not the
+// settings screen - that path lives in the explanation sheet, not the
 // card itself, so there is no one-tap "change preset" affordance.
 
 import 'package:flutter/material.dart';

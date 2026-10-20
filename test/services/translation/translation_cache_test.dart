@@ -185,7 +185,7 @@ void main() {
     });
 
     test('initialize is idempotent', () async {
-      // Already initialized in setUp — calling again should be no-op
+      // Already initialized in setUp - calling again should be no-op
       await cache.initialize();
 
       await cache.put(

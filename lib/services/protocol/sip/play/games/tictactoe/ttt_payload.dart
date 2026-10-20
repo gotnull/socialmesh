@@ -4,7 +4,7 @@
 /// Tic-Tac-Toe v1 mark. Determined deterministically by the offer
 /// protocol: the side that sent the `offer` action is [x] (and moves
 /// first); the side that sent the `accept` action is [o]. Both ends
-/// arrive at the same assignment from the entry log alone — no clock,
+/// arrive at the same assignment from the entry log alone - no clock,
 /// no hash, no initiator tiebreak.
 enum TttMark {
   /// Wire code 0. Always assigned to the offerer.
@@ -37,7 +37,7 @@ class TttMove {
   final int cell;
 
   /// Which mark is being placed. The receiver re-validates this
-  /// against its own deterministic mark assignment for the sender —
+  /// against its own deterministic mark assignment for the sender -
   /// any mismatch is an instant drop.
   final TttMark mark;
 

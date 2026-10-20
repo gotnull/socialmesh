@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MetricChip — a compact, low-noise icon+value chip used in list-tile
+// MetricChip - a compact, low-noise icon+value chip used in list-tile
 // metadata clusters across the app (NodeDex co-seen counts, MeshCanvas
 // channel-card stats, etc.).
 //
@@ -11,7 +11,7 @@
 //   - Optional tooltip on long-press.
 //
 // Use this wherever a list tile needs "iconish small stat badge"
-// next to a label. Never hand-roll the shape — pull it from here.
+// next to a label. Never hand-roll the shape - pull it from here.
 library;
 
 import 'package:flutter/material.dart';

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// AnimatedAvatarStack — reusable premium avatar cluster component.
+// AnimatedAvatarStack - reusable premium avatar cluster component.
 //
 // Renders overlapping circular avatars in a compact stack with subtle
 // cycling animation where the front-most avatar rotates back and the
@@ -18,7 +18,7 @@ import 'package:flutter/services.dart';
 
 /// Presentation model for a single item in an [AnimatedAvatarStack].
 ///
-/// This is a pure view model — it contains only the data the widget
+/// This is a pure view model - it contains only the data the widget
 /// needs to render. Business logic and data selection happen in the
 /// provider layer, not here.
 @immutable
@@ -31,7 +31,7 @@ class AvatarStackItem {
   ///
   /// This can be a [SigilAvatar], [NodeAvatar], [CircleAvatar],
   /// [Image], or any other compact widget. The stack does not
-  /// prescribe what goes inside — it only manages layout and animation.
+  /// prescribe what goes inside - it only manages layout and animation.
   final Widget child;
 
   /// Tooltip text shown on long-press. Also used as the semantic label
@@ -195,13 +195,13 @@ class AnimatedAvatarStack extends StatefulWidget {
 
 /// State for [AnimatedAvatarStack].
 ///
-/// Visible for testing — allows tests to verify cycling state.
+/// Visible for testing - allows tests to verify cycling state.
 class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  /// Current rotation offset — the index that is visually "front".
+  /// Current rotation offset - the index that is visually "front".
   int _frontIndex = 0;
 
-  /// Previous front index — used to interpolate between states.
+  /// Previous front index - used to interpolate between states.
   int _prevFrontIndex = 0;
 
   /// Timer for periodic cycling.
@@ -507,7 +507,7 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
       );
     }
 
-    // Overflow "+N" circle — static, not part of cycling animation.
+    // Overflow "+N" circle - static, not part of cycling animation.
     if (showOverflow) {
       final overflowLeft = padLeft + count * step;
 

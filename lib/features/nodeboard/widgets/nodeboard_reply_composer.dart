@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Canonical NodeBoard reply composer — fixed to the bottom of the thread
+// Canonical NodeBoard reply composer - fixed to the bottom of the thread
 // detail screen. Structurally identical to the Messages chat composer
 // (lib/features/messaging/widgets/chat_composer.dart and its wrapper in
 // messaging_screen.dart): spacing16 outer padding, SafeArea, borderless
@@ -193,7 +193,7 @@ class _SendButton extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Locked banner — shown in place of the input when the thread is locked.
+// Locked banner - shown in place of the input when the thread is locked.
 // ---------------------------------------------------------------------------
 
 class _LockedBanner extends StatelessWidget {

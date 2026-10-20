@@ -7,7 +7,7 @@ import 'package:socialmesh/models/mesh_models.dart';
 
 /// Formats RSSI value the same way the _NodeCard widget does.
 String formatRssi(int? rssi) {
-  if (rssi == null) return '—';
+  if (rssi == null) return '-';
   return '$rssi dBm';
 }
 
@@ -41,7 +41,7 @@ int calculateSignalBars(int? rssi) {
 void main() {
   group('RSSI display', () {
     test('renders null RSSI as dash', () {
-      expect(formatRssi(null), '—');
+      expect(formatRssi(null), '-');
     });
 
     test('renders strong RSSI correctly', () {
@@ -247,7 +247,7 @@ void main() {
     test('MQTT node with no RF metadata shows appropriate defaults', () {
       final node = MeshNode(nodeNum: 2, viaMqtt: true);
 
-      expect(formatRssi(node.rssi), '—');
+      expect(formatRssi(node.rssi), '-');
       expect(formatHopCount(node.hopCount), isNull);
       expect(transportLabel(node.viaMqtt), 'MQTT');
       expect(calculateSignalBars(node.rssi), 0);

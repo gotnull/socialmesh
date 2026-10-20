@@ -14,7 +14,7 @@ import 'package:socialmesh/services/storage/telemetry_database.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // ---------------------------------------------------------------------------
-// Haversine helper — mirrors the production _PositionFingerprint logic.
+// Haversine helper - mirrors the production _PositionFingerprint logic.
 // ---------------------------------------------------------------------------
 
 double haversineMeters(double lat1, double lon1, double lat2, double lon2) {
@@ -52,7 +52,7 @@ void main() {
       expect(haversineMeters(37.7749, -122.4194, 37.7749, -122.4194), 0.0);
     });
 
-    test('known distance — roughly correct for short span', () {
+    test('known distance - roughly correct for short span', () {
       // ~5 m offset northward
       final lat2 = offsetLatByMeters(37.7749, 5.0);
       final d = haversineMeters(37.7749, -122.4194, lat2, -122.4194);
@@ -76,7 +76,7 @@ void main() {
   // Database: clearPositionLogsForNode
   // -------------------------------------------------------------------------
 
-  group('TelemetryDatabase — clearPositionLogsForNode', () {
+  group('TelemetryDatabase - clearPositionLogsForNode', () {
     late TelemetryDatabase db;
 
     setUp(() async {
@@ -132,7 +132,7 @@ void main() {
   // Low-precision replace-and-store pattern
   // -------------------------------------------------------------------------
 
-  group('Low-precision position — latest-only retention', () {
+  group('Low-precision position - latest-only retention', () {
     late TelemetryDatabase db;
 
     setUp(() async {
@@ -248,10 +248,10 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // PositionLog model — precisionBits round-trip
+  // PositionLog model - precisionBits round-trip
   // -------------------------------------------------------------------------
 
-  group('PositionLog — precisionBits serialisation', () {
+  group('PositionLog - precisionBits serialisation', () {
     test('precisionBits round-trips through JSON', () {
       final log = PositionLog(
         nodeNum: 42,
@@ -296,7 +296,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // Durable dedupe seeding — cold cache after reconnect must reuse the last
+  // Durable dedupe seeding - cold cache after reconnect must reuse the last
   // stored position so an unchanged fix is not re-logged as a new row.
   // -------------------------------------------------------------------------
 

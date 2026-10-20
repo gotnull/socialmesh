@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import '../theme.dart';
 
 /// Animated tagline that cycles through different phrases with fade+slide
@@ -119,9 +120,8 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
   Widget build(BuildContext context) {
     final style =
         widget.textStyle ??
-        Theme.of(
-          context,
-        ).textTheme.bodyLarge?.copyWith(color: context.textSecondary);
+        Theme.of(context).textTheme.bodyLarge
+            ?.copyWith(color: context.textSecondary);
     if (_reduceMotion) {
       return Text(
         widget.taglines.first,

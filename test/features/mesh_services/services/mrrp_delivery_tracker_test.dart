@@ -118,7 +118,7 @@ void main() {
         ]);
       });
 
-      test('timeout on single attempt — no retry', () async {
+      test('timeout on single attempt - no retry', () async {
         engine.results.addAll([_timeout]);
 
         final result = await tracker.trackRequest(_makeRequest());
@@ -129,7 +129,7 @@ void main() {
         expect(engine.sendCount, 1);
       });
 
-      test('protocol error — no retry regardless', () async {
+      test('protocol error - no retry regardless', () async {
         engine.results.addAll([_notFound]);
 
         final result = await tracker.trackRequest(_makeRequest());
@@ -193,7 +193,7 @@ void main() {
         expect(engine.sendCount, 3);
       });
 
-      test('4. all attempts timeout — terminal failure once', () async {
+      test('4. all attempts timeout - terminal failure once', () async {
         engine.results.addAll([_timeout, _timeout, _timeout]);
 
         final terminalStates = <MrrpDeliveryState>[];
@@ -216,7 +216,7 @@ void main() {
         expect(terminalStates.length, 1);
       });
 
-      test('5. protocol error on first attempt — no retry', () async {
+      test('5. protocol error on first attempt - no retry', () async {
         engine.results.addAll([_notFound]);
 
         final result = await tracker.trackRequest(
@@ -230,7 +230,7 @@ void main() {
         expect(engine.sendCount, 1);
       });
 
-      test('5b. internal error on first attempt — no retry', () async {
+      test('5b. internal error on first attempt - no retry', () async {
         engine.results.addAll([_internal]);
 
         final result = await tracker.trackRequest(
@@ -244,7 +244,7 @@ void main() {
       });
 
       test(
-        '6. busy status on first attempt — no retry (needsAttention)',
+        '6. busy status on first attempt - no retry (needsAttention)',
         () async {
           engine.results.addAll([
             const MrrpRequestResult(status: MrrpStatusCode.busy),
@@ -392,7 +392,7 @@ void main() {
       });
 
       test('dispose mid-retry stops engine calls', () async {
-        // Engine is slow — gives time to dispose after attempt 1.
+        // Engine is slow - gives time to dispose after attempt 1.
         engine.sendDelay = const Duration(milliseconds: 80);
         engine.results.addAll([_timeout, _timeout, _timeout]);
 
@@ -407,7 +407,7 @@ void main() {
 
         await future;
 
-        // Engine should NOT have been called 3 times — dispose aborted
+        // Engine should NOT have been called 3 times - dispose aborted
         // the loop before exhausting all retries.
         expect(engine.sendCount, lessThan(3));
       });
@@ -417,7 +417,7 @@ void main() {
 
     group('lifecycle correctness', () {
       test(
-        'no duplicate terminal on success — delivered emitted once',
+        'no duplicate terminal on success - delivered emitted once',
         () async {
           engine.results.addAll([_okResult()]);
 
@@ -433,7 +433,7 @@ void main() {
       );
 
       test(
-        'no duplicate terminal on retry success — delivered emitted once',
+        'no duplicate terminal on retry success - delivered emitted once',
         () async {
           engine.results.addAll([_timeout, _okResult()]);
 
@@ -467,7 +467,7 @@ void main() {
         },
       );
 
-      test('sequential attempts — no interleaved pending requests', () async {
+      test('sequential attempts - no interleaved pending requests', () async {
         // Each engine call records invocation order. Since trackRequest
         // uses sequential await (not fire-and-forget), attempt N+1 cannot
         // start until attempt N completes. This test verifies the engine

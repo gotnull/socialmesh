@@ -22,7 +22,7 @@ void main() {
 
   group('licenseOrgUidFromAllocationId', () {
     test('extracts the uid from a canonical orgId__uid__productId triple', () {
-      // Regression for the 2026-05-28 first-revoke bug — `targetId`
+      // Regression for the 2026-05-28 first-revoke bug - `targetId`
       // on a `seat_revoked_manual` audit row is the full allocation
       // doc id, not the uid alone. Splitting + returning the middle
       // segment is the load-bearing transformation.

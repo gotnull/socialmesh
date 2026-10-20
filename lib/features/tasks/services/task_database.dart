@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Task Database — SQLite schema and lifecycle management.
+// Task Database - SQLite schema and lifecycle management.
 //
 // This file defines the database schema for the task system.
 // Tables: tasks, task_transitions.
@@ -381,7 +381,7 @@ class TaskDatabase {
     final syncedAt = taskRows.first['syncedAt'] as int?;
 
     if (syncedAt == null) {
-      // Never synced — return all transitions.
+      // Never synced - return all transitions.
       return getTransitionsByTaskId(taskId);
     }
 
@@ -449,10 +449,10 @@ class TaskDatabase {
   /// 4. Updates the task projection based on the resolution.
   ///
   /// Both local and remote transitions are preserved (append-only).
-  /// This method is idempotent — calling it again with the same transitions
+  /// This method is idempotent - calling it again with the same transitions
   /// produces the same result.
   ///
-  /// Spec: TASK_SYSTEM.md — Reconciliation Rules, Sprint 008/W4.2.
+  /// Spec: TASK_SYSTEM.md - Reconciliation Rules, Sprint 008/W4.2.
   Future<void> applyRemoteTransitions({
     required List<TaskTransition> remoteTransitions,
     TaskConflictResolver resolver = const TaskConflictResolver(),

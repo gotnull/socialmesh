@@ -20,7 +20,7 @@ import 'voice_decoder.dart';
 ///  5. Call [restart] to seek back to the beginning.
 ///  6. Call [dispose] to release resources.
 ///
-/// Important: never call [stop] while expecting to seek and resume — [stop]
+/// Important: never call [stop] while expecting to seek and resume - [stop]
 /// clears the audio pipeline.  Always use [pause]/[resume] for
 /// play/pause toggles.
 class VoicePlayer {
@@ -46,7 +46,7 @@ class VoicePlayer {
   /// Real-time playback position stream from just_audio.
   Stream<Duration> get positionStream => _player.positionStream;
 
-  /// Duration stream — emits once the audio source is loaded and metadata is known.
+  /// Duration stream - emits once the audio source is loaded and metadata is known.
   Stream<Duration?> get durationStream => _player.durationStream;
 
   /// Current playback position (synchronous snapshot).
@@ -75,7 +75,7 @@ class VoicePlayer {
     try {
       if (isPlaying.value) {
         // Pause current playback before swapping the source so the pipeline
-        // is in a defined state.  Do NOT call stop() — it discards position
+        // is in a defined state.  Do NOT call stop() - it discards position
         // and the audio source entirely.
         await _player.pause();
         isPlaying.value = false;

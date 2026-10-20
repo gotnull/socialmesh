@@ -42,7 +42,7 @@ enum TransferState {
   cancelled,
 
   /// Outbound: offer sent, waiting for receiver's ACCEPT before sending
-  /// chunks. This is a hard gate — no chunk transmission is permitted
+  /// chunks. This is a hard gate - no chunk transmission is permitted
   /// until the negotiation layer confirms acceptance.
   awaitingAccept,
 }
@@ -710,7 +710,7 @@ class FileTransferEngine {
     _chunkBuffers[idHex]![chunk.chunkIndex] = chunk.payload;
 
     // Persist chunk to database for restart survivability.
-    // Uses REPLACE so duplicate writes are safe. Fire-and-forget — DB
+    // Uses REPLACE so duplicate writes are safe. Fire-and-forget - DB
     // write must not block the receive path or slow chunk pacing.
     _database?.saveChunk(idHex, chunk.chunkIndex, chunk.payload);
 
@@ -732,7 +732,7 @@ class FileTransferEngine {
       _tryCompleteInbound(idHex);
     } else if (_transfers[idHex]?.state == TransferState.chunking ||
         _transfers[idHex]?.state == TransferState.waitingMissing) {
-      // Restart inactivity timer — if no new chunk arrives within the
+      // Restart inactivity timer - if no new chunk arrives within the
       // timeout and we still have gaps, auto-NACK to recover.
       // Also restart during recovery (waitingMissing) so that
       // retransmitted chunks reset the countdown for the next round.
@@ -764,7 +764,7 @@ class FileTransferEngine {
       'chunks (round ${transfer.nackRounds + 1}/${SmRateLimit.maxNackRounds})',
     );
 
-    // Cancel completion timeout — retransmission in progress moves the
+    // Cancel completion timeout - retransmission in progress moves the
     // deadline. A new timeout starts after the retransmitted chunks are sent.
     _cancelCompletionTimeout(idHex);
 
@@ -946,13 +946,13 @@ class FileTransferEngine {
   ///
   /// **Only transfers that have durably crossed into the accepted / data
   /// phase may be restored.** Resumable inbound states:
-  /// - `chunking` — user accepted, actively receiving chunks.
-  /// - `waitingMissing` — NACK recovery phase, user already accepted.
+  /// - `chunking` - user accepted, actively receiving chunks.
+  /// - `waitingMissing` - NACK recovery phase, user already accepted.
   ///
   /// Non-resumable inbound states (rejected on restore):
-  /// - `offerPending` — user never accepted; restoring to `chunking`
+  /// - `offerPending` - user never accepted; restoring to `chunking`
   ///   would bypass user consent.
-  /// - `created`, `offerSent`, `awaitingAccept` — should not exist for
+  /// - `created`, `offerSent`, `awaitingAccept` - should not exist for
   ///   inbound transfers, but defensively rejected.
   ///
   /// If all chunks are already present, triggers the completion path
@@ -978,7 +978,7 @@ class FileTransferEngine {
 
     // Only post-accept inbound states are eligible for restoration.
     // An inbound transfer persisted as offerPending was never accepted
-    // by the user — restoring it to chunking would silently bypass
+    // by the user - restoring it to chunking would silently bypass
     // user consent. Negotiation state is not persisted, so the offer
     // cannot be re-presented. Fail cleanly.
     if (transfer.state != TransferState.chunking &&
@@ -1041,7 +1041,7 @@ class FileTransferEngine {
   ///   the SPP v1 negotiation contract.
   ///
   /// The transfer is placed in [TransferState.chunking] and a completion
-  /// timeout is started. No chunks are proactively queued — the engine
+  /// timeout is started. No chunks are proactively queued - the engine
   /// passively waits for the receiver's NACK (requesting missing indexes)
   /// or ACK (transfer complete). This is protocol-compatible: the
   /// receiver's inactivity timer will fire and drive retransmission.
@@ -1305,7 +1305,7 @@ class FileTransferEngine {
         transfer.copyWith(completedChunks: updatedChunks),
       );
 
-      // Check if all chunks sent — defer completion to receiver ACK.
+      // Check if all chunks sent - defer completion to receiver ACK.
       // The transfer stays active to service late NACKs for lost chunks.
       if (updatedChunks.length == transfer.chunkCount) {
         AppLogging.fileTransfer(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Offline Storage Location Notifier — exposes whether a removable SD card is
+// Offline Storage Location Notifier - exposes whether a removable SD card is
 // available and which storage root the offline tile cache currently uses,
 // and performs the destroy-and-recreate switch between locations.
 // Feature-local Riverpod 3 AsyncNotifier.

@@ -21,7 +21,7 @@ class _Harness {
   _Harness({required this.nodeNum, required this.clock, Duration? cooldown}) {
     container = ProviderContainer(
       overrides: [
-        // Sync-derived observation view — test-friendly replacement
+        // Sync-derived observation view - test-friendly replacement
         // for the FutureProvider-backed remotePetProvider.
         peerPetObservationProvider(nodeNum).overrideWith((ref) => _obs),
         peerLastSeenProvider(nodeNum).overrideWith((ref) => _lastSeen),
@@ -115,7 +115,7 @@ void main() {
           reason: 'must hold during cooldown',
         );
 
-        // 10s elapsed — still held.
+        // 10s elapsed - still held.
         now = now.add(const Duration(seconds: 10));
         async.elapse(const Duration(seconds: 10));
         expect(h.currentBand(), PeerPetLiveBand.active);
@@ -146,7 +146,7 @@ void main() {
           // Materialize.
           h.container.read(peerPetLiveStateProvider(3));
 
-          // Five identical-band updates — raw stays "active" across all.
+          // Five identical-band updates - raw stays "active" across all.
           for (var i = 1; i <= 5; i++) {
             now = now.add(const Duration(seconds: 1));
             h.setLastSeen(now.subtract(const Duration(seconds: 6)));
@@ -215,7 +215,7 @@ void main() {
           final h = _Harness(nodeNum: 6, clock: () => now);
           addTearDown(h.dispose);
 
-          // No observation ever — purely presence-driven.
+          // No observation ever - purely presence-driven.
           h.setLastSeen(now.subtract(const Duration(seconds: 10)));
           async.flushMicrotasks();
           expect(

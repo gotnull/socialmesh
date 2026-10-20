@@ -11,7 +11,7 @@ import 'stl_envelope.dart';
 /// Ed25519 signing service for the SocialMesh Trust Layer (STL).
 ///
 /// Uses the existing SIP keypair infrastructure for Ed25519 operations.
-/// This service is stateless — it accepts key material as parameters
+/// This service is stateless - it accepts key material as parameters
 /// and does not manage keypair storage.
 class StlSigningService {
   final Ed25519 _algorithm;

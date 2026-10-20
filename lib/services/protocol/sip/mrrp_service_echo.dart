@@ -22,7 +22,7 @@ import 'mrrp_frame.dart';
 import 'mrrp_service_handler.dart';
 import 'mrrp_types.dart';
 
-/// echo.test handler — only for MRRP harness testing.
+/// echo.test handler - only for MRRP harness testing.
 class MrrpServiceEcho implements MrrpServiceHandler {
   @override
   int get serviceId => MrrpServiceId.echoTest;
@@ -87,9 +87,8 @@ class MrrpServiceEcho implements MrrpServiceHandler {
   Future<MrrpFrame> _handleEchoDelay(MrrpFrame request) async {
     int delayMs = 0;
     if (request.payload.length >= 2) {
-      delayMs = ByteData.sublistView(
-        request.payload,
-      ).getUint16(0, Endian.little);
+      delayMs = ByteData.sublistView(request.payload)
+          .getUint16(0, Endian.little);
     }
     delayMs = min(delayMs, _maxDelayMs);
 

@@ -97,26 +97,26 @@ enum SipDmDirection {
 /// What kind of payload a [SipDmHistoryEntry] carries.
 ///
 /// Stored explicitly on every entry so renderers branch on the field
-/// rather than inferring type from string contents — see
+/// rather than inferring type from string contents - see
 /// `feedback_implementation_standards`.
 enum SipDmContentType {
   /// UTF-8 text body (the historical default).
   text,
 
-  /// SIP Ink v1 binary sketch payload — see [SipInkConstants].
+  /// SIP Ink v1 binary sketch payload - see [SipInkConstants].
   ink,
 
   /// SIP Play v1 binary game-action envelope. The payload bytes are
   /// the encoded [SipPlayEnvelope] (typeAndVersion ‖ gameType ‖
   /// instanceId ‖ action ‖ seq ‖ game-payload). Renderers MUST NOT
-  /// infer this type from payload bytes — it is set explicitly when
+  /// infer this type from payload bytes - it is set explicitly when
   /// the entry is appended via the dmPlay path.
   play,
 
   /// SIP Signal v1 binary musical-phrase or Morse envelope. The
   /// payload bytes are the encoded `SipSignalEnvelope`
   /// (typeAndVersion ‖ signalKind ‖ sequenceId ‖ kind-specific
-  /// payload). The receiver synthesizes audio locally — no audio
+  /// payload). The receiver synthesizes audio locally - no audio
   /// samples ever travel on the wire. Set explicitly when the entry
   /// is appended via the dmSignal path.
   signal,
@@ -211,12 +211,12 @@ enum SipDmSendError {
   peerUnsupported,
 
   /// SIP Ink: the supplied payload failed to decode as a valid v1
-  /// sketch. Almost always a programmer error — the simplifier owns
+  /// sketch. Almost always a programmer error - the simplifier owns
   /// this contract.
   invalidSketch,
 
   /// Trust + Safety: the local user has blocked this peer. Outbound
-  /// is refused locally — the wire is silent so we don't even leak
+  /// is refused locally - the wire is silent so we don't even leak
   /// "I tried to send" to the blocked peer.
   peerBlocked,
 
@@ -254,7 +254,7 @@ class SipDmManager {
   final int Function() _clock;
   final PeerSafetyGate _safetyGate;
 
-  /// Whether [peerNodeId] is locally blocked. Hot-path sync — used
+  /// Whether [peerNodeId] is locally blocked. Hot-path sync - used
   /// by every inbound + outbound handler to short-circuit. Returns
   /// false when no gate has been wired (default-safe).
   bool _isPeerBlocked(int peerNodeId) => _safetyGate.isBlocked(peerNodeId);
@@ -274,7 +274,7 @@ class SipDmManager {
   ///
   /// Args: `(peerNodeId, sessionTag, gameTypeCode, instanceId)`.
   ///
-  /// Fires only on `move` actions — offer / accept / decline /
+  /// Fires only on `move` actions - offer / accept / decline /
   /// resign do NOT fire this hook (offers come from the local user
   /// directly so they're already engaged, and terminal actions have
   /// no follow-up turn). Multi-path retransmits are filtered by the
@@ -373,7 +373,7 @@ class SipDmManager {
   /// and its `session_tag` supersedes a prior session for the same
   /// peer.
   ///
-  /// No DM_CLOSE frame is emitted — the peer has already installed the
+  /// No DM_CLOSE frame is emitted - the peer has already installed the
   /// new tag on its side, so a close would be wasted airtime and could
   /// race against the new session. Message history persisted elsewhere
   /// is untouched; only in-memory session entries are expired.
@@ -452,7 +452,7 @@ class SipDmManager {
 
     // T+S guard: silent drop. A blocked peer cannot mutate local
     // session state, so swallow the CLOSE without flipping status
-    // and without firing onStateChanged. No log line at info — the
+    // and without firing onStateChanged. No log line at info - the
     // brief explicitly forbids info-level logs that contain the
     // peer node id on inbound drops.
     if (_isPeerBlocked(session.peerNodeId)) return;
@@ -489,7 +489,7 @@ class SipDmManager {
   /// Build a DM_TYPING frame for the given session.
   ///
   /// Returns the encoded bytes ready to transmit, or null if rate-limited
-  /// or budget exhausted. Typing indicators are best-effort — failures are
+  /// or budget exhausted. Typing indicators are best-effort - failures are
   /// silently swallowed.
   Uint8List? buildTypingIndicator({required int sessionTag}) {
     final session = _sessions[sessionTag];
@@ -550,7 +550,7 @@ class SipDmManager {
     if (session.status != SipDmSessionStatus.active) return;
 
     // T+S guard: silent drop. Don't surface "is typing" UI for a
-    // blocked peer — that would leak presence even when block is
+    // blocked peer - that would leak presence even when block is
     // supposed to render the peer invisible.
     if (_isPeerBlocked(session.peerNodeId)) return;
 
@@ -662,7 +662,7 @@ class SipDmManager {
     }
 
     // T+S guard: silent drop. Reactions mutate prior history entries
-    // (entry.peerReaction =) — a blocked peer must not be allowed
+    // (entry.peerReaction =) - a blocked peer must not be allowed
     // to retroactively annotate the local thread.
     if (_isPeerBlocked(session.peerNodeId)) return;
 
@@ -694,7 +694,7 @@ class SipDmManager {
       // Bump the DM epoch so the UI rebuilds and the deleted entry
       // disappears from the timeline immediately. Without this, the
       // local delete sat invisible until some other state change
-      // (typing, reaction, message arrival) forced a rebuild —
+      // (typing, reaction, message arrival) forced a rebuild -
       // perceived as the X being unresponsive.
       onStateChanged?.call();
     }
@@ -721,7 +721,7 @@ class SipDmManager {
     // T+S guard: outbound to a blocked peer is silently suppressed
     // at the wire. The UI fall-back at the call site (sip_dm_screen
     // `_onDelete`) already handles a null return by removing the
-    // message locally only — that's the correct semantic for "I
+    // message locally only - that's the correct semantic for "I
     // blocked them and want this gone from my history."
     if (_isPeerBlocked(session.peerNodeId)) return null;
 
@@ -792,7 +792,7 @@ class SipDmManager {
     }
 
     // T+S guard: silent drop. A blocked peer cannot remove
-    // messages from the local user's history — that would let them
+    // messages from the local user's history - that would let them
     // retroactively erase evidence of past behaviour.
     if (_isPeerBlocked(session.peerNodeId)) return;
 
@@ -901,7 +901,7 @@ class SipDmManager {
     // Bump the DM epoch so providers that derive UI state from the
     // session history (sip_dm_screen, sip_play, sip_signal) rebuild on
     // the sender's own outbound entry. Mirrors the inbound `handleDm` path
-    // and the secure router's `_sendSecure*` helpers — without this call
+    // and the secure router's `_sendSecure*` helpers - without this call
     // the plaintext path silently desyncs the local view.
     onStateChanged?.call();
 
@@ -916,7 +916,7 @@ class SipDmManager {
   ///
   /// [inkPayload] is the byte sequence produced by `SipInkEncoder.encode`.
   /// The caller (typically the SIP DM router) is responsible for the
-  /// peer-feature gate — we only validate session state, payload size,
+  /// peer-feature gate - we only validate session state, payload size,
   /// and the airtime budget here.
   ///
   /// Returns a [SipDmSendResult] with either the frame or an error.
@@ -1067,7 +1067,7 @@ class SipDmManager {
     }
 
     // T+S guard: silent drop. No log line containing the peer node
-    // id at info level — drops a blocked peer's DM without
+    // id at info level - drops a blocked peer's DM without
     // mutating history, firing typing-clear, or invoking the
     // notification callback. The wire is silent on our side too:
     // nothing goes out.
@@ -1123,7 +1123,7 @@ class SipDmManager {
       return null;
     }
 
-    // Multi-path mesh dedupe — same wire frame sometimes arrives via
+    // Multi-path mesh dedupe - same wire frame sometimes arrives via
     // two relays. Drop the second copy before any UI mutation.
     if (!_markInboundFrameSeen(
       peerNodeId: session.peerNodeId,
@@ -1153,7 +1153,7 @@ class SipDmManager {
       return null;
     }
 
-    // T+S guard: silent drop. No log at info level — the peer node
+    // T+S guard: silent drop. No log at info level - the peer node
     // id stays out of logs on inbound block hits.
     if (_isPeerBlocked(session.peerNodeId)) return null;
 
@@ -1196,7 +1196,7 @@ class SipDmManager {
   ///
   /// [playPayload] is the byte sequence produced by `SipPlayCodec.encode`
   /// (a v1 SIP Play envelope). The caller (typically the SIP DM router)
-  /// is responsible for the peer-feature gate — we only validate
+  /// is responsible for the peer-feature gate - we only validate
   /// session state, payload size, and the airtime budget here.
   ///
   /// On success the message is appended to the session history with
@@ -1218,7 +1218,7 @@ class SipDmManager {
 
     // T+S guard (defence-in-depth). Same rationale as buildDmMessage /
     // buildInkMessage. A blocked peer mid-game must not get any further
-    // wire traffic from us — the router-level gate is the primary
+    // wire traffic from us - the router-level gate is the primary
     // block, this is the belt.
     if (_isPeerBlocked(session.peerNodeId)) {
       return SipDmSendResult.fail(SipDmSendError.peerBlocked);
@@ -1238,7 +1238,7 @@ class SipDmManager {
 
     // Defensive: ensure the bytes parse as a valid v1 envelope. Catches
     // any caller that hands us a hand-crafted blob without going through
-    // the codec pipeline. Unknown gameType codes are NOT rejected here —
+    // the codec pipeline. Unknown gameType codes are NOT rejected here -
     // those produce a structured "unsupported game" UX downstream.
     final parsed = SipPlayCodec.decode(playPayload);
     if (!parsed.isOk) {
@@ -1292,7 +1292,7 @@ class SipDmManager {
       'payload_bytes=${playPayload.length} frame_bytes=$frameSize',
     );
 
-    // Outbound replay-driving entry — bump epoch so the SIP Play engine
+    // Outbound replay-driving entry - bump epoch so the SIP Play engine
     // re-derives `_DispatchBody` (offer→active for accept, →declinedByLocal
     // for decline, board update for move). Without this the plaintext
     // path leaves the bubble stuck on the loading spinner / pending tap.
@@ -1311,7 +1311,7 @@ class SipDmManager {
   /// **State changes are deferred to the engine.** This method only
   /// appends the entry; the engine is responsible for deriving game
   /// state from the entry stream. Strict-seq enforcement, duplicate
-  /// detection, and turn validation all live in the engine — adding
+  /// detection, and turn validation all live in the engine - adding
   /// them here would split state authority between two layers.
   SipPlayEnvelope? handleInboundPlay(SipFrame frame) {
     if (frame.msgType != SipMessageType.dmPlay) {
@@ -1364,7 +1364,7 @@ class SipDmManager {
       return null;
     }
 
-    // T+S guard: silent drop. Mirror handleInboundInk — no info-level
+    // T+S guard: silent drop. Mirror handleInboundInk - no info-level
     // log including the peer node id, no entry append, no engine
     // invocation. The peer's game stays "frozen" on our side without
     // any auto-resign or state mutation, exactly as the user locked
@@ -1439,7 +1439,7 @@ class SipDmManager {
     // entry was a `move` action and replaying the per-instance log
     // shows the local side is now the active player. Skipped for
     // offers (initiator is already engaged), accepts (the offerer
-    // moves first — they got the turn from the offer itself), and
+    // moves first - they got the turn from the offer itself), and
     // terminal actions (decline / resign).
     if (result.envelope!.action == SipPlayAction.move) {
       _maybeFirePlayYourTurn(
@@ -1457,7 +1457,7 @@ class SipDmManager {
 
   /// Replay the per-instance entry log to find out whether the
   /// local side is now the active player; if so, fire the
-  /// `onPlayMoveYourTurn` hook. Idempotent — the upstream
+  /// `onPlayMoveYourTurn` hook. Idempotent - the upstream
   /// `_markInboundFrameSeen` dedupe ensures we don't fire twice for
   /// the same wire move.
   void _maybeFirePlayYourTurn({
@@ -1545,7 +1545,7 @@ class SipDmManager {
   /// unique within a 1800 s window per [SipReplayCache] semantics, so
   /// it's a stable dedupe key for content frames in a given session.
   /// Idempotent paths (typing indicators, close acks) don't need
-  /// this — re-running them is a no-op.
+  /// this - re-running them is a no-op.
   ///
   /// **Best-effort dedupe, not replay protection.** A 32-entry ring
   /// covers multi-path RF + BLE rebroadcast bursts but does NOT
@@ -1570,7 +1570,7 @@ class SipDmManager {
   }) {
     final key = (peerNodeId: peerNodeId, sessionTag: sessionTag);
     final ring = _inboundFrameDedupe.putIfAbsent(key, () => []);
-    if (ring.contains(frameNonce)) return false; // duplicate — drop
+    if (ring.contains(frameNonce)) return false; // duplicate - drop
     ring.add(frameNonce);
     if (ring.length > _kFrameDedupeRingBytes) {
       ring.removeAt(0);
@@ -1670,7 +1670,7 @@ class SipDmManager {
   /// Returns the parsed [SipSignalEnvelope] when accepted into history,
   /// or null when dropped (unknown session, blocked peer, malformed
   /// payload, duplicate). Dedupe combines `sequenceId` with a
-  /// FNV-1a hash of the payload bytes — both must match a previous
+  /// FNV-1a hash of the payload bytes - both must match a previous
   /// entry for the same session for the inbound to be silently
   /// dropped.
   SipSignalEnvelope? handleInboundSignal(SipFrame frame) {
@@ -1768,7 +1768,7 @@ class SipDmManager {
   /// Local-only removal of a session and its message history.
   ///
   /// Differs from [closeSession] in two ways:
-  ///   1. Emits NO wire frame — the peer is not notified. Used by the
+  ///   1. Emits NO wire frame - the peer is not notified. Used by the
   ///      Trust + Safety "Remove conversation" action which should
   ///      have zero airtime cost and zero observable effect on the
   ///      peer.
@@ -1786,7 +1786,7 @@ class SipDmManager {
       sessionTag: sessionTag,
     ));
     // Clear typing state only if no other session for this peer
-    // remains tracked — the peer's typing flag is keyed by peer
+    // remains tracked - the peer's typing flag is keyed by peer
     // node id, not by session tag.
     final peerHasOtherSessions = _sessions.values.any(
       (s) => s.peerNodeId == session.peerNodeId,
@@ -1875,7 +1875,7 @@ class SipDmManager {
   /// [handleInboundDm] when it builds its own history entry around a
   /// secure-encrypted text body. Without this, the secure path
   /// previously used [extractReplyBody] (which returns the BODY) and
-  /// stored that as the quote — making the sender's local bubble
+  /// stored that as the quote - making the sender's local bubble
   /// render the user's own reply text in the quote box.
   static String? parseReplyToText(String text) {
     if (!text.startsWith(_quotePrefix)) return null;

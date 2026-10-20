@@ -60,7 +60,7 @@ void main() {
     });
 
     // =========================================================================
-    // is24Hour — preference resolution
+    // is24Hour - preference resolution
     // =========================================================================
 
     group('is24Hour', () {
@@ -239,9 +239,8 @@ void main() {
           buildTestHarness(
             alwaysUse24HourFormat: false,
             onBuild: (ctx) {
-              formatted = AppTimeFormat.dateAndTimeCompact(
-                ctx,
-              ).format(testDate);
+              formatted = AppTimeFormat.dateAndTimeCompact(ctx)
+                  .format(testDate);
             },
           ),
         );
@@ -255,9 +254,8 @@ void main() {
           buildTestHarness(
             alwaysUse24HourFormat: false,
             onBuild: (ctx) {
-              formatted = AppTimeFormat.dateAndTimeCompact(
-                ctx,
-              ).format(testDate);
+              formatted = AppTimeFormat.dateAndTimeCompact(ctx)
+                  .format(testDate);
             },
           ),
         );
@@ -311,9 +309,8 @@ void main() {
           buildTestHarness(
             alwaysUse24HourFormat: false,
             onBuild: (ctx) {
-              formatted = AppTimeFormat.fullDateBulletTime(
-                ctx,
-              ).format(testDate);
+              formatted = AppTimeFormat.fullDateBulletTime(ctx)
+                  .format(testDate);
             },
           ),
         );
@@ -330,9 +327,8 @@ void main() {
           buildTestHarness(
             alwaysUse24HourFormat: false,
             onBuild: (ctx) {
-              formatted = AppTimeFormat.fullDateBulletTime(
-                ctx,
-              ).format(testDate);
+              formatted = AppTimeFormat.fullDateBulletTime(ctx)
+                  .format(testDate);
             },
           ),
         );
@@ -356,9 +352,8 @@ void main() {
           buildTestHarness(
             alwaysUse24HourFormat: false,
             onBuild: (ctx) {
-              formatted = AppTimeFormat.numericDateAndTimeWithSeconds(
-                ctx,
-              ).format(testDate);
+              formatted = AppTimeFormat.numericDateAndTimeWithSeconds(ctx)
+                  .format(testDate);
             },
           ),
         );
@@ -373,9 +368,8 @@ void main() {
           buildTestHarness(
             alwaysUse24HourFormat: false,
             onBuild: (ctx) {
-              formatted = AppTimeFormat.numericDateAndTimeWithSeconds(
-                ctx,
-              ).format(testDate);
+              formatted = AppTimeFormat.numericDateAndTimeWithSeconds(ctx)
+                  .format(testDate);
             },
           ),
         );
@@ -398,9 +392,8 @@ void main() {
           buildTestHarness(
             alwaysUse24HourFormat: false,
             onBuild: (ctx) {
-              formatted = AppTimeFormat.numericDateAndTime(
-                ctx,
-              ).format(testDate);
+              formatted = AppTimeFormat.numericDateAndTime(ctx)
+                  .format(testDate);
             },
           ),
         );
@@ -415,9 +408,8 @@ void main() {
           buildTestHarness(
             alwaysUse24HourFormat: false,
             onBuild: (ctx) {
-              formatted = AppTimeFormat.numericDateAndTime(
-                ctx,
-              ).format(testDate);
+              formatted = AppTimeFormat.numericDateAndTime(ctx)
+                  .format(testDate);
             },
           ),
         );
@@ -560,7 +552,7 @@ void main() {
     });
 
     // =========================================================================
-    // Edge cases — midnight and noon
+    // Edge cases - midnight and noon
     // =========================================================================
 
     group('edge cases', () {
@@ -698,7 +690,7 @@ void main() {
     });
 
     // =========================================================================
-    // relativeDateTime — calendar-relative date + time for detail surfaces
+    // relativeDateTime - calendar-relative date + time for detail surfaces
     // =========================================================================
 
     // =========================================================================

@@ -6,7 +6,7 @@ import 'dart:typed_data';
 /// One inbound port-76 (`RETICULUM_TUNNEL_APP`) fragment as seen on the mesh.
 ///
 /// Phase 1 treats every payload as an opaque fragment. No reassembly, no
-/// header parsing — that is Phase 2 work driven by a captured corpus and
+/// header parsing - that is Phase 2 work driven by a captured corpus and
 /// a published spec.
 class ReticulumFragmentEvent {
   ReticulumFragmentEvent({

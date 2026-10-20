@@ -6,7 +6,7 @@
 // graph. They represent the "signal" that flows from a trigger node through
 // condition/logic gates and ultimately into action nodes.
 //
-// Color: Amber — matches the WHEN section color in the automation editor.
+// Color: Amber - matches the WHEN section color in the automation editor.
 
 import 'package:flutter/material.dart';
 
@@ -20,7 +20,7 @@ const Color kEventSignalColor = Color(0xFFFBBF24);
 
 /// Input interface that accepts an event signal.
 ///
-/// Used on condition nodes, logic gate nodes, and action nodes — any node
+/// Used on condition nodes, logic gate nodes, and action nodes - any node
 /// that needs to receive the trigger event context flowing through the graph.
 ///
 /// Accepts connections from [EventSignalOutputData] only. This prevents
@@ -44,7 +44,7 @@ class EventSignalInputData extends VSInputData {
 
 /// Output interface that emits an event signal.
 ///
-/// Used on trigger nodes and condition/logic gate nodes — any node that
+/// Used on trigger nodes and condition/logic gate nodes - any node that
 /// produces or forwards the trigger event context downstream.
 ///
 /// The [outputFunction] receives a map of the node's evaluated input values
@@ -71,7 +71,7 @@ class EventSignalOutputData extends VSOutputData<EventSignalPayload> {
 /// themselves appropriately.
 ///
 /// At runtime, the actual [AutomationEvent] is evaluated by the
-/// [AutomationEngine] — this payload is used only for graph compilation
+/// [AutomationEngine] - this payload is used only for graph compilation
 /// and type-checking, not for live event processing.
 class EventSignalPayload {
   const EventSignalPayload({

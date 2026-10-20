@@ -3,7 +3,7 @@
 
 import 'c4_payload.dart';
 
-/// Pure Connect Four rules. No I/O, no clock, no logging side effects —
+/// Pure Connect Four rules. No I/O, no clock, no logging side effects -
 /// a [C4Board] is just a 42-cell value type that gets transformed by
 /// [apply] and queried by [winner] / [isDraw] / [isLegalMove].
 ///
@@ -85,7 +85,7 @@ class C4Board {
   /// Return a new board with [disc] dropped into [column]. The landing
   /// row is computed internally by gravity. Caller is responsible for
   /// legality (engine checks via [isLegalMove] + turn / status guards).
-  /// Returns the same board unchanged if the column is full — callers
+  /// Returns the same board unchanged if the column is full - callers
   /// MUST gate on [isLegalMove] first; this is a defensive no-op rather
   /// than a throw because `apply` is invoked from the engine's pure
   /// replay path which is designed to drop+log on illegal input.

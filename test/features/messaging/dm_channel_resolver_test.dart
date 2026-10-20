@@ -11,16 +11,16 @@ import 'package:socialmesh/models/mesh_models.dart';
 /// Parity reference for these tests:
 ///
 /// - `meshtastic-ios/Meshtastic/Enums/MessageDestination.swift:13-18`
-///   — `.user` returns `0` for `channelNum`. Always.
+///   - `.user` returns `0` for `channelNum`. Always.
 /// - `meshtastic-ios/Meshtastic/Accessory/Accessory Manager/AccessoryManager+ToRadio.swift:327-329, 360`
-///   — outbound DM packet sets `meshPacket.channel = UInt32(channel)`
+///   - outbound DM packet sets `meshPacket.channel = UInt32(channel)`
 ///   verbatim. When the recipient's `UserEntity.pkiEncrypted` is true,
 ///   `meshPacket.pkiEncrypted = true` and `meshPacket.publicKey =
 ///   recipient.publicKey` are also attached.
 ///
 /// Together these mean: iOS's DM channel resolution is **always 0**, with
 /// the public key attached when known. There is no last-heard-channel
-/// logic, no multi-channel selection, no fallback table — only `0`.
+/// logic, no multi-channel selection, no fallback table - only `0`.
 ///
 /// These tests pin that behaviour so a future "smart" change that
 /// reintroduces a last-heard heuristic fails the parity contract.
@@ -44,11 +44,11 @@ void main() {
     AppLogging.reset();
   });
 
-  group('DmChannelResolver — iOS parity', () {
+  group('DmChannelResolver - iOS parity', () {
     test('scenario 1: node only seen on a secondary encrypted channel '
         'still gets DM on channel 0 (matches iOS, NOT a smart route)', () {
       // The brief described "DM uses that secondary channel". iOS does
-      // NOT do that — `MessageDestination.channelNum` for `.user`
+      // NOT do that - `MessageDestination.channelNum` for `.user`
       // returns 0 unconditionally. This test pins the iOS-correct
       // behaviour and acts as a regression guard against a tempting
       // "last-heard channel" heuristic.
@@ -72,7 +72,7 @@ void main() {
     });
 
     test('scenario 2: node seen on multiple channels still resolves to '
-        'channel 0 — iOS does not use any per-channel selection', () {
+        'channel 0 - iOS does not use any per-channel selection', () {
       // Even if our NodeDB has rich per-channel telemetry, iOS sends
       // DMs on channel 0 with no selection logic. Resolver must
       // mirror that.
@@ -100,7 +100,7 @@ void main() {
       expect(result.hasPki, isFalse);
     });
 
-    test('scenario 4: PKI absent path — channel 0 + no key attached. '
+    test('scenario 4: PKI absent path - channel 0 + no key attached. '
         'Firmware will encrypt with the channel PSK (matches iOS '
         'when UserEntity.pkiEncrypted is false).', () {
       final node = _node(num: 0x42, hasPublicKey: false);
@@ -115,12 +115,11 @@ void main() {
       expect(result.hasPki, isFalse);
     });
 
-    test('scenario 5: regression guard — resolver is the SOLE producer of '
+    test('scenario 5: regression guard - resolver is the SOLE producer of '
         'the DM channel value. messaging_screen.dart must not contain a '
         'literal `channel: 0` for DMs.', () async {
-      final src = await File(
-        'lib/features/messaging/messaging_screen.dart',
-      ).readAsString();
+      final src = await File('lib/features/messaging/messaging_screen.dart')
+          .readAsString();
 
       // The DM branch passes `channel: dmResolution?.channel ?? 0`.
       // If a future change reintroduces a literal `channel: 0` in the
@@ -149,7 +148,7 @@ void main() {
     });
   });
 
-  group('DmChannelResolver — PKI attachment', () {
+  group('DmChannelResolver - PKI attachment', () {
     test('node with cached public key attaches the key bytes verbatim '
         '(matches iOS `meshPacket.publicKey = recipient.publicKey`)', () {
       final pubKey = List<int>.unmodifiable(<int>[
@@ -175,7 +174,7 @@ void main() {
       expect(result.publicKey, equals(pubKey));
     });
 
-    test('hasPublicKey=true with empty bytes does NOT attach a key — '
+    test('hasPublicKey=true with empty bytes does NOT attach a key - '
         'the bytes are the source of truth, not the boolean', () {
       final node = _node(num: 0xBEEF, hasPublicKey: true, publicKey: const []);
 
@@ -189,7 +188,7 @@ void main() {
     });
   });
 
-  group('DmChannelResolver — logging', () {
+  group('DmChannelResolver - logging', () {
     test('emits a single MESSAGES_DM_CHANNEL_RESOLVED line per call', () {
       final messages = <String>[];
       AppLogging.setAppLogSink((level, source, message) {
@@ -198,7 +197,7 @@ void main() {
       addTearDown(AppLogging.reset);
 
       // Note: AppLogging.messages doesn't go through _appLogSink in
-      // current code — it only debugPrints. So we can't capture the
+      // current code - it only debugPrints. So we can't capture the
       // line here. But we can at least confirm the resolver doesn't
       // throw and produces the expected struct shape.
       final node = _node(num: 0x1234, hasPublicKey: false);

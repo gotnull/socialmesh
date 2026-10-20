@@ -6,7 +6,7 @@
 // Mounted globally in the app shell so it can surface itself the
 // instant a `socialmesh://purchase-return?sessionId=…` link arrives,
 // without requiring the user to be on a specific screen. Pure listener
-// over [externalConfirmationStreamProvider] — no business logic.
+// over [externalConfirmationStreamProvider] - no business logic.
 //
 // Lifecycle:
 //   - ConfirmationStage.idle      → renders nothing (just the child).
@@ -97,7 +97,7 @@ class _OverlayContent extends ConsumerWidget {
                     // and would vanish on reinstall. Nudge them to
                     // sign in so the install→uid re-key happens before
                     // they ever lose the device identity. Covers both
-                    // Stripe and Buy Me a Coffee success — this overlay
+                    // Stripe and Buy Me a Coffee success - this overlay
                     // is the sole exit for both.
                     final user = FirebaseAuth.instance.currentUser;
                     if (user == null || user.isAnonymous) {
@@ -186,7 +186,7 @@ class _Success extends ConsumerWidget {
   /// Returns null when the buyer has no orgs (personal purchase) or
   /// every owned org already has a name (the user is renaming
   /// post-purchase manually, or the rename was already done in a
-  /// previous session). Only this scenario triggers the CTA — we
+  /// previous session). Only this scenario triggers the CTA - we
   /// never push the user to a screen where there's nothing to do.
   String? _unnamedOwnedOrgId(WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
@@ -240,7 +240,7 @@ class _Success extends ConsumerWidget {
                 // Navigator.of(context) throws "Null check operator
                 // used on a null value". Use the global navigatorKey
                 // bound to the root Navigator in main.dart. Capture
-                // before onDismiss() — the overlay unmounts on idle
+                // before onDismiss() - the overlay unmounts on idle
                 // and the captured reference outlives this widget.
                 // Crashlytics 0fac5378d7a21235e2599d2fed6cc415, fresh
                 // 2026-05-28 on iOS 26.5.0 (1.43.0 #182).

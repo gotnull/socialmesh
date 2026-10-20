@@ -19,7 +19,7 @@ import '../widgets/operation_card.dart';
 
 /// Detail view for a single operation. Shows objective progress rows, a
 /// reward preview block, and contextual metadata. The screen is a passive
-/// reader — there are no destructive actions in v1.
+/// reader - there are no destructive actions in v1.
 class OperationDetailScreen extends ConsumerWidget {
   final String operationId;
 

@@ -36,7 +36,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('appShellProvider — onboarding-flow drives routing', () {
+  group('appShellProvider - onboarding-flow drives routing', () {
     test('OnboardingConnecting -> AppShell.scanner', () {
       final container = _container();
       addTearDown(container.dispose);
@@ -109,7 +109,7 @@ void main() {
     });
   });
 
-  group('appShellProvider — boot lifecycle gates take precedence', () {
+  group('appShellProvider - boot lifecycle gates take precedence', () {
     test('AppInitState.initializing -> splash (overrides any flow state)', () {
       final container = _container();
       addTearDown(container.dispose);
@@ -159,7 +159,7 @@ void _setAppInit(ProviderContainer container, AppInitState state) {
   // testing-only seam.
   switch (state) {
     case AppInitState.uninitialized:
-      // Default initial state — do nothing.
+      // Default initial state - do nothing.
       break;
     case AppInitState.initializing:
       container

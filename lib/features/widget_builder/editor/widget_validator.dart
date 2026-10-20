@@ -80,8 +80,7 @@ class WidgetValidator {
         const ValidationIssue(
           severity: ValidationSeverity.error,
           message: 'Widget is empty', // lint-allow: hardcoded-string
-          fix:
-              'Add some elements to your widget', // lint-allow: hardcoded-string
+          fix: 'Add some elements to your widget', // lint-allow: hardcoded-string
         ),
       );
     }
@@ -95,8 +94,7 @@ class WidgetValidator {
           severity: ValidationSeverity.error,
           message:
               'Widget has too many elements ($totalElements). Maximum is ${ValidationLimits.maxTotalElements}.', // lint-allow: hardcoded-string
-          fix:
-              'Simplify your widget by removing unnecessary elements', // lint-allow: hardcoded-string
+          fix: 'Simplify your widget by removing unnecessary elements', // lint-allow: hardcoded-string
         ),
       );
     }
@@ -120,8 +118,7 @@ class WidgetValidator {
       issues.add(
         const ValidationIssue(
           severity: ValidationSeverity.warning,
-          message:
-              'Give your widget a descriptive name', // lint-allow: hardcoded-string
+          message: 'Give your widget a descriptive name', // lint-allow: hardcoded-string
           fix: 'Tap the title to rename', // lint-allow: hardcoded-string
         ),
       );
@@ -287,8 +284,7 @@ class WidgetValidator {
       issues.add(
         ValidationIssue(
           severity: ValidationSeverity.error,
-          message:
-              'Icon element has no icon selected', // lint-allow: hardcoded-string
+          message: 'Icon element has no icon selected', // lint-allow: hardcoded-string
           elementId: element.id,
           fix: 'Select an icon', // lint-allow: hardcoded-string
         ),
@@ -306,8 +302,7 @@ class WidgetValidator {
           severity: ValidationSeverity.warning,
           message: 'Gauge has no data binding', // lint-allow: hardcoded-string
           elementId: element.id,
-          fix:
-              'Bind to a numeric value like battery or signal', // lint-allow: hardcoded-string
+          fix: 'Bind to a numeric value like battery or signal', // lint-allow: hardcoded-string
         ),
       );
     } else {
@@ -324,11 +319,9 @@ class WidgetValidator {
         issues.add(
           ValidationIssue(
             severity: ValidationSeverity.warning,
-            message:
-                'Gauge is bound to non-numeric data', // lint-allow: hardcoded-string
+            message: 'Gauge is bound to non-numeric data', // lint-allow: hardcoded-string
             elementId: element.id,
-            fix:
-                'Gauges work best with numeric values', // lint-allow: hardcoded-string
+            fix: 'Gauges work best with numeric values', // lint-allow: hardcoded-string
           ),
         );
       }
@@ -377,11 +370,9 @@ class WidgetValidator {
       issues.add(
         ValidationIssue(
           severity: ValidationSeverity.error,
-          message:
-              'Action button has no action configured', // lint-allow: hardcoded-string
+          message: 'Action button has no action configured', // lint-allow: hardcoded-string
           elementId: element.id,
-          fix:
-              'Configure what happens when tapped', // lint-allow: hardcoded-string
+          fix: 'Configure what happens when tapped', // lint-allow: hardcoded-string
         ),
       );
     }
@@ -430,8 +421,7 @@ class WidgetValidator {
           issues.add(
             ValidationIssue(
               severity: ValidationSeverity.error,
-              message:
-                  'Navigate action has no destination', // lint-allow: hardcoded-string
+              message: 'Navigate action has no destination', // lint-allow: hardcoded-string
               elementId: element.id,
               fix: 'Select where to navigate', // lint-allow: hardcoded-string
             ),
@@ -455,8 +445,7 @@ class WidgetValidator {
               severity: ValidationSeverity.warning,
               message: 'URL may be invalid', // lint-allow: hardcoded-string
               elementId: element.id,
-              fix:
-                  'Make sure URL starts with http:// or https://', // lint-allow: hardcoded-string
+              fix: 'Make sure URL starts with http:// or https://', // lint-allow: hardcoded-string
             ),
           );
         }
@@ -477,8 +466,7 @@ class WidgetValidator {
       issues.add(
         ValidationIssue(
           severity: ValidationSeverity.warning,
-          message:
-              'Unknown data binding: ${binding.path}', // lint-allow: hardcoded-string
+          message: 'Unknown data binding: ${binding.path}', // lint-allow: hardcoded-string
           elementId: elementId,
           fix: 'Select a valid data source', // lint-allow: hardcoded-string
         ),

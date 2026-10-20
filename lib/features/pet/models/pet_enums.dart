@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Pet enums — stage, branch, mood, action, event, call reason.
+// Pet enums - stage, branch, mood, action, event, call reason.
 //
 // Wire format invariants: the numeric index of every enum below is part of
 // the PetPublicState codec. Never reorder existing values. Add new values at

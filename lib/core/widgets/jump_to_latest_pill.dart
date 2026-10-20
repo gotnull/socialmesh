@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Jump-to-latest pill — shared chat affordance.
+// Jump-to-latest pill - shared chat affordance.
 //
 // Used by both the messaging screen and the SIP DM screen so the two
 // chat surfaces stay 1:1 in look, animation, and tap behaviour.

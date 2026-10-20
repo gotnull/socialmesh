@@ -280,7 +280,7 @@ class FakeProtocolService implements ProtocolService {
 // =============================================================================
 
 void main() {
-  group('D5 — MeshCoreTcpDeviceId.tryParse', () {
+  group('D5 - MeshCoreTcpDeviceId.tryParse', () {
     // Regression: MeshCore TCP auto-reconnect needs to recognise saved
     // device ids of the form `meshcore-tcp:<host>:<port>` and dispatch
     // back into `connectMeshCoreTcp`. Before D5 the auto-reconnect path
@@ -401,7 +401,7 @@ void main() {
       final coordinator = ConnectionCoordinator(
         meshtasticAdapterFactory: (_) {
           throw FactoryShouldNotBeCalledException(
-            'MeshtasticAdapterFactory (D3 — should route to MeshCore)',
+            'MeshtasticAdapterFactory (D3 - should route to MeshCore)',
           );
         },
         meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
@@ -421,7 +421,7 @@ void main() {
         ],
       );
 
-      // Note: NOT passing advertisedServiceUuids — same as the buggy
+      // Note: NOT passing advertisedServiceUuids - same as the buggy
       // scanner callsite did before the fix.
       final result = await coordinator.connect(device: device);
 
@@ -446,7 +446,7 @@ void main() {
 
         // DeviceInfo carries Meshtastic UUID, but caller forces MeshCore
         // detection by explicit override. This should not happen in
-        // practice — but the parameter must remain authoritative.
+        // practice - but the parameter must remain authoritative.
         final device = DeviceInfo(
           id: 'force-meshcore',
           name: 'Some Device',
@@ -1396,45 +1396,42 @@ void main() {
   });
 
   group('MeshCore TCP path', () {
-    test(
-      'typedef widening permits a non-BLE MeshTransport from the factory',
-      () async {
-        // The factory typedef was widened from `MeshCoreBleTransport Function()`
-        // to `MeshTransport Function()` so the coordinator can accept a TCP
-        // (or any future) transport without conditional dispatch. Pin that
-        // a non-BLE MeshTransport flows through the existing MeshCore connect
-        // sequence end-to-end.
-        final fakeTransport = FakeMeshTransport();
+    test('typedef widening permits a non-BLE MeshTransport from the factory', () async {
+      // The factory typedef was widened from `MeshCoreBleTransport Function()`
+      // to `MeshTransport Function()` so the coordinator can accept a TCP
+      // (or any future) transport without conditional dispatch. Pin that
+      // a non-BLE MeshTransport flows through the existing MeshCore connect
+      // sequence end-to-end.
+      final fakeTransport = FakeMeshTransport();
 
-        final coordinator = ConnectionCoordinator(
-          meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
-          meshCoreTransportFactory: () => fakeTransport,
-        );
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+        meshCoreTransportFactory: () => fakeTransport,
+      );
 
-        final device = DeviceInfo(
-          id: 'meshcore-test-id',
-          name: 'MeshCore Test',
-          type: TransportType.network,
-        );
+      final device = DeviceInfo(
+        id: 'meshcore-test-id',
+        name: 'MeshCore Test',
+        type: TransportType.network,
+      );
 
-        final result = await coordinator.connect(
-          device: device,
-          advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
-        );
+      final result = await coordinator.connect(
+        device: device,
+        advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+      );
 
-        expect(result.success, isTrue);
-        expect(result.deviceInfo?.protocolType, MeshProtocolType.meshcore);
-        expect(coordinator.activeProtocol, MeshProtocolType.meshcore);
+      expect(result.success, isTrue);
+      expect(result.deviceInfo?.protocolType, MeshProtocolType.meshcore);
+      expect(coordinator.activeProtocol, MeshProtocolType.meshcore);
 
-        await coordinator.dispose();
-      },
-    );
+      await coordinator.dispose();
+    });
 
     test(
       'connectMeshCoreTcp to a closed port returns a failure result',
       () async {
         // Bind an ephemeral port and immediately close it so nothing is
-        // listening — the coordinator's TCP connect must surface a failure
+        // listening - the coordinator's TCP connect must surface a failure
         // result, not throw, and must leave the coordinator idle (no
         // active adapter, no in-flight connect).
         final probe = await ServerSocket.bind('127.0.0.1', 0);
@@ -1456,49 +1453,46 @@ void main() {
       },
     );
 
-    test(
-      'connectMeshCoreTcp while another connect is in flight returns alreadyConnecting',
-      () async {
-        // Park a fake MeshCore connect in flight (transport.connect that
-        // never completes) so the single-flight guard is held, then
-        // verify a concurrent connectMeshCoreTcp call short-circuits with
-        // alreadyConnecting instead of constructing a real socket.
-        final coordinator = ConnectionCoordinator(
-          meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
-          meshCoreTransportFactory: () => FakeMeshCoreBleTransportWithHooks(
-            onConnect: () async {
-              await Completer<void>().future;
-            },
-          ),
-        );
+    test('connectMeshCoreTcp while another connect is in flight returns alreadyConnecting', () async {
+      // Park a fake MeshCore connect in flight (transport.connect that
+      // never completes) so the single-flight guard is held, then
+      // verify a concurrent connectMeshCoreTcp call short-circuits with
+      // alreadyConnecting instead of constructing a real socket.
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+        meshCoreTransportFactory: () => FakeMeshCoreBleTransportWithHooks(
+          onConnect: () async {
+            await Completer<void>().future;
+          },
+        ),
+      );
 
-        final device = DeviceInfo(
-          id: 'meshcore-test-id',
-          name: 'MeshCore Test',
-          type: TransportType.ble,
-        );
+      final device = DeviceInfo(
+        id: 'meshcore-test-id',
+        name: 'MeshCore Test',
+        type: TransportType.ble,
+      );
 
-        // Park the BLE connect in the single-flight slot.
-        unawaited(
-          coordinator.connect(
-            device: device,
-            advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
-          ),
-        );
-        await Future<void>.delayed(const Duration(milliseconds: 5));
+      // Park the BLE connect in the single-flight slot.
+      unawaited(
+        coordinator.connect(
+          device: device,
+          advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 5));
 
-        final tcpResult = await coordinator.connectMeshCoreTcp(
-          host: '127.0.0.1',
-          port: 1,
-        );
-        expect(tcpResult.success, isFalse);
-        expect(tcpResult.protocolError, MeshProtocolError.connectionInProgress);
+      final tcpResult = await coordinator.connectMeshCoreTcp(
+        host: '127.0.0.1',
+        port: 1,
+      );
+      expect(tcpResult.success, isFalse);
+      expect(tcpResult.protocolError, MeshProtocolError.connectionInProgress);
 
-        // Cleanup: cancel the in-flight BLE connect and dispose.
-        await coordinator.disconnect();
-        await coordinator.dispose();
-      },
-    );
+      // Cleanup: cancel the in-flight BLE connect and dispose.
+      await coordinator.disconnect();
+      await coordinator.dispose();
+    });
   });
 }
 

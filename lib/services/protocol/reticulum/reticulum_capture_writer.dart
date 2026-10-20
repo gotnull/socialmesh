@@ -28,7 +28,7 @@ import 'reticulum_safe_log.dart';
 ///   ```
 ///
 /// Files rotate at 8 MB and live under `<appDocs>/reticulum_captures/`.
-/// Schema is locked — any change requires a new version byte and a
+/// Schema is locked - any change requires a new version byte and a
 /// matching reader path in the replay engine.
 class ReticulumCaptureWriter {
   ReticulumCaptureWriter({this._captureDirOverride});
@@ -92,7 +92,7 @@ class ReticulumCaptureWriter {
     }
   }
 
-  /// Pure encoder — exposed for unit-testing the wire layout.
+  /// Pure encoder - exposed for unit-testing the wire layout.
   static Uint8List encodeRecord(ReticulumFragmentEvent event) {
     final fixed = ByteData(recordHeaderBytes);
     fixed.setUint64(0, event.timestampMs, Endian.little);

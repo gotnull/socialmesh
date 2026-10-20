@@ -144,26 +144,26 @@ enum MrrpTlvType {
 
 /// Well-known MRRP service identifiers.
 abstract final class MrrpServiceId {
-  /// meetup.v1 — short-lived rendezvous tokens.
+  /// meetup.v1 - short-lived rendezvous tokens.
   static const int meetupV1 = 0x00000001;
 
-  /// profile.v1 — opt-in peer profile summaries.
+  /// profile.v1 - opt-in peer profile summaries.
   static const int profileV1 = 0x00000002;
 
-  /// board.v1 — short mesh bulletin posts.
+  /// board.v1 - short mesh bulletin posts.
   static const int boardV1 = 0x00000003;
 
-  /// incident.v1 — structured incident/emergency reporting.
+  /// incident.v1 - structured incident/emergency reporting.
   static const int incidentV1 = 0x00000004;
 
-  /// pet.v1 — opt-in compact owner-pet public state (~8 B per peer).
+  /// pet.v1 - opt-in compact owner-pet public state (~8 B per peer).
   static const int petV1 = 0x00000005;
 
-  /// canvas.v1 — collaborative pixel canvas (MeshCanvas).
+  /// canvas.v1 - collaborative pixel canvas (MeshCanvas).
   /// Spec: docs/canvas/CANVAS_V0_1.md.
   static const int canvasV1 = 0x00000007;
 
-  /// echo.test — harness-only echo service.
+  /// echo.test - harness-only echo service.
   static const int echoTest = 0xFFFF0001;
 
   /// Human-readable name for a known service ID.
@@ -259,7 +259,7 @@ abstract final class ProfileAction {
 /// See `docs/sip/MRRP_SERVICES_V0_1.md` for the spec entry (to be added).
 /// Wire format for the get_summary response is the 8-byte PetPublicState
 /// codec v1 (schema_tag 0x01). Empty 0-byte response signals "no pet
-/// bound yet" — the requester treats this as a silent no-op.
+/// bound yet" - the requester treats this as a silent no-op.
 abstract final class PetAction {
   static const int getSummary = 0x0001;
 }

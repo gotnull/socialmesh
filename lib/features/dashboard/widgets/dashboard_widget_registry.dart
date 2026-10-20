@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
+
 import '../../../l10n/app_localizations.dart';
 
 /// Unique identifier for each dashboard widget type
@@ -116,8 +117,7 @@ class DashboardWidgetRegistry {
       type: DashboardWidgetType.signalStrength,
       id: 'signal_strength',
       title: 'Signal Strength', // lint-allow: hardcoded-string
-      description:
-          'Live RSSI, SNR, and channel utilization chart', // lint-allow: hardcoded-string
+      description: 'Live RSSI, SNR, and channel utilization chart', // lint-allow: hardcoded-string
       icon: Icons.signal_cellular_alt,
       size: DashboardWidgetSize.large,
       tags: {'signal', 'live', 'chart'},
@@ -158,8 +158,7 @@ class DashboardWidgetRegistry {
       type: DashboardWidgetType.packetStats,
       id: 'packet_stats',
       title: 'Packet Statistics', // lint-allow: hardcoded-string
-      description:
-          'Sent, received, and dropped packet counts', // lint-allow: hardcoded-string
+      description: 'Sent, received, and dropped packet counts', // lint-allow: hardcoded-string
       icon: Icons.analytics_outlined,
       size: DashboardWidgetSize.medium,
       tags: {'packets', 'stats', 'network'},

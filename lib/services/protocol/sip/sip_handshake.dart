@@ -82,7 +82,7 @@ class _HandshakeSession {
   /// each duplicate HELLO with a matching client_nonce signals our
   /// CHALLENGE never arrived and is the trigger to re-send the cached
   /// frame. Reusing the same wrapper nonce/timestamp/payload is
-  /// intentional — the peer (which never saw the original) processes it
+  /// intentional - the peer (which never saw the original) processes it
   /// normally, and we never rotate the server nonce mid-attempt.
   SipFrame? challengeFrame;
 
@@ -101,7 +101,7 @@ class _HandshakeSession {
   /// if no terminal state has been reached. Without it, a session that
   /// stalls in `helloSent` (peer never responds) lingers forever because
   /// `_cleanExpired` is only invoked when `initiateHandshake` or
-  /// `handleHello` is called for some other peer — there's no traffic
+  /// `handleHello` is called for some other peer - there's no traffic
   /// trigger on a dead-end handshake. Symptom from the field: chip stuck
   /// on "Connecting…" after the 8s/20s/40s retransmit schedule completes.
   Timer? expiryTimer;
@@ -139,7 +139,7 @@ class _PendingHandshake {
   /// Pending consent has its own local-only timeout
   /// ([SipConstants.pendingConsentTimeout]) decoupled from the
   /// wire-bound [SipConstants.handshakeTimeout]. The consent UI must
-  /// outlast the peer's 60-second retransmit budget — otherwise the
+  /// outlast the peer's 60-second retransmit budget - otherwise the
   /// user's late Accept tap is silently dropped.
   bool get isExpired =>
       DateTime.now().difference(lastObservedAt) >
@@ -219,7 +219,7 @@ class SipHandshakeManager {
   /// session. The initiator's HS_HELLO retransmit cadence is 8s/20s/40s,
   /// so a 4 s gate guarantees we re-emit at most once per inbound HELLO
   /// without spamming when the mesh duplicates a single HELLO. No
-  /// blind timer-driven CHALLENGE retransmit exists by design — the
+  /// blind timer-driven CHALLENGE retransmit exists by design - the
   /// peer's continuing HELLO retransmits ARE the proof the previous
   /// CHALLENGE was lost, and that signal is more airtime-efficient than
   /// a fixed schedule.
@@ -241,13 +241,13 @@ class SipHandshakeManager {
 
   /// Called when a cached HS_CHALLENGE should be re-emitted because the
   /// peer is still HELLO-retransmitting against an active
-  /// [SipHandshakeState.challengeSent] session — proof our previous
+  /// [SipHandshakeState.challengeSent] session - proof our previous
   /// CHALLENGE was lost on the radio. The caller is responsible for
   /// encoding and transmitting the frame on the same rate-limited path
   /// as the original send.
   void Function(int peerNodeId, SipFrame frame)? onChallengeReemit;
 
-  /// Called when a handshake fails for a NON-user-initiated reason —
+  /// Called when a handshake fails for a NON-user-initiated reason -
   /// timeout, replayed nonce, mismatched session_tag, etc. The
   /// `'cancelled'` reason (explicit user cancel via [cancelHandshake])
   /// is intentionally suppressed so e.g. a Block tap doesn't fire a
@@ -278,7 +278,7 @@ class SipHandshakeManager {
   ///
   /// **Asymmetry note.** Only fires on the *responder* side
   /// ([handleHello]) because HS_HELLO is the only handshake message
-  /// that carries `requested_features` on the wire — HS_CHALLENGE /
+  /// that carries `requested_features` on the wire - HS_CHALLENGE /
   /// HS_RESPONSE / HS_ACCEPT do not. The initiator side keeps using
   /// the slower CAP_BEACON / ROLLCALL_RESP fallback for the peer's
   /// caps. UI surfaces (e.g. the SIP DM compose trigger) hold the
@@ -305,7 +305,7 @@ class SipHandshakeManager {
   /// already exists for this peer.
   ///
   /// [overrideCooldown] bypasses the per-peer post-failure cooldown.
-  /// Pass `true` ONLY for an explicit user-initiated retry — typically
+  /// Pass `true` ONLY for an explicit user-initiated retry - typically
   /// when the user taps a peer whose tile is rendering the
   /// `failed` / `timedOut` state. The cooldown exists to throttle
   /// automatic retransmits (and to soften double-tap accidents); it
@@ -335,7 +335,7 @@ class SipHandshakeManager {
       return null;
     }
 
-    // Enforce per-peer cooldown after failure/timeout — unless the
+    // Enforce per-peer cooldown after failure/timeout - unless the
     // caller explicitly overrides (user-initiated retry).
     final cooldownUntilMs = _failCooldownMs[peerNodeId];
     if (cooldownUntilMs != null) {
@@ -432,7 +432,7 @@ class SipHandshakeManager {
     // Note: NO synchronous `isTimedOut` check here. The Timer-based
     // `_scheduleSessionExpiry` is the sole timeout authority. Receiving
     // a wire-level reply for a session still in `_sessions` means the
-    // peer believes the session is alive — accepting it (even if our
+    // peer believes the session is alive - accepting it (even if our
     // local clock passed the 60s mark by milliseconds) avoids the
     // millisecond-tight race that left iOS with a "Could not connect"
     // state while the peer happily considered the session established.
@@ -461,7 +461,7 @@ class SipHandshakeManager {
       return null;
     }
 
-    // The initiator's HELLO reached the peer and was answered — no further
+    // The initiator's HELLO reached the peer and was answered - no further
     // retransmits are needed regardless of how the rest of the flow lands.
     _cancelRetransmits(peerNodeId);
 
@@ -536,7 +536,7 @@ class SipHandshakeManager {
     }
 
     // Note: NO synchronous `isTimedOut` check. See [handleChallenge]
-    // for rationale — the Timer is the sole authority and the peer's
+    // for rationale - the Timer is the sole authority and the peer's
     // HS_ACCEPT arriving means the wire-level handshake completed.
 
     final accept = SipHsMessages.decodeAccept(frame.payload);
@@ -598,7 +598,7 @@ class SipHandshakeManager {
 
   /// Process a received HS_HELLO (responder receives this).
   ///
-  /// Queues the request for user consent — does NOT send an immediate
+  /// Queues the request for user consent - does NOT send an immediate
   /// HS_CHALLENGE. The UI must show an Accept/Decline prompt, then call
   /// [acceptHandshake] or [declineHandshake] to proceed. This is a hard
   /// privacy boundary: consent is mandatory on every incoming HELLO, even
@@ -609,7 +609,7 @@ class SipHandshakeManager {
   /// same time, each receives the other's HS_HELLO while in `helloSent`
   /// state. The node with the higher node ID keeps the initiator role
   /// (ignores the incoming HELLO); the lower node ID yields, discards its
-  /// initiator session, and becomes the responder — still requiring consent.
+  /// initiator session, and becomes the responder - still requiring consent.
   void handleHello(int peerNodeId, SipFrame frame) {
     // Privacy gate: silently ignore incoming handshake when DM not available.
     if (!isDmAvailable) {
@@ -628,7 +628,7 @@ class SipHandshakeManager {
     if (hello == null) return;
 
     // SIP v0.2 target check (defence-in-depth). The protocol_service
-    // layer drops mismatched HELLOs before they reach the manager —
+    // layer drops mismatched HELLOs before they reach the manager -
     // this re-check covers any future ingress path that bypasses
     // `_handleSipPacket` (test harness, alternate transport).
     // Spec: docs/sip/SIP_V0_2_TARGET_NODE_ID_PLAN.md §5.2.
@@ -646,12 +646,12 @@ class SipHandshakeManager {
     final existing = _sessions[peerNodeId];
     if (existing != null && existing.state == SipHandshakeState.helloSent) {
       if (_localNodeId > peerNodeId) {
-        // We win the tie-break — keep our initiator session, ignore theirs.
+        // We win the tie-break - keep our initiator session, ignore theirs.
         //
         // Cancel the HS_HELLO retransmit schedule: the peer has either
         // already received our HELLO (they must have, to detect the
         // simultaneous-open and yield) or they've queued us for user
-        // consent — in both cases further HELLOs from us are wasted
+        // consent - in both cases further HELLOs from us are wasted
         // airtime. We still sit in `helloSent` state so an inbound
         // HS_CHALLENGE from the peer (once their user approves) can
         // drive the session forward normally.
@@ -665,7 +665,7 @@ class SipHandshakeManager {
         _cancelRetransmits(peerNodeId);
         return;
       } else {
-        // We lose the tie-break — discard our initiator session, become
+        // We lose the tie-break - discard our initiator session, become
         // the responder for this peer's HELLO. Still requires consent
         // (privacy boundary; initiating does not imply accepting).
         AppLogging.sip(
@@ -682,12 +682,12 @@ class SipHandshakeManager {
     // Peer-driven HS_CHALLENGE re-emit. If we are sitting in
     // [SipHandshakeState.challengeSent] and the peer is still
     // retransmitting the SAME HS_HELLO (matching client_nonce), our
-    // previous CHALLENGE was lost on the radio — the peer wouldn't keep
+    // previous CHALLENGE was lost on the radio - the peer wouldn't keep
     // HELLOing if they had it. Re-send the cached frame on the same
     // rate-limited path. Throttled to one re-emit per
     // [_kChallengeReemitMinInterval] per session so multi-hop rebroadcast
     // can't trigger a flurry. We do NOT rotate the server nonce, rebuild
-    // the session, or reset the expiry timer — the handshake remains the
+    // the session, or reset the expiry timer - the handshake remains the
     // same attempt.
     if (existing != null &&
         existing.state == SipHandshakeState.challengeSent &&
@@ -731,7 +731,7 @@ class SipHandshakeManager {
       return;
     }
 
-    // Already completed — ignore stale HELLO retransmit.
+    // Already completed - ignore stale HELLO retransmit.
     if (_completed.containsKey(peerNodeId)) {
       AppLogging.sip(
         'SIP_HS: duplicate HELLO ignored for '
@@ -740,7 +740,7 @@ class SipHandshakeManager {
       return;
     }
 
-    // Already pending consent — refresh the entry's observation
+    // Already pending consent - refresh the entry's observation
     // timestamp so the consent UI stays alive while the peer keeps
     // retransmitting, then ignore the duplicate frame itself.
     final existingPending = _pendingRequests[peerNodeId];
@@ -797,8 +797,8 @@ class SipHandshakeManager {
     // `requestedFeatures` is what the peer is requesting *for this
     // session*, which may be a subset of their full advertised
     // features. For the rich-cap UI gates (dmInkV1 / dmPlayV1 /
-    // dmSignalV1) the gap is irrelevant — these are unconditionally
-    // advertised by every SocialMesh build — and even if the gap
+    // dmSignalV1) the gap is irrelevant - these are unconditionally
+    // advertised by every SocialMesh build - and even if the gap
     // were real, the row gets corrected on the next CAP_BEACON.
     final featuresHook = onPeerFeaturesObserved;
     if (featuresHook != null) {
@@ -904,7 +904,7 @@ class SipHandshakeManager {
 
     // Cache for peer-driven re-emit (see [handleHello] challengeSent
     // branch). Same wrapper nonce/timestamp/payload on re-send is
-    // intentional — the peer never saw the original.
+    // intentional - the peer never saw the original.
     session.challengeFrame = frame;
 
     return frame;
@@ -976,7 +976,7 @@ class SipHandshakeManager {
   /// Process a received HS_DECLINE (initiator receives this).
   ///
   /// Clears the in-progress initiator session without applying a cooldown.
-  /// The peer declined by choice — this is not a protocol failure, so the
+  /// The peer declined by choice - this is not a protocol failure, so the
   /// initiator is free to retry immediately (subject only to its UI/UX flow).
   void handleDecline(int peerNodeId, SipFrame frame) {
     final session = _sessions[peerNodeId];
@@ -1280,7 +1280,7 @@ class SipHandshakeManager {
 
     // Fire the failure SFX hook for non-user-cancelled failures only.
     // Block / Cancel paths reach `_failSession` with reason='cancelled'
-    // and must NOT play a sound — the user already chose silent action.
+    // and must NOT play a sound - the user already chose silent action.
     if (reason != 'cancelled') {
       final failHook = onHandshakeFailed;
       if (failHook != null) {
@@ -1353,7 +1353,7 @@ class SipHandshakeManager {
       if (current == null) return;
       // Terminal states already drop the session from `_sessions` via
       // `_failSession` / `handleAccept` / `handleResponse`, so this
-      // null check is sufficient — anything still here at the timeout
+      // null check is sufficient - anything still here at the timeout
       // boundary is a stalled handshake worth failing.
       _failSession(peerNodeId, 'timeout');
     });

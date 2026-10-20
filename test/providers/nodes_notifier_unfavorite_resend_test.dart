@@ -260,9 +260,8 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 200));
 
     expect(
-      _sentAdminFrames(
-        env.transport,
-      ).where((f) => f.message.hasRemoveFavoriteNode()),
+      _sentAdminFrames(env.transport)
+          .where((f) => f.message.hasRemoveFavoriteNode()),
       isEmpty,
       reason:
           'A second ready transition must not re-send once the protocol '
@@ -294,9 +293,9 @@ void main() {
     env.protocol.debugForceReadinessForTesting(OperationalReadiness.ready);
     await Future<void>.delayed(const Duration(milliseconds: 200));
 
-    final adds = _sentAdminFrames(
-      env.transport,
-    ).where((f) => f.message.hasSetFavoriteNode()).toList();
+    final adds = _sentAdminFrames(env.transport)
+        .where((f) => f.message.hasSetFavoriteNode())
+        .toList();
 
     expect(
       adds.length,

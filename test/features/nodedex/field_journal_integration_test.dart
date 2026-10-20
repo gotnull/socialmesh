@@ -149,114 +149,108 @@ void main() {
     // -------------------------------------------------------------------------
 
     group('end-to-end determinism', () {
-      test(
-        'same entry produces identical sigil + traits + patina + note + disclosure',
-        () {
-          final entry = _makeEntry(
-            nodeNum: 0xCAFE,
-            encounterCount: 25,
-            ageDays: 21,
-            regionCount: 4,
-            distinctPositions: 7,
-            messageCount: 18,
-            coSeenCount: 10,
-            withSignal: true,
-            bestSnr: 12,
-            bestRssi: -75,
-            maxDistanceSeen: 8500,
-          );
+      test('same entry produces identical sigil + traits + patina + note + disclosure', () {
+        final entry = _makeEntry(
+          nodeNum: 0xCAFE,
+          encounterCount: 25,
+          ageDays: 21,
+          regionCount: 4,
+          distinctPositions: 7,
+          messageCount: 18,
+          coSeenCount: 10,
+          withSignal: true,
+          bestSnr: 12,
+          bestRssi: -75,
+          maxDistanceSeen: 8500,
+        );
 
-          // Run every subsystem twice
-          final sigil1 = SigilGenerator.generate(entry.nodeNum);
-          final sigil2 = SigilGenerator.generate(entry.nodeNum);
+        // Run every subsystem twice
+        final sigil1 = SigilGenerator.generate(entry.nodeNum);
+        final sigil2 = SigilGenerator.generate(entry.nodeNum);
 
-          final trait1 = TraitEngine.infer(entry: entry);
-          final trait2 = TraitEngine.infer(entry: entry);
+        final trait1 = TraitEngine.infer(entry: entry);
+        final trait2 = TraitEngine.infer(entry: entry);
 
-          final allTraits1 = TraitEngine.inferAll(entry: entry);
-          final allTraits2 = TraitEngine.inferAll(entry: entry);
+        final allTraits1 = TraitEngine.inferAll(entry: entry);
+        final allTraits2 = TraitEngine.inferAll(entry: entry);
 
-          final patina1 = PatinaScore.computeAt(entry, refTime);
-          final patina2 = PatinaScore.computeAt(entry, refTime);
+        final patina1 = PatinaScore.computeAt(entry, refTime);
+        final patina2 = PatinaScore.computeAt(entry, refTime);
 
-          final note1 = FieldNoteGenerator.generate(
-            entry: entry,
-            trait: trait1.primary,
-            l10n: l10n,
-          );
-          final note2 = FieldNoteGenerator.generate(
-            entry: entry,
-            trait: trait2.primary,
-            l10n: l10n,
-          );
+        final note1 = FieldNoteGenerator.generate(
+          entry: entry,
+          trait: trait1.primary,
+          l10n: l10n,
+        );
+        final note2 = FieldNoteGenerator.generate(
+          entry: entry,
+          trait: trait2.primary,
+          l10n: l10n,
+        );
 
-          final disclosure1 = ProgressiveDisclosure.computeAt(entry, refTime);
-          final disclosure2 = ProgressiveDisclosure.computeAt(entry, refTime);
+        final disclosure1 = ProgressiveDisclosure.computeAt(entry, refTime);
+        final disclosure2 = ProgressiveDisclosure.computeAt(entry, refTime);
 
-          // Sigil
-          expect(sigil1.vertices, equals(sigil2.vertices));
-          expect(sigil1.rotation, equals(sigil2.rotation));
-          expect(sigil1.innerRings, equals(sigil2.innerRings));
-          expect(sigil1.primaryColor, equals(sigil2.primaryColor));
-          expect(sigil1.secondaryColor, equals(sigil2.secondaryColor));
-          expect(sigil1.tertiaryColor, equals(sigil2.tertiaryColor));
+        // Sigil
+        expect(sigil1.vertices, equals(sigil2.vertices));
+        expect(sigil1.rotation, equals(sigil2.rotation));
+        expect(sigil1.innerRings, equals(sigil2.innerRings));
+        expect(sigil1.primaryColor, equals(sigil2.primaryColor));
+        expect(sigil1.secondaryColor, equals(sigil2.secondaryColor));
+        expect(sigil1.tertiaryColor, equals(sigil2.tertiaryColor));
 
-          // Trait primary
-          expect(trait1.primary, equals(trait2.primary));
-          expect(trait1.confidence, equals(trait2.confidence));
-          expect(trait1.secondary, equals(trait2.secondary));
+        // Trait primary
+        expect(trait1.primary, equals(trait2.primary));
+        expect(trait1.confidence, equals(trait2.confidence));
+        expect(trait1.secondary, equals(trait2.secondary));
 
-          // All traits
-          expect(allTraits1.length, equals(allTraits2.length));
-          for (int i = 0; i < allTraits1.length; i++) {
-            expect(
-              allTraits1[i].trait,
-              equals(allTraits2[i].trait),
-              reason: 'Trait mismatch at index $i',
-            );
-            expect(
-              allTraits1[i].confidence,
-              equals(allTraits2[i].confidence),
-              reason: 'Confidence mismatch at index $i',
-            );
-            expect(
-              allTraits1[i].evidence.length,
-              equals(allTraits2[i].evidence.length),
-              reason: 'Evidence count mismatch at index $i',
-            );
-          }
-
-          // Patina
-          expect(patina1.score, equals(patina2.score));
-          expect(patina1.tenure, equals(patina2.tenure));
-          expect(patina1.encounters, equals(patina2.encounters));
-          expect(patina1.reach, equals(patina2.reach));
-          expect(patina1.signalDepth, equals(patina2.signalDepth));
-          expect(patina1.social, equals(patina2.social));
-          expect(patina1.recency, equals(patina2.recency));
-          expect(patina1.stampLabel, equals(patina2.stampLabel));
-
-          // Field note
-          expect(note1, equals(note2));
-
-          // Disclosure
-          expect(disclosure1.tier, equals(disclosure2.tier));
+        // All traits
+        expect(allTraits1.length, equals(allTraits2.length));
+        for (int i = 0; i < allTraits1.length; i++) {
           expect(
-            disclosure1.overlayDensity,
-            equals(disclosure2.overlayDensity),
+            allTraits1[i].trait,
+            equals(allTraits2[i].trait),
+            reason: 'Trait mismatch at index $i',
           );
           expect(
-            disclosure1.showPrimaryTrait,
-            equals(disclosure2.showPrimaryTrait),
+            allTraits1[i].confidence,
+            equals(allTraits2[i].confidence),
+            reason: 'Confidence mismatch at index $i',
           );
-          expect(disclosure1.showFieldNote, equals(disclosure2.showFieldNote));
           expect(
-            disclosure1.showPatinaStamp,
-            equals(disclosure2.showPatinaStamp),
+            allTraits1[i].evidence.length,
+            equals(allTraits2[i].evidence.length),
+            reason: 'Evidence count mismatch at index $i',
           );
-          expect(disclosure1.showOverlay, equals(disclosure2.showOverlay));
-        },
-      );
+        }
+
+        // Patina
+        expect(patina1.score, equals(patina2.score));
+        expect(patina1.tenure, equals(patina2.tenure));
+        expect(patina1.encounters, equals(patina2.encounters));
+        expect(patina1.reach, equals(patina2.reach));
+        expect(patina1.signalDepth, equals(patina2.signalDepth));
+        expect(patina1.social, equals(patina2.social));
+        expect(patina1.recency, equals(patina2.recency));
+        expect(patina1.stampLabel, equals(patina2.stampLabel));
+
+        // Field note
+        expect(note1, equals(note2));
+
+        // Disclosure
+        expect(disclosure1.tier, equals(disclosure2.tier));
+        expect(disclosure1.overlayDensity, equals(disclosure2.overlayDensity));
+        expect(
+          disclosure1.showPrimaryTrait,
+          equals(disclosure2.showPrimaryTrait),
+        );
+        expect(disclosure1.showFieldNote, equals(disclosure2.showFieldNote));
+        expect(
+          disclosure1.showPatinaStamp,
+          equals(disclosure2.showPatinaStamp),
+        );
+        expect(disclosure1.showOverlay, equals(disclosure2.showOverlay));
+      });
 
       test('determinism holds for 100 distinct node numbers', () {
         for (int nodeNum = 0; nodeNum < 100; nodeNum++) {
@@ -810,51 +804,48 @@ void main() {
         expect(sigilRich.tertiaryColor, equals(sigilSparse.tertiaryColor));
       });
 
-      test(
-        'field note is identity-stable: same template for same nodeNum regardless of data',
-        () {
-          // The template selection is driven by hash of nodeNum, not data.
-          // Different encounter counts should select the same template family
-          // for the same trait.
-          final entry1 = _makeEntry(
-            nodeNum: 500,
-            encounterCount: 10,
-            ageDays: 7,
-            regionCount: 2,
-          );
-          final entry2 = _makeEntry(
-            nodeNum: 500,
-            encounterCount: 30,
-            ageDays: 7,
-            regionCount: 2,
-          );
+      test('field note is identity-stable: same template for same nodeNum regardless of data', () {
+        // The template selection is driven by hash of nodeNum, not data.
+        // Different encounter counts should select the same template family
+        // for the same trait.
+        final entry1 = _makeEntry(
+          nodeNum: 500,
+          encounterCount: 10,
+          ageDays: 7,
+          regionCount: 2,
+        );
+        final entry2 = _makeEntry(
+          nodeNum: 500,
+          encounterCount: 30,
+          ageDays: 7,
+          regionCount: 2,
+        );
 
-          final note1 = FieldNoteGenerator.generate(
-            entry: entry1,
-            trait: NodeTrait.sentinel,
-            l10n: l10n,
-          );
-          final note2 = FieldNoteGenerator.generate(
-            entry: entry2,
-            trait: NodeTrait.sentinel,
-            l10n: l10n,
-          );
+        final note1 = FieldNoteGenerator.generate(
+          entry: entry1,
+          trait: NodeTrait.sentinel,
+          l10n: l10n,
+        );
+        final note2 = FieldNoteGenerator.generate(
+          entry: entry2,
+          trait: NodeTrait.sentinel,
+          l10n: l10n,
+        );
 
-          // Both notes should share the same template structure.
-          // The easiest check: they should share most of the non-numeric words.
-          final words1 = note1.split(' ').where((w) => !_isNumeric(w)).toSet();
-          final words2 = note2.split(' ').where((w) => !_isNumeric(w)).toSet();
-          final common = words1.intersection(words2);
+        // Both notes should share the same template structure.
+        // The easiest check: they should share most of the non-numeric words.
+        final words1 = note1.split(' ').where((w) => !_isNumeric(w)).toSet();
+        final words2 = note2.split(' ').where((w) => !_isNumeric(w)).toSet();
+        final common = words1.intersection(words2);
 
-          expect(
-            common.length,
-            greaterThan(words1.length ~/ 2),
-            reason:
-                'Notes should share template structure.\n'
-                'Note1: "$note1"\nNote2: "$note2"',
-          );
-        },
-      );
+        expect(
+          common.length,
+          greaterThan(words1.length ~/ 2),
+          reason:
+              'Notes should share template structure.\n'
+              'Note1: "$note1"\nNote2: "$note2"',
+        );
+      });
     });
 
     // -------------------------------------------------------------------------

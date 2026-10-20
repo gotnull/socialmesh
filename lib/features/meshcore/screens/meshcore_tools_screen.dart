@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — GestureDetector onTap delegates to parent callback
+// lint-allow: haptic-feedback - GestureDetector onTap delegates to parent callback
 
 import '../../../core/l10n/l10n_extension.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/logging.dart';
 import '../../../core/meshcore_constants.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -17,6 +19,7 @@ import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../core/widgets/status_banner.dart';
+
 import 'package:share_plus/share_plus.dart';
 
 import '../../../providers/app_providers.dart';
@@ -141,7 +144,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               trailing: _chevron(context),
               onTap: () => _showBatteryInfo(battInfoState),
             ),
-            // D28: Trace Path — wire format observed in upstream and
+            // D28: Trace Path - wire format observed in upstream and
             // pinned in `parseTraceData`. Tile opens a contact picker
             // sheet, sends `CMD_SEND_TRACE_PATH (0x24)`, and renders the
             // hop list with per-hop SNR after the firmware push arrives.
@@ -153,7 +156,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               trailing: _chevron(context),
               onTap: _openTracePath,
             ),
-            // D34b-A1: Discovered Nodes — recent-heard feed populated
+            // D34b-A1: Discovered Nodes - recent-heard feed populated
             // from 0x8A / 0x80 pushes. In-memory only; capped at 100;
             // no autoadd-config dependency.
             SettingsTile(
@@ -268,7 +271,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
             // Discovery Section. D29 cleanup: the Tools surface owns
             // "do something now" actions. Persistent radio config
             // (region preset + freq/bw/SF/CR/TX power) lives only in
-            // Settings → Radio Settings — the previous read-only
+            // Settings → Radio Settings - the previous read-only
             // duplicate here was confusing because it had the same
             // label as the editable sheet but couldn't write.
             SettingsSectionHeader(title: context.l10n.meshcoreDiscovery),
@@ -608,7 +611,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
         builder: (context, ref, _) {
           // D-Q11: look up the chemistry override for the current
           // self radio. AsyncValue.value can be null before
-          // hydration — treat that as `auto` so the sheet renders
+          // hydration - treat that as `auto` so the sheet renders
           // cleanly during the first frame after open.
           final selfInfo = ref.watch(meshCoreSelfInfoProvider).selfInfo;
           final selfPubKeyHex = selfInfo != null
@@ -871,9 +874,8 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
   /// + safe export, so this entry point is purely navigation.
   void _openAppDebugLog() {
     HapticFeedback.lightImpact();
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const AppLogScreen()));
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => const AppLogScreen()));
   }
 
   /// Row 50: open the dedicated transport status screen (connection
@@ -925,7 +927,7 @@ Future<void> showMeshCoreTracePathSheet(BuildContext context) {
 /// recent drain (`source -> outcome at HH:MM:SS`). Hidden / shown
 /// adaptively based on whether anything has happened yet.
 ///
-/// Does NOT claim firmware queue depth — the firmware does not expose
+/// Does NOT claim firmware queue depth - the firmware does not expose
 /// it. Copy uses "Last queue check" not "Queue depth" to avoid lying.
 class _QueueStatusCard extends ConsumerWidget {
   const _QueueStatusCard();
@@ -1089,9 +1091,9 @@ class _QueueStatusCard extends ConsumerWidget {
 /// D28 Part C: Trace Path picker + result bottom sheet.
 ///
 /// Two phases inside one sheet:
-/// 1. Picker — user taps a contact (chat or repeater). Sheet locks the
+/// 1. Picker - user taps a contact (chat or repeater). Sheet locks the
 ///    target and fires `session.sendTracePath(...)`.
-/// 2. Result — once the firmware push arrives (or times out), the sheet
+/// 2. Result - once the firmware push arrives (or times out), the sheet
 ///    swaps to a hop list with per-hop SNR.
 class MeshCoreTracePathSheet extends ConsumerStatefulWidget {
   final ScrollController scrollController;
@@ -1164,7 +1166,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
   Widget build(BuildContext context) {
     final l = context.l10n;
     final contactsState = ref.watch(meshCoreContactsProvider);
-    // Filter to actionable trace targets — chat + repeater. Sensors
+    // Filter to actionable trace targets - chat + repeater. Sensors
     // and rooms aren't useful trace destinations.
     final eligible = contactsState.contacts
         .where((c) => c.isChat || c.isRepeater)

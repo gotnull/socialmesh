@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34c-B-A — wire-byte supplement for path-override writes.
+// D34c-B-A - wire-byte supplement for path-override writes.
 //
 // Pinned invariants (this file):
 //   - addUpdateContact(pathLength: 0, pathBytes: empty)
@@ -79,7 +79,7 @@ void main() {
 
   final pubKey = Uint8List.fromList(List<int>.generate(32, (i) => i + 1));
 
-  group('D34c-B-A — addUpdateContact wire bytes for path overrides', () {
+  group('D34c-B-A - addUpdateContact wire bytes for path overrides', () {
     test('Force Direct: pathLength=0, empty pathBytes → byte 35 == 0x00 '
         'and path bytes zero-padded', () async {
       final t = _FakeTransport();
@@ -134,7 +134,7 @@ void main() {
     });
 
     test('Force Flood (pathLength=-1) and the [-1, 64] bounds check are '
-        'pinned in d29_session_helpers_test.dart — not duplicated here', () {
+        'pinned in d29_session_helpers_test.dart - not duplicated here', () {
       // Sentinel test so a future refactor that drops the D29 file
       // gets a visible cue here. The actual byte-pin lives in
       // d29_session_helpers_test.dart at the

@@ -4,10 +4,10 @@
 //
 // ActionSignal interfaces are terminal inputs on action nodes. They represent
 // the final destination of an event signal flowing through the automation
-// graph — the point where "something happens" (send a message, push a
+// graph - the point where "something happens" (send a message, push a
 // notification, trigger a webhook, etc.).
 //
-// Color: Green — matches the THEN section color in the automation editor
+// Color: Green - matches the THEN section color in the automation editor
 // and the AppTheme.successGreen accent, reinforcing the visual metaphor
 // that green means "go / execute / complete".
 //
@@ -25,26 +25,26 @@ import 'event_signal_interface.dart';
 /// AppTheme.successGreen.
 ///
 /// This is the wire color users see on the rightmost connections in their
-/// automation graphs — the final leg from the last condition/logic gate
+/// automation graphs - the final leg from the last condition/logic gate
 /// into each action node.
 const Color kActionSignalColor = Color(0xFF4ADE80);
 
 /// Input interface that accepts an event signal for action execution.
 ///
-/// Used exclusively on action nodes — the terminal nodes in an automation
+/// Used exclusively on action nodes - the terminal nodes in an automation
 /// graph. Each action node has exactly one ActionSignalInputData, which
 /// connects to the upstream event signal chain (trigger → conditions →
 /// logic gates → action).
 ///
 /// Accepts connections from:
-/// - [EventSignalOutputData] — the primary event signal type flowing through
+/// - [EventSignalOutputData] - the primary event signal type flowing through
 ///   the graph from trigger nodes through condition and logic gate nodes.
 ///
 /// This type is intentionally restrictive. Action nodes should only receive
 /// properly-typed event signals that have passed through the full
 /// trigger/condition pipeline. If a user needs to gate an action on a
 /// boolean condition, they wire the condition node's event signal output
-/// (not its bool gate output) into the action — the condition node acts as
+/// (not its bool gate output) into the action - the condition node acts as
 /// a pass-through filter on the event signal, not as a boolean data source.
 class ActionSignalInputData extends VSInputData {
   ActionSignalInputData({
@@ -67,7 +67,7 @@ class ActionSignalInputData extends VSInputData {
 /// Used on action nodes that need to chain into downstream actions or
 /// logging nodes. In the simplest case (Phase 2), action nodes are pure
 /// terminals with no output. This output type exists for Phase 3+ when
-/// action chaining is introduced — e.g. "Send Message → Log Event" where
+/// action chaining is introduced - e.g. "Send Message → Log Event" where
 /// the send message action's completion signal feeds into the log node.
 ///
 /// The [outputFunction] receives a map of the node's evaluated input values
@@ -93,7 +93,7 @@ class ActionSignalOutputData extends VSOutputData<ActionSignalPayload> {
 /// corresponding [AutomationAction] model objects.
 ///
 /// At runtime, the actual action execution is handled by
-/// [AutomationEngine._executeAction] — this payload is used only for
+/// [AutomationEngine._executeAction] - this payload is used only for
 /// graph compilation, not for live action processing.
 class ActionSignalPayload {
   const ActionSignalPayload({

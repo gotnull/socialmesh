@@ -19,6 +19,7 @@ import 'package:socialmesh/services/storage/route_storage_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'dart:io';
+
 import 'package:path/path.dart' as p;
 
 int _testDbSeq = 0;
@@ -259,7 +260,7 @@ void main() {
       TransportType.network,
       reason:
           'Disconnect must NOT silently revert the user-chosen transport '
-          'to BLE — that was the bug in issue #102 that forced network '
+          'to BLE - that was the bug in issue #102 that forced network '
           'reconnect back into a BLE scan loop.',
     );
   });
@@ -588,168 +589,157 @@ void _protocolAwareMarkAsPairedTests() {
         expect(
           notifier.state.state,
           DevicePairingState.connected,
-          reason:
-              'MeshCore connection should not react to Meshtastic transport events',
+          reason: 'MeshCore connection should not react to Meshtastic transport events',
         );
       },
     );
 
-    test(
-      'Meshtastic markAsPaired subscribes to transport and reacts to disconnect',
-      () async {
-        final s = SettingsService();
-        await s.init();
+    test('Meshtastic markAsPaired subscribes to transport and reacts to disconnect', () async {
+      final s = SettingsService();
+      await s.init();
 
-        final testTransport = _TestTransport();
+      final testTransport = _TestTransport();
 
-        final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
-        await messageStorage.init();
+      final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
+      await messageStorage.init();
 
-        final nodeStorage = NodeStorageService();
-        await nodeStorage.init();
+      final nodeStorage = NodeStorageService();
+      await nodeStorage.init();
 
-        final telemetryStorage = TelemetryDatabase(
-          testDbPath: _uniqueTelemDbPath(),
-        );
-        await telemetryStorage.init();
+      final telemetryStorage = TelemetryDatabase(
+        testDbPath: _uniqueTelemDbPath(),
+      );
+      await telemetryStorage.init();
 
-        final routeStorage = RouteStorageService(
-          testDbPath: inMemoryDatabasePath,
-        );
-        await routeStorage.init();
+      final routeStorage = RouteStorageService(
+        testDbPath: inMemoryDatabasePath,
+      );
+      await routeStorage.init();
 
-        final container = ProviderContainer(
-          overrides: [
-            transportProvider.overrideWithValue(testTransport),
-            meshPacketDedupeStoreProvider.overrideWithValue(
-              MeshPacketDedupeStore(dbPathOverride: ':memory:'),
-            ),
-            settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
-            messageStorageProvider.overrideWithValue(
-              AsyncValue.data(messageStorage),
-            ),
-            nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
-            telemetryStorageProvider.overrideWithValue(
-              AsyncValue.data(telemetryStorage),
-            ),
-            routeStorageProvider.overrideWithValue(
-              AsyncValue.data(routeStorage),
-            ),
-          ],
-        );
-        addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [
+          transportProvider.overrideWithValue(testTransport),
+          meshPacketDedupeStoreProvider.overrideWithValue(
+            MeshPacketDedupeStore(dbPathOverride: ':memory:'),
+          ),
+          settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+          messageStorageProvider.overrideWithValue(
+            AsyncValue.data(messageStorage),
+          ),
+          nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
+          telemetryStorageProvider.overrideWithValue(
+            AsyncValue.data(telemetryStorage),
+          ),
+          routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
+        ],
+      );
+      addTearDown(container.dispose);
 
-        final notifier = container.read(deviceConnectionProvider.notifier);
-        final deviceInfo = DeviceInfo(
-          id: 'meshtastic-device-1',
-          name: 'Meshtastic Device',
-          type: TransportType.ble,
-        );
+      final notifier = container.read(deviceConnectionProvider.notifier);
+      final deviceInfo = DeviceInfo(
+        id: 'meshtastic-device-1',
+        name: 'Meshtastic Device',
+        type: TransportType.ble,
+      );
 
-        // First connect the test transport (so it's in connected state)
-        await testTransport.connect(deviceInfo);
+      // First connect the test transport (so it's in connected state)
+      await testTransport.connect(deviceInfo);
 
-        // Mark as paired WITHOUT isMeshCore (defaults to Meshtastic behavior)
-        notifier.markAsPaired(deviceInfo, 0x87654321);
+      // Mark as paired WITHOUT isMeshCore (defaults to Meshtastic behavior)
+      notifier.markAsPaired(deviceInfo, 0x87654321);
 
-        // Verify state is connected
-        expect(notifier.state.state, DevicePairingState.connected);
-        expect(notifier.state.device?.id, 'meshtastic-device-1');
+      // Verify state is connected
+      expect(notifier.state.state, DevicePairingState.connected);
+      expect(notifier.state.device?.id, 'meshtastic-device-1');
 
-        // Now simulate the transport disconnecting
-        testTransport.simulateDisconnect();
+      // Now simulate the transport disconnecting
+      testTransport.simulateDisconnect();
 
-        // Give time for the stream listener to process
-        await Future.delayed(const Duration(milliseconds: 50));
+      // Give time for the stream listener to process
+      await Future.delayed(const Duration(milliseconds: 50));
 
-        // State should change to disconnected for Meshtastic
-        expect(
-          notifier.state.state,
-          DevicePairingState.disconnected,
-          reason: 'Meshtastic connection should react to transport disconnect',
-        );
-      },
-    );
+      // State should change to disconnected for Meshtastic
+      expect(
+        notifier.state.state,
+        DevicePairingState.disconnected,
+        reason: 'Meshtastic connection should react to transport disconnect',
+      );
+    });
   });
 
   group('initialize protocol awareness', () {
-    test(
-      'MeshCore device on initialize skips Meshtastic transport listener',
-      () async {
-        // Set up with MeshCore as last protocol
-        SharedPreferences.setMockInitialValues({
-          'last_device_id': 'meshcore-device-test',
-          'last_device_type': 'ble',
-          'last_device_name': 'MeshCore Device',
-          'last_device_protocol': 'meshcore',
-        });
+    test('MeshCore device on initialize skips Meshtastic transport listener', () async {
+      // Set up with MeshCore as last protocol
+      SharedPreferences.setMockInitialValues({
+        'last_device_id': 'meshcore-device-test',
+        'last_device_type': 'ble',
+        'last_device_name': 'MeshCore Device',
+        'last_device_protocol': 'meshcore',
+      });
 
-        final s = SettingsService();
-        await s.init();
+      final s = SettingsService();
+      await s.init();
 
-        await SharedPreferences.getInstance();
-        final testTransport = _TestTransport();
+      await SharedPreferences.getInstance();
+      final testTransport = _TestTransport();
 
-        final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
-        await messageStorage.init();
+      final messageStorage = MessageDatabase(testDbPath: _uniqueTestDbPath());
+      await messageStorage.init();
 
-        final nodeStorage = NodeStorageService();
-        await nodeStorage.init();
+      final nodeStorage = NodeStorageService();
+      await nodeStorage.init();
 
-        final telemetryStorage = TelemetryDatabase(
-          testDbPath: _uniqueTelemDbPath(),
-        );
-        await telemetryStorage.init();
+      final telemetryStorage = TelemetryDatabase(
+        testDbPath: _uniqueTelemDbPath(),
+      );
+      await telemetryStorage.init();
 
-        final routeStorage = RouteStorageService(
-          testDbPath: inMemoryDatabasePath,
-        );
-        await routeStorage.init();
+      final routeStorage = RouteStorageService(
+        testDbPath: inMemoryDatabasePath,
+      );
+      await routeStorage.init();
 
-        final container = ProviderContainer(
-          overrides: [
-            transportProvider.overrideWithValue(testTransport),
-            meshPacketDedupeStoreProvider.overrideWithValue(
-              MeshPacketDedupeStore(dbPathOverride: ':memory:'),
-            ),
-            settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
-            messageStorageProvider.overrideWithValue(
-              AsyncValue.data(messageStorage),
-            ),
-            nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
-            telemetryStorageProvider.overrideWithValue(
-              AsyncValue.data(telemetryStorage),
-            ),
-            routeStorageProvider.overrideWithValue(
-              AsyncValue.data(routeStorage),
-            ),
-          ],
-        );
-        addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [
+          transportProvider.overrideWithValue(testTransport),
+          meshPacketDedupeStoreProvider.overrideWithValue(
+            MeshPacketDedupeStore(dbPathOverride: ':memory:'),
+          ),
+          settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+          messageStorageProvider.overrideWithValue(
+            AsyncValue.data(messageStorage),
+          ),
+          nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
+          telemetryStorageProvider.overrideWithValue(
+            AsyncValue.data(telemetryStorage),
+          ),
+          routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
+        ],
+      );
+      addTearDown(container.dispose);
 
-        final notifier = container.read(deviceConnectionProvider.notifier);
+      final notifier = container.read(deviceConnectionProvider.notifier);
 
-        // Initialize - should detect MeshCore and skip transport listener
-        await notifier.initialize();
+      // Initialize - should detect MeshCore and skip transport listener
+      await notifier.initialize();
 
-        // State should be disconnected (previous device found)
-        expect(notifier.state.state, DevicePairingState.disconnected);
+      // State should be disconnected (previous device found)
+      expect(notifier.state.state, DevicePairingState.disconnected);
 
-        // Now simulate the Meshtastic transport emitting events
-        // For MeshCore, these should NOT trigger any state changes
-        testTransport.simulateDisconnect();
+      // Now simulate the Meshtastic transport emitting events
+      // For MeshCore, these should NOT trigger any state changes
+      testTransport.simulateDisconnect();
 
-        // Give time for any async event handlers
-        await Future.delayed(const Duration(milliseconds: 50));
+      // Give time for any async event handlers
+      await Future.delayed(const Duration(milliseconds: 50));
 
-        // State should still be disconnected (not changed by transport event)
-        expect(
-          notifier.state.state,
-          DevicePairingState.disconnected,
-          reason:
-              'MeshCore device should not react to Meshtastic transport on init',
-        );
-      },
-    );
+      // State should still be disconnected (not changed by transport event)
+      expect(
+        notifier.state.state,
+        DevicePairingState.disconnected,
+        reason:
+            'MeshCore device should not react to Meshtastic transport on init',
+      );
+    });
   });
 }

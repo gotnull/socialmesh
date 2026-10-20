@@ -5,7 +5,7 @@ import 'task.dart';
 
 /// An immutable record of a state transition on a task.
 ///
-/// The `task_transitions` table is append-only — rows are never deleted.
+/// The `task_transitions` table is append-only - rows are never deleted.
 /// This table is the source of truth for task state. The `tasks.state`
 /// column is a derived projection rebuilt by replaying transitions.
 ///

@@ -209,7 +209,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
           ),
           const SizedBox(height: AppTheme.spacing24),
 
-          // Features — list actual premium sync types
+          // Features - list actual premium sync types
           _buildFeatureItem(
             Icons.hexagon_outlined,
             context.l10n.cloudSyncNodeDex,

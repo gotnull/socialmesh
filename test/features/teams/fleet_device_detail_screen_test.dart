@@ -155,9 +155,8 @@ Future<_StubService> _open(
         licenseOrgFleetServiceProvider.overrideWithValue(stub),
         isOnlineProvider.overrideWithValue(online),
         licenseOrgRoleProvider(_org).overrideWithValue(role),
-        licenseOrgMembersProvider(
-          _org,
-        ).overrideWith((ref) => Stream.value(members)),
+        licenseOrgMembersProvider(_org)
+            .overrideWith((ref) => Stream.value(members)),
         licenseOrgFleetProvider(_org).overrideWith(
           (ref) => Stream.value(
             LicenseOrgFleetSnapshot(

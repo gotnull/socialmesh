@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../theme.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
@@ -235,9 +236,8 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                   const Spacer(),
                   Text(
                     '${nodes.length} nodes',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: context.textTertiary),
                   ),
                 ],
               ),

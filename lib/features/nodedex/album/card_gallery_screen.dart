@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — immersive transparent card gallery overlay
+// lint-allow: scaffold - immersive transparent card gallery overlay
 
-// Card Gallery Screen — horizontal PageView for browsing collectible cards.
+// Card Gallery Screen - horizontal PageView for browsing collectible cards.
 //
 // A full-screen modal route that displays SigilCards in a swipeable
 // horizontal carousel. Features:
@@ -64,7 +64,7 @@ import 'card_flip_widget.dart';
 import 'holographic_effect.dart';
 
 // =============================================================================
-// Public API — show the gallery
+// Public API - show the gallery
 // =============================================================================
 
 /// Opens the card gallery as a full-screen modal route.
@@ -267,7 +267,7 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
 }
 
 // =============================================================================
-// Gallery page — a single card in the PageView
+// Gallery page - a single card in the PageView
 // =============================================================================
 
 /// A single page in the gallery PageView.
@@ -767,7 +767,7 @@ class _GlassButton extends StatelessWidget {
 
 /// Shown when the gallery is opened with no cards available.
 ///
-/// This is a defensive fallback — normally the gallery is only
+/// This is a defensive fallback - normally the gallery is only
 /// opened when cards exist.
 class _EmptyGallery extends StatelessWidget {
   final VoidCallback onClose;

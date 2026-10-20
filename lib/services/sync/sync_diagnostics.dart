@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Sync Diagnostics — observability for Cloud Sync operations.
+// Sync Diagnostics - observability for Cloud Sync operations.
 //
 // Provides structured logging and state tracking for sync operations.
 // All output is gated behind the SYNC_DIAGNOSTICS_ENABLED env flag

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Avatar Stack — co-seen avatar cluster for NodeDex cards.
+// NodeDex Avatar Stack - co-seen avatar cluster for NodeDex cards.
 //
 // This file provides:
 // - nodeDexAvatarStackProvider: selects and orders co-seen nodes for a

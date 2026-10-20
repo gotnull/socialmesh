@@ -63,7 +63,7 @@ class TakCertificateManager {
   Future<String> getCaCertificatePem() async {
     if (_cachedCaPem != null) return _cachedCaPem!;
     final pem = await _storage.read(key: _caCertKey);
-    if (pem == null) throw StateError('CA not initialized — call initialize()');
+    if (pem == null) throw StateError('CA not initialized - call initialize()');
     return _cachedCaPem = pem;
   }
 
@@ -81,7 +81,7 @@ class TakCertificateManager {
         _cachedServerCertPem ?? await _storage.read(key: _serverCertKey);
     final key = _cachedServerKeyPem ?? await _storage.read(key: _serverKeyKey);
     if (cert == null || key == null) {
-      throw StateError('Server cert not initialized — call initialize()');
+      throw StateError('Server cert not initialized - call initialize()');
     }
     _cachedServerCertPem = cert;
     _cachedServerKeyPem = key;
@@ -297,7 +297,7 @@ class TakCertificateManager {
 }
 
 // =============================================================================
-// DER encoder — minimal X.509 subset
+// DER encoder - minimal X.509 subset
 // =============================================================================
 
 abstract final class _DerEncoder {
@@ -509,7 +509,7 @@ abstract final class _DerEncoder {
 }
 
 // =============================================================================
-// DER decoder — PKCS#8 RSA private key parser
+// DER decoder - PKCS#8 RSA private key parser
 // =============================================================================
 
 abstract final class _DerDecoder {
@@ -561,11 +561,11 @@ abstract final class _DerDecoder {
 
     readBigInt(); // version (0)
     final n = readBigInt();
-    readBigInt(); // e (public exponent — derived by RSAPrivateKey)
+    readBigInt(); // e (public exponent - derived by RSAPrivateKey)
     final d = readBigInt();
     final p = readBigInt();
     final q = readBigInt();
-    readBigInt(); // dp — not needed for constructor
+    readBigInt(); // dp - not needed for constructor
     readBigInt(); // dq
     readBigInt(); // qi
     return pc.RSAPrivateKey(n, d, p, q);

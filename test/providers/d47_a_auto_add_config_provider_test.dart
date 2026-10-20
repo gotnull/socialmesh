@@ -145,13 +145,13 @@ void main() {
         await firstFut;
         expect(c.read(meshCoreAutoAddConfigProvider).loaded, isNotNull);
 
-        // Second refresh: timeout via no inject — short timeout so the
+        // Second refresh: timeout via no inject - short timeout so the
         // test stays fast. Use a short-timeout custom drive via the
         // session methods.
         final secondFut = c
             .read(meshCoreAutoAddConfigProvider.notifier)
             .refresh();
-        // Don't inject anything — session.getAutoAddConfig has a
+        // Don't inject anything - session.getAutoAddConfig has a
         // default 5s timeout. Drive via Future delay simulation by
         // injecting nothing and awaiting; this would otherwise be
         // slow. Instead, mimic the failure by directly injecting a
@@ -160,7 +160,7 @@ void main() {
         // notifier sets lastError = load_failed.
         await Future<void>.delayed(Duration.zero);
         tx.simulateConfigResponse(0); // valid 1-byte; will succeed
-        // Wait — to truly test load_failed we need session.get to
+        // Wait - to truly test load_failed we need session.get to
         // return null. The cleanest way is to override the session
         // with one that times out. Drop to the malformed path
         // instead: inject an autoAddConfig frame with empty payload.

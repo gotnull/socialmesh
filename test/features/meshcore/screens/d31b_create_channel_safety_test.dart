@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// D31b — guard against the pre-D31b "Private" toggle that produced a
+// D31b - guard against the pre-D31b "Private" toggle that produced a
 // predictable `[0, 1, 2, ..., 15]` PSK. The toggle has been removed
 // from the simple Create Channel dialog (hashtag-derived only); users
 // who want a custom PSK are routed to the canonical
@@ -15,7 +15,7 @@
 //      `[0, 1, 2, ..., 15]` PSK pattern. If a future refactor
 //      reintroduces it, this test fails loudly.
 //   3. Widget: the simple Create dialog renders the new hashtag-only
-//      flow — no Private toggle, no `meshcoreRandomPskPrivate` /
+//      flow - no Private toggle, no `meshcoreRandomPskPrivate` /
 //      `meshcorePublicHashtagChannel` strings, redirect hint visible.
 
 import 'dart:io';
@@ -49,7 +49,7 @@ void main() {
     });
 
     test('every name in a representative set is safe', () {
-      // Cross-check a handful of names — including the names a user
+      // Cross-check a handful of names - including the names a user
       // would actually try in the simple dialog. Any collision with
       // the banned pattern would be cosmically unlikely (1 in 2^128
       // for SHA-256), but pinning this guards against a future
@@ -77,19 +77,16 @@ void main() {
       }
     });
 
-    test(
-      'MeshCoreChannel.empty(idx) is safe — empty PSK is all zeros, NOT [0..15]',
-      () {
-        // The wire-level "delete" convention uses an all-zero PSK.
-        // That's distinct from the banned [0..15] pattern; pin so
-        // future reorganisation of the empty-channel helper does not
-        // accidentally reintroduce the predictable monotonic pattern.
-        final empty = MeshCoreChannel.empty(0);
-        expect(empty.psk.length, 16);
-        expect(empty.psk.every((b) => b == 0), isTrue);
-        expect(empty.psk, isNot(equals(_bannedPsk)));
-      },
-    );
+    test('MeshCoreChannel.empty(idx) is safe - empty PSK is all zeros, NOT [0..15]', () {
+      // The wire-level "delete" convention uses an all-zero PSK.
+      // That's distinct from the banned [0..15] pattern; pin so
+      // future reorganisation of the empty-channel helper does not
+      // accidentally reintroduce the predictable monotonic pattern.
+      final empty = MeshCoreChannel.empty(0);
+      expect(empty.psk.length, 16);
+      expect(empty.psk.every((b) => b == 0), isTrue);
+      expect(empty.psk, isNot(equals(_bannedPsk)));
+    });
   });
 
   test('no .dart file under lib/ or test/ constructs the [0..15] PSK pattern '
@@ -97,8 +94,8 @@ void main() {
     // Walk lib/ and test/ for the literal source patterns the
     // pre-D31b dialog used. We catch both the natural form
     // `List.generate(16, (i) => i)` and a few obvious cousins. If a
-    // future change reintroduces this construction — accidentally
-    // or deliberately — this test fails before it can ship.
+    // future change reintroduces this construction - accidentally
+    // or deliberately - this test fails before it can ship.
     final patterns = <RegExp>[
       // Canonical pre-D31b construction
       RegExp(r'List\.generate\(\s*16\s*,\s*\(\s*i\s*\)\s*=>\s*i\s*\)'),
@@ -108,7 +105,7 @@ void main() {
       ),
     ];
 
-    // Scope the scan to `lib/` — production code only. Test fixtures
+    // Scope the scan to `lib/` - production code only. Test fixtures
     // (SIP handshake vectors, codec round-trips, etc.) legitimately
     // use the same `List.generate(16, (i) => i)` shape as fixed
     // input bytes; those PSKs never reach the wire so they aren't a

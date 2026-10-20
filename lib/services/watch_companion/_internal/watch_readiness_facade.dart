@@ -129,7 +129,7 @@ WatchCompanionConnectionState _mapMeshtasticReadiness(
       // OperationalReadiness.degraded fires when the BLE/TCP
       // transport drops mid-handshake (protocol_service.dart:1548 is
       // the only producer). That's "we lost the link, will retry",
-      // not "we have a link but it's impaired" — so the Watch
+      // not "we have a link but it's impaired" - so the Watch
       // should surface plain "Disconnected" instead of an alarming
       // orange-triangle "Degraded" state. If a future readiness path
       // ever means truly-degraded (link up but unhealthy), reinstate

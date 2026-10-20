@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — GestureDetector onTap forwards parent callback
+// lint-allow: haptic-feedback - GestureDetector onTap forwards parent callback
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -540,8 +540,7 @@ class _AdminPostCard extends StatelessWidget {
                       color: context.textSecondary,
                     ),
                     _MetaPill(
-                      label:
-                          'Created ${dateFormat.format(post.createdAt)}', // lint-allow: hardcoded-string
+                      label: 'Created ${dateFormat.format(post.createdAt)}', // lint-allow: hardcoded-string
                       color: context.accentColor,
                     ),
                     if (expiresAt != null)

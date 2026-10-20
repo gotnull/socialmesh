@@ -135,16 +135,16 @@ class BackgroundIdentityResolver {
 /// providers can process them on resume.
 ///
 /// Lifecycle (managed by [BackgroundBleService]):
-///   1. [init] — opens databases.
-///   2. [start] — subscribes to [DeviceTransport.dataStream].
-///   3. [stop] — cancels subscription, flushes resources.
-///   4. [dispose] — closes databases.
+///   1. [init] - opens databases.
+///   2. [start] - subscribes to [DeviceTransport.dataStream].
+///   3. [stop] - cancels subscription, flushes resources.
+///   4. [dispose] - closes databases.
 class BackgroundMessageProcessor {
   BackgroundMessageProcessor._();
   static final BackgroundMessageProcessor instance =
       BackgroundMessageProcessor._();
 
-  // Dependencies — initialised lazily.
+  // Dependencies - initialised lazily.
   MessageDatabase? _messageDb;
   MeshPacketDedupeStore? _dedupeStore;
   BackgroundIdentityResolver? _identityResolver;
@@ -297,7 +297,7 @@ class BackgroundMessageProcessor {
       final fromRadio = pb.FromRadio.fromBuffer(rawBytes);
 
       if (!fromRadio.hasPacket()) {
-        // Non-mesh-packet payload (config, nodeinfo, log, etc.)  — buffer.
+        // Non-mesh-packet payload (config, nodeinfo, log, etc.)  - buffer.
         pendingPackets.add(rawBytes);
         return;
       }
@@ -315,7 +315,7 @@ class BackgroundMessageProcessor {
       if (data.portnum == pn.PortNum.TEXT_MESSAGE_APP) {
         await _handleTextMessage(packet, data);
       } else {
-        // Non-text-message mesh packet — buffer for foreground.
+        // Non-text-message mesh packet - buffer for foreground.
         pendingPackets.add(rawBytes);
       }
     } catch (e) {
@@ -330,10 +330,10 @@ class BackgroundMessageProcessor {
   /// Dedup TTL matching the foreground ProtocolService (120 min).
   static const Duration _messageDeduplicateTtl = Duration(minutes: 120);
 
-  /// Minimum plausible Unix epoch (2020-01-01) — matches ProtocolService.
+  /// Minimum plausible Unix epoch (2020-01-01) - matches ProtocolService.
   static const int _minPlausibleEpoch = 1577836800;
 
-  /// Maximum future tolerance: 1 day — matches ProtocolService.
+  /// Maximum future tolerance: 1 day - matches ProtocolService.
   static const int _maxFutureSlack = 86400;
 
   /// Validate rxTime and return a plausible [DateTime].

@@ -5,12 +5,12 @@
 /// offer protocol: the side that sent the `offer` action plays
 /// [red] (and moves first); the side that sent the `accept` action
 /// plays [yellow]. Both ends arrive at the same assignment from the
-/// entry log alone — no clock, no hash, no initiator tiebreak.
+/// entry log alone - no clock, no hash, no initiator tiebreak.
 ///
 /// **Wire-only naming.** The `red` / `yellow` labels exist for
 /// spec readability + parser symmetry with TTT's `x` / `o`. The UI
 /// rendering layer (board widget + bubble) NEVER references these
-/// names directly — it only knows about `localDisc` / `remoteDisc`
+/// names directly - it only knows about `localDisc` / `remoteDisc`
 /// and chooses between `context.accentColor` and the muted-text
 /// peer colour, identical to how TTT picks colours for X/O.
 enum C4Disc {
@@ -40,7 +40,7 @@ enum C4Disc {
 /// bits 3..0  column   (0..6)
 /// ```
 ///
-/// The landing row is NOT transmitted — the receiver derives it from
+/// The landing row is NOT transmitted - the receiver derives it from
 /// current board state via gravity (lowest empty row in the chosen
 /// column). Sending the row would be redundant and would let a
 /// malicious or buggy sender desync the board.
@@ -49,7 +49,7 @@ class C4Move {
   final int column;
 
   /// Which disc is being dropped. The receiver re-validates this
-  /// against its own deterministic disc assignment for the sender —
+  /// against its own deterministic disc assignment for the sender -
   /// any mismatch is an instant drop.
   final C4Disc disc;
 

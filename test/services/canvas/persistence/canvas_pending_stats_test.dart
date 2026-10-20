@@ -48,36 +48,33 @@ void main() {
       expect(stats.nextAttemptAtMs, isNull);
     });
 
-    test(
-      'single queued op returns (count=1, oldest=<insertedMs>, next=<insertedMs>)',
-      () async {
-        final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
-        await db.init();
-        addTearDown(db.close);
-        final repo = CanvasRepository(db);
-        final canvas = await repo.getOrCreateMeshCanvas(
-          canvasId: 0xC0DE,
-          channelIndex: 0,
-          name: 'Mesh',
-        );
-        const insertedMs = 1_000_000;
-        await repo.enqueuePaint(
-          canvasLocalId: canvas.localId,
-          x: 5,
-          y: 7,
-          color: 3,
-          authorNodeNum: 0x100,
-          opTs: 1000,
-          opSeq: 0,
-          createdAtMsOverride: insertedMs,
-        );
+    test('single queued op returns (count=1, oldest=<insertedMs>, next=<insertedMs>)', () async {
+      final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
+      await db.init();
+      addTearDown(db.close);
+      final repo = CanvasRepository(db);
+      final canvas = await repo.getOrCreateMeshCanvas(
+        canvasId: 0xC0DE,
+        channelIndex: 0,
+        name: 'Mesh',
+      );
+      const insertedMs = 1_000_000;
+      await repo.enqueuePaint(
+        canvasLocalId: canvas.localId,
+        x: 5,
+        y: 7,
+        color: 3,
+        authorNodeNum: 0x100,
+        opTs: 1000,
+        opSeq: 0,
+        createdAtMsOverride: insertedMs,
+      );
 
-        final stats = await repo.pendingStatsForCanvas(canvas.localId);
-        expect(stats.count, 1);
-        expect(stats.oldestCreatedAtMs, insertedMs);
-        expect(stats.nextAttemptAtMs, insertedMs);
-      },
-    );
+      final stats = await repo.pendingStatsForCanvas(canvas.localId);
+      expect(stats.count, 1);
+      expect(stats.oldestCreatedAtMs, insertedMs);
+      expect(stats.nextAttemptAtMs, insertedMs);
+    });
 
     test('three queued ops with different created_at_ms → oldest reflects '
         'the minimum', () async {
@@ -108,7 +105,7 @@ void main() {
       expect(stats.oldestCreatedAtMs, 1_000_000);
     });
 
-    test('canvases are isolated — one canvas\'s queue does not affect '
+    test('canvases are isolated - one canvas\'s queue does not affect '
         'another\'s stats', () async {
       final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
       await db.init();

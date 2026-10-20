@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Mesh feed repository — coordinates post ingest, dedup, ranking, expiry.
+/// Mesh feed repository - coordinates post ingest, dedup, ranking, expiry.
 ///
 /// This is the single source of truth for mesh feed state. Providers watch
 /// its streams; UI never touches the database directly.
@@ -22,16 +22,16 @@ enum IngestResult {
   /// Existing post had metadata merged (new transport, updated hop count).
   merged,
 
-  /// Only provenance/receipt updated — no object-level merge needed.
+  /// Only provenance/receipt updated - no object-level merge needed.
   provenanceUpdated,
 
-  /// Replay suppressed — same post ingested recently with no new info.
+  /// Replay suppressed - same post ingested recently with no new info.
   replaySuppressed,
 
-  /// Post rejected — expired.
+  /// Post rejected - expired.
   rejectedExpired,
 
-  /// Post rejected — invalid content or structure.
+  /// Post rejected - invalid content or structure.
   rejectedInvalid,
 }
 
@@ -69,13 +69,13 @@ class MeshFeedRepository {
   /// Replay protection configuration.
   final ReplayGuardConfig replayConfig;
 
-  /// In-memory replay cache — keyed by canonical post ID.
+  /// In-memory replay cache - keyed by canonical post ID.
   final Map<String, _ReplayCacheEntry> _replayCache = {};
 
   final _feedController = StreamController<List<RankedPost>>.broadcast();
   Timer? _cleanupTimer;
 
-  /// Ranked feed stream — emits whenever the feed changes.
+  /// Ranked feed stream - emits whenever the feed changes.
   Stream<List<RankedPost>> get feedStream => _feedController.stream;
 
   /// Start periodic cleanup of expired posts.
@@ -121,7 +121,7 @@ class MeshFeedRepository {
         return IngestResult.replaySuppressed;
       }
 
-      // New transport provenance — record receipts and merge transports
+      // New transport provenance - record receipts and merge transports
       // without full upsert churn.
       for (final transport in newTransports) {
         await _db.addReceipt(
@@ -148,7 +148,7 @@ class MeshFeedRepository {
       return IngestResult.provenanceUpdated;
     }
 
-    // Full ingest path — outside replay window or first time.
+    // Full ingest path - outside replay window or first time.
     final isNew = await _db.upsertPost(post);
 
     // Record transport receipts.

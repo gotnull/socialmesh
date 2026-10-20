@@ -8,7 +8,7 @@
 //   2. createExternalCheckout returns a sessionId, checkoutUrl, and a
 //      reference code (SM-XXXX-XXXX).
 //   3. This sheet appears, showing the reference code prominently with
-//      a one-tap copy button — that's the strongest hint we can give
+//      a one-tap copy button - that's the strongest hint we can give
 //      Buy Me a Coffee for unambiguous matching.
 //   4. User taps "Open Buy Me a Coffee" → external browser launches.
 //   5. User pastes the reference into the BMC support note, completes
@@ -134,7 +134,7 @@ class _BuyMeACoffeeHandoffBodyState
       showErrorSnackBar(context, context.l10n.couldNotOpenCheckout);
       return;
     }
-    // Dismiss the sheet — the user is now in the browser. The
+    // Dismiss the sheet - the user is now in the browser. The
     // confirmation overlay will take over once the deep-link return
     // arrives.
     safeNavigatorPop();
@@ -233,7 +233,7 @@ class _ReadyPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Reference code card. This is the most important affordance
-        // on the sheet — without it, BMC matching falls back to amount
+        // on the sheet - without it, BMC matching falls back to amount
         // + recency window, which is fragile.
         Container(
           padding: const EdgeInsets.symmetric(

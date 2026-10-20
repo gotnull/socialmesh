@@ -74,7 +74,7 @@ void main() {
         'This device was removed from Android Bluetooth settings. '
         'Re-pair it from Scanner.',
       );
-      // Distinct from the generic copy — banners must NOT show the
+      // Distinct from the generic copy - banners must NOT show the
       // re-pair text for plain unreachable.
       expect(
         l10n.connectionErrorBondForgotten,
@@ -86,9 +86,8 @@ void main() {
   group('source-level implementation pins', () {
     late String source;
     setUpAll(() async {
-      source = await File(
-        'lib/providers/connection_providers.dart',
-      ).readAsString();
+      source = await File('lib/providers/connection_providers.dart')
+          .readAsString();
     });
 
     test('final scan-fail branch is gated on Platform.isAndroid before reading '
@@ -152,7 +151,7 @@ void main() {
         'PairingInvalidationReason.bondForgotten', () {
       // The reason-keyed UX-copy switch must exist. Without it,
       // bondForgotten would fall back to the generic "Device was
-      // reset" text — losing the re-pair guidance the user needs.
+      // reset" text - losing the re-pair guidance the user needs.
       expect(
         source.contains('reason == PairingInvalidationReason.bondForgotten'),
         isTrue,
@@ -183,7 +182,7 @@ void main() {
       // A fourth runtime read would mean the bond query crept into
       // the per-attempt retry path or some other unintended location.
       // Doc-comment mentions of `FlutterBluePlus.bondedDevices` are
-      // not call sites — filter them out by requiring the `await`
+      // not call sites - filter them out by requiring the `await`
       // prefix that runtime calls use.
       final runtimeCalls = 'await FlutterBluePlus.bondedDevices'.allMatches(
         source,

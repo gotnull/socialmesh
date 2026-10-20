@@ -5,7 +5,7 @@
 // indicator from a debug sheet so every combination of
 // stage/branch/mood/flags can be previewed against the real hero
 // widget without touching actual pet state. kDebugMode-gated on the
-// UI side — this file compiles in release, but nothing writes to the
+// UI side - this file compiles in release, but nothing writes to the
 // overrides outside debug builds.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

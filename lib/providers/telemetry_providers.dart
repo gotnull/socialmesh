@@ -626,7 +626,7 @@ class _PositionFingerprint {
   static const double _dedupeDistanceMeters = 9.0;
 
   /// Returns `true` when [node] is within the dedupe distance of this
-  /// fingerprint — i.e. the new position should be **skipped**.
+  /// fingerprint - i.e. the new position should be **skipped**.
   bool isNearDuplicate(MeshNode node) {
     if (node.latitude == null || node.longitude == null) return false;
     return _haversineMeters(
@@ -761,7 +761,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         // Log device metrics only when values actually change, and only
         // when they came from a live telemetry packet. A NodeDB NodeInfo
         // replay (connect/reconnect config dump) carries the radio's
-        // cached battery reading — logging it would re-chart a stale
+        // cached battery reading - logging it would re-chart a stale
         // value at the current wall clock as a spurious flat step. The
         // fingerprint is left untouched so the next live sample still
         // logs normally.
@@ -951,7 +951,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 _lastPosition[id] ??
                 await _seedPositionFingerprint(storage, id);
             if (cached != null && cached.isNearDuplicate(node)) {
-              // Within 9 m — skip (no new row)
+              // Within 9 m - skip (no new row)
             } else {
               _lastPosition[id] = _PositionFingerprint(
                 latitude: node.latitude!,

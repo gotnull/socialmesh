@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Production CanvasOutboundChannel — wraps a canvas codec payload in
+// Production CanvasOutboundChannel - wraps a canvas codec payload in
 // MRRP + SIP frames and pushes it through ProtocolService.sendSipGated
 // with the canvas's bound channelIndex.
 //
@@ -106,7 +106,7 @@ class ProductionCanvasOutboundChannel implements CanvasOutboundChannel {
     // 2. Build the MRRP frame. msg_type=REQUEST is the only inbound
     // path the engine routes via service handlers on peers running
     // older code paths; receivers running S6 demux skip the engine.
-    // No ack_required flag — canvas frames are fire-and-forget.
+    // No ack_required flag - canvas frames are fire-and-forget.
     final requestId = _nextRequestId;
     _nextRequestId = (_nextRequestId + 1) & 0xFFFFFFFF;
     if (_nextRequestId == 0) _nextRequestId = 1;

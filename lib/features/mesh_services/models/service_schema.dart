@@ -5,7 +5,7 @@
 ///
 /// Every service instance may expose a schema that describes its fields
 /// and actions. Peers cache this schema once and use field IDs (not names)
-/// in subsequent payloads — minimizing LoRa airtime.
+/// in subsequent payloads - minimizing LoRa airtime.
 ///
 /// Wire-compact: field IDs are uint8, types are uint8. The full schema
 /// is transmitted only on first request; subsequent payloads carry only

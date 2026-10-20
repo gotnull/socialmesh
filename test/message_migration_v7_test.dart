@@ -86,7 +86,7 @@ Future<String> _createV6Database(List<Map<String, Object?>> rows) async {
 }
 
 /// Creates a v7 database (via MessageDatabase.init()) with raw rows inserted
-/// directly via SQL — bypassing _messageToRow — so we can test _messageFromRow
+/// directly via SQL - bypassing _messageToRow - so we can test _messageFromRow
 /// normalisation on load.  The raw rows are inserted AFTER the schema is
 /// created but via a separate handle that is opened and closed before
 /// MessageDatabase is constructed, avoiding handle conflicts.
@@ -158,10 +158,10 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // v7 migration — channel column normalisation
+  // v7 migration - channel column normalisation
   // ---------------------------------------------------------------------------
 
-  group('v7 migration — channel column normalisation', () {
+  group('v7 migration - channel column normalisation', () {
     test('broadcast with NULL channel is normalised to 0', () async {
       final dbPath = await _createV6Database([
         _row(
@@ -174,7 +174,7 @@ void main() {
         ),
       ]);
 
-      // Open via MessageDatabase — triggers v6→v7 migration.
+      // Open via MessageDatabase - triggers v6→v7 migration.
       final storage = MessageDatabase(testDbPath: dbPath);
       await storage.init();
 
@@ -306,7 +306,7 @@ void main() {
       expect(rawRows.first['channel'], 0);
     });
 
-    test('mixed rows — only broadcast NULL channels are fixed', () async {
+    test('mixed rows - only broadcast NULL channels are fixed', () async {
       final dbPath = await _createV6Database([
         // Broadcast with NULL channel → should become 0
         _row(
@@ -373,10 +373,10 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // _messageFromRow — channel normalisation on load
+  // _messageFromRow - channel normalisation on load
   // ---------------------------------------------------------------------------
 
-  group('_messageFromRow — channel normalisation on load', () {
+  group('_messageFromRow - channel normalisation on load', () {
     test('broadcast row with NULL channel loads as channel 0', () async {
       final dbPath = await _createV7DatabaseWithRawRows([
         _row(
@@ -389,7 +389,7 @@ void main() {
         ),
       ]);
 
-      // Open via MessageDatabase — _messageFromRow should normalise on load.
+      // Open via MessageDatabase - _messageFromRow should normalise on load.
       final storage = MessageDatabase(testDbPath: dbPath);
       await storage.init();
 

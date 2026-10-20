@@ -7,9 +7,9 @@
 /// Schema version: 1
 ///
 /// Two tables:
-///   - `overlay_transfers` — one row per transfer, composite PK
+///   - `overlay_transfers` - one row per transfer, composite PK
 ///     `(peer_endpoint_hint, resource_id)`.
-///   - `overlay_transfer_chunks` — per-chunk payload bytes for the
+///   - `overlay_transfer_chunks` - per-chunk payload bytes for the
 ///     receiver. Sender-side records do not store chunk bytes here
 ///     (the sender already owns the source data).
 ///
@@ -131,7 +131,7 @@ class OverlayResourceStore {
     final db = _db;
     if (db == null || !db.isOpen) {
       throw StateError(
-        'OverlayResourceStore not initialized — call init() first',
+        'OverlayResourceStore not initialized - call init() first',
       );
     }
     return db;

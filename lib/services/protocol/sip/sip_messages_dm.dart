@@ -186,7 +186,7 @@ abstract final class SipDmMessages {
   // timestamp so the decrypted payload can be reconstructed into a
   // synthetic [SipFrame] that flows through the existing
   // `SipDmManager.handleInboundDm` / `handleInboundReaction` paths
-  // unchanged. Typing (`0x41`) is explicitly NOT carried over secure —
+  // unchanged. Typing (`0x41`) is explicitly NOT carried over secure -
   // its high frequency / low content value doesn't justify the 62 B
   // per-frame overhead.
   //
@@ -350,7 +350,7 @@ abstract final class SipDmMessages {
   }
 
   // ---------------------------------------------------------------------------
-  // Secure DM Play envelope — same shape as secure DM Ink: a 4-byte
+  // Secure DM Play envelope - same shape as secure DM Ink: a 4-byte
   // big-endian sender timestamp prefix, followed by the v1 SIP Play
   // envelope bytes (typeAndVersion ‖ gameType ‖ instanceId ‖ action ‖
   // seq ‖ game-payload). Travels in
@@ -418,7 +418,7 @@ abstract final class SipDmMessages {
   }
 
   // ---------------------------------------------------------------------------
-  // Secure DM Signal envelope — same shape as secure DM Play / Ink:
+  // Secure DM Signal envelope - same shape as secure DM Play / Ink:
   // a 4-byte big-endian sender timestamp prefix followed by the v1
   // SIP Signal envelope bytes. Travels in
   // OverlaySecureDataSubtype.dmSignal frames; receiver reconstructs

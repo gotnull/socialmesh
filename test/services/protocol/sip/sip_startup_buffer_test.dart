@@ -9,7 +9,7 @@
 /// once attachment occurs.
 ///
 /// Historical bug: the log line
-///   "SIP_RX: no SipDiscovery attached — dropping"
+///   "SIP_RX: no SipDiscovery attached - dropping"
 /// was emitted for every packet that arrived in the window between BLE
 /// connect and the first SIP-aware screen opening. This prevented passive
 /// peer discovery (CAP_BEACON) and MRRP service advertisement caching
@@ -263,65 +263,62 @@ void main() {
       protocol = ProtocolService(_FakeTransport());
     });
 
-    // A1 — frames received before SipDiscovery is attached are buffered
+    // A1 - frames received before SipDiscovery is attached are buffered
     // and not permanently lost.
-    test(
-      'A1: CAP_BEACON before SipDiscovery attachment is not permanently dropped',
-      () async {
-        final discovery = _buildDiscovery();
+    test('A1: CAP_BEACON before SipDiscovery attachment is not permanently dropped', () async {
+      final discovery = _buildDiscovery();
 
-        // SipDiscovery is NOT attached yet (simulates startup window).
-        expect(
-          protocol.sipStartupBufferLength,
-          equals(0),
-          reason: 'buffer must start empty',
-        );
+      // SipDiscovery is NOT attached yet (simulates startup window).
+      expect(
+        protocol.sipStartupBufferLength,
+        equals(0),
+        reason: 'buffer must start empty',
+      );
 
-        final beaconPayload = _buildBeaconPayload();
-        final packet = _makePacket(remotePeer);
+      final beaconPayload = _buildBeaconPayload();
+      final packet = _makePacket(remotePeer);
 
-        // Inject beacon while unattached — must buffer, not drop.
-        protocol.injectSipPacketForTest(packet, beaconPayload);
+      // Inject beacon while unattached - must buffer, not drop.
+      protocol.injectSipPacketForTest(packet, beaconPayload);
 
-        expect(
-          protocol.sipStartupBufferLength,
-          equals(1),
-          reason: 'beacon must be held in startup buffer',
-        );
+      expect(
+        protocol.sipStartupBufferLength,
+        equals(1),
+        reason: 'beacon must be held in startup buffer',
+      );
 
-        // Not yet processed — discoverer not attached.
-        expect(
-          discovery.discoveredPeers.isEmpty,
-          isTrue,
-          reason: 'peer should not be discovered before drain',
-        );
+      // Not yet processed - discoverer not attached.
+      expect(
+        discovery.discoveredPeers.isEmpty,
+        isTrue,
+        reason: 'peer should not be discovered before drain',
+      );
 
-        // Now attach SipDiscovery — drain is deferred to a microtask.
-        protocol.attachSipDiscovery(discovery);
-        await Future.microtask(() {});
+      // Now attach SipDiscovery - drain is deferred to a microtask.
+      protocol.attachSipDiscovery(discovery);
+      await Future.microtask(() {});
 
-        // Buffer must be cleared after drain.
-        expect(
-          protocol.sipStartupBufferLength,
-          equals(0),
-          reason: 'startup buffer must be empty after drain',
-        );
+      // Buffer must be cleared after drain.
+      expect(
+        protocol.sipStartupBufferLength,
+        equals(0),
+        reason: 'startup buffer must be empty after drain',
+      );
 
-        // Peer must have been discovered via the drained beacon.
-        expect(
-          discovery.discoveredPeers.length,
-          equals(1),
-          reason: 'buffered CAP_BEACON must be processed exactly once on drain',
-        );
-        expect(
-          discovery.discoveredPeers.first.nodeId,
-          equals(remotePeer),
-          reason: 'discovered peer must match beacon sender',
-        );
-      },
-    );
+      // Peer must have been discovered via the drained beacon.
+      expect(
+        discovery.discoveredPeers.length,
+        equals(1),
+        reason: 'buffered CAP_BEACON must be processed exactly once on drain',
+      );
+      expect(
+        discovery.discoveredPeers.first.nodeId,
+        equals(remotePeer),
+        reason: 'discovered peer must match beacon sender',
+      );
+    });
 
-    // A2 — multiple frames received before attachment, all drained on attach.
+    // A2 - multiple frames received before attachment, all drained on attach.
     test(
       'A2: multiple buffered frames all drained on SipDiscovery attachment',
       () async {
@@ -350,7 +347,7 @@ void main() {
       },
     );
 
-    // A3 — once attached, frames arrive and are processed immediately (not
+    // A3 - once attached, frames arrive and are processed immediately (not
     // double-buffered or queued again).
     test(
       'A3: frames after SipDiscovery attachment are processed immediately',
@@ -369,7 +366,7 @@ void main() {
       },
     );
 
-    // A4 — detaching (null) and re-attaching works; new buffers can be drained.
+    // A4 - detaching (null) and re-attaching works; new buffers can be drained.
     test('A4: re-attach after detach drains newly buffered frames', () async {
       final discoveryA = _buildDiscovery(localNodeId: 0xAAAA0000);
       protocol.attachSipDiscovery(discoveryA);
@@ -395,7 +392,7 @@ void main() {
       );
     });
 
-    // A5 — startup buffer is bounded; frames beyond the cap are discarded.
+    // A5 - startup buffer is bounded; frames beyond the cap are discarded.
     test('A5: startup buffer cap prevents unbounded memory growth', () async {
       final beaconPayload = _buildBeaconPayload();
 
@@ -416,7 +413,7 @@ void main() {
       );
     });
 
-    // A6 — loopback frames received before attachment are silently ignored
+    // A6 - loopback frames received before attachment are silently ignored
     // after drain (self-node beacon must not appear in peer list).
     test(
       'A6: loopback frame buffered before attachment is ignored on drain',
@@ -468,7 +465,7 @@ void main() {
       );
     });
 
-    // B1 — SERVICE_ADVERT before MrrpEngine attached is not permanently dropped.
+    // B1 - SERVICE_ADVERT before MrrpEngine attached is not permanently dropped.
     test(
       'B1: SERVICE_ADVERT before MrrpEngine attachment is buffered',
       () async {
@@ -504,7 +501,7 @@ void main() {
       },
     );
 
-    // B2 — SERVICE_ADVERT arriving after MrrpEngine attachment works normally.
+    // B2 - SERVICE_ADVERT arriving after MrrpEngine attachment works normally.
     test(
       'B2: SERVICE_ADVERT after MrrpEngine attachment is cached immediately',
       () {
@@ -528,7 +525,7 @@ void main() {
       },
     );
 
-    // B3 — MRRP buffer is bounded; frames beyond cap are discarded.
+    // B3 - MRRP buffer is bounded; frames beyond cap are discarded.
     test(
       'B3: MRRP startup buffer cap prevents unbounded memory growth',
       () async {
@@ -585,20 +582,20 @@ void main() {
       final advertPayload = _buildMrrpServiceAdvertPayload(remoteReg);
       protocol.injectSipPacketForTest(_makePacket(remotePeer), advertPayload);
 
-      // Step 1: attach SipDiscovery — SIP drain is deferred to a microtask.
+      // Step 1: attach SipDiscovery - SIP drain is deferred to a microtask.
       // Once it fires, the mrrpData frame routes to the MRRP engine (which
-      // is already attached by step 2, so it processes directly — no MRRP
+      // is already attached by step 2, so it processes directly - no MRRP
       // buffer stage needed with the deferred SIP drain).
       final discovery = _buildDiscovery();
       protocol.attachSipDiscovery(discovery);
 
-      // Step 2: attach MrrpEngine — synchronous MRRP drain (no-op here
+      // Step 2: attach MrrpEngine - synchronous MRRP drain (no-op here
       // since the SIP drain hasn't fired yet, so the MRRP buffer is empty).
       final built = _buildMrrpEngine();
       built.engine.start();
       protocol.attachMrrpEngine(built.engine);
 
-      // Flush the deferred SIP drain microtask — the SIP frame is processed,
+      // Flush the deferred SIP drain microtask - the SIP frame is processed,
       // decoded as MRRP data, and routed directly to the now-attached engine.
       await Future.microtask(() {});
 
@@ -667,7 +664,7 @@ void main() {
         meetupDescriptor.serviceFlags & MrrpServiceFlags.requiresHandshake,
         equals(0),
         reason:
-            'meetup.v1 must not have requiresHandshake set — '
+            'meetup.v1 must not have requiresHandshake set - '
             'discovery must be possible without a handshake',
       );
     });
@@ -748,7 +745,7 @@ void main() {
         final discovery = _buildDiscovery();
         protocol.attachSipDiscovery(discovery);
 
-        // Corrupt payload — wrong magic bytes.
+        // Corrupt payload - wrong magic bytes.
         final badPayload = Uint8List.fromList([0x00, 0x00, 0x01, 0x00]);
         protocol.injectSipPacketForTest(_makePacket(remotePeer), badPayload);
 
@@ -760,39 +757,35 @@ void main() {
       },
     );
 
-    test(
-      'E3: SipDiscovery receives exactly one event per frame, never double-counted',
-      () async {
-        final protocol = ProtocolService(_FakeTransport());
-        final beaconPayload = _buildBeaconPayload();
+    test('E3: SipDiscovery receives exactly one event per frame, never double-counted', () async {
+      final protocol = ProtocolService(_FakeTransport());
+      final beaconPayload = _buildBeaconPayload();
 
-        // Buffer one beacon before attach...
-        protocol.injectSipPacketForTest(_makePacket(remotePeer), beaconPayload);
+      // Buffer one beacon before attach...
+      protocol.injectSipPacketForTest(_makePacket(remotePeer), beaconPayload);
 
-        // ... then attach (drain deferred to microtask).
-        final discovery = _buildDiscovery();
-        protocol.attachSipDiscovery(discovery);
+      // ... then attach (drain deferred to microtask).
+      final discovery = _buildDiscovery();
+      protocol.attachSipDiscovery(discovery);
 
-        // ... then send another beacon from same peer AFTER attach (live path).
-        protocol.injectSipPacketForTest(_makePacket(remotePeer), beaconPayload);
+      // ... then send another beacon from same peer AFTER attach (live path).
+      protocol.injectSipPacketForTest(_makePacket(remotePeer), beaconPayload);
 
-        // Wait for deferred SIP drain microtask.
-        await Future.microtask(() {});
+      // Wait for deferred SIP drain microtask.
+      await Future.microtask(() {});
 
-        // The same peer sending two beacons should still result in 1 peer
-        // in the cache (SipDiscovery dedups by nodeId).
-        expect(
-          discovery.discoveredPeers.length,
-          equals(1),
-          reason:
-              'same peer sending two beacons must appear only once in cache',
-        );
-      },
-    );
+      // The same peer sending two beacons should still result in 1 peer
+      // in the cache (SipDiscovery dedups by nodeId).
+      expect(
+        discovery.discoveredPeers.length,
+        equals(1),
+        reason: 'same peer sending two beacons must appear only once in cache',
+      );
+    });
   });
 
   // ==========================================================================
-  // F. Reconnect isolation — stale frames must not survive a BLE reconnect
+  // F. Reconnect isolation - stale frames must not survive a BLE reconnect
   // ==========================================================================
   //
   // Root cause: ProtocolService is a singleton (provider lives for the app
@@ -808,7 +801,7 @@ void main() {
     const deviceAPeer = 0x11223344; // peer node on Device A's mesh
     const deviceBPeer = 0x55667788; // peer node on Device B's mesh
 
-    // F1 — clearStartupBuffersForTest() empties both buffers and the
+    // F1 - clearStartupBuffersForTest() empties both buffers and the
     // discovery engine is then not reached by stale SIP frames.
     test('F1: clearStartupBuffers empties SIP startup buffer', () {
       final protocol = ProtocolService(_FakeTransport());
@@ -834,7 +827,7 @@ void main() {
       );
     });
 
-    // F2 — clearStartupBuffers also empties the MRRP startup buffer.
+    // F2 - clearStartupBuffers also empties the MRRP startup buffer.
     test('F2: clearStartupBuffers empties MRRP startup buffer', () {
       final protocol = ProtocolService(_FakeTransport());
       final built = _buildMrrpEngine();
@@ -867,7 +860,7 @@ void main() {
       );
     });
 
-    // F3 — Stale SIP peer from Device A does NOT appear after reconnect.
+    // F3 - Stale SIP peer from Device A does NOT appear after reconnect.
     //
     // This is the core adversarial test: buffer Device A's beacon, simulate
     // reconnect (clear buffers), inject Device B's beacon, then attach
@@ -901,7 +894,7 @@ void main() {
         final discovery = _buildDiscovery(localNodeId: deviceBPeer + 1);
         protocol.attachSipDiscovery(discovery);
 
-        // SIP drain is deferred to a microtask — wait for it.
+        // SIP drain is deferred to a microtask - wait for it.
         await Future.microtask(() {});
 
         // Only Device B's peer must appear.
@@ -923,7 +916,7 @@ void main() {
       },
     );
 
-    // F4 — Post-reconnect buffering still works: frames injected after
+    // F4 - Post-reconnect buffering still works: frames injected after
     // clearStartupBuffers (but before SipDiscovery attaches) are buffered.
     test(
       'F4: post-reconnect buffering works normally after clearStartupBuffers',
@@ -943,11 +936,11 @@ void main() {
           reason: 'post-reconnect frames must still buffer until attach',
         );
 
-        // Attach — drain is deferred to a microtask.
+        // Attach - drain is deferred to a microtask.
         final discovery = _buildDiscovery(localNodeId: deviceBPeer + 1);
         protocol.attachSipDiscovery(discovery);
 
-        // SIP drain is deferred to a microtask — wait for it.
+        // SIP drain is deferred to a microtask - wait for it.
         await Future.microtask(() {});
 
         expect(
@@ -963,7 +956,7 @@ void main() {
       },
     );
 
-    // F5 — Both-null drain: clear both buffers atomically; partial state
+    // F5 - Both-null drain: clear both buffers atomically; partial state
     // (SIP flushed but MRRP not) must be impossible.
     test('F5: clearStartupBuffers clears both buffers atomically', () {
       final protocol = ProtocolService(_FakeTransport());
@@ -1005,7 +998,7 @@ void main() {
   });
 
   // ==========================================================================
-  // G. Engine start order — proves the critical attach/start ordering contract
+  // G. Engine start order - proves the critical attach/start ordering contract
   // ==========================================================================
   //
   // Root cause (class of bugs): mrrpEngineProvider originally called
@@ -1020,7 +1013,7 @@ void main() {
   group('Engine start order', () {
     const peer = 0x11223344;
 
-    // G1 — the failure mode: attach BEFORE start drops all buffered frames.
+    // G1 - the failure mode: attach BEFORE start drops all buffered frames.
     //
     // This test deliberately uses the incorrect ordering (attach → start) and
     // asserts that the buffered SERVICE_ADVERT is NOT cached.  If this test
@@ -1045,7 +1038,7 @@ void main() {
 
       // WRONG ORDER: attach before start.
       // Engine._running == false when drain fires → handleInboundFrame drops.
-      protocol.attachMrrpEngine(built.engine); // drain fires here — drops
+      protocol.attachMrrpEngine(built.engine); // drain fires here - drops
       built.engine.start(); // too late
 
       expect(
@@ -1053,54 +1046,57 @@ void main() {
         isEmpty,
         reason:
             'buffered SERVICE_ADVERT must be dropped when engine is attached '
-            'before start() — this documents the failure mode that the '
+            'before start() - this documents the failure mode that the '
             'provider-layer fix must avoid',
       );
     });
 
-    // G2 — the required contract: start BEFORE attach delivers all buffered frames.
+    // G2 - the required contract: start BEFORE attach delivers all buffered frames.
     //
     // This mirrors the corrected ordering in mrrpEngineProvider and must
     // always pass.  A regression in the provider layer that reverts to
     // "attach before start" will be caught by G1 changing sense AND by B1.
-    test('G2: starting engine before attach() delivers all buffered MRRP frames '
-        '(required contract)', () async {
-      final protocol = ProtocolService(_FakeTransport());
-      final discovery = _buildDiscovery();
-      protocol.attachSipDiscovery(discovery);
+    test(
+      'G2: starting engine before attach() delivers all buffered MRRP frames '
+      '(required contract)',
+      () async {
+        final protocol = ProtocolService(_FakeTransport());
+        final discovery = _buildDiscovery();
+        protocol.attachSipDiscovery(discovery);
 
-      // Buffer a SERVICE_ADVERT while MrrpEngine is unattached.
-      final built = _buildMrrpEngine();
-      final mrrpPayload = _buildMrrpServiceAdvertPayload(built.registry);
-      protocol.injectSipPacketForTest(_makePacket(peer), mrrpPayload);
+        // Buffer a SERVICE_ADVERT while MrrpEngine is unattached.
+        final built = _buildMrrpEngine();
+        final mrrpPayload = _buildMrrpServiceAdvertPayload(built.registry);
+        protocol.injectSipPacketForTest(_makePacket(peer), mrrpPayload);
 
-      expect(
-        protocol.mrrpStartupBufferLength,
-        equals(1),
-        reason: 'SERVICE_ADVERT must be in the MRRP startup buffer',
-      );
+        expect(
+          protocol.mrrpStartupBufferLength,
+          equals(1),
+          reason: 'SERVICE_ADVERT must be in the MRRP startup buffer',
+        );
 
-      // CORRECT ORDER: start before attach.
-      // Engine._running == true when drain fires → handleInboundFrame processes.
-      built.engine.start(); // running = true BEFORE drain
-      protocol.attachMrrpEngine(built.engine); // drain scheduled as microtask
-      await Future.microtask(() {}); // let the deferred drain run
+        // CORRECT ORDER: start before attach.
+        // Engine._running == true when drain fires → handleInboundFrame processes.
+        built.engine.start(); // running = true BEFORE drain
+        protocol.attachMrrpEngine(built.engine); // drain scheduled as microtask
+        await Future.microtask(() {}); // let the deferred drain run
 
-      expect(
-        built.advertEngine.getAllCachedServices(),
-        isNotEmpty,
-        reason:
-            'buffered SERVICE_ADVERT must be cached when engine is started '
-            'before attach() — this is the required contract',
-      );
-      expect(
-        built.advertEngine.getAllCachedServices()[peer],
-        isNotNull,
-        reason: 'cached services must be keyed to the peer node ID',
-      );
-    });
+        expect(
+          built.advertEngine.getAllCachedServices(),
+          isNotEmpty,
+          reason:
+              'buffered SERVICE_ADVERT must be cached when engine is started '
+              'before attach() - this is the required contract',
+        );
+        expect(
+          built.advertEngine.getAllCachedServices()[peer],
+          isNotNull,
+          reason: 'cached services must be keyed to the peer node ID',
+        );
+      },
+    );
 
-    // G3 — multiple peers' buffered adverts all delivered with correct ordering.
+    // G3 - multiple peers' buffered adverts all delivered with correct ordering.
     test('G3: buffered SERVICE_ADVERTs from multiple peers all delivered when '
         'start() precedes attach()', () async {
       final protocol = ProtocolService(_FakeTransport());
@@ -1135,7 +1131,7 @@ void main() {
   });
 
   // ==========================================================================
-  // H. Duplicate early frames — dedup within the startup buffers
+  // H. Duplicate early frames - dedup within the startup buffers
   // ==========================================================================
   //
   // Mesh broadcasts hop up to 3 times; the app may receive multiple copies of
@@ -1146,16 +1142,16 @@ void main() {
   group('Duplicate early frames', () {
     const peer = 0x11223344;
 
-    // H1 — duplicate CAP_BEACON nonces in SIP startup buffer: only the first
+    // H1 - duplicate CAP_BEACON nonces in SIP startup buffer: only the first
     // copy of each nonce is processed (SipReplayCache dedup).
-    test('H1: duplicate CAP_BEACON nonces in startup buffer — only first copy '
+    test('H1: duplicate CAP_BEACON nonces in startup buffer - only first copy '
         'reaches discovery cache', () async {
       final protocol = ProtocolService(_FakeTransport());
 
       // Build a single beacon payload (same nonce throughout).
       final beaconPayload = _buildBeaconPayload();
 
-      // Inject three copies — same bytes, same nonce.
+      // Inject three copies - same bytes, same nonce.
       protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
       protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
       protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
@@ -1170,7 +1166,7 @@ void main() {
       final discovery = _buildDiscovery();
       protocol.attachSipDiscovery(discovery);
 
-      // SIP drain is deferred to a microtask — wait for it.
+      // SIP drain is deferred to a microtask - wait for it.
       await Future.microtask(() {});
 
       // SipReplayCache records the nonce on first processing; subsequent
@@ -1179,14 +1175,14 @@ void main() {
         discovery.discoveredPeers.length,
         equals(1),
         reason:
-            'only one peer must appear — duplicates deduplicated via '
+            'only one peer must appear - duplicates deduplicated via '
             'SipReplayCache nonce matching',
       );
     });
 
-    // H2 — duplicate SERVICE_ADVERT hashes in MRRP startup buffer: only the
+    // H2 - duplicate SERVICE_ADVERT hashes in MRRP startup buffer: only the
     // first is cached (MrrpAdvertEngine._lastAdvertHash payload-hash dedup).
-    test('H2: duplicate SERVICE_ADVERT payloads in MRRP startup buffer — only '
+    test('H2: duplicate SERVICE_ADVERT payloads in MRRP startup buffer - only '
         'first copy cached', () async {
       final protocol = ProtocolService(_FakeTransport());
       final discovery = _buildDiscovery();
@@ -1227,10 +1223,10 @@ void main() {
       );
     });
 
-    // H3 — duplicate early beacon + live beacon overlap: drain processes early
+    // H3 - duplicate early beacon + live beacon overlap: drain processes early
     // copy (nonce recorded); live copy with same nonce arrives post-attach and
     // is also deduplicated.  No double-count either way.
-    test('H3: buffered beacon + live beacon with same nonce — discovery cache '
+    test('H3: buffered beacon + live beacon with same nonce - discovery cache '
         'remains at exactly one peer', () async {
       final protocol = ProtocolService(_FakeTransport());
 
@@ -1239,11 +1235,11 @@ void main() {
       // Buffer one copy before attach.
       protocol.injectSipPacketForTest(_makePacket(peer), beaconPayload);
 
-      // Attach — drain deferred to microtask.
+      // Attach - drain deferred to microtask.
       final discovery = _buildDiscovery();
       protocol.attachSipDiscovery(discovery);
 
-      // SIP drain is deferred to a microtask — wait for it.
+      // SIP drain is deferred to a microtask - wait for it.
       await Future.microtask(() {});
 
       expect(
@@ -1260,7 +1256,7 @@ void main() {
         discovery.discoveredPeers.length,
         equals(1),
         reason:
-            'peer count must remain 1 — live duplicate deduplicated via '
+            'peer count must remain 1 - live duplicate deduplicated via '
             'SipReplayCache',
       );
     });

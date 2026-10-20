@@ -38,7 +38,7 @@ void main() {
         await transport.refreshNotifications();
 
         // Early returns must not bump the accepted-call counter when
-        // there is no characteristic / not connected — otherwise idle
+        // there is no characteristic / not connected - otherwise idle
         // periodic checks would produce false telemetry.
         expect(transport.refreshNotificationsCount, 0);
         expect(transport.refreshNotificationsFailureCount, 0);
@@ -53,7 +53,7 @@ void main() {
         await transport.dispose();
         await transport.dispose();
 
-        // Counters remain readable after dispose — the diagnostics
+        // Counters remain readable after dispose - the diagnostics
         // provider may snapshot a torn-down transport during teardown.
         expect(transport.fromNumNotificationCount, 0);
         expect(transport.refreshNotificationsCount, 0);

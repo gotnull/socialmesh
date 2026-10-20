@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/accessibility_preferences.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 /// Adapts ThemeData based on accessibility preferences

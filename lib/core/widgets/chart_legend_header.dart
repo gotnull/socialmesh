@@ -74,7 +74,7 @@ class ChartLegendHeaderDelegate extends SliverPersistentHeaderDelegate {
     double textHeight(double fontSize) {
       final painter = TextPainter(
         text: TextSpan(
-          text: 'Ag', // lint-allow: hardcoded-string — glyph-height probe
+          text: 'Ag', // lint-allow: hardcoded-string - glyph-height probe
           style: TextStyle(fontSize: fontSize, fontFamily: AppTheme.fontFamily),
         ),
         textDirection: TextDirection.ltr,

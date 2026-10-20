@@ -8,7 +8,7 @@ import 'package:socialmesh/services/protocol/reticulum/reticulum_fragment_event.
 import 'package:socialmesh/services/protocol/reticulum/reticulum_nodedex_bridge.dart';
 
 void main() {
-  group('ReticulumNodeDexBridge — keyForEvent', () {
+  group('ReticulumNodeDexBridge - keyForEvent', () {
     test('uses packetId when present', () {
       final event = ReticulumFragmentEvent(
         timestampMs: 0,
@@ -55,12 +55,12 @@ void main() {
     });
   });
 
-  group('ReticulumNodeDexBridge — dedup window', () {
+  group('ReticulumNodeDexBridge - dedup window', () {
     test('first event records; duplicate within window does not', () {
       final calls = <int>[];
       final times = <DateTime>[
         DateTime(2026, 1, 1, 12, 0, 0),
-        DateTime(2026, 1, 1, 12, 1, 0), // 60s later — within 5min window
+        DateTime(2026, 1, 1, 12, 1, 0), // 60s later - within 5min window
       ];
       var idx = 0;
       final bridge = ReticulumNodeDexBridge(
@@ -80,7 +80,7 @@ void main() {
       final calls = <int>[];
       final times = <DateTime>[
         DateTime(2026, 1, 1, 12, 0, 0),
-        DateTime(2026, 1, 1, 12, 6, 0), // 6 min later — past 5min window
+        DateTime(2026, 1, 1, 12, 6, 0), // 6 min later - past 5min window
       ];
       var idx = 0;
       final bridge = ReticulumNodeDexBridge(

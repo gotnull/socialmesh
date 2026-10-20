@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Sync Outbox Pattern Tests — comprehensive coverage for the
+// NodeDex Sync Outbox Pattern Tests - comprehensive coverage for the
 // outbox-based Cloud Sync pipeline.
 //
 // Covers store-level outbox operations, sync pull edge cases,
@@ -158,9 +158,9 @@ void main() {
       final outbox = await store.readOutbox();
       expect(outbox, isNotEmpty);
 
-      final payload =
-          jsonDecode(outbox.last['payload_json'] as String)
-              as Map<String, dynamic>;
+      final payload = jsonDecode(
+        outbox.last['payload_json'] as String,
+      ) as Map<String, dynamic>;
       final restored = NodeDexEntry.fromJson(payload);
       expect(restored.socialTag, isNull);
     });
@@ -195,9 +195,9 @@ void main() {
         final outbox = await store.readOutbox();
         expect(outbox, isNotEmpty);
 
-        final payload =
-            jsonDecode(outbox.last['payload_json'] as String)
-                as Map<String, dynamic>;
+        final payload = jsonDecode(
+          outbox.last['payload_json'] as String,
+        ) as Map<String, dynamic>;
         final restored = NodeDexEntry.fromJson(payload);
         expect(restored.userNote, 'Relay on the hill');
       },
@@ -220,9 +220,9 @@ void main() {
       final outbox = await store.readOutbox();
       expect(outbox, isNotEmpty);
 
-      final payload =
-          jsonDecode(outbox.last['payload_json'] as String)
-              as Map<String, dynamic>;
+      final payload = jsonDecode(
+        outbox.last['payload_json'] as String,
+      ) as Map<String, dynamic>;
       final restored = NodeDexEntry.fromJson(payload);
       expect(restored.userNote, isNull);
     });
@@ -350,7 +350,7 @@ void main() {
       final entry = makeEntry(nodeNum: 303);
       store.saveEntry(entry);
 
-      // Delete before flush — should remove from pending.
+      // Delete before flush - should remove from pending.
       await store.deleteEntry(303);
 
       // Flush should not crash or re-insert.
@@ -487,7 +487,7 @@ void main() {
         node600.length,
         1,
         reason:
-            'Outbox should deduplicate — only the latest entry for node 600',
+            'Outbox should deduplicate - only the latest entry for node 600',
       );
     });
 
@@ -573,9 +573,9 @@ void main() {
       await store.saveEntryImmediate(entry);
 
       final outbox = await store.readOutbox();
-      final payload =
-          jsonDecode(outbox.last['payload_json'] as String)
-              as Map<String, dynamic>;
+      final payload = jsonDecode(
+        outbox.last['payload_json'] as String,
+      ) as Map<String, dynamic>;
       final restored = NodeDexEntry.fromJson(payload);
 
       expect(restored.lastKnownName, 'AliceNode');
@@ -588,9 +588,9 @@ void main() {
       await store.saveEntryImmediate(entry);
 
       final outbox = await store.readOutbox();
-      final payload =
-          jsonDecode(outbox.last['payload_json'] as String)
-              as Map<String, dynamic>;
+      final payload = jsonDecode(
+        outbox.last['payload_json'] as String,
+      ) as Map<String, dynamic>;
       final restored = NodeDexEntry.fromJson(payload);
 
       expect(restored.lastKnownName, isNull);
@@ -617,8 +617,7 @@ void main() {
       expect(
         result!.lastKnownName,
         'RemoteRelay',
-        reason:
-            'Remote lastKnownName should merge in when remote has later lastSeen',
+        reason: 'Remote lastKnownName should merge in when remote has later lastSeen',
       );
     });
   });
@@ -874,7 +873,7 @@ void main() {
     test('duplicate nodes in same pull batch are handled', () async {
       store.syncEnabled = true;
 
-      // Two entries for same node in one batch — last one wins.
+      // Two entries for same node in one batch - last one wins.
       final entries = [
         makeEntry(
           nodeNum: 3010,
@@ -1059,9 +1058,9 @@ void main() {
       final outbox = await store.readOutbox();
       expect(outbox, isNotEmpty);
 
-      final payload =
-          jsonDecode(outbox.last['payload_json'] as String)
-              as Map<String, dynamic>;
+      final payload = jsonDecode(
+        outbox.last['payload_json'] as String,
+      ) as Map<String, dynamic>;
       final restored = NodeDexEntry.fromJson(payload);
 
       expect(restored.nodeNum, 6000);
@@ -1205,7 +1204,7 @@ void main() {
     });
 
     test('upload success decrements queued below zero safely', () {
-      // No enqueue, just record success — should clamp to 0.
+      // No enqueue, just record success - should clamp to 0.
       SyncDiagnostics.instance.recordUploadSuccess(
         SyncType.nodedexEntry,
         count: 10,
@@ -1263,7 +1262,7 @@ void main() {
       expect(imported, greaterThan(0));
 
       // Import writes via _upsertEntryInTxn which respects syncEnabled.
-      // This is expected behavior — imported entries ARE enqueued because
+      // This is expected behavior - imported entries ARE enqueued because
       // the user is explicitly importing data they want synced.
       // Verify the entries exist.
       expect(await store.hasEntry(8000), isTrue);
@@ -1350,9 +1349,9 @@ void main() {
         final outbox = await deviceAStore.readOutbox();
         expect(outbox, isNotEmpty);
 
-        final payload =
-            jsonDecode(outbox.last['payload_json'] as String)
-                as Map<String, dynamic>;
+        final payload = jsonDecode(
+          outbox.last['payload_json'] as String,
+        ) as Map<String, dynamic>;
         final serialized = NodeDexEntry.fromJson(payload);
 
         // Simulate Device B.
@@ -1507,7 +1506,7 @@ void main() {
         lastSeen: DateTime(2024, 5, 1),
       );
 
-      // Apply in all possible orders — result must be the same.
+      // Apply in all possible orders - result must be the same.
       final abcMerge = deviceA.mergeWith(deviceB).mergeWith(deviceC);
       final bacMerge = deviceB.mergeWith(deviceA).mergeWith(deviceC);
       final cabMerge = deviceC.mergeWith(deviceA).mergeWith(deviceB);
@@ -1625,7 +1624,7 @@ void main() {
 
     test('NodeDexSyncService dispose is safe when not enabled', () async {
       final service = NodeDexSyncService(store);
-      // Dispose without ever enabling — should not crash.
+      // Dispose without ever enabling - should not crash.
       await service.dispose();
     });
 
@@ -1656,9 +1655,9 @@ void main() {
       await store.saveEntryImmediate(entry);
 
       final outbox = await store.readOutbox();
-      final payload =
-          jsonDecode(outbox.last['payload_json'] as String)
-              as Map<String, dynamic>;
+      final payload = jsonDecode(
+        outbox.last['payload_json'] as String,
+      ) as Map<String, dynamic>;
       final restored = NodeDexEntry.fromJson(payload);
 
       expect(restored.sigil, isNotNull);

@@ -3,7 +3,7 @@
 
 // Slippy-map tile maths for the offline region downloader.
 //
-// Pure functions only — no Flutter, no IO — so the enumeration and the
+// Pure functions only - no Flutter, no IO - so the enumeration and the
 // pre-download count/size estimate are fully unit-testable. Conventions follow
 // the OpenStreetMap "slippy map tilenames" standard (Web Mercator, z/x/y).
 
@@ -78,7 +78,7 @@ int latToTileY(double lat, int z) {
 }
 
 /// Number of tiles covering [bounds] across the (clamped) zoom range, computed
-/// without materializing the list — for the pre-download estimate.
+/// without materializing the list - for the pre-download estimate.
 int countTilesForBounds(LatLngBounds bounds, int minZoom, int maxZoom) {
   final range = clampZoomRange(minZoom, maxZoom);
   var total = 0;

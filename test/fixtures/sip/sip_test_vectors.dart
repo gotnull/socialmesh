@@ -116,7 +116,7 @@ abstract final class SipTestVectors {
     detail: 0x00,
   );
 
-  /// HS_ACCEPT (msg_type=0x16, 35 bytes total — v0.2 layout)
+  /// HS_ACCEPT (msg_type=0x16, 35 bytes total - v0.2 layout)
   ///
   /// v0.2 prepends a 4-byte little-endian `target_node_id` (here
   /// `0xB15E74DB`) and widens `dm_ttl_s` from 16 to 32 bits, growing

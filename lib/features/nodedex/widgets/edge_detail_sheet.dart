@@ -3,7 +3,7 @@
 
 import 'package:socialmesh/features/nodes/node_display_name_resolver.dart';
 
-// Edge Detail Sheet — rich per-edge relationship info bottom sheet.
+// Edge Detail Sheet - rich per-edge relationship info bottom sheet.
 //
 // Shows detailed information about a co-seen relationship between two
 // nodes, including:
@@ -100,7 +100,7 @@ class EdgeDetailSheet extends ConsumerWidget {
     final toNode = nodes[toNodeNum];
 
     // Resolve the relationship from both directions (pick the one
-    // that exists — they should be symmetric but we handle edge cases).
+    // that exists - they should be symmetric but we handle edge cases).
     final resolvedRelationship =
         relationship ??
         fromEntry?.coSeenNodes[toNodeNum] ??

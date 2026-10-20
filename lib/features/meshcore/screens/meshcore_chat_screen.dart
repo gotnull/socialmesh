@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../utils/text_sanitizer.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -150,7 +151,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// D43-A3: pre-prepend `maxScrollExtent` captured before each
   /// `loadOlder`. After the rebuild, the post-frame callback uses
   /// `newExtent - capturedExtent` to translate the scroll offset by
-  /// the prepended content height — the user stays parked on the
+  /// the prepended content height - the user stays parked on the
   /// same message instead of being teleported.
   double? _oldMaxExtentBeforeLoadOlder;
 
@@ -227,7 +228,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     if (widget.initialMessages.isNotEmpty) {
       // D43-A3: test-injected path. Pipe each seed through the
       // chat-history provider as if it had arrived from the wire or
-      // been queued by the composer — keeps the rendered list the
+      // been queued by the composer - keeps the rendered list the
       // single source of truth without faking a store partition.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -494,7 +495,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       // not writing twice keeps the diag log surface clean.
       _historyNotifier.appendInbound(message);
       // D30: only auto-scroll when the user is parked at the bottom.
-      // Honour the jump-to-latest pill — if it's showing, the user is
+      // Honour the jump-to-latest pill - if it's showing, the user is
       // reading earlier history and we must not yank them away.
       if (!_showJumpToLatest) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -578,7 +579,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
     if (mounted) {
       _historyNotifier.appendInbound(message);
-      // D30: respect the jump-to-latest pill — only auto-scroll when
+      // D30: respect the jump-to-latest pill - only auto-scroll when
       // the user is already parked at the bottom.
       if (!_showJumpToLatest) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -689,7 +690,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     final timestampS = now.millisecondsSinceEpoch ~/ 1000;
     // D33: nullable when self pubkey isn't yet loaded (rare; chat
     // can't be opened pre-identification). Persisting `mmf=null` is
-    // fine — the message just doesn't participate in the reply MMF
+    // fine - the message just doesn't participate in the reply MMF
     // index until the next send/load cycle stamps it.
     final ownMmf = _outboundMmfFor(timestampS)?.toStableString();
 
@@ -735,8 +736,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// so receiver-derived inbound MMFs (which use that senderPrefix)
   /// match the author's outbound MMF byte-for-byte.
   ///
-  /// Pre-fix this used `widget.contact!.publicKey.sublist(0, 6)` —
-  /// "the other party's" prefix — which produced asymmetric MMFs
+  /// Pre-fix this used `widget.contact!.publicKey.sublist(0, 6)` -
+  /// "the other party's" prefix - which produced asymmetric MMFs
   /// across the conversation: the author's stored MMF used the
   /// receiver's prefix while the receiver's stored MMF (from the
   /// wire's senderPrefix) used the author's prefix. Replies that
@@ -775,7 +776,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   }
 
   /// D33: locate the locally-stored message a given MMF refers to.
-  /// Returns null if no message in the visible list matches — the
+  /// Returns null if no message in the visible list matches - the
   /// caller surfaces the "Reply to a message you don't have"
   /// fallback in that case.
   MeshCoreMessage? _findMessageByMmf(String mmf) {
@@ -788,7 +789,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// D33: enter reply-compose mode. Latches the source message so
   /// the next send threads against it. No-op when the source has no
   /// MMF (the long-press menu hides Reply in that case, but defence
-  /// in depth — a stale tap shouldn't half-arm reply state).
+  /// in depth - a stale tap shouldn't half-arm reply state).
   void _startReply(MeshCoreMessage source) {
     if (source.mmf == null) return;
     HapticFeedback.selectionClick();
@@ -983,7 +984,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// before calling.
   ///
   /// D33: [timestampS] is the Unix-epoch-seconds timestamp the wire
-  /// frame must carry — caller controls this so the outbound MMF
+  /// frame must carry - caller controls this so the outbound MMF
   /// (already stored on [message]) matches what receivers will derive.
   /// [replyTarget], when non-null, causes the wire body to be encoded
   /// as a chat-meta REPLY envelope; when null the body is sent
@@ -1321,9 +1322,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           ),
         ],
         body: MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: TextScaler.linear(scale)),
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(scale)),
           child: Column(
             children: [
               // Connection status banner
@@ -1734,7 +1734,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// D33: inline quote-preview row that renders above the body of any
   /// bubble whose `replyToMmf` is set. Two states:
   ///
-  ///   - **Resolved**: the local store has the target message — the row
+  ///   - **Resolved**: the local store has the target message - the row
   ///     shows the target author + a single-line preview of its body
   ///     and tapping it scrolls the list to the target bubble.
   ///   - **Missing**: the target isn't in the local store (out-of-order
@@ -1876,7 +1876,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       //   1..N    = traveled through N intermediate relays
       //   0xFF    = sentinel ("path unknown / not yet established"),
       //             commonly seen on contact DMs that arrived via a
-      //             still-converging route. Render nothing — "via 255
+      //             still-converging route. Render nothing - "via 255
       //             hops" is not a meaningful count.
       // We map 0 and 1 both to "direct" (the live D30 smoke surfaced
       // "via 0 hops" on legacy channel bubbles, which reads awkwardly).

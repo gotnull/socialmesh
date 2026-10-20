@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Mesh Capacity Advisor — Riverpod wiring.
+// Mesh Capacity Advisor - Riverpod wiring.
 //
 // Watches the existing node graph + the device's modem preset and runs
 // the pure [MeshCapacityAdvisor] to produce a [MeshCapacitySnapshot].
-// No business logic here — the provider is a thin reactive bridge so
+// No business logic here - the provider is a thin reactive bridge so
 // the UI can subscribe to recommendations without knowing about
 // ProtocolService streams.
 
@@ -36,7 +36,7 @@ class MeshCapacitySnapshotNotifier extends Notifier<MeshCapacitySnapshot> {
   static const MeshCapacityAdvisor _advisor = MeshCapacityAdvisor();
 
   // Canonical advisor-state dedupe key. Every screen / card consumer of
-  // the snapshot rebuilds many times per second as nodes update — but
+  // the snapshot rebuilds many times per second as nodes update - but
   // logging is only useful when the *advisor's verdict* changes, not
   // when an individual node count ticks. Active node counts (5/15/60m)
   // are intentionally NOT in the key so high-cadence histogram updates
@@ -85,7 +85,7 @@ final meshCapacitySnapshotProvider =
     );
 
 /// Tracks reason codes the user has dismissed for the current session.
-/// In-memory only — restarting the app re-surfaces a still-applicable
+/// In-memory only - restarting the app re-surfaces a still-applicable
 /// recommendation, which is the desired behaviour for capacity advice
 /// (the network may have changed between sessions).
 class MeshCapacityDismissalNotifier
@@ -117,7 +117,7 @@ final meshCapacityCardVisibleProvider = Provider<bool>((ref) {
   return !dismissed.contains(snapshot.recommendation.reasonCode);
 });
 
-/// Test seam — exposes the pure advisor for any consumer that needs
+/// Test seam - exposes the pure advisor for any consumer that needs
 /// to compute a snapshot without going through the provider graph.
 MeshCapacityAdvisor meshCapacityAdvisorForTest() => const MeshCapacityAdvisor();
 

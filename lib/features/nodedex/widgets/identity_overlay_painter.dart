@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Identity Overlay Painter — subtle constellation-like background pattern.
+// Identity Overlay Painter - subtle constellation-like background pattern.
 //
 // Renders a low-opacity geometric pattern behind NodeDex UI elements,
 // derived deterministically from the node's identity seed. The overlay
-// is never full-screen — it is used only inside list tiles and detail
+// is never full-screen - it is used only inside list tiles and detail
 // headers as a subtle visual fingerprint.
 //
 // The pattern is built from the same murmur3-style hash as the sigil,
@@ -252,12 +252,12 @@ class IdentityOverlayPainter extends CustomPainter {
     List<Offset> positions,
     double effectiveDensity,
   ) {
-    // Glow paint — soft halo behind each dot.
+    // Glow paint - soft halo behind each dot.
     final glowPaint = Paint()
       ..color = data.color.withValues(alpha: effectiveDensity * 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0);
 
-    // Dot paint — crisp center point.
+    // Dot paint - crisp center point.
     final dotPaint = Paint()
       ..color = data.color.withValues(alpha: effectiveDensity * 0.7);
 

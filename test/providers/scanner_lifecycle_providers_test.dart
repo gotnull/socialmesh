@@ -53,7 +53,7 @@ void main() {
     });
 
     test(
-      'count drop to 1 is observable to a listener — unblocks the lone-'
+      'count drop to 1 is observable to a listener - unblocks the lone-'
       'survivor activation pattern that promotes the surviving scanner',
       () async {
         final container = ProviderContainer();
@@ -121,7 +121,7 @@ void main() {
 
   group('lone-survivor invariant (lifecycle counter regression)', () {
     test('when two scanners mount and the doomed one disposes first, '
-        'a listener fires with count=1 — this is what promotes the '
+        'a listener fires with count=1 - this is what promotes the '
         'surviving Scanner to active in the production widget', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -157,7 +157,7 @@ void main() {
     });
 
     test('auto-reconnect suppression is independently toggleable from the '
-        'mount counter — Scanner #1 disposing must not flip suppression '
+        'mount counter - Scanner #1 disposing must not flip suppression '
         'off if Scanner #2 is still driving the scan', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -172,7 +172,7 @@ void main() {
       // Doomed scanner disposes.
       mountNotifier.unregister();
       // Suppression is intentionally NOT auto-cleared by the count
-      // change — only the active scanner's dispose should clear it.
+      // change - only the active scanner's dispose should clear it.
       expect(container.read(manualScanActiveProvider), isTrue);
 
       // Active scanner explicitly clears on dispose.

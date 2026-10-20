@@ -93,7 +93,7 @@ void main() {
     });
 
     test('odd-length hex returns null', () {
-      // 271 hex chars = 135.5 bytes — invalid.
+      // 271 hex chars = 135.5 bytes - invalid.
       final oddHex = '0' * 271;
       expect(MeshCoreContactUrl.decode('meshcore://$oddHex'), isNull);
     });
@@ -105,13 +105,13 @@ void main() {
     });
 
     test('too-short hex (< 135 bytes) returns null', () {
-      // 268 chars = 134 bytes — under min.
+      // 268 chars = 134 bytes - under min.
       final shortHex = '00' * 134;
       expect(MeshCoreContactUrl.decode('meshcore://$shortHex'), isNull);
     });
 
     test('too-long hex (> 147 bytes) returns null', () {
-      // 296 chars = 148 bytes — over max.
+      // 296 chars = 148 bytes - over max.
       final longHex = '00' * 148;
       expect(MeshCoreContactUrl.decode('meshcore://$longHex'), isNull);
     });

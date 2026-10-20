@@ -62,7 +62,7 @@ class ClaimsState {
 /// Consumer users (no custom claims) are handled gracefully: the provider
 /// returns [ClaimsState] with null orgId and null role.
 class ClaimsNotifier extends Notifier<ClaimsState> {
-  // Not `late final` — build() is re-invoked on dependency changes and
+  // Not `late final` - build() is re-invoked on dependency changes and
   // `late final` fields cannot be reassigned.
   late ClaimsCache _cache;
   bool _wasOffline = false;
@@ -101,7 +101,7 @@ class ClaimsNotifier extends Notifier<ClaimsState> {
     _wasOffline = !isOnline;
 
     // On first build with a user, load from cache then refresh.
-    // Return a default ClaimsState immediately — the async load will
+    // Return a default ClaimsState immediately - the async load will
     // call `state = ...` once cached/remote claims are available.
     if (!_initialized) {
       _initialized = true;
@@ -120,7 +120,7 @@ class ClaimsNotifier extends Notifier<ClaimsState> {
   Future<void> _loadCachedAndRefresh(User user) async {
     // Load from cache first for instant availability.
     // Wrapped in try-catch because this is called fire-and-forget from
-    // build() — an unhandled exception here becomes an unhandled future
+    // build() - an unhandled exception here becomes an unhandled future
     // error that crashes the app. ClaimsCache.read() already handles
     // PlatformException (e.g. iOS Keychain -25308 when device is locked),
     // but we defend in depth against any unexpected storage failure.

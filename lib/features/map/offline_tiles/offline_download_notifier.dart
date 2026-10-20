@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Offline Download Notifier — drives a bulk region tile pre-download into the
+// Offline Download Notifier - drives a bulk region tile pre-download into the
 // durable built-in tile cache. Feature-local Riverpod 3 Notifier.
 
 import 'dart:async';

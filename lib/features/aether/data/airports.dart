@@ -8299,8 +8299,7 @@ const List<Airport> kAirports = [
   Airport(
     iata: 'SAL',
     icao: 'MSLP',
-    name:
-        'El Salvador International Airport Saint Óscar Arnulfo Romero y Galdámez',
+    name: 'El Salvador International Airport Saint Óscar Arnulfo Romero y Galdámez',
     city: 'San Salvador (San Luis Talpa)',
     country: 'SV',
     latitude: 13.44447,

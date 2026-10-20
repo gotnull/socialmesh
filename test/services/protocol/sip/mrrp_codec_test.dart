@@ -172,9 +172,8 @@ void main() {
         // Request TTL TLV
         final ttlTlv = frame.findExtension(MrrpTlvType.requestTtlS);
         expect(ttlTlv, isNotNull);
-        final ttlValue = ByteData.sublistView(
-          ttlTlv!.value,
-        ).getUint16(0, Endian.little);
+        final ttlValue = ByteData.sublistView(ttlTlv!.value)
+            .getUint16(0, Endian.little);
         expect(ttlValue, f.tlvRequestTtlS);
       });
     });
@@ -595,7 +594,7 @@ void main() {
           MrrpFuzzCases.maxSizeFrame,
         ];
         for (final data in cases) {
-          // Should not throw — only return null or a valid frame
+          // Should not throw - only return null or a valid frame
           expect(() => MrrpCodec.decode(data), returnsNormally);
         }
       });

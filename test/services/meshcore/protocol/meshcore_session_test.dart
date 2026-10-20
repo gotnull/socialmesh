@@ -954,59 +954,62 @@ void main() {
       expect(result!.command, equals(0x05));
     });
 
-    test('ACK then SELF_INFO succeeds - simulates real device behavior', () async {
-      // This simulates real device behavior:
-      // 1. Device receives cmdDeviceQuery -> sends ACK (0x01)
-      // 2. Device receives cmdAppStart -> sends ACK (0x01)
-      // 3. Device processes appStart -> sends SELF_INFO (0x05)
+    test(
+      'ACK then SELF_INFO succeeds - simulates real device behavior',
+      () async {
+        // This simulates real device behavior:
+        // 1. Device receives cmdDeviceQuery -> sends ACK (0x01)
+        // 2. Device receives cmdAppStart -> sends ACK (0x01)
+        // 3. Device processes appStart -> sends SELF_INFO (0x05)
 
-      final statusFrames = <MeshCoreStatusFrame>[];
-      session.statusStream.listen(statusFrames.add);
+        final statusFrames = <MeshCoreStatusFrame>[];
+        session.statusStream.listen(statusFrames.add);
 
-      // Wait for SELF_INFO with minimum payload size (simulating getSelfInfo behavior)
-      final selfInfoFuture = session.waitForResponse(
-        0x05,
-        timeout: const Duration(milliseconds: 500),
-      );
+        // Wait for SELF_INFO with minimum payload size (simulating getSelfInfo behavior)
+        final selfInfoFuture = session.waitForResponse(
+          0x05,
+          timeout: const Duration(milliseconds: 500),
+        );
 
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
 
-      // Device sends ACK for deviceQuery
-      transport.simulateReceiveFrame(
-        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
-      );
+        // Device sends ACK for deviceQuery
+        transport.simulateReceiveFrame(
+          MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
+        );
 
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
 
-      // Device sends ACK for appStart
-      transport.simulateReceiveFrame(
-        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
-      );
+        // Device sends ACK for appStart
+        transport.simulateReceiveFrame(
+          MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
+        );
 
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
 
-      // Waiter should still be pending (ACKs don't satisfy it)
-      expect(session.hasWaiter(0x05), isTrue);
-      expect(statusFrames.length, equals(2));
+        // Waiter should still be pending (ACKs don't satisfy it)
+        expect(session.hasWaiter(0x05), isTrue);
+        expect(statusFrames.length, equals(2));
 
-      // Device sends actual SELF_INFO response
-      // Minimum valid payload: ADV_TYPE + tx_power + MAX_LORA_TX_POWER + 32-byte pubkey = 35 bytes
-      final selfInfoPayload = Uint8List.fromList([
-        0x01, // ADV_TYPE
-        20, // tx_power
-        22, // MAX_LORA_TX_POWER
-        ...List.filled(32, 0xAA), // pub_key
-        ...List.filled(30, 0x00), // remaining fields
-      ]);
-      transport.simulateReceiveFrame(
-        MeshCoreFrame(command: 0x05, payload: selfInfoPayload),
-      );
+        // Device sends actual SELF_INFO response
+        // Minimum valid payload: ADV_TYPE + tx_power + MAX_LORA_TX_POWER + 32-byte pubkey = 35 bytes
+        final selfInfoPayload = Uint8List.fromList([
+          0x01, // ADV_TYPE
+          20, // tx_power
+          22, // MAX_LORA_TX_POWER
+          ...List.filled(32, 0xAA), // pub_key
+          ...List.filled(30, 0x00), // remaining fields
+        ]);
+        transport.simulateReceiveFrame(
+          MeshCoreFrame(command: 0x05, payload: selfInfoPayload),
+        );
 
-      final result = await selfInfoFuture;
-      expect(result, isNotNull);
-      expect(result!.command, equals(0x05));
-      expect(result.payload.length, greaterThanOrEqualTo(35));
-    });
+        final result = await selfInfoFuture;
+        expect(result, isNotNull);
+        expect(result!.command, equals(0x05));
+        expect(result.payload.length, greaterThanOrEqualTo(35));
+      },
+    );
 
     test('status frames still appear in general frameStream', () async {
       final allFrames = <MeshCoreFrame>[];

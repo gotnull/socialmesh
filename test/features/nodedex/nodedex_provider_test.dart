@@ -20,7 +20,7 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // =============================================================================
-// Test Notifiers — extend the real notifier classes so overrideWith type-checks,
+// Test Notifiers - extend the real notifier classes so overrideWith type-checks,
 // but override build() to skip all real dependency watching / initialization.
 // =============================================================================
 
@@ -432,7 +432,7 @@ void main() {
       //
       // The initial discovery seeds whatever baseline counts NodeDexEntry
       // .discovered uses; the assertion that matters is "no increment on the
-      // reconnect tick" — that's where the bug would manifest as a fake
+      // reconnect tick" - that's where the bug would manifest as a fake
       // remote-peer encounter.
       final ctx = _createTestContainer(preInitStore: preInitStore);
       addTearDown(ctx.container.dispose);
@@ -607,7 +607,7 @@ void main() {
         await _pumpEventQueue();
       });
 
-      // Re-discover 6 minutes later — past both provider and model cooldowns
+      // Re-discover 6 minutes later - past both provider and model cooldowns
       final laterTime = firstSeen.add(const Duration(minutes: 6));
       await withClock(Clock.fixed(laterTime), () async {
         ctx.nodesNotifier.setNodes({100: _makeNode(100, snr: 15)});
@@ -711,9 +711,9 @@ void main() {
       // Simulate a brief disconnect/reconnect to the same radio: bounce
       // myNodeNum through null and back. Riverpod dedupes same-value
       // writes, so this null→value bounce is the realistic shape of a
-      // "re-emission" — what actually happens when the user disconnects
+      // "re-emission" - what actually happens when the user disconnects
       // then reconnects to the same radio. Both transitions happen 30s
-      // after the initial stamp — well within the 1-minute cooldown.
+      // after the initial stamp - well within the 1-minute cooldown.
       final reconnect = firstStamp.add(const Duration(seconds: 30));
       await withClock(Clock.fixed(reconnect), () async {
         ctx.myNodeNumNotifier.setMyNodeNum(null);
@@ -757,7 +757,7 @@ void main() {
         await _initProvider(ctx.container);
       });
 
-      // Bounce through null and back, 90s later — past the 1-minute
+      // Bounce through null and back, 90s later - past the 1-minute
       // cooldown. Same realistic disconnect/reconnect shape as the
       // within-cooldown test.
       final reconnect = firstStamp.add(const Duration(seconds: 90));
@@ -783,7 +783,7 @@ void main() {
         // Load-bearing guardrail: connection-identity stamping is wired to
         // myNodeNumProvider only. If `_handleNodesUpdate` could stamp from
         // sync-replay of the local node's stale NodeDB entry, lastUsedAt
-        // would falsely advance on every reconnect — defeating the whole
+        // would falsely advance on every reconnect - defeating the whole
         // multi-device purpose of the feature.
         final ctx = _createTestContainer(
           preInitStore: preInitStore,
@@ -810,14 +810,14 @@ void main() {
           entry.firstUsedAt,
           isNull,
           reason:
-              'sync-replay of local node must not stamp firstUsedAt — '
+              'sync-replay of local node must not stamp firstUsedAt - '
               'stamping is connection-identity-driven, not packet-driven',
         );
         expect(
           entry.lastUsedAt,
           isNull,
           reason:
-              'sync-replay of local node must not stamp lastUsedAt — '
+              'sync-replay of local node must not stamp lastUsedAt - '
               'stamping is connection-identity-driven, not packet-driven',
         );
       },
@@ -855,82 +855,75 @@ void main() {
       });
     });
 
-    test(
-      'switching myNodeNum freezes previous lastUsedAt and stamps the new entry',
-      () async {
-        const otherNodeNum = 88888;
-        final firstStamp = DateTime(2026, 5, 4, 12, 0);
-        final switchAt = firstStamp.add(const Duration(minutes: 10));
+    test('switching myNodeNum freezes previous lastUsedAt and stamps the new entry', () async {
+      const otherNodeNum = 88888;
+      final firstStamp = DateTime(2026, 5, 4, 12, 0);
+      final switchAt = firstStamp.add(const Duration(minutes: 10));
 
-        final ctx = _createTestContainer(
-          preInitStore: preInitStore,
-          initialNodes: {
-            _myNodeNum: _makeNode(_myNodeNum),
-            otherNodeNum: _makeNode(otherNodeNum),
-          },
-        );
-        addTearDown(ctx.container.dispose);
+      final ctx = _createTestContainer(
+        preInitStore: preInitStore,
+        initialNodes: {
+          _myNodeNum: _makeNode(_myNodeNum),
+          otherNodeNum: _makeNode(otherNodeNum),
+        },
+      );
+      addTearDown(ctx.container.dispose);
 
-        await withClock(Clock.fixed(firstStamp), () async {
-          await _initProvider(ctx.container);
-        });
+      await withClock(Clock.fixed(firstStamp), () async {
+        await _initProvider(ctx.container);
+      });
 
-        final initialOriginal = ctx.container.read(
-          nodeDexProvider,
-        )[_myNodeNum]!;
-        // firstUsedAt backfills from firstSeen on the first stamp.
-        expect(initialOriginal.firstUsedAt, equals(initialOriginal.firstSeen));
-        expect(initialOriginal.lastUsedAt, equals(firstStamp));
-        final originalFirstUsedAt = initialOriginal.firstUsedAt;
+      final initialOriginal = ctx.container.read(nodeDexProvider)[_myNodeNum]!;
+      // firstUsedAt backfills from firstSeen on the first stamp.
+      expect(initialOriginal.firstUsedAt, equals(initialOriginal.firstSeen));
+      expect(initialOriginal.lastUsedAt, equals(firstStamp));
+      final originalFirstUsedAt = initialOriginal.firstUsedAt;
 
-        // Switch myNodeNum to a different device.
-        await withClock(Clock.fixed(switchAt), () async {
-          ctx.myNodeNumNotifier.setMyNodeNum(otherNodeNum);
-          await _pumpEventQueue();
-        });
+      // Switch myNodeNum to a different device.
+      await withClock(Clock.fixed(switchAt), () async {
+        ctx.myNodeNumNotifier.setMyNodeNum(otherNodeNum);
+        await _pumpEventQueue();
+      });
 
-        final state = ctx.container.read(nodeDexProvider);
+      final state = ctx.container.read(nodeDexProvider);
 
-        // Previously-self entry's lastUsedAt is frozen at firstStamp — no
-        // further updates fire because the listener now stamps a different
-        // nodeNum.
-        expect(
-          state[_myNodeNum]!.lastUsedAt,
-          equals(firstStamp),
-          reason: 'previous self entry must retain its frozen lastUsedAt',
-        );
-        expect(
-          state[_myNodeNum]!.firstUsedAt,
-          equals(originalFirstUsedAt),
-          reason: 'previous self entry must retain its firstUsedAt',
-        );
-        // Newly-self entry got its own firstUsedAt stamped from its firstSeen.
-        expect(
-          state[otherNodeNum]!.firstUsedAt,
-          equals(state[otherNodeNum]!.firstSeen),
-          reason: 'newly self entry must backfill firstUsedAt from firstSeen',
-        );
-        expect(
-          state[otherNodeNum]!.lastUsedAt,
-          equals(switchAt),
-          reason: 'newly self entry must get lastUsedAt at switch time',
-        );
-      },
-    );
+      // Previously-self entry's lastUsedAt is frozen at firstStamp - no
+      // further updates fire because the listener now stamps a different
+      // nodeNum.
+      expect(
+        state[_myNodeNum]!.lastUsedAt,
+        equals(firstStamp),
+        reason: 'previous self entry must retain its frozen lastUsedAt',
+      );
+      expect(
+        state[_myNodeNum]!.firstUsedAt,
+        equals(originalFirstUsedAt),
+        reason: 'previous self entry must retain its firstUsedAt',
+      );
+      // Newly-self entry got its own firstUsedAt stamped from its firstSeen.
+      expect(
+        state[otherNodeNum]!.firstUsedAt,
+        equals(state[otherNodeNum]!.firstSeen),
+        reason: 'newly self entry must backfill firstUsedAt from firstSeen',
+      );
+      expect(
+        state[otherNodeNum]!.lastUsedAt,
+        equals(switchAt),
+        reason: 'newly self entry must get lastUsedAt at switch time',
+      );
+    });
 
     test('mergeWith keeps min(firstUsedAt) and max(lastUsedAt)', () async {
-      // Pure model-level test — no container needed.
+      // Pure model-level test - no container needed.
       final earlyFirst = DateTime(2026, 1, 1);
       final lateFirst = DateTime(2026, 3, 1);
       final earlyLast = DateTime(2026, 4, 1);
       final lateLast = DateTime(2026, 5, 1);
 
-      final local = _makeEntry(
-        nodeNum: _myNodeNum,
-      ).copyWith(firstUsedAt: lateFirst, lastUsedAt: earlyLast);
-      final remote = _makeEntry(
-        nodeNum: _myNodeNum,
-      ).copyWith(firstUsedAt: earlyFirst, lastUsedAt: lateLast);
+      final local = _makeEntry(nodeNum: _myNodeNum)
+          .copyWith(firstUsedAt: lateFirst, lastUsedAt: earlyLast);
+      final remote = _makeEntry(nodeNum: _myNodeNum)
+          .copyWith(firstUsedAt: earlyFirst, lastUsedAt: lateLast);
 
       final merged = local.mergeWith(remote);
       expect(
@@ -947,9 +940,8 @@ void main() {
 
     test('mergeWith preserves the non-null side when only one is set', () {
       final ts = DateTime(2026, 5, 4);
-      final local = _makeEntry(
-        nodeNum: _myNodeNum,
-      ).copyWith(firstUsedAt: ts, lastUsedAt: ts);
+      final local = _makeEntry(nodeNum: _myNodeNum)
+          .copyWith(firstUsedAt: ts, lastUsedAt: ts);
       final remote = _makeEntry(nodeNum: _myNodeNum); // both null
 
       final merged = local.mergeWith(remote);
@@ -1056,7 +1048,7 @@ void main() {
       var state = ctx.container.read(nodeDexProvider);
       expect(state[100]!.coSeenNodes[200]!.count, equals(1));
 
-      // Second flush without new node updates — session was cleared
+      // Second flush without new node updates - session was cleared
       // so no new co-seen relationships should be added
       ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
       await _waitForSave();
@@ -1348,48 +1340,43 @@ void main() {
       });
     });
 
-    test(
-      'excludes geographically implausible distant pairings when positions exist',
-      () async {
-        final now = DateTime(2026, 4, 13, 12);
-        final recentRelationship = CoSeenRelationship(
-          count: 2,
-          firstSeen: now.subtract(const Duration(minutes: 15)),
-          lastSeen: now.subtract(const Duration(minutes: 2)),
+    test('excludes geographically implausible distant pairings when positions exist', () async {
+      final now = DateTime(2026, 4, 13, 12);
+      final recentRelationship = CoSeenRelationship(
+        count: 2,
+        firstSeen: now.subtract(const Duration(minutes: 15)),
+        lastSeen: now.subtract(const Duration(minutes: 2)),
+      );
+
+      await withClock(Clock.fixed(now), () async {
+        await preInitStore.bulkInsert([
+          _makeEntry(
+            nodeNum: 100,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {200: recentRelationship},
+          ),
+          _makeEntry(
+            nodeNum: 200,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {100: recentRelationship},
+          ),
+        ]);
+
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          initialNodes: {
+            100: _makeNode(100, latitude: -33.8688, longitude: 151.2093),
+            200: _makeNode(200, latitude: 51.5074, longitude: -0.1278),
+          },
         );
+        addTearDown(ctx.container.dispose);
 
-        await withClock(Clock.fixed(now), () async {
-          await preInitStore.bulkInsert([
-            _makeEntry(
-              nodeNum: 100,
-              lastSeen: now.subtract(const Duration(minutes: 1)),
-              coSeenNodes: {200: recentRelationship},
-            ),
-            _makeEntry(
-              nodeNum: 200,
-              lastSeen: now.subtract(const Duration(minutes: 1)),
-              coSeenNodes: {100: recentRelationship},
-            ),
-          ]);
+        await _initProvider(ctx.container);
 
-          final ctx = _createTestContainer(
-            preInitStore: preInitStore,
-            initialNodes: {
-              100: _makeNode(100, latitude: -33.8688, longitude: 151.2093),
-              200: _makeNode(200, latitude: 51.5074, longitude: -0.1278),
-            },
-          );
-          addTearDown(ctx.container.dispose);
-
-          await _initProvider(ctx.container);
-
-          final links = ctx.container.read(
-            nodeDexRecentCoSeenLinksProvider(100),
-          );
-          expect(links, isEmpty);
-        });
-      },
-    );
+        final links = ctx.container.read(nodeDexRecentCoSeenLinksProvider(100));
+        expect(links, isEmpty);
+      });
+    });
 
     test(
       'uses deterministic tie-breaking for equal weight and timestamp',
@@ -1484,56 +1471,53 @@ void main() {
   });
 
   group('historical co-seen semantics', () {
-    test(
-      'historical links remain available when recent-facing providers filter them out',
-      () async {
-        final now = DateTime(2026, 4, 13, 12);
-        final staleRelationship = CoSeenRelationship(
-          count: 4,
-          firstSeen: now.subtract(const Duration(days: 120)),
-          lastSeen: now.subtract(const Duration(days: 90)),
+    test('historical links remain available when recent-facing providers filter them out', () async {
+      final now = DateTime(2026, 4, 13, 12);
+      final staleRelationship = CoSeenRelationship(
+        count: 4,
+        firstSeen: now.subtract(const Duration(days: 120)),
+        lastSeen: now.subtract(const Duration(days: 90)),
+      );
+
+      await withClock(Clock.fixed(now), () async {
+        await preInitStore.bulkInsert([
+          _makeEntry(
+            nodeNum: 100,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {200: staleRelationship},
+          ),
+          _makeEntry(
+            nodeNum: 200,
+            lastSeen: now.subtract(const Duration(minutes: 1)),
+            coSeenNodes: {100: staleRelationship},
+          ),
+        ]);
+
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          initialNodes: {100: _makeNode(100), 200: _makeNode(200)},
+        );
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        final historicalLinks = ctx.container.read(
+          nodeDexHistoricalCoSeenLinksProvider(100),
+        );
+        final recentLinks = ctx.container.read(
+          nodeDexRecentCoSeenLinksProvider(100),
+        );
+        final cardViewModel = ctx.container.read(
+          nodeDexCoSeenCardProvider(100),
         );
 
-        await withClock(Clock.fixed(now), () async {
-          await preInitStore.bulkInsert([
-            _makeEntry(
-              nodeNum: 100,
-              lastSeen: now.subtract(const Duration(minutes: 1)),
-              coSeenNodes: {200: staleRelationship},
-            ),
-            _makeEntry(
-              nodeNum: 200,
-              lastSeen: now.subtract(const Duration(minutes: 1)),
-              coSeenNodes: {100: staleRelationship},
-            ),
-          ]);
-
-          final ctx = _createTestContainer(
-            preInitStore: preInitStore,
-            initialNodes: {100: _makeNode(100), 200: _makeNode(200)},
-          );
-          addTearDown(ctx.container.dispose);
-
-          await _initProvider(ctx.container);
-
-          final historicalLinks = ctx.container.read(
-            nodeDexHistoricalCoSeenLinksProvider(100),
-          );
-          final recentLinks = ctx.container.read(
-            nodeDexRecentCoSeenLinksProvider(100),
-          );
-          final cardViewModel = ctx.container.read(
-            nodeDexCoSeenCardProvider(100),
-          );
-
-          expect(historicalLinks, hasLength(1));
-          expect(historicalLinks.first.otherNodeNum, equals(200));
-          expect(historicalLinks.first.relationship.count, equals(4));
-          expect(recentLinks, isEmpty);
-          expect(cardViewModel, isNull);
-        });
-      },
-    );
+        expect(historicalLinks, hasLength(1));
+        expect(historicalLinks.first.otherNodeNum, equals(200));
+        expect(historicalLinks.first.relationship.count, equals(4));
+        expect(recentLinks, isEmpty);
+        expect(cardViewModel, isNull);
+      });
+    });
   });
 
   // ===========================================================================
@@ -1604,45 +1588,42 @@ void main() {
       expect(state.containsKey(999), isFalse);
     });
 
-    test(
-      'increments per-edge message count for session peers with existing relationship',
-      () async {
-        final ctx = _createTestContainer(preInitStore: preInitStore);
-        addTearDown(ctx.container.dispose);
+    test('increments per-edge message count for session peers with existing relationship', () async {
+      final ctx = _createTestContainer(preInitStore: preInitStore);
+      addTearDown(ctx.container.dispose);
 
-        await _initProvider(ctx.container);
+      await _initProvider(ctx.container);
 
-        // Discover two nodes (adds them to session)
-        ctx.nodesNotifier.setNodes({100: _makeNode(100), 200: _makeNode(200)});
-        await _pumpEventQueue();
+      // Discover two nodes (adds them to session)
+      ctx.nodesNotifier.setNodes({100: _makeNode(100), 200: _makeNode(200)});
+      await _pumpEventQueue();
 
-        // Flush to create co-seen relationships
-        ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
-        await _waitForSave();
+      // Flush to create co-seen relationships
+      ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
+      await _waitForSave();
 
-        // Verify relationships exist
-        var state = ctx.container.read(nodeDexProvider);
-        expect(state[100]!.coSeenNodes.containsKey(200), isTrue);
+      // Verify relationships exist
+      var state = ctx.container.read(nodeDexProvider);
+      expect(state[100]!.coSeenNodes.containsKey(200), isTrue);
 
-        // Re-discover to add back to session (session was cleared after flush).
-        // The Riverpod listener fires synchronously, so _handleNodesUpdate runs
-        // immediately — no pump needed. Pumping gives the periodic flush timer
-        // a chance to fire and clear _sessionSeenNodes before recordMessage.
-        ctx.nodesNotifier.setNodes({
-          100: _makeNode(100, snr: 15),
-          200: _makeNode(200, snr: 20),
-        });
+      // Re-discover to add back to session (session was cleared after flush).
+      // The Riverpod listener fires synchronously, so _handleNodesUpdate runs
+      // immediately - no pump needed. Pumping gives the periodic flush timer
+      // a chance to fire and clear _sessionSeenNodes before recordMessage.
+      ctx.nodesNotifier.setNodes({
+        100: _makeNode(100, snr: 15),
+        200: _makeNode(200, snr: 20),
+      });
 
-        // Now record a message for node 100
-        ctx.container.read(nodeDexProvider.notifier).recordMessage(100);
+      // Now record a message for node 100
+      ctx.container.read(nodeDexProvider.notifier).recordMessage(100);
 
-        state = ctx.container.read(nodeDexProvider);
-        // Node 100's edge to 200 should have messageCount incremented
-        expect(state[100]!.coSeenNodes[200]!.messageCount, equals(1));
-        // Node-level message count
-        expect(state[100]!.messageCount, equals(1));
-      },
-    );
+      state = ctx.container.read(nodeDexProvider);
+      // Node 100's edge to 200 should have messageCount incremented
+      expect(state[100]!.coSeenNodes[200]!.messageCount, equals(1));
+      // Node-level message count
+      expect(state[100]!.messageCount, equals(1));
+    });
 
     test(
       'does not create new co-seen relationship from message alone',
@@ -1652,12 +1633,12 @@ void main() {
 
         await _initProvider(ctx.container);
 
-        // Discover two nodes. No pump after — listener fires synchronously,
+        // Discover two nodes. No pump after - listener fires synchronously,
         // and pumping gives the periodic flush timer a chance to create
         // unwanted co-seen relationships.
         ctx.nodesNotifier.setNodes({100: _makeNode(100), 200: _makeNode(200)});
 
-        // Do NOT flush co-seen — no relationships exist yet
+        // Do NOT flush co-seen - no relationships exist yet
 
         // Record message: should not create a co-seen edge
         ctx.container.read(nodeDexProvider.notifier).recordMessage(100);
@@ -1705,7 +1686,7 @@ void main() {
         ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
         await _waitForSave();
 
-        // Re-add to session. No pump — listener fires synchronously.
+        // Re-add to session. No pump - listener fires synchronously.
         ctx.nodesNotifier.setNodes({
           100: _makeNode(100, snr: 20),
           200: _makeNode(200, snr: 25),
@@ -1724,7 +1705,7 @@ void main() {
   });
 
   // ===========================================================================
-  // recordEncounter (notifier-level — message-derived path)
+  // recordEncounter (notifier-level - message-derived path)
   // ===========================================================================
 
   group('recordEncounter', () {
@@ -1803,7 +1784,7 @@ void main() {
         final initialCount = before.encounterCount;
         final base = before.lastSeen;
 
-        // Fire two messages 30 seconds apart — well inside the 5-minute
+        // Fire two messages 30 seconds apart - well inside the 5-minute
         // entry-level cooldown. lastSeen advances both times, but the
         // encounter count must not double-count.
         notifier.recordEncounter(
@@ -1820,7 +1801,7 @@ void main() {
           after.encounterCount,
           equals(initialCount),
           reason:
-              'calls within cooldown must not bump encounterCount — chatty '
+              'calls within cooldown must not bump encounterCount - chatty '
               'channels would otherwise inflate the count',
         );
         expect(after.lastSeen, equals(base.add(const Duration(seconds: 60))));
@@ -2170,7 +2151,7 @@ void main() {
       await _pumpEventQueue();
 
       // Just verify it doesn't throw and returns some value.
-      // Trait might be null if not enough data, that's fine —
+      // Trait might be null if not enough data, that's fine -
       // the point is the provider doesn't throw.
       ctx.container.read(nodeDexTraitProvider(100));
       expect(true, isTrue); // Provider executed without error
@@ -2402,7 +2383,7 @@ void main() {
         expect(state[300]!.coSeenNodes.length, equals(2));
 
         // Step 3: Re-enter session (session was cleared after flush).
-        // No pump — listener fires synchronously. Pumping gives the periodic
+        // No pump - listener fires synchronously. Pumping gives the periodic
         // flush timer a chance to clear _sessionSeenNodes before recordMessage.
         ctx.nodesNotifier.setNodes({
           100: _makeNode(100, snr: 12),
@@ -2598,7 +2579,7 @@ void main() {
       expect(state.containsKey(100), isTrue);
       expect(state.containsKey(200), isTrue);
 
-      // Flush co-seen — the cached initial snapshot should not count as
+      // Flush co-seen - the cached initial snapshot should not count as
       // recent overlap evidence for co-seen link generation.
       ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
       await _waitForSave();

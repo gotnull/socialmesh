@@ -70,17 +70,14 @@ void main() {
       },
     );
 
-    test(
-      'non-2xx response still reaches decode (status handling is caller policy)',
-      () async {
-        final result = await safeHttpRequest<int>(
-          surface: 'unit-test',
-          send: () async => http.Response('error', 500),
-          decode: (r) => r.statusCode,
-        );
-        expect(result, isA<HttpSuccess<int>>());
-        expect((result as HttpSuccess<int>).value, 500);
-      },
-    );
+    test('non-2xx response still reaches decode (status handling is caller policy)', () async {
+      final result = await safeHttpRequest<int>(
+        surface: 'unit-test',
+        send: () async => http.Response('error', 500),
+        decode: (r) => r.statusCode,
+      );
+      expect(result, isA<HttpSuccess<int>>());
+      expect((result as HttpSuccess<int>).value, 500);
+    });
   });
 }

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
 // Unit tests for `AuthService.linkAnonOrSignInWithCredential` and
-// `AuthService.linkAnonOrSignInWithProvider` — the helpers that decide
+// `AuthService.linkAnonOrSignInWithProvider` - the helpers that decide
 // between linking a credential to an existing anonymous user vs. doing
 // a plain sign-in.
 //
@@ -58,9 +58,8 @@ void main() {
   group('linkAnonOrSignInWithCredential', () {
     test('no current user → falls through to signInWithCredential', () async {
       when(() => auth.currentUser).thenReturn(null);
-      when(
-        () => auth.signInWithCredential(any()),
-      ).thenAnswer((_) async => signInResult);
+      when(() => auth.signInWithCredential(any()))
+          .thenAnswer((_) async => signInResult);
 
       final credential = _MockAuthCredential();
       final result = await service.linkAnonOrSignInWithCredential(credential);
@@ -73,16 +72,15 @@ void main() {
     test('non-anonymous current user → falls through to signInWithCredential '
         '(does not link an already-real account)', () async {
       // A user who is already signed in with a real provider
-      // shouldn't be link-upgraded — that's a no-op or an error
+      // shouldn't be link-upgraded - that's a no-op or an error
       // depending on the credential. Plain sign-in is the right call
       // (e.g. switching accounts).
       final realUser = _MockUser();
       when(() => realUser.isAnonymous).thenReturn(false);
       when(() => realUser.uid).thenReturn('real-uid');
       when(() => auth.currentUser).thenReturn(realUser);
-      when(
-        () => auth.signInWithCredential(any()),
-      ).thenAnswer((_) async => signInResult);
+      when(() => auth.signInWithCredential(any()))
+          .thenAnswer((_) async => signInResult);
 
       final credential = _MockAuthCredential();
       final result = await service.linkAnonOrSignInWithCredential(credential);
@@ -100,16 +98,15 @@ void main() {
       when(() => anonUser.isAnonymous).thenReturn(true);
       when(() => anonUser.uid).thenReturn('anon-uid-12345');
       when(() => auth.currentUser).thenReturn(anonUser);
-      when(
-        () => anonUser.linkWithCredential(any()),
-      ).thenAnswer((_) async => linkResult);
+      when(() => anonUser.linkWithCredential(any()))
+          .thenAnswer((_) async => linkResult);
 
       final credential = _MockAuthCredential();
       final result = await service.linkAnonOrSignInWithCredential(credential);
 
       expect(result, linkResult);
       verify(() => anonUser.linkWithCredential(credential)).called(1);
-      // MUST NOT have fallen through to sign-in — that would have
+      // MUST NOT have fallen through to sign-in - that would have
       // discarded the anon uid.
       verifyNever(() => auth.signInWithCredential(any()));
     });
@@ -129,9 +126,8 @@ void main() {
         when(
           () => anonUser.linkWithCredential(any()),
         ).thenThrow(FirebaseAuthException(code: 'credential-already-in-use'));
-        when(
-          () => auth.signInWithCredential(any()),
-        ).thenAnswer((_) async => signInResult);
+        when(() => auth.signInWithCredential(any()))
+            .thenAnswer((_) async => signInResult);
 
         final credential = _MockAuthCredential();
         final result = await service.linkAnonOrSignInWithCredential(credential);
@@ -150,12 +146,10 @@ void main() {
       when(() => anonUser.isAnonymous).thenReturn(true);
       when(() => anonUser.uid).thenReturn('anon-uid-12345');
       when(() => auth.currentUser).thenReturn(anonUser);
-      when(
-        () => anonUser.linkWithCredential(any()),
-      ).thenThrow(FirebaseAuthException(code: 'email-already-in-use'));
-      when(
-        () => auth.signInWithCredential(any()),
-      ).thenAnswer((_) async => signInResult);
+      when(() => anonUser.linkWithCredential(any()))
+          .thenThrow(FirebaseAuthException(code: 'email-already-in-use'));
+      when(() => auth.signInWithCredential(any()))
+          .thenAnswer((_) async => signInResult);
 
       final credential = _MockAuthCredential();
       final result = await service.linkAnonOrSignInWithCredential(credential);
@@ -170,14 +164,13 @@ void main() {
       // user-disabled, etc.) MUST propagate so the UI can surface
       // them properly. Silent fallback on, say, a network error
       // would attempt a sign-in over the same broken connection
-      // and probably fail the same way — but with confusing logs.
+      // and probably fail the same way - but with confusing logs.
       final anonUser = _MockUser();
       when(() => anonUser.isAnonymous).thenReturn(true);
       when(() => anonUser.uid).thenReturn('anon-uid-12345');
       when(() => auth.currentUser).thenReturn(anonUser);
-      when(
-        () => anonUser.linkWithCredential(any()),
-      ).thenThrow(FirebaseAuthException(code: 'network-request-failed'));
+      when(() => anonUser.linkWithCredential(any()))
+          .thenThrow(FirebaseAuthException(code: 'network-request-failed'));
 
       final credential = _MockAuthCredential();
       await expectLater(
@@ -202,9 +195,8 @@ void main() {
   group('linkAnonOrSignInWithProvider', () {
     test('no current user → falls through to signInWithProvider', () async {
       when(() => auth.currentUser).thenReturn(null);
-      when(
-        () => auth.signInWithProvider(any()),
-      ).thenAnswer((_) async => signInResult);
+      when(() => auth.signInWithProvider(any()))
+          .thenAnswer((_) async => signInResult);
 
       final provider = _MockAuthProvider();
       final result = await service.linkAnonOrSignInWithProvider(provider);
@@ -220,9 +212,8 @@ void main() {
         when(() => anonUser.isAnonymous).thenReturn(true);
         when(() => anonUser.uid).thenReturn('anon-uid-12345');
         when(() => auth.currentUser).thenReturn(anonUser);
-        when(
-          () => anonUser.linkWithProvider(any()),
-        ).thenAnswer((_) async => linkResult);
+        when(() => anonUser.linkWithProvider(any()))
+            .thenAnswer((_) async => linkResult);
 
         final provider = _MockAuthProvider();
         final result = await service.linkAnonOrSignInWithProvider(provider);
@@ -233,27 +224,22 @@ void main() {
       },
     );
 
-    test(
-      'anonymous user + provider link conflict → falls back to signInWithProvider',
-      () async {
-        final anonUser = _MockUser();
-        when(() => anonUser.isAnonymous).thenReturn(true);
-        when(() => anonUser.uid).thenReturn('anon-uid-12345');
-        when(() => auth.currentUser).thenReturn(anonUser);
-        when(
-          () => anonUser.linkWithProvider(any()),
-        ).thenThrow(FirebaseAuthException(code: 'credential-already-in-use'));
-        when(
-          () => auth.signInWithProvider(any()),
-        ).thenAnswer((_) async => signInResult);
+    test('anonymous user + provider link conflict → falls back to signInWithProvider', () async {
+      final anonUser = _MockUser();
+      when(() => anonUser.isAnonymous).thenReturn(true);
+      when(() => anonUser.uid).thenReturn('anon-uid-12345');
+      when(() => auth.currentUser).thenReturn(anonUser);
+      when(() => anonUser.linkWithProvider(any()))
+          .thenThrow(FirebaseAuthException(code: 'credential-already-in-use'));
+      when(() => auth.signInWithProvider(any()))
+          .thenAnswer((_) async => signInResult);
 
-        final provider = _MockAuthProvider();
-        final result = await service.linkAnonOrSignInWithProvider(provider);
+      final provider = _MockAuthProvider();
+      final result = await service.linkAnonOrSignInWithProvider(provider);
 
-        expect(result, signInResult);
-        verify(() => anonUser.linkWithProvider(provider)).called(1);
-        verify(() => auth.signInWithProvider(provider)).called(1);
-      },
-    );
+      expect(result, signInResult);
+      verify(() => anonUser.linkWithProvider(provider)).called(1);
+      verify(() => auth.signInWithProvider(provider)).called(1);
+    });
   });
 }

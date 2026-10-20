@@ -222,7 +222,7 @@ class MeshCoreSession {
   ///
   /// Exposed publicly (read-only) so the chat composer can show a
   /// remaining-budget hint and a countdown to the next allowed send.
-  /// Other commands (advertise, get_channel, etc.) are NOT gated —
+  /// Other commands (advertise, get_channel, etc.) are NOT gated -
   /// they're infrequent and don't compete with chat airtime.
   final MeshCoreSendRateLimiter _sendRateLimiter;
 
@@ -703,7 +703,7 @@ class MeshCoreSession {
     //
     //   StateError ("transport not connected" / "session not active"
     //   from the BLE / TCP / USB layer): treat as a transient null
-    //   return — same semantics as a TimeoutException. Periodic
+    //   return - same semantics as a TimeoutException. Periodic
     //   pollers (radio / core / packets stats notifiers) call us
     //   from a `Future.microtask` chain and would otherwise surface
     //   the StateError as an unhandled async error in production.
@@ -741,7 +741,7 @@ class MeshCoreSession {
   ///
   /// Use this for `CMD_SEND_TXT_MSG` (0x02) and
   /// `CMD_SEND_CHANNEL_TXT_MSG` (0x03). Other commands keep using
-  /// [sendAndWait] directly — they are infrequent and don't compete
+  /// [sendAndWait] directly - they are infrequent and don't compete
   /// for chat airtime budget.
   ///
   /// Returns a [MeshCoreTextSendResult] discriminating:
@@ -827,7 +827,7 @@ class MeshCoreSession {
   /// `sendKind`, so the prefix sniff only fires for tests and any
   /// future caller that omits the kind. False negatives (a reply
   /// payload whose routing header pushes `[mrrp]` past offset 0)
-  /// classify as plain — acceptable, since per-kind attribution is
+  /// classify as plain - acceptable, since per-kind attribution is
   /// best-effort when the kind is omitted; the byte budget itself is
   /// always counted correctly.
   static MeshCoreSendKind _inferSendKind(int command, Uint8List payload) {
@@ -1267,7 +1267,7 @@ class MeshCoreSession {
   ///             [tag:u32 LE][response_data: variable]
   /// ```
   ///
-  /// The host does NOT supply the tag — the firmware allocates it and
+  /// The host does NOT supply the tag - the firmware allocates it and
   /// echoes it in the SENT ack. We extract the tag from the ack and
   /// match against subsequent push frames; non-matching pushes are
   /// ignored.
@@ -1355,9 +1355,8 @@ class MeshCoreSession {
       //   payload[1..5] = tag (u32 LE)
       //   payload[5..]  = response_data
       if (frame.payload.length < 5) return;
-      final pushTag = ByteData.sublistView(
-        frame.payload,
-      ).getUint32(1, Endian.little);
+      final pushTag = ByteData.sublistView(frame.payload)
+          .getUint32(1, Endian.little);
       final data = Uint8List.fromList(frame.payload.sublist(5));
       if (expectedTag == null) {
         // SENT ack hasn't landed yet; buffer the push so we can
@@ -1394,9 +1393,8 @@ class MeshCoreSession {
       }
 
       final tag = ByteData.sublistView(ack.payload).getUint32(1, Endian.little);
-      final estTimeoutMs = ByteData.sublistView(
-        ack.payload,
-      ).getUint32(5, Endian.little);
+      final estTimeoutMs = ByteData.sublistView(ack.payload)
+          .getUint32(5, Endian.little);
       expectedTag = tag;
 
       AppLogging.meshcore(
@@ -1487,7 +1485,7 @@ class MeshCoreSession {
   }
 
   /// D49-D3: read the repeater's access list (admin allow-list).
-  /// Read-only — mutation lives on a separate slice.
+  /// Read-only - mutation lives on a separate slice.
   Future<Uint8List?> requestRepeaterAccessList({
     required Uint8List recipientPubKey,
     Duration timeout = const Duration(seconds: 10),
@@ -1599,9 +1597,8 @@ class MeshCoreSession {
         .listen((frame) {
           if (frame.command == MeshCoreResponses.contactsStart) {
             total = frame.payload.length >= 4
-                ? ByteData.sublistView(
-                    frame.payload,
-                  ).getUint32(0, Endian.little)
+                ? ByteData.sublistView(frame.payload)
+                      .getUint32(0, Endian.little)
                 : null;
             received = 0;
             onProgress?.call(received, total);
@@ -2077,7 +2074,7 @@ class MeshCoreSession {
   //
   // The retry is single-shot; there is no recursive descent. If the
   // retry also times out the caller gets a `firmwareTimeout` and can
-  // surface a "session may have expired" prompt — same as without
+  // surface a "session may have expired" prompt - same as without
   // this wrapper.
   //
   // Privacy: the password is forwarded to [sendLogin] which already
@@ -2268,7 +2265,7 @@ class MeshCoreSession {
   /// Firmware reads `name` as a 32-byte char buffer (null-terminated
   /// within the buffer) and `secret` as 16 raw bytes. The 32-byte secret
   /// branch is signalled by the firmware as `ERR_CODE_UNSUPPORTED_CMD`
-  /// at the pinned SHA — only 128-bit keys are supported.
+  /// at the pinned SHA - only 128-bit keys are supported.
   ///
   /// Firmware returns `RESP_CODE_OK` (0x00) on success, `RESP_CODE_ERR`
   /// (0x01) with `ERR_CODE_NOT_FOUND` on bad slot index. Changes apply
@@ -2283,11 +2280,11 @@ class MeshCoreSession {
   /// to pad to exactly 32 bytes and pinned by a byte-vector test.
   ///
   /// [index] is the channel slot (0-based; firmware capacity is
-  /// `MAX_GROUP_CHANNELS`, board-dependent — 8 is the conservative
+  /// `MAX_GROUP_CHANNELS`, board-dependent - 8 is the conservative
   /// default our `getChannels` polls).
   /// [name] is the channel name (max 32 bytes; longer names are
   /// truncated. Firmware's `StrHelper::strncpy` accepts 0-32 byte names).
-  /// [psk] is the pre-shared key — must be exactly 16 bytes (128-bit).
+  /// [psk] is the pre-shared key - must be exactly 16 bytes (128-bit).
   Future<bool> setChannel({
     required int index,
     required String name,
@@ -2336,7 +2333,7 @@ class MeshCoreSession {
   ///
   /// MeshCore firmware has **no dedicated delete-channel opcode** at
   /// the pinned SHA. The effective wire op is `setChannel(idx, "", 0×16)`
-  /// — overwrite the slot with empty name + all-zero secret. Our
+  /// - overwrite the slot with empty name + all-zero secret. Our
   /// `parseChannelInfo` then treats the slot as unconfigured
   /// (`MeshCoreChannelInfo.isEmpty`), hiding it from `getChannels`.
   ///
@@ -2496,8 +2493,8 @@ class MeshCoreSession {
   /// [35..98]  path                    64B (zero-padded)
   /// [99..130] name                    32B (UTF-8, null-terminated, padded)
   /// [131..134] last_advert_timestamp  u32 LE (unix seconds; 0 if unknown)
-  /// [135..138] gps_lat                i32 LE × 1e6 — included if [latitude] != null
-  /// [139..142] gps_lon                i32 LE × 1e6 — included if [longitude] != null
+  /// [135..138] gps_lat                i32 LE × 1e6 - included if [latitude] != null
+  /// [139..142] gps_lon                i32 LE × 1e6 - included if [longitude] != null
   /// ```
   ///
   /// Firmware enforces a minimum payload of pubkey + type + flags + path_len
@@ -2511,7 +2508,7 @@ class MeshCoreSession {
   ///
   /// Returns `true` on `RESP_CODE_OK`. Returns `false` on timeout, error
   /// response, or `RESP_CODE_ERR`. Caller should refresh the contact
-  /// list from firmware after success — the firmware does not push a
+  /// list from firmware after success - the firmware does not push a
   /// new contact frame.
   Future<bool> addUpdateContact({
     required Uint8List pubKey,
@@ -2659,7 +2656,7 @@ class MeshCoreSession {
   /// firmware uses it to identify which contact card to broadcast.
   ///
   /// Returns `true` on `RESP_CODE_OK`, `false` on `RESP_CODE_ERR` or
-  /// timeout. The receive side is asynchronous — there's no per-peer
+  /// timeout. The receive side is asynchronous - there's no per-peer
   /// confirmation that an advert was heard.
   Future<bool> shareSelfContact(
     Uint8List selfPubKey, {
@@ -2846,7 +2843,7 @@ class MeshCoreSession {
   /// next outbound message.
   ///
   /// Wire payload: `[0x0D][pubkey 32B]` (33 bytes total). Firmware
-  /// does not push a contact-updated frame — caller should refresh the
+  /// does not push a contact-updated frame - caller should refresh the
   /// contact list to see the new path state.
   Future<bool> resetPath(
     Uint8List pubKey, {
@@ -2981,10 +2978,10 @@ class MeshCoreSession {
   ///
   /// Wire format (after the 0x24 opcode byte):
   /// ```
-  /// [0..3] tag       u32 LE  — caller-supplied correlation id
-  /// [4..7] auth_code u32 LE  — typically 0 for unauthenticated traces
-  /// [8]    flag      u8      — control flags (typically 0)
-  /// [9..]  path_data variable — target path bytes (e.g. repeater pubkey
+  /// [0..3] tag       u32 LE  - caller-supplied correlation id
+  /// [4..7] auth_code u32 LE  - typically 0 for unauthenticated traces
+  /// [8]    flag      u8      - control flags (typically 0)
+  /// [9..]  path_data variable - target path bytes (e.g. repeater pubkey
   ///                              prefix sequence). Empty path = trace
   ///                              along default route.
   /// ```
@@ -3048,7 +3045,7 @@ class MeshCoreSession {
       }
       final result = parsed.value!;
       if (result.tag != tag) {
-        // Different concurrent trace — not ours. Stay subscribed.
+        // Different concurrent trace - not ours. Stay subscribed.
         return;
       }
       if (!completer.isCompleted) {
@@ -3133,7 +3130,7 @@ class MeshCoreSession {
   }
 
   /// Reboot the radio (`CMD_REBOOT` 0x13). Wire payload requires the
-  /// literal magic word `"reboot"` after the opcode — without it
+  /// literal magic word `"reboot"` after the opcode - without it
   /// the firmware silently ignores the frame.
   ///
   /// Fire-and-forget: the radio does NOT send `RESP_CODE_OK`; it
@@ -3143,7 +3140,7 @@ class MeshCoreSession {
   /// after the await returns.
   Future<void> rebootDevice() async {
     AppLogging.meshcore('event=identity.reboot.requested');
-    // Magic-word literal — without it the firmware drops the frame
+    // Magic-word literal - without it the firmware drops the frame
     // (`memcmp(&cmd_frame[1], "reboot", 6)` check in companion
     // firmware). Hardcoded; do not extract to a constant since the
     // string itself IS the protocol.

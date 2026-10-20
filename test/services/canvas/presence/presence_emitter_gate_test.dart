@@ -192,7 +192,7 @@ void main() {
     });
 
     test('gate flipping false → true does NOT lazily create a session that '
-        'attachViewer previously skipped — host must re-attach', () async {
+        'attachViewer previously skipped - host must re-attach', () async {
       final cache = PresenceCache();
       final channel = _FakeChannel();
       var canEmit = false;
@@ -232,7 +232,7 @@ void main() {
       expect(channel.sent, isNotEmpty);
     });
 
-    test('default canEmit (no callback) preserves pre-S5 behaviour — '
+    test('default canEmit (no callback) preserves pre-S5 behaviour - '
         'attachViewer seeds + emits as before', () async {
       final cache = PresenceCache();
       final channel = _FakeChannel();

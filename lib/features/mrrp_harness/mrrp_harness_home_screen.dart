@@ -65,7 +65,7 @@ class _MrrpHarnessHomeScreenState extends ConsumerState<MrrpHarnessHomeScreen> {
       );
     }
 
-    // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
+    // lint-allow: haptic-feedback - keyboard dismissal, not interactive action
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(

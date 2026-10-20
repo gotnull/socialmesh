@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodePet creature renderer — a thin presentational wrapper over the
+// NodePet creature renderer - a thin presentational wrapper over the
 // shared [MeshNodeBrain] (the icosahedron mesh creature used by the
 // onboarding advisor). This was previously a bespoke 2.5D painter with
 // hexagonal body + petal orbit; we now reuse the mesh creature system
@@ -38,19 +38,19 @@ class PetCreature extends StatelessWidget {
   final bool isCalling;
 
   /// Still in the public API so care-action wiring doesn't break, but
-  /// the creature doesn't render hygiene splats on the body anymore —
+  /// the creature doesn't render hygiene splats on the body anymore -
   /// the status banner above the pet communicates "needs Clean" via
   /// text + pulsing button instead of ambient visual noise.
   final int hygieneArtefactCount;
 
   final double size;
 
-  /// Renderer profile — scales which depth layers, flourishes, and
+  /// Renderer profile - scales which depth layers, flourishes, and
   /// interactive features are enabled. home = full, card = compact,
   /// tiny = face-less dot for NodeDex row previews.
   final PetRenderMode mode;
 
-  /// Optional raw stat values (0..[statMax]) — subtle modulation of
+  /// Optional raw stat values (0..[statMax]) - subtle modulation of
   /// glow intensity within each mood bucket. When null, full vitality
   /// is assumed (used for mini previews built from PetPublicState
   /// which only carries the derived mood class).
@@ -59,11 +59,11 @@ class PetCreature extends StatelessWidget {
   final int? stability;
   final int statMax;
 
-  /// Optional tap callback — forwarded to the underlying MeshNodeBrain.
+  /// Optional tap callback - forwarded to the underlying MeshNodeBrain.
   final VoidCallback? onTap;
 
   /// Pin the face forward so NodePet reads as a creature looking at
-  /// the user rather than a tumbling icosahedron. Default true —
+  /// the user rather than a tumbling icosahedron. Default true -
   /// overridable so the debug scrubber can show the tumble.
   final bool preferFrontFace;
 
@@ -121,7 +121,7 @@ class PetCreature extends StatelessWidget {
       showFaces: !isEgg && mode == PetRenderMode.home,
       faceOpacity: _faceOpacity(stage, branch, mode),
       sciFiGlitch: isSick,
-      // Keep the pet feeling alive between mood changes — only on the
+      // Keep the pet feeling alive between mood changes - only on the
       // home hero, where the creature is large enough for a blink to
       // register. Tiny NodeDex previews and card-mode companions stay
       // quiet (per-instance timer overhead × N node rows would add up).
@@ -131,7 +131,7 @@ class PetCreature extends StatelessWidget {
   }
 }
 
-/// Murmur3 fmix32 finalizer — scrambles bits so adjacent DNA seeds
+/// Murmur3 fmix32 finalizer - scrambles bits so adjacent DNA seeds
 /// produce visibly different palettes. The constants are the standard
 /// Murmur3 mix constants.
 int _murmurFinalize(int seed) {

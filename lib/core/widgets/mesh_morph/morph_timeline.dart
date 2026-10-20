@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
 // Dart port of rsvpnano's Timeline.cpp. A MorphTimeline is an ordered list
-// of keyframes — each keyframe holds a shape for `hold` ms, then morphs
+// of keyframes - each keyframe holds a shape for `hold` ms, then morphs
 // into the next keyframe over `morph` ms. The sampler maps a wall-clock
 // elapsed value onto the timeline and returns:
 //   - which shape is the "from"
@@ -17,7 +17,7 @@ import 'mesh_shape.dart';
 
 /// How morph progress is shaped from 0 → 1.
 enum EaseCurve {
-  /// Identity — t passes through unchanged.
+  /// Identity - t passes through unchanged.
   linear,
 
   /// Cubic smoothstep: t·t·(3 − 2t). Soft start, soft end.
@@ -27,7 +27,7 @@ enum EaseCurve {
   /// keyframes where you want a slow "settling" feel.
   smootherStep,
 
-  /// easeOutCubic: 1 − (1−t)³. Fast start, soft end — good for "arrival"
+  /// easeOutCubic: 1 − (1−t)³. Fast start, soft end - good for "arrival"
   /// transitions into the final hero shape (e.g. icosahedron).
   easeOutCubic,
 }
@@ -36,7 +36,7 @@ enum EaseCurve {
 /// the blend per-point for explode / spiral / dissolve effects.
 enum MorphStyle {
   linear,
-  // explode, spiral, axisSweep, noiseDissolve, collapseToCenter — TBD.
+  // explode, spiral, axisSweep, noiseDissolve, collapseToCenter - TBD.
 }
 
 /// One slot in the morph timeline. Holds a shape for `hold`, then morphs
@@ -90,7 +90,7 @@ class TimelineSample {
   MeshShapeId get current => !inMorph || easedT < 0.5 ? from : to;
 }
 
-/// Whole timeline. Loops automatically — past the last keyframe's morph
+/// Whole timeline. Loops automatically - past the last keyframe's morph
 /// it wraps to the first keyframe.
 class MorphTimeline {
   final List<MorphKeyframe> keyframes;
@@ -148,8 +148,8 @@ class MorphTimeline {
       }
       cursorMicro = morphEnd;
     }
-    // Unreachable — cycle math above guarantees we always return inside the
-    // loop — but the analyzer wants a fallback path.
+    // Unreachable - cycle math above guarantees we always return inside the
+    // loop - but the analyzer wants a fallback path.
     final last = keyframes.last;
     return TimelineSample(
       from: last.shape,
@@ -164,7 +164,7 @@ class MorphTimeline {
 
   // Edges follow the "from" shape during hold (so they appear/disappear
   // as the shape lands), and fade to the "to" shape's edges during morph.
-  // Caller decides whether to render — for now the painter just toggles
+  // Caller decides whether to render - for now the painter just toggles
   // on/off; smooth edge crossfades can be added later if visually wanted.
   bool _resolveEdgesFlag(
     MorphKeyframe kf,

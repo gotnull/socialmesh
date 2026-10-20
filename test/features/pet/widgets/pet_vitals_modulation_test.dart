@@ -5,7 +5,7 @@
 // renderer. The primary animation contract is PetMood + flags; raw
 // stats only supply bounded secondary modulation WITHIN a mood bucket.
 // These tests pin the invariant that modulation never crosses mood
-// boundaries — a "sick" pet at max stats is still visibly sicker than
+// boundaries - a "sick" pet at max stats is still visibly sicker than
 // a "hungry" pet at min stats, etc.
 
 import 'package:flutter/material.dart';
@@ -15,7 +15,7 @@ import 'package:socialmesh/features/pet/widgets/pet_render_model.dart';
 import 'package:socialmesh/features/pet/widgets/pet_sigil_painter.dart';
 
 void main() {
-  group('petBreathAmplitude — monotonic in vitality', () {
+  group('petBreathAmplitude - monotonic in vitality', () {
     test('every mood gets slightly more breath as vitality rises', () {
       for (final mood in PetMood.values) {
         final low = petBreathAmplitude(mood, PetStage.adult, 0.0);
@@ -48,7 +48,7 @@ void main() {
       }
     });
 
-    test('vitality is clamped — values outside [0,1] do not extend band', () {
+    test('vitality is clamped - values outside [0,1] do not extend band', () {
       final base = petBreathAmplitude(PetMood.content, PetStage.adult, 1.0);
       final over = petBreathAmplitude(PetMood.content, PetStage.adult, 5.0);
       final under = petBreathAmplitude(PetMood.content, PetStage.adult, -2.0);
@@ -60,7 +60,7 @@ void main() {
     });
   });
 
-  group('petBreathAmplitude — mood bucket boundaries preserved', () {
+  group('petBreathAmplitude - mood bucket boundaries preserved', () {
     // Invariant: a pet's mood class must be recognisable regardless of
     // stats. Adjacent mood amplitudes never overlap after modulation.
 
@@ -127,7 +127,7 @@ void main() {
     });
   });
 
-  group('petBreathAmplitude — egg override', () {
+  group('petBreathAmplitude - egg override', () {
     test('egg stage uses its own baseline regardless of mood', () {
       // All moods at egg stage must return the same baseline (0.10 × vitality band).
       final amps = <double>[];
@@ -149,7 +149,7 @@ void main() {
     });
   });
 
-  group('petBuoyancyScale — monotonic and tight', () {
+  group('petBuoyancyScale - monotonic and tight', () {
     test('bounds are 0.80 (vitality=0) and 1.15 (vitality=1)', () {
       expect(petBuoyancyScale(0.0), 0.80);
       expect(petBuoyancyScale(1.0), closeTo(1.15, 0.001));
@@ -163,7 +163,7 @@ void main() {
     });
   });
 
-  group('petAuraIntensityScale — stability-only band', () {
+  group('petAuraIntensityScale - stability-only band', () {
     test('bounds are 0.75 (stability=0) and 1.10 (stability=1)', () {
       expect(petAuraIntensityScale(0.0), 0.75);
       expect(petAuraIntensityScale(1.0), closeTo(1.10, 0.001));
@@ -174,7 +174,7 @@ void main() {
     });
   });
 
-  group('petWobbleAmplitudeScale — deliberately very narrow', () {
+  group('petWobbleAmplitudeScale - deliberately very narrow', () {
     test('bounds are 0.85 (vitality=0) and 1.05 (vitality=1)', () {
       expect(petWobbleAmplitudeScale(0.0), 0.85);
       expect(petWobbleAmplitudeScale(1.0), closeTo(1.05, 0.001));
@@ -186,7 +186,7 @@ void main() {
     });
   });
 
-  group('PetRenderContext — vitality aggregation', () {
+  group('PetRenderContext - vitality aggregation', () {
     PetRenderContext ctx({
       double energy = 1.0,
       double moodStat = 1.0,
@@ -238,7 +238,7 @@ void main() {
     });
   });
 
-  group('PetCreature widget — vitality flows through without regression', () {
+  group('PetCreature widget - vitality flows through without regression', () {
     // Smoke + construction tests. We can't verify pixel output, but we
     // can verify that (a) the widget accepts the new optional params,
     // (b) same-mood widgets with wildly different stats both paint
@@ -300,7 +300,7 @@ void main() {
               hygieneArtefactCount: 0,
               size: 220,
               mode: PetRenderMode.home,
-              // energy / moodStat / stability omitted — should default
+              // energy / moodStat / stability omitted - should default
               // to full-health baseline.
             ),
           ),
@@ -314,7 +314,7 @@ void main() {
     testWidgets('statMax scales raw-int params correctly', (tester) async {
       // Same normalized stats via different (raw, statMax) pairs must
       // produce identical visual output. We verify by constructing both
-      // and confirming both paint — the vitality value is internal.
+      // and confirming both paint - the vitality value is internal.
       for (final cfg in [(5, 10), (50, 100), (1, 2)]) {
         final (raw, max) = cfg;
         final widget = MediaQuery(
@@ -349,7 +349,7 @@ void main() {
   });
 
   group('Regression: modulation never overwhelms the mood contract', () {
-    // Holistic assertion — the full matrix of distinct-bucket adjacent
+    // Holistic assertion - the full matrix of distinct-bucket adjacent
     // pairs at extremal vitality must stay strictly ordered. Moods that
     // share a base amplitude (hungry ≈ sad) occupy the same bucket, so
     // the matrix groups them together.

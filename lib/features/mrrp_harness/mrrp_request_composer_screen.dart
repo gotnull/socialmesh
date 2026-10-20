@@ -21,7 +21,7 @@ import '../../services/protocol/sip/mrrp_frame.dart';
 import '../../services/protocol/sip/mrrp_types.dart';
 import 'mrrp_response_viewer_screen.dart';
 
-/// Request composer — build and send MRRP requests to discovered peers.
+/// Request composer - build and send MRRP requests to discovered peers.
 class MrrpRequestComposerScreen extends ConsumerStatefulWidget {
   final int? initialPeerNodeId;
   final int? initialServiceId;
@@ -93,7 +93,7 @@ class _MrrpRequestComposerScreenState
         rateLimiter.remainingBytes >= encodedSize &&
         !_sending;
 
-    // lint-allow: haptic-feedback — keyboard dismissal, not interactive action
+    // lint-allow: haptic-feedback - keyboard dismissal, not interactive action
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// D33 — provider-level inbound envelope routing tests.
+// D33 - provider-level inbound envelope routing tests.
 //
 // These exercise the chat-meta envelope helpers that the
 // `MeshCoreConversationsNotifier` calls inline on every inbound
@@ -80,7 +80,7 @@ void main() {
       expect(decoded.displayText, wire);
     });
 
-    test('malformed envelope (bad base64) falls through to plain text — '
+    test('malformed envelope (bad base64) falls through to plain text - '
         'no exception', () {
       const wire = '[mrrp]not_valid_base64!![/mrrp] human summary';
       final decoded = ChatMetaEnvelopeCodec.decode(wire);

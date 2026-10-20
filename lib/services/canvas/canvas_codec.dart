@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCanvas wire codec — encode/decode for canvas.v1 action payloads.
+// MeshCanvas wire codec - encode/decode for canvas.v1 action payloads.
 //
 // Source of truth: docs/canvas/CANVAS_V0_1.md §4, §5, §6.
 // Tests in test/services/canvas/codec/ pin byte vectors against the
@@ -18,7 +18,7 @@
 // Encoders return `null` only when input is rejected by the spec's
 // encoder-side invariants (oversize batch, wrong digest length, etc.);
 // caller-bug input (negative coordinates, etc.) throws ArgumentError.
-// Decoders return `null` on any spec violation — they never throw.
+// Decoders return `null` on any spec violation - they never throw.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -207,8 +207,8 @@ class CanvasSyncRequestOp {
   int get y1 => y0 + CanvasWireFormat.syncTileSpan;
 }
 
-/// Sync response (action 0x0005). The body has two encodings — RLE
-/// single-frame, OR raw banded multi-frame — discriminated by the
+/// Sync response (action 0x0005). The body has two encodings - RLE
+/// single-frame, OR raw banded multi-frame - discriminated by the
 /// `encoding` byte at offset 14.
 sealed class CanvasSyncResponseBody {
   const CanvasSyncResponseBody();
@@ -378,7 +378,7 @@ abstract final class CanvasCodec {
   }
 
   // ---------------------------------------------------------------------------
-  // paint (action 0x0001) — 24 bytes
+  // paint (action 0x0001) - 24 bytes
   // ---------------------------------------------------------------------------
 
   static Uint8List? encodePaint(CanvasPaintOp op) {
@@ -453,7 +453,7 @@ abstract final class CanvasCodec {
   }
 
   // ---------------------------------------------------------------------------
-  // paint_batch (action 0x0002) — 22 + 5N bytes, 1 <= N <= 21
+  // paint_batch (action 0x0002) - 22 + 5N bytes, 1 <= N <= 21
   // ---------------------------------------------------------------------------
 
   static Uint8List? encodePaintBatch(CanvasPaintBatchOp batch) {
@@ -578,7 +578,7 @@ abstract final class CanvasCodec {
   }
 
   // ---------------------------------------------------------------------------
-  // canvas_digest (action 0x0003) — 64 bytes at v0.1 (12 prefix + 16
+  // canvas_digest (action 0x0003) - 64 bytes at v0.1 (12 prefix + 16
   // global + 4 cellCount + tilesConcatenatedBytes). All offsets +
   // lengths derive from CanvasDigestSizes so the encoder stays valid
   // if CanvasGeometry tile count ever changes.
@@ -642,7 +642,7 @@ abstract final class CanvasCodec {
   }
 
   // ---------------------------------------------------------------------------
-  // sync_request (action 0x0004) — 18 bytes
+  // sync_request (action 0x0004) - 18 bytes
   // ---------------------------------------------------------------------------
 
   static Uint8List? encodeSyncRequest(CanvasSyncRequestOp op) {
@@ -709,7 +709,7 @@ abstract final class CanvasCodec {
   }
 
   // ---------------------------------------------------------------------------
-  // sync_response (action 0x0005) — dual-mode, 18-byte header + body
+  // sync_response (action 0x0005) - dual-mode, 18-byte header + body
   // ---------------------------------------------------------------------------
 
   static Uint8List? encodeSyncResponse(CanvasSyncResponseOp op) {
@@ -1017,7 +1017,7 @@ abstract final class CanvasCodec {
   }
 
   // ---------------------------------------------------------------------------
-  // presence (action 0x0007) — 24 bytes
+  // presence (action 0x0007) - 24 bytes
   // ---------------------------------------------------------------------------
 
   static Uint8List? encodePresence(CanvasPresenceOp op) {

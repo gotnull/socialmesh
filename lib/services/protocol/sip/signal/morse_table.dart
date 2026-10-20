@@ -61,7 +61,7 @@ abstract final class MorseTable {
     '@': '.--.-.',
   };
 
-  /// Reverse of [charToCode] — built lazily on first access.
+  /// Reverse of [charToCode] - built lazily on first access.
   ///
   /// Used by the tap-Morse input surface to decode a token like
   /// `"..."` back to the letter `"S"` while the user is composing.
@@ -97,7 +97,7 @@ abstract final class MorseTable {
   }
 
   /// Strip every unsupported character. Used for the live composer
-  /// preview — the actual send rejects unsupported chars rather
+  /// preview - the actual send rejects unsupported chars rather
   /// than silently dropping them.
   static String filtered(String text) {
     final upper = text.toUpperCase();
@@ -115,7 +115,7 @@ abstract final class MorseTable {
   /// rendered receiver pattern, and the canonical [decode] all agree.
   ///
   /// The middle dot (U+00B7) is visually distinct from a Morse `.`
-  /// (which encodes the letter E) and from a Morse `-` (T) — so the
+  /// (which encodes the letter E) and from a Morse `-` (T) - so the
   /// separator never collides with the alphabet. Spaces around it
   /// keep the displayed pattern readable on long messages.
   static const String wordSeparator = ' · ';
@@ -147,15 +147,15 @@ abstract final class MorseTable {
   ///
   /// Decoding rules (per v1 token-grouping spec):
   ///
-  ///   1. **Explicit separators** — input contains ` / `: split on
+  ///   1. **Explicit separators** - input contains ` / `: split on
   ///      that for words, then on single space for letters. Each
   ///      letter token is looked up via [letterForToken].
-  ///   2. **Multi-space fallback** — input has no `/` but contains
+  ///   2. **Multi-space fallback** - input has no `/` but contains
   ///      ≥2 consecutive spaces: treat the multi-space run as a
   ///      word boundary.
-  ///   3. **Single-space fallback** — input has only single spaces:
+  ///   3. **Single-space fallback** - input has only single spaces:
   ///      decode as a sequence of letters with no word boundaries.
-  ///   4. **Continuous fallback** — input has no whitespace at all:
+  ///   4. **Continuous fallback** - input has no whitespace at all:
   ///      best-effort greedy decode (longest matching prefix from
   ///      the canonical table). Inherently lossy on ambiguous input;
   ///      surfaces unknown sub-strings as `?`.
@@ -233,7 +233,7 @@ abstract final class MorseTable {
         }
       }
       if (hit == null) {
-        // No prefix matches at the current head — skip one symbol so
+        // No prefix matches at the current head - skip one symbol so
         // we don't loop forever on garbage. Surface the failure in UI
         // via the `?` placeholder.
         out.write('?');
@@ -248,7 +248,7 @@ abstract final class MorseTable {
 }
 
 /// One step in the timed Morse playback sequence emitted by
-/// [morseTimingForText] — used by the synth to build a
+/// [morseTimingForText] - used by the synth to build a
 /// gap/tone-on/tone-off schedule for one `text` at one WPM.
 enum MorseStepKind {
   /// Tone-on for `units` units (1 = dot, 3 = dash).
@@ -273,7 +273,7 @@ class MorseStep {
 ///   - inter-word gap = 7 units
 ///
 /// Unsupported characters are skipped (caller should validate via
-/// [MorseTable.isEncodable] first — encoder enforces this).
+/// [MorseTable.isEncodable] first - encoder enforces this).
 List<MorseStep> morseTimingForText(String text) {
   final out = <MorseStep>[];
   final upper = text.toUpperCase();

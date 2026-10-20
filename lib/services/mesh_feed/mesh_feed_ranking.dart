@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Feed ranking engine — deterministic scoring for mesh post ordering.
+/// Feed ranking engine - deterministic scoring for mesh post ordering.
 ///
 /// The ranking is a weighted blend of four signals:
-///   1. Freshness (35%) — how close to creation vs. expiry
-///   2. Trust     (30%) — author trust score from NodeDex evidence
-///   3. Proximity (20%) — hop distance (lower = closer = higher score)
-///   4. Recency   (15%) — how recently the post was last seen
+///   1. Freshness (35%) - how close to creation vs. expiry
+///   2. Trust     (30%) - author trust score from NodeDex evidence
+///   3. Proximity (20%) - hop distance (lower = closer = higher score)
+///   4. Recency   (15%) - how recently the post was last seen
 ///
 /// Tie-breaking is deterministic: posts with equal score are ordered
 /// by (createdAtMs DESC, id ASC).

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Collector Album — barrel export for the album module.
+// Collector Album - barrel export for the album module.
 //
 // Provides a single import point for all album-related widgets,
 // providers, constants, and effects. Feature code outside the

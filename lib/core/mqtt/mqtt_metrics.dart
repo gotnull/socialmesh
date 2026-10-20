@@ -69,7 +69,7 @@ class ConnectionErrorRecord {
   /// When the error occurred.
   final DateTime timestamp;
 
-  /// Human-readable error message (sanitized — no secrets).
+  /// Human-readable error message (sanitized - no secrets).
   final String message;
 
   /// Error classification for grouping in diagnostics.
@@ -113,7 +113,7 @@ class ConnectionErrorRecord {
 
 /// Classification of connection errors for diagnostics grouping.
 enum ConnectionErrorType {
-  /// DNS resolution failed — host not found.
+  /// DNS resolution failed - host not found.
   dnsFailure,
 
   /// TCP connection could not be established.

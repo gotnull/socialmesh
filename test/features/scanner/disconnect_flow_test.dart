@@ -475,7 +475,7 @@ void main() {
       expect(container.read(connectedDeviceProvider)?.id, 'device-B');
 
       // _performReconnect was looking for device-A but saved device changed
-      // to device-B — it should abort to avoid connecting to the wrong device
+      // to device-B - it should abort to avoid connecting to the wrong device
     });
   });
 
@@ -609,54 +609,48 @@ void main() {
       expect(skipAutoReconnectReason, isTrue);
     });
 
-    test(
-      'scanner navigates to main when device is already connected and user did not disconnect',
-      () {
-        final container = _createContainer();
-        addTearDown(container.dispose);
+    test('scanner navigates to main when device is already connected and user did not disconnect', () {
+      final container = _createContainer();
+      addTearDown(container.dispose);
 
-        _setConnected(container);
-        // userDisconnected is false by default
+      _setConnected(container);
+      // userDisconnected is false by default
 
-        final deviceState = container.read(deviceConnectionProvider);
-        final userDisconnected = container.read(userDisconnectedProvider);
+      final deviceState = container.read(deviceConnectionProvider);
+      final userDisconnected = container.read(userDisconnectedProvider);
 
-        // This replicates the first guard in _tryAutoReconnect:
-        // If device is connected and user didn't disconnect, navigate to main
-        final shouldNavigateToMain =
-            (deviceState.isConnected ||
-                deviceState.state == DevicePairingState.configuring) &&
-            !userDisconnected;
+      // This replicates the first guard in _tryAutoReconnect:
+      // If device is connected and user didn't disconnect, navigate to main
+      final shouldNavigateToMain =
+          (deviceState.isConnected ||
+              deviceState.state == DevicePairingState.configuring) &&
+          !userDisconnected;
 
-        expect(shouldNavigateToMain, isTrue);
-      },
-    );
+      expect(shouldNavigateToMain, isTrue);
+    });
 
-    test(
-      'scanner waits for disconnect when user disconnected but transport still connected',
-      () {
-        final container = _createContainer();
-        addTearDown(container.dispose);
+    test('scanner waits for disconnect when user disconnected but transport still connected', () {
+      final container = _createContainer();
+      addTearDown(container.dispose);
 
-        // Transport is still connected (disconnect in flight)
-        _setConnected(container);
-        // But user has already tapped disconnect
-        container
-            .read(userDisconnectedProvider.notifier)
-            .setUserDisconnected(true);
+      // Transport is still connected (disconnect in flight)
+      _setConnected(container);
+      // But user has already tapped disconnect
+      container
+          .read(userDisconnectedProvider.notifier)
+          .setUserDisconnected(true);
 
-        final deviceState = container.read(deviceConnectionProvider);
-        final userDisconnected = container.read(userDisconnectedProvider);
+      final deviceState = container.read(deviceConnectionProvider);
+      final userDisconnected = container.read(userDisconnectedProvider);
 
-        // Scanner should wait for disconnect to complete before scanning
-        final shouldWaitForDisconnect =
-            userDisconnected &&
-            (deviceState.isConnected ||
-                deviceState.state == DevicePairingState.configuring);
+      // Scanner should wait for disconnect to complete before scanning
+      final shouldWaitForDisconnect =
+          userDisconnected &&
+          (deviceState.isConnected ||
+              deviceState.state == DevicePairingState.configuring);
 
-        expect(shouldWaitForDisconnect, isTrue);
-      },
-    );
+      expect(shouldWaitForDisconnect, isTrue);
+    });
   });
 
   // =========================================================================
@@ -833,7 +827,7 @@ void main() {
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.scanning);
 
-        // User taps a device in scanner — sets manualConnecting
+        // User taps a device in scanner - sets manualConnecting
         container
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.manualConnecting);
@@ -865,7 +859,7 @@ void main() {
         expect(container.read(userDisconnectedProvider), isTrue);
 
         // The auto-reconnect manager checks userDisconnected BEFORE
-        // checking canAttemptReconnect — so this combination blocks reconnect
+        // checking canAttemptReconnect - so this combination blocks reconnect
       },
     );
 
@@ -881,7 +875,7 @@ void main() {
             .setUserDisconnected(true);
         expect(container.read(userDisconnectedProvider), isTrue);
 
-        // User taps a new device in scanner — scanner clears the flag
+        // User taps a new device in scanner - scanner clears the flag
         container
             .read(userDisconnectedProvider.notifier)
             .setUserDisconnected(false);
@@ -920,7 +914,7 @@ void main() {
         final regionState = container.read(regionConfigProvider);
         expect(regionState.applyStatus, RegionApplyStatus.idle);
 
-        // Read the notifier — we can't set state directly, but we can
+        // Read the notifier - we can't set state directly, but we can
         // verify the disconnect listener behavior by checking that the
         // notifier's build() listener does NOT reset state on disconnect
         // when the same device is involved and status is applying.
@@ -1007,38 +1001,35 @@ void main() {
       },
     );
 
-    test(
-      'manualConnecting blocks auto-reconnect manager canAttemptReconnect check',
-      () {
-        final container = _createContainer();
-        addTearDown(container.dispose);
+    test('manualConnecting blocks auto-reconnect manager canAttemptReconnect check', () {
+      final container = _createContainer();
+      addTearDown(container.dispose);
 
-        container
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.manualConnecting);
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.manualConnecting);
 
-        // Replicate the exact check from autoReconnectManagerProvider
-        final autoReconnectState = container.read(autoReconnectStateProvider);
-        final userDisconnected = container.read(userDisconnectedProvider);
+      // Replicate the exact check from autoReconnectManagerProvider
+      final autoReconnectState = container.read(autoReconnectStateProvider);
+      final userDisconnected = container.read(userDisconnectedProvider);
 
-        // Check 1: manualConnecting blocks
-        final isManualConnecting =
-            autoReconnectState == AutoReconnectState.manualConnecting;
-        expect(isManualConnecting, isTrue);
+      // Check 1: manualConnecting blocks
+      final isManualConnecting =
+          autoReconnectState == AutoReconnectState.manualConnecting;
+      expect(isManualConnecting, isTrue);
 
-        // Check 2: canAttemptReconnect is false
-        final canAttemptReconnect =
-            autoReconnectState == AutoReconnectState.idle ||
-            autoReconnectState == AutoReconnectState.success;
-        expect(canAttemptReconnect, isFalse);
+      // Check 2: canAttemptReconnect is false
+      final canAttemptReconnect =
+          autoReconnectState == AutoReconnectState.idle ||
+          autoReconnectState == AutoReconnectState.success;
+      expect(canAttemptReconnect, isFalse);
 
-        // Check 3: userDisconnected is false (was cleared when user tapped device)
-        expect(userDisconnected, isFalse);
+      // Check 3: userDisconnected is false (was cleared when user tapped device)
+      expect(userDisconnected, isFalse);
 
-        // All three checks together: even though userDisconnected is false
-        // and device is disconnected, manualConnecting prevents reconnect
-      },
-    );
+      // All three checks together: even though userDisconnected is false
+      // and device is disconnected, manualConnecting prevents reconnect
+    });
 
     test('manualConnecting is cleared when a new manual connection starts', () {
       final container = _createContainer();
@@ -1071,51 +1062,48 @@ void main() {
       );
     });
 
-    test(
-      'transport state transitions while manualConnecting do not enable reconnect',
-      () {
-        final container = _createContainer();
-        addTearDown(container.dispose);
+    test('transport state transitions while manualConnecting do not enable reconnect', () {
+      final container = _createContainer();
+      addTearDown(container.dispose);
 
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.manualConnecting);
+
+      // Simulate the full transport error cascade that happens when
+      // BLE drops during protocol setup:
+      // connected → error → disconnecting → disconnected
+      final transitions = [
+        DevicePairingState.connected,
+        DevicePairingState.error,
+        DevicePairingState.disconnected,
+      ];
+
+      for (final state in transitions) {
         container
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.manualConnecting);
+            .read(deviceConnectionProvider.notifier)
+            .setTestState(
+              DeviceConnectionState2(
+                state: state,
+                device: _device(),
+                connectionSessionId: 1,
+              ),
+            );
 
-        // Simulate the full transport error cascade that happens when
-        // BLE drops during protocol setup:
-        // connected → error → disconnecting → disconnected
-        final transitions = [
-          DevicePairingState.connected,
-          DevicePairingState.error,
-          DevicePairingState.disconnected,
-        ];
-
-        for (final state in transitions) {
-          container
-              .read(deviceConnectionProvider.notifier)
-              .setTestState(
-                DeviceConnectionState2(
-                  state: state,
-                  device: _device(),
-                  connectionSessionId: 1,
-                ),
-              );
-
-          // At every transition point, manualConnecting should block reconnect
-          final autoState = container.read(autoReconnectStateProvider);
-          final canAttempt =
-              autoState == AutoReconnectState.idle ||
-              autoState == AutoReconnectState.success;
-          expect(
-            canAttempt,
-            isFalse,
-            reason:
-                'canAttemptReconnect should be false during '
-                'DevicePairingState.$state with manualConnecting set',
-          );
-        }
-      },
-    );
+        // At every transition point, manualConnecting should block reconnect
+        final autoState = container.read(autoReconnectStateProvider);
+        final canAttempt =
+            autoState == AutoReconnectState.idle ||
+            autoState == AutoReconnectState.success;
+        expect(
+          canAttempt,
+          isFalse,
+          reason:
+              'canAttemptReconnect should be false during '
+              'DevicePairingState.$state with manualConnecting set',
+        );
+      }
+    });
 
     test(
       'idle autoReconnectState after error WOULD allow reconnect (the old bug)',
@@ -1147,7 +1135,7 @@ void main() {
             state == AutoReconnectState.idle ||
             state == AutoReconnectState.success;
 
-        // This combination would trigger _performReconnect — the race bug
+        // This combination would trigger _performReconnect - the race bug
         expect(canAttemptReconnect, isTrue);
         expect(userDisconnected, isFalse);
         // With the fix, autoReconnectState stays manualConnecting,
@@ -1211,108 +1199,96 @@ void main() {
       expect(newCheck, isTrue);
     });
 
-    test(
-      'APP RESUMED still reconnects when auto-reconnect is idle and device saved',
-      () {
-        // Verify the fix doesn't break the normal resume-reconnect path
+    test('APP RESUMED still reconnects when auto-reconnect is idle and device saved', () {
+      // Verify the fix doesn't break the normal resume-reconnect path
 
-        final container = _createContainer();
-        addTearDown(container.dispose);
+      final container = _createContainer();
+      addTearDown(container.dispose);
 
-        // Normal state: disconnected, idle, not user-disconnected
-        _setDisconnected(container);
-        container
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.idle);
-        container
-            .read(userDisconnectedProvider.notifier)
-            .setUserDisconnected(false);
+      // Normal state: disconnected, idle, not user-disconnected
+      _setDisconnected(container);
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      container
+          .read(userDisconnectedProvider.notifier)
+          .setUserDisconnected(false);
 
-        final autoReconnectState = container.read(autoReconnectStateProvider);
-        final userDisconnected = container.read(userDisconnectedProvider);
+      final autoReconnectState = container.read(autoReconnectStateProvider);
+      final userDisconnected = container.read(userDisconnectedProvider);
 
-        // All guards pass → should proceed to reconnect
-        final isBlocked =
-            autoReconnectState == AutoReconnectState.scanning ||
-            autoReconnectState == AutoReconnectState.connecting ||
-            autoReconnectState == AutoReconnectState.manualConnecting;
-        final isUserBlocked = userDisconnected;
+      // All guards pass → should proceed to reconnect
+      final isBlocked =
+          autoReconnectState == AutoReconnectState.scanning ||
+          autoReconnectState == AutoReconnectState.connecting ||
+          autoReconnectState == AutoReconnectState.manualConnecting;
+      final isUserBlocked = userDisconnected;
 
-        expect(isBlocked, isFalse);
-        expect(isUserBlocked, isFalse);
-        // In the real code, this would proceed to check settings.lastDeviceId
-      },
-    );
+      expect(isBlocked, isFalse);
+      expect(isUserBlocked, isFalse);
+      // In the real code, this would proceed to check settings.lastDeviceId
+    });
 
-    test(
-      'APP RESUMED is still blocked when scanning (existing behavior preserved)',
-      () {
-        final container = _createContainer();
-        addTearDown(container.dispose);
+    test('APP RESUMED is still blocked when scanning (existing behavior preserved)', () {
+      final container = _createContainer();
+      addTearDown(container.dispose);
 
-        container
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.scanning);
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.scanning);
 
-        final autoReconnectState = container.read(autoReconnectStateProvider);
+      final autoReconnectState = container.read(autoReconnectStateProvider);
 
-        final isBlocked =
-            autoReconnectState == AutoReconnectState.scanning ||
-            autoReconnectState == AutoReconnectState.connecting ||
-            autoReconnectState == AutoReconnectState.manualConnecting;
+      final isBlocked =
+          autoReconnectState == AutoReconnectState.scanning ||
+          autoReconnectState == AutoReconnectState.connecting ||
+          autoReconnectState == AutoReconnectState.manualConnecting;
 
-        expect(isBlocked, isTrue);
-      },
-    );
+      expect(isBlocked, isTrue);
+    });
   });
 
   // =========================================================================
   // Group 9: startBackgroundConnection Concurrent Scan Guard
   // =========================================================================
   group('startBackgroundConnection Concurrent Scan Guard', () {
-    test(
-      'startBackgroundConnection is blocked when auto-reconnect manager is scanning',
-      () {
-        // This test verifies the fix for the bug where TopStatusBanner
-        // triggered startBackgroundConnection while _performReconnect
-        // was already running, creating two concurrent BLE scans.
+    test('startBackgroundConnection is blocked when auto-reconnect manager is scanning', () {
+      // This test verifies the fix for the bug where TopStatusBanner
+      // triggered startBackgroundConnection while _performReconnect
+      // was already running, creating two concurrent BLE scans.
 
-        final container = _createContainer();
-        addTearDown(container.dispose);
+      final container = _createContainer();
+      addTearDown(container.dispose);
 
-        // Auto-reconnect manager is actively scanning
-        container
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.scanning);
+      // Auto-reconnect manager is actively scanning
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.scanning);
 
-        // Replicate the new guard in startBackgroundConnection
-        final autoReconnectState = container.read(autoReconnectStateProvider);
-        final shouldBlock =
-            autoReconnectState == AutoReconnectState.scanning ||
-            autoReconnectState == AutoReconnectState.connecting;
+      // Replicate the new guard in startBackgroundConnection
+      final autoReconnectState = container.read(autoReconnectStateProvider);
+      final shouldBlock =
+          autoReconnectState == AutoReconnectState.scanning ||
+          autoReconnectState == AutoReconnectState.connecting;
 
-        expect(shouldBlock, isTrue);
-      },
-    );
+      expect(shouldBlock, isTrue);
+    });
 
-    test(
-      'startBackgroundConnection is blocked when auto-reconnect manager is connecting',
-      () {
-        final container = _createContainer();
-        addTearDown(container.dispose);
+    test('startBackgroundConnection is blocked when auto-reconnect manager is connecting', () {
+      final container = _createContainer();
+      addTearDown(container.dispose);
 
-        container
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.connecting);
+      container
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.connecting);
 
-        final autoReconnectState = container.read(autoReconnectStateProvider);
-        final shouldBlock =
-            autoReconnectState == AutoReconnectState.scanning ||
-            autoReconnectState == AutoReconnectState.connecting;
+      final autoReconnectState = container.read(autoReconnectStateProvider);
+      final shouldBlock =
+          autoReconnectState == AutoReconnectState.scanning ||
+          autoReconnectState == AutoReconnectState.connecting;
 
-        expect(shouldBlock, isTrue);
-      },
-    );
+      expect(shouldBlock, isTrue);
+    });
 
     test(
       'startBackgroundConnection is blocked when user is manually connecting',
@@ -1338,7 +1314,7 @@ void main() {
         final container = _createContainer();
         addTearDown(container.dispose);
 
-        // Idle state — startBackgroundConnection should proceed
+        // Idle state - startBackgroundConnection should proceed
         // (assuming other guards like userDisconnected also pass)
         final autoReconnectState = container.read(autoReconnectStateProvider);
         final isBlockedByAutoReconnect =
@@ -1355,7 +1331,7 @@ void main() {
       final container = _createContainer();
       addTearDown(container.dispose);
 
-      // Failed state — startBackgroundConnection can try (e.g. retry)
+      // Failed state - startBackgroundConnection can try (e.g. retry)
       container
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.failed);
@@ -1412,7 +1388,7 @@ void main() {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.failed);
 
-      // Verify state is failed — prevents retry loop
+      // Verify state is failed - prevents retry loop
       expect(
         container.read(autoReconnectStateProvider),
         AutoReconnectState.failed,
@@ -1432,7 +1408,7 @@ void main() {
 
     test('failed auto-reconnect state blocks startBackgroundConnection', () {
       // After PIN error sets failed, TopStatusBanner should show
-      // "Device not found" with retry button — not auto-trigger another scan.
+      // "Device not found" with retry button - not auto-trigger another scan.
 
       final container = _createContainer();
       addTearDown(container.dispose);
@@ -1444,7 +1420,7 @@ void main() {
       final autoReconnectState = container.read(autoReconnectStateProvider);
 
       // startBackgroundConnection's new guard checks scanning/connecting/manualConnecting
-      // but failed is NOT in that list — so it can proceed if user taps retry.
+      // but failed is NOT in that list - so it can proceed if user taps retry.
       // This is correct: failed allows manual retry but blocks auto-trigger.
       final isBlockedByActiveReconnect =
           autoReconnectState == AutoReconnectState.scanning ||
@@ -1455,7 +1431,7 @@ void main() {
       // (it's blocked by TopStatusBanner's _autoRetryTriggered flag instead)
       expect(isBlockedByActiveReconnect, isFalse);
 
-      // But canAttemptReconnect IS false — so autoReconnectManager won't
+      // But canAttemptReconnect IS false - so autoReconnectManager won't
       // start _performReconnect either
       final canAttemptReconnect =
           autoReconnectState == AutoReconnectState.idle ||
@@ -1475,14 +1451,14 @@ void main() {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.connecting);
 
-      // Simulate: generic error (not PIN/auth) — the catch block in
+      // Simulate: generic error (not PIN/auth) - the catch block in
       // _initializeProtocolAfterAutoReconnect does NOT set failed state
       // for non-auth errors, so state stays as connecting (or whatever
       // the autoReconnectManager loop sets it to next).
       //
       // The important thing is that only auth errors force failed state.
 
-      // For non-auth errors, state remains connecting — the manager
+      // For non-auth errors, state remains connecting - the manager
       // loop will handle retry/backoff on its own
       expect(
         container.read(autoReconnectStateProvider),
@@ -1490,7 +1466,7 @@ void main() {
       );
 
       // Verify auth detection with the tightened patterns.
-      // Only actual BLE auth/encryption errors should match — NOT generic
+      // Only actual BLE auth/encryption errors should match - NOT generic
       // config timeouts (which can happen with slow BLE after app restart).
       bool isAuthError(String msg) {
         final lower = msg.toLowerCase();
@@ -1520,8 +1496,7 @@ void main() {
       expect(
         isAuthError(transportError),
         isFalse,
-        reason:
-            'Transport disconnect during config should NOT be detected as auth error',
+        reason: 'Transport disconnect during config should NOT be detected as auth error',
       );
     });
 
@@ -1598,7 +1573,7 @@ void main() {
           .setState(AutoReconnectState.failed);
 
       // 2. After transport.disconnect(), _handleDisconnect fires with
-      //    unexpectedDisconnect — but the _authFailurePending flag
+      //    unexpectedDisconnect - but the _authFailurePending flag
       //    should override it to authFailed.
       //    We can't set the private flag directly, so we verify the
       //    state expectations instead.
@@ -1611,8 +1586,7 @@ void main() {
               state: DevicePairingState.disconnected,
               connectionSessionId: 1,
               reason: DisconnectReason.authFailed,
-              errorMessage:
-                  'Protocol configuration failed: TimeoutException: Configuration timed out',
+              errorMessage: 'Protocol configuration failed: TimeoutException: Configuration timed out',
             ),
           );
 
@@ -1747,8 +1721,7 @@ void main() {
       expect(
         isAuthError(newTransportMessage),
         isFalse,
-        reason:
-            'Transport disconnect during config should NOT be detected as auth error',
+        reason: 'Transport disconnect during config should NOT be detected as auth error',
       );
 
       // Actual BLE auth error SHOULD still be detected

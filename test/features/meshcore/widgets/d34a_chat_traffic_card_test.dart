@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34a — `MeshCoreChatTrafficCard` widget regression pins.
+// D34a - `MeshCoreChatTrafficCard` widget regression pins.
 //
 // Pins:
 //   - Card renders the canonical title + progress bar + InfoTable
@@ -64,7 +64,7 @@ final List<RegExp> _bannedRenderTextPatterns = [
   RegExp(r'\[mrrp\]'),
   RegExp(r'\[/mrrp\]'),
   // MMF stable-string envelopes pin the full shape from
-  // `MeshCoreMmf.toStableString` — channel is `01:<2-hex>:<8-hex>`,
+  // `MeshCoreMmf.toStableString` - channel is `01:<2-hex>:<8-hex>`,
   // contact is `02:<12-hex>:<8-hex>`. The 8-hex timestamp tail keeps
   // the pattern from false-positive matching HH:MM:SS row values like
   // `01:23:45` (which only carry 2 hex chars after the second colon).

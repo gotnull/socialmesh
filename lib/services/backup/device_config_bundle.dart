@@ -22,7 +22,7 @@ const String kDeviceConfigBundleExtension = 'smcfg.json';
 /// Mirrors the `oneof payload_variant` slots on `ModuleConfig` that have a
 /// matching get/set admin path in [ProtocolService]. `audio`,
 /// `remoteHardware`, and `neighborInfo` are intentionally not yet wired into
-/// the protocol service set/cache flow — they are preserved on the wire when
+/// the protocol service set/cache flow - they are preserved on the wire when
 /// present in the file but skipped on capture if their cache is null.
 enum BundleModuleType {
   mqtt,
@@ -81,7 +81,7 @@ BundleModuleType? _moduleTypeFromKey(String key) {
 /// All protobuf fields are stored as the live message instances. The JSON
 /// envelope produced by [encode] base64-encodes each field's wire bytes
 /// (`writeToBuffer`) so the round-trip is byte-identical to what the device
-/// emits — no proto3-JSON intermediate, no risk of unknown-field loss.
+/// emits - no proto3-JSON intermediate, no risk of unknown-field loss.
 ///
 /// The DM private key is **not** part of this bundle. It is owned by the
 /// existing FlutterSecureStorage / iCloud-Keychain backup flow in
@@ -317,7 +317,7 @@ class DeviceConfigBundle {
           final wire = channel_pb.Channel.fromBuffer(base64Decode(encoded));
           channels.add(_channelFromWire(wire));
         } catch (_) {
-          // Skip malformed entries — partial bundles still restore what they can.
+          // Skip malformed entries - partial bundles still restore what they can.
         }
       }
     }

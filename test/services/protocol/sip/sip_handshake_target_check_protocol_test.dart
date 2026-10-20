@@ -129,9 +129,8 @@ void main() {
     transport = _SilentTransport();
     protocol = ProtocolService(transport);
     await protocol.handleIncomingPacket(
-      pb.FromRadio(
-        myInfo: pb.MyNodeInfo(myNodeNum: _myNodeNum),
-      ).writeToBuffer(),
+      pb.FromRadio(myInfo: pb.MyNodeInfo(myNodeNum: _myNodeNum))
+          .writeToBuffer(),
     );
 
     final rateLimiter = SipRateLimiter();

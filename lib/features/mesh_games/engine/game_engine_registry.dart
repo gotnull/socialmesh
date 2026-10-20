@@ -11,7 +11,7 @@ import 'tic_tac_toe_engine.dart';
 
 /// Registry of pure engines for all supported game types.
 ///
-/// Engines are const instances because they hold no mutable state —
+/// Engines are const instances because they hold no mutable state -
 /// they are pure functions of input state + move.
 abstract final class GameEngineRegistry {
   static const RpsEngine rps = RpsEngine();

@@ -16,7 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/protocol/sip/peer_rate_limiter.dart';
 
 void main() {
-  group('PeerRateLimiter — PeerRateKind.play', () {
+  group('PeerRateLimiter - PeerRateKind.play', () {
     test('starts with burst capacity 6, then refuses', () {
       var nowMs = 1700000000000;
       final limiter = PeerRateLimiter(clock: () => nowMs);
@@ -28,7 +28,7 @@ void main() {
       expect(
         limiter.tryAcquire(peer, PeerRateKind.play),
         isFalse,
-        reason: 'Burst is 6 — seventh attempt must fail',
+        reason: 'Burst is 6 - seventh attempt must fail',
       );
     });
 
@@ -43,7 +43,7 @@ void main() {
       }
       expect(limiter.tryAcquire(peer, PeerRateKind.play), isFalse);
 
-      // Text bucket is untouched — still has its own burst.
+      // Text bucket is untouched - still has its own burst.
       for (var i = 0; i < 3; i += 1) {
         expect(limiter.tryAcquire(peer, PeerRateKind.text), isTrue);
       }

@@ -222,11 +222,9 @@ void main() {
       expect(richFinder, findsOneWidget);
       final text = tester.widget<Text>(richFinder);
       final root = text.textSpan! as TextSpan;
-      final coordSpan =
-          root.children!.firstWhere(
-                (s) => s is TextSpan && s.text == '52.51208, 13.45923',
-              )
-              as TextSpan;
+      final coordSpan = root.children!.firstWhere(
+        (s) => s is TextSpan && s.text == '52.51208, 13.45923',
+      ) as TextSpan;
       expect(coordSpan.recognizer, isNotNull);
     });
   });
@@ -353,9 +351,10 @@ void main() {
         ),
       );
       // No crash; full source text visible.
-      final joined = spansOf(
-        tester,
-      ).map((s) => s.text).whereType<String>().join();
+      final joined = spansOf(tester)
+          .map((s) => s.text)
+          .whereType<String>()
+          .join();
       expect(joined, 'odd **pair and ~half');
     });
   });

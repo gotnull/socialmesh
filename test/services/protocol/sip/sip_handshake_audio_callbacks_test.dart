@@ -3,10 +3,10 @@
 
 /// Tests for the audio-cue callbacks added to [SipHandshakeManager]:
 ///
-///   - [onHandshakeFailed]   — fires from `_failSession` for real
+///   - [onHandshakeFailed]   - fires from `_failSession` for real
 ///                             failures (timeout / nonce mismatch /
 ///                             …) but NOT for user-initiated cancels.
-///   - [onHandshakeDeclined] — fires when state transitions to
+///   - [onHandshakeDeclined] - fires when state transitions to
 ///                             [SipHandshakeState.declined] from
 ///                             either side (local declineHandshake
 ///                             tap OR inbound HS_DECLINE handling).
@@ -42,7 +42,7 @@ void main() {
         final hello = mgr.initiateHandshake(0xBEEF);
         expect(hello, isNotNull);
 
-        // Drive past the wire-handshake timeout — _cleanExpired will
+        // Drive past the wire-handshake timeout - _cleanExpired will
         // call _failSession with reason='timeout' on the next
         // initiateHandshake call (or session-expiry timer).
         fake.elapse(SipConstants.handshakeTimeout + const Duration(seconds: 1));
@@ -62,7 +62,7 @@ void main() {
       'does NOT fire when reason is "cancelled" (Block / cancelHandshake)',
       () {
         // Block flow calls cancelHandshake → _failSession('cancelled').
-        // The user already chose silent action — playing a failure SFX
+        // The user already chose silent action - playing a failure SFX
         // would be wrong.
         final mgr = _newManager();
         final failures = <int>[];
@@ -90,7 +90,7 @@ void main() {
       FakeAsync().run((fake) {
         mgr.initiateHandshake(0xBEEF);
         fake.elapse(SipConstants.handshakeTimeout + const Duration(seconds: 1));
-        // No exception escapes — initiate sweeps cleanExpired which
+        // No exception escapes - initiate sweeps cleanExpired which
         // calls the throwing hook internally.
         mgr.initiateHandshake(0xBEEF, overrideCooldown: true);
       });
@@ -100,7 +100,7 @@ void main() {
   group('SipHandshakeManager.onHandshakeDeclined', () {
     test('fires when local user calls declineHandshake on a pending '
         'inbound handshake', () {
-      // Cooperative pattern — initiator B sends HS_HELLO to manager A;
+      // Cooperative pattern - initiator B sends HS_HELLO to manager A;
       // A queues a pending request; A taps Decline; the hook fires.
       const nodeA = 0x1111;
       const nodeB = 0x2222;
@@ -175,7 +175,7 @@ void main() {
       final helloFromB = mgrB.initiateHandshake(nodeA);
       mgrA.handleHello(nodeB, helloFromB!);
 
-      // Throwing hook must not propagate — declineHandshake should
+      // Throwing hook must not propagate - declineHandshake should
       // still return a valid frame for transmission.
       final declineFrame = mgrA.declineHandshake(nodeB);
       expect(declineFrame, isNotNull);

@@ -8,7 +8,7 @@
 //   - toFlagsByte / fromFlagsByte round-trip is byte-for-byte.
 //   - Each flag maps to exactly one bit (no aliasing).
 //   - Reserved bits (0x20..0x80) survive a round trip via the
-//     `reservedBits` field — a future firmware can introduce
+//     `reservedBits` field - a future firmware can introduce
 //     additional toggles without our parser stripping them.
 //   - copyWith updates the named field, preserves others.
 //   - == / hashCode treat instances with identical flag content as
@@ -159,7 +159,7 @@ void main() {
     test('toString never leaks the unpacked flag content', () {
       const c = MeshCoreAutoAddConfig(autoAddChat: true, autoAddRepeater: true);
       final s = c.toString();
-      // No verbose field dump — only the packed byte.
+      // No verbose field dump - only the packed byte.
       expect(s.contains('autoAddChat'), isFalse);
       expect(s.contains('overwriteOldest'), isFalse);
       // Single byte hex emitted.

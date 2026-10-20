@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Sprint 5 — ringtone built-in presets curated default set (Section P).
+/// Sprint 5 - ringtone built-in presets curated default set (Section P).
 ///
 /// Source-level pins protecting the boundary so the next contributor
 /// can't accidentally remove the Featured-slice behaviour by reverting
@@ -24,7 +24,7 @@ void main() {
       // The first 10 entries of _builtInPresets are the universally
       // recognisable classics: Meshtastic Default, Nokia, Zelda Get
       // Item, Mario x3, Morse CQ, Simple Beep, Alert, Ping. Past that
-      // the list goes alphabetical by band/song — clearly browse
+      // the list goes alphabetical by band/song - clearly browse
       // territory.
       expect(
         source.contains('static const int _featuredBuiltInCount = 10;'),
@@ -46,13 +46,13 @@ void main() {
         true,
         reason:
             'Local variable `visiblePresets` must be the result of a '
-            'ternary on `_showAllBuiltIns` — that is the slice gate.',
+            'ternary on `_showAllBuiltIns` - that is the slice gate.',
       );
       expect(
         source.contains('.take(_featuredBuiltInCount)'),
         true,
         reason:
-            'The slice must use take() not skip()/sublist() — take() handles '
+            'The slice must use take() not skip()/sublist() - take() handles '
             'the case where _featuredBuiltInCount > _builtInPresets.length '
             'gracefully (returns the whole list rather than throwing).',
       );
@@ -61,7 +61,7 @@ void main() {
         true,
         reason:
             'The render loop must iterate the sliced list, not the full '
-            '_builtInPresets — otherwise the slice is cosmetic-only.',
+            '_builtInPresets - otherwise the slice is cosmetic-only.',
       );
     });
 
@@ -69,7 +69,7 @@ void main() {
       'divider gate uses visiblePresets.length not _builtInPresets.length',
       () {
         // The trailing divider must hide on the LAST visible item, not
-        // on what would have been the last item of the full list — if it
+        // on what would have been the last item of the full list - if it
         // checks _builtInPresets.length the slice would render a stray
         // divider after the last visible row.
         expect(source.contains('if (index < visiblePresets.length - 1)'), true);
@@ -104,7 +104,7 @@ void main() {
         true,
         reason:
             'Settings toggles in this app fire HapticFeedback.selectionClick '
-            '— the expansion footer should match.',
+            '- the expansion footer should match.',
       );
       expect(
         source.contains("'[Ringtone] showAllBuiltIns toggled to"),
@@ -117,17 +117,17 @@ void main() {
 
     test('state is screen-local (no SharedPreferences persistence)', () {
       // The expansion state intentionally does NOT persist across
-      // visits — each entry to the ringtone screen starts collapsed so
+      // visits - each entry to the ringtone screen starts collapsed so
       // first-time users see the curated set. Returning users who
       // want to find a specific tone tap Show all again.
       expect(source.contains('bool _showAllBuiltIns = false;'), true);
-      // No SharedPreferences key for this — confirm we didn't drift.
+      // No SharedPreferences key for this - confirm we didn't drift.
       expect(
         source.contains("setBool('show_all_builtin_ringtones'"),
         false,
         reason:
             'If this trips, someone added persistence for the expansion '
-            'state. Drop it — the collapsed-by-default UX is intentional.',
+            'state. Drop it - the collapsed-by-default UX is intentional.',
       );
     });
   });

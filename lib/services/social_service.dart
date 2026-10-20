@@ -1975,7 +1975,7 @@ class SocialService {
       'SocialService: uploadProfileAvatar storageRef: ${ref.fullPath}',
     );
 
-    // Re-encode as JPEG — iOS may provide HEIC data
+    // Re-encode as JPEG - iOS may provide HEIC data
     AppLogging.auth('SocialService: uploadProfileAvatar reading file bytes...');
     final bytes = await file.readAsBytes();
     AppLogging.auth(

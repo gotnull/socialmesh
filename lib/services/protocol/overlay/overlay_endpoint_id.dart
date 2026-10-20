@@ -10,7 +10,7 @@
 ///
 /// The derivation is identity-scoped-by-service. `service_id = 0`
 /// denotes the root identity (no service scoping). Same `persona_pub`
-/// + different `service_id` ⇒ different endpointId — this is
+/// + different `service_id` ⇒ different endpointId - this is
 /// intentional and enables service-scoped destinations without
 /// leaking the persona across services.
 library;

@@ -5,7 +5,7 @@
 //
 // Source of truth: docs/canvas/CANVAS_SYNC_V0_1.md §2.3 + §6.1.
 //
-// Exposes [meshCanvasHydrationStatusProvider] — a stream provider
+// Exposes [meshCanvasHydrationStatusProvider] - a stream provider
 // keyed by canvasLocalId that emits the current hydration state on
 // every relevant change. The coordinator's broadcast `changes`
 // stream drives re-emission; an initial snapshot lands synchronously
@@ -34,7 +34,7 @@ final meshCanvasHydrationStatusProvider =
       }
     });
 
-/// Raw-band reception progress for the canvas — `(received, total)`
+/// Raw-band reception progress for the canvas - `(received, total)`
 /// for the lowest-completion in-progress band set, or `null` when no
 /// raw-band sets are pending. HUD reads this alongside the
 /// hydration state to render `recovering 3/8` style chrome.

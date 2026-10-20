@@ -64,9 +64,8 @@ void main() {
       expect(response.msgType, MrrpMessageType.response);
       expect(response.payloadLen, 4);
 
-      final postId = ByteData.sublistView(
-        response.payload,
-      ).getUint32(0, Endian.little);
+      final postId = ByteData.sublistView(response.payload)
+          .getUint32(0, Endian.little);
       expect(postId, greaterThan(0));
       expect(handler.postCount, 1);
     });
@@ -180,9 +179,8 @@ void main() {
         payload: _makePostPayload('Test post'), // lint-allow: hardcoded-string
       );
       final response = await handler.handleRequest(request, 0xABCD);
-      postId = ByteData.sublistView(
-        response.payload,
-      ).getUint32(0, Endian.little);
+      postId = ByteData.sublistView(response.payload)
+          .getUint32(0, Endian.little);
     });
 
     test('returns post by ID', () async {

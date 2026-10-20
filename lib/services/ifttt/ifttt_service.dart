@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/logging.dart';
+
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../models/trigger_protocol.dart';
@@ -433,7 +435,7 @@ class IftttService {
   /// POST JSON to an arbitrary URL (for automation webhook actions).
   ///
   /// Unlike [_triggerWebhook], this does not require the global webhook config
-  /// to be active — it fires directly to the provided [url].
+  /// to be active - it fires directly to the provided [url].
   /// Private/LAN addresses (e.g. 192.168.x.x) are supported.
   Future<bool> triggerCustomUrl({
     required String url,

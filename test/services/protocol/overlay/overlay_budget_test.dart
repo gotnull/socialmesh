@@ -5,7 +5,7 @@
 ///
 /// These assertions guard the numeric relationships documented in
 /// `docs/sip/OVERLAY_V0_2.md` §3 and §25. If a constant changes, this
-/// test file is the first place to break — that is intentional.
+/// test file is the first place to break - that is intentional.
 library;
 
 import 'package:flutter_test/flutter_test.dart';

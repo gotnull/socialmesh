@@ -125,7 +125,7 @@ final takFilterProvider = NotifierProvider<TakFilterNotifier, TakFilterState>(
 /// to the previous emission, the same list reference is returned. This
 /// prevents downstream widget rebuilds (TakMapLayer marker recreation,
 /// heading vector layer, trail layer) when the visible entity set has not
-/// actually changed — e.g. after a snapshot backfill that contains the same
+/// actually changed - e.g. after a snapshot backfill that contains the same
 /// events already loaded from SQLite.
 List<TakEvent> _previousFilteredEvents = const [];
 

@@ -80,9 +80,8 @@ void main() {
       // Parse response: token_id(8) + state(1) + intent(1) + ttl_s(2) + party_count(1).
       expect(response.payload[8], MeetupTokenState.pending.code);
       expect(response.payload[9], MeetupIntentType.social.code);
-      final ttl = ByteData.sublistView(
-        response.payload,
-      ).getUint16(10, Endian.little);
+      final ttl = ByteData.sublistView(response.payload)
+          .getUint16(10, Endian.little);
       expect(ttl, 600);
       expect(response.payload[12], 1); // party_count starts at 1
     });
@@ -126,9 +125,8 @@ void main() {
       );
       final response = await handler.handleRequest(request, 0xABCD);
       expect(response.msgType, MrrpMessageType.response);
-      final ttl = ByteData.sublistView(
-        response.payload,
-      ).getUint16(10, Endian.little);
+      final ttl = ByteData.sublistView(response.payload)
+          .getUint16(10, Endian.little);
       expect(ttl, 3600);
     });
   });

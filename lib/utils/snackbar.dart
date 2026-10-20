@@ -2,11 +2,13 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'dart:ui';
 
 import '../core/l10n/l10n_extension.dart';
 import '../core/widgets/loading_indicator.dart';
 import '../core/navigation.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 // Picks the Row cross-axis alignment for a snackbar based on whether
@@ -43,7 +45,7 @@ CrossAxisAlignment _snackBarRowAlignment({
 ///
 /// Only the icon tint is per-type; the container background is driven by
 /// `Theme.of(context).cardColor` in the helpers below. All colours come
-/// from the theme — no hardcoded `Color(0x...)` literals.
+/// from the theme - no hardcoded `Color(0x...)` literals.
 enum SnackBarType {
   success(icon: Icons.check_circle_rounded, iconColor: ChartColors.green),
   error(icon: Icons.error_rounded, iconColor: AppTheme.errorRed),
@@ -143,7 +145,7 @@ bool isTxBlockedNotReadyError(Object error) {
 ///
 /// Wired at UI call sites only (Step 6c) so the protocol return type
 /// stays unchanged. The detection key is the `'protocol not ready'`
-/// substring written by `_assertOperational`'s `StateError.message` —
+/// substring written by `_assertOperational`'s `StateError.message` -
 /// see `lib/services/protocol/protocol_service.dart`.
 bool maybeShowTxBlockedSnackBar(BuildContext context, Object error) {
   if (error is StateError && error.message.contains('protocol not ready')) {

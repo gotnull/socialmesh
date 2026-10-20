@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Overlay link engine — single-writer owner of link state.
+/// Overlay link engine - single-writer owner of link state.
 ///
 /// Every mutation of an [OverlayLinkRecord] flows through this engine.
 /// Mutation methods are serialised via an internal async mutex so that
 /// ingress callbacks, tick callbacks, local opens, and close requests
 /// cannot race each other. This is the rule the spec calls out in
-/// §21.1: "single-writer persistence — one authoritative mutation
+/// §21.1: "single-writer persistence - one authoritative mutation
 /// path per link/resource row".
 ///
 /// The engine is deliberately minimal for P1:
@@ -61,7 +61,7 @@ class OverlayLinkEngine {
   ///   endpoint observation with `trustLevel=signatureVerified`.
   ///
   /// When `null`, unsigned P2 behavior is used on both send and
-  /// receive — peers see empty-payload handshakes, interop with P2-
+  /// receive - peers see empty-payload handshakes, interop with P2-
   /// only peers is preserved.
   final OverlayEndpointManager? _endpointManager;
 
@@ -122,8 +122,8 @@ class OverlayLinkEngine {
   /// Open a new link to [peerNodeNum].
   ///
   /// When a canonical non-terminal link already exists for [peerNodeNum]
-  /// it is reused (§tie-break). On reuse, [peerCapabilitiesHint] — if
-  /// supplied — overwrites the record's stored capabilities. The
+  /// it is reused (§tie-break). On reuse, [peerCapabilitiesHint] - if
+  /// supplied - overwrites the record's stored capabilities. The
   /// provider layer uses this to propagate the peer's CURRENT SIP-
   /// advertised overlay capabilities (e.g. `secureV03` toggled on
   /// today when yesterday's stored record predates that rollout) onto
@@ -225,9 +225,9 @@ class OverlayLinkEngine {
     // bridges the synthetic/real view so initiator and responder
     // records for the same peer converge on one canonical link.
     //
-    // If a non-terminal record already exists for this peer — whether
+    // If a non-terminal record already exists for this peer - whether
     // from a prior openLocal, a restored record, or an inbound
-    // LINK_OPEN the responder path already accepted — reuse it. No
+    // LINK_OPEN the responder path already accepted - reuse it. No
     // second LINK_OPEN is fired; the sim-open race handling in
     // `_handleLinkOpen` picks the deterministic winner when both
     // sides race.
@@ -239,11 +239,11 @@ class OverlayLinkEngine {
         'peer=$peerNodeNum state=${canonical.state.name}',
       );
       // A successful caller-side `openLocal` is a strong signal that
-      // the peer is reachable RIGHT NOW — SIP handshake just
+      // the peer is reachable RIGHT NOW - SIP handshake just
       // completed, user is actively trying to talk to them. Promote a
       // `stale` canonical (typically restored from a prior run, per
       // §21.1) back to `active` and refresh activity so downstream
-      // consumers — chiefly the secure-session manager — see a live
+      // consumers - chiefly the secure-session manager - see a live
       // link.
       final refreshedNow = _clock();
       var promoted = canonical;
@@ -367,7 +367,7 @@ class OverlayLinkEngine {
         // open a link using a linkId that already belongs to a
         // non-terminal record for someone else. Reject
         // deterministically; NEVER mutate the existing record to
-        // point at the new peer — doing so silently re-attributes
+        // point at the new peer - doing so silently re-attributes
         // the link in the store and poisons every downstream lookup
         // that resolves "this linkId → this peer" (notably
         // `resolveSecureInboundDmSession`, which then fails to
@@ -1101,7 +1101,7 @@ class OverlayLinkEngine {
   //
   // [_buildSignedHandshakeBody] produces the 110-byte signed payload
   // described in spec §24.1.1 when an endpoint manager is attached.
-  // When no manager is set, returns null — the outbound frame keeps
+  // When no manager is set, returns null - the outbound frame keeps
   // the P2 empty-body shape, which a v0.2 peer still understands.
   //
   // [_verifyInboundHandshake] is the symmetric receive-side helper:
@@ -1134,7 +1134,7 @@ class OverlayLinkEngine {
   ) async {
     final mgr = _endpointManager;
     // If no manager is attached, identity binding is disabled. Accept
-    // regardless of payload shape — the engine behaves as it did in P2.
+    // regardless of payload shape - the engine behaves as it did in P2.
     if (mgr == null) return _HandshakeVerifyResult.acceptUnsigned();
 
     // Unsigned peers (P2 interop): empty payload → accept without

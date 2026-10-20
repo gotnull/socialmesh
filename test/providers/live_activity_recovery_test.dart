@@ -83,9 +83,8 @@ void main() {
     when(() => protocol.lastSnr).thenReturn(5);
     when(() => protocol.rssiStream).thenAnswer((_) => const Stream.empty());
     when(() => protocol.snrStream).thenAnswer((_) => const Stream.empty());
-    when(
-      () => protocol.channelUtilStream,
-    ).thenAnswer((_) => const Stream.empty());
+    when(() => protocol.channelUtilStream)
+        .thenAnswer((_) => const Stream.empty());
     container = ProviderContainer(
       overrides: [
         liveActivityServiceProvider.overrideWithValue(service),

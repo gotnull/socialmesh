@@ -5,10 +5,10 @@
 // Each ActionType maps to a VSOutputNode-style builder that:
 // - Accepts an EventSignalInputData (the upstream trigger/condition chain)
 // - Presents a user-configurable widget for the action parameters
-// - Acts as a terminal node (no outputs) — the end of an automation path
+// - Acts as a terminal node (no outputs) - the end of an automation path
 // - Serializes/deserializes its configuration
 //
-// Action nodes are terminal nodes — they sit on the right edge of the
+// Action nodes are terminal nodes - they sit on the right edge of the
 // automation graph canvas. Each action node represents one concrete thing
 // that happens when the automation fires: send a message, push a
 // notification, trigger a webhook, etc.
@@ -26,6 +26,7 @@ import '../vs_node_view/common.dart';
 import '../vs_node_view/data/vs_interface.dart';
 import '../vs_node_view/data/vs_node_data.dart';
 import '../vs_node_view/data/vs_subgroup.dart';
+
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/core/widgets/animations.dart';
 
@@ -33,7 +34,7 @@ import 'package:socialmesh/core/widgets/animations.dart';
 // Constants
 // ---------------------------------------------------------------------------
 
-/// Node width for action nodes — wider than the default to accommodate
+/// Node width for action nodes - wider than the default to accommodate
 /// configuration widgets with proper padding.
 const double _kActionNodeWidth = 220.0;
 
@@ -203,7 +204,7 @@ class _ShortcutConfig {
 // ---------------------------------------------------------------------------
 // Action node data class
 //
-// Action nodes are terminal — they have one EventSignal input and no outputs.
+// Action nodes are terminal - they have one EventSignal input and no outputs.
 // They use a custom VSNodeData subclass that embeds the action configuration
 // widget and holds the serializable config alongside the standard node data.
 // ---------------------------------------------------------------------------
@@ -212,11 +213,11 @@ class _ShortcutConfig {
 /// graph.
 ///
 /// Inputs:
-/// - [EventSignalInputData] 'action_in' — the upstream event signal from
+/// - [EventSignalInputData] 'action_in' - the upstream event signal from
 ///   the trigger/condition chain. Only EventSignal wires can connect here,
 ///   enforcing that actions are always preceded by a proper trigger pipeline.
 ///
-/// Outputs: none — action nodes are terminals.
+/// Outputs: none - action nodes are terminals.
 ///
 /// The embedded [configWidget] is rendered inside the node card, allowing
 /// users to configure the action parameters (message text, webhook URL,

@@ -143,7 +143,7 @@ void main() {
     });
   });
 
-  group('rnsCompanionEndpointProvider — persisted host/port', () {
+  group('rnsCompanionEndpointProvider - persisted host/port', () {
     setUp(() {
       SharedPreferences.setMockInitialValues(<String, Object>{});
     });

@@ -246,9 +246,9 @@ class DeviceConnectionState2 {
 // =============================================================================
 
 /// Single canonical entry point for re-binding the Meshtastic protocol to
-/// a (newly or already) connected transport. Every reconnect path —
+/// a (newly or already) connected transport. Every reconnect path -
 /// auto-reconnect after a transport blip, background scan/connect, manual
-/// retry, lifecycle resume — funnels through [restoreSession] so the
+/// retry, lifecycle resume - funnels through [restoreSession] so the
 /// stale-state hazards listed below are handled uniformly:
 ///
 /// - **Single-flight via [_inFlight]**: overlapping triggers (iOS may
@@ -274,7 +274,7 @@ class DeviceConnectionState2 {
 ///   a fresh handshake.
 ///
 /// The coordinator deliberately does NOT touch UI providers (no banner
-/// text, no snackbars) and does NOT auto-trigger session rebuilds — that
+/// text, no snackbars) and does NOT auto-trigger session rebuilds - that
 /// is the watchdog's job (Step 4, gated, default OFF in release).
 /// MeshCore is unaffected; it has its own `ConnectionCoordinator`.
 ///
@@ -284,7 +284,7 @@ class DeviceConnectionState2 {
 /// overrides for `transportProvider` / `protocolServiceProvider`.
 /// Production code MUST go through
 /// [DeviceConnectionNotifier.restoreSessionForLifecycleResume] (or
-/// remain inside the connection notifier itself) — never construct an
+/// remain inside the connection notifier itself) - never construct an
 /// extra instance.
 @visibleForTesting
 class RestoreSessionCoordinator {
@@ -308,7 +308,7 @@ class RestoreSessionCoordinator {
 
   /// Returns `true` while the app is in the background (paused / inactive
   /// / detached). Used to enforce a one-attempt budget per background
-  /// session — see [_kBackgroundAttemptBudget]. Defaulted to "always
+  /// session - see [_kBackgroundAttemptBudget]. Defaulted to "always
   /// foreground" so unit tests that don't care about lifecycle keep
   /// working unchanged.
   final bool Function() isAppBackgrounded;
@@ -317,7 +317,7 @@ class RestoreSessionCoordinator {
 
   /// Maximum number of restore attempts permitted while the app is
   /// backgrounded before we suppress further attempts until foreground.
-  /// Battery / thermal safety is the design constraint here — repeated
+  /// Battery / thermal safety is the design constraint here - repeated
   /// failed restores while backgrounded create a hot-phone-overnight
   /// regression. 2 covers the legitimate "iOS woke us with state
   /// restoration" case plus one retry for a drop that lands mid-session
@@ -343,7 +343,7 @@ class RestoreSessionCoordinator {
   /// consumed (i.e. a further restore call would be denied with
   /// `cause=background_budget_exhausted`). Used by the readiness
   /// watchdog to suppress its rebuild when a user is actively keeping
-  /// the app backgrounded — battery-safety beats staying connected.
+  /// the app backgrounded - battery-safety beats staying connected.
   bool get backgroundBudgetExhausted =>
       _backgroundAttemptCount >= _kBackgroundAttemptBudget;
 
@@ -380,10 +380,10 @@ class RestoreSessionCoordinator {
       return;
     }
 
-    // Background safety budget — enforced BEFORE the single-flight + the
+    // Background safety budget - enforced BEFORE the single-flight + the
     // transport check so repeated background attempts don't even pay the
     // cost of those checks. Foreground is always-allowed; the budget
-    // resets when we observe foreground (the natural moments — lifecycle
+    // resets when we observe foreground (the natural moments - lifecycle
     // resume, manual reconnect, auto-reconnect) all happen in foreground
     // with the app's existing flow. See `_kBackgroundAttemptBudget`.
     final backgrounded = isAppBackgrounded();
@@ -437,7 +437,7 @@ class RestoreSessionCoordinator {
     try {
       await future;
     } finally {
-      // Only clear the in-flight slot if it still points at our future —
+      // Only clear the in-flight slot if it still points at our future -
       // a later restore that overwrote it (cannot happen today because
       // single-flight blocks it, but cheap defense) must not be cleared
       // by an earlier completion.
@@ -482,7 +482,7 @@ class RestoreSessionCoordinator {
       }
     }
 
-    // `stop()` is synchronous in this codebase — it cancels the data
+    // `stop()` is synchronous in this codebase - it cancels the data
     // subscription, errors any pending completers, and resets
     // `_isStarted = false` so the upcoming `start()` is allowed past the
     // `_isStarted && _transport.isConnected` short-circuit.
@@ -505,7 +505,7 @@ class RestoreSessionCoordinator {
 /// transport-disconnect + fresh `startBackgroundConnection()` cycle via
 /// the supplied [triggerRebuild] callback. The rebuild flows through
 /// `RestoreSessionCoordinator` so session-generation, single-flight,
-/// user-disconnect, and background-budget guards still apply — the
+/// user-disconnect, and background-budget guards still apply - the
 /// watchdog is NEVER a separate reconnect path.
 ///
 /// Hard rules baked into this class:
@@ -517,7 +517,7 @@ class RestoreSessionCoordinator {
 /// - **Suppressed in background once the coordinator's budget is
 ///   exhausted.** Battery / thermal safety wins.
 /// - **Phase-1 timeout is a warning only**, not a rebuild trigger. The
-///   rebuild fires on total-timeout (20 s) only — phase-1 (18 s) just
+///   rebuild fires on total-timeout (20 s) only - phase-1 (18 s) just
 ///   surfaces the wedge in logs sooner for triage. The phase-1 warning
 ///   only logs if readiness is still in `linkConnected` /
 ///   `handshakePhase1` when the timer fires; firmware that completes
@@ -597,7 +597,7 @@ class ReadinessWatchdog {
   OperationalReadiness get lastReadinessForTesting => _lastReadiness;
 
   /// Subscribe to readiness transitions. No-op if the watchdog flag is
-  /// disabled — call sites can construct the watchdog unconditionally
+  /// disabled - call sites can construct the watchdog unconditionally
   /// for symmetry without paying any cost in release.
   void start() {
     if (!flags.watchdogEnabled) return;
@@ -645,7 +645,7 @@ class ReadinessWatchdog {
     // fresh pair. Without this, an `_arm()` call that races a
     // partially-fired previous arm (phase-1 fired, total still
     // pending) would drop the field reference but leave the OS-level
-    // timer alive — the orphan total timer that fired spurious
+    // timer alive - the orphan total timer that fired spurious
     // rebuilds in field testing.
     if (_phase1Timer != null || _totalTimer != null) {
       AppLogging.connection(
@@ -928,7 +928,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// coordinator's `restoreSession`. Generation, single-flight,
   /// user-disconnect, and background-budget guards all still apply.
   ///
-  /// **Not a separate reconnect path** — every guard the coordinator
+  /// **Not a separate reconnect path** - every guard the coordinator
   /// enforces fires here too. A user-disconnect mid-rebuild causes the
   /// next `startBackgroundConnection` call to return early on its own
   /// `_userDisconnected` check.
@@ -962,7 +962,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// tests can pin the region-apply gate (must not call
   /// `setNeedsScanner` while `regionConfigProvider.applyStatus ==
   /// applying`). Production code reaches `_handleDisconnect` via the
-  /// transport state stream — driving that here is unnecessary
+  /// transport state stream - driving that here is unnecessary
   /// overhead.
   @visibleForTesting
   void debugHandleDisconnectForTest(DisconnectReason reason) {
@@ -1013,7 +1013,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   ///    app-resume, and any other re-arm path is blocked until the
   ///    user explicitly initiates a new connect from Scanner.
   /// 2. Drives `autoReconnectState` straight to `idle` (not `failed`)
-  ///    because the next surface the user sees is the Scanner — the
+  ///    because the next surface the user sees is the Scanner - the
   ///    "Device not found" banner state is never displayed.
   ///
   /// Also issues a best-effort transport disconnect so any in-flight
@@ -1220,7 +1220,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               'DeviceConnectionNotifier: BLE connected, state=configuring',
             );
             state = state.copyWith(state: DevicePairingState.configuring);
-            // Transport auto-reconnected (BLE / USB / network) — start protocol
+            // Transport auto-reconnected (BLE / USB / network) - start protocol
             _initializeProtocolAfterAutoReconnect();
           }
           break;
@@ -1310,7 +1310,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       );
       // Route through the canonical restore routine. Replaces a prior
       // `if (configurationComplete && myNodeNum != null) skip` guard
-      // that could leave stale state in place when phase-2 stalled —
+      // that could leave stale state in place when phase-2 stalled -
       // myNodeNum was already set in phase-1 and the skip-guard fell
       // through to a `start()` that short-circuited on
       // `_isStarted && _transport.isConnected` and never re-attached
@@ -1359,7 +1359,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection('_initializeProtocolAfterAutoReconnect: Error: $e');
 
       // Determine if this is a PIN/auth error that requires user interaction.
-      // These errors cannot be resolved by retrying — the user must manually
+      // These errors cannot be resolved by retrying - the user must manually
       // re-pair via the Scanner (which shows the system PIN dialog). Without
       // this guard, the auto-reconnect manager keeps retrying indefinitely,
       // creating a loop of connect → PIN fail → disconnect → reconnect.
@@ -1367,7 +1367,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // CRITICAL: Only match ACTUAL BLE authentication/encryption errors,
       // NOT generic config timeouts. Config timeouts can happen for many
       // reasons (slow BLE after app restart, device still booting, etc.)
-      // and should be retried normally — not routed to Scanner.
+      // and should be retried normally - not routed to Scanner.
       final errorStr = e.toString().toLowerCase();
       final isAuthError =
           errorStr.contains('authentication') ||
@@ -1402,7 +1402,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           final transport = ref.read(transportProvider);
           await transport.disconnect();
         } catch (_) {
-          // Ignore cleanup errors — ensure we still route to Scanner
+          // Ignore cleanup errors - ensure we still route to Scanner
           // even if the disconnect itself fails.
           _authFailurePending = false;
           state = state.copyWith(
@@ -1417,7 +1417,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           );
         }
       } else {
-        // NOT an auth error — this is a generic config timeout or
+        // NOT an auth error - this is a generic config timeout or
         // transport error. Do NOT route to Scanner.
         AppLogging.connection(
           '_initializeProtocolAfterAutoReconnect: Non-auth error - '
@@ -1563,7 +1563,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           return _BleCleanupOutcome.bondMissing;
         }
       } catch (e) {
-        // Ignore — proceed with connection attempt if bond check fails
+        // Ignore - proceed with connection attempt if bond check fails
         AppLogging.connection('$logContext: Bond check failed: $e');
       }
     }
@@ -1589,7 +1589,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     // Manual scan is in flight (Scanner is actively driving the BLE
     // adapter). Skip background reconnect so the two don't race for the
-    // adapter — the scanner publishes results into its own state and
+    // adapter - the scanner publishes results into its own state and
     // resumes auto-reconnect on dispose / scan completion.
     if (ref.read(manualScanActiveProvider)) {
       AppLogging.connection(
@@ -1730,7 +1730,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Previously this branch deferred to autoReconnectManagerProvider's
     // transport-state listener, but at cold start the listener uses the
     // in-memory `_lastConnectedDeviceIdProvider` (null on fresh launch),
-    // so no reconnect would ever be triggered — the user was left
+    // so no reconnect would ever be triggered - the user was left
     // staring at "Connecting…" forever.
     if (ref.read(transportProvider).reconnectMode ==
         TransportReconnectMode.directEndpoint) {
@@ -1934,7 +1934,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         // Android: at the final scan-fail (about to enter unreachable
         // state), check the system bond list. If `lastDeviceId` is
         // missing, the user removed the device from Android Bluetooth
-        // settings — surface a re-pair CTA instead of the generic
+        // settings - surface a re-pair CTA instead of the generic
         // "Device not found" copy. The pre-scan cleanup branch above
         // already runs the same check, but it can be skipped if
         // `bondedDevices` threw, or the bond can be removed mid-scan.
@@ -2040,7 +2040,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   /// Used by `dispatchReconnectMeshCoreAware` and the MeshCore lifecycle
   /// listener so every mid-session reconnect for a saved MeshCore peer
   /// flows through the coordinator's protocol-aware path
-  /// ([_startMeshCoreBackgroundConnection]) — TCP ids dispatch to
+  /// ([_startMeshCoreBackgroundConnection]) - TCP ids dispatch to
   /// `connectMeshCoreTcp`, BLE ids fall through to the BLE strategies,
   /// and the Meshtastic `transportProvider` is never consulted.
   ///
@@ -2491,7 +2491,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Android-only "user removed the device from Bluetooth settings"
     // case and gets re-pair guidance; every other reason keeps the
     // existing "Device was reset or replaced" copy. Only fire the
-    // re-pair text when there is an actual pairing/auth signal — a
+    // re-pair text when there is an actual pairing/auth signal - a
     // plain scan-fail with the bond still present must NOT reach this
     // branch (the call site checks bond presence first).
     final errorMessage = reason == PairingInvalidationReason.bondForgotten
@@ -2566,7 +2566,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection('Starting protocol...');
       // Route through the canonical restore routine so the BLE-restoration
       // safety net (refreshNotifications + clean stop+start) runs on every
-      // fresh connect too — a freshly-paired session can also inherit a
+      // fresh connect too - a freshly-paired session can also inherit a
       // stale subscription from a prior `_RecordingTransport` lifecycle on
       // some flutter_blue_plus / iOS combinations.
       await _restoreCoordinator.restoreSession(reason: 'connect_to_device');
@@ -2656,7 +2656,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               rethrow;
             }
           } catch (bondCheckError) {
-            // Bond check itself failed — fall through to normal error handling
+            // Bond check itself failed - fall through to normal error handling
             AppLogging.connection(
               '_connectToDevice: Bond check after GATT 133 failed: $bondCheckError',
             );
@@ -2779,7 +2779,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // (and `protocol.start()` itself skips on its internal
     // `_isStarted && _transport.isConnected` guard once the transport
     // flips back to connected). The result was Nodes (0) forever
-    // after any reboot — region apply, nodeDbReset, factoryReset —
+    // after any reboot - region apply, nodeDbReset, factoryReset -
     // because no fresh `NodeInfo` packets ever arrived.
     //
     // We don't call the heavier `protocol.stop()` here: the transport
@@ -2799,7 +2799,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // scanning, but that silently erased the user's intent and broke TCP
     // continuity: reconnect logic would then scan for BLE devices of a
     // node the user connected to over the network. Transport changes
-    // must be explicit user actions (Scanner UI / Network section) —
+    // must be explicit user actions (Scanner UI / Network section) -
     // never an implicit side effect of disconnect cleanup.
     ref.read(connectedDeviceProvider.notifier).setState(null);
 
@@ -2815,7 +2815,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       if (reason == DisconnectReason.authFailed) {
         // Region apply triggers an EXPECTED transport disconnect (the
         // device reboots after writing the new region). If a region
-        // apply is in flight, this is not a fault — skip the
+        // apply is in flight, this is not a fault - skip the
         // setNeedsScanner() that would otherwise stomp the
         // RegionSelectionScreen's `setInitialized()` after it pops.
         // The auto-reconnect manager handles the reboot reconnect on
@@ -2848,7 +2848,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         }
       } else {
         // Unexpected disconnect (e.g., device reboot after region change).
-        // Do NOT call startBackgroundConnection() here — the
+        // Do NOT call startBackgroundConnection() here - the
         // autoReconnectManagerProvider listener on connectionStateProvider
         // already detects this disconnect and calls _performReconnect(),
         // which has its own scan loop with retry logic. Calling
@@ -2879,7 +2879,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
         // Defense: if the latch is still set but the Scanner is no
         // longer mounted, the manual connect's `try/catch/finally`
-        // can no longer clear it — the future is orphaned. Clear here
+        // can no longer clear it - the future is orphaned. Clear here
         // as a safety net so recovery (auto-reconnect / APP RESUMED)
         // is not perma-blocked. Scanner-still-mounted cases are
         // handled by `_connectToDevice`'s catch + Scanner dispose's
@@ -2938,7 +2938,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     AppLogging.connection('disconnect(): Transport disconnected');
 
     // Preserve the user's chosen transport type across manual disconnect.
-    // See `_handleDisconnect` for the full rationale — transport changes
+    // See `_handleDisconnect` for the full rationale - transport changes
     // must be explicit user actions (Scanner UI), not disconnect side
     // effects.
 
@@ -3049,7 +3049,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     );
 
     // Prompt for battery optimization exemption on first BLE connection
-    // (Android only, Meshtastic only). Fire-and-forget — the prompt is
+    // (Android only, Meshtastic only). Fire-and-forget - the prompt is
     // non-blocking and stores its own "shown" flag.
     if (!isMeshCore) {
       Future.microtask(() async {
@@ -3412,7 +3412,7 @@ class BackgroundNotificationUpdaterNotifier extends Notifier<bool> {
   }
 
   /// Compute the current mesh stats and push them to the foreground service.
-  /// Safe to call when the service is stopped — it no-ops internally.
+  /// Safe to call when the service is stopped - it no-ops internally.
   void refreshNow() {
     if (!ref.read(platformCapabilitiesProvider).supportsForegroundService) {
       return;

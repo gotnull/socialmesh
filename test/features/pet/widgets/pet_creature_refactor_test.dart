@@ -19,7 +19,7 @@ void main() {
     test('adjacent seeds produce visibly different palettes', () {
       final a = paletteFromDnaSeed(0xA5F3C7, PetBranch.steady);
       final b = paletteFromDnaSeed(0xA5F3C8, PetBranch.steady);
-      // First colour should not match — Murmur3 fmix32 scrambles bits
+      // First colour should not match - Murmur3 fmix32 scrambles bits
       // enough that a +1 seed lands on a very different hue.
       expect(a[0], isNot(equals(b[0])));
     });

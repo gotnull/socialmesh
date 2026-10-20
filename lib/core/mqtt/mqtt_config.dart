@@ -39,7 +39,7 @@ class GlobalLayerPrivacySettings {
     this.allowInboundGlobal = GlobalLayerConstants.defaultAllowInboundGlobal,
   });
 
-  /// All toggles are off — nothing is shared.
+  /// All toggles are off - nothing is shared.
   static const GlobalLayerPrivacySettings allOff = GlobalLayerPrivacySettings();
 
   GlobalLayerPrivacySettings copyWith({
@@ -179,7 +179,7 @@ class TopicSubscription {
 ///
 /// This model holds everything needed to establish and manage the
 /// MQTT broker connection. The [password] field is intentionally
-/// excluded from [toJson] — it must be stored and retrieved via
+/// excluded from [toJson] - it must be stored and retrieved via
 /// secure storage separately.
 class GlobalLayerConfig {
   // ---------------------------------------------------------------------------

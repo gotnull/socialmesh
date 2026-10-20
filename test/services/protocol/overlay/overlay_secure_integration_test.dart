@@ -277,7 +277,7 @@ void main() {
     // Link state on Bob's side remains `active`: the `activated`
     // event was emitted by the engine before we stopped recording,
     // and no `terminated` event fired afterwards. That's the fail-
-    // closed invariant — secure-layer failures never tear down the
+    // closed invariant - secure-layer failures never tear down the
     // link.
     final lastState = bob.events.last;
     expect(lastState.kind, OverlayLinkEventKind.activated);

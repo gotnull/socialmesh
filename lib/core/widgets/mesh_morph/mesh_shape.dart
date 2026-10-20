@@ -65,7 +65,7 @@ enum MeshShapeId {
 }
 
 /// A shape generator produces `pointCount` Point3D positions deterministically.
-/// Implementations are pure functions of (pointCount, seed) — same inputs →
+/// Implementations are pure functions of (pointCount, seed) - same inputs →
 /// identical output across rebuilds, identical morph targets across re-entries.
 abstract class MeshShape {
   MeshShapeId get id;
@@ -105,7 +105,7 @@ const double _modelScale = 1.0;
 const double _sphereRadius = 1.0;
 
 // ---------------------------------------------------------------------------
-// Shape 0 — Cube grid. 6³ filled cube. Always uses 216 distinct points; if
+// Shape 0 - Cube grid. 6³ filled cube. Always uses 216 distinct points; if
 // pointCount < 216 the cube downsamples to fit a smaller cubic grid; if it
 // exceeds 216 the grid is upsampled in the same dimensions.
 // ---------------------------------------------------------------------------
@@ -134,7 +134,7 @@ class CubeShape extends MeshShape {
         }
       }
     }
-    // Pad any leftover slots with the centre — these stack with no visual
+    // Pad any leftover slots with the centre - these stack with no visual
     // penalty (renderer paints them on top of an existing dot at origin).
     while (idx < n) {
       out[idx++] = const Point3D(0, 0, 0);
@@ -143,7 +143,7 @@ class CubeShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 1 — Sphere (Fibonacci-spiral distribution). Uniform within ~1
+// Shape 1 - Sphere (Fibonacci-spiral distribution). Uniform within ~1
 // nearest-neighbour distance, no clumps, no holes. Direct port of
 // rsvpnano's genSphere.
 // ---------------------------------------------------------------------------
@@ -173,7 +173,7 @@ class SphereShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 2 — Torus. Grid sized so adjacent neighbours stay readable both
+// Shape 2 - Torus. Grid sized so adjacent neighbours stay readable both
 // around the major loop and around the tube cross-section.
 // ---------------------------------------------------------------------------
 
@@ -186,7 +186,7 @@ class TorusShape extends MeshShape {
   @override
   void fill(List<Point3D> out, {int seed = 0}) {
     final n = out.length;
-    // Roughly 4:3 aspect (u:v) — picked empirically to read as a fat ring.
+    // Roughly 4:3 aspect (u:v) - picked empirically to read as a fat ring.
     final v = math.max(4, _sqrt(n / 1.33).round());
     final u = math.max(4, (n / v).floor());
     const majorR = 0.66;
@@ -206,7 +206,7 @@ class TorusShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 3 — Single-helix tube. Thin tube wrapped around a helical core; the
+// Shape 3 - Single-helix tube. Thin tube wrapped around a helical core; the
 // 2D u/v parametrisation keeps adjacent samples well-spaced both along the
 // curve and around the cross-section.
 // ---------------------------------------------------------------------------
@@ -241,7 +241,7 @@ class HelixShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 4 — Double helix. Two tube strands 180° apart; per-strand grid is
+// Shape 4 - Double helix. Two tube strands 180° apart; per-strand grid is
 // half the total point count.
 // ---------------------------------------------------------------------------
 
@@ -278,7 +278,7 @@ class DoubleHelixShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 5 — Random cloud. Deterministic LCG seed so the cloud is identical
+// Shape 5 - Random cloud. Deterministic LCG seed so the cloud is identical
 // across rebuilds.
 // ---------------------------------------------------------------------------
 
@@ -302,7 +302,7 @@ class RandomCloudShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 6 — Wave-plane ripple. cos(r) × falloff so it reads as a pond
+// Shape 6 - Wave-plane ripple. cos(r) × falloff so it reads as a pond
 // ripple rather than a stripey saddle.
 // ---------------------------------------------------------------------------
 
@@ -334,7 +334,7 @@ class WavePlaneShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 7 — Lissajous blob. Three irrational frequency ratios produce a
+// Shape 7 - Lissajous blob. Three irrational frequency ratios produce a
 // non-repeating 3D figure-8 cluster.
 // ---------------------------------------------------------------------------
 
@@ -395,7 +395,7 @@ void _fillEdgeWireframe({
 }
 
 // ---------------------------------------------------------------------------
-// Shape 8 — Octahedron edges. 6 verts, 12 edges.
+// Shape 8 - Octahedron edges. 6 verts, 12 edges.
 // ---------------------------------------------------------------------------
 
 class OctahedronShape extends MeshShape {
@@ -441,7 +441,7 @@ class OctahedronShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 9 — Trefoil knot. Curve length ≈ 11·scale; stack onto fewer
+// Shape 9 - Trefoil knot. Curve length ≈ 11·scale; stack onto fewer
 // distinct samples than pointCount so adjacent dots don't visibly overlap
 // where the curve doubles back on itself.
 // ---------------------------------------------------------------------------
@@ -470,7 +470,7 @@ class TrefoilShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 10 — Möbius strip. Wide strip so the half-twist reads clearly when
+// Shape 10 - Möbius strip. Wide strip so the half-twist reads clearly when
 // the band rotates through the camera.
 // ---------------------------------------------------------------------------
 
@@ -502,7 +502,7 @@ class MobiusShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 11 — Hyperboloid of one sheet. Cooling-tower hourglass.
+// Shape 11 - Hyperboloid of one sheet. Cooling-tower hourglass.
 // ---------------------------------------------------------------------------
 
 class HyperboloidShape extends MeshShape {
@@ -531,7 +531,7 @@ class HyperboloidShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 12 — Hyperbolic-paraboloid saddle.
+// Shape 12 - Hyperbolic-paraboloid saddle.
 // ---------------------------------------------------------------------------
 
 class SaddleShape extends MeshShape {
@@ -560,7 +560,7 @@ class SaddleShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 13 — Square pyramid edges. 4-vertex base + apex, 8 edges.
+// Shape 13 - Square pyramid edges. 4-vertex base + apex, 8 edges.
 // ---------------------------------------------------------------------------
 
 class PyramidShape extends MeshShape {
@@ -593,7 +593,7 @@ class PyramidShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Shape 14 — Icosahedron edge wireframe. 12 vertices, 30 edges. The 12
+// Shape 14 - Icosahedron edge wireframe. 12 vertices, 30 edges. The 12
 // vertex caps are exposed via edges so the painter can render the same
 // "glowing vertex balls + connecting lines" look as the SocialMesh logo.
 // ---------------------------------------------------------------------------
@@ -675,7 +675,7 @@ class IcosahedronShape extends MeshShape {
 }
 
 // ---------------------------------------------------------------------------
-// Registry — order MUST match the MeshShapeId enum so byId lookups stay O(1).
+// Registry - order MUST match the MeshShapeId enum so byId lookups stay O(1).
 // ---------------------------------------------------------------------------
 
 final List<MeshShape> meshShapeRegistry = List<MeshShape>.unmodifiable([

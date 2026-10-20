@@ -99,7 +99,7 @@ _createContainer({
       ),
       // Provide a test user ID so the matcher can filter own flights.
       aetherCurrentUserIdProvider.overrideWithValue('test-user'),
-      // Connected node — null by default, set via myNodeNum parameter.
+      // Connected node - null by default, set via myNodeNum parameter.
       if (myNodeNum != null)
         myNodeNumProvider.overrideWith(
           () => _TestMyNodeNumNotifierWithValue(myNodeNum),
@@ -293,7 +293,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final state = h.container.read(aetherFlightMatcherProvider);
-      // Should deduplicate by ID — only one match
+      // Should deduplicate by ID - only one match
       expect(state.matches, hasLength(1));
     });
 
@@ -365,7 +365,7 @@ void main() {
 
       final notifier =
           h.container.read(nodesProvider.notifier) as _TestNodesNotifier;
-      // userId is null — matcher should fall back to nodeNum hex
+      // userId is null - matcher should fall back to nodeNum hex
       notifier.setNodes({
         0xa1b2c3d4: _makeNode(nodeNum: 0xa1b2c3d4, userId: null),
       });
@@ -424,7 +424,7 @@ void main() {
 
       final matcher = h.container.read(aetherFlightMatcherProvider.notifier);
 
-      // Mark with different casing — should still work
+      // Mark with different casing - should still work
       matcher.markNotified('!a1b2c3d4');
       expect(matcher.unnotifiedMatches, isEmpty);
     });
@@ -498,7 +498,7 @@ void main() {
   group('Departure-proximity filter', () {
     test('skips match when local device is near departure airport', () async {
       // Flight departs LAX (33.94, -118.41).  The local device (myNodeNum)
-      // is at LAX coordinates — well within 15 km.
+      // is at LAX coordinates - well within 15 km.
       // scheduledDeparture is 1 hour ago so the time-based grace period
       // alone would NOT block it.
       const myNum = 0xdeadbeef;
@@ -509,7 +509,7 @@ void main() {
       final notifier =
           h.container.read(nodesProvider.notifier) as _TestNodesNotifier;
       notifier.setNodes({
-        // Flight node — the one we would match.
+        // Flight node - the one we would match.
         0xa1b2c3d4: _makeNode(nodeNum: 0xa1b2c3d4, userId: '!a1b2c3d4'),
         // Our own node, sitting at LAX.
         myNum: _makeNode(
@@ -554,7 +554,7 @@ void main() {
 
         await Future<void>.delayed(Duration.zero);
 
-        // Far from LAX — match should be allowed.
+        // Far from LAX - match should be allowed.
         expect(
           h.container.read(aetherFlightMatcherProvider).matches,
           hasLength(1),
@@ -564,7 +564,7 @@ void main() {
 
     test('falls back to time-based grace when GPS unavailable', () async {
       // Local device has no GPS (latitude/longitude = null).
-      // Flight scheduledDeparture is only 5 minutes ago — inside the
+      // Flight scheduledDeparture is only 5 minutes ago - inside the
       // 10-minute grace window, so time-based guard blocks it.
       const myNum = 0xdeadbeef;
       final now = DateTime.now();
@@ -590,7 +590,7 @@ void main() {
           h.container.read(nodesProvider.notifier) as _TestNodesNotifier;
       notifier.setNodes({
         0xa1b2c3d4: _makeNode(nodeNum: 0xa1b2c3d4, userId: '!a1b2c3d4'),
-        // No lat/lon — GPS unavailable.
+        // No lat/lon - GPS unavailable.
         myNum: _makeNode(
           nodeNum: myNum,
           userId: '!deadbeef',

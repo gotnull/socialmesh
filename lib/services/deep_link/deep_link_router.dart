@@ -286,7 +286,7 @@ class DeepLinkRouter {
 
   /// Route an external-purchase return deep link.
   ///
-  /// The router stays pure — it surfaces the sessionId in arguments
+  /// The router stays pure - it surfaces the sessionId in arguments
   /// and DeepLinkManager hands it to ExternalPurchaseService, which
   /// drives the polling state machine. The route name is informational
   /// (the actual confirmation overlay is mounted by app shell, not

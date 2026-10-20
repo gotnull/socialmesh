@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../utils/time_format.dart';
 
 import '../../../core/auth/permission.dart';
@@ -17,7 +18,7 @@ import '../widgets/incident_filter_bar.dart';
 import 'create_incident_screen.dart';
 import 'incident_detail_screen.dart';
 
-/// Incident list screen — shows all incidents for the current org.
+/// Incident list screen - shows all incidents for the current org.
 ///
 /// Supports filtering by state, priority, and assignee via
 /// [IncidentFilterBar]. Empty state prompts creation (RBAC-gated).

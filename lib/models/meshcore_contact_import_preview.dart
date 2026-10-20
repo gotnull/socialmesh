@@ -18,11 +18,11 @@ import 'dart:typed_data';
 import 'meshcore_contact.dart';
 
 enum MeshCoreContactImportFormat {
-  /// Canonical `meshcore://` URL — full contact frame round-tripped
+  /// Canonical `meshcore://` URL - full contact frame round-tripped
   /// from `CMD_EXPORT_CONTACT`.
   modern,
 
-  /// Legacy `<pubkeyhex>:<name>` — pre-D46-A SocialMesh stopgap.
+  /// Legacy `<pubkeyhex>:<name>` - pre-D46-A SocialMesh stopgap.
   legacy,
 }
 

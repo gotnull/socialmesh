@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Tests for [OverlayHandshakeCodec] — the P3 signed LINK_OPEN body.
+/// Tests for [OverlayHandshakeCodec] - the P3 signed LINK_OPEN body.
 library;
 
 import 'dart:math';

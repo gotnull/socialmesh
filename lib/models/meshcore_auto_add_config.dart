@@ -121,7 +121,7 @@ class MeshCoreAutoAddConfig {
 
   @override
   String toString() =>
-      // lint-allow: hardcoded-string — diagnostic, never user-visible.
+      // lint-allow: hardcoded-string - diagnostic, never user-visible.
       'MeshCoreAutoAddConfig(flags=0x'
       '${toFlagsByte().toRadixString(16).padLeft(2, '0')})';
 }

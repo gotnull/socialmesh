@@ -70,7 +70,7 @@ Future<void> shareFiles(
 /// proper file (gives the share sheet a real filename + MIME, so "Save to
 /// Files" / mail attachments work correctly on iOS).
 ///
-/// Use this for any export larger than a snippet — CSV, GPX, JSON, etc.
+/// Use this for any export larger than a snippet - CSV, GPX, JSON, etc.
 /// Plain `shareText` is fine for short copy-to-clipboard snippets but on
 /// iOS produces an untitled `.txt` when saved.
 Future<void> shareTextAsFile(

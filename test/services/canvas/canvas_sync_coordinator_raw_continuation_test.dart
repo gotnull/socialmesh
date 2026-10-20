@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// S9g — resumable raw-band continuation tests.
+// S9g - resumable raw-band continuation tests.
 //
 // Spec: docs/canvas/CANVAS_SYNC_V0_1.md §11.
 //
@@ -102,7 +102,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  group('S9g — sender-side raw-band continuation', () {
+  group('S9g - sender-side raw-band continuation', () {
     test(
       'dense tile → 8 bands queued; governor closes after band 0; '
       'bands 1..7 remain pending; later drainRawBands() ships them',
@@ -159,7 +159,7 @@ void main() {
           channel.rawBandSendCount,
           1,
           reason:
-              'governor allowed only one send; bands 1..7 must wait — '
+              'governor allowed only one send; bands 1..7 must wait - '
               'NOT be dropped',
         );
         expect(channel.rawBandIndexesSent, [0]);
@@ -170,7 +170,7 @@ void main() {
         expect(shippedWhileClosed, 0);
         expect(channel.rawBandSendCount, 1);
 
-        // Refill the budget for 7 more sends — next drain ships the
+        // Refill the budget for 7 more sends - next drain ships the
         // remaining bands in order.
         governor.allowedSends = 7;
         final shippedAfterReopen = await sync.drainRawBands();
@@ -178,7 +178,7 @@ void main() {
         expect(channel.rawBandSendCount, 8);
         expect(channel.rawBandIndexesSent, [0, 1, 2, 3, 4, 5, 6, 7]);
 
-        // Job is drained — another drain ships nothing.
+        // Job is drained - another drain ships nothing.
         expect(await sync.drainRawBands(), 0);
       },
     );
@@ -237,7 +237,7 @@ void main() {
       );
       expect(channel.rawBandSendCount, 1);
 
-      // Refill budget — drain finishes the original 7 deferred
+      // Refill budget - drain finishes the original 7 deferred
       // bands. Total ships is 8 (not 16) because the dedupe blocked
       // the second 8-band enqueue.
       governor.allowedSends = 7;
@@ -246,7 +246,7 @@ void main() {
     });
   });
 
-  group('S9g — receiver-side band tracking + state', () {
+  group('S9g - receiver-side band tracking + state', () {
     test(
       'receiver bitmask tracks each band arrival; tile complete only at 8/8',
       () async {
@@ -268,7 +268,7 @@ void main() {
           name: 'Primary',
         );
 
-        // Initial state — quiet/idle, no progress.
+        // Initial state - quiet/idle, no progress.
         expect(sync.bandProgressForCanvas(canvas.localId), isNull);
         expect(
           sync.hydrationStateFor(canvas.localId),
@@ -293,13 +293,13 @@ void main() {
           );
         }
 
-        // Progress should report 3/8 — receiver state is recovering.
+        // Progress should report 3/8 - receiver state is recovering.
         final progress = sync.bandProgressForCanvas(canvas.localId);
         expect(progress, isNotNull);
         expect(progress!.received, 3);
         expect(progress.total, 8);
 
-        // Deliver the remaining 5 bands — set completes, progress
+        // Deliver the remaining 5 bands - set completes, progress
         // disappears, state returns toward idle.
         for (final band in [1, 3, 5, 6, 7]) {
           await sync.handleInboundSyncResponse(
@@ -321,7 +321,7 @@ void main() {
     );
   });
 
-  group('S9g — HUD state under partial hydration', () {
+  group('S9g - HUD state under partial hydration', () {
     test('hydrationStateFor reports recovering while sender raw-band job '
         'still queued; never quiet', () async {
       final db = CanvasDatabase(testDbPath: _testDbPath('hud-sender'));
@@ -370,17 +370,17 @@ void main() {
       expect(channel.rawBandSendCount, 1);
 
       // With bands 1..7 still queued on the sender side, state
-      // must be recovering — NOT quiet, NOT idle.
+      // must be recovering - NOT quiet, NOT idle.
       // Note: `_lastBandAtMs` was set by sending band 0 a moment
       // ago, so state might also report `syncing`. Either is fine
-      // for this assertion — both indicate active sync, not quiet.
+      // for this assertion - both indicate active sync, not quiet.
       final state = sync.hydrationStateFor(canvas.localId);
       expect(
         state == MeshCanvasHydrationState.recovering ||
             state == MeshCanvasHydrationState.syncing,
         isTrue,
         reason:
-            'sender raw-band job still queued — state must be a recovery '
+            'sender raw-band job still queued - state must be a recovery '
             'state, never quiet/idle. Got: $state',
       );
       expect(state, isNot(MeshCanvasHydrationState.quiet));
@@ -407,7 +407,7 @@ void main() {
         name: 'Primary',
       );
 
-      // Land bands 0, 1, 2 — receiver state is recovering.
+      // Land bands 0, 1, 2 - receiver state is recovering.
       for (final band in [0, 1, 2]) {
         await sync.handleInboundSyncResponse(
           senderNodeId: _kPeer,
@@ -423,13 +423,13 @@ void main() {
           ),
         );
       }
-      // syncingActivityWindow = 10s — fresh band landed → syncing.
+      // syncingActivityWindow = 10s - fresh band landed → syncing.
       expect(
         sync.hydrationStateFor(canvas.localId),
         MeshCanvasHydrationState.syncing,
       );
 
-      // Land the remaining 5 — full set complete.
+      // Land the remaining 5 - full set complete.
       for (final band in [3, 4, 5, 6, 7]) {
         await sync.handleInboundSyncResponse(
           senderNodeId: _kPeer,
@@ -445,7 +445,7 @@ void main() {
           ),
         );
       }
-      // Still syncing for ~10s — that's expected. Progress is gone
+      // Still syncing for ~10s - that's expected. Progress is gone
       // because the set completed.
       expect(sync.bandProgressForCanvas(canvas.localId), isNull);
     });

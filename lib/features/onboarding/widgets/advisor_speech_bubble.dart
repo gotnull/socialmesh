@@ -2,8 +2,10 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../core/theme.dart';
 
 /// A sci-fi styled speech bubble for Ico, the mesh brain advisor.

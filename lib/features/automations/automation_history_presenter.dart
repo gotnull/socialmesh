@@ -23,7 +23,7 @@ enum RunOutcome {
   /// One or more actions failed.
   failed,
 
-  /// Condition failed and no ELSE branch — nothing ran.
+  /// Condition failed and no ELSE branch - nothing ran.
   skippedNoElse,
 
   /// Skipped due to cooldown/throttle.

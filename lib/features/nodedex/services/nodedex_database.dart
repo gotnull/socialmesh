@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Database — SQLite schema and lifecycle management.
+// NodeDex Database - SQLite schema and lifecycle management.
 //
 // This file defines the database schema for NodeDex persistence.
 // All tables, indices, and migration logic live here.
@@ -77,7 +77,7 @@ abstract final class NodeDexTables {
   static const colEncFreqOffset = 'enc_freq_offset';
 
   // -- Connection-identity columns (v11) --
-  // Stamped from myNodeNumProvider emissions only — never from packet ingest.
+  // Stamped from myNodeNumProvider emissions only - never from packet ingest.
   static const colFirstUsedAtMs = 'first_used_at_ms';
   static const colLastUsedAtMs = 'last_used_at_ms';
 
@@ -644,7 +644,7 @@ class NodeDexDatabase {
     }
     if (oldVersion < 7) {
       // v7: Add SIP identity columns for SocialMesh Interop Profile peers.
-      // All nullable — existing entries are non-SIP by default.
+      // All nullable - existing entries are non-SIP by default.
       await addColumnIfMissing(
         NodeDexTables.entries,
         NodeDexTables.colSipCapable,
@@ -707,7 +707,7 @@ class NodeDexDatabase {
     }
     if (oldVersion < 10) {
       // v10: Track the frequency offset of the local radio when a node
-      // was observed. Stored as a float (Hz). Nullable — zero offset
+      // was observed. Stored as a float (Hz). Nullable - zero offset
       // is omitted entirely and legacy entries won't have this field.
       await addColumnIfMissing(
         NodeDexTables.entries,
@@ -725,7 +725,7 @@ class NodeDexDatabase {
     }
     if (oldVersion < 11) {
       // v11: Connection-identity timestamps. Stamped from
-      // myNodeNumProvider emissions only — never from packet ingest. Both
+      // myNodeNumProvider emissions only - never from packet ingest. Both
       // nullable; existing entries leave them NULL forever (remote nodes)
       // or until the next time the user connects to that nodeNum (self).
       await addColumnIfMissing(
@@ -813,7 +813,7 @@ class NodeDexDatabase {
       // v14: Observed-from regions. Records the local radio's coarse
       // region (~1°x1° geohash cell) at the time the remote node was
       // encountered. Distinct from seen_regions, which records the
-      // remote node's own broadcast position. Both are nullable —
+      // remote node's own broadcast position. Both are nullable -
       // observed_from only gets a row when the local radio has GPS.
       await db.execute('''
         CREATE TABLE IF NOT EXISTS ${NodeDexTables.observedFromRegions} (

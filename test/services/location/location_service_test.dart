@@ -227,12 +227,12 @@ void main() {
         expect(
           decision,
           PublishDecision.blockedDisabled,
-          reason: 'null callback should default to false — no emission',
+          reason: 'null callback should default to false - no emission',
         );
         expect(
           protocol.sentPositions,
           isEmpty,
-          reason: 'null callback should default to false — no emission',
+          reason: 'null callback should default to false - no emission',
         );
       },
     );
@@ -257,7 +257,7 @@ void main() {
         expect(
           protocol.sentPositions,
           isEmpty,
-          reason: 'providePhoneLocation=false — no emission',
+          reason: 'providePhoneLocation=false - no emission',
         );
       },
     );
@@ -310,7 +310,7 @@ void main() {
     // ----- Dynamic toggle (simulating setting change between ticks) -----
 
     test(
-      'gate is evaluated dynamically — toggling mid-session works',
+      'gate is evaluated dynamically - toggling mid-session works',
       () async {
         var enabled = false;
 
@@ -347,7 +347,7 @@ void main() {
         expect(
           protocol.sentPositions,
           hasLength(1),
-          reason: 'Still 1 — the third call was blocked',
+          reason: 'Still 1 - the third call was blocked',
         );
       },
     );
@@ -369,7 +369,7 @@ void main() {
       // startLocationUpdates will fail permission check in test env
       // (no Geolocator platform channel), so we test via sendPositionOnce
       // which exercises the same governor code path.
-      // The timer-based path is structurally identical — it calls
+      // The timer-based path is structurally identical - it calls
       // _governedTick on each tick.
       await service.sendPositionOnce();
       await service.sendPositionOnce();
@@ -402,7 +402,7 @@ void main() {
         expect(
           protocol.sentPositions,
           isEmpty,
-          reason: 'Default must be false — privacy by default',
+          reason: 'Default must be false - privacy by default',
         );
       },
     );
@@ -456,83 +456,74 @@ void main() {
       protocol = _SpyProtocolService();
     });
 
-    test(
-      'startLocationUpdates does not start when isLocationSharingEnabled is null',
-      () async {
-        final governor = PhonePositionGovernor(protocol);
-        final service = _TestableLocationService(
-          protocol,
-          governor: governor,
-          fakePosition: _fakePosition(),
-          // isLocationSharingEnabled deliberately omitted (null → false)
-        );
+    test('startLocationUpdates does not start when isLocationSharingEnabled is null', () async {
+      final governor = PhonePositionGovernor(protocol);
+      final service = _TestableLocationService(
+        protocol,
+        governor: governor,
+        fakePosition: _fakePosition(),
+        // isLocationSharingEnabled deliberately omitted (null → false)
+      );
 
-        await service.startLocationUpdates();
+      await service.startLocationUpdates();
 
-        expect(
-          service.isRunning,
-          isFalse,
-          reason: 'Timer must not start when sharing callback is null',
-        );
-        expect(protocol.sentPositions, isEmpty);
-      },
-    );
+      expect(
+        service.isRunning,
+        isFalse,
+        reason: 'Timer must not start when sharing callback is null',
+      );
+      expect(protocol.sentPositions, isEmpty);
+    });
 
-    test(
-      'startLocationUpdates does not start when isLocationSharingEnabled returns false',
-      () async {
-        final governor = PhonePositionGovernor(
-          protocol,
-          isLocationSharingEnabled: () => false,
-        );
-        final service = _TestableLocationService(
-          protocol,
-          isLocationSharingEnabled: () => false,
-          governor: governor,
-          fakePosition: _fakePosition(),
-        );
+    test('startLocationUpdates does not start when isLocationSharingEnabled returns false', () async {
+      final governor = PhonePositionGovernor(
+        protocol,
+        isLocationSharingEnabled: () => false,
+      );
+      final service = _TestableLocationService(
+        protocol,
+        isLocationSharingEnabled: () => false,
+        governor: governor,
+        fakePosition: _fakePosition(),
+      );
 
-        await service.startLocationUpdates();
+      await service.startLocationUpdates();
 
-        expect(
-          service.isRunning,
-          isFalse,
-          reason: 'Timer must not start when sharing is disabled',
-        );
-        expect(protocol.sentPositions, isEmpty);
-      },
-    );
+      expect(
+        service.isRunning,
+        isFalse,
+        reason: 'Timer must not start when sharing is disabled',
+      );
+      expect(protocol.sentPositions, isEmpty);
+    });
 
-    test(
-      'startLocationUpdates starts and sends when isLocationSharingEnabled returns true',
-      () async {
-        final governor = PhonePositionGovernor(
-          protocol,
-          isLocationSharingEnabled: () => true,
-        );
-        final service = _TestableLocationService(
-          protocol,
-          isLocationSharingEnabled: () => true,
-          governor: governor,
-          fakePosition: _fakePosition(latitude: 38.7223, longitude: -9.1393),
-        );
+    test('startLocationUpdates starts and sends when isLocationSharingEnabled returns true', () async {
+      final governor = PhonePositionGovernor(
+        protocol,
+        isLocationSharingEnabled: () => true,
+      );
+      final service = _TestableLocationService(
+        protocol,
+        isLocationSharingEnabled: () => true,
+        governor: governor,
+        fakePosition: _fakePosition(latitude: 38.7223, longitude: -9.1393),
+      );
 
-        await service.startLocationUpdates();
+      await service.startLocationUpdates();
 
-        expect(
-          service.isRunning,
-          isTrue,
-          reason: 'Timer must start when sharing is enabled',
-        );
-        // The initial tick should have been submitted to the governor.
-        // On a fresh governor with no previous publish, the first tick is
-        // allowed.
-        expect(protocol.sentPositions, hasLength(1));
-        expect(protocol.sentPositions.first.lat, 38.7223);
+      expect(
+        service.isRunning,
+        isTrue,
+        reason: 'Timer must start when sharing is enabled',
+      );
+      // The initial tick should have been submitted to the governor.
+      // On a fresh governor with no previous publish, the first tick is
+      // allowed.
+      expect(protocol.sentPositions, hasLength(1));
+      expect(protocol.sentPositions.first.lat, 38.7223);
 
-        service.dispose();
-      },
-    );
+      service.dispose();
+    });
   });
 
   // -----------------------------------------------------------------------
@@ -553,7 +544,7 @@ void main() {
       final ps = ProtocolService(transport);
 
       await ps.sendPosition(latitude: 39.5, longitude: -8.9);
-      // Immediately send again — should be blocked.
+      // Immediately send again - should be blocked.
       await ps.sendPosition(latitude: 39.6, longitude: -8.8);
 
       expect(
@@ -576,7 +567,7 @@ void main() {
       final ps = ProtocolService(transport);
 
       await ps.sendPositionToNode(nodeNum: 42, latitude: 39.5, longitude: -8.9);
-      // Immediately send again — should be blocked.
+      // Immediately send again - should be blocked.
       await ps.sendPositionToNode(nodeNum: 42, latitude: 39.6, longitude: -8.8);
 
       expect(
@@ -590,7 +581,7 @@ void main() {
       final transport = _RecordingTransport();
       final ps = ProtocolService(transport);
 
-      // Broadcast then direct — both should succeed because they track
+      // Broadcast then direct - both should succeed because they track
       // separate timestamps.
       await ps.sendPosition(latitude: 39.5, longitude: -8.9);
       await ps.sendPositionToNode(nodeNum: 42, latitude: 39.5, longitude: -8.9);

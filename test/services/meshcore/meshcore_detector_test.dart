@@ -204,7 +204,7 @@ void main() {
         // The reporter's Elecrow Thinknode M1 on MeshCore: no advertised
         // service UUID captured, name ends in the shared "<name> <4hex>"
         // convention, so the detector falls back to a Meshtastic name guess.
-        // It must NOT be displayed — that is the bug being fixed.
+        // It must NOT be displayed - that is the bug being fixed.
         final detection = createDevice('ThinkNode d88b').detectProtocol();
 
         expect(detection.protocolType, equals(MeshProtocolType.meshtastic));

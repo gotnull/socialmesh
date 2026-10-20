@@ -6,14 +6,14 @@
 /// Exposes:
 ///   * [meshGameRateLimiterProvider]
 ///   * [meshGameRepositoryProvider]
-///   * [meshGameRouterProvider] — also installs itself on
+///   * [meshGameRouterProvider] - also installs itself on
 ///     [MeshServiceEngine.gameInteractionHandler] so inbound MRRP
 ///     `interact` payloads with `canonicalType == game` are routed
 ///     into this feature.
 ///   * [meshGameTransportProvider]
-///   * [meshGamesEpochProvider] — bumped whenever session state
+///   * [meshGamesEpochProvider] - bumped whenever session state
 ///     changes, so UI providers can invalidate deterministically.
-///   * [meshGameSessionProvider] — per-session state.
+///   * [meshGameSessionProvider] - per-session state.
 library;
 
 import 'dart:typed_data';
@@ -130,7 +130,7 @@ enum MeshGameLocalMoveOutcome {
   /// Engine rejected the move (invalid cell, not your turn, etc.).
   rejectedByEngine,
 
-  /// Transport failed — session advanced locally; UI should show
+  /// Transport failed - session advanced locally; UI should show
   /// resync affordance.
   transportFailed,
 
@@ -147,7 +147,7 @@ class MeshGameLocalMoveResult {
 
 /// Apply a local move optimistically: validate, persist, send.
 ///
-/// The session advance is durable *before* the send — per spec § 6.2
+/// The session advance is durable *before* the send - per spec § 6.2
 /// we rely on revision gating to make the move re-sendable rather
 /// than relying on automatic retry.
 ///

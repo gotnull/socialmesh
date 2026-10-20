@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -73,9 +74,8 @@ void main() {
           if (hasAwait && hasRefRead) {
             // Check if ref.read appears AFTER an await (simplified heuristic)
             final awaitIndex = methodBody.indexOf('await ');
-            final refReadMatch = RegExp(
-              r'ref\.read\(',
-            ).firstMatch(methodBody.substring(awaitIndex));
+            final refReadMatch = RegExp(r'ref\.read\(')
+                .firstMatch(methodBody.substring(awaitIndex));
             if (refReadMatch != null) {
               final methodName =
                   match.group(0)?.replaceAll(RegExp(r'\s+'), ' ').trim() ?? '';
@@ -391,9 +391,9 @@ void main() {
         final fileName = file.path.split('/').last;
 
         // Count StreamSubscription declarations
-        final subDeclarations = RegExp(
-          r'StreamSubscription[<\w,\s>]*\??\s+_',
-        ).allMatches(content).length;
+        final subDeclarations = RegExp(r'StreamSubscription[<\w,\s>]*\??\s+_')
+            .allMatches(content)
+            .length;
 
         if (subDeclarations > 0) {
           // Count cancel calls (both safe and unsafe patterns)
@@ -427,9 +427,8 @@ void main() {
         final fileName = file.path.split('/').last;
 
         // Count AnimationController declarations
-        final controllerDeclarations = RegExp(
-          r'AnimationController\s+(_\w+)',
-        ).allMatches(content);
+        final controllerDeclarations = RegExp(r'AnimationController\s+(_\w+)')
+            .allMatches(content);
 
         for (final match in controllerDeclarations) {
           final name = match.group(1);

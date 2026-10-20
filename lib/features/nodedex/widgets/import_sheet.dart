@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodeDex Import/Export Sheet — file-based import with preview and conflict
+// NodeDex Import/Export Sheet - file-based import with preview and conflict
 // resolution UI.
 //
 // Export flow:
@@ -539,7 +539,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
             child: Text(
               '$unresolvedCount '
               '${unresolvedCount == 1 ? "conflict" : "conflicts"} '
-              'unresolved — using "Keep Local" as default', // lint-allow: hardcoded-string
+              'unresolved - using "Keep Local" as default', // lint-allow: hardcoded-string
               style: TextStyle(
                 fontSize: 11,
                 color: AppTheme.warningYellow,
@@ -620,7 +620,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
 
       navigator.pop();
 
-      // Use global snackbar — sheet context is invalidated after pop.
+      // Use global snackbar - sheet context is invalidated after pop.
       if (count > 0) {
         showGlobalSuccessSnackBar(
           count == 1

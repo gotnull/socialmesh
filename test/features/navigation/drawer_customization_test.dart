@@ -20,7 +20,7 @@ import 'package:socialmesh/services/storage/storage_service.dart';
 /// - The pure `applyDrawerCustomization` filter+reorder algorithm.
 /// - The SharedPreferences round-trip for `drawerHiddenItems` and
 ///   `drawerItemOrder` on [SettingsService].
-/// - Stability pins on `DrawerMenuItem.id` strings — drift means
+/// - Stability pins on `DrawerMenuItem.id` strings - drift means
 ///   silent loss of user state.
 
 DrawerMenuItem _item(String id, {String label = 'X'}) =>
@@ -58,7 +58,7 @@ void main() {
       expect(result.map((e) => e.id), [null, 'c']);
     });
 
-    test('customOrder is intentionally ignored — ordering is section-aware '
+    test('customOrder is intentionally ignored - ordering is section-aware '
         '(see applySectionOrder + deriveSectionMembership)', () {
       // The old global-sort behaviour was the source of the
       // "items end up in the wrong section" bug. The pure helper
@@ -69,7 +69,7 @@ void main() {
         list,
         const DrawerCustomizationState(hiddenIds: {}, customOrder: ['c', 'a']),
       );
-      // No global reorder — list comes back in default order.
+      // No global reorder - list comes back in default order.
       expect(result.map((e) => e.id), ['a', 'b', 'c', 'd']);
     });
 
@@ -123,7 +123,7 @@ void main() {
           customOrder: null,
         ),
       );
-      // identical (not just equal) — the helper hands back the
+      // identical (not just equal) - the helper hands back the
       // original DrawerMenuItem when the subtree was unchanged so
       // const-Widget identity survives downstream.
       expect(identical(result.first, parent), true);
@@ -233,7 +233,7 @@ void main() {
     test('stale customOrder entries are silently skipped', () {
       final list = [_item('a'), _item('b')];
       final result = applySectionOrder(list, ['ghost', 'b', 'a']);
-      // 'ghost' is not in the input — just dropped.
+      // 'ghost' is not in the input - just dropped.
       expect(result.map((e) => e.id), ['b', 'a']);
     });
   });
@@ -254,7 +254,7 @@ void main() {
     });
   });
 
-  group('SettingsService — drawer customization keys', () {
+  group('SettingsService - drawer customization keys', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -310,7 +310,7 @@ void main() {
     });
   });
 
-  group('DrawerCustomizationNotifier — behaviour', () {
+  group('DrawerCustomizationNotifier - behaviour', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -368,7 +368,7 @@ void main() {
       source = shellFile.readAsStringSync();
     });
 
-    // Every customizable item must keep its ID across releases —
+    // Every customizable item must keep its ID across releases -
     // renaming an ID silently drops any user customization that
     // referenced it. Pin the full set here. When adding a new item:
     // add it to this list and the SharedPreferences side stays in
@@ -444,7 +444,7 @@ void main() {
           source.contains("id: '$id',"),
           true,
           reason:
-              'Drawer item id "$id" is part of the release contract — '
+              'Drawer item id "$id" is part of the release contract - '
               'renaming or removing it without a migration silently '
               'drops any user customization that referenced it.',
         );
@@ -454,7 +454,7 @@ void main() {
     // The customize sheet renders each hidden item by id via the
     // descriptor lookup. If a customizable id ships in the drawer
     // without a matching descriptor, the user sees the fallback
-    // (raw id + help icon) instead of the real label — degraded
+    // (raw id + help icon) instead of the real label - degraded
     // UX. Pin parity so the sheet always renders the canonical
     // icon + accent + localized label for every customizable id.
     test('every customizable id resolves to a hidden-item descriptor', () {
@@ -495,7 +495,7 @@ void main() {
           isNotNull,
           reason:
               'Drawer item id "$id" has no entry in '
-              'drawerHiddenItemDescriptor — the customize sheet will '
+              'drawerHiddenItemDescriptor - the customize sheet will '
               'fall back to a neutral tile instead of the real label '
               'and accent. Add the case to the descriptor switch.',
         );
@@ -503,7 +503,7 @@ void main() {
           descriptor!.label,
           isNotEmpty,
           reason:
-              'Descriptor for "$id" returned an empty label — likely '
+              'Descriptor for "$id" returned an empty label - likely '
               'a missing ARB key.',
         );
       }

@@ -211,7 +211,7 @@ class MeshCoreMessage {
   final int? snrQuarter;
 
   /// D33: cross-device MeshCore Message Fingerprint (MMF) for THIS
-  /// message — `01:<idx>:<ts>` for channel, `02:<peerPrefix>:<ts>`
+  /// message - `01:<idx>:<ts>` for channel, `02:<peerPrefix>:<ts>`
   /// for contact. Set on send (outbound) and receive (inbound) so
   /// both ends derive the same id for the same logical message.
   /// Null on records pre-dating D33 OR records that lack enough
@@ -261,7 +261,7 @@ class MeshCoreMessage {
 enum MeshCoreMessageDeliveryStatus { pending, sent, delivered, failed }
 
 // ---------------------------------------------------------------------------
-// D22 — Drain coordination (heartbeat + manual + auto-tickle non-overlap)
+// D22 - Drain coordination (heartbeat + manual + auto-tickle non-overlap)
 // ---------------------------------------------------------------------------
 
 /// Origin of an in-flight `CMD_SYNC_NEXT_MESSAGE` drain. Used by the
@@ -429,7 +429,7 @@ class MeshCoreConversationsNotifier
   // `CMD_SYNC_NEXT_MESSAGE` while connected so messages already in the
   // firmware queue (whose 0x83 tickle was missed) get pulled. The
   // timer is owned here because this notifier already owns inbound
-  // frame routing, persistence, and the existing 0x83 auto-drain — so
+  // frame routing, persistence, and the existing 0x83 auto-drain - so
   // the heartbeat naturally shares the same parser/persistence path.
   Timer? _heartbeatTimer;
   MeshCoreSession? _heartbeatSession;
@@ -525,7 +525,7 @@ class MeshCoreConversationsNotifier
     // Idempotent: if we're already running for this exact session, just
     // re-publish the active flag and return. D28: re-publishing is
     // important on a Notifier rebuild (e.g. when session provider
-    // cascades from a connection-state emit) — Riverpod replaces the
+    // cascades from a connection-state emit) - Riverpod replaces the
     // notifier state with build's return value (initial =
     // heartbeatActive=false) on every rebuild, so the publish has to
     // fire to bring the state back in line with the timer.
@@ -533,7 +533,7 @@ class MeshCoreConversationsNotifier
       _publishHeartbeatActive(true);
       return;
     }
-    // Different session (reconnect, device swap) — cancel and re-arm.
+    // Different session (reconnect, device swap) - cancel and re-arm.
     _stopHeartbeat('session_changed');
     _heartbeatSession = session;
     final interval = debugHeartbeatInterval;
@@ -607,7 +607,7 @@ class MeshCoreConversationsNotifier
             'code=0x${outcome.code!.toRadixString(16).padLeft(2, '0')} '
             'size=${outcome.size ?? 0}',
           );
-          // Loop and try again — there may be more queued.
+          // Loop and try again - there may be more queued.
           continue;
         case MeshCoreDrainOutcomeKind.noMore:
           AppLogging.meshcore(
@@ -641,14 +641,14 @@ class MeshCoreConversationsNotifier
     );
   }
 
-  /// Public manual drain entry — invoked by the Tools tile. Single
+  /// Public manual drain entry - invoked by the Tools tile. Single
   /// shot, classified outcome (message / no_more / timeout / skipped
   /// / failed). The Tools UI maps the outcome to a snackbar.
   Future<MeshCoreDrainOutcome> manualDrain() async {
     return drainOnce(MeshCoreDrainSource.manual);
   }
 
-  /// Test entry point — fire one heartbeat tick synchronously without
+  /// Test entry point - fire one heartbeat tick synchronously without
   /// waiting for the [Timer.periodic] interval. Same path as the
   /// production timer callback.
   @visibleForTesting
@@ -983,7 +983,7 @@ class MeshCoreConversationsNotifier
               // D33: store the displayed body (envelope stripped on
               // reply messages) so the chat surface never re-decodes
               // on each load. The original raw envelope bytes are
-              // not retained — losing them is fine because the
+              // not retained - losing them is fine because the
               // structured payload (target MMF + body) is what we
               // actually need.
               text: displayText,
@@ -1055,7 +1055,7 @@ class MeshCoreConversationsNotifier
     // D30 Part A: fire a local notification for inbound MeshCore DMs.
     // Gated on the existing app-wide notification toggles so the user's
     // master + per-category preferences apply uniformly across protocols.
-    // Only inbound persisted messages reach this point — the parser at
+    // Only inbound persisted messages reach this point - the parser at
     // the top of the handler runs only for `RESP_CODE_CONTACT_MSG_RECV*`
     // frames (firmware → app), so there's no risk of self-echo
     // notifications. Persistence ran via Future.microtask above; the
@@ -1096,7 +1096,7 @@ class MeshCoreConversationsNotifier
         // appear on the radio's roster and their messages still
         // arrive (no wire change), but the OS notification is
         // suppressed so the user isn't nagged. Reading the
-        // notifier synchronously is safe — the provider has been
+        // notifier synchronously is safe - the provider has been
         // hydrated by the time the first DM arrives in any
         // realistic flow, and a missed-on-cold-start notification
         // is an acceptable single-frame fallback.
@@ -1126,7 +1126,7 @@ class MeshCoreConversationsNotifier
 
   /// D30 Part A: dispatch the channel notification.
   /// D37-A: per-channel mute gates the system notification. The in-app
-  /// chat persistence path (above this call site) is unconditional —
+  /// chat persistence path (above this call site) is unconditional -
   /// muted channels still receive and store messages; only the system
   /// notification is suppressed. Storage / provider read failures
   /// fail-open (deliver the notification) so the user never misses a
@@ -1218,7 +1218,7 @@ class MeshCoreConversationsNotifier
         final settings = await ref.read(settingsServiceProvider.future);
         if (!settings.notificationsEnabled) return;
         if (!settings.channelMessageNotificationsEnabled) return;
-        // D37-A: per-channel mute gate. Read defensively — a failure to
+        // D37-A: per-channel mute gate. Read defensively - a failure to
         // read the muted set must NOT silently drop the notification.
         bool muted = false;
         try {
@@ -1438,7 +1438,7 @@ class MeshCoreConversationsNotifier
             .read(meshCoreDiscoveredAdvertsProvider.notifier)
             .bumpLastHeard(pubKey);
       } catch (_) {
-        // Swallow — discovery feed is a best-effort surface.
+        // Swallow - discovery feed is a best-effort surface.
       }
     }
 
@@ -1457,7 +1457,7 @@ class MeshCoreConversationsNotifier
           'event=contact.advert.name.observed name_len=${info.name.length}',
         );
         // D34b-A1: record the discovered advert before we attempt
-        // any name-merge — the recent-heard feed should reflect a
+        // any name-merge - the recent-heard feed should reflect a
         // newly-observed peer even when the local contact slot is
         // already populated and the merge bails on "preserved".
         try {
@@ -1465,7 +1465,7 @@ class MeshCoreConversationsNotifier
               .read(meshCoreDiscoveredAdvertsProvider.notifier)
               .recordAdvert(info, isNew: true);
         } catch (_) {
-          // Swallow — discovery feed is a best-effort surface.
+          // Swallow - discovery feed is a best-effort surface.
         }
         if (info.name.isNotEmpty) {
           AppLogging.meshcore('event=contact.advert.name.update.attempted');
@@ -1493,7 +1493,7 @@ class MeshCoreConversationsNotifier
                   );
                   break;
                 case 'empty_advert':
-                  // Defensive — already gated above.
+                  // Defensive - already gated above.
                   AppLogging.meshcore(
                     'event=contact.advert.name.update.skipped '
                     'reason=empty_advert',
@@ -1866,7 +1866,7 @@ class MeshCoreChatChannelKey extends MeshCoreChatHistoryKey {
 
 /// Immutable window state for a single conversation's chat history.
 ///
-/// [messages] is ALWAYS in ascending `(timestamp, id)` order — the
+/// [messages] is ALWAYS in ascending `(timestamp, id)` order - the
 /// shape the chat screen renders bottom-up.
 ///
 /// [oldestCursor] is a derived view of `messages.firstOrNull` and is
@@ -1881,7 +1881,7 @@ class MeshCoreChatHistoryState {
   /// `true` while another older page may still exist. Flips to
   /// `false` the moment a load returns fewer than the page size,
   /// whether that is the real bottom of history or the 500-cap trim
-  /// wall — the provider cannot distinguish.
+  /// wall - the provider cannot distinguish.
   final bool hasMore;
 
   /// Last error surface for the chat screen. Cleared on the next
@@ -1927,7 +1927,7 @@ class MeshCoreChatHistoryState {
   }
 }
 
-/// D43 page size. Matches the spec — small enough to keep JSON parse
+/// D43 page size. Matches the spec - small enough to keep JSON parse
 /// + filter cheap, large enough that the median user never pages.
 const int _kMeshCoreChatHistoryPageSize = 50;
 
@@ -1938,7 +1938,7 @@ const int _kMeshCoreChatHistoryDefaultMaxPages = 10;
 ///
 /// Owns the in-memory window for one contact or channel conversation.
 /// Reads through the D43-A1 store paging API; never writes to the
-/// store — persistence stays on `MeshCoreConversationsNotifier` and
+/// store - persistence stays on `MeshCoreConversationsNotifier` and
 /// the chat screen's existing dual-write paths.
 ///
 /// All mutators preserve the ascending-order invariant. Inbound and
@@ -2014,7 +2014,7 @@ class MeshCoreChatHistoryNotifier extends Notifier<MeshCoreChatHistoryState> {
     }
   }
 
-  /// Append an inbound message at the tail. Dedupe by id — repeat
+  /// Append an inbound message at the tail. Dedupe by id - repeat
   /// deliveries of the same logical message are ignored.
   ///
   /// Tail-append preserves today's chat-screen behaviour (an inbound
@@ -2023,7 +2023,7 @@ class MeshCoreChatHistoryNotifier extends Notifier<MeshCoreChatHistoryState> {
   /// is not part of D43.
   void appendInbound(MeshCoreMessage m) => _appendDedup(m);
 
-  /// Append an outbound (pending) message at the tail. Dedupe by id —
+  /// Append an outbound (pending) message at the tail. Dedupe by id -
   /// idempotent for retried sends that reuse the same stable id.
   void appendOutbound(MeshCoreMessage m) => _appendDedup(m);
 
@@ -2041,7 +2041,7 @@ class MeshCoreChatHistoryNotifier extends Notifier<MeshCoreChatHistoryState> {
   /// Replace the loaded copy of a message by id with [m]. No-op when
   /// the id is not in the loaded window. Used by the retry path
   /// (rewrites MMF on a re-send) and any other flow that needs to
-  /// rewrite multiple fields atomically — `updateMessageStatus`
+  /// rewrite multiple fields atomically - `updateMessageStatus`
   /// alone cannot express that.
   ///
   /// Asserts that [m.id] matches the target id implicitly: the find

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34b-A1 — `MeshCoreDiscoveredAdvertsNotifier` regression pins.
+// D34b-A1 - `MeshCoreDiscoveredAdvertsNotifier` regression pins.
 //
 // Pinned invariants:
 //   - recordAdvert adds new entries with full info from a 0x8A push.
 //   - duplicate recordAdvert dedupes by pubkey, updates metadata, and
 //     bumps lastHeard while preserving firstHeard.
-//   - cap at MeshCoreDiscoveredAdvertsNotifier.maxEntries (100) — oldest
+//   - cap at MeshCoreDiscoveredAdvertsNotifier.maxEntries (100) - oldest
 //     `lastHeard` evicted first.
 //   - self-pubkey is filtered out (matched against
 //     `meshCoreSelfInfoProvider.selfInfo.pubKey`).
@@ -144,7 +144,7 @@ void main() {
       );
 
       // Yield so the next recordAdvert's `now` is later than every
-      // existing `lastHeard` — guarantees the oldest ([0]) is the
+      // existing `lastHeard` - guarantees the oldest ([0]) is the
       // eviction target.
       await Future<void>.delayed(const Duration(milliseconds: 2));
 
@@ -152,7 +152,7 @@ void main() {
       final firstEntryHex = Uint8List.fromList(
         List.generate(32, (k) => k & 0xFF),
       ).map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-      // Add a 101st distinct entry — should evict the oldest.
+      // Add a 101st distinct entry - should evict the oldest.
       final extra = Uint8List.fromList(List.generate(32, (k) => 0xC0 + k));
       notifier.recordAdvert(
         _info(pubKey: extra, name: 'overflow', advType: 1),
@@ -328,7 +328,7 @@ void main() {
       expect(state.map((e) => e.name).toList(), ['newest', 'middle', 'older']);
     });
 
-    test('state is unmodifiable — callers cannot mutate the feed', () {
+    test('state is unmodifiable - callers cannot mutate the feed', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 

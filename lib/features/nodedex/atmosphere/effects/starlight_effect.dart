@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Starlight Effect — ambient twinkling background particles.
+// Starlight Effect - ambient twinkling background particles.
 //
 // Starlight is the most subtle and ever-present of the four atmosphere
 // effects. Small luminous points appear at random positions across the
 // viewport and gently twinkle (oscillate in brightness) before fading
 // away. Unlike rain and embers which have directional motion, starlight
-// particles are stationary — they shimmer in place like distant stars.
+// particles are stationary - they shimmer in place like distant stars.
 //
 // Visual characteristics:
 //   - Tiny filled circles (ParticleShape.circle), 0.5–2.0dp radius
 //   - Pale blue-white palette on dark, muted grey on light
-//   - No translational motion — particles stay where they spawn
+//   - No translational motion - particles stay where they spawn
 //   - Brightness oscillates via phase-offset sine wave (twinkle)
 //   - Long lifetime with very gradual fade-in and fade-out
 //   - Spawn anywhere on the canvas with uniform distribution
@@ -20,12 +20,12 @@
 // Starlight intensity is the least data-responsive of the four effects.
 // It provides a gentle ambient baseline that is always subtly present
 // when the atmosphere system is enabled, regardless of mesh activity.
-// The intensity scales mildly with total node count — a richer mesh
+// The intensity scales mildly with total node count - a richer mesh
 // has a slightly more populated starfield.
 //
 // Design intent: the starlight layer establishes the "space" feeling
 // of the constellation view. Even with zero mesh activity, the canvas
-// should not feel dead — tiny points of light breathe quietly in the
+// should not feel dead - tiny points of light breathe quietly in the
 // background, suggesting latent potential.
 
 import 'dart:math' as math;
@@ -50,7 +50,7 @@ class StarlightSpawnStrategy extends ParticleSpawnStrategy {
   @override
   double get spawnInterval {
     if (intensity <= 0) return double.infinity;
-    // Starlight spawns at a moderate rate — enough to maintain a
+    // Starlight spawns at a moderate rate - enough to maintain a
     // gentle field of twinkling points without overcrowding.
     // At full intensity, one every ~200ms. At low intensity, every ~3s.
     const baseInterval = 0.2;
@@ -59,13 +59,13 @@ class StarlightSpawnStrategy extends ParticleSpawnStrategy {
 
   @override
   void initParticle(Particle p, Size canvasSize, bool isDark) {
-    // Star radius — tiny points of light.
+    // Star radius - tiny points of light.
     final radius = randomRange(
       AtmosphereTiming.starlightRadiusMin,
       AtmosphereTiming.starlightRadiusMax,
     );
 
-    // Lifetime — starlight particles live longer than others
+    // Lifetime - starlight particles live longer than others
     // to maintain a stable, calm field.
     final lifetime = randomRange(
       AtmosphereTiming.starlightLifetimeMin,
@@ -78,11 +78,11 @@ class StarlightSpawnStrategy extends ParticleSpawnStrategy {
         : AtmosphereColors.starlightLight;
     final baseColor = randomColor(palette);
 
-    // Twinkle phase — each star gets a unique phase offset so they
+    // Twinkle phase - each star gets a unique phase offset so they
     // do not all pulse in unison.
     final twinklePhase = rng.nextDouble() * math.pi * 2;
 
-    // Spawn position — uniformly distributed across the entire canvas.
+    // Spawn position - uniformly distributed across the entire canvas.
     // Stars can appear anywhere, unlike rain (top) or embers (bottom).
     final spawnX = rng.nextDouble() * canvasSize.width;
     final spawnY = rng.nextDouble() * canvasSize.height;
@@ -91,7 +91,7 @@ class StarlightSpawnStrategy extends ParticleSpawnStrategy {
       ..x = spawnX
       ..y = spawnY
       ..vx =
-          0.0 // stationary — no translational motion
+          0.0 // stationary - no translational motion
       ..vy = 0.0
       ..lifetime = lifetime
       ..age = 0.0
@@ -110,7 +110,7 @@ class StarlightSpawnStrategy extends ParticleSpawnStrategy {
 ///   - Brightness twinkle via phase-offset sine wave
 ///   - Larger stars get a faint glow halo
 ///   - Extended fade curves (40% fade-in, 40% fade-out) for calm pacing
-///   - No motion — particles are drawn at their spawn position
+///   - No motion - particles are drawn at their spawn position
 ///
 /// The twinkle animation creates the impression of distant stars
 /// breathing in and out of visibility. The effect is intentionally
@@ -127,7 +127,7 @@ class StarlightPainter extends CustomPainter {
   /// Elapsed time in seconds, used for twinkle animation.
   final double elapsed;
 
-  /// Cached paint objects — reused every frame.
+  /// Cached paint objects - reused every frame.
   final Paint _starPaint = Paint()
     ..isAntiAlias = true
     ..style = PaintingStyle.fill;
@@ -147,11 +147,11 @@ class StarlightPainter extends CustomPainter {
     for (final p in pool.particles) {
       if (!p.alive) continue;
 
-      // Stars are stationary — no bounds check needed beyond canvas.
+      // Stars are stationary - no bounds check needed beyond canvas.
       if (p.x < -p.size || p.x > size.width + p.size) continue;
       if (p.y < -p.size || p.y > size.height + p.size) continue;
 
-      // Extended lifecycle fade — starlight uses slower fade-in and
+      // Extended lifecycle fade - starlight uses slower fade-in and
       // fade-out than the default 15%/25% to feel calmer and more
       // ambient. Stars should materialise and dissolve gently.
       final progress = p.progress;
@@ -169,7 +169,7 @@ class StarlightPainter extends CustomPainter {
         lifecycleFade = 1.0;
       }
 
-      // Twinkle — sine-wave brightness oscillation.
+      // Twinkle - sine-wave brightness oscillation.
       // The twinkle produces a gentle pulsation between ~30% and 100%
       // of the star's maximum brightness, creating a breathing effect.
       final twinkle =
@@ -198,7 +198,7 @@ class StarlightPainter extends CustomPainter {
       final center = Offset(p.x, p.y);
 
       // Draw faint glow halo for larger stars.
-      // Only stars above 1.2dp radius get a halo — tiny stars are
+      // Only stars above 1.2dp radius get a halo - tiny stars are
       // just points of light without any bloom.
       if (p.size > 1.2) {
         final glowRadius = p.size * 3.5;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback
+// lint-allow: haptic-feedback - onTap delegates to parent callback
 
-// Vendored from vs_node_view v2.1.1 — BSD-3-Clause
+// Vendored from vs_node_view v2.1.1 - BSD-3-Clause
 // Import paths rewritten for SocialMesh vendoring.
 // Modified: Replaced PopupMenuButton with a simpler icon button row for mobile.
 // Modified: Styled title with sci-fi themed divider and typography.
@@ -10,10 +10,13 @@
 import 'package:flutter/material.dart';
 
 import '../../flow_node_l10n.dart';
+
 import 'package:socialmesh/core/l10n/l10n_extension.dart';
+
 import '../common.dart';
 import '../data/vs_node_data.dart';
 import '../data/vs_node_data_provider.dart';
+
 import 'package:socialmesh/core/theme.dart';
 
 enum PopupOptions { rename, delete }
@@ -135,7 +138,7 @@ class _VSNodeTitleState extends State<VSNodeTitle> {
                       ),
                     ),
             ),
-            // Action buttons — compact row instead of PopupMenuButton for
+            // Action buttons - compact row instead of PopupMenuButton for
             // easier mobile interaction. Each button has a generous touch
             // area.
             SizedBox(
@@ -200,7 +203,7 @@ class _VSNodeTitleState extends State<VSNodeTitle> {
             ),
           ],
         ),
-        // Sci-fi divider — gradient line matching the interface color scheme
+        // Sci-fi divider - gradient line matching the interface color scheme
         // rather than a plain Material Divider.
         Container(
           height: 1,

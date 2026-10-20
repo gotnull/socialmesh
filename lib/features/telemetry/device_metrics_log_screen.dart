@@ -48,7 +48,7 @@ enum _MetricFilter {
 // Screen
 // =============================================================================
 
-/// Device metrics history screen — battery, voltage, utilization logs.
+/// Device metrics history screen - battery, voltage, utilization logs.
 ///
 /// Follows the standard screen architecture:
 /// GlassScaffold → pinned SearchFilterHeaderDelegate → chart → SliverList.
@@ -376,7 +376,7 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
                 ),
               ),
 
-              // Pinned chart legend — stays visible like a section header
+              // Pinned chart legend - stays visible like a section header
               // while the chart + list scroll beneath it. Shown from the
               // first sample: a single reading renders as a dot, never
               // silently hidden.
@@ -419,12 +419,12 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
                   );
                 }(),
 
-              // Chart — always visible when there is data (matches
+              // Chart - always visible when there is data (matches
               // Android BaseMetricScreen / iOS DeviceMetricsLog).
               if (filtered.isNotEmpty)
                 SliverToBoxAdapter(child: _DeviceMetricsChart(logs: filtered)),
 
-              // Content — empty state or list
+              // Content - empty state or list
               if (filtered.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -535,7 +535,7 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
 }
 
 // =============================================================================
-// Chart — all metrics overlaid, matching Android/iOS reference apps
+// Chart - all metrics overlaid, matching Android/iOS reference apps
 // =============================================================================
 
 class _DeviceMetricsChart extends StatelessWidget {
@@ -803,7 +803,7 @@ class _DeviceMetricsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header — node name + timestamp
+            // Header - node name + timestamp
             Row(
               children: [
                 Icon(Icons.memory, size: 16, color: context.accentColor),
@@ -865,7 +865,7 @@ class _DeviceMetricsCard extends StatelessWidget {
               const SizedBox(height: AppTheme.spacing12),
             ],
 
-            // Metric chips — single-line pill layout matching SectionFilterChip
+            // Metric chips - single-line pill layout matching SectionFilterChip
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -939,13 +939,13 @@ class _DeviceMetricsCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Single-line metric chip — matches SectionFilterChip visual language
+// Single-line metric chip - matches SectionFilterChip visual language
 // =============================================================================
 
 /// Read-only data chip styled to match [SectionFilterChip].
 ///
 /// Single-line horizontal layout: icon + label text.
-/// Pill shape, tinted background, subtle border — identical to the
+/// Pill shape, tinted background, subtle border - identical to the
 /// design system chips used across Nodes, NodeDex, Channels, etc.
 class _MetricChip extends StatelessWidget {
   final IconData icon;

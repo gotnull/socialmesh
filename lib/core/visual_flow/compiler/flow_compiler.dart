@@ -7,7 +7,7 @@
 // compiled Automation objects compatible with the existing AutomationEngine.
 //
 // The compiler treats the visual editor as a design-time tool. The node graph
-// is never evaluated at runtime — instead it is compiled into one or more
+// is never evaluated at runtime - instead it is compiled into one or more
 // Automation objects that the push-based AutomationEngine can execute.
 //
 // Key semantics:
@@ -448,7 +448,7 @@ FlowCompilationResult compileFlowGraph({
         warnings.add(
           FlowCompilationWarning(
             message:
-                'Unknown action type "${ae.actionType}" — using pushNotification as fallback.', // lint-allow: hardcoded-string
+                'Unknown action type "${ae.actionType}" - using pushNotification as fallback.', // lint-allow: hardcoded-string
             nodeId: ae.nodeId,
             nodeType: ae.actionType,
           ),
@@ -623,7 +623,7 @@ const double _kDecompileRowStart = 72.0;
 /// Describes a node to be created during decompilation, along with its
 /// position and wiring instructions.
 ///
-/// This is a data-only class — the actual VSNodeData objects are created
+/// This is a data-only class - the actual VSNodeData objects are created
 /// by the provider layer using the appropriate node builders registered
 /// with the VSNodeManager.
 class DecompiledNode {
@@ -731,19 +731,19 @@ DecompiledGraph decompileAutomation(Automation automation) {
     );
   }
 
-  // 3. Determine the "last node before actions" — either the trigger,
+  // 3. Determine the "last node before actions" - either the trigger,
   //    a single condition, or an AND gate combining multiple conditions.
   int preActionNodeIndex;
   String preActionOutputType = 'event_out';
 
   if (conditions.isEmpty) {
-    // No conditions — trigger feeds directly into actions.
+    // No conditions - trigger feeds directly into actions.
     preActionNodeIndex = triggerIndex;
   } else if (conditions.length == 1) {
-    // Single condition — it feeds directly into actions.
+    // Single condition - it feeds directly into actions.
     preActionNodeIndex = conditionIndices.first;
   } else {
-    // Multiple conditions — insert an AND gate to combine them.
+    // Multiple conditions - insert an AND gate to combine them.
     final andRow =
         _kDecompileRowStart +
         ((conditions.length - 1) * _kDecompileRowSpacing / 2);
@@ -821,7 +821,7 @@ List<_CompiledPath> _tracePaths(
     errors.add(
       FlowCompilationError(
         message:
-            'Cycle detected at node "${node.title}" — ' // lint-allow: hardcoded-string
+            'Cycle detected at node "${node.title}" - ' // lint-allow: hardcoded-string
             'automation graphs must be acyclic.', // lint-allow: hardcoded-string
         nodeId: node.id,
         nodeType: node.type,
@@ -945,8 +945,7 @@ List<_CompiledPath> _traceAndGate(
   if (connectedInputs.isEmpty) {
     errors.add(
       FlowCompilationError(
-        message:
-            'AND gate "${node.title}" has no connected inputs.', // lint-allow: hardcoded-string
+        message: 'AND gate "${node.title}" has no connected inputs.', // lint-allow: hardcoded-string
         nodeId: node.id,
         nodeType: node.type,
       ),
@@ -967,8 +966,7 @@ List<_CompiledPath> _traceAndGate(
   if (allBranchPaths.isEmpty) {
     errors.add(
       FlowCompilationError(
-        message:
-            'AND gate "${node.title}" has no valid upstream paths.', // lint-allow: hardcoded-string
+        message: 'AND gate "${node.title}" has no valid upstream paths.', // lint-allow: hardcoded-string
         nodeId: node.id,
         nodeType: node.type,
       ),
@@ -1050,8 +1048,7 @@ List<_CompiledPath> _traceOrGate(
   if (connectedInputs.isEmpty) {
     errors.add(
       FlowCompilationError(
-        message:
-            'OR gate "${node.title}" has no connected inputs.', // lint-allow: hardcoded-string
+        message: 'OR gate "${node.title}" has no connected inputs.', // lint-allow: hardcoded-string
         nodeId: node.id,
         nodeType: node.type,
       ),
@@ -1082,8 +1079,7 @@ List<_CompiledPath> _traceNotGate(
   if (upstream == null) {
     errors.add(
       FlowCompilationError(
-        message:
-            'NOT gate "${node.title}" has no upstream connection.', // lint-allow: hardcoded-string
+        message: 'NOT gate "${node.title}" has no upstream connection.', // lint-allow: hardcoded-string
         nodeId: node.id,
         nodeType: node.type,
       ),
@@ -1098,12 +1094,12 @@ List<_CompiledPath> _traceNotGate(
   // (the one closest to the NOT gate) on each path.
   return upstreamPaths.map((path) {
     if (path.conditions.isEmpty) {
-      // NOT gate applied to a trigger with no conditions — warn and pass
+      // NOT gate applied to a trigger with no conditions - warn and pass
       // through. This is semantically questionable but not a hard error.
       warnings.add(
         FlowCompilationWarning(
           message:
-              'NOT gate "${node.title}" has no condition to invert — ' // lint-allow: hardcoded-string
+              'NOT gate "${node.title}" has no condition to invert - ' // lint-allow: hardcoded-string
               'the NOT gate is ignored.', // lint-allow: hardcoded-string
           nodeId: node.id,
           nodeType: node.type,
@@ -1144,8 +1140,7 @@ List<_CompiledPath> _traceDelayGate(
   if (upstream == null) {
     errors.add(
       FlowCompilationError(
-        message:
-            'Delay gate "${node.title}" has no upstream connection.', // lint-allow: hardcoded-string
+        message: 'Delay gate "${node.title}" has no upstream connection.', // lint-allow: hardcoded-string
         nodeId: node.id,
         nodeType: node.type,
       ),
@@ -1287,7 +1282,7 @@ ConditionType? _resolveConditionType(String typeName) {
 /// For types with a natural inverse (e.g. nodeOnline↔nodeOffline,
 /// batteryAbove↔batteryBelow), returns the inverse type.
 /// For types without a clean inverse (e.g. timeRange, dayOfWeek),
-/// returns the same type — the engine will need to handle these via
+/// returns the same type - the engine will need to handle these via
 /// runtime inversion if supported.
 ConditionType _invertConditionType(ConditionType type) {
   final nodeType = ConditionTypes.fromEnum[type] ?? type.name;
@@ -1295,7 +1290,7 @@ ConditionType _invertConditionType(ConditionType type) {
   if (inverseName != null && inverseName != nodeType) {
     return _resolveConditionType(inverseName) ?? type;
   }
-  // No clean inverse exists — return the same type.
+  // No clean inverse exists - return the same type.
   // The caller should note that this condition could not be fully inverted.
   return type;
 }
@@ -1328,7 +1323,7 @@ class _ActionEntry {
 /// Returns a list of validation issues. An empty list means the graph is
 /// valid and ready to compile.
 ///
-/// This is a lighter-weight check than full compilation — it verifies
+/// This is a lighter-weight check than full compilation - it verifies
 /// structural requirements without walking the full graph.
 List<FlowCompilationError> validateGraph(Map<String, VSNodeData> nodes) {
   final issues = <FlowCompilationError>[];

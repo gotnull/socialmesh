@@ -63,7 +63,7 @@ void main() {
     test('protocol_service.dart does not set ..wantAck on packets', () {
       // Match `..wantAck = true` (the problematic pattern).
       // Parameter declarations like `bool wantAck = true` in method
-      // signatures are fine — only cascade assignment on packets is banned.
+      // signatures are fine - only cascade assignment on packets is banned.
       final wantAckPattern = RegExp(
         r'\.\.\s*wantAck\s*=\s*true',
         multiLine: true,

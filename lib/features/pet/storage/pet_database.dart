@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Pet Database — SQLite schema for the owner-side pet state and remote cache.
+// Pet Database - SQLite schema for the owner-side pet state and remote cache.
 //
 // Database: pet.db
 // Schema version: 2
@@ -16,7 +16,7 @@
 // migration is a v2 concern.
 //
 // The `pet_timeline_events` table exists because `PetState.recentEvents`
-// is a 24-slot ring buffer — nowhere near enough for a lifecycle story
+// is a 24-slot ring buffer - nowhere near enough for a lifecycle story
 // spanning days/weeks. Rows are written through from OwnPetController
 // whenever a new event appears in recentEvents, deduped by
 // (owner, at_ms, kind, IFNULL(detail, '')). Soft-capped per owner with

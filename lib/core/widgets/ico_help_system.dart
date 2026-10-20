@@ -260,14 +260,14 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
             HapticFeedback.lightImpact();
             final activeTourId = ref.read(helpProvider).activeTourId;
             if (activeTourId == widget.topicId) {
-              // Tapping while this topic's tour is active — dismiss it
+              // Tapping while this topic's tour is active - dismiss it
               ref.read(helpProvider.notifier).dismissTopic(widget.topicId);
             } else if (activeTourId != null) {
-              // Different tour is active — cancel it and start this one
+              // Different tour is active - cancel it and start this one
               ref.read(helpProvider.notifier).cancelTour();
               ref.read(helpProvider.notifier).startTour(widget.topicId);
             } else {
-              // No tour active — start this one
+              // No tour active - start this one
               ref.read(helpProvider.notifier).startTour(widget.topicId);
             }
           },

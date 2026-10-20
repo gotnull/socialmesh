@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// SIP DM Screen — ephemeral chat thread for a single SIP session.
+// SIP DM Screen - ephemeral chat thread for a single SIP session.
 //
 // Design patterns used (matching the rest of the app):
 // - GlassScaffold with resolved peer name in title
@@ -80,7 +80,7 @@ class SipDmScreen extends ConsumerStatefulWidget {
 /// Composer modes available in an accepted SIP DM session.
 ///
 /// Tab inside the rich-composer bottom sheet. Text is intentionally
-/// NOT in this enum — the text input stays as the always-on inline
+/// NOT in this enum - the text input stays as the always-on inline
 /// composer, separate from the sheet, so swapping between rich modes
 /// no longer jolts the chat list above. The sheet hosts only the
 /// rich attachment surfaces (sketch / play / signal).
@@ -96,7 +96,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   SipDmHistoryEntry? _replyingToEntry;
 
   /// Persistent sketch draft. Lifted to screen state so it survives
-  /// the rich-composer sheet being dismissed and reopened — the
+  /// the rich-composer sheet being dismissed and reopened - the
   /// user's strokes are intact when they return to the Sketch tab.
   /// Cleared after a successful send by the SIP Ink composer.
   final List<SipInkRawStroke> _sketchDraft = [];
@@ -115,7 +115,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// to keyboard-up vs keyboard-down state. When true, a tap anywhere
   /// in the chat list dismisses the keyboard AND is absorbed (so a
   /// game cell or bubble sitting under the user's finger doesn't fire
-  /// on that same tap — first tap dismisses, second tap interacts).
+  /// on that same tap - first tap dismisses, second tap interacts).
   bool _inputHasFocus = false;
 
   /// Timer to dismiss the typing indicator after the display duration.
@@ -128,7 +128,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
 
   /// History length on the previous build. Null means "first build, no
   /// comparison yet". Used to detect new inbound messages and auto-
-  /// scroll when the user is parked at the bottom — important in
+  /// scroll when the user is parked at the bottom - important in
   /// sketch mode where the canvas occupies vertical space and a
   /// freshly arrived sketch otherwise lands off-screen.
   int? _lastHistoryLength;
@@ -242,7 +242,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   }
 
   // SIP DM caps text at SipDmConstants.maxDmTextBytes UTF-8 bytes (not
-  // characters) — emoji/CJK runs out of budget faster than the visible
+  // characters) - emoji/CJK runs out of budget faster than the visible
   // char count suggests. Surface that to the user via the same byte
   // counter pattern used in the messaging composer.
   TextMessagePayloadBudget _measureSipDmBudget(String text) {
@@ -267,7 +267,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final haptics = ref.read(hapticServiceProvider);
 
     // If replying, format the message with the quote prefix. Ink
-    // entries have no plaintext body — substitute the localized
+    // entries have no plaintext body - substitute the localized
     // placeholder so the recipient sees a meaningful quote block
     // instead of an empty `>` line.
     final messageText = _replyingToEntry != null
@@ -326,7 +326,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   }
 
   /// Maximum number of frames to retry [_scrollToBottom] while the
-  /// layout settles. At 60 fps that's ~500 ms — long enough to outlast
+  /// layout settles. At 60 fps that's ~500 ms - long enough to outlast
   /// the route push transition, but bounded so we don't loop forever
   /// when the chat is genuinely empty (or shorter than the viewport).
   static const int _scrollToBottomMaxAttempts = 30;
@@ -334,7 +334,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   void _scrollToBottom({bool animate = true, int attempt = 0}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // Layout may not be settled yet — controller not attached, or
+      // Layout may not be settled yet - controller not attached, or
       // the ListView's maxScrollExtent is still 0 because items
       // haven't been laid out. Retry on the next frame until we have
       // a usable position or we hit the attempt cap.
@@ -389,7 +389,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   //   - Block = persist block via PeerSafetyManager. Future inbound
   //             HELLO / DM / MRRP frames hit the protocol-layer
   //             safety gate and are silently dropped. Local
-  //             conversation history is PRESERVED — to wipe history
+  //             conversation history is PRESERVED - to wipe history
   //             too, the user must also choose Remove.
   //   - Reset = drop the in-memory secure (X25519) session for the
   //             canonical overlay link with this peer. Next outbound
@@ -421,7 +421,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     // Section headers are non-interactive `enabled: false` items so
     // taps fall through cleanly. The five existing action values
     // ('mute', 'block', 'reset_secure', 'remove', 'close') are
-    // preserved byte-for-byte — overflow wiring tests still pin them.
+    // preserved byte-for-byte - overflow wiring tests still pin them.
     return AppBarOverflowMenu<String>(
       itemBuilder: (context) => [
         _sectionHeader(context, l10n.sipDmOverflowSectionPreferences),
@@ -584,7 +584,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
 
     // Look up the canonical overlay link for this peer. If none
     // exists yet (peer never advertised secure, or link was torn
-    // down) Reset is a no-op — the next outbound DM falls back to
+    // down) Reset is a no-op - the next outbound DM falls back to
     // plaintext via the existing router gates.
     final store = await ref.read(overlayLinkStoreProvider.future);
     final records = await store.getNonTerminalForPeerNode(session.peerNodeId);
@@ -646,7 +646,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     setState(() {
       _replyingToEntry = entry;
     });
-    // Replies always compose as text — sketch / signal / play
+    // Replies always compose as text - sketch / signal / play
     // payloads can't carry a quote prefix (the wire formats have no
     // provision for it). The text input is always inline, so just
     // raise the keyboard.
@@ -656,7 +656,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// Quoted text to display in the reply indicator and embed in the
   /// wire-encoded `> ... \n ...` prefix. Ink and Signal entries fall
   /// back to localised placeholders since they carry no plaintext
-  /// body — the placeholder lets `_findReplyTarget` walk back to the
+  /// body - the placeholder lets `_findReplyTarget` walk back to the
   /// matching content type without an explicit reference.
   String _replyingQuoteText(SipDmHistoryEntry entry) {
     if (entry.contentType == SipDmContentType.ink) {
@@ -672,7 +672,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// original entry it points at. The wire format doesn't carry an
   /// explicit reference (the quote is just truncated text), so we
   /// search backwards from the reply for the most recent candidate
-  /// whose body matches the quote prefix — handling the 40-char
+  /// whose body matches the quote prefix - handling the 40-char
   /// `...` truncation in [SipDmManager.formatReplyMessage] and the
   /// `🎨 Sketch` placeholder used for ink replies.
   SipDmHistoryEntry? _findReplyTarget(
@@ -785,7 +785,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
       return;
     }
 
-    // Target not currently rendered — animate to a rough offset based
+    // Target not currently rendered - animate to a rough offset based
     // on its index ratio, then retry ensureVisible after the scroll
     // settles so the alignment is precise.
     if (!_scrollController.hasClients) return;
@@ -972,7 +972,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
               _onCopy(entry);
             },
           ),
-          // Delete — only available for your own messages
+          // Delete - only available for your own messages
           if (entry.direction == SipDmDirection.outbound)
             ListTile(
               leading: const Icon(
@@ -1083,7 +1083,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         // session info bar fixed at top, then an Expanded Stack that
         // holds the chat list with the JumpToLatestPill overlaid on
         // top. The pill is a Positioned sibling of the list so the
-        // chat extends right up to the input bar — the pill floats
+        // chat extends right up to the input bar - the pill floats
         // transparently above the most recent messages, identical to
         // how the messaging screen handles its jump affordance.
         body: Column(
@@ -1114,7 +1114,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             if (session != null)
               _FirstContactBanner(peerNodeId: session.peerNodeId),
             Expanded(
-              // Tap-to-dismiss-keyboard. Standard chat UX — when the
+              // Tap-to-dismiss-keyboard. Standard chat UX - when the
               // text input is focused (keyboard up), tapping anywhere
               // in the chat list dismisses the keyboard AND absorbs
               // that first tap so a tic-tac-toe cell or bubble
@@ -1133,7 +1133,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                     : null,
                 child: AbsorbPointer(
                   // Absorb child gestures (cell taps, bubble taps)
-                  // ONLY while focused — the parent GestureDetector
+                  // ONLY while focused - the parent GestureDetector
                   // above eats the tap to dismiss the keyboard, and
                   // AbsorbPointer makes sure the same tap doesn't also
                   // route to the game cell underneath. When unfocused,
@@ -1156,7 +1156,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                             // (Accept / Decline / Resign / cell taps) and
                             // are not reaction / reply / delete targets.
                             // Suppress the generic message-action sheet
-                            // for them — the actions don't apply, and
+                            // for them - the actions don't apply, and
                             // letting users delete a play entry leaves
                             // the engine state log incoherent (later
                             // entries reference the deleted offer).
@@ -1171,7 +1171,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
                               // sent in the same second collide on the
                               // millisecond-rounded timestamp and Flutter
                               // throws "Multiple widgets used the same
-                              // GlobalKey" — see logs.txt regression.
+                              // GlobalKey" - see logs.txt regression.
                               key: GlobalObjectKey(entry),
                               onLongPress: suppressLongPress
                                   ? null
@@ -1283,12 +1283,12 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   }
 
   /// Whether SIP discovery has a *fully resolved* cap row for the
-  /// peer — i.e. we've actually observed their feature bitmap, not
+  /// peer - i.e. we've actually observed their feature bitmap, not
   /// just the `features=sip0` passive-discovery placeholder that
   /// gets inserted the moment any inbound SIP frame is decoded.
   ///
   /// By the time an accepted SIP DM session exists, the peer MUST
-  /// support `sip1` (handshake) — otherwise the session wouldn't
+  /// support `sip1` (handshake) - otherwise the session wouldn't
   /// have been created. Checking for that bit specifically
   /// distinguishes the brief "sip0-only placeholder" window from
   /// the real post-CAP_BEACON / CAP_RESP / ROLLCALL_RESP /
@@ -1318,7 +1318,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     final peerSupportsSignal = _peerSupportsSignal(session);
     // T+S: hide the rich-composer attach options when the peer is
     // blocked. Defence-in-depth on top of the router-level peerBlocked
-    // guard — keeps the trigger honest about the locked-in "no further
+    // guard - keeps the trigger honest about the locked-in "no further
     // outbound" rule.
     final peerBlocked =
         session != null &&
@@ -1338,7 +1338,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     //                                     (greyed-out "+", inert)
     //   - peerCapsKnown && !hasAnyRichCap → trigger hidden
     //                                       (peer doesn't support any
-    //                                        rich mode — e.g. stock
+    //                                        rich mode - e.g. stock
     //                                        Meshtastic / blocked peer)
     final peerCapsKnown = _peerCapsKnown(session);
     final showComposerTrigger = enabled && (hasAnyRichCap || !peerCapsKnown);
@@ -1386,7 +1386,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   /// Render the always-on text input row plus its reply-quote chip
   /// and (when any rich tab is reachable) a leading attach button
   /// that opens the rich-composer bottom sheet. Sketch / Play /
-  /// Signal live entirely in that sheet now — the inline composer
+  /// Signal live entirely in that sheet now - the inline composer
   /// only ever changes height for the reply-quote chip, so swapping
   /// "modes" can no longer jolt the chat list above.
   Widget _buildTextInputBlock({
@@ -1458,7 +1458,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
               : const SizedBox.shrink(),
         ),
 
-        // Input field — reuses ChatComposer for consistent UX. The
+        // Input field - reuses ChatComposer for consistent UX. The
         // leading slot hosts the attach trigger that opens the rich-
         // composer bottom sheet (Sketch / Play / Signal).
         Padding(
@@ -1484,7 +1484,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
             leading: showComposerTrigger
                 ? _ComposerSheetTrigger(
                     // composerTriggerEnabled is false during the
-                    // pending state — peer in session but caps not
+                    // pending state - peer in session but caps not
                     // yet observed. The trigger still renders so the
                     // input bar's leading slot stays visually stable;
                     // the disabled grey says "not yet ready".
@@ -1508,14 +1508,14 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   }
 
   /// Open the rich-composer bottom sheet. Hosts a Sketch / Play /
-  /// Signal tab switcher and the active panel — completely separate
+  /// Signal tab switcher and the active panel - completely separate
   /// from the inline text input so the chat list never resizes when
   /// the user switches between rich modes.
   ///
   /// Sketch drafts persist across open/close because [_sketchDraft]
   /// lives at screen scope. Play state is provider-backed so it
   /// persists naturally. Signal local drafts (phrase notes /
-  /// tap-Morse buffer) are lost on each open — see KNOWN_LIMITS.
+  /// tap-Morse buffer) are lost on each open - see KNOWN_LIMITS.
   Future<void> _openComposerSheet({
     required SipDmSession? session,
     required bool enabled,
@@ -1533,7 +1533,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
         // 0.72 fits Sketch's 280×280 canvas + sticky action bar
         // with no clipping at the bottom. Signal's piano grid is
         // taller; the user drags up to 0.95 for it. Earlier 0.58
-        // chopped off the bottom of the canvas — the previous
+        // chopped off the bottom of the canvas - the previous
         // (scrolling) layout masked the issue because the user
         // could scroll the sheet to see the cut-off region; the
         // sticky-bar layout doesn't scroll the body to the
@@ -1593,7 +1593,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
   }
 }
 
-/// Inline Play composer panel — shown when the user selects the Play
+/// Inline Play composer panel - shown when the user selects the Play
 /// tab in the DM composer mode switcher.
 ///
 /// Pure UI dispatcher:
@@ -1611,7 +1611,7 @@ class _PlayComposerPanel extends ConsumerWidget {
   final int sessionTag;
   final int peerNodeId;
 
-  /// Called when the user taps "Jump to game" — the parent screen
+  /// Called when the user taps "Jump to game" - the parent screen
   /// scrolls the chat to the latest play bubble.
   final VoidCallback onJumpToLatestGame;
 
@@ -1626,7 +1626,7 @@ class _PlayComposerPanel extends ConsumerWidget {
     final l10n = context.l10n;
     // Watch the play instance ids for this session so the
     // "Game in progress" banner reacts in real time. Banner shows
-    // ONLY when at least one instance is in the `active` state —
+    // ONLY when at least one instance is in the `active` state -
     // a `pendingOffer` is not "in progress" yet (the peer hasn't
     // accepted) and a "Jump to game" affordance there is misleading.
     // Terminal instances (declined / resigned / won / draw) don't
@@ -1645,7 +1645,7 @@ class _PlayComposerPanel extends ConsumerWidget {
     // so the visible composer area shrinks and the active board
     // bubble (which lives inline in the chat timeline) stays
     // unobscured. Also prevents starting a duplicate game while one
-    // is in flight — the registry's "one active per peer" rule.
+    // is in flight - the registry's "one active per peer" rule.
     if (hasActiveInstance) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -1661,7 +1661,7 @@ class _PlayComposerPanel extends ConsumerWidget {
     // Default mode: header + subtitle + one card per registered
     // game. Visible only when no active game exists. The panel sits
     // in the Scaffold's `bottomNavigationBar` slot which doesn't
-    // bound its height — on shorter Android screens N game cards +
+    // bound its height - on shorter Android screens N game cards +
     // the header pushed the panel past the remaining vertical room
     // and the chat-body Column overflowed by the card delta. Cap at
     // a fraction of the screen and scroll inside so the chat list
@@ -1696,7 +1696,7 @@ class _PlayComposerPanel extends ConsumerWidget {
             ),
             const SizedBox(height: AppTheme.spacing12),
             // Render one card per registered game. Tapping a card sends
-            // the offer envelope directly — no intermediate picker sheet
+            // the offer envelope directly - no intermediate picker sheet
             // (the chip-tap path already commits the user to "Play
             // something", so a second confirmation sheet is just churn).
             for (var i = 0; i < SipPlayRegistry.games.length; i += 1) ...[
@@ -1728,7 +1728,7 @@ class _PlayComposerPanel extends ConsumerWidget {
 /// the offer envelope is in-flight through the router. Without that,
 /// the card showed no feedback at all between tap and the engine
 /// transitioning to pendingOffer (which collapses the picker into
-/// the "Game in progress" banner) — the user perceived a hang
+/// the "Game in progress" banner) - the user perceived a hang
 /// followed by a janky panel swap.
 class _GameOfferCard extends StatefulWidget {
   final SipPlayGameDescriptor descriptor;
@@ -1754,7 +1754,7 @@ class _GameOfferCardState extends State<_GameOfferCard> {
     try {
       await widget.onTap();
       // Auto-dismiss the rich-composer sheet once the offer is
-      // committed — leaving the user on the empty picker after a
+      // committed - leaving the user on the empty picker after a
       // successful send was confusing (UX #2). The dispatcher
       // collapsed the picker into a "Game in progress" banner
       // anyway, but the bottom sheet stayed up; pop it explicitly.
@@ -1794,11 +1794,11 @@ class _GameOfferCardState extends State<_GameOfferCard> {
     // While sending: dim the whole card, replace the icon with a
     // spinner, replace the title with the "Sending offer…" caption,
     // and hide the chevron + size badge so the user reads the card
-    // as committed-but-pending. UX #1 — the prior tiny 18-pt spinner
+    // as committed-but-pending. UX #1 - the prior tiny 18-pt spinner
     // inside the leading icon was easy to miss.
     //
     // The card uses `Ink` (not a plain `Container`) so the wrapping
-    // `InkWell` can render its tap ripple — `Container` is opaque
+    // `InkWell` can render its tap ripple - `Container` is opaque
     // and obscures the Material surface that ripples paint onto, so
     // taps fire silently with no visual feedback. `Ink` is the
     // purpose-built primitive: it draws the decoration as a Material
@@ -1998,7 +1998,7 @@ class _GameInProgressBanner extends StatelessWidget {
 ///
 /// Visual mirrors the messaging quick-responses button (40×40 with a
 /// `context.background` circle backdrop) so the two surfaces feel
-/// like the same family — accent-tinted icon to signal it's the
+/// like the same family - accent-tinted icon to signal it's the
 /// "extras" entry point rather than the bolt-style quick replies.
 class _ComposerSheetTrigger extends StatelessWidget {
   final bool enabled;
@@ -2023,7 +2023,7 @@ class _ComposerSheetTrigger extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         // 48×48 mirrors the send button on the right of the composer
         // so the leading and trailing affordances are visually
-        // balanced — same circle size, same icon size.
+        // balanced - same circle size, same icon size.
         child: Container(
           width: 48,
           height: 48,
@@ -2046,7 +2046,7 @@ class _ComposerSheetTrigger extends StatelessWidget {
 ///   - Play state is provider-backed, so an active game is always
 ///     visible when the user re-opens the Play tab.
 ///   - Signal panel state (phrase notes, tap-Morse buffer) is panel-
-///     local — drafts reset each time the sheet opens. Lifting them
+///     local - drafts reset each time the sheet opens. Lifting them
 ///     to screen scope is tracked in KNOWN_LIMITS.
 class _RichComposerSheet extends ConsumerStatefulWidget {
   final int sessionTag;
@@ -2139,14 +2139,14 @@ class _RichComposerSheetState extends ConsumerState<_RichComposerSheet> {
     // size or sheet drag position.
     //
     // We DELIBERATELY don't wrap this in a SingleChildScrollView
-    // anymore — that previously turned the entire composer (tabs +
+    // anymore - that previously turned the entire composer (tabs +
     // body + action row) into one scrolling region, which dragged
     // the "sticky" action row out of view as the user resized the
     // bottom sheet. Each composer still attaches its inner scroll
     // view to [widget.scrollController] so DraggableScrollableSheet's
     // drag-to-resize still hands off naturally between sheet and
     // body.
-    // Outer padding kept thin — vertical padding bottom=0 because
+    // Outer padding kept thin - vertical padding bottom=0 because
     // the sticky action bar provides its own bottom inset. Removing
     // the bottom-16 reclaims the height the sketch canvas was being
     // clipped against.
@@ -2190,7 +2190,7 @@ class _RichComposerSheetState extends ConsumerState<_RichComposerSheet> {
 /// Equal-width segmented switcher used INSIDE the rich-composer
 /// sheet. Mirrors the previous inline switcher's look (accent fill
 /// on selected, transparent on others) but only carries the three
-/// rich modes — text isn't an option here, it's the always-on
+/// rich modes - text isn't an option here, it's the always-on
 /// inline composer.
 class _RichComposerTabBar extends StatelessWidget {
   final _RichComposerTab activeTab;
@@ -2266,7 +2266,7 @@ class _RichComposerTabBar extends StatelessWidget {
 }
 
 // =============================================================================
-// Session info bar delegate — frosted-glass pinned header (Signals pattern)
+// Session info bar delegate - frosted-glass pinned header (Signals pattern)
 // =============================================================================
 
 /// Blur sigma for the frosted-glass effect on the pinned session bar.
@@ -2276,13 +2276,13 @@ const double _kInfoBarBlurSigma = 20.0;
 const double _kInfoBarBackgroundAlpha = 0.8;
 
 // =============================================================================
-// First-contact banner — only shown when the local user hasn't yet
+// First-contact banner - only shown when the local user hasn't yet
 // explicitly accepted a handshake from this peer (e.g. they initiated
 // the handshake themselves) AND hasn't tapped to dismiss the banner.
 //
 // Tap-to-dismiss persists locally via [FirstContactBannerDismissals]
 // (SharedPreferences). Dismissal does NOT mutate any protocol state
-// — it never calls markFirstHandshake, never changes the safety
+// - it never calls markFirstHandshake, never changes the safety
 // state, never sends any wire frame.
 // =============================================================================
 
@@ -2333,7 +2333,7 @@ class _FirstContactBanner extends ConsumerWidget {
 }
 
 // =============================================================================
-// Session info bar content — sigil + hex ID + status badge
+// Session info bar content - sigil + hex ID + status badge
 // =============================================================================
 
 class _SessionInfoBar extends ConsumerWidget {
@@ -2357,7 +2357,7 @@ class _SessionInfoBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // Sigil avatar (small) with evolution — tap to view NodeDex
+          // Sigil avatar (small) with evolution - tap to view NodeDex
           GestureDetector(
             onTap: () {
               ref.read(hapticServiceProvider).trigger(HapticType.light);
@@ -2466,21 +2466,21 @@ class _SessionInfoBar extends ConsumerWidget {
 }
 
 // =============================================================================
-// Message bubble — semantic colors with proper card styling
+// Message bubble - semantic colors with proper card styling
 // =============================================================================
 
 class _MessageBubble extends ConsumerWidget {
   final SipDmHistoryEntry entry;
   final int peerNodeId;
 
-  /// SIP DM session tag — only consumed by the SIP Play branch so
+  /// SIP DM session tag - only consumed by the SIP Play branch so
   /// the play bubble can dispatch moves through the router. Threaded
   /// here rather than reading from a provider so the bubble has no
   /// hidden lookup paths.
   final int sessionTag;
 
   /// True when the user just tapped a reply quote pointing at this
-  /// bubble — paints a brief accent halo to draw the eye to it.
+  /// bubble - paints a brief accent halo to draw the eye to it.
   final bool isHighlighted;
 
   /// Tap handler for the quoted-reply block. Null when this bubble
@@ -2511,7 +2511,7 @@ class _MessageBubble extends ConsumerWidget {
 
     if (isPlay) {
       // SIP Play bubble owns its own status / board / controls. It
-      // skips the reactions row and reply-quote affordances — games
+      // skips the reactions row and reply-quote affordances - games
       // are not reaction targets in v1. Terminal-decline cards get
       // an explicit dismiss button that removes the offer entry from
       // session history; the instance-id provider is offer-gated, so
@@ -2531,7 +2531,7 @@ class _MessageBubble extends ConsumerWidget {
     // SIP Signal bubbles fall through to the default branch below
     // (handled alongside ink as a third bubble-content variant).
     // Earlier they had a dedicated early-return that skipped the
-    // reaction row + reply-quote infrastructure — long-press still
+    // reaction row + reply-quote infrastructure - long-press still
     // fired the action sheet, but any picked emoji had no widget
     // to render against, so users saw nothing happen. Now signals
     // share the same outer Column as text + ink, so reactions
@@ -2550,7 +2550,7 @@ class _MessageBubble extends ConsumerWidget {
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
             children: [
-              // Bubble body — wrapped in the highlight halo (border + blink
+              // Bubble body - wrapped in the highlight halo (border + blink
               // + shake). Reactions are deliberately OUTSIDE the halo so
               // the accent ring frames the message itself, not the
               // floating reaction pill below it.
@@ -2633,7 +2633,7 @@ class _MessageBubble extends ConsumerWidget {
                           ? CrossAxisAlignment.end
                           : CrossAxisAlignment.start,
                       children: [
-                        // Quoted reply block — tappable, jumps to /
+                        // Quoted reply block - tappable, jumps to /
                         // glows the original message when matched.
                         if (replyTo != null) ...[
                           GestureDetector(
@@ -2697,7 +2697,7 @@ class _MessageBubble extends ConsumerWidget {
                   ),
                 ),
 
-              // Reaction row — Telegram-style pills below the bubble.
+              // Reaction row - Telegram-style pills below the bubble.
               // Intentionally rendered outside _HighlightHalo so taps on a
               // reply quote frame the original message, not its reactions.
               AnimatedSize(
@@ -2725,7 +2725,7 @@ class _MessageBubble extends ConsumerWidget {
     WidgetRef ref,
     bool isOutbound,
   ) {
-    // Same emoji from both users — single pill with both sigils.
+    // Same emoji from both users - single pill with both sigils.
     if (entry.localReaction != null &&
         entry.peerReaction != null &&
         entry.localReaction == entry.peerReaction) {
@@ -2901,7 +2901,7 @@ class _MessageBubble extends ConsumerWidget {
 }
 
 // =============================================================================
-// Highlight halo — accent-blink + damped-shake wrapper used to draw the eye
+// Highlight halo - accent-blink + damped-shake wrapper used to draw the eye
 // to a message bubble after the user taps a reply quote pointing at it.
 // Always reserves a 1.5px border so layout doesn't jump when triggered.
 // =============================================================================
@@ -2992,7 +2992,7 @@ class _HighlightHaloState extends State<_HighlightHalo>
 }
 
 // =============================================================================
-// Typing indicator — animated bouncing dots (iMessage-style)
+// Typing indicator - animated bouncing dots (iMessage-style)
 // =============================================================================
 
 class _TypingIndicatorBubble extends StatefulWidget {

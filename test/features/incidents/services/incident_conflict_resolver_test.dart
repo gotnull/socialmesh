@@ -482,7 +482,7 @@ void main() {
         id: 'tx-B',
         fromState: IncidentState.open,
         toState: IncidentState.resolved, // rank=2
-        timestampMs: 0, // Same ts as anchor — chain walk must handle this.
+        timestampMs: 0, // Same ts as anchor - chain walk must handle this.
       );
       final a = _transition(
         id: 'tx-A',
@@ -802,7 +802,7 @@ void main() {
         timestampMs: 1000,
       );
 
-      // Insert twice — second should be ignored.
+      // Insert twice - second should be ignored.
       await db.applyRemoteTransitions(remoteTransitions: [remote]);
       await db.applyRemoteTransitions(remoteTransitions: [remote]);
 
@@ -1013,7 +1013,7 @@ void main() {
           expect(stateA, stateB);
           expect(stateA, 'assigned');
 
-          // Admin's transition wins — supervisor's is superseded.
+          // Admin's transition wins - supervisor's is superseded.
           final supersededA = await supersededIds(dbA, 'conv-2');
           final supersededB = await supersededIds(dbB, 'conv-2');
           expect(supersededA, ['tx-supervisor']);

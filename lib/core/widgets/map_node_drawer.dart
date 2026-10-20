@@ -6,8 +6,8 @@
 // A reusable glass-styled slide-out panel for listing nodes across all
 // map-like screens (world map, position log, geofence picker, mesh 3D).
 //
-// The panel provides a consistent outer chrome — backdrop blur, rounded
-// right-side corners, accent-colored count badge, and a search field —
+// The panel provides a consistent outer chrome - backdrop blur, rounded
+// right-side corners, accent-colored count badge, and a search field -
 // while letting each caller supply its own list content via the [content]
 // slot.
 //
@@ -23,7 +23,7 @@ import '../theme.dart';
 import 'search_filter_header.dart';
 
 // ---------------------------------------------------------------------------
-// MapNodeDrawer — glass chrome shell
+// MapNodeDrawer - glass chrome shell
 // ---------------------------------------------------------------------------
 
 /// A glass-styled side panel with a consistent header, search field, and
@@ -285,7 +285,7 @@ class _DrawerSearchField extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// DrawerEmptyState — shared empty-list placeholder
+// DrawerEmptyState - shared empty-list placeholder
 // ---------------------------------------------------------------------------
 
 /// A centered empty-state widget for use inside [MapNodeDrawer.content].
@@ -346,7 +346,7 @@ class DrawerEmptyState extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// StaggeredDrawerTile — staggered entrance animation for list tiles
+// StaggeredDrawerTile - staggered entrance animation for list tiles
 // ---------------------------------------------------------------------------
 
 /// Wraps a child widget with a staggered fade+slide entrance animation.

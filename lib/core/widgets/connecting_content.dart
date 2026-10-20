@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
+
 import '../theme.dart';
 import '../../providers/splash_mesh_provider.dart';
 import 'animated_tagline.dart';
 import 'split_flap_text.dart';
+
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// Status information for the connecting screen

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Mesh Feed screen — ranked, trust-scored, transport-agnostic content feed.
+/// Mesh Feed screen - ranked, trust-scored, transport-agnostic content feed.
 library;
 
 import 'package:flutter/material.dart';
@@ -145,11 +145,11 @@ class _MeshFeedScreenState extends ConsumerState<MeshFeedScreen>
     final myNodeNum = ref.watch(myNodeNumProvider);
     final canCompose = myNodeNum != null;
 
-    // Kick off LAN sync by watching the provider — Riverpod lazily creates
+    // Kick off LAN sync by watching the provider - Riverpod lazily creates
     // the service only when watched.
     ref.watch(lanSyncServiceProvider);
 
-    // Kick off Meshtastic RF transport — wires send/receive for feed posts.
+    // Kick off Meshtastic RF transport - wires send/receive for feed posts.
     ref.watch(meshFeedRfTransportProvider);
 
     final allPosts = feedState.posts;
@@ -240,9 +240,8 @@ class _MeshFeedScreenState extends ConsumerState<MeshFeedScreen>
                 child: ListTile(
                   leading: const Icon(Icons.refresh_rounded),
                   title: Text(
-                    MaterialLocalizations.of(
-                      context,
-                    ).refreshIndicatorSemanticLabel,
+                    MaterialLocalizations.of(context)
+                        .refreshIndicatorSemanticLabel,
                   ),
                   contentPadding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,

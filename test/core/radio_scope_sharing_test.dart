@@ -58,16 +58,14 @@ void main() {
       );
       expect(RadioScope.instance.currentKey, 'node-a6960864');
       expect(
-        File(
-          p.join(scopeDir('node-a6960864').path, 'messages.db'),
-        ).readAsStringSync(),
+        File(p.join(scopeDir('node-a6960864').path, 'messages.db'))
+            .readAsStringSync(),
         'home history',
       );
       // Nothing was merged or lost: the mobile radio's own data still exists.
       expect(
-        File(
-          p.join(scopeDir('node-6944378a').path, 'messages.db'),
-        ).readAsStringSync(),
+        File(p.join(scopeDir('node-6944378a').path, 'messages.db'))
+            .readAsStringSync(),
         'mobile history',
       );
 

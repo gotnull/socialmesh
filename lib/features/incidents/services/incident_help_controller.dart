@@ -91,8 +91,10 @@ class IncidentSendOutcome {
 /// handed to the transport. The [recipients] are the eligible peers; the
 /// implementation may broadcast once (the transport is broadcast-only) and use
 /// the list only for the decision and safe logging.
-typedef SendHelpEvent =
-    Future<bool> Function(Uint8List payload, List<int> recipients);
+typedef SendHelpEvent = Future<bool> Function(
+  Uint8List payload,
+  List<int> recipients,
+);
 
 class IncidentHelpController {
   /// Maximum incident-id allocation attempts before giving up (collision

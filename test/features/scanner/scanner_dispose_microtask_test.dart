@@ -20,7 +20,7 @@
 //   - Unmounting a widget whose `dispose()` schedules
 //     `Future.microtask(() => notifier.setActive(false))` does NOT
 //     synchronously throw during finalizeTree.
-//   - The flag is still cleared after one microtask completes — the
+//   - The flag is still cleared after one microtask completes - the
 //     auto-reconnect-resume side effect is preserved.
 //
 // Why we don't also try to prove the original synchronous failure
@@ -31,7 +31,7 @@
 // `persistentCallbacks` phase reliably enough to make an "expect
 // throws" test stable. Locking the post-fix shape is sufficient: if
 // someone reverts to a synchronous call, the live crash will
-// re-surface on device and this test will keep passing — that is the
+// re-surface on device and this test will keep passing - that is the
 // trade-off documented here so a future reader doesn't accidentally
 // drop the microtask wrap.
 //
@@ -79,7 +79,7 @@ class _DisposeProbeState extends ConsumerState<_DisposeProbe> {
 }
 
 void main() {
-  testWidgets('Crashlytics 88594eb858cbccdc06d041dc0fcbbafe — Future.microtask '
+  testWidgets('Crashlytics 88594eb858cbccdc06d041dc0fcbbafe - Future.microtask '
       'wrap does NOT throw and still clears the flag', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -119,7 +119,7 @@ void main() {
       container.read(manualScanActiveProvider),
       isFalse,
       reason:
-          'The microtask still has to fire and clear the flag — the '
+          'The microtask still has to fire and clear the flag - the '
           'fix preserves the original auto-reconnect-resume side '
           'effect of the synchronous call.',
     );

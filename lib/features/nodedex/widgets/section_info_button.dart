@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Section Info Button — inline contextual help for NodeDex cards.
+// Section Info Button - inline contextual help for NodeDex cards.
 //
 // Opens a bottom sheet with the section-specific help text from
 // HelpContent.nodeDexSectionHelp. Shared across detail-screen cards

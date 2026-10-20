@@ -10,7 +10,7 @@ import 'c4_payload.dart';
 /// payload that rides inside a SIP Play `move` envelope.
 ///
 /// Other actions (`offer` / `accept` / `decline` / `resign`) carry
-/// no game-specific payload — the codec returns/expects a zero-byte
+/// no game-specific payload - the codec returns/expects a zero-byte
 /// [Uint8List] for those.
 abstract final class C4Codec {
   /// Per-game declared payload budget. The framework uses this to
@@ -20,7 +20,7 @@ abstract final class C4Codec {
 
   /// Encode a [C4Move] to a single byte.
   ///
-  /// Returns null when [C4Move.column] is out of range — callers
+  /// Returns null when [C4Move.column] is out of range - callers
   /// should treat this as a programmer error since UI-level
   /// validation gates illegal taps before reaching this surface.
   static Uint8List? encodeMove(C4Move move) {
@@ -35,7 +35,7 @@ abstract final class C4Codec {
   }
 
   /// Decode a 1-byte move payload. Returns null on any malformation.
-  /// Receivers map the null result to a drop+log outcome — they MUST
+  /// Receivers map the null result to a drop+log outcome - they MUST
   /// NOT throw or apply state changes.
   static C4Move? decodeMove(Uint8List bytes) {
     if (bytes.length != maxGamePayloadBytes) {

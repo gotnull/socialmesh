@@ -24,7 +24,7 @@ bool get _encryptionSupported =>
 /// On first open of an existing plaintext database the file is migrated in
 /// place to an encrypted file (rows preserved). If that migration fails the
 /// plaintext file is left untouched and opened unencrypted for this session,
-/// and the migration is retried on the next launch — user data is never lost.
+/// and the migration is retried on the next launch - user data is never lost.
 ///
 /// On non-mobile platforms (tests/desktop) this falls back to a plain
 /// unencrypted open so CI needs no SQLCipher build.
@@ -51,7 +51,7 @@ Future<sqflite.Database> openEncryptedDatabase(
   }
 
   // Retries a locked keystore internally, then throws
-  // DatabaseKeyUnavailableException — an encrypted file cannot be opened
+  // DatabaseKeyUnavailableException - an encrypted file cannot be opened
   // without its key, and inventing one orphans the file for good. The memoised
   // key is cleared on failure, so a later open (the provider rebuilding after
   // the device is unlocked) reads the keystore again.

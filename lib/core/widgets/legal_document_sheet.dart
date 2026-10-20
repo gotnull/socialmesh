@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: scaffold — WebView browser with solid background, no glass blur
+// lint-allow: scaffold - WebView browser with solid background, no glass blur
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
 import '../constants.dart';
 import '../l10n/l10n_extension.dart';
 import '../theme.dart';

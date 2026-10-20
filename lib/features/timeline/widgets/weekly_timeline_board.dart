@@ -60,7 +60,7 @@ class WeeklyTimelineBoard extends ConsumerStatefulWidget {
   final List<AvatarStackItem> Function(List<String> participantIds)?
   avatarResolver;
 
-  /// Pixels per minute — controls vertical density.
+  /// Pixels per minute - controls vertical density.
   final double pixelsPerMinute;
 
   /// Reference date used to compute which day columns to show.

@@ -611,42 +611,39 @@ void main() {
       scheduler.dispose();
     });
 
-    test(
-      'catchUpPolicy.none does not fire if past the scheduled time even within minutes',
-      () {
-        // Start at Jan 30 09:00 with slot already fired
-        final clock = FakeClock(DateTime(2026, 1, 30, 9, 0, 0));
-        final events = <ScheduledFireEvent>[];
+    test('catchUpPolicy.none does not fire if past the scheduled time even within minutes', () {
+      // Start at Jan 30 09:00 with slot already fired
+      final clock = FakeClock(DateTime(2026, 1, 30, 9, 0, 0));
+      final events = <ScheduledFireEvent>[];
 
-        final scheduler = InAppScheduler(clock: clock);
-        scheduler.fireEvents.listen(events.add);
-        scheduler.start();
+      final scheduler = InAppScheduler(clock: clock);
+      scheduler.fireEvents.listen(events.add);
+      scheduler.start();
 
-        final spec =
-            ScheduleSpec.daily(
-              id: 'test-no-catchup-grace',
-              hour: 9,
-              minute: 0,
-              catchUpPolicy: CatchUpPolicy.none,
-              lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
-            ).recordFiredSlot(
-              'daily:2026-01-30T09:00+11:00',
-              DateTime(2026, 1, 30, 9, 0, 0),
-            );
-        scheduler.register(spec);
+      final spec =
+          ScheduleSpec.daily(
+            id: 'test-no-catchup-grace',
+            hour: 9,
+            minute: 0,
+            catchUpPolicy: CatchUpPolicy.none,
+            lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
+          ).recordFiredSlot(
+            'daily:2026-01-30T09:00+11:00',
+            DateTime(2026, 1, 30, 9, 0, 0),
+          );
+      scheduler.register(spec);
 
-        // Jump forward 7 days to Feb 6 at 09:02 (past today's 09:00)
-        // With catchUpPolicy.none, since 09:00 already passed, it should NOT fire
-        // The next occurrence is scheduled for Feb 7 09:00
-        clock.setTime(DateTime(2026, 2, 6, 9, 2, 0));
-        scheduler.tick(clock.now());
+      // Jump forward 7 days to Feb 6 at 09:02 (past today's 09:00)
+      // With catchUpPolicy.none, since 09:00 already passed, it should NOT fire
+      // The next occurrence is scheduled for Feb 7 09:00
+      clock.setTime(DateTime(2026, 2, 6, 9, 2, 0));
+      scheduler.tick(clock.now());
 
-        // Should fire 0 - past today's 09:00 slot, next is tomorrow
-        expect(events.length, 0);
+      // Should fire 0 - past today's 09:00 slot, next is tomorrow
+      expect(events.length, 0);
 
-        scheduler.dispose();
-      },
-    );
+      scheduler.dispose();
+    });
 
     test('catchUpPolicy.lastOnly fires once for most recent missed slot', () {
       final clock = FakeClock(DateTime(2026, 1, 30, 9, 0, 0));
@@ -1128,11 +1125,11 @@ void main() {
         );
         scheduler.register(spec);
 
-        // At 8:59 — not yet
+        // At 8:59 - not yet
         scheduler.tick(clock.now());
         expect(events, isEmpty);
 
-        // Advance to 9:00 — should NOT fire (9:00 is the anchor, first fire
+        // Advance to 9:00 - should NOT fire (9:00 is the anchor, first fire
         // is at 10:00 because interval fires after the first full period)
         clock.setTime(DateTime(2026, 1, 30, 9, 0, 0));
         scheduler.tick(clock.now());
@@ -1266,9 +1263,9 @@ void main() {
         repository: mockRepository,
         iftttService: MockSchedulerIftttService(),
         scheduler: scheduler,
-        // onSendMessage is null — will cause a controlled failure
+        // onSendMessage is null - will cause a controlled failure
       );
-      // Do NOT call engine.start() — it subscribes to fireEvents and would
+      // Do NOT call engine.start() - it subscribes to fireEvents and would
       // cause duplicate processing with throttling.  Instead, process events
       // manually.
 
@@ -1288,7 +1285,7 @@ void main() {
       expect(entry.automationName, 'Fail Test');
       expect(entry.success, isFalse);
       expect(entry.timestamp, isNotNull);
-      // Node/battery metadata may be null — that is acceptable
+      // Node/battery metadata may be null - that is acceptable
       expect(entry.triggerNodeName, isNull);
       expect(entry.triggerBatteryLevel, isNull);
 

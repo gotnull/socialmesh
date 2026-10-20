@@ -21,7 +21,7 @@ import 'package:socialmesh/generated/meshtastic/portnums.pbenum.dart' as pn;
 import 'package:socialmesh/services/protocol/mesh_packet_builder.dart';
 
 void main() {
-  group('MeshPacketBuilder.userPayload — transport invariants', () {
+  group('MeshPacketBuilder.userPayload - transport invariants', () {
     test('channel broadcast sets correct destination and channel', () {
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
@@ -137,7 +137,7 @@ void main() {
     });
   });
 
-  group('Data protobuf — user message construction', () {
+  group('Data protobuf - user message construction', () {
     test('wantResponse must NOT be set for user text messages', () {
       // Regression: SocialMesh previously set data.wantResponse = wantAck,
       // which told the receiving node to generate a ROUTING_APP response.
@@ -189,7 +189,7 @@ void main() {
     });
   });
 
-  group('ToRadio wrapping — packet serialization', () {
+  group('ToRadio wrapping - packet serialization', () {
     test('user message wrapped in ToRadio.packet', () {
       final data = pb.Data()
         ..portnum = pn.PortNum.TEXT_MESSAGE_APP
@@ -269,7 +269,7 @@ void main() {
     });
   });
 
-  group('wantAck — matches official Meshtastic behaviour', () {
+  group('wantAck - matches official Meshtastic behaviour', () {
     test('channel broadcast should use wantAck=true', () {
       // Regression: SocialMesh previously set wantAck=false for channel
       // messages. The official Meshtastic iOS app always sets wantAck=true

@@ -34,12 +34,11 @@ class TakBridgeEvent {
 }
 
 /// Callback for sending a TAKPacket to the Meshtastic mesh.
-typedef MeshSendCallback =
-    Future<void> Function(
-      Uint8List payload, {
-      required int portnum,
-      int? destination,
-    });
+typedef MeshSendCallback = Future<void> Function(
+  Uint8List payload, {
+  required int portnum,
+  int? destination,
+});
 
 /// Bidirectional bridge between Meshtastic mesh and TAK clients.
 ///

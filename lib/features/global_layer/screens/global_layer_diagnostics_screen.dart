@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Global Layer Diagnostics Screen — guided fault-finding for the
+/// Global Layer Diagnostics Screen - guided fault-finding for the
 /// MQTT broker connection.
 ///
 /// This screen runs diagnostic checks sequentially and displays
@@ -364,9 +364,8 @@ class _GlobalLayerDiagnosticsScreenState
             const SizedBox(height: AppTheme.spacing8),
             Text(
               context.l10n.globalLayerConnectionDiagnosticsDescription,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: context.textSecondary),
             ),
           ],
         ),
@@ -437,7 +436,7 @@ class _GlobalLayerDiagnosticsScreenState
       );
     }
 
-    // Initial state — show run button
+    // Initial state - show run button
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: SizedBox(
@@ -514,10 +513,8 @@ class _GlobalLayerDiagnosticsScreenState
             const SizedBox(height: AppTheme.spacing10),
             Text(
               diagnosis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.textPrimary,
-                height: 1.5,
-              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: context.textPrimary, height: 1.5),
             ),
 
             // Duration
@@ -527,9 +524,8 @@ class _GlobalLayerDiagnosticsScreenState
                 context.l10n.globalLayerTotalTime(
                   _report!.totalDuration!.inMilliseconds,
                 ),
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: context.textTertiary),
               ),
             ],
           ],
@@ -596,17 +592,14 @@ class _OverallResultBanner extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(color: color, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: AppTheme.spacing2),
                 Text(
                   message,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color.withValues(alpha: 0.8),
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: color.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -660,9 +653,8 @@ class _DiagnosticCheckTile extends StatelessWidget {
                 if (result.duration != null)
                   Text(
                     '${result.duration!.inMilliseconds}ms',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: context.textTertiary),
                   ),
               ],
             ),
@@ -674,9 +666,8 @@ class _DiagnosticCheckTile extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 28),
                 child: Text(
                   result.type.localizedDescription(context.l10n),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: context.textTertiary),
                 ),
               ),
             ],
@@ -689,9 +680,8 @@ class _DiagnosticCheckTile extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 28),
                 child: Text(
                   result.message,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: _messageColor(result.status),
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: _messageColor(result.status)),
                 ),
               ),
             ],

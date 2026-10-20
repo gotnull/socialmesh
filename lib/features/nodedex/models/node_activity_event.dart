@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Node Activity Event — union type for the node activity timeline.
+// Node Activity Event - union type for the node activity timeline.
 //
 // Each variant represents one observable event in a node's history.
 // Events are aggregated from multiple data sources (encounters,
@@ -37,7 +37,7 @@ enum NodeActivityEventType {
 
 /// A single event in the node activity timeline.
 ///
-/// Sealed class hierarchy — each variant carries type-specific
+/// Sealed class hierarchy - each variant carries type-specific
 /// data while sharing the common [timestamp] and [type] fields
 /// needed for sorting and rendering.
 @immutable

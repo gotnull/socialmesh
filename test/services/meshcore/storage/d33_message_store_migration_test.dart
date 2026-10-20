@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// D33 — MeshCoreMessageStore migration tests.
+// D33 - MeshCoreMessageStore migration tests.
 //
 // Pins the storage migration invariants the developer locked in for
 // Phase 2:
@@ -110,7 +110,7 @@ void main() {
       // saved with `senderKey = Uint8List(0)` (selfInfo unavailable
       // at persist time) has no recoverable author prefix and must
       // stay `mmf = null` rather than fall back to the partition's
-      // recipient prefix — that would re-introduce the asymmetry
+      // recipient prefix - that would re-introduce the asymmetry
       // the fix exists to eliminate.
       final partition =
           '79426d8db8fd'
@@ -260,7 +260,7 @@ void main() {
           'isChannelMessage': true,
           'channelIndex': partition,
           // existing MMF that does NOT match what backfill would
-          // compute — the load path must NOT overwrite it.
+          // compute - the load path must NOT overwrite it.
           'mmf': 'ff:ff:ffffffff',
           'replyToMmf': null,
         },

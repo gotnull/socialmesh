@@ -90,7 +90,7 @@ class CloudSyncEntitlement {
 /// Service to manage cloud sync entitlements
 /// Combines RevenueCat subscription status with Firebase grandfathering
 class CloudSyncEntitlementService {
-  // lint-allow: socialmesh-name-casing — entitlement ID is the literal
+  // lint-allow: socialmesh-name-casing - entitlement ID is the literal
   // identifier configured in the RevenueCat dashboard. Renaming it
   // there would invalidate every existing subscriber's entitlement,
   // so the wrong-casing form is pinned here on purpose.
@@ -517,10 +517,10 @@ class CloudSyncEntitlementService {
   /// RC-WINS predicate (RC-ARCH-01).
   ///
   /// RevenueCat is the source of truth for entitlement. The Firestore
-  /// mirror at `user_entitlements/{uid}` is a cache — its value may lag
+  /// mirror at `user_entitlements/{uid}` is a cache - its value may lag
   /// (e.g. the user just upgraded from a feature pack to Cloud Monthly
   /// but `syncPurchasesToFirestore` hasn't re-run yet, or it failed
-  /// silently — see RC-ARCH-04).
+  /// silently - see RC-ARCH-04).
   ///
   /// Returns false when the mirror would *downgrade* an entitlement that
   /// RevenueCat has already resolved as full access. In that case the
@@ -562,7 +562,7 @@ class CloudSyncEntitlementService {
               final status = data['cloud_sync'] as String?;
 
               if (status == 'grandfathered') {
-                // Upgrade is always safe — grandfathered grants more access,
+                // Upgrade is always safe - grandfathered grants more access,
                 // never less.
                 _updateEntitlement(
                   const CloudSyncEntitlement(

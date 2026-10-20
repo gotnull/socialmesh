@@ -189,7 +189,7 @@ void main() {
       engine.handleIncomingChunk(chunk, sourceNodeNum: 0xABCD);
       engine.handleIncomingChunk(chunk, sourceNodeNum: 0xABCD);
 
-      // Should still have exactly one entry — no corruption.
+      // Should still have exactly one entry - no corruption.
       expect(mockDb.savedChunks[f.idHex]!.length, 1);
       expect(mockDb.savedChunks[f.idHex]![0], equals(chunk0Data));
     });
@@ -420,7 +420,7 @@ void main() {
       engine.handleIncomingOffer(offer, sourceNodeNum: 0x1234);
       expect(engine.transfers.containsKey(idHex), isTrue);
 
-      // Second: attempt restore — should be rejected.
+      // Second: attempt restore - should be rejected.
       final dbTransfer = _buildInboundTransferState(
         offer,
         completedChunks: const {},
@@ -917,7 +917,7 @@ void main() {
           // Sender sent chunk packets.
           expect(senderPackets, isNotEmpty);
 
-          // Decode the chunk sent by sender — should be chunk 2.
+          // Decode the chunk sent by sender - should be chunk 2.
           final chunkPacket = SmFileChunk.decode(senderPackets.last);
           expect(chunkPacket, isNotNull);
           expect(chunkPacket!.chunkIndex, 2);
@@ -1033,7 +1033,7 @@ void main() {
           transferState: TransferState.awaitingAccept,
         );
 
-        // Engine rejects pre-accept transfers — they never got an ACCEPT.
+        // Engine rejects pre-accept transfers - they never got an ACCEPT.
         final ok = engine.restoreOutboundTransfer(dbTransfer);
         expect(ok, isFalse);
 
@@ -1074,7 +1074,7 @@ void main() {
     });
 
     test(
-      'cancelled (declined) transfer is not active — skipped by recovery',
+      'cancelled (declined) transfer is not active - skipped by recovery',
       () {
         fakeAsync((async) {
           final f = _buildTestFile(size: 500);
@@ -1084,7 +1084,7 @@ void main() {
             transferState: TransferState.cancelled,
           );
 
-          // Cancelled transfers are terminal — isActive is false, so they
+          // Cancelled transfers are terminal - isActive is false, so they
           // would never be passed to restoreOutboundTransfer by the provider.
           // Verify the invariant directly.
           expect(dbTransfer.isActive, isFalse);
@@ -1097,7 +1097,7 @@ void main() {
       },
     );
 
-    test('NACK retransmits only requested indexes — not full transfer', () {
+    test('NACK retransmits only requested indexes - not full transfer', () {
       fakeAsync((async) {
         final payload = Uint8List.fromList(List.generate(1000, (i) => i % 256));
         final offer = SmFileOffer.fromFile(
@@ -1124,7 +1124,7 @@ void main() {
         // Let send loop process.
         async.elapse(SmRateLimit.fileChunkInterval * 5);
 
-        // Decode sent chunk packets — should only be indexes 2 and 4.
+        // Decode sent chunk packets - should only be indexes 2 and 4.
         final sentChunkIndexes = <int>[];
         for (final pkt in sentPackets) {
           final chunk = SmFileChunk.decode(pkt);
@@ -1341,7 +1341,7 @@ void main() {
     // an outbound transfer, a 60s completion timeout starts. If no NACK
     // or ACK arrives within that window (e.g. receiver hasn't restarted
     // yet), the sender marks the transfer as "complete". This is a safety
-    // valve against indefinite hangs — the receiver may have completed
+    // valve against indefinite hangs - the receiver may have completed
     // with a lost ACK, or may be unreachable.
     //
     // Known limitation: if the receiver restarts >60s after the sender,
@@ -1369,7 +1369,7 @@ void main() {
 
           final result = engine.getTransfer(f.idHex);
           expect(result!.state, TransferState.complete);
-          // No chunks were sent — the sender just timed out passively.
+          // No chunks were sent - the sender just timed out passively.
           expect(sentPackets, isEmpty);
         });
       },
@@ -1425,7 +1425,7 @@ void main() {
         final nack = SmFileNack(fileId: f.offer.fileId, missingIndexes: [0]);
         engine.handleIncomingNack(nack);
 
-        // No retransmission — transfer is terminal.
+        // No retransmission - transfer is terminal.
         async.elapse(SmRateLimit.fileChunkInterval * 3);
         expect(sentPackets, isEmpty);
       });

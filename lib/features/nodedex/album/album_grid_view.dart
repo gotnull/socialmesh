@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Album Grid View — the full album browsing experience.
+// Album Grid View - the full album browsing experience.
 //
 // Renders the collector album as a vertically scrolling grid with:
 //   - Album cover stats dashboard at the top
@@ -382,10 +382,10 @@ String _localizedRarityLabel(String groupKey, BuildContext context) {
 
 /// Wraps a slot widget with a staggered entrance animation that combines:
 ///
-///   1. **Fade in** — opacity ramps from 0 to 1 over the first 60%.
-///   2. **Scale settle** — card scales from 0.88 to 1.0 with easeOutCubic.
-///      No overshoot, no bounce — the card has weight and settles into place.
-///   3. **Slide up** — 20px vertical travel with decelerate curve.
+///   1. **Fade in** - opacity ramps from 0 to 1 over the first 60%.
+///   2. **Scale settle** - card scales from 0.88 to 1.0 with easeOutCubic.
+///      No overshoot, no bounce - the card has weight and settles into place.
+///   3. **Slide up** - 20px vertical travel with decelerate curve.
 ///
 /// The stagger delay between cards creates a wave that cascades diagonally
 /// across the grid (since SliverGrid fills left-to-right, top-to-bottom).
@@ -434,7 +434,7 @@ class _StaggeredSlotState extends State<_StaggeredSlot>
       ),
     );
 
-    // Scale: 0.88 → 1.0 with deceleration. No overshoot — the card
+    // Scale: 0.88 → 1.0 with deceleration. No overshoot - the card
     // has mass and settles cleanly.
     _scaleAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(
       CurvedAnimation(

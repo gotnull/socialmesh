@@ -42,7 +42,7 @@ class FileTransferDatabase {
         version: _dbVersion,
         onConfigure: (db) async {
           final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
-          // WAL assertion skipped — WAL is requested but only verified
+          // WAL assertion skipped - WAL is requested but only verified
           // for on-disk databases. Log instead of asserting to avoid
           // crashing in edge cases where the journal mode differs.
           if (walResult.isEmpty || walResult.first['journal_mode'] != 'wal') {
@@ -66,7 +66,7 @@ class FileTransferDatabase {
           }
           if (oldVersion < 3) {
             // v3: added savedFilePath for automatic disk persistence.
-            // Safe nullable column addition — no data loss.
+            // Safe nullable column addition - no data loss.
             await db.execute(
               'ALTER TABLE $_transfersTable ADD COLUMN savedFilePath TEXT',
             );

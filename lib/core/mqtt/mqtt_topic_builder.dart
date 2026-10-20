@@ -322,10 +322,8 @@ class TopicBuilder {
     return switch (placeholder) {
       rootPlaceholder =>
         'Your topic root prefix (e.g. "msh")', // lint-allow: hardcoded-string
-      channelPlaceholder =>
-        'The mesh channel name (e.g. "LongFast")', // lint-allow: hardcoded-string
-      nodeIdPlaceholder =>
-        'The node identifier (e.g. "!a1b2c3d4")', // lint-allow: hardcoded-string
+      channelPlaceholder => 'The mesh channel name (e.g. "LongFast")', // lint-allow: hardcoded-string
+      nodeIdPlaceholder => 'The node identifier (e.g. "!a1b2c3d4")', // lint-allow: hardcoded-string
       _ => 'Unknown placeholder', // lint-allow: hardcoded-string
     };
   }

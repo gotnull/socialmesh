@@ -141,7 +141,7 @@ class _PathHistorySheet extends ConsumerWidget {
 /// `localizedPathLabel` from the contact_l10n extension. When the
 /// contact carries a non-null `pathOverride` (Force Flood / Force
 /// Direct), the tile surfaces a trailing icon-button that calls
-/// `MeshCoreContactsNotifier.resetPath` — the same wrapper Contact
+/// `MeshCoreContactsNotifier.resetPath` - the same wrapper Contact
 /// Detail uses for its "Reset to auto" action. Closes the
 /// architectural gap upstream's all-in-one path-management dialog
 /// covers by having both surfaces co-located.
@@ -447,9 +447,8 @@ class _PathHistoryRow extends ConsumerWidget {
       showInfoSnackBar(context, l10n.meshcorePathOverlayNoData);
       return;
     }
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const MeshCoreMapScreen()));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const MeshCoreMapScreen()));
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {

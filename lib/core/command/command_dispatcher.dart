@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../providers/connection_providers.dart';
 import '../../providers/app_providers.dart';
 import '../../core/logging.dart';

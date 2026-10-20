@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/constants.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -540,9 +541,8 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
               children: [
                 Text(
                   context.l10n.debugScreenEntryCount(logs.length),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.textTertiary),
                 ),
                 const Spacer(),
                 if (filters.length < LogLevel.values.length)
@@ -587,9 +587,8 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                   SizedBox(height: AppTheme.spacing16),
                   Text(
                     context.l10n.debugScreenNoLogEntries,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: context.textTertiary,
-                    ),
+                    style: Theme.of(context).textTheme.bodyLarge
+                        ?.copyWith(color: context.textTertiary),
                   ),
                 ],
               ),

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// Pins RemoteFlagOverridesService.effectiveBoolFor — the resolver the
+// Pins RemoteFlagOverridesService.effectiveBoolFor - the resolver the
 // admin sheet uses to render each flag's switch. It must agree with the
 // AppFeatureFlags / AppLogging getter semantics for both opt-in
 // (default-false) and opt-out (default-true) keys, so an unset opt-out

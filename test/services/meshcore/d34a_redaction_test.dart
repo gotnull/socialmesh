@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34a — chat-traffic measurement layer redaction proof.
+// D34a - chat-traffic measurement layer redaction proof.
 //
 // Pins that the new `event=text.send.recorded`,
 // `event=text.send.rate_limited`, and `event=text.send.window_reset`
@@ -82,7 +82,7 @@ Future<List<String>> _capture(Future<void> Function() body) async {
 }
 
 void main() {
-  group('D34a — measurement-layer log redaction', () {
+  group('D34a - measurement-layer log redaction', () {
     test('D34a log events surface kind/bytes/win_used but never carry '
         'plaintext, envelope, MMF, pubkey, or PSK material', () async {
       final tx = _RecordingTransport();
@@ -180,7 +180,7 @@ void main() {
         RegExp(r'[A-Za-z0-9+/=]{40,}'),
       ];
 
-      // Filter to D34a-counter events only — the surrounding session
+      // Filter to D34a-counter events only - the surrounding session
       // already redacts `payload=<redacted>` for sensitive command
       // codes via the D4 denylist. We only need to prove the NEW
       // event lines stay clean.

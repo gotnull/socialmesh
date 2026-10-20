@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// MRRP advertisement engine — SERVICE_ADVERT broadcast, SERVICE_DIR_REQ/RESP,
+/// MRRP advertisement engine - SERVICE_ADVERT broadcast, SERVICE_DIR_REQ/RESP,
 /// and remote peer advert cache.
 ///
 /// The advert engine is responsible for:
@@ -319,7 +319,7 @@ class MrrpAdvertEngine {
       _evictOldestPeer();
     }
 
-    // Remove all existing entries for this peer — a fresh advert replaces
+    // Remove all existing entries for this peer - a fresh advert replaces
     // the entire set. This is essential when multiple descriptors share the
     // same serviceId (e.g. user-created Mesh Services instances).
     _advertCache.removeWhere((k, _) => k.nodeId == nodeId);

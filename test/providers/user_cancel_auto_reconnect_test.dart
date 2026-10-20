@@ -18,7 +18,7 @@ import 'package:socialmesh/providers/connection_providers.dart';
 /// `userCancelAutoReconnect`:
 /// 1. Sets `userDisconnected=true` (via the global provider) so re-arm
 ///    is blocked until an explicit user-initiated connect from Scanner.
-/// 2. Drives `autoReconnectState` to `idle` (not `failed`) — Scanner is
+/// 2. Drives `autoReconnectState` to `idle` (not `failed`) - Scanner is
 ///    the next surface the user sees.
 /// 3. Cancels the retry timer / scan guards.
 /// 4. Best-effort transport disconnect.
@@ -64,7 +64,7 @@ void main() {
     );
 
     test('drives autoReconnectState to idle (not failed) so Scanner is the '
-        'next surface — no Device-not-found flicker', () async {
+        'next surface - no Device-not-found flicker', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -149,11 +149,11 @@ void main() {
     //
     //   1. Transient transport-state==connected during a TCP retry
     //      cycle (`isConnected==true` && `isReconnecting==true`) MUST
-    //      keep the banner visible — otherwise the SizeTransition flips
+    //      keep the banner visible - otherwise the SizeTransition flips
     //      and the Nodes screen bops vertically.
     //   2. After user cancel / manual disconnect (`userDisconnected ==
     //      true` && `autoReconnectState == idle` && device disconnected),
-    //      the banner MUST be hidden — never a stale "Disconnected"
+    //      the banner MUST be hidden - never a stale "Disconnected"
     //      banner with a Connect button on a route the user is
     //      actively leaving.
     bool showBanner({

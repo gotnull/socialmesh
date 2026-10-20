@@ -64,9 +64,8 @@ class MeshCoreWidgetEmptyState extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacing6),
                 Text(
                   subtitle!,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: context.textTertiary),
                   textAlign: TextAlign.center,
                   softWrap: true,
                 ),

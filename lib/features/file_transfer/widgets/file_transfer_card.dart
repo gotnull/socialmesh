@@ -496,7 +496,7 @@ class FileTransferCard extends ConsumerWidget {
 }
 
 // =============================================================================
-// Sub-widgets — NodeDex-style components
+// Sub-widgets - NodeDex-style components
 // =============================================================================
 
 // -----------------------------------------------------------------------------
@@ -614,7 +614,7 @@ class FileTypeIcon extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// Direction badge — matches NodeDex trust / social-tag badge style
+// Direction badge - matches NodeDex trust / social-tag badge style
 // -----------------------------------------------------------------------------
 
 class _DirectionBadge extends StatelessWidget {
@@ -659,7 +659,7 @@ class _DirectionBadge extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// Status chip — colored chip with icon, matching NodeDex trait badge style
+// Status chip - colored chip with icon, matching NodeDex trait badge style
 // -----------------------------------------------------------------------------
 
 class _StatusChip extends StatelessWidget {
@@ -702,7 +702,7 @@ class _StatusChip extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// Metric chip — NodeDex _MetricChip: icon + monospace value, subtle border
+// Metric chip - NodeDex _MetricChip: icon + monospace value, subtle border
 // -----------------------------------------------------------------------------
 
 class _MetricChip extends StatelessWidget {
@@ -743,7 +743,7 @@ class _MetricChip extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// Timestamp row — NodeDex _DiscoveryAgeBadge style
+// Timestamp row - NodeDex _DiscoveryAgeBadge style
 // -----------------------------------------------------------------------------
 
 class _TimestampRow extends StatelessWidget {
@@ -782,7 +782,7 @@ class _TimestampRow extends StatelessWidget {
 ///
 /// When [progress] changes (e.g. a new chunk arrives), the bar animates from
 /// the current displayed position to the new target using [Curves.easeOut].
-/// This removes the janky per-chunk step jumps without sacrificing accuracy —
+/// This removes the janky per-chunk step jumps without sacrificing accuracy -
 /// the animation always lands on the real reported value.
 class _AnimatedTransferProgress extends StatefulWidget {
   const _AnimatedTransferProgress({
@@ -974,7 +974,7 @@ class _ProgressRing extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// Action row — uses ink-well buttons with haptic feedback
+// Action row - uses ink-well buttons with haptic feedback
 // -----------------------------------------------------------------------------
 
 class _ActionRow extends StatelessWidget {
@@ -1003,7 +1003,7 @@ class _ActionRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Active transfer: cancel (but not for offerPending — those use
+        // Active transfer: cancel (but not for offerPending - those use
         // the top-of-card Accept/Decline banner instead).
         if (transfer.isActive &&
             transfer.state != TransferState.offerPending &&
@@ -1034,7 +1034,7 @@ class _ActionRow extends StatelessWidget {
             ),
           ],
         ],
-        // Info button — always available when provided
+        // Info button - always available when provided
         if (onInfo != null) ...[
           const SizedBox(width: AppTheme.spacing8),
           _ActionButton(
@@ -1060,7 +1060,7 @@ class _ActionRow extends StatelessWidget {
 }
 
 // -----------------------------------------------------------------------------
-// Action button — subtle ink-well tap target
+// Action button - subtle ink-well tap target
 // -----------------------------------------------------------------------------
 
 class _ActionButton extends StatelessWidget {

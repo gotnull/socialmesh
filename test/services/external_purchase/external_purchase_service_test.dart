@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// Tests for the ExternalPurchaseService — the Flutter side of the
+// Tests for the ExternalPurchaseService - the Flutter side of the
 // external (fallback) purchase pipeline. The Cloud Function shapes
 // being mocked here mirror backend/functions/src/external_checkout.ts;
 // drift is caught by the round-trip JSON tests in
@@ -100,7 +100,7 @@ void main() {
         expect(invoker.calls, hasLength(1));
         expect(invoker.calls.first.name, 'createExternalCheckout');
         expect(invoker.calls.first.data['productId'], 'theme_pack');
-        // Anonymous caller — installId must be present so the backend
+        // Anonymous caller - installId must be present so the backend
         // can key entitlements off the device.
         expect(invoker.calls.first.data['deviceInstallId'], isNotNull);
         expect(
@@ -228,12 +228,12 @@ void main() {
 
     test(
       'parses entitlements when cloud_functions returns Map<Object?, Object?> '
-      '(regression — silent filter dropped all entitlements)',
+      '(regression - silent filter dropped all entitlements)',
       () async {
         // The cloud_functions plugin decodes nested JSON objects as
         // `Map<Object?, Object?>`, not `Map<String, dynamic>`. The
         // earlier `whereType<Map<String, dynamic>>()` filter silently
-        // dropped every entitlement against this shape — backend
+        // dropped every entitlement against this shape - backend
         // returned count=1, client cache wrote 0, UI never updated.
         // This test fixture mimics the real plugin shape so we never
         // regress.
@@ -314,36 +314,33 @@ void main() {
       ]);
     });
 
-    test(
-      'non-LSEAT codes route through redeemUnlockCode (existing path unchanged)',
-      () async {
-        // Defence-in-depth: the slice 4b routing must NOT touch the
-        // personal-pack path for codes without the licensing prefix.
-        // Pre-existing customers using SM-XXXX-XXXX support codes
-        // continue to hit the same Cloud Function with the same
-        // identity payload.
-        invoker.scriptResponse('redeemUnlockCode', {
-          'productIds': ['theme_pack'],
-        });
-        invoker.scriptResponse('getExternalEntitlements', {
-          'ownerKind': 'install',
-          'entitlements': [_entitlementJson('theme_pack')],
-        });
+    test('non-LSEAT codes route through redeemUnlockCode (existing path unchanged)', () async {
+      // Defence-in-depth: the slice 4b routing must NOT touch the
+      // personal-pack path for codes without the licensing prefix.
+      // Pre-existing customers using SM-XXXX-XXXX support codes
+      // continue to hit the same Cloud Function with the same
+      // identity payload.
+      invoker.scriptResponse('redeemUnlockCode', {
+        'productIds': ['theme_pack'],
+      });
+      invoker.scriptResponse('getExternalEntitlements', {
+        'ownerKind': 'install',
+        'entitlements': [_entitlementJson('theme_pack')],
+      });
 
-        final service = buildService();
-        await service.redeemCode('SM-AB23-CD45');
+      final service = buildService();
+      await service.redeemCode('SM-AB23-CD45');
 
-        // First call MUST be redeemUnlockCode (not the licensing one).
-        expect(invoker.calls.first.name, 'redeemUnlockCode');
-        // Identity payload still carries deviceInstallId on this path.
-        expect(invoker.calls.first.data.containsKey('deviceInstallId'), isTrue);
-        // No licensing call.
-        expect(
-          invoker.calls.any((c) => c.name == 'redeemLicenseSeatCode'),
-          isFalse,
-        );
-      },
-    );
+      // First call MUST be redeemUnlockCode (not the licensing one).
+      expect(invoker.calls.first.name, 'redeemUnlockCode');
+      // Identity payload still carries deviceInstallId on this path.
+      expect(invoker.calls.first.data.containsKey('deviceInstallId'), isTrue);
+      // No licensing call.
+      expect(
+        invoker.calls.any((c) => c.name == 'redeemLicenseSeatCode'),
+        isFalse,
+      );
+    });
 
     test(
       'LSEAT- codes route through redeemLicenseSeatCode and refresh cache',
@@ -449,7 +446,7 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('handleDeepLink', () {
-    test('redirect alone does NOT unlock — only webhook does', () async {
+    test('redirect alone does NOT unlock - only webhook does', () async {
       // Backend says still pending. Cache must stay empty even though
       // we received the redirect. This is the spec's hard rule.
       invoker.scriptResponse('getCheckoutStatus', {
@@ -542,7 +539,7 @@ void main() {
     test('empty sessionId is ignored', () async {
       final service = buildService();
       service.handleDeepLink('');
-      // No call should have been made — guard short-circuits.
+      // No call should have been made - guard short-circuits.
       expect(invoker.calls, isEmpty);
       expect(service.currentConfirmation.stage, ConfirmationStage.idle);
     });

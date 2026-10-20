@@ -7,7 +7,7 @@ library;
 /// Wire-frozen identifiers for the Slice 1 games.
 ///
 /// The wire `code` is the single byte used in `CREATE` frames and in
-/// `service_instances.config.gameTypeCode`. Codes are one-way — never
+/// `service_instances.config.gameTypeCode`. Codes are one-way - never
 /// reuse a code for a different game, and never rename the identifier
 /// string in a new version (bump the version suffix instead).
 enum MeshGameType {

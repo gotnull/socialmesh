@@ -38,7 +38,7 @@ class PurchaseService {
   /// These are preserved across refreshes AND app restarts to prevent losing unlock status
   final Set<String> _storeConfirmedProducts = {};
 
-  /// Set when the most recent restore encountered PaymentPendingError —
+  /// Set when the most recent restore encountered PaymentPendingError -
   /// the store believes a purchase exists but RevenueCat has not accepted
   /// its receipt. Typical Android case: Google Play returns the purchase
   /// in queryPurchaseHistory but /v1/receipts returns 400 with
@@ -101,7 +101,7 @@ class PurchaseService {
   /// Initialize RevenueCat SDK.
   ///
   /// If [appUserId] is non-null, RevenueCat is configured directly under that
-  /// id — no anonymous → identified alias is created at cold start. Pass the
+  /// id - no anonymous → identified alias is created at cold start. Pass the
   /// FirebaseAuth UID when the user is already signed in. Pass null only when
   /// the user is genuinely signed out; the SDK will then mint an anonymous id.
   Future<void> initialize({String? appUserId}) async {
@@ -140,7 +140,7 @@ class PurchaseService {
         return;
       }
 
-      // Enable debug logging in debug mode (not verbose — verbose dumps
+      // Enable debug logging in debug mode (not verbose - verbose dumps
       // full product JSON on every BillingClient query, flooding logcat).
       if (kDebugMode) {
         AppLogging.subscriptions('Setting LogLevel.debug for debug mode...');
@@ -164,7 +164,7 @@ class PurchaseService {
       // Suppress alias-on-restore. The SDK persists this flag across
       // launches in NSUserDefaults / SharedPreferences, so once any prior
       // session set it to false it stays false even for anonymous configs
-      // — that's why we set it unconditionally on every initialize. With
+      // - that's why we set it unconditionally on every initialize. With
       // false, every restorePurchases() call aliases the current appUserID
       // to any other id sharing the same store receipt, and the alias
       // chain eventually saturates with RC error code 23 "Alias limit

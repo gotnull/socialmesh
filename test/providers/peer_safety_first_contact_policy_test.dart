@@ -4,7 +4,7 @@
 /// Pins the first-contact-mark policy: `markFirstHandshake` must
 /// fire ONLY on the local user's explicit Accept tap. Receiving
 /// inbound HS_HELLO / HS_DECLINE / HS_ACCEPT (alone) does NOT carry
-/// consent — those frames must NOT mark first contact.
+/// consent - those frames must NOT mark first contact.
 ///
 /// This test verifies the contract by directly exercising the
 /// `PeerSafetyManager.markFirstHandshake` surface (the same method
@@ -16,7 +16,7 @@
 /// The protocol layer's three handshake handlers
 /// (`_handleSipHandshakeHello`, `_handleSipHandshakeDecline`,
 /// `_handleSipHandshakeAccept` / `_completeSipHandshake`) must NOT
-/// call `markFirstHandshake` themselves — that would mark a
+/// call `markFirstHandshake` themselves - that would mark a
 /// first-contact for any peer who happens to be involved in our
 /// handshake state-machine, including the responder side where the
 /// user never explicitly tapped Accept.
@@ -93,7 +93,7 @@ void main() {
       expect(mgr.hasFirstContact(0xBBBB), isFalse);
     });
 
-    test('only the FIRST timestamp persists — second tap is ignored', () async {
+    test('only the FIRST timestamp persists - second tap is ignored', () async {
       final c = _newContainer();
       final mgr = await _readyManager(c);
       await mgr.markFirstHandshake(0xAAAA, 1000);
@@ -155,9 +155,9 @@ void main() {
       final first = _newContainer();
       final mgr1 = await _readyManager(first);
       await mgr1.markFirstHandshake(0xDEAD, 7777);
-      final dbPath = (await first.read(
-        peerSafetyStoreProvider.future,
-      )).runtimeType.toString();
+      final dbPath = (await first.read(peerSafetyStoreProvider.future))
+          .runtimeType
+          .toString();
       // We can't easily reopen the same tempfile from a separate
       // container in this helper, so verify the simpler durability
       // path: the cache was populated and the row is in the DB.
@@ -166,7 +166,7 @@ void main() {
       expect(ids, contains(0xDEAD));
       // Sanity: the cache reads it too.
       expect(mgr1.hasFirstContact(0xDEAD), isTrue);
-      // dbPath unused — kept to silence unused_local lint.
+      // dbPath unused - kept to silence unused_local lint.
       expect(dbPath, isA<String>());
     });
   });
@@ -179,14 +179,13 @@ void main() {
     // fires from explicit user-tap call sites in the UI.
     test('grep: protocol_service.dart contains zero markFirstHandshake '
         'references', () {
-      final src = File(
-        'lib/services/protocol/protocol_service.dart',
-      ).readAsStringSync();
+      final src = File('lib/services/protocol/protocol_service.dart')
+          .readAsStringSync();
       expect(
         src.contains('markFirstHandshake'),
         isFalse,
         reason:
-            'protocol_service.dart must NOT call markFirstHandshake — '
+            'protocol_service.dart must NOT call markFirstHandshake - '
             'first-contact is gated on the explicit user Accept tap, '
             'NOT on inbound HELLO / DECLINE / ACCEPT alone',
       );
@@ -194,9 +193,8 @@ void main() {
 
     test('grep: sip_handshake.dart contains zero markFirstHandshake '
         'references', () {
-      final src = File(
-        'lib/services/protocol/sip/sip_handshake.dart',
-      ).readAsStringSync();
+      final src = File('lib/services/protocol/sip/sip_handshake.dart')
+          .readAsStringSync();
       expect(
         src.contains('markFirstHandshake'),
         isFalse,
@@ -209,15 +207,14 @@ void main() {
 
     test('grep: sip_hub_screen.dart Accept button DOES call '
         'markFirstHandshake (positive control)', () {
-      final src = File(
-        'lib/features/sip/sip_hub_screen.dart',
-      ).readAsStringSync();
+      final src = File('lib/features/sip/sip_hub_screen.dart')
+          .readAsStringSync();
       expect(
         src.contains('markFirstHandshake'),
         isTrue,
         reason:
             'sip_hub_screen.dart Accept button MUST mark first-contact '
-            '— this is the consent moment',
+            '- this is the consent moment',
       );
     });
 
@@ -231,7 +228,7 @@ void main() {
         isTrue,
         reason:
             'mesh_explorer_peer_detail_sheet.dart _onAccept MUST mark '
-            'first-contact — same consent moment as sip_hub_screen',
+            'first-contact - same consent moment as sip_hub_screen',
       );
     });
   });

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap delegates to parent callback (caller fires ref.haptics)
+// lint-allow: haptic-feedback - onTap delegates to parent callback (caller fires ref.haptics)
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
@@ -15,7 +15,7 @@ class DrawerMenuItem {
 
   /// Stable string identifier for customization (hide / reorder) state.
   ///
-  /// Items with `id == null` are NOT customizable — they always render
+  /// Items with `id == null` are NOT customizable - they always render
   /// in their default position and cannot be hidden. Used for the few
   /// drawer entries that must always be reachable (currently none, but
   /// reserved for future safety-critical entries).
@@ -51,12 +51,12 @@ class DrawerMenuItem {
   /// Optional sub-items rendered indented beneath this tile when the
   /// drawer expands the parent. The parent itself remains tappable
   /// (opens its own [screen] / [tabIndex]); the chevron toggles the
-  /// children visibility — a split-tap affordance similar to the
+  /// children visibility - a split-tap affordance similar to the
   /// macOS Finder sidebar.
   final List<DrawerMenuItem>? children;
 
   /// Custom open handler. When set, takes precedence over [screen] /
-  /// [tabIndex] in the drawer dispatch — for entries that route through a
+  /// [tabIndex] in the drawer dispatch - for entries that route through a
   /// feature-specific entry-point function rather than pushing a screen
   /// directly, typically because the entry point logs or resolves state
   /// first.
@@ -144,7 +144,7 @@ class DrawerMenuTile extends StatelessWidget {
   /// triggering [onTap] (open the parent screen).
   final bool hasChildren;
 
-  /// Current expansion state of the parent's children — drives the
+  /// Current expansion state of the parent's children - drives the
   /// chevron rotation. Only meaningful when [hasChildren] is true.
   final bool isExpanded;
 
@@ -153,13 +153,13 @@ class DrawerMenuTile extends StatelessWidget {
   final VoidCallback? onChevronTap;
 
   /// When true, the tile renders in compact "child" form: indented
-  /// from the leading edge, smaller icon, slightly smaller label —
+  /// from the leading edge, smaller icon, slightly smaller label -
   /// used for sub-items beneath an expanded parent.
   final bool isChild;
 
   /// When true, the tile renders in drawer edit mode: a red minus
   /// badge appears on the icon, the trailing region renders a drag
-  /// handle (visual cue — actual reorder lives at the parent), and
+  /// handle (visual cue - actual reorder lives at the parent), and
   /// [onTap] is suppressed in favour of [onRemove].
   final bool editMode;
 
@@ -209,7 +209,7 @@ class DrawerMenuTile extends StatelessWidget {
     final labelFontSize = isChild ? 14.0 : 15.0;
     final tileVerticalPadding = isChild ? 10.0 : 14.0;
 
-    // In edit mode, tapping the tile body is a no-op — the user
+    // In edit mode, tapping the tile body is a no-op - the user
     // interacts via the explicit minus badge / drag handle. Long-press
     // (handled by the parent via a higher-level GestureDetector) stays
     // open as the entry point.
@@ -242,7 +242,7 @@ class DrawerMenuTile extends StatelessWidget {
           child: Row(
             children: [
               // Edit-mode remove control. Renders as a leading column
-              // to the left of the icon — mirrors the drag-handle's
+              // to the left of the icon - mirrors the drag-handle's
               // placement on the right so the user sees a clear
               // "remove ← icon → reorder" affordance pair instead of
               // a badge overlapping the icon glyph.
@@ -422,17 +422,17 @@ class DrawerMenuTile extends StatelessWidget {
                   ],
                 ),
               ),
-              // Expand affordance — sub-tap target separate from the
+              // Expand affordance - sub-tap target separate from the
               // tile's main onTap. Tapping this region toggles children
               // visibility; tapping the icon/label area still opens the
               // parent screen via [onTap]. Inner GestureDetector wins
               // the gesture before the outer BouncyTap.
               //
-              // Uses `Icons.expand_more` (downward V) — the Material
-              // convention for "this expands inline" — flipped 180° to
+              // Uses `Icons.expand_more` (downward V) - the Material
+              // convention for "this expands inline" - flipped 180° to
               // expand_less when open. Intentionally distinct from
               // `Icons.chevron_right` which means "tap to navigate".
-              // Edit-mode drag handle. Visual cue only — the actual
+              // Edit-mode drag handle. Visual cue only - the actual
               // drag is initiated by the parent's
               // ReorderableDelayedDragStartListener which wraps the
               // tile in main_shell. Wins precedence over all other

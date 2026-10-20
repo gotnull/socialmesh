@@ -53,7 +53,7 @@ void _apply(_Cell? cell, _Op op, _Cell Function() initIfEmpty) {
 }
 
 void main() {
-  group('canvasMergeAccept — newer op_ts wins', () {
+  group('canvasMergeAccept - newer op_ts wins', () {
     test('strictly newer ts accepts regardless of other fields', () {
       expect(
         canvasMergeAccept(
@@ -83,7 +83,7 @@ void main() {
     });
   });
 
-  group('canvasMergeAccept — same ts, lower author wins', () {
+  group('canvasMergeAccept - same ts, lower author wins', () {
     test('lower author wins on tie', () {
       expect(
         canvasMergeAccept(
@@ -127,7 +127,7 @@ void main() {
     });
   });
 
-  group('canvasMergeAccept — op_seq mod-256 forward window', () {
+  group('canvasMergeAccept - op_seq mod-256 forward window', () {
     test('delta=1 accepts', () {
       expect(
         canvasMergeAccept(
@@ -170,7 +170,7 @@ void main() {
       );
     });
 
-    test('delta=0 rejects (idempotent — same op is not "newer")', () {
+    test('delta=0 rejects (idempotent - same op is not "newer")', () {
       expect(
         canvasMergeAccept(
           opTs: 1,
@@ -301,7 +301,7 @@ void main() {
 
       // Apply every permutation and assert the final cell state equals
       // the canonical winner. We need to seed each replay from an
-      // unpainted cell — the comparator can only run after the first
+      // unpainted cell - the comparator can only run after the first
       // accepted op, so we treat any first op as accepted.
       for (var i = 0; i < permutations.length; i++) {
         final order = permutations[i];

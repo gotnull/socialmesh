@@ -11,14 +11,19 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/countdown_providers.dart';
+
 import 'package:latlong2/latlong.dart';
+
 import '../../core/units/geo_distance.dart';
+
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../core/map_config.dart';
 import '../../core/widgets/map_tile_layer.dart';
 import '../../core/routing/conversation_routes.dart';
@@ -34,7 +39,9 @@ import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_overlay_layers.dart';
 import '../../core/widgets/waypoint_markers.dart';
+
 import 'package:socialmesh/features/incidents/widgets/help_mode/help_request_affordance.dart';
+
 import '../../core/widgets/map_node_drawer.dart';
 import '../../core/widgets/node_info_card.dart';
 import '../../core/node_color.dart';
@@ -137,7 +144,7 @@ class MapScreen extends ConsumerStatefulWidget {
   final TraceRouteLog? tracerouteLog;
 
   /// When true, the marker source switches from the live `nodesProvider`
-  /// to `nodedexMapPinsProvider` — every entry in NodeDex with a
+  /// to `nodedexMapPinsProvider` - every entry in NodeDex with a
   /// positioned encounter is synthesized into a `MeshNode` and pinned at
   /// its last-known coordinates. All other MapScreen features (filter,
   /// search, controls, overlays, info card) keep working unchanged.
@@ -153,7 +160,7 @@ class MapScreen extends ConsumerStatefulWidget {
   final route_model.Route? routeOverlay;
 
   /// Optional widget pinned to the bottom of the map (above attribution) when
-  /// [routeOverlay] is set — used by the Routes feature for the compact
+  /// [routeOverlay] is set - used by the Routes feature for the compact
   /// distance / duration / elevation / points strip and the share action.
   final Widget? routeBottomOverlay;
 
@@ -356,7 +363,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   AnimationController? _animationController;
 
   // Compass rotation. Lives in a ValueNotifier so pan/rotate gestures don't
-  // rebuild the screen on every frame — only the compass needle (wrapped in
+  // rebuild the screen on every frame - only the compass needle (wrapped in
   // ValueListenableBuilder around `MapControlsOverlay`) listens.
   final ValueNotifier<double> _mapRotationNotifier = ValueNotifier<double>(0.0);
   double get _mapRotation => _mapRotationNotifier.value;
@@ -393,7 +400,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // One-shot: on a plain Map-tab open (no deep-link / traceroute /
   // location target) the camera is placed imperatively after first
   // render. MapOptions.initialCenter only applies on the first build,
-  // and node positions arrive async — so the computed `center` would
+  // and node positions arrive async - so the computed `center` would
   // otherwise be stranded at the LatLng(0,0) fallback (blank ocean).
   bool _didInitialAutoFit = false;
 
@@ -404,7 +411,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // Camera-boundary NaN recovery. flutter_map's pinch pipeline computes a
   // new zoom via math.log(scale) and commits it through the internal
-  // moveRaw() — which bypasses every safeMove/safeLatLng guard. When the
+  // moveRaw() - which bypasses every safeMove/safeLatLng guard. When the
   // gesture's scale term reaches <= 0 the log yields -Infinity/NaN, clampZoom
   // passes it through, and the camera lands on a non-finite center/zoom. The
   // next tile-layer build (and every later pinch) then projects that center
@@ -559,7 +566,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
       // Keep compass state in sync during programmatic moves. Rotation goes
       // through the notifier (compass-only rebuild). Zoom is mutated as a
-      // plain field — the next data/selection-driven setState will pick it up.
+      // plain field - the next data/selection-driven setState will pick it up.
       final currentRotation = rotationTween.evaluate(animation);
       if (currentRotation != _mapRotation) {
         _mapRotation = currentRotation;
@@ -625,7 +632,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   /// Synthesize a `Map<int, MeshNode>` from NodeDex map pins so the
-  /// rest of MapScreen — which is built around live MeshNodes — works
+  /// rest of MapScreen - which is built around live MeshNodes - works
   /// unchanged. Only the fields the marker / filter / search / info-
   /// card paths read are populated; everything else (snr, rssi, env
   /// metrics, etc.) is null because NodeDex doesn't carry it.
@@ -732,7 +739,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   /// Filter nodes based on current filter.
   ///
-  /// Single-pass evaluation — the previous chain of up to four
+  /// Single-pass evaluation - the previous chain of up to four
   /// `.where(...).toList()` calls materialised an intermediate list per
   /// filter step. Combined predicate, one walk, one allocation.
   List<_NodeWithPosition> _filterNodes(
@@ -832,7 +839,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
       if (!mounted) return;
 
-      // Start global position request countdown — banner persists
+      // Start global position request countdown - banner persists
       // across navigation and sets expectations for trickle-in time.
       notifier.startPositionRequestCountdown();
     } finally {
@@ -948,7 +955,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // One-shot: pick up TAK provider values that were set before this
     // widget built (e.g. "Show on Map" in TakEventDetailScreen sets the
     // providers, pops the stack, and MainShell then builds MapScreen
-    // fresh — ref.listen misses the already-set value).
+    // fresh - ref.listen misses the already-set value).
     if (!_takInitialCheckDone) {
       _takInitialCheckDone = true;
 
@@ -973,7 +980,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
-    // In NodeDex mode, the marker source is the NodeDex pin list —
+    // In NodeDex mode, the marker source is the NodeDex pin list -
     // every entry with a positioned encounter, synthesized into a
     // MeshNode so the rest of MapScreen (filtering, search, info card,
     // overlays) keeps working unchanged.
@@ -993,7 +1000,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final meshWaypoints = ref.watch(meshWaypointsProvider);
     final localWaypoints = ref.watch(mapLocalWaypointsProvider);
 
-    // Load position history — per-node when tracking, all when global toggle
+    // Load position history - per-node when tracking, all when global toggle
     final List<PositionLog> positionLogs;
     if (_trackNodeNum != null) {
       positionLogs =
@@ -1007,7 +1014,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
 
     // Direction-of-contact map only feeds the message-based filters, so we
-    // subscribe to it only when one is active — otherwise the map would
+    // subscribe to it only when one is active - otherwise the map would
     // rebuild on every DM regardless of the selected filter.
     final dmDirection =
         (_nodeFilter == NodeFilter.messagedMe ||
@@ -1101,7 +1108,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Traceroute mode: fit camera to hop bounds when the traceroute
     // has at least two valid GPS points. When every hop reports 0,0
     // (or no GPS data exists for the route), `_tracerouteBounds`
-    // returns null — in that case we MUST fall through to the
+    // returns null - in that case we MUST fall through to the
     // standard user-position / nodes-with-position fallback, otherwise
     // the camera lands at LatLng(0,0) (the Gulf of Guinea, "Africa
     // fallback bug").
@@ -1121,7 +1128,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 tracerouteBounds.northEast.longitude) /
             2;
         center = safeLatLng(midLat, midLng) ?? center;
-        // Rough zoom from bounds span — the map will refine in onMapReady
+        // Rough zoom from bounds span - the map will refine in onMapReady
         final latSpan =
             tracerouteBounds.northEast.latitude -
             tracerouteBounds.southWest.latitude;
@@ -1193,7 +1200,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     // True when the screen was opened from a traceroute card but the
     // route has no usable GPS data (every hop reports 0,0 or has no
-    // position). Drives the persistent banner below — without it, the
+    // position). Drives the persistent banner below - without it, the
     // user sees an apparently-blank map with no explanation.
     final tracerouteHasNoGps = widget.tracerouteLog != null && !centerResolved;
 
@@ -1240,7 +1247,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Restore the camera the user left on the Map tab last time. MapScreen is
     // rebuilt from scratch on every tab switch, so without this the camera
     // resets to the computed fallback above (and the user loses their zoom and
-    // place). Applied only on a plain Map-tab open — deep-link / traceroute /
+    // place). Applied only on a plain Map-tab open - deep-link / traceroute /
     // location targets own the camera. Marking _didInitialAutoFit skips the
     // auto-fit below so the restored pose wins.
     if (!_didInitialAutoFit &&
@@ -1458,7 +1465,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               }
             },
             itemBuilder: (context) => [
-              // Filter — hide in location-only mode (no nodes shown).
+              // Filter - hide in location-only mode (no nodes shown).
               if (!widget.locationOnlyMode)
                 PopupMenuItem(
                   value: 'filter',
@@ -1478,7 +1485,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     ],
                   ),
                 ),
-              // Map style — radio-like, check on the active style.
+              // Map style - radio-like, check on the active style.
               ...MapTileStyle.values.map(
                 (style) => PopupMenuItem(
                   value: 'style_${style.name}',
@@ -1497,7 +1504,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ),
                 ),
               ),
-              // Satellite labels toggle — only meaningful in satellite mode,
+              // Satellite labels toggle - only meaningful in satellite mode,
               // so the entry stays hidden for the other styles.
               if (_mapStyle == MapTileStyle.satellite)
                 PopupMenuItem(
@@ -1984,7 +1991,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         // Record every finite pose; if a non-finite one lands
                         // (flutter_map pinch math overflow committed via the
                         // internal moveRaw), snap back to the last good pose
-                        // on a microtask — which drains before the next frame
+                        // on a microtask - which drains before the next frame
                         // builds, so the crashing tile projection never runs.
                         if (isFiniteCameraPose(
                           position.center,
@@ -2059,7 +2066,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     children: [
                       // Map tiles. When Mapbox is active the URL switches to
                       // Mapbox's raster Static Tiles API and the Esri labels
-                      // overlay below is skipped — Mapbox bakes labels into
+                      // overlay below is skipped - Mapbox bakes labels into
                       // satellite-streets-v12 directly.
                       // No tileBuilder: AnimatedOpacity at constant 1.0
                       // created unnecessary animation controllers per tile,
@@ -2123,7 +2130,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             themeBrightness,
                           ),
                         ),
-                      // Measurement line — terrain-colored when available
+                      // Measurement line - terrain-colored when available
                       if (_measureStart != null && _measureEnd != null)
                         PolylineLayer(
                           polylines:
@@ -2194,7 +2201,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             }),
                           ),
                         ),
-                      // Shared mesh waypoints (WAYPOINT_APP) — orange emoji
+                      // Shared mesh waypoints (WAYPOINT_APP) - orange emoji
                       // markers, distinct from the local "dropped pin" above.
                       if (_showMeshWaypoints)
                         MarkerLayer(
@@ -3065,7 +3072,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         });
       case ElevationProfileOffline():
       case ElevationProfileFailure():
-        // Offline or API error — fall back to single-color line
+        // Offline or API error - fall back to single-color line
         safeSetState(() {
           _measureTerrainPolylines = _buildFallbackMeasurePolylines();
           _measureTerrainResult = null;
@@ -3391,7 +3398,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     HapticFeedback.lightImpact();
   }
 
-  // Frames every node in [nodes] without firing haptics — shared by the
+  // Frames every node in [nodes] without firing haptics - shared by the
   // fit-all button (via [_fitAllNodes]) and the one-shot auto-fit on a
   // plain Map-tab open, where a haptic on load would be wrong.
   // Route-overlay polyline points (empty when no route is attached).
@@ -3440,7 +3447,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Single-pass min/max with strict WGS-84 range filter. The mesh-observer
     // / NodeDex feed contains a small fraction of nodes with garbage
     // coordinates (e.g. lat=-211, lon=194) that pass `.isFinite` but fail
-    // `safeLatLng` — without this filter the bounds become invalid and
+    // `safeLatLng` - without this filter the bounds become invalid and
     // `CameraFit.bounds` no-ops silently.
     var minLat = double.infinity;
     var maxLat = double.negativeInfinity;
@@ -3484,7 +3491,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   /// World Map (`maxClusterRadius: 80`, animations tuned for large
   /// node sets) so behaviour is consistent across the two map
   /// surfaces. Tapping a cluster opens a bottom sheet listing the
-  /// underlying nodes — the user can pick one to select it (the
+  /// underlying nodes - the user can pick one to select it (the
   /// existing node-info card surfaces it) or pinch-zoom to expand
   /// the cluster into individual markers.
   Widget _buildClusterLayer({
@@ -4030,7 +4037,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
     }
 
-    // Fall back to ephemeral in-session trails — map-screen-only state, so it
+    // Fall back to ephemeral in-session trails - map-screen-only state, so it
     // stays here rather than in the shared builder.
     final trails = <Polyline>[];
     for (final node in nodes) {
@@ -4085,7 +4092,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return safeLatLng(lat, lng);
   }
 
-  // Build the label pill marker shared by every traceroute node — the
+  // Build the label pill marker shared by every traceroute node - the
   // intermediate hops and both route endpoints. Border colour encodes
   // direction: teal for the forward terminus / hops, purple for the
   // return terminus / hops.
@@ -4184,7 +4191,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final forwardSegments = tracerouteSegmentsFor(forwardRoute);
 
     // When the request never came back (`response == false`), the
-    // forward path is conceptually unverified end-to-end — treat
+    // forward path is conceptually unverified end-to-end - treat
     // every segment as dashed regardless of which hops we managed
     // to geolocate, and skip the return path entirely.
     final unverified = !log.response;
@@ -4240,7 +4247,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return polylines;
   }
 
-  /// Build markers for every node in a traceroute route overlay — the
+  /// Build markers for every node in a traceroute route overlay - the
   /// intermediate hops plus the two route endpoints (local origin and
   /// target node). The detail view lists both endpoints as terminus
   /// rows, so the map must label them too or the two surfaces disagree.
@@ -4735,18 +4742,18 @@ class _CachedNodeMarker {
 /// Prefers the full shortName (capped to 4 chars per Meshtastic spec)
 /// so a node labelled "MYSO" reads as itself, not the single letter
 /// "M". Falls back to the last 4 hex digits of `nodeNum` when no
-/// shortName is set — that matches NodeDisplayNameResolver.shortHex's
+/// shortName is set - that matches NodeDisplayNameResolver.shortHex's
 /// fallback shape and reads as a recognisable mesh identifier.
 ///
 /// Top-level so widget tests can pin the contract without spinning up
 /// the full map.
 /// Splits a traceroute's logical route (a sequence of nullable
-/// [LatLng]s — null where a hop did not report a position) into a
+/// [LatLng]s - null where a hop did not report a position) into a
 /// list of contiguous polyline segments.
 ///
 /// A segment is solid when both endpoints are adjacent known points
 /// in the route. It is dashed when the renderer had to bridge over
-/// one or more hops with no known position — the dashed pattern
+/// one or more hops with no known position - the dashed pattern
 /// signals "we know A and we know D but the in-between hops did not
 /// report a location, so the line you see is inferred rather than
 /// measured."
@@ -4764,7 +4771,7 @@ List<({List<LatLng> points, bool dashed})> tracerouteSegmentsFor(
   for (final point in route) {
     if (point == null) {
       // Only count a missing position as a gap when we already have
-      // a tail — leading nulls aren't a gap, they just push the
+      // a tail - leading nulls aren't a gap, they just push the
       // route start forward.
       if (last != null) crossedGap = true;
       continue;
@@ -5941,7 +5948,7 @@ class _LosResultPanel extends StatelessWidget {
   }
 }
 
-/// Tab for the node list panel (Nodes / TAK) — underlined tab style
+/// Tab for the node list panel (Nodes / TAK) - underlined tab style
 class _PanelTab extends StatelessWidget {
   final String label;
   final int count;
@@ -6387,7 +6394,7 @@ class _TakEntityInfoCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Isolated TAK marker layer — ConsumerWidget so it only rebuilds when
+// Isolated TAK marker layer - ConsumerWidget so it only rebuilds when
 // takActiveEventsProvider or takTrackedUidsProvider change, not on every
 // parent map build.
 // ---------------------------------------------------------------------------
@@ -6412,7 +6419,7 @@ class _TakMarkerLayer extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Isolated TAK heading vector overlay — ConsumerWidget so it only rebuilds
+// Isolated TAK heading vector overlay - ConsumerWidget so it only rebuilds
 // when filtered events change, not on every parent map build.
 // ---------------------------------------------------------------------------
 
@@ -6427,7 +6434,7 @@ class _TakHeadingVectorOverlay extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Isolated TAK trail overlay — ConsumerWidget so it only rebuilds when
+// Isolated TAK trail overlay - ConsumerWidget so it only rebuilds when
 // trail data changes.
 // ---------------------------------------------------------------------------
 

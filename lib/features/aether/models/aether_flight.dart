@@ -3,6 +3,7 @@
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../../l10n/app_localizations.dart';
 
 /// A Meshtastic node scheduled to be on a flight
@@ -80,7 +81,7 @@ class AetherFlight {
       scheduledArrival: json['scheduled_arrival'] != null
           ? DateTime.parse(json['scheduled_arrival'] as String)
           : null,
-      userId: '', // API flights have no userId — community-shared
+      userId: '', // API flights have no userId - community-shared
       userName: json['user_name'] as String?,
       notes: json['notes'] as String?,
       isActive: json['is_active'] == 1 || json['is_active'] == true,

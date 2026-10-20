@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// PetRemoteClient — builds pet.v1 REQUEST frames and decodes responses.
+// PetRemoteClient - builds pet.v1 REQUEST frames and decodes responses.
 //
 // ## Peer-targeting model (v1)
 //
@@ -12,7 +12,7 @@
 // `PetPublicState` and return a RESPONSE carrying the same `requestId`.
 //
 // `MrrpDispatcher.sendRequest` correlates a single completer per
-// `requestId` — it completes on the first matching RESPONSE, and the
+// `requestId` - it completes on the first matching RESPONSE, and the
 // `MrrpDedupCache` silently drops later responses with the same id.
 // That means the `PetFetchOutcome` returned here represents "one peer
 // answered"; it does NOT uniquely identify which peer.
@@ -21,7 +21,7 @@
 // `from` field (the broadcast sender's nodeNum), which enters the MRRP
 // engine at `_routeFrame(frame, senderNodeId, ...)`. The response observer
 // installed in `mrrp_providers.dart` uses that `senderNodeId` to call
-// `PetIngestController.ingestRemotePet(senderNodeId, decoded)` — so the
+// `PetIngestController.ingestRemotePet(senderNodeId, decoded)` - so the
 // cache key is always the authoritative sender, not the requester's
 // assumed target.
 //
@@ -38,7 +38,7 @@
 //     of additional responders requires relaxing dedup or hooking before
 //     dedup fires (see response observer wiring).
 //
-// The `fetchSummary()` function here returns a single outcome — the
+// The `fetchSummary()` function here returns a single outcome - the
 // reassembled view from the dispatcher's completer. Cache population is
 // a side effect of the response observer, not of this return value.
 

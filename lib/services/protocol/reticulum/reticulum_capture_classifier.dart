@@ -16,7 +16,7 @@ enum ReticulumCaptureKind {
 
   /// SMRC v1 file that contains at least one record whose payload
   /// does NOT begin with `SHRN`. Treat as a real-mesh capture
-  /// candidate — eligible for Phase 2 inputs once provenance has
+  /// candidate - eligible for Phase 2 inputs once provenance has
   /// been verified.
   realCandidate,
 

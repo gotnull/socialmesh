@@ -54,9 +54,8 @@ void main() {
           localDeviceCanvasProvider.overrideWith((ref) async => fakeCanvas),
           // The Local tab renders the viewport inline, which reads
           // cells for the local canvas.
-          canvasCellsProvider(
-            fakeCanvas.localId,
-          ).overrideWith((ref) async => const <CanvasCell>[]),
+          canvasCellsProvider(fakeCanvas.localId)
+              .overrideWith((ref) async => const <CanvasCell>[]),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -80,9 +79,8 @@ void main() {
   });
 
   test('MeshCoreShell does not import or reference any MeshCanvas screen', () {
-    final file = File(
-      'lib/features/navigation/meshcore_shell.dart',
-    ).readAsStringSync();
+    final file = File('lib/features/navigation/meshcore_shell.dart')
+        .readAsStringSync();
     expect(
       file,
       isNot(contains('MeshCanvasOverviewScreen')),

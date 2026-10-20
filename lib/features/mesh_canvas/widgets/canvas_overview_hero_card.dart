@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCanvas overview hero card — Mesh tab.
+// MeshCanvas overview hero card - Mesh tab.
 //
 // Visual peer of `_PressureHeroCard` from Mesh Capacity. A large
 // gradient-fill stat card that anchors the Mesh tab and gives the

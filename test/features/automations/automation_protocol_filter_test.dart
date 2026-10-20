@@ -143,7 +143,7 @@ void main() {
   group('AutomationEngine gating on protocolFilter', () {
     // Use distinct senders per call so the engine's per-sender dedupe
     // key (`messageReceived_node{from}`) doesn't throttle the second
-    // fire — throttling is orthogonal to protocol filtering and not
+    // fire - throttling is orthogonal to protocol filtering and not
     // what these tests pin.
     AutomationMessage msg(int from) =>
         AutomationMessage(from: from, text: 'hi', channel: null);

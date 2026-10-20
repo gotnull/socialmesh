@@ -103,7 +103,7 @@ class _TerrainProfile3DViewState extends State<TerrainProfile3DView> {
                 }
               },
             ),
-            // Loading overlay — visible until Three.js signals ready.
+            // Loading overlay - visible until Three.js signals ready.
             if (!_isReady)
               const Positioned.fill(
                 child: Center(child: CircularProgressIndicator.adaptive()),

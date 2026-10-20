@@ -15,7 +15,7 @@ import 'package:socialmesh/core/logging.dart';
 
 void main() {
   group('AppLogging.meshcore secret-blacklist regression', () {
-    // Canonical fakes — none of these substrings must appear in any sink
+    // Canonical fakes - none of these substrings must appear in any sink
     // entry produced by the helpers below.
     const plaintext = 'this-is-a-secret-message-payload';
     final fullKey = Uint8List.fromList(List.generate(32, (i) => 0xa0 + i));

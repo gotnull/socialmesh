@@ -28,7 +28,7 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 import 'package:socialmesh/services/storage/message_database.dart';
 
 // ---------------------------------------------------------------------------
-// Fakes (following existing test conventions — per-file copies)
+// Fakes (following existing test conventions - per-file copies)
 // ---------------------------------------------------------------------------
 
 class _FakeTransport extends DeviceTransport {
@@ -315,7 +315,7 @@ void main() {
 
         final now = DateTime.now();
 
-        // Two sent messages without packetId — each gets a random UUID
+        // Two sent messages without packetId - each gets a random UUID
         final sent1 = Message(
           from: 20,
           to: 10,
@@ -402,7 +402,7 @@ void main() {
         );
 
         // Insert duplicate rows with different random UUIDs but same
-        // (packet_id, from_node) — the pre-fix scenario.
+        // (packet_id, from_node) - the pre-fix scenario.
         final ts = DateTime.now().millisecondsSinceEpoch;
         await rawDb.insert('messages', {
           'id': 'uuid-aaa-111',

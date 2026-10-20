@@ -110,8 +110,7 @@ class MeshCoreOsReconnectArmer {
       MeshCoreBleDebugLogStore.instance.append(
         severity: MeshCoreBleDebugLogSeverity.info,
         category: MeshCoreBleDebugLogCategory.connect,
-        message:
-            'OS pending reconnect completed, dispatching session rebuild', // lint-allow: hardcoded-string
+        message: 'OS pending reconnect completed, dispatching session rebuild', // lint-allow: hardcoded-string
       );
       final armedId = _armedDeviceId;
       // Disarm before dispatching so the coordinator's bring-up sees a
@@ -131,8 +130,7 @@ class MeshCoreOsReconnectArmer {
       MeshCoreBleDebugLogStore.instance.append(
         severity: MeshCoreBleDebugLogSeverity.info,
         category: MeshCoreBleDebugLogCategory.connect,
-        message:
-            'OS pending reconnect armed for background recovery', // lint-allow: hardcoded-string
+        message: 'OS pending reconnect armed for background recovery', // lint-allow: hardcoded-string
       );
     } catch (e) {
       AppLogging.meshcore(

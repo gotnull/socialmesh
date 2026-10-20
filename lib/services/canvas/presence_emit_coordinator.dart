@@ -7,7 +7,7 @@
 //
 // Responsibilities:
 //   - Synchronously seed the local "self" entry in PresenceCache on
-//     viewer mount (CANVAS_PRESENCE_V0_1.md §4.4 — local viewer
+//     viewer mount (CANVAS_PRESENCE_V0_1.md §4.4 - local viewer
 //     appears before any wire echo).
 //   - Drive viewing / active / painting / leaving emits through the
 //     shared canvas outbound pipeline (canvas governor, then SIP
@@ -305,7 +305,7 @@ class PresenceEmitCoordinator {
   /// reads as painting (and unexpired) we re-emit painting; same for
   /// active; otherwise viewing. Throttles and gates still apply, so a
   /// painting heartbeat that would land inside the 30 s ceiling is
-  /// silently dropped. The cache is NOT refreshed by heartbeat — TTL
+  /// silently dropped. The cache is NOT refreshed by heartbeat - TTL
   /// drives natural decay back toward viewing.
   Future<int> tick({int? nowMs}) async {
     if (_disposed) return 0;
@@ -376,7 +376,7 @@ class PresenceEmitCoordinator {
   }
 
   /// Tear everything down. Clears every session and self entry.
-  /// Does NOT emit `leaving` for any session — full app dispose is
+  /// Does NOT emit `leaving` for any session - full app dispose is
   /// not a graceful unmount.
   void dispose() {
     if (_disposed) return;
@@ -465,7 +465,7 @@ class PresenceEmitCoordinator {
 
     // 4. Anti-starvation: governor headroom must reserve at least
     // 96 B for paints. The earlier paint-queue gate was removed
-    // (P5 sim verification) — because presence is activity-driven
+    // (P5 sim verification) - because presence is activity-driven
     // by paint itself, that gate always tripped after the
     // notifyPaintEnqueued path's freshly enqueued row, and presence
     // never broadcast. The byte-level gates (canvas governor +

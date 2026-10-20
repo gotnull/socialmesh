@@ -130,7 +130,7 @@ void main() {
         ),
       );
 
-      // No InkWell — the surrounding ThemedSwitch / trailing widget owns
+      // No InkWell - the surrounding ThemedSwitch / trailing widget owns
       // its own gesture detector. This matches the canonical MQTT toggle
       // tile shape.
       expect(find.byType(InkWell), findsNothing);
@@ -154,7 +154,7 @@ void main() {
     });
 
     testWidgets(
-      'title uses fontSize 15 / w500 — the canonical inner-settings tile shape',
+      'title uses fontSize 15 / w500 - the canonical inner-settings tile shape',
       (tester) async {
         await tester.pumpWidget(
           _wrap(

@@ -128,47 +128,50 @@ void main() {
     },
   );
 
-  test('nodesProvider strips BLE default names when identity missing', () async {
-    SharedPreferences.setMockInitialValues({});
+  test(
+    'nodesProvider strips BLE default names when identity missing',
+    () async {
+      SharedPreferences.setMockInitialValues({});
 
-    final storage = NodeStorageService();
-    await storage.init();
-    await storage.saveNode(
-      MeshNode(nodeNum: 0x5ed6, shortName: 'Meshtastic_5ed6'),
-    );
+      final storage = NodeStorageService();
+      await storage.init();
+      await storage.saveNode(
+        MeshNode(nodeNum: 0x5ed6, shortName: 'Meshtastic_5ed6'),
+      );
 
-    final identityStore = NodeIdentityStore();
-    await identityStore.init();
+      final identityStore = NodeIdentityStore();
+      await identityStore.init();
 
-    final protocol = ProtocolService(_FakeTransport());
+      final protocol = ProtocolService(_FakeTransport());
 
-    final container = ProviderContainer(
-      overrides: [
-        protocolServiceProvider.overrideWithValue(protocol),
-        nodeStorageProvider.overrideWith((ref) async => storage),
-        deviceFavoritesProvider.overrideWith((ref) async {
-          final service = DeviceFavoritesService();
-          await service.init();
-          return service;
-        }),
-        nodeIdentityStoreProvider.overrideWith((ref) async => identityStore),
-      ],
-    );
-    addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [
+          protocolServiceProvider.overrideWithValue(protocol),
+          nodeStorageProvider.overrideWith((ref) async => storage),
+          deviceFavoritesProvider.overrideWith((ref) async {
+            final service = DeviceFavoritesService();
+            await service.init();
+            return service;
+          }),
+          nodeIdentityStoreProvider.overrideWith((ref) async => identityStore),
+        ],
+      );
+      addTearDown(container.dispose);
 
-    await container.read(nodeStorageProvider.future);
-    await container.read(deviceFavoritesProvider.future);
-    await container.read(nodeIdentityStoreProvider.future);
+      await container.read(nodeStorageProvider.future);
+      await container.read(deviceFavoritesProvider.future);
+      await container.read(nodeIdentityStoreProvider.future);
 
-    container.read(nodesProvider);
-    // Allow multiple event loop iterations for async _init to complete
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+      container.read(nodesProvider);
+      // Allow multiple event loop iterations for async _init to complete
+      await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    final node = container.read(nodesProvider)[0x5ed6];
-    expect(node, isNotNull);
-    // BLE default name should be stripped (null), falling back to "Meshtastic XXXX"
-    expect(node?.longName, isNull);
-    expect(node?.shortName, isNull);
-    expect(node?.displayName, 'Meshtastic 5ED6');
-  });
+      final node = container.read(nodesProvider)[0x5ed6];
+      expect(node, isNotNull);
+      // BLE default name should be stripped (null), falling back to "Meshtastic XXXX"
+      expect(node?.longName, isNull);
+      expect(node?.shortName, isNull);
+      expect(node?.displayName, 'Meshtastic 5ED6');
+    },
+  );
 }

@@ -17,7 +17,7 @@ void main() {
     });
   });
 
-  group('formatTemperatureCelsius — localized (en)', () {
+  group('formatTemperatureCelsius - localized (en)', () {
     test('metric keeps Celsius', () {
       expect(
         formatTemperatureCelsius(21.5, MeasurementUnits.metric, l10n),

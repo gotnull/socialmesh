@@ -11,7 +11,7 @@
 //   - flipping participation off forces sharing off (UI + persisted
 //     state both consistent);
 //   - sharing switch is visually disabled (onChanged=null) while
-//     participation is off — verified by tapping the switch and
+//     participation is off - verified by tapping the switch and
 //     asserting the persisted state did not change;
 //   - replay-onboarding action re-opens the onboarding sheet.
 library;
@@ -105,7 +105,7 @@ void main() {
   );
 
   testWidgets(
-    'toggling participation off forces sharing off — invariant enforced',
+    'toggling participation off forces sharing off - invariant enforced',
     (tester) async {
       final container = await _pump(tester, participation: true, sharing: true);
 
@@ -134,7 +134,7 @@ void main() {
   );
 
   testWidgets(
-    'presence switch is disabled while participation is off — tapping it '
+    'presence switch is disabled while participation is off - tapping it '
     'has no effect on persisted state',
     (tester) async {
       final container = await _pump(

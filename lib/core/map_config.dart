@@ -54,7 +54,7 @@ class MapConfig {
   ///
   /// flutter_map_marker_cluster builds its cluster tree down to the camera's
   /// max zoom and asserts that no cluster node deeper than this value is ever
-  /// traversed — so this MUST be at least the deepest camera max zoom any map
+  /// traversed - so this MUST be at least the deepest camera max zoom any map
   /// surface uses, which is [liveMapMaxZoom]. (Its own defaults encode the
   /// same contract: disableClusteringAtZoom 20 vs maxZoom 17.) Co-located
   /// nodes share identical coordinates and therefore cluster at every level
@@ -128,7 +128,7 @@ class MapConfig {
   /// Whether a style serves true `@2x` retina tiles (URL carries the `{r}`
   /// placeholder). Enabling retina for a source WITHOUT `{r}` makes flutter_map
   /// "simulate" retina via a zoom offset, which (a) costs extra tile requests
-  /// and (b) shifts the requested tile coordinates — breaking parity between
+  /// and (b) shifts the requested tile coordinates - breaking parity between
   /// what the live map fetches and what the offline downloader pre-seeds. So
   /// retina is gated strictly on real server support.
   static bool styleSupportsRetina(MapTileStyle style) =>
@@ -230,7 +230,7 @@ class MapConfig {
   /// True when a MapTiler key is present and MapTiler has not refused it
   /// this session (see [terrainFallbackActive]). Gates the terrain basemap
   /// onto MapTiler Outdoor (real `@2x` tiles) instead of OpenTopoMap (1x
-  /// only). No feature flag — presence of the key is the switch.
+  /// only). No feature flag - presence of the key is the switch.
   static bool get isMaptilerActive =>
       AppUrls.maptilerToken.isNotEmpty && !terrainFallbackActive.value;
 
@@ -396,7 +396,7 @@ class MapConfig {
 ///
 /// [maxNativeZoom] is the highest zoom level the tile server actually serves.
 /// Setting it below the interaction [MapConfig.maxZoom] lets flutter_map
-/// "overzoom" — upscaling the last real tiles — instead of requesting
+/// "overzoom" - upscaling the last real tiles - instead of requesting
 /// non-existent tiles (which return a server placeholder, e.g. OpenTopoMap's
 /// "max zoom layer 17" error image).
 enum MapTileStyle {

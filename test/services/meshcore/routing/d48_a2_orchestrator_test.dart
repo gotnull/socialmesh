@@ -224,49 +224,46 @@ void main() {
       expect(selected.routeWeight, greaterThan(3.0));
     });
 
-    test(
-      'rotates paths on timeout and falls through to flood on the final attempt',
-      () async {
-        await _seedHistory(
-          store,
-          paths: [
-            [0xAA],
-            [0xBB],
-          ],
-          initialWeight: 3.0,
-        );
+    test('rotates paths on timeout and falls through to flood on the final attempt', () async {
+      await _seedHistory(
+        store,
+        paths: [
+          [0xAA],
+          [0xBB],
+        ],
+        initialWeight: 3.0,
+      );
 
-        // Always return ok from the send wrapper; we never fire a 0x82
-        // so every attempt times out.
-        sendRecorder.nextResult = () => MeshCoreTextSendResult.ok(
-          response: MeshCoreFrame(command: 0x06, payload: Uint8List(0)),
-        );
+      // Always return ok from the send wrapper; we never fire a 0x82
+      // so every attempt times out.
+      sendRecorder.nextResult = () => MeshCoreTextSendResult.ok(
+        response: MeshCoreFrame(command: 0x06, payload: Uint8List(0)),
+      );
 
-        final outcome = await newOrchestrator().sendWithAutoRoute(
-          text: _text,
-          timestampSeconds: _ts,
-          sendKind: MeshCoreSendKind.plainContact,
-        );
+      final outcome = await newOrchestrator().sendWithAutoRoute(
+        text: _text,
+        timestampSeconds: _ts,
+        sendKind: MeshCoreSendKind.plainContact,
+      );
 
-        expect(outcome.delivered, isFalse);
-        expect(outcome.attempts, 3);
-        expect(
-          outcome.failureReason,
-          MeshCoreAutoRouteFailureReason.allAttemptsTimedOut,
-        );
-        // 3 attempts: 2 saved paths then flood.
-        expect(addUpdateRecorder.calls, hasLength(3));
-        expect(addUpdateRecorder.calls[0].pathLength, 1);
-        expect(addUpdateRecorder.calls[1].pathLength, 1);
-        expect(
-          addUpdateRecorder.calls[2].pathLength,
-          -1,
-          reason: 'final attempt MUST be flood (pathLength=-1)',
-        );
-        // Attempt bytes should monotonically increase.
-        expect(sendRecorder.attemptsObserved, [0, 1, 2]);
-      },
-    );
+      expect(outcome.delivered, isFalse);
+      expect(outcome.attempts, 3);
+      expect(
+        outcome.failureReason,
+        MeshCoreAutoRouteFailureReason.allAttemptsTimedOut,
+      );
+      // 3 attempts: 2 saved paths then flood.
+      expect(addUpdateRecorder.calls, hasLength(3));
+      expect(addUpdateRecorder.calls[0].pathLength, 1);
+      expect(addUpdateRecorder.calls[1].pathLength, 1);
+      expect(
+        addUpdateRecorder.calls[2].pathLength,
+        -1,
+        reason: 'final attempt MUST be flood (pathLength=-1)',
+      );
+      // Attempt bytes should monotonically increase.
+      expect(sendRecorder.attemptsObserved, [0, 1, 2]);
+    });
 
     test(
       'rateLimited mid-loop bails out with the rateLimited reason',

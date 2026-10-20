@@ -386,7 +386,7 @@ void main() {
   // Cache isolation: remote admin must not overwrite local cache
   // ──────────────────────────────────────────────────────────
 
-  group('Cache isolation — remote admin responses', () {
+  group('Cache isolation - remote admin responses', () {
     test('local config response caches LoRa config', () async {
       final loraConfig = config_pb.Config_LoRaConfig()
         ..region = config_pb.Config_LoRaConfig_RegionCode.US;

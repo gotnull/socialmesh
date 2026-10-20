@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Patina Stamp — subtle stamp-style display for patina score.
+// Patina Stamp - subtle stamp-style display for patina score.
 //
 // Renders a compact, stamp-like label showing the node's patina
 // score and its associated label. The stamp is designed to look
-// like an archival classification mark — understated, precise,
+// like an archival classification mark - understated, precise,
 // and earned rather than decorative.
 //
 // Visual style:
@@ -15,7 +15,7 @@
 //   - Reads like "Inked: 62" or "Archival: 91"
 //
 // The stamp intentionally avoids progress bars or gauges. Patina
-// is not a goal to fill — it is a measurement of accumulated
+// is not a goal to fill - it is a measurement of accumulated
 // history that emerges naturally from observation.
 
 import 'package:flutter/material.dart';
@@ -123,7 +123,7 @@ class PatinaStamp extends StatelessWidget {
                 letterSpacing: 0.5,
               ),
             ),
-            // Visible (i) tap target — never hide the breakdown behind
+            // Visible (i) tap target - never hide the breakdown behind
             // a long-press; people don't know to try it.
             if (interactive) ...[
               const SizedBox(width: AppTheme.spacing4),
@@ -274,7 +274,7 @@ class _AxisRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
-          // Subtle bar visualization (not a progress bar — just a
+          // Subtle bar visualization (not a progress bar - just a
           // proportional fill for quick visual comparison)
           ClipRRect(
             borderRadius: BorderRadius.circular(AppTheme.radius2),

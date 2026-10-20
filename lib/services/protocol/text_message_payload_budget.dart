@@ -67,7 +67,7 @@ class TextMessagePayloadTooLargeException implements Exception {
 /// SocialMesh's composer UI and send path rely on the same source of truth.
 ///
 /// PKI-encrypted DMs carry extra crypto overhead on the wire, so their
-/// encoded `Data` ceiling is lower — pass `pkiEncrypted: true` whenever the
+/// encoded `Data` ceiling is lower - pass `pkiEncrypted: true` whenever the
 /// send path will attach the recipient's public key, or the firmware NAKs
 /// the packet with `Routing.Error.TOO_LARGE` even though the plain-text
 /// budget looked fine.

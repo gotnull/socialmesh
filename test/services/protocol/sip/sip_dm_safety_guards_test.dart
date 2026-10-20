@@ -58,7 +58,7 @@ SipFrame _frame(SipMessageType type, int sessionId, Uint8List payload) {
 }
 
 void main() {
-  group('SipDmManager — inbound block guards', () {
+  group('SipDmManager - inbound block guards', () {
     test('blocked peer DM_MSG is silently dropped (no history mutation)', () {
       final gate = _MutableSafetyGate();
       final dm = _newDm(gate: gate);
@@ -98,7 +98,7 @@ void main() {
 
       final reactionPayload = SipDmMessages.encodeReaction(
         emojiIndex: 0,
-        targetTimestampS: 1000, // doesn't matter — guard fires first
+        targetTimestampS: 1000, // doesn't matter - guard fires first
       )!;
       dm.handleInboundReaction(
         _frame(SipMessageType.dmReaction, 0xAA, reactionPayload),
@@ -116,7 +116,7 @@ void main() {
       gate.blocked.add(0xBEEF);
 
       final deletePayload = SipDmMessages.encodeDelete(
-        targetTimestampS: 1000, // doesn't matter — guard fires first
+        targetTimestampS: 1000, // doesn't matter - guard fires first
       );
       dm.handleInboundDelete(
         _frame(SipMessageType.dmDelete, 0xAA, deletePayload),
@@ -132,7 +132,7 @@ void main() {
       gate.blocked.add(0xBEEF);
 
       dm.handleInboundClose(_frame(SipMessageType.dmClose, 0xAA, Uint8List(0)));
-      // Session is still in active state — block prevented status flip.
+      // Session is still in active state - block prevented status flip.
       expect(dm.getSession(0xAA)?.status, equals(SipDmSessionStatus.active));
     });
 
@@ -175,7 +175,7 @@ void main() {
     });
   });
 
-  group('SipDmManager — outbound block guards', () {
+  group('SipDmManager - outbound block guards', () {
     test('buildDmMessage to a blocked peer fails with peerBlocked', () {
       final gate = _MutableSafetyGate();
       final dm = _newDm(gate: gate);
@@ -250,13 +250,13 @@ void main() {
         dm.buildDmDelete(sessionTag: 0xAA, targetEntry: target),
         isNull,
         reason:
-            'wire egress is silent for blocked peers — the UI removes '
+            'wire egress is silent for blocked peers - the UI removes '
             'the message locally via SipDmManager.removeMessage',
       );
     });
   });
 
-  group('SipDmManager — default-safe gate', () {
+  group('SipDmManager - default-safe gate', () {
     test(
       'omitting safetyGate defaults to NoopPeerSafetyGate (no blocking)',
       () {

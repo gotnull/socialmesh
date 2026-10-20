@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// lint-allow: haptic-feedback — the viewer is a pure render+gesture
+// lint-allow: haptic-feedback - the viewer is a pure render+gesture
 // surface; haptics are gated by the host screen via
 // `ref.haptics.toggle()` (which respects the user's settings) on the
 // `onTapPaint` callback. Triggering `HapticFeedback.lightImpact()`
@@ -12,7 +12,7 @@
 //
 // Spec anchor: docs/canvas/CANVAS_V0_1.md §S0.ux.15 (pan, pinch zoom,
 // tap-to-paint, long-press-inspect) and §S0.ux.16 (S7 critical
-// acceptance — MUST feel r/place-style; a grid editor / list / table
+// acceptance - MUST feel r/place-style; a grid editor / list / table
 // is a FAILED S7).
 //
 // Initial-camera contract (set in `initState`, recomputed when the
@@ -55,7 +55,7 @@ const Duration _kPopInDuration = Duration(milliseconds: 320);
 /// the initial framed scale (~0.4 on a typical phone) shrinks that
 /// to a comfortably-sized board with all cells visible AND each
 /// painted cell rendering as a clear ~3pt square at default zoom
-/// (jumping to ~24pt at max zoom — finger-friendly).
+/// (jumping to ~24pt at max zoom - finger-friendly).
 const double _kDefaultCellSize = 8.0;
 
 /// Minimum scale. MUST stay at or below the smallest plausible
@@ -64,7 +64,7 @@ const double _kDefaultCellSize = 8.0;
 /// breathing room so the framed scale is comfortably inside the
 /// allowed range. If minScale > the framed scale, InteractiveViewer
 /// silently refuses all pan/zoom gestures (the matrix is in an
-/// invalid state) — that broke S7.A sim-verification once and is
+/// invalid state) - that broke S7.A sim-verification once and is
 /// regression-pinned in canvas_viewer_test ("framed fit honours
 /// minScale").
 const double _kMinScale = 0.25;
@@ -76,13 +76,13 @@ const double _kMaxScale = 24.0;
 /// zoom, can only move vertically, can't pinch out." The earlier
 /// "feels like the whole screen moves" complaint is solved by giving
 /// the host CustomScrollView NeverScrollableScrollPhysics (the strip
-/// + chrome stay still regardless of the viewer's pan pose) — NOT by
+/// + chrome stay still regardless of the viewer's pan pose) - NOT by
 /// tightening this value. With `infinity` margin + minScale=0.25, the
 /// canvas always renders at >=~250pt and can never lock up.
 const EdgeInsets _kBoundaryMargin = EdgeInsets.all(double.infinity);
 
 /// Fraction of the smaller viewport axis the initial framed view
-/// uses. 0.82 leaves visible margin on every side at first glance —
+/// uses. 0.82 leaves visible margin on every side at first glance -
 /// the eye locates the board edge immediately.
 const double _kInitialFitFraction = 0.82;
 
@@ -102,7 +102,7 @@ class CanvasViewer extends StatefulWidget {
   final int heightCells;
 
   /// Colour rendered in the boundary margin around the canvas
-  /// surface — the "outside the board" space the user can pan into.
+  /// surface - the "outside the board" space the user can pan into.
   final Color outsideColor;
 
   /// Colour of the canvas surface itself. MUST be tonally distinct
@@ -121,7 +121,7 @@ class CanvasViewer extends StatefulWidget {
   /// Cells with a pending outbound row in `pending_op`, packed as
   /// `y * widthCells + x`. The painter renders these at reduced
   /// opacity (CANVAS_TRANSMISSION_STATUS_V0_1.md §3.2). Empty for
-  /// local-scope viewers — the host gates by scope upstream.
+  /// local-scope viewers - the host gates by scope upstream.
   final Set<int> pendingCellIndices;
 
   /// Tile indices currently receiving raw-band sync_responses (packed
@@ -136,7 +136,7 @@ class CanvasViewer extends StatefulWidget {
   /// taps are filtered before this callback runs.
   ///
   /// §S0.rate.10 cooldowns and §S0.rate.7 vs §S0.rate.8 (local vs
-  /// mesh) policy decisions live in the caller, NOT in the viewer —
+  /// mesh) policy decisions live in the caller, NOT in the viewer -
   /// the viewer's job is to surface raw cell intent.
   final void Function(int x, int y)? onTapPaint;
 
@@ -256,7 +256,7 @@ class _CanvasViewerState extends State<CanvasViewer>
     // sweep animates smoothly. The pop-in/pop-out machinery already
     // starts/stops the ticker for cell arrivals; shimmer just
     // piggybacks on the same pump. Do NOT extend `_newestArrivalMs`
-    // here — `_onAnimTick` checks the shimmer set live and pumps
+    // here - `_onAnimTick` checks the shimmer set live and pumps
     // while it is non-empty; when the set empties, the ticker stops
     // immediately instead of ghost-pumping at 60Hz for 60s
     // (the previous +60_000 hack burned battery).
@@ -371,7 +371,7 @@ class _CanvasViewerState extends State<CanvasViewer>
 
   /// Set the initial transformation so the whole canvas is centred
   /// in [viewport] at a comfortable framed scale. No-op after the
-  /// first call for a given viewport size — the user's zoom/pan
+  /// first call for a given viewport size - the user's zoom/pan
   /// gestures survive subsequent rebuilds.
   void _applyInitialFraming(Size viewport) {
     if (widget.disableInitialFraming) return;
@@ -441,7 +441,7 @@ class _CanvasViewerState extends State<CanvasViewer>
           maxScale: _kMaxScale,
           boundaryMargin: _kBoundaryMargin,
           // Constrained = false lets the child render at its
-          // intrinsic size and the user pan/zoom freely — without it
+          // intrinsic size and the user pan/zoom freely - without it
           // the canvas would clamp to the viewport which kills the
           // r/place feel.
           constrained: false,

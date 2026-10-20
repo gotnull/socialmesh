@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'atmosphere_data_adapter.dart';
 
 final atmosphereEnabledProvider = Provider<bool>((ref) => false);

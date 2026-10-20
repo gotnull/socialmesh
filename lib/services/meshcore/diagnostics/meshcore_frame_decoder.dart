@@ -20,7 +20,7 @@
 //   - NO PSK / channel-key bytes. The CHANNEL_INFO decoder shows
 //     `psk: <first 4 hex>…` only.
 //
-// The registry is intentionally narrow — only opcodes whose
+// The registry is intentionally narrow - only opcodes whose
 // structure is genuinely useful for field debugging get a decoder
 // entry. Anything else falls through to "no decoded view; raw hex
 // only", which is what the viewer already shows.
@@ -40,12 +40,12 @@ class MeshCoreFrameDecodedField {
 }
 
 /// Decode a captured frame's payload into a labelled key/value list.
-/// TX vs RX disambiguator — the byte-space is shared so the same
+/// TX vs RX disambiguator - the byte-space is shared so the same
 /// opcode means different things on opposite directions.
 enum MeshCoreFrameDirection { tx, rx }
 
 /// Returns an empty list when the opcode has no registered decoder
-/// or the payload is too short to parse — the caller renders the
+/// or the payload is too short to parse - the caller renders the
 /// raw hex as-is in that case.
 ///
 /// Pure: no Riverpod, no I/O. Safe to call from any isolate.

@@ -5,7 +5,7 @@ import 'incident.dart';
 
 /// An immutable record of a state transition on an incident.
 ///
-/// The `incident_transitions` table is append-only — rows are never deleted.
+/// The `incident_transitions` table is append-only - rows are never deleted.
 /// Transitions that lose conflict resolution have [supersededBy] set to the
 /// winning transition's ID but are otherwise preserved.
 ///

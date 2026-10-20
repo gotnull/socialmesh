@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// NodePet creature renderer — a self-contained, face-first procedural
+// NodePet creature renderer - a self-contained, face-first procedural
 // painter built specifically for the NodePet companion. Independent of
 // the MeshNodeBrain / Ico advisor system; the two visual languages must
 // not blur together.
 //
 // Composition (back to front):
-//   1. Aura          — soft branch-tinted radial halo (mode-gated)
-//   2. Shadow        — squashed ellipse anchoring the creature to a surface
-//   3. Body          — soft seed-shaped silhouette with subtle gradient
-//   4. Markings      — sigil-style dots / glyphs on the shell
-//   5. Antennae      — 0..3 stalks with glowing orb tips
-//   6. Face          — eyes + mouth, painted FLAT on the front; never
+//   1. Aura          - soft branch-tinted radial halo (mode-gated)
+//   2. Shadow        - squashed ellipse anchoring the creature to a surface
+//   3. Body          - soft seed-shaped silhouette with subtle gradient
+//   4. Markings      - sigil-style dots / glyphs on the shell
+//   5. Antennae      - 0..3 stalks with glowing orb tips
+//   6. Face          - eyes + mouth, painted FLAT on the front; never
 //                      tumbles, never rotates away (this is the
 //                      emotional anchor and the single biggest readability
 //                      win over the previous MeshNodeBrain hand-me-down)
-//   7. Mood overlay  — Zzz, sweat, alert ring, sick glitch
+//   7. Mood overlay  - Zzz, sweat, alert ring, sick glitch
 //
 // Determinism: morphology + palette are pure functions of `dnaSeed +
 // branch + stage`. Same identity always renders the same creature.
@@ -37,24 +37,24 @@ import 'pet_render_model.dart' show PetRenderMode;
 // Morphology
 // ---------------------------------------------------------------------------
 
-/// Body silhouette family — seed-derived. All silhouettes are
+/// Body silhouette family - seed-derived. All silhouettes are
 /// soft / rounded / creature-like; no sharp polygons (those read as
 /// debug visualisations, not living things).
 enum NodePetBodyShape {
-  /// Round droplet — top tapered, bottom rounded. The default friendly
+  /// Round droplet - top tapered, bottom rounded. The default friendly
   /// blob.
   droplet,
 
-  /// Squat oval — wider than tall, calm and grounded.
+  /// Squat oval - wider than tall, calm and grounded.
   pebble,
 
-  /// Tall oval — slightly elongated vertically, alert reading.
+  /// Tall oval - slightly elongated vertically, alert reading.
   capsule,
 
-  /// Soft diamond — gentle four-point silhouette, more "spirit-like".
+  /// Soft diamond - gentle four-point silhouette, more "spirit-like".
   diamond,
 
-  /// Shell — rounded top, flat bottom; reads as a creature wearing a
+  /// Shell - rounded top, flat bottom; reads as a creature wearing a
   /// shell.
   shell,
 }
@@ -62,7 +62,7 @@ enum NodePetBodyShape {
 /// Antenna shape family.
 enum NodePetAntennaStyle { none, straight, curled, branched }
 
-/// Mouth family — base shape before mood modulation.
+/// Mouth family - base shape before mood modulation.
 enum NodePetMouthStyle { smileSoft, smileWide, neutral, smallO, dotMouth }
 
 /// Marking pattern on the body shell.
@@ -72,7 +72,7 @@ enum NodePetMarkingPattern { none, dots, ring, glyph }
 enum NodePetSideFlourish { none, cheekDots, sideFins }
 
 /// Deterministic morphology derived from a (dnaSeed, branch, stage)
-/// triple. Pure value type — equality + hashCode rely on every field.
+/// triple. Pure value type - equality + hashCode rely on every field.
 @immutable
 class NodePetMorphology {
   final NodePetBodyShape body;
@@ -120,7 +120,7 @@ class NodePetMorphology {
     required this.markingRotation,
   });
 
-  /// Murmur3 fmix32 finalizer — same constants as the existing
+  /// Murmur3 fmix32 finalizer - same constants as the existing
   /// palette mixer in [pet_sigil_painter.dart]. Kept inline so this
   /// renderer stays self-contained.
   static int _mix(int seed) {
@@ -135,7 +135,7 @@ class NodePetMorphology {
 
   /// Build morphology for the given identity.
   ///
-  /// Stage and branch only modulate a handful of traits — body silhouette
+  /// Stage and branch only modulate a handful of traits - body silhouette
   /// and core proportions remain stable across stages so the user reads
   /// "same pet, just older". Branch picks side-flourish style and
   /// modulates antenna boldness; stage gates how many flourishes appear.
@@ -146,7 +146,7 @@ class NodePetMorphology {
   }) {
     final m = _mix(dnaSeed);
 
-    // Body shape bucket — 5 silhouettes, picked by 3 bits of the mixed
+    // Body shape bucket - 5 silhouettes, picked by 3 bits of the mixed
     // seed (8 buckets → 5 shapes, with droplet/pebble slightly more
     // common for friendlier average reading).
     final shapeRoll = (m >>> 3) & 0x07;
@@ -170,7 +170,7 @@ class NodePetMorphology {
     };
     final aspect = (aspectBase + aspectJitter).clamp(0.80, 1.30);
 
-    // Antenna style — egg has none; otherwise seed-driven.
+    // Antenna style - egg has none; otherwise seed-driven.
     NodePetAntennaStyle antennae;
     int antennaCount;
     if (stage == PetStage.egg || branch == PetBranch.unborn) {
@@ -205,7 +205,7 @@ class NodePetMorphology {
       _ => NodePetMouthStyle.dotMouth,
     };
 
-    // Markings — egg shows none; juveniles show fewer.
+    // Markings - egg shows none; juveniles show fewer.
     NodePetMarkingPattern markings;
     int markingCount;
     if (stage == PetStage.egg) {
@@ -231,7 +231,7 @@ class NodePetMorphology {
           : (countRoll % stageGate) + 1;
     }
 
-    // Side flourish — gentle "cheek dots" or small fins on the sides.
+    // Side flourish - gentle "cheek dots" or small fins on the sides.
     NodePetSideFlourish sideFlourish;
     if (stage == PetStage.egg || stage == PetStage.dormant) {
       sideFlourish = NodePetSideFlourish.none;
@@ -244,7 +244,7 @@ class NodePetMorphology {
       };
     }
 
-    // Face proportions — eye spacing and size jitter per seed.
+    // Face proportions - eye spacing and size jitter per seed.
     final eyeSpacingJitter = ((m >>> 9) & 0x0F) / 15.0; // 0..1
     final eyeSpacing = (0.34 + 0.16 * eyeSpacingJitter).clamp(0.34, 0.50);
     final eyeSizeJitter = ((m >>> 14) & 0x0F) / 15.0;
@@ -338,7 +338,7 @@ class NodePetExpression {
   /// (hopeful / alert), positive = drooped (sad / sick).
   final double postureOffset;
 
-  /// Body tilt in radians. Small (-0.08..0.08) — readable lean without
+  /// Body tilt in radians. Small (-0.08..0.08) - readable lean without
   /// breaking the front-facing face.
   final double tiltRadians;
 
@@ -554,7 +554,7 @@ class NodePetExpression {
 // Widget
 // ---------------------------------------------------------------------------
 
-/// The new NodePet creature renderer. Self-contained — owns its own
+/// The new NodePet creature renderer. Self-contained - owns its own
 /// animation controller, paints directly via [CustomPaint], no
 /// dependency on MeshNodeBrain / Ico.
 class NodePetCreature extends StatefulWidget {
@@ -573,7 +573,7 @@ class NodePetCreature extends StatefulWidget {
   /// renderer stays purely presentational.
   final List<Color> palette;
 
-  /// Vitality scalar in [0, 1] — softly modulates breath / glow within
+  /// Vitality scalar in [0, 1] - softly modulates breath / glow within
   /// the active mood bucket. Defaults to full vitality.
   final double vitality;
 
@@ -795,12 +795,12 @@ class _NodePetPainter extends CustomPainter {
     }
     canvas.scale(breath);
 
-    // 1. Aura (under body, after transform — wraps with the breath).
+    // 1. Aura (under body, after transform - wraps with the breath).
     if (mode != PetRenderMode.tiny) {
       _paintAura(canvas, bodyWidth, bodyHeight);
     }
 
-    // 2. Shadow — squashed ellipse below the body, drawn in body-local
+    // 2. Shadow - squashed ellipse below the body, drawn in body-local
     // coords so it bobs with the creature but doesn't tilt with it
     // (subtle but helps the "anchored" feel).
     _paintShadow(canvas, bodyWidth, bodyHeight);
@@ -815,26 +815,26 @@ class _NodePetPainter extends CustomPainter {
       _paintMarkings(canvas, bodyWidth, bodyHeight);
     }
 
-    // 5. Side flourish (cheek dots / fins) — skip in tiny.
+    // 5. Side flourish (cheek dots / fins) - skip in tiny.
     if (morphology.sideFlourish != NodePetSideFlourish.none &&
         mode != PetRenderMode.tiny) {
       _paintSideFlourish(canvas, bodyWidth, bodyHeight);
     }
 
-    // 6. Antennae — drawn from top of body.
+    // 6. Antennae - drawn from top of body.
     if (morphology.antennae != NodePetAntennaStyle.none &&
         mode != PetRenderMode.tiny) {
       _paintAntennae(canvas, bodyWidth, bodyHeight);
     }
 
-    // 7. Body outline (thin) — sells the silhouette against dark bg.
+    // 7. Body outline (thin) - sells the silhouette against dark bg.
     final outline = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = mode == PetRenderMode.tiny ? 1.2 : 1.6
       ..color = _accent.withValues(alpha: 0.55);
     canvas.drawPath(bodyPath, outline);
 
-    // 8. FACE — eyes + mouth. Face-first principle: this is the last
+    // 8. FACE - eyes + mouth. Face-first principle: this is the last
     // body-anchored layer, so it sits on top of every other body
     // element. Tiny mode still paints simplified eyes (a creature
     // without eyes doesn't read as a creature).
@@ -844,7 +844,7 @@ class _NodePetPainter extends CustomPainter {
 
     canvas.restore();
 
-    // 9. Mood overlays (Z, alert ring, sparkles) — drawn in screen-space
+    // 9. Mood overlays (Z, alert ring, sparkles) - drawn in screen-space
     // so they don't tilt/breath with the body.
     _paintMoodOverlay(canvas, size, bodyCenter, bodyHeight);
   }
@@ -921,7 +921,7 @@ class _NodePetPainter extends CustomPainter {
     final fill = Paint()..shader = gradient.createShader(rect);
     canvas.drawPath(body, fill);
 
-    // Inner soft shadow at bottom — sells volume.
+    // Inner soft shadow at bottom - sells volume.
     final shadow = Paint()
       ..shader = RadialGradient(
         center: const Alignment(0.0, 0.55),
@@ -1177,7 +1177,7 @@ class _NodePetPainter extends CustomPainter {
     final eyeDx = morphology.eyeSpacing * hw;
     final baseEyeR = morphology.eyeRadiusFactor * hh;
 
-    // For tiny mode, simplify face to a pair of dot eyes — face must
+    // For tiny mode, simplify face to a pair of dot eyes - face must
     // still survive but with minimal detail.
     final eyeR = mode == PetRenderMode.tiny
         ? math.max(1.6, baseEyeR * 0.65)
@@ -1185,7 +1185,7 @@ class _NodePetPainter extends CustomPainter {
 
     _paintEyes(canvas, eyeDx, eyeY, eyeR);
 
-    // Skip mouth in tiny — the eyes alone carry the read.
+    // Skip mouth in tiny - the eyes alone carry the read.
     if (mode == PetRenderMode.tiny) return;
 
     final mouthY = morphology.mouthYFactor * hh;
@@ -1201,7 +1201,7 @@ class _NodePetPainter extends CustomPainter {
     // Compute eye shape modifiers from expression.
     final eyes = expression.eyes;
 
-    // Sick: asymmetric — one eye half-closed.
+    // Sick: asymmetric - one eye half-closed.
     final closedRatios = switch (eyes) {
       NodePetEyeShape.open => const [0.0, 0.0],
       NodePetEyeShape.halfClosed => const [0.5, 0.5],
@@ -1210,7 +1210,7 @@ class _NodePetPainter extends CustomPainter {
       NodePetEyeShape.sickAsymm => const [0.2, 0.65],
     };
 
-    // Apply natural blink — lerp toward fully-closed for the duration
+    // Apply natural blink - lerp toward fully-closed for the duration
     // of the blink.
     final blinkClose = isBlinking
         ? math.sin(blinkProgress * math.pi).clamp(0.0, 1.0)
@@ -1258,7 +1258,7 @@ class _NodePetPainter extends CustomPainter {
       // Whites.
       canvas.drawOval(eyeRect, whitesPaint);
 
-      // Pupil — slight downward droop in sad/halfClosed for empathy.
+      // Pupil - slight downward droop in sad/halfClosed for empathy.
       final pupilDy =
           (eyes == NodePetEyeShape.halfClosed ||
               eyes == NodePetEyeShape.sickAsymm)
@@ -1274,7 +1274,7 @@ class _NodePetPainter extends CustomPainter {
       );
       canvas.restore();
 
-      // Eye outline (subtle) — gives the eye a "lid" line that holds
+      // Eye outline (subtle) - gives the eye a "lid" line that holds
       // up against busy bodies.
       final outline = Paint()
         ..style = PaintingStyle.stroke
@@ -1377,7 +1377,7 @@ class _NodePetPainter extends CustomPainter {
         if (mode == PetRenderMode.tiny) return;
         _paintSickGlitch(canvas, bodyCenter, bodyHeight);
       case NodePetAuraStyle.dormant:
-        // Faint static "ghost" — desaturated low-alpha veil.
+        // Faint static "ghost" - desaturated low-alpha veil.
         final paint = Paint()
           ..color = Colors.black.withValues(alpha: 0.18)
           ..blendMode = BlendMode.srcATop;
@@ -1405,7 +1405,7 @@ class _NodePetPainter extends CustomPainter {
       final s = bodyHeight * 0.06 * scale;
       final alpha = (1.0 - t) * 0.85;
       paint.color = Colors.white.withValues(alpha: alpha);
-      // Draw a "Z" — top, diagonal, bottom.
+      // Draw a "Z" - top, diagonal, bottom.
       final p1 = origin;
       final p2 = origin.translate(s, 0);
       final p3 = origin.translate(0, s);

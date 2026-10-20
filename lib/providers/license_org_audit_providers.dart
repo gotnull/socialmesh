@@ -97,7 +97,7 @@ final licenseOrgRecentAuditProvider =
 ///
 /// Fail-closed mirrors [licenseOrgRecentAuditProvider]: flag off /
 /// signed out / anonymous user / suspended org / repo error all
-/// degrade to an empty list. Capped at 100 rows to bound payload —
+/// degrade to an empty list. Capped at 100 rows to bound payload -
 /// owners revoking past that have a much bigger problem than
 /// scrollable history, and the full audit log screen surfaces
 /// everything via the paginated provider.

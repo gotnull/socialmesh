@@ -15,13 +15,13 @@ class SipPlayGameDescriptor {
   /// The strongly-typed game id this descriptor handles.
   final SipPlayGameType gameType;
 
-  /// User-visible label. UI can override via ARB key — this is a
+  /// User-visible label. UI can override via ARB key - this is a
   /// stable identifier for logs and unit tests.
   final String labelId;
 
   /// Maximum bytes the per-game `move` payload may occupy. Other
   /// actions (offer / accept / decline / resign) carry zero
-  /// game-payload bytes by SIP Play v1 convention — they don't
+  /// game-payload bytes by SIP Play v1 convention - they don't
   /// consume this budget.
   ///
   /// This must stay below
@@ -44,14 +44,14 @@ abstract final class SipPlayRegistry {
     SipPlayGameDescriptor(
       gameType: SipPlayGameType.ticTacToe,
       labelId: 'ticTacToe',
-      // 1-byte move payload (mark nibble | cell nibble) — see
+      // 1-byte move payload (mark nibble | cell nibble) - see
       // `ttt_codec.dart`.
       maxMovePayloadBytes: 1,
     ),
     SipPlayGameDescriptor(
       gameType: SipPlayGameType.connectFour,
       labelId: 'connectFour',
-      // 1-byte move payload (disc nibble | column nibble) — landing
+      // 1-byte move payload (disc nibble | column nibble) - landing
       // row is derived by the receiver from gravity, not transmitted.
       // See `c4_codec.dart`.
       maxMovePayloadBytes: 1,
@@ -67,7 +67,7 @@ abstract final class SipPlayRegistry {
   }
 
   /// Lookup by raw wire byte. Returns null for unknown / reserved
-  /// game-type codes — receivers render the unsupported fallback in
+  /// game-type codes - receivers render the unsupported fallback in
   /// that case rather than crashing.
   static SipPlayGameDescriptor? descriptorForCode(int code) {
     final type = SipPlayGameType.fromCode(code);

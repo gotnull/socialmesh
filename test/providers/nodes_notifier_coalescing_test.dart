@@ -288,7 +288,7 @@ void main() {
     final updatesAfterDiscovery = h.engine.nodeUpdates;
     // Each telemetry MeshPacket produces TWO nodeStream events (the
     // lastHeard/RF-metadata update and the telemetry merge), and side
-    // effects fire once per stream event — with or without coalescing.
+    // effects fire once per stream event - with or without coalescing.
     await h.injectDeviceTelemetry(_peer, battery: 10);
     await h.injectDeviceTelemetry(_peer, battery: 20);
     await h.injectDeviceTelemetry(_peer, battery: 30);

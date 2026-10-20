@@ -6,7 +6,7 @@
 // region_selection_screen) and helpers (mqtt_config_screen
 // duty-cycle math, settings_screen subtitle) all read from
 // [kRegionMetadata]. Adding a new region to the picker is a single
-// entry in this list and one ARB key per locale — no per-screen
+// entry in this list and one ARB key per locale - no per-screen
 // edits, no drift between screens. Mirrors the Apple iOS app's
 // `enum RegionCodes: CaseIterable` pattern from
 // `meshtastic-ios/Meshtastic/Enums/LoraConfigEnums.swift`.
@@ -39,7 +39,7 @@ class RegionMetadata {
   final int dutyCycle;
 
   // True when the region maps to a single country (used by iOS to
-  // show a country flag — currently unused in SocialMesh, kept for
+  // show a country flag - currently unused in SocialMesh, kept for
   // parity).
   final bool isCountry;
 

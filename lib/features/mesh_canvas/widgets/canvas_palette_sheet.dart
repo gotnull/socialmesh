@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// lint-allow: haptic-feedback — swatch taps return a palette index to
+// lint-allow: haptic-feedback - swatch taps return a palette index to
 // the host screen via Navigator.pop; the host fires `ref.haptics.
 // itemSelect()` (respecting user settings) immediately after pop. An
 // inline HapticFeedback call here would bypass that preference and
@@ -40,7 +40,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 /// null if the user dismissed via drag-down / tap-outside.
 ///
 /// [recentIndices] drives the pinned "Recent" rail at the top of the
-/// sheet — pass an empty list (or omit) to hide the rail entirely.
+/// sheet - pass an empty list (or omit) to hide the rail entirely.
 /// Order is "newest first"; the caller is responsible for de-duping.
 Future<int?> showCanvasPaletteSheet({
   required BuildContext context,
@@ -76,7 +76,7 @@ class _CanvasPaletteSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasRecents = recentIndices.isNotEmpty;
     // SingleChildScrollView + GridView(shrinkWrap) so every swatch
-    // is materialised eagerly — a lazy SliverGrid would chop off
+    // is materialised eagerly - a lazy SliverGrid would chop off
     // the bottom rows in widget tests where the initial sheet
     // height is smaller than the full 8 x 8 grid. The grid does
     // not need lazy rendering (only 64 entries) so we pay nothing.
@@ -198,8 +198,7 @@ class _RecentSwatch extends StatelessWidget {
     // Suffix the semantic label so the recents-rail entry is
     // distinguishable from the main-grid entry of the same colour
     // when widget tests look up by Semantics label.
-    final name =
-        '${SocialMeshPalette.nameOf(paletteIndex)} (recent)'; // lint-allow: hardcoded-string
+    final name = '${SocialMeshPalette.nameOf(paletteIndex)} (recent)'; // lint-allow: hardcoded-string
 
     return Semantics(
       label: name,

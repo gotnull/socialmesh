@@ -4,7 +4,7 @@
 // Regression tests for TelemetryLoggerNotifier protocol re-subscription.
 //
 // Root cause: TelemetryLoggerNotifier.build() only watched
-// telemetryStorageProvider — it did NOT watch protocolServiceProvider.
+// telemetryStorageProvider - it did NOT watch protocolServiceProvider.
 // When the protocol service was recreated (BLE reconnect, transport
 // change), the logger kept subscriptions on the OLD (closed) streams.
 // New traceroute events were silently lost.

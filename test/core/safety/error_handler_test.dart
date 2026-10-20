@@ -104,7 +104,7 @@ void main() {
     test('preserves Meshtastic service UUID format', () {
       // BLE UUIDs are 36 chars with hyphens: 8-4-4-4-12
       const input = 'Service not found: 6ba1b218-15a8-461f-9fa8-5dcae273eafd';
-      // Should NOT be redacted — UUIDs are not PII
+      // Should NOT be redacted - UUIDs are not PII
       expect(sanitize(input), contains('6ba1b218'));
     });
 
@@ -557,7 +557,7 @@ void main() {
     });
 
     test('does NOT match non-SocketException with mqtt frames', () {
-      // A StateError from mqtt_client internals should still be reported —
+      // A StateError from mqtt_client internals should still be reported -
       // only SocketException from the keep-alive path is suppressed.
       final stack = StackTrace.fromString(
         '#0      MqttConnectionKeepAlive.pingRequired '

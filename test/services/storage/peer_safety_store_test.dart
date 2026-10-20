@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 /// Persistence tests for [PeerSafetyStore]. Mirrors the
-/// `OverlayLinkStore` test pattern — sqflite_common_ffi for in-memory
+/// `OverlayLinkStore` test pattern - sqflite_common_ffi for in-memory
 /// SQLite, schema round-trip, filter queries, idempotency.
 library;
 

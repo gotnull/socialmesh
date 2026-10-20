@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Parses terminal input strings into TerminalCommand + arguments.
-// Pure function — no side effects, easily testable.
+// Pure function - no side effects, easily testable.
 
 import '../models/nodeboard_enums.dart';
 

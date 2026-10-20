@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
+
 import 'presence_confidence.dart';
 import '../core/health/node_health.dart';
 import '../features/nodes/node_display_name_resolver.dart';
@@ -11,7 +12,7 @@ import '../utils/text_sanitizer.dart';
 /// Message status enum
 enum MessageStatus {
   pending, // Message being sent
-  sent, // Message sent to radio — awaiting confirmation
+  sent, // Message sent to radio - awaiting confirmation
   delivered, // Message confirmed (ACK received)
   failed, // Terminal send failure (routing error, PKI, etc.)
   unconfirmed, // Sent but no ACK within the timeout window
@@ -141,7 +142,7 @@ class Message {
   /// Strength of the acknowledgement for DM outgoing messages, mirroring the
   /// official Meshtastic companion app's `realACK` distinction.
   ///
-  /// - `null`: unknown / legacy — row was written before the column existed,
+  /// - `null`: unknown / legacy - row was written before the column existed,
   ///   or the message has not yet received any ack.
   /// - `false`: an implicit mesh ack was received (proof that *some* node on
   ///   the mesh observed the packet, but not that the intended recipient
@@ -150,7 +151,7 @@ class Message {
   /// - `true`: an explicit ack was received from the intended DM recipient
   ///   (the authoritative delivery confirmation).
   ///
-  /// Forward-only — the provider layer never downgrades `true → false`.
+  /// Forward-only - the provider layer never downgrades `true → false`.
   final bool? realAck;
   final MessageStatus status;
   final String? errorMessage;
@@ -175,7 +176,7 @@ class Message {
   /// Whether bounded auto-retry is enabled for this message.
   final bool autoRetryEnabled;
 
-  /// Meshtastic replyId — the packet ID of the message this is replying to.
+  /// Meshtastic replyId - the packet ID of the message this is replying to.
   /// Used for tapback reactions and threaded replies.
   final int? replyId;
 
@@ -366,7 +367,7 @@ class Message {
   /// the [Message] object.  This eliminates the TOCTOU race where both
   /// paths generate different random UUIDs for the same physical packet.
   ///
-  /// Format: `pkt-<fromHex>-<packetIdHex>` — human-readable, cannot
+  /// Format: `pkt-<fromHex>-<packetIdHex>` - human-readable, cannot
   /// collide with UUID v4 or SHA1 IDs from push notifications.
   static String deterministicId({
     required int packetId,
@@ -487,7 +488,7 @@ class MeshNode {
 
   /// The local channel index on which this node was last heard.
   ///
-  /// Field 6 in the firmware's `meshtastic.NodeInfo` proto — quote from
+  /// Field 6 in the firmware's `meshtastic.NodeInfo` proto - quote from
   /// the proto comment: "local channel index we heard that node on.
   /// Only populated if its not the default channel." `null` means the
   /// firmware did not include it (i.e. the node was last heard on the
@@ -497,8 +498,8 @@ class MeshNode {
   /// Diagnostic value: when an outbound DM gets a `NO_CHANNEL` NAK, the
   /// firmware uses this index (or the channel hash from NodeDB) to
   /// decide which of our channels to encrypt with. If the recipient's
-  /// `lastHeardChannel` points to a slot we don't have configured —
-  /// or we have configured with a different PSK — the firmware refuses
+  /// `lastHeardChannel` points to a slot we don't have configured -
+  /// or we have configured with a different PSK - the firmware refuses
   /// to dispatch the DM.
   final int? lastHeardChannel;
 
@@ -1056,7 +1057,7 @@ class ChannelConfig {
 
   /// Firmware-equivalent channel-hash byte used for routing.
   ///
-  /// Mirrors `meshtastic/firmware`'s `Channels::generateHash()` —
+  /// Mirrors `meshtastic/firmware`'s `Channels::generateHash()` -
   /// `xorHash(name_bytes) ^ xorHash(psk_bytes)` reduced to a single
   /// byte. Two radios that have a channel with the same byte-equal
   /// `name` and byte-equal `psk` produce the SAME hash; if either
@@ -1066,7 +1067,7 @@ class ChannelConfig {
   /// Used for diagnostic log lines (`CHANNEL_HASH_SUMMARY`) so a
   /// support trace can confirm two devices' "RnsHarness" entries are
   /// genuinely identical at the byte level. NEVER used for actual
-  /// encryption / routing decisions — that's firmware-side. Just a
+  /// encryption / routing decisions - that's firmware-side. Just a
   /// sanity-check fingerprint.
   int get firmwareHash {
     int h = 0;

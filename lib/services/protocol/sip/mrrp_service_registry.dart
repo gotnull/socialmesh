@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// MRRP service registry — manages the set of locally registered services.
+/// MRRP service registry - manages the set of locally registered services.
 ///
 /// The registry tracks which [MrrpServiceHandler] instances are active and
 /// generates SERVICE_ADVERT payloads describing them. It does not handle
-/// network transmission — that is the [MrrpAdvertEngine]'s responsibility.
+/// network transmission - that is the [MrrpAdvertEngine]'s responsibility.
 library;
 
 import 'dart:typed_data';
@@ -101,7 +101,7 @@ class MrrpServiceRegistry {
   /// multiple advert entries (one per active instance).
   ///
   /// When set, [getAdvertDescriptors] replaces the base descriptor for
-  /// [_instanceBaseServiceId] with these. Handler dispatch is unaffected —
+  /// [_instanceBaseServiceId] with these. Handler dispatch is unaffected -
   /// all instances still route to the same [MrrpServiceHandler].
   final List<MrrpServiceDescriptor> _instanceDescriptors = [];
   int? _instanceBaseServiceId;

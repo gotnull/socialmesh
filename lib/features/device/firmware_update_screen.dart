@@ -6,6 +6,7 @@ import 'dart:io';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -766,9 +767,8 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
           Text(
             context.l10n.firmwareUpdateVisitWebsite,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.textSecondary),
           ),
         ],
       ),
@@ -800,9 +800,8 @@ class _FirmwareUpdateScreenState extends ConsumerState<FirmwareUpdateScreen>
         Expanded(
           child: Text(
             text,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.textSecondary),
           ),
         ),
       ],

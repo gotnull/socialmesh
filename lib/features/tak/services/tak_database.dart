@@ -253,7 +253,7 @@ class TakDatabase {
   }
 
   /// Insert or update a TAK event.
-  /// Uses uid+type as a logical key — updates the existing row if present.
+  /// Uses uid+type as a logical key - updates the existing row if present.
   Future<void> upsert(TakEvent event) async {
     final db = _database;
     // Check for existing row with same uid+type

@@ -99,14 +99,14 @@ Uint8List _createTestImage(int width, int height, {bool noisy = false}) {
   for (var y = 0; y < height; y++) {
     for (var x = 0; x < width; x++) {
       if (noisy) {
-        // Noisy pattern — harder to compress (simulates textured content
+        // Noisy pattern - harder to compress (simulates textured content
         // like the knitted fabric photo that motivated this rework).
         final r = ((x * 37 + y * 53) % 256);
         final g = ((x * 71 + y * 29) % 256);
         final b = ((x * 13 + y * 97) % 256);
         image.setPixelRgb(x, y, r, g, b);
       } else {
-        // Smooth gradient — easy to compress.
+        // Smooth gradient - easy to compress.
         final r = (x * 255 ~/ width);
         final g = (y * 255 ~/ height);
         image.setPixelRgb(x, y, r, g, 128);
@@ -143,7 +143,7 @@ void main() {
     });
 
     test('compresses a noisy image within 8 KB', () {
-      // Noisy images are harder to compress — this exercises the dimension
+      // Noisy images are harder to compress - this exercises the dimension
       // step-down path where 160px may be too large even at Q20.
       final source = _createTestImage(640, 480, noisy: true);
       final result = compressImagePureDart(source);
@@ -155,9 +155,9 @@ void main() {
       );
     });
 
-    test('maximizes quality — result is close to the 8 KB ceiling', () {
+    test('maximizes quality - result is close to the 8 KB ceiling', () {
       // Noisy images are harder to compress and better exercise the binary
-      // search — smooth gradients compress so efficiently they may not use
+      // search - smooth gradients compress so efficiently they may not use
       // much of the budget even at max quality.
       final source = _createTestImage(800, 600, noisy: true);
       final result = compressImagePureDart(source);
@@ -250,7 +250,7 @@ void main() {
     });
 
     test('handles already-tiny images', () {
-      // 32x32 image — already at the smallest dimension step.
+      // 32x32 image - already at the smallest dimension step.
       final source = _createTestImage(32, 32);
       final result = compressImagePureDart(source);
 

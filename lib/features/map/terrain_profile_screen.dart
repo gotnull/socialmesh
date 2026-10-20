@@ -23,7 +23,7 @@ import 'widgets/terrain_profile_chart.dart';
 /// renders a [TerrainProfileChart], and shows a terrain-aware LOS verdict
 /// when endpoint altitude data is available.
 ///
-/// Constructor args only — does not re-read map state from providers.
+/// Constructor args only - does not re-read map state from providers.
 class TerrainProfileScreen extends ConsumerStatefulWidget {
   /// Start point of the measurement path.
   final LatLng start;
@@ -31,10 +31,10 @@ class TerrainProfileScreen extends ConsumerStatefulWidget {
   /// End point of the measurement path.
   final LatLng end;
 
-  /// Optional start node — used for altitude and display name.
+  /// Optional start node - used for altitude and display name.
   final MeshNode? nodeA;
 
-  /// Optional end node — used for altitude and display name.
+  /// Optional end node - used for altitude and display name.
   final MeshNode? nodeB;
 
   const TerrainProfileScreen({
@@ -60,7 +60,7 @@ class TerrainProfileScreen extends ConsumerStatefulWidget {
 ///     because [_fetchTriggered] guards the call.
 class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
     with LifecycleSafeMixin {
-  // Service instance — created once, not in build().
+  // Service instance - created once, not in build().
   late final ElevationService _service;
 
   // Fetch state flags (never reset after first fetch without explicit retry).
@@ -136,7 +136,7 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
         // When GPS altitude is missing for a point, fall back to the terrain
         // elevation at that endpoint (first / last sample). This allows LOS
         // analysis to run for arbitrary map points where no node altitude is
-        // known — treating ground level as the antenna height.
+        // known - treating ground level as the antenna height.
         final terrainAltA = samples.isNotEmpty
             ? samples.first.elevationMeters?.round()
             : null;
@@ -361,9 +361,8 @@ class _TerrainProfileScreenState extends ConsumerState<TerrainProfileScreen>
                     l10n.mapTerrainProfileSampleCount(_samples!.length),
                     style: TextStyle(
                       fontSize: 11,
-                      color: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                      color: Theme.of(context).textTheme.bodySmall?.color
+                          ?.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: AppTheme.spacing12),
@@ -556,9 +555,8 @@ class _AntennaHeightField extends StatelessWidget {
                   l10n.mapTerrainAntennaHeightGroundLevel(terrainAlt!),
                   style: TextStyle(
                     fontSize: 10,
-                    color: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                    color: Theme.of(context).textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.7),
                   ),
                 ),
             ],
@@ -581,9 +579,8 @@ class _AntennaHeightField extends StatelessWidget {
               counterText: '',
               hintText: '0', // lint-allow: hardcoded-string
               hintStyle: TextStyle(
-                color: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.color?.withValues(alpha: 0.4),
+                color: Theme.of(context).textTheme.bodySmall?.color
+                    ?.withValues(alpha: 0.4),
               ),
               suffixText: l10n.unitM,
               suffixStyle: TextStyle(

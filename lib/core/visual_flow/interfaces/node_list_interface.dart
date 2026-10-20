@@ -3,11 +3,11 @@
 // Custom interface type for the SocialMesh visual automation flow builder.
 //
 // NodeList interfaces carry filtered lists of mesh nodes through the
-// automation graph. They represent the output of NodeDex query nodes —
+// automation graph. They represent the output of NodeDex query nodes -
 // filters, sorts, and set operations that narrow down the full mesh node
 // population to a specific subset matching user-defined criteria.
 //
-// Color: Purple — visually distinct from the amber event signal, cyan bool
+// Color: Purple - visually distinct from the amber event signal, cyan bool
 // gate, and green action signal wires, making NodeDex query pipelines
 // immediately recognisable on the canvas.
 //
@@ -40,7 +40,7 @@ const Color kNodeListColor = Color(0xFF8B5CF6);
 /// filtered set of nodes).
 ///
 /// Accepts connections from:
-/// - [NodeListOutputData] — the primary node list output type from query
+/// - [NodeListOutputData] - the primary node list output type from query
 ///   nodes.
 class NodeListInputData extends VSInputData {
   NodeListInputData({
@@ -60,7 +60,7 @@ class NodeListInputData extends VSInputData {
 
 /// Output interface that emits a filtered node list.
 ///
-/// Used on NodeDex query nodes — filter nodes, sort nodes, set operation
+/// Used on NodeDex query nodes - filter nodes, sort nodes, set operation
 /// nodes (union, intersection, difference), and the root "All Nodes" source
 /// node.
 ///
@@ -89,7 +89,7 @@ class NodeListOutputData extends VSOutputData<NodeListPayload> {
 /// runtime evaluation.
 ///
 /// At runtime, the actual node list is evaluated dynamically by the
-/// automation engine using live NodeDex data — this payload is used for
+/// automation engine using live NodeDex data - this payload is used for
 /// graph compilation and visual preview, not as a static snapshot of
 /// which nodes matched at design time.
 class NodeListPayload {
@@ -130,7 +130,7 @@ class NodeListPayload {
   /// Each entry is a [NodeListFilter] describing one filter step in the
   /// pipeline. The compiler uses this to build the runtime query.
   ///
-  /// Filters are applied in order — the output of each filter is the input
+  /// Filters are applied in order - the output of each filter is the input
   /// to the next.
   final List<NodeListFilter> filters;
 
@@ -216,7 +216,7 @@ class NodeListPayload {
 /// A single filter step in a NodeDex query pipeline.
 ///
 /// Each filter describes one predicate applied to the node list. Filters
-/// are composable — the output of one filter is the input to the next,
+/// are composable - the output of one filter is the input to the next,
 /// forming a pipeline that progressively narrows the result set.
 ///
 /// The [field], [operator], and [value] triple maps to the NodeDex filter
@@ -232,29 +232,29 @@ class NodeListFilter {
   /// The node attribute to filter on.
   ///
   /// Matches NodeDex filter field identifiers:
-  /// - 'trait' — the node's assigned trait (Beacon, Wanderer, etc.)
-  /// - 'distance' — distance from the user's current position in meters
-  /// - 'encounters' — number of times the node has been seen
-  /// - 'lastSeen' — time since the node was last heard from
-  /// - 'firstSeen' — time since the node was first discovered
-  /// - 'batteryLevel' — last known battery percentage
-  /// - 'snr' — last known signal-to-noise ratio
-  /// - 'name' — the node's display name (substring match)
-  /// - 'online' — whether the node is currently online (boolean)
-  /// - 'coSeenWith' — nodes co-seen with a specific other node
+  /// - 'trait' - the node's assigned trait (Beacon, Wanderer, etc.)
+  /// - 'distance' - distance from the user's current position in meters
+  /// - 'encounters' - number of times the node has been seen
+  /// - 'lastSeen' - time since the node was last heard from
+  /// - 'firstSeen' - time since the node was first discovered
+  /// - 'batteryLevel' - last known battery percentage
+  /// - 'snr' - last known signal-to-noise ratio
+  /// - 'name' - the node's display name (substring match)
+  /// - 'online' - whether the node is currently online (boolean)
+  /// - 'coSeenWith' - nodes co-seen with a specific other node
   final String field;
 
   /// The comparison operator.
   ///
   /// Supported operators:
-  /// - 'eq' — equals
-  /// - 'neq' — not equals
-  /// - 'gt' — greater than
-  /// - 'gte' — greater than or equal
-  /// - 'lt' — less than
-  /// - 'lte' — less than or equal
-  /// - 'contains' — substring match (for string fields)
-  /// - 'in' — value is in a list (for enum fields like trait)
+  /// - 'eq' - equals
+  /// - 'neq' - not equals
+  /// - 'gt' - greater than
+  /// - 'gte' - greater than or equal
+  /// - 'lt' - less than
+  /// - 'lte' - less than or equal
+  /// - 'contains' - substring match (for string fields)
+  /// - 'in' - value is in a list (for enum fields like trait)
   final String operator;
 
   /// The comparison value.

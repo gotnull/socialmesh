@@ -33,7 +33,7 @@ String _validPayload({
 }
 
 void main() {
-  group('parseMeshCoreCommunityPayload — success', () {
+  group('parseMeshCoreCommunityPayload - success', () {
     test('valid payload returns a parsed result', () {
       final result = parseMeshCoreCommunityPayload(_validPayload());
       expect(result.isSuccess, isTrue);
@@ -72,7 +72,7 @@ void main() {
     });
   });
 
-  group('parseMeshCoreCommunityPayload — failure variants', () {
+  group('parseMeshCoreCommunityPayload - failure variants', () {
     test('non-JSON returns notJson', () {
       final result = parseMeshCoreCommunityPayload('not json at all');
       expect(result.error, MeshCoreCommunityParseError.notJson);

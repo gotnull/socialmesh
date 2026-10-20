@@ -10,7 +10,7 @@
 // Privacy invariants (mirror docs/engineering/MESHCORE_OPEN_PARITY_AUDIT.md
 // D-Q6 spec):
 //   - NO chat / DM message bodies.
-//   - NO full public keys — fingerprints only.
+//   - NO full public keys - fingerprints only.
 //   - NO admin / channel passwords or PSK bytes.
 //   - NO GPS coordinates.
 //   - Crashlytics identifier surfaces as a short prefix only.
@@ -129,7 +129,7 @@ Map<String, dynamic> buildMeshCoreDiagnosticsPayload({
       'pathHistory':
           'Pending list-all helper on MeshCorePathHistoryStore (deferred).',
       'appLogger':
-          'Use D44 AppLogScreen export — separate from this MeshCore bundle.',
+          'Use D44 AppLogScreen export - separate from this MeshCore bundle.',
     },
   };
 }

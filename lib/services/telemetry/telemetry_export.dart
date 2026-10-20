@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
 
-// PR-4: "App telemetry store export v1" — a pure (IO-free) formatter that
+// PR-4: "App telemetry store export v1" - a pure (IO-free) formatter that
 // turns the on-device telemetry samples into a stable, business-ingestible
 // contract: per-metric CSV (typed, snake_case columns), NDJSON, and a
 // structured JSON document.
@@ -10,7 +10,7 @@ import 'dart:convert';
 // Scope honesty: this exports ONLY what the app's `telemetry` table holds
 // (per-type model `toJson` + node_num + timestamp). It is NOT the gateway /
 // decoded-MQTT ingest schema (gateway_id, packet_id, channel, portnum,
-// from/to node, raw/decoded payload) — that is PR-5. No `protocol` column:
+// from/to node, raw/decoded payload) - that is PR-5. No `protocol` column:
 // the store does not record protocol per row.
 //
 // The input to every method is the per-type model `toJson()` maps (camelCase
@@ -29,7 +29,7 @@ abstract final class TelemetryExport {
   /// Bumped only on a breaking change to the column/record contract.
   static const int schemaVersion = 1;
 
-  /// Provenance marker — this export is the app store, not the gateway ingest.
+  /// Provenance marker - this export is the app store, not the gateway ingest.
   static const String source = 'app_telemetry_db';
 
   /// The on-device store carries no decoded packet metadata.

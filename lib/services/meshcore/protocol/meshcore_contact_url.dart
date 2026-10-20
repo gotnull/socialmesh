@@ -6,7 +6,7 @@
 // The URL is a thin app-side wrapper around the firmware's canonical
 // 135..147-byte contact frame: the bytes that `CMD_EXPORT_CONTACT 0x11`
 // returns and that `CMD_IMPORT_CONTACT 0x12` accepts. Firmware never
-// sees the URL form — it only ever encodes/decodes the byte frame.
+// sees the URL form - it only ever encodes/decodes the byte frame.
 //
 // Wire-compat with meshcore-open: their `contacts_screen.dart` builds
 // `meshcore://<pubKeyToHex(rawPacket)>` from the same response bytes.
@@ -58,7 +58,7 @@ class MeshCoreContactUrl {
 
   /// Decode a `meshcore://<hex>` URL into raw contact-frame bytes.
   /// Returns null on any parse failure (bad scheme, odd hex length,
-  /// non-hex chars, out-of-range byte count). Never throws —
+  /// non-hex chars, out-of-range byte count). Never throws -
   /// clipboard contents are untrusted input.
   static Uint8List? decode(String url) {
     final trimmed = url.trim();

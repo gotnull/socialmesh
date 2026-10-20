@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Pet notifications — dispatcher + durable per-owner dedupe ledger.
+// Pet notifications - dispatcher + durable per-owner dedupe ledger.
 //
 // v1 categories (actionable care + major milestones only):
 //   - stage transitions (hatch, adolescence, branch resolution, maturation,
@@ -22,7 +22,7 @@
 // Catch-up staleness: when `advanceTo` crosses many care ticks we can
 // end up with `recentEvents` containing a burst of callStarted /
 // sicknessOnset / callMissed entries. The dispatcher gates each
-// candidate behind a "still relevant now?" check — only the current,
+// candidate behind a "still relevant now?" check - only the current,
 // live state is notified. For stage transitions we notify only the
 // latest (post-burst) transition.
 
@@ -90,7 +90,7 @@ class PetNotificationLedger {
   Future<void> clearCallNotification(int owner) => _clear(_callKey(owner));
 }
 
-/// The decision a single dispatch pass made — useful for logging and
+/// The decision a single dispatch pass made - useful for logging and
 /// for tests that want to assert on outcome without mocking the
 /// notification layer.
 enum PetNotificationDecision {
@@ -116,7 +116,7 @@ abstract class PetNotificationSink {
   });
 }
 
-/// Production sink — wraps [NotificationService]'s singleton.
+/// Production sink - wraps [NotificationService]'s singleton.
 class DefaultPetNotificationSink implements PetNotificationSink {
   const DefaultPetNotificationSink();
 
@@ -154,7 +154,7 @@ class PetNotificationDispatcher {
   final PetNotificationLedger ledger;
   final PetNotificationSink sink;
 
-  /// Transitions older than this are considered stale on resume — the
+  /// Transitions older than this are considered stale on resume - the
   /// milestone moment has already passed and a notification would be
   /// confusing.
   final Duration stageStalenessWindow;
@@ -162,7 +162,7 @@ class PetNotificationDispatcher {
   /// Optional gate for OS-level notification suppression. When provided
   /// and returning true, the dispatcher STILL takes the dedupe claim
   /// (so the notification is treated as delivered) but does NOT emit a
-  /// system notification — the user is already looking at NodePet and
+  /// system notification - the user is already looking at NodePet and
   /// the in-app banner / hatch overlay is a better signal. Leave null
   /// in tests to exercise the full fire path.
   final bool Function()? isAppInForeground;
@@ -195,7 +195,7 @@ class PetNotificationDispatcher {
 
   /// Inspect a provider-layer transition from [previous] to [current].
   /// Returns the list of decisions made (for logging + test assertions).
-  /// Safe to call repeatedly with identical states — dedupe prevents
+  /// Safe to call repeatedly with identical states - dedupe prevents
   /// duplicate emissions.
   Future<List<PetNotificationDecision>> onStateTransition({
     required PetState? previous,
@@ -257,7 +257,7 @@ class PetNotificationDispatcher {
     required CareEvent event,
     required DateTime now,
   }) async {
-    // Dedupe against the in-memory claim FIRST — this is the
+    // Dedupe against the in-memory claim FIRST - this is the
     // synchronous guard that prevents concurrent dispatches from
     // both passing the check. The persistent ledger is the same
     // watermark, bootstrapped from disk on first use this session.
@@ -287,7 +287,7 @@ class PetNotificationDispatcher {
 
     // Claim SYNCHRONOUSLY before the async dispatch so any concurrent
     // call sees the claim and returns suppressedDedupe. Persist to the
-    // ledger as well, but don't wait for it — the in-memory claim is
+    // ledger as well, but don't wait for it - the in-memory claim is
     // the authority within this session.
     _stageClaims[current.ownerNodeNum] = event.at;
     final persist = ledger.markStageNotifiedAt(current.ownerNodeNum, event.at);

@@ -12,7 +12,7 @@
 /// client_nonce, our previous CHALLENGE never arrived. Re-send the
 /// cached frame on the same rate-limited path. Throttled to one re-emit
 /// every 4 s per session so multi-hop rebroadcast can't trigger a
-/// flurry. No new session, no fresh nonce, no expiry/cooldown reset —
+/// flurry. No new session, no fresh nonce, no expiry/cooldown reset -
 /// the handshake stays the same attempt.
 library;
 
@@ -44,8 +44,8 @@ SipHandshakeManager _newManager({int localNodeId = 0xBBBB}) {
 
 /// Build a HS_HELLO frame with a controllable client_nonce and wrapper
 /// nonce. The peer's HELLO retransmit cadence reuses the SAME frame
-/// (identical wrapper nonce) — and so does the multi-hop rebroadcast
-/// path — so re-emit detection must work on payload `clientNonce` alone,
+/// (identical wrapper nonce) - and so does the multi-hop rebroadcast
+/// path - so re-emit detection must work on payload `clientNonce` alone,
 /// not the wrapper nonce.
 SipFrame _makeHello({
   required Uint8List clientNonce,
@@ -81,7 +81,7 @@ Uint8List _nonce(int seed) =>
     Uint8List.fromList(List.generate(16, (i) => (i + seed) & 0xFF));
 
 void main() {
-  group('SipHandshakeManager — peer-driven HS_CHALLENGE re-emit', () {
+  group('SipHandshakeManager - peer-driven HS_CHALLENGE re-emit', () {
     test('dropped challenge + duplicate HELLO re-emits the same frame', () {
       final mgr = _newManager();
 
@@ -163,7 +163,7 @@ void main() {
         );
         expect(reemitCount, 1);
 
-        // Three more in quick succession — all suppressed by the 4 s
+        // Three more in quick succession - all suppressed by the 4 s
         // throttle, so a multi-hop echo can't burn airtime.
         fake.elapse(const Duration(milliseconds: 500));
         mgr.handleHello(
@@ -186,7 +186,7 @@ void main() {
           reason: 'all duplicates inside the 4 s window must be throttled',
         );
 
-        // Total elapsed since first re-emit: 3.5 s — still inside the
+        // Total elapsed since first re-emit: 3.5 s - still inside the
         // 4 s window. One more tick past the threshold and the next
         // duplicate is allowed through.
         fake.elapse(const Duration(milliseconds: 600));
@@ -203,7 +203,7 @@ void main() {
     });
 
     test('duplicate HELLO with a different client_nonce does NOT re-emit', () {
-      // The peer started a fresh handshake attempt under a new nonce —
+      // The peer started a fresh handshake attempt under a new nonce -
       // our cached CHALLENGE is bound to the previous attempt and would
       // fail the echoed_client_nonce check on the peer side. Falls
       // through to the existing duplicate-HELLO ignore branch.
@@ -239,7 +239,7 @@ void main() {
     test('duplicate HELLO after the local side advanced does NOT re-emit', () {
       // Once the responder receives HS_RESPONSE the session terminates
       // (state = accepted, removed from `_sessions`). Late HELLO
-      // duplicates from a multi-hop echo must NOT trigger a re-emit —
+      // duplicates from a multi-hop echo must NOT trigger a re-emit -
       // the handshake is done.
       FakeAsync().run((fake) {
         final initiator = _newManager(localNodeId: 0xAAAA);
@@ -269,11 +269,10 @@ void main() {
           reason: 'sanity: handshake completed end-to-end',
         );
 
-        // Late HELLO duplicate (e.g. multi-hop rebroadcast) — must hit
+        // Late HELLO duplicate (e.g. multi-hop rebroadcast) - must hit
         // the "already completed" branch, NOT the re-emit branch.
-        final clientNonce = SipHsMessages.decodeHello(
-          hello.payload,
-        )!.clientNonce;
+        final clientNonce = SipHsMessages.decodeHello(hello.payload)!
+            .clientNonce;
         responder.handleHello(
           nodeA,
           _makeHello(clientNonce: clientNonce, wrapperNonce: 99),
@@ -289,7 +288,7 @@ void main() {
     test('re-emit does NOT reset session expiry', () {
       // The session-expiry timer is the sole authority on the
       // 60 s wire-bound handshake timeout. Re-emits driven by peer
-      // duplicates must not push that timer out — otherwise a stuck
+      // duplicates must not push that timer out - otherwise a stuck
       // session could survive arbitrarily long, defeating the
       // post-failure cooldown that protects airtime.
       FakeAsync().run((fake) {
@@ -318,7 +317,7 @@ void main() {
           _makeHello(clientNonce: clientNonce, wrapperNonce: 3),
         );
 
-        // Session must still be alive — we are at t=30s.
+        // Session must still be alive - we are at t=30s.
         expect(mgr.getState(peer), SipHandshakeState.challengeSent);
         expect(mgr.isInCooldown(peer), isFalse);
 
@@ -404,10 +403,10 @@ void main() {
     );
   });
 
-  group('SipHandshakeManager — re-emit frame integrity', () {
+  group('SipHandshakeManager - re-emit frame integrity', () {
     test('re-emit preserves server_nonce and echoed_client_nonce', () {
       // The cached CHALLENGE binds to (server_nonce, client_nonce) of
-      // the original attempt. Re-emit must not regenerate either —
+      // the original attempt. Re-emit must not regenerate either -
       // otherwise the initiator's handleChallenge would reject on
       // nonce mismatch.
       final mgr = _newManager();
@@ -472,7 +471,7 @@ void main() {
         responder.handleHello(nodeA, hello!);
         final firstChallenge = responder.acceptHandshake(nodeA);
         expect(firstChallenge, isNotNull);
-        // Drop firstChallenge — initiator never sees it.
+        // Drop firstChallenge - initiator never sees it.
 
         // Initiator HELLO retransmit fires (matching client_nonce).
         responder.handleHello(nodeA, hello);

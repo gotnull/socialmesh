@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: keyboard-dismissal — TextFields are in bottom-sheet sub-widgets, not the main screen
+// lint-allow: keyboard-dismissal - TextFields are in bottom-sheet sub-widgets, not the main screen
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/routing/conversation_routes.dart';
@@ -9,6 +9,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animations.dart';
@@ -304,7 +305,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   }
 
   Widget _buildEmptyState(String deviceName) {
-    // [deviceName] is no longer surfaced inline — the connected device is
+    // [deviceName] is no longer surfaced inline - the connected device is
     // visible via the device-status button in the app bar; a separate
     // "Connected to X" badge inside the empty state would be duplicate UI
     // and clash with the canonical AnimatedEmptyState shape. The "Join
@@ -639,7 +640,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     // D31b: this dialog now ONLY creates hashtag-derived public
     // channels (deterministic SHA-256(`#name`)[:16] PSK). The pre-D31b
     // "Private" toggle generated a predictable `[0, 1, ..., 15]`
-    // placeholder PSK — that's not a private channel, that's a
+    // placeholder PSK - that's not a private channel, that's a
     // public channel whose key is on every developer's machine. The
     // toggle is gone; users who want a real private channel are
     // routed to "Add channel" (the canonical edit sheet) where they
@@ -750,7 +751,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                     }
 
                     // D31b: hashtag-derive only. PSK is
-                    // SHA-256(`#name`)[:16] — deterministic by design,
+                    // SHA-256(`#name`)[:16] - deterministic by design,
                     // shared across every client that knows the name,
                     // never random and never the broken `[0..15]`
                     // placeholder.
@@ -982,7 +983,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   /// Channel" entry, awaits the wire ACK, and surfaces explicit
   /// success/failure rather than the fire-and-forget pattern the
   /// pre-existing join-by-code flow uses. Logs do NOT include the
-  /// pasted code or PSK — only success/failure outcomes.
+  /// pasted code or PSK - only success/failure outcomes.
   Future<void> _importChannelByCode() async {
     final controller = TextEditingController();
     await AppBottomSheet.show<void>(
@@ -1358,10 +1359,10 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   }
 
   /// D37-B-A: toggle the local hide preference for [channel]. Hide is
-  /// independent of mute — hidden channels still receive notifications
+  /// independent of mute - hidden channels still receive notifications
   /// unless the channel is also muted. Snackbar confirms either side
   /// of the toggle. No PSK / channel-code / full pubkey reaches the
-  /// snackbar or log line — only the display name (already user-
+  /// snackbar or log line - only the display name (already user-
   /// visible) and the slot index.
   Future<void> _toggleChannelHide(
     MeshCoreChannel channel, {
@@ -1389,7 +1390,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   /// update goes through the notifier so the channel-tile overlay icon
   /// and the next long-press menu both pick up the new state. Snackbar
   /// confirms either side of the toggle. No PSK / channel-code / full
-  /// pubkey reaches the snackbar or log line — only the display name
+  /// pubkey reaches the snackbar or log line - only the display name
   /// (already user-visible) and the slot index.
   Future<void> _toggleChannelMute(
     MeshCoreChannel channel, {

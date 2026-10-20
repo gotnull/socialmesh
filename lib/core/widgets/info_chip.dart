@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// InfoChip — compact metadata badge for list tiles.
+// InfoChip - compact metadata badge for list tiles.
 //
 // Use inside a Wrap widget so chips flow to the next line instead of
 // truncating. The label text is wrapped in Flexible so even a single

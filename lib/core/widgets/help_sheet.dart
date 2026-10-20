@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Reusable in-app help sheet — icon-driven explanations for screens
+// Reusable in-app help sheet - icon-driven explanations for screens
 // where the user needs to know what each control does. Designed to be
 // dropped into any AppBottomSheet.showScrollable builder. Pattern:
 // short intro paragraph followed by a vertical list of icon + title +
@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-/// One row in the [HelpSheet] — an icon, a short title, and a
+/// One row in the [HelpSheet] - an icon, a short title, and a
 /// body paragraph describing what the thing does.
 class HelpSheetItem {
   final IconData icon;

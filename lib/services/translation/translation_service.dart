@@ -55,7 +55,7 @@ class TranslationService {
       }
     }
 
-    // No cache hit — need network
+    // No cache hit - need network
     if (!isOnline()) {
       throw const TranslationError(
         type: TranslationErrorType.offline,

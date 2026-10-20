@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Widget tests for NodeActivityTimeline — verifies rendering of mixed
+// Widget tests for NodeActivityTimeline - verifies rendering of mixed
 // event types, empty state, pagination trigger, and event ordering.
 
 import 'dart:async';
@@ -85,9 +85,8 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => Future.value(events)),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => Future.value(events)),
           ],
         ),
       );
@@ -117,9 +116,8 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => Future.value(<NodeActivityEvent>[])),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => Future.value(<NodeActivityEvent>[])),
           ],
         ),
       );
@@ -144,9 +142,8 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => Future.value(events)),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => Future.value(events)),
           ],
         ),
       );
@@ -163,9 +160,8 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => Future.value(events)),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => Future.value(events)),
           ],
         ),
       );
@@ -189,9 +185,8 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => Future.value(events)),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => Future.value(events)),
           ],
         ),
       );
@@ -215,9 +210,8 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => Future.value(events)),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => Future.value(events)),
           ],
         ),
       );
@@ -247,9 +241,8 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => Future.value(events)),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => Future.value(events)),
           ],
         ),
       );
@@ -277,9 +270,8 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => Future.value(events)),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => Future.value(events)),
           ],
         ),
       );
@@ -296,13 +288,12 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           overrides: [
-            nodeActivityTimelineProvider(
-              _testNodeNum,
-            ).overrideWith((ref) => completer.future),
+            nodeActivityTimelineProvider(_testNodeNum)
+                .overrideWith((ref) => completer.future),
           ],
         ),
       );
-      // Don't pump and settle — check during loading
+      // Don't pump and settle - check during loading
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);

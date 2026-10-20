@@ -45,13 +45,13 @@ enum NotificationStyle {
 /// What the Live Activity treats as the "destination" half of the
 /// route row on the lock-screen / Dynamic Island card.
 enum LiveActivityDestination {
-  /// Whole network — node count and overall mesh health.
+  /// Whole network - node count and overall mesh health.
   mesh(0),
 
-  /// Strongest peer — auto-tracks the best-RSSI online peer.
+  /// Strongest peer - auto-tracks the best-RSSI online peer.
   bestPeer(1),
 
-  /// Most-recent DM partner — switches as you chat.
+  /// Most-recent DM partner - switches as you chat.
   activePeer(2);
 
   const LiveActivityDestination(this.value);

@@ -542,7 +542,7 @@ void main() {
             isTrue,
             reason:
                 'Template "${template.label}" produces invalid topic: '
-                '$resolved — ${validation.error}',
+                '$resolved - ${validation.error}',
           );
         }
       },

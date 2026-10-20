@@ -280,7 +280,7 @@ void main() {
       await notifier.loadInitial();
       final fut1 = notifier.loadOlder();
       // Second call must short-circuit while the first is still in
-      // flight — no second store hit, no duplicate prepend.
+      // flight - no second store hit, no duplicate prepend.
       final fut2 = notifier.loadOlder();
       await Future.wait([fut1, fut2]);
 

@@ -17,7 +17,7 @@
 //     `isInitialLoading == true` AND the window is empty.
 //   - A scroll near the top arms a `loadOlder` call on the notifier
 //     (only when `hasMore && !isLoadingOlder && !isInitialLoading`).
-//   - A scroll near the top is a no-op when `hasMore == false` — no
+//   - A scroll near the top is a no-op when `hasMore == false` - no
 //     `loadOlder` call is recorded.
 
 import 'dart:typed_data';
@@ -100,9 +100,8 @@ Widget _wrap(
       meshCoreConversationsProvider.overrideWith(
         _StubConversationsNotifier.new,
       ),
-      meshCoreChatHistoryProvider(
-        historyKey,
-      ).overrideWith(historyNotifierFactory),
+      meshCoreChatHistoryProvider(historyKey)
+          .overrideWith(historyNotifierFactory),
       linkStatusProvider.overrideWithValue(
         const LinkStatus(
           protocol: LinkProtocol.meshcore,

@@ -114,7 +114,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
 
   /// User-tapped authoritative cancel. Stops the retry cycle, blocks
   /// re-arm via `userDisconnected=true`, and clears the auto-reconnect
-  /// state to `idle` (the Scanner becomes the next surface — no
+  /// state to `idle` (the Scanner becomes the next surface - no
   /// "Device not found" intermediate state). Tears down any in-flight
   /// transport link.
   void _userCancelReconnect() {
@@ -150,7 +150,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
 
   void _animateIn() {
     _cancelDismissTimer();
-    // Clear any frozen snapshot — we're showing live data again.
+    // Clear any frozen snapshot - we're showing live data again.
     _frozenReconnectState = null;
     _frozenDeviceState = null;
     _animController.forward();
@@ -289,7 +289,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
       if (!_isReconnecting(widget.autoReconnectState)) {
         _startDismissTimer();
       } else {
-        // Already reconnecting on first build — arm the watchdog.
+        // Already reconnecting on first build - arm the watchdog.
         _startReconnectWatchdog();
       }
     }
@@ -348,7 +348,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Meshtastic readiness banner state. Pure presentation — never
+    // Meshtastic readiness banner state. Pure presentation - never
     // touches `unifiedConnectionStateProvider`. MeshCore sessions
     // resolve to `passthrough` so the existing banner logic below
     // remains the single source of truth for that protocol.
@@ -384,17 +384,17 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     // Auto-trigger reconnect when the banner appears in idle+disconnected
     // state (unexpected disconnect where autoReconnectManager didn't kick
     // in). This gives the user immediate feedback instead of a dead
-    // "Disconnected" banner. Skip if user manually disconnected — they
+    // "Disconnected" banner. Skip if user manually disconnected - they
     // intentionally want to be disconnected (and with the /app route fix,
     // they should be on Scanner, not MainShell, anyway).
-    // Also skip auth failures — auto-retry just hits the same PIN issue.
+    // Also skip auth failures - auto-retry just hits the same PIN issue.
     if (widget.visible &&
         isIdle &&
         !isUserDisconnected &&
         !isTerminalInvalidated &&
         !isAuthFailed &&
         // Don't fire a parallel auto-reconnect while the readiness
-        // restoreSession is doing its thing — the coordinator already
+        // restoreSession is doing its thing - the coordinator already
         // owns the recovery and a parallel scan would race it.
         !isConfiguring &&
         !isDegraded &&
@@ -449,11 +449,11 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
               ? 'Searching for device...'
               : 'Reconnecting...') // lint-allow: hardcoded-string
         : isAuthFailed
-        ? 'Authentication failed — re-pair in Scanner' // lint-allow: hardcoded-string
+        ? 'Authentication failed - re-pair in Scanner' // lint-allow: hardcoded-string
         : (isFailed
               ? 'Device not found'
               : 'Disconnected'); // lint-allow: hardcoded-string
-    // Don't show retry for auth failures — retrying background connect
+    // Don't show retry for auth failures - retrying background connect
     // hits the same PIN/auth issue. The user needs Scanner to manually
     // re-pair (which triggers the system PIN dialog). A degraded session
     // always gets Retry: the link is up and the retry re-runs the
@@ -517,7 +517,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                             return;
                           }
                           if (isReconnecting) {
-                            // User tapped during reconnecting — run the
+                            // User tapped during reconnecting - run the
                             // authoritative cancel (stops timers, sets
                             // userDisconnected, drives state to idle, tears
                             // down transport) before routing to Scanner.
@@ -573,7 +573,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                           if (showRetryButton) ...[
                             TextButton.icon(
                               onPressed: () {
-                                // User tapped retry — cancel dismiss timer
+                                // User tapped retry - cancel dismiss timer
                                 // so the banner stays while reconnecting.
                                 _cancelDismissTimer();
                                 widget.onRetry();

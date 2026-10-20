@@ -561,9 +561,8 @@ class _PreviewCard extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.appearanceLivePreview,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
@@ -621,10 +620,8 @@ class _PreviewChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: context.accentColor,
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: context.accentColor, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -1263,17 +1260,15 @@ class _ResetConfirmationSheet extends StatelessWidget {
           const SizedBox(height: AppTheme.spacing16),
           Text(
             context.l10n.appearanceResetDialogTitle,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
             context.l10n.appearanceResetDialogMessage,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: AppTheme.spacing24),
           Row(
@@ -1299,7 +1294,7 @@ class _ResetConfirmationSheet extends StatelessWidget {
   }
 }
 
-/// Language selector — shows "System Default" plus each supported locale.
+/// Language selector - shows "System Default" plus each supported locale.
 class _LanguageSelector extends StatelessWidget {
   const _LanguageSelector({
     required this.currentLocale,

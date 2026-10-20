@@ -24,7 +24,7 @@ import 'package:socialmesh/providers/connection_providers.dart';
 ///
 /// All three are valuable but each requires substantial ProviderScope
 /// + transport-fake scaffolding. Tracked for follow-up. The
-/// state-machine gate (B3) — by far the most subtle regression — is
+/// state-machine gate (B3) - by far the most subtle regression - is
 /// pinned by the test below at the provider layer using only the
 /// public `debugHandleDisconnectForTest` seam.
 ///
@@ -35,7 +35,7 @@ import 'package:socialmesh/providers/connection_providers.dart';
 /// post-region success path, leaving the user on the connecting splash.
 ///
 /// The gate uses `regionConfigProvider.applyStatus == applying` as the
-/// source of truth — no separate "in-flight" provider was introduced
+/// source of truth - no separate "in-flight" provider was introduced
 /// because the existing status flag is already set/cleared by the
 /// region apply lifecycle and survives the expected disconnect window.
 
@@ -48,7 +48,7 @@ void main() {
 
   test(
     'auth-fail disconnect during regionConfig.applying does NOT route '
-    'to needsScanner — preserves the post-region MainShell promotion',
+    'to needsScanner - preserves the post-region MainShell promotion',
     () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -108,7 +108,7 @@ void main() {
   );
 
   test('auth-fail disconnect when region apply is NOT in flight DOES '
-      'route to needsScanner — preserves the original auth-fail UX', () async {
+      'route to needsScanner - preserves the original auth-fail UX', () async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 

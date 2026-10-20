@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Particle System — lightweight pooled particle engine for atmospheric effects.
+// Particle System - lightweight pooled particle engine for atmospheric effects.
 //
 // Architecture:
 //   - Object pool eliminates GC pressure during animation loops
@@ -48,7 +48,7 @@ enum ParticleShape {
 /// A single particle in the system.
 ///
 /// All fields are mutable for in-place updates during the tick loop.
-/// Particles are never individually allocated or freed — they live
+/// Particles are never individually allocated or freed - they live
 /// in a pre-allocated pool and are recycled via [alive] flag.
 class Particle {
   /// Whether this particle is currently active.
@@ -395,7 +395,7 @@ class ParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ParticlePainter oldDelegate) {
-    // Always repaint — particles move every frame.
+    // Always repaint - particles move every frame.
     return true;
   }
 }

@@ -11,7 +11,7 @@
 ///
 ///   2. Silently clear the pending consent state by calling
 ///      `cancelSipHandshake` (NOT `declineSipHandshake`). Block must
-///      never emit a HS_DECLINE on the wire — that would confirm to
+///      never emit a HS_DECLINE on the wire - that would confirm to
 ///      the peer that we exist and saw their request. Block makes
 ///      the peer see "node unreachable."
 ///
@@ -38,8 +38,8 @@ void main() {
 
     test('Block path persists block via peerSafetyManagerProvider', () {
       // The Block confirm path must call PeerSafetyManager.block.
-      // Grep is intentionally loose — anchored on the provider name +
-      // the method — so reformatting won't break it.
+      // Grep is intentionally loose - anchored on the provider name +
+      // the method - so reformatting won't break it.
       expect(src.contains('peerSafetyManagerProvider.notifier'), isTrue);
       expect(
         RegExp(r'\.block\(\s*peerNodeId').hasMatch(src),
@@ -55,7 +55,7 @@ void main() {
         isTrue,
         reason:
             'Block must silently drop the pending request via '
-            'cancelSipHandshake — it must NOT emit a HS_DECLINE on '
+            'cancelSipHandshake - it must NOT emit a HS_DECLINE on '
             'the wire',
       );
     });
@@ -158,7 +158,7 @@ void main() {
     test('banner dismiss path goes through '
         'firstContactBannerDismissalsProvider, NOT markFirstHandshake', () {
       expect(src.contains('firstContactBannerDismissalsProvider'), isTrue);
-      // The banner must not piggyback on markFirstHandshake — the
+      // The banner must not piggyback on markFirstHandshake - the
       // first-contact mark is reserved for explicit Accept taps.
       // Search the banner widget body specifically.
       final bannerStart = src.indexOf('class _FirstContactBanner');
@@ -178,7 +178,7 @@ void main() {
         bannerBody.contains('markFirstHandshake'),
         isFalse,
         reason:
-            'banner dismissal MUST NOT call markFirstHandshake — '
+            'banner dismissal MUST NOT call markFirstHandshake - '
             'that mark is reserved for explicit Accept-tap consent',
       );
       expect(

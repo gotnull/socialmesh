@@ -6,7 +6,7 @@
 // Source of truth: docs/canvas/CANVAS_PRESENCE_V0_1.md §7.2.
 //
 // Opens from the HUD presence strip's tap target. Renders the live
-// remote-peer list — one row per peer — for the canvas the user is
+// remote-peer list - one row per peer - for the canvas the user is
 // viewing. Canonical AppBottomSheet.showScrollable + scrollController
 // shape per `lib/features/device/device_sheet.dart`.
 //
@@ -15,8 +15,8 @@
 //     the host AppBottomSheet, not this widget).
 //   - No sound, no haptics on row interaction. Tapping a row opens
 //     the NodeDex detail screen via TappableSigilAvatar's default
-//     behaviour — same as every other sigil tap target in the app.
-//   - SectionTitle uses the approved "Here right now" copy — never
+//     behaviour - same as every other sigil tap target in the app.
+//   - SectionTitle uses the approved "Here right now" copy - never
 //     "Users collaborating" / "Active members" / similar SaaS lines.
 library;
 

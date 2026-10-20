@@ -26,7 +26,7 @@ int? computeHopCount(pb.MeshPacket packet) {
 /// Either alone must classify as MQTT or broker-sourced packets read as RF.
 ///
 /// `MeshPacket.via_mqtt` is a plain proto3 bool: `false` is never encoded
-/// on the wire, so absence IS the value `false` — `hasViaMqtt()` cannot
+/// on the wire, so absence IS the value `false` - `hasViaMqtt()` cannot
 /// distinguish "firmware said RF" from "field missing" and gating on it
 /// would classify every RF delivery as unknown. A packet decoded from the
 /// connected radio therefore always carries a definitive answer: `true`

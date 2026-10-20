@@ -288,7 +288,7 @@ void main() {
       engine.handleServiceAdvert(frame, 0x1111);
       expect(cacheChanges, 1);
 
-      // Same payload again — dedup should skip.
+      // Same payload again - dedup should skip.
       engine.handleServiceAdvert(frame, 0x1111);
       expect(cacheChanges, 1); // unchanged
     });

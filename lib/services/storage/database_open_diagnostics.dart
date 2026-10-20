@@ -50,7 +50,7 @@ Map<String, String> buildDatabaseOpenDiagnostics({
   'db_sqlite_result_code': sqliteResultCode?.toString() ?? 'none',
 };
 
-/// Reads the app lifecycle state, or `unknown` when there is no binding —
+/// Reads the app lifecycle state, or `unknown` when there is no binding -
 /// a background isolate has none, and that is itself worth knowing.
 String currentLifecycleLabel() {
   try {

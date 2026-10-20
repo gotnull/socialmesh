@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 /// capture tool. Without this bridge, Flutter's stdout is unreachable
 /// from outside a `flutter run` / `flutter attach` session.
 ///
-/// iOS debug builds only — no-op everywhere else. All log lines are
+/// iOS debug builds only - no-op everywhere else. All log lines are
 /// tagged with subsystem `com.gotnull.socialmesh`, category `dart`.
 /// Filter from a log-stream capture with:
 ///
@@ -39,7 +39,7 @@ class OsLogBridge {
       await _channel.invokeMethod<void>('log', {'msg': message});
     } catch (_) {
       // Channel not available yet (very early startup) or iOS side not
-      // registered — swallow silently; debugPrint still went to stdout.
+      // registered - swallow silently; debugPrint still went to stdout.
     }
   }
 }

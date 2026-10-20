@@ -261,7 +261,7 @@ abstract final class MeshServiceCatalog {
     maxDescriptionLength: 100,
   );
 
-  /// Mesh games — two-peer session-based games over MRRP.
+  /// Mesh games - two-peer session-based games over MRRP.
   /// See docs/mesh_games/MESH_GAMES_V0_1.md.
   static const game = MeshServiceTypeDefinition(
     type: MeshServiceType.game,

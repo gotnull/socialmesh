@@ -31,7 +31,7 @@ import 'package:socialmesh/core/visual_flow/vs_node_view/special_nodes/vs_widget
 import 'package:socialmesh/features/automations/models/automation.dart';
 
 // ---------------------------------------------------------------------------
-// Test helpers — build minimal graph nodes without full widget trees
+// Test helpers - build minimal graph nodes without full widget trees
 // ---------------------------------------------------------------------------
 
 /// Creates a minimal trigger node (VSWidgetNode) for the given trigger type.
@@ -593,7 +593,7 @@ void main() {
         // Create a delay gate with a known config.
         // We can't easily create the private _DelayNode, so we create a
         // VSNodeData with the delay type and rely on the compiler's
-        // fallback getDelayConfig returning null — the compiler will use
+        // fallback getDelayConfig returning null - the compiler will use
         // the default 300s delay.
         final delayGate = VSNodeData(
           type: LogicGateTypes.delay,

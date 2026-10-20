@@ -207,7 +207,7 @@ class OverlayResourceEngine {
   ///   - Expired rows transition to `failed(timeout)`.
   ///   - Any other non-terminal state (`offering`, `negotiating`,
   ///     `accepting`, `evaluating`, `awaitingVerify`, `verifying`) is
-  ///     treated as non-resumable and transitions to `failed(timeout)` —
+  ///     treated as non-resumable and transitions to `failed(timeout)` -
   ///     those states represent handshakes or in-memory work that
   ///     cannot safely continue mid-flight.
   Future<void> restore() {
@@ -353,7 +353,7 @@ class OverlayResourceEngine {
       working.chunkCount,
     );
     if (missing.isEmpty) {
-      // Sender has confirmation for every chunk — move to verify.
+      // Sender has confirmation for every chunk - move to verify.
       final now = _clock();
       final advanced = working.copyWith(
         state: OverlayResourceState.awaitingVerify,
@@ -551,7 +551,7 @@ class OverlayResourceEngine {
       frame.resourceId,
     );
     if (existing != null && !existing.isTerminal) {
-      // Duplicate OFFER — ignore to preserve the current record.
+      // Duplicate OFFER - ignore to preserve the current record.
       AppLogging.overlay(
         'resource OFFER duplicate id=0x${frame.resourceId.toRadixString(16)}',
       );
@@ -672,7 +672,7 @@ class OverlayResourceEngine {
     final existingBit =
         (record.bitmap[frame.chunkIndex >> 3] >> (frame.chunkIndex & 7)) & 0x01;
     if (existingBit == 1) {
-      // Duplicate chunk — ignore without penalty.
+      // Duplicate chunk - ignore without penalty.
       return;
     }
     await _store.putChunk(
@@ -835,7 +835,7 @@ class OverlayResourceEngine {
       staged.chunkCount,
     );
     if (bitmapReceived != staged.chunkCount) {
-      // Missing chunks — send BITMAP and stay in receiving after
+      // Missing chunks - send BITMAP and stay in receiving after
       // rolling the state back.
       final rolledBack = staged.copyWith(
         state: OverlayResourceState.receiving,
@@ -1122,7 +1122,7 @@ class OverlayResourceEngine {
         case OverlayResourceState.cancelled:
         case OverlayResourceState.declined:
         case OverlayResourceState.corrupt:
-          // Terminal — keep as-is.
+          // Terminal - keep as-is.
           break;
       }
     }

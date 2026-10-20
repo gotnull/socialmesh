@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D34c-A — `MeshCoreContactDetailScreen` widget regression pins.
+// D34c-A - `MeshCoreContactDetailScreen` widget regression pins.
 //
 // Pinned invariants:
 //   - Canonical sections render in order: Identity, Routing, Activity,
@@ -118,7 +118,7 @@ void main() {
   });
 
   testWidgets('D34c-B-A scope guard: Force Flood / Force Direct labels '
-      'do NOT surface on the contact detail screen body — they live '
+      'do NOT surface on the contact detail screen body - they live '
       'inside the action sheet only. Manual N-hop UI is absent.', (
     tester,
   ) async {
@@ -199,7 +199,7 @@ void main() {
 
       expect(find.text('Hops'), findsOneWidget);
       // Hops value renders as an em-dash placeholder for flood.
-      expect(find.text('—'), findsOneWidget);
+      expect(find.text('-'), findsOneWidget);
       // Path bytes row hidden when there are no path bytes saved.
       expect(find.text('Path Bytes'), findsNothing);
     },

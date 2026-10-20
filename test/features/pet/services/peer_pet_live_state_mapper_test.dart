@@ -24,7 +24,7 @@ void main() {
   group('PeerPetLiveStateMapper.resolveRaw', () {
     const mapper = PeerPetLiveStateMapper();
 
-    test('dormant on wire wins over everything — not freshness-gated', () {
+    test('dormant on wire wins over everything - not freshness-gated', () {
       final s = _signal(
         sinceLastSeen: const Duration(seconds: 5),
         sinceObserved: const Duration(days: 30),
@@ -43,7 +43,7 @@ void main() {
     });
 
     test('asleep on wire is IGNORED when observation is stale (>30m)', () {
-      // Peer was asleep 2h ago. That flag is no longer authoritative —
+      // Peer was asleep 2h ago. That flag is no longer authoritative -
       // fall through to presence freshness (10s → active).
       final s = _signal(
         sinceLastSeen: const Duration(seconds: 10),
@@ -53,14 +53,14 @@ void main() {
       expect(mapper.resolveRaw(s), PeerPetLiveBand.active);
     });
 
-    test('freshness ladder — active (<60s)', () {
+    test('freshness ladder - active (<60s)', () {
       expect(
         mapper.resolveRaw(_signal(sinceLastSeen: const Duration(seconds: 30))),
         PeerPetLiveBand.active,
       );
     });
 
-    test('freshness ladder — calm (60s ≤ x < 5m)', () {
+    test('freshness ladder - calm (60s ≤ x < 5m)', () {
       expect(
         mapper.resolveRaw(_signal(sinceLastSeen: const Duration(seconds: 60))),
         PeerPetLiveBand.calm,
@@ -71,7 +71,7 @@ void main() {
       );
     });
 
-    test('freshness ladder — idle (5m ≤ x < 30m)', () {
+    test('freshness ladder - idle (5m ≤ x < 30m)', () {
       expect(
         mapper.resolveRaw(_signal(sinceLastSeen: const Duration(minutes: 5))),
         PeerPetLiveBand.idle,
@@ -82,7 +82,7 @@ void main() {
       );
     });
 
-    test('freshness ladder — unknown (≥ 30m or absent)', () {
+    test('freshness ladder - unknown (≥ 30m or absent)', () {
       expect(
         mapper.resolveRaw(_signal(sinceLastSeen: const Duration(minutes: 30))),
         PeerPetLiveBand.unknown,
@@ -91,7 +91,7 @@ void main() {
     });
   });
 
-  group('PeerPetLiveStateMapper.smooth — rule 0: same-band', () {
+  group('PeerPetLiveStateMapper.smooth - rule 0: same-band', () {
     const mapper = PeerPetLiveStateMapper();
 
     test('same band emits nothing and clears any stale pending', () {
@@ -109,7 +109,7 @@ void main() {
     });
   });
 
-  group('PeerPetLiveStateMapper.smooth — rule 1: sleepy/dormant entry', () {
+  group('PeerPetLiveStateMapper.smooth - rule 1: sleepy/dormant entry', () {
     const mapper = PeerPetLiveStateMapper();
 
     test('any -> sleepy is immediate', () {
@@ -138,7 +138,7 @@ void main() {
     });
   });
 
-  group('PeerPetLiveStateMapper.smooth — rule 2: sleepy/dormant EXIT', () {
+  group('PeerPetLiveStateMapper.smooth - rule 2: sleepy/dormant EXIT', () {
     const mapper = PeerPetLiveStateMapper();
 
     test('exit sleepy without wire-clearance requires cooldown', () {
@@ -158,7 +158,7 @@ void main() {
     });
 
     test('exit sleepy WITH fresh wire clearance (≤10s) is immediate', () {
-      // The peer freshly and explicitly said "awake" — trust it.
+      // The peer freshly and explicitly said "awake" - trust it.
       final d = mapper.smooth(
         current: PeerPetLiveBand.sleepy,
         incoming: PeerPetLiveBand.active,
@@ -196,7 +196,7 @@ void main() {
     });
   });
 
-  group('PeerPetLiveStateMapper.smooth — rules 3 & 4: upgrades', () {
+  group('PeerPetLiveStateMapper.smooth - rules 3 & 4: upgrades', () {
     const mapper = PeerPetLiveStateMapper();
 
     test('any non-low-energy -> active is immediate', () {
@@ -242,7 +242,7 @@ void main() {
     });
   });
 
-  group('PeerPetLiveStateMapper.smooth — rule 5: downgrade cooldown', () {
+  group('PeerPetLiveStateMapper.smooth - rule 5: downgrade cooldown', () {
     const mapper = PeerPetLiveStateMapper(
       downgradeCooldown: Duration(seconds: 15),
     );
@@ -323,7 +323,7 @@ void main() {
     });
   });
 
-  group('PeerPetLiveStateMapper.smooth — unknown transitions', () {
+  group('PeerPetLiveStateMapper.smooth - unknown transitions', () {
     const mapper = PeerPetLiveStateMapper();
 
     test('sleepy -> unknown goes through rule 2 (exit sleepy) cooldown', () {

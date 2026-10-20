@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// MRRP engine — orchestrator wiring codec, registry, advert engine,
+/// MRRP engine - orchestrator wiring codec, registry, advert engine,
 /// dispatcher, dedup cache, and SIP transport together.
 ///
 /// [MrrpEngine] is the single entry point for all inbound MRRP frames
@@ -27,7 +27,7 @@ import 'mrrp_types.dart';
 /// Callback to send an MRRP frame encoded inside a SIP mrrpData payload.
 typedef MrrpSendCallback = Future<bool> Function(Uint8List sipPayload);
 
-/// MRRP engine — lifecycle orchestrator.
+/// MRRP engine - lifecycle orchestrator.
 class MrrpEngine {
   final MrrpServiceRegistry registry;
   final MrrpAdvertEngine advertEngine;
@@ -44,7 +44,7 @@ class MrrpEngine {
   /// Attach the local Trust + Safety gate. Hot-path consulted on
   /// every inbound MRRP frame at [_routeFrame] to silently drop
   /// content originating from blocked peers (request, response,
-  /// service advert, directory request/response — all of them).
+  /// service advert, directory request/response - all of them).
   /// Pass `null` to revert to the no-op default.
   void attachPeerSafetyGate(PeerSafetyGate? gate) {
     _safetyGate = gate ?? const NoopPeerSafetyGate();
@@ -60,7 +60,7 @@ class MrrpEngine {
   /// dedup check passes but BEFORE the dispatcher completes the pending
   /// request. Gives feature-layer hooks the authoritative sender nodeNum
   /// (from the Meshtastic packet's `from` field) so they can attribute
-  /// response payloads to specific peers — information that
+  /// response payloads to specific peers - information that
   /// [MrrpDispatcher.sendRequest]'s completer does NOT carry.
   ///
   /// Must be side-effect-only: do not throw, do not mutate the frame.
@@ -68,7 +68,7 @@ class MrrpEngine {
 
   /// Whether the engine accepts inbound MRRP REQUEST frames.
   ///
-  /// When `false` (default), inbound requests are silently dropped — the
+  /// When `false` (default), inbound requests are silently dropped - the
   /// device is "hidden" and does not respond to direct service requests.
   /// Wired from the mesh privacy "discoverable" toggle via the provider layer.
   bool isServicingEnabled = false;
@@ -215,7 +215,7 @@ class MrrpEngine {
 
   void _routeFrame(MrrpFrame frame, int senderNodeId, int frameSizeBytes) {
     // T+S guard: silent drop of every MRRP frame originating from a
-    // blocked peer — request, response, advert, dirReq, dirResp.
+    // blocked peer - request, response, advert, dirReq, dirResp.
     // Pending outbound requests addressed to a peer the user blocks
     // mid-flight time out locally rather than getting their answer
     // delivered. No info-level log line carrying the peer node id.
@@ -336,7 +336,7 @@ class MrrpEngine {
     final dedupKey = buildDedupKey(frame, senderNodeId);
 
     if (dedupCache.isDuplicate(dedupKey)) {
-      // Duplicate request — check for cached response to replay.
+      // Duplicate request - check for cached response to replay.
       counters?.recordDuplicateRequestIgnored();
       final cachedResponse = dedupCache.checkAndRecordRequest(dedupKey);
       if (cachedResponse != null) {
@@ -346,7 +346,7 @@ class MrrpEngine {
       return;
     }
 
-    // First-time request — record it and route to dispatcher.
+    // First-time request - record it and route to dispatcher.
     dedupCache.checkAndRecordRequest(dedupKey);
 
     final response = await dispatcher.dispatch(frame, senderNodeId);
@@ -360,7 +360,7 @@ class MrrpEngine {
 
   void _handleInboundResponse(MrrpFrame frame, int senderNodeId) {
     if (!dedupCache.checkAndRecordResponse(frame.requestId)) {
-      // Duplicate response — suppress.
+      // Duplicate response - suppress.
       AppLogging.mrrp(
         'MRRP_TRACE_RESP_REJECT '
         'req_id=0x${frame.requestId.toRadixString(16)} '
@@ -371,7 +371,7 @@ class MrrpEngine {
       counters?.recordDuplicateResponseIgnored();
       return;
     }
-    // Invoke the sender-attributing observer before dispatch — lets
+    // Invoke the sender-attributing observer before dispatch - lets
     // feature layers attribute payloads to specific peers even though
     // the dispatcher's completer only sees requestId correlation.
     try {

@@ -12,9 +12,9 @@ import '../models/pet_enums.dart';
 import '../providers/pet_providers.dart';
 import 'pet_recent_timeline.dart';
 
-/// Inspect sheet — the "status" screen for the pet. Read-only.
+/// Inspect sheet - the "status" screen for the pet. Read-only.
 class PetInspectSheet extends ConsumerWidget {
-  /// Provided by `AppBottomSheet.showScrollable`'s builder — wired to
+  /// Provided by `AppBottomSheet.showScrollable`'s builder - wired to
   /// the internal ListView so drag gestures coordinate with scroll
   /// position.
   final ScrollController? scrollController;
@@ -161,7 +161,7 @@ Color _branchAccent(PetBranch branch) {
 }
 
 /// Compact elapsed-duration label for the "In stage" row. Differs from
-/// [_relativeTime] in that it has no "ago" suffix — this is a forward-
+/// [_relativeTime] in that it has no "ago" suffix - this is a forward-
 /// reading elapsed counter, not a past-tense timestamp.
 ///
 ///   < 1 m  → "<1m"

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// lint-allow: haptic-feedback — onTap is forwarded from parent callback
+// lint-allow: haptic-feedback - onTap is forwarded from parent callback
 
-// Trait Badge — compact trait indicator for NodeDex list items and detail screens.
+// Trait Badge - compact trait indicator for NodeDex list items and detail screens.
 //
 // Displays the inferred personality trait of a node as a styled badge
 // with icon, label, and trait-specific color. Comes in multiple sizes:
@@ -11,7 +11,7 @@
 // - expanded: icon + label + description + confidence bar, for detail screens
 //
 // Trait colors are defined on NodeTrait itself for consistency.
-// The badge never allows user editing — traits are always derived.
+// The badge never allows user editing - traits are always derived.
 
 import 'package:flutter/material.dart';
 
@@ -37,7 +37,7 @@ enum TraitBadgeSize {
 
 /// A badge that displays a node's inferred personality trait.
 ///
-/// The badge is read-only — traits are always computed from real data
+/// The badge is read-only - traits are always computed from real data
 /// and cannot be manually assigned. The visual treatment uses the
 /// trait's own color for immediate recognition.
 class TraitBadge extends StatelessWidget {

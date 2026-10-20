@@ -32,7 +32,7 @@ import '../../core/radio_scope.dart';
 
 /// Local-only safety state for a peer.
 ///
-/// `unsafe` and `trusted` are reserved for v2+ — schema columns are
+/// `unsafe` and `trusted` are reserved for v2+ - schema columns are
 /// present so a future user-facing UI can surface them without a
 /// migration.
 enum NodeSafetyState {
@@ -63,7 +63,7 @@ class PeerSafetyRecord {
   final NodeSafetyState state;
 
   /// Wall-clock ms of the first Accept the local user has issued on a
-  /// HS_HELLO from this peer. Null when no Accept has ever fired —
+  /// HS_HELLO from this peer. Null when no Accept has ever fired -
   /// used to gate the first-contact warning UX.
   final int? firstHandshakeMs;
 
@@ -176,7 +176,7 @@ class PeerSafetyStore {
         AppLogging.storage(
           'Upgrading peer_safety.db v$oldVersion -> v$newVersion',
         );
-        // No migrations yet — schema v1 is the baseline.
+        // No migrations yet - schema v1 is the baseline.
       },
     );
   }
@@ -206,7 +206,7 @@ class PeerSafetyStore {
   Database get _database {
     final db = _db;
     if (db == null || !db.isOpen) {
-      throw StateError('PeerSafetyStore not initialized — call init() first');
+      throw StateError('PeerSafetyStore not initialized - call init() first');
     }
     return db;
   }
@@ -219,7 +219,7 @@ class PeerSafetyStore {
     _db = null;
   }
 
-  /// Insert or replace [record]. The full row is rewritten — callers
+  /// Insert or replace [record]. The full row is rewritten - callers
   /// should fetch the current record and use [PeerSafetyRecord.copyWith]
   /// to mutate fields rather than passing partial data.
   Future<void> upsert(PeerSafetyRecord record) async {
@@ -286,7 +286,7 @@ class PeerSafetyStore {
     return rows.map((r) => r['peer_node_id']! as int).toList(growable: false);
   }
 
-  /// Drop the row for [peerNodeId]. Idempotent — no-op when absent.
+  /// Drop the row for [peerNodeId]. Idempotent - no-op when absent.
   Future<int> delete(int peerNodeId) async {
     return _database.delete(
       _tableName,
@@ -295,7 +295,7 @@ class PeerSafetyStore {
     );
   }
 
-  /// Diagnostics — total row count.
+  /// Diagnostics - total row count.
   Future<int> count() async {
     final rows = await _database.rawQuery(
       'SELECT COUNT(*) AS cnt FROM $_tableName',

@@ -12,7 +12,7 @@ import '../../models/mesh_models.dart';
 
 /// Single-select role filter shared between the Nodes tab and Messages
 /// > Contacts. The filter is non-destructive (UI-only) and orthogonal
-/// to the existing presence-based filters (active / favorites / etc.) —
+/// to the existing presence-based filters (active / favorites / etc.) -
 /// callers apply both in series.
 ///
 /// Roles are stored on [MeshNode.role] as the protobuf enum's `name`
@@ -28,7 +28,7 @@ const String roleFilterAll = '__all__';
 /// the `roleFilterAll` sentinel.
 ///
 /// Nodes with a null/empty role contribute the literal empty string
-/// `''` — callers can decide whether to render an "Unknown" chip for
+/// `''` - callers can decide whether to render an "Unknown" chip for
 /// it. We do not render that bucket today because Meshtastic nodes
 /// almost always advertise a role; flipping it on later is a one-line
 /// change in [buildRoleFilterChips].
@@ -182,10 +182,10 @@ IconData? _roleIcon(String role) {
 ///
 /// Used by both the Nodes tab and Messages > Contacts as a sliver/box
 /// adapter above the list. Hides itself entirely when only the
-/// `roleFilterAll` bucket would render — there's no signal in a
+/// `roleFilterAll` bucket would render - there's no signal in a
 /// single-chip filter row.
 ///
-/// [source] is the marker logged when the user picks a chip — pass
+/// [source] is the marker logged when the user picks a chip - pass
 /// `'nodes_tab'` or `'contacts'` so triage can tell which surface
 /// drove the change.
 class RoleFilterChipRow extends StatelessWidget {

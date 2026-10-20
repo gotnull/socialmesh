@@ -207,9 +207,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            fleetCandidateSourceProvider(
-              _org,
-            ).overrideWithValue(const FleetCandidateSourceLoading()),
+            fleetCandidateSourceProvider(_org)
+                .overrideWithValue(const FleetCandidateSourceLoading()),
             licenseOrgFleetServiceProvider.overrideWithValue(service),
           ],
           child: MaterialApp(

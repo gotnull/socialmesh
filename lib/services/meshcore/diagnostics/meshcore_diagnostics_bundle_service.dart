@@ -44,7 +44,7 @@ class MeshCoreDiagnosticsBundleService {
 
     // D-Q6: Crashlytics' SDK has no public read API for the user id
     // it stores. Use the signed-in FirebaseAuth UID as the support
-    // cross-reference instead — it's the same identifier our backend
+    // cross-reference instead - it's the same identifier our backend
     // surfaces in bug reports and admin tickets. The pure builder
     // still names the slot `crashlyticsUserId` since that's the
     // canonical "support cross-reference" field.
@@ -67,8 +67,7 @@ class MeshCoreDiagnosticsBundleService {
       appBuildNumber: packageInfo.buildNumber,
       selfNodeName: selfInfo?.nodeName,
       selfPubKey: selfInfo?.pubKey,
-      selfBatteryMv:
-          null, // battery surfaces via a separate provider; leave for D-Q6 follow-up
+      selfBatteryMv: null, // battery surfaces via a separate provider; leave for D-Q6 follow-up
       selfFreqKhz: selfInfo?.freqKhz,
       selfBandwidthHz: selfInfo?.bandwidthHz,
       selfSpreadingFactor: selfInfo?.spreadingFactor,

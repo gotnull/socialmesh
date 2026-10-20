@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Transport capability matrix — pins the answers to the three questions
+// Transport capability matrix - pins the answers to the three questions
 // the protocol layer has to ask about a transport: does it need framing,
 // does it need a serial-UART wake preamble before wantConfigId, and is
 // reconnect scan-based or endpoint-based. See issue #102 for why
@@ -39,7 +39,7 @@ void main() {
         t.requiresWakeSequence,
         isFalse,
         reason:
-            'TCP must NOT receive the 32x0xC3 wake preamble — that is a '
+            'TCP must NOT receive the 32x0xC3 wake preamble - that is a '
             'serial-UART quirk. The firmware PhoneAPI parses those bytes '
             'as a malformed framed packet.',
       );

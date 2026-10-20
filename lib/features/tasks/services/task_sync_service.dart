@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Task Sync Service — syncs task transitions across devices.
+// Task Sync Service - syncs task transitions across devices.
 //
 // Uses the same outbox + drain pattern proven in AutomationSyncService
 // and NodeDexSyncService:
@@ -14,7 +14,7 @@
 // Firestore collection: orgs/{orgId}/task_transitions/{transitionId}
 //
 // The service integrates with the existing 2-minute drain cycle pattern.
-// No parallel sync loops — each domain has its own independent timer.
+// No parallel sync loops - each domain has its own independent timer.
 //
 // Logging gated behind TASK_SYNC_LOGGING_ENABLED.
 //
@@ -49,7 +49,7 @@ const int _taskMaxOutboxRetries = 5;
 /// - Conflict-safe: uses [TaskConflictResolver] for reconciliation.
 /// - Non-blocking: sync runs in the background.
 ///
-/// Spec: TASK_SYSTEM.md — Offline Sync, Sprint 008/W4.2.
+/// Spec: TASK_SYSTEM.md - Offline Sync, Sprint 008/W4.2.
 class TaskSyncService {
   final TaskDatabase _db;
   final TaskConflictResolver _resolver;
@@ -83,7 +83,7 @@ class TaskSyncService {
 
   /// Enable or disable cloud sync.
   ///
-  /// [orgId] is required when enabling — all Firestore operations are
+  /// [orgId] is required when enabling - all Firestore operations are
   /// scoped to `orgs/{orgId}/`.
   void setEnabled(bool enabled, {String? orgId}) {
     final wasEnabled = _enabled;
@@ -112,7 +112,7 @@ class TaskSyncService {
   /// Trigger a one-shot sync cycle (drain outbox + pull updates).
   Future<void> syncNow() async {
     if (!_enabled) {
-      _syncLog('syncNow: skipped — sync not enabled');
+      _syncLog('syncNow: skipped - sync not enabled');
       return;
     }
     _syncLog('syncNow: triggering manual sync cycle');
@@ -125,24 +125,24 @@ class TaskSyncService {
   /// the change to Firestore promptly.
   Future<void> drainOutboxNow() async {
     if (!_enabled) {
-      _syncLog('drainOutboxNow: skipped — sync not enabled');
+      _syncLog('drainOutboxNow: skipped - sync not enabled');
       return;
     }
 
     if (_isDraining) {
-      _syncLog('drainOutboxNow: skipped — drain already in progress');
+      _syncLog('drainOutboxNow: skipped - drain already in progress');
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _syncLog('drainOutboxNow: skipped — no authenticated user');
+      _syncLog('drainOutboxNow: skipped - no authenticated user');
       return;
     }
 
     final orgId = _orgId;
     if (orgId == null) {
-      _syncLog('drainOutboxNow: skipped — no orgId');
+      _syncLog('drainOutboxNow: skipped - no orgId');
       return;
     }
 
@@ -195,7 +195,7 @@ class TaskSyncService {
       final orgId = _orgId;
 
       if (user == null || orgId == null) {
-        _syncLog('Sync cycle skipped — no user or orgId');
+        _syncLog('Sync cycle skipped - no user or orgId');
         return;
       }
 
@@ -216,7 +216,7 @@ class TaskSyncService {
 
   Future<void> _drainOutbox(String orgId) async {
     if (_isDraining) {
-      _syncLog('drain: skipped — already in progress');
+      _syncLog('drain: skipped - already in progress');
       return;
     }
     _isDraining = true;
@@ -238,7 +238,7 @@ class TaskSyncService {
         final unsyncedTransitions = await _db.getUnsyncedTransitions(task.id);
 
         if (unsyncedTransitions.isEmpty) {
-          // Task row changed but no unsynced transitions — just mark synced.
+          // Task row changed but no unsynced transitions - just mark synced.
           await _db.markSynced(task.id, DateTime.now());
           continue;
         }

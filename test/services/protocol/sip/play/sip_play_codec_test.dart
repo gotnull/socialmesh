@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 /// Wire-format tests for the SIP Play v1 envelope codec. These pin
-/// the byte layout from the spec — any future change here must bump
+/// the byte layout from the spec - any future change here must bump
 /// `SipPlayConstants.envelopeTypeAndVersionV1` first.
 library;
 
@@ -26,7 +26,7 @@ void main() {
       );
       final bytes = SipPlayCodec.encode(envelope)!;
 
-      // Header (6 bytes) + game payload (1 byte) = 7 bytes total —
+      // Header (6 bytes) + game payload (1 byte) = 7 bytes total -
       // matches the spec's "~7 bytes before SIP framing" budget for
       // a TTT move.
       expect(bytes.length, equals(7));
@@ -191,7 +191,7 @@ void main() {
       for (final bytes in cases) {
         final result = SipPlayCodec.decode(bytes);
         // Either ok (e.g. unknown game type) or fail with a typed
-        // error — never an exception.
+        // error - never an exception.
         expect(result.error == null || result.envelope == null, isTrue);
       }
     });

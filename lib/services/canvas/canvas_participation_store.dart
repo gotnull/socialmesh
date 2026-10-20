@@ -5,7 +5,7 @@
 // settings.
 //
 // Source of truth: docs/canvas/CANVAS_PARTICIPATION_V0_1.md §3.
-// Pattern mirrors `MeshCoreChannelSortModeStore` — a thin wrapper
+// Pattern mirrors `MeshCoreChannelSortModeStore` - a thin wrapper
 // over a single `SharedPreferences` instance with sync read + async
 // write methods. No caching, no migrations, no schema version. Three
 // keys, three booleans, all default `false`.

@@ -127,7 +127,7 @@ final licenseOrgActiveSeatCountProvider = StreamProvider.family<int, String>((
   }
   // Force teardown + re-subscribe whenever the signed-in uid changes.
   // The query is scoped by orgId, not the caller's uid, so this watch
-  // is not strictly part of the filter — but the underlying Firestore
+  // is not strictly part of the filter - but the underlying Firestore
   // snapshot listener binds to the auth context at subscribe time. If
   // a sign-out / sign-in flip happens while the provider has a live
   // subscription, the existing stream keeps the old auth context and

@@ -26,7 +26,7 @@ enum ReticulumCaptureSource {
 /// Sidecar metadata for a single SMRC capture file. Stored as
 /// `<capture>.meta.json` next to the capture itself.
 ///
-/// Crucially, this object **never** holds payload bytes — only
+/// Crucially, this object **never** holds payload bytes - only
 /// envelope metadata derived from the SMRC headers. The classifier
 /// is responsible for populating the kind / counts / source-ID list;
 /// human-curated fields (deviceModel, firmwareVersion, region,

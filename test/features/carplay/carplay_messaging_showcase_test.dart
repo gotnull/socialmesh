@@ -100,9 +100,8 @@ void main() {
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => MediaQuery(
-                        data: MediaQuery.of(
-                          context,
-                        ).copyWith(disableAnimations: true),
+                        data: MediaQuery.of(context)
+                            .copyWith(disableAnimations: true),
                         child: const CarPlayMessagingShowcaseScreen(),
                       ),
                     ),

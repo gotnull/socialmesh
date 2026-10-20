@@ -57,7 +57,7 @@ class VideoStream {
   /// Last heartbeat time (epoch ms).
   final int lastHeartbeat;
 
-  /// Expiry time — stream is removed after this (epoch ms).
+  /// Expiry time - stream is removed after this (epoch ms).
   final int expiresAt;
 
   const VideoStream({

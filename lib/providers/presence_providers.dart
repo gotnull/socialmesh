@@ -132,7 +132,7 @@ class NodePresence {
   ConfidenceTier get confidenceTier =>
       ConfidenceTier.fromConfidence(confidence);
 
-  /// Whether this node is considered **online** — heard within the
+  /// Whether this node is considered **online** - heard within the
   /// Meshtastic firmware online window (2 h).  Broader than
   /// [PresenceConfidence.isActive] (2 min).
   bool get isOnline {
@@ -242,7 +242,7 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
 
     // Pause/resume the periodic recompute timer when the app is
     // backgrounded/foregrounded. Recomputing all node presence states every
-    // 30 seconds in the background serves no purpose — the UI is not visible.
+    // 30 seconds in the background serves no purpose - the UI is not visible.
     ref.listen<bool>(appLifecycleProvider, (previous, isForeground) {
       if (isForeground) {
         _startTimer();
@@ -293,7 +293,7 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
   /// reference equality is a complete change signal. A node's presence
   /// can change only by packet (covered here) or by time (covered by
   /// the periodic tick), so reusing untouched NodePresence instances
-  /// between ticks is lossless up to the tick interval — the same
+  /// between ticks is lossless up to the tick interval - the same
   /// staleness bound the tick already imposes. Keeping instance
   /// identity for untouched nodes is what lets per-node family
   /// providers skip notifying their dependents.

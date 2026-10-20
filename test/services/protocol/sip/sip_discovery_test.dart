@@ -251,7 +251,7 @@ void main() {
         discovery.handleRollcallReq(0xBBBB);
         expect(changed, 1);
 
-        // Second call from same peer (already cached) — no change event.
+        // Second call from same peer (already cached) - no change event.
         discovery.handleRollcallReq(0xBBBB);
         expect(changed, 1);
       });
@@ -518,7 +518,7 @@ void main() {
         final created = discovery.getPeer(0xCAFE);
         expect(created, isNotNull);
         expect(created!.features, equals(0x3F0B));
-        // Other fields stay zero — they're filled in on the next real
+        // Other fields stay zero - they're filled in on the next real
         // CAP frame.
         expect(created.mtuHint, equals(0));
         expect(created.rxWindowS, equals(0));
@@ -536,7 +536,7 @@ void main() {
             discovery.getPeer(0x1234)!.features,
             equals(0x3F0B),
             reason:
-                'recordPeerFeaturesObserved is monotonic — bits already '
+                'recordPeerFeaturesObserved is monotonic - bits already '
                 'observed must never be lost when a narrower observation '
                 'arrives',
           );
@@ -554,7 +554,7 @@ void main() {
           discovery.getPeer(0xDEAD)!.capsHash,
           equals(beforeHash),
           reason:
-              'capsHash must NOT change on the fast path — a future real '
+              'capsHash must NOT change on the fast path - a future real '
               'CAP_BEACON / CAP_RESP with a different hash still needs to '
               'trigger a full _upsertPeer replacement',
         );

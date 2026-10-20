@@ -8,7 +8,7 @@ import 'package:socialmesh/l10n/app_localizations_en.dart';
 void main() {
   final l10n = AppLocalizationsEn();
 
-  group('formatDistanceMetersAscii — metric', () {
+  group('formatDistanceMetersAscii - metric', () {
     test('sub-kilometre distances render whole metres', () {
       expect(formatDistanceMetersAscii(0, MeasurementUnits.metric), '0 m');
       expect(formatDistanceMetersAscii(450, MeasurementUnits.metric), '450 m');
@@ -34,7 +34,7 @@ void main() {
     });
   });
 
-  group('formatDistanceMetersAscii — imperial', () {
+  group('formatDistanceMetersAscii - imperial', () {
     test('short distances render whole feet', () {
       // 100 m ≈ 328 ft
       expect(
@@ -70,7 +70,7 @@ void main() {
     });
   });
 
-  group('formatDistanceMeters — localized (en)', () {
+  group('formatDistanceMeters - localized (en)', () {
     test('metric uses localized metre/kilometre symbols', () {
       expect(formatDistanceMeters(450, MeasurementUnits.metric, l10n), '450 m');
       expect(

@@ -129,7 +129,7 @@ void main() {
     test('returns null for exactly 90° offset (perpendicular)', () {
       // Bearing to target is 0°, reverse is 180°.
       // Target course is 90° (heading east). Diff = |90 - 180| = 90°.
-      // 90° is the boundary — >= 90° means no ETA.
+      // 90° is the boundary - >= 90° means no ETA.
       final state = TakNavigationState(
         target: _targetEvent(speed: 10, course: 90),
         bearingDegrees: 0,

@@ -137,7 +137,7 @@ void main() {
       expect(settings.participationEnabled, isFalse);
       expect(settings.presenceSharingEnabled, isFalse);
 
-      // Sheet dismissed — explore button no longer present.
+      // Sheet dismissed - explore button no longer present.
       expect(
         find.byKey(const ValueKey('mesh-canvas-onboarding-explore')),
         findsNothing,
@@ -146,7 +146,7 @@ void main() {
   );
 
   testWidgets(
-    'tapping "Join MeshCanvas" persists (true, true, false) and dismisses — '
+    'tapping "Join MeshCanvas" persists (true, true, false) and dismisses - '
     'sharing must stay off until explicit settings toggle',
     (tester) async {
       final container = ProviderContainer();
@@ -172,7 +172,7 @@ void main() {
         settings.presenceSharingEnabled,
         isFalse,
         reason:
-            'Join MeshCanvas must NOT auto-enable presence sharing — that is '
+            'Join MeshCanvas must NOT auto-enable presence sharing - that is '
             'a separate explicit toggle (spec §5.5)',
       );
 

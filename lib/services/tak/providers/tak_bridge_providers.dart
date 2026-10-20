@@ -49,7 +49,7 @@ final takMeshBridgeProvider = Provider<TakMeshBridge>((ref) {
   final bridge = TakMeshBridge(
     server: server,
     meshSend: (payload, {required int portnum, int? destination}) async {
-      // Placeholder — will be wired to ProtocolService in integration.
+      // Placeholder - will be wired to ProtocolService in integration.
       AppLogging.tak(
         'Bridge meshSend: ${payload.length} bytes on portnum $portnum',
       );
@@ -68,7 +68,7 @@ final takGeoChatBridgeProvider = Provider<GeoChatBridge>((ref) {
   AppLogging.tak('Creating GeoChatBridge provider');
   return GeoChatBridge(
     meshSend: (text, {int channelIndex = 0, int? destination}) async {
-      // Placeholder — will be wired to ProtocolService in integration.
+      // Placeholder - will be wired to ProtocolService in integration.
       AppLogging.tak('GeoChat meshSend: "$text" on channel $channelIndex');
       return 0;
     },
@@ -96,7 +96,7 @@ class TakBridgeStatus {
   });
 }
 
-/// Bridge status notifier — refreshes on a timer stream.
+/// Bridge status notifier - refreshes on a timer stream.
 class TakBridgeStatusNotifier extends Notifier<TakBridgeStatus> {
   Timer? _timer;
 

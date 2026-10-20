@@ -12,12 +12,11 @@ import 'spp_protocol.dart';
 import 'spp_types.dart';
 
 /// Callback type for sending an SPP packet over the mesh.
-typedef SppSendCallback =
-    Future<bool> Function(
-      Uint8List payload, {
-      int? destinationNode,
-      int hopLimit,
-    });
+typedef SppSendCallback = Future<bool> Function(
+  Uint8List payload, {
+  int? destinationNode,
+  int hopLimit,
+});
 
 /// Callback type for checking if a node is trusted.
 typedef SppTrustCheck = bool Function(int nodeNum);

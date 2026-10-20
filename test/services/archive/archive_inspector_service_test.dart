@@ -176,14 +176,14 @@ void main() {
     });
 
     test('rejects corrupt archive data', () {
-      // A truncated ZIP header — starts with PK signature but is incomplete.
+      // A truncated ZIP header - starts with PK signature but is incomplete.
       // The archive library recognises this as a ZIP attempt and throws.
       final corrupt = Uint8List.fromList([
         0x50, 0x4B, 0x03, 0x04, // Local file header signature
         0x14, 0x00, // Version needed
         0x00, 0x00, // Flags
         0x08, 0x00, // Compression: deflate
-        // Truncated — missing required fields
+        // Truncated - missing required fields
       ]);
 
       final manifest = service.inspect(
@@ -205,7 +205,7 @@ void main() {
       builder.add([0x50, 0x4B, 0x03, 0x04]);
       // Version needed.
       builder.add([0x14, 0x00]);
-      // General purpose bit flag — bit 0 = encrypted.
+      // General purpose bit flag - bit 0 = encrypted.
       builder.add([0x01, 0x00]);
       // Compression method (stored).
       builder.add([0x00, 0x00]);
@@ -242,7 +242,7 @@ void main() {
       );
 
       // The raw byte scanner should detect the encrypted flag.
-      // If decoding also fails, that's fine — either path rejects it.
+      // If decoding also fails, that's fine - either path rejects it.
       expect(manifest.isEncrypted || manifest.rejectReason != null, isTrue);
     });
 

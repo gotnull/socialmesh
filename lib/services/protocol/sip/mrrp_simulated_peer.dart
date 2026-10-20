@@ -92,7 +92,7 @@ class MrrpSimulatedPeer {
         return [_buildErrorResponse(request, errorStatus)];
 
       case SimResponseMode.timeout:
-        // No response — let the request time out.
+        // No response - let the request time out.
         return [];
 
       case SimResponseMode.duplicate:

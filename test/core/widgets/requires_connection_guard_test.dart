@@ -96,7 +96,7 @@ void main() {
     });
 
     testWidgets(
-      'brief blip is silent — banner shows then disappears, no pop, no snackbar',
+      'brief blip is silent - banner shows then disappears, no pop, no snackbar',
       (tester) async {
         final transport = _FakeTransport(
           initial: DeviceConnectionState.connected,
@@ -133,7 +133,7 @@ void main() {
         expect(find.text('guarded'), findsOneWidget);
         expect(find.byType(SnackBar), findsNothing);
 
-        // Drain the (cancelled) timer just in case — should not pop or snack.
+        // Drain the (cancelled) timer just in case - should not pop or snack.
         await tester.pump(
           kRequiresConnectionGuardGraceWindow + const Duration(seconds: 2),
         );
@@ -201,7 +201,7 @@ void main() {
         await tester.pump();
         expect(bannerFinder(), findsNothing);
 
-        // Drain past the grace window — neither timer should fire.
+        // Drain past the grace window - neither timer should fire.
         await tester.pump(
           kRequiresConnectionGuardGraceWindow + const Duration(seconds: 2),
         );
@@ -232,7 +232,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('open'), findsOneWidget);
 
-      // Drain past the grace window — the cancelled timer must not fire,
+      // Drain past the grace window - the cancelled timer must not fire,
       // i.e. no snackbar appears after the user has already left.
       await tester.pump(
         kRequiresConnectionGuardGraceWindow + const Duration(seconds: 2),
@@ -245,7 +245,7 @@ void main() {
   });
 }
 
-/// Minimal `DeviceTransport` test double — only the surface that
+/// Minimal `DeviceTransport` test double - only the surface that
 /// `connectionStateProvider` reads (`state` + `stateStream`) is
 /// exercised. All other interface methods are no-ops.
 class _FakeTransport implements DeviceTransport {

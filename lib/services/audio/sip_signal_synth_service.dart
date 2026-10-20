@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Local SIP Signal synthesis — turns a [SipSignalEnvelope] into
+/// Local SIP Signal synthesis - turns a [SipSignalEnvelope] into
 /// audible output by generating 16-bit PCM WAV in memory, writing
 /// it to a temp file, and handing it to [just_audio].
 ///
@@ -11,7 +11,7 @@
 ///     (replay), generating waveforms from the compact wire envelope.
 ///   - Pure synthesis. No network. No persistence beyond the
 ///     short-lived WAV temp file (cleaned on next play).
-///   - Every public method is fire-and-forget — exceptions are
+///   - Every public method is fire-and-forget - exceptions are
 ///     logged + swallowed, so a missing audio backend never breaks
 ///     the SIP DM happy path.
 library;
@@ -46,7 +46,7 @@ class SipSignalSynthCueSink {
   void recordCue(SipSignalSynthCue cue) => cues.add(cue);
 }
 
-/// Discriminated record of a synthesis request — used by tests.
+/// Discriminated record of a synthesis request - used by tests.
 class SipSignalSynthCue {
   final SipSignalKind kind;
 
@@ -68,7 +68,7 @@ class SipSignalSynthCue {
 }
 
 class SipSignalSynthService {
-  /// Test override — when non-null, [playPhrase] / [playMorse] route
+  /// Test override - when non-null, [playPhrase] / [playMorse] route
   /// to the sink instead of generating audio.
   static SipSignalSynthCueSink? overrideSinkForTest;
 
@@ -99,7 +99,7 @@ class SipSignalSynthService {
   /// previews) skip the per-tap synthesis cost, which is the bulk of
   /// the user-perceived "delay before sound" on Android. Capped to a
   /// sane maximum so a long-running session can't let it grow
-  /// unbounded — eviction is FIFO via [_tapWavCacheOrder].
+  /// unbounded - eviction is FIFO via [_tapWavCacheOrder].
   static const int _kTapWavCacheMax = 64;
   final Map<int, Uint8List> _tapWavCache = {};
   final List<int> _tapWavCacheOrder = [];
@@ -111,7 +111,7 @@ class SipSignalSynthService {
     required int velocity,
   }) {
     // Pack into a single int for a cheap map key. MIDI fits in 7
-    // bits, instrument in 3, duration in 8, velocity in 7 — under
+    // bits, instrument in 3, duration in 8, velocity in 7 - under
     // 32 bits total, no collisions across realistic inputs.
     return (midi & 0x7F) |
         ((instrument.code & 0x07) << 7) |
@@ -149,7 +149,7 @@ class SipSignalSynthService {
   /// run in parallel, and consults the WAV cache so repeat-same-note
   /// taps skip both the synthesis and (for the cached slot) the
   /// temp-file rewrite. Skipping the previous-temp-file cleanup
-  /// await — stale `sm_tap_*` files purge in the background or with
+  /// await - stale `sm_tap_*` files purge in the background or with
   /// the OS temp sweep.
   Future<void> playToneTap({
     required int midi,
@@ -210,7 +210,7 @@ class SipSignalSynthService {
 
       final player = _tapPool[slot];
       await player.setFilePath(temp.filePath);
-      // No explicit seek — setFilePath leaves position at 0, and
+      // No explicit seek - setFilePath leaves position at 0, and
       // skipping the await shaves another small platform round-trip.
       await player.play();
     } catch (e, st) {
@@ -274,7 +274,7 @@ class SipSignalSynthService {
   }
 
   // ---------------------------------------------------------------
-  // Pure synthesis — no I/O, deterministic, testable.
+  // Pure synthesis - no I/O, deterministic, testable.
   // ---------------------------------------------------------------
 
   /// Render a phrase to a 16-bit PCM WAV byte buffer.
@@ -304,7 +304,7 @@ class SipSignalSynthService {
     final unitMs = SipSignalConstants.unitMsForWpm(morse.speedWpm);
     final timing = morseTimingForText(morse.text);
     final samples = <int>[];
-    // Standard Morse practice tone — 600 Hz; clear + non-fatiguing.
+    // Standard Morse practice tone - 600 Hz; clear + non-fatiguing.
     const freq = 600.0;
     for (final step in timing) {
       final n = _samplesForUnits(step.units, unitMs);
@@ -342,7 +342,7 @@ class SipSignalSynthService {
       double sample;
       switch (instrument) {
         case SipSignalInstrument.sine:
-          // Linear ADSR — 5 ms attack, 30 ms release, sustain elsewhere.
+          // Linear ADSR - 5 ms attack, 30 ms release, sustain elsewhere.
           env = _adsr(progress, sampleCount);
           sample = math.sin(twoPiF * t);
         case SipSignalInstrument.bell:
