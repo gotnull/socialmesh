@@ -8,6 +8,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/units/byte_format.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
@@ -76,85 +77,14 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     final disconnects = causesDisconnect && remoteNode == null;
 
     if (requiresConfirmation) {
-      final confirmed = await AppBottomSheet.show<bool>(
+      // Every confirmed action here reboots, powers off or erases a radio.
+      final confirmed = await AppBottomSheet.showConfirm(
         context: context,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  causesDisconnect
-                      ? Icons.warning_amber_rounded
-                      : Icons.info_outline,
-                  color: causesDisconnect
-                      ? AppTheme.warningYellow
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: Text(
-                    actionName,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              warningMessage ?? l10n.deviceMgmtDefaultWarning(actionName),
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: SemanticColors.divider),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                    ),
-                    child: Text(
-                      l10n.accountSubCancel,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: causesDisconnect
-                          ? AppTheme.warningYellow
-                          : Theme.of(context).colorScheme.primary,
-                      foregroundColor: causesDisconnect
-                          ? Colors.black
-                          : Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                    ),
-                    child: Text(l10n.accountSubConfirm),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        title: actionName,
+        message: warningMessage ?? l10n.deviceMgmtDefaultWarning(actionName),
+        confirmLabel: l10n.accountSubConfirm,
+        cancelLabel: l10n.accountSubCancel,
+        isDestructive: true,
       );
 
       if (confirmed != true) {
@@ -214,49 +144,37 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
         if (_isProcessing)
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else
+          // Vertical only: the settings primitives own their horizontal inset.
           SliverPadding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
             sliver: SliverList.list(
               children: [
                 if (!isConnected)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Card(
-                      color: theme.colorScheme.errorContainer,
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppTheme.spacing16),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.warning_rounded,
-                              color: theme.colorScheme.onErrorContainer,
-                            ),
-                            const SizedBox(width: AppTheme.spacing12),
-                            Expanded(
-                              child: Text(
-                                context.l10n.deviceMgmtNotConnected,
-                                style: TextStyle(
-                                  color: theme.colorScheme.onErrorContainer,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  StatusBanner.error(
+                    title: context.l10n.deviceMgmtNotConnected,
+                    margin: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing16,
+                      0,
+                      AppTheme.spacing16,
+                      AppTheme.spacing8,
                     ),
                   ),
                 if (remoteName != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
-                    child: StatusBanner.info(
-                      title: context.l10n.settingsRemoteAdminConfiguringTitle,
-                      subtitle: context.l10n.deviceMgmtRemoteTargetBanner(
-                        remoteName,
-                      ),
+                  StatusBanner.info(
+                    title: context.l10n.settingsRemoteAdminConfiguringTitle,
+                    subtitle: context.l10n.deviceMgmtRemoteTargetBanner(
+                      remoteName,
+                    ),
+                    margin: const EdgeInsets.fromLTRB(
+                      AppTheme.spacing16,
+                      0,
+                      AppTheme.spacing16,
+                      AppTheme.spacing8,
                     ),
                   ),
-                _SectionHeader(title: context.l10n.deviceMgmtSectionPower),
-                const SizedBox(height: AppTheme.spacing8),
+                SettingsSectionHeader(
+                  title: context.l10n.deviceMgmtSectionPower,
+                ),
                 _ActionCard(
                   icon: Icons.refresh,
                   iconColor: theme.colorScheme.primary,
@@ -303,7 +221,6 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: true,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.power_settings_new,
                   iconColor: theme.colorScheme.secondary,
@@ -355,12 +272,12 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: true,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing24),
                 // Sync Time has no remote form; it would set this app's
                 // radio while the screen says commands go to the remote node.
                 if (remoteName == null) ...[
-                  _SectionHeader(title: context.l10n.deviceMgmtSectionTime),
-                  const SizedBox(height: AppTheme.spacing8),
+                  SettingsSectionHeader(
+                    title: context.l10n.deviceMgmtSectionTime,
+                  ),
                   _ActionCard(
                     icon: Icons.access_time,
                     iconColor: theme.colorScheme.tertiary,
@@ -373,10 +290,10 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       requiresConfirmation: false,
                     ),
                   ),
-                  const SizedBox(height: AppTheme.spacing24),
                 ],
-                _SectionHeader(title: context.l10n.deviceMgmtSectionReset),
-                const SizedBox(height: AppTheme.spacing8),
+                SettingsSectionHeader(
+                  title: context.l10n.deviceMgmtSectionReset,
+                ),
                 _ActionCard(
                   icon: Icons.cleaning_services,
                   iconColor: AccentColors.orange,
@@ -425,7 +342,6 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     warningMessage: context.l10n.deviceMgmtResetNodeDbWarning,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.settings_backup_restore,
                   iconColor: AccentColors.coral,
@@ -516,7 +432,6 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: true,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
                   icon: Icons.delete_forever,
                   iconColor: theme.colorScheme.error,
@@ -678,9 +593,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     causesDisconnect: false, // Navigation handled in action
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(title: context.l10n.deviceMgmtSectionFirmware),
-                const SizedBox(height: AppTheme.spacing8),
+                SettingsSectionHeader(
+                  title: context.l10n.deviceMgmtSectionFirmware,
+                ),
                 _ActionCard(
                   icon: Icons.system_update,
                   iconColor: AccentColors.indigo,
@@ -717,27 +632,8 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
+/// One device action row: the canonical [SettingsTile] with a chevron,
+/// greyed and inert while no radio is connected.
 class _ActionCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -757,65 +653,16 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final effectiveIconColor = enabled ? iconColor : theme.disabledColor;
-    final effectiveTextColor = enabled ? null : theme.disabledColor;
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        child: Opacity(
-          opacity: enabled ? 1.0 : 0.5,
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: effectiveIconColor.withAlpha(25),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Icon(icon, color: effectiveIconColor),
-                ),
-                const SizedBox(width: AppTheme.spacing16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: effectiveTextColor,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing2),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: enabled
-                              ? theme.colorScheme.onSurfaceVariant
-                              : theme.disabledColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: enabled
-                      ? theme.colorScheme.onSurfaceVariant
-                      : theme.disabledColor,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return SettingsTile(
+      icon: icon,
+      iconColor: enabled ? iconColor : context.textTertiary,
+      title: title,
+      subtitle: subtitle,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      trailing: enabled
+          ? Icon(Icons.chevron_right, color: context.textTertiary)
+          : null,
+      onTap: enabled ? onTap : null,
     );
   }
 }

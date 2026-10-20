@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
+import 'package:socialmesh/core/widgets/settings_primitives.dart';
 import 'package:socialmesh/core/widgets/status_banner.dart';
 import 'package:socialmesh/features/settings/device_management_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -23,13 +24,15 @@ const _remoteNode = 0x2002;
 const _remoteName = 'Hilltop';
 
 class _FakeProtocolService extends ProtocolService {
-  _FakeProtocolService({required this.sessionReady}) : super(_FakeTransport());
+  _FakeProtocolService({required this.sessionReady, this.connected = true})
+    : super(_FakeTransport());
 
   bool sessionReady;
+  final bool connected;
   final List<AdminTarget?> rebootTargets = [];
 
   @override
-  bool get isConnected => true;
+  bool get isConnected => connected;
 
   @override
   bool remoteAdminSessionReady(int nodeNum) => sessionReady;
@@ -147,6 +150,37 @@ void main() {
 
     expect(find.byType(StatusBanner), findsNothing);
     expect(find.text('Sync Time'), findsOneWidget);
+  });
+
+  testWidgets('disconnected: explains why and the actions do nothing', (
+    tester,
+  ) async {
+    final protocol = _FakeProtocolService(sessionReady: true, connected: false);
+    await _pump(
+      tester,
+      _wrap(protocol, _RemoteTarget(const RemoteAdminState())),
+    );
+
+    expect(
+      find.text('Device not connected. Connect to a device to manage it.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Reboot Device'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm'), findsNothing);
+    expect(protocol.rebootTargets, isEmpty);
+  });
+
+  testWidgets('rows use the canonical settings primitives', (tester) async {
+    final protocol = _FakeProtocolService(sessionReady: true);
+    await _pump(
+      tester,
+      _wrap(protocol, _RemoteTarget(const RemoteAdminState())),
+    );
+
+    // Power, Time, Reset and Firmware sections; seven action rows.
+    expect(find.byType(SettingsSectionHeader), findsNWidgets(4));
+    expect(find.byType(SettingsTile), findsNWidgets(7));
   });
 
   testWidgets('remote target: names the node and hides local-only Sync Time', (
