@@ -204,6 +204,7 @@ void main() {
             title: 'Test',
             controller: controller,
             scrollbar: true,
+            scrollbarTopInset: 40,
             slivers: [
               SliverList(
                 delegate: SliverChildBuilderDelegate(
@@ -219,6 +220,14 @@ void main() {
       final bar = tester.widget<RawScrollbar>(find.byType(RawScrollbar));
       expect(bar.interactive, isTrue);
       expect(bar.controller, same(controller));
+      // Track starts below the toolbar plus the caller's pinned content.
+      final insets = MediaQuery.paddingOf(
+        tester.element(find.byType(RawScrollbar)),
+      );
+      expect(
+        (bar.padding! as EdgeInsets).top,
+        insets.top + kToolbarHeight + 40,
+      );
       expect(
         PrimaryScrollController.of(tester.element(find.byType(Scaffold))),
         same(controller),

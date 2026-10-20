@@ -69,6 +69,7 @@ class GlassScaffold extends StatelessWidget {
     this.resizeToAvoidBottomInset = true,
     this.backgroundLayer,
     this.scrollbar = false,
+    this.scrollbarTopInset = 0,
   }) : assert(!scrollbar || controller != null),
        body = null,
        hasScrollBody = false;
@@ -112,6 +113,7 @@ class GlassScaffold extends StatelessWidget {
     this.resizeToAvoidBottomInset = true,
     this.backgroundLayer,
     this.scrollbar = false,
+    this.scrollbarTopInset = 0,
   }) : assert(!scrollbar || controller != null),
        slivers = const [];
 
@@ -212,6 +214,11 @@ class GlassScaffold extends StatelessWidget {
   /// primary controller with other tabs.
   final bool scrollbar;
 
+  /// Extra space between the app bar and the top of the scroll bar track,
+  /// for content pinned below the app bar such as a search header. Keeps
+  /// the thumb and its touch target clear of those controls.
+  final double scrollbarTopInset;
+
   /// Whether the physics disables scrolling entirely.
   bool get _isNonScrollable => physics is NeverScrollableScrollPhysics;
 
@@ -291,10 +298,14 @@ class GlassScaffold extends StatelessWidget {
         mainAxisMargin: AppTheme.scrollbarMargin,
         timeToFade: AppTheme.scrollbarTimeToFade,
         fadeDuration: AppTheme.scrollbarFadeDuration,
-        // The track starts below the pinned glass app bar.
+        // The track starts below the pinned glass app bar and anything the
+        // caller pins beneath it.
         padding: EdgeInsets.only(
           top:
-              insets.top + kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+              insets.top +
+              kToolbarHeight +
+              (bottom?.preferredSize.height ?? 0) +
+              scrollbarTopInset,
           bottom: insets.bottom,
         ),
         child: scrollView,

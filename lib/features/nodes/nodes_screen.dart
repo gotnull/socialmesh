@@ -264,6 +264,9 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
         child: GlassScaffold(
           controller: _scrollController,
           scrollbar: true,
+          scrollbarTopInset: SearchFilterLayout.fullExtent(
+            MediaQuery.textScalerOf(context),
+          ),
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           titleWidget: Text(
