@@ -3,10 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  app_links_linux
   emoji_picker_flutter
   file_selector_linux
   flutter_secure_storage_linux
-  gtk
   record_linux
   url_launcher_linux
 )
