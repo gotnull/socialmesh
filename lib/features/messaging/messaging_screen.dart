@@ -61,6 +61,7 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/node_avatar.dart';
+import '../../core/widgets/positioned_list_scrollbar.dart';
 import '../channels/channel_options_sheet.dart';
 import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
@@ -1769,6 +1770,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
   }
 
+  void _dragTimelineToEnd() {
+    final query = _activeTimelineQuery;
+    if (query == null) return;
+    unawaited(_scrollToLatest(query, animate: false));
+  }
+
   Future<void> _jumpToLatest() async {
     final query = _activeTimelineQuery;
     if (query == null) return;
@@ -2956,182 +2963,198 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                       messageCount: filteredRows.length,
                                       unreadCount: _initialUnreadCount,
                                     );
-                              return ScrollablePositionedList.builder(
-                                itemScrollController: _timelineScrollController,
-                                itemPositionsListener: _itemPositionsListener,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                physics: const ClampingScrollPhysics(),
+                              return PositionedListScrollbar(
                                 itemCount: filteredRows.length,
-                                itemBuilder: (context, index) {
-                                  final row = filteredRows[index];
-                                  final showDividerAbove =
-                                      dividerInsertIndex == index;
-                                  // Calendar-day separator above the first
-                                  // row of each local day. Suppressed while
-                                  // searching: a filtered window jumps
-                                  // across days, so per-row chips would
-                                  // outnumber the results. Wrapped into the
-                                  // same slot as the bubble (like the unread
-                                  // divider) to preserve index parity.
-                                  final showDateAbove =
-                                      !_isSearching &&
-                                      showsMessageDateSeparator(
-                                        index == 0
-                                            ? null
-                                            : filteredRows[index - 1]
-                                                  .sortTimestamp,
-                                        row.sortTimestamp,
+                                itemPositionsListener: _itemPositionsListener,
+                                itemScrollController: _timelineScrollController,
+                                onDragToEnd: _dragTimelineToEnd,
+                                child: ScrollablePositionedList.builder(
+                                  itemScrollController:
+                                      _timelineScrollController,
+                                  itemPositionsListener: _itemPositionsListener,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  physics: const ClampingScrollPhysics(),
+                                  itemCount: filteredRows.length,
+                                  itemBuilder: (context, index) {
+                                    final row = filteredRows[index];
+                                    final showDividerAbove =
+                                        dividerInsertIndex == index;
+                                    // Calendar-day separator above the first
+                                    // row of each local day. Suppressed while
+                                    // searching: a filtered window jumps
+                                    // across days, so per-row chips would
+                                    // outnumber the results. Wrapped into the
+                                    // same slot as the bubble (like the unread
+                                    // divider) to preserve index parity.
+                                    final showDateAbove =
+                                        !_isSearching &&
+                                        showsMessageDateSeparator(
+                                          index == 0
+                                              ? null
+                                              : filteredRows[index - 1]
+                                                    .sortTimestamp,
+                                          row.sortTimestamp,
+                                        );
+
+                                    Widget withInserts(Widget child) {
+                                      if (!showDateAbove && !showDividerAbove) {
+                                        return child;
+                                      }
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          if (showDateAbove)
+                                            MessageDateSeparator(
+                                              timestamp: row.sortTimestamp,
+                                            ),
+                                          if (showDividerAbove)
+                                            const MessagingUnreadDivider(),
+                                          child,
+                                        ],
                                       );
-
-                                  Widget withInserts(Widget child) {
-                                    if (!showDateAbove && !showDividerAbove) {
-                                      return child;
                                     }
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        if (showDateAbove)
-                                          MessageDateSeparator(
-                                            timestamp: row.sortTimestamp,
-                                          ),
-                                        if (showDividerAbove)
-                                          const MessagingUnreadDivider(),
-                                        child,
-                                      ],
-                                    );
-                                  }
 
-                                  if (row.isOrphanPlaceholder) {
-                                    return KeyedSubtree(
-                                      key: ValueKey(row.key),
-                                      child: withInserts(
-                                        _OrphanTapbackPlaceholder(row: row),
+                                    if (row.isOrphanPlaceholder) {
+                                      return KeyedSubtree(
+                                        key: ValueKey(row.key),
+                                        child: withInserts(
+                                          _OrphanTapbackPlaceholder(row: row),
+                                        ),
+                                      );
+                                    }
+
+                                    final message = row.message!;
+                                    final isFromMe = message.isFromOwnRadio(
+                                      myNodeNum,
+                                    );
+
+                                    if (index == filteredRows.length - 1 &&
+                                        AppLogging.messagesLoggingEnabled) {
+                                      AppLogging.messages(
+                                        'Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, status=${message.status.name}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
+                                      );
+                                    }
+
+                                    final senderNode = nodes[message.from];
+                                    final senderName =
+                                        senderNode?.displayName ??
+                                        message.senderDisplayName;
+                                    final senderShortName =
+                                        senderNode?.shortName ??
+                                        message.senderAvatarName;
+                                    final avatarColor =
+                                        senderNode?.avatarColor ??
+                                        message.senderAvatarColor;
+
+                                    final bubble = _MessageBubble(
+                                      message: message,
+                                      allMessages: visibleMessages,
+                                      tapbacks: row.tapbacks,
+                                      isFromMe: isFromMe,
+                                      senderName: senderName,
+                                      senderShortName: senderShortName,
+                                      avatarColor: avatarColor,
+                                      showSender:
+                                          widget.type ==
+                                              ConversationType.channel &&
+                                          !isFromMe,
+                                      isEncrypted: isEncrypted,
+                                      isDm:
+                                          widget.type ==
+                                          ConversationType.directMessage,
+                                      isQueued: queuedMessageIds.contains(
+                                        message.id,
                                       ),
-                                    );
-                                  }
-
-                                  final message = row.message!;
-                                  final isFromMe = message.isFromOwnRadio(
-                                    myNodeNum,
-                                  );
-
-                                  if (index == filteredRows.length - 1 &&
-                                      AppLogging.messagesLoggingEnabled) {
-                                    AppLogging.messages(
-                                      'Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, status=${message.status.name}, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
-                                    );
-                                  }
-
-                                  final senderNode = nodes[message.from];
-                                  final senderName =
-                                      senderNode?.displayName ??
-                                      message.senderDisplayName;
-                                  final senderShortName =
-                                      senderNode?.shortName ??
-                                      message.senderAvatarName;
-                                  final avatarColor =
-                                      senderNode?.avatarColor ??
-                                      message.senderAvatarColor;
-
-                                  final bubble = _MessageBubble(
-                                    message: message,
-                                    allMessages: visibleMessages,
-                                    tapbacks: row.tapbacks,
-                                    isFromMe: isFromMe,
-                                    senderName: senderName,
-                                    senderShortName: senderShortName,
-                                    avatarColor: avatarColor,
-                                    showSender:
-                                        widget.type ==
-                                            ConversationType.channel &&
-                                        !isFromMe,
-                                    isEncrypted: isEncrypted,
-                                    isDm:
-                                        widget.type ==
-                                        ConversationType.directMessage,
-                                    isQueued: queuedMessageIds.contains(
-                                      message.id,
-                                    ),
-                                    isHighlighted:
-                                        _highlightedMessageId == message.id,
-                                    showTechInfo: _expandedTechInfoIds.contains(
-                                      message.id,
-                                    ),
-                                    onToggleTechInfo: () {
-                                      ref.haptics.trigger(HapticType.light);
-                                      setState(() {
-                                        if (_expandedTechInfoIds.contains(
-                                          message.id,
-                                        )) {
-                                          _expandedTechInfoIds.remove(
+                                      isHighlighted:
+                                          _highlightedMessageId == message.id,
+                                      showTechInfo: _expandedTechInfoIds
+                                          .contains(message.id),
+                                      onToggleTechInfo: () {
+                                        ref.haptics.trigger(HapticType.light);
+                                        setState(() {
+                                          if (_expandedTechInfoIds.contains(
                                             message.id,
-                                          );
-                                        } else {
-                                          _expandedTechInfoIds.add(message.id);
-                                        }
-                                      });
-                                    },
-                                    channelIndex:
-                                        widget.type == ConversationType.channel
-                                        ? widget.channelIndex
-                                        : null,
-                                    onReply: () => _setReplyTo(message),
-                                    onRetry: message.isFailed
-                                        ? () => _retryMessage(message)
-                                        : null,
-                                    onResend: isFromMe && message.canResend
-                                        ? () => ref
-                                              .read(dmRetryCoordinatorProvider)
-                                              .scheduleResend(message)
-                                        : null,
-                                    onAutoRetry:
-                                        isFromMe && message.canEnableAutoRetry
-                                        ? () => ref
-                                              .read(dmRetryCoordinatorProvider)
-                                              .enableAutoRetry(message.id)
-                                        : null,
-                                    onStopRetry:
-                                        isFromMe && message.canStopAutoRetry
-                                        ? () => ref
-                                              .read(dmRetryCoordinatorProvider)
-                                              .disableAutoRetry(message.id)
-                                        : null,
-                                    onPkiFix:
-                                        message.routingError?.isPkiRelated ==
-                                            true
-                                        ? () => _showPkiFixSheet(message)
-                                        : null,
-                                    onDelete: () => _deleteMessage(message),
-                                    onSenderTap: senderNode != null && !isFromMe
-                                        ? () => showNodeDetailsSheet(
-                                            context,
-                                            senderNode,
-                                            false,
-                                          )
-                                        : null,
-                                    onQuoteTap: message.replyId != null
-                                        ? () {
-                                            ref.haptics.trigger(
-                                              HapticType.light,
+                                          )) {
+                                            _expandedTechInfoIds.remove(
+                                              message.id,
                                             );
-                                            unawaited(
-                                              _scrollToQuotedMessage(
-                                                message.replyId!,
-                                              ),
+                                          } else {
+                                            _expandedTechInfoIds.add(
+                                              message.id,
                                             );
                                           }
-                                        : null,
-                                  );
+                                        });
+                                      },
+                                      channelIndex:
+                                          widget.type ==
+                                              ConversationType.channel
+                                          ? widget.channelIndex
+                                          : null,
+                                      onReply: () => _setReplyTo(message),
+                                      onRetry: message.isFailed
+                                          ? () => _retryMessage(message)
+                                          : null,
+                                      onResend: isFromMe && message.canResend
+                                          ? () => ref
+                                                .read(
+                                                  dmRetryCoordinatorProvider,
+                                                )
+                                                .scheduleResend(message)
+                                          : null,
+                                      onAutoRetry:
+                                          isFromMe && message.canEnableAutoRetry
+                                          ? () => ref
+                                                .read(
+                                                  dmRetryCoordinatorProvider,
+                                                )
+                                                .enableAutoRetry(message.id)
+                                          : null,
+                                      onStopRetry:
+                                          isFromMe && message.canStopAutoRetry
+                                          ? () => ref
+                                                .read(
+                                                  dmRetryCoordinatorProvider,
+                                                )
+                                                .disableAutoRetry(message.id)
+                                          : null,
+                                      onPkiFix:
+                                          message.routingError?.isPkiRelated ==
+                                              true
+                                          ? () => _showPkiFixSheet(message)
+                                          : null,
+                                      onDelete: () => _deleteMessage(message),
+                                      onSenderTap:
+                                          senderNode != null && !isFromMe
+                                          ? () => showNodeDetailsSheet(
+                                              context,
+                                              senderNode,
+                                              false,
+                                            )
+                                          : null,
+                                      onQuoteTap: message.replyId != null
+                                          ? () {
+                                              ref.haptics.trigger(
+                                                HapticType.light,
+                                              );
+                                              unawaited(
+                                                _scrollToQuotedMessage(
+                                                  message.replyId!,
+                                                ),
+                                              );
+                                            }
+                                          : null,
+                                    );
 
-                                  return KeyedSubtree(
-                                    key: ValueKey(row.key),
-                                    child: withInserts(bubble),
-                                  );
-                                },
+                                    return KeyedSubtree(
+                                      key: ValueKey(row.key),
+                                      child: withInserts(bubble),
+                                    );
+                                  },
+                                ),
                               );
                             },
                           ),

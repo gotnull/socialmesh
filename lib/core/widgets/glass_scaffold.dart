@@ -68,7 +68,9 @@ class GlassScaffold extends StatelessWidget {
     this.sigmaOverride,
     this.resizeToAvoidBottomInset = true,
     this.backgroundLayer,
-  }) : body = null,
+    this.scrollbar = false,
+  }) : assert(!scrollbar || controller != null),
+       body = null,
        hasScrollBody = false;
 
   /// Creates a GlassScaffold with a non-sliver body widget.
@@ -109,7 +111,9 @@ class GlassScaffold extends StatelessWidget {
     this.sigmaOverride,
     this.resizeToAvoidBottomInset = true,
     this.backgroundLayer,
-  }) : slivers = const [];
+    this.scrollbar = false,
+  }) : assert(!scrollbar || controller != null),
+       slivers = const [];
 
   /// Title text for the app bar.
   final String? title;
@@ -203,6 +207,11 @@ class GlassScaffold extends StatelessWidget {
   /// should render between the background color and the scroll content.
   final Widget? backgroundLayer;
 
+  /// Shows a draggable scroll bar below the app bar while the content
+  /// scrolls. Requires [controller]; the bar cannot share the route's
+  /// primary controller with other tabs.
+  final bool scrollbar;
+
   /// Whether the physics disables scrolling entirely.
   bool get _isNonScrollable => physics is NeverScrollableScrollPhysics;
 
@@ -245,7 +254,54 @@ class GlassScaffold extends StatelessWidget {
     // (primary ScrollViews get their controller via PrimaryScrollController)
     final effectivePrimary = controller != null ? false : primary;
 
-    return Scaffold(
+    Widget scrollView = CustomScrollView(
+      controller: controller,
+      physics: effectivePhysics,
+      primary: effectivePrimary,
+      slivers: [
+        _GlassSliverAppBarInternal(
+          title: effectiveTitle,
+          leading: leading,
+          actions: actions,
+          pinned: pinned,
+          floating: floating,
+          snap: snap,
+          centerTitle: centerTitle,
+          automaticallyImplyLeading: automaticallyImplyLeading,
+          expandedHeight: expandedHeight,
+          flexibleSpace: flexibleSpace,
+          bottom: bottom,
+          sigmaOverride: sigmaOverride,
+          isDark: isDark,
+        ),
+        ...effectiveSlivers,
+      ],
+    );
+
+    if (scrollbar) {
+      final insets = MediaQuery.paddingOf(context);
+      scrollView = RawScrollbar(
+        controller: controller,
+        interactive: true,
+        thickness: AppTheme.scrollbarThickness,
+        radius: const Radius.circular(AppTheme.radius2),
+        thumbColor: context.textTertiary,
+        minThumbLength: AppTheme.scrollbarMinThumbLength,
+        crossAxisMargin: AppTheme.scrollbarMargin,
+        mainAxisMargin: AppTheme.scrollbarMargin,
+        timeToFade: AppTheme.scrollbarTimeToFade,
+        fadeDuration: AppTheme.scrollbarFadeDuration,
+        // The track starts below the pinned glass app bar.
+        padding: EdgeInsets.only(
+          top:
+              insets.top + kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+          bottom: insets.bottom,
+        ),
+        child: scrollView,
+      );
+    }
+
+    final scaffold = Scaffold(
       key: scaffoldKey,
       extendBodyBehindAppBar: true,
       backgroundColor: context.background,
@@ -259,55 +315,17 @@ class GlassScaffold extends StatelessWidget {
           ? Stack(
               children: [
                 Positioned.fill(child: backgroundLayer!),
-                CustomScrollView(
-                  controller: controller,
-                  physics: effectivePhysics,
-                  primary: effectivePrimary,
-                  slivers: [
-                    _GlassSliverAppBarInternal(
-                      title: effectiveTitle,
-                      leading: leading,
-                      actions: actions,
-                      pinned: pinned,
-                      floating: floating,
-                      snap: snap,
-                      centerTitle: centerTitle,
-                      automaticallyImplyLeading: automaticallyImplyLeading,
-                      expandedHeight: expandedHeight,
-                      flexibleSpace: flexibleSpace,
-                      bottom: bottom,
-                      sigmaOverride: sigmaOverride,
-                      isDark: isDark,
-                    ),
-                    ...effectiveSlivers,
-                  ],
-                ),
+                scrollView,
               ],
             )
-          : CustomScrollView(
-              controller: controller,
-              physics: effectivePhysics,
-              primary: effectivePrimary,
-              slivers: [
-                _GlassSliverAppBarInternal(
-                  title: effectiveTitle,
-                  leading: leading,
-                  actions: actions,
-                  pinned: pinned,
-                  floating: floating,
-                  snap: snap,
-                  centerTitle: centerTitle,
-                  automaticallyImplyLeading: automaticallyImplyLeading,
-                  expandedHeight: expandedHeight,
-                  flexibleSpace: flexibleSpace,
-                  bottom: bottom,
-                  sigmaOverride: sigmaOverride,
-                  isDark: isDark,
-                ),
-                ...effectiveSlivers,
-              ],
-            ),
+          : scrollView,
     );
+
+    // A caller-owned controller makes the scroll view non-primary, so hand
+    // it to the Scaffold as primary to keep status-bar tap to top working.
+    return scrollbar
+        ? PrimaryScrollController(controller: controller!, child: scaffold)
+        : scaffold;
   }
 
   /// Builds a non-scrolling layout for screens that use

@@ -564,6 +564,18 @@ class AppTheme {
   static const double fontSizeEmoji2 = 28; // two emoji
   static const double fontSizeEmoji3 = 22; // three emoji
 
+  // -------------------------------------------------------
+  // Scroll bars
+  // -------------------------------------------------------
+  // Shared by GlassScaffold's scroll bar and PositionedListScrollbar so every
+  // draggable bar has the same look and timing. The fade delay is long
+  // enough to reach for the thumb after a fling.
+  static const double scrollbarThickness = 4;
+  static const double scrollbarMinThumbLength = 48;
+  static const double scrollbarMargin = 2;
+  static const Duration scrollbarTimeToFade = Duration(milliseconds: 1200);
+  static const Duration scrollbarFadeDuration = Duration(milliseconds: 300);
+
   // Font families
   //
   // `fontFamily` resolves the user's font-mode accessibility preference at

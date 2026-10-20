@@ -65,6 +65,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
   bool _showSectionHeaders = true;
   bool _compactView = false;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   /// Track node IDs that have already been seen/animated
   /// This allows new nodes to animate in while existing ones don't re-animate
@@ -104,6 +105,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -260,6 +262,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
         topicId: 'nodes_overview',
         stepKeys: const {},
         child: GlassScaffold(
+          controller: _scrollController,
+          scrollbar: true,
           leading: const HamburgerMenuButton(),
           centerTitle: true,
           titleWidget: Text(

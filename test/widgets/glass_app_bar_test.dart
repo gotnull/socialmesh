@@ -180,6 +180,51 @@ void main() {
   });
 
   group('GlassScaffold', () {
+    testWidgets('has no scroll bar unless asked for one', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: GlassScaffold(
+            title: 'Test',
+            slivers: const [SliverToBoxAdapter(child: SizedBox(height: 100))],
+          ),
+        ),
+      );
+      expect(find.byType(RawScrollbar), findsNothing);
+    });
+
+    testWidgets('scrollbar adds a draggable bar and keeps the controller '
+        'primary for status bar taps', (tester) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: GlassScaffold(
+            title: 'Test',
+            controller: controller,
+            scrollbar: true,
+            slivers: [
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => ListTile(title: Text('Item $index')),
+                  childCount: 100,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final bar = tester.widget<RawScrollbar>(find.byType(RawScrollbar));
+      expect(bar.interactive, isTrue);
+      expect(bar.controller, same(controller));
+      expect(
+        PrimaryScrollController.of(tester.element(find.byType(Scaffold))),
+        same(controller),
+      );
+    });
+
     testWidgets('wraps content with glass app bar and proper structure', (
       tester,
     ) async {
