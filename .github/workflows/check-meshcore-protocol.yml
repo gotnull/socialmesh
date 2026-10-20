@@ -135,7 +135,10 @@ jobs:
 
             if ! git diff --quiet "$PINNED_SHA" "$HEAD_SHA" -- "$path"; then
               CHANGED="${CHANGED}- ${path}"$'\n'
-              hunk=$(git diff "$PINNED_SHA" "$HEAD_SHA" -- "$path" | head -200)
+              # Truncate from a file, not a pipe: under pipefail, head closing
+              # the pipe early kills git diff with SIGPIPE (exit 141).
+              git diff "$PINNED_SHA" "$HEAD_SHA" -- "$path" > "$WORK/path.diff"
+              hunk=$(head -200 "$WORK/path.diff")
               DIFF_BODY="${DIFF_BODY}"$'\n'"#### \`${path}\`"$'\n\n'"\`\`\`diff"$'\n'"${hunk}"$'\n'"\`\`\`"$'\n'
             fi
           done <<< "$WATCHED_PATHS"
