@@ -132,6 +132,10 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   Widget build(BuildContext context) {
     final linkStatus = ref.watch(linkStatusProvider);
     final isConnected = linkStatus.isConnected;
+    // Shut down needs the v1.18 companion CLI; older firmware has no
+    // power-off command, so the tile is not offered there.
+    final supportsCli =
+        ref.watch(meshCoreSessionProvider)?.supportsCliCommands ?? false;
     final selfInfoState = ref.watch(meshCoreSelfInfoProvider);
     final selfInfo = selfInfoState.selfInfo;
     final batteryState = ref.watch(meshCoreBatteryProvider);
@@ -275,6 +279,18 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                     onTap: () => _confirmReboot(context),
                   ),
                 ),
+                if (supportsCli)
+                  _maybeDisabled(
+                    enabled: isConnected,
+                    child: SettingsTile(
+                      icon: Icons.power_settings_new_rounded,
+                      iconColor: AppTheme.errorRed,
+                      title: context.l10n.meshcoreShutDownDevice,
+                      subtitle: context.l10n.meshcoreShutDownDeviceSubtitle,
+                      trailing: _chevron(context),
+                      onTap: () => _confirmShutDown(context),
+                    ),
+                  ),
                 SizedBox(height: AppTheme.spacing16),
                 // Account, premium, feedback and support live here as well
                 // as on the Meshtastic settings screen: a MeshCore-only user
@@ -1309,6 +1325,41 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     if (!mounted) return;
 
     await _rebootDevice();
+  }
+
+  Future<void> _confirmShutDown(BuildContext context) async {
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.meshcoreShutDownDevice,
+      message: context.l10n.meshcoreShutDownDeviceMessage,
+      confirmLabel: context.l10n.meshcoreShutDown,
+      isDestructive: true,
+    );
+    if (confirmed != true || !mounted) return;
+
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null || !session.isActive) {
+      showErrorSnackBar(this.context, this.context.l10n.meshcoreNotConnected);
+      return;
+    }
+    try {
+      // Fire-and-forget: the radio powers off without replying.
+      await session.powerOff();
+      if (mounted) {
+        showSuccessSnackBar(
+          this.context,
+          this.context.l10n.meshcoreShutDownCommandSent,
+        );
+      }
+    } catch (e) {
+      AppLogging.meshcore('event=identity.poweroff.failed error=$e');
+      if (mounted) {
+        showErrorSnackBar(
+          this.context,
+          this.context.l10n.meshcoreFailedToShutDownDevice,
+        );
+      }
+    }
   }
 
   Future<void> _rebootDevice() async {

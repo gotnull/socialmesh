@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Channel and direct message history and the Nodes list show a scroll bar while you scroll. Press and hold it to drag through a long history; dragging it to the bottom returns to the latest message.
+- MeshCore radios on firmware 1.18.0 or later can be shut down from MeshCore settings. The app reads the firmware's protocol version when it connects and only offers the option where the radio supports it.
 
 ### Changed
 

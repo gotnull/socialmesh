@@ -12327,6 +12327,30 @@
   "@meshcoreFailedToRebootDevice": {
     "description": "Error snackbar when reboot fails"
   },
+  "meshcoreShutDownDevice": "Shut Down Device",
+  "@meshcoreShutDownDevice": {
+    "description": "MeshCore settings tile and confirm title that powers the radio off (firmware v1.18+)."
+  },
+  "meshcoreShutDownDeviceSubtitle": "Power off the MeshCore device",
+  "@meshcoreShutDownDeviceSubtitle": {
+    "description": "Subtitle of the MeshCore shut down tile."
+  },
+  "meshcoreShutDownDeviceMessage": "The MeshCore device will power off and disconnect. It stays off until someone switches it back on.",
+  "@meshcoreShutDownDeviceMessage": {
+    "description": "Confirmation text before powering a MeshCore radio off."
+  },
+  "meshcoreShutDown": "Shut Down",
+  "@meshcoreShutDown": {
+    "description": "Confirm button label for powering a MeshCore radio off."
+  },
+  "meshcoreShutDownCommandSent": "Shutdown command sent",
+  "@meshcoreShutDownCommandSent": {
+    "description": "Snackbar after the power-off command is sent."
+  },
+  "meshcoreFailedToShutDownDevice": "Failed to shut down device",
+  "@meshcoreFailedToShutDownDevice": {
+    "description": "Snackbar when the power-off command could not be sent."
+  },
   "meshcoreFailedToSendAdTools": "Failed to send advertisement",
   "@meshcoreFailedToSendAdTools": {
     "description": "Error snackbar when advertisement fails in tools"

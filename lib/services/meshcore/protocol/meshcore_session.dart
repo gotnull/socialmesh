@@ -919,6 +919,15 @@ class MeshCoreSession {
       MeshCoreResponses.selfInfo,
       (frame) => frame.payload.length >= _minSelfInfoPayloadSize,
     );
+    // The deviceQuery reply carries FIRMWARE_VER_CODE. Capture it in the
+    // background so optional commands can be gated without another round
+    // trip and without holding up the handshake. A waiter left over from
+    // an earlier handshake is replaced, not treated as a collision.
+    _pendingResponses.remove(MeshCoreResponses.deviceInfo);
+    _deviceInfo = null;
+    final deviceInfoWaiter = _registerWaiter(MeshCoreResponses.deviceInfo);
+    _deviceInfoWaiter = deviceInfoWaiter;
+    unawaited(_captureDeviceInfo(deviceInfoWaiter, timeout));
 
     // Build and send startup sequence with proper frame formats. If
     // either sendRaw throws (transport disconnected mid-handshake), the
@@ -934,6 +943,7 @@ class MeshCoreSession {
       await _transport.sendRaw(deviceQueryFrame);
     } catch (_) {
       _validatedWaiters.remove(MeshCoreResponses.selfInfo);
+      _pendingResponses.remove(MeshCoreResponses.deviceInfo);
       rethrow;
     }
     _capture?.recordTx(
@@ -951,6 +961,7 @@ class MeshCoreSession {
       await _transport.sendRaw(appStartFrame);
     } catch (_) {
       _validatedWaiters.remove(MeshCoreResponses.selfInfo);
+      _pendingResponses.remove(MeshCoreResponses.deviceInfo);
       rethrow;
     }
     _capture?.recordTx(
@@ -985,6 +996,7 @@ class MeshCoreSession {
         },
       );
     } on TimeoutException {
+      _pendingResponses.remove(MeshCoreResponses.deviceInfo);
       return null;
     }
 
@@ -1007,6 +1019,48 @@ class MeshCoreSession {
 
     AppLogging.protocol('MeshCore: getSelfInfo() success: ${result.value}');
     return result.value;
+  }
+
+  MeshCoreDeviceInfo? _deviceInfo;
+
+  /// Firmware identity from the last handshake, or null when the radio
+  /// did not answer `CMD_DEVICE_QUERY`.
+  MeshCoreDeviceInfo? get deviceInfo => _deviceInfo;
+
+  /// Whether the connected radio accepts [runCliCommand].
+  bool get supportsCliCommands => _deviceInfo?.supportsCliCommands ?? false;
+
+  /// The waiter of the most recent handshake; an older capture that
+  /// finishes late must not overwrite what a newer one found.
+  Completer<MeshCoreFrame>? _deviceInfoWaiter;
+
+  Future<void> _captureDeviceInfo(
+    Completer<MeshCoreFrame> waiter,
+    Duration timeout,
+  ) async {
+    MeshCoreDeviceInfo? info;
+    String? missing;
+    try {
+      final frame = await waiter.future.timeout(timeout);
+      info = parseDeviceInfo(frame.payload).value;
+    } on TimeoutException {
+      final pending = _pendingResponses[MeshCoreResponses.deviceInfo];
+      if (identical(pending?.completer, waiter)) {
+        _pendingResponses.remove(MeshCoreResponses.deviceInfo);
+      }
+      missing = 'timeout';
+    } catch (e) {
+      // Unawaited, so every failure (a dispose included) ends here.
+      missing = e.runtimeType.toString();
+    }
+    if (!identical(waiter, _deviceInfoWaiter)) return;
+    _deviceInfo = info;
+    AppLogging.meshcore(
+      info == null
+          ? 'event=identity.device_info missing=$missing'
+          : 'event=identity.device_info ver_code=${info.firmwareVerCode} '
+                'cli=$supportsCliCommands',
+    );
   }
 
   /// Get battery and storage info.
@@ -3149,6 +3203,56 @@ class MeshCoreSession {
     ]);
     await sendCommandWithPayload(MeshCoreCommands.reboot, payload);
     AppLogging.meshcore('event=identity.reboot.sent');
+  }
+
+  void _requireCli() {
+    if (!supportsCliCommands) {
+      throw StateError(
+        'CLI commands need firmware version code '
+        '${MeshCoreFirmware.cliMinVerCode} or later',
+      );
+    }
+  }
+
+  /// Run one companion CLI line (`CMD_RUN_CLI_COMMAND` 0x42) and return
+  /// the radio's text reply, or null on timeout or a dropped transport.
+  ///
+  /// Requires [supportsCliCommands]: older firmware does not know the
+  /// opcode and never sends `RESP_CODE_CLI_REPLY`. Only the command verb
+  /// is logged, because replies can carry secrets such as a WiFi password.
+  Future<String?> runCliCommand(
+    String command, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    _requireCli();
+    final verb = command.split(' ').take(2).join(' ');
+    AppLogging.meshcore('event=cli.sent cmd="$verb"');
+    final reply = await sendAndWait(
+      MeshCoreCommands.runCliCommand,
+      payload: Uint8List.fromList(utf8.encode(command)),
+      expectedResponse: MeshCoreResponses.cliReply,
+      timeout: timeout,
+    );
+    if (reply == null) {
+      AppLogging.meshcore('event=cli.timeout cmd="$verb"', error: true);
+      return null;
+    }
+    return utf8.decode(reply.payload, allowMalformed: true);
+  }
+
+  /// Switch the radio off through the companion CLI (`poweroff`).
+  ///
+  /// Requires [supportsCliCommands]. Fire-and-forget like [rebootDevice]:
+  /// the radio powers down without replying, the transport drops, and it
+  /// stays off until someone switches it back on.
+  Future<void> powerOff() async {
+    _requireCli();
+    AppLogging.meshcore('event=identity.poweroff.requested');
+    await sendCommandWithPayload(
+      MeshCoreCommands.runCliCommand,
+      Uint8List.fromList(utf8.encode('poweroff')),
+    );
+    AppLogging.meshcore('event=identity.poweroff.sent');
   }
 
   // ---------------------------------------------------------------------------

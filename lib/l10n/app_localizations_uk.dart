@@ -9339,6 +9339,25 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося перезавантажити пристрій';
 
   @override
+  String get meshcoreShutDownDevice => 'Вимкнути пристрій';
+
+  @override
+  String get meshcoreShutDownDeviceSubtitle => 'Вимкнути пристрій MeshCore';
+
+  @override
+  String get meshcoreShutDownDeviceMessage =>
+      'Пристрій MeshCore вимкнеться та від\'єднається. Він залишиться вимкненим, доки хтось не ввімкне його знову.';
+
+  @override
+  String get meshcoreShutDown => 'Вимкнути';
+
+  @override
+  String get meshcoreShutDownCommandSent => 'Команда вимкнення надіслана';
+
+  @override
+  String get meshcoreFailedToShutDownDevice => 'Не вдалося вимкнути пристрій';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Не вдалося надіслати оголошення';
 
   @override

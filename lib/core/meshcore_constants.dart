@@ -247,6 +247,21 @@ class MeshCoreCommands {
   /// build a send path for it (no UI surface needs raw injection).
   /// Tracked as a parity gap in MESHCORE_OPEN_PARITY_AUDIT.md.
   static const int sendRawPacket = 0x41;
+
+  /// Run one companion CLI line on the radio. Wire payload:
+  /// `[0x42][UTF-8 command text]`; the radio answers with
+  /// [MeshCoreResponses.cliReply]. Companion firmware v1.18.0 / ver_code 14
+  /// and later ([MeshCoreFirmware.cliMinVerCode]).
+  static const int runCliCommand = 0x42;
+}
+
+/// Companion firmware version codes (`FIRMWARE_VER_CODE`, reported in
+/// `RESP_CODE_DEVICE_INFO`) that gate optional commands.
+class MeshCoreFirmware {
+  MeshCoreFirmware._();
+
+  /// First version code that accepts [MeshCoreCommands.runCliCommand].
+  static const int cliMinVerCode = 14;
 }
 
 /// MeshCore response codes (device -> app, 0x00-0x7F).
@@ -318,6 +333,10 @@ class MeshCoreResponses {
   /// `CMD_GET_AUTO_ADD_CONFIG (0x3B)`. Single byte of flag bits;
   /// see [MeshCoreAutoAddFlag].
   static const int autoAddConfig = 0x19;
+
+  /// Text reply to [MeshCoreCommands.runCliCommand]: `[0x1D][UTF-8 reply]`,
+  /// no terminator. Version code 14 and later.
+  static const int cliReply = 0x1D;
 }
 
 /// D35-A: stats subtypes carried as the second byte of both the

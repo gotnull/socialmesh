@@ -9318,6 +9318,26 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось перезагрузить устройство';
 
   @override
+  String get meshcoreShutDownDevice => 'Выключить устройство';
+
+  @override
+  String get meshcoreShutDownDeviceSubtitle => 'Выключить устройство MeshCore';
+
+  @override
+  String get meshcoreShutDownDeviceMessage =>
+      'Устройство MeshCore выключится и отключится. Оно останется выключенным, пока кто-нибудь не включит его снова.';
+
+  @override
+  String get meshcoreShutDown => 'Выключить';
+
+  @override
+  String get meshcoreShutDownCommandSent => 'Команда выключения отправлена';
+
+  @override
+  String get meshcoreFailedToShutDownDevice =>
+      'Не удалось выключить устройство';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Не удалось отправить объявление';
 
   @override

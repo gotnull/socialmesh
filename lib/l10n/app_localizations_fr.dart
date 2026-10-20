@@ -9391,6 +9391,26 @@ class AppLocalizationsFr extends AppLocalizations {
       'Échec du redémarrage de l\'appareil';
 
   @override
+  String get meshcoreShutDownDevice => 'Éteindre l\'appareil';
+
+  @override
+  String get meshcoreShutDownDeviceSubtitle => 'Éteindre l\'appareil MeshCore';
+
+  @override
+  String get meshcoreShutDownDeviceMessage =>
+      'L\'appareil MeshCore va s\'éteindre et se déconnecter. Il restera éteint jusqu\'à ce que quelqu\'un le rallume.';
+
+  @override
+  String get meshcoreShutDown => 'Éteindre';
+
+  @override
+  String get meshcoreShutDownCommandSent => 'Commande d\'extinction envoyée';
+
+  @override
+  String get meshcoreFailedToShutDownDevice =>
+      'Échec de l\'extinction de l\'appareil';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Échec de l\'envoi de l\'annonce';
 
   @override

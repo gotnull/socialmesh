@@ -9204,6 +9204,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreFailedToRebootDevice => 'Failed to reboot device';
 
   @override
+  String get meshcoreShutDownDevice => 'Shut Down Device';
+
+  @override
+  String get meshcoreShutDownDeviceSubtitle => 'Power off the MeshCore device';
+
+  @override
+  String get meshcoreShutDownDeviceMessage =>
+      'The MeshCore device will power off and disconnect. It stays off until someone switches it back on.';
+
+  @override
+  String get meshcoreShutDown => 'Shut Down';
+
+  @override
+  String get meshcoreShutDownCommandSent => 'Shutdown command sent';
+
+  @override
+  String get meshcoreFailedToShutDownDevice => 'Failed to shut down device';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Failed to send advertisement';
 
   @override

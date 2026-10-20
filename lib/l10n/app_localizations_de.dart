@@ -9336,6 +9336,26 @@ class AppLocalizationsDe extends AppLocalizations {
       'Neustart des Geräts fehlgeschlagen';
 
   @override
+  String get meshcoreShutDownDevice => 'Gerät ausschalten';
+
+  @override
+  String get meshcoreShutDownDeviceSubtitle => 'MeshCore-Gerät ausschalten';
+
+  @override
+  String get meshcoreShutDownDeviceMessage =>
+      'Das MeshCore-Gerät schaltet sich aus und trennt die Verbindung. Es bleibt aus, bis es jemand wieder einschaltet.';
+
+  @override
+  String get meshcoreShutDown => 'Ausschalten';
+
+  @override
+  String get meshcoreShutDownCommandSent => 'Ausschalt-Befehl gesendet';
+
+  @override
+  String get meshcoreFailedToShutDownDevice =>
+      'Ausschalten des Geräts fehlgeschlagen';
+
+  @override
   String get meshcoreFailedToSendAdTools =>
       'Ankündigung konnte nicht gesendet werden';
 

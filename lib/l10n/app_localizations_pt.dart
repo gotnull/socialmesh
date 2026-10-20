@@ -9311,6 +9311,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreFailedToRebootDevice => 'Falha ao reiniciar o dispositivo';
 
   @override
+  String get meshcoreShutDownDevice => 'Desligar Dispositivo';
+
+  @override
+  String get meshcoreShutDownDeviceSubtitle =>
+      'Desligar o dispositivo MeshCore';
+
+  @override
+  String get meshcoreShutDownDeviceMessage =>
+      'O dispositivo MeshCore será desligado e desconectado. Ficará desligado até que alguém o ligue novamente.';
+
+  @override
+  String get meshcoreShutDown => 'Desligar';
+
+  @override
+  String get meshcoreShutDownCommandSent => 'Comando de desligamento enviado';
+
+  @override
+  String get meshcoreFailedToShutDownDevice =>
+      'Falha ao desligar o dispositivo';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Falha ao enviar anúncio';
 
   @override

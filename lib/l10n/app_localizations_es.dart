@@ -9362,6 +9362,25 @@ class AppLocalizationsEs extends AppLocalizations {
       'Error al reiniciar el dispositivo';
 
   @override
+  String get meshcoreShutDownDevice => 'Apagar dispositivo';
+
+  @override
+  String get meshcoreShutDownDeviceSubtitle => 'Apagar el dispositivo MeshCore';
+
+  @override
+  String get meshcoreShutDownDeviceMessage =>
+      'El dispositivo MeshCore se apagará y se desconectará. Seguirá apagado hasta que alguien lo vuelva a encender.';
+
+  @override
+  String get meshcoreShutDown => 'Apagar';
+
+  @override
+  String get meshcoreShutDownCommandSent => 'Comando de apagado enviado';
+
+  @override
+  String get meshcoreFailedToShutDownDevice => 'Error al apagar el dispositivo';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Error al enviar el anuncio';
 
   @override

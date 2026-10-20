@@ -9317,6 +9317,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreFailedToRebootDevice => 'Riavvio dispositivo fallito';
 
   @override
+  String get meshcoreShutDownDevice => 'Spegni Dispositivo';
+
+  @override
+  String get meshcoreShutDownDeviceSubtitle => 'Spegni il dispositivo MeshCore';
+
+  @override
+  String get meshcoreShutDownDeviceMessage =>
+      'Il dispositivo MeshCore si spegnerà e si disconnetterà. Resterà spento finché qualcuno non lo riaccenderà.';
+
+  @override
+  String get meshcoreShutDown => 'Spegni';
+
+  @override
+  String get meshcoreShutDownCommandSent => 'Comando di spegnimento inviato';
+
+  @override
+  String get meshcoreFailedToShutDownDevice =>
+      'Spegnimento dispositivo fallito';
+
+  @override
   String get meshcoreFailedToSendAdTools => 'Invio annuncio fallito';
 
   @override

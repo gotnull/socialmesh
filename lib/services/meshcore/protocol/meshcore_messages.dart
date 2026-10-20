@@ -973,6 +973,70 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
   );
 }
 
+/// Firmware identity from `RESP_CODE_DEVICE_INFO` (0x0D), the reply to
+/// `CMD_DEVICE_QUERY`. The BLE PIN the frame also carries is never kept.
+class MeshCoreDeviceInfo {
+  const MeshCoreDeviceInfo({
+    required this.firmwareVerCode,
+    this.buildDate,
+    this.manufacturer,
+    this.firmwareVersion,
+  });
+
+  /// `FIRMWARE_VER_CODE`, the companion protocol level.
+  final int firmwareVerCode;
+  final String? buildDate;
+  final String? manufacturer;
+  final String? firmwareVersion;
+
+  /// Whether the radio accepts [MeshCoreCommands.runCliCommand].
+  bool get supportsCliCommands =>
+      firmwareVerCode >= MeshCoreFirmware.cliMinVerCode;
+}
+
+/// Parse a DEVICE_INFO response payload.
+///
+/// DEVICE_INFO format (payload, after command byte); firmware before v3
+/// sends only the first byte:
+/// ```
+/// [0]      FIRMWARE_VER_CODE
+/// [1]      MAX_CONTACTS / 2
+/// [2]      MAX_GROUP_CHANNELS
+/// [3-6]    BLE pin (uint32 LE), skipped
+/// [7-18]   build date, NUL-padded (12 bytes)
+/// [19-58]  manufacturer name, NUL-padded (40 bytes)
+/// [59-78]  firmware version, NUL-padded (20 bytes)
+/// [79+]    repeat enabled (v9+), path hash mode (v10+), not read
+/// ```
+ParseResult<MeshCoreDeviceInfo> parseDeviceInfo(Uint8List payload) {
+  if (payload.isEmpty) {
+    return const ParseResult.failure('Device info payload empty');
+  }
+
+  final reader = MeshCoreBufferReader(payload);
+  final verCode = reader.readByte();
+
+  const stringsOffset = 7;
+  String? buildDate;
+  String? manufacturer;
+  String? firmwareVersion;
+  if (payload.length > stringsOffset) {
+    reader.skip(stringsOffset - 1);
+    buildDate = reader.readCString(12);
+    if (reader.hasRemaining) manufacturer = reader.readCString(40);
+    if (reader.hasRemaining) firmwareVersion = reader.readCString(20);
+  }
+
+  return ParseResult.success(
+    MeshCoreDeviceInfo(
+      firmwareVerCode: verCode,
+      buildDate: buildDate,
+      manufacturer: manufacturer,
+      firmwareVersion: firmwareVersion,
+    ),
+  );
+}
+
 /// Parse a BATT_AND_STORAGE response payload.
 ///
 /// BATT_AND_STORAGE format (payload, after command byte):

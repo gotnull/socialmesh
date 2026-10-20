@@ -16076,6 +16076,42 @@ abstract class AppLocalizations {
   /// **'Failed to reboot device'**
   String get meshcoreFailedToRebootDevice;
 
+  /// MeshCore settings tile and confirm title that powers the radio off (firmware v1.18+).
+  ///
+  /// In en, this message translates to:
+  /// **'Shut Down Device'**
+  String get meshcoreShutDownDevice;
+
+  /// Subtitle of the MeshCore shut down tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Power off the MeshCore device'**
+  String get meshcoreShutDownDeviceSubtitle;
+
+  /// Confirmation text before powering a MeshCore radio off.
+  ///
+  /// In en, this message translates to:
+  /// **'The MeshCore device will power off and disconnect. It stays off until someone switches it back on.'**
+  String get meshcoreShutDownDeviceMessage;
+
+  /// Confirm button label for powering a MeshCore radio off.
+  ///
+  /// In en, this message translates to:
+  /// **'Shut Down'**
+  String get meshcoreShutDown;
+
+  /// Snackbar after the power-off command is sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Shutdown command sent'**
+  String get meshcoreShutDownCommandSent;
+
+  /// Snackbar when the power-off command could not be sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to shut down device'**
+  String get meshcoreFailedToShutDownDevice;
+
   /// Error snackbar when advertisement fails in tools
   ///
   /// In en, this message translates to:
