@@ -35342,6 +35342,42 @@
   "@deviceMgmtShutdownWarning": {
     "description": "Text displayed in developer tools"
   },
+  "deviceMgmtRemoteTargetBanner": "Commands on this screen go to {name}, not the radio you are connected to.",
+  "@deviceMgmtRemoteTargetBanner": {
+    "description": "Banner on Device Management while a remote node is the admin target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceMgmtRemoteNoSession": "No admin session with {name} yet. Requesting one now; try again in a few seconds.",
+  "@deviceMgmtRemoteNoSession": {
+    "description": "Shown when a remote Device Management action is tried before the remote node has granted an admin session.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceMgmtRemoteRebootWarning": "{name} will reboot in 2 seconds. Your connection to your own radio is not affected.",
+  "@deviceMgmtRemoteRebootWarning": {
+    "description": "Confirmation text before rebooting a remote node.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceMgmtRemoteShutdownWarning": "{name} will shut down in 2 seconds and stay off until someone powers it back on.",
+  "@deviceMgmtRemoteShutdownWarning": {
+    "description": "Confirmation text before shutting down a remote node.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "deviceMgmtSyncTimeTitle": "Sync Time",
   "@deviceMgmtSyncTimeTitle": {
     "description": "Title for the developer tools screen"

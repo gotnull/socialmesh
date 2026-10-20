@@ -26629,6 +26629,26 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il dispositivo si spegnerà tra 2 secondi. Dovrai riaccenderlo manualmente.';
 
   @override
+  String deviceMgmtRemoteTargetBanner(String name) {
+    return 'I comandi di questa schermata vanno a $name, non alla radio a cui sei connesso.';
+  }
+
+  @override
+  String deviceMgmtRemoteNoSession(String name) {
+    return 'Nessuna sessione admin con $name. È in corso la richiesta di una sessione; riprova tra qualche secondo.';
+  }
+
+  @override
+  String deviceMgmtRemoteRebootWarning(String name) {
+    return '$name si riavvierà tra 2 secondi. La connessione alla tua radio non viene interrotta.';
+  }
+
+  @override
+  String deviceMgmtRemoteShutdownWarning(String name) {
+    return '$name si spegnerà tra 2 secondi e resterà spento finché qualcuno non lo riaccenderà.';
+  }
+
+  @override
   String get deviceMgmtSyncTimeTitle => 'Sincronizza ora';
 
   @override

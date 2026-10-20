@@ -26313,6 +26313,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'The device will shut down in 2 seconds. You will need to manually power it back on.';
 
   @override
+  String deviceMgmtRemoteTargetBanner(String name) {
+    return 'Commands on this screen go to $name, not the radio you are connected to.';
+  }
+
+  @override
+  String deviceMgmtRemoteNoSession(String name) {
+    return 'No admin session with $name yet. Requesting one now; try again in a few seconds.';
+  }
+
+  @override
+  String deviceMgmtRemoteRebootWarning(String name) {
+    return '$name will reboot in 2 seconds. Your connection to your own radio is not affected.';
+  }
+
+  @override
+  String deviceMgmtRemoteShutdownWarning(String name) {
+    return '$name will shut down in 2 seconds and stay off until someone powers it back on.';
+  }
+
+  @override
   String get deviceMgmtSyncTimeTitle => 'Sync Time';
 
   @override

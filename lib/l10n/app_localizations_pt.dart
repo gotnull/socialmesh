@@ -26618,6 +26618,26 @@ class AppLocalizationsPt extends AppLocalizations {
       'O dispositivo será desligado em 2 segundos. Você precisará ligá-lo manualmente.';
 
   @override
+  String deviceMgmtRemoteTargetBanner(String name) {
+    return 'Os comandos desta tela vão para $name, não para o rádio ao qual você está conectado.';
+  }
+
+  @override
+  String deviceMgmtRemoteNoSession(String name) {
+    return 'Ainda não há sessão de administração com $name. Uma está sendo solicitada; tente novamente em alguns segundos.';
+  }
+
+  @override
+  String deviceMgmtRemoteRebootWarning(String name) {
+    return '$name será reiniciado em 2 segundos. Sua conexão com o seu próprio rádio não é afetada.';
+  }
+
+  @override
+  String deviceMgmtRemoteShutdownWarning(String name) {
+    return '$name será desligado em 2 segundos e ficará desligado até que alguém o ligue novamente.';
+  }
+
+  @override
   String get deviceMgmtSyncTimeTitle => 'Sincronizar hora';
 
   @override

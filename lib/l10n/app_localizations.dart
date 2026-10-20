@@ -45940,6 +45940,30 @@ abstract class AppLocalizations {
   /// **'The device will shut down in 2 seconds. You will need to manually power it back on.'**
   String get deviceMgmtShutdownWarning;
 
+  /// Banner on Device Management while a remote node is the admin target.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands on this screen go to {name}, not the radio you are connected to.'**
+  String deviceMgmtRemoteTargetBanner(String name);
+
+  /// Shown when a remote Device Management action is tried before the remote node has granted an admin session.
+  ///
+  /// In en, this message translates to:
+  /// **'No admin session with {name} yet. Requesting one now; try again in a few seconds.'**
+  String deviceMgmtRemoteNoSession(String name);
+
+  /// Confirmation text before rebooting a remote node.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will reboot in 2 seconds. Your connection to your own radio is not affected.'**
+  String deviceMgmtRemoteRebootWarning(String name);
+
+  /// Confirmation text before shutting down a remote node.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will shut down in 2 seconds and stay off until someone powers it back on.'**
+  String deviceMgmtRemoteShutdownWarning(String name);
+
   /// Title for the developer tools screen
   ///
   /// In en, this message translates to:

@@ -26646,6 +26646,26 @@ class AppLocalizationsRu extends AppLocalizations {
       'Устройство выключится через 2 секунды. Вам потребуется включить его вручную.';
 
   @override
+  String deviceMgmtRemoteTargetBanner(String name) {
+    return 'Команды на этом экране отправляются на $name, а не на радио, к которому вы подключены.';
+  }
+
+  @override
+  String deviceMgmtRemoteNoSession(String name) {
+    return 'Сессии администратора с $name пока нет. Сейчас она запрашивается; повторите попытку через несколько секунд.';
+  }
+
+  @override
+  String deviceMgmtRemoteRebootWarning(String name) {
+    return '$name перезагрузится через 2 секунды. Ваше подключение к собственному радио не прервётся.';
+  }
+
+  @override
+  String deviceMgmtRemoteShutdownWarning(String name) {
+    return '$name выключится через 2 секунды и останется выключенным, пока кто-нибудь не включит его снова.';
+  }
+
+  @override
   String get deviceMgmtSyncTimeTitle => 'Синхронизировать время';
 
   @override

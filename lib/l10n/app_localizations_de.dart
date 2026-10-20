@@ -26702,6 +26702,26 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Gerät wird in 2 Sekunden heruntergefahren. Sie müssen es manuell wieder einschalten.';
 
   @override
+  String deviceMgmtRemoteTargetBanner(String name) {
+    return 'Befehle auf diesem Bildschirm gehen an $name, nicht an das Funkgerät, mit dem du verbunden bist.';
+  }
+
+  @override
+  String deviceMgmtRemoteNoSession(String name) {
+    return 'Noch keine Admin-Sitzung mit $name. Eine wird jetzt angefordert; versuche es in ein paar Sekunden erneut.';
+  }
+
+  @override
+  String deviceMgmtRemoteRebootWarning(String name) {
+    return '$name wird in 2 Sekunden neu gestartet. Deine Verbindung zu deinem eigenen Funkgerät bleibt bestehen.';
+  }
+
+  @override
+  String deviceMgmtRemoteShutdownWarning(String name) {
+    return '$name wird in 2 Sekunden heruntergefahren und bleibt aus, bis es jemand wieder einschaltet.';
+  }
+
+  @override
   String get deviceMgmtSyncTimeTitle => 'Zeit synchronisieren';
 
   @override

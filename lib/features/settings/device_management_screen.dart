@@ -7,6 +7,8 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/units/byte_format.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../providers/countdown_providers.dart';
@@ -29,6 +31,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     with LifecycleSafeMixin {
   bool _isProcessing = false;
 
+  String _remoteName(RemoteAdminState remote) =>
+      remote.targetNodeName ?? formatNodeId(remote.targetNodeNum!);
+
   Future<void> _executeAction(
     String actionName,
     Future<void> Function() action, {
@@ -44,6 +49,31 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     if (!mounted) return;
 
     final l10n = context.l10n;
+
+    // A remote SET/ACTION without a session passkey is dropped by the
+    // firmware, so never send one: request the session and say so instead.
+    final remote = ref.read(remoteAdminProvider);
+    final remoteNode = remote.targetNodeNum;
+    if (remoteNode != null &&
+        !ref
+            .read(protocolServiceProvider)
+            .remoteAdminSessionReady(remoteNode)) {
+      AppLogging.connection(
+        'DeviceManagement: $actionName not sent - no admin session with '
+        '${formatNodeId(remoteNode)}',
+      );
+      ref
+          .read(remoteAdminProvider.notifier)
+          .setTarget(remoteNode, remote.targetNodeName);
+      showWarningSnackBar(
+        context,
+        l10n.deviceMgmtRemoteNoSession(_remoteName(remote)),
+      );
+      return;
+    }
+
+    // Only the radio this app is connected to drops the link.
+    final disconnects = causesDisconnect && remoteNode == null;
 
     if (requiresConfirmation) {
       final confirmed = await AppBottomSheet.show<bool>(
@@ -144,13 +174,13 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
       await action();
 
       if (mounted) {
-        final message = causesDisconnect
+        final message = disconnects
             ? l10n.deviceMgmtSuccessDisconnect(actionName)
             : l10n.deviceMgmtSuccessCommandSent(actionName);
         showSuccessSnackBar(context, message);
 
         // Pop the screen after triggering actions that cause disconnect
-        if (causesDisconnect) {
+        if (disconnects) {
           AppLogging.connection(
             'DeviceManagement: $actionName complete - popping screen, '
             'expect disconnect shortly',
@@ -175,6 +205,8 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     final theme = Theme.of(context);
     final protocol = ref.watch(protocolServiceProvider);
     final isConnected = protocol.isConnected;
+    final remote = ref.watch(remoteAdminProvider);
+    final remoteName = remote.isRemote ? _remoteName(remote) : null;
 
     return GlassScaffold(
       title: context.l10n.deviceMgmtTitle,
@@ -210,6 +242,16 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                             ),
                           ],
                         ),
+                      ),
+                    ),
+                  ),
+                if (remoteName != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
+                    child: StatusBanner.info(
+                      title: context.l10n.settingsRemoteAdminConfiguringTitle,
+                      subtitle: context.l10n.deviceMgmtRemoteTargetBanner(
+                        remoteName,
                       ),
                     ),
                   ),
@@ -255,7 +297,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         await protocol.reboot(delaySeconds: 2, target: target);
                       }
                     },
-                    warningMessage: context.l10n.deviceMgmtRebootWarning,
+                    warningMessage: remoteName != null
+                        ? context.l10n.deviceMgmtRemoteRebootWarning(remoteName)
+                        : context.l10n.deviceMgmtRebootWarning,
                     causesDisconnect: true,
                   ),
                 ),
@@ -303,26 +347,34 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         );
                       }
                     },
-                    warningMessage: context.l10n.deviceMgmtShutdownWarning,
+                    warningMessage: remoteName != null
+                        ? context.l10n.deviceMgmtRemoteShutdownWarning(
+                            remoteName,
+                          )
+                        : context.l10n.deviceMgmtShutdownWarning,
                     causesDisconnect: true,
                   ),
                 ),
                 const SizedBox(height: AppTheme.spacing24),
-                _SectionHeader(title: context.l10n.deviceMgmtSectionTime),
-                const SizedBox(height: AppTheme.spacing8),
-                _ActionCard(
-                  icon: Icons.access_time,
-                  iconColor: theme.colorScheme.tertiary,
-                  title: context.l10n.deviceMgmtSyncTimeTitle,
-                  subtitle: context.l10n.deviceMgmtSyncTimeSubtitle,
-                  enabled: isConnected,
-                  onTap: () => _executeAction(
-                    context.l10n.deviceMgmtSyncTimeTitle,
-                    () => protocol.syncTime(),
-                    requiresConfirmation: false,
+                // Sync Time has no remote form; it would set this app's
+                // radio while the screen says commands go to the remote node.
+                if (remoteName == null) ...[
+                  _SectionHeader(title: context.l10n.deviceMgmtSectionTime),
+                  const SizedBox(height: AppTheme.spacing8),
+                  _ActionCard(
+                    icon: Icons.access_time,
+                    iconColor: theme.colorScheme.tertiary,
+                    title: context.l10n.deviceMgmtSyncTimeTitle,
+                    subtitle: context.l10n.deviceMgmtSyncTimeSubtitle,
+                    enabled: isConnected,
+                    onTap: () => _executeAction(
+                      context.l10n.deviceMgmtSyncTimeTitle,
+                      () => protocol.syncTime(),
+                      requiresConfirmation: false,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing24),
+                  const SizedBox(height: AppTheme.spacing24),
+                ],
                 _SectionHeader(title: context.l10n.deviceMgmtSectionReset),
                 const SizedBox(height: AppTheme.spacing8),
                 _ActionCard(
