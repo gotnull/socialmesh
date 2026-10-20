@@ -443,6 +443,34 @@ void main() {
         ], reason: 'downlink-flag flip must subscribe to that channel only');
       },
     );
+
+    test('a second downlink channel re-subscribes although coverage was already on', () async {
+      protocol.setCurrentMqttConfig(_proxyEnabledConfig());
+      container = _makeContainer(
+        protocol: protocol,
+        proxyService: proxyService,
+      );
+      container
+          .read(channelsProvider.notifier)
+          .setChannel(_channel(index: 0, downlink: true));
+      container.read(mqttClientProxyAutoConnectProvider);
+      await Future<void>.delayed(Duration.zero);
+      expect(proxyService.connectCalls.last.subscriptionTopics, [
+        'msh/2/e/ch0/+',
+        'msh/2/e/PKI/+',
+      ]);
+
+      container
+          .read(channelsProvider.notifier)
+          .setChannel(_channel(index: 1, downlink: true));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(proxyService.connectCalls.last.subscriptionTopics, [
+        'msh/2/e/ch0/+',
+        'msh/2/e/ch1/+',
+        'msh/2/e/PKI/+',
+      ]);
+    });
   });
 
   group('MqttClientProxyController', () {

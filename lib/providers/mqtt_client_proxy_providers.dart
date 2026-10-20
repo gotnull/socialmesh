@@ -13,6 +13,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
@@ -106,13 +107,29 @@ final mqttClientProxyForwarderProvider = Provider<void>((ref) {
 // Proxy auto-connect (starts proxy when device MQTT config is received)
 // ---------------------------------------------------------------------------
 
+// True when [a] and [b] have the same downlink channels in the same order,
+// matching on index, name and role: the inputs to the subscribed topics.
+bool _sameDownlinkChannels(List<ChannelConfig> a, List<ChannelConfig> b) {
+  String key(ChannelConfig c) => '${c.index}|${c.name}|${c.role}';
+  return listEquals(
+    [
+      for (final c in a)
+        if (c.downlink) key(c),
+    ],
+    [
+      for (final c in b)
+        if (c.downlink) key(c),
+    ],
+  );
+}
+
 /// Evaluates the proxy state from cached MQTT config and current channel
 /// downlink coverage, then either calls `connect` or `disconnect` on the
 /// service. Idempotent - safe to call from multiple triggers.
 ///
 /// Reasons used in logs (kept short, structured): `initial-build`,
 /// `config-stream-emit`, `link-connected`, `app-resumed`,
-/// `downlink-flag-changed`, `manual` (controller), `save-flow` (UI).
+/// `downlink-channels-changed`, `manual` (controller), `save-flow` (UI).
 Future<void> _evaluateProxyState(Ref ref, String reason) async {
   final protocol = ref.read(protocolServiceProvider);
   final proxyService = ref.read(mqttClientProxyServiceProvider);
@@ -261,14 +278,13 @@ final mqttClientProxyAutoConnectProvider = Provider<void>((ref) {
     }
   });
 
-  // Channel downlink coverage transitions → re-evaluate. We deliberately
-  // ignore unrelated channel edits (name, PSK, uplink-only flag) so a
-  // routine channel rename does not trigger a destructive reconnect.
+  // The subscribed topics follow the downlink channels' names and roles,
+  // so any change to that set re-evaluates. Edits outside it (PSK,
+  // uplink-only flag, a non-downlink rename) are skipped, and an evaluation
+  // that yields the live session's topics is a no-op in connect().
   ref.listen<List<ChannelConfig>>(channelsProvider, (previous, next) {
-    final prevHas = previous?.any((c) => c.downlink) ?? false;
-    final nextHas = next.any((c) => c.downlink);
-    if (prevHas != nextHas) {
-      unawaited(_evaluateProxyState(ref, 'downlink-flag-changed'));
+    if (!_sameDownlinkChannels(previous ?? const [], next)) {
+      unawaited(_evaluateProxyState(ref, 'downlink-channels-changed'));
     }
   });
 
