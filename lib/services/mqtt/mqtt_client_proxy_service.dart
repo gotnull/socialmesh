@@ -477,6 +477,19 @@ class MqttClientProxyService {
   static const int _maxPendingPublishes = 32;
   static const Duration _pendingPublishTtl = Duration(minutes: 2);
 
+  // Broker→radio relay queue, drained one write at a time. A busy broker
+  // delivers far faster than the radio link drains (the public EU broker
+  // sends about 50 messages a second; BLE carries about 13), and relaying
+  // each message without waiting piles up unbounded pending writes that
+  // starve the link. Bounded (drop-oldest): live traffic only gets staler
+  // in a backlog.
+  final List<({String topic, List<int> data, bool retained})>
+  _pendingDownlinks = [];
+  static const int _maxPendingDownlinks = 32;
+  bool _drainingDownlinks = false;
+  int _downlinksDropped = 0;
+  DateTime? _lastDownlinkDropLogAt;
+
   // Proactive reconnect request. Fired when a publish detects that the live
   // socket has died while the phase still reads `connected`: the package's
   // own disconnect callback has not fired, so its auto-reconnect is blind to
@@ -1462,13 +1475,54 @@ class MqttClientProxyService {
         'Received from broker: $topic (${payload.length} bytes)',
       );
 
-      _onBrokerMessage!(topic, List<int>.from(payload), retained);
-      _messagesRelayed++;
+      _enqueueDownlink(topic, List<int>.from(payload), retained);
     }
 
     // Any inbound broker traffic is proof the socket is alive.
     _lastProofOfLifeAt = DateTime.now();
     _emitDiagnostics();
+    unawaited(_drainDownlinks());
+  }
+
+  void _enqueueDownlink(String topic, List<int> data, bool retained) {
+    if (_pendingDownlinks.length >= _maxPendingDownlinks) {
+      _pendingDownlinks.removeAt(0);
+      _downlinksDropped++;
+      final now = DateTime.now();
+      final lastLog = _lastDownlinkDropLogAt;
+      if (lastLog == null ||
+          now.difference(lastLog) >= _suppressionDedupeWindow) {
+        _lastDownlinkDropLogAt = now;
+        AppLogging.mqttProxyWarning(
+          'Relay queue full ($_maxPendingDownlinks); dropped oldest '
+          '(total dropped: $_downlinksDropped)',
+        );
+      }
+    }
+    _pendingDownlinks.add((topic: topic, data: data, retained: retained));
+  }
+
+  // At most one relay write is outstanding, so the radio link stays free
+  // for the app's own traffic between relays.
+  Future<void> _drainDownlinks() async {
+    if (_drainingDownlinks) return;
+    _drainingDownlinks = true;
+    try {
+      while (_pendingDownlinks.isNotEmpty && !_disposed) {
+        final relay = _onBrokerMessage;
+        if (relay == null) break;
+        final next = _pendingDownlinks.removeAt(0);
+        _messagesRelayed++;
+        try {
+          await relay(next.topic, next.data, next.retained);
+        } catch (e) {
+          AppLogging.mqttProxyWarning('Relay to radio failed: $e');
+        }
+      }
+    } finally {
+      _drainingDownlinks = false;
+      if (!_disposed) _emitDiagnostics();
+    }
   }
 
   // ---------------------------------------------------------------------------

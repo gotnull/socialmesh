@@ -1170,6 +1170,66 @@ void main() {
     });
   });
 
+  group('MqttClientProxyService relay queue', () {
+    late MqttClientProxyService service;
+    late List<String> started;
+    late List<Completer<void>> pending;
+
+    setUp(() {
+      service = MqttClientProxyService();
+      started = [];
+      pending = [];
+      // Each relay stays in flight until the test completes it, like a BLE
+      // write the radio has not yet acknowledged.
+      service.setOnBrokerMessage((topic, data, retained) {
+        started.add(topic);
+        final write = Completer<void>();
+        pending.add(write);
+        return write.future;
+      });
+    });
+
+    tearDown(() {
+      service.dispose();
+    });
+
+    List<MqttReceivedMessage<MqttMessage>> burst(int count) => [
+      for (var i = 0; i < count; i++)
+        MqttReceivedMessage<MqttMessage>(
+          'msh/EU_868/2/e/LongFast/!$i',
+          MqttPublishMessage().toTopic('msh/EU_868/2/e/LongFast/!$i'),
+        ),
+    ];
+
+    test('only one relay write is in flight at a time', () async {
+      service.debugHandleInboundMessage(burst(3));
+      await Future<void>.delayed(Duration.zero);
+      expect(started, ['msh/EU_868/2/e/LongFast/!0']);
+
+      pending.last.complete();
+      await Future<void>.delayed(Duration.zero);
+      expect(started, [
+        'msh/EU_868/2/e/LongFast/!0',
+        'msh/EU_868/2/e/LongFast/!1',
+      ]);
+    });
+
+    test('a burst beyond the queue bound drops the oldest messages', () async {
+      // A broker batch is queued in full before the drain starts, so of 41
+      // messages only the newest 32 (!9 to !40) reach the radio.
+      service.debugHandleInboundMessage(burst(41));
+      await Future<void>.delayed(Duration.zero);
+      expect(started, ['msh/EU_868/2/e/LongFast/!9']);
+
+      for (var i = 0; i < 31; i++) {
+        pending.last.complete();
+        await Future<void>.delayed(Duration.zero);
+      }
+      expect(started, hasLength(32));
+      expect(started.last, 'msh/EU_868/2/e/LongFast/!40');
+    });
+  });
+
   group('mqttProxySubscriptionTopics', () {
     const prefix = 'msh/EU_868/2/e';
 
