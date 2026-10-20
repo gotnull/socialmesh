@@ -1665,9 +1665,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 children: [
                   NodeAvatar(
                     text: node.avatarName,
-                    color: isMyNode
-                        ? context.accentColor
-                        : _getAvatarColor(node),
+                    color: _getAvatarColor(node),
                     size: 28,
                   ),
                   const SizedBox(width: AppTheme.spacing10),
