@@ -64,6 +64,35 @@ Duration scannerRescanDelay(int failureStreak) {
   return Duration(seconds: seconds);
 }
 
+/// Completed scan cycles a listed device may go unseen before the
+/// scanner drops it. One missed 10 s cycle can be a radio between
+/// advertisements; two means it is off, out of range, or connected
+/// elsewhere.
+@visibleForTesting
+const int scannerMissedCyclesBeforeRemoval = 2;
+
+/// Drops the devices in [devices] that no scan has reported for
+/// [scannerMissedCyclesBeforeRemoval] completed cycles, given the cycle
+/// that just completed. Rescans keep the list between cycles, so without
+/// this a radio that was switched off stayed listed with its last signal
+/// reading. [lastSeenCycle] records the cycle that last reported each
+/// device and is pruned with it.
+@visibleForTesting
+void pruneUnseenScannerDevices(
+  List<DeviceInfo> devices,
+  Map<DeviceInfo, int> lastSeenCycle,
+  int completedCycle,
+) {
+  devices.removeWhere((device) {
+    final seen = lastSeenCycle[device];
+    final gone =
+        seen == null ||
+        completedCycle - seen >= scannerMissedCyclesBeforeRemoval;
+    if (gone) lastSeenCycle.remove(device);
+    return gone;
+  });
+}
+
 /// Whether the scanner shows its Bluetooth search banner. The rescan
 /// timer keeps searching between scan cycles, so while no radio is
 /// listed the banner stays up through the gap; hiding it there left the
@@ -124,6 +153,10 @@ class ScannerScreen extends ConsumerStatefulWidget {
 class _ScannerScreenState extends ConsumerState<ScannerScreen>
     with LifecycleSafeMixin {
   final List<DeviceInfo> _devices = [];
+  // Scan cycle that last reported each listed device, and the number of
+  // the last cycle that completed.
+  final Map<DeviceInfo, int> _deviceLastSeenCycle = {};
+  int _scanCycle = 0;
   bool _scanning = false;
   bool _connecting = false;
   bool _autoReconnecting = false;
@@ -647,19 +680,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         AppLogging.connection(
           'SCANNER: Background reconnect state changed: $previous -> $next',
         );
-        if (next == AutoReconnectState.success) {
+        // The auto-reconnect manager resets the state to idle the moment
+        // the link comes up, before the session has finished: that idle
+        // is the background reconnect succeeding, not giving up.
+        final linkUp =
+            next == AutoReconnectState.idle &&
+            ref.read(transportProvider).isConnected;
+        if (next == AutoReconnectState.success || linkUp) {
           _backgroundReconnectSub?.close();
           _backgroundReconnectSub = null;
           AppLogging.connection(
-            'SCANNER: Background reconnect succeeded - navigating to main',
+            'SCANNER: Background reconnect reached the radio ($next) - '
+            'navigating to main',
           );
           if (!mounted) return;
-          final appState = ref.read(appInitProvider);
-          if (appState == AppInitState.needsScanner) {
-            ref.read(appInitProvider.notifier).setReady();
-          } else if (!widget.isInline) {
-            _navigateToMain();
-          }
+          _leaveForLiveConnection();
         } else if (next == AutoReconnectState.failed ||
             next == AutoReconnectState.idle) {
           _backgroundReconnectSub?.close();
@@ -676,6 +711,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         }
       },
     );
+  }
+
+  // Leaves the Scanner for a connection that is live or still settling:
+  // through the app router when it shows the Scanner for needsScanner,
+  // otherwise back to the screen below.
+  void _leaveForLiveConnection() {
+    final appState = ref.read(appInitProvider);
+    if (appState == AppInitState.needsScanner) {
+      ref.read(appInitProvider.notifier).setReady();
+    } else if (!widget.isInline) {
+      _navigateToMain();
+    }
+  }
+
+  // A background attempt that did not find the radio holds the
+  // auto-reconnect state at scanning through each retry wait, while the
+  // adapter sits unused. Stop the cycle so the manual scan can start
+  // rather than the user waiting it out. An attempt that is still
+  // scanning or connecting is left alone.
+  void _stopIdleBackgroundRetry() {
+    if (!mounted || _backgroundReconnectSub == null) return;
+    final notifier = ref.read(conn.deviceConnectionProvider.notifier);
+    if (!notifier.backgroundRetryPending) return;
+    AppLogging.connection(
+      'SCANNER: background reconnect is waiting to retry - '
+      'stopping it for the manual scan',
+    );
+    notifier.cancelAutoReconnect();
   }
 
   /// Navigate to main app after successful connection.
@@ -746,12 +809,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         'SCANNER: gate=block_navigate_to_main TRIPPED - '
         'meshtasticState=${deviceState.state}, userDisconnected=false',
       );
-      final appState = ref.read(appInitProvider);
-      if (appState == AppInitState.needsScanner) {
-        ref.read(appInitProvider.notifier).setReady();
-      } else if (!widget.isInline) {
-        _navigateToMain();
-      }
+      _leaveForLiveConnection();
       return;
     }
 
@@ -793,6 +851,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // Listen for background reconnect outcome - when it completes or
       // fails, we either navigate away or fall through to manual scan.
       _listenForBackgroundReconnectOutcome();
+      final inFlight = ref
+          .read(conn.deviceConnectionProvider.notifier)
+          .backgroundConnectionInFlight;
+      if (inFlight == null) {
+        _stopIdleBackgroundRetry();
+      } else {
+        // The attempt's own callers handle its errors; only its end
+        // matters here.
+        inFlight.whenComplete(_stopIdleBackgroundRetry).ignore();
+      }
       return;
     }
 
@@ -904,7 +972,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         AppLogging.connection(
           'SCANNER: Auto-reconnect device found, connecting...',
         );
-        // Found the device, try to connect
+        // The onboarding coordinator owns the exit from the Scanner after
+        // a successful connect, for this path as for a tap. Without the
+        // hand-off the session comes up behind the overlay and the
+        // Scanner never leaves.
+        ref.read(meshtasticOnboardingFlowProvider.notifier).connect(lastDevice);
         await _connectToDevice(lastDevice, isAutoReconnect: true);
       } else {
         AppLogging.connection(
@@ -1056,6 +1128,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       _scanning = true;
       if (!isRescan) {
         _devices.clear();
+        _deviceLastSeenCycle.clear();
         _hasCompletedScan = false;
         AppLogging.connection('BLE_SCAN_CLEARED reason=fresh_scan');
       }
@@ -1238,6 +1311,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         timeout: const Duration(seconds: 10),
         scanAll: showAllDevices,
       );
+      // Only completed cycles count towards removal: a cycle that ends in
+      // an error does not advance the number, so its sightings carry over
+      // to the next one.
+      final cycle = _scanCycle + 1;
 
       await for (final device in scanStream) {
         if (!mounted) {
@@ -1258,7 +1335,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           } else {
             _devices.add(device);
           }
+          _deviceLastSeenCycle[device] = cycle;
         });
+      }
+      _scanCycle = cycle;
+      if (mounted) {
+        final before = _devices.length;
+        safeSetState(() {
+          pruneUnseenScannerDevices(_devices, _deviceLastSeenCycle, cycle);
+        });
+        if (_devices.length != before) {
+          AppLogging.connection(
+            'SCANNER: dropped ${before - _devices.length} devices not seen '
+            'for $scannerMissedCyclesBeforeRemoval scan cycles',
+          );
+        }
       }
       AppLogging.connection(
         'SCANNER: Scan stream completed, found ${_devices.length} devices',

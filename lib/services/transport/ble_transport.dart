@@ -343,6 +343,24 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   static bool scanRequiresLocationServices(int? androidSdkInt) =>
       androidSdkInt == null || androidSdkInt < 31;
 
+  /// The first settled adapter state (`on` or `off`) from [states], or
+  /// `unknown` if none arrives within [timeout]. Straight after launch
+  /// the adapter reports `unknown` until the platform delivers its real
+  /// state, so reading the stream's first value then misreads a working
+  /// adapter as unavailable.
+  static Future<BluetoothAdapterState> settledAdapterState(
+    Stream<BluetoothAdapterState> states, {
+    Duration timeout = const Duration(seconds: 3),
+  }) {
+    return states
+        .where(
+          (s) =>
+              s == BluetoothAdapterState.on || s == BluetoothAdapterState.off,
+        )
+        .first
+        .timeout(timeout, onTimeout: () => BluetoothAdapterState.unknown);
+  }
+
   static Future<int?> _androidSdkInt() async {
     if (defaultTargetPlatform != TargetPlatform.android) return null;
     try {
@@ -443,17 +461,9 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
         // Wait for Bluetooth adapter to be ready (up to 3 seconds)
         AppLogging.ble('BLE_TRANSPORT: Checking adapter state...');
-        final adapterState = await FlutterBluePlus.adapterState
-            .where(
-              (s) =>
-                  s == BluetoothAdapterState.on ||
-                  s == BluetoothAdapterState.off,
-            )
-            .first
-            .timeout(
-              const Duration(seconds: 3),
-              onTimeout: () => BluetoothAdapterState.unknown,
-            );
+        final adapterState = await settledAdapterState(
+          FlutterBluePlus.adapterState,
+        );
 
         AppLogging.ble('BLE_TRANSPORT: Adapter state = $adapterState');
 

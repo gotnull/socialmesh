@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.75.0] - 2026-10-22
+
+### Fixed
+
+- After a force quit, the app reconnects to your radio on its own again. On slower phones the reconnect at launch started before Bluetooth had reported that it was on, took it as off and gave up, and nothing tried again.
+- When the Scanner reconnects to your saved radio by itself, it now returns you to the app once the radio is connected. It used to stay on "Auto-reconnecting...", and tapping Cancel there disconnected the radio it had just connected.
+- If Bluetooth was off when you opened the app, turning it on now reconnects your radio. Before, nothing happened until you went to the Scanner.
+- The Scanner no longer holds you on "Auto-reconnecting..." while a background reconnect that could not find your radio waits to try again. It shows the device list so you can pick a radio, and if the background reconnect reaches the radio while you wait, it returns you to the app.
+- A radio that is switched off, goes out of range or is taken by another device now drops off the Scanner list within about half a minute. It used to stay listed with its last signal strength, and tapping it timed out.
+
 ## [1.74.0] - 2026-10-20
 
 ### Added

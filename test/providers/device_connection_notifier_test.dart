@@ -99,11 +99,16 @@ void main() {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.scanning);
 
+      expect(notifier.backgroundConnectionInFlight, isNull);
       final first = notifier.startBackgroundConnection();
       final second = notifier.startBackgroundConnection();
       expect(identical(first, second), isTrue);
+      // The Scanner waits on this to learn when the attempt ends.
+      expect(identical(notifier.backgroundConnectionInFlight, first), isTrue);
 
       await first;
+      expect(notifier.backgroundConnectionInFlight, isNull);
+      expect(notifier.backgroundRetryPending, isFalse);
       final third = notifier.startBackgroundConnection();
       expect(identical(first, third), isFalse);
       await third;

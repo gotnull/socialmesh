@@ -970,6 +970,15 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     _handleDisconnect(reason);
   }
 
+  /// The [startBackgroundConnection] attempt that is running, if any.
+  Future<void>? get backgroundConnectionInFlight =>
+      _backgroundConnectionInFlight;
+
+  /// True while [startBackgroundConnection] is waiting to retry after a
+  /// scan that did not find the saved radio. Nothing uses the adapter
+  /// during that wait, but the auto-reconnect state stays `scanning`.
+  bool get backgroundRetryPending => _retryTimer?.isActive ?? false;
+
   /// Cancel any in-progress auto-reconnect cycle.
   ///
   /// Called by the reconnect watchdog timer in [TopStatusBanner] when
@@ -1769,8 +1778,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return;
     }
 
-    // Check Bluetooth state first
-    final btState = await FlutterBluePlus.adapterState.first;
+    // Check Bluetooth state first. At cold start this runs before iOS has
+    // reported the adapter state, so wait for it to settle rather than
+    // taking the first, still unknown, value.
+    final btState = await BleTransport.settledAdapterState(
+      FlutterBluePlus.adapterState,
+    );
     if (btState != BluetoothAdapterState.on) {
       AppLogging.connection('startBackgroundConnection: Bluetooth is off');
       final l10n = safeL10n();
@@ -2178,8 +2191,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return;
     }
 
-    // Check Bluetooth state first
-    final btState = await FlutterBluePlus.adapterState.first;
+    // Check Bluetooth state first. At cold start this runs before iOS has
+    // reported the adapter state, so wait for it to settle rather than
+    // taking the first, still unknown, value.
+    final btState = await BleTransport.settledAdapterState(
+      FlutterBluePlus.adapterState,
+    );
     if (btState != BluetoothAdapterState.on) {
       AppLogging.connection('MeshCore background connect: Bluetooth is off');
       final l10n = safeL10n();

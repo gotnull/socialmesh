@@ -2548,9 +2548,13 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
         return;
       }
 
-      // Check if we have a device to reconnect to
+      // Check if we have a device to reconnect to. Before the first
+      // connection of this launch only the saved device exists: Bluetooth
+      // was off at launch, so the startup reconnect gave up and has to
+      // run again now that it is on.
       final lastDeviceId = ref.read(_lastConnectedDeviceIdProvider);
-      if (lastDeviceId == null) {
+      final retryStartup = lastDeviceId == null;
+      if (retryStartup && settings.lastDeviceId == null) {
         AppLogging.connection(
           'Bluetooth ON but no previous device to reconnect to',
         );
@@ -2634,6 +2638,22 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
           AppLogging.connection(
             'Bluetooth ON but active transport is '
             '${dispatchTransport.type.name} - skipping BLE reconnect',
+          );
+          return;
+        }
+
+        if (retryStartup) {
+          // The startup reconnect owns this case. It sets its own
+          // reconnect state and refuses to start while that state is
+          // already scanning, so it is not set here.
+          AppLogging.connection(
+            'Bluetooth ON - retrying startup reconnect for saved device: '
+            '${currentSettings.lastDeviceId}',
+          );
+          unawaited(
+            ref
+                .read(deviceConnectionProvider.notifier)
+                .startBackgroundConnection(),
           );
           return;
         }

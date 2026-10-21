@@ -171,4 +171,54 @@ void main() {
       );
     });
   });
+
+  group('pruneUnseenScannerDevices', () {
+    DeviceInfo radio(String id) =>
+        DeviceInfo(id: id, name: id, type: TransportType.ble);
+
+    test('keeps a radio missed in one cycle', () {
+      final a = radio('a');
+      final devices = [a];
+      final seen = {a: 4};
+
+      pruneUnseenScannerDevices(devices, seen, 5);
+
+      expect(devices, [a]);
+      expect(seen, {a: 4});
+    });
+
+    test('drops a radio missed in two cycles in a row', () {
+      final a = radio('a');
+      final b = radio('b');
+      final devices = [a, b];
+      final seen = {a: 4, b: 6};
+
+      pruneUnseenScannerDevices(devices, seen, 6);
+
+      expect(devices, [b]);
+      expect(seen, {b: 6}, reason: 'the dropped radio loses its record');
+    });
+
+    test('a radio seen again in time stays listed', () {
+      final a = radio('a');
+      final devices = [a];
+      final seen = {a: 4};
+
+      pruneUnseenScannerDevices(devices, seen, 5);
+      seen[a] = 6;
+      pruneUnseenScannerDevices(devices, seen, 6);
+      pruneUnseenScannerDevices(devices, seen, 7);
+
+      expect(devices, [a]);
+    });
+
+    test('a listed radio with no sighting record is dropped', () {
+      final a = radio('a');
+      final devices = [a];
+
+      pruneUnseenScannerDevices(devices, {}, 1);
+
+      expect(devices, isEmpty);
+    });
+  });
 }
