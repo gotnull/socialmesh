@@ -1610,6 +1610,15 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   }
 
   Future<void> _runBackgroundConnection() async {
+    // Always-on record of what the guards below see, so an App Log export
+    // from a release build shows where an attempt stopped.
+    AppLogging.session(
+      'BACKGROUND_RECONNECT: start userDisconnected=$_userDisconnected '
+      'manualScan=${ref.read(manualScanActiveProvider)} '
+      'autoReconnect=${ref.read(autoReconnectStateProvider).name} '
+      'pairing=${state.state.name} scanInProgress=$_backgroundScanInProgress',
+    );
+
     // Check if user manually disconnected - don't auto-reconnect
     if (_userDisconnected) {
       AppLogging.connection(
@@ -1781,8 +1790,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Check Bluetooth state first. At cold start this runs before iOS has
     // reported the adapter state, so wait for it to settle rather than
     // taking the first, still unknown, value.
+    final adapterWait = Stopwatch()..start();
     final btState = await BleTransport.settledAdapterState(
       FlutterBluePlus.adapterState,
+    );
+    AppLogging.session(
+      'BACKGROUND_RECONNECT: adapter=${btState.name} '
+      'waitedMs=${adapterWait.elapsedMilliseconds}',
     );
     if (btState != BluetoothAdapterState.on) {
       AppLogging.connection('startBackgroundConnection: Bluetooth is off');

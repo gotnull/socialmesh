@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/core/logging.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' hide DisconnectReason;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
@@ -99,6 +100,14 @@ void main() {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.scanning);
 
+      // Release builds only keep always-on lines; each attempt records
+      // what its guards saw so an exported App Log shows where it stopped.
+      final session = <String>[];
+      AppLogging.setAppLogSink((level, source, message) {
+        if (source == 'session') session.add(message);
+      });
+      addTearDown(AppLogging.reset);
+
       expect(notifier.backgroundConnectionInFlight, isNull);
       final first = notifier.startBackgroundConnection();
       final second = notifier.startBackgroundConnection();
@@ -107,6 +116,12 @@ void main() {
       expect(identical(notifier.backgroundConnectionInFlight, first), isTrue);
 
       await first;
+      final starts = session
+          .where((m) => m.startsWith('BACKGROUND_RECONNECT: start '))
+          .toList();
+      expect(starts, hasLength(1), reason: 'the joined call adds no line');
+      expect(starts.single, contains('autoReconnect=scanning'));
+      expect(starts.single, contains('userDisconnected=false'));
       expect(notifier.backgroundConnectionInFlight, isNull);
       expect(notifier.backgroundRetryPending, isFalse);
       final third = notifier.startBackgroundConnection();
