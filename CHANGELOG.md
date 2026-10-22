@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - If Bluetooth was off when you opened the app, turning it on now reconnects your radio. Before, nothing happened until you went to the Scanner.
 - The Scanner no longer holds you on "Auto-reconnecting..." while a background reconnect that could not find your radio waits to try again. It shows the device list so you can pick a radio, and if the background reconnect reaches the radio while you wait, it returns you to the app.
 - A radio that is switched off, goes out of range or is taken by another device now drops off the Scanner list within about half a minute. It used to stay listed with its last signal strength, and tapping it timed out.
+- The Scanner shows the name a radio is broadcasting now. A radio re-flashed with different firmware could appear under its old name, such as a Meshtastic radio listed as "MeshCore-...".
 
 ## [1.74.0] - 2026-10-20
 

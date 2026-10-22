@@ -3377,11 +3377,10 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
                 'Found device: $foundId (looking for $deviceId)',
               );
 
+              final scanName = BleTransport.scanResultName(r);
               final deviceInfo = DeviceInfo(
                 id: foundId,
-                name: r.device.platformName.isNotEmpty
-                    ? r.device.platformName
-                    : 'Meshtastic Device',
+                name: scanName.isNotEmpty ? scanName : 'Meshtastic Device',
                 type: TransportType.ble,
                 address: foundId,
                 rssi: r.rssi,

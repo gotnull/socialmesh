@@ -343,6 +343,23 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   static bool scanRequiresLocationServices(int? androidSdkInt) =>
       androidSdkInt == null || androidSdkInt < 31;
 
+  /// Display name for a scan result: the name in the current
+  /// advertisement, or the platform name when the advertisement carries
+  /// none. iOS keeps a peripheral's name from earlier sightings, so after
+  /// a radio is re-flashed the platform name can still be the old
+  /// firmware's (a Meshtastic radio listed under its MeshCore name).
+  /// Empty when neither is known.
+  static String scanResultName(ScanResult result) => preferAdvertisedName(
+    advertisedName: result.advertisementData.advName,
+    platformName: result.device.platformName,
+  );
+
+  @visibleForTesting
+  static String preferAdvertisedName({
+    required String advertisedName,
+    required String platformName,
+  }) => advertisedName.isNotEmpty ? advertisedName : platformName;
+
   /// The first settled adapter state (`on` or `off`) from [states], or
   /// `unknown` if none arrives within [timeout]. Straight after launch
   /// the adapter reports `unknown` until the platform delivers its real
@@ -672,12 +689,11 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
                 'BLE_TRANSPORT: Found device #$deviceCount: ${r.device.remoteId} '
                 '(${r.device.platformName}) services: $serviceUuids',
               );
+              final name = scanResultName(r);
               controller.add(
                 DeviceInfo(
                   id: r.device.remoteId.toString(),
-                  name: r.device.platformName.isNotEmpty
-                      ? r.device.platformName
-                      : 'Unknown Device',
+                  name: name.isNotEmpty ? name : 'Unknown Device',
                   type: TransportType.ble,
                   address: r.device.remoteId.toString(),
                   rssi: r.rssi,
