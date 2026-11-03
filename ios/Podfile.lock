@@ -1219,11 +1219,11 @@ PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
   - cloud_firestore (6.10.0):
-    - Firebase/Firestore (= 12.19.0)
+    - Firebase/Firestore (= 12.19.3)
     - firebase_core
     - Flutter
-  - cloud_functions (6.5.0):
-    - Firebase/Functions (= 12.19.0)
+  - cloud_functions (6.5.1):
+    - Firebase/Functions (= 12.19.3)
     - firebase_core
     - Flutter
   - connectivity_plus (0.0.1):
@@ -1235,47 +1235,47 @@ PODS:
   - file_picker_darwin (1.0.0):
     - Flutter
     - FlutterMacOS
-  - Firebase/Auth (12.19.0):
+  - Firebase/Auth (12.19.3):
     - Firebase/CoreOnly
     - FirebaseAuth (~> 12.19.0)
-  - Firebase/CoreOnly (12.19.0):
-    - FirebaseCore (~> 12.19.0)
-  - Firebase/Crashlytics (12.19.0):
+  - Firebase/CoreOnly (12.19.3):
+    - FirebaseCore (~> 12.19.3)
+  - Firebase/Crashlytics (12.19.3):
     - Firebase/CoreOnly
     - FirebaseCrashlytics (~> 12.19.0)
-  - Firebase/Firestore (12.19.0):
+  - Firebase/Firestore (12.19.3):
     - Firebase/CoreOnly
-    - FirebaseFirestore (~> 12.19.0)
-  - Firebase/Functions (12.19.0):
+    - FirebaseFirestore (~> 12.19.3)
+  - Firebase/Functions (12.19.3):
     - Firebase/CoreOnly
     - FirebaseFunctions (~> 12.19.0)
-  - Firebase/Messaging (12.19.0):
+  - Firebase/Messaging (12.19.3):
     - Firebase/CoreOnly
     - FirebaseMessaging (~> 12.19.0)
-  - Firebase/Storage (12.19.0):
+  - Firebase/Storage (12.19.3):
     - Firebase/CoreOnly
     - FirebaseStorage (~> 12.19.0)
-  - firebase_analytics (12.6.0):
+  - firebase_analytics (12.6.1):
     - firebase_core
-    - FirebaseAnalytics (= 12.19.0)
+    - FirebaseAnalytics (~> 12.19.0)
     - Flutter
-  - firebase_auth (6.7.0):
-    - Firebase/Auth (= 12.19.0)
+  - firebase_auth (6.7.1):
+    - Firebase/Auth (= 12.19.3)
     - firebase_core
     - Flutter
-  - firebase_core (4.15.0):
-    - Firebase/CoreOnly (= 12.19.0)
+  - firebase_core (4.15.2):
+    - Firebase/CoreOnly (= 12.19.3)
     - Flutter
   - firebase_crashlytics (5.4.0):
-    - Firebase/Crashlytics (= 12.19.0)
+    - Firebase/Crashlytics (= 12.19.3)
     - firebase_core
     - Flutter
   - firebase_messaging (16.7.0):
-    - Firebase/Messaging (= 12.19.0)
+    - Firebase/Messaging (= 12.19.3)
     - firebase_core
     - Flutter
-  - firebase_storage (13.6.0):
-    - Firebase/Storage (= 12.19.0)
+  - firebase_storage (13.6.1):
+    - Firebase/Storage (= 12.19.3)
     - firebase_core
     - Flutter
   - FirebaseAnalytics (12.19.0):
@@ -1307,7 +1307,7 @@ PODS:
     - GTMSessionFetcher/Core (< 6.0, >= 3.4)
     - RecaptchaInterop (~> 101.0)
   - FirebaseAuthInterop (12.19.0)
-  - FirebaseCore (12.19.0):
+  - FirebaseCore (12.19.3):
     - FirebaseCoreInternal (~> 12.19.0)
     - GoogleUtilities/Environment (~> 8.1)
     - GoogleUtilities/Logger (~> 8.1)
@@ -1324,12 +1324,12 @@ PODS:
     - GoogleUtilities/Environment (~> 8.1)
     - nanopb (~> 3.30910.0)
     - PromisesObjC (~> 2.4)
-  - FirebaseFirestore (12.19.0):
-    - FirebaseCore (~> 12.19.0)
+  - FirebaseFirestore (12.19.3):
+    - FirebaseCore (~> 12.19.3)
     - FirebaseCoreExtension (~> 12.19.0)
-    - FirebaseFirestoreInternal (~> 12.19.0)
+    - FirebaseFirestoreInternal (~> 12.19.3)
     - FirebaseSharedSwift (~> 12.19.0)
-  - FirebaseFirestoreInternal (12.19.0):
+  - FirebaseFirestoreInternal (12.19.3):
     - abseil/algorithm (~> 1.20240722.0)
     - abseil/base (~> 1.20240722.0)
     - abseil/container/flat_hash_map (~> 1.20240722.0)
@@ -1339,7 +1339,7 @@ PODS:
     - abseil/time (~> 1.20240722.0)
     - abseil/types (~> 1.20240722.0)
     - FirebaseAppCheckInterop (~> 12.19.0)
-    - FirebaseCore (~> 12.19.0)
+    - FirebaseCore (~> 12.19.3)
     - "gRPC-C++ (~> 1.69.0)"
     - gRPC-Core (~> 1.69.0)
     - leveldb-library (~> 1.22)
@@ -1678,69 +1678,69 @@ PODS:
     - SQLCipher/common
   - sticker_view (0.0.1):
     - Flutter
-  - Stripe (26.9.0):
-    - StripeApplePay (= 26.9.0)
-    - StripeCore (= 26.9.0)
-    - StripeIssuing (= 26.9.0)
-    - StripePayments (= 26.9.0)
-    - StripePaymentsUI (= 26.9.0)
-    - StripeUICore (= 26.9.0)
+  - Stripe (26.13.0):
+    - StripeApplePay (= 26.13.0)
+    - StripeCore (= 26.13.0)
+    - StripeIssuing (= 26.13.0)
+    - StripePayments (= 26.13.0)
+    - StripePaymentsUI (= 26.13.0)
+    - StripeUICore (= 26.13.0)
   - stripe_ios (0.0.1):
     - Flutter
-    - Stripe (~> 26.9.0)
+    - Stripe (~> 26.13.0)
     - stripe_ios/stripe_ios (= 0.0.1)
     - stripe_ios/stripe_objc (= 0.0.1)
-    - StripeApplePay (~> 26.9.0)
-    - StripeFinancialConnections (~> 26.9.0)
-    - StripePayments (~> 26.9.0)
-    - StripePaymentSheet (~> 26.9.0)
-    - StripePaymentsUI (~> 26.9.0)
+    - StripeApplePay (~> 26.13.0)
+    - StripeFinancialConnections (~> 26.13.0)
+    - StripePayments (~> 26.13.0)
+    - StripePaymentSheet (~> 26.13.0)
+    - StripePaymentsUI (~> 26.13.0)
   - stripe_ios/stripe_ios (0.0.1):
     - Flutter
-    - Stripe (~> 26.9.0)
+    - Stripe (~> 26.13.0)
     - stripe_ios/stripe_objc
-    - StripeApplePay (~> 26.9.0)
-    - StripeFinancialConnections (~> 26.9.0)
-    - StripePayments (~> 26.9.0)
-    - StripePaymentSheet (~> 26.9.0)
-    - StripePaymentsUI (~> 26.9.0)
+    - StripeApplePay (~> 26.13.0)
+    - StripeFinancialConnections (~> 26.13.0)
+    - StripePayments (~> 26.13.0)
+    - StripePaymentSheet (~> 26.13.0)
+    - StripePaymentsUI (~> 26.13.0)
   - stripe_ios/stripe_objc (0.0.1):
     - Flutter
-    - Stripe (~> 26.9.0)
-    - StripeApplePay (~> 26.9.0)
-    - StripeFinancialConnections (~> 26.9.0)
-    - StripePayments (~> 26.9.0)
-    - StripePaymentSheet (~> 26.9.0)
-    - StripePaymentsUI (~> 26.9.0)
-  - StripeApplePay (26.9.0):
-    - StripeCore (= 26.9.0)
-  - StripeCore (26.9.0)
-  - StripeFinancialConnections (26.9.0):
-    - StripeCore (= 26.9.0)
-    - StripeUICore (= 26.9.0)
-  - StripeFinancialConnectionsLite (26.9.0):
-    - StripeCore (= 26.9.0)
-  - StripeIssuing (26.9.0):
-    - StripeCore (= 26.9.0)
-    - StripePayments (= 26.9.0)
-    - StripePaymentsUI (= 26.9.0)
-  - StripePayments (26.9.0):
-    - StripeCore (= 26.9.0)
-    - StripePayments/Stripe3DS2 (= 26.9.0)
-  - StripePayments/Stripe3DS2 (26.9.0):
-    - StripeCore (= 26.9.0)
-  - StripePaymentSheet (26.9.0):
-    - StripeApplePay (= 26.9.0)
-    - StripeCore (= 26.9.0)
-    - StripeFinancialConnectionsLite (= 26.9.0)
-    - StripePayments (= 26.9.0)
-    - StripePaymentsUI (= 26.9.0)
-  - StripePaymentsUI (26.9.0):
-    - StripeCore (= 26.9.0)
-    - StripePayments (= 26.9.0)
-    - StripeUICore (= 26.9.0)
-  - StripeUICore (26.9.0):
-    - StripeCore (= 26.9.0)
+    - Stripe (~> 26.13.0)
+    - StripeApplePay (~> 26.13.0)
+    - StripeFinancialConnections (~> 26.13.0)
+    - StripePayments (~> 26.13.0)
+    - StripePaymentSheet (~> 26.13.0)
+    - StripePaymentsUI (~> 26.13.0)
+  - StripeApplePay (26.13.0):
+    - StripeCore (= 26.13.0)
+  - StripeCore (26.13.0)
+  - StripeFinancialConnections (26.13.0):
+    - StripeCore (= 26.13.0)
+    - StripeUICore (= 26.13.0)
+  - StripeFinancialConnectionsLite (26.13.0):
+    - StripeCore (= 26.13.0)
+  - StripeIssuing (26.13.0):
+    - StripeCore (= 26.13.0)
+    - StripePayments (= 26.13.0)
+    - StripePaymentsUI (= 26.13.0)
+  - StripePayments (26.13.0):
+    - StripeCore (= 26.13.0)
+    - StripePayments/Stripe3DS2 (= 26.13.0)
+  - StripePayments/Stripe3DS2 (26.13.0):
+    - StripeCore (= 26.13.0)
+  - StripePaymentSheet (26.13.0):
+    - StripeApplePay (= 26.13.0)
+    - StripeCore (= 26.13.0)
+    - StripeFinancialConnectionsLite (= 26.13.0)
+    - StripePayments (= 26.13.0)
+    - StripePaymentsUI (= 26.13.0)
+  - StripePaymentsUI (26.13.0):
+    - StripeCore (= 26.13.0)
+    - StripePayments (= 26.13.0)
+    - StripeUICore (= 26.13.0)
+  - StripeUICore (26.13.0):
+    - StripeCore (= 26.13.0)
   - TSBackgroundFetch (4.1.1)
   - url_launcher_ios (0.0.1):
     - Flutter
@@ -1985,29 +1985,29 @@ SPEC CHECKSUMS:
   bonsoir_darwin: 14bd7429acb51db6a8e51f6574ac3b1ea0037a87
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   camera_avfoundation: 968a9a5323c79a99c166ad9d7866bfd2047b5a9b
-  cloud_firestore: 4102ac8059de4e35f2c6d950ed59526fbd4f81f5
-  cloud_functions: 905f2759ad7872bf4fc6b8a633ec63670e36484f
+  cloud_firestore: 395de8d60c06fcd891c94a5c64f3a08cc4a496ba
+  cloud_functions: aed2c977869e57132b87fe398a6fa0f365efeb27
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   emoji_picker_flutter: ece213fc274bdddefb77d502d33080dc54e616cc
   file_picker_darwin: 4c2b9a50ea44cb3b071381ea0cf48591bdd80251
-  Firebase: 7ca191e43724142f79fae653547b3382c45413cc
-  firebase_analytics: 99133ddb6f6cf89c0b49cafae131070607abbfa5
-  firebase_auth: 09023e4cff3162bed3375fb2f4f350b07c422206
-  firebase_core: 55de508663ceda7d1dc369a32b327a5655019ae2
-  firebase_crashlytics: 289a6a01605d663873a978d9daaa3648edc3f3b5
-  firebase_messaging: df68cb5feefa02766144a50fa5348362a0127008
-  firebase_storage: e9d687991b05f1a3b408ca6b9feeb9cc41419407
+  Firebase: e3c5ab38229ae085490d02398d97b9f5374bbe6e
+  firebase_analytics: 8c7bb07ea4c4eafd8650be38d17595bfbcedcce9
+  firebase_auth: 749e959255e42e6ca6ec2ecc83a0e1ce55d384fe
+  firebase_core: 4d065e808a89f0eaa0df16660666783f9ea13d38
+  firebase_crashlytics: aeb7b8d578747a8acdb0a0fdc8dcfdb6adc207de
+  firebase_messaging: 7779ed163828632cf982fb19c525eac785e34717
+  firebase_storage: 8ea03b6c6623411cd9995b2950e3b6fe7f256afa
   FirebaseAnalytics: e9f8c369447e453da23f0455a06e4910bad10de0
   FirebaseAppCheckInterop: bd4b791ffaed7ae719304af6369d243ddee5e4a0
   FirebaseAuth: 8c38236f67e5e3dd6aacf3e0c46b3eed31e9c820
   FirebaseAuthInterop: f1ad187a0052276ad49a990538accfdf36fc595d
-  FirebaseCore: c990214798d7c568ad436a15ba7da25c7a278c9a
+  FirebaseCore: ab948de5d99e69aeed3cd6f5ace263ce795b2559
   FirebaseCoreExtension: 201c78d7491a273d61d8afbf491214276a951e6d
   FirebaseCoreInternal: 656b1c2fd5a1c5976183dc54b73deda78fb26ee3
   FirebaseCrashlytics: 5c8e09beebcd41913b35250cd0e533b58e4961a0
-  FirebaseFirestore: 311722a65983b64e912ef1aa5ab8933cefbbf6d8
-  FirebaseFirestoreInternal: c5fe347a024926551b8cb6d6b3ba78f19a7b525e
+  FirebaseFirestore: 1fc8a582c9a2b8a4c089d0fcd8793a4bf2b54846
+  FirebaseFirestoreInternal: 2617381b45331505f051d60f451d254a6275a5c2
   FirebaseFunctions: 5b5ae19d3cd261b74802d54780ac79db152562cd
   FirebaseInstallations: f70a49eed611f5602f373e40974b3b01556ac217
   FirebaseMessaging: c15f48126adbe8b4d3238a5e1fa24bab3ad3e472
@@ -2071,17 +2071,17 @@ SPEC CHECKSUMS:
   sqflite_sqlcipher: 8e5bdaae6b2c254f8a277a564f07bc4e2a8642a3
   SQLCipher: eb79c64049cb002b4e9fcb30edb7979bf4706dfc
   sticker_view: 70c8064192685c6f50213e1e9dc3d93728e91def
-  Stripe: a232266e1c9709b56cfdeffaa731370407b0e3e2
-  stripe_ios: acd494dc5a2aa7cf5d4a6b486fb94e497a6af853
-  StripeApplePay: 83587609b80bc165a941fbe7c6ba7db8822bcc36
-  StripeCore: 0d4533f5ca61b8abd60004464e0125ee98df91b7
-  StripeFinancialConnections: e61972f157473f6bdced8d25075ddfad48d36ca9
-  StripeFinancialConnectionsLite: 0b51780316bb63a94fd5ef11a4480fb9a0951661
-  StripeIssuing: 4a0c35bebc94b586c4c3b73fe432280330f75739
-  StripePayments: 57614a765aa5dce6d5e5c4d669afda2b80c64e5e
-  StripePaymentSheet: 6ecef03b5032a1acff02a47e0bbfc17fb730bb3d
-  StripePaymentsUI: bcb256b2cb9cb0926842ca92cd19e9705c3339f8
-  StripeUICore: cd7242a0449cea4e4b38b61d11584dfabb8e28ce
+  Stripe: 2f6d025c3dc6c93890f39c75c4b85ccb96412cfc
+  stripe_ios: 407544c50d1da0cca0fe67b8f2ef068add93d163
+  StripeApplePay: 05c69df3ee93e82b6399e4c3c03bbf7ccd3568e5
+  StripeCore: 02c8ba87ddf9b838fc1d4a2d3650d416e0c9ddc1
+  StripeFinancialConnections: 35e44f12ca99c5db3d8069a29c0ffcc669ab0400
+  StripeFinancialConnectionsLite: 2321c88ad41e2477568c23a8b391890cc82c1b7b
+  StripeIssuing: 715e7b38b95bb1e50e72a318113ff3c80561aaf1
+  StripePayments: cf4557e925d39aa0c308b51bb3dcb4e34f817086
+  StripePaymentSheet: e250c2518ea55f6c81fa124320343535ccb458a6
+  StripePaymentsUI: c15703ef9d7029a771b6888e112ea24ff328cdba
+  StripeUICore: 64ea2cd22d214b711cfc39bce86863e1afa9993e
   TSBackgroundFetch: 18918b6449a1e3f01eb0f5b44d6d79ce6160a5a5
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
