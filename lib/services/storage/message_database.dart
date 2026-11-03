@@ -10,6 +10,7 @@ import '../../core/logging.dart';
 import '../../core/radio_scope.dart';
 import 'conversation_read_position.dart';
 import 'encrypted_database.dart';
+import 'storage_service.dart';
 import '../../utils/text_sanitizer.dart';
 
 /// SQLite-backed message storage service.
@@ -28,7 +29,8 @@ class MessageDatabase {
   static const _readPositionsTableName = 'conversation_read_positions';
   static const _dbVersion = 12;
 
-  /// Maximum messages retained per conversation (DM or channel).
+  /// Messages retained per conversation (DM or channel) when the user has not
+  /// raised the message history limit.
   static const int maxMessagesPerConversation = 500;
 
   Database? _db;
@@ -420,7 +422,7 @@ class MessageDatabase {
   // ---------------------------------------------------------------------------
 
   /// Insert or update a message. Trims the conversation if it exceeds
-  /// [maxMessagesPerConversation].
+  /// the user's message history limit.
   Future<void> saveMessage(Message message) async {
     final convKey = conversationKey(message);
     final row = _messageToRow(message, convKey);
@@ -717,16 +719,33 @@ class MessageDatabase {
   // Trimming
   // ---------------------------------------------------------------------------
 
+  // Read on every trim, not once at open: the background processor holds its
+  // own long-lived instance, and a limit cached there would trim to the old
+  // value after the user raised it.
+  Future<int> _conversationLimit() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return SettingsService.readMessageHistoryLimit(prefs);
+    } catch (e) {
+      AppLogging.storage(
+        'Message history limit unreadable, trimming at '
+        '$maxMessagesPerConversation: $e',
+      );
+      return maxMessagesPerConversation;
+    }
+  }
+
   /// Remove oldest messages in a conversation if count exceeds the limit.
   Future<void> _trimConversation(String convKey) async {
+    final limit = await _conversationLimit();
     final countResult = await _database.rawQuery(
       'SELECT COUNT(*) as cnt FROM $_tableName WHERE conversation_key = ?', // lint-allow: hardcoded-string
       [convKey],
     );
     final count = Sqflite.firstIntValue(countResult) ?? 0;
 
-    if (count > maxMessagesPerConversation) {
-      final excess = count - maxMessagesPerConversation;
+    if (count > limit) {
+      final excess = count - limit;
       await _database.rawDelete(
         '''
         DELETE FROM $_tableName WHERE id IN (

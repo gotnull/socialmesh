@@ -17884,7 +17884,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsSearchHistoryLimitSubtitle =>
-      'Максимальна кількість повідомлень для збереження';
+      'Максимум повідомлень, що зберігаються в кожному чаті';
 
   @override
   String get settingsSearchHistoryLimitTitle => 'Ліміт історії повідомлень';
@@ -18326,7 +18326,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String settingsTileMessageHistorySubtitle(int count) {
-    return '$count повідомлень збережено';
+    return 'До $count у кожному чаті';
   }
 
   @override

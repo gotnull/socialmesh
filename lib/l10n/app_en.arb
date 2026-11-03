@@ -24029,7 +24029,7 @@
   "@settingsSearchHint": {
     "description": "Hint text in the settings search field."
   },
-  "settingsSearchHistoryLimitSubtitle": "Maximum messages to keep",
+  "settingsSearchHistoryLimitSubtitle": "Maximum messages kept per conversation",
   "@settingsSearchHistoryLimitSubtitle": {
     "description": "Subtitle for the message history limit search item."
   },
@@ -24546,13 +24546,13 @@
   "@settingsTileListAnimationsTitle": {
     "description": "Title of the list animations toggle tile."
   },
-  "settingsTileMessageHistorySubtitle": "{count} messages stored",
+  "settingsTileMessageHistorySubtitle": "Up to {count} per conversation",
   "@settingsTileMessageHistorySubtitle": {
-    "description": "Subtitle of the message history limit tile showing the current limit.",
+    "description": "Subtitle of the message history tile showing how many messages each conversation keeps.",
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "The current message history limit."
+        "description": "The per-conversation message limit."
       }
     }
   },

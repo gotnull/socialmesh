@@ -30523,7 +30523,7 @@ abstract class AppLocalizations {
   /// Subtitle for the message history limit search item.
   ///
   /// In en, this message translates to:
-  /// **'Maximum messages to keep'**
+  /// **'Maximum messages kept per conversation'**
   String get settingsSearchHistoryLimitSubtitle;
 
   /// Title for the message history limit search item.
@@ -31288,10 +31288,10 @@ abstract class AppLocalizations {
   /// **'List animations'**
   String get settingsTileListAnimationsTitle;
 
-  /// Subtitle of the message history limit tile showing the current limit.
+  /// Subtitle of the message history tile showing how many messages each conversation keeps.
   ///
   /// In en, this message translates to:
-  /// **'{count} messages stored'**
+  /// **'Up to {count} per conversation'**
   String settingsTileMessageHistorySubtitle(int count);
 
   /// Title of the message history limit settings tile.

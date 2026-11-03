@@ -17673,7 +17673,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSearchHint => 'Find a setting';
 
   @override
-  String get settingsSearchHistoryLimitSubtitle => 'Maximum messages to keep';
+  String get settingsSearchHistoryLimitSubtitle =>
+      'Maximum messages kept per conversation';
 
   @override
   String get settingsSearchHistoryLimitTitle => 'Message history limit';
@@ -18108,7 +18109,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String settingsTileMessageHistorySubtitle(int count) {
-    return '$count messages stored';
+    return 'Up to $count per conversation';
   }
 
   @override

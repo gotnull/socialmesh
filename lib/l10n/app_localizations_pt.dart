@@ -17855,7 +17855,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsSearchHistoryLimitSubtitle =>
-      'Máximo de mensagens a manter';
+      'Máximo de mensagens mantidas por conversa';
 
   @override
   String get settingsSearchHistoryLimitTitle =>
@@ -18306,7 +18306,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String settingsTileMessageHistorySubtitle(int count) {
-    return '$count mensagens armazenadas';
+    return 'Até $count por conversa';
   }
 
   @override

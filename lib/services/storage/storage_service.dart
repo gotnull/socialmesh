@@ -15,6 +15,7 @@ import '../../models/tapback.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../utils/location_privacy.dart';
 import 'database_key_service.dart';
+import 'message_database.dart';
 
 /// Secure storage service for sensitive data
 class SecureStorageService {
@@ -906,13 +907,34 @@ class SettingsService {
   bool get animations3DEnabled =>
       _preferences.getBool('animations_3d_enabled') ?? true;
 
-  // Message history limit
+  // Message history limit (messages kept per Meshtastic conversation)
+  static const String _messageHistoryLimitKey = 'message_history_limit';
+
+  /// The limits offered in Settings, smallest first. The smallest is the
+  /// limit the message database applies when nothing is saved.
+  static const List<int> messageHistoryLimitOptions = [
+    MessageDatabase.maxMessagesPerConversation,
+    1000,
+    2000,
+    5000,
+  ];
+
   Future<void> setMessageHistoryLimit(int limit) async {
-    await _preferences.setInt('message_history_limit', limit);
+    await _preferences.setInt(_messageHistoryLimitKey, limit);
   }
 
-  int get messageHistoryLimit =>
-      _preferences.getInt('message_history_limit') ?? 100;
+  int get messageHistoryLimit => readMessageHistoryLimit(_preferences);
+
+  /// Resolves the saved limit. Values below the database default (50 to 200,
+  /// saved while the setting was not yet applied) resolve to the default, so
+  /// applying the setting never trims history the database already kept.
+  static int readMessageHistoryLimit(SharedPreferences prefs) {
+    final stored = prefs.getInt(_messageHistoryLimitKey);
+    if (stored == null || stored < MessageDatabase.maxMessagesPerConversation) {
+      return MessageDatabase.maxMessagesPerConversation;
+    }
+    return stored;
+  }
 
   // Clear all settings
   Future<void> clearAll() async {

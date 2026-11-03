@@ -17870,7 +17870,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsSearchHistoryLimitSubtitle =>
-      'Numero massimo di messaggi da conservare';
+      'Numero massimo di messaggi conservati per conversazione';
 
   @override
   String get settingsSearchHistoryLimitTitle => 'Limite cronologia messaggi';
@@ -18312,7 +18312,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String settingsTileMessageHistorySubtitle(int count) {
-    return '$count messaggi salvati';
+    return 'Fino a $count per conversazione';
   }
 
   @override

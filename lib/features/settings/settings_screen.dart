@@ -4027,12 +4027,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     BuildContext context,
     SettingsService settingsService,
   ) {
-    final limits = [50, 100, 200, 500, 1000];
-
     AppBottomSheet.showPicker<int>(
       context: context,
       title: context.l10n.settingsHistoryLimitTitle,
-      items: limits,
+      items: SettingsService.messageHistoryLimitOptions,
       selectedItem: settingsService.messageHistoryLimit,
       itemBuilder: (limit, isSelected) => ListTile(
         leading: Icon(
@@ -4049,10 +4047,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
         ),
       ),
-    ).then((selectedLimit) {
-      if (selectedLimit != null) {
-        settingsService.setMessageHistoryLimit(selectedLimit);
-      }
+    ).then((selectedLimit) async {
+      if (selectedLimit == null) return;
+      await settingsService.setMessageHistoryLimit(selectedLimit);
+      safeSetState(() {});
     });
   }
 

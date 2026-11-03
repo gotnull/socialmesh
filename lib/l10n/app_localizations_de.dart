@@ -17905,7 +17905,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsSearchHistoryLimitSubtitle =>
-      'Maximale Anzahl der gespeicherten Nachrichten';
+      'Maximale Anzahl gespeicherter Nachrichten pro Unterhaltung';
 
   @override
   String get settingsSearchHistoryLimitTitle => 'Nachrichtenverlauf-Limit';
@@ -18349,7 +18349,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String settingsTileMessageHistorySubtitle(int count) {
-    return '$count Nachrichten gespeichert';
+    return 'Bis zu $count pro Unterhaltung';
   }
 
   @override
