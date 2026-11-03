@@ -93,6 +93,19 @@ void pruneUnseenScannerDevices(
   });
 }
 
+/// Whether the saved radio's placeholder row is listed. It stands in for
+/// the radio while the first scan cycle looks for it, and through an
+/// auto-reconnect attempt. Once a cycle has completed without it, the
+/// "not found" banner reports that, and the rescans that follow must not
+/// bring the row back: showing it at the start of every 10 s cycle and
+/// hiding it at the end made a switched-off radio blink in and out.
+@visibleForTesting
+bool scannerShowsSavedDevicePlaceholder({
+  required bool scanning,
+  required bool autoReconnecting,
+  required bool hasCompletedScan,
+}) => autoReconnecting || (scanning && !hasCompletedScan);
+
 /// Whether the scanner shows its Bluetooth search banner. The rescan
 /// timer keeps searching between scan cycles, so while no radio is
 /// listed the banner stays up through the gap; hiding it there left the
@@ -1583,7 +1596,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // unreachable). Only inject when the saved device's transport
     // matches what we're actually scanning. Identity dedupe is
     // transport-aware via `DeviceInfo.==` (id + type).
-    if ((_scanning || _autoReconnecting) &&
+    final showPlaceholder = scannerShowsSavedDevicePlaceholder(
+      scanning: _scanning,
+      autoReconnecting: _autoReconnecting,
+      hasCompletedScan: _hasCompletedScan,
+    );
+    if (showPlaceholder &&
         _savedDeviceId != null &&
         _savedDeviceTransportType == TransportType.ble) {
       final placeholder = _savedDevicePlaceholder();

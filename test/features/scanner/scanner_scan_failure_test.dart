@@ -221,4 +221,33 @@ void main() {
       expect(devices, isEmpty);
     });
   });
+
+  group('scannerShowsSavedDevicePlaceholder', () {
+    bool shows({
+      bool scanning = false,
+      bool autoReconnecting = false,
+      bool hasCompletedScan = false,
+    }) => scannerShowsSavedDevicePlaceholder(
+      scanning: scanning,
+      autoReconnecting: autoReconnecting,
+      hasCompletedScan: hasCompletedScan,
+    );
+
+    test('stands in for the saved radio while the first cycle runs', () {
+      expect(shows(scanning: true), isTrue);
+    });
+
+    test('stays away on rescans once a cycle completed without it', () {
+      expect(shows(scanning: true, hasCompletedScan: true), isFalse);
+    });
+
+    test('is hidden between cycles', () {
+      expect(shows(hasCompletedScan: true), isFalse);
+      expect(shows(), isFalse);
+    });
+
+    test('shows through an auto-reconnect attempt', () {
+      expect(shows(autoReconnecting: true, hasCompletedScan: true), isTrue);
+    });
+  });
 }
