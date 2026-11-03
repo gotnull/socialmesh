@@ -19,6 +19,7 @@
 #   no-bare-scaffold           Bare Scaffold (use GlassScaffold)
 #   no-bare-switch             Bare Switch/SwitchListTile (use ThemedSwitch)
 #   no-rounded-distance        Raw latlong2 Distance() (rounds to whole units; use core/units/geo_distance.dart)
+#   secure-storage-android-options  FlutterSecureStorage without aOptions: kSecureStorageAndroidOptions
 #   no-bare-dropdown           Bare DropdownButton (wrap in DropdownButtonHideUnderline)
 #   no-ignore-directive        // ignore: outside lib/generated/
 #   no-railway-domains         Railway *.up.railway.app domains
@@ -872,6 +873,35 @@ check_file() {
       "no-switch-list-tile" \
       "SwitchListTile — use ListTile with ThemedSwitch trailing instead" \
       "error" true true
+  fi
+
+  # ------------------------------------------------------------------
+  # BLOCK: FlutterSecureStorage without kSecureStorageAndroidOptions
+  # Every instance shares one Android store, and the plugin's default
+  # resetOnError: true wipes that whole store (the SQLCipher passphrase
+  # included) when any call by any instance fails. The constructor argument
+  # list is read from the matched line through its closing parenthesis.
+  # ------------------------------------------------------------------
+  if [ "$in_lib" = true ] && [ "$in_lib_generated" = false ]; then
+    while IFS=: read -r lineno matched_line; do
+      line_in_scope "$file" "$lineno" || continue
+      local trimmed="${matched_line#"${matched_line%%[![:space:]]*}"}"
+      [[ "$trimmed" == //* ]] && continue
+      local ctor_args
+      ctor_args=$(awk -v start="$lineno" '
+        NR < start { next }
+        {
+          line = $0
+          if (NR == start) sub(/.*FlutterSecureStorage\(/, "(", line)
+          out = out line "\n"
+          depth += gsub(/\(/, "(", line) - gsub(/\)/, ")", line)
+          if (depth <= 0) { printf "%s", out; exit }
+        }' "$file")
+      if [[ ! "$ctor_args" =~ aOptions:[[:space:]]*kSecureStorageAndroidOptions ]]; then
+        record_hit "$file" "$lineno" "secure-storage-android-options" \
+          "FlutterSecureStorage without aOptions: kSecureStorageAndroidOptions (lib/core/secure_storage_options.dart)" "error"
+      fi
+    done < <(grep -nE '\bFlutterSecureStorage\(' "$file" 2>/dev/null || true)
   fi
 
   # ------------------------------------------------------------------
