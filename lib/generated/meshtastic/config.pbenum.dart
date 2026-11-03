@@ -18,7 +18,7 @@ import 'package:protobuf/protobuf.dart' as $pb;
 ///  Defines the device's role on the Mesh network
 class Config_DeviceConfig_Role extends $pb.ProtobufEnum {
   ///
-  ///  Description: App connected or stand alone messaging device.
+  ///  Description: App connected or standalone messaging device.
   ///  Technical Details: Default Role
   static const Config_DeviceConfig_Role CLIENT =
       Config_DeviceConfig_Role._(0, _omitEnumNames ? '' : 'CLIENT');
@@ -82,7 +82,7 @@ class Config_DeviceConfig_Role extends $pb.ProtobufEnum {
       Config_DeviceConfig_Role._(8, _omitEnumNames ? '' : 'CLIENT_HIDDEN');
 
   ///
-  ///  Description: Broadcasts location as message to default channel regularly for to assist with device recovery.
+  ///  Description: Broadcasts location as message to default channel regularly to assist with device recovery.
   ///  Technical Details: Used to automatically send a text message to the mesh
   ///     with the current position of the device on a frequent interval:
   ///     "I'm lost! Position: lat / long"
@@ -157,14 +157,14 @@ class Config_DeviceConfig_RebroadcastMode extends $pb.ProtobufEnum {
 
   ///
   ///  Ignores observed messages from foreign meshes that are open or those which it cannot decrypt.
-  ///  Only rebroadcasts message on the nodes local primary / secondary channels.
+  ///  Only rebroadcasts messages on the node's local primary / secondary channels.
   static const Config_DeviceConfig_RebroadcastMode LOCAL_ONLY =
       Config_DeviceConfig_RebroadcastMode._(
           2, _omitEnumNames ? '' : 'LOCAL_ONLY');
 
   ///
   ///  Ignores observed messages from foreign meshes like LOCAL_ONLY,
-  ///  but takes it step further by also ignoring messages from nodenums not in the node's known list (NodeDB)
+  ///  but takes it a step further by also ignoring messages from nodenums not in the node's known list (NodeDB)
   static const Config_DeviceConfig_RebroadcastMode KNOWN_ONLY =
       Config_DeviceConfig_RebroadcastMode._(
           3, _omitEnumNames ? '' : 'KNOWN_ONLY');
@@ -555,7 +555,7 @@ class Config_DisplayConfig_DisplayMode extends $pb.ProtobufEnum {
       Config_DisplayConfig_DisplayMode._(2, _omitEnumNames ? '' : 'INVERTED');
 
   ///
-  ///  TFT Full Color Displays (not implemented yet)
+  ///  TFT Full Color Displays, which select the MUI
   static const Config_DisplayConfig_DisplayMode COLOR =
       Config_DisplayConfig_DisplayMode._(3, _omitEnumNames ? '' : 'COLOR');
 
@@ -939,14 +939,14 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
 
   ///
   ///  Short Range - Turbo
-  ///  This is the fastest preset and the only one with 500kHz bandwidth.
+  ///  This is the fastest preset, and one of three with 500kHz bandwidth.
   ///  It is not legal to use in all regions due to this wider bandwidth.
   static const Config_LoRaConfig_ModemPreset SHORT_TURBO =
       Config_LoRaConfig_ModemPreset._(8, _omitEnumNames ? '' : 'SHORT_TURBO');
 
   ///
   ///  Long Range - Turbo
-  ///  This preset performs similarly to LongFast, but with 500Khz bandwidth.
+  ///  This preset performs similarly to LongFast, but with 500kHz bandwidth.
   static const Config_LoRaConfig_ModemPreset LONG_TURBO =
       Config_LoRaConfig_ModemPreset._(9, _omitEnumNames ? '' : 'LONG_TURBO');
 

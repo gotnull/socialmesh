@@ -1024,7 +1024,7 @@ class ModuleConfig_TrafficManagementConfig extends $pb.GeneratedMessage {
   ///
   ///  Minimum interval in seconds between position updates from the same node.
   ///  A non-zero value implicitly enables the suppression window; 0 disables it.
-  ///  Firmware default: 21600 (6 hours), installed when this config is first created.
+  ///  Firmware default: 18000 (5 hours), installed when this config is first created.
   @$pb.TagNumber(4)
   $core.int get positionMinIntervalSecs => $_getIZ(0);
   @$pb.TagNumber(4)
@@ -1073,7 +1073,7 @@ class ModuleConfig_TrafficManagementConfig extends $pb.GeneratedMessage {
   void clearRateLimitMaxPackets() => $_clearField(9);
 
   ///
-  ///  Maximum unknown/undecryptable packets per rate window before the source
+  ///  Maximum unknown/undecryptable packets per 5 minutes before the source
   ///  is dropped. A non-zero value implicitly enables unknown-packet filtering;
   ///  0 disables it.
   @$pb.TagNumber(11)

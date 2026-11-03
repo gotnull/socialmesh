@@ -1941,7 +1941,7 @@
   "deviceConfigRebroadcastAll": "Все",
   "deviceConfigRebroadcastAllDesc": "Ретранслировать любое полученное сообщение. Поведение по умолчанию.",
   "deviceConfigRebroadcastAllSkipDecoding": "Все (без декодирования)",
-  "deviceConfigRebroadcastAllSkipDecodingDesc": "Ретранслировать все сообщения без декодирования. Быстрее, меньше нагрузка на CPU.",
+  "deviceConfigRebroadcastAllSkipDecodingDesc": "Работает как «Все». Пропуск декодирования действовал только для роли Repeater, которая больше не поддерживается.",
   "deviceConfigRebroadcastCorePortnumsOnly": "Только основные номера портов",
   "deviceConfigRebroadcastCorePortnumsOnlyDesc": "Ретранслировать только основные пакеты Meshtastic (позиция, телеметрия и т.д.).",
   "deviceConfigRebroadcastKnownOnly": "Только известные",

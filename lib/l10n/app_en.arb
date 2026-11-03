@@ -5071,7 +5071,7 @@
   "@deviceConfigRebroadcastAllSkipDecoding": {
     "description": "Meshtastic rebroadcast mode: relays all packets without parsing their contents, reducing CPU usage."
   },
-  "deviceConfigRebroadcastAllSkipDecodingDesc": "Rebroadcast all messages without decoding. Faster, less CPU.",
+  "deviceConfigRebroadcastAllSkipDecodingDesc": "Behaves as All. Skipping decoding only applied to the Repeater role, which is no longer supported.",
   "@deviceConfigRebroadcastAllSkipDecodingDesc": {
     "description": "Description text in developer tools"
   },

@@ -176,7 +176,7 @@ class Config_DeviceConfig extends $pb.GeneratedMessage {
 
   ///
   ///  Send our nodeinfo this often
-  ///  Defaults to 900 Seconds (15 minutes)
+  ///  Defaults to 10800 seconds (3 hours), minimum 3600 (1 hour)
   @$pb.TagNumber(7)
   $core.int get nodeInfoBroadcastSecs => $_getIZ(5);
   @$pb.TagNumber(7)
@@ -357,7 +357,7 @@ class Config_PositionConfig extends $pb.GeneratedMessage {
 
   ///
   ///  We should send our position this often (but only if it has changed significantly)
-  ///  Defaults to 15 minutes
+  ///  Defaults to 1 hour (12 hours on routers)
   @$pb.TagNumber(1)
   $core.int get positionBroadcastSecs => $_getIZ(0);
   @$pb.TagNumber(1)
@@ -408,7 +408,7 @@ class Config_PositionConfig extends $pb.GeneratedMessage {
 
   ///
   ///  How often should we try to get GPS position (in seconds)
-  ///  or zero for the default of once every 30 seconds
+  ///  or zero for the default of once every 2 minutes (24 hours on routers)
   ///  or a very large value (maxint) to update only once at boot.
   @$pb.TagNumber(5)
   $core.int get gpsUpdateInterval => $_getIZ(4);
@@ -597,7 +597,7 @@ class Config_PowerConfig extends $pb.GeneratedMessage {
   static Config_PowerConfig? _defaultInstance;
 
   ///
-  ///  Description: Will sleep everything as much as possible, for the tracker and sensor role this will also include the lora radio.
+  ///  Description: Will sleep everything as much as possible, for the Tracker and Sensor roles this also includes the LoRa radio.
   ///  Don't use this setting if you want to use your device with the phone apps or are using a device without a user button.
   ///  Technical Details: Works for ESP32 devices and NRF52 devices in the Sensor or Tracker roles
   @$pb.TagNumber(1)
@@ -1105,7 +1105,7 @@ class Config_DisplayConfig extends $pb.GeneratedMessage {
 
   ///
   ///  Number of seconds the screen stays on after pressing the user button or receiving a message
-  ///  0 for default of one minute MAXUINT for always on
+  ///  0 for default of ten minutes, MAXUINT for always on
   @$pb.TagNumber(1)
   $core.int get screenOnSecs => $_getIZ(0);
   @$pb.TagNumber(1)
@@ -1432,7 +1432,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
   void clearBandwidth() => $_clearField(3);
 
   ///
-  ///  A number from 5 to 12, which the firmware clamps to that range.
+  ///  A number from 5 to 12; firmware replaces a value outside that range with 11.
   ///  Indicates number of chirps per symbol as 1<<spread_factor.
   ///  RF95 radios additionally reject 5 and 6; that exclusion is per hardware
   ///  and so is not expressible as a bound here.
@@ -1449,7 +1449,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
   ///  The denominator of the coding rate.
   ///  ie for 4/5, the value is 5. 4/8 the value is 8.
   ///
-  ///  With `use_preset` disabled this is the coding rate, clamped to 5 through 8.
+  ///  With `use_preset` disabled this is the coding rate, 4 through 8; firmware replaces a value outside that range with 5.
   ///
   ///  With `use_preset` enabled, since 2.7.18 this raises the preset's coding rate
   ///  when it is 5 through 8 AND higher than the preset's. A lower value, a value
@@ -1497,7 +1497,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
   ///
   ///  Maximum number of hops. This can't be greater than 7.
   ///  Default of 3
-  ///  Attempting to set a value > 7 results in the default
+  ///  Values above 7 are treated as 7
   @$pb.TagNumber(8)
   $core.int get hopLimit => $_getIZ(7);
   @$pb.TagNumber(8)
@@ -1855,7 +1855,7 @@ class Config_SecurityConfig extends $pb.GeneratedMessage {
   void clearIsManaged() => $_clearField(4);
 
   ///
-  ///  Serial Console over the Stream API."
+  ///  Serial Console over the Stream API.
   @$pb.TagNumber(5)
   $core.bool get serialEnabled => $_getBF(4);
   @$pb.TagNumber(5)

@@ -250,6 +250,8 @@ enum AdminMessage_PayloadVariant {
   setIgnoredNode,
   removeIgnoredNode,
   toggleMutedNode,
+  getDisplayFrameRequest,
+  setDisplayMirror,
   beginEditSettings,
   commitEditSettings,
   addContact,
@@ -317,6 +319,8 @@ class AdminMessage extends $pb.GeneratedMessage {
     $core.int? setIgnoredNode,
     $core.int? removeIgnoredNode,
     $core.int? toggleMutedNode,
+    $core.bool? getDisplayFrameRequest,
+    $core.bool? setDisplayMirror,
     $core.bool? beginEditSettings,
     $core.bool? commitEditSettings,
     SharedContact? addContact,
@@ -406,6 +410,9 @@ class AdminMessage extends $pb.GeneratedMessage {
     if (setIgnoredNode != null) result.setIgnoredNode = setIgnoredNode;
     if (removeIgnoredNode != null) result.removeIgnoredNode = removeIgnoredNode;
     if (toggleMutedNode != null) result.toggleMutedNode = toggleMutedNode;
+    if (getDisplayFrameRequest != null)
+      result.getDisplayFrameRequest = getDisplayFrameRequest;
+    if (setDisplayMirror != null) result.setDisplayMirror = setDisplayMirror;
     if (beginEditSettings != null) result.beginEditSettings = beginEditSettings;
     if (commitEditSettings != null)
       result.commitEditSettings = commitEditSettings;
@@ -482,6 +489,8 @@ class AdminMessage extends $pb.GeneratedMessage {
     47: AdminMessage_PayloadVariant.setIgnoredNode,
     48: AdminMessage_PayloadVariant.removeIgnoredNode,
     49: AdminMessage_PayloadVariant.toggleMutedNode,
+    50: AdminMessage_PayloadVariant.getDisplayFrameRequest,
+    51: AdminMessage_PayloadVariant.setDisplayMirror,
     64: AdminMessage_PayloadVariant.beginEditSettings,
     65: AdminMessage_PayloadVariant.commitEditSettings,
     66: AdminMessage_PayloadVariant.addContact,
@@ -547,6 +556,8 @@ class AdminMessage extends $pb.GeneratedMessage {
       47,
       48,
       49,
+      50,
+      51,
       64,
       65,
       66,
@@ -642,6 +653,8 @@ class AdminMessage extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aI(49, _omitFieldNames ? '' : 'toggleMutedNode',
         fieldType: $pb.PbFieldType.OU3)
+    ..aOB(50, _omitFieldNames ? '' : 'getDisplayFrameRequest')
+    ..aOB(51, _omitFieldNames ? '' : 'setDisplayMirror')
     ..aOB(64, _omitFieldNames ? '' : 'beginEditSettings')
     ..aOB(65, _omitFieldNames ? '' : 'commitEditSettings')
     ..aOM<SharedContact>(66, _omitFieldNames ? '' : 'addContact',
@@ -728,6 +741,8 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(47)
   @$pb.TagNumber(48)
   @$pb.TagNumber(49)
+  @$pb.TagNumber(50)
+  @$pb.TagNumber(51)
   @$pb.TagNumber(64)
   @$pb.TagNumber(65)
   @$pb.TagNumber(66)
@@ -788,6 +803,8 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(47)
   @$pb.TagNumber(48)
   @$pb.TagNumber(49)
+  @$pb.TagNumber(50)
+  @$pb.TagNumber(51)
   @$pb.TagNumber(64)
   @$pb.TagNumber(65)
   @$pb.TagNumber(66)
@@ -1344,62 +1361,95 @@ class AdminMessage extends $pb.GeneratedMessage {
   void clearToggleMutedNode() => $_clearField(49);
 
   ///
+  ///  Request a single frame of the device's display framebuffer.
+  ///  The frame is delivered to the local client as FromRadio.display_frame
+  ///  chunks (see DisplayFrame in mesh.proto). There is no AdminMessage
+  ///  response. Local connection only: a node receiving this over the mesh,
+  ///  or a build without a display, ignores it. During active mirroring it
+  ///  forces one frame on the next redraw even if the screen is unchanged.
+  @$pb.TagNumber(50)
+  $core.bool get getDisplayFrameRequest => $_getBF(44);
+  @$pb.TagNumber(50)
+  set getDisplayFrameRequest($core.bool value) => $_setBool(44, value);
+  @$pb.TagNumber(50)
+  $core.bool hasGetDisplayFrameRequest() => $_has(44);
+  @$pb.TagNumber(50)
+  void clearGetDisplayFrameRequest() => $_clearField(50);
+
+  ///
+  ///  Enable (true) or disable (false) continuous mirroring of the device
+  ///  display. Unlike most bool verbs in this oneof, false is meaningful.
+  ///  While enabled, the device sends a DisplayFrame after each screen
+  ///  redraw that changed the framebuffer, as FromRadio.display_frame
+  ///  chunks; the first frame arrives immediately and acts as the
+  ///  acknowledgement. Local connection only (see get_display_frame_request)
+  ///  and not persisted across reboot.
+  @$pb.TagNumber(51)
+  $core.bool get setDisplayMirror => $_getBF(45);
+  @$pb.TagNumber(51)
+  set setDisplayMirror($core.bool value) => $_setBool(45, value);
+  @$pb.TagNumber(51)
+  $core.bool hasSetDisplayMirror() => $_has(45);
+  @$pb.TagNumber(51)
+  void clearSetDisplayMirror() => $_clearField(51);
+
+  ///
   ///  Begins an edit transaction for config, module config, owner, and channel settings changes
   ///  This will delay the standard *implicit* save to the file system and subsequent reboot behavior until committed (commit_edit_settings)
   @$pb.TagNumber(64)
-  $core.bool get beginEditSettings => $_getBF(44);
+  $core.bool get beginEditSettings => $_getBF(46);
   @$pb.TagNumber(64)
-  set beginEditSettings($core.bool value) => $_setBool(44, value);
+  set beginEditSettings($core.bool value) => $_setBool(46, value);
   @$pb.TagNumber(64)
-  $core.bool hasBeginEditSettings() => $_has(44);
+  $core.bool hasBeginEditSettings() => $_has(46);
   @$pb.TagNumber(64)
   void clearBeginEditSettings() => $_clearField(64);
 
   ///
   ///  Commits an open transaction for any edits made to config, module config, owner, and channel settings
   @$pb.TagNumber(65)
-  $core.bool get commitEditSettings => $_getBF(45);
+  $core.bool get commitEditSettings => $_getBF(47);
   @$pb.TagNumber(65)
-  set commitEditSettings($core.bool value) => $_setBool(45, value);
+  set commitEditSettings($core.bool value) => $_setBool(47, value);
   @$pb.TagNumber(65)
-  $core.bool hasCommitEditSettings() => $_has(45);
+  $core.bool hasCommitEditSettings() => $_has(47);
   @$pb.TagNumber(65)
   void clearCommitEditSettings() => $_clearField(65);
 
   ///
   ///  Add a contact (User) to the nodedb
   @$pb.TagNumber(66)
-  SharedContact get addContact => $_getN(46);
+  SharedContact get addContact => $_getN(48);
   @$pb.TagNumber(66)
   set addContact(SharedContact value) => $_setField(66, value);
   @$pb.TagNumber(66)
-  $core.bool hasAddContact() => $_has(46);
+  $core.bool hasAddContact() => $_has(48);
   @$pb.TagNumber(66)
   void clearAddContact() => $_clearField(66);
   @$pb.TagNumber(66)
-  SharedContact ensureAddContact() => $_ensure(46);
+  SharedContact ensureAddContact() => $_ensure(48);
 
   ///
   ///  Initiate or respond to a key verification request
   @$pb.TagNumber(67)
-  KeyVerificationAdmin get keyVerification => $_getN(47);
+  KeyVerificationAdmin get keyVerification => $_getN(49);
   @$pb.TagNumber(67)
   set keyVerification(KeyVerificationAdmin value) => $_setField(67, value);
   @$pb.TagNumber(67)
-  $core.bool hasKeyVerification() => $_has(47);
+  $core.bool hasKeyVerification() => $_has(49);
   @$pb.TagNumber(67)
   void clearKeyVerification() => $_clearField(67);
   @$pb.TagNumber(67)
-  KeyVerificationAdmin ensureKeyVerification() => $_ensure(47);
+  KeyVerificationAdmin ensureKeyVerification() => $_ensure(49);
 
   ///
   ///  Tell the node to factory reset config everything; all device state and configuration will be returned to factory defaults and BLE bonds will be cleared.
   @$pb.TagNumber(94)
-  $core.int get factoryResetDevice => $_getIZ(48);
+  $core.int get factoryResetDevice => $_getIZ(50);
   @$pb.TagNumber(94)
-  set factoryResetDevice($core.int value) => $_setSignedInt32(48, value);
+  set factoryResetDevice($core.int value) => $_setSignedInt32(50, value);
   @$pb.TagNumber(94)
-  $core.bool hasFactoryResetDevice() => $_has(48);
+  $core.bool hasFactoryResetDevice() => $_has(50);
   @$pb.TagNumber(94)
   void clearFactoryResetDevice() => $_clearField(94);
 
@@ -1409,13 +1459,13 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  Deprecated in favor of reboot_ota_mode in 2.7.17
   @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(95)
-  $core.int get rebootOtaSeconds => $_getIZ(49);
+  $core.int get rebootOtaSeconds => $_getIZ(51);
   @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(95)
-  set rebootOtaSeconds($core.int value) => $_setSignedInt32(49, value);
+  set rebootOtaSeconds($core.int value) => $_setSignedInt32(51, value);
   @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(95)
-  $core.bool hasRebootOtaSeconds() => $_has(49);
+  $core.bool hasRebootOtaSeconds() => $_has(51);
   @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(95)
   void clearRebootOtaSeconds() => $_clearField(95);
@@ -1424,44 +1474,44 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  This message is only supported for the simulator Portduino build.
   ///  If received the simulator will exit successfully.
   @$pb.TagNumber(96)
-  $core.bool get exitSimulator => $_getBF(50);
+  $core.bool get exitSimulator => $_getBF(52);
   @$pb.TagNumber(96)
-  set exitSimulator($core.bool value) => $_setBool(50, value);
+  set exitSimulator($core.bool value) => $_setBool(52, value);
   @$pb.TagNumber(96)
-  $core.bool hasExitSimulator() => $_has(50);
+  $core.bool hasExitSimulator() => $_has(52);
   @$pb.TagNumber(96)
   void clearExitSimulator() => $_clearField(96);
 
   ///
   ///  Tell the node to reboot in this many seconds (or <0 to cancel reboot)
   @$pb.TagNumber(97)
-  $core.int get rebootSeconds => $_getIZ(51);
+  $core.int get rebootSeconds => $_getIZ(53);
   @$pb.TagNumber(97)
-  set rebootSeconds($core.int value) => $_setSignedInt32(51, value);
+  set rebootSeconds($core.int value) => $_setSignedInt32(53, value);
   @$pb.TagNumber(97)
-  $core.bool hasRebootSeconds() => $_has(51);
+  $core.bool hasRebootSeconds() => $_has(53);
   @$pb.TagNumber(97)
   void clearRebootSeconds() => $_clearField(97);
 
   ///
   ///  Tell the node to shutdown in this many seconds (or <0 to cancel shutdown)
   @$pb.TagNumber(98)
-  $core.int get shutdownSeconds => $_getIZ(52);
+  $core.int get shutdownSeconds => $_getIZ(54);
   @$pb.TagNumber(98)
-  set shutdownSeconds($core.int value) => $_setSignedInt32(52, value);
+  set shutdownSeconds($core.int value) => $_setSignedInt32(54, value);
   @$pb.TagNumber(98)
-  $core.bool hasShutdownSeconds() => $_has(52);
+  $core.bool hasShutdownSeconds() => $_has(54);
   @$pb.TagNumber(98)
   void clearShutdownSeconds() => $_clearField(98);
 
   ///
   ///  Tell the node to factory reset config; all device state and configuration will be returned to factory defaults; BLE bonds will be preserved.
   @$pb.TagNumber(99)
-  $core.int get factoryResetConfig => $_getIZ(53);
+  $core.int get factoryResetConfig => $_getIZ(55);
   @$pb.TagNumber(99)
-  set factoryResetConfig($core.int value) => $_setSignedInt32(53, value);
+  set factoryResetConfig($core.int value) => $_setSignedInt32(55, value);
   @$pb.TagNumber(99)
-  $core.bool hasFactoryResetConfig() => $_has(53);
+  $core.bool hasFactoryResetConfig() => $_has(55);
   @$pb.TagNumber(99)
   void clearFactoryResetConfig() => $_clearField(99);
 
@@ -1469,11 +1519,11 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  Tell the node to reset the nodedb.
   ///  When true, favorites are preserved through reset.
   @$pb.TagNumber(100)
-  $core.bool get nodedbReset => $_getBF(54);
+  $core.bool get nodedbReset => $_getBF(56);
   @$pb.TagNumber(100)
-  set nodedbReset($core.bool value) => $_setBool(54, value);
+  set nodedbReset($core.bool value) => $_setBool(56, value);
   @$pb.TagNumber(100)
-  $core.bool hasNodedbReset() => $_has(54);
+  $core.bool hasNodedbReset() => $_has(56);
   @$pb.TagNumber(100)
   void clearNodedbReset() => $_clearField(100);
 
@@ -1482,39 +1532,39 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  The client MUST include the same key with any set_x commands. Key expires after 300 seconds.
   ///  Prevents replay attacks for admin messages.
   @$pb.TagNumber(101)
-  $core.List<$core.int> get sessionPasskey => $_getN(55);
+  $core.List<$core.int> get sessionPasskey => $_getN(57);
   @$pb.TagNumber(101)
-  set sessionPasskey($core.List<$core.int> value) => $_setBytes(55, value);
+  set sessionPasskey($core.List<$core.int> value) => $_setBytes(57, value);
   @$pb.TagNumber(101)
-  $core.bool hasSessionPasskey() => $_has(55);
+  $core.bool hasSessionPasskey() => $_has(57);
   @$pb.TagNumber(101)
   void clearSessionPasskey() => $_clearField(101);
 
   ///
   ///  Tell the node to reset into the OTA Loader
   @$pb.TagNumber(102)
-  AdminMessage_OTAEvent get otaRequest => $_getN(56);
+  AdminMessage_OTAEvent get otaRequest => $_getN(58);
   @$pb.TagNumber(102)
   set otaRequest(AdminMessage_OTAEvent value) => $_setField(102, value);
   @$pb.TagNumber(102)
-  $core.bool hasOtaRequest() => $_has(56);
+  $core.bool hasOtaRequest() => $_has(58);
   @$pb.TagNumber(102)
   void clearOtaRequest() => $_clearField(102);
   @$pb.TagNumber(102)
-  AdminMessage_OTAEvent ensureOtaRequest() => $_ensure(56);
+  AdminMessage_OTAEvent ensureOtaRequest() => $_ensure(58);
 
   ///
   ///  Parameters and sensor configuration
   @$pb.TagNumber(103)
-  SensorConfig get sensorConfig => $_getN(57);
+  SensorConfig get sensorConfig => $_getN(59);
   @$pb.TagNumber(103)
   set sensorConfig(SensorConfig value) => $_setField(103, value);
   @$pb.TagNumber(103)
-  $core.bool hasSensorConfig() => $_has(57);
+  $core.bool hasSensorConfig() => $_has(59);
   @$pb.TagNumber(103)
   void clearSensorConfig() => $_clearField(103);
   @$pb.TagNumber(103)
-  SensorConfig ensureSensorConfig() => $_ensure(57);
+  SensorConfig ensureSensorConfig() => $_ensure(59);
 
   ///
   ///  Lockdown passphrase delivery / unlock / lock-now command for hardened
@@ -1526,15 +1576,15 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  Replaces the earlier scheme that repurposed SecurityConfig.private_key
   ///  to carry passphrase bytes; that hack is retired.
   @$pb.TagNumber(104)
-  LockdownAuth get lockdownAuth => $_getN(58);
+  LockdownAuth get lockdownAuth => $_getN(60);
   @$pb.TagNumber(104)
   set lockdownAuth(LockdownAuth value) => $_setField(104, value);
   @$pb.TagNumber(104)
-  $core.bool hasLockdownAuth() => $_has(58);
+  $core.bool hasLockdownAuth() => $_has(60);
   @$pb.TagNumber(104)
   void clearLockdownAuth() => $_clearField(104);
   @$pb.TagNumber(104)
-  LockdownAuth ensureLockdownAuth() => $_ensure(58);
+  LockdownAuth ensureLockdownAuth() => $_ensure(60);
 }
 
 ///

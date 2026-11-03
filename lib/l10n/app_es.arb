@@ -1926,7 +1926,7 @@
   "deviceConfigRebroadcastAll": "Todos",
   "deviceConfigRebroadcastAllDesc": "Retransmitir cualquier mensaje observado. Comportamiento predeterminado.",
   "deviceConfigRebroadcastAllSkipDecoding": "Todos (omitir decodificación)",
-  "deviceConfigRebroadcastAllSkipDecodingDesc": "Retransmitir todos los mensajes sin decodificarlos. Más rápido, menos CPU.",
+  "deviceConfigRebroadcastAllSkipDecodingDesc": "Se comporta como Todos. Omitir la decodificación solo se aplicaba al rol Repeater, que ya no es compatible.",
   "deviceConfigRebroadcastCorePortnumsOnly": "Solo números de puerto principales",
   "deviceConfigRebroadcastCorePortnumsOnlyDesc": "Retransmitir solo paquetes principales de Meshtastic (posición, telemetría, etc.).",
   "deviceConfigRebroadcastKnownOnly": "Solo conocidos",

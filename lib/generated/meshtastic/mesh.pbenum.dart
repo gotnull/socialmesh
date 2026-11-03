@@ -793,6 +793,16 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(150, _omitEnumNames ? '' : 'THINKNODE_MX');
 
   ///
+  ///  Radioddity Nodara
+  static const HardwareModel NODARA =
+      HardwareModel._(151, _omitEnumNames ? '' : 'NODARA');
+
+  ///
+  ///  Heltec Magnetic Power Bank V2
+  static const HardwareModel HELTEC_MESH_POCKET_V2 =
+      HardwareModel._(152, _omitEnumNames ? '' : 'HELTEC_MESH_POCKET_V2');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -951,6 +961,8 @@ class HardwareModel extends $pb.ProtobufEnum {
     AXIOMETA_GENESIS_MINI,
     MAKERFABS_NOMAD_TERMINAL,
     THINKNODE_MX,
+    NODARA,
+    HELTEC_MESH_POCKET_V2,
     PRIVATE_HW,
   ];
 
@@ -1988,6 +2000,41 @@ class LogRecord_Level extends $pb.ProtobufEnum {
   const LogRecord_Level._(super.value, super.name);
 }
 
+///
+///  Pixel encodings of the framebuffer bytes.
+class DisplayFrame_Format extends $pb.ProtobufEnum {
+  ///
+  ///  Default; should not be sent.
+  static const DisplayFrame_Format FORMAT_UNSPECIFIED =
+      DisplayFrame_Format._(0, _omitEnumNames ? '' : 'FORMAT_UNSPECIFIED');
+
+  ///
+  ///  1 bit per pixel, vertical LSB-first pages (SSD1306/OLEDDisplay layout):
+  ///  byte index = x + (y / 8) * width, bit index = y % 8.
+  static const DisplayFrame_Format MONO_VLSB =
+      DisplayFrame_Format._(1, _omitEnumNames ? '' : 'MONO_VLSB');
+
+  ///
+  ///  16 bits per pixel, RGB565 in little-endian byte order, rows tightly
+  ///  packed. Used with the partial-update rect fields: data covers only
+  ///  the rectangle. Streamed by LVGL-based color UIs.
+  static const DisplayFrame_Format RGB565 =
+      DisplayFrame_Format._(2, _omitEnumNames ? '' : 'RGB565');
+
+  static const $core.List<DisplayFrame_Format> values = <DisplayFrame_Format>[
+    FORMAT_UNSPECIFIED,
+    MONO_VLSB,
+    RGB565,
+  ];
+
+  static final $core.List<DisplayFrame_Format?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static DisplayFrame_Format? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const DisplayFrame_Format._(super.value, super.name);
+}
+
 class LockdownStatus_State extends $pb.ProtobufEnum {
   /// Default; should not be sent.
   static const LockdownStatus_State STATE_UNSPECIFIED =
@@ -2044,6 +2091,60 @@ class LockdownStatus_State extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const LockdownStatus_State._(super.value, super.name);
+}
+
+///
+///  Physical panel technology, as a hint for client rendering and refresh
+///  expectations.
+class DisplayInfo_PanelClass extends $pb.ProtobufEnum {
+  ///
+  ///  Unknown, or selected at runtime (e.g. a native build's configured panel).
+  static const DisplayInfo_PanelClass PANEL_CLASS_UNSPECIFIED =
+      DisplayInfo_PanelClass._(
+          0, _omitEnumNames ? '' : 'PANEL_CLASS_UNSPECIFIED');
+
+  ///
+  ///  Monochrome OLED (SSD1306/SH1106 family).
+  static const DisplayInfo_PanelClass OLED =
+      DisplayInfo_PanelClass._(1, _omitEnumNames ? '' : 'OLED');
+
+  ///
+  ///  Monochrome LCD (ST7567 family).
+  static const DisplayInfo_PanelClass LCD =
+      DisplayInfo_PanelClass._(2, _omitEnumNames ? '' : 'LCD');
+
+  ///
+  ///  Color TFT.
+  static const DisplayInfo_PanelClass TFT =
+      DisplayInfo_PanelClass._(3, _omitEnumNames ? '' : 'TFT');
+
+  ///
+  ///  E-ink panel: refresh is slow and full-screen; clients should prefer
+  ///  one-shot frame requests over continuous mirroring.
+  static const DisplayInfo_PanelClass EINK =
+      DisplayInfo_PanelClass._(4, _omitEnumNames ? '' : 'EINK');
+
+  ///
+  ///  LED matrix (HUB75).
+  static const DisplayInfo_PanelClass HUB75 =
+      DisplayInfo_PanelClass._(5, _omitEnumNames ? '' : 'HUB75');
+
+  static const $core.List<DisplayInfo_PanelClass> values =
+      <DisplayInfo_PanelClass>[
+    PANEL_CLASS_UNSPECIFIED,
+    OLED,
+    LCD,
+    TFT,
+    EINK,
+    HUB75,
+  ];
+
+  static final $core.List<DisplayInfo_PanelClass?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static DisplayInfo_PanelClass? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const DisplayInfo_PanelClass._(super.value, super.name);
 }
 
 const $core.bool _omitEnumNames =

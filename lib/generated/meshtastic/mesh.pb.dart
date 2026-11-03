@@ -3209,6 +3209,8 @@ enum FromRadio_PayloadVariant {
   deviceuiConfig,
   lockdownStatus,
   regionPresets,
+  displayFrame,
+  displayPalette,
   notSet
 }
 
@@ -3238,6 +3240,8 @@ class FromRadio extends $pb.GeneratedMessage {
     $5.DeviceUIConfig? deviceuiConfig,
     LockdownStatus? lockdownStatus,
     LoRaRegionPresetMap? regionPresets,
+    DisplayFrame? displayFrame,
+    DisplayPalette? displayPalette,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -3261,6 +3265,8 @@ class FromRadio extends $pb.GeneratedMessage {
     if (deviceuiConfig != null) result.deviceuiConfig = deviceuiConfig;
     if (lockdownStatus != null) result.lockdownStatus = lockdownStatus;
     if (regionPresets != null) result.regionPresets = regionPresets;
+    if (displayFrame != null) result.displayFrame = displayFrame;
+    if (displayPalette != null) result.displayPalette = displayPalette;
     return result;
   }
 
@@ -3293,13 +3299,36 @@ class FromRadio extends $pb.GeneratedMessage {
     17: FromRadio_PayloadVariant.deviceuiConfig,
     18: FromRadio_PayloadVariant.lockdownStatus,
     19: FromRadio_PayloadVariant.regionPresets,
+    21: FromRadio_PayloadVariant.displayFrame,
+    22: FromRadio_PayloadVariant.displayPalette,
     0: FromRadio_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'FromRadio',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+    ..oo(0, [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21,
+      22
+    ])
     ..aI(1, _omitFieldNames ? '' : 'id', fieldType: $pb.PbFieldType.OU3)
     ..aOM<MeshPacket>(2, _omitFieldNames ? '' : 'packet',
         subBuilder: MeshPacket.create)
@@ -3338,6 +3367,10 @@ class FromRadio extends $pb.GeneratedMessage {
         subBuilder: LockdownStatus.create)
     ..aOM<LoRaRegionPresetMap>(19, _omitFieldNames ? '' : 'regionPresets',
         subBuilder: LoRaRegionPresetMap.create)
+    ..aOM<DisplayFrame>(21, _omitFieldNames ? '' : 'displayFrame',
+        subBuilder: DisplayFrame.create)
+    ..aOM<DisplayPalette>(22, _omitFieldNames ? '' : 'displayPalette',
+        subBuilder: DisplayPalette.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3376,6 +3409,8 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(17)
   @$pb.TagNumber(18)
   @$pb.TagNumber(19)
+  @$pb.TagNumber(21)
+  @$pb.TagNumber(22)
   FromRadio_PayloadVariant whichPayloadVariant() =>
       _FromRadio_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
@@ -3396,6 +3431,8 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(17)
   @$pb.TagNumber(18)
   @$pb.TagNumber(19)
+  @$pb.TagNumber(21)
+  @$pb.TagNumber(22)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -3656,6 +3693,552 @@ class FromRadio extends $pb.GeneratedMessage {
   void clearRegionPresets() => $_clearField(19);
   @$pb.TagNumber(19)
   LoRaRegionPresetMap ensureRegionPresets() => $_ensure(18);
+
+  ///
+  ///  One chunk of the device's display framebuffer, sent while display
+  ///  mirroring is active (see AdminMessage.set_display_mirror and
+  ///  AdminMessage.get_display_frame_request).
+  @$pb.TagNumber(21)
+  DisplayFrame get displayFrame => $_getN(19);
+  @$pb.TagNumber(21)
+  set displayFrame(DisplayFrame value) => $_setField(21, value);
+  @$pb.TagNumber(21)
+  $core.bool hasDisplayFrame() => $_has(19);
+  @$pb.TagNumber(21)
+  void clearDisplayFrame() => $_clearField(21);
+  @$pb.TagNumber(21)
+  DisplayFrame ensureDisplayFrame() => $_ensure(19);
+
+  ///
+  ///  One chunk of the color palette referenced by display_frame's
+  ///  palette_signature (see DisplayPalette).
+  @$pb.TagNumber(22)
+  DisplayPalette get displayPalette => $_getN(20);
+  @$pb.TagNumber(22)
+  set displayPalette(DisplayPalette value) => $_setField(22, value);
+  @$pb.TagNumber(22)
+  $core.bool hasDisplayPalette() => $_has(20);
+  @$pb.TagNumber(22)
+  void clearDisplayPalette() => $_clearField(22);
+  @$pb.TagNumber(22)
+  DisplayPalette ensureDisplayPalette() => $_ensure(20);
+}
+
+///
+///  A chunk of the device's display framebuffer, streamed to the local client
+///  over BLE/serial/TCP. Frames larger than one chunk are split by byte offset;
+///  a chunk with offset + data length == total_size completes the frame.
+///  This is application-level chunking of a framebuffer into several complete
+///  FromRadio messages, and is unrelated to ClientApiChunkedPayload, which
+///  splits ONE serialized FromRadio across a small BLE MTU. A frame cannot ride
+///  that wrapper: FromRadio is statically capped at MAX_TO_FROM_RADIO_SIZE, far
+///  below a full framebuffer. The two compose - a chunked-transport client
+///  receives these frames through it.
+///
+///  Chunks of one frame arrive contiguously (no other display_frame between
+///  them; display_palette messages may interleave) and in offset order, so a
+///  client never has to reorder. It does have to check for loss: the queue to
+///  the client drops its oldest entry when full, and a frame in flight can be
+///  truncated when mirroring is disabled. A client MUST verify that offset
+///  equals the number of bytes it has already accumulated for this frame_id,
+///  and discard the partial frame on any gap or frame_id change. An incomplete
+///  frame must never be rendered.
+class DisplayFrame extends $pb.GeneratedMessage {
+  factory DisplayFrame({
+    $core.int? width,
+    $core.int? height,
+    DisplayFrame_Format? format,
+    $core.int? frameId,
+    $core.int? offset,
+    $core.int? totalSize,
+    $core.List<$core.int>? data,
+    $core.int? rectX,
+    $core.int? rectY,
+    $core.int? rectWidth,
+    $core.int? rectHeight,
+    $core.int? paletteSignature,
+  }) {
+    final result = create();
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    if (format != null) result.format = format;
+    if (frameId != null) result.frameId = frameId;
+    if (offset != null) result.offset = offset;
+    if (totalSize != null) result.totalSize = totalSize;
+    if (data != null) result.data = data;
+    if (rectX != null) result.rectX = rectX;
+    if (rectY != null) result.rectY = rectY;
+    if (rectWidth != null) result.rectWidth = rectWidth;
+    if (rectHeight != null) result.rectHeight = rectHeight;
+    if (paletteSignature != null) result.paletteSignature = paletteSignature;
+    return result;
+  }
+
+  DisplayFrame._();
+
+  factory DisplayFrame.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DisplayFrame.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DisplayFrame',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aE<DisplayFrame_Format>(3, _omitFieldNames ? '' : 'format',
+        enumValues: DisplayFrame_Format.values)
+    ..aI(4, _omitFieldNames ? '' : 'frameId', fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'offset', fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'totalSize', fieldType: $pb.PbFieldType.OU3)
+    ..a<$core.List<$core.int>>(
+        7, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..aI(8, _omitFieldNames ? '' : 'rectX', fieldType: $pb.PbFieldType.OU3)
+    ..aI(9, _omitFieldNames ? '' : 'rectY', fieldType: $pb.PbFieldType.OU3)
+    ..aI(10, _omitFieldNames ? '' : 'rectWidth', fieldType: $pb.PbFieldType.OU3)
+    ..aI(11, _omitFieldNames ? '' : 'rectHeight',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(12, _omitFieldNames ? '' : 'paletteSignature',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DisplayFrame clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DisplayFrame copyWith(void Function(DisplayFrame) updates) =>
+      super.copyWith((message) => updates(message as DisplayFrame))
+          as DisplayFrame;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DisplayFrame create() => DisplayFrame._();
+  @$core.override
+  DisplayFrame createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DisplayFrame getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DisplayFrame>(create);
+  static DisplayFrame? _defaultInstance;
+
+  ///
+  ///  Display width in pixels.
+  @$pb.TagNumber(1)
+  $core.int get width => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set width($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasWidth() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearWidth() => $_clearField(1);
+
+  ///
+  ///  Display height in pixels.
+  @$pb.TagNumber(2)
+  $core.int get height => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set height($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasHeight() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHeight() => $_clearField(2);
+
+  ///
+  ///  Pixel encoding of data.
+  @$pb.TagNumber(3)
+  DisplayFrame_Format get format => $_getN(2);
+  @$pb.TagNumber(3)
+  set format(DisplayFrame_Format value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFormat() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFormat() => $_clearField(3);
+
+  ///
+  ///  Frame counter, constant across the chunks of one frame, so a change
+  ///  marks the start of a new frame. It cannot reveal loss WITHIN a frame,
+  ///  since every chunk of that frame carries the same value; only offset
+  ///  contiguity can. Increments per captured frame, wraps at uint32 range,
+  ///  and restarts from 1 on device reboot, so treat any change as "a new
+  ///  frame" rather than as an ordering guarantee.
+  @$pb.TagNumber(4)
+  $core.int get frameId => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set frameId($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasFrameId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearFrameId() => $_clearField(4);
+
+  ///
+  ///  Byte offset of this chunk within the full frame buffer.
+  @$pb.TagNumber(5)
+  $core.int get offset => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set offset($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasOffset() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearOffset() => $_clearField(5);
+
+  ///
+  ///  Total size in bytes of the full frame buffer.
+  @$pb.TagNumber(6)
+  $core.int get totalSize => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set totalSize($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTotalSize() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTotalSize() => $_clearField(6);
+
+  ///
+  ///  The framebuffer bytes for this chunk.
+  @$pb.TagNumber(7)
+  $core.List<$core.int> get data => $_getN(6);
+  @$pb.TagNumber(7)
+  set data($core.List<$core.int> value) => $_setBytes(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasData() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearData() => $_clearField(7);
+
+  ///
+  ///  Optional partial-update rectangle (dirty-rect streaming from LVGL-based
+  ///  color UIs, format RGB565). A zero rect_width or rect_height means the
+  ///  full panel in that axis, so data carries the pixels of the resulting
+  ///  rectangle and offset/total_size describe that rectangle's own buffer;
+  ///  width/height above always remain the full display dimensions, and each
+  ///  rectangle is an independently completed unit under its own frame_id.
+  ///  MONO_VLSB frames never set these fields.
+  @$pb.TagNumber(8)
+  $core.int get rectX => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set rectX($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasRectX() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearRectX() => $_clearField(8);
+
+  ///
+  ///  See rect_x.
+  @$pb.TagNumber(9)
+  $core.int get rectY => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set rectY($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasRectY() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearRectY() => $_clearField(9);
+
+  ///
+  ///  See rect_x.
+  @$pb.TagNumber(10)
+  $core.int get rectWidth => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set rectWidth($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasRectWidth() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearRectWidth() => $_clearField(10);
+
+  ///
+  ///  See rect_x.
+  @$pb.TagNumber(11)
+  $core.int get rectHeight => $_getIZ(10);
+  @$pb.TagNumber(11)
+  set rectHeight($core.int value) => $_setUnsignedInt32(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasRectHeight() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearRectHeight() => $_clearField(11);
+
+  ///
+  ///  Identity of the DisplayPalette that colorizes this frame, matching
+  ///  DisplayPalette.signature. 0 when the device renders monochrome (no
+  ///  color panel); clients without the referenced palette yet should render
+  ///  monochrome until its chunks arrive.
+  @$pb.TagNumber(12)
+  $core.int get paletteSignature => $_getIZ(11);
+  @$pb.TagNumber(12)
+  set paletteSignature($core.int value) => $_setUnsignedInt32(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasPaletteSignature() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearPaletteSignature() => $_clearField(12);
+}
+
+///
+///  One colorized rectangle of the display.
+class DisplayPalette_ColorRegion extends $pb.GeneratedMessage {
+  factory DisplayPalette_ColorRegion({
+    $core.int? x,
+    $core.int? y,
+    $core.int? width,
+    $core.int? height,
+    $core.int? onColor,
+    $core.int? offColor,
+  }) {
+    final result = create();
+    if (x != null) result.x = x;
+    if (y != null) result.y = y;
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    if (onColor != null) result.onColor = onColor;
+    if (offColor != null) result.offColor = offColor;
+    return result;
+  }
+
+  DisplayPalette_ColorRegion._();
+
+  factory DisplayPalette_ColorRegion.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DisplayPalette_ColorRegion.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DisplayPalette.ColorRegion',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'x', fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'y', fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'onColor', fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'offColor', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DisplayPalette_ColorRegion clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DisplayPalette_ColorRegion copyWith(
+          void Function(DisplayPalette_ColorRegion) updates) =>
+      super.copyWith(
+              (message) => updates(message as DisplayPalette_ColorRegion))
+          as DisplayPalette_ColorRegion;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DisplayPalette_ColorRegion create() => DisplayPalette_ColorRegion._();
+  @$core.override
+  DisplayPalette_ColorRegion createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DisplayPalette_ColorRegion getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DisplayPalette_ColorRegion>(create);
+  static DisplayPalette_ColorRegion? _defaultInstance;
+
+  ///
+  ///  Region origin and size in pixels.
+  @$pb.TagNumber(1)
+  $core.int get x => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set x($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasX() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearX() => $_clearField(1);
+
+  ///
+  ///  See x.
+  @$pb.TagNumber(2)
+  $core.int get y => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set y($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasY() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearY() => $_clearField(2);
+
+  ///
+  ///  See x.
+  @$pb.TagNumber(3)
+  $core.int get width => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set width($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasWidth() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearWidth() => $_clearField(3);
+
+  ///
+  ///  See x.
+  @$pb.TagNumber(4)
+  $core.int get height => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set height($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasHeight() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearHeight() => $_clearField(4);
+
+  ///
+  ///  RGB565 drawn for set (1) pixels inside this region.
+  @$pb.TagNumber(5)
+  $core.int get onColor => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set onColor($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasOnColor() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearOnColor() => $_clearField(5);
+
+  ///
+  ///  RGB565 drawn for clear (0) pixels inside this region.
+  @$pb.TagNumber(6)
+  $core.int get offColor => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set offColor($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasOffColor() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearOffColor() => $_clearField(6);
+}
+
+///
+///  Colorization palette for DisplayFrame streams from devices that paint the
+///  1bpp base UI onto a color panel. The panel applies per-region on/off
+///  colors at flush time; streaming the same region table lets a client
+///  render the mirror in the panel's true colors at 1bpp bandwidth.
+///  Sent as FromRadio.display_palette, split by region index when the table
+///  exceeds one message; re-sent only when the region layout or theme changes
+///  (the signature changes with it). Regions are ordered by table index; a
+///  region with a higher table index overrides lower-indexed ones where they
+///  overlap, regardless of chunk boundaries. A client holding partial chunks
+///  of a signature that no longer matches incoming chunks should discard
+///  them. All colors are RGB565 in logical bit layout (RRRRRGGGGGGBBBBB).
+class DisplayPalette extends $pb.GeneratedMessage {
+  factory DisplayPalette({
+    $core.int? signature,
+    $core.int? defaultOnColor,
+    $core.int? defaultOffColor,
+    $core.int? regionOffset,
+    $core.int? regionTotal,
+    $core.Iterable<DisplayPalette_ColorRegion>? regions,
+  }) {
+    final result = create();
+    if (signature != null) result.signature = signature;
+    if (defaultOnColor != null) result.defaultOnColor = defaultOnColor;
+    if (defaultOffColor != null) result.defaultOffColor = defaultOffColor;
+    if (regionOffset != null) result.regionOffset = regionOffset;
+    if (regionTotal != null) result.regionTotal = regionTotal;
+    if (regions != null) result.regions.addAll(regions);
+    return result;
+  }
+
+  DisplayPalette._();
+
+  factory DisplayPalette.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DisplayPalette.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DisplayPalette',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'signature', fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'defaultOnColor',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'defaultOffColor',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'regionOffset',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'regionTotal',
+        fieldType: $pb.PbFieldType.OU3)
+    ..pPM<DisplayPalette_ColorRegion>(6, _omitFieldNames ? '' : 'regions',
+        subBuilder: DisplayPalette_ColorRegion.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DisplayPalette clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DisplayPalette copyWith(void Function(DisplayPalette) updates) =>
+      super.copyWith((message) => updates(message as DisplayPalette))
+          as DisplayPalette;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DisplayPalette create() => DisplayPalette._();
+  @$core.override
+  DisplayPalette createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DisplayPalette getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DisplayPalette>(create);
+  static DisplayPalette? _defaultInstance;
+
+  ///
+  ///  Identity of this palette; DisplayFrame.palette_signature references it.
+  ///  Changes whenever the region table or theme changes. Never 0, which
+  ///  DisplayFrame.palette_signature reserves for monochrome.
+  @$pb.TagNumber(1)
+  $core.int get signature => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set signature($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSignature() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSignature() => $_clearField(1);
+
+  ///
+  ///  RGB565 for set pixels outside all regions. The region_offset 0 chunk is authoritative.
+  @$pb.TagNumber(2)
+  $core.int get defaultOnColor => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set defaultOnColor($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDefaultOnColor() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDefaultOnColor() => $_clearField(2);
+
+  ///
+  ///  RGB565 for clear pixels outside all regions. The region_offset 0 chunk is authoritative.
+  @$pb.TagNumber(3)
+  $core.int get defaultOffColor => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set defaultOffColor($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDefaultOffColor() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDefaultOffColor() => $_clearField(3);
+
+  ///
+  ///  Table index of the first region in this chunk.
+  @$pb.TagNumber(4)
+  $core.int get regionOffset => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set regionOffset($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRegionOffset() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRegionOffset() => $_clearField(4);
+
+  ///
+  ///  Total regions in the complete palette; region_offset + regions length
+  ///  == region_total completes it.
+  @$pb.TagNumber(5)
+  $core.int get regionTotal => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set regionTotal($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRegionTotal() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRegionTotal() => $_clearField(5);
+
+  ///
+  ///  The regions of this chunk, in table order.
+  @$pb.TagNumber(6)
+  $pb.PbList<DisplayPalette_ColorRegion> get regions => $_getList(5);
 }
 
 ///
@@ -4890,6 +5473,7 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     $core.bool? hasPKC,
     $core.int? excludedModules,
     $core.bool? hasXeddsa,
+    DisplayInfo? display,
   }) {
     final result = create();
     if (firmwareVersion != null) result.firmwareVersion = firmwareVersion;
@@ -4906,6 +5490,7 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     if (hasPKC != null) result.hasPKC = hasPKC;
     if (excludedModules != null) result.excludedModules = excludedModules;
     if (hasXeddsa != null) result.hasXeddsa = hasXeddsa;
+    if (display != null) result.display = display;
     return result;
   }
 
@@ -4941,6 +5526,8 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     ..aI(12, _omitFieldNames ? '' : 'excludedModules',
         fieldType: $pb.PbFieldType.OU3)
     ..aOB(14, _omitFieldNames ? '' : 'hasXeddsa')
+    ..aOM<DisplayInfo>(16, _omitFieldNames ? '' : 'display',
+        subBuilder: DisplayInfo.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -5106,6 +5693,140 @@ class DeviceMetadata extends $pb.GeneratedMessage {
   $core.bool hasHasXeddsa() => $_has(12);
   @$pb.TagNumber(14)
   void clearHasXeddsa() => $_clearField(14);
+
+  ///
+  ///  Describes the device's screen when one is present; absent on display-less
+  ///  builds. Lets clients gate display-mirroring UI (see DisplayFrame) and
+  ///  adapt to the panel, e.g. expect slow refresh from EINK, or offer
+  ///  tap-to-touch when has_touch is set.
+  @$pb.TagNumber(16)
+  DisplayInfo get display => $_getN(13);
+  @$pb.TagNumber(16)
+  set display(DisplayInfo value) => $_setField(16, value);
+  @$pb.TagNumber(16)
+  $core.bool hasDisplay() => $_has(13);
+  @$pb.TagNumber(16)
+  void clearDisplay() => $_clearField(16);
+  @$pb.TagNumber(16)
+  DisplayInfo ensureDisplay() => $_ensure(13);
+}
+
+///
+///  Static description of a device's display, sent inside DeviceMetadata
+///  during the connection handshake.
+class DisplayInfo extends $pb.GeneratedMessage {
+  factory DisplayInfo({
+    $core.int? width,
+    $core.int? height,
+    DisplayFrame_Format? format,
+    DisplayInfo_PanelClass? panelClass,
+    $core.bool? hasTouch,
+  }) {
+    final result = create();
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    if (format != null) result.format = format;
+    if (panelClass != null) result.panelClass = panelClass;
+    if (hasTouch != null) result.hasTouch = hasTouch;
+    return result;
+  }
+
+  DisplayInfo._();
+
+  factory DisplayInfo.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DisplayInfo.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DisplayInfo',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aE<DisplayFrame_Format>(3, _omitFieldNames ? '' : 'format',
+        enumValues: DisplayFrame_Format.values)
+    ..aE<DisplayInfo_PanelClass>(4, _omitFieldNames ? '' : 'panelClass',
+        enumValues: DisplayInfo_PanelClass.values)
+    ..aOB(5, _omitFieldNames ? '' : 'hasTouch')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DisplayInfo clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DisplayInfo copyWith(void Function(DisplayInfo) updates) =>
+      super.copyWith((message) => updates(message as DisplayInfo))
+          as DisplayInfo;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DisplayInfo create() => DisplayInfo._();
+  @$core.override
+  DisplayInfo createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DisplayInfo getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DisplayInfo>(create);
+  static DisplayInfo? _defaultInstance;
+
+  ///
+  ///  Display width in pixels.
+  @$pb.TagNumber(1)
+  $core.int get width => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set width($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasWidth() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearWidth() => $_clearField(1);
+
+  ///
+  ///  Display height in pixels.
+  @$pb.TagNumber(2)
+  $core.int get height => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set height($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasHeight() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHeight() => $_clearField(2);
+
+  ///
+  ///  Pixel encoding that DisplayFrame streams from this device will use.
+  @$pb.TagNumber(3)
+  DisplayFrame_Format get format => $_getN(2);
+  @$pb.TagNumber(3)
+  set format(DisplayFrame_Format value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFormat() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFormat() => $_clearField(3);
+
+  ///
+  ///  Physical panel technology.
+  @$pb.TagNumber(4)
+  DisplayInfo_PanelClass get panelClass => $_getN(3);
+  @$pb.TagNumber(4)
+  set panelClass(DisplayInfo_PanelClass value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPanelClass() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPanelClass() => $_clearField(4);
+
+  ///
+  ///  True when the panel accepts touch input; clients may map taps on a
+  ///  mirrored frame to AdminMessage.send_input_event touch coordinates.
+  @$pb.TagNumber(5)
+  $core.bool get hasTouch => $_getBF(4);
+  @$pb.TagNumber(5)
+  set hasTouch($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasHasTouch() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearHasTouch() => $_clearField(5);
 }
 
 ///

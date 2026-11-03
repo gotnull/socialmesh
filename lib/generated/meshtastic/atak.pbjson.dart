@@ -1446,12 +1446,21 @@ const TAKPacketV2$json = {
       '17': true
     },
     {
+      '1': 'start_epoch_lo14',
+      '3': 43,
+      '4': 1,
+      '5': 13,
+      '9': 3,
+      '10': 'startEpochLo14',
+      '17': true
+    },
+    {
       '1': 'marti',
       '3': 29,
       '4': 1,
       '5': 11,
       '6': '.meshtastic.Marti',
-      '9': 3,
+      '9': 4,
       '10': 'marti',
       '17': true
     },
@@ -1560,6 +1569,7 @@ const TAKPacketV2$json = {
     {'1': 'payload_variant'},
     {'1': '_environment'},
     {'1': '_sensor_fov'},
+    {'1': '_start_epoch_lo14'},
     {'1': '_marti'},
   ],
   '9': [
@@ -1587,17 +1597,19 @@ final $typed_data.Uint8List tAKPacketV2Descriptor = $convert.base64Decode(
     'hlbmRwb2ludBIUCgVwaG9uZRgWIAEoCVIFcGhvbmUSIAoMY290X3R5cGVfc3RyGBcgASgJUgpj'
     'b3RUeXBlU3RyEhgKB3JlbWFya3MYGCABKAlSB3JlbWFya3MSQQoLZW52aXJvbm1lbnQYGSABKA'
     'syGi5tZXNodGFzdGljLlRBS0Vudmlyb25tZW50SAFSC2Vudmlyb25tZW50iAEBEjkKCnNlbnNv'
-    'cl9mb3YYGiABKAsyFS5tZXNodGFzdGljLlNlbnNvckZvdkgCUglzZW5zb3JGb3aIAQESLAoFbW'
-    'FydGkYHSABKAsyES5tZXNodGFzdGljLk1hcnRpSANSBW1hcnRpiAEBEikKBGNoYXQYHyABKAsy'
-    'Ey5tZXNodGFzdGljLkdlb0NoYXRIAFIEY2hhdBI3CghhaXJjcmFmdBggIAEoCzIZLm1lc2h0YX'
-    'N0aWMuQWlyY3JhZnRUcmFja0gAUghhaXJjcmFmdBIfCgpyYXdfZGV0YWlsGCEgASgMSABSCXJh'
-    'd0RldGFpbBIuCgVzaGFwZRgiIAEoCzIWLm1lc2h0YXN0aWMuRHJhd25TaGFwZUgAUgVzaGFwZR'
-    'IsCgZtYXJrZXIYIyABKAsyEi5tZXNodGFzdGljLk1hcmtlckgAUgZtYXJrZXISLwoDcmFiGCQg'
-    'ASgLMhsubWVzaHRhc3RpYy5SYW5nZUFuZEJlYXJpbmdIAFIDcmFiEikKBXJvdXRlGCUgASgLMh'
-    'EubWVzaHRhc3RpYy5Sb3V0ZUgAUgVyb3V0ZRI1CgdjYXNldmFjGCYgASgLMhkubWVzaHRhc3Rp'
-    'Yy5DYXNldmFjUmVwb3J0SABSB2Nhc2V2YWMSOgoJZW1lcmdlbmN5GCcgASgLMhoubWVzaHRhc3'
-    'RpYy5FbWVyZ2VuY3lBbGVydEgAUgllbWVyZ2VuY3kSLQoEdGFzaxgoIAEoCzIXLm1lc2h0YXN0'
-    'aWMuVGFza1JlcXVlc3RIAFIEdGFzaxI2Cgd0YWt0YWxrGCkgASgLMhoubWVzaHRhc3RpYy5UYW'
-    'tUYWxrTWVzc2FnZUgAUgd0YWt0YWxrEkAKDHRha3RhbGtfcm9vbRgqIAEoCzIbLm1lc2h0YXN0'
-    'aWMuVGFrVGFsa1Jvb21EYXRhSABSC3Rha3RhbGtSb29tQhEKD3BheWxvYWRfdmFyaWFudEIOCg'
-    'xfZW52aXJvbm1lbnRCDQoLX3NlbnNvcl9mb3ZCCAoGX21hcnRpSgQIGxAcSgQIHBAdSgQIHhAf');
+    'cl9mb3YYGiABKAsyFS5tZXNodGFzdGljLlNlbnNvckZvdkgCUglzZW5zb3JGb3aIAQESLQoQc3'
+    'RhcnRfZXBvY2hfbG8xNBgrIAEoDUgDUg5zdGFydEVwb2NoTG8xNIgBARIsCgVtYXJ0aRgdIAEo'
+    'CzIRLm1lc2h0YXN0aWMuTWFydGlIBFIFbWFydGmIAQESKQoEY2hhdBgfIAEoCzITLm1lc2h0YX'
+    'N0aWMuR2VvQ2hhdEgAUgRjaGF0EjcKCGFpcmNyYWZ0GCAgASgLMhkubWVzaHRhc3RpYy5BaXJj'
+    'cmFmdFRyYWNrSABSCGFpcmNyYWZ0Eh8KCnJhd19kZXRhaWwYISABKAxIAFIJcmF3RGV0YWlsEi'
+    '4KBXNoYXBlGCIgASgLMhYubWVzaHRhc3RpYy5EcmF3blNoYXBlSABSBXNoYXBlEiwKBm1hcmtl'
+    'chgjIAEoCzISLm1lc2h0YXN0aWMuTWFya2VySABSBm1hcmtlchIvCgNyYWIYJCABKAsyGy5tZX'
+    'NodGFzdGljLlJhbmdlQW5kQmVhcmluZ0gAUgNyYWISKQoFcm91dGUYJSABKAsyES5tZXNodGFz'
+    'dGljLlJvdXRlSABSBXJvdXRlEjUKB2Nhc2V2YWMYJiABKAsyGS5tZXNodGFzdGljLkNhc2V2YW'
+    'NSZXBvcnRIAFIHY2FzZXZhYxI6CgllbWVyZ2VuY3kYJyABKAsyGi5tZXNodGFzdGljLkVtZXJn'
+    'ZW5jeUFsZXJ0SABSCWVtZXJnZW5jeRItCgR0YXNrGCggASgLMhcubWVzaHRhc3RpYy5UYXNrUm'
+    'VxdWVzdEgAUgR0YXNrEjYKB3Rha3RhbGsYKSABKAsyGi5tZXNodGFzdGljLlRha1RhbGtNZXNz'
+    'YWdlSABSB3Rha3RhbGsSQAoMdGFrdGFsa19yb29tGCogASgLMhsubWVzaHRhc3RpYy5UYWtUYW'
+    'xrUm9vbURhdGFIAFILdGFrdGFsa1Jvb21CEQoPcGF5bG9hZF92YXJpYW50Qg4KDF9lbnZpcm9u'
+    'bWVudEINCgtfc2Vuc29yX2ZvdkITChFfc3RhcnRfZXBvY2hfbG8xNEIICgZfbWFydGlKBAgbEB'
+    'xKBAgcEB1KBAgeEB8=');

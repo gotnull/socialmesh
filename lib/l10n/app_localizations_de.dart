@@ -3890,7 +3890,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deviceConfigRebroadcastAllSkipDecodingDesc =>
-      'Alle Nachrichten ohne Dekodierung weiterleiten. Schneller, weniger CPU.';
+      'Verhält sich wie Alle. Das Überspringen der Dekodierung galt nur für die Rolle Repeater, die nicht mehr unterstützt wird.';
 
   @override
   String get deviceConfigRebroadcastCorePortnumsOnly => 'Nur Kern-Portnummern';

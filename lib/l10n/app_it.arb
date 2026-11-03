@@ -28657,7 +28657,7 @@
   "deviceConfigRebroadcastAll": "Tutto",
   "deviceConfigRebroadcastAllDesc": "Ritrasmetti qualsiasi messaggio osservato. Comportamento predefinito.",
   "deviceConfigRebroadcastAllSkipDecoding": "Tutto (senza decodifica)",
-  "deviceConfigRebroadcastAllSkipDecodingDesc": "Ritrasmetti tutti i messaggi senza decodifica. Più veloce, meno CPU.",
+  "deviceConfigRebroadcastAllSkipDecodingDesc": "Si comporta come Tutto. Saltare la decodifica valeva solo per il ruolo Repeater, che non è più supportato.",
   "deviceConfigRebroadcastCorePortnumsOnly": "Solo porte core",
   "deviceConfigRebroadcastCorePortnumsOnlyDesc": "Ritrasmetti solo pacchetti core Meshtastic (posizione, telemetria, ecc.).",
   "deviceConfigRebroadcastKnownOnly": "Solo nodi conosciuti",

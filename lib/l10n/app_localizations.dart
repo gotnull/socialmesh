@@ -6717,7 +6717,7 @@ abstract class AppLocalizations {
   /// Description text in developer tools
   ///
   /// In en, this message translates to:
-  /// **'Rebroadcast all messages without decoding. Faster, less CPU.'**
+  /// **'Behaves as All. Skipping decoding only applied to the Repeater role, which is no longer supported.'**
   String get deviceConfigRebroadcastAllSkipDecodingDesc;
 
   /// Meshtastic rebroadcast mode: only relays essential protocol messages (position, nodeinfo, routing). Port numbers are Meshtastic message type identifiers, not TCP ports.

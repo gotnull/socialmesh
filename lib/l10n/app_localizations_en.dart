@@ -3828,7 +3828,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceConfigRebroadcastAllSkipDecodingDesc =>
-      'Rebroadcast all messages without decoding. Faster, less CPU.';
+      'Behaves as All. Skipping decoding only applied to the Repeater role, which is no longer supported.';
 
   @override
   String get deviceConfigRebroadcastCorePortnumsOnly =>

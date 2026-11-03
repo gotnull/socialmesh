@@ -3913,7 +3913,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deviceConfigRebroadcastAllSkipDecodingDesc =>
-      'Rediffuse tous les messages sans les décoder. Plus rapide, moins de CPU.';
+      'Se comporte comme Tout. Le saut du décodage ne concernait que le rôle Repeater, qui n\'est plus pris en charge.';
 
   @override
   String get deviceConfigRebroadcastCorePortnumsOnly =>

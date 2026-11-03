@@ -296,6 +296,11 @@ class ModuleConfig_SerialConfig_Serial_Mode extends $pb.ProtobufEnum {
       ModuleConfig_SerialConfig_Serial_Mode._(
           10, _omitEnumNames ? '' : 'LOGTEXT');
 
+  /// Modbus-RTU master, polls an RS485 sensor and sends telemetry
+  static const ModuleConfig_SerialConfig_Serial_Mode MODBUS =
+      ModuleConfig_SerialConfig_Serial_Mode._(
+          11, _omitEnumNames ? '' : 'MODBUS');
+
   static const $core.List<ModuleConfig_SerialConfig_Serial_Mode> values =
       <ModuleConfig_SerialConfig_Serial_Mode>[
     DEFAULT,
@@ -309,10 +314,11 @@ class ModuleConfig_SerialConfig_Serial_Mode extends $pb.ProtobufEnum {
     MS_CONFIG,
     LOG,
     LOGTEXT,
+    MODBUS,
   ];
 
   static final $core.List<ModuleConfig_SerialConfig_Serial_Mode?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 10);
+      $pb.ProtobufEnum.$_initByValueList(values, 11);
   static ModuleConfig_SerialConfig_Serial_Mode? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

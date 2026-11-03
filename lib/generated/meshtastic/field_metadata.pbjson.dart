@@ -30,6 +30,7 @@ const FieldMetadata$json = {
     {'1': 'keywords', '3': 9, '4': 1, '5': 9, '10': 'keywords'},
     {'1': 'since_firmware', '3': 10, '4': 1, '5': 9, '10': 'sinceFirmware'},
     {'1': 'deprecated_since', '3': 11, '4': 1, '5': 9, '10': 'deprecatedSince'},
+    {'1': 'oem_fixed_gps', '3': 12, '4': 1, '5': 8, '10': 'oemFixedGps'},
   ],
 };
 
@@ -41,4 +42,4 @@ final $typed_data.Uint8List fieldMetadataDescriptor = $convert.base64Decode(
     'YgASgIUgpkZXByZWNhdGVkEhQKBWxhYmVsGAcgASgJUgVsYWJlbBIgCgtkZXNjcmlwdGlvbhgI'
     'IAEoCVILZGVzY3JpcHRpb24SGgoIa2V5d29yZHMYCSABKAlSCGtleXdvcmRzEiUKDnNpbmNlX2'
     'Zpcm13YXJlGAogASgJUg1zaW5jZUZpcm13YXJlEikKEGRlcHJlY2F0ZWRfc2luY2UYCyABKAlS'
-    'D2RlcHJlY2F0ZWRTaW5jZQ==');
+    'D2RlcHJlY2F0ZWRTaW5jZRIiCg1vZW1fZml4ZWRfZ3BzGAwgASgIUgtvZW1GaXhlZEdwcw==');

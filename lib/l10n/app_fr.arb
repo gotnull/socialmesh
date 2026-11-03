@@ -1926,7 +1926,7 @@
   "deviceConfigRebroadcastAll": "Tout",
   "deviceConfigRebroadcastAllDesc": "Rediffuse tout message observé. Comportement par défaut.",
   "deviceConfigRebroadcastAllSkipDecoding": "Tout (sans décodage)",
-  "deviceConfigRebroadcastAllSkipDecodingDesc": "Rediffuse tous les messages sans les décoder. Plus rapide, moins de CPU.",
+  "deviceConfigRebroadcastAllSkipDecodingDesc": "Se comporte comme Tout. Le saut du décodage ne concernait que le rôle Repeater, qui n'est plus pris en charge.",
   "deviceConfigRebroadcastCorePortnumsOnly": "Numéros de port principaux uniquement",
   "deviceConfigRebroadcastCorePortnumsOnlyDesc": "Rediffuse uniquement les paquets Meshtastic principaux (position, télémétrie, etc.).",
   "deviceConfigRebroadcastKnownOnly": "Connus uniquement",

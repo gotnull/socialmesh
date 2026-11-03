@@ -3901,7 +3901,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deviceConfigRebroadcastAllSkipDecodingDesc =>
-      'Retransmitir todos los mensajes sin decodificarlos. Más rápido, menos CPU.';
+      'Se comporta como Todos. Omitir la decodificación solo se aplicaba al rol Repeater, que ya no es compatible.';
 
   @override
   String get deviceConfigRebroadcastCorePortnumsOnly =>

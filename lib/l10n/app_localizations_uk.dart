@@ -3891,7 +3891,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get deviceConfigRebroadcastAllSkipDecodingDesc =>
-      'Ретранслювати всі повідомлення без декодування. Швидше, менше навантаження на ЦП.';
+      'Працює як «Усі». Пропуск декодування діяв лише для ролі Repeater, яка більше не підтримується.';
 
   @override
   String get deviceConfigRebroadcastCorePortnumsOnly =>

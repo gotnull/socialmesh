@@ -97,6 +97,7 @@ class FieldMetadata extends $pb.GeneratedMessage {
     $core.String? keywords,
     $core.String? sinceFirmware,
     $core.String? deprecatedSince,
+    $core.bool? oemFixedGps,
   }) {
     final result = create();
     if (diyOnly != null) result.diyOnly = diyOnly;
@@ -110,6 +111,7 @@ class FieldMetadata extends $pb.GeneratedMessage {
     if (keywords != null) result.keywords = keywords;
     if (sinceFirmware != null) result.sinceFirmware = sinceFirmware;
     if (deprecatedSince != null) result.deprecatedSince = deprecatedSince;
+    if (oemFixedGps != null) result.oemFixedGps = oemFixedGps;
     return result;
   }
 
@@ -137,6 +139,7 @@ class FieldMetadata extends $pb.GeneratedMessage {
     ..aOS(9, _omitFieldNames ? '' : 'keywords')
     ..aOS(10, _omitFieldNames ? '' : 'sinceFirmware')
     ..aOS(11, _omitFieldNames ? '' : 'deprecatedSince')
+    ..aOB(12, _omitFieldNames ? '' : 'oemFixedGps')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -159,8 +162,8 @@ class FieldMetadata extends $pb.GeneratedMessage {
   static FieldMetadata? _defaultInstance;
 
   ///
-  ///  Field is only relevant to DIY hardware builds. Apps may hide it when
-  ///  connected to a pre-assembled / commercial board.
+  ///  Field is only relevant to DIY hardware builds. Apps hide a GPS field
+  ///  tagged this way when the board's `HardwareModel` sets `oem_fixed_gps`.
   @$pb.TagNumber(1)
   $core.bool get diyOnly => $_getBF(0);
   @$pb.TagNumber(1)
@@ -336,6 +339,19 @@ class FieldMetadata extends $pb.GeneratedMessage {
   $core.bool hasDeprecatedSince() => $_has(10);
   @$pb.TagNumber(11)
   void clearDeprecatedSince() => $_clearField(11);
+
+  ///
+  ///  Set on a `HardwareModel` value: the maker wired the board's GPS, so the
+  ///  `diy_only` GPS pin fields do not apply. Apps hide those fields on these
+  ///  boards and keep them on any other or unknown board.
+  @$pb.TagNumber(12)
+  $core.bool get oemFixedGps => $_getBF(11);
+  @$pb.TagNumber(12)
+  set oemFixedGps($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasOemFixedGps() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearOemFixedGps() => $_clearField(12);
 }
 
 class Field_metadata {
