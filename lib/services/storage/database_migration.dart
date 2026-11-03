@@ -120,6 +120,72 @@ Future<void> migratePlaintextToEncrypted({
   AppLogging.storage('DB migration: encrypted $debugName in place');
 }
 
+/// Recovers from an encrypted database at [path] that the current key cannot
+/// open, after [open] has already failed once with [error].
+///
+/// The file outlived its key (secure storage was cleared, or wiped by the
+/// keystore plugin), so no later launch can read it either, and until it
+/// moves every session would run without persistence. [open] is retried once
+/// after [retryDelay] to rule out a passing lock. If that fails too, the file
+/// and its WAL sidecars are renamed to `<name>.unreadable-<millis>` (kept, not
+/// deleted) and [open] creates a fresh database in their place. If the fresh
+/// open fails as well, the fault is not the file: the new files are removed,
+/// the originals are put back, and [error] is rethrown. [onSetAside] runs
+/// only when a fresh database replaced the original.
+///
+/// Call only for a file that exists, is non-empty and is not plaintext; a
+/// file the platform withholds fails that header read before reaching here.
+Future<Database> openAfterSettingAsideUnreadable({
+  required String path,
+  required Future<Database> Function() open,
+  required Object error,
+  required StackTrace stackTrace,
+  required void Function() onSetAside,
+  Duration retryDelay = const Duration(milliseconds: 500),
+}) async {
+  await Future<void>.delayed(retryDelay);
+  try {
+    return await open();
+  } catch (retryError) {
+    AppLogging.storage(
+      'DB recovery: retry failed for ${_basename(path)} ($retryError)',
+    );
+  }
+
+  final asidePath = '$path.unreadable-${DateTime.now().millisecondsSinceEpoch}';
+  const sidecars = ['', '-wal', '-shm'];
+  final moved = <String>[];
+  for (final suffix in sidecars) {
+    final file = File('$path$suffix');
+    if (await file.exists()) {
+      await file.rename('$asidePath$suffix');
+      moved.add(suffix);
+    }
+  }
+
+  try {
+    final db = await open();
+    AppLogging.session(
+      'DB recovery: ${_basename(path)} could not be opened with the current '
+      'key; set aside as ${_basename(asidePath)} and started empty',
+    );
+    onSetAside();
+    return db;
+  } catch (freshError) {
+    AppLogging.storage(
+      'DB recovery: fresh open failed for ${_basename(path)} ($freshError), '
+      'restoring the original',
+    );
+    for (final suffix in sidecars) {
+      await _deleteIfExists('$path$suffix');
+    }
+    for (final suffix in moved) {
+      await File('$asidePath$suffix').rename('$path$suffix');
+    }
+    Error.throwWithStackTrace(error, stackTrace);
+  }
+}
+
 Future<void> _deleteIfExists(String path) async {
   final file = File(path);
   if (await file.exists()) {

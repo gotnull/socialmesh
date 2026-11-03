@@ -23,6 +23,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/secure_storage_options.dart';
 
 /// Storage keys for the overlay Ed25519 keypair. Intentionally
 /// separate namespace from `SipKeypair`.
@@ -46,6 +47,7 @@ class OverlayIdentityKeypair {
             iOptions: IOSOptions(
               accessibility: KeychainAccessibility.first_unlock,
             ),
+            aOptions: kSecureStorageAndroidOptions,
           ),
       _algorithm = algorithm ?? Ed25519();
 

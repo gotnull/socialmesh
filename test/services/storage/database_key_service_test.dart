@@ -181,4 +181,45 @@ void main() {
     await loading.getOrCreateKey();
     expect(loading.keyGeneratedThisLaunch, isFalse);
   });
+
+  group('preserveKeyAcross', () {
+    test('a bulk wipe keeps the stored key and clears the rest', () async {
+      final storage = _FakeSecureStorage();
+      final key = base64Encode(List<int>.filled(32, 9));
+      storage.store[DatabaseKeyService.storageKey] = key;
+      storage.store['channel_primary'] = 'abc';
+      final service = DatabaseKeyService(storage: storage);
+
+      await service.preserveKeyAcross(() async => storage.store.clear());
+
+      expect(storage.store, {DatabaseKeyService.storageKey: key});
+      // A later launch reads the same key back rather than generating one.
+      final nextLaunch = DatabaseKeyService(storage: storage);
+      expect(await nextLaunch.getOrCreateKey(), key);
+      expect(nextLaunch.keyGeneratedThisLaunch, isFalse);
+    });
+
+    test(
+      'a locked keystore stops the wipe before anything is deleted',
+      () async {
+        final storage = _FakeSecureStorage();
+        storage.store[DatabaseKeyService.storageKey] = 'stored';
+        storage.store['channel_primary'] = 'abc';
+        storage.throwOnRead = true;
+        final service = DatabaseKeyService(
+          storage: storage,
+          retryBackoff: const [],
+        );
+        var wiped = false;
+
+        await expectLater(
+          service.preserveKeyAcross(() async => wiped = true),
+          throwsA(isA<DatabaseKeyUnavailableException>()),
+        );
+
+        expect(wiped, isFalse);
+        expect(storage.store, hasLength(2));
+      },
+    );
+  });
 }

@@ -15,6 +15,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/secure_storage_options.dart';
 import '../../../features/nodedex/services/sigil_generator.dart';
 
 /// Secure storage keys for the SIP Ed25519 keypair.
@@ -43,6 +44,7 @@ class SipKeypair {
             iOptions: IOSOptions(
               accessibility: KeychainAccessibility.first_unlock,
             ),
+            aOptions: kSecureStorageAndroidOptions,
           ),
       _algorithm = algorithm ?? Ed25519();
 

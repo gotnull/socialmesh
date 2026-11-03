@@ -32,6 +32,7 @@ import 'package:cryptography/cryptography.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/secure_storage_options.dart';
 
 class SecurityConfigScreen extends ConsumerStatefulWidget {
   const SecurityConfigScreen({super.key});
@@ -727,6 +728,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           accessibility: KeychainAccessibility.first_unlock,
           synchronizable: true, // Enable iCloud Keychain sync
         ),
+        aOptions: kSecureStorageAndroidOptions,
       );
 
       await storage.write(key: 'PrivateKeyNode$nodeNum', value: _privateKey);
@@ -762,6 +764,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           accessibility: KeychainAccessibility.first_unlock,
           synchronizable: true,
         ),
+        aOptions: kSecureStorageAndroidOptions,
       );
 
       final storedKey = await storage.read(key: 'PrivateKeyNode$nodeNum');
@@ -819,6 +822,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           accessibility: KeychainAccessibility.first_unlock,
           synchronizable: true,
         ),
+        aOptions: kSecureStorageAndroidOptions,
       );
 
       await storage.delete(key: 'PrivateKeyNode$nodeNum');

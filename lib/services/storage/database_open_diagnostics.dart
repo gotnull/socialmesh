@@ -10,10 +10,12 @@
 // hand over yet, and a half-finished plaintext migration - and none of them
 // can be told apart after the fact.
 //
-// Policy: this module only sets custom keys and logs. It MUST NOT call
+// Policy: a failed open only sets custom keys and logs. It MUST NOT call
 // recordError. The failure already propagates to AppErrorHandler, which
 // reports it; reporting here as well would split one failure across two
-// Crashlytics issues.
+// Crashlytics issues. The one exception is a file set aside so the open could
+// succeed: nothing propagates then, so [recordDatabaseSetAside] is its only
+// report.
 
 import 'dart:io' show File;
 
@@ -108,5 +110,32 @@ Future<void> recordDatabaseOpenFailure({
   } catch (_) {
     // Crashlytics not initialised (tests, early boot). The log line above is
     // the whole record in that case.
+  }
+}
+
+/// Reported when an encrypted database could not be opened with the current
+/// key and was set aside for a fresh one.
+class DatabaseSetAsideException implements Exception {
+  final String dbName;
+
+  const DatabaseSetAsideException(this.dbName);
+
+  @override
+  String toString() =>
+      'DatabaseSetAsideException($dbName unreadable with the current key)';
+}
+
+/// Reports a set-aside database as a non-fatal, carrying the custom keys
+/// [recordDatabaseOpenFailure] attached to the failed open.
+void recordDatabaseSetAside(String path) {
+  try {
+    FirebaseCrashlytics.instance.recordError(
+      DatabaseSetAsideException(path.split('/').last),
+      StackTrace.current,
+      fatal: false,
+    );
+  } catch (_) {
+    // Crashlytics not initialised (tests, early boot). The App Log line
+    // written when the file was set aside is the whole record in that case.
   }
 }

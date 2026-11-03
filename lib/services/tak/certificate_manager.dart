@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pointycastle/export.dart' as pc;
 
 import '../../core/logging.dart';
+import '../../core/secure_storage_options.dart';
 
 /// Manages on-device TLS certificate authority and derived certificates
 /// for the mesh-native TAK server (Sprint 016).
@@ -36,7 +37,9 @@ class TakCertificateManager {
   DateTime? _cachedCaExpiry;
 
   TakCertificateManager({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(aOptions: kSecureStorageAndroidOptions);
 
   // ---------------------------------------------------------------------------
   // Public API

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'dart:io' show Platform;
+import 'dart:io' show File, Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite/sqflite.dart' as sqflite;
@@ -80,18 +80,20 @@ Future<sqflite.Database> openEncryptedDatabase(
     openEncrypted = false;
   }
 
+  Future<sqflite.Database> open() => cipher.openDatabase(
+    path,
+    password: openEncrypted ? key : null,
+    version: version,
+    onConfigure: onConfigure,
+    onCreate: onCreate,
+    onUpgrade: onUpgrade,
+    onDowngrade: onDowngrade,
+    onOpen: onOpen,
+  );
+
   try {
-    return await cipher.openDatabase(
-      path,
-      password: openEncrypted ? key : null,
-      version: version,
-      onConfigure: onConfigure,
-      onCreate: onCreate,
-      onUpgrade: onUpgrade,
-      onDowngrade: onDowngrade,
-      onOpen: onOpen,
-    );
-  } catch (error) {
+    return await open();
+  } catch (error, stackTrace) {
     // Describe the file and the key before the failure travels on. The error
     // itself carries only `open_failed <path>`, which cannot distinguish a
     // mismatched key from a file the platform is withholding.
@@ -108,7 +110,30 @@ Future<sqflite.Database> openEncryptedDatabase(
     } catch (_) {
       // Diagnostics must never displace the failure they describe.
     }
+    // An encrypted file that existed before this launch and will not open
+    // with the only key there is cannot be read by any later launch either.
+    // A file migrated from plaintext just now was written with this key, so
+    // its failure is something else and propagates.
+    if (openEncrypted && !wasPlaintext && await _hasContent(path)) {
+      return openAfterSettingAsideUnreadable(
+        path: path,
+        open: open,
+        error: error,
+        stackTrace: stackTrace,
+        onSetAside: () => recordDatabaseSetAside(path),
+      );
+    }
     rethrow;
+  }
+}
+
+Future<bool> _hasContent(String path) async {
+  try {
+    final file = File(path);
+    return await file.exists() && await file.length() > 0;
+  } catch (e) {
+    AppLogging.storage('openEncryptedDatabase: stat failed for $path ($e)');
+    return false;
   }
 }
 

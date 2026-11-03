@@ -22,6 +22,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
+import '../secure_storage_options.dart';
 import 'mqtt_config.dart';
 import 'mqtt_constants.dart';
 
@@ -45,6 +46,7 @@ class GlobalLayerSecureStorage {
   GlobalLayerSecureStorage()
     : _secureStorage = const FlutterSecureStorage(
         iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+        aOptions: kSecureStorageAndroidOptions,
       );
 
   /// Creates an instance with a custom [FlutterSecureStorage] for testing.

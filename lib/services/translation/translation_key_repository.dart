@@ -4,6 +4,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../core/logging.dart';
+import '../../core/secure_storage_options.dart';
 
 /// Secure local-only store for BYO translation provider API keys.
 ///
@@ -16,7 +17,9 @@ class TranslationKeyRepository {
   final FlutterSecureStorage _storage;
 
   TranslationKeyRepository({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(aOptions: kSecureStorageAndroidOptions);
 
   /// Store a BYO API key securely.
   Future<void> storeKey(String apiKey) async {

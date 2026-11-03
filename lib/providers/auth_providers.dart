@@ -16,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../core/logging.dart';
+import '../core/secure_storage_options.dart';
 import '../main.dart' show firebaseReady;
 import '../services/local_data_wipe_service.dart';
 import '../services/notifications/push_notification_service.dart';
@@ -958,7 +959,9 @@ class AuthService {
     // Step 4: Clear FlutterSecureStorage.
     AppLogging.auth('deleteAccount - Clearing SecureStorage...');
     try {
-      const storage = FlutterSecureStorage();
+      const storage = FlutterSecureStorage(
+        aOptions: kSecureStorageAndroidOptions,
+      );
       await storage.deleteAll();
     } catch (e) {
       AppLogging.auth('deleteAccount - SecureStorage clear error: $e');

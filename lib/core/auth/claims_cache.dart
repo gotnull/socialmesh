@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../logging.dart';
+import '../secure_storage_options.dart';
 
 /// Cached organisation claims extracted from Firebase JWT.
 ///
@@ -100,7 +101,9 @@ class ClaimsCache {
   final FlutterSecureStorage _storage;
 
   ClaimsCache({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(aOptions: kSecureStorageAndroidOptions);
 
   /// Write [claims] to secure storage.
   ///

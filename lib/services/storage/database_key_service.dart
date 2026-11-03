@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../core/logging.dart';
+import '../../core/secure_storage_options.dart';
 
 /// Thrown when the database encryption key cannot be read or written because
 /// the platform keystore is unavailable (e.g. the device is locked before the
@@ -68,6 +69,7 @@ class DatabaseKeyService {
              iOptions: IOSOptions(
                accessibility: KeychainAccessibility.first_unlock,
              ),
+             aOptions: kSecureStorageAndroidOptions,
            ),
        _retryBackoff = retryBackoff ?? _defaultRetryBackoff;
 
@@ -144,6 +146,27 @@ class DatabaseKeyService {
       throw DatabaseKeyUnavailableException(e.code, e.message);
     }
     return generated;
+  }
+
+  /// Runs [wipe], a bulk clear of secure storage, without losing the key.
+  ///
+  /// The key shares the store with everything else, but the databases it
+  /// opens stay on disk through such a clear. Deleting it would generate a
+  /// new key on the next launch that cannot open any of them. The key is
+  /// read before the wipe (failing before anything is deleted if it cannot
+  /// be) and written back after it.
+  Future<void> preserveKeyAcross(Future<void> Function() wipe) async {
+    final key = await getOrCreateKey();
+    await wipe();
+    try {
+      await _storage.write(key: _storageKey, value: key);
+    } on PlatformException catch (e) {
+      AppLogging.storage(
+        'DatabaseKeyService: restore after wipe failed '
+        '(${e.code}: ${e.message})',
+      );
+      throw DatabaseKeyUnavailableException(e.code, e.message);
+    }
   }
 
   static String _generateKey() {

@@ -8,17 +8,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
 import '../../core/radio_scope.dart';
+import '../../core/secure_storage_options.dart';
 import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
 import '../../models/tapback.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../utils/location_privacy.dart';
+import 'database_key_service.dart';
 
 /// Secure storage service for sensitive data
 class SecureStorageService {
   final FlutterSecureStorage _storage;
 
-  SecureStorageService() : _storage = const FlutterSecureStorage();
+  SecureStorageService()
+    : _storage = const FlutterSecureStorage(
+        aOptions: kSecureStorageAndroidOptions,
+      );
 
   /// Store channel key
   Future<void> storeChannelKey(String name, List<int> key) async {
@@ -75,10 +80,11 @@ class SecureStorageService {
     }
   }
 
-  /// Clear all data
+  /// Clear all data, except the database key: the encrypted databases
+  /// survive this clear and must still open on the next launch.
   Future<void> clearAll() async {
     try {
-      await _storage.deleteAll();
+      await DatabaseKeyService.instance.preserveKeyAcross(_storage.deleteAll);
       AppLogging.storage('Cleared all secure storage');
     } catch (e) {
       AppLogging.storage('Error clearing storage: $e');
