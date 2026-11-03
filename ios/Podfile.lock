@@ -1218,7 +1218,7 @@ PODS:
   - BoringSSL-GRPC/Interface (0.0.37)
   - camera_avfoundation (0.0.1):
     - Flutter
-  - cloud_firestore (6.10.0):
+  - cloud_firestore (6.10.2):
     - Firebase/Firestore (= 12.19.3)
     - firebase_core
     - Flutter
@@ -1266,11 +1266,11 @@ PODS:
   - firebase_core (4.15.2):
     - Firebase/CoreOnly (= 12.19.3)
     - Flutter
-  - firebase_crashlytics (5.4.0):
+  - firebase_crashlytics (5.4.1):
     - Firebase/Crashlytics (= 12.19.3)
     - firebase_core
     - Flutter
-  - firebase_messaging (16.7.0):
+  - firebase_messaging (16.7.1):
     - Firebase/Messaging (= 12.19.3)
     - firebase_core
     - Flutter
@@ -1985,7 +1985,7 @@ SPEC CHECKSUMS:
   bonsoir_darwin: 14bd7429acb51db6a8e51f6574ac3b1ea0037a87
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   camera_avfoundation: 968a9a5323c79a99c166ad9d7866bfd2047b5a9b
-  cloud_firestore: 395de8d60c06fcd891c94a5c64f3a08cc4a496ba
+  cloud_firestore: 80cb65a08f881ca2c811dce631cd3fd1120c25e0
   cloud_functions: aed2c977869e57132b87fe398a6fa0f365efeb27
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
@@ -1995,8 +1995,8 @@ SPEC CHECKSUMS:
   firebase_analytics: 8c7bb07ea4c4eafd8650be38d17595bfbcedcce9
   firebase_auth: 749e959255e42e6ca6ec2ecc83a0e1ce55d384fe
   firebase_core: 4d065e808a89f0eaa0df16660666783f9ea13d38
-  firebase_crashlytics: aeb7b8d578747a8acdb0a0fdc8dcfdb6adc207de
-  firebase_messaging: 7779ed163828632cf982fb19c525eac785e34717
+  firebase_crashlytics: d4d2cffdd16f240f8b563c2351b9285595b82e5f
+  firebase_messaging: d66dd9b68ca259955678628aa4f3e4294d055790
   firebase_storage: 8ea03b6c6623411cd9995b2950e3b6fe7f256afa
   FirebaseAnalytics: e9f8c369447e453da23f0455a06e4910bad10de0
   FirebaseAppCheckInterop: bd4b791ffaed7ae719304af6369d243ddee5e4a0
