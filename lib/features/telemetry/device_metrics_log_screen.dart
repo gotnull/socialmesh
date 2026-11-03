@@ -70,6 +70,7 @@ class DeviceMetricsLogScreen extends ConsumerStatefulWidget {
 class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
     with LifecycleSafeMixin<DeviceMetricsLogScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
   _MetricFilter _activeFilter = _MetricFilter.all;
   DateTime? _startDate;
@@ -88,6 +89,7 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -228,6 +230,11 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: GlassScaffold(
+        controller: _scrollController,
+        scrollbar: true,
+        scrollbarTopInset: SearchFilterLayout.fullExtent(
+          MediaQuery.textScalerOf(context),
+        ),
         title: context.l10n.telemetryDeviceMetricsTitle,
         actions: [
           if (_hasDateFilter)

@@ -20,21 +20,37 @@ import '../../providers/app_providers.dart';
 /// then a reverse-chronological list of reading cards. Power data is logged by
 /// [TelemetryLoggerNotifier] but, until now, had no dedicated screen even
 /// though device / environment / air-quality each do.
-class PowerMetricsLogScreen extends ConsumerWidget {
+class PowerMetricsLogScreen extends ConsumerStatefulWidget {
   final int? nodeNum;
 
   const PowerMetricsLogScreen({super.key, this.nodeNum});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final logsAsync = nodeNum != null
-        ? ref.watch(nodePowerMetricsLogsProvider(nodeNum!))
+  ConsumerState<PowerMetricsLogScreen> createState() =>
+      _PowerMetricsLogScreenState();
+}
+
+class _PowerMetricsLogScreenState extends ConsumerState<PowerMetricsLogScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final logsAsync = widget.nodeNum != null
+        ? ref.watch(nodePowerMetricsLogsProvider(widget.nodeNum!))
         : ref.watch(powerMetricsLogsProvider);
     final nodes = ref.watch(nodesProvider);
-    final node = nodeNum != null ? nodes[nodeNum] : null;
+    final node = widget.nodeNum != null ? nodes[widget.nodeNum] : null;
     final nodeName = node?.displayName ?? context.l10n.telemetryAllNodes;
 
     return GlassScaffold(
+      controller: _scrollController,
+      scrollbar: true,
       title: context.l10n.telemetryPowerMetricsTitle,
       slivers: [
         SliverPadding(

@@ -2449,6 +2449,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         topicId: 'settings_overview',
         stepKeys: const {},
         child: GlassScaffold(
+          controller: _scrollController,
+          scrollbar: true,
+          scrollbarTopInset: SearchFilterLayout.searchOnlyExtent(
+            MediaQuery.textScalerOf(context),
+          ),
           title: context.l10n.settingsTitle,
           actions: [
             IconButton(

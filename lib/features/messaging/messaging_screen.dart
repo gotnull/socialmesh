@@ -50,6 +50,7 @@ import '../../providers/presence_providers.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/app_scrollbar.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/chat_bubble_text.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -160,6 +161,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
     with LifecycleSafeMixin {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   ContactFilter _currentFilter = ContactFilter.all;
   String _activeRoleFilter = roleFilterAll;
   bool _showSectionHeaders = true;
@@ -186,6 +188,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -359,7 +362,9 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       physics: widget.embedded
           ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
           : null,
-      primary: !widget.embedded,
+      // The contact list scrolls in this view in both layouts, so it owns
+      // the controller the scroll bar reads.
+      controller: _scrollController,
       slivers: [
         SliverPersistentHeader(
           pinned: true,
@@ -503,11 +508,17 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       ],
     );
 
+    final scrollableBody = AppScrollbar(
+      controller: _scrollController,
+      padding: EdgeInsets.only(top: SearchFilterLayout.fullExtent(textScaler)),
+      child: bodyContent,
+    );
+
     // If embedded (in tabs), return just the body with gesture detector
     if (widget.embedded) {
       return GestureDetector(
         onTap: _dismissKeyboard,
-        child: Container(color: context.background, child: bodyContent),
+        child: Container(color: context.background, child: scrollableBody),
       );
     }
 
@@ -536,7 +547,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
           // which CustomScrollView cannot provide, causing a null check crash
           // in RenderViewportBase.layoutChildSequence.
           slivers: [
-            SliverFillRemaining(hasScrollBody: true, child: bodyContent),
+            SliverFillRemaining(hasScrollBody: true, child: scrollableBody),
           ],
         ),
       ),

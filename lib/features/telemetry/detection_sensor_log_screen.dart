@@ -13,21 +13,38 @@ import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
 
 /// Screen showing detection sensor history
-class DetectionSensorLogScreen extends ConsumerWidget {
+class DetectionSensorLogScreen extends ConsumerStatefulWidget {
   final int? nodeNum;
 
   const DetectionSensorLogScreen({super.key, this.nodeNum});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final logsAsync = nodeNum != null
-        ? ref.watch(nodeDetectionSensorLogsProvider(nodeNum!))
+  ConsumerState<DetectionSensorLogScreen> createState() =>
+      _DetectionSensorLogScreenState();
+}
+
+class _DetectionSensorLogScreenState
+    extends ConsumerState<DetectionSensorLogScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final logsAsync = widget.nodeNum != null
+        ? ref.watch(nodeDetectionSensorLogsProvider(widget.nodeNum!))
         : ref.watch(detectionSensorLogsProvider);
     final nodes = ref.watch(nodesProvider);
-    final node = nodeNum != null ? nodes[nodeNum] : null;
+    final node = widget.nodeNum != null ? nodes[widget.nodeNum] : null;
     final nodeName = node?.displayName ?? context.l10n.telemetryAllNodes;
 
     return GlassScaffold(
+      controller: _scrollController,
+      scrollbar: true,
       title: context.l10n.telemetryDetectionTitle,
       slivers: [
         SliverPadding(

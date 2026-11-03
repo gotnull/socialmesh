@@ -79,6 +79,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
   bool _isExporting = false;
   bool _isSendingTraceroute = false;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   // Optional per-node filter: seeded from widget.nodeNum, clearable so the user
   // can broaden from a single node to all nodes via the chip's close icon.
@@ -96,6 +97,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -287,6 +289,11 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
         topicId: 'traceroute_overview',
         stepKeys: const {},
         child: GlassScaffold(
+          controller: _scrollController,
+          scrollbar: true,
+          scrollbarTopInset: SearchFilterLayout.fullExtent(
+            MediaQuery.textScalerOf(context),
+          ),
           titleWidget: _filterNodeNum != null && nodeName != null
               ? Column(
                   mainAxisSize: MainAxisSize.min,

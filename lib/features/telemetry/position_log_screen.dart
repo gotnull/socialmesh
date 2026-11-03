@@ -75,6 +75,7 @@ class PositionLogScreen extends ConsumerStatefulWidget {
 class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
     with LifecycleSafeMixin<PositionLogScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
   _PositionFilter _activeFilter = _PositionFilter.all;
 
@@ -104,6 +105,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -459,6 +461,11 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
         topicId: 'position_overview',
         stepKeys: const {},
         child: GlassScaffold(
+          controller: _scrollController,
+          scrollbar: !_showMap,
+          scrollbarTopInset: SearchFilterLayout.fullExtent(
+            MediaQuery.textScalerOf(context),
+          ),
           title: context.l10n.telemetryPositionTitle,
           actions: [
             // Map / list toggle

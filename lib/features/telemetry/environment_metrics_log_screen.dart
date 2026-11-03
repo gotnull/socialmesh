@@ -71,6 +71,7 @@ class _EnvironmentMetricsLogScreenState
     extends ConsumerState<EnvironmentMetricsLogScreen>
     with LifecycleSafeMixin<EnvironmentMetricsLogScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
   _MetricFilter _activeFilter = _MetricFilter.all;
   DateTime? _startDate;
@@ -79,6 +80,7 @@ class _EnvironmentMetricsLogScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -271,6 +273,11 @@ class _EnvironmentMetricsLogScreenState
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: GlassScaffold(
+        controller: _scrollController,
+        scrollbar: true,
+        scrollbarTopInset: SearchFilterLayout.fullExtent(
+          MediaQuery.textScalerOf(context),
+        ),
         title: context.l10n.telemetryEnvironmentTitle,
         actions: [
           if (_hasDateFilter)

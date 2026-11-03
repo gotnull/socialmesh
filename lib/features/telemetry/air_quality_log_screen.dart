@@ -16,26 +16,42 @@ import '../map/map_screen.dart';
 import 'air_quality_timeline.dart';
 
 /// Screen showing air quality metrics history
-class AirQualityLogScreen extends ConsumerWidget {
+class AirQualityLogScreen extends ConsumerStatefulWidget {
   final int? nodeNum;
 
   const AirQualityLogScreen({super.key, this.nodeNum});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final airAsync = nodeNum != null
-        ? ref.watch(nodeAirQualityMetricsLogsProvider(nodeNum!))
+  ConsumerState<AirQualityLogScreen> createState() =>
+      _AirQualityLogScreenState();
+}
+
+class _AirQualityLogScreenState extends ConsumerState<AirQualityLogScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final airAsync = widget.nodeNum != null
+        ? ref.watch(nodeAirQualityMetricsLogsProvider(widget.nodeNum!))
         : ref.watch(airQualityMetricsLogsProvider);
     // Gas resistance rides in environment rows on the wire; merged into
     // this timeline so gas sensors appear under Air Quality too.
-    final envAsync = nodeNum != null
-        ? ref.watch(nodeEnvironmentMetricsLogsProvider(nodeNum!))
+    final envAsync = widget.nodeNum != null
+        ? ref.watch(nodeEnvironmentMetricsLogsProvider(widget.nodeNum!))
         : ref.watch(environmentMetricsLogsProvider);
     final nodes = ref.watch(nodesProvider);
-    final node = nodeNum != null ? nodes[nodeNum] : null;
+    final node = widget.nodeNum != null ? nodes[widget.nodeNum] : null;
     final nodeName = node?.displayName ?? context.l10n.telemetryAllNodes;
 
     return GlassScaffold(
+      controller: _scrollController,
+      scrollbar: true,
       title: context.l10n.telemetryAirQualityTitle,
       slivers: [
         SliverPadding(

@@ -11,6 +11,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/app_scrollbar.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -97,6 +98,13 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
     with LifecycleSafeMixin {
   bool _editMode = false;
   bool _didAutoOpenPicker = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -233,51 +241,57 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
     return Column(
       children: [
         Expanded(
-          child: ReorderableListView.builder(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
-              (showUpsell || showOwnerDiscovery || showEditAddTile) ? 8 : 16,
+          // The cards scroll in this list rather than in the scaffold, so
+          // the scroll bar wraps the list.
+          child: AppScrollbar(
+            controller: _scrollController,
+            child: ReorderableListView.builder(
+              scrollController: _scrollController,
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                (showUpsell || showOwnerDiscovery || showEditAddTile) ? 8 : 16,
+              ),
+              buildDefaultDragHandles: false,
+              proxyDecorator: (child, index, animation) {
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) {
+                    final elevation = lerpDouble(0, 8, animation.value) ?? 0;
+                    return Material(
+                      elevation: elevation,
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(AppTheme.radius16),
+                      child: child,
+                    );
+                  },
+                  child: child,
+                );
+              },
+              itemCount: enabledWidgets.length,
+              onReorder: (oldIndex, newIndex) {
+                ref
+                    .read(dashboardWidgetsProvider.notifier)
+                    .reorder(oldIndex, newIndex);
+              },
+              itemBuilder: (context, index) {
+                final config = enabledWidgets[index];
+                return Padding(
+                  key: ValueKey(config.id),
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _editMode
+                      ? _buildWidgetCard(config, reorderIndex: index)
+                      : GestureDetector(
+                          onLongPress: () {
+                            HapticFeedback.mediumImpact();
+                            _showWidgetContextMenu(context, config);
+                          },
+                          child: _buildWidgetCard(config),
+                        ),
+                );
+              },
             ),
-            buildDefaultDragHandles: false,
-            proxyDecorator: (child, index, animation) {
-              return AnimatedBuilder(
-                animation: animation,
-                builder: (context, child) {
-                  final elevation = lerpDouble(0, 8, animation.value) ?? 0;
-                  return Material(
-                    elevation: elevation,
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(AppTheme.radius16),
-                    child: child,
-                  );
-                },
-                child: child,
-              );
-            },
-            itemCount: enabledWidgets.length,
-            onReorder: (oldIndex, newIndex) {
-              ref
-                  .read(dashboardWidgetsProvider.notifier)
-                  .reorder(oldIndex, newIndex);
-            },
-            itemBuilder: (context, index) {
-              final config = enabledWidgets[index];
-              return Padding(
-                key: ValueKey(config.id),
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _editMode
-                    ? _buildWidgetCard(config, reorderIndex: index)
-                    : GestureDetector(
-                        onLongPress: () {
-                          HapticFeedback.mediumImpact();
-                          _showWidgetContextMenu(context, config);
-                        },
-                        child: _buildWidgetCard(config),
-                      ),
-              );
-            },
           ),
         ),
         // Sticky edit-mode add-another-widget tile (visible-count gated)

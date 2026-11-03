@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.76.0] - 2026-11-03
+
+### Added
+
+- Contacts, the Dashboard, Settings and the telemetry logs (Device Metrics, Environment, Power, Air Quality, Position, PAX Counter, Detection Sensor and Traceroute History) show a scroll bar while you scroll. Press and hold it to drag through a long list.
+
+### Fixed
+
+- Message history survives a restart again. On some phones it vanished every time. The message database is encrypted, and its key could be deleted while the database stayed on disk, either by Settings > Clear all data or, on Android, by the secure storage plugin wiping its whole store after an unrelated error. From then on the app could not open the database at launch, held messages in memory only and lost them on the next restart. Clear all data keeps the key now and the plugin no longer wipes its store. A database that can no longer be opened is set aside (kept, not deleted) and a new one started, so messages are saved again. History written under the deleted key stays unreadable.
+- MeshCore messages reach the app again. If Messages was open before the radio connected, which is usual after a restart, the app never asked the radio for waiting messages for the rest of the session. Messages that arrived while the phone was away now come in as soon as the contact list has loaded, a burst arrives in full instead of one at a time, and nothing is pulled from the radio before its sender can be matched, so none are dropped.
+- A long MeshCore contact list now loads in full over a slow Bluetooth link. The app gave the whole list 10 seconds and kept whatever had arrived by then. It now waits as long as contacts keep coming.
+- A saved radio that is switched off no longer blinks in and out of the Scanner list. Its placeholder row came back at the start of every 10-second scan after a scan had already reported it not found.
+
 ## [1.75.0] - 2026-10-22
 
 ### Fixed

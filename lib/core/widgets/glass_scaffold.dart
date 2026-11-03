@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import 'app_scrollbar.dart';
 import 'glass_app_bar.dart';
 
 /// A scaffold with a glassmorphic app bar that blurs content scrolling underneath.
@@ -287,17 +288,8 @@ class GlassScaffold extends StatelessWidget {
 
     if (scrollbar) {
       final insets = MediaQuery.paddingOf(context);
-      scrollView = RawScrollbar(
-        controller: controller,
-        interactive: true,
-        thickness: AppTheme.scrollbarThickness,
-        radius: const Radius.circular(AppTheme.radius2),
-        thumbColor: context.textTertiary,
-        minThumbLength: AppTheme.scrollbarMinThumbLength,
-        crossAxisMargin: AppTheme.scrollbarMargin,
-        mainAxisMargin: AppTheme.scrollbarMargin,
-        timeToFade: AppTheme.scrollbarTimeToFade,
-        fadeDuration: AppTheme.scrollbarFadeDuration,
+      scrollView = AppScrollbar(
+        controller: controller!,
         // The track starts below the pinned glass app bar and anything the
         // caller pins beneath it.
         padding: EdgeInsets.only(
