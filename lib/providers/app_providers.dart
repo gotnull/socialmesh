@@ -2006,7 +2006,7 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
   // NodesNotifier whose `_init` would immediately `await loadNodes()`
   // on still-populated storage - and any write back via its async
   // resumption would resurrect the old nodes we're trying to clear.
-  await clearDeviceDataBeforeConnectRef(
+  final nodesCleared = await clearDeviceDataBeforeConnectRef(
     ref,
     clearNodeData: transition.clearNodes,
     previousDeviceId: transition.previousDeviceId,
@@ -2019,13 +2019,18 @@ Future<ActiveDeviceTransition> prepareForDeviceTransitionRef(
   // NodesNotifier's epoch, so doing it after the scope change would
   // abandon the hydration the scope change just started, and the new
   // radio's cached nodes would stay unloaded for the session.
-  await RadioScope.instance.useDevice(
+  final scopeChanged = await RadioScope.instance.useDevice(
     deviceId: device.id,
     label: device.name,
     knownNodeNum: _scopeNodeNumForTransition(
       transition,
       settings.lastMyNodeNum,
     ),
+  );
+  _reloadNodesIfScopeKept(
+    nodesCleared: nodesCleared,
+    scopeChanged: scopeChanged,
+    reload: () => ref.invalidate(nodesProvider),
   );
 
   // For same-radio cross-transport: preserve the persisted node cache
@@ -2214,6 +2219,24 @@ bool _routeMeshCoreReconnect({
   return (routed: routed, transportTag: tag);
 }
 
+// Reloads the stored nodes after a connect cleared the in-memory list but
+// left the storage scope where it was. The scope change is what normally
+// rehydrates nodesProvider after the clear; a radio that shares the previous
+// radio's data resolves to the scope already open, so without this the list
+// holds only what the new radio streams from its own NodeDB.
+void _reloadNodesIfScopeKept({
+  required bool nodesCleared,
+  required bool scopeChanged,
+  required void Function() reload,
+}) {
+  if (!nodesCleared || scopeChanged) return;
+  AppLogging.connection(
+    'DEVICE TRANSITION: node list cleared and storage scope kept '
+    '(radio shares the previous radio\'s data) - reloading stored nodes',
+  );
+  reload();
+}
+
 /// WidgetRef wrapper for widget-layer callers (scanner, etc.). Delegates
 /// to the Ref variant via the underlying container reference.
 Future<ActiveDeviceTransition> prepareForDeviceTransition(
@@ -2248,7 +2271,7 @@ Future<ActiveDeviceTransition> prepareForDeviceTransition(
     protocol: deviceProtocol,
   );
 
-  await clearDeviceDataBeforeConnect(
+  final nodesCleared = await clearDeviceDataBeforeConnect(
     ref,
     clearNodeData: transition.clearNodes,
     previousDeviceId: transition.previousDeviceId,
@@ -2258,13 +2281,18 @@ Future<ActiveDeviceTransition> prepareForDeviceTransition(
 
   // See the Ref variant for why this runs between the in-memory clear and
   // the transport flip.
-  await RadioScope.instance.useDevice(
+  final scopeChanged = await RadioScope.instance.useDevice(
     deviceId: device.id,
     label: device.name,
     knownNodeNum: _scopeNodeNumForTransition(
       transition,
       settings.lastMyNodeNum,
     ),
+  );
+  _reloadNodesIfScopeKept(
+    nodesCleared: nodesCleared,
+    scopeChanged: scopeChanged,
+    reload: () => ref.invalidate(nodesProvider),
   );
 
   if (transition.forceFreshHydration) {
@@ -2310,13 +2338,15 @@ Future<ActiveDeviceTransition> prepareForDeviceTransition(
 /// the in-memory reset happens regardless of [clearNodeData], so the new
 /// radio never renders the previous one's nodes.
 ///
+/// Returns true when the in-memory node map was reset.
+///
 /// Pass [isTransportRebind] as `true` when the caller has already
 /// determined (e.g. via `_tryLogicalDeviceMatch` or [isLogicalRebindForTest])
 /// that the new BLE UUID belongs to the SAME physical radio as the last
 /// one - BLE peripheral UUIDs rotate on ESP32 / nRF hardware. When true,
 /// the raw-UUID mismatch auto-reset is suppressed so a same-radio reconnect
 /// keeps the mesh on screen.
-Future<void> clearDeviceDataBeforeConnect(
+Future<bool> clearDeviceDataBeforeConnect(
   WidgetRef ref, {
   bool clearNodeData = false,
   String? previousDeviceId,
@@ -2363,7 +2393,7 @@ Future<void> clearDeviceDataBeforeConnect(
       'before sync capture (Scanner likely unmounted mid-connect); '
       'skipping clear: $e',
     );
-    return;
+    return false;
   }
 
   AppLogging.app(
@@ -2400,12 +2430,13 @@ Future<void> clearDeviceDataBeforeConnect(
     'Device data cleared (in-memory nodes '
     '${clearNodeData ? 'reset' : 'preserved'}) - ready for fresh data from device',
   );
+  return clearNodeData;
 }
 
 /// Ref-based version for use in providers (non-widget contexts).
 /// See [clearDeviceDataBeforeConnect] for the device-switch auto-clear
 /// and [isTransportRebind] semantics - they apply identically here.
-Future<void> clearDeviceDataBeforeConnectRef(
+Future<bool> clearDeviceDataBeforeConnectRef(
   Ref ref, {
   bool clearNodeData = false,
   String? previousDeviceId,
@@ -2463,6 +2494,7 @@ Future<void> clearDeviceDataBeforeConnectRef(
     'Device data cleared (in-memory nodes '
     '${clearNodeData ? 'reset' : 'preserved'}) - ready for fresh data from device',
   );
+  return clearNodeData;
 }
 
 // Store the last known device ID for reconnection attempts

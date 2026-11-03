@@ -427,6 +427,55 @@ void main() {
       expect(transition.clearNodes, isFalse);
       expect(h.settings.lastDeviceId, 'AA:BB:CC:DD:EE:01');
     });
+
+    test('switching to a radio that shares the previous radio\'s data '
+        'reloads the shared node cache', () async {
+      const radioA = 'tcp:radio-a.local:4403';
+      const radioB = 'tcp:radio-b.local:4403';
+      final h = await _makeHarness(
+        lastDeviceId: radioA,
+        lastDeviceType: 'network',
+        lastDeviceName: 'Meshtastic_aaaa',
+        lastMyNodeNum: 0xaaaa,
+      );
+      addTearDown(h.container.dispose);
+
+      // B has connected before, then the user set it to share A's data;
+      // the session is back on A.
+      await RadioScope.instance.useNodeNum(0xbbbb, deviceId: radioB);
+      await RadioScope.instance.useNodeNum(0xaaaa, deviceId: radioA);
+      await RadioScope.instance.shareScope(
+        key: radioScopeKeyForNodeNum(0xbbbb),
+        into: radioScopeKeyForNodeNum(0xaaaa),
+      );
+      await h.nodeStorage.saveNodes([_node(1), _node(2), _node(3)]);
+      h.container.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(h.container.read(nodesProvider).length, 3);
+
+      final transition = await h.container
+          .read(_prepareRunnerProvider.notifier)
+          .run(
+            DeviceInfo(
+              id: radioB,
+              name: 'Meshtastic_bbbb',
+              type: TransportType.network,
+            ),
+          );
+      h.container.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+
+      expect(transition.kind, DeviceTransitionKind.deviceSwitch);
+      expect(RadioScope.instance.currentKey, radioScopeKeyForNodeNum(0xaaaa));
+      expect(
+        h.container.read(nodesProvider).keys,
+        unorderedEquals([1, 2, 3]),
+        reason:
+            'B reads and writes A\'s data, so the stored nodes must come '
+            'back after the in-memory reset even though the scope did not '
+            'change',
+      );
+    });
   });
 
   group('NodesNotifier._init hydration race', () {
