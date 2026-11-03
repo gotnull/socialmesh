@@ -73,6 +73,7 @@ ProviderContainer _container({
   return ProviderContainer(
     overrides: [
       meshCoreSessionProvider.overrideWithValue(session),
+      meshCoreContactsProvider.overrideWith(_Roster.new),
       // Build the lifecycle notifier and pre-set its state if needed.
       if (!foreground)
         appLifecycleProvider.overrideWith(() => _BackgroundLifecycleNotifier()),
@@ -84,6 +85,31 @@ class _BackgroundLifecycleNotifier extends AppLifecycleNotifier {
   @override
   bool build() => false;
 }
+
+/// Contact roster that has finished loading unless a test says otherwise.
+class _Roster extends MeshCoreContactsNotifier {
+  @override
+  MeshCoreContactsState build() =>
+      MeshCoreContactsState(lastRefresh: DateTime(2026));
+
+  void startLoading() => state = const MeshCoreContactsState.loading();
+
+  void finishLoading() =>
+      state = MeshCoreContactsState(lastRefresh: DateTime(2026));
+}
+
+/// Session slot the test can fill after the conversations notifier has
+/// built, the way a radio connects after the Messages screen opened.
+class _SessionSlot extends Notifier<MeshCoreSession?> {
+  @override
+  MeshCoreSession? build() => null;
+
+  void connect(MeshCoreSession session) => state = session;
+}
+
+final _sessionSlotProvider = NotifierProvider<_SessionSlot, MeshCoreSession?>(
+  _SessionSlot.new,
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -113,6 +139,16 @@ void main() {
       milliseconds: 100,
     );
   });
+
+  // Answers the drain the notifier starts as soon as a session connects,
+  // so the drain a test triggers is not skipped as overlapping it.
+  Future<void> settleConnectDrain() async {
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    transport.simulateReceiveFrame(
+      MeshCoreFrame(command: 0x0A, payload: Uint8List(0)),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
 
   tearDown(() async {
     MeshCoreConversationsNotifier.debugResetHeartbeatInterval();
@@ -178,6 +214,7 @@ void main() {
       final c = _container(session: session);
       addTearDown(c.dispose);
       final n = c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
 
       final fired = n.debugFireHeartbeatTick();
       // Settle just enough for the sync send and the 3 s timeout to
@@ -200,6 +237,7 @@ void main() {
         final c = _container(session: session);
         addTearDown(c.dispose);
         final n = c.read(meshCoreConversationsProvider.notifier);
+        await settleConnectDrain();
         final beforeConvs = c.read(meshCoreConversationsProvider).conversations;
 
         // Schedule the response right after sync is sent.
@@ -227,6 +265,7 @@ void main() {
       final c = _container(session: session);
       addTearDown(c.dispose);
       final n = c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
 
       final tick = n.debugFireHeartbeatTick();
       await Future<void>.delayed(const Duration(milliseconds: 5));
@@ -275,6 +314,7 @@ void main() {
       final c = _container(session: session);
       addTearDown(c.dispose);
       final n = c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
 
       // Kick off a manual drain but don't send any response so it
       // blocks on the 3 s timeout. We assert overlap in <100 ms below.
@@ -307,6 +347,7 @@ void main() {
       final c = _container(session: session);
       addTearDown(c.dispose);
       final n = c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
 
       // Pump a 0x83 tickle. Sync command is fired off-microtask
       // and parks waiting on the broadcast stream.
@@ -340,6 +381,7 @@ void main() {
       final c = _container(session: session);
       addTearDown(c.dispose);
       final n = c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
 
       final tick = n.debugFireHeartbeatTick();
       // Yield so heartbeat sets _activeDrain.
@@ -358,6 +400,146 @@ void main() {
     });
   });
 
+  group('session that connects after the notifier built', () {
+    ProviderContainer containerWithLateSession() {
+      final c = ProviderContainer(
+        overrides: [
+          meshCoreSessionProvider.overrideWith(
+            (ref) => ref.watch(_sessionSlotProvider),
+          ),
+          meshCoreContactsProvider.overrideWith(_Roster.new),
+        ],
+      );
+      // Built before any radio is connected, as on a cold start that
+      // opens Messages while the reconnect is still running.
+      c.read(meshCoreConversationsProvider);
+      c.read(_sessionSlotProvider.notifier).connect(session);
+      c.read(meshCoreConversationsProvider);
+      return c;
+    }
+
+    test('the heartbeat still drains', () async {
+      final c = containerWithLateSession();
+      addTearDown(c.dispose);
+      final n = c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
+      final before = transport.syncCommandCount;
+
+      final tick = n.debugFireHeartbeatTick();
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x0A, payload: Uint8List(0)),
+      );
+      await tick;
+
+      expect(transport.syncCommandCount, greaterThan(before));
+    });
+
+    test('a MSG_WAITING tickle still drains', () async {
+      final c = containerWithLateSession();
+      addTearDown(c.dispose);
+      await settleConnectDrain();
+      final before = transport.syncCommandCount;
+
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x83, payload: Uint8List(0)),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x0A, payload: Uint8List(0)),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      expect(transport.syncCommandCount, greaterThan(before));
+    });
+  });
+
+  group('queued messages', () {
+    // A message frame the drain classifies as delivered; its content
+    // is irrelevant to these tests.
+    MeshCoreFrame queuedMessage() => MeshCoreFrame(
+      command: 0x10,
+      payload: Uint8List.fromList(List.filled(20, 0)),
+    );
+
+    test('a connecting session drains the radio queue at once', () async {
+      final c = _container(session: session);
+      addTearDown(c.dispose);
+      c.read(meshCoreConversationsProvider);
+
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(transport.syncCommandCount, 1);
+      transport.simulateReceiveFrame(queuedMessage());
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(transport.syncCommandCount, 2);
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x0A, payload: Uint8List(0)),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+
+      expect(
+        meshLogs.any(
+          (l) => l.contains(
+            'event=msg_waiting.drain.heartbeat.result result=no_more',
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('drains wait for the contact roster, then run', () async {
+      final c = _container(session: session);
+      addTearDown(c.dispose);
+      final roster = c.read(meshCoreContactsProvider.notifier) as _Roster;
+      c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
+      final before = transport.syncCommandCount;
+
+      roster.startLoading();
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x83, payload: Uint8List(0)),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(transport.syncCommandCount, before);
+
+      roster.finishLoading();
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(transport.syncCommandCount, before + 1);
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x0A, payload: Uint8List(0)),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    });
+
+    test('one tickle pulls a whole burst', () async {
+      final c = _container(session: session);
+      addTearDown(c.dispose);
+      c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
+      final before = transport.syncCommandCount;
+
+      // Three arrivals: the firmware tickles for each, and the later
+      // tickles land while the first drain is in flight.
+      for (var i = 0; i < 3; i++) {
+        transport.simulateReceiveFrame(
+          MeshCoreFrame(command: 0x83, payload: Uint8List(0)),
+        );
+      }
+      for (var i = 0; i < 3; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        transport.simulateReceiveFrame(queuedMessage());
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x0A, payload: Uint8List(0)),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+
+      // Three message pulls and the NO_MORE that ends the loop.
+      expect(transport.syncCommandCount - before, 4);
+    });
+  });
+
   group('D22 failure handling', () {
     test(
       'no response within 3 s yields result=timeout without crashing',
@@ -370,6 +552,7 @@ void main() {
         final c = _container(session: session);
         addTearDown(c.dispose);
         final n = c.read(meshCoreConversationsProvider.notifier);
+        await settleConnectDrain();
 
         await n.debugFireHeartbeatTick();
         expect(
@@ -391,6 +574,7 @@ void main() {
       final c = _container(session: session);
       addTearDown(c.dispose);
       final n = c.read(meshCoreConversationsProvider.notifier);
+      await settleConnectDrain();
 
       transport.disconnect();
       final outcome = await n.manualDrain();
@@ -412,6 +596,7 @@ void main() {
         final c = _container(session: session);
         addTearDown(c.dispose);
         final n = c.read(meshCoreConversationsProvider.notifier);
+        await settleConnectDrain();
 
         // Pump a 0x10 contact frame whose payload contains both a
         // plausible plaintext substring and a 32-byte hex stretch.

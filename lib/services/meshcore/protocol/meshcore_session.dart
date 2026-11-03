@@ -1641,6 +1641,18 @@ class MeshCoreSession {
     // Register waiter for END_OF_CONTACTS
     final endCompleter = _registerWaiter(MeshCoreResponses.endOfContacts);
 
+    // [timeout] bounds the silence between frames, not the whole fetch. A
+    // full roster over a slow BLE link outlasts any fixed budget, and
+    // cutting it short handed back a partial list as if it were complete.
+    final idleExpired = Completer<void>();
+    Timer? idleTimer;
+    void restartIdleTimer() {
+      idleTimer?.cancel();
+      idleTimer = Timer(timeout, () {
+        if (!idleExpired.isCompleted) idleExpired.complete();
+      });
+    }
+
     // Listen for CONTACTS_START (sync total) and CONTACT frames.
     final contactSubscription = frameStream
         .where(
@@ -1649,6 +1661,7 @@ class MeshCoreSession {
               f.command == MeshCoreResponses.contactsStart,
         )
         .listen((frame) {
+          restartIdleTimer();
           if (frame.command == MeshCoreResponses.contactsStart) {
             total = frame.payload.length >= 4
                 ? ByteData.sublistView(frame.payload)
@@ -1682,13 +1695,15 @@ class MeshCoreSession {
       }
 
       // Wait for END_OF_CONTACTS
-      await endCompleter.future.timeout(
-        timeout,
-        onTimeout: () {
-          _pendingResponses.remove(MeshCoreResponses.endOfContacts);
-          throw TimeoutException('Contacts timeout');
-        },
-      );
+      restartIdleTimer();
+      final ended = await Future.any<bool>([
+        endCompleter.future.then((_) => true),
+        idleExpired.future.then((_) => false),
+      ]);
+      if (!ended) {
+        _pendingResponses.remove(MeshCoreResponses.endOfContacts);
+        throw TimeoutException('Contacts timeout');
+      }
 
       AppLogging.protocol(
         'MeshCore: getContacts() complete: ${contacts.length} contacts',
@@ -1706,6 +1721,7 @@ class MeshCoreSession {
       );
       return contacts; // Return what we got so far
     } finally {
+      idleTimer?.cancel();
       await contactSubscription.cancel();
     }
   }

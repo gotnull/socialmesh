@@ -54,8 +54,16 @@ ProviderContainer _container({required MeshCoreSession? session}) {
     overrides: [
       meshCoreSessionProvider.overrideWithValue(session),
       appLifecycleProvider.overrideWith(() => _ForegroundLifecycle()),
+      meshCoreContactsProvider.overrideWith(_SettledRoster.new),
     ],
   );
+}
+
+/// Roster that has already loaded, so automatic drains are not held back.
+class _SettledRoster extends MeshCoreContactsNotifier {
+  @override
+  MeshCoreContactsState build() =>
+      MeshCoreContactsState(lastRefresh: DateTime(2026));
 }
 
 class _ForegroundLifecycle extends AppLifecycleNotifier {

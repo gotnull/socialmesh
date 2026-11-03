@@ -426,6 +426,12 @@ class MeshCoreContactsState {
       syncReceived = 0,
       syncTotal = null;
 
+  /// Whether a roster fetch has finished, successfully or not, and none is
+  /// in flight. Inbound DMs are matched to a sender against this list, so
+  /// draining the radio queue before it settles drops their messages.
+  bool get rosterSettled =>
+      !isLoading && (lastRefresh != null || error != null);
+
   MeshCoreContactsState copyWith({
     List<MeshCoreContact>? contacts,
     bool? isLoading,

@@ -150,6 +150,48 @@ void main() {
       await fut;
       expect(progress, equals([(0, null), (1, null), (2, null)]));
     });
+
+    test('a roster slower than the timeout still loads in full', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      // Six frames 30 ms apart take 180 ms in all, three times the
+      // timeout, but no single gap reaches it.
+      final fut = session.getContacts(
+        timeout: const Duration(milliseconds: 60),
+      );
+      const gap = Duration(milliseconds: 30);
+      await Future<void>.delayed(gap);
+      tx.inject(_contactsStart(total: 4));
+      for (var i = 0; i < 4; i++) {
+        await Future<void>.delayed(gap);
+        tx.inject(_contactFrame(0x10 * (i + 1), 'Node $i'));
+      }
+      await Future<void>.delayed(gap);
+      tx.inject(_endOfContacts());
+
+      expect(await fut, hasLength(4));
+    });
+
+    test('a roster that stalls returns what arrived', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      final fut = session.getContacts(
+        timeout: const Duration(milliseconds: 60),
+      );
+      await _pump();
+      tx.inject(_contactsStart(total: 3));
+      await _pump();
+      tx.inject(_contactFrame(0x10, 'Alpha'));
+      // The radio goes quiet: no further frames, no END_OF_CONTACTS.
+
+      expect(await fut, hasLength(1));
+    });
   });
 
   group('MO-4: getChannels() sync progress', () {
