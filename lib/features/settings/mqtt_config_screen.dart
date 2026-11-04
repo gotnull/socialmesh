@@ -36,6 +36,7 @@ import '../../core/widgets/status_banner.dart';
 import '../../core/mqtt/mqtt_constants.dart' show BrokerPreset;
 import '../../core/mqtt/mqtt_preferences.dart';
 import '../../core/utils/utf8_byte_length_formatter.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Screen for configuring MQTT module settings
 class MqttConfigScreen extends ConsumerStatefulWidget {
@@ -409,6 +410,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
           ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_isLoading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

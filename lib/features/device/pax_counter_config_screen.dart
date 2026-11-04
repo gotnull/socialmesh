@@ -16,6 +16,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../services/protocol/admin_target.dart';
@@ -170,6 +171,7 @@ class _PaxCounterConfigScreenState extends ConsumerState<PaxCounterConfigScreen>
           ),
       ],
       slivers: [
+        const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
         SliverPadding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(

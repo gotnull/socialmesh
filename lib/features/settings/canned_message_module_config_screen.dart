@@ -16,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -266,6 +267,7 @@ class _CannedMessageModuleConfigScreenState
           ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_isLoading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

@@ -20,6 +20,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Screen for configuring External Notification module (buzzers, LEDs, vibration)
 class ExternalNotificationConfigScreen extends ConsumerStatefulWidget {
@@ -218,6 +219,7 @@ class _ExternalNotificationConfigScreenState
           ),
       ],
       slivers: [
+        const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
         if (_isLoading)
           const SliverFillRemaining(child: ScreenLoadingIndicator())
         else ...[

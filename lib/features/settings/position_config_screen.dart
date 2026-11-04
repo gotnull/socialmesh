@@ -28,6 +28,7 @@ import '../../generated/meshtastic/hardware_model_metadata.dart';
 import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Screen for configuring GPS and position settings
 class PositionConfigScreen extends ConsumerStatefulWidget {
@@ -447,6 +448,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
           ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_isLoading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

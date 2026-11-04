@@ -24,6 +24,7 @@ import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 class NetworkConfigScreen extends ConsumerStatefulWidget {
   const NetworkConfigScreen({super.key});
@@ -216,6 +217,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen>
           ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_loading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

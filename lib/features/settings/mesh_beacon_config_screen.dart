@@ -17,6 +17,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
@@ -444,6 +445,7 @@ class _MeshBeaconConfigScreenState extends ConsumerState<MeshBeaconConfigScreen>
           ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_isLoading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

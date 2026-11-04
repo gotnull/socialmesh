@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Radio settings screens now say when they are changing a remote node. While Remote Administration points at another node, a banner at the top of each config screen names it, so you can see where a save will go before you make it. Device Management already did this; the other screens did not.
 - Position settings no longer offer the GPS pin choices on boards whose maker wires the GPS, such as the T-Beam, T-Echo and Wireless Tracker. Those pins are fixed in the hardware, so setting them did nothing. Boards built by hand keep the settings, and so does any radio whose model the app does not know yet.
 - Reset Node Database no longer empties the node list for every radio set to share data. On a radio that shares data with another, it resets only the radio, which relearns the mesh, and the app keeps the shared list, since it holds the other radios' history too. The Reset Node Database row and its confirmation say which of the two will happen. A radio that keeps its own data is reset as before, on the radio and in the app.
 

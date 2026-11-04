@@ -19,6 +19,7 @@ import '../../providers/countdown_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Telemetry module configuration screen
 class TelemetryConfigScreen extends ConsumerStatefulWidget {
@@ -224,6 +225,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen>
           ),
       ],
       slivers: [
+        const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
         SliverPadding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(

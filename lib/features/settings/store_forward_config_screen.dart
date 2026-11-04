@@ -19,6 +19,7 @@ import '../../providers/countdown_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Screen for configuring Store & Forward module
 class StoreForwardConfigScreen extends ConsumerStatefulWidget {
@@ -173,6 +174,7 @@ class _StoreForwardConfigScreenState
       slivers: _isLoading
           ? [SliverFillRemaining(child: const ScreenLoadingIndicator())]
           : [
+              const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
               SliverPadding(
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 sliver: SliverList(

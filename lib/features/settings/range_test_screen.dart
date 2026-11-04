@@ -28,6 +28,7 @@ import '../../models/presence_confidence.dart';
 import '../../utils/presence_utils.dart';
 import '../../providers/presence_providers.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Screen for running and configuring Range Test module
 class RangeTestScreen extends ConsumerStatefulWidget {
@@ -342,6 +343,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
             ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_isLoading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

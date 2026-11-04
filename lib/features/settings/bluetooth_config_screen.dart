@@ -23,6 +23,7 @@ import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 class BluetoothConfigScreen extends ConsumerStatefulWidget {
   const BluetoothConfigScreen({super.key});
@@ -211,6 +212,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen>
           ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_loading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

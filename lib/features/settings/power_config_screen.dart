@@ -25,6 +25,7 @@ import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 class PowerConfigScreen extends ConsumerStatefulWidget {
   const PowerConfigScreen({super.key});
@@ -286,6 +287,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
         slivers: _loading
             ? [SliverFillRemaining(child: const ScreenLoadingIndicator())]
             : [
+                const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   sliver: SliverList(

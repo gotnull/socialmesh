@@ -8,6 +8,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/units/byte_format.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../providers/app_providers.dart';
@@ -163,19 +164,14 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       AppTheme.spacing8,
                     ),
                   ),
-                if (remoteName != null)
-                  StatusBanner.info(
-                    title: context.l10n.settingsRemoteAdminConfiguringTitle,
-                    subtitle: context.l10n.deviceMgmtRemoteTargetBanner(
-                      remoteName,
-                    ),
-                    margin: const EdgeInsets.fromLTRB(
-                      AppTheme.spacing16,
-                      0,
-                      AppTheme.spacing16,
-                      AppTheme.spacing8,
-                    ),
+                const RemoteAdminTargetBanner(
+                  margin: EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    0,
+                    AppTheme.spacing16,
+                    AppTheme.spacing8,
                   ),
+                ),
                 SettingsSectionHeader(
                   title: context.l10n.deviceMgmtSectionPower,
                 ),

@@ -34,6 +34,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Screen for configuring LoRa radio settings
 class RadioConfigScreen extends ConsumerStatefulWidget {
@@ -407,6 +408,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
             ),
           ],
           slivers: [
+            const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
             if (_isLoading)
               const SliverFillRemaining(child: ScreenLoadingIndicator())
             else

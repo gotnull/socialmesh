@@ -23,6 +23,7 @@ import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/module_config.pbenum.dart' as module_pbenum;
 import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Screen for configuring Detection Sensor module
 class DetectionSensorConfigScreen extends ConsumerStatefulWidget {
@@ -206,6 +207,7 @@ class _DetectionSensorConfigScreenState
           ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_isLoading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

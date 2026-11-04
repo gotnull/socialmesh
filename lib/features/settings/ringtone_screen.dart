@@ -29,6 +29,7 @@ import '../../services/audio/rtttl_player.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 /// Preset ringtones with name and RTTTL string
 class RingtonePreset {
@@ -1215,6 +1216,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                 ),
               ]
             : [
+                const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
                 SliverPadding(
                   padding: const EdgeInsets.all(AppTheme.spacing16),
                   sliver: SliverList(

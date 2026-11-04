@@ -33,6 +33,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/secure_storage_options.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 class SecurityConfigScreen extends ConsumerStatefulWidget {
   const SecurityConfigScreen({super.key});
@@ -363,6 +364,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen>
           ),
         ],
         slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
           if (_loading)
             const SliverFillRemaining(child: ScreenLoadingIndicator())
           else

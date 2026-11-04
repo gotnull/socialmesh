@@ -19,6 +19,7 @@ import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../services/protocol/admin_target.dart';
 import '../../core/logging.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 
 class SerialConfigScreen extends ConsumerStatefulWidget {
   const SerialConfigScreen({super.key});
@@ -234,6 +235,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen>
           ),
       ],
       slivers: [
+        const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
         SliverPadding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
