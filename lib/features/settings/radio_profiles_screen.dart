@@ -117,6 +117,18 @@ class RadioProfilesScreen extends ConsumerWidget {
         )
         .toList();
 
+    // A radio's data can go to any other identified radio that is not
+    // sharing a third radio; RadioScope.moveScope applies the same rule and
+    // sets the receiving radio's own data aside.
+    List<RadioScopeInfo> moveTargetsFor(RadioScopeInfo scope) => scopes
+        .where(
+          (s) =>
+              s.key != scope.key &&
+              s.nodeNum != null &&
+              (s.sharesWith == null || s.sharesWith == scope.key),
+        )
+        .toList();
+
     _RadioProfileTile tileFor(RadioScopeInfo scope, {required bool deletable}) {
       final sharesWith = scope.sharesWith;
       final targets = targetsFor(scope);
@@ -131,6 +143,15 @@ class RadioProfilesScreen extends ConsumerWidget {
             : null,
         onStopSharing: sharesWith != null
             ? () => _confirmStopSharing(context, ref, scope)
+            : null,
+        // The radio connected now keeps its data; only a radio that owns
+        // stored data can hand it on.
+        onMove:
+            scope.nodeNum != null &&
+                sharesWith == null &&
+                scope.isStored &&
+                !scope.isConnected
+            ? () => _confirmMove(context, ref, scope, moveTargetsFor(scope))
             : null,
       );
     }
@@ -178,42 +199,8 @@ class RadioProfilesScreen extends ConsumerWidget {
       context: context,
       title: l10n.radioProfilesSharePickerTitle,
       items: targets,
-      itemBuilder: (item, isSelected) => Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing24,
-          vertical: AppTheme.spacing12,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              item.isCurrent ? Icons.router : Icons.storage_outlined,
-              color: isSelected ? context.accentColor : context.textSecondary,
-            ),
-            const SizedBox(width: AppTheme.spacing12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _displayName(context, item),
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  // Two radios reached over the same TCP endpoint carry the
-                  // same name; the node id and size tell them apart.
-                  Text(
-                    _storageLine(context, item),
-                    style: TextStyle(color: context.textTertiary, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      itemBuilder: (item, isSelected) =>
+          _radioPickerRow(context, item, isSelected: isSelected),
     );
     if (target == null) return;
     if (!context.mounted) return;
@@ -241,6 +228,55 @@ class RadioProfilesScreen extends ConsumerWidget {
     } else {
       showErrorSnackBar(context, l10n.radioProfilesShareFailed);
     }
+  }
+
+  Future<void> _confirmMove(
+    BuildContext context,
+    WidgetRef ref,
+    RadioScopeInfo scope,
+    List<RadioScopeInfo> targets,
+  ) async {
+    final l10n = context.l10n;
+    ref.haptics.trigger(HapticType.light);
+    if (targets.isEmpty) {
+      showWarningSnackBar(context, l10n.radioProfilesNoMoveTargets);
+      return;
+    }
+    final name = _displayName(context, scope);
+
+    final target = await AppBottomSheet.showPicker<RadioScopeInfo>(
+      context: context,
+      title: l10n.radioProfilesMovePickerTitle,
+      items: targets,
+      itemBuilder: (item, isSelected) =>
+          _radioPickerRow(context, item, isSelected: isSelected),
+    );
+    if (target == null) return;
+    if (!context.mounted) return;
+    final targetName = _displayName(context, target);
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.radioProfilesMoveConfirmTitle,
+      message: l10n.radioProfilesMoveConfirmMessage(name, targetName),
+      confirmLabel: l10n.radioProfilesMoveConfirm,
+      cancelLabel: l10n.commonCancel,
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    final moved = await RadioScope.instance.moveScope(
+      from: scope.key,
+      into: target.key,
+    );
+    if (!context.mounted) return;
+    if (moved) {
+      ref.haptics.trigger(HapticType.success);
+      showSuccessSnackBar(context, l10n.radioProfilesMoved(name, targetName));
+    } else {
+      showErrorSnackBar(context, l10n.radioProfilesMoveFailed);
+    }
+    ref.invalidate(radioScopeListProvider);
   }
 
   Future<void> _confirmStopSharing(
@@ -321,14 +357,61 @@ String _displayName(
   return context.l10n.radioProfilesUnidentifiedRadio;
 }
 
-/// "node id · size" line shown under a radio, or the unidentified variant
-/// for a radio that never reported its node number.
+/// "node id · size" line shown under a radio, or the set-aside or
+/// unidentified variant for data that no radio resolves to.
 String _storageLine(BuildContext context, RadioScopeInfo scope) {
   final nodeNum = scope.nodeNum;
   final size = formatByteSize(scope.sizeBytes);
+  if (scope.isSetAside) {
+    return context.l10n.radioProfilesTileSubtitleSetAside(size);
+  }
   return nodeNum != null
       ? context.l10n.radioProfilesTileSubtitle(formatNodeId(nodeNum), size)
       : context.l10n.radioProfilesTileSubtitleUnidentified(size);
+}
+
+/// One radio in a share or move picker: icon, name and the storage line.
+Widget _radioPickerRow(
+  BuildContext context,
+  RadioScopeInfo item, {
+  required bool isSelected,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(
+      horizontal: AppTheme.spacing24,
+      vertical: AppTheme.spacing12,
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          item.isCurrent ? Icons.router : Icons.storage_outlined,
+          color: isSelected ? context.accentColor : context.textSecondary,
+        ),
+        const SizedBox(width: AppTheme.spacing12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _displayName(context, item),
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              // Two radios reached over the same TCP endpoint carry the
+              // same name; the node id and size tell them apart.
+              Text(
+                _storageLine(context, item),
+                style: TextStyle(color: context.textTertiary, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _RadioProfileTile extends StatelessWidget {
@@ -337,6 +420,7 @@ class _RadioProfileTile extends StatelessWidget {
     required this.onDelete,
     this.onShare,
     this.onStopSharing,
+    this.onMove,
     this.sharesWithName,
   });
 
@@ -344,6 +428,7 @@ class _RadioProfileTile extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onShare;
   final VoidCallback? onStopSharing;
+  final VoidCallback? onMove;
 
   /// Display name of the radio whose data this one shares, when it does.
   final String? sharesWithName;
@@ -358,6 +443,15 @@ class _RadioProfileTile extends StatelessWidget {
         : '${l10n.radioProfilesSharesWith(sharing)}\n$storage';
 
     final actions = <Widget>[
+      // Leftmost, so the share and delete columns stay aligned down the
+      // list whether or not a row can move its data.
+      if (onMove != null)
+        IconButton(
+          icon: const Icon(Icons.drive_file_move_outline),
+          color: context.accentColor,
+          tooltip: l10n.radioProfilesMoveTooltip,
+          onPressed: onMove,
+        ),
       if (onShare != null)
         IconButton(
           icon: const Icon(Icons.call_merge),

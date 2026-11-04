@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A lost or replaced radio's stored data can be handed to the new radio. In Settings > Radio data, the Move action on the old radio's row moves its messages, nodes and history to another radio, such as the replacement you have just connected. What the new radio had stored itself is kept as a separate entry you can delete, so nothing is overwritten. The old radio then leaves the list, and if it ever connects again it starts with no data.
 - Contacts, the Dashboard, Settings and the telemetry logs (Device Metrics, Environment, Power, Air Quality, Position, PAX Counter, Detection Sensor and Traceroute History) show a scroll bar while you scroll. Press and hold it to drag through a long list.
 
 ### Changed

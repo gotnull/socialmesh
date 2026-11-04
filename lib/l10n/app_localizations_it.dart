@@ -39438,6 +39438,11 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String radioProfilesTileSubtitleSetAside(String size) {
+    return 'Salvato prima di ricevere i dati di un\'altra radio · $size';
+  }
+
+  @override
   String get radioProfilesUnidentifiedRadio => 'Radio non identificata';
 
   @override
@@ -39484,6 +39489,36 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get radioProfilesShareFailed => 'Condivisione non riuscita';
+
+  @override
+  String get radioProfilesMoveTooltip =>
+      'Sposta i dati di questa radio su un\'altra';
+
+  @override
+  String get radioProfilesMovePickerTitle => 'Sposta i dati su';
+
+  @override
+  String get radioProfilesNoMoveTargets =>
+      'Nessun\'altra radio può ancora ricevere questi dati. Collega prima la nuova radio, così compare qui.';
+
+  @override
+  String get radioProfilesMoveConfirmTitle => 'Spostare i dati della radio?';
+
+  @override
+  String radioProfilesMoveConfirmMessage(String radio, String target) {
+    return 'I messaggi, i nodi e la cronologia salvati per $radio passeranno a $target. Ciò che $target ha salvato per conto suo resta come voce separata. $radio sparisce poi da questo elenco e, se si riconnette, riparte senza dati.';
+  }
+
+  @override
+  String get radioProfilesMoveConfirm => 'Sposta';
+
+  @override
+  String radioProfilesMoved(String radio, String target) {
+    return '$target ora ha i dati di $radio';
+  }
+
+  @override
+  String get radioProfilesMoveFailed => 'Spostamento dei dati non riuscito';
 
   @override
   String radioProfilesSharesWith(Object target) {

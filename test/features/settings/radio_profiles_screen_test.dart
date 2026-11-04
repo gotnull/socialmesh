@@ -145,4 +145,90 @@ void main() {
       expect(find.byIcon(Icons.call_split), findsOneWidget);
     },
   );
+
+  group('moving a radio\'s data to another radio', () {
+    const otherWithData = RadioScopeInfo(
+      key: 'node-0c0ffee0',
+      label: 'Old Base',
+      sizeBytes: 2097152,
+      isCurrent: false,
+    );
+
+    testWidgets('the radio sharing an old radio can take its data', (
+      tester,
+    ) async {
+      await _pumpScreen(tester, [_radioA, _connectedSharing]);
+
+      // Only the old radio offers the move; the connected one never does.
+      expect(find.byIcon(Icons.drive_file_move_outline), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.drive_file_move_outline));
+      await tester.pumpAndSettle();
+      expect(find.text('Move data to'), findsOneWidget);
+
+      await tester.tap(find.text('MGrT_5949').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Move radio data?'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'stored for Meshtastic 0864 will belong to MGrT_5949',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a radio with data of its own is offered, one sharing a '
+        'third radio is not', (tester) async {
+      const sharingThird = RadioScopeInfo(
+        key: 'node-0000dddd',
+        label: 'Shares B',
+        sizeBytes: 4096,
+        isCurrent: false,
+        sharesWith: 'node-b0b0beef',
+      );
+      await _pumpScreen(tester, [
+        _radioA,
+        otherWithData,
+        _radioB,
+        sharingThird,
+      ]);
+
+      await tester.tap(find.byIcon(Icons.drive_file_move_outline).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Old Base'), findsNWidgets(2));
+      expect(find.text('Fake Radio B'), findsNWidgets(2));
+      expect(find.text('Shares B'), findsOneWidget);
+    });
+
+    testWidgets('says why when no radio can take the data', (tester) async {
+      await _pumpScreen(tester, [_radioA, _unidentified]);
+
+      await tester.tap(find.byIcon(Icons.drive_file_move_outline));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Move data to'), findsNothing);
+      expect(
+        find.textContaining('Connect the new radio first'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('labels data set aside by a move', (tester) async {
+      const aside = RadioScopeInfo(
+        key: 'aside-0000bbbb-1793750000000',
+        label: 'MGrT_5949',
+        sizeBytes: 184320,
+        isCurrent: false,
+      );
+      await _pumpScreen(tester, [_radioA, aside]);
+
+      expect(
+        find.textContaining("Stored before another radio's data moved"),
+        findsOneWidget,
+      );
+      // Kept or deleted, never shared or moved on.
+      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      expect(find.byIcon(Icons.drive_file_move_outline), findsOneWidget);
+    });
+  });
 }

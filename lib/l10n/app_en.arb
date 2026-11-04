@@ -51599,6 +51599,15 @@
   "radioProfilesSectionStored": "STORED",
   "radioProfilesTileSubtitle": "{nodeId} · {size}",
   "radioProfilesTileSubtitleUnidentified": "Never reported its node number · {size}",
+  "radioProfilesTileSubtitleSetAside": "Stored before another radio's data moved onto it · {size}",
+  "@radioProfilesTileSubtitleSetAside": {
+    "description": "Radio data screen: subtitle of a radio's own data that was set aside when another radio's data moved onto it",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "radioProfilesUnidentifiedRadio": "Unidentified radio",
   "radioProfilesDeleteTooltip": "Delete this radio's data",
   "radioProfilesDeleteTitle": "Delete radio data?",
@@ -51612,6 +51621,54 @@
   "radioProfilesShareConfirm": "Share",
   "radioProfilesShared": "{radio} now shares data with {target}",
   "radioProfilesShareFailed": "Sharing failed",
+  "radioProfilesMoveTooltip": "Move this radio's data to another radio",
+  "@radioProfilesMoveTooltip": {
+    "description": "Radio data screen: tooltip on the action that hands a lost or replaced radio's stored data to another radio"
+  },
+  "radioProfilesMovePickerTitle": "Move data to",
+  "@radioProfilesMovePickerTitle": {
+    "description": "Radio data screen: title of the picker listing radios that can take the data"
+  },
+  "radioProfilesNoMoveTargets": "No other radio can take this data yet. Connect the new radio first so it shows up here.",
+  "@radioProfilesNoMoveTargets": {
+    "description": "Radio data screen: shown when no other identified radio can take the data"
+  },
+  "radioProfilesMoveConfirmTitle": "Move radio data?",
+  "@radioProfilesMoveConfirmTitle": {
+    "description": "Radio data screen: title of the confirmation before moving a radio's data"
+  },
+  "radioProfilesMoveConfirmMessage": "The messages, nodes and history stored for {radio} will belong to {target}. What {target} has stored itself is kept as a separate entry. {radio} is then removed from this list, and if it connects again it starts with no data.",
+  "@radioProfilesMoveConfirmMessage": {
+    "description": "Radio data screen: confirmation body; radio is the radio giving up its data, target the one taking it",
+    "placeholders": {
+      "radio": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "radioProfilesMoveConfirm": "Move",
+  "@radioProfilesMoveConfirm": {
+    "description": "Radio data screen: confirm button for moving a radio's data"
+  },
+  "radioProfilesMoved": "{target} now has the data of {radio}",
+  "@radioProfilesMoved": {
+    "description": "Radio data screen: snackbar after the data moved",
+    "placeholders": {
+      "radio": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "radioProfilesMoveFailed": "Moving the data failed",
+  "@radioProfilesMoveFailed": {
+    "description": "Radio data screen: snackbar when the move was refused or failed"
+  },
   "radioProfilesSharesWith": "Shares data with {target}",
   "radioProfilesStopSharingTooltip": "Stop sharing",
   "radioProfilesStopSharingConfirmTitle": "Stop sharing?",

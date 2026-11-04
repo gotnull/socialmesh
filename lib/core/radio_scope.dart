@@ -87,6 +87,10 @@ const String kLegacyRadioScopeKey = 'legacy';
 
 const String _deviceScopePrefix = 'dev-';
 const String _nodeScopePrefix = 'node-';
+// A replacement radio's own data, set aside when another radio's data was
+// moved onto it. No radio ever resolves to it; it can only be listed and
+// deleted.
+const String _setAsidePrefix = 'aside-';
 
 /// Scope key for a radio that has reported its node number.
 String radioScopeKeyForNodeNum(int nodeNum) =>
@@ -147,6 +151,10 @@ class RadioScopeInfo {
 
   /// Node number this scope belongs to, or null for a provisional scope.
   int? get nodeNum => nodeNumForRadioScopeKey(key);
+
+  /// Whether this is a radio's own data set aside when another radio's data
+  /// was moved onto it. See [RadioScope.moveScope].
+  bool get isSetAside => key.startsWith(_setAsidePrefix);
 }
 
 /// Node number encoded in a node scope [key], or null for any other key.
@@ -612,6 +620,71 @@ class RadioScope {
     return _readMap(prefs, _prefsAliasesKey).values.contains(_current);
   }
 
+  /// Hands the data of the radio behind [from] to the radio behind [into],
+  /// for a radio that was lost or replaced.
+  ///
+  /// [from]'s directory and preference values become [into]'s, and [from]
+  /// is forgotten: its name, device ids and key go, so if it connects again
+  /// it starts with no data. Radios that shared [from] share [into] from now
+  /// on. Whatever [into] stored itself is set aside under its own entry,
+  /// never deleted. Refused (false) when either is not a node scope, when
+  /// [from] is the radio connected now, shares another radio's data or has
+  /// no directory, or when [into] shares a third radio.
+  Future<bool> moveScope({required String from, required String into}) async {
+    if (from == into ||
+        isProvisionalRadioScopeKey(from) ||
+        isProvisionalRadioScopeKey(into) ||
+        _lastIdentity == from) {
+      return false;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final aliases = _readMap(prefs, _prefsAliasesKey);
+    if (aliases.containsKey(from)) return false;
+    final intoShares = aliases[into];
+    if (intoShares != null && intoShares != from) return false;
+    if (!await (await _directoryFor(from, create: false)).exists()) {
+      return false;
+    }
+
+    final touchesOpenStores = _current == from || _current == into;
+    if (touchesOpenStores) await _closeOpenStores();
+    // A replacement has usually connected before it can be picked, so it
+    // holds a short history of its own. That is set aside, with its
+    // preference values and name, rather than overwritten.
+    if (await (await _directoryFor(into, create: false)).exists()) {
+      final aside =
+          '$_setAsidePrefix${into.substring(_nodeScopePrefix.length)}-'
+          '${DateTime.now().millisecondsSinceEpoch}';
+      await _promoteDirectory(from: into, to: aside);
+      await _promotePreferences(prefs, from: into, to: aside);
+      final label = _readMap(prefs, _prefsLabelsKey)[into];
+      if (label != null) await _rememberLabel(prefs, aside, label);
+      AppLogging.storage('RADIO SCOPE: set aside the own data of $into');
+    }
+    await _promoteDirectory(from: from, to: into);
+    await _promotePreferences(prefs, from: from, to: into, sourceWins: true);
+
+    aliases.remove(into);
+    for (final entry in aliases.entries.toList()) {
+      if (entry.value == from) aliases[entry.key] = into;
+    }
+    await _writeMap(prefs, _prefsAliasesKey, aliases);
+    final labels = _readMap(prefs, _prefsLabelsKey)..remove(from);
+    await _writeMap(prefs, _prefsLabelsKey, labels);
+    final devices = _readMap(prefs, _prefsDeviceMapKey)
+      ..removeWhere((_, scope) => scope == from);
+    await _writeMap(prefs, _prefsDeviceMapKey, devices);
+    final keys = _readMap(prefs, _prefsPublicKeysKey)..remove(from);
+    await _writeMap(prefs, _prefsPublicKeysKey, keys);
+    AppLogging.storage('RADIO SCOPE: moved the data of $from to $into');
+
+    if (touchesOpenStores) {
+      await _setCurrent(prefs, into);
+      _changes.add(into);
+    }
+    return true;
+  }
+
   /// Scope [key] stores into: itself, or the scope it shares.
   String _resolveAlias(SharedPreferences prefs, String key) {
     final aliases = _readMap(prefs, _prefsAliasesKey);
@@ -827,13 +900,14 @@ class RadioScope {
     SharedPreferences prefs, {
     required String from,
     required String to,
+    bool sourceWins = false,
   }) async {
     for (final base in kRadioScopedPreferenceKeys) {
       final sourceKey = _scopedPrefsKey(from, base);
       final value = prefs.get(sourceKey);
       if (value == null) continue;
       final targetKey = _scopedPrefsKey(to, base);
-      if (prefs.get(targetKey) == null) {
+      if (sourceWins || prefs.get(targetKey) == null) {
         await _writeValue(prefs, targetKey, value);
       }
       await prefs.remove(sourceKey);

@@ -39451,6 +39451,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String radioProfilesTileSubtitleSetAside(String size) {
+    return 'Сохранено до переноса данных другой рации · $size';
+  }
+
+  @override
   String get radioProfilesUnidentifiedRadio => 'Неопознанная рация';
 
   @override
@@ -39496,6 +39501,36 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get radioProfilesShareFailed => 'Не удалось сделать данные общими';
+
+  @override
+  String get radioProfilesMoveTooltip =>
+      'Перенести данные этой рации на другую';
+
+  @override
+  String get radioProfilesMovePickerTitle => 'Перенести данные на';
+
+  @override
+  String get radioProfilesNoMoveTargets =>
+      'Пока ни одна другая рация не может принять эти данные. Сначала подключите новую рацию, чтобы она появилась здесь.';
+
+  @override
+  String get radioProfilesMoveConfirmTitle => 'Перенести данные рации?';
+
+  @override
+  String radioProfilesMoveConfirmMessage(String radio, String target) {
+    return 'Сообщения, узлы и история, сохранённые для $radio, перейдут к $target. То, что $target сохранила сама, останется отдельной записью. После этого $radio исчезнет из списка, а при повторном подключении начнёт без данных.';
+  }
+
+  @override
+  String get radioProfilesMoveConfirm => 'Перенести';
+
+  @override
+  String radioProfilesMoved(String radio, String target) {
+    return 'Данные $radio перенесены на $target';
+  }
+
+  @override
+  String get radioProfilesMoveFailed => 'Не удалось перенести данные';
 
   @override
   String radioProfilesSharesWith(Object target) {

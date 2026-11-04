@@ -38989,6 +38989,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String radioProfilesTileSubtitleSetAside(String size) {
+    return 'Stored before another radio\'s data moved onto it · $size';
+  }
+
+  @override
   String get radioProfilesUnidentifiedRadio => 'Unidentified radio';
 
   @override
@@ -39034,6 +39039,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get radioProfilesShareFailed => 'Sharing failed';
+
+  @override
+  String get radioProfilesMoveTooltip =>
+      'Move this radio\'s data to another radio';
+
+  @override
+  String get radioProfilesMovePickerTitle => 'Move data to';
+
+  @override
+  String get radioProfilesNoMoveTargets =>
+      'No other radio can take this data yet. Connect the new radio first so it shows up here.';
+
+  @override
+  String get radioProfilesMoveConfirmTitle => 'Move radio data?';
+
+  @override
+  String radioProfilesMoveConfirmMessage(String radio, String target) {
+    return 'The messages, nodes and history stored for $radio will belong to $target. What $target has stored itself is kept as a separate entry. $radio is then removed from this list, and if it connects again it starts with no data.';
+  }
+
+  @override
+  String get radioProfilesMoveConfirm => 'Move';
+
+  @override
+  String radioProfilesMoved(String radio, String target) {
+    return '$target now has the data of $radio';
+  }
+
+  @override
+  String get radioProfilesMoveFailed => 'Moving the data failed';
 
   @override
   String radioProfilesSharesWith(Object target) {

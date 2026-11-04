@@ -39538,6 +39538,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String radioProfilesTileSubtitleSetAside(String size) {
+    return 'Gespeichert, bevor die Daten eines anderen Funkgeräts übertragen wurden · $size';
+  }
+
+  @override
   String get radioProfilesUnidentifiedRadio => 'Unbekanntes Funkgerät';
 
   @override
@@ -39584,6 +39589,36 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get radioProfilesShareFailed => 'Teilen fehlgeschlagen';
+
+  @override
+  String get radioProfilesMoveTooltip =>
+      'Daten dieses Funkgeräts auf ein anderes übertragen';
+
+  @override
+  String get radioProfilesMovePickerTitle => 'Daten übertragen an';
+
+  @override
+  String get radioProfilesNoMoveTargets =>
+      'Noch kann kein anderes Funkgerät diese Daten übernehmen. Verbinde zuerst das neue Funkgerät, damit es hier erscheint.';
+
+  @override
+  String get radioProfilesMoveConfirmTitle => 'Funkgerätedaten übertragen?';
+
+  @override
+  String radioProfilesMoveConfirmMessage(String radio, String target) {
+    return 'Die für $radio gespeicherten Nachrichten, Knoten und der Verlauf gehören dann zu $target. Was $target selbst gespeichert hat, bleibt als separater Eintrag erhalten. $radio verschwindet danach aus dieser Liste und beginnt ohne Daten, falls es sich erneut verbindet.';
+  }
+
+  @override
+  String get radioProfilesMoveConfirm => 'Übertragen';
+
+  @override
+  String radioProfilesMoved(String radio, String target) {
+    return '$target hat jetzt die Daten von $radio';
+  }
+
+  @override
+  String get radioProfilesMoveFailed => 'Übertragen fehlgeschlagen';
 
   @override
   String radioProfilesSharesWith(Object target) {

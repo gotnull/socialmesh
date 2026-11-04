@@ -39691,6 +39691,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String radioProfilesTileSubtitleSetAside(String size) {
+    return 'Enregistré avant de recevoir les données d\'une autre radio · $size';
+  }
+
+  @override
   String get radioProfilesUnidentifiedRadio => 'Radio non identifiée';
 
   @override
@@ -39739,6 +39744,37 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get radioProfilesShareFailed => 'Le partage a échoué';
+
+  @override
+  String get radioProfilesMoveTooltip =>
+      'Déplacer les données de cette radio vers une autre';
+
+  @override
+  String get radioProfilesMovePickerTitle => 'Déplacer les données vers';
+
+  @override
+  String get radioProfilesNoMoveTargets =>
+      'Aucune autre radio ne peut encore recevoir ces données. Connectez d\'abord la nouvelle radio pour qu\'elle apparaisse ici.';
+
+  @override
+  String get radioProfilesMoveConfirmTitle =>
+      'Déplacer les données de la radio ?';
+
+  @override
+  String radioProfilesMoveConfirmMessage(String radio, String target) {
+    return 'Les messages, les nœuds et l\'historique enregistrés pour $radio appartiendront à $target. Ce que $target a enregistré de son côté est conservé dans une entrée séparée. $radio disparaît ensuite de cette liste ; si elle se reconnecte, elle repart sans données.';
+  }
+
+  @override
+  String get radioProfilesMoveConfirm => 'Déplacer';
+
+  @override
+  String radioProfilesMoved(String radio, String target) {
+    return '$target a désormais les données de $radio';
+  }
+
+  @override
+  String get radioProfilesMoveFailed => 'Le déplacement des données a échoué';
 
   @override
   String radioProfilesSharesWith(Object target) {

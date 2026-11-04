@@ -67733,6 +67733,12 @@ abstract class AppLocalizations {
   /// **'Never reported its node number · {size}'**
   String radioProfilesTileSubtitleUnidentified(String size);
 
+  /// Radio data screen: subtitle of a radio's own data that was set aside when another radio's data moved onto it
+  ///
+  /// In en, this message translates to:
+  /// **'Stored before another radio\'s data moved onto it · {size}'**
+  String radioProfilesTileSubtitleSetAside(String size);
+
   /// No description provided for @radioProfilesUnidentifiedRadio.
   ///
   /// In en, this message translates to:
@@ -67810,6 +67816,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sharing failed'**
   String get radioProfilesShareFailed;
+
+  /// Radio data screen: tooltip on the action that hands a lost or replaced radio's stored data to another radio
+  ///
+  /// In en, this message translates to:
+  /// **'Move this radio\'s data to another radio'**
+  String get radioProfilesMoveTooltip;
+
+  /// Radio data screen: title of the picker listing radios that can take the data
+  ///
+  /// In en, this message translates to:
+  /// **'Move data to'**
+  String get radioProfilesMovePickerTitle;
+
+  /// Radio data screen: shown when no other identified radio can take the data
+  ///
+  /// In en, this message translates to:
+  /// **'No other radio can take this data yet. Connect the new radio first so it shows up here.'**
+  String get radioProfilesNoMoveTargets;
+
+  /// Radio data screen: title of the confirmation before moving a radio's data
+  ///
+  /// In en, this message translates to:
+  /// **'Move radio data?'**
+  String get radioProfilesMoveConfirmTitle;
+
+  /// Radio data screen: confirmation body; radio is the radio giving up its data, target the one taking it
+  ///
+  /// In en, this message translates to:
+  /// **'The messages, nodes and history stored for {radio} will belong to {target}. What {target} has stored itself is kept as a separate entry. {radio} is then removed from this list, and if it connects again it starts with no data.'**
+  String radioProfilesMoveConfirmMessage(String radio, String target);
+
+  /// Radio data screen: confirm button for moving a radio's data
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get radioProfilesMoveConfirm;
+
+  /// Radio data screen: snackbar after the data moved
+  ///
+  /// In en, this message translates to:
+  /// **'{target} now has the data of {radio}'**
+  String radioProfilesMoved(String radio, String target);
+
+  /// Radio data screen: snackbar when the move was refused or failed
+  ///
+  /// In en, this message translates to:
+  /// **'Moving the data failed'**
+  String get radioProfilesMoveFailed;
 
   /// No description provided for @radioProfilesSharesWith.
   ///
