@@ -217,6 +217,19 @@ class RadioScope {
   final StreamController<String> _identityChanges =
       StreamController<String>.broadcast();
 
+  // Scope changes move directories and rewrite the mappings across awaits.
+  // A radio reports its identity several times while a connect settles, so
+  // binds arrive together; run at once they would promote the same
+  // directory twice, and a late one could take the promoted directory as
+  // its own source. Every public change starts once the previous one ends.
+  Future<void> _lastChange = Future<void>.value();
+
+  Future<T> _serialised<T>(Future<T> Function() change) {
+    final result = _lastChange.then((_) => change());
+    _lastChange = result.then<void>((_) {}, onError: (Object _) {});
+    return result;
+  }
+
   /// Scope key currently in effect.
   String get currentKey => _current;
 
@@ -302,6 +315,18 @@ class RadioScope {
     required String deviceId,
     String? label,
     int? knownNodeNum,
+  }) => _serialised(
+    () => _useDevice(
+      deviceId: deviceId,
+      label: label,
+      knownNodeNum: knownNodeNum,
+    ),
+  );
+
+  Future<bool> _useDevice({
+    required String deviceId,
+    String? label,
+    int? knownNodeNum,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final known = _readMap(prefs, _prefsDeviceMapKey)[deviceId];
@@ -358,6 +383,20 @@ class RadioScope {
   ///
   /// Returns true when the scope changed.
   Future<bool> useNodeNum(
+    int nodeNum, {
+    String? deviceId,
+    String? label,
+    List<int>? ownPublicKey,
+  }) => _serialised(
+    () => _useNodeNum(
+      nodeNum,
+      deviceId: deviceId,
+      label: label,
+      ownPublicKey: ownPublicKey,
+    ),
+  );
+
+  Future<bool> _useNodeNum(
     int nodeNum, {
     String? deviceId,
     String? label,
@@ -525,7 +564,9 @@ class RadioScope {
   /// Deletes one stored radio profile: its directory, its preference values
   /// and its label. Refuses to delete the scope currently in use, since its
   /// stores are open.
-  Future<bool> deleteScope(String key) async {
+  Future<bool> deleteScope(String key) => _serialised(() => _deleteScope(key));
+
+  Future<bool> _deleteScope(String key) async {
     if (key == _current) {
       AppLogging.storage('RADIO SCOPE: refusing to delete active scope $key');
       return false;
@@ -571,7 +612,10 @@ class RadioScope {
   /// that itself shares another follows the chain, so every arrangement
   /// ends on a scope that owns its data. Returns false when the request is
   /// not applicable.
-  Future<bool> shareScope({required String key, required String into}) async {
+  Future<bool> shareScope({required String key, required String into}) =>
+      _serialised(() => _shareScope(key: key, into: into));
+
+  Future<bool> _shareScope({required String key, required String into}) async {
     if (isProvisionalRadioScopeKey(key) || isProvisionalRadioScopeKey(into)) {
       return false;
     }
@@ -599,7 +643,9 @@ class RadioScope {
 
   /// Ends [key]'s sharing arrangement; the radio uses its own data again.
   /// Returns false when [key] was not sharing.
-  Future<bool> stopSharing(String key) async {
+  Future<bool> stopSharing(String key) => _serialised(() => _stopSharing(key));
+
+  Future<bool> _stopSharing(String key) async {
     final prefs = await SharedPreferences.getInstance();
     final aliases = _readMap(prefs, _prefsAliasesKey);
     if (aliases.remove(key) == null) return false;
@@ -630,7 +676,10 @@ class RadioScope {
   /// never deleted. Refused (false) when either is not a node scope, when
   /// [from] is the radio connected now, shares another radio's data or has
   /// no directory, or when [into] shares a third radio.
-  Future<bool> moveScope({required String from, required String into}) async {
+  Future<bool> moveScope({required String from, required String into}) =>
+      _serialised(() => _moveScope(from: from, into: into));
+
+  Future<bool> _moveScope({required String from, required String into}) async {
     if (from == into ||
         isProvisionalRadioScopeKey(from) ||
         isProvisionalRadioScopeKey(into) ||
