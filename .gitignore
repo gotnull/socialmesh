@@ -107,6 +107,7 @@ firebase-service-account.json
 !/scripts/check_translation_coverage.py
 !/scripts/fetch_device_hardware.sh
 !/scripts/generate_protos.sh
+!/scripts/gen_hardware_model_metadata.py
 !/scripts/hooks/
 /scripts/hooks/*
 !/scripts/hooks/socialmesh-lint.sh

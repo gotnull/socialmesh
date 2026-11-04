@@ -24,6 +24,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/hardware_model_metadata.dart';
 import '../../services/protocol/admin_target.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -412,7 +413,18 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isRemote = ref.watch(remoteAdminTargetProvider) != null;
+    final remoteTarget = ref.watch(remoteAdminTargetProvider);
+    final isRemote = remoteTarget != null;
+    final configuredNodeNum = remoteTarget ?? ref.watch(myNodeNumProvider);
+    // A board whose maker wires the GPS has no pins to choose. An unknown
+    // model keeps the settings, so nothing is hidden on a guess.
+    final hasFixedGpsPins = ref.watch(
+      nodesProvider.select(
+        (nodes) => kOemFixedGpsHardwareModels.contains(
+          nodes[configuredNodeNum]?.hwModelId,
+        ),
+      ),
+    );
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold(
@@ -985,9 +997,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                     ),
                     SizedBox(height: AppTheme.spacing16),
                   ],
-                  // GPS Settings and GPIO only shown when GPS is enabled
-                  // (matches official Meshtastic iOS behaviour)
-                  if (_isGpsEnabled) ...[
+                  // GPS pins only apply when GPS is enabled and the board
+                  // leaves the GPS wiring to the builder.
+                  if (_isGpsEnabled && !hasFixedGpsPins) ...[
                     SettingsSectionHeader(
                       title: context.l10n.positionConfigSectionGpsGpio,
                     ),

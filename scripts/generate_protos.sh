@@ -176,6 +176,9 @@ generate_dart() {
       --dart_out="$PROJECT_ROOT/lib/generated" \
       --proto_path="$PROTO_DIR" \
       $proto_files
+
+    # Enum value options (oem_fixed_gps) never reach the generated Dart enum.
+    python3 "$SCRIPT_DIR/gen_hardware_model_metadata.py"
     
     local current_version=$(get_current_version)
     print_success "Protobuf generation complete! (version: $current_version)"
