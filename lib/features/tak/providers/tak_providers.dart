@@ -117,7 +117,9 @@ class TakPersistenceNotifier extends AsyncNotifier<List<TakEvent>> {
   @override
   Future<List<TakEvent>> build() async {
     AppLogging.tak('TakPersistenceNotifier: initializing database');
-    final db = ref.read(takDatabaseProvider);
+    // Watched, not read: a radio switch replaces the store, and the list,
+    // the cleanup timer and the subscriptions must move to the new one.
+    final db = ref.watch(takDatabaseProvider);
     await db.init();
 
     // Load persisted events

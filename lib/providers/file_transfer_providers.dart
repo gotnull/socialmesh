@@ -187,7 +187,9 @@ final fileTransferEngineProvider = Provider<FileTransferEngine>((ref) {
     });
   }
 
-  final db = ref.read(fileTransferDatabaseProvider);
+  // Watched, not read: a radio switch replaces the store, and the engine
+  // with it, so the previous radio's in-flight transfers end with the switch.
+  final db = ref.watch(fileTransferDatabaseProvider);
 
   engine = FileTransferEngine(
     database: db,
@@ -411,9 +413,10 @@ class FileTransferStateNotifier extends Notifier<FileTransferListState> {
     // Ensure the engine is alive so the broadcast stream has a listener.
     // This is the primary creation path - _initializeBackgroundServices
     // may not have run yet (Android timing), and broadcast streams
-    // silently drop events with no listener.
+    // silently drop events with no listener. Watched, so a radio switch
+    // that replaces the engine also reloads the new radio's transfers.
     try {
-      ref.read(fileTransferEngineProvider);
+      ref.watch(fileTransferEngineProvider);
     } catch (e) {
       AppLogging.fileTransfer('Notifier: engine ensure failed: $e');
     }
