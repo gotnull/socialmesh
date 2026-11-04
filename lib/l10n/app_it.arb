@@ -28745,6 +28745,7 @@
   "deviceMgmtRebootTitle": "Riavvia dispositivo",
   "deviceMgmtRebootWarning": "Il dispositivo si riavvierà tra 2 secondi. Sarai brevemente disconnesso durante il riavvio.",
   "deviceMgmtResetNodeDbSubtitle": "Cancella tutti i nodi conosciuti dal dispositivo e dall'app",
+  "deviceMgmtResetNodeDbSubtitleShared": "Cancella i nodi conosciuti dalla radio, l'elenco condiviso resta nell'app",
   "deviceMgmtResetNodeDbTitle": "Reimposta database nodi",
   "deviceMgmtResetNodeDbWarning": "Questo cancellerà tutti i nodi scoperti dal dispositivo e dall'app. I nodi verranno riscoperti nel tempo.",
   "resetNodeDbSharedWarning": "Questo cancella i nodi salvati sulla radio, che riscoprirà la mesh nel tempo. L'elenco dei nodi dell'app è condiviso con le tue altre radio, quindi resta com'è.",

@@ -26771,6 +26771,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Очистить все известные узлы с устройства и из приложения';
 
   @override
+  String get deviceMgmtResetNodeDbSubtitleShared =>
+      'Очистить известные узлы на рации, общий список остаётся в приложении';
+
+  @override
   String get deviceMgmtResetNodeDbWarning =>
       'Это удалит все обнаруженные узлы с устройства и из приложения. Узлы будут повторно обнаружены со временем.';
 

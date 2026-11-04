@@ -26954,6 +26954,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Effacer tous les noeuds connus de l\'appareil et de l\'application';
 
   @override
+  String get deviceMgmtResetNodeDbSubtitleShared =>
+      'Effacer les nœuds connus de la radio, la liste partagée reste dans l\'application';
+
+  @override
   String get deviceMgmtResetNodeDbWarning =>
       'Ceci effacera tous les noeuds découverts de l\'appareil et de l\'application. Les noeuds seront redécouverts progressivement.';
 

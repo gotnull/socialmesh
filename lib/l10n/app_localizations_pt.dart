@@ -26745,6 +26745,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Limpar todos os nós conhecidos do dispositivo e do app';
 
   @override
+  String get deviceMgmtResetNodeDbSubtitleShared =>
+      'Limpar os nós conhecidos do rádio; a lista compartilhada continua no app';
+
+  @override
   String get deviceMgmtResetNodeDbWarning =>
       'Isso limpará todos os nós descobertos do dispositivo e do app. Os nós serão redescobertos com o tempo.';
 

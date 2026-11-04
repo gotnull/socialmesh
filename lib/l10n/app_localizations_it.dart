@@ -26755,6 +26755,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Cancella tutti i nodi conosciuti dal dispositivo e dall\'app';
 
   @override
+  String get deviceMgmtResetNodeDbSubtitleShared =>
+      'Cancella i nodi conosciuti dalla radio, l\'elenco condiviso resta nell\'app';
+
+  @override
   String get deviceMgmtResetNodeDbWarning =>
       'Questo cancellerà tutti i nodi scoperti dal dispositivo e dall\'app. I nodi verranno riscoperti nel tempo.';
 

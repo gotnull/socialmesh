@@ -35514,6 +35514,10 @@
   "@deviceMgmtResetNodeDbSubtitle": {
     "description": "Subtitle in developer tools"
   },
+  "deviceMgmtResetNodeDbSubtitleShared": "Clear known nodes from the radio, keep the shared list in the app",
+  "@deviceMgmtResetNodeDbSubtitleShared": {
+    "description": "Reset Node Database tile subtitle in Device Management when the connected radio shares its stored data with other radios"
+  },
   "deviceMgmtResetNodeDbWarning": "This will clear all discovered nodes from the device and app. Nodes will be rediscovered over time.",
   "@deviceMgmtResetNodeDbWarning": {
     "description": "Text displayed in developer tools"

@@ -46144,6 +46144,12 @@ abstract class AppLocalizations {
   /// **'Clear all known nodes from device and app'**
   String get deviceMgmtResetNodeDbSubtitle;
 
+  /// Reset Node Database tile subtitle in Device Management when the connected radio shares its stored data with other radios
+  ///
+  /// In en, this message translates to:
+  /// **'Clear known nodes from the radio, keep the shared list in the app'**
+  String get deviceMgmtResetNodeDbSubtitleShared;
+
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:

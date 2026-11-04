@@ -82,6 +82,15 @@ final radioScopeListProvider = FutureProvider<List<RadioScopeInfo>>((
   return RadioScope.instance.list();
 });
 
+/// Whether the dataset in effect is shared with another radio, which decides
+/// what Reset Node Database clears. Auto-disposed so each visit to Device
+/// Management reads it afresh after a sharing change on Radio Profiles.
+final currentRadioScopeSharedProvider = FutureProvider.autoDispose<bool>((ref) {
+  ref.watch(radioScopeProvider);
+  ref.watch(radioScopeIdentityProvider);
+  return RadioScope.instance.currentScopeIsShared();
+});
+
 /// Registers [store] with the scope so it is closed before a scope change,
 /// and unregisters it when the owning provider disposes.
 ///

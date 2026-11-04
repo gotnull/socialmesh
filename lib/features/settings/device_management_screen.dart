@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
-import '../../core/radio_scope.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/units/byte_format.dart';
@@ -14,6 +13,7 @@ import '../../core/widgets/status_banner.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../providers/countdown_providers.dart';
+import '../../providers/radio_scope_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/protocol/admin_target.dart';
 import '../../utils/snackbar.dart';
@@ -138,6 +138,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     final isConnected = protocol.isConnected;
     final remote = ref.watch(remoteAdminProvider);
     final remoteName = remote.isRemote ? _remoteName(remote) : null;
+    final resetKeepsSharedNodes =
+        !remote.isRemote &&
+        (ref.watch(currentRadioScopeSharedProvider).value ?? false);
 
     return GlassScaffold(
       title: context.l10n.deviceMgmtTitle,
@@ -299,7 +302,9 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                   icon: Icons.cleaning_services,
                   iconColor: AccentColors.orange,
                   title: context.l10n.deviceMgmtResetNodeDbTitle,
-                  subtitle: context.l10n.deviceMgmtResetNodeDbSubtitle,
+                  subtitle: resetKeepsSharedNodes
+                      ? context.l10n.deviceMgmtResetNodeDbSubtitleShared
+                      : context.l10n.deviceMgmtResetNodeDbSubtitle,
                   enabled: isConnected,
                   onTap: () async {
                     final l10n = context.l10n;
@@ -308,7 +313,7 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     );
                     final shared =
                         target.isLocal &&
-                        await RadioScope.instance.currentScopeIsShared();
+                        await ref.read(currentRadioScopeSharedProvider.future);
                     if (!mounted) return;
                     await _executeAction(
                       l10n.deviceMgmtResetNodeDbTitle,

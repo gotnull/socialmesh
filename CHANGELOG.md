@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Position settings no longer offer the GPS pin choices on boards whose maker wires the GPS, such as the T-Beam, T-Echo and Wireless Tracker. Those pins are fixed in the hardware, so setting them did nothing. Boards built by hand keep the settings, and so does any radio whose model the app does not know yet.
-- Reset Node Database no longer empties the node list for every radio set to share data. On a radio that shares data with another, it resets only the radio, which relearns the mesh, and the app keeps the shared list, since it holds the other radios' history too. The confirmation says which of the two will happen. A radio that keeps its own data is reset as before, on the radio and in the app.
+- Reset Node Database no longer empties the node list for every radio set to share data. On a radio that shares data with another, it resets only the radio, which relearns the mesh, and the app keeps the shared list, since it holds the other radios' history too. The Reset Node Database row and its confirmation say which of the two will happen. A radio that keeps its own data is reset as before, on the radio and in the app.
 
 ### Fixed
 

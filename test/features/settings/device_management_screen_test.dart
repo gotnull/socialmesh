@@ -12,6 +12,7 @@ import 'package:socialmesh/core/widgets/status_banner.dart';
 import 'package:socialmesh/features/settings/device_management_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/providers/app_providers.dart';
+import 'package:socialmesh/providers/radio_scope_providers.dart';
 import 'package:socialmesh/services/protocol/admin_target.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
@@ -111,11 +112,16 @@ class _FakeTransport extends DeviceTransport {
   }
 }
 
-Widget _wrap(_FakeProtocolService protocol, _RemoteTarget remote) {
+Widget _wrap(
+  _FakeProtocolService protocol,
+  _RemoteTarget remote, {
+  bool sharedScope = false,
+}) {
   return ProviderScope(
     overrides: [
       protocolServiceProvider.overrideWithValue(protocol),
       remoteAdminProvider.overrideWith(() => remote),
+      currentRadioScopeSharedProvider.overrideWith((ref) async => sharedScope),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -181,6 +187,74 @@ void main() {
     // Power, Time, Reset and Firmware sections; seven action rows.
     expect(find.byType(SettingsSectionHeader), findsNWidgets(4));
     expect(find.byType(SettingsTile), findsNWidgets(7));
+  });
+
+  group('Reset Node Database on a radio that shares data', () {
+    const ownSubtitle = 'Clear all known nodes from device and app';
+    const sharedSubtitle =
+        'Clear known nodes from the radio, keep the shared list in the app';
+
+    testWidgets('says the shared node list stays, on the tile and the '
+        'confirmation', (tester) async {
+      final protocol = _FakeProtocolService(sessionReady: true);
+      await _pump(
+        tester,
+        _wrap(
+          protocol,
+          _RemoteTarget(const RemoteAdminState()),
+          sharedScope: true,
+        ),
+      );
+
+      expect(find.text(sharedSubtitle), findsOneWidget);
+      expect(find.text(ownSubtitle), findsNothing);
+
+      await tester.tap(find.text('Reset Node Database'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining("The app's node list is shared with your other"),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a radio with its own data keeps the original wording', (
+      tester,
+    ) async {
+      final protocol = _FakeProtocolService(sessionReady: true);
+      await _pump(
+        tester,
+        _wrap(protocol, _RemoteTarget(const RemoteAdminState())),
+      );
+
+      expect(find.text(ownSubtitle), findsOneWidget);
+      await tester.tap(find.text('Reset Node Database'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('clear all discovered nodes from the device'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a remote target never touches the app list, so the shared '
+        'wording does not apply', (tester) async {
+      final protocol = _FakeProtocolService(sessionReady: true);
+      await _pump(
+        tester,
+        _wrap(
+          protocol,
+          _RemoteTarget(
+            const RemoteAdminState(
+              targetNodeNum: _remoteNode,
+              targetNodeName: _remoteName,
+            ),
+          ),
+          sharedScope: true,
+        ),
+      );
+
+      expect(find.text(ownSubtitle), findsOneWidget);
+      expect(find.text(sharedSubtitle), findsNothing);
+    });
   });
 
   testWidgets('remote target: names the node and hides local-only Sync Time', (

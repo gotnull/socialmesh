@@ -26888,6 +26888,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Borrar todos los nodos conocidos del dispositivo y la aplicación';
 
   @override
+  String get deviceMgmtResetNodeDbSubtitleShared =>
+      'Borrar los nodos conocidos de la radio; la lista compartida se queda en la aplicación';
+
+  @override
   String get deviceMgmtResetNodeDbWarning =>
       'Esto borrará todos los nodos descubiertos del dispositivo y la aplicación. Los nodos se redescubrirán con el tiempo.';
 

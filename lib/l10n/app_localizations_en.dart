@@ -26437,6 +26437,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Clear all known nodes from device and app';
 
   @override
+  String get deviceMgmtResetNodeDbSubtitleShared =>
+      'Clear known nodes from the radio, keep the shared list in the app';
+
+  @override
   String get deviceMgmtResetNodeDbWarning =>
       'This will clear all discovered nodes from the device and app. Nodes will be rediscovered over time.';
 

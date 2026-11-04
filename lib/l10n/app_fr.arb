@@ -2014,6 +2014,7 @@
   "deviceMgmtRebootTitle": "Redémarrer l'appareil",
   "deviceMgmtRebootWarning": "L'appareil redémarrera dans 2 secondes. Vous serez brièvement déconnecté pendant le redémarrage.",
   "deviceMgmtResetNodeDbSubtitle": "Effacer tous les noeuds connus de l'appareil et de l'application",
+  "deviceMgmtResetNodeDbSubtitleShared": "Effacer les nœuds connus de la radio, la liste partagée reste dans l'application",
   "deviceMgmtResetNodeDbTitle": "Réinitialiser la base de données des noeuds",
   "deviceMgmtResetNodeDbWarning": "Ceci effacera tous les noeuds découverts de l'appareil et de l'application. Les noeuds seront redécouverts progressivement.",
   "resetNodeDbSharedWarning": "Cela efface les nœuds enregistrés sur la radio, qui réapprendra le mesh au fil du temps. La liste des nœuds de l'application est partagée avec vos autres radios, elle reste donc inchangée.",

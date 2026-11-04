@@ -26775,6 +26775,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Очистити всі відомі вузли з пристрою та застосунку';
 
   @override
+  String get deviceMgmtResetNodeDbSubtitleShared =>
+      'Очистити відомі вузли на рації, спільний список залишається в застосунку';
+
+  @override
   String get deviceMgmtResetNodeDbWarning =>
       'Це очистить усі виявлені вузли з пристрою та застосунку. Вузли будуть повторно виявлені з часом.';
 

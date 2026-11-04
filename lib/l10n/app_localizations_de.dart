@@ -26828,6 +26828,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Alle bekannten Knoten vom Gerät und der App löschen';
 
   @override
+  String get deviceMgmtResetNodeDbSubtitleShared =>
+      'Bekannte Knoten vom Funkgerät löschen, die geteilte Liste bleibt in der App';
+
+  @override
   String get deviceMgmtResetNodeDbWarning =>
       'Dadurch werden alle entdeckten Knoten vom Gerät und der App gelöscht. Knoten werden nach und nach neu entdeckt.';
 
