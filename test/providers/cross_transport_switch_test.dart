@@ -478,6 +478,67 @@ void main() {
     });
   });
 
+  group('NodesNotifier.clearAfterNodeDbReset', () {
+    Future<_Harness> connectedTo(int nodeNum) async {
+      final h = await _makeHarness(
+        lastDeviceId: 'tcp:radio-a.local:4403',
+        lastDeviceType: 'network',
+        lastMyNodeNum: nodeNum,
+      );
+      addTearDown(h.container.dispose);
+      await RadioScope.instance.useNodeNum(nodeNum);
+      return h;
+    }
+
+    Future<void> seedNodes(_Harness h) async {
+      await h.nodeStorage.saveNodes([_node(1), _node(2), _node(3)]);
+      h.container.read(nodesProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(h.container.read(nodesProvider).length, 3);
+    }
+
+    test('keeps the node list another radio shares', () async {
+      final h = await connectedTo(0xaaaa);
+      await RadioScope.instance.useNodeNum(0xbbbb);
+      await RadioScope.instance.useNodeNum(0xaaaa);
+      await RadioScope.instance.shareScope(
+        key: radioScopeKeyForNodeNum(0xbbbb),
+        into: radioScopeKeyForNodeNum(0xaaaa),
+      );
+      await seedNodes(h);
+
+      h.container
+          .read(nodesProvider.notifier)
+          .clearAfterNodeDbReset(
+            sharedWithOtherRadios: await RadioScope.instance
+                .currentScopeIsShared(),
+          );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(h.container.read(nodesProvider).keys, unorderedEquals([1, 2, 3]));
+      expect(
+        (await h.nodeStorage.loadNodes()).map((n) => n.nodeNum),
+        unorderedEquals([1, 2, 3]),
+      );
+    });
+
+    test('clears the node list a radio keeps to itself', () async {
+      final h = await connectedTo(0xaaaa);
+      await seedNodes(h);
+
+      h.container
+          .read(nodesProvider.notifier)
+          .clearAfterNodeDbReset(
+            sharedWithOtherRadios: await RadioScope.instance
+                .currentScopeIsShared(),
+          );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(h.container.read(nodesProvider), isEmpty);
+      expect(await h.nodeStorage.loadNodes(), isEmpty);
+    });
+  });
+
   group('NodesNotifier._init hydration race', () {
     test('destructive clearNodes() during an in-flight loadNodes() await does '
         'NOT resurrect stale nodes when the await resolves', () async {

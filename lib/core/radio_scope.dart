@@ -603,6 +603,15 @@ class RadioScope {
     return true;
   }
 
+  /// Whether the dataset in effect belongs to more than one radio: the
+  /// connected radio shares another's data, or another radio shares its.
+  Future<bool> currentScopeIsShared() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Arrangements are flattened on write, so every alias names the scope
+    // that owns the data.
+    return _readMap(prefs, _prefsAliasesKey).values.contains(_current);
+  }
+
   /// Scope [key] stores into: itself, or the scope it shares.
   String _resolveAlias(SharedPreferences prefs, String key) {
     final aliases = _readMap(prefs, _prefsAliasesKey);

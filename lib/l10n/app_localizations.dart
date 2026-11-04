@@ -46150,6 +46150,12 @@ abstract class AppLocalizations {
   /// **'This will clear all discovered nodes from the device and app. Nodes will be rediscovered over time.'**
   String get deviceMgmtResetNodeDbWarning;
 
+  /// Reset Node Database confirmation shown when the connected radio shares its stored data with other radios: only the radio is reset and the app keeps the shared node list
+  ///
+  /// In en, this message translates to:
+  /// **'This clears the nodes stored on the radio, and it relearns the mesh over time. The app\'s node list is shared with your other radios, so it stays as it is.'**
+  String get resetNodeDbSharedWarning;
+
   /// Title for the developer tools screen
   ///
   /// In en, this message translates to:

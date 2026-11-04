@@ -26892,6 +26892,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esto borrará todos los nodos descubiertos del dispositivo y la aplicación. Los nodos se redescubrirán con el tiempo.';
 
   @override
+  String get resetNodeDbSharedWarning =>
+      'Esto borra los nodos guardados en la radio, que volverá a conocer la malla con el tiempo. La lista de nodos de la aplicación se comparte con sus otras radios, así que se conserva tal como está.';
+
+  @override
   String get deviceMgmtFactoryResetConfigTitle =>
       'Restablecimiento de fábrica de configuración';
 

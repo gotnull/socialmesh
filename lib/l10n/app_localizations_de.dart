@@ -26832,6 +26832,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dadurch werden alle entdeckten Knoten vom Gerät und der App gelöscht. Knoten werden nach und nach neu entdeckt.';
 
   @override
+  String get resetNodeDbSharedWarning =>
+      'Dadurch werden die auf dem Funkgerät gespeicherten Knoten gelöscht, und es lernt das Mesh nach und nach neu. Die Knotenliste der App wird mit Ihren anderen Funkgeräten geteilt und bleibt deshalb erhalten.';
+
+  @override
   String get deviceMgmtFactoryResetConfigTitle =>
       'Konfiguration auf Werksstandard zurücksetzen';
 

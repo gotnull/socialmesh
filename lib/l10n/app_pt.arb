@@ -28747,6 +28747,7 @@
   "deviceMgmtResetNodeDbSubtitle": "Limpar todos os nós conhecidos do dispositivo e do app",
   "deviceMgmtResetNodeDbTitle": "Redefinir banco de dados de nós",
   "deviceMgmtResetNodeDbWarning": "Isso limpará todos os nós descobertos do dispositivo e do app. Os nós serão redescobertos com o tempo.",
+  "resetNodeDbSharedWarning": "Isso limpa os nós salvos no rádio, que vai redescobrir a mesh com o tempo. A lista de nós do app é compartilhada com seus outros rádios, por isso continua como está.",
   "deviceMgmtSectionFirmware": "FIRMWARE",
   "deviceMgmtSectionPower": "ENERGIA",
   "deviceMgmtSectionReset": "REDEFINIR",

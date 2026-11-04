@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/units/byte_format.dart';
@@ -300,47 +301,57 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                   title: context.l10n.deviceMgmtResetNodeDbTitle,
                   subtitle: context.l10n.deviceMgmtResetNodeDbSubtitle,
                   enabled: isConnected,
-                  onTap: () => _executeAction(
-                    context.l10n.deviceMgmtResetNodeDbTitle,
-                    () async {
-                      final target = AdminTarget.fromNullable(
-                        ref.read(remoteAdminTargetProvider),
-                      );
-                      AppLogging.connection(
-                        'DeviceManagement: Sending nodeDbReset - '
-                        'will clear all discovered nodes from device',
-                      );
-                      await protocol.nodeDbReset(target: target);
-                      if (!mounted) return;
-                      AppLogging.connection(
-                        'DeviceManagement: nodeDbReset sent',
-                      );
-                      // Only clear local app state for local device
-                      if (target.isLocal) {
-                        final nodesNotifier = ref.read(nodesProvider.notifier);
+                  onTap: () async {
+                    final l10n = context.l10n;
+                    final target = AdminTarget.fromNullable(
+                      ref.read(remoteAdminTargetProvider),
+                    );
+                    final shared =
+                        target.isLocal &&
+                        await RadioScope.instance.currentScopeIsShared();
+                    if (!mounted) return;
+                    await _executeAction(
+                      l10n.deviceMgmtResetNodeDbTitle,
+                      () async {
                         AppLogging.connection(
-                          'DeviceManagement: clearing local nodes cache',
+                          'DeviceManagement: Sending nodeDbReset - '
+                          'will clear all discovered nodes from device',
                         );
-                        nodesNotifier.clearNodes();
-                        // Restart the discovery-cooldown window so the
-                        // Nodes screen's "Discovering" shimmer is
-                        // bounded (default 3 min) instead of rendering
-                        // forever - the TCP-connected radio's link
-                        // stays up across this reset, so the cooldown
-                        // would otherwise never re-arm via the
-                        // disconnect→connect listener.
-                        ref
-                            .read(nodeDiscoveryCooldownProvider.notifier)
-                            .restartCooldown();
-                        ref
-                            .read(countdownProvider.notifier)
-                            .startDeviceRebootCountdown(
-                              reason: 'node database reset',
-                            );
-                      }
-                    },
-                    warningMessage: context.l10n.deviceMgmtResetNodeDbWarning,
-                  ),
+                        await protocol.nodeDbReset(target: target);
+                        if (!mounted) return;
+                        AppLogging.connection(
+                          'DeviceManagement: nodeDbReset sent',
+                        );
+                        // Only clear local app state for local device
+                        if (target.isLocal) {
+                          final nodesNotifier = ref.read(
+                            nodesProvider.notifier,
+                          );
+                          nodesNotifier.clearAfterNodeDbReset(
+                            sharedWithOtherRadios: shared,
+                          );
+                          // Restart the discovery-cooldown window so the
+                          // Nodes screen's "Discovering" shimmer is
+                          // bounded (default 3 min) instead of rendering
+                          // forever - the TCP-connected radio's link
+                          // stays up across this reset, so the cooldown
+                          // would otherwise never re-arm via the
+                          // disconnect→connect listener.
+                          ref
+                              .read(nodeDiscoveryCooldownProvider.notifier)
+                              .restartCooldown();
+                          ref
+                              .read(countdownProvider.notifier)
+                              .startDeviceRebootCountdown(
+                                reason: 'node database reset',
+                              );
+                        }
+                      },
+                      warningMessage: shared
+                          ? l10n.resetNodeDbSharedWarning
+                          : l10n.deviceMgmtResetNodeDbWarning,
+                    );
+                  },
                 ),
                 _ActionCard(
                   icon: Icons.settings_backup_restore,

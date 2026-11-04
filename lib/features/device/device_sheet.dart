@@ -9,6 +9,7 @@ import 'package:socialmesh/providers/scanner_lifecycle_providers.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
@@ -549,10 +550,14 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
   }
 
   Future<void> _showResetNodeDbDialog(BuildContext context) async {
+    final shared = await RadioScope.instance.currentScopeIsShared();
+    if (!context.mounted) return;
     final confirmed = await AppBottomSheet.showConfirm(
       context: context,
       title: context.l10n.deviceSheetResetNodeDbDialogTitle,
-      message: context.l10n.deviceSheetResetNodeDbDialogMessage,
+      message: shared
+          ? context.l10n.resetNodeDbSharedWarning
+          : context.l10n.deviceSheetResetNodeDbDialogMessage,
       confirmLabel: context.l10n.deviceSheetResetNodeDbDialogConfirm,
       isDestructive: true,
     );
@@ -562,9 +567,10 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
         final protocol = ref.read(protocolServiceProvider);
         await protocol.nodeDbReset();
 
-        // Clear local nodes from the app's state and storage
         if (!mounted) return;
-        ref.read(nodesProvider.notifier).clearNodes();
+        ref
+            .read(nodesProvider.notifier)
+            .clearAfterNodeDbReset(sharedWithOtherRadios: shared);
         ref
             .read(countdownProvider.notifier)
             .startDeviceRebootCountdown(reason: 'node database reset');

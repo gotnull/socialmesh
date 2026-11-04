@@ -26779,6 +26779,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Це очистить усі виявлені вузли з пристрою та застосунку. Вузли будуть повторно виявлені з часом.';
 
   @override
+  String get resetNodeDbSharedWarning =>
+      'Це очистить вузли, збережені на рації, і з часом вона знову вивчить меш. Список вузлів у застосунку спільний з вашими іншими раціями, тому він залишиться без змін.';
+
+  @override
   String get deviceMgmtFactoryResetConfigTitle =>
       'Скидання конфігурації до заводських налаштувань';
 

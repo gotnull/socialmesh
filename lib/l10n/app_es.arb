@@ -2016,6 +2016,7 @@
   "deviceMgmtResetNodeDbSubtitle": "Borrar todos los nodos conocidos del dispositivo y la aplicación",
   "deviceMgmtResetNodeDbTitle": "Restablecer base de datos de nodos",
   "deviceMgmtResetNodeDbWarning": "Esto borrará todos los nodos descubiertos del dispositivo y la aplicación. Los nodos se redescubrirán con el tiempo.",
+  "resetNodeDbSharedWarning": "Esto borra los nodos guardados en la radio, que volverá a conocer la malla con el tiempo. La lista de nodos de la aplicación se comparte con sus otras radios, así que se conserva tal como está.",
   "deviceMgmtSectionFirmware": "FIRMWARE",
   "deviceMgmtSectionPower": "ENERGÍA",
   "deviceMgmtSectionReset": "RESTABLECER",

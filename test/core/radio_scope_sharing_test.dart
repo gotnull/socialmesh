@@ -94,6 +94,31 @@ void main() {
       expect(RadioScope.instance.currentKey, 'node-a6960864');
     });
 
+    test('currentScopeIsShared covers both sides of the arrangement', () async {
+      await RadioScope.instance.useNodeNum(home);
+      await RadioScope.instance.useNodeNum(mobile);
+      expect(await RadioScope.instance.currentScopeIsShared(), isFalse);
+
+      await RadioScope.instance.shareScope(
+        key: 'node-6944378a',
+        into: 'node-a6960864',
+      );
+      // The connected radio uses another's data.
+      expect(await RadioScope.instance.currentScopeIsShared(), isTrue);
+
+      // The radio that owns the data is shared too.
+      await RadioScope.instance.useNodeNum(home);
+      expect(await RadioScope.instance.currentScopeIsShared(), isTrue);
+
+      // A third radio with its own data is not.
+      await RadioScope.instance.useNodeNum(third);
+      expect(await RadioScope.instance.currentScopeIsShared(), isFalse);
+
+      await RadioScope.instance.useNodeNum(home);
+      await RadioScope.instance.stopSharing('node-6944378a');
+      expect(await RadioScope.instance.currentScopeIsShared(), isFalse);
+    });
+
     test('stopSharing returns the radio to its own data', () async {
       await RadioScope.instance.useNodeNum(home);
       await RadioScope.instance.useNodeNum(mobile);

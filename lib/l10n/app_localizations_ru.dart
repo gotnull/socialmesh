@@ -26775,6 +26775,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это удалит все обнаруженные узлы с устройства и из приложения. Узлы будут повторно обнаружены со временем.';
 
   @override
+  String get resetNodeDbSharedWarning =>
+      'Это удалит узлы, сохранённые на рации, и со временем она заново узнает меш. Список узлов в приложении общий с вашими другими рациями, поэтому он останется без изменений.';
+
+  @override
   String get deviceMgmtFactoryResetConfigTitle => 'Сброс конфигурации';
 
   @override

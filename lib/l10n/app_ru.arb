@@ -2031,6 +2031,7 @@
   "deviceMgmtResetNodeDbSubtitle": "Очистить все известные узлы с устройства и из приложения",
   "deviceMgmtResetNodeDbTitle": "Сброс базы данных узлов",
   "deviceMgmtResetNodeDbWarning": "Это удалит все обнаруженные узлы с устройства и из приложения. Узлы будут повторно обнаружены со временем.",
+  "resetNodeDbSharedWarning": "Это удалит узлы, сохранённые на рации, и со временем она заново узнает меш. Список узлов в приложении общий с вашими другими рациями, поэтому он останется без изменений.",
   "deviceMgmtSectionFirmware": "ПРОШИВКА",
   "deviceMgmtSectionPower": "ПИТАНИЕ",
   "deviceMgmtSectionReset": "СБРОС",

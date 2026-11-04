@@ -26441,6 +26441,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This will clear all discovered nodes from the device and app. Nodes will be rediscovered over time.';
 
   @override
+  String get resetNodeDbSharedWarning =>
+      'This clears the nodes stored on the radio, and it relearns the mesh over time. The app\'s node list is shared with your other radios, so it stays as it is.';
+
+  @override
   String get deviceMgmtFactoryResetConfigTitle => 'Factory Reset Config';
 
   @override

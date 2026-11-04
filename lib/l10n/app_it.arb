@@ -28747,6 +28747,7 @@
   "deviceMgmtResetNodeDbSubtitle": "Cancella tutti i nodi conosciuti dal dispositivo e dall'app",
   "deviceMgmtResetNodeDbTitle": "Reimposta database nodi",
   "deviceMgmtResetNodeDbWarning": "Questo cancellerà tutti i nodi scoperti dal dispositivo e dall'app. I nodi verranno riscoperti nel tempo.",
+  "resetNodeDbSharedWarning": "Questo cancella i nodi salvati sulla radio, che riscoprirà la mesh nel tempo. L'elenco dei nodi dell'app è condiviso con le tue altre radio, quindi resta com'è.",
   "deviceMgmtSectionFirmware": "FIRMWARE",
   "deviceMgmtSectionPower": "ALIMENTAZIONE",
   "deviceMgmtSectionReset": "RIPRISTINO",

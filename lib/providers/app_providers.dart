@@ -6865,6 +6865,19 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
 
   void clearNodes() => _clear(clearStorage: true);
 
+  /// Clears the node list after the connected radio's node database was
+  /// reset. A list shared with other radios is their history too, so it is
+  /// kept and only the radio starts over.
+  void clearAfterNodeDbReset({required bool sharedWithOtherRadios}) {
+    if (sharedWithOtherRadios) {
+      AppLogging.nodes(
+        'NODEDB_RESET: node list shared with other radios - kept',
+      );
+      return;
+    }
+    clearNodes();
+  }
+
   /// Drops the in-memory node map but leaves the persisted cache alone.
   ///
   /// Used when the connection moves to another radio: each radio's nodes

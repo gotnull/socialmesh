@@ -26749,6 +26749,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Isso limpará todos os nós descobertos do dispositivo e do app. Os nós serão redescobertos com o tempo.';
 
   @override
+  String get resetNodeDbSharedWarning =>
+      'Isso limpa os nós salvos no rádio, que vai redescobrir a mesh com o tempo. A lista de nós do app é compartilhada com seus outros rádios, por isso continua como está.';
+
+  @override
   String get deviceMgmtFactoryResetConfigTitle => 'Redefinir configuração';
 
   @override

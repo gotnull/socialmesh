@@ -26958,6 +26958,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ceci effacera tous les noeuds découverts de l\'appareil et de l\'application. Les noeuds seront redécouverts progressivement.';
 
   @override
+  String get resetNodeDbSharedWarning =>
+      'Cela efface les nœuds enregistrés sur la radio, qui réapprendra le mesh au fil du temps. La liste des nœuds de l\'application est partagée avec vos autres radios, elle reste donc inchangée.';
+
+  @override
   String get deviceMgmtFactoryResetConfigTitle =>
       'Réinitialisation d\'usine de la config';
 

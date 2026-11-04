@@ -35518,6 +35518,10 @@
   "@deviceMgmtResetNodeDbWarning": {
     "description": "Text displayed in developer tools"
   },
+  "resetNodeDbSharedWarning": "This clears the nodes stored on the radio, and it relearns the mesh over time. The app's node list is shared with your other radios, so it stays as it is.",
+  "@resetNodeDbSharedWarning": {
+    "description": "Reset Node Database confirmation shown when the connected radio shares its stored data with other radios: only the radio is reset and the app keeps the shared node list"
+  },
   "deviceMgmtFactoryResetConfigTitle": "Factory Reset Config",
   "@deviceMgmtFactoryResetConfigTitle": {
     "description": "Title for the developer tools screen"

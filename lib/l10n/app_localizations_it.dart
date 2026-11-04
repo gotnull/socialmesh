@@ -26759,6 +26759,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo cancellerà tutti i nodi scoperti dal dispositivo e dall\'app. I nodi verranno riscoperti nel tempo.';
 
   @override
+  String get resetNodeDbSharedWarning =>
+      'Questo cancella i nodi salvati sulla radio, che riscoprirà la mesh nel tempo. L\'elenco dei nodi dell\'app è condiviso con le tue altre radio, quindi resta com\'è.';
+
+  @override
   String get deviceMgmtFactoryResetConfigTitle => 'Ripristino configurazione';
 
   @override
