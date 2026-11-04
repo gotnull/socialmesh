@@ -17,12 +17,14 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:socialmesh/core/radio_scope.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/features/waypoints/providers/waypoint_providers.dart';
 import 'package:socialmesh/features/waypoints/services/waypoint_database.dart';
 import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
 import 'package:socialmesh/generated/meshtastic/portnums.pbenum.dart' as pn;
 import 'package:socialmesh/providers/app_providers.dart';
+import 'package:socialmesh/providers/radio_scope_providers.dart';
 import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
@@ -198,5 +200,58 @@ void main() {
       await settle();
       expect(c.read(meshWaypointsProvider), isEmpty);
     });
+  });
+
+  test('switching radios moves the list to the new radio\'s store', () async {
+    SharedPreferences.setMockInitialValues({});
+    final tempDir = await Directory.systemTemp.createTemp('wp_scope');
+    RadioScope.instance.debugSetRoot(Directory(p.join(tempDir.path, 'root')));
+    await RadioScope.instance.init();
+    await RadioScope.instance.useNodeNum(0xaaaa);
+    final dedupeStore = MeshPacketDedupeStore(
+      dbPathOverride: p.join(tempDir.path, 'dedupe.db'),
+    );
+    await dedupeStore.init();
+    final protocol = ProtocolService(
+      _SilentTransport(),
+      dedupeStore: dedupeStore,
+    );
+    // Same wiring as production, with one file per scope on disk.
+    final container = ProviderContainer(
+      overrides: [
+        protocolServiceProvider.overrideWithValue(protocol),
+        waypointDatabaseProvider.overrideWith((ref) {
+          final key = ref.watch(radioScopeProvider);
+          final db = WaypointDatabase(
+            testDbPath: p.join(tempDir.path, '$key-waypoints.db'),
+          );
+          bindStoreToRadioScope(ref, db, db.close);
+          return db;
+        }),
+      ],
+    );
+    try {
+      container.listen(waypointsNotifierProvider, (_, _) {});
+      await container.read(waypointsNotifierProvider.future);
+      await protocol.handleIncomingPacket(_waypointFrame(from: 0x10, id: 1));
+      await settle();
+      expect(container.read(meshWaypointsProvider).map((w) => w.id), [1]);
+
+      await RadioScope.instance.useNodeNum(0xbbbb);
+      await settle();
+      expect(await container.read(waypointsNotifierProvider.future), isEmpty);
+
+      await protocol.handleIncomingPacket(_waypointFrame(from: 0x10, id: 2));
+      await settle();
+      expect(container.read(meshWaypointsProvider).map((w) => w.id), [2]);
+      final stored = await container.read(waypointDatabaseProvider).getAll();
+      expect(stored.map((w) => w.id), [2]);
+    } finally {
+      container.dispose();
+      protocol.stop();
+      await dedupeStore.dispose();
+      RadioScope.instance.debugSetRoot(null);
+      await tempDir.delete(recursive: true);
+    }
   });
 }

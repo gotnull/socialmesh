@@ -44,7 +44,9 @@ class WaypointsNotifier extends AsyncNotifier<List<MeshWaypoint>> {
 
   @override
   Future<List<MeshWaypoint>> build() async {
-    final db = ref.read(waypointDatabaseProvider);
+    // Watched, not read: a radio switch replaces the store, and the list,
+    // the cleanup timer and the subscription must move to the new one.
+    final db = ref.watch(waypointDatabaseProvider);
     await db.init();
 
     _myNodeNum = ref.read(myNodeNumProvider);
