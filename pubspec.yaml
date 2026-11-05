@@ -62,7 +62,7 @@ dependencies:
   intl: ^0.20.2
   collection: ^1.18.0
   geolocator: ^14.1.1
-  geocoding: ^5.0.0
+  geocoding: ^5.0.1
   share_plus: ^13.3.1
   social_media_buttons: ^1.0.0
   sticker_view: ^0.0.4
