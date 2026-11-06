@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.77.0] - 2026-11-06
+
+### Fixed
+
+- Connecting to a Meshtastic radio no longer floods the mesh. Every time the app connected or reconnected, it asked every node in the radio's node list for its position, one after another. With a few hundred nodes that was a few hundred radio transmissions, plus every reply, on each reconnect. It no longer does. The radio already hands over each node's last known position when it connects.
+- Refreshing positions from the Map, the Dashboard quick action or a widget button now asks only the nodes heard in the last two hours, the most recently heard first, and at most 16 of them, which is as many as the radio can queue at once. It used to ask every node the radio had ever stored, including ones long out of range, and the radio dropped whatever did not fit in its queue or pushed out other nodes' traffic to make room.
+
 ## [1.76.0] - 2026-11-03
 
 ### Added
