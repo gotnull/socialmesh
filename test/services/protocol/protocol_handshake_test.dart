@@ -551,6 +551,71 @@ void main() {
     },
   );
 
+  test('position refresh asks only recently heard nodes, newest first, '
+      'up to the radio transmit queue', () async {
+    await _withTempDirectory((dir) async {
+      final transport = _FakeTransport();
+      final protocol = await _freshProtocol(dir, transport);
+      try {
+        const myNode = 0x1000;
+        final nowSecs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        await protocol.sendInitialConfigRequestForTest();
+        await protocol.handleIncomingPacket(
+          (pb.FromRadio()..myInfo = (pb.MyNodeInfo()..myNodeNum = myNode))
+              .writeToBuffer(),
+        );
+        Future<void> addNode(int nodeNum, {int? lastHeardSecs}) =>
+            protocol.handleIncomingPacket(
+              (pb.FromRadio()
+                    ..nodeInfo = (pb.NodeInfo()
+                      ..num = nodeNum
+                      ..lastHeard = lastHeardSecs ?? 0))
+                  .writeToBuffer(),
+            );
+        // 20 nodes heard 1..20 minutes ago, one heard 3 hours ago, one
+        // never heard.
+        for (var i = 1; i <= 20; i++) {
+          await addNode(0x2000 + i, lastHeardSecs: nowSecs - i * 60);
+        }
+        await addNode(0x3001, lastHeardSecs: nowSecs - 3 * 3600);
+        await addNode(0x3002);
+        // Let the local-node request scheduled by myInfo fire first.
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+        transport.sent.clear();
+
+        await protocol.requestAllPositions();
+
+        final targets = transport.sent
+            .map((bytes) => pb.ToRadio.fromBuffer(bytes))
+            .where(
+              (t) =>
+                  t.hasPacket() &&
+                  t.packet.hasDecoded() &&
+                  t.packet.decoded.portnum == pn.PortNum.POSITION_APP,
+            )
+            .map((t) => t.packet.to)
+            .toList();
+        expect(targets.first, myNode, reason: 'the local node is asked');
+        expect(
+          targets.skip(1).toList(),
+          [
+            for (
+              var i = 1;
+              i <= ProtocolService.maxPositionRequestsPerRefresh;
+              i++
+            )
+              0x2000 + i,
+          ],
+          reason:
+              'only nodes heard within the online window, most recent '
+              'first, capped at the transmit queue size',
+        );
+      } finally {
+        protocol.stop();
+      }
+    });
+  });
+
   // Regression: defensive nonce handling. Older / forked firmware that
   // doesn't echo the wantConfigId in configCompleteId would have
   // hard-failed with the original strict-equality gate. We accept any

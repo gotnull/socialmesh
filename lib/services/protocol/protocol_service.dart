@@ -1165,6 +1165,12 @@ class ProtocolService {
   final Map<(int, TelemetryRequestType), DateTime> _lastTelemetryRequestAt = {};
   static const Duration _telemetryRequestMinInterval = Duration(seconds: 30);
 
+  /// Remote nodes asked in one position refresh. Matches the firmware's
+  /// transmit queue (`MAX_TX_QUEUE` in `RadioInterface.h`); past it the
+  /// radio drops each request or evicts a lower-priority queued packet,
+  /// which can be another node's rebroadcast.
+  static const int maxPositionRequestsPerRefresh = 16;
+
   /// Public accessors for SM binary protocol components.
   SmCapabilityStore get smCapabilityStore => _smCapabilityStore;
   SmFeatureFlag get smFeatureFlag => _smFeatureFlag;
@@ -8823,13 +8829,31 @@ class ProtocolService {
     }
   }
 
-  /// Request positions from all known nodes
+  /// Request positions from the nodes most likely to answer: those heard
+  /// within [PresenceThresholds.onlineWindow], most recently heard first,
+  /// at most [maxPositionRequestsPerRefresh] of them. The local node is
+  /// always asked; that request is answered by the radio without a
+  /// transmission.
   Future<void> requestAllPositions() async {
-    // Take a snapshot of node keys to avoid ConcurrentModificationError
-    // if _nodes is modified while iterating (e.g., by incoming packets)
-    final nodeNums = _nodes.keys.toList();
+    final cutoff = DateTime.now().subtract(PresenceThresholds.onlineWindow);
+    final heard =
+        _nodes.values
+            .where(
+              (n) =>
+                  n.nodeNum != _myNodeNum &&
+                  n.lastHeard != null &&
+                  n.lastHeard!.isAfter(cutoff),
+            )
+            .toList()
+          ..sort((a, b) => b.lastHeard!.compareTo(a.lastHeard!));
+    final nodeNums = [
+      ?_myNodeNum,
+      ...heard.take(maxPositionRequestsPerRefresh).map((n) => n.nodeNum),
+    ];
     AppLogging.protocol(
-      'Requesting positions from all ${nodeNums.length} known nodes',
+      'Requesting positions from ${nodeNums.length} nodes '
+      '(${heard.length} heard within ${PresenceThresholds.onlineWindow.inHours}h, '
+      '${_nodes.length} known)',
     );
     for (final nodeNum in nodeNums) {
       await requestPosition(nodeNum);
