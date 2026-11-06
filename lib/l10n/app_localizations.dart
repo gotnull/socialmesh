@@ -29491,7 +29491,7 @@ abstract class AppLocalizations {
   /// Copyright notice at the bottom of the scanner screen.
   ///
   /// In en, this message translates to:
-  /// **'© 2025-2026 GOTNULL PTY. LTD. Licensed under GPL-3.0-or-later.'**
+  /// **'© 2025-2026 GOTNULL PTY. LTD.\nLicensed under GPL-3.0-or-later.'**
   String get scannerCopyright;
 
   /// Column header in the device details table.

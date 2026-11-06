@@ -8341,7 +8341,7 @@
   "scannerConnectingStatus": "Підключення...",
   "scannerConnectionFailedWithError": "Помилка підключення: {error}",
   "scannerConnectionTimedOut": "Час підключення вичерпано. Пристрій може бути поза зоною дії, вимкнено або підключено до іншого телефону.",
-  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD. Поширюється за ліцензією GPL-3.0-or-later.",
+  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD.\nПоширюється за ліцензією GPL-3.0-or-later.",
   "scannerDetailAddress": "Адреса",
   "scannerDetailBluetoothLowEnergy": "BLE",
   "scannerDetailConnectionType": "Тип з'єднання",

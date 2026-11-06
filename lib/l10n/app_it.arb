@@ -35404,7 +35404,7 @@
   "scannerConnectingStatus": "Connessione...",
   "scannerConnectionFailedWithError": "Connessione fallita: {error}",
   "scannerConnectionTimedOut": "Timeout di connessione. Il dispositivo potrebbe essere fuori portata, spento o connesso a un altro telefono.",
-  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD. Distribuito con licenza GPL-3.0-or-later.",
+  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD.\nDistribuito con licenza GPL-3.0-or-later.",
   "scannerDetailAddress": "Indirizzo",
   "scannerDetailBluetoothLowEnergy": "BLE",
   "scannerDetailConnectionType": "Tipo di Connessione",

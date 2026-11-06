@@ -17364,7 +17364,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scannerCopyright =>
-      '© 2025-2026 GOTNULL PTY. LTD. Sous licence GPL-3.0-or-later.';
+      '© 2025-2026 GOTNULL PTY. LTD.\nSous licence GPL-3.0-or-later.';
 
   @override
   String get scannerDetailAddress => 'Adresse';

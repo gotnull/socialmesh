@@ -8341,7 +8341,7 @@
   "scannerConnectingStatus": "Connexion en cours...",
   "scannerConnectionFailedWithError": "Échec de la connexion : {error}",
   "scannerConnectionTimedOut": "La connexion a expiré. L'appareil est peut-être hors de portée, éteint ou connecté à un autre téléphone.",
-  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD. Sous licence GPL-3.0-or-later.",
+  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD.\nSous licence GPL-3.0-or-later.",
   "scannerDetailAddress": "Adresse",
   "scannerDetailBluetoothLowEnergy": "BLE",
   "scannerDetailConnectionType": "Type de connexion",

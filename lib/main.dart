@@ -3295,7 +3295,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                     ),
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
-                      '© 2025-2026 GOTNULL PTY. LTD. Licensed under GPL-3.0-or-later.', // lint-allow: hardcoded-string
+                      '© 2025-2026 GOTNULL PTY. LTD.\nLicensed under GPL-3.0-or-later.', // lint-allow: hardcoded-string
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 11,

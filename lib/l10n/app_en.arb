@@ -23261,7 +23261,7 @@
   "@scannerConnectionTimedOut": {
     "description": "User-friendly error message for BLE connection timeout errors."
   },
-  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD. Licensed under GPL-3.0-or-later.",
+  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD.\nLicensed under GPL-3.0-or-later.",
   "@scannerCopyright": {
     "description": "Copyright notice at the bottom of the scanner screen."
   },

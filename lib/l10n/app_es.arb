@@ -8341,7 +8341,7 @@
   "scannerConnectingStatus": "Conectando...",
   "scannerConnectionFailedWithError": "Error de conexión: {error}",
   "scannerConnectionTimedOut": "La conexión agotó el tiempo de espera. Es posible que el dispositivo esté fuera de alcance, apagado o conectado a otro teléfono.",
-  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD. Con licencia GPL-3.0-or-later.",
+  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD.\nCon licencia GPL-3.0-or-later.",
   "scannerDetailAddress": "Dirección",
   "scannerDetailBluetoothLowEnergy": "Bluetooth Low Energy",
   "scannerDetailConnectionType": "Tipo de conexión",

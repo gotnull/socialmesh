@@ -8341,7 +8341,7 @@
   "scannerConnectingStatus": "Verbinde...",
   "scannerConnectionFailedWithError": "Verbindung fehlgeschlagen: {error}",
   "scannerConnectionTimedOut": "Verbindungszeit überschritten. Das Gerät ist möglicherweise außer Reichweite, ausgeschaltet oder mit einem anderen Telefon verbunden.",
-  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD. Lizenziert unter GPL-3.0-or-later.",
+  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD.\nLizenziert unter GPL-3.0-or-later.",
   "scannerDetailAddress": "Adresse",
   "scannerDetailBluetoothLowEnergy": "Bluetooth Low Energy",
   "scannerDetailConnectionType": "Verbindungstyp",

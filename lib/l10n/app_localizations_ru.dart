@@ -17263,7 +17263,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get scannerCopyright =>
-      '© 2025-2026 GOTNULL PTY. LTD. Распространяется по лицензии GPL-3.0-or-later.';
+      '© 2025-2026 GOTNULL PTY. LTD.\nРаспространяется по лицензии GPL-3.0-or-later.';
 
   @override
   String get scannerDetailAddress => 'Адрес';
