@@ -1265,6 +1265,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             'configure',
           ],
           section: context.l10n.settingsSectionRemoteAdmin,
+          sectionBuilder: (context, ref) => _adminableNodeCount(ref) == 0
+              ? null
+              : _buildRemoteAdminSelector(context, ref),
           onTap: () async {
             final currentTarget = ref.read(remoteAdminProvider).targetNodeNum;
             final adminNotifier = ref.read(remoteAdminProvider.notifier);
@@ -1869,6 +1872,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           delegate: SliverChildBuilderDelegate((context, index) {
             final section = grouped.keys.elementAt(index);
             final items = grouped[section]!;
+            if (items.length == 1 && items.first.sectionBuilder != null) {
+              final whole = items.first.sectionBuilder!(context, ref);
+              if (whole != null) return whole;
+            }
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2264,24 +2271,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
   /// Build the Remote Administration selector widget
   /// Shows a tappable tile that opens a bottom sheet to select target node
-  Widget _buildRemoteAdminSelector(BuildContext context, WidgetRef ref) {
-    final remoteState = ref.watch(remoteAdminProvider);
+  // Other nodes with a public key: only those can accept PKI admin messages.
+  int _adminableNodeCount(WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    return nodes.values
+        .where((node) => node.nodeNum != myNodeNum && node.hasPublicKey)
+        .length;
+  }
+
+  Widget _buildRemoteAdminSelector(BuildContext context, WidgetRef ref) {
+    final remoteState = ref.watch(remoteAdminProvider);
     final connectedDevice = ref.watch(connectedDeviceProvider);
     final accentColor = context.accentColor;
 
-    // Only show if we have other nodes to configure
-    // Filter to nodes with public keys (can accept admin messages via PKI)
-    final adminableNodes = nodes.values.where((node) {
-      // Exclude our own node
-      if (node.nodeNum == myNodeNum) return false;
-      // Node must have a public key for PKI admin messages
-      return node.hasPublicKey;
-    }).toList();
-
     // If no other nodes, don't show the selector
-    if (adminableNodes.isEmpty) {
+    final adminableNodeCount = _adminableNodeCount(ref);
+    if (adminableNodeCount == 0) {
       return const SizedBox.shrink();
     }
 
@@ -2376,7 +2382,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   children: [
                     Text(
                       context.l10n.settingsRemoteAdminNodeCount(
-                        adminableNodes.length,
+                        adminableNodeCount,
                       ),
                       style: Theme.of(context).textTheme.labelSmall
                           ?.copyWith(color: context.textTertiary),
@@ -5208,6 +5214,11 @@ class _SearchableSettingItem {
   final Widget Function(BuildContext, WidgetRef, SettingsService)?
   switchBuilder;
 
+  // Renders the item's whole section (heading included) the way the
+  // unfiltered list does, so a live control looks the same when searched.
+  // A null result falls back to the plain heading and row.
+  final Widget? Function(BuildContext, WidgetRef)? sectionBuilder;
+
   const _SearchableSettingItem({
     required this.icon,
     required this.title,
@@ -5216,6 +5227,7 @@ class _SearchableSettingItem {
     required this.section,
     this.onTap,
     this.switchBuilder,
+    this.sectionBuilder,
   });
 }
 

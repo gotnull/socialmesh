@@ -335,4 +335,48 @@ void main() {
       expect(regs, isNot(contains('automatically applies the correct')));
     });
   });
+
+  // Drives the real remote-admin state the way the Settings card does, then
+  // opens the screen: the banner must name the node the changes go to.
+  testWidgets('names the remote node when remote admin is set from Settings', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 6000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    final protocol = _FakeProtocolService(
+      _preset(
+        Config_LoRaConfig_RegionCode.EU_868,
+        Config_LoRaConfig_ModemPreset.LONG_FAST,
+      ),
+      '2.8.0',
+      true,
+    );
+    addTearDown(protocol.closeStreams);
+    final container = ProviderContainer(
+      overrides: [protocolServiceProvider.overrideWithValue(protocol)],
+    );
+    addTearDown(container.dispose);
+    container.read(remoteAdminProvider.notifier).setTarget(0x5678, 'Krahberg');
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: ThemeData.light(),
+          home: const RadioConfigScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(
+      find.text(_l10n.settingsRemoteAdminConfiguringTitle),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Krahberg'), findsWidgets);
+  });
 }

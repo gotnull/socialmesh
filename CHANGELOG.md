@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Searching Settings for remote administration shows the same Remote Administration card as the full list: the node you are configuring, how many nodes you can administer, and the Admin Keys note. It used to show a plain row that looked the same whether or not you were configuring another node.
+
 ### Changed
 
 - The copyright line on the launch screen, the splash screen, the Scanner and Settings > Open source licences now names GOTNULL PTY. LTD., the company that publishes SocialMesh, and says the app is licensed under GPL-3.0-or-later. It used to name SocialMesh, which is the app's name rather than a company, and claimed all rights reserved, which the GPL licence contradicts.
