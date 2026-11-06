@@ -3295,7 +3295,8 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                     ),
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
-                      '© 2026 SocialMesh. All rights reserved.',
+                      '© 2025-2026 GOTNULL PTY. LTD. Licensed under GPL-3.0-or-later.', // lint-allow: hardcoded-string
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 11,
                         color: context.textTertiary.withValues(alpha: 0.7),

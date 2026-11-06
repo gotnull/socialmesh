@@ -17262,7 +17262,8 @@ class AppLocalizationsRu extends AppLocalizations {
       'Время подключения истекло. Устройство может быть вне зоны действия, выключено или подключено к другому телефону.';
 
   @override
-  String get scannerCopyright => '© 2026 SocialMesh. Все права защищены.';
+  String get scannerCopyright =>
+      '© 2025-2026 GOTNULL PTY. LTD. Распространяется по лицензии GPL-3.0-or-later.';
 
   @override
   String get scannerDetailAddress => 'Адрес';
@@ -17714,7 +17715,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsOpenSourceLegalese =>
-      '© 2024 SocialMesh\n\nЭто приложение использует программное обеспечение с открытым исходным кодом. Полный список лицензий сторонних компонентов приведён ниже.';
+      '© 2025-2026 GOTNULL PTY. LTD.\n\nЭто приложение использует программное обеспечение с открытым исходным кодом. Полный список лицензий сторонних компонентов приведён ниже.';
 
   @override
   String get settingsPremiumAllUnlocked => 'Все функции разблокированы!';

@@ -2431,6 +2431,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
                       context.l10n.scannerCopyright,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 11,
                         color: context.textTertiary.withValues(alpha: 0.7),
@@ -2551,6 +2552,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
                       context.l10n.scannerCopyright,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 11,
                         color: context.textTertiary.withValues(alpha: 0.7),

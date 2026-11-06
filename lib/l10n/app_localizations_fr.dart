@@ -17363,7 +17363,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'La connexion a expiré. L\'appareil est peut-être hors de portée, éteint ou connecté à un autre téléphone.';
 
   @override
-  String get scannerCopyright => '© 2026 SocialMesh. Tous droits réservés.';
+  String get scannerCopyright =>
+      '© 2025-2026 GOTNULL PTY. LTD. Sous licence GPL-3.0-or-later.';
 
   @override
   String get scannerDetailAddress => 'Adresse';
@@ -17822,7 +17823,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsOpenSourceLegalese =>
-      '© 2024 SocialMesh\n\nCette application utilise des logiciels open source. Consultez ci-dessous la liste complète des licences tierces.';
+      '© 2025-2026 GOTNULL PTY. LTD.\n\nCette application utilise des logiciels open source. Consultez ci-dessous la liste complète des licences tierces.';
 
   @override
   String get settingsPremiumAllUnlocked =>

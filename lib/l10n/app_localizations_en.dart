@@ -17080,7 +17080,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connection timed out. The device may be out of range, powered off, or connected to another phone.';
 
   @override
-  String get scannerCopyright => '© 2026 SocialMesh. All rights reserved.';
+  String get scannerCopyright =>
+      '© 2025-2026 GOTNULL PTY. LTD. Licensed under GPL-3.0-or-later.';
 
   @override
   String get scannerDetailAddress => 'Address';
@@ -17526,7 +17527,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsOpenSourceLegalese =>
-      '© 2024 SocialMesh\n\nThis app uses open source software. See below for the complete list of third-party licenses.';
+      '© 2025-2026 GOTNULL PTY. LTD.\n\nThis app uses open source software. See below for the complete list of third-party licenses.';
 
   @override
   String get settingsPremiumAllUnlocked => 'All features unlocked!';

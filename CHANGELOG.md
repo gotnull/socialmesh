@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- The copyright line on the launch screen, the splash screen, the Scanner and Settings > Open source licences now names GOTNULL PTY. LTD., the company that publishes SocialMesh, and says the app is licensed under GPL-3.0-or-later. It used to name SocialMesh, which is the app's name rather than a company, and claimed all rights reserved, which the GPL licence contradicts.
+
 ## [1.77.0] - 2026-11-06
 
 ### Fixed

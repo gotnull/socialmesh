@@ -17299,7 +17299,8 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verbindungszeit überschritten. Das Gerät ist möglicherweise außer Reichweite, ausgeschaltet oder mit einem anderen Telefon verbunden.';
 
   @override
-  String get scannerCopyright => '© 2026 SocialMesh. Alle Rechte vorbehalten.';
+  String get scannerCopyright =>
+      '© 2025-2026 GOTNULL PTY. LTD. Lizenziert unter GPL-3.0-or-later.';
 
   @override
   String get scannerDetailAddress => 'Adresse';
@@ -17752,7 +17753,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsOpenSourceLegalese =>
-      '© 2024 SocialMesh\n\nDiese App verwendet Open-Source-Software. Nachfolgend finden Sie die vollständige Liste der Drittanbieter-Lizenzen.';
+      '© 2025-2026 GOTNULL PTY. LTD.\n\nDiese App verwendet Open-Source-Software. Nachfolgend finden Sie die vollständige Liste der Drittanbieter-Lizenzen.';
 
   @override
   String get settingsPremiumAllUnlocked => 'Alle Funktionen freigeschaltet!';

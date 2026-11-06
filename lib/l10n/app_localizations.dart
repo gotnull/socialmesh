@@ -29491,7 +29491,7 @@ abstract class AppLocalizations {
   /// Copyright notice at the bottom of the scanner screen.
   ///
   /// In en, this message translates to:
-  /// **'© 2026 SocialMesh. All rights reserved.'**
+  /// **'© 2025-2026 GOTNULL PTY. LTD. Licensed under GPL-3.0-or-later.'**
   String get scannerCopyright;
 
   /// Column header in the device details table.
@@ -30265,7 +30265,7 @@ abstract class AppLocalizations {
   /// Legalese text passed to the Flutter LicensePage.
   ///
   /// In en, this message translates to:
-  /// **'© 2024 SocialMesh\n\nThis app uses open source software. See below for the complete list of third-party licenses.'**
+  /// **'© 2025-2026 GOTNULL PTY. LTD.\n\nThis app uses open source software. See below for the complete list of third-party licenses.'**
   String get settingsOpenSourceLegalese;
 
   /// Subtitle in the premium card when all features are owned.

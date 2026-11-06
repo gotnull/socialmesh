@@ -17252,7 +17252,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get scannerCopyright =>
-      '© 2026 SocialMesh. Todos os direitos reservados.';
+      '© 2025-2026 GOTNULL PTY. LTD. Licenciado sob a GPL-3.0-or-later.';
 
   @override
   String get scannerDetailAddress => 'Endereço';
@@ -17704,7 +17704,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsOpenSourceLegalese =>
-      '© 2024 SocialMesh\n\nEste app utiliza software de código aberto. Veja abaixo a lista completa de licenças de terceiros.';
+      '© 2025-2026 GOTNULL PTY. LTD.\n\nEste app utiliza software de código aberto. Veja abaixo a lista completa de licenças de terceiros.';
 
   @override
   String get settingsPremiumAllUnlocked => 'Todos os recursos desbloqueados!';

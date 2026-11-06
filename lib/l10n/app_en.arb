@@ -23261,7 +23261,7 @@
   "@scannerConnectionTimedOut": {
     "description": "User-friendly error message for BLE connection timeout errors."
   },
-  "scannerCopyright": "© 2026 SocialMesh. All rights reserved.",
+  "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD. Licensed under GPL-3.0-or-later.",
   "@scannerCopyright": {
     "description": "Copyright notice at the bottom of the scanner screen."
   },
@@ -23851,7 +23851,7 @@
   "@settingsOpenSourceAppName": {
     "description": "Application name passed to the Flutter LicensePage."
   },
-  "settingsOpenSourceLegalese": "© 2024 SocialMesh\n\nThis app uses open source software. See below for the complete list of third-party licenses.",
+  "settingsOpenSourceLegalese": "© 2025-2026 GOTNULL PTY. LTD.\n\nThis app uses open source software. See below for the complete list of third-party licenses.",
   "@settingsOpenSourceLegalese": {
     "description": "Legalese text passed to the Flutter LicensePage."
   },
