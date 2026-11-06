@@ -1497,10 +1497,10 @@ packages:
     dependency: "direct main"
     description:
       name: infinite_calendar_view
-      sha256: e4b6fefb3b30c5f6969c18f5dc5bac830bc9dd4d36d687f2dd786784cacba475
+      sha256: b5eaa20c00f30781a6be705b1a21fde909c2f7ae7ae8d27197759e3087778bd9
       url: "https://pub.dev"
     source: hosted
-    version: "2.12.0"
+    version: "2.14.0"
   intl:
     dependency: "direct main"
     description:
