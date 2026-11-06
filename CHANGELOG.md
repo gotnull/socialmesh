@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The copyright line on the launch screen, the splash screen, the Scanner and Settings > Open source licences now names GOTNULL PTY. LTD., the company that publishes SocialMesh, and says the app is licensed under GPL-3.0-or-later. It used to name SocialMesh, which is the app's name rather than a company, and claimed all rights reserved, which the GPL licence contradicts.
+- The Terms of Service and Privacy Policy now name GOTNULL PTY. LTD., PO Box 5062, Moreland West VIC 3055, Australia, as the company you are dealing with. Before, the Terms called the agreement one between you and SocialMesh, which is the app's name, and the Privacy Policy named no company at all. Because of this, the app asks everyone to accept the updated Terms and Privacy Policy once.
 
 ## [1.77.0] - 2026-11-06
 

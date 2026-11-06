@@ -12,11 +12,11 @@ class LegalConstants {
 
   /// Current Terms of Service version (matches "Last Updated" on website).
   /// Bump this value when Terms content changes materially.
-  static const String termsVersion = '2026-05-01';
+  static const String termsVersion = '2026-11-07';
 
   /// Current Privacy Policy version (matches "Last Updated" on website).
   /// Bump this value when Privacy Policy content changes materially.
-  static const String privacyVersion = '2026-05-01';
+  static const String privacyVersion = '2026-11-07';
 
   /// Age eligibility policy version. Increment to force re-confirmation
   /// from all users (e.g. when the minimum age or legal posture changes).
