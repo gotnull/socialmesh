@@ -1,0 +1,7 @@
+{
+  "app_store_whats_new": "SocialMesh no longer floods the mesh when it connects to a Meshtastic radio. Every connect and reconnect used to ask each node your radio had stored for its position, one after another, which on a busy mesh meant hundreds of transmissions plus the replies. Your radio already passes along each node's last known position, so nothing is lost.\n\nRefreshing positions from the Map, the Dashboard or a widget button now asks only nodes heard in the last two hours, newest first. It stops at 16. That is as many requests as the radio can queue, and it used to drop the rest or push other nodes' traffic aside to fit them.",
+  "app_store_promotional_text": "Quieter on the air: connecting no longer asks every node on the mesh for its position, and a position refresh asks only the nodes heard in the last two hours.",
+  "play": {
+    "en-GB": "Connecting to a Meshtastic radio no longer asks every stored node for its position, which on a busy mesh meant hundreds of transmissions each time. Your radio already passes along each node's last position.\n\nRefreshing positions from the Map, Dashboard or a widget now asks only nodes heard in the last two hours, newest first, and stops at 16, the most the radio can queue."
+  }
+}
