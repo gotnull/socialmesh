@@ -2828,15 +2828,9 @@ class ProtocolService {
         AppLogging.protocol('Failed to request channel details: $e');
       }
     });
-
-    Future.delayed(const Duration(milliseconds: 900), () async {
-      if (!_transport.isConnected) return;
-      try {
-        await requestAllPositions();
-      } catch (e) {
-        AppLogging.protocol('Failed to request positions: $e');
-      }
-    });
+    // No position fan-out here: one directed request per NodeDB entry on
+    // every connect costs one LoRa packet per node, plus acks and replies.
+    // The NodeDB already carries each node's last position.
   }
 
   /// Emit a [MeshTelemetry] event for mesh health analysis.

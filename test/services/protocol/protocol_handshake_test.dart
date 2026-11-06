@@ -492,6 +492,65 @@ void main() {
     });
   });
 
+  // A connect must not put one directed request per NodeDB entry on the
+  // air: with hundreds of nodes that is hundreds of LoRa packets, plus
+  // acks and replies, on every reconnect. Positions arrive in the NodeDB
+  // itself; an on-demand pull is a user action.
+  test(
+    'completed handshake sends no position requests to known nodes',
+    () async {
+      await _withTempDirectory((dir) async {
+        final transport = _FakeTransport();
+        final protocol = await _freshProtocol(dir, transport);
+        try {
+          await protocol.sendInitialConfigRequestForTest();
+          await protocol.handleIncomingPacket(
+            (pb.FromRadio()..myInfo = (pb.MyNodeInfo()..myNodeNum = 0x1000))
+                .writeToBuffer(),
+          );
+          for (final nodeNum in [0x1000, 0x2001, 0x2002, 0x2003]) {
+            await protocol.handleIncomingPacket(
+              (pb.FromRadio()..nodeInfo = (pb.NodeInfo()..num = nodeNum))
+                  .writeToBuffer(),
+            );
+          }
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceInitialConfig),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+          transport.sent.clear();
+          await protocol.handleIncomingPacket(
+            _configCompleteFrame(_nonceQueueDrain),
+          );
+          // Post-config requests are staggered up to about one second.
+          await Future<void>.delayed(const Duration(milliseconds: 1800));
+
+          final packets = transport.sent
+              .map((bytes) => pb.ToRadio.fromBuffer(bytes))
+              .where((t) => t.hasPacket() && t.packet.hasDecoded())
+              .map((t) => t.packet)
+              .toList();
+          expect(
+            packets.any((p) => p.decoded.portnum == pn.PortNum.ADMIN_APP),
+            isTrue,
+            reason: 'post-config admin requests must still run after phase 2',
+          );
+          expect(
+            packets.where(
+              (p) =>
+                  p.decoded.portnum == pn.PortNum.POSITION_APP &&
+                  p.to != 0x1000,
+            ),
+            isEmpty,
+            reason: 'a connect must not request positions from other nodes',
+          );
+        } finally {
+          protocol.stop();
+        }
+      });
+    },
+  );
+
   // Regression: defensive nonce handling. Older / forked firmware that
   // doesn't echo the wantConfigId in configCompleteId would have
   // hard-failed with the original strict-equality gate. We accept any
