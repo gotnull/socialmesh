@@ -27838,6 +27838,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mqttProxyTls => 'TLS';
 
   @override
+  String get mqttDownlinkOffBannerTitle => 'Aucune réception via MQTT';
+
+  @override
+  String get mqttDownlinkOffBannerHint =>
+      'Aucun canal n\'a la liaison descendante activée, donc rien du courtier n\'atteint votre radio. Activez « Liaison descendante activée » dans Modifier le canal pour chaque canal que vous voulez recevoir.';
+
+  @override
   String get mqttProxyAuth => 'Authentification';
 
   @override

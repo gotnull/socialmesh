@@ -164,16 +164,21 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
         return;
       }
     }
+    final broker = mqttProxyBroker(
+      address: cfg.address,
+      username: cfg.username,
+      password: cfg.password,
+    );
     // Preflight gate: validate the config before attempting any connect.
     // Distinguishes missingHost / missingTopicRoot / invalidPort so the UI
     // can surface a structured reason instead of a bare "not connected".
     final preflightResult = MqttClientProxyService.preflight(
       mqttEnabled: cfg.enabled,
       proxyToClientEnabled: cfg.proxyToClientEnabled,
-      address: cfg.address,
+      address: broker.address,
       topicRoot: root,
       tlsEnabled: cfg.tlsEnabled,
-      username: cfg.username,
+      username: broker.username,
     );
     if (!preflightResult.ok) {
       AppLogging.mqttProxyWarning(
@@ -210,10 +215,10 @@ Future<void> _evaluateProxyState(Ref ref, String reason) async {
     );
 
     proxyService.connect(
-      address: cfg.address,
+      address: broker.address,
       tlsEnabled: cfg.tlsEnabled,
-      username: cfg.username,
-      password: cfg.password,
+      username: broker.username,
+      password: broker.password,
       topicPrefix: topicPrefix,
       nodeUserId: nodeUserId,
       subscriptionTopics: subscriptionTopics,

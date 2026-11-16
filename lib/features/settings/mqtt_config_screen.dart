@@ -898,10 +898,27 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
         diag.failureReason ==
         MqttProxyFailureReason.mapReportingConsentRequired;
 
+    // The firmware delivers broker traffic only on channels with downlink
+    // enabled, and downlink is off by default, so a connected MQTT link can
+    // still receive nothing. The channel list is the connected radio's, so
+    // the note is skipped while a remote node is being configured.
+    final showDownlinkOffBanner =
+        _enabled &&
+        ref.watch(remoteAdminTargetProvider) == null &&
+        !ref.watch(channelsProvider).any((c) => c.downlink);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: AppTheme.spacing16),
+        if (showDownlinkOffBanner)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: StatusBanner.info(
+              title: l10n.mqttDownlinkOffBannerTitle,
+              subtitle: l10n.mqttDownlinkOffBannerHint,
+            ),
+          ),
         if (showNotConnectedBanner)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

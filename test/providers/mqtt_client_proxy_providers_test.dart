@@ -297,6 +297,26 @@ void main() {
       expect(proxyService.connectCalls.first.subscriptionTopics, isEmpty);
     });
 
+    test('an empty broker address connects to the default broker', () {
+      protocol.setCurrentMqttConfig(
+        _proxyEnabledConfig(address: '', username: '', password: ''),
+      );
+      container = _makeContainer(
+        protocol: protocol,
+        proxyService: proxyService,
+      );
+
+      container.read(mqttClientProxyAutoConnectProvider);
+
+      expect(proxyService.connectCalls, hasLength(1));
+      expect(proxyService.connectCalls.first.address, 'mqtt.meshtastic.org');
+      expect(proxyService.connectCalls.first.username, 'meshdev');
+      expect(
+        proxyService.diagnostics.failureReason,
+        isNot(MqttProxyFailureReason.missingHost),
+      );
+    });
+
     test('cold start with no cached config does nothing', () {
       protocol.setCurrentMqttConfig(null);
       container = _makeContainer(

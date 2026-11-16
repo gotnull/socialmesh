@@ -22,6 +22,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/meshtastic/modem_preset_metadata.dart';
+import '../../core/mqtt/mqtt_constants.dart';
 import '../../core/mqtt/mqtt_topic_builder.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../models/mesh_models.dart';
@@ -67,6 +68,26 @@ List<String> mqttProxySubscriptionTopics({
   if (topics.isEmpty) return const [];
   topics.add('$topicPrefix/PKI/+');
   return topics;
+}
+
+/// The broker a radio's MQTT config points the proxy at, resolved the way the
+/// firmware resolves it: an empty address means the default Meshtastic broker
+/// with its public credentials, and a set address is used with the configured
+/// username and password exactly as given, including when they are empty.
+({String address, String username, String password}) mqttProxyBroker({
+  required String address,
+  required String username,
+  required String password,
+}) {
+  if (address.isNotEmpty) {
+    return (address: address, username: username, password: password);
+  }
+  final official = BrokerPreset.defaults.first;
+  return (
+    address: official.host,
+    username: official.defaultUsername,
+    password: official.defaultPassword,
+  );
 }
 
 // ---------------------------------------------------------------------------

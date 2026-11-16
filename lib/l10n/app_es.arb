@@ -5386,6 +5386,8 @@
   "mqttConfigUseTls": "Usar TLS",
   "mqttConfigUseTlsSubtitle": "Cifrar la conexión al broker",
   "mqttConfigUsernameLabel": "Usuario",
+  "mqttDownlinkOffBannerHint": "Ningún canal tiene el enlace descendente activado, así que nada del broker llega a su radio. Active «Enlace descendente activado» en Editar canal para cada canal que quiera recibir.",
+  "mqttDownlinkOffBannerTitle": "Sin recepción por MQTT",
   "mqttProxyAuth": "Autenticación",
   "mqttProxyBannerConsentRequiredHint": "Marque la casilla de consentimiento en Informes de mapa para autorizar la transmisión sin cifrar de su ubicación y, luego, guarde.",
   "mqttProxyBannerConsentRequiredTitle": "Se requiere consentimiento para informes de mapa",

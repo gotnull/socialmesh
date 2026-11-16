@@ -5386,6 +5386,8 @@
   "mqttConfigUseTls": "TLS verwenden",
   "mqttConfigUseTlsSubtitle": "Verbindung zum Broker verschlüsseln",
   "mqttConfigUsernameLabel": "Benutzername",
+  "mqttDownlinkOffBannerHint": "Bei keinem Kanal ist „Downlink Aktiv“ eingeschaltet, daher erreicht nichts vom Broker Ihr Funkgerät. Schalten Sie es unter „Kanal bearbeiten“ für jeden Kanal ein, den Sie empfangen möchten.",
+  "mqttDownlinkOffBannerTitle": "Kein Empfang über MQTT",
   "mqttProxyAuth": "Authentifizierung",
   "mqttProxyBannerConsentRequiredHint": "Aktivieren Sie das Einwilligungs-Kontrollkästchen unter Kartenberichterstattung, um die unverschlüsselte Übertragung Ihres Standorts zu autorisieren, und speichern Sie dann.",
   "mqttProxyBannerConsentRequiredTitle": "Einwilligung zur Kartenberichterstattung erforderlich",

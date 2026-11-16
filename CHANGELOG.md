@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Searching Settings for remote administration shows the same Remote Administration card as the full list: the node you are configuring, how many nodes you can administer, and the Admin Keys note. It used to show a plain row that looked the same whether or not you were configuring another node.
 - While you are configuring another node through remote administration, Settings > Region / Frequency now opens Radio Configuration for that node and names it, instead of changing the region of the radio your phone is connected to and rebooting it.
 - Device Config shows the same remote administration banner as the other radio settings screens.
+- Settings > MQTT now says when nothing from the server can reach your radio because no channel has Downlink Enabled turned on, and where to turn it on. Downlink is off by default, so MQTT could show as connected while no messages ever arrived.
+- MQTT through the phone (MQTT Client Proxy) now connects when the radio's server address is empty. The radio treats an empty address as the default Meshtastic server with its public login, and the app now does the same instead of refusing to connect.
 
 ### Changed
 

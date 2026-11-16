@@ -500,6 +500,80 @@ void main() {
     });
   });
 
+  // Firmware PubSubConfig: an empty address selects mqtt.meshtastic.org with
+  // the meshdev / large4cats credentials; a set address keeps the configured
+  // credentials verbatim.
+  group('mqttProxyBroker', () {
+    test('an empty address resolves to the default broker and credentials', () {
+      final broker = mqttProxyBroker(address: '', username: '', password: '');
+      expect(broker.address, 'mqtt.meshtastic.org');
+      expect(broker.username, 'meshdev');
+      expect(broker.password, 'large4cats');
+    });
+
+    test('an empty address ignores any configured credentials', () {
+      final broker = mqttProxyBroker(
+        address: '',
+        username: 'alice',
+        password: 'secret',
+      );
+      expect(broker.address, 'mqtt.meshtastic.org');
+      expect(broker.username, 'meshdev');
+      expect(broker.password, 'large4cats');
+    });
+
+    test('a set address keeps the configured credentials, even empty', () {
+      final withAuth = mqttProxyBroker(
+        address: 'mqtt.example.com:1884',
+        username: 'alice',
+        password: 'secret',
+      );
+      expect(withAuth.address, 'mqtt.example.com:1884');
+      expect(withAuth.username, 'alice');
+      expect(withAuth.password, 'secret');
+
+      final noAuth = mqttProxyBroker(
+        address: 'mqtt.example.com',
+        username: '',
+        password: '',
+      );
+      expect(noAuth.address, 'mqtt.example.com');
+      expect(noAuth.username, '');
+      expect(noAuth.password, '');
+    });
+
+    test('a whitespace address is not treated as empty', () {
+      final broker = mqttProxyBroker(address: '  ', username: '', password: '');
+      expect(broker.address, '  ');
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: broker.address,
+        topicRoot: 'msh/EU_868',
+        tlsEnabled: false,
+        username: broker.username,
+      );
+      expect(result.reason, MqttProxyFailureReason.missingHost);
+    });
+
+    test('an empty address passes preflight against the default broker', () {
+      final broker = mqttProxyBroker(address: '', username: '', password: '');
+      final result = MqttClientProxyService.preflight(
+        mqttEnabled: true,
+        proxyToClientEnabled: true,
+        address: broker.address,
+        topicRoot: 'msh/EU_868',
+        tlsEnabled: false,
+        username: broker.username,
+      );
+      expect(result.ok, true);
+      expect(result.host, 'mqtt.meshtastic.org');
+      expect(result.port, 8883);
+      expect(result.tlsEnabled, true);
+      expect(result.usernamePresent, true);
+    });
+  });
+
   group('MqttClientProxyService phase + reason transitions', () {
     late MqttClientProxyService service;
 

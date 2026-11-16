@@ -27641,6 +27641,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mqttProxyTls => 'TLS';
 
   @override
+  String get mqttDownlinkOffBannerTitle => 'Нет приёма через MQTT';
+
+  @override
+  String get mqttDownlinkOffBannerHint =>
+      'Ни на одном канале не включён нисходящий канал, поэтому ничего от брокера не доходит до вашего радио. Включите «Нисходящий канал включён» в разделе «Изменить канал» для каждого канала, который хотите принимать.';
+
+  @override
   String get mqttProxyAuth => 'Аутентификация';
 
   @override

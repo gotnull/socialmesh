@@ -27705,6 +27705,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mqttProxyTls => 'TLS';
 
   @override
+  String get mqttDownlinkOffBannerTitle => 'Kein Empfang über MQTT';
+
+  @override
+  String get mqttDownlinkOffBannerHint =>
+      'Bei keinem Kanal ist „Downlink Aktiv“ eingeschaltet, daher erreicht nichts vom Broker Ihr Funkgerät. Schalten Sie es unter „Kanal bearbeiten“ für jeden Kanal ein, den Sie empfangen möchten.';
+
+  @override
   String get mqttProxyAuth => 'Authentifizierung';
 
   @override

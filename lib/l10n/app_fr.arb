@@ -5386,6 +5386,8 @@
   "mqttConfigUseTls": "Utiliser TLS",
   "mqttConfigUseTlsSubtitle": "Chiffrer la connexion au courtier",
   "mqttConfigUsernameLabel": "Nom d'utilisateur",
+  "mqttDownlinkOffBannerHint": "Aucun canal n'a la liaison descendante activée, donc rien du courtier n'atteint votre radio. Activez « Liaison descendante activée » dans Modifier le canal pour chaque canal que vous voulez recevoir.",
+  "mqttDownlinkOffBannerTitle": "Aucune réception via MQTT",
   "mqttProxyAuth": "Authentification",
   "mqttProxyBannerConsentRequiredHint": "Cochez la case de consentement sous Rapport cartographique pour autoriser la diffusion non chiffrée de votre localisation, puis enregistrez.",
   "mqttProxyBannerConsentRequiredTitle": "Consentement au rapport cartographique requis",

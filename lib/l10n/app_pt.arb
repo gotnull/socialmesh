@@ -32453,6 +32453,8 @@
   "mqttConfigUseTls": "Usar TLS",
   "mqttConfigUseTlsSubtitle": "Criptografar conexão com o broker",
   "mqttConfigUsernameLabel": "Nome de usuário",
+  "mqttDownlinkOffBannerHint": "Nenhum canal tem o downlink habilitado, então nada do broker chega ao seu rádio. Ative «Downlink habilitado» em Editar canal para cada canal que você quer receber.",
+  "mqttDownlinkOffBannerTitle": "Sem recepção do MQTT",
   "mqttProxyAuth": "Autenticação",
   "mqttProxyBannerConsentRequiredHint": "Marque a caixa de consentimento em Relatório de Mapa para autorizar a transmissão não encriptada da sua localização, depois guarde.",
   "mqttProxyBannerConsentRequiredTitle": "Consentimento de relatório de mapa necessário",

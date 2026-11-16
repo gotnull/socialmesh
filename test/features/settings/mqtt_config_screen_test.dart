@@ -13,6 +13,7 @@ import 'package:socialmesh/generated/meshtastic/module_config.pb.dart'
     as module_pb;
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
+import 'package:socialmesh/models/mesh_models.dart' show ChannelConfig;
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/mqtt_client_proxy_providers.dart';
 import 'package:socialmesh/services/mqtt/mqtt_client_proxy_service.dart';
@@ -89,6 +90,22 @@ class _RecordingProxyService extends MqttClientProxyService {
   bool get isConnected => false;
 }
 
+class _StaticChannelsNotifier extends ChannelsNotifier {
+  _StaticChannelsNotifier(this._channels);
+  final List<ChannelConfig> _channels;
+
+  @override
+  List<ChannelConfig> build() => _channels;
+}
+
+ChannelConfig _channel({required bool downlink}) => ChannelConfig(
+  index: 0,
+  name: '',
+  psk: const <int>[1],
+  role: 'PRIMARY',
+  downlink: downlink,
+);
+
 class _StaticDiagnosticsNotifier extends MqttProxyDiagnosticsNotifier {
   _StaticDiagnosticsNotifier(this._initial);
   final MqttProxyDiagnostics _initial;
@@ -121,9 +138,15 @@ Widget _wrap({
   required _FakeProtocolService protocol,
   required MqttProxyDiagnostics initialDiagnostics,
   _RecordingProxyService? proxyService,
+  List<ChannelConfig>? channels,
+  int? remoteTarget,
 }) {
   return ProviderScope(
     overrides: [
+      if (channels != null)
+        channelsProvider.overrideWith(() => _StaticChannelsNotifier(channels)),
+      if (remoteTarget != null)
+        remoteAdminTargetProvider.overrideWithValue(remoteTarget),
       protocolServiceProvider.overrideWithValue(protocol),
       mqttClientProxyServiceProvider.overrideWithValue(
         proxyService ?? _RecordingProxyService(),
@@ -243,6 +266,56 @@ void main() {
 
     expect(find.text(_l10n.mqttProxyBannerNotConnectedTitle), findsOneWidget);
     expect(find.text(_l10n.mqttProxyBannerNotConnectedHint), findsOneWidget);
+  });
+
+  group('downlink-off note', () {
+    Future<void> pumpWith(
+      WidgetTester tester, {
+      required List<ChannelConfig> channels,
+      int? remoteTarget,
+    }) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      final protocol = _FakeProtocolService(
+        cachedConfig: _proxyEnabledConfig(),
+      );
+      addTearDown(protocol.closeStreams);
+      await tester.pumpWidget(
+        _wrap(
+          protocol: protocol,
+          initialDiagnostics: const MqttProxyDiagnostics(
+            phase: MqttProxyConnectionPhase.connected,
+            isConnected: true,
+          ),
+          channels: channels,
+          remoteTarget: remoteTarget,
+        ),
+      );
+      await _settle(tester);
+    }
+
+    testWidgets('shows while connected when no channel has downlink', (
+      tester,
+    ) async {
+      await pumpWith(tester, channels: [_channel(downlink: false)]);
+      expect(find.text(_l10n.mqttDownlinkOffBannerTitle), findsOneWidget);
+      expect(find.text(_l10n.mqttDownlinkOffBannerHint), findsOneWidget);
+    });
+
+    testWidgets('is absent once a channel has downlink', (tester) async {
+      await pumpWith(tester, channels: [_channel(downlink: true)]);
+      expect(find.text(_l10n.mqttDownlinkOffBannerTitle), findsNothing);
+    });
+
+    testWidgets('is absent while configuring a remote node', (tester) async {
+      await pumpWith(
+        tester,
+        channels: [_channel(downlink: false)],
+        remoteTarget: 0x1234,
+      );
+      expect(find.text(_l10n.mqttDownlinkOffBannerTitle), findsNothing);
+    });
   });
 
   testWidgets('banner is absent when MQTT enabled but proxy disabled', (

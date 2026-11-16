@@ -47698,6 +47698,18 @@ abstract class AppLocalizations {
   /// **'TLS'**
   String get mqttProxyTls;
 
+  /// Title of the MQTT screen note shown when MQTT is on but no channel has downlink enabled, so nothing from the broker reaches the radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Not receiving from MQTT'**
+  String get mqttDownlinkOffBannerTitle;
+
+  /// Body of the MQTT screen note shown when no channel has downlink enabled. 'Downlink Enabled' and 'Edit Channel' must match channelFormDownlinkTitle and channelFormEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No channel has Downlink Enabled turned on, so nothing from the broker reaches your radio. Turn it on under Edit Channel for each channel you want to receive.'**
+  String get mqttDownlinkOffBannerHint;
+
   /// Label for authentication status in MQTT proxy diagnostics
   ///
   /// In en, this message translates to:
