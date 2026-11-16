@@ -157,12 +157,14 @@ void main() {
       final session = MeshCoreSession(tx);
       addTearDown(session.dispose);
 
-      // Six frames 30 ms apart take 180 ms in all, three times the
-      // timeout, but no single gap reaches it.
+      // Six frames 150 ms apart take 900 ms in all, one and a half times
+      // the timeout, but no single gap comes near it. Each gap keeps 450 ms
+      // of slack: a 30 ms gap against a 60 ms timeout failed a correct
+      // session when a loaded machine delayed one timer.
       final fut = session.getContacts(
-        timeout: const Duration(milliseconds: 60),
+        timeout: const Duration(milliseconds: 600),
       );
-      const gap = Duration(milliseconds: 30);
+      const gap = Duration(milliseconds: 150);
       await Future<void>.delayed(gap);
       tx.inject(_contactsStart(total: 4));
       for (var i = 0; i < 4; i++) {
