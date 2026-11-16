@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/qr_share_sheet.dart';
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
@@ -329,30 +331,63 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
       return;
     }
     final protocol = ref.read(protocolServiceProvider);
-    // Prefill from what the radio is configured to send, then from what it
+    final configured = isMyNode
+        ? protocol.currentStatusMessageConfig
+        : protocol.remoteStatusMessageConfig(node.nodeNum);
+    if (!isMyNode) {
+      // A remote save needs a live admin session passkey, which only lasts a
+      // few minutes; asking for this module's config now renews it (and
+      // refreshes the configured value) while the user types.
+      unawaited(
+        protocol
+            .getModuleConfig(
+              admin_pbenum.AdminMessage_ModuleConfigType.STATUSMESSAGE_CONFIG,
+              target: AdminTarget.remote(node.nodeNum),
+            )
+            .catchError(
+              (Object e) => AppLogging.protocol(
+                'Status message config request to '
+                '${node.nodeNum.toRadixString(16)} failed: $e',
+              ),
+            ),
+      );
+    }
+    // Prefill from what the node is configured to send, then from what it
     // last broadcast.
     final initial =
-        _displayableStatus(protocol.currentStatusMessageConfig?.nodeStatus) ??
+        _displayableStatus(configured?.nodeStatus) ??
         _displayableStatus(node.nodeStatus) ??
         '';
     AppBottomSheet.show<void>(
       context: context,
       child: StatusMessageSheet(
         initialStatus: initial,
-        onSave: _saveStatusMessage,
+        onSave: (status) => _saveStatusMessage(status, node),
       ),
     );
   }
 
-  Future<void> _saveStatusMessage(String status) async {
+  Future<void> _saveStatusMessage(String status, MeshNode node) async {
     final l10n = context.l10n;
     if (!ref.read(isLinkConnectedProvider)) {
       showErrorSnackBar(context, l10n.nodeDetailStatusMessageNotConnected);
       return;
     }
     final protocol = ref.read(protocolServiceProvider);
+    // Without a live session the remote node rejects the write, so say so
+    // instead of showing a status that was never set.
+    if (!isMyNode && !protocol.remoteAdminSessionReady(node.nodeNum)) {
+      showErrorSnackBar(
+        context,
+        l10n.nodeDetailStatusMessageNoSession(node.displayName),
+      );
+      return;
+    }
     try {
-      await protocol.setStatusMessageConfig(status);
+      await protocol.setStatusMessageConfig(
+        status,
+        target: isMyNode ? null : AdminTarget.remote(node.nodeNum),
+      );
     } catch (e) {
       AppLogging.protocol('Status message save failed: $e');
       if (!mounted) return;
@@ -902,17 +937,22 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 
   /// Identity section: user ID, hardware, firmware.
   Widget _buildIdentityCard(BuildContext context, MeshNode node) {
-    // The live broadcast first, then for this radio its configured value,
-    // which it knows before it next broadcasts.
+    // The live broadcast first, then the node's configured value, which the
+    // app knows for this radio and for a node it administers remotely.
+    final protocol = ref.watch(protocolServiceProvider);
+    final isAdminTarget =
+        !isMyNode && ref.watch(remoteAdminTargetProvider) == node.nodeNum;
     final configuredStatus = isMyNode
-        ? ref.watch(protocolServiceProvider).currentStatusMessageConfig
+        ? protocol.currentStatusMessageConfig
+        : isAdminTarget
+        ? protocol.remoteStatusMessageConfig(node.nodeNum)
         : null;
     final status =
         _displayableStatus(node.nodeStatus) ??
         _displayableStatus(configuredStatus?.nodeStatus);
     final firmware = firmwareSemanticVersion(node.firmwareVersion);
     final canEditStatus =
-        isMyNode &&
+        (isMyNode || isAdminTarget) &&
         (firmware == null || firmware.isAtLeast(_statusMessageMinFirmware));
     return _buildInfoSection(
       context,

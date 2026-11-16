@@ -13076,6 +13076,11 @@ class AppLocalizationsIt extends AppLocalizations {
       'Collega la tua radio per impostarne il messaggio di stato.';
 
   @override
+  String nodeDetailStatusMessageNoSession(String nodeName) {
+    return '$nodeName non ha ancora risposto, quindi lo stato non può essere salvato. Attendi un momento la risposta, poi salva di nuovo.';
+  }
+
+  @override
   String get nodeDetailStatusMessageNotSet => 'Non impostato';
 
   @override

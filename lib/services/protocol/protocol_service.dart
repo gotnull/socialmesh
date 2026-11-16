@@ -710,6 +710,10 @@ class ProtocolService {
   module_pb.ModuleConfig_TelemetryConfig? _currentTelemetryConfig;
   module_pb.ModuleConfig_PaxcounterConfig? _currentPaxCounterConfig;
   module_pb.ModuleConfig_StatusMessageConfig? _currentStatusMessageConfig;
+  // Last-known Status Message config of remote-admin nodes, keyed by node
+  // number: from their get-module-config responses and from saves to them.
+  final Map<int, module_pb.ModuleConfig_StatusMessageConfig>
+  _remoteStatusMessageConfigByNode = {};
   module_pb.ModuleConfig_AmbientLightingConfig? _currentAmbientLightingConfig;
   module_pb.ModuleConfig_SerialConfig? _currentSerialConfig;
   module_pb.ModuleConfig_StoreForwardConfig? _currentStoreForwardConfig;
@@ -1539,6 +1543,12 @@ class ProtocolService {
   /// The connected radio's Status Message module config (firmware 2.7.20+).
   module_pb.ModuleConfig_StatusMessageConfig? get currentStatusMessageConfig =>
       _currentStatusMessageConfig;
+
+  /// Last-known Status Message config of a remote-admin [nodeNum], or null
+  /// if that node has not reported it.
+  module_pb.ModuleConfig_StatusMessageConfig? remoteStatusMessageConfig(
+    int nodeNum,
+  ) => _remoteStatusMessageConfigByNode[nodeNum];
 
   /// Stream of ambient lighting config updates
   Stream<module_pb.ModuleConfig_AmbientLightingConfig>
@@ -4054,6 +4064,8 @@ class ProtocolService {
           );
           if (isLocalResponse) {
             _currentStatusMessageConfig = statusConfig;
+          } else {
+            _remoteStatusMessageConfigByNode[packet.from] = statusConfig;
           }
         }
 
@@ -11087,11 +11099,11 @@ class ProtocolService {
       _cacheLocalModuleConfig(moduleConfig);
 
       // Module config writes trigger a device reboot, except the status
-      // message, which the firmware saves without one (AdminModule
-      // handleSetModuleConfig sets shouldReboot = false for it). Signalling
-      // a reboot there would leave reboot recovery armed until the next
-      // reconnect.
-      if (!moduleConfig.hasStatusmessage()) {
+      // message and Mesh Beacon, which the firmware saves without one
+      // (AdminModule handleSetModuleConfig sets shouldReboot = false for
+      // both). Signalling a reboot there would leave reboot recovery armed
+      // until the next reconnect.
+      if (!moduleConfig.hasStatusmessage() && !moduleConfig.hasMeshBeacon()) {
         AppLogging.protocol(
           'setModuleConfig: Emitting localConfigWrite - device reboot expected',
         );
@@ -11658,24 +11670,32 @@ class ProtocolService {
     await setModuleConfig(moduleConfig, target: target);
   }
 
-  /// Sets the status message the connected radio broadcasts; an empty
-  /// string clears it. The radio's own node is updated at once so the app
-  /// shows the new status before the radio next broadcasts it.
-  Future<void> setStatusMessageConfig(String nodeStatus) async {
+  /// Sets the status message a radio broadcasts: the connected radio, or a
+  /// remote-admin [target]. An empty string clears it. That node is updated
+  /// at once so the app shows the new status before the radio next
+  /// broadcasts it.
+  Future<void> setStatusMessageConfig(
+    String nodeStatus, {
+    AdminTarget? target,
+  }) async {
     AppLogging.protocol(
       'Setting status message config - length: ${nodeStatus.length}',
     );
     final config = module_pb.ModuleConfig_StatusMessageConfig()
       ..nodeStatus = nodeStatus;
-    await setModuleConfig(module_pb.ModuleConfig()..statusmessage = config);
+    await setModuleConfig(
+      module_pb.ModuleConfig()..statusmessage = config,
+      target: target,
+    );
 
-    final myNodeNum = _myNodeNum;
-    final ownNode = myNodeNum == null ? null : _nodes[myNodeNum];
-    if (myNodeNum == null || ownNode == null) return;
+    final dest = _resolveTarget(target);
+    if (dest != _myNodeNum) _remoteStatusMessageConfigByNode[dest] = config;
+    final node = _nodes[dest];
+    if (node == null) return;
     final updated = nodeStatus.isEmpty
-        ? ownNode.copyWith(clearNodeStatus: true)
-        : ownNode.copyWith(nodeStatus: nodeStatus);
-    _nodes[myNodeNum] = updated;
+        ? node.copyWith(clearNodeStatus: true)
+        : node.copyWith(nodeStatus: nodeStatus);
+    _nodes[dest] = updated;
     _nodeController.add(updated);
   }
 

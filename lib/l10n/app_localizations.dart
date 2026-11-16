@@ -22374,6 +22374,12 @@ abstract class AppLocalizations {
   /// **'Connect to your radio to set its status message.'**
   String get nodeDetailStatusMessageNotConnected;
 
+  /// Error shown when saving a remote node's status message before that node has answered with a live admin session. {nodeName} = remote node display name.
+  ///
+  /// In en, this message translates to:
+  /// **'{nodeName} has not answered yet, so the status cannot be saved. Wait a moment for it to respond, then save again.'**
+  String nodeDetailStatusMessageNoSession(String nodeName);
+
   /// Value of the Status row on the connected radio's node details when no status message is set; tapping the row edits it.
   ///
   /// In en, this message translates to:

@@ -13160,6 +13160,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Connectez votre radio pour définir son message de statut.';
 
   @override
+  String nodeDetailStatusMessageNoSession(String nodeName) {
+    return '$nodeName n\'a pas encore répondu, le statut ne peut donc pas être enregistré. Attendez un instant sa réponse, puis enregistrez à nouveau.';
+  }
+
+  @override
   String get nodeDetailStatusMessageNotSet => 'Non défini';
 
   @override

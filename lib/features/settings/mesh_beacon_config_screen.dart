@@ -20,7 +20,6 @@ import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/remote_admin_target_banner.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/countdown_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/protocol/admin_target.dart';
 import '../../services/protocol/protocol_service.dart';
@@ -290,11 +289,6 @@ class _MeshBeaconConfigScreenState extends ConsumerState<MeshBeaconConfigScreen>
 
       if (mounted) {
         showSuccessSnackBar(context, l10n.meshBeaconSaved);
-        if (target.isLocal) {
-          ref
-              .read(countdownProvider.notifier)
-              .startDeviceRebootCountdown(reason: 'mesh beacon config saved');
-        }
         safeNavigatorPop();
       }
     } catch (e) {

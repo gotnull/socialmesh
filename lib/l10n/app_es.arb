@@ -5905,6 +5905,7 @@
   "nodeDetailStatusMessageError": "No se pudo guardar el mensaje de estado: {error}",
   "nodeDetailStatusMessageFieldLabel": "Estado del nodo",
   "nodeDetailStatusMessageNotConnected": "Conecte su radio para definir su mensaje de estado.",
+  "nodeDetailStatusMessageNoSession": "{nodeName} aún no ha respondido, así que no se puede guardar el estado. Espere un momento a que responda y vuelva a guardar.",
   "nodeDetailStatusMessageNotSet": "Sin definir",
   "nodeDetailStatusMessageTitle": "Mensaje de estado",
   "nodeDetailTracerouteComplete": "Traceroute completado",

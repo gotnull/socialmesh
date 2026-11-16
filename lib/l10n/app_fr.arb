@@ -5905,6 +5905,7 @@
   "nodeDetailStatusMessageError": "Impossible d'enregistrer le message de statut : {error}",
   "nodeDetailStatusMessageFieldLabel": "Statut du nœud",
   "nodeDetailStatusMessageNotConnected": "Connectez votre radio pour définir son message de statut.",
+  "nodeDetailStatusMessageNoSession": "{nodeName} n'a pas encore répondu, le statut ne peut donc pas être enregistré. Attendez un instant sa réponse, puis enregistrez à nouveau.",
   "nodeDetailStatusMessageNotSet": "Non défini",
   "nodeDetailStatusMessageTitle": "Message de statut",
   "nodeDetailTracerouteComplete": "Traceroute terminé",

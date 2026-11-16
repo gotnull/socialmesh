@@ -15798,6 +15798,14 @@
   "@nodeDetailStatusMessageNotConnected": {
     "description": "Error shown when the user tries to set the status message without a connected radio."
   },
+  "@nodeDetailStatusMessageNoSession": {
+    "placeholders": {
+      "nodeName": {
+        "type": "String"
+      }
+    },
+    "description": "Error shown when saving a remote node's status message before that node has answered with a live admin session. {nodeName} = remote node display name."
+  },
   "@nodeDetailStatusMessageNotSet": {
     "description": "Value of the Status row on the connected radio's node details when no status message is set; tapping the row edits it."
   },
@@ -32992,6 +33000,7 @@
   "nodeDetailStatusMessageError": "Falha ao guardar a mensagem de status: {error}",
   "nodeDetailStatusMessageFieldLabel": "Status do nó",
   "nodeDetailStatusMessageNotConnected": "Conecte o seu rádio para definir a mensagem de status.",
+  "nodeDetailStatusMessageNoSession": "{nodeName} ainda não respondeu, por isso o status não pode ser guardado. Aguarde um momento pela resposta e guarde novamente.",
   "nodeDetailStatusMessageNotSet": "Não definido",
   "nodeDetailStatusMessageTitle": "Mensagem de status",
   "nodeDetailTracerouteComplete": "Traceroute concluído",

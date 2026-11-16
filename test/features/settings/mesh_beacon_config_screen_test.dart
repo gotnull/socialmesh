@@ -17,6 +17,7 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
+import 'package:socialmesh/providers/countdown_providers.dart';
 import 'package:socialmesh/services/protocol/admin_target.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
@@ -55,6 +56,16 @@ class _FakeProtocolService extends ProtocolService {
     admin.AdminMessage_ModuleConfigType moduleType, {
     AdminTarget? target,
   }) async {}
+
+  final List<module_pb.ModuleConfig> savedConfigs = [];
+
+  @override
+  Future<void> setModuleConfig(
+    module_pb.ModuleConfig moduleConfig, {
+    AdminTarget? target,
+  }) async {
+    savedConfigs.add(moduleConfig);
+  }
 
   Future<void> closeStreams() async {
     await _configCtrl.close();
@@ -260,5 +271,27 @@ void main() {
       expect(find.text('Club net Sundays'), findsOneWidget);
       expect(find.text(_l10n.meshBeaconReceivedEmpty), findsNothing);
     });
+  });
+
+  // Firmware saves Mesh Beacon without rebooting (AdminModule sets
+  // shouldReboot = false), so a save must not announce a reboot.
+  testWidgets('saving writes the config without a reboot countdown', (
+    tester,
+  ) async {
+    final protocol = _FakeProtocolService(
+      cachedConfig: module_pb.ModuleConfig_MeshBeaconConfig(),
+    );
+    await _pumpScreen(tester, protocol);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MeshBeaconConfigScreen)),
+    );
+
+    await tester.tap(find.text(_l10n.meshBeaconSave));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(protocol.savedConfigs, hasLength(1));
+    expect(protocol.savedConfigs.single.hasMeshBeacon(), isTrue);
+    expect(container.read(countdownProvider), isEmpty);
   });
 }

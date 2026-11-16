@@ -9,6 +9,8 @@ import 'package:socialmesh/generated/meshtastic/admin.pb.dart' as admin;
 import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
 import 'package:socialmesh/generated/meshtastic/module_config.pb.dart'
     as module_pb;
+import 'package:socialmesh/generated/meshtastic/portnums.pbenum.dart' as pn;
+import 'package:socialmesh/services/protocol/admin_target.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
 class _CapturingTransport implements DeviceTransport {
@@ -136,6 +138,97 @@ void main() {
       '',
     );
     expect(protocol.nodes[_myNodeNum]?.nodeStatus, isNull);
+  });
+
+  group('remote node', () {
+    const remoteNodeNum = 0x12345678;
+
+    Future<void> remoteResponds(String status) async {
+      final adm = admin.AdminMessage()
+        ..getModuleConfigResponse = (module_pb.ModuleConfig()
+          ..statusmessage = (module_pb.ModuleConfig_StatusMessageConfig()
+            ..nodeStatus = status))
+        ..sessionPasskey = [9, 8, 7];
+      await _feed(
+        protocol,
+        pb.FromRadio()
+          ..packet = (pb.MeshPacket()
+            ..from = remoteNodeNum
+            ..to = _myNodeNum
+            ..id = 4242
+            ..decoded = (pb.Data()
+              ..portnum = pn.PortNum.ADMIN_APP
+              ..payload = adm.writeToBuffer())),
+      );
+    }
+
+    setUp(() async {
+      await _feed(
+        protocol,
+        pb.FromRadio()
+          ..nodeInfo = (pb.NodeInfo()
+            ..num = remoteNodeNum
+            ..user = (pb.User()
+              ..id = '!12345678'
+              ..longName = 'Hilltop'
+              ..shortName = 'HT')),
+      );
+    });
+
+    test(
+      'its config response is cached for that node and opens a session',
+      () async {
+        expect(protocol.remoteAdminSessionReady(remoteNodeNum), isFalse);
+        await remoteResponds('On the hill');
+
+        expect(
+          protocol.remoteStatusMessageConfig(remoteNodeNum)?.nodeStatus,
+          'On the hill',
+        );
+        expect(
+          protocol.currentStatusMessageConfig,
+          isNull,
+          reason: 'a remote node\'s config never replaces this radio\'s',
+        );
+        expect(protocol.remoteAdminSessionReady(remoteNodeNum), isTrue);
+      },
+    );
+
+    test(
+      'saving goes to that node with its session passkey and updates it',
+      () async {
+        await remoteResponds('On the hill');
+        await protocol.setStatusMessageConfig(
+          'Back at base',
+          target: const AdminTarget.remote(remoteNodeNum),
+        );
+
+        expect(transport.lastPacket.to, remoteNodeNum);
+        final sent = transport.lastAdminMessage;
+        expect(sent.setModuleConfig.statusmessage.nodeStatus, 'Back at base');
+        expect(sent.sessionPasskey, [9, 8, 7]);
+        expect(protocol.nodes[remoteNodeNum]?.nodeStatus, 'Back at base');
+        expect(
+          protocol.remoteStatusMessageConfig(remoteNodeNum)?.nodeStatus,
+          'Back at base',
+        );
+        expect(protocol.nodes[_myNodeNum]?.nodeStatus, isNull);
+      },
+    );
+  });
+
+  test('a Mesh Beacon save does not signal a reboot', () async {
+    final rebootSignals = <void>[];
+    final sub = protocol.localConfigWriteStream.listen(rebootSignals.add);
+    addTearDown(sub.cancel);
+
+    await protocol.setModuleConfig(
+      module_pb.ModuleConfig()
+        ..meshBeacon = module_pb.ModuleConfig_MeshBeaconConfig(),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(rebootSignals, isEmpty);
   });
 
   test('other module config saves still signal the expected reboot', () async {

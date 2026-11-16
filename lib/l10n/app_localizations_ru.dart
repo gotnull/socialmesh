@@ -13080,6 +13080,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Подключите радио, чтобы задать его сообщение о статусе.';
 
   @override
+  String nodeDetailStatusMessageNoSession(String nodeName) {
+    return '$nodeName ещё не ответил, поэтому статус нельзя сохранить. Подождите ответа и сохраните снова.';
+  }
+
+  @override
   String get nodeDetailStatusMessageNotSet => 'Не задано';
 
   @override

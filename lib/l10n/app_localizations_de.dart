@@ -13103,6 +13103,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verbinden Sie Ihr Funkgerät, um seine Statusnachricht festzulegen.';
 
   @override
+  String nodeDetailStatusMessageNoSession(String nodeName) {
+    return '$nodeName hat noch nicht geantwortet, daher kann der Status nicht gespeichert werden. Warten Sie kurz auf eine Antwort und speichern Sie dann erneut.';
+  }
+
+  @override
   String get nodeDetailStatusMessageNotSet => 'Nicht festgelegt';
 
   @override

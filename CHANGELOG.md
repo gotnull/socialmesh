@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Set the status message your radio broadcasts to the mesh (firmware 2.8 and later). Open your own node's details and tap the Status row; other nodes see the status in their node list. Saving does not restart the radio, and saving an empty field clears the status.
+- Set the status message your radio broadcasts to the mesh (firmware 2.8 and later). Open your own node's details and tap the Status row; other nodes see the status in their node list. Saving does not restart the radio, and saving an empty field clears the status. The same row works on a node you are administering remotely once it has answered.
 
 ### Fixed
 
+- Saving Mesh Beacon settings no longer starts a "device rebooting" countdown or waits for the radio to reconnect. The radio applies them without restarting.
 - Searching Settings for remote administration shows the same Remote Administration card as the full list: the node you are configuring, how many nodes you can administer, and the Admin Keys note. It used to show a plain row that looked the same whether or not you were configuring another node.
 - While you are configuring another node through remote administration, Settings > Region / Frequency now opens Radio Configuration for that node and names it, instead of changing the region of the radio your phone is connected to and rebooting it.
 - Device Config shows the same remote administration banner as the other radio settings screens.
@@ -22,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The lock beside each channel now shows how exposed the channel is, as in the official Meshtastic app: green for a channel with its own key, yellow for no key or the public default key, red when such a channel shares precise location, and a warning badge when it also sends that location to MQTT.
 - The copyright line on the launch screen, the splash screen, the Scanner and Settings > Open source licences now names GOTNULL PTY. LTD., the company that publishes SocialMesh, and says the app is licensed under GPL-3.0-or-later. It used to name SocialMesh, which is the app's name rather than a company, and claimed all rights reserved, which the GPL licence contradicts.
 - The Terms of Service and Privacy Policy now name GOTNULL PTY. LTD., PO Box 5062, Moreland West VIC 3055, Australia, as the company you are dealing with. Before, the Terms called the agreement one between you and SocialMesh, which is the app's name, and the Privacy Policy named no company at all. Because of this, the app asks everyone to accept the updated Terms and Privacy Policy once.
 

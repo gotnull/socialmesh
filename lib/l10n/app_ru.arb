@@ -6259,6 +6259,7 @@
   "nodeDetailStatusMessageError": "Не удалось сохранить сообщение о статусе: {error}",
   "nodeDetailStatusMessageFieldLabel": "Статус узла",
   "nodeDetailStatusMessageNotConnected": "Подключите радио, чтобы задать его сообщение о статусе.",
+  "nodeDetailStatusMessageNoSession": "{nodeName} ещё не ответил, поэтому статус нельзя сохранить. Подождите ответа и сохраните снова.",
   "nodeDetailStatusMessageNotSet": "Не задано",
   "nodeDetailStatusMessageTitle": "Сообщение о статусе",
   "nodeDetailTracerouteComplete": "Трассировка завершена",

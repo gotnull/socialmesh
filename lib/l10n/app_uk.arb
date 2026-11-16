@@ -5905,6 +5905,7 @@
   "nodeDetailStatusMessageError": "Не вдалося зберегти статусне повідомлення: {error}",
   "nodeDetailStatusMessageFieldLabel": "Статус вузла",
   "nodeDetailStatusMessageNotConnected": "Підключіть радіо, щоб задати його статусне повідомлення.",
+  "nodeDetailStatusMessageNoSession": "{nodeName} ще не відповів, тому статус не можна зберегти. Зачекайте на відповідь і збережіть знову.",
   "nodeDetailStatusMessageNotSet": "Не задано",
   "nodeDetailStatusMessageTitle": "Статусне повідомлення",
   "nodeDetailTracerouteComplete": "Трасування маршруту завершено",

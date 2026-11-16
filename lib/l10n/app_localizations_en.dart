@@ -12919,6 +12919,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connect to your radio to set its status message.';
 
   @override
+  String nodeDetailStatusMessageNoSession(String nodeName) {
+    return '$nodeName has not answered yet, so the status cannot be saved. Wait a moment for it to respond, then save again.';
+  }
+
+  @override
   String get nodeDetailStatusMessageNotSet => 'Not set';
 
   @override
