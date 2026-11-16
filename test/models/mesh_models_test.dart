@@ -468,4 +468,80 @@ void main() {
       expect(channel.toString(), 'ChannelConfig(TestChannel, index: 1)');
     });
   });
+
+  // Cases mirror firmware Channels::getKey and channelFileUsesPublicKey.
+  group('ChannelConfig.encryption', () {
+    const defaultPsk = [
+      0xd4, 0xf1, 0xbb, 0x3a, 0x20, 0x29, 0x07, 0x59, //
+      0xf0, 0xbc, 0xff, 0xab, 0xcf, 0x4e, 0x69, 0x01,
+    ];
+    ChannelConfig primary(List<int> psk) =>
+        ChannelConfig(index: 0, name: '', psk: psk, role: 'PRIMARY');
+    ChannelConfig secondary(List<int> psk) =>
+        ChannelConfig(index: 1, name: 'ch1', psk: psk, role: 'SECONDARY');
+    ChannelEncryption of(ChannelConfig c, [List<ChannelConfig>? all]) =>
+        c.encryption(all ?? [c]);
+
+    test('an empty primary key and the one-byte key 0 are plaintext', () {
+      expect(of(primary(const [])), ChannelEncryption.none);
+      expect(of(primary(const [0])), ChannelEncryption.none);
+    });
+
+    test('one-byte keys 1 to 255 are the public default family', () {
+      expect(of(primary(const [1])), ChannelEncryption.publicKey);
+      expect(of(primary(const [2])), ChannelEncryption.publicKey);
+      expect(of(primary(const [255])), ChannelEncryption.publicKey);
+    });
+
+    test('the full default key is public whatever its last byte', () {
+      expect(of(primary(defaultPsk)), ChannelEncryption.publicKey);
+      final bumped = [...defaultPsk]..[15] = 0x09;
+      expect(of(primary(bumped)), ChannelEncryption.publicKey);
+      final changed = [...defaultPsk]..[0] = 0x00;
+      expect(of(primary(changed)), ChannelEncryption.privateKey);
+    });
+
+    test('other 16 and 32 byte keys are private', () {
+      expect(
+        of(primary(List<int>.generate(16, (i) => i + 1))),
+        ChannelEncryption.privateKey,
+      );
+      expect(
+        of(primary(List<int>.generate(32, (i) => i + 1))),
+        ChannelEncryption.privateKey,
+      );
+    });
+
+    test('a secondary with no key of its own follows the primary', () {
+      final own = secondary(const []);
+      expect(
+        of(own, [
+          primary(const [1]),
+          own,
+        ]),
+        ChannelEncryption.publicKey,
+      );
+      expect(
+        of(own, [primary(List<int>.generate(16, (i) => i + 1)), own]),
+        ChannelEncryption.privateKey,
+      );
+      expect(of(own, [primary(const []), own]), ChannelEncryption.none);
+      expect(
+        of(own, [own]),
+        ChannelEncryption.publicKey,
+        reason: 'no primary to inherit from: firmware fails closed to public',
+      );
+    });
+
+    test('a secondary with its own key ignores the primary', () {
+      final own = secondary(List<int>.generate(32, (i) => i + 1));
+      expect(
+        of(own, [
+          primary(const [1]),
+          own,
+        ]),
+        ChannelEncryption.privateKey,
+      );
+    });
+  });
 }

@@ -2662,9 +2662,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelOptionsEdit => 'Edit Channel';
 
   @override
-  String get channelOptionsEncrypted => 'Encrypted';
-
-  @override
   String get channelOptionsHideButton => 'Hide';
 
   @override
@@ -2680,9 +2677,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get channelOptionsKeyTitle => 'Encryption Key';
-
-  @override
-  String get channelOptionsNoEncryption => 'No encryption';
 
   @override
   String get channelOptionsShare => 'Share Channel';
@@ -3115,6 +3109,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get channelsSearchHint => 'Search channels';
+
+  @override
+  String get channelsTileDefaultKey => 'Public default key';
 
   @override
   String get channelsTileEncrypted => 'Encrypted';

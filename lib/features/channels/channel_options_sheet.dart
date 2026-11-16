@@ -18,6 +18,7 @@ import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/muted_channels_provider.dart';
 import '../../utils/snackbar.dart';
+import 'channel_encryption_label.dart';
 import 'channel_form_screen.dart';
 import 'channel_reorder_sheet.dart';
 import 'channel_share_utils.dart';
@@ -37,6 +38,10 @@ Future<void> showChannelOptionsSheet(
       (channel.name.isEmpty
           ? context.l10n.channelOptionsDefaultName(channel.index)
           : channel.name);
+  final encryptionLabel = channelEncryptionLabel(
+    context,
+    channel.encryption(ref.read(channelsProvider)),
+  );
 
   final isMuted = ref.read(mutedChannelsProvider).contains(channel.index);
 
@@ -103,9 +108,7 @@ Future<void> showChannelOptionsSheet(
     header: BottomSheetHeader(
       icon: Icons.wifi_tethering,
       title: channelName,
-      subtitle: channel.psk.isNotEmpty
-          ? context.l10n.channelOptionsEncrypted
-          : context.l10n.channelOptionsNoEncryption,
+      subtitle: encryptionLabel,
     ),
   );
 
@@ -117,7 +120,7 @@ Future<void> showChannelOptionsSheet(
     case 'reorder':
       await showChannelReorderSheet(context);
     case 'view_qr':
-      _showChannelQrCode(context, channel, channelName);
+      _showChannelQrCode(context, channel, channelName, encryptionLabel);
     case 'edit':
       Navigator.push(
         context,
@@ -209,15 +212,14 @@ void _showChannelQrCode(
   BuildContext context,
   ChannelConfig channel,
   String channelName,
+  String encryptionLabel,
 ) {
   final channelUrl = _generateChannelUrl(channel);
 
   QrShareSheet.show(
     context: context,
     title: channelName,
-    subtitle: channel.psk.isNotEmpty
-        ? context.l10n.channelOptionsEncrypted
-        : context.l10n.channelOptionsNoEncryption,
+    subtitle: encryptionLabel,
     qrData: channelUrl,
     infoText: context.l10n.channelOptionsViewQrInfo,
   );

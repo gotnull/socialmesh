@@ -1020,6 +1020,19 @@ class MeshNode {
   int get hashCode => nodeNum.hashCode;
 }
 
+/// How a channel's traffic is protected; see [ChannelConfig.encryption].
+enum ChannelEncryption {
+  /// Sent in plaintext.
+  none,
+
+  /// Encrypted with the public default key, which any Meshtastic radio can
+  /// read.
+  publicKey,
+
+  /// Encrypted with a key of the channel's own.
+  privateKey,
+}
+
 /// Channel configuration
 class ChannelConfig {
   final int index;
@@ -1043,14 +1056,46 @@ class ChannelConfig {
   /// Whether position sharing is enabled for this channel
   bool get positionEnabled => positionPrecision > 0;
 
-  /// Whether the channel has a secure encryption key
-  /// Returns false for empty keys or the default 1-byte key (AQ==)
-  bool get hasSecureKey {
-    if (psk.isEmpty) return false;
-    // Default key is a single byte with value 1 (encoded as "AQ==")
-    if (psk.length == 1 && psk[0] == 1) return false;
-    return true;
+  /// How this channel's traffic is protected, resolved as the firmware
+  /// resolves the key. [channels] is the radio's channel list, used to find
+  /// the primary: a secondary channel with no key of its own uses the
+  /// primary's key, and counts as public when no other primary exists.
+  ChannelEncryption encryption(Iterable<ChannelConfig> channels) {
+    if (psk.isNotEmpty) return _pskEncryption(psk);
+    if (role.toUpperCase() != 'SECONDARY') return ChannelEncryption.none;
+    for (final c in channels) {
+      if (c.index != index && c.role.toUpperCase() == 'PRIMARY') {
+        return c.psk.isEmpty ? ChannelEncryption.none : _pskEncryption(c.psk);
+      }
+    }
+    return ChannelEncryption.publicKey;
   }
+
+  // One-byte keys are aliases: 0 turns encryption off, 1 to 255 select the
+  // default key with its last byte offset. A full-length key that matches
+  // the default key in all but its last byte is the same public family.
+  static ChannelEncryption _pskEncryption(List<int> key) {
+    if (key.length == 1) {
+      return key[0] == 0 ? ChannelEncryption.none : ChannelEncryption.publicKey;
+    }
+    if (key.length == _defaultPsk.length) {
+      var publicFamily = true;
+      for (var i = 0; i < _defaultPsk.length - 1; i++) {
+        if (key[i] != _defaultPsk[i]) {
+          publicFamily = false;
+          break;
+        }
+      }
+      if (publicFamily) return ChannelEncryption.publicKey;
+    }
+    return ChannelEncryption.privateKey;
+  }
+
+  // Firmware `defaultpsk` (src/mesh/Channels.cpp).
+  static const List<int> _defaultPsk = [
+    0xd4, 0xf1, 0xbb, 0x3a, 0x20, 0x29, 0x07, 0x59, //
+    0xf0, 0xbc, 0xff, 0xab, 0xcf, 0x4e, 0x69, 0x01,
+  ];
 
   /// Whether the channel uses the default simple key (AQ==)
   bool get isDefaultKey => psk.length == 1 && psk[0] == 1;

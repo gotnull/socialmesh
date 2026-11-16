@@ -4060,9 +4060,6 @@
   "@channelOptionsEdit": {
     "description": "Text displayed in channel configuration"
   },
-  "@channelOptionsEncrypted": {
-    "description": "Text displayed in channel configuration"
-  },
   "@channelOptionsHideButton": {
     "description": "Button label in channel configuration"
   },
@@ -4085,9 +4082,6 @@
   },
   "@channelOptionsKeyTitle": {
     "description": "Title for the channel configuration screen"
-  },
-  "@channelOptionsNoEncryption": {
-    "description": "Text displayed in channel configuration"
   },
   "@channelOptionsShare": {
     "description": "Text displayed in channel configuration"
@@ -4447,6 +4441,9 @@
   },
   "@channelsSearchHint": {
     "description": "Hint text for an input field in channel configuration"
+  },
+  "@channelsTileDefaultKey": {
+    "description": "Encryption state of a channel that uses the well-known default key: the traffic is encrypted, but any Meshtastic radio can read it. Shown in the channel list, its options sheet and its QR share sheet."
   },
   "@channelsTileEncrypted": {
     "description": "Text displayed in channel configuration"
@@ -28021,14 +28018,12 @@
   "channelOptionsDeleting": "Eliminazione canale…",
   "channelOptionsDeleted": "Canale eliminato",
   "channelOptionsEdit": "Modifica canale",
-  "channelOptionsEncrypted": "Crittografato",
   "channelOptionsHideButton": "Nascondi",
   "channelOptionsInviteLink": "Condividi link di invito",
   "channelOptionsKeyCopied": "Chiave copiata negli appunti",
   "channelOptionsKeySubtitle": "{keyBits} bit · {keyBytes} byte · Base64",
   "channelOptionsKeyTitle": "Chiave di crittografia",
   "channelOptionsMuteNotifications": "Disattiva notifiche",
-  "channelOptionsNoEncryption": "Nessuna crittografia",
   "channelOptionsShare": "Condividi canale",
   "channelOptionsShowButton": "Mostra",
   "channelOptionsUnmuteNotifications": "Riattiva notifiche",
@@ -28155,6 +28150,7 @@
   "channelsPrimaryChannelName": "Canale primario",
   "channelsScreenTitle": "Canali ({count})",
   "channelsSearchHint": "Cerca canali",
+  "channelsTileDefaultKey": "Chiave predefinita pubblica",
   "channelsTileEncrypted": "Crittografato",
   "channelsTileNoEncryption": "Nessuna crittografia",
   "channelsTilePrimaryBadge": "PRIMARIO",

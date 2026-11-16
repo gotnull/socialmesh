@@ -3574,10 +3574,6 @@
   "@channelOptionsEdit": {
     "description": "Text displayed in channel configuration"
   },
-  "channelOptionsEncrypted": "Encrypted",
-  "@channelOptionsEncrypted": {
-    "description": "Text displayed in channel configuration"
-  },
   "channelOptionsHideButton": "Hide",
   "@channelOptionsHideButton": {
     "description": "Button label in channel configuration"
@@ -3605,10 +3601,6 @@
   "channelOptionsKeyTitle": "Encryption Key",
   "@channelOptionsKeyTitle": {
     "description": "Title for the channel configuration screen"
-  },
-  "channelOptionsNoEncryption": "No encryption",
-  "@channelOptionsNoEncryption": {
-    "description": "Text displayed in channel configuration"
   },
   "channelOptionsShare": "Share Channel",
   "@channelOptionsShare": {
@@ -4160,6 +4152,10 @@
   "channelsSearchHint": "Search channels",
   "@channelsSearchHint": {
     "description": "Hint text for an input field in channel configuration"
+  },
+  "channelsTileDefaultKey": "Public default key",
+  "@channelsTileDefaultKey": {
+    "description": "Encryption state of a channel that uses the well-known default key: the traffic is encrypted, but any Meshtastic radio can read it. Shown in the channel list, its options sheet and its QR share sheet."
   },
   "channelsTileEncrypted": "Encrypted",
   "@channelsTileEncrypted": {

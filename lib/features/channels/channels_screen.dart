@@ -23,6 +23,7 @@ import '../../core/widgets/status_filter_chip.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
+import 'channel_encryption_label.dart';
 import 'channel_form_screen.dart';
 import 'channel_options_sheet.dart';
 import 'channel_reorder_sheet.dart';
@@ -105,7 +106,11 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
       case ChannelFilter.primary:
         return channels.where((c) => c.role == 'PRIMARY').toList();
       case ChannelFilter.encrypted:
-        return channels.where((c) => c.hasSecureKey).toList();
+        return channels
+            .where(
+              (c) => c.encryption(channels) == ChannelEncryption.privateKey,
+            )
+            .toList();
       case ChannelFilter.position:
         return channels.where((c) => c.positionEnabled).toList();
       case ChannelFilter.mqtt:
@@ -129,7 +134,9 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
         .where((c) => (channelUnreads[c.index] ?? 0) > 0)
         .length;
     final primaryCount = channels.where((c) => c.role == 'PRIMARY').length;
-    final encryptedCount = channels.where((c) => c.hasSecureKey).length;
+    final encryptedCount = channels
+        .where((c) => c.encryption(channels) == ChannelEncryption.privateKey)
+        .length;
     final positionCount = channels.where((c) => c.positionEnabled).length;
     final mqttCount = channels.where((c) => c.uplink || c.downlink).length;
 
@@ -451,7 +458,8 @@ class _ChannelTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPrimary = channel.index == 0;
-    final hasKey = channel.hasSecureKey;
+    final encryption = channel.encryption(ref.watch(channelsProvider));
+    final hasKey = encryption == ChannelEncryption.privateKey;
     final channelUnreads = ref.watch(channelUnreadCountsProvider);
     final unreadCount = channelUnreads[channel.index] ?? 0;
 
@@ -519,9 +527,7 @@ class _ChannelTile extends ConsumerWidget {
                         ),
                         SizedBox(width: AppTheme.spacing6),
                         Text(
-                          hasKey
-                              ? context.l10n.channelsTileEncrypted
-                              : context.l10n.channelsTileNoEncryption,
+                          channelEncryptionLabel(context, encryption),
                           style: TextStyle(
                             fontSize: 13,
                             color: context.textSecondary,
@@ -632,7 +638,8 @@ class _CompactChannelTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPrimary = channel.index == 0;
-    final hasKey = channel.hasSecureKey;
+    final encryption = channel.encryption(ref.watch(channelsProvider));
+    final hasKey = encryption == ChannelEncryption.privateKey;
     final unreadCount =
         ref.watch(channelUnreadCountsProvider)[channel.index] ?? 0;
 

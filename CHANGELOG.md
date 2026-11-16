@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - While you are configuring another node through remote administration, Settings > Region / Frequency now opens Radio Configuration for that node and names it, instead of changing the region of the radio your phone is connected to and rebooting it.
 - Device Config shows the same remote administration banner as the other radio settings screens.
 - Settings > MQTT now says when nothing from the server can reach your radio because no channel has Downlink Enabled turned on, and where to turn it on. Downlink is off by default, so MQTT could show as connected while no messages ever arrived.
+- Channels on the default key now say "Public default key" instead of "No encryption" in the channel list, and the channel's menu and QR sheet no longer call them "Encrypted". Their messages are encrypted, but with a key every Meshtastic radio has. The labels and the Encrypted filter now follow the firmware's rules, so a secondary channel with no key of its own shows its primary channel's state, and the one-byte key 0 counts as no encryption.
 - MQTT through the phone (MQTT Client Proxy) now connects when the radio's server address is empty. The radio treats an empty address as the default Meshtastic server with its public login, and the app now does the same instead of refusing to connect.
 
 ### Changed

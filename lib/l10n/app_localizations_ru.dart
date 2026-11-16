@@ -2692,9 +2692,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelOptionsEdit => 'Изменить канал';
 
   @override
-  String get channelOptionsEncrypted => 'Зашифрован';
-
-  @override
   String get channelOptionsHideButton => 'Скрыть';
 
   @override
@@ -2710,9 +2707,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get channelOptionsKeyTitle => 'Ключ шифрования';
-
-  @override
-  String get channelOptionsNoEncryption => 'Без шифрования';
 
   @override
   String get channelOptionsShare => 'Поделиться каналом';
@@ -3151,6 +3145,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get channelsSearchHint => 'Поиск каналов';
+
+  @override
+  String get channelsTileDefaultKey => 'Общедоступный ключ по умолчанию';
 
   @override
   String get channelsTileEncrypted => 'Зашифрован';

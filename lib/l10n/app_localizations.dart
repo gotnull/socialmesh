@@ -4680,12 +4680,6 @@ abstract class AppLocalizations {
   /// **'Edit Channel'**
   String get channelOptionsEdit;
 
-  /// Text displayed in channel configuration
-  ///
-  /// In en, this message translates to:
-  /// **'Encrypted'**
-  String get channelOptionsEncrypted;
-
   /// Button label in channel configuration
   ///
   /// In en, this message translates to:
@@ -4715,12 +4709,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Encryption Key'**
   String get channelOptionsKeyTitle;
-
-  /// Text displayed in channel configuration
-  ///
-  /// In en, this message translates to:
-  /// **'No encryption'**
-  String get channelOptionsNoEncryption;
 
   /// Text displayed in channel configuration
   ///
@@ -5483,6 +5471,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search channels'**
   String get channelsSearchHint;
+
+  /// Encryption state of a channel that uses the well-known default key: the traffic is encrypted, but any Meshtastic radio can read it. Shown in the channel list, its options sheet and its QR share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Public default key'**
+  String get channelsTileDefaultKey;
 
   /// Text displayed in channel configuration
   ///
