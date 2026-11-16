@@ -3894,14 +3894,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não retransmitir nenhuma mensagem. O nó apenas recebe.';
 
   @override
-  String deviceConfigRemoteAdminConfiguring(String nodeName) {
-    return 'Configurando: $nodeName';
-  }
-
-  @override
-  String get deviceConfigRemoteAdminTitle => 'Administração remota';
-
-  @override
   String get deviceConfigResetNodeDb => 'Redefinir banco de dados de nós';
 
   @override
@@ -18457,6 +18449,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsTileRegionTitle => 'Região / Frequência';
+
+  @override
+  String settingsTileRegionRemoteSubtitle(String nodeName) {
+    return 'Definida em $nodeName na Configuração do rádio';
+  }
 
   @override
   String get settingsTileResetLocalDataSubtitle =>

@@ -3945,14 +3945,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ne rediffuse aucun message. Le noeud reçoit uniquement.';
 
   @override
-  String deviceConfigRemoteAdminConfiguring(String nodeName) {
-    return 'Configuration : $nodeName';
-  }
-
-  @override
-  String get deviceConfigRemoteAdminTitle => 'Administration à distance';
-
-  @override
   String get deviceConfigResetNodeDb =>
       'Réinitialiser la base de données des noeuds';
 
@@ -18579,6 +18571,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsTileRegionTitle => 'Région / Fréquence';
+
+  @override
+  String settingsTileRegionRemoteSubtitle(String nodeName) {
+    return 'À régler sur $nodeName dans Configuration radio';
+  }
 
   @override
   String get settingsTileResetLocalDataSubtitle =>

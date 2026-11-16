@@ -16,6 +16,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/remote_admin_target_banner.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -796,7 +797,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     if (_isLoading) {
       return GlassScaffold(
         title: title,
-        slivers: [SliverFillRemaining(child: const ScreenLoadingIndicator())],
+        slivers: [
+          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
+          SliverFillRemaining(child: const ScreenLoadingIndicator()),
+        ],
       );
     }
 
@@ -825,13 +829,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
           ),
       ],
       slivers: [
+        const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
         SliverPadding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              // Remote admin banner
-              if (isRemote) _buildRemoteAdminBanner(context, remoteState),
-
               // Long Name Field
               _buildNameField(
                 icon: Icons.badge_outlined,
@@ -2076,61 +2078,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
               ),
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRemoteAdminBanner(
-    BuildContext context,
-    RemoteAdminState remoteState,
-  ) {
-    final accentColor = context.accentColor;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(AppTheme.spacing12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            accentColor.withValues(alpha: 0.15),
-            accentColor.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.admin_panel_settings, color: accentColor, size: 24),
-          const SizedBox(width: AppTheme.spacing12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.deviceConfigRemoteAdminTitle,
-                  style: TextStyle(
-                    color: accentColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing2),
-                Text(
-                  context.l10n.deviceConfigRemoteAdminConfiguring(
-                    remoteState.targetNodeName ??
-                        '0x${remoteState.targetNodeNum!.toRadixString(16)}',
-                  ),
-                  style: TextStyle(
-                    color: accentColor.withValues(alpha: 0.8),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

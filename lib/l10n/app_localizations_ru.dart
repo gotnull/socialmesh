@@ -3913,14 +3913,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не ретранслировать никакие сообщения. Узел только принимает.';
 
   @override
-  String deviceConfigRemoteAdminConfiguring(String nodeName) {
-    return 'Настройка: $nodeName';
-  }
-
-  @override
-  String get deviceConfigRemoteAdminTitle => 'Удаленное администрирование';
-
-  @override
   String get deviceConfigResetNodeDb => 'Сброс базы данных узлов';
 
   @override
@@ -18462,6 +18454,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsTileRegionTitle => 'Регион / Частота';
+
+  @override
+  String settingsTileRegionRemoteSubtitle(String nodeName) {
+    return 'Задаётся на $nodeName в разделе «Конфигурация радио»';
+  }
 
   @override
   String get settingsTileResetLocalDataSubtitle =>

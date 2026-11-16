@@ -5863,17 +5863,6 @@
   "@deviceConfigRebroadcastNoneDesc": {
     "description": "Description text in developer tools"
   },
-  "@deviceConfigRemoteAdminConfiguring": {
-    "placeholders": {
-      "nodeName": {
-        "type": "String"
-      }
-    },
-    "description": "Text in developer tools Parameters: {nodeName} = display name."
-  },
-  "@deviceConfigRemoteAdminTitle": {
-    "description": "Title for the developer tools screen"
-  },
   "@deviceConfigResetNodeDb": {
     "description": "Text displayed in developer tools"
   },
@@ -22842,6 +22831,14 @@
   "@settingsTileRegionTitle": {
     "description": "Title of the region/frequency settings tile."
   },
+  "@settingsTileRegionRemoteSubtitle": {
+    "placeholders": {
+      "nodeName": {
+        "type": "String"
+      }
+    },
+    "description": "Subtitle of the region/frequency settings tile while remote administration is active; tapping it opens Radio Configuration for that node. {nodeName} = remote node display name."
+  },
   "@settingsTileResetLocalDataSubtitle": {
     "description": "Subtitle of the reset local data settings tile."
   },
@@ -28666,8 +28663,6 @@
   "deviceConfigRebroadcastLocalOnlyDesc": "Retransmitir apenas mensagens de remetentes locais. Ideal para redes isoladas.",
   "deviceConfigRebroadcastNone": "Nenhum",
   "deviceConfigRebroadcastNoneDesc": "Não retransmitir nenhuma mensagem. O nó apenas recebe.",
-  "deviceConfigRemoteAdminConfiguring": "Configurando: {nodeName}",
-  "deviceConfigRemoteAdminTitle": "Administração remota",
   "deviceConfigResetNodeDb": "Redefinir banco de dados de nós",
   "deviceConfigResetNodeDbDialogConfirm": "Redefinir",
   "deviceConfigResetNodeDbDialogMessage": "Isso limpará todas as informações de nós armazenadas no dispositivo. A rede mesh precisará redescobrir todos os nós.\n\nTem certeza de que deseja continuar?",
@@ -35893,6 +35888,7 @@
   "settingsTileRadioConfigTitle": "Configuração do rádio",
   "settingsTileRangeTestSubtitle": "Teste o alcance do sinal com outros nós",
   "settingsTileRangeTestTitle": "Teste de alcance",
+  "settingsTileRegionRemoteSubtitle": "Definida em {nodeName} na Configuração do rádio",
   "settingsTileRegionTitle": "Região / Frequência",
   "settingsTileResetLocalDataSubtitle": "Limpar mensagens e nós, manter configurações",
   "settingsTileResetLocalDataTitle": "Redefinir dados locais",

@@ -31,6 +31,7 @@ import '../../services/notifications/push_notification_service.dart';
 import '../../services/haptic_service.dart';
 import 'background_connection_screen.dart';
 import '../../core/theme.dart';
+import '../../core/units/byte_format.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/settings_primitives.dart';
 import '../../core/widgets/info_table.dart';
@@ -1309,10 +1310,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsSearchRegionSubtitle,
           keywords: ['region', 'frequency', 'country', 'radio'],
           section: context.l10n.settingsSectionDevice,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const RegionSelectionScreen()),
-          ),
+          onTap: () => _openRegionSettings(context, ref),
         ),
         _SearchableSettingItem(
           icon: Icons.settings,
@@ -2565,25 +2563,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
                   // Get current region for display
                   final regionAsync = ref.watch(deviceRegionProvider);
-                  final regionSubtitle = regionAsync.when(
-                    data: (region) {
-                      if (region ==
-                          config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
-                        return context.l10n.settingsNotConfigured;
-                      }
-                      // Find the region info for display
-                      final regionInfo = getAvailableRegions(context)
-                          .where((r) => r.code == region)
-                          .firstOrNull;
-                      if (regionInfo != null) {
-                        return '${regionInfo.name} (${regionInfo.frequency})';
-                      }
-                      return region.name;
-                    },
-                    loading: () => context.l10n.settingsLoadingStatus,
-                    error: (e, _) =>
-                        context.l10n.settingsRegionConfigureSubtitle,
-                  );
+                  // While remote admin is active the Region tile edits the
+                  // remote node, so the local radio's region and its unset
+                  // warning do not apply to it.
+                  final remoteAdmin = ref.watch(remoteAdminProvider);
+                  final remoteAdminNode = remoteAdmin.targetNodeNum;
+                  final localRegionUnset =
+                      remoteAdminNode == null &&
+                      regionAsync.whenOrNull(
+                            data: (r) =>
+                                r ==
+                                config_pbenum
+                                    .Config_LoRaConfig_RegionCode
+                                    .UNSET,
+                          ) ==
+                          true;
+                  final regionSubtitle = remoteAdminNode != null
+                      ? context.l10n.settingsTileRegionRemoteSubtitle(
+                          remoteAdmin.targetNodeName ??
+                              formatNodeId(remoteAdminNode),
+                        )
+                      : regionAsync.when(
+                          data: (region) {
+                            if (region ==
+                                config_pbenum
+                                    .Config_LoRaConfig_RegionCode
+                                    .UNSET) {
+                              return context.l10n.settingsNotConfigured;
+                            }
+                            // Find the region info for display
+                            final regionInfo = getAvailableRegions(context)
+                                .where((r) => r.code == region)
+                                .firstOrNull;
+                            if (regionInfo != null) {
+                              return '${regionInfo.name} (${regionInfo.frequency})';
+                            }
+                            return region.name;
+                          },
+                          loading: () => context.l10n.settingsLoadingStatus,
+                          error: (e, _) =>
+                              context.l10n.settingsRegionConfigureSubtitle,
+                        );
 
                   return [
                     SliverPadding(
@@ -3354,49 +3374,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             onTap: () => _forceSync(context, ref),
                           ),
                           SettingsNavTile(
-                            icon:
-                                regionAsync.whenOrNull(
-                                      data: (r) =>
-                                          r ==
-                                          config_pbenum
-                                              .Config_LoRaConfig_RegionCode
-                                              .UNSET,
-                                    ) ==
-                                    true
+                            icon: localRegionUnset
                                 ? Icons.warning_amber_rounded
                                 : Icons.language,
-                            iconColor:
-                                regionAsync.whenOrNull(
-                                      data: (r) =>
-                                          r ==
-                                          config_pbenum
-                                              .Config_LoRaConfig_RegionCode
-                                              .UNSET,
-                                    ) ==
-                                    true
+                            iconColor: localRegionUnset
                                 ? AccentColors.orange
                                 : null,
                             title: context.l10n.settingsTileRegionTitle,
                             subtitle: regionSubtitle,
-                            subtitleColor:
-                                regionAsync.whenOrNull(
-                                      data: (r) =>
-                                          r ==
-                                          config_pbenum
-                                              .Config_LoRaConfig_RegionCode
-                                              .UNSET,
-                                    ) ==
-                                    true
+                            subtitleColor: localRegionUnset
                                 ? AccentColors.orange
                                 : null,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const RegionSelectionScreen(
-                                  isInitialSetup: false,
-                                ),
-                              ),
-                            ),
+                            onTap: () => _openRegionSettings(context, ref),
                           ),
                           SettingsNavTile(
                             icon: Icons.settings,
@@ -4121,6 +4110,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         );
       }
     }
+  }
+
+  // RegionSelectionScreen always writes to the connected radio and runs its
+  // reboot and reconnect cycle, so while remote admin targets another node
+  // the region is edited in Radio Configuration, which writes to that node.
+  void _openRegionSettings(BuildContext context, WidgetRef ref) {
+    final isRemote = ref.read(remoteAdminProvider).targetNodeNum != null;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => isRemote
+            ? const RadioConfigScreen()
+            : const RegionSelectionScreen(isInitialSetup: false),
+      ),
+    );
   }
 
   Future<void> _forceSync(BuildContext context, WidgetRef ref) async {

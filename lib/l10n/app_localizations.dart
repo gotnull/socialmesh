@@ -6768,18 +6768,6 @@ abstract class AppLocalizations {
   /// **'Do not rebroadcast any messages. Node only receives.'**
   String get deviceConfigRebroadcastNoneDesc;
 
-  /// Text in developer tools Parameters: {nodeName} = display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Configuring: {nodeName}'**
-  String deviceConfigRemoteAdminConfiguring(String nodeName);
-
-  /// Title for the developer tools screen
-  ///
-  /// In en, this message translates to:
-  /// **'Remote Administration'**
-  String get deviceConfigRemoteAdminTitle;
-
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:
@@ -31551,6 +31539,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Region / Frequency'**
   String get settingsTileRegionTitle;
+
+  /// Subtitle of the region/frequency settings tile while remote administration is active; tapping it opens Radio Configuration for that node. {nodeName} = remote node display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Set on {nodeName} in Radio Configuration'**
+  String settingsTileRegionRemoteSubtitle(String nodeName);
 
   /// Subtitle of the reset local data settings tile.
   ///

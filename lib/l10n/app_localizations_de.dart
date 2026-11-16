@@ -3921,14 +3921,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine Nachrichten weiterleiten. Knoten empfängt nur.';
 
   @override
-  String deviceConfigRemoteAdminConfiguring(String nodeName) {
-    return 'Konfiguration: $nodeName';
-  }
-
-  @override
-  String get deviceConfigRemoteAdminTitle => 'Fernverwaltung';
-
-  @override
   String get deviceConfigResetNodeDb => 'Knotendatenbank zurücksetzen';
 
   @override
@@ -18502,6 +18494,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsTileRegionTitle => 'Region / Frequenz';
+
+  @override
+  String settingsTileRegionRemoteSubtitle(String nodeName) {
+    return 'Auf $nodeName in der Funkkonfiguration einstellen';
+  }
 
   @override
   String get settingsTileResetLocalDataSubtitle =>

@@ -3860,14 +3860,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Do not rebroadcast any messages. Node only receives.';
 
   @override
-  String deviceConfigRemoteAdminConfiguring(String nodeName) {
-    return 'Configuring: $nodeName';
-  }
-
-  @override
-  String get deviceConfigRemoteAdminTitle => 'Remote Administration';
-
-  @override
   String get deviceConfigResetNodeDb => 'Reset Node Database';
 
   @override
@@ -18258,6 +18250,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTileRegionTitle => 'Region / Frequency';
+
+  @override
+  String settingsTileRegionRemoteSubtitle(String nodeName) {
+    return 'Set on $nodeName in Radio Configuration';
+  }
 
   @override
   String get settingsTileResetLocalDataSubtitle =>

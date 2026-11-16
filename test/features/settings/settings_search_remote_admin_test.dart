@@ -53,6 +53,53 @@ void main() {
     expect(builder < header, true);
   });
 
+  // RegionSelectionScreen writes to the connected radio and reboots it, so
+  // while remote admin targets another node the region shortcut must open
+  // Radio Configuration, which writes to that node.
+  test('both region entry points go through one remote-aware router', () {
+    expect(
+      RegExp(r'onTap: \(\) => _openRegionSettings\(context, ref\)')
+          .allMatches(flat)
+          .length,
+      2,
+      reason: 'the Device tile and the search item share the router',
+    );
+    expect(
+      RegExp(r'RegionSelectionScreen\(').allMatches(flat).length,
+      1,
+      reason: 'only the router may open the local-only region picker',
+    );
+    final router = flat.indexOf('void _openRegionSettings(');
+    expect(router, isNot(-1));
+    final body = flat.substring(router, flat.indexOf('Future<void>', router));
+    expect(
+      body.contains('ref.read(remoteAdminProvider).targetNodeNum != null'),
+      true,
+    );
+    expect(
+      body.contains(
+        'isRemote ? const RadioConfigScreen() '
+        ': const RegionSelectionScreen(isInitialSetup: false)',
+      ),
+      true,
+    );
+  });
+
+  test('the region tile names the remote node instead of the local region', () {
+    expect(
+      flat.contains(
+        'final regionSubtitle = remoteAdminNode != null '
+        '? context.l10n.settingsTileRegionRemoteSubtitle(',
+      ),
+      true,
+    );
+    expect(
+      flat.contains('final localRegionUnset = remoteAdminNode == null &&'),
+      true,
+      reason: 'the unset warning is about the local radio only',
+    );
+  });
+
   test('the selector and the search share one adminable-node rule', () {
     expect(
       RegExp(r'node\.hasPublicKey').allMatches(flat).length,

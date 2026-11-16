@@ -5863,17 +5863,6 @@
   "@deviceConfigRebroadcastNoneDesc": {
     "description": "Description text in developer tools"
   },
-  "@deviceConfigRemoteAdminConfiguring": {
-    "placeholders": {
-      "nodeName": {
-        "type": "String"
-      }
-    },
-    "description": "Text in developer tools Parameters: {nodeName} = display name."
-  },
-  "@deviceConfigRemoteAdminTitle": {
-    "description": "Title for the developer tools screen"
-  },
   "@deviceConfigResetNodeDb": {
     "description": "Text displayed in developer tools"
   },
@@ -22842,6 +22831,14 @@
   "@settingsTileRegionTitle": {
     "description": "Title of the region/frequency settings tile."
   },
+  "@settingsTileRegionRemoteSubtitle": {
+    "placeholders": {
+      "nodeName": {
+        "type": "String"
+      }
+    },
+    "description": "Subtitle of the region/frequency settings tile while remote administration is active; tapping it opens Radio Configuration for that node. {nodeName} = remote node display name."
+  },
   "@settingsTileResetLocalDataSubtitle": {
     "description": "Subtitle of the reset local data settings tile."
   },
@@ -28666,8 +28663,6 @@
   "deviceConfigRebroadcastLocalOnlyDesc": "Ritrasmetti solo messaggi da mittenti locali. Ideale per reti isolate.",
   "deviceConfigRebroadcastNone": "Nessuno",
   "deviceConfigRebroadcastNoneDesc": "Non ritrasmettere alcun messaggio. Il nodo solo riceve.",
-  "deviceConfigRemoteAdminConfiguring": "Configurazione: {nodeName}",
-  "deviceConfigRemoteAdminTitle": "Amministrazione remota",
   "deviceConfigResetNodeDb": "Resetta database nodi",
   "deviceConfigResetNodeDbDialogConfirm": "Resetta",
   "deviceConfigResetNodeDbDialogMessage": "Questo cancellerà tutte le informazioni sui nodi memorizzate nel dispositivo. La rete mesh dovrà riscoprire tutti i nodi.\n\nSei sicuro di voler continuare?",
@@ -35893,6 +35888,7 @@
   "settingsTileRadioConfigTitle": "Configurazione radio",
   "settingsTileRangeTestSubtitle": "Testa la portata del segnale con altri nodi",
   "settingsTileRangeTestTitle": "Test di portata",
+  "settingsTileRegionRemoteSubtitle": "Si imposta su {nodeName} in Configurazione radio",
   "settingsTileRegionTitle": "Regione / Frequenza",
   "settingsTileResetLocalDataSubtitle": "Cancella messaggi e nodi, mantieni impostazioni",
   "settingsTileResetLocalDataTitle": "Ripristina dati locali",

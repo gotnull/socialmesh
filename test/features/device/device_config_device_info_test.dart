@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/core/widgets/info_table.dart';
+import 'package:socialmesh/core/widgets/remote_admin_target_banner.dart';
+import 'package:socialmesh/core/widgets/status_banner.dart';
 import 'package:socialmesh/features/device/device_config_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/models/mesh_models.dart';
@@ -242,6 +244,55 @@ void main() {
     expect(_valueInDeviceInfo('LOCAL-BRAVO-HW'), findsOneWidget);
     expect(_valueInDeviceInfo('!local5151'), findsOneWidget);
     expect(_valueInDeviceInfo('515151'), findsOneWidget);
+  });
+
+  testWidgets('remote config shows the shared remote admin banner', (
+    tester,
+  ) async {
+    final localNode = MeshNode(nodeNum: 616161, longName: 'Local Charlie');
+    final remoteNode = MeshNode(nodeNum: 727272, longName: 'Remote Delta');
+    final remoteContainer = _createContainer(
+      nodes: {localNode.nodeNum: localNode, remoteNode.nodeNum: remoteNode},
+      myNodeNum: localNode.nodeNum,
+      connectedDevice: null,
+      remoteState: RemoteAdminState(
+        targetNodeNum: remoteNode.nodeNum,
+        targetNodeName: remoteNode.displayName,
+      ),
+    );
+    addTearDown(remoteContainer.dispose);
+
+    await _pumpScreen(tester, remoteContainer);
+
+    final banner = find.descendant(
+      of: find.byType(RemoteAdminTargetBanner),
+      matching: find.byType(StatusBanner),
+    );
+    expect(banner, findsOneWidget);
+    expect(
+      find.descendant(
+        of: banner,
+        matching: find.textContaining('Remote Delta'),
+      ),
+      findsOneWidget,
+    );
+
+    final localContainer = _createContainer(
+      nodes: {localNode.nodeNum: localNode},
+      myNodeNum: localNode.nodeNum,
+      connectedDevice: null,
+    );
+    addTearDown(localContainer.dispose);
+
+    await _pumpScreen(tester, localContainer);
+
+    expect(
+      find.descendant(
+        of: find.byType(RemoteAdminTargetBanner),
+        matching: find.byType(StatusBanner),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('remote config deterministically prefers remote over local', (

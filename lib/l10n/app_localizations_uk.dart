@@ -3923,14 +3923,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не ретранслювати жодних повідомлень. Вузол лише отримує.';
 
   @override
-  String deviceConfigRemoteAdminConfiguring(String nodeName) {
-    return 'Налаштування: $nodeName';
-  }
-
-  @override
-  String get deviceConfigRemoteAdminTitle => 'Дистанційне адміністрування';
-
-  @override
   String get deviceConfigResetNodeDb => 'Скинути базу даних вузлів';
 
   @override
@@ -18477,6 +18469,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsTileRegionTitle => 'Регіон / Частота';
+
+  @override
+  String settingsTileRegionRemoteSubtitle(String nodeName) {
+    return 'Задається на $nodeName у розділі «Конфігурація радіо»';
+  }
 
   @override
   String get settingsTileResetLocalDataSubtitle =>

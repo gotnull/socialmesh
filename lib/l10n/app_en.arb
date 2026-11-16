@@ -5107,19 +5107,6 @@
   "@deviceConfigRebroadcastNoneDesc": {
     "description": "Description text in developer tools"
   },
-  "deviceConfigRemoteAdminConfiguring": "Configuring: {nodeName}",
-  "@deviceConfigRemoteAdminConfiguring": {
-    "placeholders": {
-      "nodeName": {
-        "type": "String"
-      }
-    },
-    "description": "Text in developer tools Parameters: {nodeName} = display name."
-  },
-  "deviceConfigRemoteAdminTitle": "Remote Administration",
-  "@deviceConfigRemoteAdminTitle": {
-    "description": "Title for the developer tools screen"
-  },
   "deviceConfigResetNodeDb": "Reset Node Database",
   "@deviceConfigResetNodeDb": {
     "description": "Text displayed in developer tools"
@@ -24727,6 +24714,15 @@
   "settingsTileRegionTitle": "Region / Frequency",
   "@settingsTileRegionTitle": {
     "description": "Title of the region/frequency settings tile."
+  },
+  "settingsTileRegionRemoteSubtitle": "Set on {nodeName} in Radio Configuration",
+  "@settingsTileRegionRemoteSubtitle": {
+    "placeholders": {
+      "nodeName": {
+        "type": "String"
+      }
+    },
+    "description": "Subtitle of the region/frequency settings tile while remote administration is active; tapping it opens Radio Configuration for that node. {nodeName} = remote node display name."
   },
   "settingsTileResetLocalDataSubtitle": "Clear messages and nodes, keep settings",
   "@settingsTileResetLocalDataSubtitle": {
