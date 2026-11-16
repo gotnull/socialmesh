@@ -17,6 +17,7 @@ import '../../../core/widgets/qr_scanner_overlay.dart';
 import '../../../models/meshcore_channel.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../meshcore_channel_slots.dart';
 import '../../../utils/snackbar.dart';
 import 'meshcore_contact_import_sheet.dart';
 
@@ -236,13 +237,12 @@ class _MeshCoreQrScannerScreenState
     // Find next available channel index
     final channelsState = ref.read(meshCoreChannelsProvider);
     final existingIndices = channelsState.channels.map((c) => c.index).toSet();
-    var newIndex = 0;
-    for (var i = 0; i < 8; i++) {
-      if (!existingIndices.contains(i)) {
-        newIndex = i;
-        break;
-      }
-    }
+    final newIndex =
+        firstFreeMeshCoreChannelSlot(
+          existingIndices,
+          ref.read(meshCoreChannelSlotCapacityProvider),
+        ) ??
+        0;
 
     // Try parsing as channel code (name:pskHex format)
     final channel = parseChannelCode(code, index: newIndex);

@@ -192,6 +192,14 @@ final meshCoreSessionProvider = Provider<MeshCoreSession?>((ref) {
   return adapter?.session;
 });
 
+/// Channel slots on the connected MeshCore radio, as it reported in
+/// DEVICE_INFO; eight when no radio is connected or its firmware predates
+/// the field.
+final meshCoreChannelSlotCapacityProvider = Provider<int>((ref) {
+  return ref.watch(meshCoreSessionProvider)?.channelSlotCapacity ??
+      MeshCoreFirmware.legacyChannelSlots;
+});
+
 /// D48-A2: single delivery-ack router per active session. Re-created
 /// whenever the session changes (reconnect, swap to a different
 /// radio). Tests override with a router fed by a controllable stream.

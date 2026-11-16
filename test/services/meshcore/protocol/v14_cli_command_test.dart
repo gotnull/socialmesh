@@ -101,10 +101,18 @@ void main() {
       expect(info.supportsCliCommands, isFalse);
     });
 
+    test('reads the contact and channel slot capacity', () {
+      final info = parseDeviceInfo(Uint8List.fromList(_deviceInfo(14))).value!;
+      expect(info.maxContacts, 350);
+      expect(info.maxGroupChannels, 40);
+      expect(info.buildDate, '15 Oct 2026');
+    });
+
     test('pre-v3 single-byte reply still yields the version code', () {
       final info = parseDeviceInfo(Uint8List.fromList([2])).value!;
       expect(info.firmwareVerCode, 2);
       expect(info.firmwareVersion, isNull);
+      expect(info.maxGroupChannels, isNull);
     });
 
     test('empty payload is a parse failure', () {
@@ -121,6 +129,21 @@ void main() {
       expect(session.supportsCliCommands, isTrue);
     });
 
+    test('the radio\'s channel slot count drives getChannels', () async {
+      final t = _FakeTransport();
+      addTearDown(t.dispose);
+      final session = await _handshake(t, deviceInfo: _deviceInfo(14));
+      expect(session.channelSlotCapacity, 40);
+
+      t.sentData.clear();
+      await session.getChannels(timeout: const Duration(milliseconds: 5));
+      final polled = t.sentData
+          .where((f) => f.isNotEmpty && f[0] == MeshCoreCommands.getChannel)
+          .map((f) => f[1])
+          .toList();
+      expect(polled, List<int>.generate(40, (i) => i));
+    });
+
     test('a v13 radio does not', () async {
       final t = _FakeTransport();
       addTearDown(t.dispose);
@@ -133,6 +156,7 @@ void main() {
       addTearDown(t.dispose);
       final session = await _handshake(t);
       expect(session.deviceInfo, isNull);
+      expect(session.channelSlotCapacity, 8);
       expect(session.supportsCliCommands, isFalse);
 
       // A second handshake on the same session must not collide with an

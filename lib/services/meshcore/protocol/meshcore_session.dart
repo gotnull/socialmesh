@@ -1027,6 +1027,12 @@ class MeshCoreSession {
   /// did not answer `CMD_DEVICE_QUERY`.
   MeshCoreDeviceInfo? get deviceInfo => _deviceInfo;
 
+  /// Number of channel slots on the connected radio: `MAX_GROUP_CHANNELS`
+  /// from DEVICE_INFO, or 8 for firmware before v3, which does not report
+  /// it and builds with eight.
+  int get channelSlotCapacity =>
+      _deviceInfo?.maxGroupChannels ?? MeshCoreFirmware.legacyChannelSlots;
+
   /// Whether the connected radio accepts [runCliCommand].
   bool get supportsCliCommands => _deviceInfo?.supportsCliCommands ?? false;
 
@@ -2278,14 +2284,16 @@ class MeshCoreSession {
   /// Request channel info from device.
   ///
   /// Sends CMD_GET_CHANNEL for each index and collects CHANNEL_INFO responses.
-  /// MeshCore typically supports 8 channels (indices 0-7).
+  /// [maxChannels] defaults to [channelSlotCapacity], the slot count the
+  /// radio reported. [timeout] bounds the wait for each slot's reply.
   ///
   /// Returns list of parsed channels, or empty list on error.
   Future<List<MeshCoreChannelInfo>> getChannels({
-    int maxChannels = 8,
-    Duration timeout = const Duration(seconds: 5),
+    int? maxChannels,
+    Duration timeout = const Duration(seconds: 2),
     void Function(int received, int total)? onProgress,
   }) async {
+    maxChannels ??= channelSlotCapacity;
     AppLogging.protocol('MeshCore: getChannels() starting...');
     AppLogging.meshcore('event=channels.fetch.started max=$maxChannels');
 
@@ -2297,7 +2305,7 @@ class MeshCoreSession {
           MeshCoreCommands.getChannel,
           payload: Uint8List.fromList([i]),
           expectedResponse: MeshCoreResponses.channelInfo,
-          timeout: Duration(seconds: 2),
+          timeout: timeout,
         );
 
         if (response != null) {

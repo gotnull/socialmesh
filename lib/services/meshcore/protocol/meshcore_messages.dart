@@ -978,6 +978,8 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
 class MeshCoreDeviceInfo {
   const MeshCoreDeviceInfo({
     required this.firmwareVerCode,
+    this.maxContacts,
+    this.maxGroupChannels,
     this.buildDate,
     this.manufacturer,
     this.firmwareVersion,
@@ -985,6 +987,14 @@ class MeshCoreDeviceInfo {
 
   /// `FIRMWARE_VER_CODE`, the companion protocol level.
   final int firmwareVerCode;
+
+  /// `MAX_CONTACTS`, sent halved; null on firmware before v3, which sends
+  /// only the version byte.
+  final int? maxContacts;
+
+  /// `MAX_GROUP_CHANNELS`, the number of channel slots the radio has. It is
+  /// board and build dependent; null on firmware before v3.
+  final int? maxGroupChannels;
   final String? buildDate;
   final String? manufacturer;
   final String? firmwareVersion;
@@ -1015,13 +1025,19 @@ ParseResult<MeshCoreDeviceInfo> parseDeviceInfo(Uint8List payload) {
 
   final reader = MeshCoreBufferReader(payload);
   final verCode = reader.readByte();
+  int? maxContacts;
+  int? maxGroupChannels;
+  if (payload.length >= 3) {
+    maxContacts = reader.readByte() * 2;
+    maxGroupChannels = reader.readByte();
+  }
 
   const stringsOffset = 7;
   String? buildDate;
   String? manufacturer;
   String? firmwareVersion;
   if (payload.length > stringsOffset) {
-    reader.skip(stringsOffset - 1);
+    reader.skip(stringsOffset - reader.position);
     buildDate = reader.readCString(12);
     if (reader.hasRemaining) manufacturer = reader.readCString(40);
     if (reader.hasRemaining) firmwareVersion = reader.readCString(20);
@@ -1030,6 +1046,8 @@ ParseResult<MeshCoreDeviceInfo> parseDeviceInfo(Uint8List payload) {
   return ParseResult.success(
     MeshCoreDeviceInfo(
       firmwareVerCode: verCode,
+      maxContacts: maxContacts,
+      maxGroupChannels: maxGroupChannels,
       buildDate: buildDate,
       manufacturer: manufacturer,
       firmwareVersion: firmwareVersion,

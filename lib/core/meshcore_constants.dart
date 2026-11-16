@@ -262,6 +262,10 @@ class MeshCoreFirmware {
 
   /// First version code that accepts [MeshCoreCommands.runCliCommand].
   static const int cliMinVerCode = 14;
+
+  /// Channel slots assumed for firmware before v3, whose DEVICE_INFO does
+  /// not report `MAX_GROUP_CHANNELS` and which builds with eight.
+  static const int legacyChannelSlots = 8;
 }
 
 /// MeshCore response codes (device -> app, 0x00-0x7F).

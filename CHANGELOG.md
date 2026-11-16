@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- MeshCore radios with more than eight channels now show all of them. SocialMesh read only slots 0 to 7, so channels in higher slots, including private ones, were missing; it now reads as many slots as the radio reports and can add channels in any free slot.
+
 ## [1.78.0] - 2026-11-16
 
 ### Added

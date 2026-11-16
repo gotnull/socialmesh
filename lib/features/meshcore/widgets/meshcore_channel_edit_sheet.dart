@@ -35,7 +35,9 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../models/meshcore_channel.dart';
+import '../../../core/meshcore_constants.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../meshcore_channel_slots.dart';
 import '../../../services/meshcore/channel_psk_kdf.dart';
 import '../../../utils/snackbar.dart';
 
@@ -52,7 +54,7 @@ Future<void> showMeshCoreChannelEditSheet({
   required MeshCoreChannelEditMode mode,
   MeshCoreChannel? existing,
   Set<int> occupiedSlots = const {},
-  int slotCapacity = 8,
+  int slotCapacity = MeshCoreFirmware.legacyChannelSlots,
 }) {
   return AppBottomSheet.showScrollable<void>(
     context: context,
@@ -121,12 +123,9 @@ class _MeshCoreChannelEditSheetState
     super.dispose();
   }
 
-  int _firstFreeSlot() {
-    for (int i = 0; i < widget.slotCapacity; i++) {
-      if (!widget.occupiedSlots.contains(i)) return i;
-    }
-    return 0;
-  }
+  int _firstFreeSlot() =>
+      firstFreeMeshCoreChannelSlot(widget.occupiedSlots, widget.slotCapacity) ??
+      0;
 
   String? _validateName(String? value, AppLocalizations l10n) {
     final trimmed = (value ?? '').trim();

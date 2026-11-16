@@ -27,6 +27,7 @@ import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_channel_sort_mode_provider.dart';
 import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../meshcore_channel_slots.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_channel_edit_sheet.dart';
@@ -633,6 +634,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
           : MeshCoreChannelEditMode.edit,
       existing: existing,
       occupiedSlots: occupied,
+      slotCapacity: ref.read(meshCoreChannelSlotCapacityProvider),
     );
   }
 
@@ -742,13 +744,12 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                     final existingIndices = channelsState.channels
                         .map((c) => c.index)
                         .toSet();
-                    var newIndex = 0;
-                    for (var i = 0; i < 8; i++) {
-                      if (!existingIndices.contains(i)) {
-                        newIndex = i;
-                        break;
-                      }
-                    }
+                    final newIndex =
+                        firstFreeMeshCoreChannelSlot(
+                          existingIndices,
+                          ref.read(meshCoreChannelSlotCapacityProvider),
+                        ) ??
+                        0;
 
                     // D31b: hashtag-derive only. PSK is
                     // SHA-256(`#name`)[:16] - deterministic by design,
@@ -957,13 +958,12 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     // Find next available index
     final channelsState = ref.read(meshCoreChannelsProvider);
     final existingIndices = channelsState.channels.map((c) => c.index).toSet();
-    var newIndex = 0;
-    for (var i = 0; i < 8; i++) {
-      if (!existingIndices.contains(i)) {
-        newIndex = i;
-        break;
-      }
-    }
+    final newIndex =
+        firstFreeMeshCoreChannelSlot(
+          existingIndices,
+          ref.read(meshCoreChannelSlotCapacityProvider),
+        ) ??
+        0;
 
     final channel = MeshCoreChannel.publicChannel(newIndex, name);
     await ref.read(meshCoreChannelsProvider.notifier).setChannel(channel);
@@ -1069,21 +1069,19 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                       );
                       return;
                     }
-                    // Pick the first free channel slot (firmware caps
-                    // at 8). If the slot search overflows we still
-                    // pass index 0; `setChannel` returns false and
-                    // the user sees a clear error.
+                    // Pick the first free slot the radio has. If every
+                    // slot is taken we still pass index 0; `setChannel`
+                    // returns false and the user sees a clear error.
                     final channelsState = ref.read(meshCoreChannelsProvider);
                     final existingIndices = channelsState.channels
                         .map((c) => c.index)
                         .toSet();
-                    var newIndex = 0;
-                    for (var i = 0; i < 8; i++) {
-                      if (!existingIndices.contains(i)) {
-                        newIndex = i;
-                        break;
-                      }
-                    }
+                    final newIndex =
+                        firstFreeMeshCoreChannelSlot(
+                          existingIndices,
+                          ref.read(meshCoreChannelSlotCapacityProvider),
+                        ) ??
+                        0;
 
                     final parsed = parseChannelCode(code, index: newIndex);
                     if (parsed == null) {
@@ -1208,13 +1206,12 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                     final existingIndices = channelsState.channels
                         .map((c) => c.index)
                         .toSet();
-                    var newIndex = 0;
-                    for (var i = 0; i < 8; i++) {
-                      if (!existingIndices.contains(i)) {
-                        newIndex = i;
-                        break;
-                      }
-                    }
+                    final newIndex =
+                        firstFreeMeshCoreChannelSlot(
+                          existingIndices,
+                          ref.read(meshCoreChannelSlotCapacityProvider),
+                        ) ??
+                        0;
 
                     final channel = parseChannelCode(code, index: newIndex);
                     if (channel != null) {

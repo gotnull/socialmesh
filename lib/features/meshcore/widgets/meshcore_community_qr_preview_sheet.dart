@@ -24,6 +24,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../models/meshcore_channel.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../meshcore_channel_slots.dart';
 import '../../../services/meshcore/storage/meshcore_community_qr_payload.dart';
 import '../../../utils/snackbar.dart';
 
@@ -116,20 +117,15 @@ class _CommunityPreviewSheetState extends ConsumerState<_CommunityPreviewSheet>
     HapticFeedback.lightImpact();
     setState(() => row.busy = true);
     try {
-      // Pick the next free 0-7 slot at accept time. Computing lazily
-      // (not at sheet open) lets successive Adds correctly skip slots
-      // that filled mid-session - same logic as the per-channel QR
-      // scanner's `newIndex` walk.
+      // Pick the next free slot at accept time. Computing lazily (not at
+      // sheet open) lets successive Adds correctly skip slots that filled
+      // mid-session.
       final channelsState = ref.read(meshCoreChannelsProvider);
-      final usedIndices = channelsState.channels.map((c) => c.index).toSet();
-      var slot = -1;
-      for (var i = 0; i < 8; i++) {
-        if (!usedIndices.contains(i)) {
-          slot = i;
-          break;
-        }
-      }
-      if (slot < 0) {
+      final slot = firstFreeMeshCoreChannelSlot(
+        channelsState.channels.map((c) => c.index),
+        ref.read(meshCoreChannelSlotCapacityProvider),
+      );
+      if (slot == null) {
         if (!mounted) return;
         setState(() => row.busy = false);
         showInfoSnackBar(context, l10n.meshcoreCommunityQrNoFreeSlot);
