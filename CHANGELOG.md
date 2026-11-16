@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Searching inside a chat now also matches the sender's long or short name, so you can find every message a node sent to a channel, not just messages containing the word you typed.
+
 ### Fixed
 
 - MeshCore radios with more than eight channels now show all of them. SocialMesh read only slots 0 to 7, so channels in higher slots, including private ones, were missing; it now reads as many slots as the radio reports and can add channels in any free slot.

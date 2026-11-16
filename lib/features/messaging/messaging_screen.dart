@@ -15,6 +15,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 
 import 'package:flutter/services.dart';
 
+import 'chat_search_match.dart';
 import 'dm_channel_resolver.dart';
 import 'dm_contacts_provider.dart';
 import 'widgets/chat_composer.dart';
@@ -2620,7 +2621,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           .where(
             (row) =>
                 row.message != null &&
-                row.message!.text.toLowerCase().contains(_searchQuery),
+                messageMatchesChatSearch(
+                  row.message!,
+                  nodes[row.message!.from],
+                  _searchQuery,
+                ),
           )
           .toList();
     }
