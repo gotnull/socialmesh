@@ -39463,4 +39463,128 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
       'Pilot organisation created';
+
+  @override
+  String get settingsTileClearStaleNodesTitle => 'Clear Stale Nodes';
+
+  @override
+  String get settingsTileClearStaleNodesSubtitle =>
+      'Clear nodes not heard for a set number of days from the app';
+
+  @override
+  String settingsClearStaleNodesAfterDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'After $days Days',
+      one: 'After 1 Day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsClearStaleNodesFootnote =>
+      'Favourited and ignored nodes are always retained. Other nodes are cleared from the app database on the schedule set by the user. (Nodes with PKC keys are always retained for at least 7 days.) Nodes are only cleared from the app; the radio keeps its own node database.';
+
+  @override
+  String get staleNodesDaysSliderLabel => 'Days before purging stale nodes';
+
+  @override
+  String staleNodesDaysValue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deviceMgmtRemoveStaleNodesTitle => 'Remove Stale Nodes';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitle =>
+      'Remove nodes not heard for a chosen number of days from the device and app';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitleShared =>
+      'Remove nodes not heard for a chosen number of days from the radio, keep the shared list in the app';
+
+  @override
+  String removeStaleNodesThreshold(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Not heard for more than $days days',
+      one: 'Not heard for more than 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesKept =>
+      'Favourited and ignored nodes, nodes never heard and the connected node are kept. Nodes with PKC keys are kept for at least 7 days.';
+
+  @override
+  String removeStaleNodesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nodes will be removed',
+      one: '1 node will be removed',
+      zero: 'No nodes to remove',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Remove $count nodes?',
+      one: 'Remove 1 node?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesConfirmMessage =>
+      'They are removed from this app, and from the radio if it still has them. Any that are still out there come back when they are next heard.';
+
+  @override
+  String get removeStaleNodesConfirmMessageShared =>
+      'They are removed from the radio if it still has them. The app\'s node list is shared with your other radios, so it stays as it is. Any that are still out there come back when they are next heard.';
+
+  @override
+  String removeStaleNodesProgress(int done, int total) {
+    return 'Removing $done of $total nodes';
+  }
+
+  @override
+  String removeStaleNodesRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Removed $count nodes.',
+      one: 'Removed 1 node.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count could not be removed.',
+      one: '1 could not be removed.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesDisconnected =>
+      'The radio disconnected before the rest were removed.';
 }

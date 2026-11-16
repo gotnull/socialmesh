@@ -39941,4 +39941,142 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
       'Пілотну організацію створено';
+
+  @override
+  String get settingsTileClearStaleNodesTitle => 'Очистити застарілі вузли';
+
+  @override
+  String get settingsTileClearStaleNodesSubtitle =>
+      'Видаляти із застосунку вузли, які не було чути задану кількість днів';
+
+  @override
+  String settingsClearStaleNodesAfterDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Через $days дня',
+      many: 'Через $days днів',
+      few: 'Через $days дні',
+      one: 'Через $days день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsClearStaleNodesFootnote =>
+      'Улюблені та ігноровані вузли завжди зберігаються. Інші вузли очищаються з бази даних застосунку за розкладом, встановленим користувачем. (Вузли з PKC-ключами завжди зберігаються щонайменше 7 днів.) Вузли очищаються лише із застосунку; рація зберігає власну базу даних вузлів.';
+
+  @override
+  String get staleNodesDaysSliderLabel => 'Днів до очищення застарілих вузлів';
+
+  @override
+  String staleNodesDaysValue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days дня',
+      many: '$days днів',
+      few: '$days дні',
+      one: '$days день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deviceMgmtRemoveStaleNodesTitle => 'Видалити застарілі вузли';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitle =>
+      'Видалити з пристрою та застосунку вузли, які не було чути вибрану кількість днів';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitleShared =>
+      'Видалити з рації вузли, які не було чути вибрану кількість днів, спільний список залишається в застосунку';
+
+  @override
+  String removeStaleNodesThreshold(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Не чути понад $days дня',
+      many: 'Не чути понад $days днів',
+      few: 'Не чути понад $days дні',
+      one: 'Не чути понад $days день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesKept =>
+      'Улюблені та ігноровані вузли, вузли, яких ніколи не було чути, і підключений вузол зберігаються. Вузли з PKC-ключами зберігаються щонайменше 7 днів.';
+
+  @override
+  String removeStaleNodesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Буде видалено $count вузла',
+      many: 'Буде видалено $count вузлів',
+      few: 'Буде видалено $count вузли',
+      one: 'Буде видалено $count вузол',
+      zero: 'Немає вузлів для видалення',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Видалити $count вузла?',
+      many: 'Видалити $count вузлів?',
+      few: 'Видалити $count вузли?',
+      one: 'Видалити $count вузол?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesConfirmMessage =>
+      'Їх буде видалено з цього застосунку, а також з рації, якщо вона їх ще зберігає. Ті, що досі в мережі, повернуться, щойно їх знову почують.';
+
+  @override
+  String get removeStaleNodesConfirmMessageShared =>
+      'Їх буде видалено з рації, якщо вона їх ще зберігає. Список вузлів у застосунку спільний з вашими іншими раціями, тому він залишиться без змін. Ті, що досі в мережі, повернуться, щойно їх знову почують.';
+
+  @override
+  String removeStaleNodesProgress(int done, int total) {
+    return 'Видалення вузлів: $done з $total';
+  }
+
+  @override
+  String removeStaleNodesRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Видалено $count вузла.',
+      many: 'Видалено $count вузлів.',
+      few: 'Видалено $count вузли.',
+      one: 'Видалено $count вузол.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Не вдалося видалити $count вузла.',
+      many: 'Не вдалося видалити $count вузлів.',
+      few: 'Не вдалося видалити $count вузли.',
+      one: 'Не вдалося видалити $count вузол.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesDisconnected =>
+      'Рація відключилася до того, як було видалено решту.';
 }

@@ -419,6 +419,15 @@ class SettingsService {
   bool get hideNewNodesBadge =>
       _preferences.getBool('hide_new_nodes_badge') ?? false;
 
+  // Clear Stale Nodes: nodes not heard for this many days are cleared
+  // from the app after each connect. Zero means off.
+  Future<void> setPurgeStaleNodeDays(int days) async {
+    await _preferences.setInt('purge_stale_node_days', days);
+  }
+
+  int get purgeStaleNodeDays =>
+      _preferences.getInt('purge_stale_node_days') ?? 0;
+
   // Messages: remembered sub-tab index.
   // Persists which sub-tab (0 = Contacts, 1 = Channels) was last
   // selected on MessagesContainerScreen. Large-mesh users typically
@@ -1616,16 +1625,17 @@ class NodeStorageService {
     }
   }
 
-  /// Delete a specific node from storage
-  Future<void> deleteNode(int nodeNum) async {
+  /// Delete [nodeNums] from storage in one read and one write.
+  Future<void> deleteNodes(Set<int> nodeNums) async {
+    if (nodeNums.isEmpty) return;
     try {
       final nodes = await loadNodes();
-      nodes.removeWhere((n) => n.nodeNum == nodeNum);
+      nodes.removeWhere((n) => nodeNums.contains(n.nodeNum));
       final jsonList = nodes.map((n) => _nodeToJson(n)).toList();
       await _preferences.setString(_nodesKey, jsonEncode(jsonList));
-      AppLogging.storage('Deleted node $nodeNum from storage');
+      AppLogging.storage('Deleted ${nodeNums.length} node(s) from storage');
     } catch (e) {
-      AppLogging.storage('Error deleting node $nodeNum: $e');
+      AppLogging.storage('Error deleting ${nodeNums.length} node(s): $e');
     }
   }
 

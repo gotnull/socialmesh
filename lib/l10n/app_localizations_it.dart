@@ -39920,4 +39920,129 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
       'Organizzazione pilota creata';
+
+  @override
+  String get settingsTileClearStaleNodesTitle => 'Elimina i nodi inattivi';
+
+  @override
+  String get settingsTileClearStaleNodesSubtitle =>
+      'Elimina dall\'app i nodi non sentiti per un numero di giorni stabilito';
+
+  @override
+  String settingsClearStaleNodesAfterDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Dopo $days giorni',
+      one: 'Dopo 1 giorno',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsClearStaleNodesFootnote =>
+      'I nodi preferiti e ignorati vengono sempre conservati. Gli altri nodi vengono eliminati dal database dell\'app in base alla programmazione impostata dall\'utente. (I nodi con chiavi PKC vengono sempre conservati per almeno 7 giorni.) I nodi vengono eliminati solo dall\'app; la radio mantiene il proprio database dei nodi.';
+
+  @override
+  String get staleNodesDaysSliderLabel =>
+      'Giorni prima di eliminare i nodi inattivi';
+
+  @override
+  String staleNodesDaysValue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days giorni',
+      one: '1 giorno',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deviceMgmtRemoveStaleNodesTitle => 'Rimuovi i nodi inattivi';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitle =>
+      'Rimuovi dal dispositivo e dall\'app i nodi non sentiti per il numero di giorni scelto';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitleShared =>
+      'Rimuovi dalla radio i nodi non sentiti per il numero di giorni scelto, l\'elenco condiviso resta nell\'app';
+
+  @override
+  String removeStaleNodesThreshold(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Non sentiti da più di $days giorni',
+      one: 'Non sentiti da più di 1 giorno',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesKept =>
+      'I nodi preferiti e ignorati, i nodi mai sentiti e il nodo connesso vengono conservati. I nodi con chiavi PKC vengono conservati per almeno 7 giorni.';
+
+  @override
+  String removeStaleNodesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Verranno rimossi $count nodi',
+      one: 'Verrà rimosso 1 nodo',
+      zero: 'Nessun nodo da rimuovere',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rimuovere $count nodi?',
+      one: 'Rimuovere 1 nodo?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesConfirmMessage =>
+      'Vengono rimossi da questa app, e dalla radio se li ha ancora. Quelli ancora attivi torneranno quando verranno sentiti di nuovo.';
+
+  @override
+  String get removeStaleNodesConfirmMessageShared =>
+      'Vengono rimossi dalla radio se li ha ancora. L\'elenco dei nodi dell\'app è condiviso con le tue altre radio, quindi resta com\'è. Quelli ancora attivi torneranno quando verranno sentiti di nuovo.';
+
+  @override
+  String removeStaleNodesProgress(int done, int total) {
+    return 'Rimozione dei nodi: $done di $total';
+  }
+
+  @override
+  String removeStaleNodesRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nodi rimossi.',
+      one: '1 nodo rimosso.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Non è stato possibile rimuovere $count nodi.',
+      one: 'Non è stato possibile rimuovere 1 nodo.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesDisconnected =>
+      'La radio si è disconnessa prima che fossero rimossi gli altri.';
 }

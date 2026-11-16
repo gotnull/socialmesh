@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Remove nodes that have not been heard for a chosen number of days. Device Management > Remove Stale Nodes shows how many nodes a threshold of 1 to 180 days removes, then removes them from the radio and the app; Settings > Data & Storage > Clear Stale Nodes does the same for the app after every connect. Favourites, ignored nodes, nodes never heard and your own radio are always kept, and nodes with a PKC key are kept for at least 7 days.
+
 ### Changed
 
 - Searching inside a chat now also matches the sender's long or short name, so you can find every message a node sent to a channel, not just messages containing the word you typed.

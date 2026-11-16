@@ -40176,4 +40176,130 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
       'Organisation pilote créée';
+
+  @override
+  String get settingsTileClearStaleNodesTitle =>
+      'Supprimer les nœuds obsolètes';
+
+  @override
+  String get settingsTileClearStaleNodesSubtitle =>
+      'Supprimer de l\'application les nœuds non entendus depuis un nombre de jours défini';
+
+  @override
+  String settingsClearStaleNodesAfterDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Après $days jours',
+      one: 'Après 1 jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsClearStaleNodesFootnote =>
+      'Les nœuds favoris et ignorés sont toujours conservés. Les autres nœuds sont supprimés de la base de données de l\'application selon le délai défini par l\'utilisateur. (Les nœuds avec des clés PKC sont toujours conservés pendant au moins 7 jours.) Les nœuds ne sont supprimés que de l\'application ; la radio conserve sa propre base de données de nœuds.';
+
+  @override
+  String get staleNodesDaysSliderLabel =>
+      'Jours avant la suppression des nœuds obsolètes';
+
+  @override
+  String staleNodesDaysValue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days jours',
+      one: '1 jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deviceMgmtRemoveStaleNodesTitle => 'Retirer les nœuds obsolètes';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitle =>
+      'Retirer de l\'appareil et de l\'application les nœuds non entendus depuis le nombre de jours choisi';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitleShared =>
+      'Retirer de la radio les nœuds non entendus depuis le nombre de jours choisi, la liste partagée reste dans l\'application';
+
+  @override
+  String removeStaleNodesThreshold(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Non entendus depuis plus de $days jours',
+      one: 'Non entendus depuis plus de 1 jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesKept =>
+      'Les nœuds favoris et ignorés, les nœuds jamais entendus et le nœud connecté sont conservés. Les nœuds avec des clés PKC sont conservés pendant au moins 7 jours.';
+
+  @override
+  String removeStaleNodesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nœuds seront retirés',
+      one: '1 nœud sera retiré',
+      zero: 'Aucun nœud à retirer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Retirer $count nœuds ?',
+      one: 'Retirer 1 nœud ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesConfirmMessage =>
+      'Ils sont retirés de cette application, et de la radio si elle les a encore. Ceux qui sont toujours actifs reviendront dès qu\'ils seront de nouveau entendus.';
+
+  @override
+  String get removeStaleNodesConfirmMessageShared =>
+      'Ils sont retirés de la radio si elle les a encore. La liste des nœuds de l\'application est partagée avec vos autres radios, elle reste donc inchangée. Ceux qui sont toujours actifs reviendront dès qu\'ils seront de nouveau entendus.';
+
+  @override
+  String removeStaleNodesProgress(int done, int total) {
+    return 'Retrait des nœuds : $done sur $total';
+  }
+
+  @override
+  String removeStaleNodesRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nœuds retirés.',
+      one: '1 nœud retiré.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nœuds n\'ont pas pu être retirés.',
+      one: '1 nœud n\'a pas pu être retiré.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesDisconnected =>
+      'La radio s\'est déconnectée avant que le reste soit retiré.';
 }

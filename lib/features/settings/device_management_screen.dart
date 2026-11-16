@@ -20,6 +20,9 @@ import '../../services/protocol/admin_target.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../models/mesh_models.dart';
+import '../../services/nodes/stale_node_cleanup.dart';
+import 'widgets/stale_node_days_slider.dart';
 
 /// Screen for device management actions like reboot, shutdown, factory reset
 class DeviceManagementScreen extends ConsumerStatefulWidget {
@@ -33,6 +36,10 @@ class DeviceManagementScreen extends ConsumerStatefulWidget {
 class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     with LifecycleSafeMixin {
   bool _isProcessing = false;
+
+  // Progress of a stale-node removal; zero total while none is running.
+  int _staleRemovalDone = 0;
+  int _staleRemovalTotal = 0;
 
   String _remoteName(RemoteAdminState remote) =>
       remote.targetNodeName ?? formatNodeId(remote.targetNodeNum!);
@@ -132,6 +139,87 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
     }
   }
 
+  /// Picks an age threshold, confirms, then removes the matching nodes
+  /// from the connected radio and the app. A node list shared with other
+  /// radios is their history too, so then only the radio is changed and
+  /// only nodes the radio reported are offered.
+  Future<void> _removeStaleNodes() async {
+    final l10n = context.l10n;
+    final protocol = ref.read(protocolServiceProvider);
+    final nodesNotifier = ref.read(nodesProvider.notifier);
+    final appNodes = ref.read(nodesProvider).values;
+    final savedDays =
+        ref.read(settingsServiceProvider).value?.purgeStaleNodeDays ?? 0;
+    final shared = await ref.read(currentRadioScopeSharedProvider.future);
+    if (!mounted) return;
+    final radioNodes = protocol.nodes;
+    final nodes = shared
+        ? appNodes.where((n) => radioNodes.containsKey(n.nodeNum)).toList()
+        : appNodes.toList();
+    final localNodeNum = protocol.myNodeNum;
+
+    final days = await AppBottomSheet.show<int>(
+      context: context,
+      child: _StaleNodeRemovalSheet(
+        nodes: nodes,
+        localNodeNum: localNodeNum,
+        initialDays: savedDays > 0 ? savedDays : kStaleNodeDefaultDays,
+      ),
+    );
+    if (days == null || !mounted) return;
+    final stale = selectStaleNodeNums(
+      nodes,
+      days: days,
+      now: DateTime.now(),
+      localNodeNum: localNodeNum,
+    );
+    if (stale.isEmpty) return;
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.removeStaleNodesConfirmTitle(stale.length),
+      message: shared
+          ? l10n.removeStaleNodesConfirmMessageShared
+          : l10n.removeStaleNodesConfirmMessage,
+      confirmLabel: l10n.commonRemove,
+      cancelLabel: l10n.commonCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true || !mounted) return;
+
+    AppLogging.connection(
+      'DeviceManagement: removing ${stale.length} stale nodes '
+      'days=$days shared=$shared',
+    );
+    safeSetState(() {
+      _isProcessing = true;
+      _staleRemovalDone = 0;
+      _staleRemovalTotal = stale.length;
+    });
+    final result = await removeStaleNodesFromRadio(
+      protocol,
+      stale,
+      onProgress: (done) => safeSetState(() => _staleRemovalDone = done),
+    );
+    if (!shared) nodesNotifier.removeNodes(result.removed.toSet());
+    safeSetState(() {
+      _isProcessing = false;
+      _staleRemovalTotal = 0;
+    });
+    if (!mounted) return;
+
+    final summary = [
+      l10n.removeStaleNodesRemoved(result.removed.length),
+      if (result.failed > 0) l10n.removeStaleNodesFailed(result.failed),
+      if (result.stoppedOnDisconnect) l10n.removeStaleNodesDisconnected,
+    ].join(' ');
+    if (result.failed > 0 || result.stoppedOnDisconnect) {
+      showWarningSnackBar(context, summary);
+    } else {
+      showSuccessSnackBar(context, summary);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -147,7 +235,16 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
       title: context.l10n.deviceMgmtTitle,
       slivers: [
         if (_isProcessing)
-          const SliverFillRemaining(child: ScreenLoadingIndicator())
+          SliverFillRemaining(
+            child: ScreenLoadingIndicator(
+              message: _staleRemovalTotal > 0
+                  ? context.l10n.removeStaleNodesProgress(
+                      _staleRemovalDone,
+                      _staleRemovalTotal,
+                    )
+                  : null,
+            ),
+          )
         else
           // Vertical only: the settings primitives own their horizontal inset.
           SliverPadding(
@@ -354,6 +451,19 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                     );
                   },
                 ),
+                // Local only: one admin write per node would cost airtime
+                // for every node when sent to a remote radio.
+                if (remoteName == null)
+                  _ActionCard(
+                    icon: Icons.playlist_remove,
+                    iconColor: AccentColors.orange,
+                    title: context.l10n.deviceMgmtRemoveStaleNodesTitle,
+                    subtitle: resetKeepsSharedNodes
+                        ? context.l10n.deviceMgmtRemoveStaleNodesSubtitleShared
+                        : context.l10n.deviceMgmtRemoveStaleNodesSubtitle,
+                    enabled: isConnected,
+                    onTap: _removeStaleNodes,
+                  ),
                 _ActionCard(
                   icon: Icons.settings_backup_restore,
                   iconColor: AccentColors.coral,
@@ -639,6 +749,75 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
               ],
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// Picks the age threshold for Remove Stale Nodes and shows how many of
+/// [nodes] it removes. Pops with the chosen number of days.
+class _StaleNodeRemovalSheet extends StatefulWidget {
+  final List<MeshNode> nodes;
+  final int? localNodeNum;
+  final int initialDays;
+
+  const _StaleNodeRemovalSheet({
+    required this.nodes,
+    required this.localNodeNum,
+    required this.initialDays,
+  });
+
+  @override
+  State<_StaleNodeRemovalSheet> createState() => _StaleNodeRemovalSheetState();
+}
+
+class _StaleNodeRemovalSheetState extends State<_StaleNodeRemovalSheet> {
+  late int _days = widget.initialDays;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
+    final count = selectStaleNodeNums(
+      widget.nodes,
+      days: _days,
+      now: DateTime.now(),
+      localNodeNum: widget.localNodeNum,
+    ).length;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        BottomSheetHeader(title: l10n.deviceMgmtRemoveStaleNodesTitle),
+        const SizedBox(height: AppTheme.spacing16),
+        StaleNodeDaysSlider(
+          label: l10n.removeStaleNodesThreshold(_days),
+          days: _days,
+          onChanged: (value) => setState(() => _days = value),
+        ),
+        Text(
+          l10n.removeStaleNodesCount(count),
+          style: textTheme.bodyMedium?.copyWith(
+            color: context.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Text(
+          l10n.removeStaleNodesKept,
+          style: textTheme.bodySmall?.copyWith(color: context.textSecondary),
+        ),
+        const SizedBox(height: AppTheme.spacing24),
+        BottomSheetButtons(
+          cancelLabel: l10n.commonCancel,
+          confirmLabel: l10n.commonRemove,
+          isDestructive: true,
+          isConfirmEnabled: count > 0,
+          onConfirm: () {
+            if (!mounted) return;
+            Navigator.pop(context, _days);
+          },
+        ),
       ],
     );
   }

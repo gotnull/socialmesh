@@ -52135,5 +52135,133 @@
   "licenseOrgAuditActionPilotLicenseOrgProvisioned": "Pilot organisation created",
   "@licenseOrgAuditActionPilotLicenseOrgProvisioned": {
     "description": "Audit log label for the PilotLicenseOrgProvisioned action."
+  },
+  "settingsTileClearStaleNodesTitle": "Clear Stale Nodes",
+  "@settingsTileClearStaleNodesTitle": {
+    "description": "Settings > Data & Storage toggle that clears nodes not heard for a set number of days from the app after each connect"
+  },
+  "settingsTileClearStaleNodesSubtitle": "Clear nodes not heard for a set number of days from the app",
+  "@settingsTileClearStaleNodesSubtitle": {
+    "description": "Subtitle of the Clear Stale Nodes toggle in Settings > Data & Storage"
+  },
+  "settingsClearStaleNodesAfterDays": "{days, plural, =1{After 1 Day} other{After {days} Days}}",
+  "@settingsClearStaleNodesAfterDays": {
+    "description": "Label above the Clear Stale Nodes days slider: nodes not heard for this many days are cleared",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "Number of days."
+      }
+    }
+  },
+  "settingsClearStaleNodesFootnote": "Favourited and ignored nodes are always retained. Other nodes are cleared from the app database on the schedule set by the user. (Nodes with PKC keys are always retained for at least 7 days.) Nodes are only cleared from the app; the radio keeps its own node database.",
+  "@settingsClearStaleNodesFootnote": {
+    "description": "Explanation under the Clear Stale Nodes slider in Settings > Data & Storage"
+  },
+  "staleNodesDaysSliderLabel": "Days before purging stale nodes",
+  "@staleNodesDaysSliderLabel": {
+    "description": "Screen reader label for the stale nodes days slider"
+  },
+  "staleNodesDaysValue": "{days, plural, =1{1 day} other{{days} days}}",
+  "@staleNodesDaysValue": {
+    "description": "Screen reader value of the stale nodes days slider",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "Number of days."
+      }
+    }
+  },
+  "deviceMgmtRemoveStaleNodesTitle": "Remove Stale Nodes",
+  "@deviceMgmtRemoveStaleNodesTitle": {
+    "description": "Device Management tile and sheet title: remove nodes not heard for a chosen number of days"
+  },
+  "deviceMgmtRemoveStaleNodesSubtitle": "Remove nodes not heard for a chosen number of days from the device and app",
+  "@deviceMgmtRemoveStaleNodesSubtitle": {
+    "description": "Remove Stale Nodes tile subtitle in Device Management"
+  },
+  "deviceMgmtRemoveStaleNodesSubtitleShared": "Remove nodes not heard for a chosen number of days from the radio, keep the shared list in the app",
+  "@deviceMgmtRemoveStaleNodesSubtitleShared": {
+    "description": "Remove Stale Nodes tile subtitle in Device Management when the connected radio shares its stored data with other radios"
+  },
+  "removeStaleNodesThreshold": "{days, plural, =1{Not heard for more than 1 day} other{Not heard for more than {days} days}}",
+  "@removeStaleNodesThreshold": {
+    "description": "Label above the days slider in the Remove Stale Nodes sheet",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "Number of days."
+      }
+    }
+  },
+  "removeStaleNodesKept": "Favourited and ignored nodes, nodes never heard and the connected node are kept. Nodes with PKC keys are kept for at least 7 days.",
+  "@removeStaleNodesKept": {
+    "description": "Remove Stale Nodes sheet: which nodes are never removed"
+  },
+  "removeStaleNodesCount": "{count, plural, =0{No nodes to remove} =1{1 node will be removed} other{{count} nodes will be removed}}",
+  "@removeStaleNodesCount": {
+    "description": "Remove Stale Nodes sheet: how many nodes the chosen threshold removes",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of nodes."
+      }
+    }
+  },
+  "removeStaleNodesConfirmTitle": "{count, plural, =1{Remove 1 node?} other{Remove {count} nodes?}}",
+  "@removeStaleNodesConfirmTitle": {
+    "description": "Confirmation title before removing stale nodes",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of nodes."
+      }
+    }
+  },
+  "removeStaleNodesConfirmMessage": "They are removed from this app, and from the radio if it still has them. Any that are still out there come back when they are next heard.",
+  "@removeStaleNodesConfirmMessage": {
+    "description": "Confirmation message before removing stale nodes from the app and the radio"
+  },
+  "removeStaleNodesConfirmMessageShared": "They are removed from the radio if it still has them. The app's node list is shared with your other radios, so it stays as it is. Any that are still out there come back when they are next heard.",
+  "@removeStaleNodesConfirmMessageShared": {
+    "description": "Confirmation message before removing stale nodes when the app's node list is shared with other radios: only the radio is changed"
+  },
+  "removeStaleNodesProgress": "Removing {done} of {total} nodes",
+  "@removeStaleNodesProgress": {
+    "description": "Shown while stale nodes are being removed one at a time",
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "description": "Nodes handled so far."
+      },
+      "total": {
+        "type": "int",
+        "description": "Nodes to remove."
+      }
+    }
+  },
+  "removeStaleNodesRemoved": "{count, plural, =1{Removed 1 node.} other{Removed {count} nodes.}}",
+  "@removeStaleNodesRemoved": {
+    "description": "Result after removing stale nodes",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of nodes."
+      }
+    }
+  },
+  "removeStaleNodesFailed": "{count, plural, =1{1 could not be removed.} other{{count} could not be removed.}}",
+  "@removeStaleNodesFailed": {
+    "description": "Result after removing stale nodes: nodes the radio send failed for",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of nodes."
+      }
+    }
+  },
+  "removeStaleNodesDisconnected": "The radio disconnected before the rest were removed.",
+  "@removeStaleNodesDisconnected": {
+    "description": "Result after removing stale nodes when the radio disconnected part way"
   }
 }

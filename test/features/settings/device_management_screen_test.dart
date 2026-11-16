@@ -11,6 +11,7 @@ import 'package:socialmesh/core/widgets/settings_primitives.dart';
 import 'package:socialmesh/core/widgets/status_banner.dart';
 import 'package:socialmesh/features/settings/device_management_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
+import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/radio_scope_providers.dart';
 import 'package:socialmesh/services/protocol/admin_target.dart';
@@ -23,17 +24,36 @@ import 'package:socialmesh/services/protocol/protocol_service.dart';
 
 const _remoteNode = 0x2002;
 const _remoteName = 'Hilltop';
+const _localNode = 0x1001;
 
 class _FakeProtocolService extends ProtocolService {
-  _FakeProtocolService({required this.sessionReady, this.connected = true})
-    : super(_FakeTransport());
+  _FakeProtocolService({
+    required this.sessionReady,
+    this.connected = true,
+    this.radioNodeNums = const {},
+  }) : super(_FakeTransport());
 
   bool sessionReady;
   final bool connected;
+  final Set<int> radioNodeNums;
   final List<AdminTarget?> rebootTargets = [];
+  final List<int> removedNodeNums = [];
 
   @override
   bool get isConnected => connected;
+
+  @override
+  int? get myNodeNum => _localNode;
+
+  @override
+  Map<int, MeshNode> get nodes => {
+    for (final n in radioNodeNums) n: MeshNode(nodeNum: n),
+  };
+
+  @override
+  Future<void> removeNode(int nodeNum) async {
+    removedNodeNums.add(nodeNum);
+  }
 
   @override
   bool remoteAdminSessionReady(int nodeNum) => sessionReady;
@@ -41,6 +61,21 @@ class _FakeProtocolService extends ProtocolService {
   @override
   Future<void> reboot({int delaySeconds = 2, AdminTarget? target}) async {
     rebootTargets.add(target);
+  }
+}
+
+class _FakeNodes extends NodesNotifier {
+  _FakeNodes(this.initial);
+  final Map<int, MeshNode> initial;
+  final List<Set<int>> removeCalls = [];
+
+  @override
+  Map<int, MeshNode> build() => initial;
+
+  @override
+  void removeNodes(Set<int> nodeNums) {
+    removeCalls.add(nodeNums);
+    state = Map.of(state)..removeWhere((k, _) => nodeNums.contains(k));
   }
 }
 
@@ -116,12 +151,14 @@ Widget _wrap(
   _FakeProtocolService protocol,
   _RemoteTarget remote, {
   bool sharedScope = false,
+  _FakeNodes? nodes,
 }) {
   return ProviderScope(
     overrides: [
       protocolServiceProvider.overrideWithValue(protocol),
       remoteAdminProvider.overrideWith(() => remote),
       currentRadioScopeSharedProvider.overrideWith((ref) async => sharedScope),
+      if (nodes != null) nodesProvider.overrideWith(() => nodes),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -184,9 +221,9 @@ void main() {
       _wrap(protocol, _RemoteTarget(const RemoteAdminState())),
     );
 
-    // Power, Time, Reset and Firmware sections; seven action rows.
+    // Power, Time, Reset and Firmware sections; eight action rows.
     expect(find.byType(SettingsSectionHeader), findsNWidgets(4));
-    expect(find.byType(SettingsTile), findsNWidgets(7));
+    expect(find.byType(SettingsTile), findsNWidgets(8));
   });
 
   group('Reset Node Database on a radio that shares data', () {
@@ -345,5 +382,125 @@ void main() {
     expect(protocol.rebootTargets.single?.resolve(1), _remoteNode);
     expect(find.text('Reboot Device command sent'), findsOneWidget);
     expect(find.text('Reboot Device'), findsOneWidget);
+  });
+
+  group('Remove Stale Nodes', () {
+    MeshNode node(int nodeNum, {int? daysAgo, bool favourite = false}) =>
+        MeshNode(
+          nodeNum: nodeNum,
+          lastHeard: daysAgo == null
+              ? null
+              : DateTime.now().subtract(Duration(days: daysAgo)),
+          isFavorite: favourite,
+        );
+
+    // 0x10 is on the radio and stale, 0x11 is stale but app-only, 0x12 is
+    // recent, 0x13 is a stale favourite, the local node is stale.
+    Map<int, MeshNode> appNodes() => {
+      for (final n in [
+        node(0x10, daysAgo: 30),
+        node(0x11, daysAgo: 30),
+        node(0x12, daysAgo: 1),
+        node(0x13, daysAgo: 30, favourite: true),
+        node(_localNode, daysAgo: 30),
+      ])
+        n.nodeNum: n,
+    };
+
+    Future<void> runRemoval(WidgetTester tester) async {
+      await tester.tap(find.text('Remove Stale Nodes'));
+      await tester.pumpAndSettle();
+      expect(find.text('Not heard for more than 7 days'), findsOneWidget);
+      expect(find.text('2 nodes will be removed'), findsOneWidget);
+
+      await tester.tap(find.text('Remove'));
+      await tester.pumpAndSettle();
+      expect(find.text('Remove 2 nodes?'), findsOneWidget);
+
+      await tester.tap(find.text('Remove'));
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+    }
+
+    testWidgets('removes stale nodes from the radio and the app', (
+      tester,
+    ) async {
+      final protocol = _FakeProtocolService(
+        sessionReady: true,
+        radioNodeNums: {0x10, 0x12},
+      );
+      final nodes = _FakeNodes(appNodes());
+      await _pump(
+        tester,
+        _wrap(protocol, _RemoteTarget(const RemoteAdminState()), nodes: nodes),
+      );
+
+      expect(
+        find.text(
+          'Remove nodes not heard for a chosen number of days from the '
+          'device and app',
+        ),
+        findsOneWidget,
+      );
+      await runRemoval(tester);
+
+      // Only the node the radio reported needs a radio write.
+      expect(protocol.removedNodeNums, [0x10]);
+      expect(nodes.removeCalls, [
+        {0x10, 0x11},
+      ]);
+      expect(find.text('Removed 2 nodes.'), findsOneWidget);
+    });
+
+    testWidgets('a shared node list is kept and only radio nodes are '
+        'offered', (tester) async {
+      final protocol = _FakeProtocolService(
+        sessionReady: true,
+        radioNodeNums: {0x10, 0x11, 0x12},
+      );
+      final nodes = _FakeNodes(appNodes());
+      await _pump(
+        tester,
+        _wrap(
+          protocol,
+          _RemoteTarget(const RemoteAdminState()),
+          sharedScope: true,
+          nodes: nodes,
+        ),
+      );
+
+      expect(
+        find.text(
+          'Remove nodes not heard for a chosen number of days from the '
+          'radio, keep the shared list in the app',
+        ),
+        findsOneWidget,
+      );
+      await runRemoval(tester);
+
+      expect(protocol.removedNodeNums, [0x10, 0x11]);
+      expect(nodes.removeCalls, isEmpty);
+    });
+
+    testWidgets('is not offered while a remote node is targeted', (
+      tester,
+    ) async {
+      final protocol = _FakeProtocolService(sessionReady: true);
+      await _pump(
+        tester,
+        _wrap(
+          protocol,
+          _RemoteTarget(
+            const RemoteAdminState(
+              targetNodeNum: _remoteNode,
+              targetNodeName: _remoteName,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Remove Stale Nodes'), findsNothing);
+    });
   });
 }

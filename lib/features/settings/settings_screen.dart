@@ -27,6 +27,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
+import '../../services/nodes/stale_node_cleanup.dart';
 import '../../services/notifications/push_notification_service.dart';
 import '../../services/haptic_service.dart';
 import 'background_connection_screen.dart';
@@ -76,6 +77,7 @@ import 'external_notification_config_screen.dart';
 import 'account_subscriptions_screen.dart';
 import 'linked_devices_screen.dart';
 import 'data_export_screen.dart';
+import 'widgets/stale_node_days_slider.dart';
 import '../device/serial_config_screen.dart';
 import 'traffic_management_config_screen.dart';
 import 'mesh_beacon_config_screen.dart';
@@ -164,6 +166,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         subtitle: context.l10n.settingsTileOfflineMapStorageSubtitle,
         onTap: () => showOfflineStorageSettingsSheet(context),
       ),
+    ];
+  }
+
+  /// Turning Clear Stale Nodes on starts at [kStaleNodeDefaultDays];
+  /// turning it off stores zero.
+  Future<void> _setClearStaleNodes(
+    SettingsService settingsService,
+    bool enabled,
+  ) async {
+    HapticFeedback.selectionClick();
+    final days = enabled ? kStaleNodeDefaultDays : 0;
+    await settingsService.setPurgeStaleNodeDays(days);
+    AppLogging.settings('[Settings] purgeStaleNodeDays=$days');
+    safeSetState(() {});
+  }
+
+  List<Widget> _buildClearStaleNodesTiles(
+    BuildContext context,
+    SettingsService settingsService,
+  ) {
+    final days = settingsService.purgeStaleNodeDays;
+    return [
+      SettingsNavTile(
+        icon: Icons.playlist_remove,
+        title: context.l10n.settingsTileClearStaleNodesTitle,
+        subtitle: context.l10n.settingsTileClearStaleNodesSubtitle,
+        trailing: ThemedSwitch(
+          value: days > 0,
+          onChanged: (value) => _setClearStaleNodes(settingsService, value),
+        ),
+      ),
+      if (days > 0)
+        FieldGroupCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StaleNodeDaysSlider(
+                label: context.l10n.settingsClearStaleNodesAfterDays(days),
+                days: days,
+                onChanged: (value) async {
+                  await settingsService.setPurgeStaleNodeDays(value);
+                  safeSetState(() {});
+                },
+              ),
+              Text(
+                context.l10n.settingsClearStaleNodesFootnote,
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: context.textSecondary),
+              ),
+            ],
+          ),
+        ),
     ];
   }
 
@@ -1219,6 +1273,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             section: context.l10n.settingsSectionDataStorage,
             onTap: () => showOfflineStorageSettingsSheet(context),
           ),
+        _SearchableSettingItem(
+          icon: Icons.playlist_remove,
+          title: context.l10n.settingsTileClearStaleNodesTitle,
+          subtitle: context.l10n.settingsTileClearStaleNodesSubtitle,
+          keywords: ['stale', 'purge', 'clear', 'node', 'old', 'days'],
+          section: context.l10n.settingsSectionDataStorage,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.purgeStaleNodeDays > 0,
+            onChanged: (value) => _setClearStaleNodes(settingsService, value),
+          ),
+        ),
         _SearchableSettingItem(
           icon: Icons.delete_outline,
           title: context.l10n.settingsSearchClearAllMessagesTitle,
@@ -3328,6 +3393,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           // when actionable (removable SD card present, or
                           // a fallback warning to surface).
                           ..._buildOfflineMapStorageTile(context),
+                          ..._buildClearStaleNodesTiles(
+                            context,
+                            settingsService,
+                          ),
                           SettingsNavTile(
                             icon: Icons.delete_sweep_outlined,
                             title: context

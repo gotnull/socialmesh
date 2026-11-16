@@ -68548,6 +68548,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pilot organisation created'**
   String get licenseOrgAuditActionPilotLicenseOrgProvisioned;
+
+  /// Settings > Data & Storage toggle that clears nodes not heard for a set number of days from the app after each connect
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Stale Nodes'**
+  String get settingsTileClearStaleNodesTitle;
+
+  /// Subtitle of the Clear Stale Nodes toggle in Settings > Data & Storage
+  ///
+  /// In en, this message translates to:
+  /// **'Clear nodes not heard for a set number of days from the app'**
+  String get settingsTileClearStaleNodesSubtitle;
+
+  /// Label above the Clear Stale Nodes days slider: nodes not heard for this many days are cleared
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{After 1 Day} other{After {days} Days}}'**
+  String settingsClearStaleNodesAfterDays(int days);
+
+  /// Explanation under the Clear Stale Nodes slider in Settings > Data & Storage
+  ///
+  /// In en, this message translates to:
+  /// **'Favourited and ignored nodes are always retained. Other nodes are cleared from the app database on the schedule set by the user. (Nodes with PKC keys are always retained for at least 7 days.) Nodes are only cleared from the app; the radio keeps its own node database.'**
+  String get settingsClearStaleNodesFootnote;
+
+  /// Screen reader label for the stale nodes days slider
+  ///
+  /// In en, this message translates to:
+  /// **'Days before purging stale nodes'**
+  String get staleNodesDaysSliderLabel;
+
+  /// Screen reader value of the stale nodes days slider
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day} other{{days} days}}'**
+  String staleNodesDaysValue(int days);
+
+  /// Device Management tile and sheet title: remove nodes not heard for a chosen number of days
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Stale Nodes'**
+  String get deviceMgmtRemoveStaleNodesTitle;
+
+  /// Remove Stale Nodes tile subtitle in Device Management
+  ///
+  /// In en, this message translates to:
+  /// **'Remove nodes not heard for a chosen number of days from the device and app'**
+  String get deviceMgmtRemoveStaleNodesSubtitle;
+
+  /// Remove Stale Nodes tile subtitle in Device Management when the connected radio shares its stored data with other radios
+  ///
+  /// In en, this message translates to:
+  /// **'Remove nodes not heard for a chosen number of days from the radio, keep the shared list in the app'**
+  String get deviceMgmtRemoveStaleNodesSubtitleShared;
+
+  /// Label above the days slider in the Remove Stale Nodes sheet
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Not heard for more than 1 day} other{Not heard for more than {days} days}}'**
+  String removeStaleNodesThreshold(int days);
+
+  /// Remove Stale Nodes sheet: which nodes are never removed
+  ///
+  /// In en, this message translates to:
+  /// **'Favourited and ignored nodes, nodes never heard and the connected node are kept. Nodes with PKC keys are kept for at least 7 days.'**
+  String get removeStaleNodesKept;
+
+  /// Remove Stale Nodes sheet: how many nodes the chosen threshold removes
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No nodes to remove} =1{1 node will be removed} other{{count} nodes will be removed}}'**
+  String removeStaleNodesCount(int count);
+
+  /// Confirmation title before removing stale nodes
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Remove 1 node?} other{Remove {count} nodes?}}'**
+  String removeStaleNodesConfirmTitle(int count);
+
+  /// Confirmation message before removing stale nodes from the app and the radio
+  ///
+  /// In en, this message translates to:
+  /// **'They are removed from this app, and from the radio if it still has them. Any that are still out there come back when they are next heard.'**
+  String get removeStaleNodesConfirmMessage;
+
+  /// Confirmation message before removing stale nodes when the app's node list is shared with other radios: only the radio is changed
+  ///
+  /// In en, this message translates to:
+  /// **'They are removed from the radio if it still has them. The app\'s node list is shared with your other radios, so it stays as it is. Any that are still out there come back when they are next heard.'**
+  String get removeStaleNodesConfirmMessageShared;
+
+  /// Shown while stale nodes are being removed one at a time
+  ///
+  /// In en, this message translates to:
+  /// **'Removing {done} of {total} nodes'**
+  String removeStaleNodesProgress(int done, int total);
+
+  /// Result after removing stale nodes
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Removed 1 node.} other{Removed {count} nodes.}}'**
+  String removeStaleNodesRemoved(int count);
+
+  /// Result after removing stale nodes: nodes the radio send failed for
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 could not be removed.} other{{count} could not be removed.}}'**
+  String removeStaleNodesFailed(int count);
+
+  /// Result after removing stale nodes when the radio disconnected part way
+  ///
+  /// In en, this message translates to:
+  /// **'The radio disconnected before the rest were removed.'**
+  String get removeStaleNodesDisconnected;
 }
 
 class _AppLocalizationsDelegate

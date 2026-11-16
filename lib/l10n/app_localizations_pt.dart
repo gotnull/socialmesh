@@ -39897,4 +39897,129 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
       'Organização piloto criada';
+
+  @override
+  String get settingsTileClearStaleNodesTitle => 'Limpar nós inativos';
+
+  @override
+  String get settingsTileClearStaleNodesSubtitle =>
+      'Limpar do app os nós que não foram ouvidos por um número definido de dias';
+
+  @override
+  String settingsClearStaleNodesAfterDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Depois de $days dias',
+      one: 'Depois de 1 dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsClearStaleNodesFootnote =>
+      'Os nós favoritos e ignorados são sempre mantidos. Os outros nós são limpos do banco de dados do app no prazo definido pelo usuário. (Os nós com chaves PKC são sempre mantidos por pelo menos 7 dias.) Os nós são limpos apenas do app; o rádio mantém seu próprio banco de dados de nós.';
+
+  @override
+  String get staleNodesDaysSliderLabel =>
+      'Dias antes de limpar os nós inativos';
+
+  @override
+  String staleNodesDaysValue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days dias',
+      one: '1 dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deviceMgmtRemoveStaleNodesTitle => 'Remover nós inativos';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitle =>
+      'Remover do dispositivo e do app os nós que não foram ouvidos pelo número de dias escolhido';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitleShared =>
+      'Remover do rádio os nós que não foram ouvidos pelo número de dias escolhido; a lista compartilhada continua no app';
+
+  @override
+  String removeStaleNodesThreshold(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Não ouvidos há mais de $days dias',
+      one: 'Não ouvidos há mais de 1 dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesKept =>
+      'Os nós favoritos e ignorados, os nós nunca ouvidos e o nó conectado são mantidos. Os nós com chaves PKC são mantidos por pelo menos 7 dias.';
+
+  @override
+  String removeStaleNodesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nós serão removidos',
+      one: '1 nó será removido',
+      zero: 'Nenhum nó para remover',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Remover $count nós?',
+      one: 'Remover 1 nó?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesConfirmMessage =>
+      'Eles são removidos deste app, e do rádio se ele ainda os tiver. Os que ainda estiverem ativos voltam quando forem ouvidos novamente.';
+
+  @override
+  String get removeStaleNodesConfirmMessageShared =>
+      'Eles são removidos do rádio se ele ainda os tiver. A lista de nós do app é compartilhada com seus outros rádios, por isso continua como está. Os que ainda estiverem ativos voltam quando forem ouvidos novamente.';
+
+  @override
+  String removeStaleNodesProgress(int done, int total) {
+    return 'Removendo $done de $total nós';
+  }
+
+  @override
+  String removeStaleNodesRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nós removidos.',
+      one: '1 nó removido.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Não foi possível remover $count nós.',
+      one: 'Não foi possível remover 1 nó.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesDisconnected =>
+      'O rádio desconectou antes que o restante fosse removido.';
 }

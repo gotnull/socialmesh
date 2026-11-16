@@ -47,6 +47,7 @@ import '../services/location/phone_position_governor.dart';
 import '../services/live_activity/live_activity_service.dart';
 import '../models/presence_confidence.dart';
 import '../services/nodes/node_identity_store.dart';
+import '../services/nodes/stale_node_cleanup.dart';
 import '../features/nodes/node_display_name_resolver.dart';
 import '../services/ifttt/ifttt_service.dart';
 import '../services/notifications/push_notification_service.dart';
@@ -6280,6 +6281,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           previous?.value != OperationalReadiness.ready;
       if (becameReady) {
         unawaited(_enforceFavoriteIntents());
+        _clearStaleNodesAfterReplay();
       }
     });
 
@@ -6851,16 +6853,43 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     }
   }
 
-  void removeNode(int nodeNum) {
-    // Drop any pending write for this node first: a later flush must
-    // not resurrect a node the user just removed.
-    _pendingNodeWrites.remove(nodeNum);
+  void removeNode(int nodeNum) => removeNodes({nodeNum});
+
+  /// Removes [nodeNums] from the node list and from persistent storage
+  /// in one state write and one storage write.
+  void removeNodes(Set<int> nodeNums) {
+    if (nodeNums.isEmpty) return;
+    // Drop pending writes and saves for these nodes first: a later flush
+    // must not resurrect a node the user just removed.
+    _pendingNodeWrites.removeWhere((nodeNum, _) => nodeNums.contains(nodeNum));
+    _pendingSaves.removeWhere((nodeNum, _) => nodeNums.contains(nodeNum));
     _flushPendingNodeWrites();
-    final newState = Map<int, MeshNode>.from(state);
-    newState.remove(nodeNum);
+    final newState = Map<int, MeshNode>.from(state)
+      ..removeWhere((nodeNum, _) => nodeNums.contains(nodeNum));
     state = newState;
-    // Also remove from persistent storage
-    _storage?.deleteNode(nodeNum);
+    _storage?.deleteNodes(nodeNums);
+  }
+
+  /// Clears nodes not heard for the user's "Clear Stale Nodes" period
+  /// from the app. Runs once the radio's node database replay is in, so
+  /// the decision uses the radio's last-heard times. The radio keeps its
+  /// own copy; nodes it still holds return with the next replay and are
+  /// cleared again.
+  void _clearStaleNodesAfterReplay() {
+    final days = ref.read(settingsServiceProvider).value?.purgeStaleNodeDays;
+    if (days == null || days <= 0) return;
+    _flushPendingNodeWrites();
+    final stale = selectStaleNodeNums(
+      state.values,
+      days: days,
+      now: DateTime.now(),
+      localNodeNum: ref.read(protocolServiceProvider).myNodeNum,
+    );
+    AppLogging.nodes(
+      'STALE_NODES: auto clear days=$days cleared=${stale.length} '
+      'of=${state.length}',
+    );
+    removeNodes(stale.toSet());
   }
 
   void clearNodes() => _clear(clearStorage: true);

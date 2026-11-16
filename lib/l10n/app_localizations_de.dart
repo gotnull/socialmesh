@@ -40021,4 +40021,129 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get licenseOrgAuditActionPilotLicenseOrgProvisioned =>
       'Pilotorganisation erstellt';
+
+  @override
+  String get settingsTileClearStaleNodesTitle => 'Veraltete Knoten löschen';
+
+  @override
+  String get settingsTileClearStaleNodesSubtitle =>
+      'Knoten, die eine festgelegte Anzahl von Tagen nicht gehört wurden, aus der App löschen';
+
+  @override
+  String settingsClearStaleNodesAfterDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Nach $days Tagen',
+      one: 'Nach 1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsClearStaleNodesFootnote =>
+      'Favorisierte und ignorierte Knoten werden immer beibehalten. Andere Knoten werden nach dem vom Benutzer festgelegten Zeitplan aus der App-Datenbank gelöscht. (Knoten mit PKC-Schlüsseln werden immer mindestens 7 Tage beibehalten.) Knoten werden nur aus der App gelöscht; das Funkgerät behält seine eigene Knotendatenbank.';
+
+  @override
+  String get staleNodesDaysSliderLabel =>
+      'Tage bis zum Löschen veralteter Knoten';
+
+  @override
+  String staleNodesDaysValue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deviceMgmtRemoveStaleNodesTitle => 'Veraltete Knoten entfernen';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitle =>
+      'Knoten, die eine gewählte Anzahl von Tagen nicht gehört wurden, vom Gerät und aus der App entfernen';
+
+  @override
+  String get deviceMgmtRemoveStaleNodesSubtitleShared =>
+      'Knoten, die eine gewählte Anzahl von Tagen nicht gehört wurden, vom Funkgerät entfernen, die geteilte Liste bleibt in der App';
+
+  @override
+  String removeStaleNodesThreshold(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Länger als $days Tage nicht gehört',
+      one: 'Länger als 1 Tag nicht gehört',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesKept =>
+      'Favorisierte und ignorierte Knoten, nie gehörte Knoten und der verbundene Knoten bleiben erhalten. Knoten mit PKC-Schlüsseln bleiben mindestens 7 Tage erhalten.';
+
+  @override
+  String removeStaleNodesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Knoten werden entfernt',
+      one: '1 Knoten wird entfernt',
+      zero: 'Keine Knoten zu entfernen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Knoten entfernen?',
+      one: '1 Knoten entfernen?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesConfirmMessage =>
+      'Sie werden aus dieser App entfernt und vom Funkgerät, falls es sie noch hat. Knoten, die noch aktiv sind, kehren zurück, sobald sie wieder gehört werden.';
+
+  @override
+  String get removeStaleNodesConfirmMessageShared =>
+      'Sie werden vom Funkgerät entfernt, falls es sie noch hat. Die Knotenliste der App wird mit Ihren anderen Funkgeräten geteilt und bleibt deshalb erhalten. Knoten, die noch aktiv sind, kehren zurück, sobald sie wieder gehört werden.';
+
+  @override
+  String removeStaleNodesProgress(int done, int total) {
+    return '$done von $total Knoten werden entfernt';
+  }
+
+  @override
+  String removeStaleNodesRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Knoten entfernt.',
+      one: '1 Knoten entfernt.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String removeStaleNodesFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Knoten konnten nicht entfernt werden.',
+      one: '1 Knoten konnte nicht entfernt werden.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get removeStaleNodesDisconnected =>
+      'Das Funkgerät hat die Verbindung getrennt, bevor die übrigen entfernt wurden.';
 }
