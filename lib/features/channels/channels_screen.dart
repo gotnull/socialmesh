@@ -459,7 +459,7 @@ class _ChannelTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isPrimary = channel.index == 0;
     final encryption = channel.encryption(ref.watch(channelsProvider));
-    final hasKey = encryption == ChannelEncryption.privateKey;
+    final lock = channelLockStyle(channel, encryption);
     final channelUnreads = ref.watch(channelUnreadCountsProvider);
     final unreadCount = channelUnreads[channel.index] ?? 0;
 
@@ -518,13 +518,7 @@ class _ChannelTile extends ConsumerWidget {
                     SizedBox(height: AppTheme.spacing6),
                     Row(
                       children: [
-                        Icon(
-                          hasKey ? Icons.lock : Icons.lock_open,
-                          size: 14,
-                          color: hasKey
-                              ? context.accentColor
-                              : context.textTertiary,
-                        ),
+                        Icon(lock.icon, size: 14, color: lock.color),
                         SizedBox(width: AppTheme.spacing6),
                         Text(
                           channelEncryptionLabel(context, encryption),
@@ -639,7 +633,7 @@ class _CompactChannelTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isPrimary = channel.index == 0;
     final encryption = channel.encryption(ref.watch(channelsProvider));
-    final hasKey = encryption == ChannelEncryption.privateKey;
+    final lock = channelLockStyle(channel, encryption);
     final unreadCount =
         ref.watch(channelUnreadCountsProvider)[channel.index] ?? 0;
 
@@ -682,11 +676,7 @@ class _CompactChannelTile extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: AppTheme.spacing8),
-            Icon(
-              hasKey ? Icons.lock : Icons.lock_open,
-              size: 14,
-              color: hasKey ? context.accentColor : context.textTertiary,
-            ),
+            Icon(lock.icon, size: 14, color: lock.color),
             if (unreadCount > 0) ...[
               const SizedBox(width: AppTheme.spacing8),
               Container(
