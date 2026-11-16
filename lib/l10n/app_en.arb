@@ -17379,6 +17379,35 @@
   "@nodeDetailSignalWeak": {
     "description": "Signal quality label for weak RSSI."
   },
+  "nodeDetailStatusMessageDescription": "A status message that is broadcast to the mesh. Other nodes will see this status in the node list.",
+  "@nodeDetailStatusMessageDescription": {
+    "description": "Subtitle of the sheet that edits the status message the connected radio broadcasts (Status Message module, firmware 2.8+)."
+  },
+  "nodeDetailStatusMessageError": "Failed to save status message: {error}",
+  "@nodeDetailStatusMessageError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    },
+    "description": "Error shown when saving the radio's status message fails. {error} = error text."
+  },
+  "nodeDetailStatusMessageFieldLabel": "Node status",
+  "@nodeDetailStatusMessageFieldLabel": {
+    "description": "Label of the text field in the status message sheet."
+  },
+  "nodeDetailStatusMessageNotConnected": "Connect to your radio to set its status message.",
+  "@nodeDetailStatusMessageNotConnected": {
+    "description": "Error shown when the user tries to set the status message without a connected radio."
+  },
+  "nodeDetailStatusMessageNotSet": "Not set",
+  "@nodeDetailStatusMessageNotSet": {
+    "description": "Value of the Status row on the connected radio's node details when no status message is set; tapping the row edits it."
+  },
+  "nodeDetailStatusMessageTitle": "Status Message",
+  "@nodeDetailStatusMessageTitle": {
+    "description": "Title of the sheet that edits the status message the connected radio broadcasts."
+  },
   "nodeDetailTracerouteChannelTitle": "Send traceroute on channel",
   "@nodeDetailTracerouteChannelTitle": {
     "description": "Title of the channel picker shown on long-press of the traceroute button"

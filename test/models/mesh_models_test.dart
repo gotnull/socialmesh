@@ -469,6 +469,13 @@ void main() {
     });
   });
 
+  test('MeshNode.copyWith clears the status only when asked to', () {
+    final node = MeshNode(nodeNum: 1, nodeStatus: 'On air');
+    expect(node.copyWith(longName: 'X').nodeStatus, 'On air');
+    expect(node.copyWith(nodeStatus: 'Back soon').nodeStatus, 'Back soon');
+    expect(node.copyWith(clearNodeStatus: true).nodeStatus, isNull);
+  });
+
   // Cases mirror firmware Channels::getKey and channelFileUsesPublicKey.
   group('ChannelConfig.encryption', () {
     const defaultPsk = [

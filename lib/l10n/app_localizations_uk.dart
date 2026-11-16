@@ -13081,6 +13081,28 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Слабкий';
 
   @override
+  String get nodeDetailStatusMessageDescription =>
+      'Статусне повідомлення, яке транслюється в mesh-мережу. Інші вузли побачать цей статус у списку вузлів.';
+
+  @override
+  String nodeDetailStatusMessageError(String error) {
+    return 'Не вдалося зберегти статусне повідомлення: $error';
+  }
+
+  @override
+  String get nodeDetailStatusMessageFieldLabel => 'Статус вузла';
+
+  @override
+  String get nodeDetailStatusMessageNotConnected =>
+      'Підключіть радіо, щоб задати його статусне повідомлення.';
+
+  @override
+  String get nodeDetailStatusMessageNotSet => 'Не задано';
+
+  @override
+  String get nodeDetailStatusMessageTitle => 'Статусне повідомлення';
+
+  @override
   String get nodeDetailTracerouteChannelTitle => 'Надіслати трасування каналом';
 
   @override

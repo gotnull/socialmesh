@@ -13052,6 +13052,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Fraco';
 
   @override
+  String get nodeDetailStatusMessageDescription =>
+      'Uma mensagem de status transmitida para a mesh. Outros nós verão este status na lista de nós.';
+
+  @override
+  String nodeDetailStatusMessageError(String error) {
+    return 'Falha ao guardar a mensagem de status: $error';
+  }
+
+  @override
+  String get nodeDetailStatusMessageFieldLabel => 'Status do nó';
+
+  @override
+  String get nodeDetailStatusMessageNotConnected =>
+      'Conecte o seu rádio para definir a mensagem de status.';
+
+  @override
+  String get nodeDetailStatusMessageNotSet => 'Não definido';
+
+  @override
+  String get nodeDetailStatusMessageTitle => 'Mensagem de status';
+
+  @override
   String get nodeDetailTracerouteChannelTitle => 'Enviar traceroute no canal';
 
   @override

@@ -15781,6 +15781,29 @@
   "@nodeDetailSignalWeak": {
     "description": "Signal quality label for weak RSSI."
   },
+  "@nodeDetailStatusMessageDescription": {
+    "description": "Subtitle of the sheet that edits the status message the connected radio broadcasts (Status Message module, firmware 2.8+)."
+  },
+  "@nodeDetailStatusMessageError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    },
+    "description": "Error shown when saving the radio's status message fails. {error} = error text."
+  },
+  "@nodeDetailStatusMessageFieldLabel": {
+    "description": "Label of the text field in the status message sheet."
+  },
+  "@nodeDetailStatusMessageNotConnected": {
+    "description": "Error shown when the user tries to set the status message without a connected radio."
+  },
+  "@nodeDetailStatusMessageNotSet": {
+    "description": "Value of the Status row on the connected radio's node details when no status message is set; tapping the row edits it."
+  },
+  "@nodeDetailStatusMessageTitle": {
+    "description": "Title of the sheet that edits the status message the connected radio broadcasts."
+  },
   "@nodeDetailTracerouteCooldownTooltip": {
     "description": "Tooltip showing remaining traceroute cooldown.",
     "placeholders": {
@@ -32965,6 +32988,12 @@
   "nodeDetailSignalUnknown": "Desconhecido",
   "nodeDetailSignalVeryWeak": "Muito fraco",
   "nodeDetailSignalWeak": "Fraco",
+  "nodeDetailStatusMessageDescription": "Uma mensagem de status transmitida para a mesh. Outros nós verão este status na lista de nós.",
+  "nodeDetailStatusMessageError": "Falha ao guardar a mensagem de status: {error}",
+  "nodeDetailStatusMessageFieldLabel": "Status do nó",
+  "nodeDetailStatusMessageNotConnected": "Conecte o seu rádio para definir a mensagem de status.",
+  "nodeDetailStatusMessageNotSet": "Não definido",
+  "nodeDetailStatusMessageTitle": "Mensagem de status",
   "nodeDetailTracerouteComplete": "Traceroute concluído",
   "nodeDetailTracerouteChannelTitle": "Enviar traceroute no canal",
   "nodeDetailTracerouteChannelLastHeard": "Ouvido aqui pela última vez",

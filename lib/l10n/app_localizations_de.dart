@@ -13087,6 +13087,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Schwach';
 
   @override
+  String get nodeDetailStatusMessageDescription =>
+      'Eine Statusnachricht, die ins Mesh gesendet wird. Andere Knoten sehen diesen Status in der Knotenliste.';
+
+  @override
+  String nodeDetailStatusMessageError(String error) {
+    return 'Statusnachricht konnte nicht gespeichert werden: $error';
+  }
+
+  @override
+  String get nodeDetailStatusMessageFieldLabel => 'Knotenstatus';
+
+  @override
+  String get nodeDetailStatusMessageNotConnected =>
+      'Verbinden Sie Ihr Funkgerät, um seine Statusnachricht festzulegen.';
+
+  @override
+  String get nodeDetailStatusMessageNotSet => 'Nicht festgelegt';
+
+  @override
+  String get nodeDetailStatusMessageTitle => 'Statusnachricht';
+
+  @override
   String get nodeDetailTracerouteChannelTitle => 'Traceroute auf Kanal senden';
 
   @override

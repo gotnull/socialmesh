@@ -31,6 +31,7 @@ import '../../providers/telemetry_providers.dart';
 import '../../services/protocol/admin_target.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/uptime_formatter.dart';
+import '../../utils/version_compare.dart';
 
 import '../device/device_config_screen.dart';
 import '../map/map_screen.dart';
@@ -56,6 +57,7 @@ import '../telemetry/traceroute_log_screen.dart';
 import 'node_actions.dart';
 import 'widgets/fixed_position_sheet.dart';
 import 'widgets/node_health_badge.dart';
+import 'widgets/status_message_sheet.dart';
 
 /// Navigates to the node detail screen. Can be called from any screen.
 void showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
@@ -306,6 +308,55 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           context.l10n.nodeDetailRebootError(e.toString()),
         );
       }
+    }
+  }
+
+  // Firmware that ships the Status Message module with its config editable
+  // from a client; unknown firmware is treated as supporting it.
+  static const _statusMessageMinFirmware = SemanticVersion(2, 8, 0);
+
+  static String? _displayableStatus(String? raw) {
+    final trimmed = raw?.trim();
+    return trimmed == null || trimmed.isEmpty ? null : trimmed;
+  }
+
+  void _editStatusMessage(MeshNode node) {
+    if (!ref.read(isLinkConnectedProvider)) {
+      showErrorSnackBar(
+        context,
+        context.l10n.nodeDetailStatusMessageNotConnected,
+      );
+      return;
+    }
+    final protocol = ref.read(protocolServiceProvider);
+    // Prefill from what the radio is configured to send, then from what it
+    // last broadcast.
+    final initial =
+        _displayableStatus(protocol.currentStatusMessageConfig?.nodeStatus) ??
+        _displayableStatus(node.nodeStatus) ??
+        '';
+    AppBottomSheet.show<void>(
+      context: context,
+      child: StatusMessageSheet(
+        initialStatus: initial,
+        onSave: _saveStatusMessage,
+      ),
+    );
+  }
+
+  Future<void> _saveStatusMessage(String status) async {
+    final l10n = context.l10n;
+    if (!ref.read(isLinkConnectedProvider)) {
+      showErrorSnackBar(context, l10n.nodeDetailStatusMessageNotConnected);
+      return;
+    }
+    final protocol = ref.read(protocolServiceProvider);
+    try {
+      await protocol.setStatusMessageConfig(status);
+    } catch (e) {
+      AppLogging.protocol('Status message save failed: $e');
+      if (!mounted) return;
+      showErrorSnackBar(context, l10n.nodeDetailStatusMessageError('$e'));
     }
   }
 
@@ -851,6 +902,18 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 
   /// Identity section: user ID, hardware, firmware.
   Widget _buildIdentityCard(BuildContext context, MeshNode node) {
+    // The live broadcast first, then for this radio its configured value,
+    // which it knows before it next broadcasts.
+    final configuredStatus = isMyNode
+        ? ref.watch(protocolServiceProvider).currentStatusMessageConfig
+        : null;
+    final status =
+        _displayableStatus(node.nodeStatus) ??
+        _displayableStatus(configuredStatus?.nodeStatus);
+    final firmware = firmwareSemanticVersion(node.firmwareVersion);
+    final canEditStatus =
+        isMyNode &&
+        (firmware == null || firmware.isAtLeast(_statusMessageMinFirmware));
     return _buildInfoSection(
       context,
       title: context.l10n.nodeDetailSectionIdentity,
@@ -884,11 +947,18 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
               ? AccentColors.green
               : context.textTertiary,
         ),
-        if (node.nodeStatus != null && node.nodeStatus!.isNotEmpty)
+        if (canEditStatus)
+          InfoTableRow(
+            icon: Icons.chat_bubble_outline,
+            label: context.l10n.nodeDetailLabelStatus,
+            value: status ?? context.l10n.nodeDetailStatusMessageNotSet,
+            onTap: () => _editStatusMessage(node),
+          )
+        else if (status != null)
           InfoTableRow(
             icon: Icons.info_outline,
             label: context.l10n.nodeDetailLabelStatus,
-            value: node.nodeStatus!,
+            value: status,
           ),
       ],
     );

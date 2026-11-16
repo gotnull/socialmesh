@@ -181,9 +181,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   SemanticVersion? _connectedFirmwareVersion(WidgetRef ref) {
     final myNodeNum = ref.watch(myNodeNumProvider);
     if (myNodeNum == null) return null;
-    final raw = ref.watch(nodesProvider)[myNodeNum]?.firmwareVersion;
-    if (raw == null || raw.isEmpty) return null;
-    return SemanticVersion.tryParse(raw.split('.').take(3).join('.'));
+    return firmwareSemanticVersion(
+      ref.watch(nodesProvider)[myNodeNum]?.firmwareVersion,
+    );
   }
 
   /// Whether the connected radio still ships the Range Test module.

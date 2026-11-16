@@ -13060,6 +13060,28 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Debole';
 
   @override
+  String get nodeDetailStatusMessageDescription =>
+      'Un messaggio di stato trasmesso alla mesh. Gli altri nodi vedranno questo stato nell\'elenco dei nodi.';
+
+  @override
+  String nodeDetailStatusMessageError(String error) {
+    return 'Impossibile salvare il messaggio di stato: $error';
+  }
+
+  @override
+  String get nodeDetailStatusMessageFieldLabel => 'Stato del nodo';
+
+  @override
+  String get nodeDetailStatusMessageNotConnected =>
+      'Collega la tua radio per impostarne il messaggio di stato.';
+
+  @override
+  String get nodeDetailStatusMessageNotSet => 'Non impostato';
+
+  @override
+  String get nodeDetailStatusMessageTitle => 'Messaggio di stato';
+
+  @override
   String get nodeDetailTracerouteChannelTitle => 'Invia traceroute sul canale';
 
   @override

@@ -22350,6 +22350,42 @@ abstract class AppLocalizations {
   /// **'Weak'**
   String get nodeDetailSignalWeak;
 
+  /// Subtitle of the sheet that edits the status message the connected radio broadcasts (Status Message module, firmware 2.8+).
+  ///
+  /// In en, this message translates to:
+  /// **'A status message that is broadcast to the mesh. Other nodes will see this status in the node list.'**
+  String get nodeDetailStatusMessageDescription;
+
+  /// Error shown when saving the radio's status message fails. {error} = error text.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save status message: {error}'**
+  String nodeDetailStatusMessageError(String error);
+
+  /// Label of the text field in the status message sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Node status'**
+  String get nodeDetailStatusMessageFieldLabel;
+
+  /// Error shown when the user tries to set the status message without a connected radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to your radio to set its status message.'**
+  String get nodeDetailStatusMessageNotConnected;
+
+  /// Value of the Status row on the connected radio's node details when no status message is set; tapping the row edits it.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get nodeDetailStatusMessageNotSet;
+
+  /// Title of the sheet that edits the status message the connected radio broadcasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Status Message'**
+  String get nodeDetailStatusMessageTitle;
+
   /// Title of the channel picker shown on long-press of the traceroute button
   ///
   /// In en, this message translates to:

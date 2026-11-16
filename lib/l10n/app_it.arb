@@ -15781,6 +15781,29 @@
   "@nodeDetailSignalWeak": {
     "description": "Signal quality label for weak RSSI."
   },
+  "@nodeDetailStatusMessageDescription": {
+    "description": "Subtitle of the sheet that edits the status message the connected radio broadcasts (Status Message module, firmware 2.8+)."
+  },
+  "@nodeDetailStatusMessageError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    },
+    "description": "Error shown when saving the radio's status message fails. {error} = error text."
+  },
+  "@nodeDetailStatusMessageFieldLabel": {
+    "description": "Label of the text field in the status message sheet."
+  },
+  "@nodeDetailStatusMessageNotConnected": {
+    "description": "Error shown when the user tries to set the status message without a connected radio."
+  },
+  "@nodeDetailStatusMessageNotSet": {
+    "description": "Value of the Status row on the connected radio's node details when no status message is set; tapping the row edits it."
+  },
+  "@nodeDetailStatusMessageTitle": {
+    "description": "Title of the sheet that edits the status message the connected radio broadcasts."
+  },
   "@nodeDetailTracerouteCooldownTooltip": {
     "description": "Tooltip showing remaining traceroute cooldown.",
     "placeholders": {
@@ -32965,6 +32988,12 @@
   "nodeDetailSignalUnknown": "Sconosciuto",
   "nodeDetailSignalVeryWeak": "Molto debole",
   "nodeDetailSignalWeak": "Debole",
+  "nodeDetailStatusMessageDescription": "Un messaggio di stato trasmesso alla mesh. Gli altri nodi vedranno questo stato nell'elenco dei nodi.",
+  "nodeDetailStatusMessageError": "Impossibile salvare il messaggio di stato: {error}",
+  "nodeDetailStatusMessageFieldLabel": "Stato del nodo",
+  "nodeDetailStatusMessageNotConnected": "Collega la tua radio per impostarne il messaggio di stato.",
+  "nodeDetailStatusMessageNotSet": "Non impostato",
+  "nodeDetailStatusMessageTitle": "Messaggio di stato",
   "nodeDetailTracerouteComplete": "Traceroute completato",
   "nodeDetailTracerouteChannelTitle": "Invia traceroute sul canale",
   "nodeDetailTracerouteChannelLastHeard": "Ricevuto qui l'ultima volta",

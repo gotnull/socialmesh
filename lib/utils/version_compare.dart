@@ -101,3 +101,10 @@ bool isVersionAtLeast(String currentVersion, String minimumVersion) {
   if (current == null || minimum == null) return false;
   return current.isAtLeast(minimum);
 }
+
+/// Parses a Meshtastic firmware version such as `2.8.2.d5f1619` by its
+/// first three numeric parts. Null when [raw] is absent or unparseable.
+SemanticVersion? firmwareSemanticVersion(String? raw) {
+  if (raw == null || raw.isEmpty) return null;
+  return SemanticVersion.tryParse(raw.split('.').take(3).join('.'));
+}

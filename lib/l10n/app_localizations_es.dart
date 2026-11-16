@@ -13117,6 +13117,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Débil';
 
   @override
+  String get nodeDetailStatusMessageDescription =>
+      'Mensaje de estado que se transmite a la red. Otros nodos verán este estado en la lista de nodos.';
+
+  @override
+  String nodeDetailStatusMessageError(String error) {
+    return 'No se pudo guardar el mensaje de estado: $error';
+  }
+
+  @override
+  String get nodeDetailStatusMessageFieldLabel => 'Estado del nodo';
+
+  @override
+  String get nodeDetailStatusMessageNotConnected =>
+      'Conecte su radio para definir su mensaje de estado.';
+
+  @override
+  String get nodeDetailStatusMessageNotSet => 'Sin definir';
+
+  @override
+  String get nodeDetailStatusMessageTitle => 'Mensaje de estado';
+
+  @override
   String get nodeDetailTracerouteChannelTitle =>
       'Enviar traceroute por el canal';
 

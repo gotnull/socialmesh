@@ -709,6 +709,7 @@ class ProtocolService {
   module_pb.ModuleConfig_MQTTConfig? _currentMqttConfig;
   module_pb.ModuleConfig_TelemetryConfig? _currentTelemetryConfig;
   module_pb.ModuleConfig_PaxcounterConfig? _currentPaxCounterConfig;
+  module_pb.ModuleConfig_StatusMessageConfig? _currentStatusMessageConfig;
   module_pb.ModuleConfig_AmbientLightingConfig? _currentAmbientLightingConfig;
   module_pb.ModuleConfig_SerialConfig? _currentSerialConfig;
   module_pb.ModuleConfig_StoreForwardConfig? _currentStoreForwardConfig;
@@ -1534,6 +1535,10 @@ class ProtocolService {
   /// Current PAX counter config
   module_pb.ModuleConfig_PaxcounterConfig? get currentPaxCounterConfig =>
       _currentPaxCounterConfig;
+
+  /// The connected radio's Status Message module config (firmware 2.7.20+).
+  module_pb.ModuleConfig_StatusMessageConfig? get currentStatusMessageConfig =>
+      _currentStatusMessageConfig;
 
   /// Stream of ambient lighting config updates
   Stream<module_pb.ModuleConfig_AmbientLightingConfig>
@@ -4039,6 +4044,17 @@ class ProtocolService {
             _currentPaxCounterConfig = paxConfig;
           }
           _paxCounterConfigController.add(paxConfig);
+        }
+
+        if (moduleConfig.hasStatusmessage()) {
+          final statusConfig = moduleConfig.statusmessage;
+          AppLogging.protocol(
+            'Received status message config - '
+            'length: ${statusConfig.nodeStatus.length}',
+          );
+          if (isLocalResponse) {
+            _currentStatusMessageConfig = statusConfig;
+          }
         }
 
         // Handle Ambient Lighting config
@@ -11070,11 +11086,17 @@ class ProtocolService {
     if (!isRemote) {
       _cacheLocalModuleConfig(moduleConfig);
 
-      // Module config writes also trigger device reboot.
-      AppLogging.protocol(
-        'setModuleConfig: Emitting localConfigWrite - device reboot expected',
-      );
-      _localConfigWriteController.add(null);
+      // Module config writes trigger a device reboot, except the status
+      // message, which the firmware saves without one (AdminModule
+      // handleSetModuleConfig sets shouldReboot = false for it). Signalling
+      // a reboot there would leave reboot recovery armed until the next
+      // reconnect.
+      if (!moduleConfig.hasStatusmessage()) {
+        AppLogging.protocol(
+          'setModuleConfig: Emitting localConfigWrite - device reboot expected',
+        );
+        _localConfigWriteController.add(null);
+      }
     }
   }
 
@@ -11093,6 +11115,9 @@ class ProtocolService {
     if (moduleConfig.hasPaxcounter()) {
       _currentPaxCounterConfig = moduleConfig.paxcounter;
       _paxCounterConfigController.add(moduleConfig.paxcounter);
+    }
+    if (moduleConfig.hasStatusmessage()) {
+      _currentStatusMessageConfig = moduleConfig.statusmessage;
     }
     if (moduleConfig.hasAmbientLighting()) {
       _currentAmbientLightingConfig = moduleConfig.ambientLighting;
@@ -11631,6 +11656,27 @@ class ProtocolService {
 
     final moduleConfig = module_pb.ModuleConfig()..paxcounter = paxConfig;
     await setModuleConfig(moduleConfig, target: target);
+  }
+
+  /// Sets the status message the connected radio broadcasts; an empty
+  /// string clears it. The radio's own node is updated at once so the app
+  /// shows the new status before the radio next broadcasts it.
+  Future<void> setStatusMessageConfig(String nodeStatus) async {
+    AppLogging.protocol(
+      'Setting status message config - length: ${nodeStatus.length}',
+    );
+    final config = module_pb.ModuleConfig_StatusMessageConfig()
+      ..nodeStatus = nodeStatus;
+    await setModuleConfig(module_pb.ModuleConfig()..statusmessage = config);
+
+    final myNodeNum = _myNodeNum;
+    final ownNode = myNodeNum == null ? null : _nodes[myNodeNum];
+    if (myNodeNum == null || ownNode == null) return;
+    final updated = nodeStatus.isEmpty
+        ? ownNode.copyWith(clearNodeStatus: true)
+        : ownNode.copyWith(nodeStatus: nodeStatus);
+    _nodes[myNodeNum] = updated;
+    _nodeController.add(updated);
   }
 
   /// Get Serial module configuration

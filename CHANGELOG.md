@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Set the status message your radio broadcasts to the mesh (firmware 2.8 and later). Open your own node's details and tap the Status row; other nodes see the status in their node list. Saving does not restart the radio, and saving an empty field clears the status.
+
 ### Fixed
 
 - Searching Settings for remote administration shows the same Remote Administration card as the full list: the node you are configuring, how many nodes you can administer, and the Admin Keys note. It used to show a plain row that looked the same whether or not you were configuring another node.

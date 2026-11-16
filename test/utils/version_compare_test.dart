@@ -297,4 +297,23 @@ void main() {
       expect(isVersionAtLeast('bad', '1.0.0'), isFalse);
     });
   });
+
+  group('firmwareSemanticVersion', () {
+    test('reads the first three parts of a firmware version', () {
+      expect(
+        firmwareSemanticVersion('2.8.2.d5f1619'),
+        const SemanticVersion(2, 8, 2),
+      );
+      expect(
+        firmwareSemanticVersion('2.7.26'),
+        const SemanticVersion(2, 7, 26),
+      );
+    });
+
+    test('is null when the version is absent or unparseable', () {
+      expect(firmwareSemanticVersion(null), isNull);
+      expect(firmwareSemanticVersion(''), isNull);
+      expect(firmwareSemanticVersion('unknown'), isNull);
+    });
+  });
 }

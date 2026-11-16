@@ -12903,6 +12903,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Weak';
 
   @override
+  String get nodeDetailStatusMessageDescription =>
+      'A status message that is broadcast to the mesh. Other nodes will see this status in the node list.';
+
+  @override
+  String nodeDetailStatusMessageError(String error) {
+    return 'Failed to save status message: $error';
+  }
+
+  @override
+  String get nodeDetailStatusMessageFieldLabel => 'Node status';
+
+  @override
+  String get nodeDetailStatusMessageNotConnected =>
+      'Connect to your radio to set its status message.';
+
+  @override
+  String get nodeDetailStatusMessageNotSet => 'Not set';
+
+  @override
+  String get nodeDetailStatusMessageTitle => 'Status Message';
+
+  @override
   String get nodeDetailTracerouteChannelTitle => 'Send traceroute on channel';
 
   @override

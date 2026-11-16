@@ -813,6 +813,7 @@ class MeshNode {
     int? noiseFloor,
     // Node Status (v2.7.18)
     String? nodeStatus,
+    bool clearNodeStatus = false,
     // Traffic Management Stats (v2.7.19)
     int? tmPacketsInspected,
     int? tmPositionDedupDrops,
@@ -926,7 +927,7 @@ class MeshNode {
       numTxDropped: numTxDropped ?? this.numTxDropped,
       noiseFloor: noiseFloor ?? this.noiseFloor,
       // Node Status (v2.7.18)
-      nodeStatus: nodeStatus ?? this.nodeStatus,
+      nodeStatus: clearNodeStatus ? null : (nodeStatus ?? this.nodeStatus),
       // Traffic Management Stats (v2.7.19)
       tmPacketsInspected: tmPacketsInspected ?? this.tmPacketsInspected,
       tmPositionDedupDrops: tmPositionDedupDrops ?? this.tmPositionDedupDrops,

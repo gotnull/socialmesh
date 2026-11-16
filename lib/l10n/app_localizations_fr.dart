@@ -13144,6 +13144,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodeDetailSignalWeak => 'Faible';
 
   @override
+  String get nodeDetailStatusMessageDescription =>
+      'Un message de statut diffusé sur le mesh. Les autres nœuds verront ce statut dans la liste des nœuds.';
+
+  @override
+  String nodeDetailStatusMessageError(String error) {
+    return 'Impossible d\'enregistrer le message de statut : $error';
+  }
+
+  @override
+  String get nodeDetailStatusMessageFieldLabel => 'Statut du nœud';
+
+  @override
+  String get nodeDetailStatusMessageNotConnected =>
+      'Connectez votre radio pour définir son message de statut.';
+
+  @override
+  String get nodeDetailStatusMessageNotSet => 'Non défini';
+
+  @override
+  String get nodeDetailStatusMessageTitle => 'Message de statut';
+
+  @override
   String get nodeDetailTracerouteChannelTitle =>
       'Envoyer le traceroute sur le canal';
 
