@@ -70,6 +70,21 @@ void main() {
       );
     });
 
+    test('registerLocalAdmin tracks the packet and completes on its '
+        'routing answer', () async {
+      expect(tracker.registerLocalAdmin(7), 7);
+      expect(tracker.isTracking(7), isTrue);
+      expect(() => tracker.registerLocalAdmin(7), throwsA(isA<StateError>()));
+
+      final future = tracker.awaitAck(7);
+      tracker.onDeliveryUpdate(
+        MessageDeliveryUpdate(packetId: 7, delivered: true),
+      );
+
+      expect(await future, isA<AdminAckSuccess>());
+      expect(tracker.pendingCount, 0);
+    });
+
     test('awaitAck completes with acked on successful delivery', () async {
       tracker.registerRemoteAdmin(100, _remote(0x1234));
 

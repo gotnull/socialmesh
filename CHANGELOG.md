@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Remove Stale Nodes now waits for the radio to confirm each removal before sending the next. A radio that falls behind can no longer drop removals the app counted as done, and a radio that stops answering ends the run with those nodes reported as not removed.
+
 ## [1.79.0] - 2026-11-17
 
 ### Added

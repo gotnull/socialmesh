@@ -80,17 +80,18 @@ final class AdminAckCancelled extends AdminAckResult {
 /// Internal state for a pending remote admin ACK wait.
 class _PendingAdminAck {
   final Completer<AdminAckResult> completer;
-  final RemoteAdminTarget target;
 
-  _PendingAdminAck({required this.completer, required this.target});
+  _PendingAdminAck({required this.completer});
 }
 
-/// Tracks outgoing remote admin packets and correlates them with ACK
-/// responses from the firmware's routing layer.
+/// Tracks outgoing admin packets and correlates them with ACK responses
+/// from the firmware's routing layer.
 ///
-/// Local admin packets MUST NOT be registered here -- they are processed
-/// synchronously by the firmware and never produce routing ACKs. The API
-/// enforces this by requiring [RemoteAdminTarget] at registration time.
+/// A local admin packet produces a routing ACK only when its `Data` sets
+/// `want_response`: the firmware's admin module answers once the command
+/// has been handled. Register a local packet with [registerLocalAdmin]
+/// only when it was built that way; any other local packet never gets an
+/// answer and its wait would only time out.
 ///
 /// Usage:
 /// ```dart
@@ -114,14 +115,20 @@ class AdminAckTracker {
 
   /// Register a remote admin packet for ACK tracking.
   ///
-  /// Only [RemoteAdminTarget] is accepted -- local admin packets never
-  /// produce routing ACKs and must not be registered.
-  ///
   /// Returns the [packetId] for chaining convenience.
   ///
   /// Throws [StateError] if a packet with the same ID is already pending
   /// (indicates a packet ID collision or double-registration).
-  int registerRemoteAdmin(int packetId, RemoteAdminTarget target) {
+  int registerRemoteAdmin(int packetId, RemoteAdminTarget target) =>
+      _register(packetId, target.nodeNum.toRadixString(16));
+
+  /// Register a local admin packet sent with `want_response` set.
+  ///
+  /// Returns the [packetId] for chaining convenience. Throws [StateError]
+  /// on a duplicate, as [registerRemoteAdmin] does.
+  int registerLocalAdmin(int packetId) => _register(packetId, 'local');
+
+  int _register(int packetId, String destination) {
     if (_pending.containsKey(packetId)) {
       throw StateError(
         'AdminAckTracker: packet $packetId is already pending. '
@@ -130,11 +137,10 @@ class AdminAckTracker {
     }
     _pending[packetId] = _PendingAdminAck(
       completer: Completer<AdminAckResult>(),
-      target: target,
     );
     AppLogging.protocol(
       'AdminAckTracker: registered packet $packetId -> '
-      '${target.nodeNum.toRadixString(16)} for ACK tracking '
+      '$destination for ACK tracking '
       '(${_pending.length} pending)',
     );
     return packetId;

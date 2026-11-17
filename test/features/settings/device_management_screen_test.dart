@@ -14,6 +14,7 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/radio_scope_providers.dart';
+import 'package:socialmesh/services/protocol/admin_ack_tracker.dart';
 import 'package:socialmesh/services/protocol/admin_target.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
@@ -51,8 +52,12 @@ class _FakeProtocolService extends ProtocolService {
   };
 
   @override
-  Future<void> removeNode(int nodeNum) async {
+  Future<AdminAckResult?> removeNode(
+    int nodeNum, {
+    Duration? ackTimeout,
+  }) async {
     removedNodeNums.add(nodeNum);
+    return ackTimeout == null ? null : const AdminAckResult.acked();
   }
 
   @override

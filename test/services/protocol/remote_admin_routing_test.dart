@@ -24,6 +24,7 @@ import 'package:socialmesh/generated/meshtastic/module_config.pb.dart'
     as module_pb;
 import 'package:socialmesh/generated/meshtastic/portnums.pbenum.dart' as pn;
 import 'package:socialmesh/models/mesh_models.dart';
+import 'package:socialmesh/services/protocol/admin_ack_tracker.dart';
 import 'package:socialmesh/services/protocol/admin_target.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 
@@ -743,6 +744,44 @@ void main() {
       expect(packet.from, _myNodeNum);
       expect(packet.to, _myNodeNum);
       expect(packet.wantAck, isFalse);
+      expect(packet.decoded.wantResponse, isFalse);
+    });
+
+    test('with an ack timeout asks the radio to answer and completes with '
+        'its routing ACK', () async {
+      final pending = protocol.removeNode(
+        0x11111111,
+        ackTimeout: const Duration(seconds: 5),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final packet = transport.lastPacket;
+      expect(packet.to, _myNodeNum);
+      expect(packet.wantAck, isFalse);
+      expect(packet.decoded.wantResponse, isTrue);
+
+      final ack = pb.FromRadio()
+        ..packet = (pb.MeshPacket()
+          ..from = _myNodeNum
+          ..to = _myNodeNum
+          ..id = packet.id + 1
+          ..decoded = (pb.Data()
+            ..portnum = pn.PortNum.ROUTING_APP
+            ..requestId = packet.id
+            ..payload = (pb.Routing()..errorReason = pb.Routing_Error.NONE)
+                .writeToBuffer()));
+      await protocol.handleIncomingPacket(ack.writeToBuffer());
+
+      expect(await pending, isA<AdminAckSuccess>());
+    });
+
+    test('with an ack timeout completes timedOut when the radio stays '
+        'silent', () async {
+      final result = await protocol.removeNode(
+        0x11111111,
+        ackTimeout: const Duration(milliseconds: 20),
+      );
+      expect(result, isA<AdminAckTimeout>());
     });
   });
 

@@ -1944,6 +1944,8 @@ class ProtocolService {
           // Per-session contact-sync cache is invalid the moment the radio
           // is gone - a different radio (different NodeDB) could attach next.
           _syncedContactsThisSession.clear();
+          // No answer can arrive for an admin command once the link is gone.
+          _adminAckTracker.cancelAll();
           // Only complete with error if we're actually waiting for config
           // This prevents double-errors when enableNotifications throws directly
           if (waitingForConfig &&
@@ -10051,8 +10053,16 @@ class ProtocolService {
   /// Local-only: removes a node from the directly-connected device's
   /// node database.
   ///
+  /// With [ackTimeout] set, the command asks the radio to answer once it
+  /// has handled the removal and completes with that answer, or with
+  /// [AdminAckResult.timedOut] after [ackTimeout]. Without it the command
+  /// is sent and the result is null.
+  ///
   /// This method intentionally uses [MeshPacketBuilder.localAdmin].
-  Future<void> removeNode(int nodeNum) async {
+  Future<AdminAckResult?> removeNode(
+    int nodeNum, {
+    Duration? ackTimeout,
+  }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot remove node: device not ready');
     }
@@ -10066,7 +10076,8 @@ class ProtocolService {
 
     final data = pb.Data()
       ..portnum = pn.PortNum.ADMIN_APP
-      ..payload = adminMsg.writeToBuffer();
+      ..payload = adminMsg.writeToBuffer()
+      ..wantResponse = ackTimeout != null;
 
     final packet = MeshPacketBuilder.localAdmin(
       myNodeNum: _myNodeNum!,
@@ -10074,10 +10085,18 @@ class ProtocolService {
       packetId: _generatePacketId(),
     );
 
+    if (ackTimeout != null) _adminAckTracker.registerLocalAdmin(packet.id);
     final toRadio = pb.ToRadio()..packet = packet;
-    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+    try {
+      await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+    } catch (_) {
+      _adminAckTracker.unregister(packet.id);
+      rethrow;
+    }
 
     AppLogging.protocol('Node $nodeNum removal command sent to device');
+    if (ackTimeout == null) return null;
+    return _adminAckTracker.awaitAck(packet.id, timeout: ackTimeout);
   }
 
   /// Local-only: favorites are stored in the directly-connected device's
