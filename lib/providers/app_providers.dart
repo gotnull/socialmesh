@@ -5900,7 +5900,19 @@ class MessagesNotifier extends Notifier<List<Message>> {
     );
   }
 
+  /// The message with [messageId] in the current state, or null.
+  Message? messageById(String messageId) =>
+      state.firstWhereOrNull((m) => m.id == messageId);
+
   void updateMessage(String messageId, Message updatedMessage) {
+    // A send that finishes after a radio switch rebuilt this notifier holds
+    // the old instance; its state is gone and writing it would throw.
+    if (!ref.mounted) {
+      AppLogging.messages(
+        'updateMessage: notifier rebuilt, dropping update for $messageId',
+      );
+      return;
+    }
     // Guard: never regress from delivered - a late status update
     // (e.g. pending→sent arriving after ACK already set delivered)
     // must not overwrite the terminal delivered state.

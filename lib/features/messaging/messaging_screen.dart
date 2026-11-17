@@ -1893,6 +1893,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final messagesNotifier = ref.read(messagesProvider.notifier);
     final connectionState = ref.read(connectionStateProvider);
     final offlineQueue = ref.read(offlineQueueProvider);
+    final l10n = context.l10n;
     final lastDeviceProtocol = ref
         .read(settingsServiceProvider)
         .asData
@@ -2054,23 +2055,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         );
       }
 
-      // Check mounted after await before updating state
-      if (!mounted) return;
-
+      // The status update goes through the captured notifier whether or not
+      // this screen is still mounted: leaving the chat while the radio write
+      // is in flight must not strand the bubble in pending.
+      //
       // Read current state - ACK may have arrived during the async send,
       // in which case the message is already delivered.  Build the update
       // from the *current* message, not the stale pendingMessage, so we
       // never overwrite delivered status.
-      final currentMessages = ref.read(messagesProvider);
-      final currentMsg = currentMessages.firstWhereOrNull(
-        (m) => m.id == messageId,
-      );
+      final currentMsg = messagesNotifier.messageById(messageId);
       if (currentMsg == null || currentMsg.status == MessageStatus.delivered) {
         AppLogging.messages(
           'SEND_OK messageId=$messageId packetId=$packetId '
           'currentStatus=${currentMsg?.status} (skip-update)',
         );
-        _trackMessageSentForReview();
+        if (mounted) _trackMessageSentForReview();
         return;
       }
 
@@ -2091,7 +2090,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       );
 
       // Track message sent for review prompt
-      _trackMessageSentForReview();
+      if (mounted) _trackMessageSentForReview();
     } catch (e, st) {
       AppLogging.messages(
         'SEND_FAIL messageId=$messageId error=$e '
@@ -2101,14 +2100,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       );
       AppLogging.messages('SEND_FAIL_STACK $st');
 
-      // Check mounted after await before updating state
-      if (!mounted) return;
-
-      // Surface the readiness-gate snackbar when applicable; either way, mark
-      // the optimistic bubble failed so it cannot spin forever in `pending`.
-      // Use the localised readiness message for the failed-state error text
-      // when that was the cause, instead of leaking the raw StateError.
-      final isReadinessBlocked = maybeShowTxBlockedSnackBar(context, e);
+      // Surface the readiness-gate snackbar when applicable (only while this
+      // screen is mounted); either way, mark the optimistic bubble failed so
+      // it cannot spin forever in `pending`. Use the localised readiness
+      // message for the failed-state error text when that was the cause,
+      // instead of leaking the raw StateError.
+      final isReadinessBlocked = isTxBlockedNotReadyError(e);
+      if (mounted) maybeShowTxBlockedSnackBar(context, e);
       AppLogging.messages(
         'SEND_FAIL_KIND messageId=$messageId '
         'readinessBlocked=$isReadinessBlocked',
@@ -2118,7 +2116,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         pendingMessage.copyWith(
           status: MessageStatus.failed,
           errorMessage: isReadinessBlocked
-              ? context.l10n.txBlockedNotReady
+              ? l10n.txBlockedNotReady
               : e.toString(),
         ),
       );
@@ -2159,6 +2157,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final messagesNotifier = ref.read(messagesProvider.notifier);
     final connectionState = ref.read(connectionStateProvider);
     final offlineQueue = ref.read(offlineQueueProvider);
+    final l10n = context.l10n;
     final protocol = ref.read(protocolServiceProvider);
 
     AppLogging.messages(
@@ -2238,9 +2237,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         );
       }
 
-      // Check mounted after await before updating state
-      if (!mounted) return;
-
+      // Updated through the captured notifier whether or not this screen is
+      // still mounted, so leaving the chat mid-send cannot strand the bubble.
       AppLogging.messages(
         'RETRY_OK messageId=${message.id} packetId=$packetId',
       );
@@ -2265,16 +2263,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       );
       AppLogging.messages('RETRY_FAIL_STACK $st');
 
-      // Check mounted after await before updating state
-      if (!mounted) return;
-
       // Retry is silent on readiness-gate failures - the user already saw
       // the snackbar on the original Send. Mark the bubble failed with the
       // localised readiness message; the readiness->ready auto-resend
       // listener will pick it up and dispatch again as soon as the radio is
-      // ready. For non-readiness errors, surface the generic snackbar.
+      // ready. For non-readiness errors, surface the generic snackbar while
+      // this screen is mounted; the bubble is marked failed either way.
       final isReadinessBlocked = isTxBlockedNotReadyError(e);
-      if (!isReadinessBlocked) {
+      if (!isReadinessBlocked && mounted) {
         maybeShowTxBlockedSnackBar(context, e);
       }
       AppLogging.messages(
@@ -2286,7 +2282,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         message.copyWith(
           status: MessageStatus.failed,
           errorMessage: isReadinessBlocked
-              ? context.l10n.txBlockedNotReady
+              ? l10n.txBlockedNotReady
               : e.toString(),
         ),
       );

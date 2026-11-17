@@ -16,6 +16,7 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/translation_providers.dart';
+import 'package:socialmesh/services/messaging/offline_queue_service.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 import 'package:socialmesh/services/storage/conversation_read_position.dart';
 import 'package:socialmesh/services/storage/message_database.dart';
@@ -78,6 +79,31 @@ class _TestProtocolService extends ProtocolService {
 
   @override
   Stream<Message> get messageStream => const Stream.empty();
+}
+
+/// Holds every text send open until the test completes it, so a test can
+/// leave the chat while the radio write is still in flight.
+class _ControlledSendProtocolService extends _TestProtocolService {
+  final List<Completer<int>> sends = [];
+
+  @override
+  Future<int> sendMessageWithPreTracking({
+    required String text,
+    required int to,
+    int channel = 0,
+    bool wantAck = true,
+    String? messageId,
+    required void Function(int packetId) onPacketIdGenerated,
+    MessageSource source = MessageSource.unknown,
+    int? replyId,
+    bool isEmoji = false,
+    List<int>? pkiPublicKey,
+    bool includeAlertBell = false,
+  }) {
+    final send = Completer<int>();
+    sends.add(send);
+    return send.future;
+  }
 }
 
 class _StubMessageTranslationsNotifier extends MessageTranslationsNotifier {
@@ -370,12 +396,15 @@ Future<void> _seedDmConversation(
 
 Future<ProviderContainer> _createContainer(
   MessageDatabase storage, {
+  ProtocolService? protocol,
   List<dynamic> overrides = const [],
 }) async {
   final container = ProviderContainer(
     overrides: [
       messageStorageProvider.overrideWithValue(AsyncValue.data(storage)),
-      protocolServiceProvider.overrideWithValue(_TestProtocolService()),
+      protocolServiceProvider.overrideWithValue(
+        protocol ?? _TestProtocolService(),
+      ),
       messageTranslationsProvider.overrideWith(
         _StubMessageTranslationsNotifier.new,
       ),
@@ -774,4 +803,95 @@ void main() {
       }
     },
   );
+
+  group('a send still in flight when the chat closes', () {
+    const text = 'left before the radio answered';
+
+    // The offline queue is a process-wide singleton; a message an earlier
+    // test queued while disconnected would start draining here.
+    setUp(() => OfflineQueueService().clear());
+
+    Future<(ProviderContainer, _ControlledSendProtocolService)> sendThenLeave(
+      WidgetTester tester,
+    ) async {
+      final protocol = _ControlledSendProtocolService();
+      final container = await _createContainer(
+        _InMemoryMessageDatabase(),
+        protocol: protocol,
+        overrides: [
+          connectionStateProvider.overrideWithValue(
+            const AsyncValue.data(DeviceConnectionState.connected),
+          ),
+        ],
+      );
+      await _pumpChat(tester, container);
+      await _pumpFor(tester, const Duration(milliseconds: 700));
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(ChatComposer),
+          matching: find.byType(TextField),
+        ),
+        text,
+      );
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+
+      expect(protocol.sends, hasLength(1));
+      expect(
+        container
+            .read(messagesProvider)
+            .singleWhere((m) => m.text == text)
+            .status,
+        MessageStatus.pending,
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: SizedBox.shrink()),
+        ),
+      );
+      await tester.pump();
+      return (container, protocol);
+    }
+
+    testWidgets('is marked sent once the radio accepts it', (tester) async {
+      final (container, protocol) = await sendThenLeave(tester);
+      try {
+        protocol.sends.single.complete(4242);
+        await tester.pump();
+
+        final message = container
+            .read(messagesProvider)
+            .singleWhere((m) => m.text == text);
+        expect(message.status, MessageStatus.sent);
+        expect(message.packetId, 4242);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        container.dispose();
+      }
+    });
+
+    testWidgets('is marked failed when the radio write fails', (tester) async {
+      final (container, protocol) = await sendThenLeave(tester);
+      try {
+        protocol.sends.single.completeError(
+          StateError('Cannot send message: not connected to device'),
+        );
+        await tester.pump();
+
+        final message = container
+            .read(messagesProvider)
+            .singleWhere((m) => m.text == text);
+        expect(message.status, MessageStatus.failed);
+        expect(message.errorMessage, contains('not connected'));
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        container.dispose();
+      }
+    });
+  });
 }

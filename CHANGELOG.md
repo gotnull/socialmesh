@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A message no longer stays on "Sending" when you leave the chat before the radio has taken it. It now moves to sent, or to failed with a retry button, whether or not the chat is still open.
 - Muting a channel now sticks after the app restarts. The channel menu showed "Mute Notifications" for a channel that was already muted, and tapping it switched that channel's notifications back on.
 
 ## [1.79.1] - 2026-11-17
