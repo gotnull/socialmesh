@@ -81,6 +81,8 @@ class WaypointsNotifier extends AsyncNotifier<List<MeshWaypoint>> {
         (event.expire > 1 &&
             event.expire * 1000 <= DateTime.now().millisecondsSinceEpoch)) {
       await db.deleteById(event.id);
+      // A radio switch can dispose this notifier while the write is out.
+      if (!ref.mounted) return;
       current.removeWhere((w) => w.id == event.id);
       state = AsyncData(current);
       return;
@@ -111,6 +113,7 @@ class WaypointsNotifier extends AsyncNotifier<List<MeshWaypoint>> {
       await db.upsert(incoming);
       current.insert(0, incoming);
     }
+    if (!ref.mounted) return;
     state = AsyncData(current);
 
     // Notify on inbound waypoints from other nodes (never our own echo),
