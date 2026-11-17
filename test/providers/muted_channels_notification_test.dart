@@ -4,9 +4,22 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/muted_channels_provider.dart';
 import 'package:socialmesh/services/notifications/channel_mute_prefs.dart';
 import 'package:socialmesh/services/notifications/notification_service.dart';
+import 'package:socialmesh/services/storage/storage_service.dart';
+
+/// A container whose settings service wraps this test's mock preferences.
+ProviderContainer _container() => ProviderContainer(
+  overrides: [
+    settingsServiceProvider.overrideWith((ref) async {
+      final settings = SettingsService();
+      await settings.init();
+      return settings;
+    }),
+  ],
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +36,7 @@ void main() {
 
   group('MutedChannelsNotifier', () {
     test('initial state is empty set', () {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final muted = container.read(mutedChannelsProvider);
@@ -31,7 +44,7 @@ void main() {
     });
 
     test('toggleMute adds channel index to set', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -42,7 +55,7 @@ void main() {
     });
 
     test('toggleMute removes channel index when already muted', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -55,7 +68,7 @@ void main() {
     });
 
     test('isMuted returns correct state', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -69,7 +82,7 @@ void main() {
     });
 
     test('multiple channels can be independently muted', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -84,7 +97,7 @@ void main() {
     });
 
     test('mute state persists to SharedPreferences', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -106,19 +119,47 @@ void main() {
         'muted_channel_indices': ['0', '4', '7'],
       });
 
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
-      // The notifier uses lazy async load; read + pump to let it settle.
-      container.read(mutedChannelsProvider);
-      await Future<void>.delayed(Duration.zero);
+      await container.read(settingsServiceProvider.future);
 
       final muted = container.read(mutedChannelsProvider);
       expect(muted, containsAll([0, 4, 7]));
     });
 
+    test('a stored mute is in the state on the first read once settings '
+        'have loaded', () async {
+      SharedPreferences.setMockInitialValues({
+        'muted_channel_indices': ['0'],
+      });
+      final container = _container();
+      addTearDown(container.dispose);
+      await container.read(settingsServiceProvider.future);
+
+      expect(container.read(mutedChannelsProvider), {0});
+    });
+
+    test('toggling a stored mute unmutes it even when the state has not been '
+        'read yet', () async {
+      SharedPreferences.setMockInitialValues({
+        'muted_channel_indices': ['0'],
+      });
+      final container = _container();
+      addTearDown(container.dispose);
+
+      final result = await container
+          .read(mutedChannelsProvider.notifier)
+          .toggleMute(0);
+
+      expect(result, isFalse);
+      expect(container.read(mutedChannelsProvider), isEmpty);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getStringList('muted_channel_indices'), isEmpty);
+    });
+
     test('isChannelMutedProvider family returns correct value', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -134,11 +175,8 @@ void main() {
         'muted_channel_indices': ['0', '3'],
       });
 
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
-
-      container.read(mutedChannelsProvider);
-      await Future<void>.delayed(Duration.zero);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
       await notifier.toggleMute(0); // unmute channel 0
@@ -183,7 +221,7 @@ void main() {
     });
 
     test('muted channel 0 blocks notification (simulated gate)', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -198,7 +236,7 @@ void main() {
     });
 
     test('unmuted channel 0 allows notification (simulated gate)', () {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       const messageChannel = 0;
@@ -209,7 +247,7 @@ void main() {
     });
 
     test('muted channel 3 blocks notification on channel 3', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       await container.read(mutedChannelsProvider.notifier).toggleMute(3);
@@ -221,7 +259,7 @@ void main() {
     });
 
     test('muted channel 3 does NOT block notification on channel 0', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       await container.read(mutedChannelsProvider.notifier).toggleMute(3);
@@ -233,7 +271,7 @@ void main() {
     });
 
     test('mixed mute states: channels behave independently', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -251,7 +289,7 @@ void main() {
     });
 
     test('toggle mute updates behavior immediately', () async {
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       final notifier = container.read(mutedChannelsProvider.notifier);
@@ -343,7 +381,7 @@ void main() {
         SharedPreferences.setMockInitialValues({});
 
         // Foreground mutes channel 0 (via MutedChannelsNotifier)
-        final container = ProviderContainer();
+        final container = _container();
         addTearDown(container.dispose);
         await container.read(mutedChannelsProvider.notifier).toggleMute(0);
 
@@ -597,7 +635,7 @@ void main() {
         mutedChannelsPrefKey: ['3'],
       });
 
-      final container = ProviderContainer();
+      final container = _container();
       addTearDown(container.dispose);
 
       // First synchronous read kicks off the async _loadFromPrefs and returns

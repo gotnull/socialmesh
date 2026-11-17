@@ -17,13 +17,14 @@ const String mutedChannelsPrefKey = 'muted_channel_indices';
 /// in-memory state, which is an empty set until its async hydration completes.
 /// During a reconnect message flood the provider can still be empty, which
 /// would let a muted channel notify; reading prefs here closes that window.
-bool isChannelMutedInPrefs(SharedPreferences prefs, int channelIndex) {
+bool isChannelMutedInPrefs(SharedPreferences prefs, int channelIndex) =>
+    mutedChannelsInPrefs(prefs).contains(channelIndex);
+
+/// The persisted set of muted channel indices; empty when none are stored.
+Set<int> mutedChannelsInPrefs(SharedPreferences prefs) {
   final stored = prefs.getStringList(mutedChannelsPrefKey);
-  if (stored == null) return false;
-  return stored
-      .map((s) => int.tryParse(s))
-      .whereType<int>()
-      .contains(channelIndex);
+  if (stored == null) return {};
+  return stored.map((s) => int.tryParse(s)).whereType<int>().toSet();
 }
 
 /// The channel index whose mute state gates a message's notification, or `null`
