@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- A waypoint arriving while you switched radios could raise an error instead of being saved to the new radio's list.
+- Switching radios while a waypoint was arriving no longer raises an error in the background.
 - MeshCore radios with more than eight channels now show all of them. SocialMesh read only slots 0 to 7, so channels in higher slots, including private ones, were missing; it now reads as many slots as the radio reports and can add channels in any free slot.
 
 ## [1.78.0] - 2026-11-16
