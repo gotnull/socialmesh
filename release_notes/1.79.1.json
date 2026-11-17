@@ -1,0 +1,6 @@
+{
+  "app_store_whats_new": "Fixes:\n- Remove Stale Nodes now waits for the radio to confirm each removal before sending the next. A radio that falls behind can no longer drop removals the app counted as done, and a radio that stops answering ends the run with those nodes reported as not removed.",
+  "play": {
+    "en-GB": "Remove Stale Nodes now waits for the radio to confirm each removal before sending the next."
+  }
+}
