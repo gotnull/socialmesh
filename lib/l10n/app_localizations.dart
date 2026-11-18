@@ -30832,12 +30832,6 @@ abstract class AppLocalizations {
   /// **'REMOTE ADMINISTRATION'**
   String get settingsSectionRemoteAdmin;
 
-  /// Section header label for the Social Notifications section in settings.
-  ///
-  /// In en, this message translates to:
-  /// **'SOCIAL NOTIFICATIONS'**
-  String get settingsSectionSocialNotifications;
-
   /// Section header label for the Telemetry Logs section in settings.
   ///
   /// In en, this message translates to:
@@ -30855,54 +30849,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'WHAT\'S NEW'**
   String get settingsSectionWhatsNew;
-
-  /// Subtitle of the comments & mentions social notification toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'When someone comments or @mentions you'**
-  String get settingsSocialCommentsSubtitle;
-
-  /// Title of the comments & mentions social notification toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Comments & mentions'**
-  String get settingsSocialCommentsTitle;
-
-  /// Subtitle of the likes social notification toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'When someone likes your posts'**
-  String get settingsSocialLikesSubtitle;
-
-  /// Title of the likes social notification toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Likes'**
-  String get settingsSocialLikesTitle;
-
-  /// Subtitle of the new followers social notification toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'When someone follows you or sends a request'**
-  String get settingsSocialNewFollowersSubtitle;
-
-  /// Title of the new followers social notification toggle.
-  ///
-  /// In en, this message translates to:
-  /// **'New followers'**
-  String get settingsSocialNewFollowersTitle;
-
-  /// Title of the social notifications tile while preferences are loading.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading…'**
-  String get settingsSocialNotificationsLoading;
-
-  /// Subtitle of the social notifications tile while preferences are loading.
-  ///
-  /// In en, this message translates to:
-  /// **'Fetching notification preferences'**
-  String get settingsSocialNotificationsLoadingSubtitle;
 
   /// Snackbar text shown when tapping the SocialMesh about tile.
   ///

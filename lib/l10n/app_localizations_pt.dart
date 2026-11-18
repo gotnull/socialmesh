@@ -18035,9 +18035,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsSectionRemoteAdmin => 'ADMINISTRAÇÃO REMOTA';
 
   @override
-  String get settingsSectionSocialNotifications => 'NOTIFICAÇÕES SOCIAIS';
-
-  @override
   String get settingsSectionTelemetryLogs => 'LOGS DE TELEMETRIA';
 
   @override
@@ -18045,34 +18042,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsSectionWhatsNew => 'NOVIDADES';
-
-  @override
-  String get settingsSocialCommentsSubtitle =>
-      'Quando alguém comenta ou @menciona você';
-
-  @override
-  String get settingsSocialCommentsTitle => 'Comentários e menções';
-
-  @override
-  String get settingsSocialLikesSubtitle =>
-      'Quando alguém curte suas publicações';
-
-  @override
-  String get settingsSocialLikesTitle => 'Curtidas';
-
-  @override
-  String get settingsSocialNewFollowersSubtitle =>
-      'Quando alguém segue você ou envia uma solicitação';
-
-  @override
-  String get settingsSocialNewFollowersTitle => 'Novos seguidores';
-
-  @override
-  String get settingsSocialNotificationsLoading => 'Carregando…';
-
-  @override
-  String get settingsSocialNotificationsLoadingSubtitle =>
-      'Buscando preferências de notificação';
 
   @override
   String settingsSocialMeshVersionSnackbar(String version) {

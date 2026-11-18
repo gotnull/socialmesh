@@ -24242,10 +24242,6 @@
   "@settingsSectionRemoteAdmin": {
     "description": "Section header label for the Remote Administration section in settings."
   },
-  "settingsSectionSocialNotifications": "SOCIAL NOTIFICATIONS",
-  "@settingsSectionSocialNotifications": {
-    "description": "Section header label for the Social Notifications section in settings."
-  },
   "settingsSectionTelemetryLogs": "TELEMETRY LOGS",
   "@settingsSectionTelemetryLogs": {
     "description": "Section header label for the Telemetry Logs section in settings."
@@ -24257,38 +24253,6 @@
   "settingsSectionWhatsNew": "WHAT'S NEW",
   "@settingsSectionWhatsNew": {
     "description": "Section header label for the What's New section in settings."
-  },
-  "settingsSocialCommentsSubtitle": "When someone comments or @mentions you",
-  "@settingsSocialCommentsSubtitle": {
-    "description": "Subtitle of the comments & mentions social notification toggle."
-  },
-  "settingsSocialCommentsTitle": "Comments & mentions",
-  "@settingsSocialCommentsTitle": {
-    "description": "Title of the comments & mentions social notification toggle."
-  },
-  "settingsSocialLikesSubtitle": "When someone likes your posts",
-  "@settingsSocialLikesSubtitle": {
-    "description": "Subtitle of the likes social notification toggle."
-  },
-  "settingsSocialLikesTitle": "Likes",
-  "@settingsSocialLikesTitle": {
-    "description": "Title of the likes social notification toggle."
-  },
-  "settingsSocialNewFollowersSubtitle": "When someone follows you or sends a request",
-  "@settingsSocialNewFollowersSubtitle": {
-    "description": "Subtitle of the new followers social notification toggle."
-  },
-  "settingsSocialNewFollowersTitle": "New followers",
-  "@settingsSocialNewFollowersTitle": {
-    "description": "Title of the new followers social notification toggle."
-  },
-  "settingsSocialNotificationsLoading": "Loading…",
-  "@settingsSocialNotificationsLoading": {
-    "description": "Title of the social notifications tile while preferences are loading."
-  },
-  "settingsSocialNotificationsLoadingSubtitle": "Fetching notification preferences",
-  "@settingsSocialNotificationsLoadingSubtitle": {
-    "description": "Subtitle of the social notifications tile while preferences are loading."
   },
   "settingsSocialMeshVersionSnackbar": "SocialMesh v{version}",
   "@settingsSocialMeshVersionSnackbar": {

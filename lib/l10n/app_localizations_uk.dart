@@ -18062,9 +18062,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsSectionRemoteAdmin => 'ВІДДАЛЕНЕ АДМІНІСТРУВАННЯ';
 
   @override
-  String get settingsSectionSocialNotifications => 'СОЦІАЛЬНІ СПОВІЩЕННЯ';
-
-  @override
   String get settingsSectionTelemetryLogs => 'ЖУРНАЛИ ТЕЛЕМЕТРІЇ';
 
   @override
@@ -18072,34 +18069,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsSectionWhatsNew => 'ЩО НОВОГО';
-
-  @override
-  String get settingsSocialCommentsSubtitle =>
-      'Коли хтось коментує або @згадує вас';
-
-  @override
-  String get settingsSocialCommentsTitle => 'Коментарі та згадки';
-
-  @override
-  String get settingsSocialLikesSubtitle =>
-      'Коли хтось вподобає ваші публікації';
-
-  @override
-  String get settingsSocialLikesTitle => 'Вподобання';
-
-  @override
-  String get settingsSocialNewFollowersSubtitle =>
-      'Коли хтось підписується на вас або надсилає запит';
-
-  @override
-  String get settingsSocialNewFollowersTitle => 'Нові підписники';
-
-  @override
-  String get settingsSocialNotificationsLoading => 'Завантаження...';
-
-  @override
-  String get settingsSocialNotificationsLoadingSubtitle =>
-      'Отримання налаштувань сповіщень';
 
   @override
   String settingsSocialMeshVersionSnackbar(String version) {

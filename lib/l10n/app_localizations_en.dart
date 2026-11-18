@@ -17851,9 +17851,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionRemoteAdmin => 'REMOTE ADMINISTRATION';
 
   @override
-  String get settingsSectionSocialNotifications => 'SOCIAL NOTIFICATIONS';
-
-  @override
   String get settingsSectionTelemetryLogs => 'TELEMETRY LOGS';
 
   @override
@@ -17861,33 +17858,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSectionWhatsNew => 'WHAT\'S NEW';
-
-  @override
-  String get settingsSocialCommentsSubtitle =>
-      'When someone comments or @mentions you';
-
-  @override
-  String get settingsSocialCommentsTitle => 'Comments & mentions';
-
-  @override
-  String get settingsSocialLikesSubtitle => 'When someone likes your posts';
-
-  @override
-  String get settingsSocialLikesTitle => 'Likes';
-
-  @override
-  String get settingsSocialNewFollowersSubtitle =>
-      'When someone follows you or sends a request';
-
-  @override
-  String get settingsSocialNewFollowersTitle => 'New followers';
-
-  @override
-  String get settingsSocialNotificationsLoading => 'Loading…';
-
-  @override
-  String get settingsSocialNotificationsLoadingSubtitle =>
-      'Fetching notification preferences';
 
   @override
   String settingsSocialMeshVersionSnackbar(String version) {

@@ -27,7 +27,6 @@ import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/nodes/stale_node_cleanup.dart';
-import '../../services/notifications/push_notification_service.dart';
 import '../../services/haptic_service.dart';
 import 'background_connection_screen.dart';
 import '../../core/theme.dart';
@@ -2710,8 +2709,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
                           _AgeGroupTile(),
 
-                          // Social Notifications Section (only for signed-in users)
-                          // const _SocialNotificationsSection(),
                           const SizedBox(height: AppTheme.spacing16),
 
                           // Feedback Section
@@ -5068,134 +5065,6 @@ class _OpenSourceLicensesScreen extends ConsumerWidget {
         applicationIcon: const _TappableMeshtasticLogo(width: 140),
         applicationLegalese: context.l10n.settingsOpenSourceLegalese,
       ),
-    );
-  }
-}
-
-/// Social notifications settings section (for signed-in users only)
-class _SocialNotificationsSection extends ConsumerStatefulWidget {
-  const _SocialNotificationsSection();
-
-  @override
-  ConsumerState<_SocialNotificationsSection> createState() =>
-      _SocialNotificationsSectionState();
-}
-
-class _SocialNotificationsSectionState
-    extends ConsumerState<_SocialNotificationsSection>
-    with LifecycleSafeMixin<_SocialNotificationsSection> {
-  bool _isLoading = true;
-  bool _followsEnabled = true;
-  bool _likesEnabled = true;
-  bool _commentsEnabled = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    try {
-      final settings = await PushNotificationService()
-          .getNotificationSettings();
-      if (!mounted) return;
-      safeSetState(() {
-        _followsEnabled = settings['follows'] ?? true;
-        _likesEnabled = settings['likes'] ?? true;
-        _commentsEnabled = settings['comments'] ?? true;
-        _isLoading = false;
-      });
-    } catch (e) {
-      safeSetState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _updateSetting(String type, bool value) async {
-    HapticFeedback.selectionClick();
-
-    safeSetState(() {
-      switch (type) {
-        case 'follows':
-          _followsEnabled = value;
-          break;
-        case 'likes':
-          _likesEnabled = value;
-          break;
-        case 'comments':
-          _commentsEnabled = value;
-          break;
-      }
-    });
-
-    await PushNotificationService().updateNotificationSettings(
-      followNotifications: type == 'follows' ? value : null,
-      likeNotifications: type == 'likes' ? value : null,
-      commentNotifications: type == 'comments' ? value : null,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserProvider);
-
-    // Only show for signed-in users
-    if (currentUser == null) {
-      return const SizedBox.shrink();
-    }
-
-    if (_isLoading) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AppTheme.spacing16),
-          SettingsListSectionHeader(
-            title: context.l10n.settingsSectionSocialNotifications,
-          ),
-          SettingsNavTile(
-            icon: Icons.notifications_active_outlined,
-            title: context.l10n.settingsSocialNotificationsLoading,
-            subtitle: context.l10n.settingsSocialNotificationsLoadingSubtitle,
-          ),
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: AppTheme.spacing16),
-        SettingsListSectionHeader(
-          title: context.l10n.settingsSectionSocialNotifications,
-        ),
-        SettingsNavTile(
-          icon: Icons.person_add_outlined,
-          title: context.l10n.settingsSocialNewFollowersTitle,
-          subtitle: context.l10n.settingsSocialNewFollowersSubtitle,
-          trailing: ThemedSwitch(
-            value: _followsEnabled,
-            onChanged: (value) => _updateSetting('follows', value),
-          ),
-        ),
-        SettingsNavTile(
-          icon: Icons.favorite_outline,
-          title: context.l10n.settingsSocialLikesTitle,
-          subtitle: context.l10n.settingsSocialLikesSubtitle,
-          trailing: ThemedSwitch(
-            value: _likesEnabled,
-            onChanged: (value) => _updateSetting('likes', value),
-          ),
-        ),
-        SettingsNavTile(
-          icon: Icons.chat_bubble_outline,
-          title: context.l10n.settingsSocialCommentsTitle,
-          subtitle: context.l10n.settingsSocialCommentsSubtitle,
-          trailing: ThemedSwitch(
-            value: _commentsEnabled,
-            onChanged: (value) => _updateSetting('comments', value),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -22390,9 +22390,6 @@
   "@settingsSectionRemoteAdmin": {
     "description": "Section header label for the Remote Administration section in settings."
   },
-  "@settingsSectionSocialNotifications": {
-    "description": "Section header label for the Social Notifications section in settings."
-  },
   "@settingsSectionTelemetryLogs": {
     "description": "Section header label for the Telemetry Logs section in settings."
   },
@@ -22402,18 +22399,6 @@
   "@settingsSectionWhatsNew": {
     "description": "Section header label for the What's New section in settings."
   },
-  "@settingsSocialCommentsSubtitle": {
-    "description": "Subtitle of the comments & mentions social notification toggle."
-  },
-  "@settingsSocialCommentsTitle": {
-    "description": "Title of the comments & mentions social notification toggle."
-  },
-  "@settingsSocialLikesSubtitle": {
-    "description": "Subtitle of the likes social notification toggle."
-  },
-  "@settingsSocialLikesTitle": {
-    "description": "Title of the likes social notification toggle."
-  },
   "@settingsSocialMeshVersionSnackbar": {
     "description": "Snackbar text shown when tapping the SocialMesh about tile.",
     "placeholders": {
@@ -22421,18 +22406,6 @@
         "type": "String"
       }
     }
-  },
-  "@settingsSocialNewFollowersSubtitle": {
-    "description": "Subtitle of the new followers social notification toggle."
-  },
-  "@settingsSocialNewFollowersTitle": {
-    "description": "Title of the new followers social notification toggle."
-  },
-  "@settingsSocialNotificationsLoading": {
-    "description": "Title of the social notifications tile while preferences are loading."
-  },
-  "@settingsSocialNotificationsLoadingSubtitle": {
-    "description": "Subtitle of the social notifications tile while preferences are loading."
   },
   "@settingsTile3dEffectsSubtitle": {
     "description": "Subtitle of the 3D effects toggle tile."
@@ -35658,19 +35631,10 @@
   "settingsSectionPremium": "Premium",
   "settingsSectionProfile": "PERFIL",
   "settingsSectionRemoteAdmin": "ADMINISTRAÇÃO REMOTA",
-  "settingsSectionSocialNotifications": "NOTIFICAÇÕES SOCIAIS",
   "settingsSectionTelemetryLogs": "LOGS DE TELEMETRIA",
   "settingsSectionTools": "FERRAMENTAS",
   "settingsSectionWhatsNew": "NOVIDADES",
-  "settingsSocialCommentsSubtitle": "Quando alguém comenta ou @menciona você",
-  "settingsSocialCommentsTitle": "Comentários e menções",
-  "settingsSocialLikesSubtitle": "Quando alguém curte suas publicações",
-  "settingsSocialLikesTitle": "Curtidas",
   "settingsSocialMeshVersionSnackbar": "SocialMesh v{version}",
-  "settingsSocialNewFollowersSubtitle": "Quando alguém segue você ou envia uma solicitação",
-  "settingsSocialNewFollowersTitle": "Novos seguidores",
-  "settingsSocialNotificationsLoading": "Carregando…",
-  "settingsSocialNotificationsLoadingSubtitle": "Buscando preferências de notificação",
   "settingsTile3dEffectsSubtitle": "Transformações de perspectiva e efeitos de profundidade",
   "settingsTile3dEffectsTitle": "Efeitos 3D",
   "settingsTileAirQualitySubtitle": "Leituras de PM2.5, PM10, CO2",
