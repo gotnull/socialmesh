@@ -4,7 +4,7 @@
 // Traceroute Database - SQLite schema and lifecycle management.
 //
 // Database: traceroute_history.db
-// Schema version: 6
+// Schema version: 7
 //
 // Tables:
 //   - traceroute_runs: each traceroute attempt (pending or completed)
@@ -22,7 +22,7 @@ import '../../core/radio_scope.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int tracerouteSchemaVersion = 6;
+const int tracerouteSchemaVersion = 7;
 
 /// Table and column name constants for Traceroute SQLite schema.
 abstract final class TracerouteTables {
@@ -44,6 +44,9 @@ abstract final class TracerouteTables {
   static const colTargetSnrTowards = 'target_snr_towards';
   static const colOriginSnrBack = 'origin_snr_back';
   static const colOriginNodeId = 'origin_node_id';
+  // When the request went out, carried over from the pending run a
+  // response replaces. Null on pending runs and on rows recorded before v7.
+  static const colSentAt = 'sent_at';
 
   // -- traceroute_hops --
   static const hops = 'traceroute_hops';
@@ -186,7 +189,8 @@ class TracerouteDatabase {
         ${TracerouteTables.colTargetLongitude} REAL,
         ${TracerouteTables.colTargetSnrTowards} REAL,
         ${TracerouteTables.colOriginSnrBack} REAL,
-        ${TracerouteTables.colOriginNodeId} INTEGER
+        ${TracerouteTables.colOriginNodeId} INTEGER,
+        ${TracerouteTables.colSentAt} INTEGER
       )
     ''');
 
@@ -288,6 +292,12 @@ class TracerouteDatabase {
       await db.execute(
         'ALTER TABLE ${TracerouteTables.runs} '
         'ADD COLUMN ${TracerouteTables.colOriginNodeId} INTEGER', // lint-allow: hardcoded-string
+      );
+    }
+    if (oldVersion < 7) {
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colSentAt} INTEGER', // lint-allow: hardcoded-string
       );
     }
   }

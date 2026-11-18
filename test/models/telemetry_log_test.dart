@@ -395,6 +395,47 @@ void main() {
   });
 
   group('TraceRouteLog', () {
+    group('roundTrip', () {
+      final sentAt = DateTime(2026, 11, 18, 10, 0, 0);
+
+      TraceRouteLog log({
+        bool response = true,
+        DateTime? sent,
+        Duration after = const Duration(milliseconds: 2500),
+      }) => TraceRouteLog(
+        nodeNum: 1,
+        targetNode: 1,
+        response: response,
+        sentAt: sent,
+        timestamp: sentAt.add(after),
+      );
+
+      test('is the time from the send to the response', () {
+        expect(log(sent: sentAt).roundTrip, const Duration(milliseconds: 2500));
+      });
+
+      test('is null without a response', () {
+        expect(log(sent: sentAt, response: false).roundTrip, isNull);
+      });
+
+      test('is null without a recorded send time', () {
+        expect(log().roundTrip, isNull);
+      });
+
+      test('is null when the response predates the send', () {
+        expect(
+          log(sent: sentAt, after: const Duration(seconds: -1)).roundTrip,
+          isNull,
+        );
+      });
+
+      test('survives a JSON round trip', () {
+        final restored = TraceRouteLog.fromJson(log(sent: sentAt).toJson());
+        expect(restored.sentAt, sentAt);
+        expect(restored.roundTrip, const Duration(milliseconds: 2500));
+      });
+    });
+
     test('creates with required fields', () {
       final log = TraceRouteLog(nodeNum: 123, targetNode: 456);
 

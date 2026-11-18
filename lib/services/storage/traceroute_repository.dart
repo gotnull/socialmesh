@@ -103,7 +103,7 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
                   '${TracerouteTables.colOriginNodeId} IS NULL)';
         final pending = await txn.query(
           TracerouteTables.runs,
-          columns: [TracerouteTables.colId],
+          columns: [TracerouteTables.colId, TracerouteTables.colCreatedAt],
           where:
               '${TracerouteTables.colTargetNodeId} = ? AND '
               '${TracerouteTables.colResponseReceived} = 0'
@@ -116,8 +116,12 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
           limit: 1,
         );
 
+        // The pending run was created when the request went out; its
+        // creation time is the start of the round trip.
+        int? sentAtMs;
         if (pending.isNotEmpty) {
           final pendingId = pending.first[TracerouteTables.colId] as String;
+          sentAtMs = pending.first[TracerouteTables.colCreatedAt] as int;
           // Delete old hops (cascade should handle it, but be explicit)
           await txn.delete(
             TracerouteTables.hops,
@@ -133,7 +137,7 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
         }
 
         // Insert the new (completed) run
-        await _insertRun(txn, run);
+        await _insertRun(txn, run, sentAtMs: sentAtMs);
         await _insertHops(txn, run.id, run.hops);
       });
 
@@ -379,7 +383,11 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  Future<void> _insertRun(DatabaseExecutor txn, TraceRouteLog run) async {
+  Future<void> _insertRun(
+    DatabaseExecutor txn,
+    TraceRouteLog run, {
+    int? sentAtMs,
+  }) async {
     final status = run.response
         ? TracerouteTables.statusCompleted
         : TracerouteTables.statusPending;
@@ -403,6 +411,8 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       TracerouteTables.colTargetSnrTowards: run.targetSnrTowards,
       TracerouteTables.colOriginSnrBack: run.originSnrBack,
       TracerouteTables.colOriginNodeId: run.originNodeNum,
+      TracerouteTables.colSentAt:
+          sentAtMs ?? run.sentAt?.millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -506,6 +516,11 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       targetLongitude: row[TracerouteTables.colTargetLongitude] as double?,
       targetSnrTowards: row[TracerouteTables.colTargetSnrTowards] as double?,
       originSnrBack: row[TracerouteTables.colOriginSnrBack] as double?,
+      sentAt: row[TracerouteTables.colSentAt] == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(
+              row[TracerouteTables.colSentAt] as int,
+            ),
     );
   }
 

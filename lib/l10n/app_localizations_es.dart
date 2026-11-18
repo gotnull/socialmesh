@@ -20024,6 +20024,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get telemetryTracerouteHopsForward => 'Saltos →';
 
   @override
+  String telemetryTracerouteRoundTrip(String seconds) {
+    return 'Ida y vuelta $seconds s';
+  }
+
+  @override
   String get telemetryTracerouteMoreActions => 'Más acciones';
 
   @override

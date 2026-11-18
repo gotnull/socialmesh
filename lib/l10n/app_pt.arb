@@ -36711,6 +36711,7 @@
   "telemetryTracerouteForwardPath": "Caminho de ida",
   "telemetryTracerouteHopsBack": "Saltos ←",
   "telemetryTracerouteHopsForward": "Saltos →",
+  "telemetryTracerouteRoundTrip": "Ida e volta {seconds} s",
   "telemetryTracerouteMoreActions": "Mais ações",
   "telemetryTracerouteNoData": "Nenhum traceroute registrado",
   "telemetryTracerouteNoExportData": "Nenhum dado de traceroute para exportar",

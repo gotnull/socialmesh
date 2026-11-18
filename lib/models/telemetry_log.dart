@@ -385,6 +385,10 @@ class TraceRouteLog extends TelemetryLogEntry {
   final double? targetSnrTowards;
   final double? originSnrBack;
 
+  /// When the request went out. Null on pending runs and on runs recorded
+  /// before the send time was kept.
+  final DateTime? sentAt;
+
   TraceRouteLog({
     super.id,
     required super.nodeNum,
@@ -404,7 +408,17 @@ class TraceRouteLog extends TelemetryLogEntry {
     this.targetLongitude,
     this.targetSnrTowards,
     this.originSnrBack,
+    this.sentAt,
   });
+
+  /// Time from sending the request to receiving the response; null without a
+  /// response or a recorded send time, and for a negative gap.
+  Duration? get roundTrip {
+    final start = sentAt;
+    if (!sent || !response || start == null) return null;
+    final elapsed = timestamp.difference(start);
+    return elapsed.isNegative ? null : elapsed;
+  }
 
   factory TraceRouteLog.fromJson(Map<String, dynamic> json) {
     return TraceRouteLog(
@@ -432,6 +446,9 @@ class TraceRouteLog extends TelemetryLogEntry {
       targetLongitude: (json['targetLongitude'] as num?)?.toDouble(),
       targetSnrTowards: (json['targetSnrTowards'] as num?)?.toDouble(),
       originSnrBack: (json['originSnrBack'] as num?)?.toDouble(),
+      sentAt: json['sentAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['sentAt'] as int)
+          : null,
     );
   }
 
@@ -455,6 +472,7 @@ class TraceRouteLog extends TelemetryLogEntry {
     'targetLongitude': _sanitizeDouble(targetLongitude),
     'targetSnrTowards': _sanitizeDouble(targetSnrTowards),
     'originSnrBack': _sanitizeDouble(originSnrBack),
+    'sentAt': sentAt?.millisecondsSinceEpoch,
   };
 }
 

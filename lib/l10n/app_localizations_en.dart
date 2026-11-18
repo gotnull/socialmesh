@@ -19729,6 +19729,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telemetryTracerouteHopsForward => 'Hops →';
 
   @override
+  String telemetryTracerouteRoundTrip(String seconds) {
+    return 'Round trip $seconds s';
+  }
+
+  @override
   String get telemetryTracerouteMoreActions => 'More actions';
 
   @override

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Traceroute history shows the round trip time beside the hop counts: how long the reply took, from sending the request to getting the response. Only traceroutes run from now on have it; older entries did not keep the send time.
+
 ### Fixed
 
 - A message no longer stays on "Sending" when you leave the chat before the radio has taken it. It now moves to sent, or to failed with a retry button, whether or not the chat is still open.

@@ -19961,6 +19961,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get telemetryTracerouteHopsForward => 'Стрибки →';
 
   @override
+  String telemetryTracerouteRoundTrip(String seconds) {
+    return 'Туди й назад $seconds с';
+  }
+
+  @override
   String get telemetryTracerouteMoreActions => 'Більше дій';
 
   @override

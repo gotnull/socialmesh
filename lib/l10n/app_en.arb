@@ -26776,6 +26776,16 @@
   "@telemetryTracerouteHopsForward": {
     "description": "Label for the forward hop count chip in a traceroute card (→ is a right arrow)"
   },
+  "telemetryTracerouteRoundTrip": "Round trip {seconds} s",
+  "@telemetryTracerouteRoundTrip": {
+    "description": "Chip on a traceroute card: time from sending the request to receiving the response, in seconds with one decimal",
+    "placeholders": {
+      "seconds": {
+        "type": "String",
+        "example": "12.3"
+      }
+    }
+  },
   "telemetryTracerouteMoreActions": "More actions",
   "@telemetryTracerouteMoreActions": {
     "description": "Tooltip for the traceroute overflow menu."

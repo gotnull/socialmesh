@@ -9623,6 +9623,7 @@
   "telemetryTracerouteForwardPath": "Vorwärtspfad",
   "telemetryTracerouteHopsBack": "Hops <-",
   "telemetryTracerouteHopsForward": "Hops ->",
+  "telemetryTracerouteRoundTrip": "Umlaufzeit {seconds} s",
   "telemetryTracerouteMoreActions": "Weitere Aktionen",
   "telemetryTracerouteNoData": "Noch keine Traceroutes aufgezeichnet",
   "telemetryTracerouteNoExportData": "Keine Traceroute-Daten zum Exportieren",

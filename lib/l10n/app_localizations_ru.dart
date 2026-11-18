@@ -19948,6 +19948,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get telemetryTracerouteHopsForward => 'Хопы →';
 
   @override
+  String telemetryTracerouteRoundTrip(String seconds) {
+    return 'Туда и обратно $seconds с';
+  }
+
+  @override
   String get telemetryTracerouteMoreActions => 'Дополнительные действия';
 
   @override

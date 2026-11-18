@@ -965,16 +965,25 @@ class _TraceRouteCard extends StatelessWidget {
               spacing: 12,
               runSpacing: 8,
               children: [
-                _HopCountChip(
-                  label: context.l10n.telemetryTracerouteHopsForward,
-                  count: log.hopsTowards,
+                _ResultChip(
+                  text:
+                      '${context.l10n.telemetryTracerouteHopsForward} '
+                      '${log.hopsTowards}',
                   color: AccentColors.teal,
                 ),
-                _HopCountChip(
-                  label: context.l10n.telemetryTracerouteHopsBack,
-                  count: log.hopsBack,
+                _ResultChip(
+                  text:
+                      '${context.l10n.telemetryTracerouteHopsBack} '
+                      '${log.hopsBack}',
                   color: AccentColors.purple,
                 ),
+                if (log.roundTrip case final roundTrip?)
+                  _ResultChip(
+                    text: context.l10n.telemetryTracerouteRoundTrip(
+                      (roundTrip.inMilliseconds / 1000).toStringAsFixed(1),
+                    ),
+                    color: AccentColors.orange,
+                  ),
               ],
             )
           else
@@ -1211,16 +1220,11 @@ class _ResponseBadge extends StatelessWidget {
 // Hop count chip
 // ---------------------------------------------------------------------------
 
-class _HopCountChip extends StatelessWidget {
-  final String label;
-  final int count;
+class _ResultChip extends StatelessWidget {
+  final String text;
   final Color color;
 
-  const _HopCountChip({
-    required this.label,
-    required this.count,
-    required this.color,
-  });
+  const _ResultChip({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -1231,7 +1235,7 @@ class _HopCountChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Text(
-        '$label $count',
+        text,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,

@@ -9623,6 +9623,7 @@
   "telemetryTracerouteForwardPath": "Прямий шлях",
   "telemetryTracerouteHopsBack": "Стрибки ←",
   "telemetryTracerouteHopsForward": "Стрибки →",
+  "telemetryTracerouteRoundTrip": "Туди й назад {seconds} с",
   "telemetryTracerouteMoreActions": "Більше дій",
   "telemetryTracerouteNoData": "Трасування ще не записано",
   "telemetryTracerouteNoExportData": "Немає даних трасування для експорту",

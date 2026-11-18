@@ -1053,4 +1053,109 @@ void main() {
       await db.close();
     });
   });
+
+  // =========================================================================
+  // Round trip (send time carried from the pending run)
+  // =========================================================================
+  group('SqliteTracerouteRepository - round trip', () {
+    test('a completed run keeps the pending run creation time as its send '
+        'time', () async {
+      final (db, repo) = await createRepo();
+      final sentAt = DateTime(2026, 11, 18, 10, 0, 0);
+      await repo.saveRun(
+        makeRun(targetNode: 0xAABBCCDD, response: false, timestamp: sentAt),
+      );
+      await repo.replaceOrAddRun(
+        makeRun(
+          targetNode: 0xAABBCCDD,
+          timestamp: sentAt.add(const Duration(milliseconds: 3400)),
+        ),
+      );
+
+      final run = (await repo.listRuns()).single;
+      expect(run.sentAt, sentAt);
+      expect(run.roundTrip, const Duration(milliseconds: 3400));
+
+      await db.close();
+    });
+
+    test('a response with no pending run has no round trip', () async {
+      final (db, repo) = await createRepo();
+      await repo.replaceOrAddRun(makeRun(targetNode: 0xAABBCCDD));
+
+      final run = (await repo.listRuns()).single;
+      expect(run.sentAt, isNull);
+      expect(run.roundTrip, isNull);
+
+      await db.close();
+    });
+
+    test('upgrading a v6 database keeps its runs and records send times '
+        'afterwards', () async {
+      final dir = Directory.systemTemp.createTempSync('traceroute_v6_');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final path = p.join(dir.path, 'traceroute_history.db');
+
+      final v6 = await openDatabase(
+        path,
+        version: 6,
+        onCreate: (db, _) async {
+          await db.execute(
+            'CREATE TABLE traceroute_runs ('
+            'id TEXT PRIMARY KEY, created_at INTEGER NOT NULL, '
+            'target_node_id INTEGER NOT NULL, '
+            "status TEXT NOT NULL DEFAULT 'pending', forward_hops INTEGER, "
+            'return_hops INTEGER, '
+            'response_received INTEGER NOT NULL DEFAULT 0, snr REAL, '
+            'via_mqtt INTEGER, origin_latitude REAL, origin_longitude REAL, '
+            'target_latitude REAL, target_longitude REAL, '
+            'target_snr_towards REAL, origin_snr_back REAL, '
+            'origin_node_id INTEGER)',
+          );
+          await db.execute(
+            'CREATE TABLE traceroute_hops ('
+            'id TEXT PRIMARY KEY, run_id TEXT NOT NULL, '
+            'hop_index INTEGER NOT NULL, node_id INTEGER NOT NULL, snr REAL, '
+            'rssi INTEGER, direction TEXT NOT NULL, latitude REAL, '
+            'longitude REAL, FOREIGN KEY(run_id) REFERENCES '
+            'traceroute_runs(id) ON DELETE CASCADE)',
+          );
+        },
+      );
+      await v6.insert('traceroute_runs', {
+        'id': 'legacy-1',
+        'created_at': DateTime(2026, 11, 1).millisecondsSinceEpoch,
+        'target_node_id': 0x11111111,
+        'status': 'completed',
+        'forward_hops': 1,
+        'return_hops': 1,
+        'response_received': 1,
+      });
+      await v6.close();
+
+      final db = TracerouteDatabase(dbPathOverride: path);
+      await db.open();
+      final repo = SqliteTracerouteRepository(db);
+
+      final legacy = (await repo.listRuns(targetNodeId: 0x11111111)).single;
+      expect(legacy.id, 'legacy-1');
+      expect(legacy.sentAt, isNull);
+      expect(legacy.roundTrip, isNull);
+
+      final sentAt = DateTime(2026, 11, 18, 10, 0, 0);
+      await repo.saveRun(
+        makeRun(targetNode: 0x22222222, response: false, timestamp: sentAt),
+      );
+      await repo.replaceOrAddRun(
+        makeRun(
+          targetNode: 0x22222222,
+          timestamp: sentAt.add(const Duration(seconds: 5)),
+        ),
+      );
+      final fresh = (await repo.listRuns(targetNodeId: 0x22222222)).single;
+      expect(fresh.roundTrip, const Duration(seconds: 5));
+
+      await db.close();
+    });
+  });
 }

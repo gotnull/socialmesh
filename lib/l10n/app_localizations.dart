@@ -34132,6 +34132,12 @@ abstract class AppLocalizations {
   /// **'Hops →'**
   String get telemetryTracerouteHopsForward;
 
+  /// Chip on a traceroute card: time from sending the request to receiving the response, in seconds with one decimal
+  ///
+  /// In en, this message translates to:
+  /// **'Round trip {seconds} s'**
+  String telemetryTracerouteRoundTrip(String seconds);
+
   /// Tooltip for the traceroute overflow menu.
   ///
   /// In en, this message translates to:

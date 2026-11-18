@@ -9970,6 +9970,7 @@
   "telemetryTracerouteForwardPath": "Прямой путь",
   "telemetryTracerouteHopsBack": "Хопы ←",
   "telemetryTracerouteHopsForward": "Хопы →",
+  "telemetryTracerouteRoundTrip": "Туда и обратно {seconds} с",
   "telemetryTracerouteMoreActions": "Дополнительные действия",
   "telemetryTracerouteNoData": "Данные traceroute ещё не записаны",
   "telemetryTracerouteNoExportData": "Нет данных traceroute для экспорта",
