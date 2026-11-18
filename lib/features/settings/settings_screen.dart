@@ -22,7 +22,6 @@ import '../../providers/age_eligibility_provider.dart';
 import '../../core/legal/age_group.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
-// import '../../providers/social_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
@@ -99,7 +98,6 @@ import '../routes/routes_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import 'screens/help_center_screen.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
-// import '../social/screens/follow_requests_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../../providers/reticulum_providers.dart';
@@ -2711,8 +2709,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           ),
 
                           _AgeGroupTile(),
-
-                          // _FollowRequestsTile()
 
                           // Social Notifications Section (only for signed-in users)
                           // const _SocialNotificationsSection(),

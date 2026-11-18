@@ -32495,129 +32495,6 @@
   "@cloudSyncPaymentIssue": {
     "description": "Text displayed in cloud sync"
   },
-  "adminPostsTitle": "Signals",
-  "@adminPostsTitle": {
-    "description": "Title for the admin panel screen"
-  },
-  "adminPostsDeleteAll": "Delete all signals",
-  "@adminPostsDeleteAll": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsRefresh": "Refresh snapshot",
-  "@adminPostsRefresh": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsFilterHint": "Filter by content or author ID",
-  "@adminPostsFilterHint": {
-    "description": "Hint text for an input field in admin panel"
-  },
-  "adminPostsLoadFailed": "Failed to load posts: {error}",
-  "@adminPostsLoadFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    },
-    "description": "Error message in admin panel Parameters: {error} = error/status message."
-  },
-  "adminPostsNoMatched": "No posts matched",
-  "@adminPostsNoMatched": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsFilterAll": "All",
-  "@adminPostsFilterAll": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsFilterSignals": "Signals",
-  "@adminPostsFilterSignals": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsFilterExpired": "Expired",
-  "@adminPostsFilterExpired": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsFilterLocation": "Location",
-  "@adminPostsFilterLocation": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsFilterMedia": "Media",
-  "@adminPostsFilterMedia": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsDeletePostTitle": "Delete post?",
-  "@adminPostsDeletePostTitle": {
-    "description": "Title for the admin panel screen"
-  },
-  "adminPostsDeletePostMessage": "Deleting a post removes it from Firebase immediately. This cannot be undone.",
-  "@adminPostsDeletePostMessage": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsDeleteConfirm": "Delete",
-  "@adminPostsDeleteConfirm": {
-    "description": "Confirmation prompt in admin panel"
-  },
-  "adminPostsDeleteSignalsTitle": "Delete signals?",
-  "@adminPostsDeleteSignalsTitle": {
-    "description": "Title for the admin panel screen"
-  },
-  "adminPostsDeleteFilteredMessage": "Delete filtered ({filtered}) or all ({total}) signals.",
-  "@adminPostsDeleteFilteredMessage": {
-    "placeholders": {
-      "filtered": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    },
-    "description": "Text in admin panel Parameters: {filtered}, {total} = numeric count."
-  },
-  "adminPostsDeleteAllMessage": "Delete all {total} signals.",
-  "@adminPostsDeleteAllMessage": {
-    "placeholders": {
-      "total": {
-        "type": "int"
-      }
-    },
-    "description": "Text in admin panel Parameters: {total} = numeric count."
-  },
-  "adminPostsDeleteWarning": "This cannot be undone. Type DELETE to confirm.",
-  "@adminPostsDeleteWarning": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsDeleteHint": "DELETE",
-  "@adminPostsDeleteHint": {
-    "description": "Hint text for an input field in admin panel"
-  },
-  "adminPostsNoText": "(no text)",
-  "@adminPostsNoText": {
-    "description": "Text displayed in admin panel"
-  },
-  "adminPostsAuthor": "Author {authorId}",
-  "@adminPostsAuthor": {
-    "placeholders": {
-      "authorId": {
-        "type": "String"
-      }
-    },
-    "description": "Text in admin panel Parameters: {authorId}."
-  },
-  "adminPostsStats": "Comments {comments} · Likes {likes}",
-  "@adminPostsStats": {
-    "placeholders": {
-      "comments": {
-        "type": "int"
-      },
-      "likes": {
-        "type": "int"
-      }
-    },
-    "description": "Text in admin panel Parameters: {comments}, {likes}."
-  },
-  "adminPostsDeletePostTooltip": "Delete post",
-  "@adminPostsDeletePostTooltip": {
-    "description": "Tooltip in admin panel"
-  },
   "bgConnDisableTitle": "Disable Background Connection?",
   "@bgConnDisableTitle": {
     "description": "Screen or section title"
@@ -37993,15 +37870,6 @@
   "@globalLayerTemplateAdded": {
     "description": "Text displayed in global layer / MQTT"
   },
-  "adminPostsFilteredCount": "Filtered ({count})",
-  "@adminPostsFilteredCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    },
-    "description": "Text in admin panel Parameters: {count} = numeric count."
-  },
   "dashboardAddAnotherWidget": "Add another widget",
   "@dashboardAddAnotherWidget": {
     "description": "Label on the sticky tile shown below the widget list in dashboard edit mode that opens the add-widget picker."
@@ -38551,15 +38419,6 @@
   "dashboardRequestPositions": "Request\nPositions",
   "@dashboardRequestPositions": {
     "description": "Text displayed in device dashboard"
-  },
-  "adminPostsDeleteAllCount": "Delete all ({count})",
-  "@adminPostsDeleteAllCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    },
-    "description": "Text in admin panel Parameters: {count} = numeric count."
   },
   "globalLayerAllowInboundChat": "Allow inbound global chat",
   "@globalLayerAllowInboundChat": {

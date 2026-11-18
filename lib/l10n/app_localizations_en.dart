@@ -24076,87 +24076,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'There\'s an issue with your payment. Please update your payment method.';
 
   @override
-  String get adminPostsTitle => 'Signals';
-
-  @override
-  String get adminPostsDeleteAll => 'Delete all signals';
-
-  @override
-  String get adminPostsRefresh => 'Refresh snapshot';
-
-  @override
-  String get adminPostsFilterHint => 'Filter by content or author ID';
-
-  @override
-  String adminPostsLoadFailed(String error) {
-    return 'Failed to load posts: $error';
-  }
-
-  @override
-  String get adminPostsNoMatched => 'No posts matched';
-
-  @override
-  String get adminPostsFilterAll => 'All';
-
-  @override
-  String get adminPostsFilterSignals => 'Signals';
-
-  @override
-  String get adminPostsFilterExpired => 'Expired';
-
-  @override
-  String get adminPostsFilterLocation => 'Location';
-
-  @override
-  String get adminPostsFilterMedia => 'Media';
-
-  @override
-  String get adminPostsDeletePostTitle => 'Delete post?';
-
-  @override
-  String get adminPostsDeletePostMessage =>
-      'Deleting a post removes it from Firebase immediately. This cannot be undone.';
-
-  @override
-  String get adminPostsDeleteConfirm => 'Delete';
-
-  @override
-  String get adminPostsDeleteSignalsTitle => 'Delete signals?';
-
-  @override
-  String adminPostsDeleteFilteredMessage(int filtered, int total) {
-    return 'Delete filtered ($filtered) or all ($total) signals.';
-  }
-
-  @override
-  String adminPostsDeleteAllMessage(int total) {
-    return 'Delete all $total signals.';
-  }
-
-  @override
-  String get adminPostsDeleteWarning =>
-      'This cannot be undone. Type DELETE to confirm.';
-
-  @override
-  String get adminPostsDeleteHint => 'DELETE';
-
-  @override
-  String get adminPostsNoText => '(no text)';
-
-  @override
-  String adminPostsAuthor(String authorId) {
-    return 'Author $authorId';
-  }
-
-  @override
-  String adminPostsStats(int comments, int likes) {
-    return 'Comments $comments · Likes $likes';
-  }
-
-  @override
-  String get adminPostsDeletePostTooltip => 'Delete post';
-
-  @override
   String get bgConnDisableTitle => 'Disable Background Connection?';
 
   @override
@@ -28329,11 +28248,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get globalLayerTemplateAdded => 'Added';
 
   @override
-  String adminPostsFilteredCount(int count) {
-    return 'Filtered ($count)';
-  }
-
-  @override
   String get dashboardAddAnotherWidget => 'Add another widget';
 
   @override
@@ -28735,11 +28649,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardRequestPositions => 'Request\nPositions';
-
-  @override
-  String adminPostsDeleteAllCount(int count) {
-    return 'Delete all ($count)';
-  }
 
   @override
   String get globalLayerAllowInboundChat => 'Allow inbound global chat';

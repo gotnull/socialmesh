@@ -3,7 +3,6 @@
 import 'dart:math';
 
 import '../core/legal/age_safety_policy.dart';
-import '../models/social.dart';
 
 const int kDefaultSignalLocationRadiusMeters = 250;
 
@@ -21,61 +20,6 @@ class LocationPrivacy {
   static int normalizeRadiusMeters(int radiusMeters) {
     final normalized = radiusMeters.clamp(50, 5000);
     return normalized.toInt();
-  }
-
-  static PostLocation? coarseFromCoordinates({
-    required double? latitude,
-    required double? longitude,
-    String? name,
-    int radiusMeters = kDefaultSignalLocationRadiusMeters,
-  }) {
-    if (latitude == null || longitude == null) return null;
-    final normalized = normalizeRadiusMeters(radiusMeters);
-    final quantized = _quantizeLatLon(latitude, longitude, normalized);
-    return PostLocation(
-      latitude: quantized.latitude,
-      longitude: quantized.longitude,
-      name: name,
-    );
-  }
-
-  static PostLocation? coarsenLocation(
-    PostLocation? location, {
-    int radiusMeters = kDefaultSignalLocationRadiusMeters,
-  }) {
-    if (location == null) return null;
-    final normalized = normalizeRadiusMeters(radiusMeters);
-    final quantized = _quantizeLatLon(
-      location.latitude,
-      location.longitude,
-      normalized,
-    );
-    return PostLocation(
-      latitude: quantized.latitude,
-      longitude: quantized.longitude,
-      name: location.name,
-    );
-  }
-
-  /// Coarsen [location] using radius settings appropriate for the user's
-  /// [AgeSafetyPolicy].
-  ///
-  /// When [policy.shouldHidePreciseLocation] is true the effective radius is
-  /// the larger of [minorRadiusMeters] and [radiusMeters], ensuring that minor
-  /// users always receive a minimum blur regardless of their settings.
-  static PostLocation? coarsenForPolicy(
-    PostLocation? location,
-    AgeSafetyPolicy policy, {
-    int radiusMeters = kDefaultSignalLocationRadiusMeters,
-    int minorRadiusMeters = kMinorSignalLocationRadiusMeters,
-  }) {
-    if (location == null) return null;
-    final effective = policy.shouldHidePreciseLocation
-        ? minorRadiusMeters > radiusMeters
-              ? minorRadiusMeters
-              : radiusMeters
-        : radiusMeters;
-    return coarsenLocation(location, radiusMeters: effective);
   }
 
   /// Coarsen raw latitude/longitude pair according to [policy].

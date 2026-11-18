@@ -24426,87 +24426,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Es gibt ein Problem mit Ihrer Zahlung. Bitte aktualisieren Sie Ihre Zahlungsmethode.';
 
   @override
-  String get adminPostsTitle => 'Signale';
-
-  @override
-  String get adminPostsDeleteAll => 'Alle Signale löschen';
-
-  @override
-  String get adminPostsRefresh => 'Snapshot aktualisieren';
-
-  @override
-  String get adminPostsFilterHint => 'Nach Inhalt oder Autor-ID filtern';
-
-  @override
-  String adminPostsLoadFailed(String error) {
-    return 'Beiträge konnten nicht geladen werden: $error';
-  }
-
-  @override
-  String get adminPostsNoMatched => 'Keine Beiträge gefunden';
-
-  @override
-  String get adminPostsFilterAll => 'Alle';
-
-  @override
-  String get adminPostsFilterSignals => 'Signale';
-
-  @override
-  String get adminPostsFilterExpired => 'Abgelaufen';
-
-  @override
-  String get adminPostsFilterLocation => 'Standort';
-
-  @override
-  String get adminPostsFilterMedia => 'Medien';
-
-  @override
-  String get adminPostsDeletePostTitle => 'Beitrag löschen?';
-
-  @override
-  String get adminPostsDeletePostMessage =>
-      'Das Löschen eines Beitrags entfernt ihn sofort aus Firebase. Diese Aktion kann nicht rückgängig gemacht werden.';
-
-  @override
-  String get adminPostsDeleteConfirm => 'Löschen';
-
-  @override
-  String get adminPostsDeleteSignalsTitle => 'Signale löschen?';
-
-  @override
-  String adminPostsDeleteFilteredMessage(int filtered, int total) {
-    return 'Gefilterte ($filtered) oder alle ($total) Signale löschen.';
-  }
-
-  @override
-  String adminPostsDeleteAllMessage(int total) {
-    return 'Alle $total Signale löschen.';
-  }
-
-  @override
-  String get adminPostsDeleteWarning =>
-      'Diese Aktion kann nicht rückgängig gemacht werden. Geben Sie LÖSCHEN zur Bestätigung ein.';
-
-  @override
-  String get adminPostsDeleteHint => 'LÖSCHEN';
-
-  @override
-  String get adminPostsNoText => '(kein Text)';
-
-  @override
-  String adminPostsAuthor(String authorId) {
-    return 'Autor $authorId';
-  }
-
-  @override
-  String adminPostsStats(int comments, int likes) {
-    return 'Kommentare $comments · Likes $likes';
-  }
-
-  @override
-  String get adminPostsDeletePostTooltip => 'Beitrag löschen';
-
-  @override
   String get bgConnDisableTitle => 'Hintergrundverbindung deaktivieren?';
 
   @override
@@ -28745,11 +28664,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get globalLayerTemplateAdded => 'Hinzugefügt';
 
   @override
-  String adminPostsFilteredCount(int count) {
-    return 'Gefiltert ($count)';
-  }
-
-  @override
   String get dashboardAddAnotherWidget => 'Weiteres Widget hinzufügen';
 
   @override
@@ -29154,11 +29068,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dashboardRequestPositions => 'Positionen\nanfordern';
-
-  @override
-  String adminPostsDeleteAllCount(int count) {
-    return 'Alle löschen ($count)';
-  }
 
   @override
   String get globalLayerAllowInboundChat =>

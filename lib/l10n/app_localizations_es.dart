@@ -24463,87 +24463,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Hay un problema con su pago. Actualice su método de pago.';
 
   @override
-  String get adminPostsTitle => 'Signals';
-
-  @override
-  String get adminPostsDeleteAll => 'Eliminar todas las señales';
-
-  @override
-  String get adminPostsRefresh => 'Actualizar instantánea';
-
-  @override
-  String get adminPostsFilterHint => 'Filtrar por contenido o ID de autor';
-
-  @override
-  String adminPostsLoadFailed(String error) {
-    return 'Error al cargar publicaciones: $error';
-  }
-
-  @override
-  String get adminPostsNoMatched => 'Ninguna publicación coincide';
-
-  @override
-  String get adminPostsFilterAll => 'Todas';
-
-  @override
-  String get adminPostsFilterSignals => 'Signals';
-
-  @override
-  String get adminPostsFilterExpired => 'Expiradas';
-
-  @override
-  String get adminPostsFilterLocation => 'Ubicación';
-
-  @override
-  String get adminPostsFilterMedia => 'Medios';
-
-  @override
-  String get adminPostsDeletePostTitle => '¿Eliminar publicación?';
-
-  @override
-  String get adminPostsDeletePostMessage =>
-      'Eliminar una publicación la quita de Firebase de inmediato. Esta acción no se puede deshacer.';
-
-  @override
-  String get adminPostsDeleteConfirm => 'Eliminar';
-
-  @override
-  String get adminPostsDeleteSignalsTitle => '¿Eliminar señales?';
-
-  @override
-  String adminPostsDeleteFilteredMessage(int filtered, int total) {
-    return 'Eliminar las filtradas ($filtered) o todas ($total) las señales.';
-  }
-
-  @override
-  String adminPostsDeleteAllMessage(int total) {
-    return 'Eliminar las $total señales.';
-  }
-
-  @override
-  String get adminPostsDeleteWarning =>
-      'Esta acción no se puede deshacer. Escriba ELIMINAR para confirmar.';
-
-  @override
-  String get adminPostsDeleteHint => 'ELIMINAR';
-
-  @override
-  String get adminPostsNoText => '(sin texto)';
-
-  @override
-  String adminPostsAuthor(String authorId) {
-    return 'Autor $authorId';
-  }
-
-  @override
-  String adminPostsStats(int comments, int likes) {
-    return 'Comentarios $comments · Me gusta $likes';
-  }
-
-  @override
-  String get adminPostsDeletePostTooltip => 'Eliminar publicación';
-
-  @override
   String get bgConnDisableTitle => '¿Desactivar conexión en segundo plano?';
 
   @override
@@ -28804,11 +28723,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get globalLayerTemplateAdded => 'Agregado';
 
   @override
-  String adminPostsFilteredCount(int count) {
-    return 'Filtradas ($count)';
-  }
-
-  @override
   String get dashboardAddAnotherWidget => 'Agregar otro widget';
 
   @override
@@ -29219,11 +29133,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dashboardRequestPositions => 'Solicitar\nposiciones';
-
-  @override
-  String adminPostsDeleteAllCount(int count) {
-    return 'Eliminar todas ($count)';
-  }
 
   @override
   String get globalLayerAllowInboundChat => 'Permitir chat global entrante';

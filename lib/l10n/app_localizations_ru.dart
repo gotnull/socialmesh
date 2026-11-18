@@ -24368,87 +24368,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Возникла проблема с оплатой. Пожалуйста, обновите способ оплаты.';
 
   @override
-  String get adminPostsTitle => 'Сигналы';
-
-  @override
-  String get adminPostsDeleteAll => 'Удалить все сигналы';
-
-  @override
-  String get adminPostsRefresh => 'Обновить снимок';
-
-  @override
-  String get adminPostsFilterHint => 'Фильтр по содержимому или ID автора';
-
-  @override
-  String adminPostsLoadFailed(String error) {
-    return 'Не удалось загрузить публикации: $error';
-  }
-
-  @override
-  String get adminPostsNoMatched => 'Публикаций не найдено';
-
-  @override
-  String get adminPostsFilterAll => 'Все';
-
-  @override
-  String get adminPostsFilterSignals => 'Сигналы';
-
-  @override
-  String get adminPostsFilterExpired => 'Истёкшие';
-
-  @override
-  String get adminPostsFilterLocation => 'Геолокация';
-
-  @override
-  String get adminPostsFilterMedia => 'Медиа';
-
-  @override
-  String get adminPostsDeletePostTitle => 'Удалить публикацию?';
-
-  @override
-  String get adminPostsDeletePostMessage =>
-      'Удаление публикации немедленно удаляет её из Firebase. Это действие нельзя отменить.';
-
-  @override
-  String get adminPostsDeleteConfirm => 'Удалить';
-
-  @override
-  String get adminPostsDeleteSignalsTitle => 'Удалить сигналы?';
-
-  @override
-  String adminPostsDeleteFilteredMessage(int filtered, int total) {
-    return 'Удалить отфильтрованные ($filtered) или все ($total) сигналы.';
-  }
-
-  @override
-  String adminPostsDeleteAllMessage(int total) {
-    return 'Удалить все $total сигналов.';
-  }
-
-  @override
-  String get adminPostsDeleteWarning =>
-      'Это действие нельзя отменить. Введите УДАЛИТЬ для подтверждения.';
-
-  @override
-  String get adminPostsDeleteHint => 'УДАЛИТЬ';
-
-  @override
-  String get adminPostsNoText => '(нет текста)';
-
-  @override
-  String adminPostsAuthor(String authorId) {
-    return 'Автор $authorId';
-  }
-
-  @override
-  String adminPostsStats(int comments, int likes) {
-    return 'Комментарии $comments · Лайки $likes';
-  }
-
-  @override
-  String get adminPostsDeletePostTooltip => 'Удалить публикацию';
-
-  @override
   String get bgConnDisableTitle => 'Отключить фоновое подключение?';
 
   @override
@@ -28679,11 +28598,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get globalLayerTemplateAdded => 'Добавлено';
 
   @override
-  String adminPostsFilteredCount(int count) {
-    return 'Отфильтровано ($count)';
-  }
-
-  @override
   String get dashboardAddAnotherWidget => 'Добавить ещё виджет';
 
   @override
@@ -29091,11 +29005,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dashboardRequestPositions => 'Запросить\nпозиции';
-
-  @override
-  String adminPostsDeleteAllCount(int count) {
-    return 'Удалить все ($count)';
-  }
 
   @override
   String get globalLayerAllowInboundChat => 'Разрешить входящий глобальный чат';

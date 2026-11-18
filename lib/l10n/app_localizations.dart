@@ -42024,144 +42024,6 @@ abstract class AppLocalizations {
   /// **'There\'s an issue with your payment. Please update your payment method.'**
   String get cloudSyncPaymentIssue;
 
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get adminPostsTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Delete all signals'**
-  String get adminPostsDeleteAll;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh snapshot'**
-  String get adminPostsRefresh;
-
-  /// Hint text for an input field in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Filter by content or author ID'**
-  String get adminPostsFilterHint;
-
-  /// Error message in admin panel Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load posts: {error}'**
-  String adminPostsLoadFailed(String error);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'No posts matched'**
-  String get adminPostsNoMatched;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get adminPostsFilterAll;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Signals'**
-  String get adminPostsFilterSignals;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Expired'**
-  String get adminPostsFilterExpired;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Location'**
-  String get adminPostsFilterLocation;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Media'**
-  String get adminPostsFilterMedia;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Delete post?'**
-  String get adminPostsDeletePostTitle;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Deleting a post removes it from Firebase immediately. This cannot be undone.'**
-  String get adminPostsDeletePostMessage;
-
-  /// Confirmation prompt in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get adminPostsDeleteConfirm;
-
-  /// Title for the admin panel screen
-  ///
-  /// In en, this message translates to:
-  /// **'Delete signals?'**
-  String get adminPostsDeleteSignalsTitle;
-
-  /// Text in admin panel Parameters: {filtered}, {total} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete filtered ({filtered}) or all ({total}) signals.'**
-  String adminPostsDeleteFilteredMessage(int filtered, int total);
-
-  /// Text in admin panel Parameters: {total} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete all {total} signals.'**
-  String adminPostsDeleteAllMessage(int total);
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'This cannot be undone. Type DELETE to confirm.'**
-  String get adminPostsDeleteWarning;
-
-  /// Hint text for an input field in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'DELETE'**
-  String get adminPostsDeleteHint;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'(no text)'**
-  String get adminPostsNoText;
-
-  /// Text in admin panel Parameters: {authorId}.
-  ///
-  /// In en, this message translates to:
-  /// **'Author {authorId}'**
-  String adminPostsAuthor(String authorId);
-
-  /// Text in admin panel Parameters: {comments}, {likes}.
-  ///
-  /// In en, this message translates to:
-  /// **'Comments {comments} · Likes {likes}'**
-  String adminPostsStats(int comments, int likes);
-
-  /// Tooltip in admin panel
-  ///
-  /// In en, this message translates to:
-  /// **'Delete post'**
-  String get adminPostsDeletePostTooltip;
-
   /// Screen or section title
   ///
   /// In en, this message translates to:
@@ -49468,12 +49330,6 @@ abstract class AppLocalizations {
   /// **'Added'**
   String get globalLayerTemplateAdded;
 
-  /// Text in admin panel Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'Filtered ({count})'**
-  String adminPostsFilteredCount(int count);
-
   /// Label on the sticky tile shown below the widget list in dashboard edit mode that opens the add-widget picker.
   ///
   /// In en, this message translates to:
@@ -50229,12 +50085,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Request\nPositions'**
   String get dashboardRequestPositions;
-
-  /// Text in admin panel Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete all ({count})'**
-  String adminPostsDeleteAllCount(int count);
 
   /// Text displayed in global layer / MQTT
   ///

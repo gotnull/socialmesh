@@ -24381,87 +24381,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Виникла проблема з оплатою. Будь ласка, оновіть спосіб оплати.';
 
   @override
-  String get adminPostsTitle => 'Сигнали';
-
-  @override
-  String get adminPostsDeleteAll => 'Видалити всі сигнали';
-
-  @override
-  String get adminPostsRefresh => 'Оновити знімок';
-
-  @override
-  String get adminPostsFilterHint => 'Фільтрувати за вмістом або ID автора';
-
-  @override
-  String adminPostsLoadFailed(String error) {
-    return 'Не вдалося завантажити публікації: $error';
-  }
-
-  @override
-  String get adminPostsNoMatched => 'Публікацій не знайдено';
-
-  @override
-  String get adminPostsFilterAll => 'Всі';
-
-  @override
-  String get adminPostsFilterSignals => 'Сигнали';
-
-  @override
-  String get adminPostsFilterExpired => 'Застарілі';
-
-  @override
-  String get adminPostsFilterLocation => 'Розташування';
-
-  @override
-  String get adminPostsFilterMedia => 'Медіа';
-
-  @override
-  String get adminPostsDeletePostTitle => 'Видалити публікацію?';
-
-  @override
-  String get adminPostsDeletePostMessage =>
-      'Видалення публікації негайно видаляє її з Firebase. Це неможливо скасувати.';
-
-  @override
-  String get adminPostsDeleteConfirm => 'Видалити';
-
-  @override
-  String get adminPostsDeleteSignalsTitle => 'Видалити сигнали?';
-
-  @override
-  String adminPostsDeleteFilteredMessage(int filtered, int total) {
-    return 'Видалити відфільтровані ($filtered) або всі ($total) сигнали.';
-  }
-
-  @override
-  String adminPostsDeleteAllMessage(int total) {
-    return 'Видалити всі $total сигналів.';
-  }
-
-  @override
-  String get adminPostsDeleteWarning =>
-      'Це неможливо скасувати. Введіть ВИДАЛИТИ для підтвердження.';
-
-  @override
-  String get adminPostsDeleteHint => 'ВИДАЛИТИ';
-
-  @override
-  String get adminPostsNoText => '(немає тексту)';
-
-  @override
-  String adminPostsAuthor(String authorId) {
-    return 'Автор $authorId';
-  }
-
-  @override
-  String adminPostsStats(int comments, int likes) {
-    return 'Коментарі $comments · Вподобання $likes';
-  }
-
-  @override
-  String get adminPostsDeletePostTooltip => 'Видалити публікацію';
-
-  @override
   String get bgConnDisableTitle => 'Вимкнути фонове підключення?';
 
   @override
@@ -28685,11 +28604,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get globalLayerTemplateAdded => 'Додано';
 
   @override
-  String adminPostsFilteredCount(int count) {
-    return 'Відфільтровано ($count)';
-  }
-
-  @override
   String get dashboardAddAnotherWidget => 'Додати ще один віджет';
 
   @override
@@ -29096,11 +29010,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get dashboardRequestPositions => 'Запит\nпозицій';
-
-  @override
-  String adminPostsDeleteAllCount(int count) {
-    return 'Видалити всі ($count)';
-  }
 
   @override
   String get globalLayerAllowInboundChat => 'Дозволити вхідний глобальний чат';
