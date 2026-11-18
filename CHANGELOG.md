@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Channel message notifications name the channel again when it has no name of its own: an unnamed primary channel now reads "Primary Channel" instead of leaving the title cut off after "in". Notifications that arrive while the app is in the background also use the translated channel label rather than English.
 - A message no longer stays on "Sending" when you leave the chat before the radio has taken it. It now moves to sent, or to failed with a retry button, whether or not the chat is still open.
 - Muting a channel now sticks after the app restarts. The channel menu showed "Mute Notifications" for a channel that was already muted, and tapping it switched that channel's notifications back on.
 

@@ -15,6 +15,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 
 import 'package:flutter/services.dart';
 
+import '../../utils/channel_display_name.dart';
 import 'chat_search_match.dart';
 import 'dm_channel_resolver.dart';
 import 'dm_contacts_provider.dart';
@@ -2483,10 +2484,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       (c) => c.index == widget.channelIndex,
     );
     if (channel == null) return widget.title;
-    if (channel.name.isNotEmpty) return channel.name;
-    return channel.index == 0
-        ? context.l10n.channelsPrimaryChannelName
-        : context.l10n.channelsDefaultChannelName(channel.index);
+    return channelDisplayName(
+      context.l10n,
+      index: channel.index,
+      name: channel.name,
+    );
   }
 
   @override

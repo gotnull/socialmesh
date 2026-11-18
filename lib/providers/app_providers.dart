@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/channel_display_name.dart';
 import 'radio_scope_providers.dart';
 import 'app_lifecycle_provider.dart';
 import '../config/admin_config.dart';
@@ -5286,9 +5287,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
       final channel = channels
           .where((c) => c.index == message.channel)
           .firstOrNull;
-      channelName =
-          channel?.name ??
-          'Channel ${message.channel}'; // lint-allow: hardcoded-string
+      channelName = channelDisplayName(
+        safeL10n(),
+        index: message.channel ?? 0,
+        name: channel?.name ?? '',
+      );
 
       AppLogging.debug(
         'Queueing channel notification: $senderName in $channelName',

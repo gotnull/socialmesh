@@ -100,6 +100,7 @@ import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/carplay/carplay_intent_service.dart';
 import 'services/deep_link_manager.dart';
+import 'utils/channel_display_name.dart';
 import 'utils/snackbar.dart';
 import 'utils/text_sanitizer.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
@@ -1881,11 +1882,11 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       return;
     }
     final l10n = safeL10n();
-    final title = channel.name.isEmpty
-        ? (channelIndex == 0
-              ? l10n.channelsPrimaryChannelName
-              : l10n.channelsDefaultChannelName(channelIndex))
-        : channel.name;
+    final title = channelDisplayName(
+      l10n,
+      index: channelIndex,
+      name: channel.name,
+    );
     final pushed = pushRouteUnlessOnTop(
       navigator,
       routeName: meshtasticChannelRouteName(channelIndex),

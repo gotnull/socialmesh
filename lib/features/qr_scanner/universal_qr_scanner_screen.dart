@@ -20,6 +20,7 @@ import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../services/deep_link/deep_link.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/channel_display_name.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/text_sanitizer.dart';
@@ -600,11 +601,11 @@ class _UniversalQrScannerScreenState
         // in the snackbar is jarring; fall back to the localized
         // "Primary Channel" label (or `Channel <index>` for unnamed
         // secondaries).
-        final displayName = existingChannel.name.isNotEmpty
-            ? existingChannel.name
-            : (existingChannel.index == 0
-                  ? context.l10n.channelsPrimaryChannelName
-                  : context.l10n.channelFormDefaultName(existingChannel.index));
+        final displayName = channelDisplayName(
+          context.l10n,
+          index: existingChannel.index,
+          name: existingChannel.name,
+        );
         showInfoSnackBar(
           context,
           context.l10n.qrScannerChannelAlreadyExists(displayName),

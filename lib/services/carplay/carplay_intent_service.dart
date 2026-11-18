@@ -13,6 +13,7 @@ import '../../l10n/l10n_utils.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/muted_channels_provider.dart';
+import '../../utils/channel_display_name.dart';
 import '../../utils/text_sanitizer.dart';
 import 'carplay_feature_flags.dart';
 
@@ -143,20 +144,12 @@ class CarPlayIntentService {
 
   String _channelName(int index) {
     final channels = _ref.read(channelsProvider);
-    for (final c in channels) {
-      if (c.index == index) {
-        final name = c.name.trim();
-        if (name.isNotEmpty) return name;
-      }
-    }
-    // Unnamed channel: fall back to the localized default so the
-    // communication notification matches the in-app channel label
-    // (a hardcoded English string surfaced wrong copy on non-English
-    // devices).
-    final l10n = safeL10n();
-    return index == 0
-        ? l10n.channelsPrimaryChannelName
-        : l10n.channelsDefaultChannelName(index);
+    final name = channels.where((c) => c.index == index).firstOrNull?.name;
+    return channelDisplayName(
+      safeL10n(),
+      index: index,
+      name: name?.trim() ?? '',
+    );
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {

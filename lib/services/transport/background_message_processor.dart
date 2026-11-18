@@ -14,6 +14,7 @@ import '../../features/nodedex/services/nodedex_database.dart';
 import '../../features/nodedex/services/nodedex_sqlite_store.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
+import '../../l10n/l10n_utils.dart';
 import '../../models/mesh_models.dart';
 import '../../services/carplay/carplay_feature_flags.dart';
 import '../../services/mesh_packet_dedupe_store.dart';
@@ -21,6 +22,7 @@ import '../../services/protocol/mesh_packet_rx_metadata.dart';
 import '../../services/notifications/channel_mute_prefs.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/message_database.dart';
+import '../../utils/channel_display_name.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../utils/validation.dart';
 
@@ -558,11 +560,14 @@ class BackgroundMessageProcessor {
 
       if (isChannelMessage) {
         // Channel names are not available in the background (stored in
-        // ProtocolService, a provider-bound object). Use "Channel N" as
-        // a best-effort label.
+        // ProtocolService, a provider-bound object), so the label is the
+        // localised default for the index.
         final channelIndex = message.channel ?? 0;
-        final channelName =
-            'Channel $channelIndex'; // lint-allow: hardcoded-string
+        final channelName = channelDisplayName(
+          safeL10n(),
+          index: channelIndex,
+          name: '',
+        );
         await ns.showChannelMessageNotification(
           senderName: displayName,
           senderShortName: senderShortName,

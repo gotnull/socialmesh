@@ -21,6 +21,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../utils/channel_display_name.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 import 'channel_encryption_label.dart';
@@ -502,13 +503,11 @@ class _ChannelTile extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      channel.name.isEmpty
-                          ? (isPrimary
-                                ? context.l10n.channelsPrimaryChannelName
-                                : context.l10n.channelsDefaultChannelName(
-                                    channel.index,
-                                  ))
-                          : channel.name,
+                      channelDisplayName(
+                        context.l10n,
+                        index: channel.index,
+                        name: channel.name,
+                      ),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -601,11 +600,7 @@ class _ChannelTile extends ConsumerWidget {
 // Resolves the display name and opens the channel chat. Shared by the
 // card and compact tiles.
 String _channelDisplayName(BuildContext context, ChannelConfig channel) =>
-    channel.name.isEmpty
-    ? (channel.index == 0
-          ? context.l10n.channelsPrimaryChannelName
-          : context.l10n.channelsDefaultChannelName(channel.index))
-    : channel.name;
+    channelDisplayName(context.l10n, index: channel.index, name: channel.name);
 
 void _openChannelChatFor(BuildContext context, ChannelConfig channel) {
   Navigator.push(

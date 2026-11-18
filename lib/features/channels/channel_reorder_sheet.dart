@@ -10,6 +10,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/channels_display_order_provider.dart';
+import '../../utils/channel_display_name.dart';
 
 /// Opens the drag-to-reorder sheet for the Channels list display order.
 ///
@@ -136,13 +137,11 @@ class _ChannelReorderSheetState extends ConsumerState<_ChannelReorderSheet> {
                     const SizedBox(width: AppTheme.spacing12),
                     Expanded(
                       child: Text(
-                        channel.name.isEmpty
-                            ? (isPrimary
-                                  ? context.l10n.channelsPrimaryChannelName
-                                  : context.l10n.channelsDefaultChannelName(
-                                      channel.index,
-                                    ))
-                            : channel.name,
+                        channelDisplayName(
+                          context.l10n,
+                          index: channel.index,
+                          name: channel.name,
+                        ),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
