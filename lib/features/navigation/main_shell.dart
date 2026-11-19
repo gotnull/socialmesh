@@ -1278,25 +1278,29 @@ class _SettingsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: theme.dividerColor.withValues(alpha: 0.3),
-            width: 1,
+    return Semantics(
+      button: true,
+      label: context.l10n.settingsTitle,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: theme.dividerColor.withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
-        ),
-        child: Icon(
-          Icons.settings_outlined,
-          size: 22,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+          child: Icon(
+            Icons.settings_outlined,
+            size: 22,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+          ),
         ),
       ),
     );

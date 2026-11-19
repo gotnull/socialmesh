@@ -15,6 +15,7 @@ import 'package:socialmesh/features/nodedex/providers/node_groups_provider.dart'
 import 'package:socialmesh/features/nodes/nodes_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/models/mesh_models.dart';
+import 'package:socialmesh/models/subscription_models.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
 import 'package:socialmesh/providers/countdown_providers.dart';
@@ -22,6 +23,7 @@ import 'package:socialmesh/providers/mesh_explorer_providers.dart';
 import 'package:socialmesh/providers/presence_providers.dart';
 import 'package:socialmesh/providers/social_providers.dart';
 import 'package:socialmesh/providers/splash_mesh_provider.dart';
+import 'package:socialmesh/providers/subscription_providers.dart';
 import 'package:socialmesh/providers/whats_new_providers.dart';
 import 'package:socialmesh/services/storage/storage_service.dart';
 
@@ -51,60 +53,68 @@ class _MyNode extends MyNodeNumNotifier {
   int? build() => null;
 }
 
+class _Purchases extends PurchaseStateNotifier {
+  @override
+  PurchaseState build() => const PurchaseState();
+}
+
 class _Peers extends NewMeshPeerCountNotifier {
   @override
   int build() => 0;
+}
+
+Future<void> _pumpShell(WidgetTester tester) async {
+  SharedPreferences.setMockInitialValues({});
+  dotenv.loadFromString(envString: 'AETHER_ENABLED=false');
+  final settings = SettingsService();
+  await settings.init();
+  tester.view.physicalSize = const Size(375, 667);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        settingsServiceProvider.overrideWith((ref) async => settings),
+        connectionStateProvider.overrideWith(
+          (ref) => Stream.value(DeviceConnectionState.connected),
+        ),
+        deviceConnectionProvider.overrideWith(_Device.new),
+        needsRegionSetupProvider.overrideWithValue(false),
+        firestoreConfigWatcherProvider.overrideWith((ref) => Stream.empty()),
+        clientNotificationStreamProvider.overrideWith((ref) => Stream.empty()),
+        activeHelpRequestsProvider.overrideWith((ref) async => []),
+        hasActiveCountdownsProvider.overrideWithValue(false),
+        nodesProvider.overrideWith(_Nodes.new),
+        myNodeNumProvider.overrideWith(_MyNode.new),
+        nodeGroupsProvider.overrideWith(_Groups.new),
+        presenceMapProvider.overrideWith(_Presence.new),
+        linkedNodeIdsProvider.overrideWith((ref) => Stream.value([])),
+        newMeshPeerCountProvider.overrideWith(_Peers.new),
+        purchaseStateProvider.overrideWith(_Purchases.new),
+        whatsNewHasUnseenProvider.overrideWithValue(false),
+        splashMeshConfigProvider.overrideWith(
+          (ref) async => SplashMeshConfig.defaultConfig,
+        ),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.darkTheme(AccentColors.green),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const MainShell(),
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(seconds: 1));
+  expect(tester.takeException(), isNull);
 }
 
 void main() {
   testWidgets('Nodes consumes the keyboard inset only once inside the shell', (
     tester,
   ) async {
-    SharedPreferences.setMockInitialValues({});
-    dotenv.loadFromString(envString: 'AETHER_ENABLED=false');
-    final settings = SettingsService();
-    await settings.init();
-    tester.view.physicalSize = const Size(375, 667);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          settingsServiceProvider.overrideWith((ref) async => settings),
-          connectionStateProvider.overrideWith(
-            (ref) => Stream.value(DeviceConnectionState.connected),
-          ),
-          deviceConnectionProvider.overrideWith(_Device.new),
-          needsRegionSetupProvider.overrideWithValue(false),
-          firestoreConfigWatcherProvider.overrideWith((ref) => Stream.empty()),
-          clientNotificationStreamProvider.overrideWith(
-            (ref) => Stream.empty(),
-          ),
-          activeHelpRequestsProvider.overrideWith((ref) async => []),
-          hasActiveCountdownsProvider.overrideWithValue(false),
-          nodesProvider.overrideWith(_Nodes.new),
-          myNodeNumProvider.overrideWith(_MyNode.new),
-          nodeGroupsProvider.overrideWith(_Groups.new),
-          presenceMapProvider.overrideWith(_Presence.new),
-          linkedNodeIdsProvider.overrideWith((ref) => Stream.value([])),
-          newMeshPeerCountProvider.overrideWith(_Peers.new),
-          whatsNewHasUnseenProvider.overrideWithValue(false),
-          splashMeshConfigProvider.overrideWith(
-            (ref) async => SplashMeshConfig.defaultConfig,
-          ),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.darkTheme(AccentColors.green),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const MainShell(),
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-    expect(tester.takeException(), isNull);
+    await _pumpShell(tester);
     final viewport = find.descendant(
       of: find.byType(NodesScreen),
       matching: find.byType(CustomScrollView),
@@ -129,5 +139,28 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.getSize(viewport).height, closeTo(initialHeight, 1));
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('drawer Settings cog is announced as a Settings button', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await _pumpShell(tester);
+    final l10n = lookupAppLocalizations(const Locale('en'));
+
+    await tester.tap(find.byTooltip(l10n.navigationMenuTooltip));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      tester.getSemantics(find.bySemanticsLabel(l10n.settingsTitle)),
+      isSemantics(
+        label: l10n.settingsTitle,
+        isButton: true,
+        hasTapAction: true,
+      ),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    semantics.dispose();
   });
 }
