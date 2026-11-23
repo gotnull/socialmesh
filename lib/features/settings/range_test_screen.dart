@@ -187,9 +187,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
 
       // Check if this update is from our target node
       if (node.nodeNum == _selectedTargetNode) {
-        // Extract signal metrics from the node update
-        final snr = node.snr?.toDouble() ?? -10.0;
-        final rssi = node.rssi?.toDouble() ?? -100.0;
+        // A node update without signal metrics records them as unknown;
+        // substituting a typical value would read as a real measurement.
+        final snr = node.snr?.toDouble();
+        final rssi = node.rssi?.toDouble();
 
         // Calculate distance if we have position data
         double? distance;
@@ -216,8 +217,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
                 timestamp: DateTime.now(),
                 snr: snr,
                 rssi: rssi,
-                hopCount: 0, // Hop count not available in node data
-                distance: distance ?? 0,
+                distance: distance,
               ),
             );
           });
@@ -583,6 +583,9 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
   }
 
   Widget _buildResultsCard() {
+    final snrs = _results.map((r) => r.snr).nonNulls;
+    final rssis = _results.map((r) => r.rssi).nonNulls;
+    final distances = _results.map((r) => r.distance).nonNulls;
     return Container(
       decoration: BoxDecoration(
         color: context.card,
@@ -597,20 +600,20 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
               children: [
                 _buildStatItem(
                   context.l10n.rangeTestAvgSnr,
-                  _results.isNotEmpty
-                      ? '${(_results.map((r) => r.snr).reduce((a, b) => a + b) / _results.length).toStringAsFixed(1)} dB'
+                  snrs.isNotEmpty
+                      ? '${(snrs.reduce((a, b) => a + b) / snrs.length).toStringAsFixed(1)} dB'
                       : '--',
                 ),
                 _buildStatItem(
                   context.l10n.rangeTestAvgRssi,
-                  _results.isNotEmpty
-                      ? '${(_results.map((r) => r.rssi).reduce((a, b) => a + b) / _results.length).toStringAsFixed(0)} dBm'
+                  rssis.isNotEmpty
+                      ? '${(rssis.reduce((a, b) => a + b) / rssis.length).toStringAsFixed(0)} dBm'
                       : '--',
                 ),
                 _buildStatItem(
                   context.l10n.rangeTestMaxDist,
-                  _results.isNotEmpty
-                      ? '${(_results.map((r) => r.distance).reduce((a, b) => a > b ? a : b) / 1000).toStringAsFixed(1)} km'
+                  distances.isNotEmpty
+                      ? '${(distances.reduce(math.max) / 1000).toStringAsFixed(1)} km'
                       : '--',
                 ),
               ],
@@ -621,7 +624,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _results.length.clamp(0, 10),
+            itemCount: _results.length,
             separatorBuilder: (_, _) =>
                 Divider(height: 1, color: context.border),
             itemBuilder: (context, index) {
@@ -647,11 +650,11 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
                   ),
                 ),
                 title: Text(
-                  'SNR: ${result.snr.toStringAsFixed(1)} dB • RSSI: ${result.rssi.toStringAsFixed(0)} dBm', // lint-allow: hardcoded-string
+                  'SNR: ${result.snr?.toStringAsFixed(1) ?? '--'} dB • RSSI: ${result.rssi?.toStringAsFixed(0) ?? '--'} dBm', // lint-allow: hardcoded-string
                   style: TextStyle(color: context.textPrimary, fontSize: 13),
                 ),
                 subtitle: Text(
-                  '${(result.distance / 1000).toStringAsFixed(2)} km • ${result.hopCount} hop(s)',
+                  '${result.distance != null ? (result.distance! / 1000).toStringAsFixed(2) : '--'} km',
                   style: TextStyle(color: context.textTertiary, fontSize: 11),
                 ),
               );
@@ -938,19 +941,17 @@ class _NodePickerContentState extends State<_NodePickerContent> {
   }
 }
 
-/// Range test result data
+/// One range test reading. A null field was not reported by the radio.
 class RangeTestResult {
   final DateTime timestamp;
-  final double snr;
-  final double rssi;
-  final int hopCount;
-  final double distance; // in meters
+  final double? snr;
+  final double? rssi;
+  final double? distance; // in meters
 
   RangeTestResult({
     required this.timestamp,
     required this.snr,
     required this.rssi,
-    required this.hopCount,
     required this.distance,
   });
 }

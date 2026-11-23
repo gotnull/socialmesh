@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Range Test lists every reading from the current test instead of only the last 10. A reading the radio did not report SNR, RSSI or distance for now shows "--" in that column and is left out of the averages. Before, it showed -10 dB, -100 dBm and 0 km, which looked like real measurements.
+
 ## [1.81.0] - 2026-11-23
 
 ### Added
