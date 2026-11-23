@@ -484,7 +484,16 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
   void _transitionTo(MeshtasticOnboardingState next, {required String reason}) {
     final old = state;
     if (identical(old, next)) return;
-    if (old.runtimeType == next.runtimeType && old.phase == next.phase) {
+    // A tap on another radio while an earlier connect never finished
+    // must replace the target; otherwise the new radio's connected edge
+    // fails the target match and the flow stays in connecting.
+    final retarget =
+        old is OnboardingConnecting &&
+        next is OnboardingConnecting &&
+        old.target.id != next.target.id;
+    if (!retarget &&
+        old.runtimeType == next.runtimeType &&
+        old.phase == next.phase) {
       // Same phase, same data class. No-op to suppress duplicate logs
       // when listeners fire repeated events for the same transition.
       return;

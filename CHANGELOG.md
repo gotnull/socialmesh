@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - VoiceOver and TalkBack now read the settings cog at the bottom of the side menu as a "Settings" button. It used to be announced with no name at all.
+- Connecting to a radio from the Scanner no longer leaves the screen stuck on "Connecting..." after an earlier attempt to a different radio failed. The new radio connected in the background while the Scanner waited on the old one, and only a force quit got past it.
 
 ## [1.80.0] - 2026-11-19
 

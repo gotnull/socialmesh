@@ -191,6 +191,43 @@ void main() {
     },
   );
 
+  test(
+    'connect to a second device while still connecting to the first '
+    'retargets the flow, and the second device promotes it to ready',
+    () async {
+      // A failed attempt leaves the flow in connecting for its device. A
+      // later tap on another radio must take over the target, or that
+      // radio connects behind the overlay and the flow never leaves
+      // connecting.
+      final protocol = FakeOnboardingProtocolService();
+      final container = buildOnboardingTestContainer(protocol: protocol);
+      addTearDown(container.dispose);
+
+      final notifier = container.read(
+        meshtasticOnboardingFlowProvider.notifier,
+      );
+      notifier.connect(testDevice(id: 'first-radio'));
+      final second = testDevice(id: 'second-radio');
+      notifier.connect(second);
+
+      final retargeted = container.read(meshtasticOnboardingFlowProvider);
+      expect(retargeted, isA<OnboardingConnecting>());
+      expect((retargeted as OnboardingConnecting).target.id, second.id);
+
+      setConnectionState(
+        container,
+        state: DevicePairingState.connected,
+        device: second,
+      );
+      await pumpMicrotasks();
+
+      expect(
+        container.read(meshtasticOnboardingFlowProvider),
+        isA<OnboardingReady>(),
+      );
+    },
+  );
+
   test('cancel() while connecting transitions to cancelled', () async {
     final protocol = FakeOnboardingProtocolService();
     final container = buildOnboardingTestContainer(protocol: protocol);
