@@ -1,0 +1,6 @@
+{
+  "app_store_whats_new": "The Scanner's \"Connecting...\" screen now has a Cancel button when you tap a Meshtastic radio, not only while it auto-reconnects. Cancel stops the attempt and drops back to the list of radios, so a connection that hangs no longer needs a force quit. A cancelled attempt that finishes late no longer marks the radio connected or shows an error.\n\nFixes:\n- VoiceOver and TalkBack now read the settings cog at the bottom of the side menu as a \"Settings\" button. It used to be announced with no name at all.\n- Connecting to a radio from the Scanner no longer leaves the screen stuck on \"Connecting...\" after an earlier attempt to a different radio failed. The new radio connected in the background while the Scanner waited on the old one, and only a force quit got past it.",
+  "play": {
+    "en-GB": "The Scanner's \"Connecting...\" screen now has a Cancel button when you tap a Meshtastic radio, not only while it auto-reconnects.\nVoiceOver and TalkBack now read the settings cog at the bottom of the side menu as a \"Settings\" button.\nConnecting to a radio from the Scanner no longer leaves the screen stuck on \"Connecting...\" after an earlier attempt to a different radio failed."
+  }
+}
