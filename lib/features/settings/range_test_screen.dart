@@ -1,36 +1,52 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import '../../core/logging.dart';
-import '../../utils/text_sanitizer.dart';
-import '../../core/l10n/l10n_extension.dart';
-
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/glass_scaffold.dart';
-import '../../core/widgets/app_bottom_sheet.dart';
-import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
-import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
-import '../../providers/splash_mesh_provider.dart';
-import '../../utils/snackbar.dart';
-import '../../providers/app_providers.dart';
-import '../../providers/countdown_providers.dart';
-import '../../services/protocol/admin_target.dart';
-import '../../models/mesh_models.dart';
-import '../../models/presence_confidence.dart';
-import '../../utils/presence_utils.dart';
-import '../../providers/presence_providers.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/remote_admin_target_banner.dart';
+import '../../core/widgets/settings_primitives.dart';
+import '../../core/widgets/status_banner.dart';
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../models/mesh_models.dart';
+import '../../providers/app_providers.dart';
+import '../../providers/countdown_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
+import '../../services/protocol/admin_target.dart';
+import '../../utils/snackbar.dart';
+import '../../utils/time_format.dart';
+import '../../utils/uptime_formatter.dart';
+import 'range_test/range_test_models.dart';
+import 'range_test/range_test_providers.dart';
+import 'range_test/range_test_session_screen.dart';
 
-/// Screen for running and configuring Range Test module
+// Sender intervals offered, in seconds; 0 makes the radio a receiver.
+// Matches the official iOS app's list.
+const List<int> _kSenderIntervals = [
+  0,
+  15,
+  30,
+  45,
+  60,
+  300,
+  600,
+  900,
+  1800,
+  3600,
+];
+
+/// Range Test module settings, and recording of the Range Test packets the
+/// connected radio hears.
 class RangeTestScreen extends ConsumerStatefulWidget {
   const RangeTestScreen({super.key});
 
@@ -40,27 +56,15 @@ class RangeTestScreen extends ConsumerStatefulWidget {
 
 class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
     with LifecycleSafeMixin {
-  void _dismissKeyboard() {
-    HapticFeedback.selectionClick();
-    FocusScope.of(context).unfocus();
-  }
-
   bool _enabled = false;
-  int _senderInterval = 60; // seconds between messages
+  int _senderInterval = 0;
   bool _saveResults = false;
   bool _isSaving = false;
-  bool _isRunning = false;
   bool _isLoading = true;
+  bool _hasChanges = false;
 
-  // Test results
-  final List<RangeTestResult> _results = [];
-  int? _selectedTargetNode;
-
-  // Stream subscription for incoming range test messages
-  StreamSubscription<MeshNode>? _nodeSubscription;
   StreamSubscription<module_pb.ModuleConfig_RangeTestConfig>?
   _configSubscription;
-  Timer? _sendTimer;
 
   @override
   void initState() {
@@ -71,17 +75,16 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
   @override
   void dispose() {
     _configSubscription?.cancel();
-    _nodeSubscription?.cancel();
-    _sendTimer?.cancel();
     super.dispose();
   }
 
   void _applyConfig(module_pb.ModuleConfig_RangeTestConfig config) {
     safeSetState(() {
       _enabled = config.enabled;
-      _senderInterval = config.sender > 0 ? config.sender : 60;
+      _senderInterval = config.sender;
       _saveResults = config.save;
       _isLoading = false;
+      _hasChanges = false;
     });
   }
 
@@ -102,12 +105,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
 
       // Only request from device if connected
       if (protocol.isConnected) {
-        // Listen for config response
         _configSubscription = protocol.rangeTestConfigStream.listen((config) {
           if (mounted) _applyConfig(config);
         });
 
-        // Request fresh config from device
         await protocol.getModuleConfig(
           admin_pbenum.AdminMessage_ModuleConfigType.RANGETEST_CONFIG,
           target: target,
@@ -116,6 +117,14 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
     } finally {
       safeSetState(() => _isLoading = false);
     }
+  }
+
+  void _edit(VoidCallback change) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      change();
+      _hasChanges = true;
+    });
   }
 
   Future<void> _saveConfig() async {
@@ -134,6 +143,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
       );
 
       if (mounted) {
+        safeSetState(() => _hasChanges = false);
         showSuccessSnackBar(context, context.l10n.rangeTestSaveSuccess);
         if (target.isLocal) {
           ref
@@ -150,808 +160,270 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen>
     }
   }
 
-  void _startTest() {
-    if (_selectedTargetNode == null) {
-      _showNodePicker();
-      return;
-    }
-
-    setState(() {
-      _isRunning = true;
-      _results.clear();
-    });
-
-    // Listen for node updates (which include RSSI/SNR from range test responses)
-    _startRangeTestListener();
-
-    // Start sending range test packets at configured interval
-    _startSendingPackets();
-  }
-
-  void _stopTest() {
-    _nodeSubscription?.cancel();
-    _nodeSubscription = null;
-    _sendTimer?.cancel();
-    _sendTimer = null;
-    setState(() => _isRunning = false);
-  }
-
-  void _startRangeTestListener() {
-    final protocol = ref.read(protocolServiceProvider);
-    final nodesMap = ref.read(nodesProvider);
-    final myNum = ref.read(myNodeNumProvider);
-
-    // Listen for node updates from the target node
-    _nodeSubscription = protocol.nodeStream.listen((node) {
-      if (!_isRunning || _selectedTargetNode == null) return;
-
-      // Check if this update is from our target node
-      if (node.nodeNum == _selectedTargetNode) {
-        // A node update without signal metrics records them as unknown;
-        // substituting a typical value would read as a real measurement.
-        final snr = node.snr?.toDouble();
-        final rssi = node.rssi?.toDouble();
-
-        // Calculate distance if we have position data
-        double? distance;
-        final nodes = nodesMap;
-        final myNodeNum = myNum;
-        final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
-
-        if (myNode?.latitude != null &&
-            myNode?.longitude != null &&
-            node.latitude != null &&
-            node.longitude != null) {
-          distance = _calculateDistance(
-            myNode!.latitude!,
-            myNode.longitude!,
-            node.latitude!,
-            node.longitude!,
-          );
-        }
-
-        if (mounted) {
-          safeSetState(() {
-            _results.add(
-              RangeTestResult(
-                timestamp: DateTime.now(),
-                snr: snr,
-                rssi: rssi,
-                distance: distance,
-              ),
-            );
-          });
-        }
+  // The sender broadcasts on the primary channel. On a public key that
+  // floods every radio in range, so sending is refused there, as the
+  // official iOS app does. Receiving is harmless and stays allowed.
+  bool _primaryChannelIsPublic(List<ChannelConfig> channels) {
+    for (final c in channels) {
+      if (c.index == 0) {
+        return c.encryption(channels) != ChannelEncryption.privateKey;
       }
-    });
-  }
-
-  void _startSendingPackets() {
-    // Send initial packet immediately
-    _sendRangeTestPacket();
-
-    // Then send at configured interval
-    _sendTimer = Timer.periodic(
-      Duration(seconds: _senderInterval),
-      (_) => _sendRangeTestPacket(),
-    );
-  }
-
-  Future<void> _sendRangeTestPacket() async {
-    if (!_isRunning || _selectedTargetNode == null) return;
-
-    try {
-      final protocol = ref.read(
-        protocolServiceProvider,
-      ); // captured before await
-      // Send a range test message to the target node
-      await protocol.sendMessage(
-        text: 'RT ${DateTime.now().millisecondsSinceEpoch}', // lint-allow: hardcoded-string
-        to: _selectedTargetNode!,
-      );
-    } catch (e) {
-      AppLogging.settings('Error sending range test packet: $e');
     }
+    return false;
   }
 
-  double _calculateDistance(
-    double lat1,
-    double lon1,
-    double lat2,
-    double lon2,
-  ) {
-    // Haversine formula for distance calculation
-    const double earthRadius = 6371000; // meters
-    final dLat = (lat2 - lat1) * (math.pi / 180);
-    final dLon = (lon2 - lon1) * (math.pi / 180);
-    final a =
-        (math.sin(dLat / 2) * math.sin(dLat / 2)) +
-        math.cos(lat1 * (math.pi / 180)) *
-            math.cos(lat2 * (math.pi / 180)) *
-            (math.sin(dLon / 2) * math.sin(dLon / 2));
-    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-    return earthRadius * c;
-  }
-
-  void _showNodePicker() {
+  bool _targetHasWifi() {
     final nodes = ref.read(nodesProvider);
-    final myNodeNum = ref.read(myNodeNumProvider);
-    final presenceMap = ref.read(presenceMapProvider);
+    final nodeNum =
+        ref.read(remoteAdminTargetProvider) ?? ref.read(myNodeNumProvider);
+    return nodeNum != null && (nodes[nodeNum]?.hasWifi ?? false);
+  }
 
-    final otherNodes =
-        nodes.values.where((n) => n.nodeNum != myNodeNum).toList()
-          ..sort((a, b) {
-            final aActive = presenceConfidenceFor(presenceMap, a).isActive;
-            final bActive = presenceConfidenceFor(presenceMap, b).isActive;
-            if (aActive != bActive) return aActive ? -1 : 1;
-            final aName = a.longName ?? a.shortName ?? '';
-            final bName = b.longName ?? b.shortName ?? '';
-            return aName.compareTo(bName);
-          });
+  String _intervalLabel(int seconds) {
+    if (seconds == 0) return context.l10n.rangeTestIntervalOff;
+    if (seconds < 60) return '${seconds}s';
+    if (seconds < 3600) return '${seconds ~/ 60}m';
+    return '${seconds ~/ 3600}h';
+  }
 
-    if (otherNodes.isEmpty) {
-      showInfoSnackBar(context, context.l10n.rangeTestNoNodes);
-      return;
+  Future<void> _toggleRecording(RangeTestState state) async {
+    HapticFeedback.mediumImpact();
+    final notifier = ref.read(rangeTestProvider.notifier);
+    if (state.isRecording) {
+      await notifier.stop();
+    } else {
+      await notifier.start();
     }
+  }
 
-    AppBottomSheet.show(
-      context: context,
-      padding: EdgeInsets.zero,
-      child: StatefulBuilder(
-        builder: (sheetContext, setSheetState) {
-          return _NodePickerContent(
-            otherNodes: otherNodes,
-            presenceMap: presenceMap,
-            selectedTargetNode: _selectedTargetNode,
-            onNodeSelected: (nodeNum) {
-              setState(() => _selectedTargetNode = nodeNum);
-              Navigator.pop(context);
-            },
-          );
-        },
+  void _openSession(int sessionId) {
+    HapticFeedback.selectionClick();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RangeTestSessionScreen(sessionId: sessionId),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final nodes = ref.watch(nodesProvider);
-    final targetNode = _selectedTargetNode != null
-        ? nodes[_selectedTargetNode]
-        : null;
-    final targetName =
-        targetNode?.longName ??
-        targetNode?.shortName ??
-        (_selectedTargetNode != null
-            ? '!${_selectedTargetNode!.toRadixString(16)}'
-            : context.l10n.rangeTestSelectTarget);
+    final l10n = context.l10n;
+    final channels = ref.watch(channelsProvider);
+    final publicPrimary = _primaryChannelIsPublic(channels);
+    final blockedSender = publicPrimary && _enabled && _senderInterval > 0;
+    final canSave = !_isLoading && !_isSaving && _hasChanges && !blockedSender;
 
-    return GestureDetector(
-      onTap: _dismissKeyboard,
-      child: GlassScaffold(
-        title: context.l10n.rangeTestTitle,
-        actions: [
-          if (!_isRunning)
-            TextButton(
-              onPressed: _isSaving ? null : _saveConfig,
-              child: _isSaving
-                  ? LoadingIndicator(size: 20)
-                  : Text(
-                      context.l10n.rangeTestSave,
-                      style: TextStyle(color: context.accentColor),
-                    ),
-            ),
-        ],
-        slivers: [
-          const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
-          if (_isLoading)
-            const SliverFillRemaining(child: ScreenLoadingIndicator())
-          else
-            SliverPadding(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Test Status Card
-                  _buildStatusCard(targetName),
-
-                  const SizedBox(height: AppTheme.spacing16),
-
-                  // Configuration Section
-                  if (!_isRunning) ...[
-                    _buildSectionTitle(context.l10n.rangeTestConfiguration),
-                    _buildConfigCard(),
-                    const SizedBox(height: AppTheme.spacing16),
-                  ],
-
-                  // Results Section
-                  if (_results.isNotEmpty) ...[
-                    _buildSectionTitle(
-                      context.l10n.rangeTestResultsCount(_results.length),
-                    ),
-                    _buildResultsCard(),
-                  ],
-
-                  // Info Section
-                  if (!_isRunning && _results.isEmpty) ...[
-                    _buildSectionTitle(context.l10n.rangeTestAbout),
-                    _buildInfoCard(),
-                  ],
-                ]),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: context.textTertiary,
-          letterSpacing: 1,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusCard(String targetName) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(
-          color: _isRunning
-              ? context.accentColor.withValues(alpha: 0.3)
-              : context.border,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Status icon
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: _isRunning
-                  ? context.accentColor.withValues(alpha: 0.15)
-                  : context.background,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _isRunning ? Icons.radar : Icons.radar_outlined,
-              size: 32,
-              color: _isRunning ? context.accentColor : context.textTertiary,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing12),
-
-          // Status text
-          Text(
-            _isRunning
-                ? context.l10n.rangeTestRunning
-                : context.l10n.rangeTestReady,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: _isRunning ? context.accentColor : context.textPrimary,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing4),
-          Text(
-            _isRunning
-                ? context.l10n.rangeTestPacketsReceived(_results.length)
-                : 'Target: $targetName',
-            style: context.bodySmallStyle?.copyWith(
-              color: context.textSecondary,
-            ),
-          ),
-
-          SizedBox(height: AppTheme.spacing16),
-
-          // Action buttons
-          Row(
-            children: [
-              if (!_isRunning)
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _showNodePicker,
-                    icon: const Icon(Icons.person_search, size: 18),
-                    label: Text(context.l10n.rangeTestSelectNode),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: context.textSecondary,
-                      side: BorderSide(color: context.border),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius10),
-                      ),
-                    ),
-                  ),
-                ),
-              if (!_isRunning) SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _isRunning ? _stopTest : _startTest,
-                  icon: Icon(
-                    _isRunning ? Icons.stop : Icons.play_arrow,
-                    size: 20,
-                  ),
-                  label: Text(
-                    _isRunning
-                        ? context.l10n.rangeTestStop
-                        : context.l10n.rangeTestStartTest,
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _isRunning
-                        ? AppTheme.errorRed
-                        : context.accentColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius10),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConfigCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            title: Text(
-              context.l10n.rangeTestEnableModule,
-              style: TextStyle(color: context.textPrimary),
-            ),
-            subtitle: Text(
-              context.l10n.rangeTestEnableModuleSubtitle,
-              style: TextStyle(color: context.textTertiary, fontSize: 12),
-            ),
-            trailing: ThemedSwitch(
-              value: _enabled,
-              onChanged: (v) => setState(() => _enabled = v),
-            ),
-          ),
-          Divider(height: 1, color: context.border),
-          ListTile(
-            title: Text(
-              context.l10n.rangeTestSenderInterval,
-              style: TextStyle(color: context.textPrimary),
-            ),
-            subtitle: Text(
-              context.l10n.rangeTestSenderIntervalSubtitle(_senderInterval),
-              style: TextStyle(color: context.textTertiary, fontSize: 12),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.remove, color: context.textSecondary),
-                  onPressed: _senderInterval > 10
-                      ? () => setState(() => _senderInterval -= 10)
-                      : null,
-                ),
-                Text(
-                  '${_senderInterval}s',
-                  style: TextStyle(
-                    color: context.accentColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.add, color: context.textSecondary),
-                  onPressed: _senderInterval < 300
-                      ? () => setState(() => _senderInterval += 10)
-                      : null,
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: context.border),
-          ListTile(
-            title: Text(
-              context.l10n.rangeTestSaveResultsToSd,
-              style: TextStyle(color: context.textPrimary),
-            ),
-            subtitle: Text(
-              context.l10n.rangeTestSaveResultsToSdSubtitle,
-              style: TextStyle(color: context.textTertiary, fontSize: 12),
-            ),
-            trailing: ThemedSwitch(
-              value: _saveResults,
-              onChanged: (v) => setState(() => _saveResults = v),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResultsCard() {
-    final snrs = _results.map((r) => r.snr).nonNulls;
-    final rssis = _results.map((r) => r.rssi).nonNulls;
-    final distances = _results.map((r) => r.distance).nonNulls;
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Column(
-        children: [
-          // Stats summary
-          Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            child: Row(
-              children: [
-                _buildStatItem(
-                  context.l10n.rangeTestAvgSnr,
-                  snrs.isNotEmpty
-                      ? '${(snrs.reduce((a, b) => a + b) / snrs.length).toStringAsFixed(1)} dB'
-                      : '--',
-                ),
-                _buildStatItem(
-                  context.l10n.rangeTestAvgRssi,
-                  rssis.isNotEmpty
-                      ? '${(rssis.reduce((a, b) => a + b) / rssis.length).toStringAsFixed(0)} dBm'
-                      : '--',
-                ),
-                _buildStatItem(
-                  context.l10n.rangeTestMaxDist,
-                  distances.isNotEmpty
-                      ? '${(distances.reduce(math.max) / 1000).toStringAsFixed(1)} km'
-                      : '--',
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: context.border),
-          // Results list
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _results.length,
-            separatorBuilder: (_, _) =>
-                Divider(height: 1, color: context.border),
-            itemBuilder: (context, index) {
-              final result = _results[_results.length - 1 - index];
-              return ListTile(
-                dense: true,
-                leading: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '#${_results.length - index}',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                title: Text(
-                  'SNR: ${result.snr?.toStringAsFixed(1) ?? '--'} dB • RSSI: ${result.rssi?.toStringAsFixed(0) ?? '--'} dBm', // lint-allow: hardcoded-string
-                  style: TextStyle(color: context.textPrimary, fontSize: 13),
-                ),
-                subtitle: Text(
-                  '${result.distance != null ? (result.distance! / 1000).toStringAsFixed(2) : '--'} km',
-                  style: TextStyle(color: context.textTertiary, fontSize: 11),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              color: context.accentColor,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing4),
-          Text(
-            label,
-            style: TextStyle(color: context.textTertiary, fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline, color: AppTheme.primaryBlue, size: 20),
-              SizedBox(width: AppTheme.spacing8),
-              Text(
-                context.l10n.rangeTestHowItWorks,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          Text(
-            context.l10n.rangeTestHowItWorksDescription,
-            style: TextStyle(
-              color: context.textSecondary,
-              fontSize: 13,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Node picker content with search for the range test bottom sheet.
-class _NodePickerContent extends StatefulWidget {
-  final List<MeshNode> otherNodes;
-  final Map<int, NodePresence> presenceMap;
-  final int? selectedTargetNode;
-  final ValueChanged<int> onNodeSelected;
-
-  const _NodePickerContent({
-    required this.otherNodes,
-    required this.presenceMap,
-    required this.selectedTargetNode,
-    required this.onNodeSelected,
-  });
-
-  @override
-  State<_NodePickerContent> createState() => _NodePickerContentState();
-}
-
-class _NodePickerContentState extends State<_NodePickerContent> {
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  List<MeshNode> get _filteredNodes {
-    if (_searchQuery.isEmpty) return widget.otherNodes;
-    final query = _searchQuery.toLowerCase();
-    return widget.otherNodes.where((node) {
-      final longName = node.longName?.toLowerCase() ?? '';
-      final shortName = node.shortName?.toLowerCase() ?? '';
-      final hexId = '!${node.nodeNum.toRadixString(16)}';
-      return longName.contains(query) ||
-          shortName.contains(query) ||
-          hexId.contains(query);
-    }).toList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = _filteredNodes;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
+    return GlassScaffold(
+      title: l10n.rangeTestTitle,
+      actions: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 16, 16, 0),
-          child: Row(
-            children: [
-              Text(
-                context.l10n.rangeTestSelectTargetNode,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  context.l10n.commonCancel,
-                  style: TextStyle(color: context.textSecondary),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.spacing16,
-            AppTheme.spacing12,
-            AppTheme.spacing16,
-            AppTheme.spacing8,
-          ),
-          child: TextField(
-            controller: _searchController,
-            maxLength: 40,
-            style: TextStyle(color: context.textPrimary, fontSize: 14),
-            onTapOutside: (_) => FocusScope.of(context).unfocus(),
-            decoration: InputDecoration(
-              hintText: context.l10n.rangeTestSearchNodes,
-              hintStyle: TextStyle(color: context.textTertiary),
-              prefixIcon: Icon(
-                Icons.search,
-                color: context.textTertiary,
-                size: 20,
-              ),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(
-                        Icons.clear,
-                        color: context.textTertiary,
-                        size: 18,
-                      ),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                  : null,
-              counterText: '',
-              filled: true,
-              fillColor: context.background.withValues(alpha: 0.6),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing12,
-                vertical: AppTheme.spacing10,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                borderSide: BorderSide(
-                  color: context.accentColor.withValues(alpha: 0.5),
-                ),
-              ),
-            ),
-            onChanged: (v) => setState(() => _searchQuery = v),
-          ),
-        ),
-        Divider(height: 1, color: context.border),
-        if (filtered.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing50),
-            child: Column(
-              children: [
-                Icon(Icons.search_off, color: context.textTertiary, size: 32),
-                const SizedBox(height: AppTheme.spacing8),
-                Text(
-                  context.l10n.rangeTestNoNodesMatch(_searchQuery),
-                  style: TextStyle(color: context.textTertiary, fontSize: 13),
-                ),
-              ],
-            ),
-          )
-        else
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.35,
-            ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                final node = filtered[index];
-                final presence = presenceConfidenceFor(
-                  widget.presenceMap,
-                  node,
-                );
-                final displayName =
-                    node.longName ??
-                    node.shortName ??
-                    '!${node.nodeNum.toRadixString(16)}';
-
-                return ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: presence.isActive
-                          ? context.accentColor.withValues(alpha: 0.15)
-                          : context.background,
-                      borderRadius: BorderRadius.circular(AppTheme.radius10),
-                    ),
-                    child: Center(
-                      child: Text(
-                        (node.shortName?.isNotEmpty == true)
-                            ? safeInitials(node.shortName, 1)
-                            : '?',
-                        style: TextStyle(
-                          color: presence.isActive
-                              ? context.accentColor
-                              : context.textTertiary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    displayName,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                  subtitle: Text(
-                    presenceStatusText(
-                      presence,
-                      lastHeardAgeFor(widget.presenceMap, node),
-                    ),
+          padding: const EdgeInsets.only(right: AppTheme.spacing8),
+          child: TextButton(
+            onPressed: canSave ? _saveConfig : null,
+            child: _isSaving
+                ? LoadingIndicator(size: 20)
+                : Text(
+                    l10n.rangeTestSave,
                     style: TextStyle(
-                      color: presence.isActive
+                      color: canSave
                           ? context.accentColor
                           : context.textTertiary,
-                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  trailing: widget.selectedTargetNode == node.nodeNum
-                      ? Icon(Icons.check_circle, color: context.accentColor)
-                      : null,
-                  onTap: () => widget.onNodeSelected(node.nodeNum),
-                );
-              },
+          ),
+        ),
+      ],
+      slivers: [
+        const SliverToBoxAdapter(child: RemoteAdminTargetBanner()),
+        if (_isLoading)
+          const SliverFillRemaining(child: ScreenLoadingIndicator())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+            sliver: SliverList.list(
+              children: [
+                if (publicPrimary)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+                    child: StatusBanner.warning(
+                      title: l10n.rangeTestPublicChannelWarning,
+                      icon: Icons.lock_open,
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing16,
+                      ),
+                    ),
+                  ),
+                ..._recordingSection(),
+                const SizedBox(height: AppTheme.spacing16),
+                ..._configSection(publicPrimary),
+                const SizedBox(height: AppTheme.spacing16),
+                ..._historySection(),
+              ],
             ),
           ),
-        SizedBox(height: MediaQuery.of(context).padding.bottom),
       ],
     );
   }
-}
 
-/// One range test reading. A null field was not reported by the radio.
-class RangeTestResult {
-  final DateTime timestamp;
-  final double? snr;
-  final double? rssi;
-  final double? distance; // in meters
+  List<Widget> _recordingSection() {
+    final l10n = context.l10n;
+    final state = ref.watch(rangeTestProvider).value;
+    final isConnected = ref.watch(isLinkConnectedProvider);
+    final active = state?.activeSession;
+    final recording = active != null;
 
-  RangeTestResult({
-    required this.timestamp,
-    required this.snr,
-    required this.rssi,
-    required this.distance,
-  });
+    final String subtitle;
+    if (recording) {
+      subtitle = l10n.rangeTestPacketsHeard(active.readingCount);
+    } else if (isConnected) {
+      subtitle = l10n.rangeTestRecordingIdleSubtitle;
+    } else {
+      subtitle = l10n.rangeTestConnectToRecord;
+    }
+
+    return [
+      SettingsSectionHeader(title: l10n.rangeTestSectionRecord),
+      SettingsTile(
+        icon: recording ? Icons.radar : Icons.radar_outlined,
+        iconColor: recording ? context.accentColor : null,
+        title: recording
+            ? l10n.rangeTestRecordingActive
+            : l10n.rangeTestRecordingIdle,
+        subtitle: subtitle,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        onTap: recording ? () => _openSession(active.id) : null,
+        trailing: TextButton(
+          onPressed: state == null || (!recording && !isConnected)
+              ? null
+              : () => _toggleRecording(state),
+          child: Text(
+            recording ? l10n.rangeTestStop : l10n.rangeTestStart,
+            style: TextStyle(
+              color: recording ? AppTheme.errorRed : context.accentColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _configSection(bool publicPrimary) {
+    final l10n = context.l10n;
+    final hasWifi = _targetHasWifi();
+    final intervals = [
+      ..._kSenderIntervals,
+      if (!_kSenderIntervals.contains(_senderInterval)) _senderInterval,
+    ]..sort();
+
+    return [
+      SettingsSectionHeader(title: l10n.rangeTestConfiguration),
+      SettingsTile(
+        icon: Icons.radar,
+        iconColor: _enabled ? context.accentColor : null,
+        title: l10n.rangeTestEnableModule,
+        subtitle: l10n.rangeTestEnableModuleSubtitle,
+        trailing: ThemedSwitch(
+          value: _enabled,
+          onChanged: (v) => _edit(() => _enabled = v),
+        ),
+      ),
+      if (_enabled) ...[
+        FieldGroupCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.rangeTestSenderInterval,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing4),
+              Text(
+                publicPrimary
+                    ? l10n.rangeTestSenderIntervalPublicHelp
+                    : l10n.rangeTestSenderIntervalHelp,
+                style: context.bodySmallStyle?.copyWith(
+                  color: context.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              ChipSelector<int>(
+                scrollable: true,
+                value: _senderInterval,
+                options: [
+                  for (final v in intervals)
+                    ChipOption<int>(
+                      value: v,
+                      label: _intervalLabel(v),
+                      icon: v == 0 ? Icons.hearing : Icons.schedule,
+                      color: context.accentColor,
+                    ),
+                ],
+                onChanged: (v) => _edit(() => _senderInterval = v),
+              ),
+            ],
+          ),
+        ),
+        SettingsTile(
+          icon: Icons.save_outlined,
+          title: l10n.rangeTestSaveResultsToSd,
+          subtitle: l10n.rangeTestSaveResultsToSdSubtitle,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          trailing: ThemedSwitch(
+            value: _saveResults,
+            // Saving is served over the radio's Wi-Fi; a radio without it
+            // can only turn a stale setting off.
+            onChanged: hasWifi || _saveResults
+                ? (v) => _edit(() => _saveResults = v)
+                : null,
+          ),
+        ),
+      ],
+    ];
+  }
+
+  List<Widget> _historySection() {
+    final l10n = context.l10n;
+    final sessions = ref.watch(rangeTestProvider).value?.sessions ?? const [];
+    if (sessions.isEmpty) {
+      return [
+        SettingsSectionHeader(title: l10n.rangeTestAbout),
+        SettingsTile(
+          icon: Icons.info_outline,
+          title: l10n.rangeTestHowItWorks,
+          subtitle: l10n.rangeTestHowItWorksDescription,
+          crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+      ];
+    }
+    final dateTime = AppTimeFormat.fullDateAndTime(context);
+    return [
+      SettingsSectionHeader(title: l10n.rangeTestSectionHistory),
+      for (final s in sessions)
+        SettingsTile(
+          icon: Icons.history,
+          title: dateTime.format(s.startedAt),
+          subtitle: _sessionSubtitle(s),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          onTap: () => _openSession(s.id),
+          trailing: Icon(Icons.chevron_right, color: context.textTertiary),
+        ),
+    ];
+  }
+
+  String _sessionSubtitle(RangeTestSession s) {
+    final l10n = context.l10n;
+    final endedAt = s.endedAt;
+    return l10n.rangeTestSessionSubtitle(
+      l10n.rangeTestPacketCount(s.readingCount),
+      endedAt == null
+          ? l10n.rangeTestRecordingActive
+          : formatUptime(endedAt.difference(s.startedAt).inSeconds),
+    );
+  }
 }

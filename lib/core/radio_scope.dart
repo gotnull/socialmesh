@@ -54,6 +54,7 @@ const List<ScopedDatabaseFile> kRadioScopedDatabases = [
   ScopedDatabaseFile('traceroute_history.db'),
   ScopedDatabaseFile('nodedex.db'),
   ScopedDatabaseFile('waypoints.db'),
+  ScopedDatabaseFile('range_test.db'),
   ScopedDatabaseFile('tak_events.db'),
   ScopedDatabaseFile('file_transfers.db'),
   ScopedDatabaseFile('mesh_services.db'),

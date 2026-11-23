@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Range Test now records the Range Test module's own packets. Press Start and every `seq` packet your radio hears is saved with its SNR, RSSI, this phone's location and the distance to the sender, even after you leave the screen. Recorded tests are listed on the Range Test screen, where each shows how many packets arrived out of how many were sent and flags the gaps. A test exports as CSV, with the radio's rangetest.csv columns, or as KML for Google Earth and other map apps, with each packet placed where it was heard and coloured by signal. The radio's own CSV only exists on ESP32 boards with Wi-Fi, so this is the only record for most radios. Range Test is still hidden on firmware 2.8 and later, which no longer includes the module.
+
 ### Fixed
 
+- Saving Range Test settings on a receiver no longer turns it into a sender. The screen replaced a sender interval of 0 with 60 seconds, so every save made the radio broadcast test packets. Off now means receive only. The other interval choices match the official app, and sending is refused while the primary channel uses a public key, because a sender on that channel would broadcast test packets to every radio within range of it.
+- Range Test no longer sends its own direct messages to a chosen node and reads unrelated node updates as results. Those were not Range Test packets and cost airtime on every interval.
 - Range Test lists every reading from the current test instead of only the last 10. A reading the radio did not report SNR, RSSI or distance for now shows "--" in that column and is left out of the averages. Before, it showed -10 dB, -100 dBm and 0 km, which looked like real measurements.
 
 ## [1.81.0] - 2026-11-23

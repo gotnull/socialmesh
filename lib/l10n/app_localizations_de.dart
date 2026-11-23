@@ -23604,41 +23604,13 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get rangeTestNoNodes => 'Keine anderen Knoten verfügbar';
-
-  @override
-  String get rangeTestSelectTarget => 'Ziel auswählen';
-
-  @override
   String get rangeTestConfiguration => 'Konfiguration';
-
-  @override
-  String rangeTestResultsCount(int count) {
-    return 'Ergebnisse ($count)';
-  }
 
   @override
   String get rangeTestAbout => 'Über den Reichweitentest';
 
   @override
-  String get rangeTestRunning => 'Test läuft';
-
-  @override
-  String get rangeTestReady => 'Bereit zum Testen';
-
-  @override
-  String rangeTestPacketsReceived(int count) {
-    return '$count Pakete empfangen';
-  }
-
-  @override
-  String get rangeTestSelectNode => 'Knoten auswählen';
-
-  @override
   String get rangeTestStop => 'Stoppen';
-
-  @override
-  String get rangeTestStartTest => 'Test starten';
 
   @override
   String get rangeTestEnableModule => 'Reichweitentest-Modul aktivieren';
@@ -23651,16 +23623,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rangeTestSenderInterval => 'Sendeintervall';
 
   @override
-  String rangeTestSenderIntervalSubtitle(int seconds) {
-    return 'Testpaket alle $seconds Sekunden senden';
-  }
-
-  @override
-  String get rangeTestSaveResultsToSd => 'Ergebnisse auf SD-Karte speichern';
+  String get rangeTestSaveResultsToSd =>
+      'Ergebnisse auf dem Funkgerät speichern';
 
   @override
   String get rangeTestSaveResultsToSdSubtitle =>
-      'Testergebnisse auf der SD-Karte des Geräts speichern';
+      'Schreibt rangetest.csv in den Speicher des Funkgeräts, abrufbar über dessen WLAN. Nur ESP32-Funkgeräte mit WLAN.';
 
   @override
   String get rangeTestAvgSnr => 'Durchschn. SNR';
@@ -23676,17 +23644,139 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rangeTestHowItWorksDescription =>
-      '1. Zielknoten für den Reichweitentest auswählen\n2. Test starten, um Pakete zu senden\n3. Echtzeit-Signalmetriken anzeigen (SNR, RSSI)\n4. Maximal erreichte Entfernung verfolgen\n\nBeide Knoten müssen das Reichweitentest-Modul aktiviert haben, um beste Ergebnisse zu erzielen.';
+      '1. Aktiviere das Modul auf zwei Funkgeräten mit demselben privaten Primärkanal. Gib einem ein Sendeintervall und lass das mit diesem Telefon verbundene Funkgerät auf Aus.\n2. Starte die Aufzeichnung und bewege dich. Jedes Testpaket, das dein Funkgerät empfängt, wird mit SNR, RSSI und dem Standort dieses Telefons gespeichert.\n3. Lücken in den Sequenznummern sind Pakete, die nicht angekommen sind.\n4. Öffne einen aufgezeichneten Test, um ihn als CSV oder als KML für eine Karte zu exportieren.';
 
   @override
-  String get rangeTestSelectTargetNode => 'Zielknoten auswählen';
+  String get rangeTestStart => 'Starten';
 
   @override
-  String get rangeTestSearchNodes => 'Knoten suchen...';
+  String get rangeTestSectionRecord => 'Aufzeichnen';
 
   @override
-  String rangeTestNoNodesMatch(String query) {
-    return 'Keine Knoten entsprechen \"$query\"';
+  String get rangeTestRecordingIdle => 'Keine Aufzeichnung';
+
+  @override
+  String get rangeTestRecordingIdleSubtitle =>
+      'Speichert jedes Range-Test-Paket, das dein Funkgerät empfängt, mit Signal und dem Standort dieses Telefons.';
+
+  @override
+  String get rangeTestRecordingActive => 'Aufzeichnung läuft';
+
+  @override
+  String get rangeTestConnectToRecord =>
+      'Verbinde ein Funkgerät, um aufzuzeichnen.';
+
+  @override
+  String rangeTestPacketsHeard(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Pakete empfangen',
+      one: '1 Paket empfangen',
+      zero: 'Noch keine Pakete empfangen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get rangeTestIntervalOff => 'Aus';
+
+  @override
+  String get rangeTestSenderIntervalHelp =>
+      'Wie oft dieses Funkgerät ein Testpaket sendet. Aus macht es zum Empfänger.';
+
+  @override
+  String get rangeTestSenderIntervalPublicHelp =>
+      'Aus macht dieses Funkgerät zum Empfänger. Senden erfordert einen privaten Schlüssel auf dem Primärkanal.';
+
+  @override
+  String get rangeTestPublicChannelWarning =>
+      'Der Primärkanal verwendet einen öffentlichen Schlüssel, daher würde ein Sender Testpakete an jedes Funkgerät in Reichweite senden. Senden bleibt aus, bis der Primärkanal einen privaten Schlüssel hat.';
+
+  @override
+  String get rangeTestSectionHistory => 'Aufgezeichnete Tests';
+
+  @override
+  String rangeTestPacketCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Pakete',
+      one: '1 Paket',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rangeTestSessionSubtitle(String packets, String duration) {
+    return '$packets, $duration';
+  }
+
+  @override
+  String rangeTestKmlName(String date) {
+    return 'Reichweitentest $date';
+  }
+
+  @override
+  String get rangeTestKmlNoPositions =>
+      'Kein Paket in diesem Test hat einen Standort, daher gibt es nichts für eine Karte.';
+
+  @override
+  String rangeTestExportFailed(String error) {
+    return 'Export fehlgeschlagen: $error';
+  }
+
+  @override
+  String get rangeTestExportCsv => 'Als CSV exportieren';
+
+  @override
+  String get rangeTestExportKml => 'Als KML exportieren (Karte)';
+
+  @override
+  String get rangeTestDelete => 'Löschen';
+
+  @override
+  String get rangeTestDeleteTitle => 'Diesen Test löschen?';
+
+  @override
+  String get rangeTestDeleteMessage =>
+      'Die aufgezeichneten Pakete werden von diesem Telefon entfernt.';
+
+  @override
+  String get rangeTestLoadFailed => 'Dieser Test konnte nicht geladen werden.';
+
+  @override
+  String get rangeTestReceived => 'Empfangen';
+
+  @override
+  String rangeTestReceivedValue(int received, int expected, int percent) {
+    return '$received von $expected ($percent %)';
+  }
+
+  @override
+  String get rangeTestStarted => 'Gestartet';
+
+  @override
+  String get rangeTestDuration => 'Dauer';
+
+  @override
+  String get rangeTestPackets => 'Pakete';
+
+  @override
+  String get rangeTestNoPackets => 'Noch keine Pakete empfangen.';
+
+  @override
+  String get rangeTestViaMqtt => 'über MQTT';
+
+  @override
+  String rangeTestMissed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Pakete verpasst',
+      one: '1 Paket verpasst',
+    );
+    return '$_temp0';
   }
 
   @override

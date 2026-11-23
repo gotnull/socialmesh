@@ -20364,41 +20364,176 @@
   "@rangeTestHowItWorksDescription": {
     "description": "Range test sends mesh radio packets between two nodes to measure signal quality (SNR/RSSI) over distance."
   },
-  "@rangeTestMaxDist": {
-    "description": "UI text: range test max dist"
+  "rangeTestStart": "Avvia",
+  "@rangeTestStart": {
+    "description": "Range Test: button that starts recording packets"
   },
-  "@rangeTestNoNodes": {
-    "description": "UI text: range test no nodes"
+  "rangeTestSectionRecord": "Registra",
+  "@rangeTestSectionRecord": {
+    "description": "Range Test: section header above the recording control"
   },
-  "@rangeTestNoNodesMatch": {
+  "rangeTestRecordingIdle": "Nessuna registrazione",
+  "@rangeTestRecordingIdle": {
+    "description": "Range Test: status title when no recording is running"
+  },
+  "rangeTestRecordingIdleSubtitle": "Salva ogni pacchetto Range Test ricevuto dalla tua radio, con il segnale e la posizione di questo telefono.",
+  "@rangeTestRecordingIdleSubtitle": {
+    "description": "Range Test: explains what recording does"
+  },
+  "rangeTestRecordingActive": "Registrazione in corso",
+  "@rangeTestRecordingActive": {
+    "description": "Range Test: status while a recording is running"
+  },
+  "rangeTestConnectToRecord": "Collega una radio per registrare.",
+  "@rangeTestConnectToRecord": {
+    "description": "Range Test: shown when no radio is connected, so recording cannot start"
+  },
+  "rangeTestPacketsHeard": "{count, plural, =0{Nessun pacchetto ricevuto finora} =1{1 pacchetto ricevuto} other{{count} pacchetti ricevuti}}",
+  "@rangeTestPacketsHeard": {
+    "description": "Range Test: number of test packets heard during the current recording",
     "placeholders": {
-      "query": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeTestIntervalOff": "Disattivato",
+  "@rangeTestIntervalOff": {
+    "description": "Range Test: sender interval option that makes the radio a receiver only"
+  },
+  "rangeTestSenderIntervalHelp": "Ogni quanto questa radio trasmette un pacchetto di test. Disattivato la rende ricevente.",
+  "@rangeTestSenderIntervalHelp": {
+    "description": "Range Test: help text under the sender interval choices"
+  },
+  "rangeTestSenderIntervalPublicHelp": "Disattivato rende questa radio ricevente. Per inviare serve una chiave privata sul canale primario.",
+  "@rangeTestSenderIntervalPublicHelp": {
+    "description": "Range Test: help text under the sender interval when the primary channel uses a public key"
+  },
+  "rangeTestPublicChannelWarning": "Il canale primario usa una chiave pubblica, quindi un trasmettitore invierebbe pacchetti di test a tutte le radio nel raggio. L'invio resta disattivato finché il canale primario non ha una chiave privata.",
+  "@rangeTestPublicChannelWarning": {
+    "description": "Range Test: warning that sending is blocked while the primary channel uses a public key"
+  },
+  "rangeTestSectionHistory": "Test registrati",
+  "@rangeTestSectionHistory": {
+    "description": "Range Test: section header above the list of recorded tests"
+  },
+  "rangeTestPacketCount": "{count, plural, =1{1 pacchetto} other{{count} pacchetti}}",
+  "@rangeTestPacketCount": {
+    "description": "Range Test: number of packets in a recorded test",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeTestSessionSubtitle": "{packets}, {duration}",
+  "@rangeTestSessionSubtitle": {
+    "description": "Range Test: recorded test subtitle. {packets} is the packet count text, {duration} the test length or the recording status",
+    "placeholders": {
+      "packets": {
+        "type": "String"
+      },
+      "duration": {
         "type": "String"
       }
-    },
-    "description": "UI text: range test no nodes match Parameters: {query}."
+    }
   },
-  "@rangeTestPacketsReceived": {
+  "rangeTestKmlName": "Test di portata {date}",
+  "@rangeTestKmlName": {
+    "description": "Range Test: name of an exported test, shown in map apps and as the share subject. {date} is the start date and time",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeTestKmlNoPositions": "Nessun pacchetto di questo test ha una posizione, quindi non c'è nulla da mostrare su una mappa.",
+  "@rangeTestKmlNoPositions": {
+    "description": "Range Test: shown when a map export is requested but no packet has a location"
+  },
+  "rangeTestExportFailed": "Esportazione non riuscita: {error}",
+  "@rangeTestExportFailed": {
+    "description": "Range Test: export error. {error} is the error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "rangeTestExportCsv": "Esporta CSV",
+  "@rangeTestExportCsv": {
+    "description": "Range Test: menu item exporting a recorded test as a CSV spreadsheet file"
+  },
+  "rangeTestExportKml": "Esporta KML (mappa)",
+  "@rangeTestExportKml": {
+    "description": "Range Test: menu item exporting a recorded test as a KML map file"
+  },
+  "rangeTestDelete": "Elimina",
+  "@rangeTestDelete": {
+    "description": "Range Test: menu item and confirm button that delete a recorded test"
+  },
+  "rangeTestDeleteTitle": "Eliminare questo test?",
+  "@rangeTestDeleteTitle": {
+    "description": "Range Test: delete confirmation title"
+  },
+  "rangeTestDeleteMessage": "I pacchetti registrati vengono rimossi da questo telefono.",
+  "@rangeTestDeleteMessage": {
+    "description": "Range Test: delete confirmation message"
+  },
+  "rangeTestLoadFailed": "Impossibile caricare questo test.",
+  "@rangeTestLoadFailed": {
+    "description": "Range Test: shown when a recorded test cannot be read from storage"
+  },
+  "rangeTestReceived": "Ricevuti",
+  "@rangeTestReceived": {
+    "description": "Range Test: summary row label for packets received"
+  },
+  "rangeTestReceivedValue": "{received} su {expected} ({percent}%)",
+  "@rangeTestReceivedValue": {
+    "description": "Range Test: packets received out of packets sent, with a percentage",
+    "placeholders": {
+      "received": {
+        "type": "int"
+      },
+      "expected": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "rangeTestStarted": "Inizio",
+  "@rangeTestStarted": {
+    "description": "Range Test: summary row label for when the test started"
+  },
+  "rangeTestDuration": "Durata",
+  "@rangeTestDuration": {
+    "description": "Range Test: summary row label for how long the test ran"
+  },
+  "rangeTestPackets": "Pacchetti",
+  "@rangeTestPackets": {
+    "description": "Range Test: section header above the list of received packets"
+  },
+  "rangeTestNoPackets": "Nessun pacchetto ricevuto finora.",
+  "@rangeTestNoPackets": {
+    "description": "Range Test: shown when a test has no packets"
+  },
+  "rangeTestViaMqtt": "tramite MQTT",
+  "@rangeTestViaMqtt": {
+    "description": "Range Test: marks a packet that arrived through MQTT rather than over the air"
+  },
+  "rangeTestMissed": "{count, plural, =1{1 pacchetto perso} other{{count} pacchetti persi}}",
+  "@rangeTestMissed": {
+    "description": "Range Test: number of packets from the same sender that did not arrive before this one",
     "placeholders": {
       "count": {
         "type": "int"
       }
-    },
-    "description": "UI text: range test packets received Parameters: {count} = numeric count."
+    }
   },
-  "@rangeTestReady": {
-    "description": "UI text: range test ready"
-  },
-  "@rangeTestResultsCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    },
-    "description": "UI text: range test results count Parameters: {count} = numeric count."
-  },
-  "@rangeTestRunning": {
-    "description": "UI text: range test running"
+  "@rangeTestMaxDist": {
+    "description": "UI text: range test max dist"
   },
   "@rangeTestSave": {
     "description": "UI text: range test save"
@@ -20420,31 +20555,8 @@
   "@rangeTestSaveSuccess": {
     "description": "Success notification"
   },
-  "@rangeTestSearchNodes": {
-    "description": "UI text: range test search nodes"
-  },
-  "@rangeTestSelectNode": {
-    "description": "UI text: range test select node"
-  },
-  "@rangeTestSelectTarget": {
-    "description": "UI text: range test select target"
-  },
-  "@rangeTestSelectTargetNode": {
-    "description": "UI text: range test select target node"
-  },
   "@rangeTestSenderInterval": {
     "description": "UI text: range test sender interval"
-  },
-  "@rangeTestSenderIntervalSubtitle": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    },
-    "description": "Subtitle Parameters: {seconds} = time duration."
-  },
-  "@rangeTestStartTest": {
-    "description": "UI text: range test start test"
   },
   "@rangeTestStop": {
     "description": "UI text: range test stop"
@@ -34736,26 +34848,14 @@
   "rangeTestEnableModule": "Attiva modulo test di portata",
   "rangeTestEnableModuleSubtitle": "Consenti a questo dispositivo di partecipare ai test di portata",
   "rangeTestHowItWorks": "Come funziona il test di portata",
-  "rangeTestHowItWorksDescription": "1. Seleziona un nodo obiettivo per testare la portata\n2. Avvia il test per iniziare a inviare pacchetti\n3. Visualizza le metriche del segnale in tempo reale (SNR, RSSI)\n4. Monitora la distanza massima raggiunta\n\nEntrambi i nodi devono avere il modulo test di portata attivato per i migliori risultati.",
+  "rangeTestHowItWorksDescription": "1. Attiva il modulo su due radio che condividono un canale primario privato. Assegna a una un intervallo di invio e lascia su Disattivato la radio collegata a questo telefono.\n2. Avvia la registrazione e spostati. Ogni pacchetto di test ricevuto dalla tua radio viene salvato con SNR, RSSI e la posizione di questo telefono.\n3. I vuoti nei numeri di sequenza sono pacchetti che non sono arrivati.\n4. Apri un test registrato per esportarlo in CSV, o in KML per vederlo su una mappa.",
   "rangeTestMaxDist": "Dist. max",
-  "rangeTestNoNodes": "Nessun altro nodo disponibile",
-  "rangeTestNoNodesMatch": "Nessun nodo corrisponde a \"{query}\"",
-  "rangeTestPacketsReceived": "{count} pacchetti ricevuti",
-  "rangeTestReady": "Pronto per il test",
-  "rangeTestResultsCount": "Risultati ({count})",
-  "rangeTestRunning": "Test in corso",
   "rangeTestSave": "Salva",
   "rangeTestSaveFailed": "Salvataggio configurazione fallito: {error}",
-  "rangeTestSaveResultsToSd": "Salva risultati su SD",
-  "rangeTestSaveResultsToSdSubtitle": "Salva i risultati del test sulla scheda SD del dispositivo",
+  "rangeTestSaveResultsToSd": "Salva i risultati sulla radio",
+  "rangeTestSaveResultsToSdSubtitle": "Scrive rangetest.csv nella memoria della radio, scaricabile tramite il suo Wi-Fi. Solo radio ESP32 con Wi-Fi.",
   "rangeTestSaveSuccess": "Configurazione test di portata salvata",
-  "rangeTestSearchNodes": "Cerca nodi…",
-  "rangeTestSelectNode": "Seleziona nodo",
-  "rangeTestSelectTarget": "Seleziona obiettivo",
-  "rangeTestSelectTargetNode": "Seleziona nodo obiettivo",
   "rangeTestSenderInterval": "Intervallo invio",
-  "rangeTestSenderIntervalSubtitle": "Invia pacchetto di test ogni {seconds} secondi",
-  "rangeTestStartTest": "Avvia test",
   "rangeTestStop": "Ferma",
   "rangeTestTitle": "Test di portata",
   "reachabilityAboutTitle": "Info sulla raggiungibilità",

@@ -268,6 +268,45 @@ class MeshWaypointEvent {
   });
 }
 
+/// One Range Test module packet (RANGE_TEST_APP) heard by the connected
+/// radio.
+///
+/// The sender's firmware broadcasts `seq <n>` with a hop limit of zero, so a
+/// packet that arrived over RF was always heard directly from its sender and
+/// [rxSnr] / [rxRssi] describe that link. A packet that reached the radio
+/// through MQTT carries no RF reading, and both are null.
+class RangeTestPacketEvent {
+  final int senderNodeNum;
+  final int packetId;
+  final String payload;
+
+  /// The `<n>` of a `seq <n>` payload; null for any other text.
+  final int? sequence;
+  final double? rxSnr;
+  final int? rxRssi;
+  final bool viaMqtt;
+  final DateTime receivedAt;
+
+  const RangeTestPacketEvent({
+    required this.senderNodeNum,
+    required this.packetId,
+    required this.payload,
+    required this.sequence,
+    required this.rxSnr,
+    required this.rxRssi,
+    required this.viaMqtt,
+    required this.receivedAt,
+  });
+
+  static final RegExp _sequencePattern = RegExp(r'^seq (\d+)$');
+
+  /// Parses the firmware's `seq <n>` payload text.
+  static int? parseSequence(String payload) {
+    final match = _sequencePattern.firstMatch(payload.trim());
+    return match == null ? null : int.tryParse(match.group(1)!);
+  }
+}
+
 /// Debug flags to control verbose logging
 class ProtocolDebugFlags {
   /// Log RSSI polling updates
@@ -492,6 +531,7 @@ class ProtocolService {
   final List<MeshBeaconEvent> _recentMeshBeacons = <MeshBeaconEvent>[];
   static const int _maxRecentMeshBeacons = 20;
   final StreamController<MeshWaypointEvent> _waypointController;
+  final StreamController<RangeTestPacketEvent> _rangeTestPacketController;
   final StreamController<TraceRouteLog> _traceRouteLogController;
   final StreamController<MeshTelemetry> _meshTelemetryController;
   final StreamController<pb.MqttClientProxyMessage>
@@ -1273,6 +1313,8 @@ class ProtocolService {
        _meshBeaconEventController =
            StreamController<MeshBeaconEvent>.broadcast(),
        _waypointController = StreamController<MeshWaypointEvent>.broadcast(),
+       _rangeTestPacketController =
+           StreamController<RangeTestPacketEvent>.broadcast(),
        _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
        _meshTelemetryController = StreamController<MeshTelemetry>.broadcast(),
        _mqttClientProxyMessageController =
@@ -1389,6 +1431,11 @@ class ProtocolService {
   /// its own waypoint immediately. [MeshWaypointEvent.isDelete] flags the
   /// firmware "delete for everyone" sentinel.
   Stream<MeshWaypointEvent> get waypointStream => _waypointController.stream;
+
+  /// Stream of Range Test module packets (RANGE_TEST_APP) heard by the
+  /// connected radio.
+  Stream<RangeTestPacketEvent> get rangeTestPacketStream =>
+      _rangeTestPacketController.stream;
 
   /// Stream of client notifications (firmware errors, warnings, config validation)
   Stream<pb.ClientNotification> get clientNotificationStream =>
@@ -3126,6 +3173,9 @@ class ProtocolService {
           case pn.PortNum.TRACEROUTE_APP:
             _handleTracerouteMessage(packet, data);
             break;
+          case pn.PortNum.RANGE_TEST_APP:
+            _handleRangeTestMessage(packet, data);
+            break;
           case pn.PortNum.RETICULUM_TUNNEL_APP:
             // Gated by AppFeatureFlags.isReticulumTunnelEnabled. When
             // false (default), the handler is a no-op and the broadcast
@@ -3808,6 +3858,30 @@ class ProtocolService {
   /// rebroadcasts. `expire == 1` is the "delete for everyone" sentinel and is
   /// surfaced via [MeshWaypointEvent.isDelete] (coordinate validation is
   /// skipped for deletes, which may carry zeroed coordinates).
+  void _handleRangeTestMessage(pb.MeshPacket packet, pb.Data data) {
+    if (packet.from == _myNodeNum) return;
+    final payload = sanitizeExternalText(
+      utf8.decode(data.payload, allowMalformed: true),
+    );
+    final viaMqtt = receiveViaMqtt(packet);
+    final event = RangeTestPacketEvent(
+      senderNodeNum: packet.from,
+      packetId: packet.id,
+      payload: payload,
+      sequence: RangeTestPacketEvent.parseSequence(payload),
+      rxSnr: !viaMqtt && packet.hasRxSnr() ? packet.rxSnr.toDouble() : null,
+      rxRssi: !viaMqtt && packet.hasRxRssi() ? packet.rxRssi : null,
+      viaMqtt: viaMqtt,
+      receivedAt: DateTime.now(),
+    );
+    AppLogging.protocol(
+      'RX_RANGE_TEST from=${packet.from.toRadixString(16)} '
+      'seq=${event.sequence} snr=${event.rxSnr} rssi=${event.rxRssi} '
+      'mqtt=$viaMqtt',
+    );
+    _rangeTestPacketController.add(event);
+  }
+
   void _handleWaypointMessage(pb.MeshPacket packet, pb.Data data) {
     try {
       final w = pb.Waypoint.fromBuffer(data.payload);
@@ -12130,6 +12204,7 @@ class ProtocolService {
     await _traceRouteLogController.close();
     await _meshTelemetryController.close();
     await _waypointController.close();
+    await _rangeTestPacketController.close();
     await _meshBeaconEventController.close();
     await _meshBeaconConfigController.close();
     await _mqttClientProxyMessageController.close();

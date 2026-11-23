@@ -40524,29 +40524,11 @@ abstract class AppLocalizations {
   /// **'Failed to save config: {error}'**
   String rangeTestSaveFailed(String error);
 
-  /// UI text: range test no nodes
-  ///
-  /// In en, this message translates to:
-  /// **'No other nodes available'**
-  String get rangeTestNoNodes;
-
-  /// UI text: range test select target
-  ///
-  /// In en, this message translates to:
-  /// **'Select target'**
-  String get rangeTestSelectTarget;
-
   /// UI text: range test configuration
   ///
   /// In en, this message translates to:
   /// **'Configuration'**
   String get rangeTestConfiguration;
-
-  /// UI text: range test results count Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'Results ({count})'**
-  String rangeTestResultsCount(int count);
 
   /// UI text: range test about
   ///
@@ -40554,41 +40536,11 @@ abstract class AppLocalizations {
   /// **'About Range Test'**
   String get rangeTestAbout;
 
-  /// UI text: range test running
-  ///
-  /// In en, this message translates to:
-  /// **'Test Running'**
-  String get rangeTestRunning;
-
-  /// UI text: range test ready
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to Test'**
-  String get rangeTestReady;
-
-  /// UI text: range test packets received Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} packets received'**
-  String rangeTestPacketsReceived(int count);
-
-  /// UI text: range test select node
-  ///
-  /// In en, this message translates to:
-  /// **'Select Node'**
-  String get rangeTestSelectNode;
-
   /// UI text: range test stop
   ///
   /// In en, this message translates to:
   /// **'Stop'**
   String get rangeTestStop;
-
-  /// UI text: range test start test
-  ///
-  /// In en, this message translates to:
-  /// **'Start Test'**
-  String get rangeTestStartTest;
 
   /// UI text: range test enable module
   ///
@@ -40608,22 +40560,16 @@ abstract class AppLocalizations {
   /// **'Sender Interval'**
   String get rangeTestSenderInterval;
 
-  /// Subtitle Parameters: {seconds} = time duration.
+  /// Range Test toggle: the radio writes received test packets to a CSV file on its own storage
   ///
   /// In en, this message translates to:
-  /// **'Send test packet every {seconds} seconds'**
-  String rangeTestSenderIntervalSubtitle(int seconds);
-
-  /// UI text: range test save results to sd
-  ///
-  /// In en, this message translates to:
-  /// **'Save Results to SD'**
+  /// **'Save results on the radio'**
   String get rangeTestSaveResultsToSd;
 
-  /// Subtitle or secondary text
+  /// Range Test: subtitle explaining the on-radio CSV file and that only ESP32 radios with Wi-Fi support it
   ///
   /// In en, this message translates to:
-  /// **'Store test results on device SD card'**
+  /// **'Writes rangetest.csv to the radio\'s storage, downloadable over its Wi-Fi. ESP32 radios with Wi-Fi only.'**
   String get rangeTestSaveResultsToSdSubtitle;
 
   /// SNR = Signal-to-Noise Ratio. 'Avg' = average over test duration.
@@ -40650,29 +40596,197 @@ abstract class AppLocalizations {
   /// **'How Range Test Works'**
   String get rangeTestHowItWorks;
 
-  /// Range test sends mesh radio packets between two nodes to measure signal quality (SNR/RSSI) over distance.
+  /// Range Test: numbered steps explaining how to run a test with a sender and a receiver radio
   ///
   /// In en, this message translates to:
-  /// **'1. Select a target node to test range with\n2. Start the test to begin sending packets\n3. View real-time signal metrics (SNR, RSSI)\n4. Track maximum distance achieved\n\nBoth nodes must have Range Test module enabled for best results.'**
+  /// **'1. Enable the module on two radios that share a private primary channel. Give one a sender interval and leave the radio connected to this phone on Off.\n2. Start recording and move around. Each test packet your radio hears is saved with its SNR, RSSI and this phone\'s location.\n3. Gaps in the sequence numbers are packets that did not arrive.\n4. Open a recorded test to export it as CSV, or as KML to see it on a map.'**
   String get rangeTestHowItWorksDescription;
 
-  /// UI text: range test select target node
+  /// Range Test: button that starts recording packets
   ///
   /// In en, this message translates to:
-  /// **'Select Target Node'**
-  String get rangeTestSelectTargetNode;
+  /// **'Start'**
+  String get rangeTestStart;
 
-  /// UI text: range test search nodes
+  /// Range Test: section header above the recording control
   ///
   /// In en, this message translates to:
-  /// **'Search nodes…'**
-  String get rangeTestSearchNodes;
+  /// **'Record'**
+  String get rangeTestSectionRecord;
 
-  /// UI text: range test no nodes match Parameters: {query}.
+  /// Range Test: status title when no recording is running
   ///
   /// In en, this message translates to:
-  /// **'No nodes match \"{query}\"'**
-  String rangeTestNoNodesMatch(String query);
+  /// **'Not recording'**
+  String get rangeTestRecordingIdle;
+
+  /// Range Test: explains what recording does
+  ///
+  /// In en, this message translates to:
+  /// **'Saves every Range Test packet your radio hears, with its signal and this phone\'s location.'**
+  String get rangeTestRecordingIdleSubtitle;
+
+  /// Range Test: status while a recording is running
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get rangeTestRecordingActive;
+
+  /// Range Test: shown when no radio is connected, so recording cannot start
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a radio to record.'**
+  String get rangeTestConnectToRecord;
+
+  /// Range Test: number of test packets heard during the current recording
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No packets heard yet} =1{1 packet heard} other{{count} packets heard}}'**
+  String rangeTestPacketsHeard(int count);
+
+  /// Range Test: sender interval option that makes the radio a receiver only
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get rangeTestIntervalOff;
+
+  /// Range Test: help text under the sender interval choices
+  ///
+  /// In en, this message translates to:
+  /// **'How often this radio broadcasts a test packet. Off makes it a receiver.'**
+  String get rangeTestSenderIntervalHelp;
+
+  /// Range Test: help text under the sender interval when the primary channel uses a public key
+  ///
+  /// In en, this message translates to:
+  /// **'Off makes this radio a receiver. Sending needs a private key on the primary channel.'**
+  String get rangeTestSenderIntervalPublicHelp;
+
+  /// Range Test: warning that sending is blocked while the primary channel uses a public key
+  ///
+  /// In en, this message translates to:
+  /// **'The primary channel uses a public key, so a sender would broadcast test packets to every radio in range. Sending stays off until the primary channel has a private key.'**
+  String get rangeTestPublicChannelWarning;
+
+  /// Range Test: section header above the list of recorded tests
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded tests'**
+  String get rangeTestSectionHistory;
+
+  /// Range Test: number of packets in a recorded test
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 packet} other{{count} packets}}'**
+  String rangeTestPacketCount(int count);
+
+  /// Range Test: recorded test subtitle. {packets} is the packet count text, {duration} the test length or the recording status
+  ///
+  /// In en, this message translates to:
+  /// **'{packets}, {duration}'**
+  String rangeTestSessionSubtitle(String packets, String duration);
+
+  /// Range Test: name of an exported test, shown in map apps and as the share subject. {date} is the start date and time
+  ///
+  /// In en, this message translates to:
+  /// **'Range test {date}'**
+  String rangeTestKmlName(String date);
+
+  /// Range Test: shown when a map export is requested but no packet has a location
+  ///
+  /// In en, this message translates to:
+  /// **'No packet in this test has a location, so there is nothing to map.'**
+  String get rangeTestKmlNoPositions;
+
+  /// Range Test: export error. {error} is the error message
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String rangeTestExportFailed(String error);
+
+  /// Range Test: menu item exporting a recorded test as a CSV spreadsheet file
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get rangeTestExportCsv;
+
+  /// Range Test: menu item exporting a recorded test as a KML map file
+  ///
+  /// In en, this message translates to:
+  /// **'Export KML (map)'**
+  String get rangeTestExportKml;
+
+  /// Range Test: menu item and confirm button that delete a recorded test
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get rangeTestDelete;
+
+  /// Range Test: delete confirmation title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this test?'**
+  String get rangeTestDeleteTitle;
+
+  /// Range Test: delete confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'The recorded packets are removed from this phone.'**
+  String get rangeTestDeleteMessage;
+
+  /// Range Test: shown when a recorded test cannot be read from storage
+  ///
+  /// In en, this message translates to:
+  /// **'This test could not be loaded.'**
+  String get rangeTestLoadFailed;
+
+  /// Range Test: summary row label for packets received
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get rangeTestReceived;
+
+  /// Range Test: packets received out of packets sent, with a percentage
+  ///
+  /// In en, this message translates to:
+  /// **'{received} of {expected} ({percent}%)'**
+  String rangeTestReceivedValue(int received, int expected, int percent);
+
+  /// Range Test: summary row label for when the test started
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get rangeTestStarted;
+
+  /// Range Test: summary row label for how long the test ran
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get rangeTestDuration;
+
+  /// Range Test: section header above the list of received packets
+  ///
+  /// In en, this message translates to:
+  /// **'Packets'**
+  String get rangeTestPackets;
+
+  /// Range Test: shown when a test has no packets
+  ///
+  /// In en, this message translates to:
+  /// **'No packets heard yet.'**
+  String get rangeTestNoPackets;
+
+  /// Range Test: marks a packet that arrived through MQTT rather than over the air
+  ///
+  /// In en, this message translates to:
+  /// **'via MQTT'**
+  String get rangeTestViaMqtt;
+
+  /// Range Test: number of packets from the same sender that did not arrive before this one
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 packet missed} other{{count} packets missed}}'**
+  String rangeTestMissed(int count);
 
   /// Screen or section title
   ///

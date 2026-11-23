@@ -18,6 +18,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../services/backup/device_config_backup_service.dart';
 import '../../services/backup/device_config_bundle.dart';
+import '../../utils/export_format.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../automations/automation_providers.dart';
@@ -707,18 +708,18 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
           fromNode?.shortName ??
           l10n.dataExportUnknownSender;
       buffer.writeln(
-        '${_csv(msg.timestamp.toIso8601String())},'
-        '${_csv(msg.from)},'
-        '${_csv(fromName)},'
-        '${_csv(msg.channel)},'
-        '${_csv(msg.text)},'
-        '${_csv(msg.isDirect)}',
+        '${csvField(msg.timestamp.toIso8601String())},'
+        '${csvField(msg.from)},'
+        '${csvField(fromName)},'
+        '${csvField(msg.channel)},'
+        '${csvField(msg.text)},'
+        '${csvField(msg.isDirect)}',
       );
     }
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('messages', 'csv'),
+      filename: exportFileName('messages', 'csv'),
       mimeType: 'text/csv',
       subject: l10n.dataExportShareSubjectMessages,
       context: context,
@@ -742,7 +743,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('device-metrics', 'csv'),
+      filename: exportFileName('device-metrics', 'csv'),
       mimeType: 'text/csv',
       subject: l10n.dataExportShareSubjectDeviceMetrics,
       context: context,
@@ -766,7 +767,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('environment-metrics', 'csv'),
+      filename: exportFileName('environment-metrics', 'csv'),
       mimeType: 'text/csv',
       subject: l10n.dataExportShareSubjectEnvironmentMetrics,
       context: context,
@@ -790,7 +791,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('air-quality', 'csv'),
+      filename: exportFileName('air-quality', 'csv'),
       mimeType: 'text/csv',
       subject: l10n.dataExportShareSubjectAirQuality,
       context: context,
@@ -814,7 +815,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('power-metrics', 'csv'),
+      filename: exportFileName('power-metrics', 'csv'),
       mimeType: 'text/csv',
       subject: l10n.dataExportShareSubjectPowerMetrics,
       context: context,
@@ -838,7 +839,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('positions', 'csv'),
+      filename: exportFileName('positions', 'csv'),
       mimeType: 'text/csv',
       subject: l10n.dataExportShareSubjectPositionHistory,
       context: context,
@@ -882,7 +883,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('routes', 'gpx'),
+      filename: exportFileName('routes', 'gpx'),
       mimeType: 'application/gpx+xml',
       subject: l10n.dataExportShareSubjectRoutes,
       context: context,
@@ -907,13 +908,13 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
           .join(',');
       buffer.writeln(
         '${log.timestamp.toIso8601String()},${log.targetNode},${log.hops.length},'
-        '${_csv(hopNodes)},${_csv(snrValues)}',
+        '${csvField(hopNodes)},${csvField(snrValues)}',
       );
     }
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('traceroutes', 'csv'),
+      filename: exportFileName('traceroutes', 'csv'),
       mimeType: 'text/csv',
       subject: l10n.dataExportShareSubjectTraceroutes,
       context: context,
@@ -932,7 +933,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       const JsonEncoder.withIndent('  ').convert(data),
-      filename: _filename('automations', 'json'),
+      filename: exportFileName('automations', 'json'),
       mimeType: 'application/json',
       subject: l10n.dataExportShareSubjectAutomations,
       context: context,
@@ -951,7 +952,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       const JsonEncoder.withIndent('  ').convert(data),
-      filename: _filename('automation-log', 'json'),
+      filename: exportFileName('automation-log', 'json'),
       mimeType: 'application/json',
       subject: l10n.dataExportShareSubjectAutomationLog,
       context: context,
@@ -969,11 +970,11 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
     for (final node in nodes.values) {
       buffer.writeln(
         '${node.nodeNum},'
-        '${_csv(node.userId ?? '')},'
-        '${_csv(node.longName ?? '')},'
-        '${_csv(node.shortName ?? '')},'
-        '${_csv(node.hardwareModel ?? '')},'
-        '${_csv(node.role ?? '')},'
+        '${csvField(node.userId ?? '')},'
+        '${csvField(node.longName ?? '')},'
+        '${csvField(node.shortName ?? '')},'
+        '${csvField(node.hardwareModel ?? '')},'
+        '${csvField(node.role ?? '')},'
         '${node.latitude ?? ''},${node.longitude ?? ''},${node.altitude ?? ''},'
         '${node.batteryLevel ?? ''},${node.snr ?? ''},'
         '${node.lastHeard?.toIso8601String() ?? ''}',
@@ -982,7 +983,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       buffer.toString(),
-      filename: _filename('nodes', 'csv'),
+      filename: exportFileName('nodes', 'csv'),
       mimeType: 'text/csv',
       subject: l10n.dataExportShareSubjectNodeList,
       context: context,
@@ -1038,7 +1039,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
 
     await shareTextAsFile(
       const JsonEncoder.withIndent('  ').convert(data),
-      filename: _filename('complete-export', 'json'),
+      filename: exportFileName('complete-export', 'json'),
       mimeType: 'application/json',
       subject: l10n.dataExportShareSubjectComplete,
       context: context,
@@ -1216,28 +1217,4 @@ class _InfoBanner extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Format a value for inclusion in a CSV row. Strings/dynamic values get
-/// double-quote escaping per RFC 4180; numbers and bools pass through.
-String _csv(Object? value) {
-  if (value == null) return '';
-  if (value is num || value is bool) return value.toString();
-  final s = value.toString();
-  if (s.contains('"') ||
-      s.contains(',') ||
-      s.contains('\n') ||
-      s.contains('\r')) {
-    return '"${s.replaceAll('"', '""')}"'; // lint-allow: hardcoded-string - CSV quoting
-  }
-  return s;
-}
-
-String _filename(String stem, String ext) {
-  final now = DateTime.now().toUtc();
-  String two(int n) => n.toString().padLeft(2, '0');
-  final stamp =
-      '${now.year}${two(now.month)}${two(now.day)}'
-      '${two(now.hour)}${two(now.minute)}';
-  return 'socialmesh-$stem-$stamp.$ext'; // lint-allow: hardcoded-string - file name
 }
