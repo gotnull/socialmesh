@@ -2079,6 +2079,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
     final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
     final offlineQueue = ref.read(offlineQueueProvider);
+    final onboardingFlow = ref.read(meshtasticOnboardingFlowProvider.notifier);
 
     final attempt = ++_connectAttempt;
 
@@ -2271,6 +2272,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         );
         return;
       }
+      onboardingFlow.connectFailed(device, detail: e.runtimeType.toString());
       // Log error to Crashlytics ONLY for unexpected errors
       // Don't log expected errors like timeouts (device busy/connected elsewhere),
       // pairing/auth errors which are user-recoverable, or GATT errors (133)

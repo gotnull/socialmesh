@@ -161,6 +161,36 @@ void main() {
       expect(guardAt, greaterThan(0));
       expect(disconnectAt, greaterThan(guardAt));
     });
+
+    test('a failed connect ends the onboarding flow attempt', () {
+      // Left in connecting, the flow held the shell on the Scanner and
+      // ignored the next radio tapped.
+      final start = source.indexOf('Future<void> _connectToDevice(');
+      final catchAt = source.indexOf('} catch (e, stack) {', start);
+      final body = source
+          .substring(
+            catchAt,
+            source.indexOf('Widget _buildConnectingContent()'),
+          )
+          .replaceAll(RegExp(r'\s+'), ' ');
+      final guardAt = body.indexOf('if (attempt != _connectAttempt) {');
+      final failAt = body.indexOf(
+        'onboardingFlow.connectFailed(device, '
+        'detail: e.runtimeType.toString());',
+      );
+      final mountedAt = body.indexOf('if (!mounted) return;');
+      expect(guardAt, greaterThan(0));
+      expect(
+        failAt,
+        greaterThan(guardAt),
+        reason: 'a superseded attempt must not fail the newer one',
+      );
+      expect(
+        mountedAt,
+        greaterThan(failAt),
+        reason: 'the flow is ended even when the Scanner has unmounted',
+      );
+    });
   });
 
   group('Scanner deferring to a background reconnect', () {

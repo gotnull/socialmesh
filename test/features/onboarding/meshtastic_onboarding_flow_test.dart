@@ -228,6 +228,57 @@ void main() {
     },
   );
 
+  test('connectFailed for the target ends the attempt as connectFailed', () {
+    final protocol = FakeOnboardingProtocolService();
+    final container = buildOnboardingTestContainer(protocol: protocol);
+    addTearDown(container.dispose);
+
+    final device = testDevice();
+    final notifier = container.read(meshtasticOnboardingFlowProvider.notifier);
+    notifier.connect(device);
+    notifier.connectFailed(device, detail: 'TimeoutException');
+
+    final state = container.read(meshtasticOnboardingFlowProvider);
+    expect(state, isA<OnboardingFailed>());
+    expect(
+      (state as OnboardingFailed).reason,
+      OnboardingFailureReason.connectFailed,
+    );
+    expect(state.detail, 'TimeoutException');
+  });
+
+  test('connectFailed for an older radio leaves a retargeted flow alone', () {
+    final protocol = FakeOnboardingProtocolService();
+    final container = buildOnboardingTestContainer(protocol: protocol);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(meshtasticOnboardingFlowProvider.notifier);
+    final older = testDevice(id: 'older-radio');
+    final newer = testDevice(id: 'newer-radio');
+    notifier.connect(older);
+    notifier.connect(newer);
+    notifier.connectFailed(older);
+
+    final state = container.read(meshtasticOnboardingFlowProvider);
+    expect(state, isA<OnboardingConnecting>());
+    expect((state as OnboardingConnecting).target.id, newer.id);
+  });
+
+  test('connectFailed outside connecting does nothing', () {
+    final protocol = FakeOnboardingProtocolService();
+    final container = buildOnboardingTestContainer(protocol: protocol);
+    addTearDown(container.dispose);
+
+    container
+        .read(meshtasticOnboardingFlowProvider.notifier)
+        .connectFailed(testDevice());
+
+    expect(
+      container.read(meshtasticOnboardingFlowProvider),
+      isA<OnboardingIdle>(),
+    );
+  });
+
   test('cancel() while connecting transitions to cancelled', () async {
     final protocol = FakeOnboardingProtocolService();
     final container = buildOnboardingTestContainer(protocol: protocol);

@@ -183,6 +183,20 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
     _transitionTo(OnboardingConnecting(device), reason: 'connect');
   }
 
+  /// Scanner's transport connect or protocol start for [device] failed.
+  /// Ends the attempt so a stale connecting state cannot outlive it; a
+  /// flow already retargeted at another radio is left alone.
+  void connectFailed(DeviceInfo device, {String? detail}) {
+    final current = state;
+    if (current is! OnboardingConnecting || current.target.id != device.id) {
+      return;
+    }
+    _transitionTo(
+      OnboardingFailed(OnboardingFailureReason.connectFailed, detail: detail),
+      reason: 'scanner_connect_failed',
+    );
+  }
+
   /// User backed out of the region picker (back gesture / cancel).
   /// Transitions to [OnboardingCancelled] which the appShell mapper
   /// routes back to the scanner.
