@@ -149,7 +149,7 @@ class ConnectingContent extends StatelessWidget {
               onPressed: onCancel,
               child: Text(
                 context.l10n.commonCancel,
-                style: TextStyle(color: context.textTertiary, fontSize: 16),
+                style: context.bodyStyle?.copyWith(color: context.textTertiary),
               ),
             ),
           ],
