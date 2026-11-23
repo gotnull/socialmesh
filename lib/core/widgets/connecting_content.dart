@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../theme.dart';
 import '../../providers/splash_mesh_provider.dart';
 import 'animated_tagline.dart';
@@ -147,7 +148,7 @@ class ConnectingContent extends StatelessWidget {
             TextButton(
               onPressed: onCancel,
               child: Text(
-                'Cancel',
+                context.l10n.commonCancel,
                 style: TextStyle(color: context.textTertiary, fontSize: 16),
               ),
             ),

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The Scanner's "Connecting..." screen now has a Cancel button when you tap a Meshtastic radio, not only while it auto-reconnects. Cancel stops the attempt and drops back to the list of radios, so a connection that hangs no longer needs a force quit. A cancelled attempt that finishes late no longer marks the radio connected or shows an error.
+
 ### Fixed
 
 - VoiceOver and TalkBack now read the settings cog at the bottom of the side menu as a "Settings" button. It used to be announced with no name at all.

@@ -177,6 +177,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   // one, so a cancelled attempt's scan loop stops and does not start a
   // second manual scan on top of the one Cancel started.
   int _autoReconnectRun = 0;
+  // Bumped when a Meshtastic connect starts and when the user cancels it,
+  // so a cancelled connect that returns later neither marks the radio
+  // paired nor tears down the link of a newer attempt.
+  int _connectAttempt = 0;
+  // The connecting overlay is up for a MeshCore connect, which ends on its
+  // own result and has no Cancel.
+  bool _connectingMeshCore = false;
   String? _errorMessage;
   String? _savedDeviceNotFoundName;
   bool _showPairingInvalidationHint = false;
@@ -1014,21 +1021,36 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
   }
 
-  // Cancel on the auto-reconnect overlay.
+  // Cancel on the Meshtastic connecting overlay, for a tapped radio and
+  // for an auto-reconnect alike.
   //
-  // The overlay is shown for the Scanner's own attempt and, more often,
-  // for the background reconnect that was already running when the
-  // Scanner opened. Clearing the overlay alone leaves that background
-  // attempt scanning and retrying, and while it holds the adapter the
-  // manual scan is blocked or contended, so the screen comes back with
-  // no Bluetooth list at all. The authoritative cancel stops the scan,
-  // idles the reconnect state and latches userDisconnected so nothing
-  // re-arms it; the manual scan starts once that has settled.
-  Future<void> _cancelAutoReconnect() async {
-    AppLogging.connection('SCANNER_AUTORECONNECT_CANCEL_TAPPED');
+  // The auto-reconnect overlay is shown for the Scanner's own attempt and,
+  // more often, for the background reconnect that was already running
+  // when the Scanner opened. Clearing the overlay alone leaves that
+  // background attempt scanning and retrying, and while it holds the
+  // adapter the manual scan is blocked or contended, so the screen comes
+  // back with no Bluetooth list at all. The authoritative cancel stops the
+  // scan, drops the link, idles the reconnect state and latches
+  // userDisconnected so nothing re-arms it; the manual scan starts once
+  // that has settled. The Scanner's in-flight connect is superseded
+  // through the attempt counter, and the onboarding flow leaves
+  // connecting so a later link to that radio cannot promote it.
+  Future<void> _cancelConnecting() async {
+    AppLogging.connection(
+      'SCANNER_CONNECT_CANCEL_TAPPED autoReconnecting=$_autoReconnecting',
+    );
     _backgroundReconnectSub?.close();
     _backgroundReconnectSub = null;
     _autoReconnectRun++;
+    _connectAttempt++;
+    final manualSession = _activeManualSession;
+    if (manualSession != null) {
+      _clearManualConnectIfCurrent(manualSession, reason: 'cancelled');
+    }
+    final flow = ref.read(meshtasticOnboardingFlowProvider.notifier);
+    if (ref.read(meshtasticOnboardingFlowProvider) is OnboardingConnecting) {
+      flow.cancel(reason: 'scanner_cancel');
+    }
     final notifier = ref.read(conn.deviceConnectionProvider.notifier);
     safeSetState(() {
       _connecting = false;
@@ -1900,6 +1922,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     safeSetState(() {
       _connecting = true;
+      _connectingMeshCore = true;
       _errorMessage = null;
     });
 
@@ -1936,6 +1959,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         // Connection failed
         safeSetState(() {
           _connecting = false;
+          _connectingMeshCore = false;
           _errorMessage =
               result.errorMessage ??
               context.l10n.scannerMeshCoreConnectionFailed;
@@ -1989,6 +2013,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       safeSetState(() {
         _connecting = false;
+        _connectingMeshCore = false;
       });
 
       if (!mounted) return;
@@ -2017,6 +2042,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       safeSetState(() {
         _connecting = false;
+        _connectingMeshCore = false;
         _errorMessage = context.l10n.scannerConnectionFailedWithError(
           e.toString(),
         );
@@ -2054,8 +2080,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
     final offlineQueue = ref.read(offlineQueueProvider);
 
+    final attempt = ++_connectAttempt;
+
     safeSetState(() {
       _connecting = true;
+      _connectingMeshCore = false;
       _autoReconnecting = isAutoReconnect;
       _showPairingInvalidationHint = false;
     });
@@ -2072,7 +2101,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         device: device,
         deviceProtocol: 'meshtastic',
       );
-      if (!mounted) return;
+      if (!mounted || attempt != _connectAttempt) return;
 
       final transport = ref.read(transportProvider);
       final protocol = ref.read(protocolServiceProvider);
@@ -2083,7 +2112,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         'SCANNER: transport.connect() returned, state=${transport.state}',
       );
 
-      if (!mounted) return;
+      if (!mounted || attempt != _connectAttempt) return;
 
       connectedDeviceNotifier.setState(device);
 
@@ -2098,6 +2127,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       protocol.setBleManufacturerName(transport.bleManufacturerName);
 
       await protocol.start();
+      if (!mounted || attempt != _connectAttempt) return;
 
       // Verify protocol actually received configuration from device
       // If PIN was cancelled or authentication failed, myNodeNum will be null
@@ -2117,7 +2147,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // This sends phone GPS to mesh for devices without GPS hardware
       await locationService.startLocationUpdates();
 
-      if (!mounted) return;
+      if (!mounted || attempt != _connectAttempt) return;
 
       // If onboarding, return the device and let onboarding handle navigation
       if (widget.isOnboarding) {
@@ -2232,6 +2262,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // handle the transition out of Scanner.
       return;
     } catch (e, stack) {
+      // A cancelled connect fails once Cancel drops its link. Cancel has
+      // already cleaned up, and a disconnect from here would cut the link
+      // of whatever attempt the user started next.
+      if (attempt != _connectAttempt) {
+        AppLogging.connection(
+          'SCANNER: superseded connect ended (${e.runtimeType})',
+        );
+        return;
+      }
       // Log error to Crashlytics ONLY for unexpected errors
       // Don't log expected errors like timeouts (device busy/connected elsewhere),
       // pairing/auth errors which are user-recoverable, or GATT errors (133)
@@ -2360,9 +2399,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     return ConnectingContent(
       statusInfo: statusInfo,
       showMeshNode: true,
-      showCancel: _autoReconnecting,
+      showCancel: !_connectingMeshCore,
       accentColor: context.accentColor,
-      onCancel: () => unawaited(_cancelAutoReconnect()),
+      onCancel: () => unawaited(_cancelConnecting()),
     );
   }
 

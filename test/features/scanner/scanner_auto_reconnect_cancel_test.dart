@@ -24,13 +24,13 @@ void main() {
     test('the overlay Cancel routes through the dedicated handler', () {
       final collapsed = source.replaceAll(RegExp(r'\s+'), ' ');
       expect(
-        collapsed.contains('onCancel: () => unawaited(_cancelAutoReconnect())'),
+        collapsed.contains('onCancel: () => unawaited(_cancelConnecting())'),
         isTrue,
       );
     });
 
     test('the handler runs the authoritative cancel before scanning', () {
-      final start = source.indexOf('Future<void> _cancelAutoReconnect()');
+      final start = source.indexOf('Future<void> _cancelConnecting()');
       expect(start, greaterThan(0));
       final body = source.substring(start, source.indexOf('\n  }\n', start));
       final cancelAt = body.indexOf('await notifier.userCancelAutoReconnect()');
@@ -49,7 +49,7 @@ void main() {
 
     test("the Scanner's own attempt stops when its run is superseded", () {
       final start = source.indexOf('Future<void> _tryAutoReconnect()');
-      final end = source.indexOf('Future<void> _cancelAutoReconnect()');
+      final end = source.indexOf('Future<void> _cancelConnecting()');
       final body = source.substring(start, end);
       expect(body.contains('final run = ++_autoReconnectRun;'), isTrue);
       expect(
@@ -68,7 +68,7 @@ void main() {
       // Without the hand-off the session comes up behind the
       // Auto-reconnecting overlay and the Scanner never leaves.
       final start = source.indexOf('Future<void> _tryAutoReconnect()');
-      final end = source.indexOf('Future<void> _cancelAutoReconnect()');
+      final end = source.indexOf('Future<void> _cancelConnecting()');
       final body = source.substring(start, end).replaceAll(RegExp(r'\s+'), ' ');
       final handoffAt = body.indexOf(
         'ref.read(meshtasticOnboardingFlowProvider.notifier).connect(lastDevice);',
@@ -78,6 +78,88 @@ void main() {
       );
       expect(handoffAt, greaterThan(0));
       expect(connectAt, greaterThan(handoffAt));
+    });
+  });
+
+  group('Scanner manual connect cancel', () {
+    String section(String from, String to) {
+      final start = source.indexOf(from);
+      expect(start, greaterThan(0), reason: 'missing: $from');
+      final end = source.indexOf(to, start);
+      expect(end, greaterThan(start), reason: 'missing: $to');
+      return source.substring(start, end).replaceAll(RegExp(r'\s+'), ' ');
+    }
+
+    test('Cancel shows on every Meshtastic connect, not only '
+        'auto-reconnect', () {
+      final body = section('Widget _buildConnectingContent()', '@override');
+      expect(body.contains('showCancel: !_connectingMeshCore,'), isTrue);
+    });
+
+    test('the handler supersedes the connect, clears the manual latch and '
+        'leaves the onboarding flow', () {
+      final body = section(
+        'Future<void> _cancelConnecting()',
+        '/// Start a BLE scan.',
+      );
+      final bumpAt = body.indexOf('_connectAttempt++;');
+      final latchAt = body.indexOf(
+        "_clearManualConnectIfCurrent(manualSession, reason: 'cancelled');",
+      );
+      final flowAt = body.indexOf("flow.cancel(reason: 'scanner_cancel');");
+      final stopAt = body.indexOf('await notifier.userCancelAutoReconnect()');
+      expect(bumpAt, greaterThan(0));
+      expect(latchAt, greaterThan(bumpAt));
+      expect(flowAt, greaterThan(latchAt));
+      expect(
+        stopAt,
+        greaterThan(flowAt),
+        reason:
+            'the flow must leave connecting before the link drops, or the '
+            'disconnect lands while the flow still targets the radio',
+      );
+      expect(
+        body.contains(
+          'if (ref.read(meshtasticOnboardingFlowProvider) is '
+          'OnboardingConnecting)',
+        ),
+        isTrue,
+        reason: 'a finished flow from an earlier session is left alone',
+      );
+    });
+
+    test('a superseded connect never marks the radio paired', () {
+      final body = section(
+        'Future<void> _connectToDevice(',
+        '} catch (e, stack) {',
+      );
+      expect(body.contains('final attempt = ++_connectAttempt;'), isTrue);
+      final startAt = body.indexOf('await protocol.start();');
+      final checkAt = body.indexOf(
+        'if (!mounted || attempt != _connectAttempt) return;',
+        startAt,
+      );
+      final pairAt = body.indexOf('deviceConnectionNotifier.markAsPaired(');
+      expect(startAt, greaterThan(0));
+      expect(checkAt, greaterThan(startAt));
+      expect(pairAt, greaterThan(checkAt));
+    });
+
+    test('a superseded connect failing does not tear down the link', () {
+      final start = source.indexOf('Future<void> _connectToDevice(');
+      final catchAt = source.indexOf('} catch (e, stack) {', start);
+      final body = source
+          .substring(
+            catchAt,
+            source.indexOf('Widget _buildConnectingContent()'),
+          )
+          .replaceAll(RegExp(r'\s+'), ' ');
+      final guardAt = body.indexOf('if (attempt != _connectAttempt) {');
+      final disconnectAt = body.indexOf(
+        'await ref.read(transportProvider).disconnect();',
+      );
+      expect(guardAt, greaterThan(0));
+      expect(disconnectAt, greaterThan(guardAt));
     });
   });
 
