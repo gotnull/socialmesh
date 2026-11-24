@@ -819,6 +819,55 @@ void main() {
       await coordinator.dispose();
     });
 
+    test('a MeshCore connect moves stored data to the radio', () async {
+      final calls = <String>[];
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+        meshCoreTransportFactory: FakeMeshCoreBleTransport.new,
+        scopeForDevice: (device) async => calls.add('device ${device.id}'),
+        scopeForIdentity: (device, info) async =>
+            calls.add('identity ${device.id} ${info.displayName}'),
+      );
+
+      final result = await coordinator.connect(
+        device: DeviceInfo(
+          id: 'meshcore-scope-id',
+          name: 'WisMeshCore',
+          type: TransportType.ble,
+        ),
+        advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+      );
+
+      expect(result.success, isTrue);
+      // Before the transport connects, then once the radio has identified.
+      expect(calls, [
+        'device meshcore-scope-id',
+        'identity meshcore-scope-id Fake MeshCore',
+      ]);
+      await coordinator.dispose();
+    });
+
+    test('a failing scope bind does not fail the connect', () async {
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+        meshCoreTransportFactory: FakeMeshCoreBleTransport.new,
+        scopeForDevice: (_) async => throw StateError('disk full'),
+        scopeForIdentity: (_, _) async => throw StateError('disk full'),
+      );
+
+      final result = await coordinator.connect(
+        device: DeviceInfo(
+          id: 'meshcore-scope-fail',
+          name: 'WisMeshCore',
+          type: TransportType.ble,
+        ),
+        advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+      );
+
+      expect(result.success, isTrue);
+      await coordinator.dispose();
+    });
+
     test('a MeshCore connect sets the radio clock', () async {
       // Radios without a real-time clock come back from a reboot with a
       // stale time, and peers drop their adverts as replays.

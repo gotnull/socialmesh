@@ -67,6 +67,8 @@ void main() {
       });
       await reopen();
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(_terry);
       expect(loaded.map((m) => m.id), ['d1', 'd2']);
@@ -87,6 +89,7 @@ void main() {
       ]),
     });
     await reopen();
+    await MeshCoreMessageStore.adoptUnscopedData();
     final store = MeshCoreMessageStore();
     expect(await store.loadContactMessages(_terry), hasLength(1));
 
@@ -97,6 +100,7 @@ void main() {
       _legacyList([_message('d1', 'first', 1)]),
     );
     await reopen();
+    await MeshCoreMessageStore.adoptUnscopedData();
 
     expect(await store.loadContactMessages(_terry), hasLength(1));
     expect(prefs.containsKey('meshcore_messages_contact_$_terry'), isFalse);
@@ -108,6 +112,7 @@ void main() {
       'meshcore_messages_channel_2': _legacyList([_message('p', 'ok', 1)]),
     });
     await reopen();
+    await MeshCoreMessageStore.adoptUnscopedData();
     final store = MeshCoreMessageStore();
 
     expect(await store.loadChannelMessages(2), hasLength(1));
@@ -119,6 +124,7 @@ void main() {
   test('messages persist across a reopen of the database file', () async {
     SharedPreferences.setMockInitialValues({});
     await reopen();
+    await MeshCoreMessageStore.adoptUnscopedData();
     final store = MeshCoreMessageStore();
     await store.addContactMessage(_terry, _message('d1', 'saved', 5));
     await store.addChannelMessage(3, _message('p1', 'posted', 6));

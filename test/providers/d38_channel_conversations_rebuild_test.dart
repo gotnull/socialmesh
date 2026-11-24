@@ -21,6 +21,7 @@
 //     the codebase).
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -270,6 +271,52 @@ void main() {
       0,
     );
   });
+
+  test(
+    'history adopted after the list loaded shows without a restart',
+    () async {
+      const terry =
+          '79426d8d00000000000000000000000000000000000000000000000000000001';
+      final c = _container(
+        channels: const [],
+        pubKeyPrefix: '96458be0',
+        session: session,
+      );
+      addTearDown(c.dispose);
+      c.read(meshCoreConversationsProvider);
+      await c.read(meshCoreConversationsProvider.notifier).refresh();
+      expect(
+        c
+            .read(meshCoreConversationsProvider)
+            .conversations
+            .where((cn) => !cn.isChannel),
+        isEmpty,
+      );
+
+      // A connect adopts history kept before the store was radio-scoped.
+      SharedPreferences.setMockInitialValues({
+        'meshcore_messages_contact_$terry': jsonEncode([
+          MeshCoreStoredMessage(
+            id: 'old',
+            senderKey: Uint8List(0),
+            text: 'from before scoping',
+            timestamp: DateTime(2026, 11, 24, 9),
+            isOutgoing: false,
+          ).toJson(),
+        ]),
+      });
+      await MeshCoreMessageStore.adoptUnscopedData();
+      for (var i = 0; i < 20; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+
+      final dm = c
+          .read(meshCoreConversationsProvider)
+          .conversations
+          .singleWhere((cn) => !cn.isChannel);
+      expect(dm.lastMessageText, 'from before scoping');
+    },
+  );
 
   test('channel with no persisted messages has null preview', () async {
     final c = _container(

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../core/logging.dart';
+import '../../core/radio_scope.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_device.dart';
 import '../../providers/meshcore_providers.dart';
@@ -17,6 +18,8 @@ import 'meshcore_detector.dart';
 import 'meshcore_tcp_transport.dart';
 import 'meshtastic_adapter.dart';
 import 'protocol/meshcore_capture.dart';
+import 'storage/meshcore_contact_store.dart';
+import 'storage/meshcore_message_store.dart';
 
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
@@ -141,6 +144,16 @@ typedef MeshtasticAdapterFactoryFn = MeshtasticAdapter Function(
 /// Meshtastic. Returns the [MeshTransport] interface so the production BLE
 /// path and the dev-only TCP path can both flow through here without the
 /// coordinator caring which concrete transport is in play.
+/// Points stored data at [device] before a MeshCore connect.
+typedef MeshCoreScopeForDeviceFn = Future<void> Function(DeviceInfo device);
+
+/// Binds stored data to the identified radio [info] after a MeshCore
+/// connect.
+typedef MeshCoreScopeForIdentityFn = Future<void> Function(
+  DeviceInfo device,
+  MeshDeviceInfo info,
+);
+
 typedef MeshCoreTransportFactoryFn = MeshTransport Function();
 
 /// Coordinates connection to mesh devices based on detected protocol.
@@ -216,12 +229,46 @@ class ConnectionCoordinator {
     MeshCoreAdapterFactoryFn? meshCoreAdapterFactory,
     MeshtasticAdapterFactoryFn? meshtasticAdapterFactory,
     MeshCoreTransportFactoryFn? meshCoreTransportFactory,
+    MeshCoreScopeForDeviceFn? scopeForDevice,
+    MeshCoreScopeForIdentityFn? scopeForIdentity,
   }) : _meshCoreAdapterFactory =
            meshCoreAdapterFactory ?? MeshCoreAdapterFactory.createForBle,
        _meshtasticAdapterFactory =
            meshtasticAdapterFactory ?? MeshtasticAdapter.new,
        _meshCoreTransportFactory =
-           meshCoreTransportFactory ?? MeshCoreBleTransport.new;
+           meshCoreTransportFactory ?? MeshCoreBleTransport.new,
+       _scopeForDevice = scopeForDevice ?? _radioScopeForDevice,
+       _scopeForIdentity = scopeForIdentity ?? _radioScopeForIdentity;
+
+  final MeshCoreScopeForDeviceFn _scopeForDevice;
+  final MeshCoreScopeForIdentityFn _scopeForIdentity;
+
+  // Stored data follows the radio: point the scope at this device before
+  // connecting, as the Meshtastic connect path does.
+  static Future<void> _radioScopeForDevice(DeviceInfo device) async {
+    await RadioScope.instance.useDevice(
+      deviceId: device.id,
+      label: device.name,
+    );
+  }
+
+  // Bind the scope to the radio's identity and bring across MeshCore data
+  // kept before it was scoped. A MeshCore radio's node id is the first four
+  // bytes of its public key.
+  static Future<void> _radioScopeForIdentity(
+    DeviceInfo device,
+    MeshDeviceInfo info,
+  ) async {
+    final nodeNum = int.tryParse(info.nodeId ?? '', radix: 16);
+    if (nodeNum == null) return;
+    await RadioScope.instance.useNodeNum(
+      nodeNum,
+      deviceId: device.id,
+      label: info.displayName,
+    );
+    await MeshCoreMessageStore.adoptUnscopedData();
+    await MeshCoreContactStore().adoptUnscopedUnreadCounts();
+  }
 
   /// Stream of connection state changes.
   Stream<MeshConnectionState> get stateStream => _stateController.stream;
@@ -448,6 +495,8 @@ class ConnectionCoordinator {
     );
 
     try {
+      await _guardScope('device', attemptId, () => _scopeForDevice(device));
+
       // -------------------------------------------------------------------------
       // MeshCore Connection Sequence:
       // 1. Transport connect (BLE: scan+discover, TCP: socket)
@@ -545,6 +594,14 @@ class ConnectionCoordinator {
         'battery=${info?.batteryPercentage ?? "?"}%',
       );
 
+      if (info != null) {
+        await _guardScope(
+          'identity',
+          attemptId,
+          () => _scopeForIdentity(device, info),
+        );
+      }
+
       // Radios without a real-time clock come back from a reboot with a
       // stale time, and peers drop their adverts as replays. Set the
       // clock on every connect, as meshcore-open does.
@@ -627,6 +684,23 @@ class ConnectionCoordinator {
   }
 
   /// Clean up MeshCore-specific resources on failure.
+  // Scope binding is bookkeeping around the connection; a storage failure
+  // must not fail the connect. It goes to the always-on log, since a bind
+  // that fails silently reads as a radio stuck on another's data.
+  Future<void> _guardScope(
+    String stage,
+    int attemptId,
+    Future<void> Function() bind,
+  ) async {
+    try {
+      await bind();
+    } catch (e) {
+      AppLogging.session(
+        'RADIO SCOPE: MeshCore $stage bind failed attempt=c$attemptId: $e',
+      );
+    }
+  }
+
   Future<void> _syncRadioClock(MeshCoreAdapter adapter, int attemptId) async {
     final session = adapter.session;
     if (session == null) return;

@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/radio_scope.dart';
 import '../core/logging.dart';
 import '../l10n/app_localizations.dart';
 import '../core/meshcore_constants.dart';
@@ -521,7 +522,12 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
           final keyHex = info.publicKey
               .map((b) => b.toRadixString(16).padLeft(2, '0'))
               .join();
-          final unread = contactStore.getInt('meshcore_unread_$keyHex') ?? 0;
+          final unread =
+              RadioScope.instance.readScoped(
+                'meshcore_unread_$keyHex',
+                contactStore.getInt,
+              ) ??
+              0;
           unreadCounts[keyHex] = unread;
         }
       } catch (e) {

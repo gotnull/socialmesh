@@ -4,6 +4,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/radio_scope.dart';
 
 /// Unread counts for MeshCore DM threads and channels. The contact roster
 /// itself lives on the radio.
@@ -44,9 +45,11 @@ class MeshCoreContactStore {
     await init();
     await _preferences.remove(_key);
     // Clear all unread counts (contacts + D38-A channel-unread keys).
-    final keys = _preferences.getKeys();
+    final scopedUnread = RadioScope.instance.prefsKey(_unreadPrefix);
+    final keys = _preferences.getKeys().toList();
     for (final key in keys) {
       if (key.startsWith(_unreadPrefix) ||
+          key.startsWith(scopedUnread) ||
           key.startsWith(_channelUnreadPrefix)) {
         await _preferences.remove(key);
       }
@@ -57,16 +60,37 @@ class MeshCoreContactStore {
   /// Get unread count for a contact.
   Future<int> getUnreadCount(String publicKeyHex) async {
     await init();
-    return _preferences.getInt('$_unreadPrefix$publicKeyHex') ?? 0;
+    return RadioScope.instance.readScoped(
+          '$_unreadPrefix$publicKeyHex',
+          _preferences.getInt,
+        ) ??
+        0;
   }
 
-  /// Set unread count for a contact.
+  /// Set unread count for a contact, under the connected radio's scope.
   Future<void> setUnreadCount(String publicKeyHex, int count) async {
     await init();
+    final key = RadioScope.instance.prefsKey('$_unreadPrefix$publicKeyHex');
     if (count <= 0) {
-      await _preferences.remove('$_unreadPrefix$publicKeyHex');
+      await _preferences.remove(key);
     } else {
-      await _preferences.setInt('$_unreadPrefix$publicKeyHex', count);
+      await _preferences.setInt(key, count);
+    }
+  }
+
+  /// Moves per-contact unread counts kept before they were radio-scoped
+  /// into the current scope, unless the scope already has a count for that
+  /// contact. Call once a MeshCore radio has identified.
+  Future<void> adoptUnscopedUnreadCounts() async {
+    await init();
+    for (final key in _preferences.getKeys().toList()) {
+      if (!key.startsWith(_unreadPrefix)) continue;
+      final value = _preferences.get(key);
+      final scoped = RadioScope.instance.prefsKey(key);
+      if (value is int && !_preferences.containsKey(scoped)) {
+        await _preferences.setInt(scoped, value);
+      }
+      await _preferences.remove(key);
     }
   }
 

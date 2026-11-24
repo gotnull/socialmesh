@@ -3,6 +3,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/radio_scope.dart';
 import 'package:socialmesh/services/meshcore/storage/meshcore_contact_store.dart';
 
 void main() {
@@ -64,6 +65,40 @@ void main() {
         expect(await store.getUnreadCount('key1'), equals(0));
         expect(await store.getUnreadCount('key2'), equals(0));
         expect(await store.getUnreadCount('key3'), equals(0));
+      });
+    });
+
+    group('radio scope', () {
+      test('unread counts are written under the radio scope', () async {
+        await store.setUnreadCount('aabbccdd', 4);
+        final prefs = await SharedPreferences.getInstance();
+        expect(
+          prefs.getInt(
+            RadioScope.instance.prefsKey('meshcore_unread_aabbccdd'),
+          ),
+          4,
+        );
+        expect(prefs.containsKey('meshcore_unread_aabbccdd'), isFalse);
+        expect(await store.getUnreadCount('aabbccdd'), 4);
+      });
+
+      test('counts kept before scoping move into the scope once', () async {
+        SharedPreferences.setMockInitialValues({
+          'meshcore_unread_aabbccdd': 3,
+          'meshcore_unread_11223344': 1,
+          RadioScope.instance.prefsKey('meshcore_unread_11223344'): 7,
+        });
+        final fresh = MeshCoreContactStore();
+        await fresh.adoptUnscopedUnreadCounts();
+
+        final prefs = await SharedPreferences.getInstance();
+        expect(
+          prefs.getKeys().where((k) => k.startsWith('meshcore_unread_')),
+          isEmpty,
+        );
+        expect(await fresh.getUnreadCount('aabbccdd'), 3);
+        // A count the scope already had is kept.
+        expect(await fresh.getUnreadCount('11223344'), 7);
       });
     });
 

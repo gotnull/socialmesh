@@ -33,6 +33,7 @@ import 'app_lifecycle_provider.dart';
 import 'app_providers.dart';
 import 'meshcore_contact_block_provider.dart';
 import 'meshcore_providers.dart';
+import 'radio_scope_providers.dart';
 
 // ---------------------------------------------------------------------------
 // Message Models
@@ -482,6 +483,13 @@ class MeshCoreConversationsNotifier
     // the active session: when the session disappears or the notifier
     // is disposed, both are torn down.
     final session = ref.watch(meshCoreSessionProvider);
+    // Stored threads belong to the connected radio; rebuilding on a scope
+    // change reloads them from the new radio's store, and history adopted
+    // into that store after the switch reloads them again.
+    ref.watch(radioScopeProvider);
+    final adoptions = MeshCoreMessageStore.adoptions.listen(
+      (_) => Future<void>(_loadConversations),
+    );
     if (session != null && session.isActive) {
       _subscribeToMessages(session);
       _startHeartbeat(session);
@@ -536,6 +544,7 @@ class MeshCoreConversationsNotifier
 
     ref.onDispose(() {
       _disposed = true;
+      adoptions.cancel();
       _frameSubscription?.cancel();
       _stopHeartbeat('disposed');
     });

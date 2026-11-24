@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/radio_scope.dart';
 import '../../storage/encrypted_database.dart';
 
 /// Message status for MeshCore messages.
@@ -193,16 +195,14 @@ class MeshCoreStoredMessage {
 /// Storage service for MeshCore messages.
 ///
 /// Messages are stored per conversation (a contact's public key hex or a
-/// channel index) in the encrypted `meshcore_messages.db`, one row per
-/// message holding its [MeshCoreStoredMessage.toJson] body in conversation
-/// order. Every instance shares one database handle. The database is not
-/// radio-scoped yet: MeshCore scoping needs the connect path to move the
-/// scope (docs/engineering/RADIO_SCOPED_STORAGE.md).
+/// channel index) in the encrypted, radio-scoped `meshcore_messages.db`,
+/// one row per message holding its [MeshCoreStoredMessage.toJson] body in
+/// conversation order. Every instance shares one database handle, which
+/// closes when the radio scope changes and reopens in the new one.
 ///
-/// Builds that kept messages in SharedPreferences are migrated on first
-/// open, one conversation at a time: copied in a transaction, then the
-/// preference key is removed. A key whose conversation already has rows is
-/// only removed, so a migration cut short never duplicates or loses data.
+/// Data stored before the database was scoped is adopted by
+/// [adoptUnscopedData] once a MeshCore radio has identified, so it lands
+/// under that radio rather than whichever scope was active at launch.
 class MeshCoreMessageStore {
   static const String _dbName = 'meshcore_messages.db';
   static const int _dbVersion = 1;
@@ -238,6 +238,17 @@ class MeshCoreMessageStore {
     );
   }
 
+  /// Points every store back at the encrypted, radio-scoped database (for
+  /// tests that drive RadioScope).
+  @visibleForTesting
+  static Future<void> debugUseRealDatabase() async {
+    final previous = _backend;
+    _backend = null;
+    _opening = null;
+    _testBackend = null;
+    await previous?.close();
+  }
+
   /// Points every store at a fresh in-memory backend. Widget tests run
   /// under fake async, where a real database never answers.
   @visibleForTesting
@@ -270,24 +281,95 @@ class MeshCoreMessageStore {
 
   static Future<_MessageBackend> _open() async {
     final make = _testBackend;
-    final _MessageBackend backend;
-    if (make != null) {
-      backend = make();
-    } else {
-      final dir = await getApplicationDocumentsDirectory();
-      backend = _SqliteBackend(
+    if (make != null) return make();
+    RadioScope.instance.registerCloser(_scopeOwner, _closeForScopeChange);
+    return _SqliteBackend(
+      await openEncryptedDatabase(
+        await RadioScope.instance.databasePath(_dbName),
+        version: _dbVersion,
+        onCreate: _SqliteBackend.createTables,
+      ),
+    );
+  }
+
+  static final StreamController<void> _adopted =
+      StreamController<void>.broadcast();
+
+  /// Fires when [adoptUnscopedData] brought history into the current
+  /// scope, after anything already loaded from it.
+  static Stream<void> get adoptions => _adopted.stream;
+
+  // Identity under which the shared handle registers with RadioScope.
+  static final Object _scopeOwner = Object();
+
+  static Future<void> _closeForScopeChange() async {
+    final pending = _opening;
+    _backend = null;
+    _opening = null;
+    if (pending == null) return;
+    try {
+      await (await pending).close();
+    } catch (e) {
+      AppLogging.storage(
+        'event=meshcore.store.scope_close.failed reason=${e.runtimeType}',
+      );
+    }
+  }
+
+  /// Adopts MeshCore history stored before it was radio-scoped into the
+  /// current scope. Call once a MeshCore radio has identified.
+  ///
+  /// Copies only into conversations the scope does not have yet, so it is
+  /// idempotent and never overwrites: the SharedPreferences lists of older
+  /// builds (each key removed once copied, kept if unreadable) and a
+  /// `meshcore_messages.db` left at the documents root by an unscoped build,
+  /// which is renamed aside afterwards, not deleted.
+  static Future<void> adoptUnscopedData() async {
+    final backend = await _store();
+    final fromPrefs = await _migrateFromPreferences(backend);
+    if (fromPrefs > 0) _adopted.add(null);
+    if (_testBackend != null) return;
+    // The documents root, where an unscoped build kept the file: the
+    // parent of the radio scope tree.
+    final root = (await RadioScope.instance.scopeRootDirectory()).parent;
+    final flat = File(p.join(root.path, _dbName));
+    if (!await flat.exists()) return;
+    try {
+      final source = _SqliteBackend(
         await openEncryptedDatabase(
-          p.join(dir.path, _dbName),
+          flat.path,
           version: _dbVersion,
           onCreate: _SqliteBackend.createTables,
         ),
       );
+      var copied = 0;
+      for (final partition in await source.partitions()) {
+        if ((await backend.load(partition)).isNotEmpty) continue;
+        await backend.replace(partition, await source.load(partition));
+        copied++;
+      }
+      await source.close();
+      final stamp = DateTime.now().millisecondsSinceEpoch;
+      for (final suffix in const ['', '-wal', '-shm', '-journal']) {
+        final file = File('${flat.path}$suffix');
+        if (await file.exists()) {
+          await file.rename('${flat.path}.adopted-$stamp$suffix');
+        }
+      }
+      AppLogging.storage(
+        'event=meshcore.store.adopted_root_db conversations=$copied',
+      );
+      if (copied > 0) _adopted.add(null);
+    } catch (e) {
+      // The root file stays where it is, so the next connect tries again.
+      AppLogging.storage(
+        'event=meshcore.store.adopt_root_db.failed reason=${e.runtimeType}',
+      );
     }
-    await _migrateFromPreferences(backend);
-    return backend;
   }
 
-  static Future<void> _migrateFromPreferences(_MessageBackend backend) async {
+  // Returns how many conversations were copied.
+  static Future<int> _migrateFromPreferences(_MessageBackend backend) async {
     final SharedPreferences prefs;
     try {
       prefs = await SharedPreferences.getInstance();
@@ -295,7 +377,7 @@ class MeshCoreMessageStore {
       AppLogging.storage(
         'event=meshcore.store.migrate.skipped reason=${e.runtimeType}',
       );
-      return;
+      return 0;
     }
     final keys = prefs
         .getKeys()
@@ -331,6 +413,7 @@ class MeshCoreMessageStore {
         'event=meshcore.store.migrated conversations=$moved keys=${keys.length}',
       );
     }
+    return moved;
   }
 
   static String _contactPartition(String contactKeyHex) => 'c:$contactKeyHex';

@@ -56,6 +56,8 @@ void main() {
         'meshcore_messages_channel_$partition': jsonEncode(legacy),
       });
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadChannelMessages(partition);
       expect(loaded, hasLength(1));
@@ -94,6 +96,8 @@ void main() {
         'meshcore_messages_contact_$partition': jsonEncode(legacy),
       });
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(partition);
       expect(loaded, hasLength(1));
@@ -128,6 +132,8 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'meshcore_messages_contact_$partition': jsonEncode(legacy),
       });
+
+      await MeshCoreMessageStore.adoptUnscopedData();
 
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(partition);
@@ -171,6 +177,8 @@ void main() {
         'meshcore_messages_contact_$partition': jsonEncode(legacy),
       });
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(partition);
       expect(loaded, hasLength(1));
@@ -206,6 +214,8 @@ void main() {
         'meshcore_messages_contact_$partition': jsonEncode(legacy),
       });
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(partition);
       expect(loaded, hasLength(1));
@@ -229,6 +239,8 @@ void main() {
         SharedPreferences.setMockInitialValues({
           'meshcore_messages_contact_$partition': jsonEncode(legacy),
         });
+
+        await MeshCoreMessageStore.adoptUnscopedData();
 
         final store = MeshCoreMessageStore();
         final loaded = await store.loadContactMessages(partition);
@@ -269,6 +281,8 @@ void main() {
         'meshcore_messages_channel_$partition': jsonEncode(preLoaded),
       });
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadChannelMessages(partition);
       expect(loaded.first.mmf, 'ff:ff:ffffffff');
@@ -294,6 +308,8 @@ void main() {
           'meshcore_messages_channel_$partition': jsonEncode(legacy),
         });
 
+        await MeshCoreMessageStore.adoptUnscopedData();
+
         final store = MeshCoreMessageStore();
         final first = await store.loadChannelMessages(partition);
         final second = await store.loadChannelMessages(partition);
@@ -309,6 +325,7 @@ void main() {
   group('post-D33 JSON round-trip', () {
     test('mmf + replyToMmf survive save → load', () async {
       const partition = 3;
+      await MeshCoreMessageStore.adoptUnscopedData();
       final store = MeshCoreMessageStore();
       await store.init();
       final msg = MeshCoreStoredMessage(
@@ -417,6 +434,8 @@ void main() {
         'meshcore_messages_channel_$partition': jsonEncode(partitionJson),
       });
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadChannelMessages(partition);
       expect(loaded, hasLength(2));
@@ -441,6 +460,8 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'meshcore_messages_channel_$partition': jsonEncode(partitionJson),
       });
+
+      await MeshCoreMessageStore.adoptUnscopedData();
 
       final store = MeshCoreMessageStore();
       final loaded = await store.loadChannelMessages(partition);

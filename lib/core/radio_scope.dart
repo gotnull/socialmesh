@@ -67,6 +67,9 @@ const List<ScopedDatabaseFile> kRadioScopedDatabases = [
   // resource transfers (`overlay_transfers.db`) are bound to the peer's
   // persona instead, so they stay unscoped.
   ScopedDatabaseFile('links.db'),
+  // MeshCore message history. MeshCore radios scope by the node id the
+  // adapter derives from their public key.
+  ScopedDatabaseFile('meshcore_messages.db'),
 ];
 
 /// Preference keys that hold radio-observed data. Values are moved into the

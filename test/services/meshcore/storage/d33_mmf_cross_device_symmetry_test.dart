@@ -92,6 +92,8 @@ void main() {
         ),
       );
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(simPubkeyHex);
       expect(loaded, hasLength(1));
@@ -128,6 +130,8 @@ void main() {
         ),
       );
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(iphonePubkeyHex);
       expect(loaded, hasLength(1));
@@ -163,6 +167,8 @@ void main() {
         ),
       );
 
+      await MeshCoreMessageStore.adoptUnscopedData();
+
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(iphonePubkeyHex);
       expect(loaded, hasLength(1));
@@ -194,6 +200,8 @@ void main() {
           },
         ),
       );
+
+      await MeshCoreMessageStore.adoptUnscopedData();
 
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(simPubkeyHex);
@@ -240,6 +248,7 @@ void main() {
         ]),
       });
       // Reload from iPhone's POV: partition = recipient (sim) hex.
+      await MeshCoreMessageStore.adoptUnscopedData();
       final iphoneStore = MeshCoreMessageStore();
       final iphoneRecords = await iphoneStore.loadContactMessages('78' * 32);
       expect(iphoneRecords, hasLength(1));
@@ -268,6 +277,7 @@ void main() {
       });
       // A separate device: its store opens and migrates its own data.
       await MeshCoreMessageStore.debugUseInMemory();
+      await MeshCoreMessageStore.adoptUnscopedData();
       final simStore = MeshCoreMessageStore();
       final simRecords = await simStore.loadContactMessages(iphonePubkeyHex);
       expect(simRecords.first.mmf, originalMmf);
