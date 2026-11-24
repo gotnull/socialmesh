@@ -10892,9 +10892,9 @@
   "@meshcoreChatInboundMetaPathDirect": {
     "description": "Inline metadata on inbound chat bubbles: shown when the message arrived in a single hop (no relays)"
   },
-  "meshcoreChatInboundMetaPathHops": "via {hops} hops",
+  "meshcoreChatInboundMetaPathHops": "{hops, plural, =1{via 1 hop} other{via {hops} hops}}",
   "@meshcoreChatInboundMetaPathHops": {
-    "description": "Inline metadata on inbound chat bubbles: shown when the message was relayed; {hops} is the number of hops the firmware reported (>1)",
+    "description": "Inline metadata on inbound chat bubbles: shown when the message was relayed; {hops} is the number of relays the firmware reported (1 or more)",
     "placeholders": {
       "hops": {
         "type": "int",

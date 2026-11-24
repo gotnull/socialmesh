@@ -4531,7 +4531,7 @@
   "meshcoreChatEmptyTitlePrefix": "Ще немає ",
   "meshcoreChatEmptyTitleSuffix": "",
   "meshcoreChatInboundMetaPathDirect": "прямий",
-  "meshcoreChatInboundMetaPathHops": "через {hops} стрибки",
+  "meshcoreChatInboundMetaPathHops": "{hops, plural, one{через {hops} стрибок} few{через {hops} стрибки} many{через {hops} стрибків} other{через {hops} стрибка}}",
   "meshcoreChatInboundMetaSnr": "SNR {snr} дБ",
   "meshcoreChatInfoLastSeen": "Востаннє активний",
   "meshcoreChatInfoLocation": "Розташування",

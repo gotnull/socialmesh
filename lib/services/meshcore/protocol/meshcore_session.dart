@@ -2616,6 +2616,7 @@ class MeshCoreSession {
     required String name,
     int flags = 0,
     int pathLength = -1,
+    int pathHashSize = 1,
     Uint8List? pathBytes,
     DateTime? lastAdvertAt,
     double? latitude,
@@ -2635,11 +2636,19 @@ class MeshCoreSession {
     if (flags < 0 || flags > 0xFF) {
       throw ArgumentError.value(flags, 'flags', 'must fit in uint8');
     }
-    if (pathLength < -1 || pathLength > 64) {
+    if (pathHashSize < 1 || pathHashSize > 3) {
+      throw ArgumentError.value(pathHashSize, 'pathHashSize', 'must be 1-3');
+    }
+    // The hop count field is six bits wide, and the hops must fit the
+    // 64-byte path.
+    if (pathLength < -1 ||
+        pathLength > 0x3F ||
+        pathLength * pathHashSize > meshCoreMaxPathSize) {
       throw ArgumentError.value(
         pathLength,
         'pathLength',
-        'must be in [-1, 64] (-1 = flood/unknown)',
+        'must be -1 (flood/unknown) or up to 63 hops fitting '
+            '$meshCoreMaxPathSize path bytes',
       );
     }
     final nameBytes = utf8.encode(name);
@@ -2666,8 +2675,7 @@ class MeshCoreSession {
     payload.setRange(0, 32, pubKey);
     payload[32] = advType;
     payload[33] = flags;
-    payload[34] =
-        pathLength & 0xFF; // signed int8 written as u8 two's complement
+    payload[34] = meshCoreEncodePathLen(pathLength, pathHashSize);
     final path = pathBytes ?? const <int>[];
     final pathCopyLen = path.length > 64 ? 64 : path.length;
     if (pathCopyLen > 0) {

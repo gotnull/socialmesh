@@ -207,11 +207,45 @@ void main() {
           pubKey: pubKey,
           advType: 1,
           name: 'X',
-          pathLength: 65,
+          pathLength: 64,
+        ),
+        throwsArgumentError,
+      );
+      // 22 hops of 3 bytes is 66 path bytes, past the 64-byte path.
+      expect(
+        () => session.addUpdateContact(
+          pubKey: pubKey,
+          advType: 1,
+          name: 'X',
+          pathLength: 22,
+          pathHashSize: 3,
         ),
         throwsArgumentError,
       );
     });
+
+    test(
+      'a 2-byte-hash path is written with its width in the top bits',
+      () async {
+        final t = _FakeTransport();
+        addTearDown(t.dispose);
+        final wire = await _capture(
+          transport: t,
+          op: (s) => s.addUpdateContact(
+            pubKey: pubKey,
+            advType: 1,
+            name: 'Alice',
+            pathLength: 2,
+            pathHashSize: 2,
+            pathBytes: Uint8List.fromList([0xA1, 0xA2, 0xB1, 0xB2]),
+            lastAdvertAt: DateTime.utc(2026, 11, 24),
+          ),
+        );
+        // (2 - 1) << 6 | 2 hops.
+        expect(wire[35], 0x42);
+        expect(wire.sublist(36, 40), [0xA1, 0xA2, 0xB1, 0xB2]);
+      },
+    );
 
     test(
       'returns false on RESP_CODE_ERR (no ACK = no local mutation)',

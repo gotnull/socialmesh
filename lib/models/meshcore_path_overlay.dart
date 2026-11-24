@@ -200,6 +200,9 @@ class MeshCorePathOverlay {
       contacts: contacts,
       selfInfo: selfInfo,
       hopBytes: bytes,
+      // The firmware path carries the contact's hash width; forced bytes
+      // are built one byte per hop.
+      hashSize: isForced ? 1 : target.pathHashSize,
       source: MeshCorePathOverlaySource.active,
       isForced: isForced,
     );
@@ -254,29 +257,37 @@ class MeshCorePathOverlay {
     required Uint8List hopBytes,
     required MeshCorePathOverlaySource source,
     required bool isForced,
+    int hashSize = 1,
   }) {
-    // Build a byte → best-contact map (collision tiebreaker = newest
-    // lastSeen). Empty / no-location contacts are skipped during the
-    // lookup, not pre-filtered, so collisions still pick the most
-    // recent local entry.
-    final byByte = <int, MeshCoreContact>{};
-    for (final c in contacts) {
-      if (c.publicKey.isEmpty) continue;
-      if (!c.hasLocation) continue;
-      final b = c.publicKey.first;
-      final prev = byByte[b];
-      if (prev == null || c.lastSeen.isAfter(prev.lastSeen)) {
-        byByte[b] = c;
+    // Each hop is the first [hashSize] bytes of a node's public key. The
+    // best match among located contacts is the newest heard; contacts
+    // without a location are skipped.
+    MeshCoreContact? matchFor(Uint8List hash) {
+      MeshCoreContact? best;
+      for (final c in contacts) {
+        if (c.publicKey.length < hash.length || !c.hasLocation) continue;
+        var same = true;
+        for (var i = 0; i < hash.length; i++) {
+          if (c.publicKey[i] != hash[i]) {
+            same = false;
+            break;
+          }
+        }
+        if (!same) continue;
+        if (best == null || c.lastSeen.isAfter(best.lastSeen)) best = c;
       }
+      return best;
     }
 
     final hops = <MeshCorePathOverlayHop>[];
-    for (final b in hopBytes) {
-      final match = byByte[b];
+    for (var i = 0; i + hashSize <= hopBytes.length; i += hashSize) {
+      final hash = Uint8List.sublistView(hopBytes, i, i + hashSize);
+      final b = hash.first;
+      final match = matchFor(hash);
       hops.add(
         MeshCorePathOverlayHop(
           byte: b,
-          label: _hex2(b),
+          label: hash.map(_hex2).join(),
           latLng: match != null
               ? _meshcoreLatLng(match.latitude, match.longitude)
               : null,

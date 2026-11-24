@@ -8352,7 +8352,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String meshcoreChatInboundMetaPathHops(int hops) {
-    return 'via $hops sauts';
+    String _temp0 = intl.Intl.pluralLogic(
+      hops,
+      locale: localeName,
+      other: 'via $hops sauts',
+      one: 'via 1 saut',
+    );
+    return '$_temp0';
   }
 
   @override

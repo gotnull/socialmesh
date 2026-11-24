@@ -1140,6 +1140,10 @@ class MeshCoreContactInfo {
   /// Path length: -1 = flood, 0+ = direct hops.
   final int pathLength;
 
+  /// Bytes per hop in [pathBytes] (1 to 3), from the top two bits of the
+  /// firmware's `out_path_len` byte.
+  final int pathHashSize;
+
   /// D-Q3: firmware-side flags byte at offset 33 of the CONTACT
   /// frame. Bit 0 is `favorite`; other bits reserved for upstream
   /// telemetry-permission expansion (preserved verbatim on toggle).
@@ -1171,6 +1175,7 @@ class MeshCoreContactInfo {
     required this.publicKey,
     required this.advType,
     required this.pathLength,
+    this.pathHashSize = 1,
     this.flags = 0,
     required this.lastMod,
     this.lastAdvert = 0,
@@ -1276,19 +1281,19 @@ ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
   // Reserved bits round-trip on toggle so future telemetry-permission
   // bits stay intact.
   final flags = reader.readByte();
-  final pathLenUnsigned = reader.readByte();
-  // 0xFF (255) is the firmware's sentinel for "flood / no direct
-  // path"; map to -1 to preserve the historical
-  // `MeshCoreContactInfo.pathLength` contract (signed: -1 = flood).
-  final pathLen = pathLenUnsigned == 0xFF
-      ? -1
-      : (pathLenUnsigned > meshCoreMaxPathSize
-            ? meshCoreMaxPathSize
-            : pathLenUnsigned);
+  final outPathLen = reader.readByte();
+  // 0xFF is the firmware's "flood / no direct path" sentinel, kept as -1.
+  // Otherwise the low six bits count the hops and the top two give the
+  // bytes per hop minus one (Packet::getPathHashCount / getPathHashSize).
+  final pathLen = meshCoreDecodePathLen(outPathLen);
+  final hashSize = meshCoreDecodePathHashSize(outPathLen);
 
   // Read the full 64-byte path slot, slice to the valid prefix.
   final pathSlot = reader.readBytes(meshCoreMaxPathSize);
-  final pathBytes = pathLen > 0 ? pathSlot.sublist(0, pathLen) : Uint8List(0);
+  final pathByteLen = pathLen > 0
+      ? (pathLen * hashSize).clamp(0, meshCoreMaxPathSize)
+      : 0;
+  final pathBytes = pathSlot.sublist(0, pathByteLen);
 
   // 32-byte null-padded name. `readCString` treats the first
   // `\0` as terminator and sanitizes lone surrogates.
@@ -1327,6 +1332,7 @@ ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
       publicKey: pubKey,
       advType: advType,
       pathLength: pathLen,
+      pathHashSize: hashSize,
       flags: flags,
       lastMod: lastMod,
       lastAdvert: lastAdvertTs,

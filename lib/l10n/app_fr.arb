@@ -4531,7 +4531,7 @@
   "meshcoreChatEmptyTitlePrefix": "Aucun ",
   "meshcoreChatEmptyTitleSuffix": " pour l'instant",
   "meshcoreChatInboundMetaPathDirect": "direct",
-  "meshcoreChatInboundMetaPathHops": "via {hops} sauts",
+  "meshcoreChatInboundMetaPathHops": "{hops, plural, =1{via 1 saut} other{via {hops} sauts}}",
   "meshcoreChatInboundMetaSnr": "SNR {snr} dB",
   "meshcoreChatInfoLastSeen": "Dernière activité",
   "meshcoreChatInfoLocation": "Localisation",

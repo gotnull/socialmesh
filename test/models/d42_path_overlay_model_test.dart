@@ -90,6 +90,44 @@ void main() {
       expect(overlay, isNull);
     });
 
+    test('a path of 2-byte hashes resolves one hop per two bytes', () {
+      // _contact keys run firstByte, firstByte + 1, ...
+      final relayA = _contact(
+        firstByte: 0x30,
+        name: 'Coburg Hill',
+        lat: -37.7,
+        lng: 144.9,
+      );
+      final relayB = _contact(
+        firstByte: 0x40,
+        name: 'Box Hill Relay',
+        lat: -37.8,
+        lng: 145.1,
+      );
+      final target = MeshCoreContact(
+        publicKey: _contact(firstByte: 0x10).publicKey,
+        name: 'Bendigo Relay',
+        type: MeshCoreAdvType.chat,
+        pathLength: 2,
+        pathHashSize: 2,
+        // 0x30 0x31 is relayA; 0x40 0x99 shares relayB's first byte only.
+        path: Uint8List.fromList([0x30, 0x31, 0x40, 0x99]),
+        latitude: -36.75,
+        longitude: 144.28,
+        lastSeen: DateTime(2026, 11, 24, 12),
+      );
+      final overlay = MeshCorePathOverlay.fromContact(
+        target: target,
+        contacts: [relayA, relayB],
+        selfInfo: null,
+      )!;
+      expect(overlay.hops, hasLength(2));
+      expect(overlay.hops[0].label, '3031');
+      expect(overlay.hops[0].displayName, 'Coburg Hill');
+      expect(overlay.hops[1].label, '4099');
+      expect(overlay.hops[1].latLng, isNull);
+    });
+
     test('pathOverride == -1 (Force Flood) returns null', () {
       final target = _contact(
         firstByte: 0x10,

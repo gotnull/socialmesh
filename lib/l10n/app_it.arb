@@ -31445,7 +31445,7 @@
   "meshcoreChatEmptyTitlePrefix": "Nessun ",
   "meshcoreChatEmptyTitleSuffix": " ancora",
   "meshcoreChatInboundMetaPathDirect": "diretto",
-  "meshcoreChatInboundMetaPathHops": "tramite {hops} salti",
+  "meshcoreChatInboundMetaPathHops": "{hops, plural, =1{tramite 1 salto} other{tramite {hops} salti}}",
   "meshcoreChatInboundMetaSnr": "SNR {snr} dB",
   "meshcoreChatInfoLastSeen": "Ultima Visita",
   "meshcoreChatInfoLocation": "Posizione",

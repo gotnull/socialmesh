@@ -14318,10 +14318,10 @@ abstract class AppLocalizations {
   /// **'direct'**
   String get meshcoreChatInboundMetaPathDirect;
 
-  /// Inline metadata on inbound chat bubbles: shown when the message was relayed; {hops} is the number of hops the firmware reported (>1)
+  /// Inline metadata on inbound chat bubbles: shown when the message was relayed; {hops} is the number of relays the firmware reported (1 or more)
   ///
   /// In en, this message translates to:
-  /// **'via {hops} hops'**
+  /// **'{hops, plural, =1{via 1 hop} other{via {hops} hops}}'**
   String meshcoreChatInboundMetaPathHops(int hops);
 
   /// Inline metadata on inbound chat bubbles: signal-to-noise ratio in dB; {snr} is a one-decimal number

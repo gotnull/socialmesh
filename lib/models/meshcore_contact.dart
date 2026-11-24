@@ -46,6 +46,9 @@ class MeshCoreContact {
   /// Path length: -1 = flood, 0+ = direct hops.
   final int pathLength;
 
+  /// Bytes per hop in [path] (1 to 3).
+  final int pathHashSize;
+
   /// Path bytes from device.
   final Uint8List path;
 
@@ -90,6 +93,7 @@ class MeshCoreContact {
     required this.name,
     required this.type,
     required this.pathLength,
+    this.pathHashSize = 1,
     required this.path,
     this.pathOverride,
     this.pathOverrideBytes,
@@ -208,6 +212,7 @@ class MeshCoreContact {
       name: name ?? this.name,
       type: type ?? this.type,
       pathLength: pathLength ?? this.pathLength,
+      pathHashSize: pathHashSize,
       path: path ?? this.path,
       pathOverride: clearPathOverride
           ? null
@@ -277,6 +282,7 @@ MeshCoreContact? parseContact(Uint8List payload) {
     name: info.name,
     type: info.advType,
     pathLength: info.pathLength,
+    pathHashSize: info.pathHashSize,
     path: info.pathBytes,
     latitude: info.latitudeDegrees,
     longitude: info.longitudeDegrees,

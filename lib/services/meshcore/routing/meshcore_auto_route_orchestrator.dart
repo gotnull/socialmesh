@@ -133,6 +133,7 @@ typedef MeshCoreAddUpdateContactCall = Future<bool> Function({
   required String name,
   required int flags,
   required int pathLength,
+  required int pathHashSize,
   required Uint8List pathBytes,
   required DateTime lastAdvertAt,
   double? latitude,
@@ -243,8 +244,10 @@ class MeshCoreAutoRouteOrchestrator {
         now: _clock(),
       );
 
-      // Write the contact's out_path before sending. Flood = -1.
-      final pathLen = selected == null ? -1 : selected.length;
+      // Write the contact's out_path before sending. Flood = -1. Paths
+      // come from this contact's history, recorded at its hash size.
+      final hashSize = contact.pathHashSize;
+      final pathLen = selected == null ? -1 : selected.length ~/ hashSize;
       final pathBytes = selected ?? Uint8List(0);
 
       final wroteContact = await _addUpdateContact(
@@ -253,6 +256,7 @@ class MeshCoreAutoRouteOrchestrator {
         name: contactName,
         flags: contact.flags,
         pathLength: pathLen,
+        pathHashSize: hashSize,
         pathBytes: pathBytes,
         lastAdvertAt: contact.lastSeen,
         latitude: contact.latitude,

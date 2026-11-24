@@ -8288,7 +8288,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String meshcoreChatInboundMetaPathHops(int hops) {
-    return 'через $hops узлов';
+    String _temp0 = intl.Intl.pluralLogic(
+      hops,
+      locale: localeName,
+      other: 'через $hops узла',
+      many: 'через $hops узлов',
+      few: 'через $hops узла',
+      one: 'через $hops узел',
+    );
+    return '$_temp0';
   }
 
   @override

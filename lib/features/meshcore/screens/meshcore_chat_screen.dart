@@ -1871,21 +1871,17 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       );
     }
     if (hasPath) {
-      final hops = message.pathLength!;
-      // Firmware semantics for pathLen byte:
-      //   0       = decoded directly (no relays in path)
-      //   1..N    = traveled through N intermediate relays
-      //   0xFF    = sentinel ("path unknown / not yet established"),
-      //             commonly seen on contact DMs that arrived via a
-      //             still-converging route. Render nothing - "via 255
-      //             hops" is not a meaningful count.
-      // We map 0 and 1 both to "direct" (the live D30 smoke surfaced
-      // "via 0 hops" on legacy channel bubbles, which reads awkwardly).
-      if (hops != 0xFF) {
+      // The firmware's path_len byte: 0xFF when the route is unknown (the
+      // message came over a direct route), otherwise the relay count in
+      // the low six bits, with the bytes per hop in the top two. Zero
+      // relays is a direct reception; one relay is a hop, not direct.
+      final raw = message.pathLength!;
+      if (raw != 0xFF) {
+        final relays = meshCoreDecodePathLen(raw);
         parts.add(
-          hops <= 1
+          relays == 0
               ? context.l10n.meshcoreChatInboundMetaPathDirect
-              : context.l10n.meshcoreChatInboundMetaPathHops(hops),
+              : context.l10n.meshcoreChatInboundMetaPathHops(relays),
         );
       }
     }

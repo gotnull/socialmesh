@@ -95,6 +95,21 @@ void main() {
       expect(contact.name, 'WisMeshCore');
     });
 
+    test('a path of 2-byte hashes: hop count and width from out_path_len', () {
+      final pubKey = Uint8List.fromList(List.generate(32, (i) => 0x90 + i));
+      final path = Uint8List.fromList([0xA1, 0xA2, 0xB1, 0xB2, 0xC1, 0xC2]);
+      final payload = _buildPayload(
+        pubKey: pubKey,
+        pathLen: 0x43, // (2 - 1) << 6 | 3 hops
+        path: path,
+        name: 'Ballarat East',
+      );
+      final contact = parseContact(payload)!;
+      expect(contact.pathLength, 3);
+      expect(contact.pathHashSize, 2);
+      expect(contact.path, equals(path));
+    });
+
     test('pathLength == 0: MeshCoreContact.path is empty (direct route)', () {
       final pubKey = Uint8List.fromList(List.generate(32, (i) => 0x10 + i));
       final payload = _buildPayload(pubKey: pubKey, pathLen: 0, name: 'Direct');

@@ -45,6 +45,21 @@ const int meshCoreMaxPathSize = 64;
 /// Maximum name size in bytes.
 const int meshCoreMaxNameSize = 32;
 
+/// Hop count from a firmware path length byte: the low six bits, or -1 for
+/// the 0xFF "no path / flood" sentinel.
+int meshCoreDecodePathLen(int pathLenByte) =>
+    pathLenByte == 0xFF ? -1 : pathLenByte & 0x3F;
+
+/// Bytes per hop (1 to 3) from a firmware path length byte: the top two
+/// bits plus one. The 0xFF sentinel carries no path, so 1.
+int meshCoreDecodePathHashSize(int pathLenByte) =>
+    pathLenByte == 0xFF ? 1 : (pathLenByte >> 6) + 1;
+
+/// Firmware path length byte for [hopCount] hops of [hashSize] bytes each;
+/// a negative [hopCount] is the 0xFF flood sentinel.
+int meshCoreEncodePathLen(int hopCount, int hashSize) =>
+    hopCount < 0 ? 0xFF : ((hashSize - 1) << 6) | (hopCount & 0x3F);
+
 /// MeshCore protocol version.
 const int meshCoreAppProtocolVersion = 3;
 

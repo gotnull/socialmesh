@@ -4819,7 +4819,7 @@
   "meshcoreChatEmptyTitlePrefix": "Нет ",
   "meshcoreChatEmptyTitleSuffix": " пока",
   "meshcoreChatInboundMetaPathDirect": "прямой",
-  "meshcoreChatInboundMetaPathHops": "через {hops} узлов",
+  "meshcoreChatInboundMetaPathHops": "{hops, plural, one{через {hops} узел} few{через {hops} узла} many{через {hops} узлов} other{через {hops} узла}}",
   "meshcoreChatInboundMetaSnr": "SNR {snr} дБ",
   "meshcoreChatInfoLastSeen": "Последний раз в сети",
   "meshcoreChatInfoLocation": "Местоположение",

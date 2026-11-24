@@ -44,6 +44,7 @@ class _AddUpdateContactRecorder {
   final List<
     ({
       int pathLength,
+      int pathHashSize,
       Uint8List pathBytes,
       int flags,
       DateTime lastAdvertAt,
@@ -60,6 +61,7 @@ class _AddUpdateContactRecorder {
     required String name,
     required int flags,
     required int pathLength,
+    required int pathHashSize,
     required Uint8List pathBytes,
     required DateTime lastAdvertAt,
     double? latitude,
@@ -67,6 +69,7 @@ class _AddUpdateContactRecorder {
   }) async {
     calls.add((
       pathLength: pathLength,
+      pathHashSize: pathHashSize,
       pathBytes: Uint8List.fromList(pathBytes),
       flags: flags,
       lastAdvertAt: lastAdvertAt,
