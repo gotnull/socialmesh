@@ -5113,6 +5113,7 @@
   "meshcoreTracePacketRoutes": "Tracer les itinéraires des paquets dans le maillage",
   "meshcoreTracePath": "Tracer le chemin",
   "meshcoreTracePathClose": "Fermer",
+  "meshcoreTracePathFinalLeg": "Retour à cette radio",
   "meshcoreTracePathFailed": "Impossible d'exécuter le tracé",
   "meshcoreTracePathHops": "{count, plural, =1{1 saut} other{{count} sauts}}",
   "meshcoreTracePathPickContact": "Sélectionnez un contact à tracer.",

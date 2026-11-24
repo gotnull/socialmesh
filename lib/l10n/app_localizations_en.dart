@@ -10894,6 +10894,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreTracePathClose => 'Close';
 
   @override
+  String get meshcoreTracePathFinalLeg => 'Back to this radio';
+
+  @override
   String get meshcoreTxPowerLabel => 'TX Power';
 
   @override

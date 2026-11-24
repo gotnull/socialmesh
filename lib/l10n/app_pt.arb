@@ -32092,6 +32092,7 @@
   "meshcoreTracePacketRoutes": "Rastrear rotas de pacotes pela mesh",
   "meshcoreTracePath": "Rastrear caminho",
   "meshcoreTracePathClose": "Fechar",
+  "meshcoreTracePathFinalLeg": "De volta a este rádio",
   "meshcoreTracePathFailed": "Não foi possível rastrear",
   "meshcoreTracePathHops": "{count, plural, =1{1 salto} other{{count} saltos}}",
   "meshcoreTracePathPickContact": "Escolha um contato para rastrear.",

@@ -743,38 +743,41 @@ class MeshCoreNeighborsResponse {
 
 /// D28 Part C: one hop in a parsed `PUSH_CODE_TRACE_DATA` (0x89) response.
 class MeshCoreTraceHop {
-  /// Single-byte hop identifier (typically the first byte of the
-  /// repeater pubkey or a hop opcode). The companion firmware emits
-  /// these bytes one per hop in the same order they appear in the
-  /// response payload.
-  final int pathByte;
+  /// The hop's path hash: the first one, two, four or eight bytes of the
+  /// repeater's public key, as the trace's `path_sz` sets.
+  final Uint8List hash;
 
   /// Raw firmware SNR encoding (signed int8, scaled by 4). Convert
   /// with `snrDb = snrQuarter / 4.0`.
   final int snrQuarter;
 
-  const MeshCoreTraceHop({required this.pathByte, required this.snrQuarter});
+  const MeshCoreTraceHop({required this.hash, required this.snrQuarter});
+
+  /// First byte of [hash].
+  int get pathByte => hash.first;
 
   /// SNR in dB, derived from the firmware quarter encoding.
   double get snrDb => snrQuarter / 4.0;
 
   @override
   String toString() =>
-      'MeshCoreTraceHop(pathByte=0x${pathByte.toRadixString(16).padLeft(2, '0')}, '
+      'MeshCoreTraceHop(hashBytes=${hash.length}, '
       'snr=${snrDb.toStringAsFixed(2)}dB)';
 }
 
 /// D28 Part C: parsed `PUSH_CODE_TRACE_DATA` (0x89) payload.
 ///
-/// Wire format (after the 0x89 opcode byte is consumed by the framer):
+/// Wire format (after the 0x89 opcode byte is consumed by the framer;
+/// MyMesh::onTraceRecv):
 /// ```
 /// [0]      reserved                       u8
-/// [1]      path_length                    u8
-/// [2]      flag                           u8
+/// [1]      path_len (bytes of hashes)     u8
+/// [2]      flags (low 2 bits: path_sz)    u8
 /// [3..6]   tag                            u32 LE  (matches request tag)
 /// [7..10]  auth_code                      u32 LE
-/// [11..]   path_data (path_length bytes)
-/// [11+pl..] snr_array  (path_length bytes, signed int8 ÷ 4 → dB)
+/// [11..]   path hashes, 1 << path_sz bytes each, path_len bytes in all
+/// [..]     one SNR per hop (signed int8 / 4 = dB)
+/// [last]   SNR of the final leg into this radio
 /// ```
 ///
 /// Receivers MUST verify that [tag] matches the tag they sent in
@@ -784,7 +787,7 @@ class MeshCoreTraceResult {
   /// Correlation tag from the original request.
   final int tag;
 
-  /// Firmware-supplied flag byte (typically zero).
+  /// Firmware-supplied flag byte; its low two bits are `path_sz`.
   final int flag;
 
   /// Auth code echoed back from the request.
@@ -793,12 +796,24 @@ class MeshCoreTraceResult {
   /// Hops in the order they appear in the firmware payload.
   final List<MeshCoreTraceHop> hops;
 
+  /// SNR (signed int8 / 4 = dB) of the last leg, back into this radio;
+  /// null on a frame without it.
+  final int? finalSnrQuarter;
+
   const MeshCoreTraceResult({
     required this.tag,
     required this.flag,
     required this.authCode,
     required this.hops,
+    this.finalSnrQuarter,
   });
+
+  /// Bytes per hop hash.
+  int get hashSize => 1 << (flag & 0x03);
+
+  /// [finalSnrQuarter] in dB.
+  double? get finalSnrDb =>
+      finalSnrQuarter == null ? null : finalSnrQuarter! / 4.0;
 
   @override
   String toString() => 'MeshCoreTraceResult(tag=$tag, hops=${hops.length})';
@@ -821,24 +836,37 @@ ParseResult<MeshCoreTraceResult> parseTraceData(Uint8List payload) {
       payload[3] | (payload[4] << 8) | (payload[5] << 16) | (payload[6] << 24);
   final authCode =
       payload[7] | (payload[8] << 8) | (payload[9] << 16) | (payload[10] << 24);
-  // Variable section: pathLen bytes of path data + pathLen bytes of SNR.
-  final required = 11 + (pathLen * 2);
+  final pathSz = flag & 0x03;
+  final hashSize = 1 << pathSz;
+  final hopCount = pathLen >> pathSz;
+  final snrStart = 11 + pathLen;
+  final required = snrStart + hopCount;
   if (payload.length < required) {
     return ParseResult.failure(
       'Trace data payload truncated: '
       'have=${payload.length} need=$required (pathLen=$pathLen)',
     );
   }
-  final hops = <MeshCoreTraceHop>[];
-  for (var i = 0; i < pathLen; i++) {
-    final pathByte = payload[11 + i];
-    final raw = payload[11 + pathLen + i];
-    // Convert unsigned byte to signed int8.
-    final snrQuarter = raw < 128 ? raw : raw - 256;
-    hops.add(MeshCoreTraceHop(pathByte: pathByte, snrQuarter: snrQuarter));
-  }
+  int signed(int b) => b < 128 ? b : b - 256;
+  final hops = <MeshCoreTraceHop>[
+    for (var i = 0; i < hopCount; i++)
+      MeshCoreTraceHop(
+        hash: Uint8List.fromList(
+          payload.sublist(11 + i * hashSize, 11 + (i + 1) * hashSize),
+        ),
+        snrQuarter: signed(payload[snrStart + i]),
+      ),
+  ];
   return ParseResult.success(
-    MeshCoreTraceResult(tag: tag, flag: flag, authCode: authCode, hops: hops),
+    MeshCoreTraceResult(
+      tag: tag,
+      flag: flag,
+      authCode: authCode,
+      hops: hops,
+      finalSnrQuarter: payload.length > required
+          ? signed(payload[required])
+          : null,
+    ),
   );
 }
 

@@ -18960,6 +18960,12 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get meshcoreTracePathClose;
 
+  /// Trace result sheet: last row, the leg from the final hop back into the connected radio, shown with its SNR.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to this radio'**
+  String get meshcoreTracePathFinalLeg;
+
   /// Info row label for TX power
   ///
   /// In en, this message translates to:

@@ -5113,6 +5113,7 @@
   "meshcoreTracePacketRoutes": "Трасування маршрутів пакетів через меш",
   "meshcoreTracePath": "Трасувати маршрут",
   "meshcoreTracePathClose": "Закрити",
+  "meshcoreTracePathFinalLeg": "Назад до цієї рації",
   "meshcoreTracePathFailed": "Не вдалося виконати трасування",
   "meshcoreTracePathHops": "{count, plural, =1{1 стрибок} other{{count} стрибків}}",
   "meshcoreTracePathPickContact": "Оберіть контакт для трасування.",

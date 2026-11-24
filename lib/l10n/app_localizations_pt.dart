@@ -11028,6 +11028,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreTracePathClose => 'Fechar';
 
   @override
+  String get meshcoreTracePathFinalLeg => 'De volta a este rádio';
+
+  @override
   String get meshcoreTxPowerLabel => 'Potência TX';
 
   @override

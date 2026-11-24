@@ -11049,6 +11049,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreTracePathClose => 'Закрити';
 
   @override
+  String get meshcoreTracePathFinalLeg => 'Назад до цієї рації';
+
+  @override
   String get meshcoreTxPowerLabel => 'Потужність TX';
 
   @override

@@ -14582,6 +14582,10 @@
   "@meshcoreTracePathClose": {
     "description": "D28 - Close button on the trace result sheet."
   },
+  "meshcoreTracePathFinalLeg": "Back to this radio",
+  "@meshcoreTracePathFinalLeg": {
+    "description": "Trace result sheet: last row, the leg from the final hop back into the connected radio, shown with its SNR."
+  },
   "meshcoreTxPowerLabel": "TX Power",
   "@meshcoreTxPowerLabel": {
     "description": "Info row label for TX power"

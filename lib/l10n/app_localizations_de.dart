@@ -11058,6 +11058,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meshcoreTracePathClose => 'Schließen';
 
   @override
+  String get meshcoreTracePathFinalLeg => 'Zurück zu diesem Funkgerät';
+
+  @override
   String get meshcoreTxPowerLabel => 'TX-Leistung';
 
   @override

@@ -11034,6 +11034,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreTracePathClose => 'Закрыть';
 
   @override
+  String get meshcoreTracePathFinalLeg => 'Обратно к этой рации';
+
+  @override
   String get meshcoreTxPowerLabel => 'Мощность TX';
 
   @override

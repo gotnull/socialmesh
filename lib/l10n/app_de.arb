@@ -5113,6 +5113,7 @@
   "meshcoreTracePacketRoutes": "Paketrouten durch das Mesh verfolgen",
   "meshcoreTracePath": "Pfad verfolgen",
   "meshcoreTracePathClose": "Schließen",
+  "meshcoreTracePathFinalLeg": "Zurück zu diesem Funkgerät",
   "meshcoreTracePathFailed": "Verfolgung konnte nicht gestartet werden",
   "meshcoreTracePathHops": "{count, plural, =1{1 Hop} other{{count} Hops}}",
   "meshcoreTracePathPickContact": "Wählen Sie einen Kontakt zum Verfolgen aus.",

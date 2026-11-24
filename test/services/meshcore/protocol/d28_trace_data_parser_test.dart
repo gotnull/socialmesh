@@ -22,12 +22,12 @@ import 'package:socialmesh/services/meshcore/protocol/meshcore_messages.dart';
 void main() {
   group('parseTraceData - happy path', () {
     test('parses single-hop response', () {
-      // tag=0x12345678, auth=0xAABBCCDD, flag=0x01, pathLen=1
-      // path=[0x42], snr=[0x14] (20 quarter-units = 5.0 dB)
+      // tag=0x12345678, auth=0xAABBCCDD, flag=0x00 (1-byte hashes),
+      // pathLen=1, path=[0x42], snr=[0x14] (20 quarter-units = 5.0 dB)
       final payload = Uint8List.fromList([
         0x00, // reserved
         0x01, // pathLen
-        0x01, // flag
+        0x00, // flag
         0x78, 0x56, 0x34, 0x12, // tag LE
         0xDD, 0xCC, 0xBB, 0xAA, // auth LE
         0x42, // path[0]
@@ -38,7 +38,7 @@ void main() {
       final v = result.value!;
       expect(v.tag, 0x12345678);
       expect(v.authCode, 0xAABBCCDD);
-      expect(v.flag, 0x01);
+      expect(v.flag, 0x00);
       expect(v.hops, hasLength(1));
       expect(v.hops[0].pathByte, 0x42);
       expect(v.hops[0].snrQuarter, 20);
@@ -155,15 +155,60 @@ void main() {
 
   group('MeshCoreTraceHop / MeshCoreTraceResult', () {
     test('hop snrDb matches snrQuarter / 4.0', () {
-      final hop = MeshCoreTraceHop(pathByte: 1, snrQuarter: 21);
+      final hop = MeshCoreTraceHop(
+        hash: Uint8List.fromList([1]),
+        snrQuarter: 21,
+      );
       expect(hop.snrDb, 5.25);
     });
 
     test('toString does not leak full pubkey or raw snr byte', () {
-      final hop = MeshCoreTraceHop(pathByte: 0x42, snrQuarter: -16);
+      final hop = MeshCoreTraceHop(
+        hash: Uint8List.fromList([0x42]),
+        snrQuarter: -16,
+      );
       final s = hop.toString();
-      expect(s, contains('pathByte=0x42'));
+      expect(s, contains('hashBytes=1'));
+      expect(s, isNot(contains('42')));
       expect(s, contains('-4.00dB'));
+    });
+  });
+
+  group('path_sz and the final leg', () {
+    test('2-byte hashes (path_sz 1): one hop and one SNR per two bytes', () {
+      final r = parseTraceData(
+        Uint8List.fromList([
+          0x00, // reserved
+          0x04, // path_len: 4 bytes of hashes
+          0x01, // flags: path_sz 1 -> 2-byte hashes
+          0x01, 0x00, 0x00, 0x00, // tag
+          0x00, 0x00, 0x00, 0x00, // auth
+          0xA1, 0xA2, 0xB1, 0xB2, // two hops
+          0x10, 0xF0, // SNRs: 4.0 dB, -4.0 dB
+          0x18, // final leg: 6.0 dB
+        ]),
+      );
+      expect(r.isSuccess, isTrue, reason: r.error);
+      final v = r.value!;
+      expect(v.hashSize, 2);
+      expect(v.hops, hasLength(2));
+      expect(v.hops[0].hash, [0xA1, 0xA2]);
+      expect(v.hops[1].snrDb, -4.0);
+      expect(v.finalSnrDb, 6.0);
+    });
+
+    test('the final SNR is read after the per-hop SNRs', () {
+      final r = parseTraceData(
+        Uint8List.fromList([
+          0x00, 0x01, 0x00, //
+          0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //
+          0x42, // one 1-byte hop
+          0x14, // 5.0 dB
+          0xEC, // final leg: -5.0 dB
+        ]),
+      );
+      expect(r.value!.hops.single.snrDb, 5.0);
+      expect(r.value!.finalSnrDb, -5.0);
     });
   });
 }

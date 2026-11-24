@@ -5466,6 +5466,7 @@
   "meshcoreTracePacketRoutes": "Трассировка маршрутов пакетов через сеть",
   "meshcoreTracePath": "Трассировать маршрут",
   "meshcoreTracePathClose": "Закрыть",
+  "meshcoreTracePathFinalLeg": "Обратно к этой рации",
   "meshcoreTracePathFailed": "Не удалось выполнить трассировку",
   "meshcoreTracePathHops": "{count, plural, =1{1 хоп} other{{count} хопов}}",
   "meshcoreTracePathPickContact": "Выберите контакт для трассировки.",

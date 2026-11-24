@@ -1378,7 +1378,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
                 const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
-                    '0x${result.hops[i].pathByte.toRadixString(16).padLeft(2, '0').toUpperCase()}',
+                    '0x${result.hops[i].hash.map((b) => b.toRadixString(16).padLeft(2, '0')).join().toUpperCase()}',
                     style: TextStyle(
                       color: context.textPrimary,
                       fontFamily: AppTheme.fontFamily,
@@ -1388,6 +1388,50 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
                 ),
                 Text(
                   l.meshcoreSnrLabel(result.hops[i].snrDb.toStringAsFixed(1)),
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontFamily: AppTheme.fontFamily,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (result.finalSnrDb != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing12,
+              vertical: AppTheme.spacing8,
+            ),
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: Icon(
+                    Icons.call_received_rounded,
+                    size: 18,
+                    color: context.accentColor,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Text(
+                    l.meshcoreTracePathFinalLeg,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontFamily: AppTheme.fontFamily,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Text(
+                  l.meshcoreSnrLabel(result.finalSnrDb!.toStringAsFixed(1)),
                   style: TextStyle(
                     color: context.textSecondary,
                     fontFamily: AppTheme.fontFamily,
@@ -1442,6 +1486,8 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
     MeshCoreTraceResult result,
   ) async {
     final l = context.l10n;
+    // The app's trace requests use 1-byte hashes (flag 0), so each hop's
+    // hash is a single byte.
     final hopBytes = Uint8List.fromList(
       result.hops.map((h) => h.pathByte).toList(growable: false),
     );

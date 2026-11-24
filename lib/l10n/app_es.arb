@@ -5113,6 +5113,7 @@
   "meshcoreTracePacketRoutes": "Rastrear rutas de paquetes a través de la malla",
   "meshcoreTracePath": "Rastrear ruta",
   "meshcoreTracePathClose": "Cerrar",
+  "meshcoreTracePathFinalLeg": "De vuelta a esta radio",
   "meshcoreTracePathFailed": "No se pudo ejecutar el rastreo",
   "meshcoreTracePathHops": "{count, plural, =1{1 salto} other{{count} saltos}}",
   "meshcoreTracePathPickContact": "Seleccione un contacto para rastrear.",

@@ -32092,6 +32092,7 @@
   "meshcoreTracePacketRoutes": "Traccia il percorso dei pacchetti nella mesh",
   "meshcoreTracePath": "Traccia percorso",
   "meshcoreTracePathClose": "Chiudi",
+  "meshcoreTracePathFinalLeg": "Ritorno a questa radio",
   "meshcoreTracePathFailed": "Impossibile eseguire la traccia",
   "meshcoreTracePathHops": "{count, plural, =1{1 hop} other{{count} hop}}",
   "meshcoreTracePathPickContact": "Scegli un contatto da tracciare.",
