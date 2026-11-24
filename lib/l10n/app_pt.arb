@@ -3,6 +3,7 @@
   "radioConfigFemLnaSubtitle": "Ativar o amplificador externo de baixo ruído independentemente do ganho RX aumentado.",
   "radioConfigFemLnaUnknown": "Este firmware não informa o suporte a FEM.",
   "radioConfigFemLnaNotPresent": "Este rádio não tem um FEM LNA controlável.",
+  "radioConfigFemLnaAuto": "Definido como automático no rádio, que liga ou desliga o amplificador conforme o ruído de fundo medido.",
   "meshBeaconNoticeTitle": "{count, plural, =1{Nova oferta Mesh Beacon} other{{count} novas ofertas Mesh Beacon}}",
   "meshBeaconNoticeSubtitle": "Toque para ver as redes mesh próximas nas configurações de Mesh Beacon.",
   "@@locale": "pt",

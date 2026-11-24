@@ -119,7 +119,8 @@ class DeviceProfile extends $pb.GeneratedMessage {
   void clearShortName() => $_clearField(2);
 
   ///
-  ///  The url of the channels from our node
+  ///  The url of the channels from our node.
+  ///  Carries every channel's PSK, so it is as secret as they are.
   @$pb.TagNumber(3)
   $core.String get channelUrl => $_getSZ(2);
   @$pb.TagNumber(3)

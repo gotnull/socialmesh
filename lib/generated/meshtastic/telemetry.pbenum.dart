@@ -311,6 +311,11 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
   static const TelemetrySensorType AS3935 =
       TelemetrySensorType._(57, _omitEnumNames ? '' : 'AS3935');
 
+  ///
+  ///  TI INA228 20-bit current, voltage and power monitor
+  static const TelemetrySensorType INA228 =
+      TelemetrySensorType._(58, _omitEnumNames ? '' : 'INA228');
+
   static const $core.List<TelemetrySensorType> values = <TelemetrySensorType>[
     SENSOR_UNSET,
     BME280,
@@ -370,10 +375,11 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
     HM330X,
     SEN6X,
     AS3935,
+    INA228,
   ];
 
   static final $core.List<TelemetrySensorType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 57);
+      $pb.ProtobufEnum.$_initByValueList(values, 58);
   static TelemetrySensorType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

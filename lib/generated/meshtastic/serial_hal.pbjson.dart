@@ -48,6 +48,7 @@ const SerialHalCommand_Type$json = {
     {'1': 'DETACH_INTERRUPT', '2': 5},
     {'1': 'SPI_TRANSFER', '2': 6},
     {'1': 'NOOP', '2': 7},
+    {'1': 'SPI_TRANSACTION', '2': 8},
   ],
 };
 
@@ -56,10 +57,10 @@ final $typed_data.Uint8List serialHalCommandDescriptor = $convert.base64Decode(
     'ChBTZXJpYWxIYWxDb21tYW5kEiUKDnRyYW5zYWN0aW9uX2lkGAEgASgNUg10cmFuc2FjdGlvbk'
     'lkEjUKBHR5cGUYAiABKA4yIS5tZXNodGFzdGljLlNlcmlhbEhhbENvbW1hbmQuVHlwZVIEdHlw'
     'ZRIQCgNwaW4YAyABKA1SA3BpbhIUCgV2YWx1ZRgEIAEoDVIFdmFsdWUSEgoEbW9kZRgFIAEoDV'
-    'IEbW9kZRISCgRkYXRhGAYgASgMUgRkYXRhIowBCgRUeXBlEgkKBVVOU0VUEAASDAoIUElOX01P'
+    'IEbW9kZRISCgRkYXRhGAYgASgMUgRkYXRhIqEBCgRUeXBlEgkKBVVOU0VUEAASDAoIUElOX01P'
     'REUQARIRCg1ESUdJVEFMX1dSSVRFEAISEAoMRElHSVRBTF9SRUFEEAMSFAoQQVRUQUNIX0lOVE'
     'VSUlVQVBAEEhQKEERFVEFDSF9JTlRFUlJVUFQQBRIQCgxTUElfVFJBTlNGRVIQBhIICgROT09Q'
-    'EAc=');
+    'EAcSEwoPU1BJX1RSQU5TQUNUSU9OEAg=');
 
 @$core.Deprecated('Use serialHalResponseDescriptor instead')
 const SerialHalResponse$json = {

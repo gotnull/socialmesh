@@ -25,6 +25,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'У этого устройства нет управляемого FEM LNA.';
 
   @override
+  String get radioConfigFemLnaAuto =>
+      'На радиостанции выбран автоматический режим: она включает или обходит усилитель по измеренному уровню шума.';
+
+  @override
   String meshBeaconNoticeTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

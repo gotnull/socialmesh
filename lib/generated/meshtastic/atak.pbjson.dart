@@ -1310,6 +1310,7 @@ const TakTalkMessage$json = {
     {'1': 'chatroom_id', '3': 2, '4': 1, '5': 9, '10': 'chatroomId'},
     {'1': 'lang', '3': 3, '4': 1, '5': 9, '10': 'lang'},
     {'1': 'from_voice', '3': 4, '4': 1, '5': 8, '10': 'fromVoice'},
+    {'1': 'voice_profile_id', '3': 5, '4': 1, '5': 9, '10': 'voiceProfileId'},
   ],
 };
 
@@ -1317,7 +1318,7 @@ const TakTalkMessage$json = {
 final $typed_data.Uint8List takTalkMessageDescriptor = $convert.base64Decode(
     'Cg5UYWtUYWxrTWVzc2FnZRISCgR0ZXh0GAEgASgJUgR0ZXh0Eh8KC2NoYXRyb29tX2lkGAIgAS'
     'gJUgpjaGF0cm9vbUlkEhIKBGxhbmcYAyABKAlSBGxhbmcSHQoKZnJvbV92b2ljZRgEIAEoCFIJ'
-    'ZnJvbVZvaWNl');
+    'ZnJvbVZvaWNlEigKEHZvaWNlX3Byb2ZpbGVfaWQYBSABKAlSDnZvaWNlUHJvZmlsZUlk');
 
 @$core.Deprecated('Use takTalkRoomDataDescriptor instead')
 const TakTalkRoomData$json = {
@@ -1342,6 +1343,54 @@ final $typed_data.Uint8List takTalkRoomDataDescriptor = $convert.base64Decode(
     'Cg9UYWtUYWxrUm9vbURhdGESKwoPc2VuZGVyX2NhbGxzaWduGAEgASgJQgIYAVIOc2VuZGVyQ2'
     'FsbHNpZ24SFwoHcm9vbV9pZBgCIAEoCVIGcm9vbUlkEhsKCXJvb21fbmFtZRgDIAEoCVIIcm9v'
     'bU5hbWUSIgoMcGFydGljaXBhbnRzGAQgAygJUgxwYXJ0aWNpcGFudHM=');
+
+@$core.Deprecated('Use voiceProfileDescriptor instead')
+const VoiceProfile$json = {
+  '1': 'VoiceProfile',
+  '2': [
+    {'1': 'voice_profile_id', '3': 1, '4': 1, '5': 9, '10': 'voiceProfileId'},
+    {
+      '1': 'voice_profile_name',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '10': 'voiceProfileName'
+    },
+    {'1': 'profile_data', '3': 3, '4': 1, '5': 12, '10': 'profileData'},
+  ],
+};
+
+/// Descriptor for `VoiceProfile`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List voiceProfileDescriptor = $convert.base64Decode(
+    'CgxWb2ljZVByb2ZpbGUSKAoQdm9pY2VfcHJvZmlsZV9pZBgBIAEoCVIOdm9pY2VQcm9maWxlSW'
+    'QSLAoSdm9pY2VfcHJvZmlsZV9uYW1lGAIgASgJUhB2b2ljZVByb2ZpbGVOYW1lEiEKDHByb2Zp'
+    'bGVfZGF0YRgDIAEoDFILcHJvZmlsZURhdGE=');
+
+@$core.Deprecated('Use voiceProfileRequestDescriptor instead')
+const VoiceProfileRequest$json = {
+  '1': 'VoiceProfileRequest',
+  '2': [
+    {'1': 'voice_profile_id', '3': 1, '4': 1, '5': 9, '10': 'voiceProfileId'},
+  ],
+};
+
+/// Descriptor for `VoiceProfileRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List voiceProfileRequestDescriptor = $convert.base64Decode(
+    'ChNWb2ljZVByb2ZpbGVSZXF1ZXN0EigKEHZvaWNlX3Byb2ZpbGVfaWQYASABKAlSDnZvaWNlUH'
+    'JvZmlsZUlk');
+
+@$core.Deprecated('Use takTalkRoomRequestDescriptor instead')
+const TakTalkRoomRequest$json = {
+  '1': 'TakTalkRoomRequest',
+  '2': [
+    {'1': 'room_id', '3': 1, '4': 1, '5': 9, '10': 'roomId'},
+  ],
+};
+
+/// Descriptor for `TakTalkRoomRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List takTalkRoomRequestDescriptor =
+    $convert.base64Decode(
+        'ChJUYWtUYWxrUm9vbVJlcXVlc3QSFwoHcm9vbV9pZBgBIAEoCVIGcm9vbUlk');
 
 @$core.Deprecated('Use martiDescriptor instead')
 const Marti$json = {
@@ -1564,6 +1613,33 @@ const TAKPacketV2$json = {
       '9': 0,
       '10': 'taktalkRoom'
     },
+    {
+      '1': 'voice_profile',
+      '3': 44,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.VoiceProfile',
+      '9': 0,
+      '10': 'voiceProfile'
+    },
+    {
+      '1': 'voice_profile_request',
+      '3': 45,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.VoiceProfileRequest',
+      '9': 0,
+      '10': 'voiceProfileRequest'
+    },
+    {
+      '1': 'taktalk_room_request',
+      '3': 46,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.TakTalkRoomRequest',
+      '9': 0,
+      '10': 'taktalkRoomRequest'
+    },
   ],
   '8': [
     {'1': 'payload_variant'},
@@ -1610,6 +1686,10 @@ final $typed_data.Uint8List tAKPacketV2Descriptor = $convert.base64Decode(
     'ZW5jeUFsZXJ0SABSCWVtZXJnZW5jeRItCgR0YXNrGCggASgLMhcubWVzaHRhc3RpYy5UYXNrUm'
     'VxdWVzdEgAUgR0YXNrEjYKB3Rha3RhbGsYKSABKAsyGi5tZXNodGFzdGljLlRha1RhbGtNZXNz'
     'YWdlSABSB3Rha3RhbGsSQAoMdGFrdGFsa19yb29tGCogASgLMhsubWVzaHRhc3RpYy5UYWtUYW'
-    'xrUm9vbURhdGFIAFILdGFrdGFsa1Jvb21CEQoPcGF5bG9hZF92YXJpYW50Qg4KDF9lbnZpcm9u'
-    'bWVudEINCgtfc2Vuc29yX2ZvdkITChFfc3RhcnRfZXBvY2hfbG8xNEIICgZfbWFydGlKBAgbEB'
-    'xKBAgcEB1KBAgeEB8=');
+    'xrUm9vbURhdGFIAFILdGFrdGFsa1Jvb20SPwoNdm9pY2VfcHJvZmlsZRgsIAEoCzIYLm1lc2h0'
+    'YXN0aWMuVm9pY2VQcm9maWxlSABSDHZvaWNlUHJvZmlsZRJVChV2b2ljZV9wcm9maWxlX3JlcX'
+    'Vlc3QYLSABKAsyHy5tZXNodGFzdGljLlZvaWNlUHJvZmlsZVJlcXVlc3RIAFITdm9pY2VQcm9m'
+    'aWxlUmVxdWVzdBJSChR0YWt0YWxrX3Jvb21fcmVxdWVzdBguIAEoCzIeLm1lc2h0YXN0aWMuVG'
+    'FrVGFsa1Jvb21SZXF1ZXN0SABSEnRha3RhbGtSb29tUmVxdWVzdEIRCg9wYXlsb2FkX3Zhcmlh'
+    'bnRCDgoMX2Vudmlyb25tZW50Qg0KC19zZW5zb3JfZm92QhMKEV9zdGFydF9lcG9jaF9sbzE0Qg'
+    'gKBl9tYXJ0aUoECBsQHEoECBwQHUoECB4QHw==');

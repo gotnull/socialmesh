@@ -134,6 +134,12 @@ abstract class AppLocalizations {
   /// **'This radio has no controllable FEM LNA.'**
   String get radioConfigFemLnaNotPresent;
 
+  /// FEM LNA set to automatic on the radio; the app shows it without offering to change it
+  ///
+  /// In en, this message translates to:
+  /// **'Set to automatic on the radio, which switches the amplifier in or out from the measured noise floor.'**
+  String get radioConfigFemLnaAuto;
+
   /// Channels notice for distinct unreviewed Mesh Beacon offers
   ///
   /// In en, this message translates to:

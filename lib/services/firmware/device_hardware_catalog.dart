@@ -125,6 +125,9 @@ class DeviceHardwareCatalog {
     // comment names no MCU, the upstream JSON has no entry and no firmware
     // variant builds it (only the original heltec_mesh_pocket, nrf52840).
     152: DeviceArchitecture.unknown, // HELTEC_MESH_POCKET_V2
+    // Protobuf 2.8.3 adds a phone or desktop app acting as a node. It has
+    // no radio hardware and so no firmware to flash.
+    254: DeviceArchitecture.unknown, // VIRTUAL_NODE
     255: DeviceArchitecture.unknown, // PRIVATE_HW
   };
 

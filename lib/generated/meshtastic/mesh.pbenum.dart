@@ -803,6 +803,11 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(152, _omitEnumNames ? '' : 'HELTEC_MESH_POCKET_V2');
 
   ///
+  ///  A virtual node: a phone or desktop app acting as a mesh node of its own, with no radio hardware of its own
+  static const HardwareModel VIRTUAL_NODE =
+      HardwareModel._(254, _omitEnumNames ? '' : 'VIRTUAL_NODE');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -963,6 +968,7 @@ class HardwareModel extends $pb.ProtobufEnum {
     THINKNODE_MX,
     NODARA,
     HELTEC_MESH_POCKET_V2,
+    VIRTUAL_NODE,
     PRIVATE_HW,
   ];
 
@@ -2091,6 +2097,376 @@ class LockdownStatus_State extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const LockdownStatus_State._(super.value, super.name);
+}
+
+///
+///  Identifies which firmware message a notification carries, so clients can
+///  localize or act on it without parsing the message text.
+class ClientNotification_NotificationType extends $pb.ProtobufEnum {
+  ///
+  ///  Not set. Older firmware, or a message without its own type.
+  static const ClientNotification_NotificationType UNSET =
+      ClientNotification_NotificationType._(0, _omitEnumNames ? '' : 'UNSET');
+
+  ///
+  ///  Position packet rejected: location sharing is disabled on this channel.
+  static const ClientNotification_NotificationType POSITION_SHARING_DISABLED =
+      ClientNotification_NotificationType._(
+          1, _omitEnumNames ? '' : 'POSITION_SHARING_DISABLED');
+
+  ///
+  ///  Traceroute rejected: only one may be sent every 30 seconds.
+  static const ClientNotification_NotificationType TRACEROUTE_RATE_LIMITED =
+      ClientNotification_NotificationType._(
+          2, _omitEnumNames ? '' : 'TRACEROUTE_RATE_LIMITED');
+
+  ///
+  ///  Traceroute rejected: multi-hop traceroute to the broadcast address is not allowed.
+  static const ClientNotification_NotificationType
+      TRACEROUTE_BROADCAST_REJECTED = ClientNotification_NotificationType._(
+          3, _omitEnumNames ? '' : 'TRACEROUTE_BROADCAST_REJECTED');
+
+  ///
+  ///  Send aborted: the duty cycle limit is exceeded. The message gives the minutes until sending resumes.
+  static const ClientNotification_NotificationType DUTY_CYCLE_LIMIT_EXCEEDED =
+      ClientNotification_NotificationType._(
+          4, _omitEnumNames ? '' : 'DUTY_CYCLE_LIMIT_EXCEEDED');
+
+  ///
+  ///  Power-saving tracker sent its position and is about to sleep for the broadcast interval.
+  static const ClientNotification_NotificationType POSITION_SENT_SLEEPING =
+      ClientNotification_NotificationType._(
+          5, _omitEnumNames ? '' : 'POSITION_SENT_SLEEPING');
+
+  ///
+  ///  Power-saving sensor sent its telemetry and is about to sleep for the update interval.
+  static const ClientNotification_NotificationType TELEMETRY_SENT_SLEEPING =
+      ClientNotification_NotificationType._(
+          6, _omitEnumNames ? '' : 'TELEMETRY_SENT_SLEEPING');
+
+  ///
+  ///  Incoming key verification: display the security number. Carries key_verification_number_inform.
+  static const ClientNotification_NotificationType
+      KEY_VERIFICATION_NUMBER_INFORM = ClientNotification_NotificationType._(
+          7, _omitEnumNames ? '' : 'KEY_VERIFICATION_NUMBER_INFORM');
+
+  ///
+  ///  Outgoing key verification: enter the security number shown on the remote node. Carries key_verification_number_request.
+  static const ClientNotification_NotificationType
+      KEY_VERIFICATION_NUMBER_REQUEST = ClientNotification_NotificationType._(
+          8, _omitEnumNames ? '' : 'KEY_VERIFICATION_NUMBER_REQUEST');
+
+  ///
+  ///  Final confirmation of an incoming key verification. Carries key_verification_final.
+  static const ClientNotification_NotificationType
+      KEY_VERIFICATION_FINAL_INCOMING = ClientNotification_NotificationType._(
+          9, _omitEnumNames ? '' : 'KEY_VERIFICATION_FINAL_INCOMING');
+
+  ///
+  ///  Final confirmation of an outgoing key verification. Carries key_verification_final.
+  static const ClientNotification_NotificationType
+      KEY_VERIFICATION_FINAL_OUTGOING = ClientNotification_NotificationType._(
+          10, _omitEnumNames ? '' : 'KEY_VERIFICATION_FINAL_OUTGOING');
+
+  ///
+  ///  Key verification is unavailable in licensed (ham) mode.
+  static const ClientNotification_NotificationType
+      KEY_VERIFICATION_LICENSED_UNAVAILABLE =
+      ClientNotification_NotificationType._(
+          11, _omitEnumNames ? '' : 'KEY_VERIFICATION_LICENSED_UNAVAILABLE');
+
+  ///
+  ///  A remote node advertised this node's public key; the key may be compromised.
+  static const ClientNotification_NotificationType DUPLICATED_PUBLIC_KEY =
+      ClientNotification_NotificationType._(
+          12, _omitEnumNames ? '' : 'DUPLICATED_PUBLIC_KEY');
+
+  ///
+  ///  Compromised (low-entropy) keys were detected at boot and regenerated.
+  static const ClientNotification_NotificationType LOW_ENTROPY_KEY_REGENERATED =
+      ClientNotification_NotificationType._(
+          13, _omitEnumNames ? '' : 'LOW_ENTROPY_KEY_REGENERATED');
+
+  ///
+  ///  A restored key is a known low-entropy key; a new key was generated and the node number changed.
+  static const ClientNotification_NotificationType
+      LOW_ENTROPY_KEY_RESTORE_REJECTED = ClientNotification_NotificationType._(
+          14, _omitEnumNames ? '' : 'LOW_ENTROPY_KEY_RESTORE_REJECTED');
+
+  ///
+  ///  Licensed mode activated: the admin channel and encryption were removed from all channels.
+  static const ClientNotification_NotificationType LICENSED_MODE_ACTIVATED =
+      ClientNotification_NotificationType._(
+          15, _omitEnumNames ? '' : 'LICENSED_MODE_ACTIVATED');
+
+  ///
+  ///  Licensed signing needs an identity key; the node identity will change after key generation.
+  static const ClientNotification_NotificationType
+      LICENSED_IDENTITY_WILL_CHANGE = ClientNotification_NotificationType._(
+          16, _omitEnumNames ? '' : 'LICENSED_IDENTITY_WILL_CHANGE');
+
+  ///
+  ///  Licensed signing generated a new identity key; the node identity changed.
+  static const ClientNotification_NotificationType LICENSED_IDENTITY_CHANGED =
+      ClientNotification_NotificationType._(
+          17, _omitEnumNames ? '' : 'LICENSED_IDENTITY_CHANGED');
+
+  ///
+  ///  Favorite or ignore refused: the protected-node limit is reached.
+  static const ClientNotification_NotificationType
+      PROTECTED_NODE_LIMIT_REACHED = ClientNotification_NotificationType._(
+          18, _omitEnumNames ? '' : 'PROTECTED_NODE_LIMIT_REACHED');
+
+  ///
+  ///  Rebroadcast mode NONE is not allowed for a router role; it was set to ALL.
+  static const ClientNotification_NotificationType
+      ROUTER_REBROADCAST_NONE_REJECTED = ClientNotification_NotificationType._(
+          19, _omitEnumNames ? '' : 'ROUTER_REBROADCAST_NONE_REJECTED');
+
+  ///
+  ///  The packet signature policy is unavailable on this firmware build; it was set to COMPATIBLE.
+  static const ClientNotification_NotificationType
+      PACKET_SIGNATURE_POLICY_UNAVAILABLE =
+      ClientNotification_NotificationType._(
+          20, _omitEnumNames ? '' : 'PACKET_SIGNATURE_POLICY_UNAVAILABLE');
+
+  ///
+  ///  Managed mode needs at least one admin public key; it was left disabled.
+  static const ClientNotification_NotificationType
+      MANAGED_MODE_REQUIRES_ADMIN_KEY = ClientNotification_NotificationType._(
+          21, _omitEnumNames ? '' : 'MANAGED_MODE_REQUIRES_ADMIN_KEY');
+
+  ///
+  ///  Precise position is not allowed on a public channel; precision was reduced.
+  static const ClientNotification_NotificationType
+      PUBLIC_CHANNEL_POSITION_PRECISION_REDUCED =
+      ClientNotification_NotificationType._(22,
+          _omitEnumNames ? '' : 'PUBLIC_CHANNEL_POSITION_PRECISION_REDUCED');
+
+  ///
+  ///  A channel has a blank PSK (no encryption) instead of the default key.
+  static const ClientNotification_NotificationType CHANNEL_BLANK_PSK =
+      ClientNotification_NotificationType._(
+          23, _omitEnumNames ? '' : 'CHANNEL_BLANK_PSK');
+
+  ///
+  ///  A channel name looks like a mistyped modem preset name; the user should type it exactly.
+  static const ClientNotification_NotificationType CHANNEL_NAME_PRESET_MISTYPE =
+      ClientNotification_NotificationType._(
+          24, _omitEnumNames ? '' : 'CHANNEL_NAME_PRESET_MISTYPE');
+
+  ///
+  ///  A channel name looks like a mistyped modem preset name; clearing it lets the preset name apply automatically.
+  static const ClientNotification_NotificationType
+      CHANNEL_NAME_PRESET_MISTYPE_CLEAR_NAME =
+      ClientNotification_NotificationType._(
+          42, _omitEnumNames ? '' : 'CHANNEL_NAME_PRESET_MISTYPE_CLEAR_NAME');
+
+  ///
+  ///  A channel resolves to or matches a modem preset but uses a non-default key.
+  static const ClientNotification_NotificationType
+      CHANNEL_PRESET_NON_DEFAULT_KEY = ClientNotification_NotificationType._(
+          25, _omitEnumNames ? '' : 'CHANNEL_PRESET_NON_DEFAULT_KEY');
+
+  ///
+  ///  After a modem preset change, a channel name still matches the old preset.
+  static const ClientNotification_NotificationType
+      CHANNEL_NAME_MATCHES_OLD_PRESET = ClientNotification_NotificationType._(
+          26, _omitEnumNames ? '' : 'CHANNEL_NAME_MATCHES_OLD_PRESET');
+
+  ///
+  ///  After a modem preset change, a channel name matches the new preset but won't auto-resolve.
+  static const ClientNotification_NotificationType
+      CHANNEL_NAME_WONT_AUTO_RESOLVE = ClientNotification_NotificationType._(
+          27, _omitEnumNames ? '' : 'CHANNEL_NAME_WONT_AUTO_RESOLVE');
+
+  ///
+  ///  Name issues on one or more channels (several warnings combined).
+  static const ClientNotification_NotificationType CHANNEL_NAME_ISSUES =
+      ClientNotification_NotificationType._(
+          28, _omitEnumNames ? '' : 'CHANNEL_NAME_ISSUES');
+
+  ///
+  ///  PSK issues on one or more channels (several warnings combined).
+  static const ClientNotification_NotificationType CHANNEL_PSK_ISSUES =
+      ClientNotification_NotificationType._(
+          29, _omitEnumNames ? '' : 'CHANNEL_PSK_ISSUES');
+
+  ///
+  ///  Name and PSK issues on one or more channels (several warnings combined).
+  static const ClientNotification_NotificationType CHANNEL_NAME_AND_PSK_ISSUES =
+      ClientNotification_NotificationType._(
+          30, _omitEnumNames ? '' : 'CHANNEL_NAME_AND_PSK_ISSUES');
+
+  ///
+  ///  LoRa region code is not recognized.
+  static const ClientNotification_NotificationType LORA_REGION_UNRECOGNIZED =
+      ClientNotification_NotificationType._(
+          31, _omitEnumNames ? '' : 'LORA_REGION_UNRECOGNIZED');
+
+  ///
+  ///  LoRa region requires licensed mode.
+  static const ClientNotification_NotificationType
+      LORA_REGION_REQUIRES_LICENSE = ClientNotification_NotificationType._(
+          32, _omitEnumNames ? '' : 'LORA_REGION_REQUIRES_LICENSE');
+
+  ///
+  ///  LoRa region needs a band (2.4 GHz or sub-GHz) this radio does not support.
+  static const ClientNotification_NotificationType
+      LORA_REGION_UNSUPPORTED_BY_RADIO = ClientNotification_NotificationType._(
+          33, _omitEnumNames ? '' : 'LORA_REGION_UNSUPPORTED_BY_RADIO');
+
+  ///
+  ///  The selected modem preset moved the node to a sibling region.
+  static const ClientNotification_NotificationType LORA_PRESET_REGION_SWAP =
+      ClientNotification_NotificationType._(
+          34, _omitEnumNames ? '' : 'LORA_PRESET_REGION_SWAP');
+
+  ///
+  ///  Modem preset is invalid for the region; the region default may have been applied.
+  static const ClientNotification_NotificationType
+      LORA_PRESET_INVALID_FOR_REGION = ClientNotification_NotificationType._(
+          35, _omitEnumNames ? '' : 'LORA_PRESET_INVALID_FOR_REGION');
+
+  ///
+  ///  Requested bandwidth is wider than the region's span; the region default may have been applied.
+  static const ClientNotification_NotificationType
+      LORA_BANDWIDTH_EXCEEDS_REGION = ClientNotification_NotificationType._(
+          36, _omitEnumNames ? '' : 'LORA_BANDWIDTH_EXCEEDS_REGION');
+
+  ///
+  ///  Channel number is out of range for the region; a valid slot may have been applied.
+  static const ClientNotification_NotificationType LORA_CHANNEL_NUM_INVALID =
+      ClientNotification_NotificationType._(
+          37, _omitEnumNames ? '' : 'LORA_CHANNEL_NUM_INVALID');
+
+  ///
+  ///  Serial config rejected: overriding the console serial port needs an output-only mode (NMEA, CalTopo or MS Config).
+  static const ClientNotification_NotificationType
+      SERIAL_CONSOLE_OVERRIDE_INVALID = ClientNotification_NotificationType._(
+          38, _omitEnumNames ? '' : 'SERIAL_CONSOLE_OVERRIDE_INVALID');
+
+  ///
+  ///  MQTT server could not be reached; the settings were saved anyway.
+  static const ClientNotification_NotificationType MQTT_SERVER_UNREACHABLE =
+      ClientNotification_NotificationType._(
+          39, _omitEnumNames ? '' : 'MQTT_SERVER_UNREACHABLE');
+
+  ///
+  ///  MQTT config rejected: proxy_to_client_enabled is required on a node without a network.
+  static const ClientNotification_NotificationType
+      MQTT_PROXY_TO_CLIENT_REQUIRED = ClientNotification_NotificationType._(
+          40, _omitEnumNames ? '' : 'MQTT_PROXY_TO_CLIENT_REQUIRED');
+
+  ///
+  ///  MQTT config rejected: the default server address must not have a port specified.
+  static const ClientNotification_NotificationType
+      MQTT_DEFAULT_SERVER_PORT_INVALID = ClientNotification_NotificationType._(
+          41, _omitEnumNames ? '' : 'MQTT_DEFAULT_SERVER_PORT_INVALID');
+
+  ///
+  ///  OTA refused: the provided ota_hash is invalid.
+  static const ClientNotification_NotificationType OTA_INVALID_HASH =
+      ClientNotification_NotificationType._(
+          43, _omitEnumNames ? '' : 'OTA_INVALID_HASH');
+
+  ///
+  ///  OTA refused: no OTA loader partition was found.
+  static const ClientNotification_NotificationType
+      OTA_LOADER_PARTITION_MISSING = ClientNotification_NotificationType._(
+          44, _omitEnumNames ? '' : 'OTA_LOADER_PARTITION_MISSING');
+
+  ///
+  ///  OTA refused: the OTA loader partition does not hold a valid loader.
+  static const ClientNotification_NotificationType OTA_LOADER_INVALID =
+      ClientNotification_NotificationType._(
+          45, _omitEnumNames ? '' : 'OTA_LOADER_INVALID');
+
+  ///
+  ///  OTA refused: the OTA loader does not support the requested mode (BLE or WiFi).
+  static const ClientNotification_NotificationType OTA_MODE_UNSUPPORTED =
+      ClientNotification_NotificationType._(
+          46, _omitEnumNames ? '' : 'OTA_MODE_UNSUPPORTED');
+
+  ///
+  ///  OTA accepted: rebooting into the OTA loader for the requested mode.
+  static const ClientNotification_NotificationType OTA_REBOOTING =
+      ClientNotification_NotificationType._(
+          47, _omitEnumNames ? '' : 'OTA_REBOOTING');
+
+  ///
+  ///  OTA refused: switching to the OTA partition failed.
+  static const ClientNotification_NotificationType OTA_PARTITION_SWITCH_FAILED =
+      ClientNotification_NotificationType._(
+          48, _omitEnumNames ? '' : 'OTA_PARTITION_SWITCH_FAILED');
+
+  ///
+  ///  A NodeInfo update without a valid signature tried to change a known node's name or role,
+  ///  and packet_signature_policy (Balanced or Strict) refused it. The stored identity is kept.
+  static const ClientNotification_NotificationType
+      UNSIGNED_IDENTITY_UPDATE_IGNORED = ClientNotification_NotificationType._(
+          49, _omitEnumNames ? '' : 'UNSIGNED_IDENTITY_UPDATE_IGNORED');
+
+  static const $core.List<ClientNotification_NotificationType> values =
+      <ClientNotification_NotificationType>[
+    UNSET,
+    POSITION_SHARING_DISABLED,
+    TRACEROUTE_RATE_LIMITED,
+    TRACEROUTE_BROADCAST_REJECTED,
+    DUTY_CYCLE_LIMIT_EXCEEDED,
+    POSITION_SENT_SLEEPING,
+    TELEMETRY_SENT_SLEEPING,
+    KEY_VERIFICATION_NUMBER_INFORM,
+    KEY_VERIFICATION_NUMBER_REQUEST,
+    KEY_VERIFICATION_FINAL_INCOMING,
+    KEY_VERIFICATION_FINAL_OUTGOING,
+    KEY_VERIFICATION_LICENSED_UNAVAILABLE,
+    DUPLICATED_PUBLIC_KEY,
+    LOW_ENTROPY_KEY_REGENERATED,
+    LOW_ENTROPY_KEY_RESTORE_REJECTED,
+    LICENSED_MODE_ACTIVATED,
+    LICENSED_IDENTITY_WILL_CHANGE,
+    LICENSED_IDENTITY_CHANGED,
+    PROTECTED_NODE_LIMIT_REACHED,
+    ROUTER_REBROADCAST_NONE_REJECTED,
+    PACKET_SIGNATURE_POLICY_UNAVAILABLE,
+    MANAGED_MODE_REQUIRES_ADMIN_KEY,
+    PUBLIC_CHANNEL_POSITION_PRECISION_REDUCED,
+    CHANNEL_BLANK_PSK,
+    CHANNEL_NAME_PRESET_MISTYPE,
+    CHANNEL_NAME_PRESET_MISTYPE_CLEAR_NAME,
+    CHANNEL_PRESET_NON_DEFAULT_KEY,
+    CHANNEL_NAME_MATCHES_OLD_PRESET,
+    CHANNEL_NAME_WONT_AUTO_RESOLVE,
+    CHANNEL_NAME_ISSUES,
+    CHANNEL_PSK_ISSUES,
+    CHANNEL_NAME_AND_PSK_ISSUES,
+    LORA_REGION_UNRECOGNIZED,
+    LORA_REGION_REQUIRES_LICENSE,
+    LORA_REGION_UNSUPPORTED_BY_RADIO,
+    LORA_PRESET_REGION_SWAP,
+    LORA_PRESET_INVALID_FOR_REGION,
+    LORA_BANDWIDTH_EXCEEDS_REGION,
+    LORA_CHANNEL_NUM_INVALID,
+    SERIAL_CONSOLE_OVERRIDE_INVALID,
+    MQTT_SERVER_UNREACHABLE,
+    MQTT_PROXY_TO_CLIENT_REQUIRED,
+    MQTT_DEFAULT_SERVER_PORT_INVALID,
+    OTA_INVALID_HASH,
+    OTA_LOADER_PARTITION_MISSING,
+    OTA_LOADER_INVALID,
+    OTA_MODE_UNSUPPORTED,
+    OTA_REBOOTING,
+    OTA_PARTITION_SWITCH_FAILED,
+    UNSIGNED_IDENTITY_UPDATE_IGNORED,
+  ];
+
+  static final $core.List<ClientNotification_NotificationType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 49);
+  static ClientNotification_NotificationType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ClientNotification_NotificationType._(super.value, super.name);
 }
 
 ///

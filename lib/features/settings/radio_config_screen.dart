@@ -1052,10 +1052,15 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     return SettingsTile(
       icon: Icons.settings_input_antenna,
       title: l10n.radioConfigFemLna,
+      // AUTO is shown but not offered: no released firmware accepts it, and
+      // the two-state switch cannot hand it back once changed. The save
+      // path returns it to the radio unchanged.
       subtitle: mode == null
           ? l10n.radioConfigFemLnaUnknown
           : supported
           ? l10n.radioConfigFemLnaSubtitle
+          : mode == config_pbenum.Config_LoRaConfig_FEM_LNA_Mode.AUTO
+          ? l10n.radioConfigFemLnaAuto
           : l10n.radioConfigFemLnaNotPresent,
       crossAxisAlignment: CrossAxisAlignment.start,
       trailing: ThemedSwitch(

@@ -1298,6 +1298,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
     $core.bool? configOkToMqtt,
     Config_LoRaConfig_FEM_LNA_Mode? femLnaMode,
     $core.bool? serialHalOnly,
+    $core.bool? transparentMode,
   }) {
     final result = create();
     if (usePreset != null) result.usePreset = usePreset;
@@ -1321,6 +1322,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
     if (configOkToMqtt != null) result.configOkToMqtt = configOkToMqtt;
     if (femLnaMode != null) result.femLnaMode = femLnaMode;
     if (serialHalOnly != null) result.serialHalOnly = serialHalOnly;
+    if (transparentMode != null) result.transparentMode = transparentMode;
     return result;
   }
 
@@ -1366,6 +1368,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
         106, _omitFieldNames ? '' : 'femLnaMode',
         enumValues: Config_LoRaConfig_FEM_LNA_Mode.values)
     ..aOB(107, _omitFieldNames ? '' : 'serialHalOnly')
+    ..aOB(108, _omitFieldNames ? '' : 'transparentMode')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1630,7 +1633,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
   void clearConfigOkToMqtt() => $_clearField(105);
 
   ///
-  ///  Set where LORA FEM is enabled, disabled, or not present
+  ///  Set whether the LoRa FEM LNA is enabled, disabled, automatic, or not present
   @$pb.TagNumber(106)
   Config_LoRaConfig_FEM_LNA_Mode get femLnaMode => $_getN(18);
   @$pb.TagNumber(106)
@@ -1651,6 +1654,19 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
   $core.bool hasSerialHalOnly() => $_has(19);
   @$pb.TagNumber(107)
   void clearSerialHalOnly() => $_clearField(107);
+
+  ///
+  ///  Act as a transparent LoRa modem: run RadioLib on-device but do no encryption, decryption, or mesh routing.
+  ///  The connected client sets the PHY settings via this LoRaConfig, supplies fully-formed (already-encrypted) frames to transmit verbatim,
+  ///  and receives every frame the radio hears delivered raw (never decrypted) back over the API.
+  @$pb.TagNumber(108)
+  $core.bool get transparentMode => $_getBF(20);
+  @$pb.TagNumber(108)
+  set transparentMode($core.bool value) => $_setBool(20, value);
+  @$pb.TagNumber(108)
+  $core.bool hasTransparentMode() => $_has(20);
+  @$pb.TagNumber(108)
+  void clearTransparentMode() => $_clearField(108);
 }
 
 class Config_BluetoothConfig extends $pb.GeneratedMessage {
@@ -1889,7 +1905,8 @@ class Config_SecurityConfig extends $pb.GeneratedMessage {
   void clearAdminChannelEnabled() => $_clearField(8);
 
   ///
-  ///  Determines the packet signature policy applied to remotely received mesh packets.
+  ///  Determines whether this device signs the packets it sends, and which received packets it accepts.
+  ///  See PacketSignaturePolicy.
   @$pb.TagNumber(9)
   Config_SecurityConfig_PacketSignaturePolicy get packetSignaturePolicy =>
       $_getN(7);

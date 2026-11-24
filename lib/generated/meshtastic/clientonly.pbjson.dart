@@ -42,6 +42,7 @@ const DeviceProfile$json = {
       '3': 3,
       '4': 1,
       '5': 9,
+      '8': {},
       '9': 2,
       '10': 'channelUrl',
       '17': true
@@ -130,14 +131,14 @@ const DeviceProfile$json = {
 /// Descriptor for `DeviceProfile`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List deviceProfileDescriptor = $convert.base64Decode(
     'Cg1EZXZpY2VQcm9maWxlEiAKCWxvbmdfbmFtZRgBIAEoCUgAUghsb25nTmFtZYgBARIiCgpzaG'
-    '9ydF9uYW1lGAIgASgJSAFSCXNob3J0TmFtZYgBARIkCgtjaGFubmVsX3VybBgDIAEoCUgCUgpj'
-    'aGFubmVsVXJsiAEBEjQKBmNvbmZpZxgEIAEoCzIXLm1lc2h0YXN0aWMuTG9jYWxDb25maWdIA1'
-    'IGY29uZmlniAEBEkcKDW1vZHVsZV9jb25maWcYBSABKAsyHS5tZXNodGFzdGljLkxvY2FsTW9k'
-    'dWxlQ29uZmlnSARSDG1vZHVsZUNvbmZpZ4gBARJACg5maXhlZF9wb3NpdGlvbhgGIAEoCzIULm'
-    '1lc2h0YXN0aWMuUG9zaXRpb25IBVINZml4ZWRQb3NpdGlvbogBARIfCghyaW5ndG9uZRgHIAEo'
-    'CUgGUghyaW5ndG9uZYgBARIsCg9jYW5uZWRfbWVzc2FnZXMYCCABKAlIB1IOY2FubmVkTWVzc2'
-    'FnZXOIAQESLAoPaXNfdW5tZXNzYWdhYmxlGAkgASgISAhSDmlzVW5tZXNzYWdhYmxliAEBEiQK'
-    'C2lzX2xpY2Vuc2VkGAogASgISAlSCmlzTGljZW5zZWSIAQFCDAoKX2xvbmdfbmFtZUINCgtfc2'
-    'hvcnRfbmFtZUIOCgxfY2hhbm5lbF91cmxCCQoHX2NvbmZpZ0IQCg5fbW9kdWxlX2NvbmZpZ0IR'
-    'Cg9fZml4ZWRfcG9zaXRpb25CCwoJX3Jpbmd0b25lQhIKEF9jYW5uZWRfbWVzc2FnZXNCEgoQX2'
-    'lzX3VubWVzc2FnYWJsZUIOCgxfaXNfbGljZW5zZWQ=');
+    '9ydF9uYW1lGAIgASgJSAFSCXNob3J0TmFtZYgBARIsCgtjaGFubmVsX3VybBgDIAEoCUIGyvMY'
+    'AmgBSAJSCmNoYW5uZWxVcmyIAQESNAoGY29uZmlnGAQgASgLMhcubWVzaHRhc3RpYy5Mb2NhbE'
+    'NvbmZpZ0gDUgZjb25maWeIAQESRwoNbW9kdWxlX2NvbmZpZxgFIAEoCzIdLm1lc2h0YXN0aWMu'
+    'TG9jYWxNb2R1bGVDb25maWdIBFIMbW9kdWxlQ29uZmlniAEBEkAKDmZpeGVkX3Bvc2l0aW9uGA'
+    'YgASgLMhQubWVzaHRhc3RpYy5Qb3NpdGlvbkgFUg1maXhlZFBvc2l0aW9uiAEBEh8KCHJpbmd0'
+    'b25lGAcgASgJSAZSCHJpbmd0b25liAEBEiwKD2Nhbm5lZF9tZXNzYWdlcxgIIAEoCUgHUg5jYW'
+    '5uZWRNZXNzYWdlc4gBARIsCg9pc191bm1lc3NhZ2FibGUYCSABKAhICFIOaXNVbm1lc3NhZ2Fi'
+    'bGWIAQESJAoLaXNfbGljZW5zZWQYCiABKAhICVIKaXNMaWNlbnNlZIgBAUIMCgpfbG9uZ19uYW'
+    '1lQg0KC19zaG9ydF9uYW1lQg4KDF9jaGFubmVsX3VybEIJCgdfY29uZmlnQhAKDl9tb2R1bGVf'
+    'Y29uZmlnQhEKD19maXhlZF9wb3NpdGlvbkILCglfcmluZ3RvbmVCEgoQX2Nhbm5lZF9tZXNzYW'
+    'dlc0ISChBfaXNfdW5tZXNzYWdhYmxlQg4KDF9pc19saWNlbnNlZA==');

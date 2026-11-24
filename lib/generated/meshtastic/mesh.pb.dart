@@ -1043,6 +1043,10 @@ class Data extends $pb.GeneratedMessage {
 
   ///
   ///  Bitfield for extra flags. First use is to indicate that user approves the packet being uploaded to MQTT.
+  ///  Bit 0 (LSB): ok_to_mqtt.
+  ///  Bit 1: mirrors want_response.
+  ///  Bit 2: is_automation, the packet was sent by automation (a bot or scripted tool) rather than typed
+  ///  by a person. Set per packet by the client; self-reported, so treat it as advisory.
   @$pb.TagNumber(9)
   $core.int get bitfield => $_getIZ(8);
   @$pb.TagNumber(9)
@@ -4396,6 +4400,7 @@ class ClientNotification extends $pb.GeneratedMessage {
     $core.int? time,
     LogRecord_Level? level,
     $core.String? message,
+    ClientNotification_NotificationType? type,
     KeyVerificationNumberInform? keyVerificationNumberInform,
     KeyVerificationNumberRequest? keyVerificationNumberRequest,
     KeyVerificationFinal? keyVerificationFinal,
@@ -4407,6 +4412,7 @@ class ClientNotification extends $pb.GeneratedMessage {
     if (time != null) result.time = time;
     if (level != null) result.level = level;
     if (message != null) result.message = message;
+    if (type != null) result.type = type;
     if (keyVerificationNumberInform != null)
       result.keyVerificationNumberInform = keyVerificationNumberInform;
     if (keyVerificationNumberRequest != null)
@@ -4447,6 +4453,8 @@ class ClientNotification extends $pb.GeneratedMessage {
     ..aE<LogRecord_Level>(3, _omitFieldNames ? '' : 'level',
         enumValues: LogRecord_Level.values)
     ..aOS(4, _omitFieldNames ? '' : 'message')
+    ..aE<ClientNotification_NotificationType>(5, _omitFieldNames ? '' : 'type',
+        enumValues: ClientNotification_NotificationType.values)
     ..aOM<KeyVerificationNumberInform>(
         11, _omitFieldNames ? '' : 'keyVerificationNumberInform',
         subBuilder: KeyVerificationNumberInform.create)
@@ -4539,64 +4547,75 @@ class ClientNotification extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearMessage() => $_clearField(4);
 
+  ///
+  ///  Which firmware message this notification carries. UNSET when not known.
+  @$pb.TagNumber(5)
+  ClientNotification_NotificationType get type => $_getN(4);
+  @$pb.TagNumber(5)
+  set type(ClientNotification_NotificationType value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasType() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearType() => $_clearField(5);
+
   @$pb.TagNumber(11)
-  KeyVerificationNumberInform get keyVerificationNumberInform => $_getN(4);
+  KeyVerificationNumberInform get keyVerificationNumberInform => $_getN(5);
   @$pb.TagNumber(11)
   set keyVerificationNumberInform(KeyVerificationNumberInform value) =>
       $_setField(11, value);
   @$pb.TagNumber(11)
-  $core.bool hasKeyVerificationNumberInform() => $_has(4);
+  $core.bool hasKeyVerificationNumberInform() => $_has(5);
   @$pb.TagNumber(11)
   void clearKeyVerificationNumberInform() => $_clearField(11);
   @$pb.TagNumber(11)
   KeyVerificationNumberInform ensureKeyVerificationNumberInform() =>
-      $_ensure(4);
+      $_ensure(5);
 
   @$pb.TagNumber(12)
-  KeyVerificationNumberRequest get keyVerificationNumberRequest => $_getN(5);
+  KeyVerificationNumberRequest get keyVerificationNumberRequest => $_getN(6);
   @$pb.TagNumber(12)
   set keyVerificationNumberRequest(KeyVerificationNumberRequest value) =>
       $_setField(12, value);
   @$pb.TagNumber(12)
-  $core.bool hasKeyVerificationNumberRequest() => $_has(5);
+  $core.bool hasKeyVerificationNumberRequest() => $_has(6);
   @$pb.TagNumber(12)
   void clearKeyVerificationNumberRequest() => $_clearField(12);
   @$pb.TagNumber(12)
   KeyVerificationNumberRequest ensureKeyVerificationNumberRequest() =>
-      $_ensure(5);
+      $_ensure(6);
 
   @$pb.TagNumber(13)
-  KeyVerificationFinal get keyVerificationFinal => $_getN(6);
+  KeyVerificationFinal get keyVerificationFinal => $_getN(7);
   @$pb.TagNumber(13)
   set keyVerificationFinal(KeyVerificationFinal value) => $_setField(13, value);
   @$pb.TagNumber(13)
-  $core.bool hasKeyVerificationFinal() => $_has(6);
+  $core.bool hasKeyVerificationFinal() => $_has(7);
   @$pb.TagNumber(13)
   void clearKeyVerificationFinal() => $_clearField(13);
   @$pb.TagNumber(13)
-  KeyVerificationFinal ensureKeyVerificationFinal() => $_ensure(6);
+  KeyVerificationFinal ensureKeyVerificationFinal() => $_ensure(7);
 
   @$pb.TagNumber(14)
-  DuplicatedPublicKey get duplicatedPublicKey => $_getN(7);
+  DuplicatedPublicKey get duplicatedPublicKey => $_getN(8);
   @$pb.TagNumber(14)
   set duplicatedPublicKey(DuplicatedPublicKey value) => $_setField(14, value);
   @$pb.TagNumber(14)
-  $core.bool hasDuplicatedPublicKey() => $_has(7);
+  $core.bool hasDuplicatedPublicKey() => $_has(8);
   @$pb.TagNumber(14)
   void clearDuplicatedPublicKey() => $_clearField(14);
   @$pb.TagNumber(14)
-  DuplicatedPublicKey ensureDuplicatedPublicKey() => $_ensure(7);
+  DuplicatedPublicKey ensureDuplicatedPublicKey() => $_ensure(8);
 
   @$pb.TagNumber(15)
-  LowEntropyKey get lowEntropyKey => $_getN(8);
+  LowEntropyKey get lowEntropyKey => $_getN(9);
   @$pb.TagNumber(15)
   set lowEntropyKey(LowEntropyKey value) => $_setField(15, value);
   @$pb.TagNumber(15)
-  $core.bool hasLowEntropyKey() => $_has(8);
+  $core.bool hasLowEntropyKey() => $_has(9);
   @$pb.TagNumber(15)
   void clearLowEntropyKey() => $_clearField(15);
   @$pb.TagNumber(15)
-  LowEntropyKey ensureLowEntropyKey() => $_ensure(8);
+  LowEntropyKey ensureLowEntropyKey() => $_ensure(9);
 }
 
 class KeyVerificationNumberInform extends $pb.GeneratedMessage {
@@ -5474,6 +5493,8 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     $core.int? excludedModules,
     $core.bool? hasXeddsa,
     DisplayInfo? display,
+    $core.String? bleAddress,
+    $core.int? bootloaderVersion,
   }) {
     final result = create();
     if (firmwareVersion != null) result.firmwareVersion = firmwareVersion;
@@ -5491,6 +5512,8 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     if (excludedModules != null) result.excludedModules = excludedModules;
     if (hasXeddsa != null) result.hasXeddsa = hasXeddsa;
     if (display != null) result.display = display;
+    if (bleAddress != null) result.bleAddress = bleAddress;
+    if (bootloaderVersion != null) result.bootloaderVersion = bootloaderVersion;
     return result;
   }
 
@@ -5528,6 +5551,9 @@ class DeviceMetadata extends $pb.GeneratedMessage {
     ..aOB(14, _omitFieldNames ? '' : 'hasXeddsa')
     ..aOM<DisplayInfo>(16, _omitFieldNames ? '' : 'display',
         subBuilder: DisplayInfo.create)
+    ..aOS(17, _omitFieldNames ? '' : 'bleAddress')
+    ..aI(19, _omitFieldNames ? '' : 'bootloaderVersion',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -5709,6 +5735,37 @@ class DeviceMetadata extends $pb.GeneratedMessage {
   void clearDisplay() => $_clearField(16);
   @$pb.TagNumber(16)
   DisplayInfo ensureDisplay() => $_ensure(13);
+
+  ///
+  ///  The address this node's BLE radio advertises and accepts connections on, as
+  ///  colon-separated uppercase hex, most significant byte first ("AA:BB:CC:DD:EE:FF").
+  ///  Read from the BLE stack, so it is the address phones and other centrals see.
+  ///  It can differ from User.macaddr: on ESP32, Bluetooth uses its own MAC derived
+  ///  from the base MAC. Reported while Bluetooth is disabled in config whenever the
+  ///  hardware address is known. Empty when the device has no BLE radio or the
+  ///  address cannot be determined.
+  @$pb.TagNumber(17)
+  $core.String get bleAddress => $_getSZ(14);
+  @$pb.TagNumber(17)
+  set bleAddress($core.String value) => $_setString(14, value);
+  @$pb.TagNumber(17)
+  $core.bool hasBleAddress() => $_has(14);
+  @$pb.TagNumber(17)
+  void clearBleAddress() => $_clearField(17);
+
+  ///
+  ///  nRF52 bootloader version, packed as major << 16 | minor << 8 | patch, as the
+  ///  bootloader hands it to the application at boot. Meshtastic nRF52 Bootloader
+  ///  releases before 2.6.0 report 0.9.2, the same as stock Adafruit 0.9.2. 0 means
+  ///  not reported: a non-nRF52 device, or firmware that predates this field.
+  @$pb.TagNumber(19)
+  $core.int get bootloaderVersion => $_getIZ(15);
+  @$pb.TagNumber(19)
+  set bootloaderVersion($core.int value) => $_setUnsignedInt32(15, value);
+  @$pb.TagNumber(19)
+  $core.bool hasBootloaderVersion() => $_has(15);
+  @$pb.TagNumber(19)
+  void clearBootloaderVersion() => $_clearField(19);
 }
 
 ///

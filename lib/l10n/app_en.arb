@@ -15,6 +15,10 @@
   "@radioConfigFemLnaNotPresent": {
     "description": "Unavailable control when firmware reports no external FEM amplifier"
   },
+  "radioConfigFemLnaAuto": "Set to automatic on the radio, which switches the amplifier in or out from the measured noise floor.",
+  "@radioConfigFemLnaAuto": {
+    "description": "FEM LNA set to automatic on the radio; the app shows it without offering to change it"
+  },
   "meshBeaconNoticeTitle": "{count, plural, =1{New Mesh Beacon offer} other{{count} new Mesh Beacon offers}}",
   "@meshBeaconNoticeTitle": {
     "description": "Channels notice for distinct unreviewed Mesh Beacon offers",

@@ -3023,12 +3023,14 @@ class TakTalkMessage extends $pb.GeneratedMessage {
     $core.String? chatroomId,
     $core.String? lang,
     $core.bool? fromVoice,
+    $core.String? voiceProfileId,
   }) {
     final result = create();
     if (text != null) result.text = text;
     if (chatroomId != null) result.chatroomId = chatroomId;
     if (lang != null) result.lang = lang;
     if (fromVoice != null) result.fromVoice = fromVoice;
+    if (voiceProfileId != null) result.voiceProfileId = voiceProfileId;
     return result;
   }
 
@@ -3049,6 +3051,7 @@ class TakTalkMessage extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'chatroomId')
     ..aOS(3, _omitFieldNames ? '' : 'lang')
     ..aOB(4, _omitFieldNames ? '' : 'fromVoice')
+    ..aOS(5, _omitFieldNames ? '' : 'voiceProfileId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3120,6 +3123,18 @@ class TakTalkMessage extends $pb.GeneratedMessage {
   $core.bool hasFromVoice() => $_has(3);
   @$pb.TagNumber(4)
   void clearFromVoice() => $_clearField(4);
+
+  ///
+  ///  Voice profile to speak this message with on the receiver, matching
+  ///  VoiceProfile.voice_profile_id. Empty = the receiver's default voice.
+  @$pb.TagNumber(5)
+  $core.String get voiceProfileId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set voiceProfileId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasVoiceProfileId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearVoiceProfileId() => $_clearField(5);
 }
 
 ///
@@ -3236,6 +3251,220 @@ class TakTalkRoomData extends $pb.GeneratedMessage {
 }
 
 ///
+///  A synthetic speech profile, so receivers can render a sender's TAKTALK
+///  messages in that sender's own voice.
+///
+///  Opaque model data, not audio: sent once per peer on request and cached,
+///  after which only text crosses the mesh. profile_data is compact binary
+///  that gains nothing from the TAK dictionary, so send it uncompressed.
+class VoiceProfile extends $pb.GeneratedMessage {
+  factory VoiceProfile({
+    $core.String? voiceProfileId,
+    $core.String? voiceProfileName,
+    $core.List<$core.int>? profileData,
+  }) {
+    final result = create();
+    if (voiceProfileId != null) result.voiceProfileId = voiceProfileId;
+    if (voiceProfileName != null) result.voiceProfileName = voiceProfileName;
+    if (profileData != null) result.profileData = profileData;
+    return result;
+  }
+
+  VoiceProfile._();
+
+  factory VoiceProfile.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory VoiceProfile.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'VoiceProfile',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'voiceProfileId')
+    ..aOS(2, _omitFieldNames ? '' : 'voiceProfileName')
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'profileData', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VoiceProfile clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VoiceProfile copyWith(void Function(VoiceProfile) updates) =>
+      super.copyWith((message) => updates(message as VoiceProfile))
+          as VoiceProfile;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static VoiceProfile create() => VoiceProfile._();
+  @$core.override
+  VoiceProfile createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static VoiceProfile getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<VoiceProfile>(create);
+  static VoiceProfile? _defaultInstance;
+
+  ///
+  ///  Stable identifier for this profile, matching
+  ///  TakTalkMessage.voice_profile_id and GeoChat.voice_profile_id.
+  @$pb.TagNumber(1)
+  $core.String get voiceProfileId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set voiceProfileId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVoiceProfileId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVoiceProfileId() => $_clearField(1);
+
+  ///
+  ///  Friendly display name for the voice (e.g. "Alpha Lead").
+  @$pb.TagNumber(2)
+  $core.String get voiceProfileName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set voiceProfileName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasVoiceProfileName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVoiceProfileName() => $_clearField(2);
+
+  ///
+  ///  The profile itself, opaque to this schema.
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get profileData => $_getN(2);
+  @$pb.TagNumber(3)
+  set profileData($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasProfileData() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearProfileData() => $_clearField(3);
+}
+
+///
+///  Request for a peer's voice profile (CoT type y-).
+///
+///  Addressed with Marti; the reply is a VoiceProfile.
+class VoiceProfileRequest extends $pb.GeneratedMessage {
+  factory VoiceProfileRequest({
+    $core.String? voiceProfileId,
+  }) {
+    final result = create();
+    if (voiceProfileId != null) result.voiceProfileId = voiceProfileId;
+    return result;
+  }
+
+  VoiceProfileRequest._();
+
+  factory VoiceProfileRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory VoiceProfileRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'VoiceProfileRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'voiceProfileId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VoiceProfileRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VoiceProfileRequest copyWith(void Function(VoiceProfileRequest) updates) =>
+      super.copyWith((message) => updates(message as VoiceProfileRequest))
+          as VoiceProfileRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static VoiceProfileRequest create() => VoiceProfileRequest._();
+  @$core.override
+  VoiceProfileRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static VoiceProfileRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<VoiceProfileRequest>(create);
+  static VoiceProfileRequest? _defaultInstance;
+
+  ///
+  ///  Profile wanted, matching VoiceProfile.voice_profile_id. Empty = whichever
+  ///  profile the peer is currently using.
+  @$pb.TagNumber(1)
+  $core.String get voiceProfileId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set voiceProfileId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVoiceProfileId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVoiceProfileId() => $_clearField(1);
+}
+
+///
+///  Request for a room's name and roster (CoT type y-).
+///
+///  Addressed with Marti; the reply is a TakTalkRoomData.
+class TakTalkRoomRequest extends $pb.GeneratedMessage {
+  factory TakTalkRoomRequest({
+    $core.String? roomId,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    return result;
+  }
+
+  TakTalkRoomRequest._();
+
+  factory TakTalkRoomRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TakTalkRoomRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TakTalkRoomRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TakTalkRoomRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TakTalkRoomRequest copyWith(void Function(TakTalkRoomRequest) updates) =>
+      super.copyWith((message) => updates(message as TakTalkRoomRequest))
+          as TakTalkRoomRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TakTalkRoomRequest create() => TakTalkRoomRequest._();
+  @$core.override
+  TakTalkRoomRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TakTalkRoomRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TakTalkRoomRequest>(create);
+  static TakTalkRoomRequest? _defaultInstance;
+
+  ///
+  ///  Room UUID wanted, matching TakTalkRoomData.room_id.
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+}
+
+///
 ///  ATAK directed-routing recipient list (CoT <marti><dest callsign='X'/>…</marti>).
 ///
 ///  Present when an event is addressed to specific TAK users rather than the
@@ -3315,6 +3544,9 @@ enum TAKPacketV2_PayloadVariant {
   task,
   taktalk,
   taktalkRoom,
+  voiceProfile,
+  voiceProfileRequest,
+  taktalkRoomRequest,
   notSet
 }
 
@@ -3365,6 +3597,9 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     TakTalkMessage? taktalk,
     TakTalkRoomData? taktalkRoom,
     $core.int? startEpochLo14,
+    VoiceProfile? voiceProfile,
+    VoiceProfileRequest? voiceProfileRequest,
+    TakTalkRoomRequest? taktalkRoomRequest,
   }) {
     final result = create();
     if (cotTypeId != null) result.cotTypeId = cotTypeId;
@@ -3407,6 +3642,11 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     if (taktalk != null) result.taktalk = taktalk;
     if (taktalkRoom != null) result.taktalkRoom = taktalkRoom;
     if (startEpochLo14 != null) result.startEpochLo14 = startEpochLo14;
+    if (voiceProfile != null) result.voiceProfile = voiceProfile;
+    if (voiceProfileRequest != null)
+      result.voiceProfileRequest = voiceProfileRequest;
+    if (taktalkRoomRequest != null)
+      result.taktalkRoomRequest = taktalkRoomRequest;
     return result;
   }
 
@@ -3433,13 +3673,16 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     40: TAKPacketV2_PayloadVariant.task,
     41: TAKPacketV2_PayloadVariant.taktalk,
     42: TAKPacketV2_PayloadVariant.taktalkRoom,
+    44: TAKPacketV2_PayloadVariant.voiceProfile,
+    45: TAKPacketV2_PayloadVariant.voiceProfileRequest,
+    46: TAKPacketV2_PayloadVariant.taktalkRoomRequest,
     0: TAKPacketV2_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'TAKPacketV2',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42])
+    ..oo(0, [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 44, 45, 46])
     ..aE<CotType>(1, _omitFieldNames ? '' : 'cotTypeId',
         enumValues: CotType.values)
     ..aE<CotHow>(2, _omitFieldNames ? '' : 'how', enumValues: CotHow.values)
@@ -3500,6 +3743,12 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
         subBuilder: TakTalkRoomData.create)
     ..aI(43, _omitFieldNames ? '' : 'startEpochLo14',
         fieldType: $pb.PbFieldType.OU3)
+    ..aOM<VoiceProfile>(44, _omitFieldNames ? '' : 'voiceProfile',
+        subBuilder: VoiceProfile.create)
+    ..aOM<VoiceProfileRequest>(45, _omitFieldNames ? '' : 'voiceProfileRequest',
+        subBuilder: VoiceProfileRequest.create)
+    ..aOM<TakTalkRoomRequest>(46, _omitFieldNames ? '' : 'taktalkRoomRequest',
+        subBuilder: TakTalkRoomRequest.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3533,6 +3782,9 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   @$pb.TagNumber(40)
   @$pb.TagNumber(41)
   @$pb.TagNumber(42)
+  @$pb.TagNumber(44)
+  @$pb.TagNumber(45)
+  @$pb.TagNumber(46)
   TAKPacketV2_PayloadVariant whichPayloadVariant() =>
       _TAKPacketV2_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(31)
@@ -3547,6 +3799,9 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   @$pb.TagNumber(40)
   @$pb.TagNumber(41)
   @$pb.TagNumber(42)
+  @$pb.TagNumber(44)
+  @$pb.TagNumber(45)
+  @$pb.TagNumber(46)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -4036,64 +4291,11 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   TakTalkRoomData ensureTaktalkRoom() => $_ensure(38);
 
   ///
-  ///  Low 14 bits of the event's `start` time, as epoch seconds.
-  ///
-  ///  Restores a value the format otherwise drops entirely. The parser reads `time`
-  ///  and `stale` only to derive `stale_seconds`, and never reads `start` at all, so
-  ///  the builder has nothing to rebuild it from and sets `time = start = now` at
-  ///  decode. A CoT that spent 40 s crossing the mesh therefore arrives stamped as
-  ///  the freshest thing on the map, and no receiver can tell a 2-second-old
-  ///  position from a 40-second-old one, which makes correct ordering of two
-  ///  reports for one UID impossible.
-  ///
-  ///  14 bits rather than a full timestamp: any tag at 16 or above costs a 2-byte
-  ///  key, and a value below 16384 fits a 2-byte varint where epoch seconds needs
-  ///  five, so the field costs 4 bytes on the wire instead of 7.
-  ///
-  ///  SENDERS: populate this only when `start` is within 8192 s of transmission,
-  ///  and omit it otherwise. The encoding cannot express an older start and a
-  ///  receiver cannot detect one: an out-of-range value reconstructs silently as a
-  ///  plausible recent time in the wrong window. Transit and clock skew spend part
-  ///  of that budget, so treat roughly two hours as the practical limit.
-  ///
-  ///  RECEIVERS: rebuild the full value by selecting the candidate NEAREST your own
-  ///  clock. Do not splice the low bits onto your current window.
-  ///
-  ///    delta = ((carried - now) % 16384 + 24576) % 16384 - 8192   // [-8192, 8191]
-  ///    start = now + delta
-  ///
-  ///  (The + 24576 keeps the second remainder non-negative under both C and Python
-  ///  remainder semantics.)
-  ///
-  ///  The naive `(now & ~0x3FFF) | carried` is wrong at a window boundary in BOTH
-  ///  directions, not just one. For a boundary B, a sender `start` of B read by a
-  ///  receiver whose clock is at B - 1 yields B - 16384: a fresh event that appears
-  ///  4.55 hours old, which no future-side sanity check will catch. Nearest-
-  ///  candidate is exact whenever the true start is within 8192 s of the receiver's
-  ///  clock, which subsumes any realistic transit plus skew.
-  ///
-  ///  Treat the result as trustworthy for ORDERING packets from a single sender,
-  ///  where a constant clock offset cancels out. Before using it as an absolute
-  ///  age, bound it: reject a start more than a few seconds in the future, or more
-  ///  than about an hour in the past, and fall back to decode time. Keep both
-  ///  bounds well inside the 8192 s half-window, because past that the
-  ///  reconstruction is wrong rather than merely implausible.
-  ///
-  ///  Ordering assumes the producer advances `start` on each emission, which ATAK
-  ///  does because it sets `start = time`. A producer that holds `start` fixed
-  ///  across updates cannot be ordered by this field.
-  ///
-  ///  `optional` is deliberate, despite the v0.4.0 `altitude` experiment above
-  ///  finding `optional` net-negative: that regressed because a genuine 0 m
-  ///  altitude is common, whereas `start` mod 16384 is 0 for one second in 16384.
-  ///  Here explicit presence costs essentially nothing and distinguishes "sender
-  ///  did not populate this" from a legitimate zero.
-  ///
-  ///  Tag 43 rather than the 27 held above for "future top-level annotations",
-  ///  which is what this is: un-reserving 27 trips buf's RESERVED_MESSAGE_NO_DELETE
-  ///  under the FILE breaking category this module enables, and every tag at 16 or
-  ///  above costs the same 2-byte key, so the fresh tag is free. Move it to 27 if
-  ///  you would rather except the rule.
+  ///  Low 14 bits of the event's `start` time, as epoch seconds UTC. 14 bits rather
+  ///  than a full timestamp, so the field costs 4 bytes on the wire instead of 7.
+  ///  Order and deduplicates packets from a single sender. Valid only when within an
+  ///  hour of current wall time. `optional` is deliberate. It costs essentially
+  ///  nothing and distinguishes "sender did not populate this" from a legitimate zero.
   @$pb.TagNumber(43)
   $core.int get startEpochLo14 => $_getIZ(39);
   @$pb.TagNumber(43)
@@ -4102,6 +4304,47 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   $core.bool hasStartEpochLo14() => $_has(39);
   @$pb.TagNumber(43)
   void clearStartEpochLo14() => $_clearField(43);
+
+  ///
+  ///  Sender's synthetic speech profile. See VoiceProfile.
+  @$pb.TagNumber(44)
+  VoiceProfile get voiceProfile => $_getN(40);
+  @$pb.TagNumber(44)
+  set voiceProfile(VoiceProfile value) => $_setField(44, value);
+  @$pb.TagNumber(44)
+  $core.bool hasVoiceProfile() => $_has(40);
+  @$pb.TagNumber(44)
+  void clearVoiceProfile() => $_clearField(44);
+  @$pb.TagNumber(44)
+  VoiceProfile ensureVoiceProfile() => $_ensure(40);
+
+  ///
+  ///  Request for a peer's voice profile (CoT type y-).
+  ///  See VoiceProfileRequest.
+  @$pb.TagNumber(45)
+  VoiceProfileRequest get voiceProfileRequest => $_getN(41);
+  @$pb.TagNumber(45)
+  set voiceProfileRequest(VoiceProfileRequest value) => $_setField(45, value);
+  @$pb.TagNumber(45)
+  $core.bool hasVoiceProfileRequest() => $_has(41);
+  @$pb.TagNumber(45)
+  void clearVoiceProfileRequest() => $_clearField(45);
+  @$pb.TagNumber(45)
+  VoiceProfileRequest ensureVoiceProfileRequest() => $_ensure(41);
+
+  ///
+  ///  Request for a room's name and roster (CoT type y-).
+  ///  See TakTalkRoomRequest.
+  @$pb.TagNumber(46)
+  TakTalkRoomRequest get taktalkRoomRequest => $_getN(42);
+  @$pb.TagNumber(46)
+  set taktalkRoomRequest(TakTalkRoomRequest value) => $_setField(46, value);
+  @$pb.TagNumber(46)
+  $core.bool hasTaktalkRoomRequest() => $_has(42);
+  @$pb.TagNumber(46)
+  void clearTaktalkRoomRequest() => $_clearField(46);
+  @$pb.TagNumber(46)
+  TakTalkRoomRequest ensureTaktalkRoomRequest() => $_ensure(42);
 }
 
 const $core.bool _omitFieldNames =

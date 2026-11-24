@@ -676,7 +676,7 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
       Config_LoRaConfig_RegionCode._(5, _omitEnumNames ? '' : 'JP');
 
   ///
-  ///  Australia / New Zealand
+  ///  Australia / Brazil / New Zealand (915-928MHz)
   static const Config_LoRaConfig_RegionCode ANZ =
       Config_LoRaConfig_RegionCode._(6, _omitEnumNames ? '' : 'ANZ');
 
@@ -906,7 +906,7 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
 
   ///
   ///  Very Long Range - Slow
-  ///  Deprecated in 2.5: Works only with txco and is unusably slow
+  ///  Deprecated: works only with a TCXO and is unusably slow.
   @$core.Deprecated('This enum value is deprecated')
   static const Config_LoRaConfig_ModemPreset VERY_LONG_SLOW =
       Config_LoRaConfig_ModemPreset._(
@@ -1051,15 +1051,21 @@ class Config_LoRaConfig_FEM_LNA_Mode extends $pb.ProtobufEnum {
   static const Config_LoRaConfig_FEM_LNA_Mode NOT_PRESENT =
       Config_LoRaConfig_FEM_LNA_Mode._(2, _omitEnumNames ? '' : 'NOT_PRESENT');
 
+  ///
+  ///  FEM_LNA is present; the firmware switches it in or bypasses it from the measured noise floor
+  static const Config_LoRaConfig_FEM_LNA_Mode AUTO =
+      Config_LoRaConfig_FEM_LNA_Mode._(3, _omitEnumNames ? '' : 'AUTO');
+
   static const $core.List<Config_LoRaConfig_FEM_LNA_Mode> values =
       <Config_LoRaConfig_FEM_LNA_Mode>[
     DISABLED,
     ENABLED,
     NOT_PRESENT,
+    AUTO,
   ];
 
   static final $core.List<Config_LoRaConfig_FEM_LNA_Mode?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 2);
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
   static Config_LoRaConfig_FEM_LNA_Mode? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -1100,27 +1106,47 @@ class Config_BluetoothConfig_PairingMode extends $pb.ProtobufEnum {
 }
 
 ///
-///  Controls how the device authenticates remotely received mesh packets.
+///  Controls whether the device signs the packets it sends with XEdDSA, and which received packets it accepts.
+///  In every mode a packet whose signature is malformed or fails verification is dropped, except a traceroute,
+///  and so is a signed NodeInfo whose public key is not the key that signed it or does not hash to the sender's
+///  node number.
+///  A traceroute is never signed, and a signature on one is ignored: every hop rewrites it.
+///  A channel with use_aead set overrides this policy: its packets are never signed, and are not dropped
+///  for lacking a signature, because the AES-CCM tag authenticates them.
 class Config_SecurityConfig_PacketSignaturePolicy extends $pb.ProtobufEnum {
   ///
-  ///  Accept unsigned packets for maximum compatibility while still rejecting malformed or invalid signatures.
-  ///  This is the default to avoid legacy nodes dropping signed packets during rebroadcast.
+  ///  Packets are not signed. Unsigned packets are accepted, including from nodes that have signed before,
+  ///  and an unsigned NodeInfo may update such a node's name and role.
+  ///  Signatures are still checked: a signed packet whose signature is malformed or fails verification is
+  ///  dropped. A signature from a node whose key is not yet known cannot be checked, and the packet is
+  ///  accepted as unsigned.
+  ///  This is the default: firmware before 2.8 strips signatures when relaying.
   static const Config_SecurityConfig_PacketSignaturePolicy
       PACKET_SIGNATURE_POLICY_COMPATIBLE =
       Config_SecurityConfig_PacketSignaturePolicy._(
           0, _omitEnumNames ? '' : 'PACKET_SIGNATURE_POLICY_COMPATIBLE');
 
   ///
-  ///  Prefer authenticated packets while retaining compatibility with unsigned packets from nodes not known to sign.
-  ///  Rejects unsigned, signable broadcasts from nodes that have previously signed.
+  ///  Broadcasts are signed, and NodeInfo and position even when unicast. Licensed (ham) mode has no PKI, so it
+  ///  also signs the unicasts PKI would cover; its acks carry an ack proof instead of a signature.
+  ///  Unsigned packets are accepted, including from nodes that have signed before, but an unsigned NodeInfo
+  ///  does not change the name or role of a node that has signed before.
+  ///  Recommended only on a mesh with no relays running firmware older than 2.8: those strip signatures, so a
+  ///  signer's NodeInfo relayed through them arrives unsigned and its name and role changes are not applied.
+  ///  The same holds for a node that has signed before and no longer signs.
   static const Config_SecurityConfig_PacketSignaturePolicy
       PACKET_SIGNATURE_POLICY_BALANCED =
       Config_SecurityConfig_PacketSignaturePolicy._(
           1, _omitEnumNames ? '' : 'PACKET_SIGNATURE_POLICY_BALANCED');
 
   ///
-  ///  Accept only packets authenticated by a verified XEdDSA signature or successful PKI decryption.
-  ///  Unsigned, malformed, invalid, or unverifiable packets are ignored.
+  ///  Broadcasts are signed, and NodeInfo and position even when unicast. Licensed (ham) mode has no PKI, so it
+  ///  also signs the unicasts PKI would cover; its acks carry an ack proof instead of a signature.
+  ///  Only packets with a verified signature, or PKI-encrypted packets, are accepted.
+  ///  Unsigned packets are dropped, except acks and other routing packets, which carry their own proof,
+  ///  traceroutes, and key verification messages, which the users' security number authenticates.
+  ///  A signature from a node whose key is not yet known cannot be checked, and the packet is dropped,
+  ///  except a traceroute.
   static const Config_SecurityConfig_PacketSignaturePolicy
       PACKET_SIGNATURE_POLICY_STRICT =
       Config_SecurityConfig_PacketSignaturePolicy._(

@@ -189,6 +189,12 @@ void main() {
               find.text(_l10n.radioConfigFemLnaNotPresent),
               findsOneWidget,
             );
+          } else if (mode == Config_LoRaConfig_FEM_LNA_Mode.AUTO) {
+            // Present and automatic: never reported as missing, and not
+            // switchable to ENABLED/DISABLED with no way back.
+            expect(control.onChanged, isNull);
+            expect(find.text(_l10n.radioConfigFemLnaAuto), findsOneWidget);
+            expect(find.text(_l10n.radioConfigFemLnaNotPresent), findsNothing);
           } else {
             expect(control.onChanged, isNotNull);
             await tester.tap(toggle);

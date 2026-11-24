@@ -3,6 +3,7 @@
   "radioConfigFemLnaSubtitle": "Den externen rauscharmen Verstärker unabhängig von der verstärkten RX-Verstärkung aktivieren.",
   "radioConfigFemLnaUnknown": "Diese Firmware meldet keine FEM-Unterstützung.",
   "radioConfigFemLnaNotPresent": "Dieses Funkgerät hat keinen steuerbaren FEM LNA.",
+  "radioConfigFemLnaAuto": "Am Funkgerät auf automatisch gestellt; es schaltet den Verstärker anhand des gemessenen Grundrauschens zu oder ab.",
   "meshBeaconNoticeTitle": "{count, plural, =1{Neues Mesh-Beacon-Angebot} other{{count} neue Mesh-Beacon-Angebote}}",
   "meshBeaconNoticeSubtitle": "Tippe, um nahegelegene Mesh-Netze in den Mesh-Beacon-Einstellungen anzusehen.",
   "@@locale": "de",

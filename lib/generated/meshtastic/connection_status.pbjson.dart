@@ -150,7 +150,7 @@ final $typed_data.Uint8List networkConnectionStatusDescriptor = $convert.base64D
 const BluetoothConnectionStatus$json = {
   '1': 'BluetoothConnectionStatus',
   '2': [
-    {'1': 'pin', '3': 1, '4': 1, '5': 13, '10': 'pin'},
+    {'1': 'pin', '3': 1, '4': 1, '5': 13, '8': {}, '10': 'pin'},
     {'1': 'rssi', '3': 2, '4': 1, '5': 5, '10': 'rssi'},
     {'1': 'is_connected', '3': 3, '4': 1, '5': 8, '10': 'isConnected'},
   ],
@@ -159,8 +159,8 @@ const BluetoothConnectionStatus$json = {
 /// Descriptor for `BluetoothConnectionStatus`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List bluetoothConnectionStatusDescriptor =
     $convert.base64Decode(
-        'ChlCbHVldG9vdGhDb25uZWN0aW9uU3RhdHVzEhAKA3BpbhgBIAEoDVIDcGluEhIKBHJzc2kYAi'
-        'ABKAVSBHJzc2kSIQoMaXNfY29ubmVjdGVkGAMgASgIUgtpc0Nvbm5lY3RlZA==');
+        'ChlCbHVldG9vdGhDb25uZWN0aW9uU3RhdHVzEhgKA3BpbhgBIAEoDUIGyvMYAmgBUgNwaW4SEg'
+        'oEcnNzaRgCIAEoBVIEcnNzaRIhCgxpc19jb25uZWN0ZWQYAyABKAhSC2lzQ29ubmVjdGVk');
 
 @$core.Deprecated('Use serialConnectionStatusDescriptor instead')
 const SerialConnectionStatus$json = {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Meshtastic protobufs updated to v2.8.3. Radio Configuration shows a FEM LNA that the radio has set to automatic as automatic, instead of saying the radio has none, and leaves the setting as it is when you save.
+
 ### Fixed
 
 - Searching Settings for Clear Stale Nodes now shows its After x Days slider while the setting is on, as the full Settings list does.

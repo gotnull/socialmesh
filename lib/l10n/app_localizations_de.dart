@@ -25,6 +25,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieses Funkgerät hat keinen steuerbaren FEM LNA.';
 
   @override
+  String get radioConfigFemLnaAuto =>
+      'Am Funkgerät auf automatisch gestellt; es schaltet den Verstärker anhand des gemessenen Grundrauschens zu oder ab.';
+
+  @override
   String meshBeaconNoticeTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

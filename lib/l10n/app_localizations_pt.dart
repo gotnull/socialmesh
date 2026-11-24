@@ -25,6 +25,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Este rádio não tem um FEM LNA controlável.';
 
   @override
+  String get radioConfigFemLnaAuto =>
+      'Definido como automático no rádio, que liga ou desliga o amplificador conforme o ruído de fundo medido.';
+
+  @override
   String meshBeaconNoticeTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

@@ -3,6 +3,7 @@
   "radioConfigFemLnaSubtitle": "Увімкнути зовнішній малошумний підсилювач незалежно від підсилення прийому RX.",
   "radioConfigFemLnaUnknown": "Ця прошивка не повідомляє про підтримку FEM.",
   "radioConfigFemLnaNotPresent": "Цей пристрій не має керованого FEM LNA.",
+  "radioConfigFemLnaAuto": "На радіостанції вибрано автоматичний режим: вона вмикає або обходить підсилювач за виміряним рівнем шуму.",
   "meshBeaconNoticeTitle": "{count, plural, one{{count} нова пропозиція Mesh Beacon} few{{count} нові пропозиції Mesh Beacon} many{{count} нових пропозицій Mesh Beacon} other{{count} нової пропозиції Mesh Beacon}}",
   "meshBeaconNoticeSubtitle": "Торкніться, щоб переглянути mesh-мережі поблизу в налаштуваннях Mesh Beacon.",
   "@@locale": "uk",

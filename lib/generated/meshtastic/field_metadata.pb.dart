@@ -98,6 +98,7 @@ class FieldMetadata extends $pb.GeneratedMessage {
     $core.String? sinceFirmware,
     $core.String? deprecatedSince,
     $core.bool? oemFixedGps,
+    $core.bool? sensitive,
   }) {
     final result = create();
     if (diyOnly != null) result.diyOnly = diyOnly;
@@ -112,6 +113,7 @@ class FieldMetadata extends $pb.GeneratedMessage {
     if (sinceFirmware != null) result.sinceFirmware = sinceFirmware;
     if (deprecatedSince != null) result.deprecatedSince = deprecatedSince;
     if (oemFixedGps != null) result.oemFixedGps = oemFixedGps;
+    if (sensitive != null) result.sensitive = sensitive;
     return result;
   }
 
@@ -140,6 +142,7 @@ class FieldMetadata extends $pb.GeneratedMessage {
     ..aOS(10, _omitFieldNames ? '' : 'sinceFirmware')
     ..aOS(11, _omitFieldNames ? '' : 'deprecatedSince')
     ..aOB(12, _omitFieldNames ? '' : 'oemFixedGps')
+    ..aOB(13, _omitFieldNames ? '' : 'sensitive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -352,6 +355,30 @@ class FieldMetadata extends $pb.GeneratedMessage {
   $core.bool hasOemFixedGps() => $_has(11);
   @$pb.TagNumber(12)
   void clearOemFixedGps() => $_clearField(12);
+
+  ///
+  ///  Field holds a SECRET: a password, PIN, passphrase or key whose value grants
+  ///  access to the node, to its network, or to the traffic it carries. Knowing a
+  ///  public key or a username does not, so neither is marked.
+  ///
+  ///  Apps should mask the value by default (a password-style control with an
+  ///  explicit reveal), keep it out of logs, crash reports, analytics and debug
+  ///  dumps, and not include it in a shared export, QR code or screenshot without
+  ///  the user knowingly choosing to.
+  ///
+  ///  Handling metadata, not protection: it changes nothing on the wire, and the
+  ///  firmware treats the field no differently. It marks the field alone. A
+  ///  message that merely CONTAINS a sensitive field (`Config` holding
+  ///  `SecurityConfig.private_key`) is not marked itself, so a consumer redacting
+  ///  a whole message should walk into its submessages.
+  @$pb.TagNumber(13)
+  $core.bool get sensitive => $_getBF(12);
+  @$pb.TagNumber(13)
+  set sensitive($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasSensitive() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearSensitive() => $_clearField(13);
 }
 
 class Field_metadata {

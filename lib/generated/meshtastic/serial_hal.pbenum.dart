@@ -32,6 +32,22 @@ class SerialHalCommand_Type extends $pb.ProtobufEnum {
   static const SerialHalCommand_Type NOOP =
       SerialHalCommand_Type._(7, _omitEnumNames ? '' : 'NOOP');
 
+  /// One radio SPI command: wait for BUSY (value) to read low, drive CS (pin)
+  /// low, transfer data, drive CS high, then wait for BUSY low again. The
+  /// response carries the received bytes in data and the BUSY level after the
+  /// second wait in value (0 = low, 1 = still high).
+  ///
+  /// Each wait is bounded by the device (the firmware uses 10 ms). If the
+  /// first wait times out, nothing is transferred and the response is ERROR
+  /// with value = 1; the host waits for BUSY itself and resends. If the second
+  /// wait times out, the response is OK with value = 1, and the host polls
+  /// BUSY with DIGITAL_READ before its next command.
+  ///
+  /// A value of 0xFFFFFFFF means no BUSY line: both waits are skipped, and the
+  /// response value is 0 and carries no meaning.
+  static const SerialHalCommand_Type SPI_TRANSACTION =
+      SerialHalCommand_Type._(8, _omitEnumNames ? '' : 'SPI_TRANSACTION');
+
   static const $core.List<SerialHalCommand_Type> values =
       <SerialHalCommand_Type>[
     UNSET,
@@ -42,10 +58,11 @@ class SerialHalCommand_Type extends $pb.ProtobufEnum {
     DETACH_INTERRUPT,
     SPI_TRANSFER,
     NOOP,
+    SPI_TRANSACTION,
   ];
 
   static final $core.List<SerialHalCommand_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 7);
+      $pb.ProtobufEnum.$_initByValueList(values, 8);
   static SerialHalCommand_Type? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

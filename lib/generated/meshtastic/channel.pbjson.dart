@@ -27,7 +27,7 @@ const ChannelSettings$json = {
       '8': {'3': true},
       '10': 'channelNum',
     },
-    {'1': 'psk', '3': 2, '4': 1, '5': 12, '10': 'psk'},
+    {'1': 'psk', '3': 2, '4': 1, '5': 12, '8': {}, '10': 'psk'},
     {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
     {'1': 'id', '3': 4, '4': 1, '5': 7, '10': 'id'},
     {'1': 'uplink_enabled', '3': 5, '4': 1, '5': 8, '10': 'uplinkEnabled'},
@@ -47,11 +47,11 @@ const ChannelSettings$json = {
 /// Descriptor for `ChannelSettings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List channelSettingsDescriptor = $convert.base64Decode(
     'Cg9DaGFubmVsU2V0dGluZ3MSIwoLY2hhbm5lbF9udW0YASABKA1CAhgBUgpjaGFubmVsTnVtEh'
-    'AKA3BzaxgCIAEoDFIDcHNrEhIKBG5hbWUYAyABKAlSBG5hbWUSDgoCaWQYBCABKAdSAmlkEiUK'
-    'DnVwbGlua19lbmFibGVkGAUgASgIUg11cGxpbmtFbmFibGVkEikKEGRvd25saW5rX2VuYWJsZW'
-    'QYBiABKAhSD2Rvd25saW5rRW5hYmxlZBJDCg9tb2R1bGVfc2V0dGluZ3MYByABKAsyGi5tZXNo'
-    'dGFzdGljLk1vZHVsZVNldHRpbmdzUg5tb2R1bGVTZXR0aW5ncxIZCgh1c2VfYWVhZBgIIAEoCF'
-    'IHdXNlQWVhZA==');
+    'gKA3BzaxgCIAEoDEIGyvMYAmgBUgNwc2sSEgoEbmFtZRgDIAEoCVIEbmFtZRIOCgJpZBgEIAEo'
+    'B1ICaWQSJQoOdXBsaW5rX2VuYWJsZWQYBSABKAhSDXVwbGlua0VuYWJsZWQSKQoQZG93bmxpbm'
+    'tfZW5hYmxlZBgGIAEoCFIPZG93bmxpbmtFbmFibGVkEkMKD21vZHVsZV9zZXR0aW5ncxgHIAEo'
+    'CzIaLm1lc2h0YXN0aWMuTW9kdWxlU2V0dGluZ3NSDm1vZHVsZVNldHRpbmdzEhkKCHVzZV9hZW'
+    'FkGAggASgIUgd1c2VBZWFk');
 
 @$core.Deprecated('Use moduleSettingsDescriptor instead')
 const ModuleSettings$json = {

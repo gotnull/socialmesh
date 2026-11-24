@@ -266,6 +266,7 @@ enum AdminMessage_PayloadVariant {
   otaRequest,
   sensorConfig,
   lockdownAuth,
+  playRingtoneRequest,
   notSet
 }
 
@@ -336,6 +337,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     AdminMessage_OTAEvent? otaRequest,
     SensorConfig? sensorConfig,
     LockdownAuth? lockdownAuth,
+    $core.bool? playRingtoneRequest,
   }) {
     final result = create();
     if (getChannelRequest != null) result.getChannelRequest = getChannelRequest;
@@ -431,6 +433,8 @@ class AdminMessage extends $pb.GeneratedMessage {
     if (otaRequest != null) result.otaRequest = otaRequest;
     if (sensorConfig != null) result.sensorConfig = sensorConfig;
     if (lockdownAuth != null) result.lockdownAuth = lockdownAuth;
+    if (playRingtoneRequest != null)
+      result.playRingtoneRequest = playRingtoneRequest;
     return result;
   }
 
@@ -505,6 +509,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     102: AdminMessage_PayloadVariant.otaRequest,
     103: AdminMessage_PayloadVariant.sensorConfig,
     104: AdminMessage_PayloadVariant.lockdownAuth,
+    105: AdminMessage_PayloadVariant.playRingtoneRequest,
     0: AdminMessage_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -571,7 +576,8 @@ class AdminMessage extends $pb.GeneratedMessage {
       100,
       102,
       103,
-      104
+      104,
+      105
     ])
     ..aI(1, _omitFieldNames ? '' : 'getChannelRequest',
         fieldType: $pb.PbFieldType.OU3)
@@ -676,6 +682,7 @@ class AdminMessage extends $pb.GeneratedMessage {
         subBuilder: SensorConfig.create)
     ..aOM<LockdownAuth>(104, _omitFieldNames ? '' : 'lockdownAuth',
         subBuilder: LockdownAuth.create)
+    ..aOB(105, _omitFieldNames ? '' : 'playRingtoneRequest')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -757,6 +764,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(102)
   @$pb.TagNumber(103)
   @$pb.TagNumber(104)
+  @$pb.TagNumber(105)
   AdminMessage_PayloadVariant whichPayloadVariant() =>
       _AdminMessage_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -819,6 +827,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(102)
   @$pb.TagNumber(103)
   @$pb.TagNumber(104)
+  @$pb.TagNumber(105)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -1364,9 +1373,15 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  Request a single frame of the device's display framebuffer.
   ///  The frame is delivered to the local client as FromRadio.display_frame
   ///  chunks (see DisplayFrame in mesh.proto). There is no AdminMessage
-  ///  response. Local connection only: a node receiving this over the mesh,
-  ///  or a build without a display, ignores it. During active mirroring it
-  ///  forces one frame on the next redraw even if the screen is unchanged.
+  ///  response. With want_ack and a nonzero MeshPacket.id the device answers
+  ///  with a routing ACK, or a NAK: BAD_REQUEST before want_config_id,
+  ///  NOT_AUTHORIZED from a connection that has not passed client access
+  ///  control, NO_RESPONSE when every connection slot is in use. A build with
+  ///  encrypted storage drops an unauthorized request with no reply, so a
+  ///  client must also time out. Local connection only: a node
+  ///  receiving this over the mesh, or a build without mirroring, answers
+  ///  NOT_AUTHORIZED. During active mirroring it forces one frame on the next
+  ///  redraw even if the screen is unchanged.
   @$pb.TagNumber(50)
   $core.bool get getDisplayFrameRequest => $_getBF(44);
   @$pb.TagNumber(50)
@@ -1381,9 +1396,11 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  display. Unlike most bool verbs in this oneof, false is meaningful.
   ///  While enabled, the device sends a DisplayFrame after each screen
   ///  redraw that changed the framebuffer, as FromRadio.display_frame
-  ///  chunks; the first frame arrives immediately and acts as the
-  ///  acknowledgement. Local connection only (see get_display_frame_request)
-  ///  and not persisted across reboot.
+  ///  chunks; the first frame arrives immediately, except while display
+  ///  redaction is active and the panel is asleep, when it arrives once the
+  ///  panel wakes. Replies and the
+  ///  local-only rule are as for get_display_frame_request. Not persisted
+  ///  across reboot.
   @$pb.TagNumber(51)
   $core.bool get setDisplayMirror => $_getBF(45);
   @$pb.TagNumber(51)
@@ -1585,6 +1602,19 @@ class AdminMessage extends $pb.GeneratedMessage {
   void clearLockdownAuth() => $_clearField(104);
   @$pb.TagNumber(104)
   LockdownAuth ensureLockdownAuth() => $_ensure(60);
+
+  ///
+  ///  Play the ringtone currently configured for ExternalNotification
+  ///  once, so a client can preview a newly set ringtone or let the user
+  ///  locate the node. Ignored on builds without RTTTL support.
+  @$pb.TagNumber(105)
+  $core.bool get playRingtoneRequest => $_getBF(61);
+  @$pb.TagNumber(105)
+  set playRingtoneRequest($core.bool value) => $_setBool(61, value);
+  @$pb.TagNumber(105)
+  $core.bool hasPlayRingtoneRequest() => $_has(61);
+  @$pb.TagNumber(105)
+  void clearPlayRingtoneRequest() => $_clearField(105);
 }
 
 ///
@@ -1682,6 +1712,22 @@ class LockdownAuth extends $pb.GeneratedMessage {
   ///  0 = use firmware default (TOKEN_DEFAULT_BOOTS).
   ///  On reboot the firmware decrements this; when it reaches 0 the
   ///  device boots fully locked and requires a fresh passphrase.
+  ///
+  ///  SECURITY: a non-zero count is what makes the device able to unlock
+  ///  itself after a reboot, and it pays for that with a stored key. The
+  ///  unlock token holds the data-encryption key wrapped under a key the
+  ///  firmware derives from device identifiers alone - no passphrase. So
+  ///  for as long as a token exists, anyone who can read the flash can
+  ///  recover the DEK without knowing the passphrase, and at-rest
+  ///  encryption protects the data only against a casual dump.
+  ///
+  ///  This bounds exposure by reboot count; it does not eliminate it. 0 is
+  ///  the sentinel for TOKEN_DEFAULT_BOOTS, not a request for zero boots,
+  ///  so it selects a lenient default rather than the strictest setting;
+  ///  1 is the lowest, granting a single unlocked boot. No value of this
+  ///  field requires a passphrase on every boot. Clients offering a
+  ///  default should send an explicit count and present it as a
+  ///  convenience trade-off.
   @$pb.TagNumber(2)
   $core.int get bootsRemaining => $_getIZ(1);
   @$pb.TagNumber(2)
