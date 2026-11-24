@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Pure helpers for assembling MeshCore text-message wire frames.
-// Mirrors the inline builders in `meshcore_chat_screen.dart`
-// (`_buildSendTextMsgFrame` / `_buildSendChannelTextMsgFrame`) so the
-// automation engine + chat screen can both speak the same wire shape
-// without each duplicating the byte layout.
+// Pure helpers for assembling MeshCore text-message wire frames, shared
+// by the chat screen and the automation engine.
 //
 // Wire formats are frozen by the upstream MeshCore protocol - see
 // `examples/companion_radio/MyMesh.cpp` in `meshcore-dev/MeshCore` for

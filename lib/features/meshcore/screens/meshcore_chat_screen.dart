@@ -5,7 +5,6 @@ import '../../../utils/text_sanitizer.dart';
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1081,16 +1080,17 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       //     9-byte payload (expected_ack_hash + est_time_to_send).
       //     A later PUSH_CODE_SEND_CONFIRMED (0x82) carries the
       //     routed-delivery ack from the peer.
+      // [timestampS] is reused for the outbound MMF; receivers echo it.
       final frame = widget.chatType == MeshCoreChatType.contact
-          ? _buildSendTextMsgFrame(
-              widget.contact!.publicKey,
-              wireBody,
-              timestampS,
+          ? meshCoreBuildSendContactTextFrame(
+              recipientPubKey: widget.contact!.publicKey,
+              text: wireBody,
+              timestampS: timestampS,
             )
-          : _buildSendChannelTextMsgFrame(
-              widget.channel!.index,
-              wireBody,
-              timestampS,
+          : meshCoreBuildSendChannelTextFrame(
+              channelIndex: widget.channel!.index,
+              text: wireBody,
+              timestampS: timestampS,
             );
 
       // D33: route through `sendTextMessage` so the new
@@ -2356,58 +2356,6 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     } else {
       return context.l10n.meshcoreJustNow;
     }
-  }
-
-  /// Build CMD_SEND_TXT_MSG frame for contact message.
-  /// Format: [cmd][txt_type][attempt][timestamp x4][pub_key_prefix x6][text...]\0
-  ///
-  /// D33: [timestampS] is supplied by the caller so the same value can
-  /// be reused for the outbound MMF (`02:<peerPrefix>:<ts>`). Receivers
-  /// echo the timestamp verbatim, so MMFs derived from the wire field
-  /// match on both ends.
-  MeshCoreFrame _buildSendTextMsgFrame(
-    Uint8List recipientPubKey,
-    String text,
-    int timestampS,
-  ) {
-    final builder = BytesBuilder();
-    builder.addByte(0); // txt_type = plain
-    builder.addByte(0); // attempt = 0
-    builder.addByte(timestampS & 0xFF);
-    builder.addByte((timestampS >> 8) & 0xFF);
-    builder.addByte((timestampS >> 16) & 0xFF);
-    builder.addByte((timestampS >> 24) & 0xFF);
-    builder.add(recipientPubKey.sublist(0, 6));
-    builder.add(utf8.encode(text));
-    builder.addByte(0);
-
-    return MeshCoreFrame(
-      command: MeshCoreCommands.sendTxtMsg,
-      payload: builder.toBytes(),
-    );
-  }
-
-  /// Build CMD_SEND_CHANNEL_TXT_MSG frame for channel message.
-  /// Format: [cmd][txt_type][channel_idx][timestamp x4][text...]\0
-  MeshCoreFrame _buildSendChannelTextMsgFrame(
-    int channelIndex,
-    String text,
-    int timestampS,
-  ) {
-    final builder = BytesBuilder();
-    builder.addByte(0); // txt_type = plain
-    builder.addByte(channelIndex);
-    builder.addByte(timestampS & 0xFF);
-    builder.addByte((timestampS >> 8) & 0xFF);
-    builder.addByte((timestampS >> 16) & 0xFF);
-    builder.addByte((timestampS >> 24) & 0xFF);
-    builder.add(utf8.encode(text));
-    builder.addByte(0);
-
-    return MeshCoreFrame(
-      command: MeshCoreCommands.sendChannelTxtMsg,
-      payload: builder.toBytes(),
-    );
   }
 }
 

@@ -484,7 +484,8 @@ class ChatMetaEnvelopeCodec {
   // -------------------------------------------------------------------
 
   /// Encode a REPLY envelope into a full text body string the caller
-  /// passes to `_buildSendTextMsgFrame` / `_buildSendChannelTextMsgFrame`.
+  /// passes to `meshCoreBuildSendContactTextFrame` /
+  /// `meshCoreBuildSendChannelTextFrame`.
   ///
   /// [target] is the MMF of the message being replied to.
   /// [body] is the reply text.
