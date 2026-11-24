@@ -442,14 +442,12 @@ void main() {
       int used = 100,
       int total = 1000,
     }) {
-      return Uint8List.fromList([
-        batteryMv & 0xFF,
-        (batteryMv >> 8) & 0xFF,
-        used & 0xFF,
-        (used >> 8) & 0xFF,
-        total & 0xFF,
-        (total >> 8) & 0xFF,
-      ]);
+      // battery_mv u16, storage used and total u32 KB, little endian.
+      final data = ByteData(10)
+        ..setUint16(0, batteryMv, Endian.little)
+        ..setUint32(2, used, Endian.little)
+        ..setUint32(6, total, Endian.little);
+      return data.buffer.asUint8List();
     }
 
     test('getSelfInfo sends correct command sequence', () async {

@@ -103,10 +103,10 @@ class MeshCoreBattAndStorage {
   /// Battery voltage in millivolts.
   final int batteryMillivolts;
 
-  /// Storage used (units depend on device).
+  /// Storage used, in KB.
   final int storageUsed;
 
-  /// Storage total (units depend on device).
+  /// Storage total, in KB.
   final int storageTotal;
 
   /// Raw payload for access to any fields not parsed.
@@ -892,7 +892,9 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
 
   // Required fields
   final advType = reader.readByte();
-  final txPowerDbm = reader.readByte();
+  // tx_power_dbm is signed: radios can be set below 0 dBm.
+  final txPowerRaw = reader.readByte();
+  final txPowerDbm = txPowerRaw >= 0x80 ? txPowerRaw - 0x100 : txPowerRaw;
   final maxLoraTxPower = reader.readByte();
   final pubKey = reader.readBytes(meshCorePubKeySize);
 
@@ -1100,20 +1102,24 @@ ParseResult<MeshCoreDeviceInfo> parseDeviceInfo(Uint8List payload) {
 ///
 /// Returns parsed info or error if payload is malformed.
 ParseResult<MeshCoreBattAndStorage> parseBattAndStorage(Uint8List payload) {
-  // Minimum required: 6 bytes
-  const minLength = 6;
-
-  if (payload.length < minLength) {
+  // battery_mv u16, then storage used and total in KB as u32 each
+  // (MyMesh.cpp CMD_GET_BATT_AND_STORAGE). The battery stands on its own
+  // when a frame stops short of the storage fields.
+  if (payload.length < 2) {
     return ParseResult.failure(
-      'Battery and storage payload too short: ${payload.length} < $minLength',
+      'Battery and storage payload too short: ${payload.length} < 2',
     );
   }
 
   final reader = MeshCoreBufferReader(payload);
 
   final batteryMillivolts = reader.readUint16LE();
-  final storageUsed = reader.readUint16LE();
-  final storageTotal = reader.readUint16LE();
+  var storageUsed = 0;
+  var storageTotal = 0;
+  if (reader.remaining >= 8) {
+    storageUsed = reader.readUint32LE();
+    storageTotal = reader.readUint32LE();
+  }
 
   return ParseResult.success(
     MeshCoreBattAndStorage(

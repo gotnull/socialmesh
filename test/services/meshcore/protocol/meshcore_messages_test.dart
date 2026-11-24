@@ -68,6 +68,11 @@ void main() {
       expect(filtered.addsEveryContact, isFalse);
     });
 
+    test('a TX power below 0 dBm reads as negative', () {
+      final info = parseSelfInfo(buildSelfInfoPayload(txPower: 0xF7)).value!;
+      expect(info.txPowerDbm, -9);
+    });
+
     test('parses minimal payload (just required fields)', () {
       // Minimum: ADV_TYPE + tx_power + MAX_LORA_TX_POWER + pub_key = 35 bytes
       final payload = Uint8List.fromList([
@@ -264,11 +269,11 @@ void main() {
   });
 
   group('parseBattAndStorage', () {
-    test('parses valid payload', () {
+    test('parses valid payload (storage as u32 KB)', () {
       final payload = Uint8List.fromList([
         0x00, 0x10, // battery millivolts = 4096 (0x1000)
-        0x64, 0x00, // storage used = 100
-        0xE8, 0x03, // storage total = 1000
+        0x64, 0x00, 0x01, 0x00, // storage used = 65636 KB
+        0x00, 0x00, 0x10, 0x00, // storage total = 1048576 KB
       ]);
 
       final result = parseBattAndStorage(payload);
@@ -276,14 +281,19 @@ void main() {
       expect(result.isSuccess, isTrue);
       expect(result.value, isNotNull);
       expect(result.value!.batteryMillivolts, equals(4096));
-      expect(result.value!.storageUsed, equals(100));
-      expect(result.value!.storageTotal, equals(1000));
+      expect(result.value!.storageUsed, equals(65636));
+      expect(result.value!.storageTotal, equals(1048576));
+    });
+
+    test('keeps the battery when storage is missing', () {
+      final result = parseBattAndStorage(Uint8List.fromList([0x00, 0x10]));
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.batteryMillivolts, 4096);
+      expect(result.value!.storageTotal, 0);
     });
 
     test('fails on payload too short', () {
-      final payload = Uint8List.fromList([0x00, 0x10, 0x64]); // Only 3 bytes
-
-      final result = parseBattAndStorage(payload);
+      final result = parseBattAndStorage(Uint8List.fromList([0x00]));
 
       expect(result.isFailure, isTrue);
       expect(result.error, contains('too short'));
@@ -327,8 +337,8 @@ void main() {
     test('calculates storage percentage', () {
       final payload = Uint8List.fromList([
         0x00, 0x00, // battery
-        0x32, 0x00, // storage used = 50
-        0xC8, 0x00, // storage total = 200
+        0x32, 0x00, 0x00, 0x00, // storage used = 50
+        0xC8, 0x00, 0x00, 0x00, // storage total = 200
       ]);
 
       final result = parseBattAndStorage(payload);
@@ -340,8 +350,8 @@ void main() {
     test('storage percentage is null when total is zero', () {
       final payload = Uint8List.fromList([
         0x00, 0x00, // battery
-        0x32, 0x00, // storage used = 50
-        0x00, 0x00, // storage total = 0
+        0x32, 0x00, 0x00, 0x00, // storage used = 50
+        0x00, 0x00, 0x00, 0x00, // storage total = 0
       ]);
 
       final result = parseBattAndStorage(payload);
