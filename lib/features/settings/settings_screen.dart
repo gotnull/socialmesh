@@ -1276,10 +1276,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsTileClearStaleNodesSubtitle,
           keywords: ['stale', 'purge', 'clear', 'node', 'old', 'days'],
           section: context.l10n.settingsSectionDataStorage,
-          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
-            value: settingsService.purgeStaleNodeDays > 0,
-            onChanged: (value) => _setClearStaleNodes(settingsService, value),
-          ),
+          tilesBuilder: _buildClearStaleNodesTiles,
         ),
         _SearchableSettingItem(
           icon: Icons.delete_outline,
@@ -1941,33 +1938,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SettingsListSectionHeader(title: section),
-                ...items.map(
-                  (item) => SettingsNavTile(
-                    icon: item.icon,
-                    title: item.title,
-                    subtitle: item.subtitle,
-                    trailing: item.switchBuilder != null
-                        ? settingsServiceAsync.when(
-                            data: (settingsService) => item.switchBuilder!(
-                              context,
-                              ref,
-                              settingsService,
-                            ),
-                            loading: () => Icon(
-                              Icons.toggle_on_outlined,
-                              color: context.textTertiary,
-                              size: 24,
-                            ),
-                            error: (_, _) => Icon(
-                              Icons.toggle_on_outlined,
-                              color: context.textTertiary,
-                              size: 24,
-                            ),
-                          )
-                        : null,
-                    onTap: item.onTap,
-                  ),
-                ),
+                for (final item in items)
+                  if (item.tilesBuilder case final tiles?
+                      when settingsServiceAsync.hasValue)
+                    ...tiles(context, settingsServiceAsync.requireValue)
+                  else
+                    SettingsNavTile(
+                      icon: item.icon,
+                      title: item.title,
+                      subtitle: item.subtitle,
+                      trailing: item.switchBuilder != null
+                          ? settingsServiceAsync.when(
+                              data: (settingsService) => item.switchBuilder!(
+                                context,
+                                ref,
+                                settingsService,
+                              ),
+                              loading: () => Icon(
+                                Icons.toggle_on_outlined,
+                                color: context.textTertiary,
+                                size: 24,
+                              ),
+                              error: (_, _) => Icon(
+                                Icons.toggle_on_outlined,
+                                color: context.textTertiary,
+                                size: 24,
+                              ),
+                            )
+                          : null,
+                      onTap: item.onTap,
+                    ),
                 const SizedBox(height: AppTheme.spacing8),
               ],
             );
@@ -5157,6 +5157,11 @@ class _SearchableSettingItem {
   // A null result falls back to the plain heading and row.
   final Widget? Function(BuildContext, WidgetRef)? sectionBuilder;
 
+  // Replaces the single row with the rows the unfiltered list shows for
+  // this setting, so a control that only appears while the setting is on
+  // appears in search results too.
+  final List<Widget> Function(BuildContext, SettingsService)? tilesBuilder;
+
   const _SearchableSettingItem({
     required this.icon,
     required this.title,
@@ -5166,6 +5171,7 @@ class _SearchableSettingItem {
     this.onTap,
     this.switchBuilder,
     this.sectionBuilder,
+    this.tilesBuilder,
   });
 }
 
