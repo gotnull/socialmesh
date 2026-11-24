@@ -7123,6 +7123,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível salvar a configuração';
 
   @override
+  String get meshcoreContactsStorageFullTitle => 'Lista de contatos cheia';
+
+  @override
+  String get meshcoreContactsStorageFullBody =>
+      'O rádio não tem espaço para novos contatos, então os novos não estão sendo salvos. Remova contatos ou ative Sobrescrever o mais antigo quando cheio nas Configurações.';
+
+  @override
   String get meshcoreAutoRouteSectionTitle => 'Rotação automática de rota';
 
   @override

@@ -7150,6 +7150,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося зберегти налаштування автододавання';
 
   @override
+  String get meshcoreContactsStorageFullTitle => 'Список контактів заповнений';
+
+  @override
+  String get meshcoreContactsStorageFullBody =>
+      'У рації немає місця для нових контактів, тому вони не зберігаються. Видаліть контакти або увімкніть у налаштуваннях «Перезаписувати найстаріший, коли список заповнено».';
+
+  @override
   String get meshcoreAutoRouteSectionTitle => 'Авторотація маршрутів';
 
   @override

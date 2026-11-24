@@ -31082,6 +31082,8 @@
   "meshcoreAutoAddOverwriteOldestSubtitle": "Quando la lista contatti è piena, rimuovi il più vecchio non preferito per fare spazio",
   "meshcoreAutoAddLoadFailed": "Impossibile caricare la configurazione",
   "meshcoreAutoAddSaveFailed": "Impossibile salvare la configurazione",
+  "meshcoreContactsStorageFullTitle": "Elenco contatti pieno",
+  "meshcoreContactsStorageFullBody": "La radio non ha spazio per nuovi contatti, quindi quelli nuovi non vengono salvati. Rimuovi dei contatti o attiva Sovrascrivi il più vecchio quando pieno nelle impostazioni.",
   "meshcoreAutoRouteSectionTitle": "Rotazione automatica del percorso",
   "meshcoreAutoRouteEnabled": "Abilita rotazione automatica del percorso",
   "meshcoreAutoRouteEnabledSubtitle": "Quando un messaggio fallisce, riprova sul prossimo percorso salvato migliore prima di passare al flood",

@@ -25,6 +25,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../models/meshcore_contact_import_preview.dart';
@@ -97,6 +98,21 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
         ? [fill(_buildEmptyState(deviceName))]
         : [
             _buildSearchHeader(allContacts),
+            if (contactsState.storageFull)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    AppTheme.spacing8,
+                    AppTheme.spacing16,
+                    0,
+                  ),
+                  child: StatusBanner.warning(
+                    title: context.l10n.meshcoreContactsStorageFullTitle,
+                    subtitle: context.l10n.meshcoreContactsStorageFullBody,
+                  ),
+                ),
+              ),
             if (contacts.isEmpty)
               fill(_buildFilteredEmptyState())
             else

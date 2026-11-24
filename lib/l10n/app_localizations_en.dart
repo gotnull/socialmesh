@@ -7041,6 +7041,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreAutoAddSaveFailed => 'Could not save auto-add config';
 
   @override
+  String get meshcoreContactsStorageFullTitle => 'Contact list full';
+
+  @override
+  String get meshcoreContactsStorageFullBody =>
+      'The radio has no room for new contacts, so new ones are not being saved. Remove contacts, or turn on Overwrite oldest when full in Settings.';
+
+  @override
   String get meshcoreAutoRouteSectionTitle => 'Auto-route rotation';
 
   @override

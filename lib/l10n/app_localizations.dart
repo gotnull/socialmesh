@@ -12377,6 +12377,18 @@ abstract class AppLocalizations {
   /// **'Could not save auto-add config'**
   String get meshcoreAutoAddSaveFailed;
 
+  /// Nodes screen banner title shown after the MeshCore radio reports its contact storage is full.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact list full'**
+  String get meshcoreContactsStorageFullTitle;
+
+  /// Nodes screen banner body when the MeshCore radio contact storage is full; names the Settings toggle Overwrite oldest when full.
+  ///
+  /// In en, this message translates to:
+  /// **'The radio has no room for new contacts, so new ones are not being saved. Remove contacts, or turn on Overwrite oldest when full in Settings.'**
+  String get meshcoreContactsStorageFullBody;
+
   /// D48-A1 - settings-screen section header for the auto-route rotation policy
   ///
   /// In en, this message translates to:

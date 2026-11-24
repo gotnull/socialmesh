@@ -10492,6 +10492,8 @@
   "meshcoreAutoAddRoomServer": "Räume automatisch hinzufügen",
   "meshcoreAutoAddRoomServerSubtitle": "Raum-Server in der Nähe automatisch zu den Kontakten hinzufügen",
   "meshcoreAutoAddSaveFailed": "Auto-Add-Konfiguration konnte nicht gespeichert werden",
+  "meshcoreContactsStorageFullTitle": "Kontaktliste voll",
+  "meshcoreContactsStorageFullBody": "Das Funkgerät hat keinen Platz für neue Kontakte, daher werden neue nicht gespeichert. Entferne Kontakte oder aktiviere in den Einstellungen „Ältesten bei vollem Speicher überschreiben“.",
   "meshcoreAutoAddSectionTitle": "Kontakte automatisch hinzufügen",
   "meshcoreAutoAddSensor": "Sensoren automatisch hinzufügen",
   "meshcoreAutoAddSensorSubtitle": "Sensoren in der Nähe automatisch zu den Kontakten hinzufügen",

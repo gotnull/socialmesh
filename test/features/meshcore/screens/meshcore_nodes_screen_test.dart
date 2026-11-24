@@ -15,11 +15,14 @@ import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/meshcore_providers.dart';
 
 class _StubContactsNotifier extends MeshCoreContactsNotifier {
-  _StubContactsNotifier(this._seed);
+  _StubContactsNotifier(this._seed, {this.storageFull = false});
   final List<MeshCoreContact> _seed;
+  final bool storageFull;
   @override
-  MeshCoreContactsState build() =>
-      MeshCoreContactsState(contacts: List.unmodifiable(_seed));
+  MeshCoreContactsState build() => MeshCoreContactsState(
+    contacts: List.unmodifiable(_seed),
+    storageFull: storageFull,
+  );
 }
 
 MeshCoreContact _contact(String name, int firstByte) => MeshCoreContact(
@@ -33,12 +36,16 @@ MeshCoreContact _contact(String name, int firstByte) => MeshCoreContact(
   lastSeen: DateTime(2026, 11, 24, 15),
 );
 
-Widget _wrap({LinkStatus? linkStatus, List<MeshCoreContact>? contacts}) {
+Widget _wrap({
+  LinkStatus? linkStatus,
+  List<MeshCoreContact>? contacts,
+  bool storageFull = false,
+}) {
   return ProviderScope(
     overrides: [
       if (contacts != null)
         meshCoreContactsProvider.overrideWith(
-          () => _StubContactsNotifier(contacts),
+          () => _StubContactsNotifier(contacts, storageFull: storageFull),
         ),
       linkStatusProvider.overrideWithValue(
         linkStatus ??
@@ -112,6 +119,26 @@ void main() {
     expect(tester.takeException(), isNull);
 
     // Contact cards start delayed animations; unmount and let them lapse.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('a full contact list shows the warning banner', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _wrap(contacts: [_contact('Coburg Hill', 0x30)], storageFull: true),
+    );
+    await _settle(tester);
+
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(MeshCoreNodesScreen)),
+    );
+    expect(find.text(l10n.meshcoreContactsStorageFullTitle), findsOneWidget);
+    expect(find.text(l10n.meshcoreContactsStorageFullBody), findsOneWidget);
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 5));
   });

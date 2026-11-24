@@ -10492,6 +10492,8 @@
   "meshcoreAutoAddRoomServer": "Ajouter automatiquement les salons",
   "meshcoreAutoAddRoomServerSubtitle": "Ajoute automatiquement les serveurs de salons à proximité à vos contacts",
   "meshcoreAutoAddSaveFailed": "Impossible d'enregistrer la configuration d'ajout automatique",
+  "meshcoreContactsStorageFullTitle": "Liste de contacts pleine",
+  "meshcoreContactsStorageFullBody": "La radio n'a plus de place pour de nouveaux contacts, qui ne sont donc pas enregistrés. Supprimez des contacts ou activez Écraser le plus ancien si plein dans les réglages.",
   "meshcoreAutoAddSectionTitle": "Ajout automatique de contacts",
   "meshcoreAutoAddSensor": "Ajouter automatiquement les capteurs",
   "meshcoreAutoAddSensorSubtitle": "Ajoute automatiquement les capteurs à proximité à vos contacts",

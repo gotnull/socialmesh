@@ -9458,6 +9458,14 @@
   "@meshcoreAutoAddSaveFailed": {
     "description": "D47-A - snackbar shown when CMD_SET_AUTO_ADD_CONFIG fails"
   },
+  "meshcoreContactsStorageFullTitle": "Contact list full",
+  "@meshcoreContactsStorageFullTitle": {
+    "description": "Nodes screen banner title shown after the MeshCore radio reports its contact storage is full."
+  },
+  "meshcoreContactsStorageFullBody": "The radio has no room for new contacts, so new ones are not being saved. Remove contacts, or turn on Overwrite oldest when full in Settings.",
+  "@meshcoreContactsStorageFullBody": {
+    "description": "Nodes screen banner body when the MeshCore radio contact storage is full; names the Settings toggle Overwrite oldest when full."
+  },
   "meshcoreAutoRouteSectionTitle": "Auto-route rotation",
   "@meshcoreAutoRouteSectionTitle": {
     "description": "D48-A1 - settings-screen section header for the auto-route rotation policy"

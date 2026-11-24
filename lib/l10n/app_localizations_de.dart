@@ -7151,6 +7151,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Auto-Add-Konfiguration konnte nicht gespeichert werden';
 
   @override
+  String get meshcoreContactsStorageFullTitle => 'Kontaktliste voll';
+
+  @override
+  String get meshcoreContactsStorageFullBody =>
+      'Das Funkgerät hat keinen Platz für neue Kontakte, daher werden neue nicht gespeichert. Entferne Kontakte oder aktiviere in den Einstellungen „Ältesten bei vollem Speicher überschreiben“.';
+
+  @override
   String get meshcoreAutoRouteSectionTitle => 'Automatische Routenrotation';
 
   @override

@@ -411,6 +411,10 @@ class MeshCoreContactsState {
   /// (older firmware) - drives indeterminate vs determinate progress.
   final int? syncTotal;
 
+  /// True after the radio reported its contact storage full; cleared when
+  /// a contact is removed, by the user or by the radio making room.
+  final bool storageFull;
+
   const MeshCoreContactsState({
     this.contacts = const [],
     this.isLoading = false,
@@ -418,6 +422,7 @@ class MeshCoreContactsState {
     this.lastRefresh,
     this.syncReceived = 0,
     this.syncTotal,
+    this.storageFull = false,
   });
 
   const MeshCoreContactsState.initial()
@@ -426,14 +431,16 @@ class MeshCoreContactsState {
       error = null,
       lastRefresh = null,
       syncReceived = 0,
-      syncTotal = null;
+      syncTotal = null,
+      storageFull = false;
   const MeshCoreContactsState.loading()
     : contacts = const [],
       isLoading = true,
       error = null,
       lastRefresh = null,
       syncReceived = 0,
-      syncTotal = null;
+      syncTotal = null,
+      storageFull = false;
 
   /// Whether a roster fetch has finished, successfully or not, and none is
   /// in flight. Inbound DMs are matched to a sender against this list, so
@@ -449,6 +456,7 @@ class MeshCoreContactsState {
     int? syncReceived,
     int? syncTotal,
     bool clearSyncTotal = false,
+    bool? storageFull,
   }) {
     return MeshCoreContactsState(
       contacts: contacts ?? this.contacts,
@@ -457,6 +465,7 @@ class MeshCoreContactsState {
       lastRefresh: lastRefresh ?? this.lastRefresh,
       syncReceived: syncReceived ?? this.syncReceived,
       syncTotal: clearSyncTotal ? null : (syncTotal ?? this.syncTotal),
+      storageFull: storageFull ?? this.storageFull,
     );
   }
 }
@@ -553,6 +562,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
         contacts: contacts,
         isLoading: false,
         lastRefresh: DateTime.now(),
+        storageFull: state.storageFull,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -736,8 +746,27 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     );
     final ok = await session.removeContact(contact.publicKey);
     if (!ok) return false;
+    state = state.copyWith(storageFull: false);
     await refresh();
     return true;
+  }
+
+  /// The radio deleted [publicKeyHex] itself to make room for a new
+  /// contact (`PUSH_CODE_CONTACT_DELETED`); drop it from the roster.
+  void applyRadioDeletion(String publicKeyHex) {
+    final key = publicKeyHex.toLowerCase();
+    state = state.copyWith(
+      contacts: state.contacts
+          .where((c) => c.publicKeyHex.toLowerCase() != key)
+          .toList(),
+      storageFull: false,
+    );
+  }
+
+  /// The radio reported its contact storage full
+  /// (`PUSH_CODE_CONTACTS_FULL`).
+  void markStorageFull() {
+    if (!state.storageFull) state = state.copyWith(storageFull: true);
   }
 
   /// D46-A: broadcast OUR contact card to nearby peers via

@@ -851,6 +851,17 @@ class MeshCoreConversationsNotifier
       // (works for both push variants); a more targeted update via
       // `CMD_GET_CONTACT_BY_KEY` would also work but is deferred.
       _handleAdvertPush(frame);
+    } else if (frame.command == MeshCorePushCodes.contactDeleted) {
+      if (frame.payload.length < meshCorePubKeySize) return;
+      final keyHex = frame.payload
+          .sublist(0, meshCorePubKeySize)
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .join();
+      AppLogging.meshcore('event=contact.deleted_by_radio');
+      ref.read(meshCoreContactsProvider.notifier).applyRadioDeletion(keyHex);
+    } else if (frame.command == MeshCorePushCodes.contactsFull) {
+      AppLogging.meshcore('event=contacts.storage_full');
+      ref.read(meshCoreContactsProvider.notifier).markStorageFull();
     }
   }
 

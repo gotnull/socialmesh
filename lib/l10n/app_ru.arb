@@ -4456,6 +4456,8 @@
   "meshcoreAutoAddOverwriteOldestSubtitle": "Когда список контактов заполнен, удалять самый старый не-избранный, чтобы освободить место",
   "meshcoreAutoAddLoadFailed": "Не удалось загрузить настройки",
   "meshcoreAutoAddSaveFailed": "Не удалось сохранить настройки",
+  "meshcoreContactsStorageFullTitle": "Список контактов заполнен",
+  "meshcoreContactsStorageFullBody": "В рации нет места для новых контактов, поэтому они не сохраняются. Удалите контакты или включите в настройках «Перезаписывать самые старые при заполнении».",
   "meshcoreAutoRouteSectionTitle": "Автоматическая смена маршрута",
   "meshcoreAutoRouteEnabled": "Включить автоматическую смену маршрута",
   "meshcoreAutoRouteEnabledSubtitle": "При сбое сообщения повторить попытку по следующему лучшему сохранённому маршруту, прежде чем переходить к flood",

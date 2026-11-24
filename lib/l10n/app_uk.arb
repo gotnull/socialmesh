@@ -10492,6 +10492,8 @@
   "meshcoreAutoAddRoomServer": "Автододавання кімнат",
   "meshcoreAutoAddRoomServerSubtitle": "Автоматично додавати сервери кімнат поруч до контактів",
   "meshcoreAutoAddSaveFailed": "Не вдалося зберегти налаштування автододавання",
+  "meshcoreContactsStorageFullTitle": "Список контактів заповнений",
+  "meshcoreContactsStorageFullBody": "У рації немає місця для нових контактів, тому вони не зберігаються. Видаліть контакти або увімкніть у налаштуваннях «Перезаписувати найстаріший, коли список заповнено».",
   "meshcoreAutoAddSectionTitle": "Автододавання контактів",
   "meshcoreAutoAddSensor": "Автододавання сенсорів",
   "meshcoreAutoAddSensorSubtitle": "Автоматично додавати сенсори поруч до контактів",

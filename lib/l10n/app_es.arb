@@ -10492,6 +10492,8 @@
   "meshcoreAutoAddRoomServer": "Agregar salas automáticamente",
   "meshcoreAutoAddRoomServerSubtitle": "Agrega automáticamente los servidores de salas cercanos a tus contactos",
   "meshcoreAutoAddSaveFailed": "No se pudo guardar la configuración de auto-agregar",
+  "meshcoreContactsStorageFullTitle": "Lista de contactos llena",
+  "meshcoreContactsStorageFullBody": "La radio no tiene espacio para contactos nuevos, así que no se están guardando. Elimina contactos o activa Sobrescribir el más antiguo cuando esté lleno en Ajustes.",
   "meshcoreAutoAddSectionTitle": "Auto-agregar contactos",
   "meshcoreAutoAddSensor": "Agregar sensores automáticamente",
   "meshcoreAutoAddSensorSubtitle": "Agrega automáticamente los sensores cercanos a tus contactos",

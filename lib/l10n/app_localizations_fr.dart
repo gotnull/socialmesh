@@ -7194,6 +7194,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d\'enregistrer la configuration d\'ajout automatique';
 
   @override
+  String get meshcoreContactsStorageFullTitle => 'Liste de contacts pleine';
+
+  @override
+  String get meshcoreContactsStorageFullBody =>
+      'La radio n\'a plus de place pour de nouveaux contacts, qui ne sont donc pas enregistrés. Supprimez des contacts ou activez Écraser le plus ancien si plein dans les réglages.';
+
+  @override
   String get meshcoreAutoRouteSectionTitle => 'Rotation auto des routes';
 
   @override

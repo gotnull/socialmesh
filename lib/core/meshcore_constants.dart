@@ -487,6 +487,13 @@ class MeshCorePushCodes {
 
   /// Binary response.
   static const int binaryResponse = 0x8C;
+
+  /// The radio deleted a contact to make room for a new one (overwrite
+  /// oldest); the payload is its 32-byte public key.
+  static const int contactDeleted = 0x8F;
+
+  /// The radio's contact storage is full and a new contact was not saved.
+  static const int contactsFull = 0x90;
 }
 
 /// MeshCore text message types.

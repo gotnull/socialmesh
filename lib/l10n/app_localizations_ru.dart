@@ -7132,6 +7132,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreAutoAddSaveFailed => 'Не удалось сохранить настройки';
 
   @override
+  String get meshcoreContactsStorageFullTitle => 'Список контактов заполнен';
+
+  @override
+  String get meshcoreContactsStorageFullBody =>
+      'В рации нет места для новых контактов, поэтому они не сохраняются. Удалите контакты или включите в настройках «Перезаписывать самые старые при заполнении».';
+
+  @override
   String get meshcoreAutoRouteSectionTitle => 'Автоматическая смена маршрута';
 
   @override
