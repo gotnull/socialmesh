@@ -23324,6 +23324,14 @@
   "@scannerDeviceNotFoundSubtitle": {
     "description": "Banner subtitle explaining why the saved device was not found."
   },
+  "scannerDeviceNotFoundSubtitleNetwork": "Check that the radio is switched on and on the same network as this phone.",
+  "@scannerDeviceNotFoundSubtitleNetwork": {
+    "description": "Banner subtitle when a saved network (TCP) radio could not be reached."
+  },
+  "scannerDeviceNotFoundSubtitleUsb": "Check that the radio is plugged in to this phone and switched on.",
+  "@scannerDeviceNotFoundSubtitleUsb": {
+    "description": "Banner subtitle when a saved USB radio could not be found."
+  },
   "scannerDeviceNotFoundTitle": "{name} not found",
   "@scannerDeviceNotFoundTitle": {
     "description": "Banner title when the saved device was not found during scan.",

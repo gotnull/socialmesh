@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Searching Settings for Clear Stale Nodes now shows its After x Days slider while the setting is on, as the full Settings list does.
+- The Devices screen no longer says a saved Wi-Fi or USB radio was not found just because a Bluetooth scan did not list it; that scan only finds Bluetooth radios. When a saved Wi-Fi or USB radio really cannot be reached, the banner now gives advice for that connection instead of Bluetooth advice.
 
 ## [1.83.0] - 2026-11-24
 

@@ -17342,6 +17342,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Если другое приложение подключено к этому устройству, сначала отключите его. Одновременно Bluetooth может использовать только одно приложение.';
 
   @override
+  String get scannerDeviceNotFoundSubtitleNetwork =>
+      'Убедитесь, что радиостанция включена и находится в той же сети, что и этот телефон.';
+
+  @override
+  String get scannerDeviceNotFoundSubtitleUsb =>
+      'Убедитесь, что радиостанция подключена к этому телефону и включена.';
+
+  @override
   String scannerDeviceNotFoundTitle(String name) {
     return '$name не найден';
   }

@@ -17437,6 +17437,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Si une autre application est connectée à cet appareil, déconnectez-la d\'abord. Une seule application peut utiliser Bluetooth à la fois.';
 
   @override
+  String get scannerDeviceNotFoundSubtitleNetwork =>
+      'Vérifiez que la radio est allumée et sur le même réseau que ce téléphone.';
+
+  @override
+  String get scannerDeviceNotFoundSubtitleUsb =>
+      'Vérifiez que la radio est branchée à ce téléphone et allumée.';
+
+  @override
   String scannerDeviceNotFoundTitle(String name) {
     return '$name introuvable';
   }

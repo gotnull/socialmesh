@@ -17374,6 +17374,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wenn eine andere App mit diesem Gerät verbunden ist, trennen Sie diese zuerst. Nur eine App kann gleichzeitig Bluetooth nutzen.';
 
   @override
+  String get scannerDeviceNotFoundSubtitleNetwork =>
+      'Prüfen Sie, ob das Funkgerät eingeschaltet und im selben Netzwerk wie dieses Telefon ist.';
+
+  @override
+  String get scannerDeviceNotFoundSubtitleUsb =>
+      'Prüfen Sie, ob das Funkgerät an dieses Telefon angeschlossen und eingeschaltet ist.';
+
+  @override
   String scannerDeviceNotFoundTitle(String name) {
     return '$name nicht gefunden';
   }

@@ -17363,6 +17363,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Якщо інший додаток підключений до цього пристрою, спочатку від\'єднайтеся від нього. Лише один додаток може використовувати Bluetooth одночасно.';
 
   @override
+  String get scannerDeviceNotFoundSubtitleNetwork =>
+      'Переконайтеся, що радіостанцію увімкнено і вона в тій самій мережі, що й цей телефон.';
+
+  @override
+  String get scannerDeviceNotFoundSubtitleUsb =>
+      'Переконайтеся, що радіостанцію підключено до цього телефону й увімкнено.';
+
+  @override
   String scannerDeviceNotFoundTitle(String name) {
     return '$name не знайдено';
   }

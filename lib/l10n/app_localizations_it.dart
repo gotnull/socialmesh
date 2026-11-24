@@ -17338,6 +17338,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Se un\'altra app è connessa a questo dispositivo, disconnettila prima. Solo un\'app alla volta può usare il Bluetooth.';
 
   @override
+  String get scannerDeviceNotFoundSubtitleNetwork =>
+      'Controlla che la radio sia accesa e sulla stessa rete di questo telefono.';
+
+  @override
+  String get scannerDeviceNotFoundSubtitleUsb =>
+      'Controlla che la radio sia collegata a questo telefono e accesa.';
+
+  @override
   String scannerDeviceNotFoundTitle(String name) {
     return '$name non trovato';
   }

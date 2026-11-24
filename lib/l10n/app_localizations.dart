@@ -29590,6 +29590,18 @@ abstract class AppLocalizations {
   /// **'If another app is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.'**
   String get scannerDeviceNotFoundSubtitle;
 
+  /// Banner subtitle when a saved network (TCP) radio could not be reached.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that the radio is switched on and on the same network as this phone.'**
+  String get scannerDeviceNotFoundSubtitleNetwork;
+
+  /// Banner subtitle when a saved USB radio could not be found.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that the radio is plugged in to this phone and switched on.'**
+  String get scannerDeviceNotFoundSubtitleUsb;
+
   /// Banner title when the saved device was not found during scan.
   ///
   /// In en, this message translates to:

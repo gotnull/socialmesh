@@ -8322,6 +8322,8 @@
   "scannerDetailUsbSerial": "USB Seriell",
   "scannerDeviceDisconnectedUnexpectedly": "Das Gerät wurde unerwartet getrennt. Möglicherweise ist es außer Reichweite geraten oder hat die Verbindung verloren.",
   "scannerDeviceNotFoundSubtitle": "Wenn eine andere App mit diesem Gerät verbunden ist, trennen Sie diese zuerst. Nur eine App kann gleichzeitig Bluetooth nutzen.",
+  "scannerDeviceNotFoundSubtitleNetwork": "Prüfen Sie, ob das Funkgerät eingeschaltet und im selben Netzwerk wie dieses Telefon ist.",
+  "scannerDeviceNotFoundSubtitleUsb": "Prüfen Sie, ob das Funkgerät an dieses Telefon angeschlossen und eingeschaltet ist.",
   "scannerDeviceNotFoundTitle": "{name} nicht gefunden",
   "scannerDevicesFoundCount": "{count} Geräte gefunden",
   "scannerDevicesTitle": "Geräte",

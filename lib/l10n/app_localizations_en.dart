@@ -17156,6 +17156,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'If another app is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.';
 
   @override
+  String get scannerDeviceNotFoundSubtitleNetwork =>
+      'Check that the radio is switched on and on the same network as this phone.';
+
+  @override
+  String get scannerDeviceNotFoundSubtitleUsb =>
+      'Check that the radio is plugged in to this phone and switched on.';
+
+  @override
   String scannerDeviceNotFoundTitle(String name) {
     return '$name not found';
   }

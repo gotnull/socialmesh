@@ -8322,6 +8322,8 @@
   "scannerDetailUsbSerial": "USB Serial",
   "scannerDeviceDisconnectedUnexpectedly": "El dispositivo se desconectó inesperadamente. Es posible que haya salido del alcance o perdido alimentación.",
   "scannerDeviceNotFoundSubtitle": "Si otra app está conectada a este dispositivo, desconéctela primero. Solo una app puede usar Bluetooth a la vez.",
+  "scannerDeviceNotFoundSubtitleNetwork": "Comprueba que la radio esté encendida y en la misma red que este teléfono.",
+  "scannerDeviceNotFoundSubtitleUsb": "Comprueba que la radio esté conectada a este teléfono y encendida.",
   "scannerDeviceNotFoundTitle": "{name} no encontrado",
   "scannerDevicesFoundCount": "{count} dispositivos encontrados",
   "scannerDevicesTitle": "Dispositivos",

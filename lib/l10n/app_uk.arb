@@ -8322,6 +8322,8 @@
   "scannerDetailUsbSerial": "USB Serial",
   "scannerDeviceDisconnectedUnexpectedly": "Пристрій несподівано відключився. Можливо, він вийшов із зони дії або знеструмився.",
   "scannerDeviceNotFoundSubtitle": "Якщо інший додаток підключений до цього пристрою, спочатку від'єднайтеся від нього. Лише один додаток може використовувати Bluetooth одночасно.",
+  "scannerDeviceNotFoundSubtitleNetwork": "Переконайтеся, що радіостанцію увімкнено і вона в тій самій мережі, що й цей телефон.",
+  "scannerDeviceNotFoundSubtitleUsb": "Переконайтеся, що радіостанцію підключено до цього телефону й увімкнено.",
   "scannerDeviceNotFoundTitle": "{name} не знайдено",
   "scannerDevicesFoundCount": "{count} пристроїв знайдено",
   "scannerDevicesTitle": "Пристрої",

@@ -38,6 +38,7 @@ import '../../providers/meshcore_providers.dart';
 import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import 'widgets/protocol_badge.dart';
@@ -105,6 +106,29 @@ bool scannerShowsSavedDevicePlaceholder({
   required bool autoReconnecting,
   required bool hasCompletedScan,
 }) => autoReconnecting || (scanning && !hasCompletedScan);
+
+/// Whether a finished Bluetooth scan shows that the saved radio is
+/// missing. The scan lists Bluetooth radios only, so a saved network or
+/// USB radio is never in it and its absence says nothing; an empty scan
+/// says nothing either, since Bluetooth itself may be unavailable.
+@visibleForTesting
+bool scannerReportsSavedDeviceMissing({
+  required TransportType? savedType,
+  required bool savedDeviceListed,
+  required bool anyDeviceListed,
+}) => savedType == TransportType.ble && !savedDeviceListed && anyDeviceListed;
+
+/// The "not found" banner's advice for a saved radio reached over [type].
+/// An unknown type is treated as Bluetooth, the default transport.
+@visibleForTesting
+String scannerDeviceNotFoundSubtitle(
+  AppLocalizations l10n,
+  TransportType? type,
+) => switch (type) {
+  TransportType.network => l10n.scannerDeviceNotFoundSubtitleNetwork,
+  TransportType.usb => l10n.scannerDeviceNotFoundSubtitleUsb,
+  TransportType.ble || null => l10n.scannerDeviceNotFoundSubtitle,
+};
 
 /// Whether the scanner shows its Bluetooth search banner. The rescan
 /// timer keeps searching between scan cycles, so while no radio is
@@ -186,6 +210,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   bool _connectingMeshCore = false;
   String? _errorMessage;
   String? _savedDeviceNotFoundName;
+  TransportType? _savedDeviceNotFoundType;
   bool _showPairingInvalidationHint = false;
 
   /// Set when Android refused the scan, surfaced as [BleScanFailure]:
@@ -393,6 +418,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             _savedDeviceNotFoundName =
                 settings.lastDeviceName ??
                 'Your saved device'; // lint-allow: hardcoded-string
+            _savedDeviceNotFoundType = transportTypeFromString(
+              settings.lastDeviceType,
+            );
           });
         }
       });
@@ -1008,6 +1036,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           _savedDeviceNotFoundName =
               lastDeviceName ??
               'your saved device'; // lint-allow: hardcoded-string
+          _savedDeviceNotFoundType = _savedDeviceTransportType;
         });
         _startScan();
       }
@@ -1434,8 +1463,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // After scan completes, check if saved device was found
       // If not, show info banner that it may be connected elsewhere
       if (mounted && _savedDeviceId != null) {
-        final savedDeviceFound = _devices.any((d) => d.id == _savedDeviceId);
-        if (!savedDeviceFound && _devices.isNotEmpty) {
+        if (scannerReportsSavedDeviceMissing(
+          savedType: _savedDeviceTransportType,
+          savedDeviceListed: _devices.any((d) => d.id == _savedDeviceId),
+          anyDeviceListed: _devices.isNotEmpty,
+        )) {
           // Found other devices but not the saved one - likely connected elsewhere
           AppLogging.connection(
             'SCANNER: Saved device $_savedDeviceId not found, may be connected elsewhere',
@@ -1444,6 +1476,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             _savedDeviceNotFoundName =
                 _savedDeviceName ??
                 'Your saved device'; // lint-allow: hardcoded-string
+            _savedDeviceNotFoundType = TransportType.ble;
           });
         }
       }
@@ -2622,7 +2655,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                     title: context.l10n.scannerDeviceNotFoundTitle(
                       _savedDeviceNotFoundName!,
                     ),
-                    subtitle: context.l10n.scannerDeviceNotFoundSubtitle,
+                    subtitle: scannerDeviceNotFoundSubtitle(
+                      context.l10n,
+                      _savedDeviceNotFoundType,
+                    ),
                     margin: const EdgeInsets.only(bottom: 16),
                     onDismiss: () =>
                         setState(() => _savedDeviceNotFoundName = null),

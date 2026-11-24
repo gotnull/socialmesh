@@ -17325,6 +17325,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Se outro app está conectado a este dispositivo, desconecte-o primeiro. Apenas um app pode usar o Bluetooth por vez.';
 
   @override
+  String get scannerDeviceNotFoundSubtitleNetwork =>
+      'Verifique se o rádio está ligado e na mesma rede que este telefone.';
+
+  @override
+  String get scannerDeviceNotFoundSubtitleUsb =>
+      'Verifique se o rádio está conectado a este telefone e ligado.';
+
+  @override
   String scannerDeviceNotFoundTitle(String name) {
     return '$name não encontrado';
   }
