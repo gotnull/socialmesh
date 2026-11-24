@@ -877,6 +877,10 @@ class MeshCoreConversationsNotifier
       return;
     }
     final parsed = result.value!;
+    if (parsed.isCliReply) {
+      AppLogging.meshcore('event=message.cli_reply.skipped scope=contact');
+      return;
+    }
 
     // D28 Part A: stamp latest SNR onto the matching contact (session
     // only, no persistence). Done before conversation matching so

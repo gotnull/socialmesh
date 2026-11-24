@@ -494,6 +494,10 @@ class MeshCoreTextTypes {
 
   /// CLI command data.
   static const int cliData = 0x01;
+
+  /// Plain text signed by its author; a room server forwards posts this
+  /// way, with the author's 4-byte public key prefix ahead of the text.
+  static const int signedPlain = 0x02;
 }
 
 /// MeshCore advertisement types.

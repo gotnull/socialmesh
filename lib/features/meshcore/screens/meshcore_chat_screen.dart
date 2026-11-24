@@ -423,6 +423,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       return;
     }
     final parsed = result.value!;
+    if (parsed.isCliReply) return;
 
     AppLogging.meshcore(
       'event=message.parse.ok scope=contact '

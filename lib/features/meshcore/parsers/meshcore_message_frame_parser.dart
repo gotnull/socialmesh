@@ -98,6 +98,10 @@ class MeshCoreContactMessageFrame {
   final DateTime timestamp;
   final String text;
 
+  /// Lowercase hex of the author's 4-byte public key prefix on a signed
+  /// post (a room server relaying someone else's message); null otherwise.
+  final String? authorPrefixHex;
+
   const MeshCoreContactMessageFrame({
     required this.protocol,
     required this.snrQuarter,
@@ -106,7 +110,12 @@ class MeshCoreContactMessageFrame {
     required this.txtType,
     required this.timestamp,
     required this.text,
+    this.authorPrefixHex,
   });
+
+  /// A reply to a CLI command sent to a repeater or room server. It
+  /// belongs to the CLI session that asked, not to the chat thread.
+  bool get isCliReply => txtType == MeshCoreTextTypes.cliData;
 }
 
 /// Result of a parse attempt. Either [value] is non-null and
@@ -234,7 +243,7 @@ class MeshCoreMessageFrameParser {
       final pathLen = p[9];
       final txtType = p[10];
       final tsRaw = _readUint32LE(p, 11);
-      final text = _decodeText(p, 15);
+      final author = _readAuthorPrefix(p, 15, txtType);
       return MeshCoreFrameParseResult.ok(
         MeshCoreContactMessageFrame(
           protocol: MeshCoreMessageProtocol.v3,
@@ -243,7 +252,8 @@ class MeshCoreMessageFrameParser {
           pathLen: pathLen,
           txtType: txtType,
           timestamp: _epochSecondsToDateTime(tsRaw),
-          text: text,
+          text: _decodeText(p, author == null ? 15 : 19),
+          authorPrefixHex: author,
         ),
       );
     }
@@ -259,7 +269,7 @@ class MeshCoreMessageFrameParser {
       final pathLen = p[6];
       final txtType = p[7];
       final tsRaw = _readUint32LE(p, 8);
-      final text = _decodeText(p, 12);
+      final author = _readAuthorPrefix(p, 12, txtType);
       return MeshCoreFrameParseResult.ok(
         MeshCoreContactMessageFrame(
           protocol: MeshCoreMessageProtocol.legacy,
@@ -268,7 +278,8 @@ class MeshCoreMessageFrameParser {
           pathLen: pathLen,
           txtType: txtType,
           timestamp: _epochSecondsToDateTime(tsRaw),
-          text: text,
+          text: _decodeText(p, author == null ? 12 : 16),
+          authorPrefixHex: author,
         ),
       );
     }
@@ -276,6 +287,14 @@ class MeshCoreMessageFrameParser {
     return MeshCoreFrameParseResult.rejected(
       'unknown_contact_command 0x${code.toRadixString(16).padLeft(2, '0')}',
     );
+  }
+
+  // A signed post carries the author's 4-byte key prefix where the text
+  // would otherwise start (MyMesh::onSignedMessageRecv).
+  static String? _readAuthorPrefix(Uint8List p, int offset, int txtType) {
+    if (txtType != MeshCoreTextTypes.signedPlain) return null;
+    if (p.length < offset + 4) return null;
+    return _hexLower(p, offset, 4);
   }
 
   /// True if [contactPublicKeyHex] starts with the firmware-supplied

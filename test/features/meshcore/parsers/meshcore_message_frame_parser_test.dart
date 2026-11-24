@@ -312,6 +312,79 @@ void main() {
     });
   });
 
+  group('parseContactMessage: text types', () {
+    final room = const [0x3b, 0x01, 0x02, 0x03, 0x04, 0x05];
+    // Author key prefix 79 42 6d 8d, then the post text.
+    const signedText = '\x79\x42\x6d\x8dmeetup at the Coburg relay at 6';
+
+    test('a signed V3 post keeps the author prefix out of the text', () {
+      final frame = MeshCoreFrame(
+        command: MeshCoreResponses.contactMsgRecvV3,
+        payload: _v3ContactPayload(
+          snrQuarter: 8,
+          senderPrefix: room,
+          pathLen: 0,
+          txtType: MeshCoreTextTypes.signedPlain,
+          timestamp: 1_795_493_244,
+          text: signedText,
+        ),
+      );
+      final v = MeshCoreMessageFrameParser.parseContactMessage(frame).value!;
+      expect(v.authorPrefixHex, '79426d8d');
+      expect(v.text, 'meetup at the Coburg relay at 6');
+      expect(v.isCliReply, isFalse);
+    });
+
+    test('a signed legacy post keeps the author prefix out of the text', () {
+      final frame = MeshCoreFrame(
+        command: MeshCoreResponses.contactMsgRecv,
+        payload: _legacyContactPayload(
+          senderPrefix: room,
+          pathLen: 0,
+          txtType: MeshCoreTextTypes.signedPlain,
+          timestamp: 1_795_493_244,
+          text: signedText,
+        ),
+      );
+      final v = MeshCoreMessageFrameParser.parseContactMessage(frame).value!;
+      expect(v.authorPrefixHex, '79426d8d');
+      expect(v.text, 'meetup at the Coburg relay at 6');
+    });
+
+    test('a plain message has no author prefix', () {
+      final frame = MeshCoreFrame(
+        command: MeshCoreResponses.contactMsgRecvV3,
+        payload: _v3ContactPayload(
+          snrQuarter: 8,
+          senderPrefix: room,
+          pathLen: 0,
+          txtType: MeshCoreTextTypes.plain,
+          timestamp: 1_795_493_244,
+          text: 'reading you loud and clear',
+        ),
+      );
+      final v = MeshCoreMessageFrameParser.parseContactMessage(frame).value!;
+      expect(v.authorPrefixHex, isNull);
+      expect(v.text, 'reading you loud and clear');
+    });
+
+    test('a CLI reply is marked so chat can leave it to the CLI', () {
+      final frame = MeshCoreFrame(
+        command: MeshCoreResponses.contactMsgRecvV3,
+        payload: _v3ContactPayload(
+          snrQuarter: 8,
+          senderPrefix: room,
+          pathLen: 0,
+          txtType: MeshCoreTextTypes.cliData,
+          timestamp: 1_795_493_244,
+          text: '> OK',
+        ),
+      );
+      final v = MeshCoreMessageFrameParser.parseContactMessage(frame).value!;
+      expect(v.isCliReply, isTrue);
+    });
+  });
+
   group('parseContactMessage: V3 (cmd 0x10)', () {
     final senderPrefix = const [0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6];
 
