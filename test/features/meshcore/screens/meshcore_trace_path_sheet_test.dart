@@ -111,4 +111,18 @@ void main() {
     expect(find.text(l10n.meshcoreTracePathPickContact), findsOneWidget);
     expect(find.text('TerryDev2'), findsOneWidget);
   });
+
+  testWidgets('each contact row is its own accessible button', (tester) async {
+    final semantics = tester.ensureSemantics();
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(_wrap());
+    await tester.pump();
+
+    expect(find.bySemanticsLabel(RegExp(r'^TerryDev2')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(r'^Coburg Hill')), findsOneWidget);
+    semantics.dispose();
+  });
 }

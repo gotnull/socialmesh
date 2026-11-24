@@ -1325,47 +1325,52 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
         ),
         const SizedBox(height: AppTheme.spacing12),
         for (final c in eligible)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
-            // The row's own Material carries the fill, so the ListTile's
-            // tap splash shows on it.
-            child: Material(
-              color: identical(_selected, c)
-                  ? context.accentColor.withValues(alpha: 0.15)
-                  : context.card,
-              borderRadius: BorderRadius.circular(AppTheme.radius12),
-              clipBehavior: Clip.antiAlias,
-              child: ListTile(
-                dense: true,
-                leading: Icon(
-                  c.isRepeater
-                      ? Icons.cell_tower_rounded
-                      : Icons.person_rounded,
-                  color: identical(_selected, c)
-                      ? context.accentColor
-                      : context.textSecondary,
-                ),
-                title: Text(
-                  c.displayName.isNotEmpty
-                      ? c.displayName
-                      : l.meshcoreContactUnknownName,
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontFamily: AppTheme.fontFamily,
+          // Its own semantics node, so iOS exposes each contact as a
+          // separate button instead of folding the list into one.
+          Semantics(
+            container: true,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+              // The row's own Material carries the fill, so the ListTile's
+              // tap splash shows on it.
+              child: Material(
+                color: identical(_selected, c)
+                    ? context.accentColor.withValues(alpha: 0.15)
+                    : context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                clipBehavior: Clip.antiAlias,
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(
+                    c.isRepeater
+                        ? Icons.cell_tower_rounded
+                        : Icons.person_rounded,
+                    color: identical(_selected, c)
+                        ? context.accentColor
+                        : context.textSecondary,
                   ),
-                ),
-                subtitle: Text(
-                  c.localizedPathLabel(l),
-                  style: TextStyle(
-                    color: context.textTertiary,
-                    fontFamily: AppTheme.fontFamily,
-                    fontSize: 12,
+                  title: Text(
+                    c.displayName.isNotEmpty
+                        ? c.displayName
+                        : l.meshcoreContactUnknownName,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
                   ),
+                  subtitle: Text(
+                    c.localizedPathLabel(l),
+                    style: TextStyle(
+                      color: context.textTertiary,
+                      fontFamily: AppTheme.fontFamily,
+                      fontSize: 12,
+                    ),
+                  ),
+                  onTap: () {
+                    FocusScope.of(context).unfocus();
+                    safeSetState(() => _selected = c);
+                  },
                 ),
-                onTap: () {
-                  FocusScope.of(context).unfocus();
-                  safeSetState(() => _selected = c);
-                },
               ),
             ),
           ),
