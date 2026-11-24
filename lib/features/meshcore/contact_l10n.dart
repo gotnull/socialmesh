@@ -26,12 +26,8 @@ extension MeshCoreContactL10n on MeshCoreContact {
     }
   }
 
-  /// Localized routing path summary.
-  ///
-  /// Mirrors the structure of [MeshCoreContact.pathLabel] but resolves the
-  /// human-readable copy through ARB so non-English locales render correctly.
-  /// The model's [pathLabel] returns ASCII on purpose (used by `toString()`
-  /// and any non-display caller) - keep both in sync at the structural level.
+  /// Localized routing path summary: flood, direct or the hop count, with
+  /// a user-forced path marked as forced.
   String localizedPathLabel(AppLocalizations l10n) {
     final override = pathOverride;
     if (override != null) {

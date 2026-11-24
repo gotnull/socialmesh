@@ -147,6 +147,8 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
                     _addContactFromClipboard();
                   case 'broadcast_self':
                     _broadcastSelfContact();
+                  case 'broadcast_self_flood':
+                    _broadcastSelfContact(flood: true);
                   case 'discover':
                     _refreshContacts();
                   case 'my_code':
@@ -177,6 +179,15 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
                   child: ListTile(
                     leading: const Icon(Icons.broadcast_on_personal_outlined),
                     title: Text(context.l10n.meshcoreBroadcastSelfContact),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'broadcast_self_flood',
+                  child: ListTile(
+                    leading: const Icon(Icons.cell_tower_rounded),
+                    title: Text(context.l10n.meshcoreBroadcastSelfContactFlood),
                     contentPadding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
@@ -632,10 +643,11 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
     showSuccessSnackBar(context, l10n.meshcoreContactUrlCopied);
   }
 
-  Future<void> _broadcastSelfContact() async {
+  // Nearby (zero hop) by default; [flood] relays it across the mesh.
+  Future<void> _broadcastSelfContact({bool flood = false}) async {
     final l10n = context.l10n;
     final notifier = ref.read(meshCoreContactsProvider.notifier);
-    final ok = await notifier.broadcastSelfContact();
+    final ok = await notifier.broadcastSelfContact(flood: flood);
     if (!mounted) return;
     if (ok) {
       showSuccessSnackBar(context, l10n.meshcoreSelfContactBroadcasted);

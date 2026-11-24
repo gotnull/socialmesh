@@ -776,7 +776,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
   ///
   /// Returns `true` on `RESP_CODE_OK`, `false` on no session, no
   /// self-info loaded, firmware error, or timeout.
-  Future<bool> broadcastSelfContact() async {
+  Future<bool> broadcastSelfContact({bool flood = false}) async {
     final session = ref.read(meshCoreSessionProvider);
     if (session == null) {
       AppLogging.meshcore(
@@ -785,7 +785,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
       );
       return false;
     }
-    return session.sendSelfAdvert();
+    return session.sendSelfAdvert(flood: flood);
   }
 
   /// D46-A: export [contact] from firmware and return the canonical

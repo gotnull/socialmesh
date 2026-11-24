@@ -158,18 +158,6 @@ class MeshCoreContact {
   /// Human-readable type label.
   String get typeLabel => MeshCoreAdvType.label(type);
 
-  /// Human-readable path description.
-  String get pathLabel {
-    if (pathOverride != null) {
-      if (pathOverride! < 0) return 'Flood (forced)';
-      if (pathOverride == 0) return 'Direct (forced)';
-      return '$pathOverride hops (forced)';
-    }
-    if (pathLength < 0) return 'Flood';
-    if (pathLength == 0) return 'Direct';
-    return '$pathLength hops';
-  }
-
   /// Whether this contact has location data.
   bool get hasLocation =>
       latitude != null &&
@@ -241,7 +229,8 @@ class MeshCoreContact {
   int get hashCode => publicKeyHex.hashCode;
 
   @override
-  String toString() => 'MeshCoreContact($name, $typeLabel, $pathLabel)';
+  String toString() =>
+      'MeshCoreContact($name, $typeLabel, pathLength=$pathLength)';
 
   static String _bytesToHex(Uint8List bytes) {
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();

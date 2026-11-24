@@ -17523,13 +17523,13 @@ abstract class AppLocalizations {
   /// Routing path label: hop count for an auto-discovered direct route
   ///
   /// In en, this message translates to:
-  /// **'{count} hops'**
+  /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
   String meshcorePathHops(int count);
 
   /// Routing path label: user-forced hop count (overrides auto-discovered path)
   ///
   /// In en, this message translates to:
-  /// **'{count} hops (forced)'**
+  /// **'{count, plural, =1{1 hop (forced)} other{{count} hops (forced)}}'**
   String meshcorePathHopsForced(int count);
 
   /// Hint text for contact code input field
@@ -17892,7 +17892,13 @@ abstract class AppLocalizations {
   /// **'Could not export contact'**
   String get meshcoreContactExportFailed;
 
-  /// D46-A - contact action that sends our own contact card zero-hop to nearby peers via CMD_SHARE_CONTACT
+  /// Nodes menu action that floods our own advert, so repeaters relay it across the whole mesh (CMD_SEND_SELF_ADVERT with flood).
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast my contact across the mesh'**
+  String get meshcoreBroadcastSelfContactFlood;
+
+  /// Nodes menu action that sends our own advert zero hop, to nearby radios only (CMD_SEND_SELF_ADVERT).
   ///
   /// In en, this message translates to:
   /// **'Broadcast my contact'**

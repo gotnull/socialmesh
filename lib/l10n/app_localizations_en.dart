@@ -10081,12 +10081,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String meshcorePathHops(int count) {
-    return '$count hops';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hops',
+      one: '1 hop',
+    );
+    return '$_temp0';
   }
 
   @override
   String meshcorePathHopsForced(int count) {
-    return '$count hops (forced)';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hops (forced)',
+      one: '1 hop (forced)',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -10285,6 +10297,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshcoreContactExportFailed => 'Could not export contact';
+
+  @override
+  String get meshcoreBroadcastSelfContactFlood =>
+      'Broadcast my contact across the mesh';
 
   @override
   String get meshcoreBroadcastSelfContact => 'Broadcast my contact';

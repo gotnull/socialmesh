@@ -13482,7 +13482,7 @@
   "@meshcorePathFloodForced": {
     "description": "Routing path label: user-forced flood route (overrides auto-discovered path)"
   },
-  "meshcorePathHops": "{count} hops",
+  "meshcorePathHops": "{count, plural, =1{1 hop} other{{count} hops}}",
   "@meshcorePathHops": {
     "description": "Routing path label: hop count for an auto-discovered direct route",
     "placeholders": {
@@ -13491,7 +13491,7 @@
       }
     }
   },
-  "meshcorePathHopsForced": "{count} hops (forced)",
+  "meshcorePathHopsForced": "{count, plural, =1{1 hop (forced)} other{{count} hops (forced)}}",
   "@meshcorePathHopsForced": {
     "description": "Routing path label: user-forced hop count (overrides auto-discovered path)",
     "placeholders": {
@@ -13770,9 +13770,13 @@
   "@meshcoreContactExportFailed": {
     "description": "D46-A - error snackbar when CMD_EXPORT_CONTACT fails or times out"
   },
+  "meshcoreBroadcastSelfContactFlood": "Broadcast my contact across the mesh",
+  "@meshcoreBroadcastSelfContactFlood": {
+    "description": "Nodes menu action that floods our own advert, so repeaters relay it across the whole mesh (CMD_SEND_SELF_ADVERT with flood)."
+  },
   "meshcoreBroadcastSelfContact": "Broadcast my contact",
   "@meshcoreBroadcastSelfContact": {
-    "description": "D46-A - contact action that sends our own contact card zero-hop to nearby peers via CMD_SHARE_CONTACT"
+    "description": "Nodes menu action that sends our own advert zero hop, to nearby radios only (CMD_SEND_SELF_ADVERT)."
   },
   "meshcoreSelfContactBroadcasted": "Your contact card sent",
   "@meshcoreSelfContactBroadcasted": {

@@ -10227,12 +10227,28 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String meshcorePathHops(int count) {
-    return '$count стрибків';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count стрибка',
+      many: '$count стрибків',
+      few: '$count стрибки',
+      one: '$count стрибок',
+    );
+    return '$_temp0';
   }
 
   @override
   String meshcorePathHopsForced(int count) {
-    return '$count стрибків (примусово)';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count стрибка (примусово)',
+      many: '$count стрибків (примусово)',
+      few: '$count стрибки (примусово)',
+      one: '$count стрибок (примусово)',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -10433,6 +10449,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreContactExportFailed => 'Не вдалося експортувати контакт';
+
+  @override
+  String get meshcoreBroadcastSelfContactFlood =>
+      'Розіслати мій контакт по всій мережі';
 
   @override
   String get meshcoreBroadcastSelfContact => 'Транслювати мій контакт';

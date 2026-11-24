@@ -216,6 +216,30 @@ void main() {
         expect(sent.single.payload, [0]);
       },
     );
+
+    test('flood: sends CMD_SEND_SELF_ADVERT with the flood byte', () async {
+      final tx = _RecordingTransport();
+      final session = MeshCoreSession(tx);
+      addTearDown(() async {
+        await session.dispose();
+        await tx.dispose();
+      });
+      final c = _container(session: session, selfInfo: _selfInfoWithPubKey(1));
+      addTearDown(c.dispose);
+
+      final fut = c
+          .read(meshCoreContactsProvider.notifier)
+          .broadcastSelfContact(flood: true);
+      await Future<void>.delayed(Duration.zero);
+      tx.simulateOk();
+      expect(await fut, isTrue);
+
+      final sent = tx.sent
+          .map(MeshCoreFrame.fromBytes)
+          .where((f) => f.command == MeshCoreCommands.sendSelfAdvert)
+          .single;
+      expect(sent.payload, [1]);
+    });
   });
 
   group('exportContactUrl - D46-A', () {

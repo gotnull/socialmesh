@@ -110,6 +110,14 @@ void main() {
       );
     });
 
+    test('one hop reads as singular in English', () {
+      expect(_contactWithPath(pathLength: 1).localizedPathLabel(l10n), '1 hop');
+      expect(
+        _contactWithPath(pathLength: 3).localizedPathLabel(l10n),
+        '3 hops',
+      );
+    });
+
     test('pathOverride wins over pathLength: -1 → meshcorePathFloodForced', () {
       // Auto-discovered direct path, but the user has forced flood. The
       // forced label must win to make the override visible.
