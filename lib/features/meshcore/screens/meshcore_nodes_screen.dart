@@ -95,9 +95,13 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
         ? [fill(_buildLoadingState())]
         : contacts.isEmpty && allContacts.isEmpty
         ? [fill(_buildEmptyState(deviceName))]
-        : contacts.isEmpty
-        ? [fill(_buildFilteredEmptyState())]
-        : _buildContactsList(contacts, allContacts, contactsState.isLoading);
+        : [
+            _buildSearchHeader(allContacts),
+            if (contacts.isEmpty)
+              fill(_buildFilteredEmptyState())
+            else
+              ..._buildContactsList(contacts, contactsState.isLoading),
+          ];
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -259,7 +263,11 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
         titleSuffix: '',
         actionLabel: l10n.meshcoreContactsFilteredEmptyAction,
         actionIcon: Icons.clear_all_rounded,
-        onAction: () => setState(() => _activeFilter = _MeshCoreNodeFilter.all),
+        onAction: () => setState(() {
+          _activeFilter = _MeshCoreNodeFilter.all;
+          _searchQuery = '';
+          _searchController.clear();
+        }),
         accentColor: context.accentColor,
       ),
     );
@@ -292,11 +300,9 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
     );
   }
 
-  List<Widget> _buildContactsList(
-    List<MeshCoreContact> contacts,
-    List<MeshCoreContact> allContacts,
-    bool isLoading,
-  ) {
+  // Stays above an empty result, as on the Meshtastic Nodes screen, so a
+  // search that matches nothing can still be edited or cleared.
+  Widget _buildSearchHeader(List<MeshCoreContact> allContacts) {
     final unreadCount = allContacts
         .where((contact) => contact.unreadCount > 0)
         .length;
@@ -307,70 +313,76 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
     final otherCount = allContacts.length - chatCount - repeaterCount;
     final textScaler = MediaQuery.textScalerOf(context);
 
-    return [
-      SliverPersistentHeader(
-        pinned: true,
-        delegate: SearchFilterHeaderDelegate(
-          searchController: _searchController,
-          searchQuery: _searchQuery,
-          onSearchChanged: (value) => setState(() => _searchQuery = value),
-          hintText: context.l10n.meshcoreSearchContactsHint,
-          textScaler: textScaler,
-          rebuildKey: Object.hashAll([
-            _activeFilter,
-            allContacts.length,
-            unreadCount,
-            chatCount,
-            repeaterCount,
-            otherCount,
-          ]),
-          filterChips: [
-            StatusFilterChip(
-              label: context.l10n.messagingFilterAll,
-              count: allContacts.length,
-              isSelected: _activeFilter == _MeshCoreNodeFilter.all,
-              onTap: () =>
-                  setState(() => _activeFilter = _MeshCoreNodeFilter.all),
-            ),
-            StatusFilterChip(
-              label: context.l10n.messagingFilterUnread,
-              count: unreadCount,
-              isSelected: _activeFilter == _MeshCoreNodeFilter.unread,
-              icon: Icons.mark_email_unread_outlined,
-              color: AccentColors.red,
-              onTap: () =>
-                  setState(() => _activeFilter = _MeshCoreNodeFilter.unread),
-            ),
-            StatusFilterChip(
-              label: context.l10n.meshcoreFilterChatNodes,
-              count: chatCount,
-              isSelected: _activeFilter == _MeshCoreNodeFilter.chat,
-              icon: Icons.person,
-              color: AccentColors.blue,
-              onTap: () =>
-                  setState(() => _activeFilter = _MeshCoreNodeFilter.chat),
-            ),
-            StatusFilterChip(
-              label: context.l10n.meshcoreFilterRepeaters,
-              count: repeaterCount,
-              isSelected: _activeFilter == _MeshCoreNodeFilter.repeaters,
-              icon: Icons.cell_tower_rounded,
-              color: AccentColors.green,
-              onTap: () =>
-                  setState(() => _activeFilter = _MeshCoreNodeFilter.repeaters),
-            ),
-            StatusFilterChip(
-              label: context.l10n.meshcoreFilterOtherNodes,
-              count: otherCount,
-              isSelected: _activeFilter == _MeshCoreNodeFilter.other,
-              icon: Icons.device_unknown,
-              color: SemanticColors.disabled,
-              onTap: () =>
-                  setState(() => _activeFilter = _MeshCoreNodeFilter.other),
-            ),
-          ],
-        ),
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: SearchFilterHeaderDelegate(
+        searchController: _searchController,
+        searchQuery: _searchQuery,
+        onSearchChanged: (value) => setState(() => _searchQuery = value),
+        hintText: context.l10n.meshcoreSearchContactsHint,
+        textScaler: textScaler,
+        rebuildKey: Object.hashAll([
+          _activeFilter,
+          allContacts.length,
+          unreadCount,
+          chatCount,
+          repeaterCount,
+          otherCount,
+        ]),
+        filterChips: [
+          StatusFilterChip(
+            label: context.l10n.messagingFilterAll,
+            count: allContacts.length,
+            isSelected: _activeFilter == _MeshCoreNodeFilter.all,
+            onTap: () =>
+                setState(() => _activeFilter = _MeshCoreNodeFilter.all),
+          ),
+          StatusFilterChip(
+            label: context.l10n.messagingFilterUnread,
+            count: unreadCount,
+            isSelected: _activeFilter == _MeshCoreNodeFilter.unread,
+            icon: Icons.mark_email_unread_outlined,
+            color: AccentColors.red,
+            onTap: () =>
+                setState(() => _activeFilter = _MeshCoreNodeFilter.unread),
+          ),
+          StatusFilterChip(
+            label: context.l10n.meshcoreFilterChatNodes,
+            count: chatCount,
+            isSelected: _activeFilter == _MeshCoreNodeFilter.chat,
+            icon: Icons.person,
+            color: AccentColors.blue,
+            onTap: () =>
+                setState(() => _activeFilter = _MeshCoreNodeFilter.chat),
+          ),
+          StatusFilterChip(
+            label: context.l10n.meshcoreFilterRepeaters,
+            count: repeaterCount,
+            isSelected: _activeFilter == _MeshCoreNodeFilter.repeaters,
+            icon: Icons.cell_tower_rounded,
+            color: AccentColors.green,
+            onTap: () =>
+                setState(() => _activeFilter = _MeshCoreNodeFilter.repeaters),
+          ),
+          StatusFilterChip(
+            label: context.l10n.meshcoreFilterOtherNodes,
+            count: otherCount,
+            isSelected: _activeFilter == _MeshCoreNodeFilter.other,
+            icon: Icons.device_unknown,
+            color: SemanticColors.disabled,
+            onTap: () =>
+                setState(() => _activeFilter = _MeshCoreNodeFilter.other),
+          ),
+        ],
       ),
+    );
+  }
+
+  List<Widget> _buildContactsList(
+    List<MeshCoreContact> contacts,
+    bool isLoading,
+  ) {
+    return [
       SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
         sliver: SliverList(
