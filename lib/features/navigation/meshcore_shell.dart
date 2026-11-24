@@ -377,9 +377,13 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
           // `removeTop: true` here tells the inner scaffolds the top
           // padding has already been consumed, collapsing the gap.
           Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: showReconnectionBanner,
+            // The shell Scaffold already consumed the keyboard inset, as in
+            // the main shell; passing it on made every tab subtract it a
+            // second time and squashed lists to a sliver while typing.
+            child: MediaQuery(
+              data: MediaQuery.of(context)
+                  .removePadding(removeTop: showReconnectionBanner)
+                  .removeViewInsets(removeBottom: true),
               child: IndexedStack(
                 index: selectedIndex,
                 children: List.generate(

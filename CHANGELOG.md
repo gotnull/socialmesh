@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Setting or forcing a MeshCore contact's route, and sending a message with automatic routing, no longer unfavourites the contact, revokes its telemetry permissions or wipes its location. Each of those saves rewrote the contact without them.
 - MeshCore direct messages close to the 160-byte limit are no longer lost. The app dropped any frame over 172 bytes while the radio sends up to 176, and the radio had already handed the message over, so it never arrived.
 - Applying MeshCore radio settings no longer switches off client repeat. The app left the repeat setting out, which the radio reads as off and saves.
+- Searching MeshCore Nodes or Messages with the keyboard open now shows the results. The list shrank to a sliver above the keyboard, so only the top edge of the first match was visible.
 
 ## [1.82.0] - 2026-11-24
 

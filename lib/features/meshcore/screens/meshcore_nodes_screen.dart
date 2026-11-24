@@ -53,6 +53,7 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
     with LifecycleSafeMixin<MeshCoreNodesScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
   _MeshCoreNodeFilter _activeFilter = _MeshCoreNodeFilter.all;
 
   @override
@@ -64,6 +65,7 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -85,90 +87,103 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
       }).toList();
     }
 
-    final body = !isConnected
-        ? _buildDisconnectedState()
+    Widget fill(Widget child) =>
+        SliverFillRemaining(hasScrollBody: false, child: child);
+    final slivers = !isConnected
+        ? [fill(_buildDisconnectedState())]
         : contactsState.isLoading && allContacts.isEmpty
-        ? _buildLoadingState()
+        ? [fill(_buildLoadingState())]
         : contacts.isEmpty && allContacts.isEmpty
-        ? _buildEmptyState(deviceName)
+        ? [fill(_buildEmptyState(deviceName))]
         : contacts.isEmpty
-        ? _buildFilteredEmptyState()
+        ? [fill(_buildFilteredEmptyState())]
         : _buildContactsList(contacts, allContacts, contactsState.isLoading);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => FocusScope.of(context).unfocus(),
-      child: GlassScaffold.body(
-        hasScrollBody: true,
-        leading: const MeshCoreHamburgerMenuButton(),
-        title: context.l10n.nodesScreenTitle(allContacts.length),
-        actions: [
-          const MeshCoreDeviceStatusButton(),
-          AppBarOverflowMenu<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'add_contact':
-                  _showAddContactOptions();
-                case 'add_from_clipboard':
-                  _addContactFromClipboard();
-                case 'broadcast_self':
-                  _broadcastSelfContact();
-                case 'discover':
-                  _refreshContacts();
-                case 'my_code':
-                  _showMyContactCode();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'add_contact',
-                child: ListTile(
-                  leading: const Icon(Icons.person_add_rounded),
-                  title: Text(context.l10n.meshcoreAddContact),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'add_from_clipboard',
-                child: ListTile(
-                  leading: const Icon(Icons.content_paste_rounded),
-                  title: Text(context.l10n.meshcoreContactsAddFromClipboard),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'broadcast_self',
-                child: ListTile(
-                  leading: const Icon(Icons.broadcast_on_personal_outlined),
-                  title: Text(context.l10n.meshcoreBroadcastSelfContact),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'discover',
-                child: ListTile(
-                  leading: const Icon(Icons.refresh_rounded),
-                  title: Text(context.l10n.meshcoreRefreshContacts),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'my_code',
-                child: ListTile(
-                  leading: const Icon(Icons.qr_code_rounded),
-                  title: Text(context.l10n.meshcoreMyContactCode),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ],
+      // One scroll view, owned by GlassScaffold, as on the Meshtastic
+      // Nodes screen: a list nested inside GlassScaffold.body took the
+      // keyboard inset twice and collapsed to a sliver while searching.
+      child: RefreshIndicator(
+        onRefresh: _refreshContacts,
+        edgeOffset: MediaQuery.paddingOf(context).top + kToolbarHeight,
+        child: GlassScaffold(
+          controller: _scrollController,
+          scrollbar: true,
+          scrollbarTopInset: SearchFilterLayout.fullExtent(
+            MediaQuery.textScalerOf(context),
           ),
-        ],
-        body: body,
+          leading: const MeshCoreHamburgerMenuButton(),
+          title: context.l10n.nodesScreenTitle(allContacts.length),
+          actions: [
+            const MeshCoreDeviceStatusButton(),
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'add_contact':
+                    _showAddContactOptions();
+                  case 'add_from_clipboard':
+                    _addContactFromClipboard();
+                  case 'broadcast_self':
+                    _broadcastSelfContact();
+                  case 'discover':
+                    _refreshContacts();
+                  case 'my_code':
+                    _showMyContactCode();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'add_contact',
+                  child: ListTile(
+                    leading: const Icon(Icons.person_add_rounded),
+                    title: Text(context.l10n.meshcoreAddContact),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'add_from_clipboard',
+                  child: ListTile(
+                    leading: const Icon(Icons.content_paste_rounded),
+                    title: Text(context.l10n.meshcoreContactsAddFromClipboard),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'broadcast_self',
+                  child: ListTile(
+                    leading: const Icon(Icons.broadcast_on_personal_outlined),
+                    title: Text(context.l10n.meshcoreBroadcastSelfContact),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'discover',
+                  child: ListTile(
+                    leading: const Icon(Icons.refresh_rounded),
+                    title: Text(context.l10n.meshcoreRefreshContacts),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'my_code',
+                  child: ListTile(
+                    leading: const Icon(Icons.qr_code_rounded),
+                    title: Text(context.l10n.meshcoreMyContactCode),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          slivers: slivers,
+        ),
       ),
     );
   }
@@ -277,7 +292,7 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
     );
   }
 
-  Widget _buildContactsList(
+  List<Widget> _buildContactsList(
     List<MeshCoreContact> contacts,
     List<MeshCoreContact> allContacts,
     bool isLoading,
@@ -292,120 +307,113 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
     final otherCount = allContacts.length - chatCount - repeaterCount;
     final textScaler = MediaQuery.textScalerOf(context);
 
-    return RefreshIndicator(
-      onRefresh: _refreshContacts,
-      child: CustomScrollView(
-        slivers: [
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: SearchFilterHeaderDelegate(
-              searchController: _searchController,
-              searchQuery: _searchQuery,
-              onSearchChanged: (value) => setState(() => _searchQuery = value),
-              hintText: context.l10n.meshcoreSearchContactsHint,
-              textScaler: textScaler,
-              rebuildKey: Object.hashAll([
-                _activeFilter,
-                allContacts.length,
-                unreadCount,
-                chatCount,
-                repeaterCount,
-                otherCount,
-              ]),
-              filterChips: [
-                StatusFilterChip(
-                  label: context.l10n.messagingFilterAll,
-                  count: allContacts.length,
-                  isSelected: _activeFilter == _MeshCoreNodeFilter.all,
-                  onTap: () =>
-                      setState(() => _activeFilter = _MeshCoreNodeFilter.all),
-                ),
-                StatusFilterChip(
-                  label: context.l10n.messagingFilterUnread,
-                  count: unreadCount,
-                  isSelected: _activeFilter == _MeshCoreNodeFilter.unread,
-                  icon: Icons.mark_email_unread_outlined,
-                  color: AccentColors.red,
-                  onTap: () => setState(
-                    () => _activeFilter = _MeshCoreNodeFilter.unread,
+    return [
+      SliverPersistentHeader(
+        pinned: true,
+        delegate: SearchFilterHeaderDelegate(
+          searchController: _searchController,
+          searchQuery: _searchQuery,
+          onSearchChanged: (value) => setState(() => _searchQuery = value),
+          hintText: context.l10n.meshcoreSearchContactsHint,
+          textScaler: textScaler,
+          rebuildKey: Object.hashAll([
+            _activeFilter,
+            allContacts.length,
+            unreadCount,
+            chatCount,
+            repeaterCount,
+            otherCount,
+          ]),
+          filterChips: [
+            StatusFilterChip(
+              label: context.l10n.messagingFilterAll,
+              count: allContacts.length,
+              isSelected: _activeFilter == _MeshCoreNodeFilter.all,
+              onTap: () =>
+                  setState(() => _activeFilter = _MeshCoreNodeFilter.all),
+            ),
+            StatusFilterChip(
+              label: context.l10n.messagingFilterUnread,
+              count: unreadCount,
+              isSelected: _activeFilter == _MeshCoreNodeFilter.unread,
+              icon: Icons.mark_email_unread_outlined,
+              color: AccentColors.red,
+              onTap: () =>
+                  setState(() => _activeFilter = _MeshCoreNodeFilter.unread),
+            ),
+            StatusFilterChip(
+              label: context.l10n.meshcoreFilterChatNodes,
+              count: chatCount,
+              isSelected: _activeFilter == _MeshCoreNodeFilter.chat,
+              icon: Icons.person,
+              color: AccentColors.blue,
+              onTap: () =>
+                  setState(() => _activeFilter = _MeshCoreNodeFilter.chat),
+            ),
+            StatusFilterChip(
+              label: context.l10n.meshcoreFilterRepeaters,
+              count: repeaterCount,
+              isSelected: _activeFilter == _MeshCoreNodeFilter.repeaters,
+              icon: Icons.cell_tower_rounded,
+              color: AccentColors.green,
+              onTap: () =>
+                  setState(() => _activeFilter = _MeshCoreNodeFilter.repeaters),
+            ),
+            StatusFilterChip(
+              label: context.l10n.meshcoreFilterOtherNodes,
+              count: otherCount,
+              isSelected: _activeFilter == _MeshCoreNodeFilter.other,
+              icon: Icons.device_unknown,
+              color: SemanticColors.disabled,
+              onTap: () =>
+                  setState(() => _activeFilter = _MeshCoreNodeFilter.other),
+            ),
+          ],
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final contact = contacts[index];
+            return MeshCoreContactCard(
+              contact: contact,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      MeshCoreChatScreen.contact(contact: contact),
+                  settings: RouteSettings(
+                    name: meshCoreContactRouteName(contact.publicKeyHex),
                   ),
                 ),
-                StatusFilterChip(
-                  label: context.l10n.meshcoreFilterChatNodes,
-                  count: chatCount,
-                  isSelected: _activeFilter == _MeshCoreNodeFilter.chat,
-                  icon: Icons.person,
-                  color: AccentColors.blue,
-                  onTap: () =>
-                      setState(() => _activeFilter = _MeshCoreNodeFilter.chat),
+              ),
+              onLongPress: () => _showContactOptions(contact),
+            );
+          }, childCount: contacts.length),
+        ),
+      ),
+      if (isLoading)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: AppTheme.spacing16,
+                  height: AppTheme.spacing16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                StatusFilterChip(
-                  label: context.l10n.meshcoreFilterRepeaters,
-                  count: repeaterCount,
-                  isSelected: _activeFilter == _MeshCoreNodeFilter.repeaters,
-                  icon: Icons.cell_tower_rounded,
-                  color: AccentColors.green,
-                  onTap: () => setState(
-                    () => _activeFilter = _MeshCoreNodeFilter.repeaters,
-                  ),
-                ),
-                StatusFilterChip(
-                  label: context.l10n.meshcoreFilterOtherNodes,
-                  count: otherCount,
-                  isSelected: _activeFilter == _MeshCoreNodeFilter.other,
-                  icon: Icons.device_unknown,
-                  color: SemanticColors.disabled,
-                  onTap: () =>
-                      setState(() => _activeFilter = _MeshCoreNodeFilter.other),
+                const SizedBox(width: AppTheme.spacing8),
+                Text(
+                  context.l10n.meshcoreRefreshing,
+                  style: TextStyle(color: context.textTertiary),
                 ),
               ],
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final contact = contacts[index];
-                return MeshCoreContactCard(
-                  contact: contact,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          MeshCoreChatScreen.contact(contact: contact),
-                      settings: RouteSettings(
-                        name: meshCoreContactRouteName(contact.publicKeyHex),
-                      ),
-                    ),
-                  ),
-                  onLongPress: () => _showContactOptions(contact),
-                );
-              }, childCount: contacts.length),
-            ),
-          ),
-          if (isLoading)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spacing8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(
-                      width: AppTheme.spacing16,
-                      height: AppTheme.spacing16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      context.l10n.meshcoreRefreshing,
-                      style: TextStyle(color: context.textTertiary),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
+        ),
+    ];
   }
 
   Future<void> _refreshContacts() async {
