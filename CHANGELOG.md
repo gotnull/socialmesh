@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- MeshCore messages that other apps send compressed now read as normal text instead of a string starting "s:".
 - MeshCore Nodes can broadcast your contact across the whole mesh as well as to nearby radios.
 - MeshCore contacts can be added from meshcore-open's contact card links (`meshcore://contact/add?...`), pasted or scanned, with the contact's name and type.
 - MeshCore contact cards say "1 hop" instead of "1 hops", with correct plural forms in every language.

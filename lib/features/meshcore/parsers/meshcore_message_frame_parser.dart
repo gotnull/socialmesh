@@ -26,6 +26,7 @@ import 'dart:typed_data';
 
 import '../../../core/meshcore_constants.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
+import '../../../services/meshcore/protocol/meshcore_smaz.dart';
 
 /// Discriminates legacy vs V3 firmware frame layouts.
 enum MeshCoreMessageProtocol {
@@ -179,7 +180,7 @@ class MeshCoreMessageFrameParser {
       final pathLen = p[4];
       final txtType = p[5];
       final tsRaw = _readUint32LE(p, 6);
-      final text = _decodeText(p, 10);
+      final text = _expandChannelText(_decodeText(p, 10));
       return MeshCoreFrameParseResult.ok(
         MeshCoreChannelMessageFrame(
           protocol: MeshCoreMessageProtocol.v3,
@@ -204,7 +205,7 @@ class MeshCoreMessageFrameParser {
       final pathLen = p[1];
       final txtType = p[2];
       final tsRaw = _readUint32LE(p, 3);
-      final text = _decodeText(p, 7);
+      final text = _expandChannelText(_decodeText(p, 7));
       return MeshCoreFrameParseResult.ok(
         MeshCoreChannelMessageFrame(
           protocol: MeshCoreMessageProtocol.legacy,
@@ -252,7 +253,10 @@ class MeshCoreMessageFrameParser {
           pathLen: pathLen,
           txtType: txtType,
           timestamp: _epochSecondsToDateTime(tsRaw),
-          text: _decodeText(p, author == null ? 15 : 19),
+          text: _expandContactText(
+            _decodeText(p, author == null ? 15 : 19),
+            txtType,
+          ),
           authorPrefixHex: author,
         ),
       );
@@ -278,7 +282,10 @@ class MeshCoreMessageFrameParser {
           pathLen: pathLen,
           txtType: txtType,
           timestamp: _epochSecondsToDateTime(tsRaw),
-          text: _decodeText(p, author == null ? 12 : 16),
+          text: _expandContactText(
+            _decodeText(p, author == null ? 12 : 16),
+            txtType,
+          ),
           authorPrefixHex: author,
         ),
       );
@@ -287,6 +294,20 @@ class MeshCoreMessageFrameParser {
     return MeshCoreFrameParseResult.rejected(
       'unknown_contact_command 0x${code.toRadixString(16).padLeft(2, '0')}',
     );
+  }
+
+  // Senders may SMAZ-compress text as `s:<base64>`; CLI replies never are.
+  static String _expandContactText(String text, int txtType) {
+    if (txtType == MeshCoreTextTypes.cliData) return text;
+    return meshCoreSmazDecodeText(text) ?? text;
+  }
+
+  // A channel post reads `<sender>: <text>`; only the text is compressed.
+  static String _expandChannelText(String text) {
+    final split = text.indexOf(': ');
+    if (split < 0) return meshCoreSmazDecodeText(text) ?? text;
+    final body = meshCoreSmazDecodeText(text.substring(split + 2));
+    return body == null ? text : '${text.substring(0, split + 2)}$body';
   }
 
   // A signed post carries the author's 4-byte key prefix where the text
