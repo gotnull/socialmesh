@@ -210,6 +210,7 @@ class MeshCoreSession {
     MeshCoreResponses.channelMsgRecv, // 0x08
     MeshCoreResponses.contactMsgRecvV3, // 0x10
     MeshCoreResponses.channelMsgRecvV3, // 0x11
+    MeshCoreResponses.channelDataRecv, // 0x1B
     // Channel info: PSK
     MeshCoreResponses.channelInfo, // 0x12
   };

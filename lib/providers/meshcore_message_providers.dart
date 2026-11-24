@@ -769,7 +769,11 @@ class MeshCoreConversationsNotifier
         } else if (code == MeshCoreResponses.contactMsgRecv ||
             code == MeshCoreResponses.contactMsgRecvV3 ||
             code == MeshCoreResponses.channelMsgRecv ||
-            code == MeshCoreResponses.channelMsgRecvV3) {
+            code == MeshCoreResponses.channelMsgRecvV3 ||
+            // Channel data has no reader yet, but the radio has popped it
+            // from the queue; count it so the drain moves on instead of
+            // waiting out the timeout.
+            code == MeshCoreResponses.channelDataRecv) {
           if (!classified.isCompleted) {
             classified.complete(
               MeshCoreDrainOutcome.message(code, frame.payload.length),

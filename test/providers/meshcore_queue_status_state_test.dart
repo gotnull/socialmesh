@@ -16,7 +16,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:socialmesh/core/meshcore_constants.dart';
 import 'package:socialmesh/providers/app_lifecycle_provider.dart';
 import 'package:socialmesh/providers/meshcore_message_providers.dart';
 import 'package:socialmesh/providers/meshcore_providers.dart';
@@ -183,6 +183,46 @@ void main() {
       );
       final state = c.read(meshCoreConversationsProvider);
       expect(state.heartbeatActive, isFalse);
+    });
+
+    test('a channel data reply does not stall the drain', () async {
+      final transport = _FakeTransport();
+      addTearDown(transport.dispose);
+      final session = MeshCoreSession(transport);
+      final c = _container(session: session);
+      addTearDown(c.dispose);
+
+      bool isSync(Uint8List f) =>
+          MeshCoreFrame.fromBytes(f).command ==
+          MeshCoreCommands.syncNextMessage;
+      int syncs() => transport.sent.where(isSync).length;
+
+      // Building the notifier with a live session drains the queue.
+      c.read(meshCoreConversationsProvider);
+      await _pumpUntil(() => syncs() >= 1);
+      expect(syncs(), 1);
+
+      // The radio answers with queued channel data, which the drain must
+      // count as a message and follow with the next sync well inside
+      // its 3 s reply timeout.
+      transport.emitFrame(
+        MeshCoreFrame(
+          command: MeshCoreResponses.channelDataRecv,
+          payload: Uint8List(12),
+        ),
+      );
+      await _pumpUntil(
+        () => syncs() >= 2,
+        timeout: const Duration(milliseconds: 1500),
+      );
+      expect(syncs(), 2);
+
+      transport.emitFrame(
+        MeshCoreFrame(
+          command: MeshCoreResponses.noMoreMessages,
+          payload: Uint8List(0),
+        ),
+      );
     });
 
     test('a queued drain skips after the container is disposed', () async {

@@ -311,9 +311,8 @@ class MeshCoreResponses {
   /// No more messages in queue.
   static const int noMoreMessages = 0x0A;
 
-  /// D46-A: serialized contact-frame bytes returned by
-  /// `CMD_EXPORT_CONTACT (0x11)`. Payload is the 135..147-byte
-  /// canonical contact frame (`parseContact`-compatible).
+  /// D46-A: the raw advert packet returned by `CMD_EXPORT_CONTACT
+  /// (0x11)`; see `MeshCoreAdvertPacket`.
   static const int exportContact = 0x0B;
 
   /// Battery and storage info.
@@ -343,6 +342,11 @@ class MeshCoreResponses {
   /// `CMD_GET_AUTO_ADD_CONFIG (0x3B)`. Single byte of flag bits;
   /// see [MeshCoreAutoAddFlag].
   static const int autoAddConfig = 0x19;
+
+  /// Binary data received on a channel (`RESP_CODE_CHANNEL_DATA_RECV`),
+  /// one of the frames `CMD_SYNC_NEXT_MESSAGE` returns from the radio's
+  /// offline queue.
+  static const int channelDataRecv = 0x1B;
 
   /// Text reply to [MeshCoreCommands.runCliCommand]: `[0x1D][UTF-8 reply]`,
   /// no terminator. Version code 14 and later.
