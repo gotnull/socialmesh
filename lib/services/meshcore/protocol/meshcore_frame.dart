@@ -23,6 +23,7 @@
 // - BLE: Each notification IS a complete frame (no extra framing)
 // - USB: Uses direction marker + 2-byte length prefix (handled separately)
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../utils/text_sanitizer.dart';
@@ -163,7 +164,7 @@ class MeshCoreBufferReader {
       if (byte == 0) break;
       value.add(byte);
     }
-    return sanitizeExternalText(String.fromCharCodes(value));
+    return sanitizeExternalText(utf8.decode(value, allowMalformed: true));
   }
 
   /// Read a string from remaining bytes (may contain nulls).
@@ -174,7 +175,9 @@ class MeshCoreBufferReader {
     while (end > 0 && bytes[end - 1] == 0) {
       end--;
     }
-    return sanitizeExternalText(String.fromCharCodes(bytes.sublist(0, end)));
+    return sanitizeExternalText(
+      utf8.decode(bytes.sublist(0, end), allowMalformed: true),
+    );
   }
 
   /// Read unsigned 8-bit integer.

@@ -25,6 +25,7 @@
 // entry. Anything else falls through to "no decoded view; raw hex
 // only", which is what the viewer already shows.
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/logging.dart';
@@ -205,7 +206,7 @@ List<MeshCoreFrameDecodedField> _decodeChannelInfo(Uint8List p) {
   final nameLen = firstNull < 0 ? 32 : firstNull;
   final name = nameLen == 0
       ? '<empty>'
-      : String.fromCharCodes(nameBytes.sublist(0, nameLen));
+      : utf8.decode(nameBytes.sublist(0, nameLen), allowMalformed: true);
   final pskHead = p
       .sublist(33, 37)
       .map((b) => b.toRadixString(16).padLeft(2, '0'))

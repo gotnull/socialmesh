@@ -102,6 +102,19 @@ void main() {
     });
   });
 
+  group('MeshCore channel-info UTF-8 names', () {
+    test('an accented, emoji channel name decodes intact', () {
+      final nameBytes = utf8.encode('Café ☕');
+      final payload = Uint8List(49);
+      payload[0] = 0x02;
+      payload.setRange(1, 1 + nameBytes.length, nameBytes);
+
+      final result = parseChannelInfo(payload);
+
+      expect(result.value!.name, 'Café ☕');
+    });
+  });
+
   group('MeshCore buffer reader', () {
     test('readCString sanitizes lone surrogate code units', () {
       final reader = MeshCoreBufferReader(

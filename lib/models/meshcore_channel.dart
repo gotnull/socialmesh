@@ -150,7 +150,7 @@ MeshCoreChannel? parseChannelInfo(Uint8List payload) {
     nameEnd++;
   }
   final name = sanitizeExternalText(
-    String.fromCharCodes(payload.sublist(1, nameEnd)),
+    utf8.decode(payload.sublist(1, nameEnd), allowMalformed: true),
   );
 
   // Read PSK (16 bytes starting at offset 33)
