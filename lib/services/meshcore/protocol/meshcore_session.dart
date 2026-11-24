@@ -23,6 +23,7 @@ import '../../../models/meshcore_auto_add_config.dart';
 import '../meshcore_send_rate_limiter.dart';
 import 'meshcore_capture.dart';
 import 'meshcore_codec.dart';
+import 'meshcore_advert_packet.dart';
 import 'meshcore_frame.dart';
 import 'meshcore_cayenne_lpp.dart';
 import 'meshcore_messages.dart';
@@ -2771,7 +2772,7 @@ class MeshCoreSession {
     return ok;
   }
 
-  /// D46-A: export the 135..147-byte canonical contact frame for the
+  /// D46-A: export the stored advert packet (see [MeshCoreAdvertPacket]) for the
   /// contact identified by [pubKey] via `CMD_EXPORT_CONTACT 0x11`.
   ///
   /// Wire payload: `[0x11][pubKey:32B]` (33 bytes total). Firmware
@@ -2780,7 +2781,7 @@ class MeshCoreSession {
   /// `CMD_IMPORT_CONTACT` on another radio.
   ///
   /// Returns the frame bytes on success, null on timeout, error, or
-  /// a short frame (< 135 bytes) that the firmware shouldn't have
+  /// a packet outside the advert packet bounds that the firmware shouldn't have
   /// emitted but we reject defensively.
   Future<Uint8List?> exportContact(
     Uint8List pubKey, {
@@ -2805,7 +2806,8 @@ class MeshCoreSession {
       return null;
     }
     final payload = Uint8List.fromList(response.payload);
-    if (payload.length < 135 || payload.length > 147) {
+    if (payload.length < MeshCoreAdvertPacket.minBytes ||
+        payload.length > MeshCoreAdvertPacket.maxBytes) {
       AppLogging.meshcore(
         'event=contact.export.malformed bytes=${payload.length}',
         error: true,
@@ -2824,7 +2826,7 @@ class MeshCoreSession {
   /// the firmware performs its own structural check and returns
   /// `RESP_CODE_ERR` on rejection.
   ///
-  /// Wire payload: `[0x12][frame:135..147B]`.
+  /// Wire payload: `[0x12][advert packet]`.
   ///
   /// Returns `true` on `RESP_CODE_OK`, `false` on `RESP_CODE_ERR`,
   /// timeout, or an out-of-range frame (caught client-side before
@@ -2833,11 +2835,13 @@ class MeshCoreSession {
     Uint8List contactFrame, {
     Duration timeout = const Duration(seconds: 5),
   }) async {
-    if (contactFrame.length < 135 || contactFrame.length > 147) {
+    if (contactFrame.length < MeshCoreAdvertPacket.minBytes ||
+        contactFrame.length > MeshCoreAdvertPacket.maxBytes) {
       throw ArgumentError.value(
         contactFrame.length,
         'contactFrame.length',
-        'must be in 135..147 bytes',
+        'must be an advert packet of '
+            '${MeshCoreAdvertPacket.minBytes}..${MeshCoreAdvertPacket.maxBytes} bytes',
       );
     }
     AppLogging.meshcore(

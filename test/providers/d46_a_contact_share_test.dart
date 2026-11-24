@@ -123,6 +123,11 @@ MeshCoreSelfInfo _selfInfoWithPubKey(int seed) {
 /// Build a deterministic 135-byte canonical contact frame that
 /// passes `parseContact`. Used to drive `MeshCoreContactUrl.encode`
 /// in tests so the preview path can be exercised end-to-end.
+// A real CMD_EXPORT_CONTACT advert packet, captured on 24th Nov 2026 from a
+// Heltec Tracker V2 (MeshCore v1.18.0) exporting the RAK4631 "WisMeshCore".
+const _capturedAdvertUrl =
+    'meshcore://110096458be0b1c55901f07463099ade0b7523f8d40f58a614f3dfd3a6b2e877e3127c0d056b032c7e4da3bb05ec4921a608289436074e3109731fac64637b699bd8a5c4be5bc8c9615328e5a75f4b36182b6b34e21a16cc218c20d6411faeec821f53d4e40e815769734d657368436f7265';
+
 Uint8List _validContactFrame({
   required Uint8List pubKey,
   required String name,
@@ -289,8 +294,8 @@ void main() {
           .read(meshCoreContactsProvider.notifier)
           .exportContactUrl(contact);
       await Future<void>.delayed(Duration.zero);
-      // Inject a malformed 100-byte response.
-      tx.simulateExportContact(Uint8List(100));
+      // Inject a response shorter than any advert packet.
+      tx.simulateExportContact(Uint8List(90));
       expect(await fut, isNull);
     });
   });
@@ -300,18 +305,16 @@ void main() {
       final c = _container(session: null);
       addTearDown(c.dispose);
 
-      final pk = Uint8List.fromList(
-        List.generate(32, (i) => (0xC0 + i) & 0xFF),
-      );
-      final frame = _validContactFrame(pubKey: pk, name: 'Carla');
-      final url = MeshCoreContactUrl.encode(frame);
+      final frame = MeshCoreContactUrl.decode(_capturedAdvertUrl)!;
+      final url = _capturedAdvertUrl;
 
       final preview = c
           .read(meshCoreContactsProvider.notifier)
           .previewContactImport(url);
       expect(preview, isNotNull);
       expect(preview!.format, MeshCoreContactImportFormat.modern);
-      expect(preview.contact.name, 'Carla');
+      expect(preview.contact.name, 'WisMeshCore');
+      expect(preview.contact.type, 1);
       expect(preview.pubKeyFingerprint8.length, 8);
       // Never embeds the full 64-char pubkey.
       expect(preview.pubKeyFingerprint8.length, isNot(64));
@@ -356,9 +359,8 @@ void main() {
       final c = _container(session: session);
       addTearDown(c.dispose);
 
-      final pk = Uint8List.fromList(List.generate(32, (i) => i + 5));
-      final frame = _validContactFrame(pubKey: pk, name: 'Eli');
-      final url = MeshCoreContactUrl.encode(frame);
+      final frame = MeshCoreContactUrl.decode(_capturedAdvertUrl)!;
+      final url = _capturedAdvertUrl;
       final preview = c
           .read(meshCoreContactsProvider.notifier)
           .previewContactImport(url)!;
@@ -377,7 +379,7 @@ void main() {
           .where((f) => f.command == MeshCoreCommands.importContact)
           .toList();
       expect(imports, hasLength(1));
-      // Wire payload is the canonical frame verbatim.
+      // Wire payload is the advert packet verbatim.
       expect(imports.single.payload, equals(frame));
     });
 

@@ -4,14 +4,14 @@
 // D46-A: `MeshCoreContactUrl` codec + `parseLegacyContactCode` pins.
 //
 // Wire-symmetric round trip:
-//   firmware `CMD_EXPORT_CONTACT 0x11` returns 135..147-byte canonical
+//   firmware `CMD_EXPORT_CONTACT 0x11` returns a 98..171-byte advert packet
 //   contact frame → `encode` → `meshcore://<hex>` → `decode` → same
 //   bytes byte-for-byte → `CMD_IMPORT_CONTACT 0x12`.
 //
 // Pinned invariants:
-//   - encode 135-byte frame returns `meshcore://<270-char hex>`.
-//   - encode 147-byte frame returns `meshcore://<294-char hex>`.
-//   - encode out-of-range (134, 148, 0) throws ArgumentError.
+//   - encode 98-byte packet returns `meshcore://<196-char hex>`.
+//   - encode 171-byte packet returns `meshcore://<342-char hex>`.
+//   - encode out-of-range (97, 172, 0) throws ArgumentError.
 //   - decode round-trips byte-for-byte.
 //   - decode malformed inputs return null cleanly:
 //       wrong scheme, odd-length hex, non-hex chars, empty hex,
@@ -32,24 +32,24 @@ Uint8List _frame(int length, {int seed = 0}) {
 
 void main() {
   group('MeshCoreContactUrl.encode - D46-A', () {
-    test('135-byte frame encodes to meshcore://<270-char hex>', () {
-      final url = MeshCoreContactUrl.encode(_frame(135));
+    test('98-byte packet encodes to meshcore://<196-char hex>', () {
+      final url = MeshCoreContactUrl.encode(_frame(98));
       expect(url.startsWith('meshcore://'), isTrue);
       final hex = url.substring(MeshCoreContactUrl.scheme.length);
-      expect(hex.length, 270);
+      expect(hex.length, 196);
     });
 
-    test('147-byte frame encodes to meshcore://<294-char hex>', () {
-      final url = MeshCoreContactUrl.encode(_frame(147));
-      expect(url.substring(MeshCoreContactUrl.scheme.length).length, 294);
+    test('171-byte packet encodes to meshcore://<342-char hex>', () {
+      final url = MeshCoreContactUrl.encode(_frame(171));
+      expect(url.substring(MeshCoreContactUrl.scheme.length).length, 342);
     });
 
-    test('134-byte frame throws ArgumentError', () {
-      expect(() => MeshCoreContactUrl.encode(_frame(134)), throwsArgumentError);
+    test('97-byte packet throws ArgumentError', () {
+      expect(() => MeshCoreContactUrl.encode(_frame(97)), throwsArgumentError);
     });
 
-    test('148-byte frame throws ArgumentError', () {
-      expect(() => MeshCoreContactUrl.encode(_frame(148)), throwsArgumentError);
+    test('172-byte packet throws ArgumentError', () {
+      expect(() => MeshCoreContactUrl.encode(_frame(172)), throwsArgumentError);
     });
 
     test('empty frame throws ArgumentError', () {
@@ -61,22 +61,22 @@ void main() {
   });
 
   group('MeshCoreContactUrl.decode - D46-A', () {
-    test('round-trips a 135-byte frame byte-for-byte', () {
-      final frame = _frame(135, seed: 7);
+    test('round-trips a 98-byte packet byte-for-byte', () {
+      final frame = _frame(98, seed: 7);
       final url = MeshCoreContactUrl.encode(frame);
       final out = MeshCoreContactUrl.decode(url);
       expect(out, isNotNull);
       expect(out, equals(frame));
     });
 
-    test('round-trips a 147-byte frame byte-for-byte', () {
-      final frame = _frame(147, seed: 13);
+    test('round-trips a 171-byte packet byte-for-byte', () {
+      final frame = _frame(171, seed: 13);
       final out = MeshCoreContactUrl.decode(MeshCoreContactUrl.encode(frame));
       expect(out, equals(frame));
     });
 
     test('decode tolerates leading and trailing whitespace', () {
-      final frame = _frame(135);
+      final frame = _frame(98);
       final url = '  ${MeshCoreContactUrl.encode(frame)}  ';
       expect(MeshCoreContactUrl.decode(url), equals(frame));
     });
@@ -99,26 +99,24 @@ void main() {
     });
 
     test('non-hex chars return null', () {
-      // Length is correct (270 chars) but contains a non-hex char.
+      // Even length but contains a non-hex char.
       final badHex = 'gg${'00' * 134}';
       expect(MeshCoreContactUrl.decode('meshcore://$badHex'), isNull);
     });
 
-    test('too-short hex (< 135 bytes) returns null', () {
-      // 268 chars = 134 bytes - under min.
-      final shortHex = '00' * 134;
+    test('too-short hex (< 98 bytes) returns null', () {
+      final shortHex = '00' * 97;
       expect(MeshCoreContactUrl.decode('meshcore://$shortHex'), isNull);
     });
 
-    test('too-long hex (> 147 bytes) returns null', () {
-      // 296 chars = 148 bytes - over max.
-      final longHex = '00' * 148;
+    test('too-long hex (> 171 bytes) returns null', () {
+      final longHex = '00' * 172;
       expect(MeshCoreContactUrl.decode('meshcore://$longHex'), isNull);
     });
 
     test('legacy pubkey-only QR (64-char hex) returns null', () {
       // `meshcore://<32-byte hex>` looks superficially valid but is
-      // shorter than the 135-byte canonical frame. Must be rejected
+      // shorter than an advert packet. Must be rejected
       // so the caller can route through parseLegacyContactCode or
       // the older `meshcore://contact/<base64>` paths.
       final pubKeyOnly = '00' * 32;

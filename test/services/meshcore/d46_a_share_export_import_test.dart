@@ -8,10 +8,10 @@
 //   - sendSelfAdvert wire payload is `[0x07][flood]`; RESP_CODE_OK ->
 //     true; RESP_CODE_ERR / timeout -> false.
 //   - exportContact wire payload is `[0x11][pubKey:32B]` (33 B);
-//     RESP_CODE_EXPORT_CONTACT (0x0B) + 135..147-byte frame → returns
+//     RESP_CODE_EXPORT_CONTACT (0x0B) + advert packet (98..171 B) → returns
 //     bytes; short / malformed frame → null; timeout → null.
 //   - importContact wire payload is `[0x12][frame:N]` where N in
-//     [135,147]; RESP_CODE_OK → true; RESP_CODE_ERR / timeout →
+//     [98,171]; RESP_CODE_OK → true; RESP_CODE_ERR / timeout →
 //     false. Out-of-range frame throws ArgumentError BEFORE bytes
 //     hit the wire.
 //   - wrong-length pubkey on export throws ArgumentError
@@ -187,7 +187,7 @@ void main() {
       expect(await fut, equals(frame));
     });
 
-    test('short frame (< 135B) returns null defensively', () async {
+    test('short packet (< 98B) returns null defensively', () async {
       final tx = _RecordingTransport();
       addTearDown(tx.dispose);
       final session = MeshCoreSession(tx);
@@ -198,7 +198,7 @@ void main() {
       tx.inject(
         MeshCoreFrame(
           command: MeshCoreResponses.exportContact,
-          payload: Uint8List(100),
+          payload: Uint8List(90),
         ).toBytes(),
       );
       expect(await fut, isNull);
@@ -309,8 +309,8 @@ void main() {
       final session = MeshCoreSession(tx);
       addTearDown(session.dispose);
 
-      expect(() => session.importContact(Uint8List(134)), throwsArgumentError);
-      expect(() => session.importContact(Uint8List(148)), throwsArgumentError);
+      expect(() => session.importContact(Uint8List(97)), throwsArgumentError);
+      expect(() => session.importContact(Uint8List(172)), throwsArgumentError);
       expect(tx.sent, isEmpty);
     });
   });

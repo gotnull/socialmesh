@@ -3,9 +3,9 @@
 
 // D46-A: codec for the `meshcore://<hex>` contact share URL.
 //
-// The URL is a thin app-side wrapper around the firmware's canonical
-// 135..147-byte contact frame: the bytes that `CMD_EXPORT_CONTACT 0x11`
-// returns and that `CMD_IMPORT_CONTACT 0x12` accepts. Firmware never
+// The URL is a thin app-side wrapper around the advert packet the firmware
+// stored for a contact: the bytes that `CMD_EXPORT_CONTACT 0x11` returns and
+// that `CMD_IMPORT_CONTACT 0x12` accepts. Firmware never
 // sees the URL form - it only ever encodes/decodes the byte frame.
 //
 // Wire-compat with meshcore-open: their `contacts_screen.dart` builds
@@ -18,6 +18,8 @@
 // fallback for one release so users' saved codes / scanned QRs don't
 // break overnight.
 
+import 'meshcore_advert_packet.dart';
+
 import 'dart:typed_data';
 
 import '../../../models/meshcore_contact.dart';
@@ -29,21 +31,14 @@ class MeshCoreContactUrl {
   /// `meshcore://<hex>` exactly.
   static const String scheme = 'meshcore://';
 
-  /// Minimum contact-frame byte length. Mirrors `parseContact`'s
-  /// minimum: 32 pub + 1 type + 1 flags + 1 plen + 64 path + 32 name
-  /// + 4 last_advert_ts = 135. Anything shorter cannot be a valid
-  /// firmware-emitted contact frame.
-  static const int minFrameBytes = 135;
-
-  /// Maximum contact-frame byte length. The 12 optional trailing
-  /// bytes are `lat[4] + lon[4] + lastmod[4]`. Anything longer is
-  /// rejected to avoid accepting padded / poisoned payloads.
-  static const int maxFrameBytes = 147;
+  /// Byte bounds of the advert packet the URL carries (see
+  /// [MeshCoreAdvertPacket]); the same bounds meshcore-open accepts.
+  static const int minFrameBytes = MeshCoreAdvertPacket.minBytes;
+  static const int maxFrameBytes = MeshCoreAdvertPacket.maxBytes;
 
   /// Encode contact-frame bytes as the canonical `meshcore://<hex>`
-  /// URL. Throws [ArgumentError] when [frame] is outside the
-  /// 135..147 byte range that the firmware contact-frame format
-  /// guarantees.
+  /// URL. Throws [ArgumentError] when [frame] is outside the advert
+  /// packet byte bounds.
   static String encode(Uint8List frame) {
     if (frame.length < minFrameBytes || frame.length > maxFrameBytes) {
       throw ArgumentError.value(

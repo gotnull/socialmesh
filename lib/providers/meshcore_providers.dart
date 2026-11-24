@@ -34,6 +34,7 @@ import '../services/meshcore/meshcore_send_rate_limiter.dart';
 import '../services/meshcore/protocol/meshcore_capture.dart';
 import '../services/meshcore/protocol/meshcore_contact_url.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
+import '../services/meshcore/protocol/meshcore_advert_packet.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
 import '../services/meshcore/routing/meshcore_path_update_listener.dart';
 import '../services/meshcore/routing/meshcore_send_confirmation_router.dart';
@@ -797,29 +798,28 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     // Try modern format first.
     final frame = MeshCoreContactUrl.decode(trimmed);
     if (frame != null) {
-      final parseResult = parseContact(frame);
-      if (!parseResult.isSuccess) {
+      final advert = MeshCoreAdvertPacket.parse(frame);
+      if (advert == null) {
         AppLogging.meshcore(
           'event=contact.import.preview.failed reason=parse_modern',
           error: true,
         );
         return null;
       }
-      final info = parseResult.value!;
       final contact = MeshCoreContact(
-        publicKey: info.publicKey,
-        name: info.name,
-        type: info.advType,
-        pathLength: info.pathLength,
-        path: info.pathBytes,
-        latitude: info.latitudeDegrees,
-        longitude: info.longitudeDegrees,
-        lastSeen: info.lastHeard,
+        publicKey: advert.publicKey,
+        name: advert.name,
+        type: advert.advType,
+        pathLength: -1,
+        path: Uint8List(0),
+        latitude: advert.latitude,
+        longitude: advert.longitude,
+        lastSeen: DateTime.fromMillisecondsSinceEpoch(advert.timestamp * 1000),
       );
       return MeshCoreContactImportPreview(
         format: MeshCoreContactImportFormat.modern,
         contact: contact,
-        pubKeyFingerprint8: _firstNHex(info.publicKey, 8),
+        pubKeyFingerprint8: _firstNHex(advert.publicKey, 8),
         frameBytes: frame,
       );
     }
