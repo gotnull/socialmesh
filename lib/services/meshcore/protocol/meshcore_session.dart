@@ -243,6 +243,11 @@ class MeshCoreSession {
   /// This prevents mis-association when multiple requests are in flight.
   final Map<int, _PendingWaiter> _pendingResponses = {};
 
+  // Completes when the contact fetch in flight ends. The firmware stops its
+  // contacts iterator on CMD_APP_START without sending END_OF_CONTACTS, so
+  // getSelfInfo waits for this before sending one.
+  Future<void>? _contactsFetch;
+
   /// Pending response completers with validation predicates.
   ///
   /// These waiters only complete when both code matches AND predicate returns true.
@@ -911,6 +916,14 @@ class MeshCoreSession {
     AppLogging.protocol(
       'MeshCore: getSelfInfo() starting (timeout=${timeout.inSeconds}s)',
     );
+
+    final contactsFetch = _contactsFetch;
+    if (contactsFetch != null) {
+      AppLogging.protocol(
+        'MeshCore: getSelfInfo() waiting for the contact fetch to finish',
+      );
+      await contactsFetch;
+    }
 
     // Use validated waiter that requires minimum payload size
     // This ensures we don't complete on tiny ACK-like frames even if they
@@ -1643,6 +1656,8 @@ class MeshCoreSession {
     final contacts = <MeshCoreContactInfo>[];
     var received = 0;
     int? total;
+    final fetchDone = Completer<void>();
+    _contactsFetch = fetchDone.future;
 
     // Register waiter for END_OF_CONTACTS
     final endCompleter = _registerWaiter(MeshCoreResponses.endOfContacts);
@@ -1728,6 +1743,8 @@ class MeshCoreSession {
       return contacts; // Return what we got so far
     } finally {
       idleTimer?.cancel();
+      if (identical(_contactsFetch, fetchDone.future)) _contactsFetch = null;
+      fetchDone.complete();
       await contactSubscription.cancel();
     }
   }

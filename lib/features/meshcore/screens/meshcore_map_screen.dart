@@ -21,7 +21,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/logging.dart';
 import '../../../core/los_analysis.dart';
 import '../../../core/map_config.dart';
+import '../../../core/node_color.dart';
 import '../../../core/widgets/map_tile_layer.dart';
+import '../../../core/widgets/node_circle_marker.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../core/routing/conversation_routes.dart';
 import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
@@ -38,6 +41,7 @@ import 'widgets/meshcore_contact_list_panel.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
+import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../models/meshcore_path_overlay.dart';
 import '../../../models/meshcore_pinned_location.dart';
 import '../../../providers/meshcore_contact_block_provider.dart';
@@ -46,7 +50,6 @@ import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../navigation/meshcore_shell.dart';
-import '../widgets/meshcore_sigil_avatar.dart';
 import 'meshcore_chat_screen.dart';
 import 'meshcore_map_marker_staleness.dart';
 
@@ -125,7 +128,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   bool _showHeatmap = false;
 
   // Cluster markers at low zoom so dense areas read cleanly. Off by
-  // default. Mirrors the Meshtastic map's `_clusterMarkers` flag.
+  // default. Shares the Meshtastic map's persisted preference.
   bool _clusterMarkers = false;
 
   @override
@@ -145,12 +148,14 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
       final settings = await ref.read(settingsServiceProvider.future);
       if (!mounted) return;
       final index = settings.mapTileStyleIndex;
-      if (index >= 0 && index < MapTileStyle.values.length) {
-        safeSetState(() {
+      safeSetState(() {
+        // Shared with the Meshtastic map: one clustering preference.
+        _clusterMarkers = settings.mapClusterMarkers;
+        if (index >= 0 && index < MapTileStyle.values.length) {
           _mapStyle = MapTileStyle.values[index];
           _mapStyleHydrated = true;
-        });
-      }
+        }
+      });
     } catch (_) {
       // Settings not available - keep default dark style.
     }
@@ -164,6 +169,16 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     } catch (_) {
       // Storage failure is non-fatal - the in-memory selection still
       // applies for the rest of the session.
+    }
+  }
+
+  Future<void> _saveClusterMarkers(bool value) async {
+    try {
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (!mounted) return;
+      await settings.setMapClusterMarkers(value);
+    } catch (e) {
+      AppLogging.meshcore('event=map.cluster_pref.save_failed error=$e');
     }
   }
 
@@ -627,31 +642,12 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                           Marker(
                             key: const ValueKey('meshcore-map-self-marker'),
                             point: selfPosition,
-                            width: 32,
-                            height: 32,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AccentColors.cyan,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 3,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AccentColors.cyan.withValues(
-                                      alpha: 0.45,
-                                    ),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                color: Colors.white,
-                                size: 16,
-                              ),
+                            width: 56,
+                            height: 56,
+                            child: NodeCircleMarker(
+                              color: _contactMarkerColor(selfInfo!.pubKey),
+                              label: _selfMarkerLabel(selfInfo),
+                              pulse: true,
                             ),
                           ),
                         ..._buildPinnedLocationMarkers(pinnedLocations),
@@ -1248,10 +1244,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     for (final contact in contacts) {
       if (!contact.hasLocation) continue;
 
-      // Row 13: age-based marker fade. Contacts we haven't heard from
-      // recently get rendered at reduced opacity so the map reflects
-      // the freshness of the data at a glance.
-      final stalenessOpacity = meshCoreContactMarkerOpacity(contact, now);
+      final isStale = meshCoreContactMarkerIsStale(contact, now);
 
       markers.add(
         Marker(
@@ -1262,8 +1255,8 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
             'meshcore-contact-marker-${contact.publicKeyHex}',
           ),
           point: LatLng(contact.latitude!, contact.longitude!),
-          width: 80,
-          height: 80,
+          width: 44,
+          height: 44,
           child: GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
@@ -1283,43 +1276,14 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                 _measureContactB = null;
               });
             },
-            // D-S5b: sigil-with-type-badge composite when the contact
-            // carries a usable pubkey. The outer container preserves
-            // the "map pin" affordance (white border + drop shadow);
-            // the inner sigil gives at-a-glance identity; the badge
-            // overlay preserves at-a-glance type discrimination
-            // (person / cell_tower / meeting_room / sensors). For
-            // malformed contacts (< 4 byte pubkey) the original
-            // type-only marker is preserved as a safe fallback.
-            // Row 13: wrap in Opacity so stale-location markers fade.
-            child: Opacity(
-              opacity: stalenessOpacity,
-              child: contact.publicKey.length >= 4
-                  ? _buildSigilMarker(contact)
-                  : Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.spacing8),
-                          decoration: BoxDecoration(
-                            color: _getContactColor(contact.type),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            _getContactIcon(contact.type),
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ],
-                    ),
+            // The same marker as the Meshtastic map, with the contact
+            // type as a badge so chat, repeater, room and sensor stay
+            // distinguishable.
+            child: NodeCircleMarker(
+              color: _contactMarkerColor(contact.publicKey),
+              label: _contactMarkerLabel(contact),
+              isStale: isStale,
+              badge: _contactTypeBadge(contact.type),
             ),
           ),
         ),
@@ -1329,54 +1293,44 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     return markers;
   }
 
-  /// D-S5b: composite map marker that overlays a small type-icon badge
-  /// (bottom-right) on top of a pubkey-derived sigil. The outer ring
-  /// keeps the "map pin" affordance (white border + drop shadow); the
-  /// inner sigil delivers identity-glance; the badge delivers
-  /// type-glance (chat / repeater / room / sensor). Callers guarantee
-  /// `contact.publicKey.length >= 4`.
-  Widget _buildSigilMarker(MeshCoreContact contact) {
-    final typeColor = _getContactColor(contact.type);
+  // Identity colour from the last three public key bytes, the MeshCore
+  // counterpart of the Meshtastic node-number colour.
+  Color _contactMarkerColor(Uint8List publicKey) {
+    if (publicKey.length < 3) return AccentColors.purple;
+    final n = publicKey.length;
+    return nodeColorFromId(
+      (publicKey[n - 3] << 16) | (publicKey[n - 2] << 8) | publicKey[n - 1],
+    );
+  }
+
+  // Two-character label, as MeshCore chat avatars show; the first key
+  // byte in hex, MeshCore's short node id, when there is no name.
+  String _contactMarkerLabel(MeshCoreContact contact) {
+    final initials = safeInitials(contact.name.trim(), 2);
+    if (initials.isNotEmpty) return initials;
+    return contact.publicKey.isEmpty
+        ? '?'
+        : contact.publicKey.first
+              .toRadixString(16)
+              .padLeft(2, '0')
+              .toUpperCase();
+  }
+
+  String _selfMarkerLabel(MeshCoreSelfInfo info) {
+    final initials = safeInitials(info.nodeName.trim(), 2);
+    return initials.isNotEmpty ? initials : '?';
+  }
+
+  Widget _contactTypeBadge(int type) {
     return Container(
-      width: 52,
-      height: 52,
+      width: 16,
+      height: 16,
       decoration: BoxDecoration(
+        color: _getContactColor(type),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: context.card, width: 1.5),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          ClipOval(
-            child: MeshCoreSigilAvatar(pubKey: contact.publicKey, size: 48),
-          ),
-          Positioned(
-            right: -4,
-            bottom: -4,
-            child: Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                color: typeColor,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              child: Icon(
-                _getContactIcon(contact.type),
-                color: Colors.white,
-                size: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
+      child: Icon(_getContactIcon(type), color: Colors.white, size: 9),
     );
   }
 
@@ -1910,6 +1864,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
               (value) {
                 setSheetState(() => _clusterMarkers = value);
                 setState(() {});
+                unawaited(_saveClusterMarkers(value));
               },
             ),
             SizedBox(height: AppTheme.spacing16),

@@ -225,4 +225,42 @@ void main() {
       expect(progress, equals([(1, 3), (2, 3), (3, 3)]));
     });
   });
+
+  // The firmware stops its contacts iterator on CMD_APP_START without
+  // sending END_OF_CONTACTS. A self-info request made while contacts are
+  // streaming must therefore hold its app-start until the fetch ends, or
+  // the roster comes back cut short.
+  group('getSelfInfo during getContacts', () {
+    test('holds app-start until END_OF_CONTACTS', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      final contacts = session.getContacts();
+      await _pump();
+      tx.inject(_contactsStart(total: 2));
+      tx.inject(_contactFrame(0x10, 'Alpha'));
+      await _pump();
+
+      final selfInfo = session.getSelfInfo(
+        timeout: const Duration(milliseconds: 200),
+      );
+      await _pump();
+      bool sentAppStart() =>
+          tx.sent.any((f) => f.isNotEmpty && f[0] == MeshCoreCommands.appStart);
+      expect(sentAppStart(), isFalse);
+
+      tx.inject(_contactFrame(0x40, 'Bravo'));
+      tx.inject(_endOfContacts());
+      final roster = await contacts;
+      await _pump();
+      await _pump();
+
+      expect(roster.map((c) => c.name), ['Alpha', 'Bravo']);
+      expect(sentAppStart(), isTrue);
+      // No SELF_INFO reply is injected, so the request times out.
+      expect(await selfInfo, isNull);
+    });
+  });
 }

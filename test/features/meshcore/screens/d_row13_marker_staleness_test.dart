@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Row 13: regression pins for the marker-opacity helper that drives
-// the stale-location fade on the MeshCore map.
+// Row 13: regression pins for the marker staleness helper that drives
+// the stale badge on the MeshCore map.
 
 import 'dart:typed_data';
 
@@ -24,44 +24,44 @@ MeshCoreContact _contact({required DateTime lastSeen}) {
 }
 
 void main() {
-  group('Row 13 meshCoreContactMarkerOpacity', () {
+  group('Row 13 meshCoreContactMarkerIsStale', () {
     final now = DateTime(2026, 5, 18, 12, 0, 0);
 
-    test('fresh (<24h) returns 1.0', () {
+    test('fresh (<24h) is not stale', () {
       final c = _contact(lastSeen: now.subtract(const Duration(hours: 1)));
-      expect(meshCoreContactMarkerOpacity(c, now), 1.0);
+      expect(meshCoreContactMarkerIsStale(c, now), isFalse);
     });
 
-    test('just-over 24h returns 0.5', () {
+    test('just-over 24h is stale', () {
       final c = _contact(
         lastSeen: now.subtract(const Duration(hours: 24, minutes: 1)),
       );
-      expect(meshCoreContactMarkerOpacity(c, now), 0.5);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('3-day-old (mid-stale band) returns 0.5', () {
+    test('3-day-old (mid-stale band) is stale', () {
       final c = _contact(lastSeen: now.subtract(const Duration(days: 3)));
-      expect(meshCoreContactMarkerOpacity(c, now), 0.5);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('7-day-old (at very-stale threshold) returns 0.25', () {
+    test('7-day-old (at very-stale threshold) is stale', () {
       final c = _contact(lastSeen: now.subtract(const Duration(days: 7)));
-      expect(meshCoreContactMarkerOpacity(c, now), 0.25);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('30-day-old returns 0.25 (very stale, clamped)', () {
+    test('30-day-old is stale', () {
       final c = _contact(lastSeen: now.subtract(const Duration(days: 30)));
-      expect(meshCoreContactMarkerOpacity(c, now), 0.25);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('boundary: exactly 24h treated as stale (not fresh)', () {
+    test('boundary: exactly 24h is stale', () {
       final c = _contact(lastSeen: now.subtract(const Duration(hours: 24)));
-      expect(meshCoreContactMarkerOpacity(c, now), 0.5);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('future timestamp (clock drift) treated as fresh', () {
+    test('future timestamp (clock drift) is not stale', () {
       final c = _contact(lastSeen: now.add(const Duration(minutes: 5)));
-      expect(meshCoreContactMarkerOpacity(c, now), 1.0);
+      expect(meshCoreContactMarkerIsStale(c, now), isFalse);
     });
 
     test('threshold constants are stable contract values', () {

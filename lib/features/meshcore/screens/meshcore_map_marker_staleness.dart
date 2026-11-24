@@ -3,32 +3,23 @@
 
 import '../../../models/meshcore_contact.dart';
 
-/// Row 13: opacity multiplier for a contact's map marker based on
-/// the age of the last advert we heard from them.
+/// Whether a contact's map marker shows the stale badge: no advert heard
+/// from it for [kMeshCoreMarkerFreshThreshold].
 ///
-/// MeshCore contact records carry `latitude` / `longitude` (advertised
-/// by the contact) and `lastSeen` (last time we heard ANY advert from
-/// them). Location doesn't carry its own timestamp, so `lastSeen` is
-/// the best signal that the location is still meaningful.
+/// MeshCore contact records carry `latitude` / `longitude` (advertised by
+/// the contact) and `lastSeen` (last time we heard any advert from them).
+/// Location has no timestamp of its own, so `lastSeen` is the best signal
+/// that the position is still meaningful. A stale marker keeps its colour
+/// and gains a "?" badge, as on the Meshtastic map, rather than fading.
 ///
-/// Thresholds:
-///   - fresh:       lastSeen <  24h            -> 1.0 (full opacity)
-///   - stale:       24h <= lastSeen < 7d       -> 0.5
-///   - very stale:  lastSeen >= 7d             -> 0.25
-///
-/// `now` is injected so tests can pin the clock; production callers
-/// pass `DateTime.now()`.
-double meshCoreContactMarkerOpacity(MeshCoreContact contact, DateTime now) {
-  final age = now.difference(contact.lastSeen);
-  if (age < kMeshCoreMarkerFreshThreshold) return 1.0;
-  if (age < kMeshCoreMarkerVeryStaleThreshold) return 0.5;
-  return 0.25;
-}
+/// `now` is injected so tests can pin the clock; production callers pass
+/// `DateTime.now()`.
+bool meshCoreContactMarkerIsStale(MeshCoreContact contact, DateTime now) =>
+    now.difference(contact.lastSeen) >= kMeshCoreMarkerFreshThreshold;
 
-/// Below this age, the marker renders at full opacity.
+/// Below this age a contact counts as fresh; at or above it the map marker
+/// shows the stale badge.
 const Duration kMeshCoreMarkerFreshThreshold = Duration(hours: 24);
 
-/// At or above this age, the marker renders at the most-faded opacity.
-/// Between the fresh and very-stale thresholds the marker renders at
-/// the mid-staleness opacity.
+/// At or above this age a contact counts as very stale in the contact lists.
 const Duration kMeshCoreMarkerVeryStaleThreshold = Duration(days: 7);

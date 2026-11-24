@@ -21,46 +21,46 @@ void main() {
     );
   }
 
-  group('meshCoreContactMarkerOpacity', () {
+  group('meshCoreContactMarkerIsStale', () {
     final now = DateTime(2026, 5, 19, 12);
 
-    test('contact heard just now is at full opacity', () {
-      expect(meshCoreContactMarkerOpacity(contactAt(now), now), 1.0);
+    test('contact heard just now is not stale', () {
+      expect(meshCoreContactMarkerIsStale(contactAt(now), now), isFalse);
     });
 
-    test('contact heard 1 hour ago is at full opacity (within 24h)', () {
+    test('contact heard 1 hour ago is not stale (within 24h)', () {
       final c = contactAt(now.subtract(const Duration(hours: 1)));
-      expect(meshCoreContactMarkerOpacity(c, now), 1.0);
+      expect(meshCoreContactMarkerIsStale(c, now), isFalse);
     });
 
-    test('contact heard 23 hours ago is still at full opacity', () {
+    test('contact heard 23 hours ago is not stale', () {
       final c = contactAt(now.subtract(const Duration(hours: 23)));
-      expect(meshCoreContactMarkerOpacity(c, now), 1.0);
+      expect(meshCoreContactMarkerIsStale(c, now), isFalse);
     });
 
-    test('contact heard at exactly 24h boundary drops to stale 0.5', () {
+    test('contact heard at exactly 24h boundary is stale', () {
       final c = contactAt(now.subtract(const Duration(hours: 24)));
-      expect(meshCoreContactMarkerOpacity(c, now), 0.5);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('contact heard 3 days ago renders at stale 0.5', () {
+    test('contact heard 3 days ago is stale', () {
       final c = contactAt(now.subtract(const Duration(days: 3)));
-      expect(meshCoreContactMarkerOpacity(c, now), 0.5);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('contact heard at exactly 7d boundary drops to very-stale 0.25', () {
+    test('contact heard at exactly 7d boundary is stale', () {
       final c = contactAt(now.subtract(const Duration(days: 7)));
-      expect(meshCoreContactMarkerOpacity(c, now), 0.25);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('contact heard 30 days ago is at very-stale 0.25', () {
+    test('contact heard 30 days ago is stale', () {
       final c = contactAt(now.subtract(const Duration(days: 30)));
-      expect(meshCoreContactMarkerOpacity(c, now), 0.25);
+      expect(meshCoreContactMarkerIsStale(c, now), isTrue);
     });
 
-    test('future lastSeen (clock skew) returns full opacity', () {
+    test('future lastSeen (clock skew) is not stale', () {
       final c = contactAt(now.add(const Duration(hours: 1)));
-      expect(meshCoreContactMarkerOpacity(c, now), 1.0);
+      expect(meshCoreContactMarkerIsStale(c, now), isFalse);
     });
 
     test('threshold constants match the documented values', () {

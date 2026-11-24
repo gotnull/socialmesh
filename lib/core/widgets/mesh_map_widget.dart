@@ -18,6 +18,7 @@ import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import 'app_bottom_sheet.dart';
 import 'node_avatar.dart';
+import 'node_circle_marker.dart';
 
 /// A shared, configurable map widget for displaying mesh nodes.
 ///
@@ -565,12 +566,11 @@ class MeshNodeMarkerData {
 }
 
 /// Standard node marker widget used across all maps (the main map screen and
-/// every [MeshMapWidget] consumer). Renders a node as a circle filled with its
-/// per-node identity colour (the official Meshtastic derivation, user override
-/// wins) labelled with its short name (or hex fallback). The own node stays on
-/// the app accent and pulses; a stale node keeps its colour and shows a "?"
-/// badge so it never ghosts away with age.
-class MeshNodeMarker extends StatefulWidget {
+/// every [MeshMapWidget] consumer): a [NodeCircleMarker] filled with the
+/// node's identity colour (the official Meshtastic derivation, user override
+/// wins) and labelled with its short name (or hex fallback). The own node
+/// pulses.
+class MeshNodeMarker extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
   final bool isSelected;
@@ -585,165 +585,18 @@ class MeshNodeMarker extends StatefulWidget {
   });
 
   @override
-  State<MeshNodeMarker> createState() => _MeshNodeMarkerState();
-}
-
-class _MeshNodeMarkerState extends State<MeshNodeMarker>
-    with SingleTickerProviderStateMixin {
-  AnimationController? _pulseController;
-  Animation<double>? _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.isMyNode) {
-      _pulseController = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 2000),
-      )..repeat();
-      _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _pulseController!, curve: Curves.easeOut),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulseController?.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // Per-node colour (low three bytes of nodeNum as RGB, user override wins)
-    // so every node keeps its identity colour on the map and never ghosts with
-    // age. The own node uses its identity colour too - the pulse ring and the
-    // larger marker mark it as ours, so it reads the same colour peers see.
-    final color = resolveNodeColor(
-      nodeNum: widget.node.nodeNum,
-      avatarColor: widget.node.avatarColor,
-    );
-    final labelColor = nodeContrastColor(color);
-
-    final marker = AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: widget.isSelected
-            ? Border.all(
-                color: Colors.white,
-                width: 3,
-                strokeAlign: BorderSide.strokeAlignOutside,
-              )
-            : null,
-        boxShadow: [
-          // Coloured glow for selection emphasis.
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: widget.isSelected ? 12 : 6,
-            spreadRadius: widget.isSelected ? 2 : 0,
-          ),
-          // Dark drop shadow defines the circle edge against same-toned map
-          // terrain so the marker never blends into the background.
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
+    return NodeCircleMarker(
+      color: resolveNodeColor(
+        nodeNum: node.nodeNum,
+        avatarColor: node.avatarColor,
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Full shortName (Meshtastic spec: <=4 chars) instead of just the
-          // first character, so a node labelled e.g. "MYSO" reads as itself on
-          // the map rather than collapsing to "M". FittedBox keeps long
-          // shortnames or wide grapheme clusters from overflowing the circle.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                nodeMarkerLabel(widget.node),
-                maxLines: 1,
-                style: TextStyle(
-                  fontSize: widget.isSelected ? 16 : 14,
-                  fontWeight: FontWeight.bold,
-                  // Black-or-white by the fill's luminance so the label stays
-                  // legible on any per-node colour.
-                  color: labelColor,
-                ),
-              ),
-            ),
-          ),
-          // Stale indicator (small question mark overlay).
-          if (widget.isStale)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: AppTheme.warningYellow,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: context.card, width: 1.5),
-                ),
-                child: const Center(
-                  child: Text(
-                    '?',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-
-    if (!widget.isMyNode || _pulseAnimation == null) return marker;
-
-    return AnimatedBuilder(
-      animation: _pulseAnimation!,
-      builder: (context, child) {
-        final value = _pulseAnimation!.value;
-        return CustomPaint(
-          painter: _PulseRingPainter(color: color, progress: value),
-          child: child,
-        );
-      },
-      child: marker,
+      label: nodeMarkerLabel(node),
+      isSelected: isSelected,
+      isStale: isStale,
+      pulse: isMyNode,
     );
   }
-}
-
-/// Expanding ring drawn behind the own-node marker to draw the eye to "you".
-class _PulseRingPainter extends CustomPainter {
-  final Color color;
-  final double progress;
-
-  _PulseRingPainter({required this.color, required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.width / 2 + 10;
-    final radius = size.width / 2 + (maxRadius - size.width / 2) * progress;
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.5 * (1.0 - progress))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5 * (1.0 - progress);
-    canvas.drawCircle(center, radius, paint);
-  }
-
-  @override
-  bool shouldRepaint(_PulseRingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }
 
 /// Helper to calculate the center of multiple nodes
