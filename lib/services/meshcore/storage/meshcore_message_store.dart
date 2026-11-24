@@ -611,6 +611,16 @@ class MeshCoreMessageStore {
     await _preferences.remove('$_channelPrefix$channelIndex');
   }
 
+  /// Full public key hex of every contact with stored messages.
+  Future<List<String>> contactKeys() async {
+    await init();
+    return [
+      for (final key in _preferences.getKeys())
+        if (key.startsWith(_contactPrefix))
+          key.substring(_contactPrefix.length),
+    ];
+  }
+
   /// Clear all MeshCore messages.
   Future<void> clearAll() async {
     await init();

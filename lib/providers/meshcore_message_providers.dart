@@ -904,16 +904,10 @@ class MeshCoreConversationsNotifier
     // discovered yet we fall back to the prefix itself as the
     // conversation id; a later contacts.fetch will correctly merge it.
     final senderPrefix = parsed.senderPrefixHex;
-    // First try the conversations provider's own list (built from
-    // `_contactStore`). If that misses, fall back to the firmware-
-    // fetched contacts in `meshCoreContactsProvider`. The two stores
-    // are separate: contacts shown in the UI come from the firmware
-    // fetch, but `_contactStore` only contains contacts that were
-    // explicitly saved client-side. Without this fallback, every
-    // first-time inbound contact message is orphaned. (D19.A live
-    // bridge test caught this: sim Contacts tile rendered "Unknown"
-    // for the iPhone radio, but `state.conversations` was empty so
-    // persistence was being skipped.)
+    // First try the existing threads, then the radio's roster. A thread
+    // rebuilt from stored messages before the roster loaded carries no
+    // contact, so the roster also supplies the sender's key and name then;
+    // a first message from a contact has no thread yet at all.
     String? matchedId = meshCoreConversationIdForSenderPrefix(
       state.conversations,
       senderPrefix,
@@ -924,7 +918,8 @@ class MeshCoreConversationsNotifier
       final matched = state.conversations.firstWhere((c) => c.id == matchedId);
       fullSenderKey = matched.contact?.publicKey;
       senderName = matched.contact?.name;
-    } else {
+    }
+    if (fullSenderKey == null) {
       final contactsState = ref.read(meshCoreContactsProvider);
       for (final c in contactsState.contacts) {
         if (c.publicKeyHex.toLowerCase().startsWith(senderPrefix)) {
@@ -1580,25 +1575,29 @@ class MeshCoreConversationsNotifier
       await _contactStore.init();
       if (_disposed) return;
 
-      // Load contacts to build conversation list
-      final contacts = await _contactStore.loadContacts();
+      // A DM thread exists wherever messages are stored for a contact, so
+      // threads survive an app restart. The contact itself comes from the
+      // radio's roster when it has loaded; the screens look it up there.
+      final roster = {
+        for (final c in ref.read(meshCoreContactsProvider).contacts)
+          c.publicKeyHex.toLowerCase(): c,
+      };
       final conversations = <MeshCoreConversation>[];
 
-      for (final contact in contacts) {
-        final messages = await _messageStore.loadContactMessages(
-          contact.publicKeyHex,
-        );
-        final lastMessage = messages.isNotEmpty ? messages.last : null;
-        final unread = await _contactStore.getUnreadCount(contact.publicKeyHex);
+      for (final keyHex in await _messageStore.contactKeys()) {
+        final messages = await _messageStore.loadContactMessages(keyHex);
+        if (messages.isEmpty) continue;
+        final contact = roster[keyHex.toLowerCase()];
+        final unread = await _contactStore.getUnreadCount(keyHex);
 
         conversations.add(
           MeshCoreConversation(
-            id: contact.publicKeyHex,
-            name: contact.name,
+            id: keyHex,
+            name: contact?.name ?? keyHex,
             isChannel: false,
             contact: contact,
-            lastMessageText: lastMessage?.text,
-            lastMessageTime: lastMessage?.timestamp,
+            lastMessageText: messages.last.text,
+            lastMessageTime: messages.last.timestamp,
             unreadCount: unread,
           ),
         );

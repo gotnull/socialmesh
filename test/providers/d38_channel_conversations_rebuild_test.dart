@@ -15,8 +15,8 @@
 //     .lastMessageText`.
 //   - Channels with no persisted messages render with null preview
 //     (no fabrication).
-//   - The contact rebuild path is unchanged (no contacts seeded means
-//     no contact conversations).
+//   - DM threads are rebuilt from the contact messages on disk, so they
+//     survive an app restart; no stored messages means no DM threads.
 //   - Channel IDs use the `channel_<idx>` shape (matches the rest of
 //     the codebase).
 
@@ -179,6 +179,55 @@ void main() {
         .firstWhere((cn) => cn.id == 'channel_1');
     expect(beta.lastMessageText, 'second (preview wins)');
     expect(beta.lastMessageTime, DateTime(2026, 5, 11, 12, 5));
+  });
+
+  test('DM threads come back from stored messages after a restart', () async {
+    const terry =
+        '79426d8d00000000000000000000000000000000000000000000000000000001';
+    final msgStore = MeshCoreMessageStore();
+    await msgStore.init();
+    await msgStore.saveContactMessages(terry, [
+      MeshCoreStoredMessage(
+        id: 'd1',
+        senderKey: Uint8List(0),
+        text: 'Morning, reading you loud and clear from Brunswick.',
+        timestamp: DateTime(2026, 11, 24, 9, 15),
+        isOutgoing: false,
+      ),
+      MeshCoreStoredMessage(
+        id: 'd2',
+        senderKey: Uint8List(0),
+        text: 'Heading up to Mt Dandenong after lunch',
+        timestamp: DateTime(2026, 11, 24, 9, 20),
+        isOutgoing: false,
+      ),
+    ]);
+    // A contact whose thread was cleared leaves an empty list behind.
+    await msgStore.saveContactMessages('aa' * 32, []);
+    await MeshCoreContactStore().incrementUnreadCount(terry);
+
+    final c = _container(
+      channels: const [],
+      pubKeyPrefix: '96458be0',
+      session: session,
+    );
+    addTearDown(c.dispose);
+    c.read(meshCoreConversationsProvider);
+    await c.read(meshCoreConversationsProvider.notifier).refresh();
+
+    final dms = c
+        .read(meshCoreConversationsProvider)
+        .conversations
+        .where((cn) => !cn.isChannel)
+        .toList();
+    expect(dms, hasLength(1));
+    expect(dms.single.id, terry);
+    expect(
+      dms.single.lastMessageText,
+      'Heading up to Mt Dandenong after lunch',
+    );
+    expect(dms.single.lastMessageTime, DateTime(2026, 11, 24, 9, 20));
+    expect(dms.single.unreadCount, 1);
   });
 
   test('channel with no persisted messages has null preview', () async {
