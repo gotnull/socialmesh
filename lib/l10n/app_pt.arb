@@ -4752,90 +4752,6 @@
   "@dashboardTraceroute": {
     "description": "Text displayed in device dashboard"
   },
-  "@dashboardWidgetActiveNodes": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetActiveNodesDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetAirtimeUsage": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetAirtimeUsageDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetChannelActivity": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetChannelActivityDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetGpsPosition": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetGpsPositionDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetMeshHealth": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetMeshHealthDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetMessages": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetMessagesDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetNetworkTopology": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetNetworkTopologyDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetNodes": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetNodesDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetPacketStats": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetPacketStatsDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetQuickActions": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetQuickActionsDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetRangeTest": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetRangeTestDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetRecentMessages": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetRecentMessagesDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetSignalStrength": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetSignalStrengthDesc": {
-    "description": "Description text in device dashboard"
-  },
-  "@dashboardWidgetWeatherData": {
-    "description": "Text displayed in device dashboard"
-  },
-  "@dashboardWidgetWeatherDataDesc": {
-    "description": "Description text in device dashboard"
-  },
   "@dataExportAirQuality": {
     "description": "UI text: data export air quality"
   },
@@ -28258,34 +28174,6 @@
   "dashboardStatusOnline": "Online",
   "dashboardTitle": "Painel",
   "dashboardTraceroute": "Traceroute",
-  "dashboardWidgetActiveNodes": "Nós ativos",
-  "dashboardWidgetActiveNodesDesc": "Nós detectados na última hora",
-  "dashboardWidgetAirtimeUsage": "Uso de airtime",
-  "dashboardWidgetAirtimeUsageDesc": "Tempo de transmissão do rádio e limites",
-  "dashboardWidgetChannelActivity": "Atividade do canal",
-  "dashboardWidgetChannelActivityDesc": "Atividade de mensagens por canal",
-  "dashboardWidgetGpsPosition": "Posição GPS",
-  "dashboardWidgetGpsPositionDesc": "Localização atual do dispositivo",
-  "dashboardWidgetMeshHealth": "Saúde da mesh",
-  "dashboardWidgetMeshHealthDesc": "Pontuação geral de saúde da rede mesh",
-  "dashboardWidgetMessages": "Mensagens",
-  "dashboardWidgetMessagesDesc": "Total de mensagens enviadas e recebidas",
-  "dashboardWidgetNetworkTopology": "Topologia de rede",
-  "dashboardWidgetNetworkTopologyDesc": "Grafo visual da rede mesh",
-  "dashboardWidgetNodes": "Nós",
-  "dashboardWidgetNodesDesc": "Total de nós descobertos na rede mesh",
-  "dashboardWidgetPacketStats": "Estatísticas de pacotes",
-  "dashboardWidgetPacketStatsDesc": "Contagem de pacotes enviados, recebidos e perdidos",
-  "dashboardWidgetQuickActions": "Ações rápidas",
-  "dashboardWidgetQuickActionsDesc": "Acesso rápido a funções comuns",
-  "dashboardWidgetRangeTest": "Teste de alcance",
-  "dashboardWidgetRangeTestDesc": "Teste o alcance do sinal com outros nós",
-  "dashboardWidgetRecentMessages": "Mensagens recentes",
-  "dashboardWidgetRecentMessagesDesc": "Últimas mensagens da rede mesh",
-  "dashboardWidgetSignalStrength": "Intensidade do sinal",
-  "dashboardWidgetSignalStrengthDesc": "Gráfico ao vivo de RSSI, SNR e utilização do canal",
-  "dashboardWidgetWeatherData": "Dados meteorológicos",
-  "dashboardWidgetWeatherDataDesc": "Leituras de sensores ambientais",
   "dataExportAirQuality": "Qualidade do ar",
   "dataExportAirQualitySubtitle": "Leituras de PM2.5, PM10, CO2",
   "dataExportAllDataCleared": "Todos os dados limpos",
