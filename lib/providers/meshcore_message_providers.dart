@@ -1856,6 +1856,31 @@ class MeshCoreConversationsNotifier
     }
   }
 
+  /// Deletes every message stored for channel [channelIndex] on this
+  /// device only, with its preview and unread count. Other devices and
+  /// the radio keep theirs.
+  Future<void> clearChannelMessages(int channelIndex) async {
+    await _messageStore.clearChannelMessages(channelIndex);
+    if (!ref.mounted) return;
+    final id = 'channel_$channelIndex';
+    state = state.copyWith(
+      conversations: [
+        for (final c in state.conversations)
+          if (c.id == id)
+            MeshCoreConversation(
+              id: c.id,
+              name: c.name,
+              isChannel: true,
+              channelIndex: c.channelIndex,
+            )
+          else
+            c,
+      ],
+    );
+    AppLogging.meshcore('event=channel.messages_cleared idx=$channelIndex');
+    await markAsRead(id);
+  }
+
   /// Refresh conversation list.
   Future<void> refresh() async {
     await _loadConversations();

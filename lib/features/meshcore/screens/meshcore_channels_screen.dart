@@ -1318,6 +1318,12 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
           },
         ),
         BottomSheetAction(
+          icon: Icons.delete_sweep_rounded,
+          label: context.l10n.channelOptionsClearMessages,
+          isDestructive: true,
+          onTap: () => _confirmClearChannelMessages(channel),
+        ),
+        BottomSheetAction(
           icon: Icons.delete_rounded,
           label: context.l10n.meshcoreLeaveChannel,
           isDestructive: true,
@@ -1326,6 +1332,28 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
           },
         ),
       ],
+    );
+  }
+
+  /// Confirms, then deletes this channel's messages from this device
+  /// only, as the Meshtastic channel options do.
+  Future<void> _confirmClearChannelMessages(MeshCoreChannel channel) async {
+    final l10n = context.l10n;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.channelOptionsClearMessagesTitle,
+      message: l10n.channelOptionsClearMessagesConfirmation,
+      confirmLabel: l10n.channelOptionsClearMessagesConfirm,
+      isDestructive: true,
+    );
+    if (confirmed != true || !mounted) return;
+    await ref
+        .read(meshCoreConversationsProvider.notifier)
+        .clearChannelMessages(channel.index);
+    if (!mounted) return;
+    showSuccessSnackBar(
+      context,
+      l10n.channelOptionsClearMessagesSuccess(channel.displayName),
     );
   }
 

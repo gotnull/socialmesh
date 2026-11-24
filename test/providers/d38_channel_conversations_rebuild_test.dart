@@ -230,6 +230,47 @@ void main() {
     expect(dms.single.unreadCount, 1);
   });
 
+  test('clearing a channel removes its messages, preview and unread', () async {
+    final msgStore = MeshCoreMessageStore();
+    await msgStore.init();
+    await msgStore.saveChannelMessages(1, [
+      MeshCoreStoredMessage(
+        id: 'p1',
+        senderKey: Uint8List(0),
+        text: 'anyone on the mesh this arvo?',
+        timestamp: DateTime(2026, 11, 24, 15),
+        isOutgoing: false,
+        isChannelMessage: true,
+        channelIndex: 1,
+      ),
+    ]);
+    await MeshCoreContactStore().incrementChannelUnreadCount('96458be0', 1);
+
+    final c = _container(
+      channels: [_channel(1, '#socialmesh-test')],
+      pubKeyPrefix: '96458be0',
+      session: session,
+    );
+    addTearDown(c.dispose);
+    c.read(meshCoreConversationsProvider);
+    final notifier = c.read(meshCoreConversationsProvider.notifier);
+    await notifier.refresh();
+
+    await notifier.clearChannelMessages(1);
+
+    final entry = c
+        .read(meshCoreConversationsProvider)
+        .conversations
+        .firstWhere((cn) => cn.id == 'channel_1');
+    expect(entry.lastMessageText, isNull);
+    expect(entry.unreadCount, 0);
+    expect(await msgStore.loadChannelMessages(1), isEmpty);
+    expect(
+      await MeshCoreContactStore().getChannelUnreadCount('96458be0', 1),
+      0,
+    );
+  });
+
   test('channel with no persisted messages has null preview', () async {
     final c = _container(
       channels: [_channel(2, 'Gamma')],
