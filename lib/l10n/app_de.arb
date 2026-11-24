@@ -10562,6 +10562,7 @@
   "meshcoreContactExportFailed": "Kontakt konnte nicht exportiert werden",
   "meshcoreContactImportConfirmAction": "Kontakt hinzufügen",
   "meshcoreContactImportConfirmFormatFull": "Signiertes Advert (Name, Typ, Standort)",
+  "meshcoreContactImportConfirmFormatCard": "Kontaktkarte (Schlüssel, Name, Typ)",
   "meshcoreContactImportConfirmFormatLegacy": "Legacy (nur Name)",
   "meshcoreContactImportConfirmTitle": "Kontakt hinzufügen?",
   "meshcoreContactImportFailed": "Kontakt konnte nicht hinzugefügt werden",

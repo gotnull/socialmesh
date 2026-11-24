@@ -855,6 +855,15 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
       );
     }
 
+    final card = parseMeshCoreContactCard(trimmed);
+    if (card != null) {
+      return MeshCoreContactImportPreview(
+        format: MeshCoreContactImportFormat.card,
+        contact: card,
+        pubKeyFingerprint8: _firstNHex(card.publicKey, 8),
+      );
+    }
+
     // Fall back to the legacy `<pubkeyhex>:<name>` form.
     final legacy = parseLegacyContactCode(trimmed);
     if (legacy == null) {

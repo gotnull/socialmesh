@@ -31968,6 +31968,7 @@
   "meshcoreContactImportConfirmTitle": "Adicionar contato?",
   "meshcoreContactImportConfirmAction": "Adicionar contato",
   "meshcoreContactImportConfirmFormatFull": "Anúncio assinado (nome, tipo, localização)",
+  "meshcoreContactImportConfirmFormatCard": "Cartão de contato (chave, nome, tipo)",
   "meshcoreContactImportConfirmFormatLegacy": "Legado (apenas nome)",
   "meshcoreContactImported": "Contato adicionado",
   "meshcoreContactImportFailed": "Não foi possível adicionar o contato",

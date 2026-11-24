@@ -337,6 +337,24 @@ void main() {
       expect(preview.isFullFrame, isFalse);
     });
 
+    test('parses a meshcore-open contact card link', () async {
+      final c = _container(session: null);
+      addTearDown(c.dispose);
+
+      final pkHex = List.generate(64, (i) => (i % 16).toRadixString(16)).join();
+      final preview = c
+          .read(meshCoreContactsProvider.notifier)
+          .previewContactImport(
+            'meshcore://contact/add?public_key=$pkHex'
+            '&name=Box%20Hill%20Relay&type=2',
+          );
+      expect(preview, isNotNull);
+      expect(preview!.format, MeshCoreContactImportFormat.card);
+      expect(preview.contact.name, 'Box Hill Relay');
+      expect(preview.contact.type, 2);
+      expect(preview.isFullFrame, isFalse);
+    });
+
     test('garbage input returns null', () async {
       final c = _container(session: null);
       addTearDown(c.dispose);

@@ -5364,6 +5364,7 @@
   "meshcoreContactImportConfirmTitle": "Добавить контакт?",
   "meshcoreContactImportConfirmAction": "Добавить контакт",
   "meshcoreContactImportConfirmFormatFull": "Подписанный анонс (имя, тип, местоположение)",
+  "meshcoreContactImportConfirmFormatCard": "Карточка контакта (ключ, имя, тип)",
   "meshcoreContactImportConfirmFormatLegacy": "Устаревший (только имя)",
   "meshcoreContactImported": "Контакт добавлен",
   "meshcoreContactImportFailed": "Не удалось добавить контакт",

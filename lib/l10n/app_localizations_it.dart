@@ -10443,6 +10443,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Annuncio firmato (nome, tipo, posizione)';
 
   @override
+  String get meshcoreContactImportConfirmFormatCard =>
+      'Scheda contatto (chiave, nome, tipo)';
+
+  @override
   String get meshcoreContactImportConfirmFormatLegacy => 'Legacy (solo nome)';
 
   @override

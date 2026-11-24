@@ -105,9 +105,14 @@ class _ContactImportSheetState extends ConsumerState<_ContactImportSheet>
             ),
             InfoTableRow(
               label: l10n.meshcoreContactImportRowFormat,
-              value: isModern
-                  ? l10n.meshcoreContactImportConfirmFormatFull
-                  : l10n.meshcoreContactImportConfirmFormatLegacy,
+              value: switch (p.format) {
+                MeshCoreContactImportFormat.modern =>
+                  l10n.meshcoreContactImportConfirmFormatFull,
+                MeshCoreContactImportFormat.card =>
+                  l10n.meshcoreContactImportConfirmFormatCard,
+                MeshCoreContactImportFormat.legacy =>
+                  l10n.meshcoreContactImportConfirmFormatLegacy,
+              },
             ),
           ],
         ),

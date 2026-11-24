@@ -10522,6 +10522,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Annonce signée (nom, type, position)';
 
   @override
+  String get meshcoreContactImportConfirmFormatCard =>
+      'Carte de contact (clé, nom, type)';
+
+  @override
   String get meshcoreContactImportConfirmFormatLegacy => 'Hérité (nom seul)';
 
   @override

@@ -20,9 +20,11 @@
 
 import 'meshcore_advert_packet.dart';
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../models/meshcore_contact.dart';
+import '../../../utils/text_sanitizer.dart';
 
 class MeshCoreContactUrl {
   MeshCoreContactUrl._();
@@ -115,7 +117,7 @@ MeshCoreContact? parseLegacyContactCode(String code) {
     }
     return MeshCoreContact(
       publicKey: pubKey,
-      name: name,
+      name: _fitContactName(name),
       type: MeshCoreAdvType.chat,
       pathLength: -1,
       path: Uint8List(0),
@@ -124,4 +126,47 @@ MeshCoreContact? parseLegacyContactCode(String code) {
   } catch (_) {
     return null;
   }
+}
+
+/// Parses meshcore-open's contact card link,
+/// `meshcore://contact/add?public_key=<64 hex>&name=<name>&type=<1-4>`,
+/// into a contact. The type defaults to chat when absent or unknown.
+/// Returns null for anything else.
+MeshCoreContact? parseMeshCoreContactCard(String text) {
+  final uri = Uri.tryParse(text.trim());
+  if (uri == null || uri.scheme != 'meshcore') return null;
+  final path = '${uri.host}${uri.path}'.toLowerCase().replaceAll(
+    RegExp(r'^/+|/+$'),
+    '',
+  );
+  if (path != 'contact/add') return null;
+  final keyHex = (uri.queryParameters['public_key'] ?? '').trim();
+  if (!RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(keyHex)) return null;
+  final pubKey = Uint8List.fromList([
+    for (var i = 0; i < 64; i += 2)
+      int.parse(keyHex.substring(i, i + 2), radix: 16),
+  ]);
+  final type = int.tryParse(uri.queryParameters['type'] ?? '');
+  return MeshCoreContact(
+    publicKey: pubKey,
+    name: _fitContactName(
+      sanitizeExternalText(uri.queryParameters['name'] ?? '').trim(),
+    ),
+    type: type != null && type >= 1 && type <= 4 ? type : MeshCoreAdvType.chat,
+    pathLength: -1,
+    path: Uint8List(0),
+    lastSeen: DateTime.now(),
+  );
+}
+
+// The radio stores at most 31 bytes of name; cut longer names on a UTF-8
+// boundary so the contact write is not refused.
+String _fitContactName(String name) {
+  final bytes = utf8.encode(name);
+  if (bytes.length <= 31) return name;
+  var cut = 31;
+  while (cut > 0 && (bytes[cut] & 0xC0) == 0x80) {
+    cut--;
+  }
+  return utf8.decode(bytes.sublist(0, cut));
 }

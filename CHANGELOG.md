@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- MeshCore contacts can be added from meshcore-open's contact card links (`meshcore://contact/add?...`), pasted or scanned, with the contact's name and type.
+- Adding a MeshCore contact whose shared name is longer than the radio stores no longer fails; the name is shortened to fit.
 - MeshCore Trace Path now follows the contact's own route out and back, as meshcore-open does, so contacts more than one hop away can be traced. A failed or timed-out trace offers Retry and Back, and the sheet explains that a chat contact answers only if it repeats packets.
 - MeshCore Trace Path has a search field for picking a contact, and its Run trace button stays at the bottom of the sheet, above the keyboard. With a few hundred contacts most could not be reached, and the button sat below the whole list.
 - MeshCore channels can now be cleared of their messages on this device from the channel's long-press menu, as Meshtastic channels can.

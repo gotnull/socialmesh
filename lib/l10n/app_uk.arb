@@ -10565,6 +10565,7 @@
   "meshcoreContactExportFailed": "Не вдалося експортувати контакт",
   "meshcoreContactImportConfirmAction": "Додати контакт",
   "meshcoreContactImportConfirmFormatFull": "Підписаний анонс (ім'я, тип, локація)",
+  "meshcoreContactImportConfirmFormatCard": "Картка контакту (ключ, ім'я, тип)",
   "meshcoreContactImportConfirmFormatLegacy": "Застарілий (тільки ім'я)",
   "meshcoreContactImportConfirmTitle": "Додати контакт?",
   "meshcoreContactImportFailed": "Не вдалося додати контакт",

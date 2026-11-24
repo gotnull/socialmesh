@@ -10438,6 +10438,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Anúncio assinado (nome, tipo, localização)';
 
   @override
+  String get meshcoreContactImportConfirmFormatCard =>
+      'Cartão de contato (chave, nome, tipo)';
+
+  @override
   String get meshcoreContactImportConfirmFormatLegacy => 'Legado (apenas nome)';
 
   @override

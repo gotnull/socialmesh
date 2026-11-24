@@ -10564,6 +10564,7 @@
   "meshcoreContactExportFailed": "Impossible d'exporter le contact",
   "meshcoreContactImportConfirmAction": "Ajouter le contact",
   "meshcoreContactImportConfirmFormatFull": "Annonce signée (nom, type, position)",
+  "meshcoreContactImportConfirmFormatCard": "Carte de contact (clé, nom, type)",
   "meshcoreContactImportConfirmFormatLegacy": "Hérité (nom seul)",
   "meshcoreContactImportConfirmTitle": "Ajouter le contact ?",
   "meshcoreContactImportFailed": "Impossible d'ajouter le contact",

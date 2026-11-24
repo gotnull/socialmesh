@@ -4,14 +4,16 @@
 // D46-A: preview struct surfaced by the contact-import confirmation
 // sheet between paste/parse and the firmware-bound commit.
 //
-// Two variants discriminated by the `format` enum:
+// Three variants discriminated by the `format` enum:
 //   - `modern`: parsed from a canonical `meshcore://<hex>` URL. Carries
-//     the raw 135..147-byte contact frame so `commit` can re-serialize
-//     verbatim via `CMD_IMPORT_CONTACT 0x12`.
+//     the raw advert packet so `commit` can send it verbatim via
+//     `CMD_IMPORT_CONTACT 0x12`.
+//   - `card`: meshcore-open's `meshcore://contact/add?...` link with
+//     key, name and type; commit goes through `CMD_ADD_UPDATE_CONTACT`.
 //   - `legacy`: parsed from the SocialMesh-only `<pubkeyhex>:<name>`
 //     stopgap format. Carries pubkey + name only; commit re-routes
 //     through `CMD_ADD_UPDATE_CONTACT 0x09` (the D29 path) since the
-//     firmware import RPC needs the full canonical frame.
+//     firmware import RPC needs the full advert packet.
 
 import 'dart:typed_data';
 
@@ -21,6 +23,9 @@ enum MeshCoreContactImportFormat {
   /// Canonical `meshcore://` URL - full contact frame round-tripped
   /// from `CMD_EXPORT_CONTACT`.
   modern,
+
+  /// meshcore-open contact card link: key, name and type.
+  card,
 
   /// Legacy `<pubkeyhex>:<name>` - pre-D46-A SocialMesh stopgap.
   legacy,
@@ -42,10 +47,9 @@ class MeshCoreContactImportPreview {
   /// for the confirmation sheet. Never the full 64-char hex.
   final String pubKeyFingerprint8;
 
-  /// Raw 135..147-byte contact frame from `MeshCoreContactUrl.decode`.
-  /// Non-null only for [MeshCoreContactImportFormat.modern]; null for
-  /// legacy previews because the legacy text-form cannot reconstruct
-  /// a wire-canonical frame.
+  /// Raw advert packet from `MeshCoreContactUrl.decode`. Non-null only
+  /// for [MeshCoreContactImportFormat.modern]; card and legacy links
+  /// carry no packet.
   final Uint8List? frameBytes;
 
   const MeshCoreContactImportPreview({

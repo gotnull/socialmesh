@@ -10314,6 +10314,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Signed advert (name, type, location)';
 
   @override
+  String get meshcoreContactImportConfirmFormatCard =>
+      'Contact card (key, name, type)';
+
+  @override
   String get meshcoreContactImportConfirmFormatLegacy => 'Legacy (name only)';
 
   @override

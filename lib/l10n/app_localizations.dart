@@ -17940,6 +17940,12 @@ abstract class AppLocalizations {
   /// **'Signed advert (name, type, location)'**
   String get meshcoreContactImportConfirmFormatFull;
 
+  /// Format label for a meshcore://contact/add contact card link (public key, name and type, no advert packet).
+  ///
+  /// In en, this message translates to:
+  /// **'Contact card (key, name, type)'**
+  String get meshcoreContactImportConfirmFormatCard;
+
   /// D46-A - format label for a legacy <pubkeyhex>:<name> import preview
   ///
   /// In en, this message translates to:

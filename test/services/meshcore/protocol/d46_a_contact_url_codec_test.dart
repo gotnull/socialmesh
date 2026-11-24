@@ -21,6 +21,7 @@
 //     wrong-length hex, non-hex chars, a leading `meshcore://`
 //     (caller should route through MeshCoreContactUrl.decode).
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -124,6 +125,52 @@ void main() {
     });
   });
 
+  group('parseMeshCoreContactCard', () {
+    final key = List.generate(64, (i) => (i % 16).toRadixString(16)).join();
+
+    test('reads key, name and type', () {
+      final c = parseMeshCoreContactCard(
+        'meshcore://contact/add?public_key=$key&name=Coburg%20Hill&type=2',
+      )!;
+      expect(c.publicKey, hasLength(32));
+      expect(c.name, 'Coburg Hill');
+      expect(c.type, 2);
+    });
+
+    test('an unknown or missing type is a chat contact', () {
+      expect(
+        parseMeshCoreContactCard(
+          'meshcore://contact/add?public_key=$key&type=9',
+        )!.type,
+        1,
+      );
+      expect(
+        parseMeshCoreContactCard('meshcore://contact/add?public_key=$key')!
+            .name,
+        '',
+      );
+    });
+
+    test('a name past 31 bytes is cut on a character boundary', () {
+      final long = Uri.encodeComponent('Mornington Peninsula Relay 📡📡');
+      final c = parseMeshCoreContactCard(
+        'meshcore://contact/add?public_key=$key&name=$long',
+      )!;
+      expect(c.name.codeUnits.isNotEmpty, isTrue);
+      expect(utf8Length(c.name), lessThanOrEqualTo(31));
+    });
+
+    test('anything else is not a card', () {
+      expect(parseMeshCoreContactCard('meshcore://contact/add'), isNull);
+      expect(
+        parseMeshCoreContactCard('meshcore://contact/add?public_key=abc'),
+        isNull,
+      );
+      expect(parseMeshCoreContactCard('meshcore://$key'), isNull);
+      expect(parseMeshCoreContactCard('https://example.com'), isNull);
+    });
+  });
+
   group('parseLegacyContactCode - D46-A', () {
     test('parses `<64-char hex>:<name>` into a flood-path stub', () {
       final pkHex = List.generate(64, (i) => (i % 16).toRadixString(16)).join();
@@ -167,3 +214,5 @@ void main() {
     });
   });
 }
+
+int utf8Length(String s) => utf8.encode(s).length;

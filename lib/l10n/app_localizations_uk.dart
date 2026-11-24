@@ -10462,6 +10462,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Підписаний анонс (ім\'я, тип, локація)';
 
   @override
+  String get meshcoreContactImportConfirmFormatCard =>
+      'Картка контакту (ключ, ім\'я, тип)';
+
+  @override
   String get meshcoreContactImportConfirmFormatLegacy =>
       'Застарілий (тільки ім\'я)';
 

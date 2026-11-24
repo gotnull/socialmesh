@@ -13802,6 +13802,10 @@
   "@meshcoreContactImportConfirmFormatFull": {
     "description": "Format label for a meshcore:// import preview: the link carries the contact's signed advert packet, so name, type and location (when shared) but no route"
   },
+  "meshcoreContactImportConfirmFormatCard": "Contact card (key, name, type)",
+  "@meshcoreContactImportConfirmFormatCard": {
+    "description": "Format label for a meshcore://contact/add contact card link (public key, name and type, no advert packet)."
+  },
   "meshcoreContactImportConfirmFormatLegacy": "Legacy (name only)",
   "@meshcoreContactImportConfirmFormatLegacy": {
     "description": "D46-A - format label for a legacy <pubkeyhex>:<name> import preview"
