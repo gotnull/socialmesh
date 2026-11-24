@@ -159,6 +159,36 @@ void main() {
       expect(contact.longitude, closeTo(32.5825, 1e-6));
     });
 
+    test('UTF-8 names decode intact (accents and emoji)', () {
+      for (final name in ['Port Phillip 📡', 'Café Relay']) {
+        final payload = _buildPayload(
+          pubKey: Uint8List.fromList(List.generate(32, (i) => 0x60 + i)),
+          pathLen: 0,
+          name: name,
+        );
+        expect(parseContact(payload)!.name, name);
+      }
+    });
+
+    test('last seen is the last advert, not the time of the fetch', () {
+      final advertAt = DateTime.utc(2026, 11, 20, 8, 30);
+      final payload = _buildPayload(
+        pubKey: Uint8List.fromList(List.generate(32, (i) => 0x70 + i)),
+        lastAdvertTs: advertAt.millisecondsSinceEpoch ~/ 1000,
+        lastMod: advertAt.millisecondsSinceEpoch ~/ 1000 + 3600,
+      );
+      expect(parseContact(payload)!.lastSeen.toUtc(), advertAt);
+    });
+
+    test('a contact never heard falls back to the record time', () {
+      final changedAt = DateTime.utc(2026, 11, 21, 9);
+      final payload = _buildPayload(
+        pubKey: Uint8List.fromList(List.generate(32, (i) => 0x80 + i)),
+        lastMod: changedAt.millisecondsSinceEpoch ~/ 1000,
+      );
+      expect(parseContact(payload)!.lastSeen.toUtc(), changedAt);
+    });
+
     test('payload shorter than the canonical minimum returns null', () {
       // The canonical parser rejects anything below the 135-byte
       // mandatory layout (pub+type+flags+plen+path+name+ts).

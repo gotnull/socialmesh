@@ -531,7 +531,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
           path: info.pathBytes,
           latitude: info.latitudeDegrees,
           longitude: info.longitudeDegrees,
-          lastSeen: DateTime.now(),
+          lastSeen: info.lastHeard,
           unreadCount: unreadCounts[keyHex] ?? 0,
           // D-Q3: surface the firmware-side flags byte. Bit 0
           // drives the favorite star + pinned-to-top sort.
@@ -821,7 +821,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
         path: info.pathBytes,
         latitude: info.latitudeDegrees,
         longitude: info.longitudeDegrees,
-        lastSeen: DateTime.fromMillisecondsSinceEpoch(info.lastMod * 1000),
+        lastSeen: info.lastHeard,
       );
       return MeshCoreContactImportPreview(
         format: MeshCoreContactImportFormat.modern,

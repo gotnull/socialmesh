@@ -280,7 +280,7 @@ MeshCoreContact? parseContact(Uint8List payload) {
     path: info.pathBytes,
     latitude: info.latitudeDegrees,
     longitude: info.longitudeDegrees,
-    lastSeen: DateTime.now(),
+    lastSeen: info.lastHeard,
   );
 }
 

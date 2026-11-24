@@ -7,6 +7,7 @@
 // These functions do NOT handle framing or transport - they only parse payloads
 // that have already been extracted from MeshCoreFrame.
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/meshcore_constants.dart';
@@ -1114,6 +1115,10 @@ class MeshCoreContactInfo {
   /// Last modification timestamp.
   final int lastMod;
 
+  /// When the radio last heard this contact's advert (Unix seconds), as
+  /// the firmware records it; 0 when it never has.
+  final int lastAdvert;
+
   /// Latitude as the firmware sends it: degrees * 1e6, int32.
   final int? latitude;
 
@@ -1135,12 +1140,20 @@ class MeshCoreContactInfo {
     required this.pathLength,
     this.flags = 0,
     required this.lastMod,
+    this.lastAdvert = 0,
     this.latitude,
     this.longitude,
     required this.name,
     required this.pathBytes,
     required this.rawPayload,
   });
+
+  /// When this contact was last heard: its last advert, else the time the
+  /// radio last changed the record, else the Unix epoch (never heard).
+  DateTime get lastHeard {
+    final seconds = lastAdvert > 0 ? lastAdvert : lastMod;
+    return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+  }
 
   /// D-Q3: convenience getter for the `favorite` bit (offset 0x01).
   bool get isFavorite =>
@@ -1283,6 +1296,7 @@ ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
       pathLength: pathLen,
       flags: flags,
       lastMod: lastMod,
+      lastAdvert: lastAdvertTs,
       latitude: lat,
       longitude: lon,
       name: name,
@@ -1354,7 +1368,7 @@ ParseResult<MeshCoreChannelInfo> parseChannelInfo(Uint8List payload) {
     nameEnd++;
   }
   final name = sanitizeExternalText(
-    String.fromCharCodes(payload.sublist(1, nameEnd)),
+    utf8.decode(payload.sublist(1, nameEnd), allowMalformed: true),
   );
 
   // Read PSK (16 bytes at offset 33)
