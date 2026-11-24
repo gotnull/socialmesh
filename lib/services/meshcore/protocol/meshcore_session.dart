@@ -2509,11 +2509,15 @@ class MeshCoreSession {
       throw ArgumentError.value(codingRate, 'codingRate', 'must be 5..8');
     }
 
-    final payload = ByteData(10);
+    // The firmware reads a missing repeat byte as "repeat off" and saves
+    // it, so the radio's current setting is sent back whenever known.
+    final repeat = _deviceInfo?.clientRepeat;
+    final payload = ByteData(repeat == null ? 10 : 11);
     payload.setUint32(0, freqKhz, Endian.little);
     payload.setUint32(4, bandwidthHz, Endian.little);
     payload.setUint8(8, spreadingFactor);
     payload.setUint8(9, codingRate);
+    if (repeat != null) payload.setUint8(10, repeat ? 1 : 0);
 
     AppLogging.meshcore(
       'event=radio.set_params freq=${freqKhz}kHz bw=${bandwidthHz}Hz '

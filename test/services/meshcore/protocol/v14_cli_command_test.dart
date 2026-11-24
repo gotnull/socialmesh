@@ -53,7 +53,7 @@ List<int> _padded(String value, int width) {
 }
 
 /// DEVICE_INFO payload as companion firmware builds it.
-List<int> _deviceInfo(int verCode) => [
+List<int> _deviceInfo(int verCode, {int repeat = 0, int pathHashMode = 0}) => [
   verCode,
   175, // MAX_CONTACTS / 2
   40, // MAX_GROUP_CHANNELS
@@ -61,8 +61,8 @@ List<int> _deviceInfo(int verCode) => [
   ..._padded('15 Oct 2026', 12),
   ..._padded('Heltec Tracker V2', 40),
   ..._padded('v1.18.0', 20),
-  0, // repeat enabled (v9+)
-  0, // path hash mode (v10+)
+  repeat, // repeat enabled (v9+)
+  pathHashMode, // path hash mode (v10+)
 ];
 
 /// Smallest SELF_INFO payload the parser accepts.
@@ -115,6 +115,14 @@ void main() {
       expect(info.maxGroupChannels, isNull);
     });
 
+    test('reads client repeat and path hash mode (v9+, v10+)', () {
+      final info = parseDeviceInfo(
+        Uint8List.fromList(_deviceInfo(14, repeat: 1, pathHashMode: 2)),
+      ).value!;
+      expect(info.clientRepeat, isTrue);
+      expect(info.pathHashMode, 2);
+    });
+
     test('empty payload is a parse failure', () {
       expect(parseDeviceInfo(Uint8List(0)).isFailure, isTrue);
     });
@@ -142,6 +150,30 @@ void main() {
           .map((f) => f[1])
           .toList();
       expect(polled, List<int>.generate(40, (i) => i));
+    });
+
+    test('setRadioParams sends the radio\'s repeat setting back', () async {
+      // A missing repeat byte means "repeat off" to the firmware, which
+      // saves it; applying radio settings must not switch repeat off.
+      final t = _FakeTransport();
+      addTearDown(t.dispose);
+      final session = await _handshake(
+        t,
+        deviceInfo: _deviceInfo(14, repeat: 1),
+      );
+      t.sentData.clear();
+      await session.setRadioParams(
+        freqKhz: 915800,
+        bandwidthHz: 250000,
+        spreadingFactor: 10,
+        codingRate: 5,
+        timeout: const Duration(milliseconds: 5),
+      );
+      final wire = t.sentData.singleWhere(
+        (f) => f.isNotEmpty && f[0] == MeshCoreCommands.setRadioParams,
+      );
+      expect(wire.length, 12);
+      expect(wire[11], 1);
     });
 
     test('a v13 radio does not', () async {

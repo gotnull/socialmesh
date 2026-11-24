@@ -984,6 +984,8 @@ class MeshCoreDeviceInfo {
     this.buildDate,
     this.manufacturer,
     this.firmwareVersion,
+    this.clientRepeat,
+    this.pathHashMode,
   });
 
   /// `FIRMWARE_VER_CODE`, the companion protocol level.
@@ -999,6 +1001,13 @@ class MeshCoreDeviceInfo {
   final String? buildDate;
   final String? manufacturer;
   final String? firmwareVersion;
+
+  /// Whether the radio repeats packets as a client (v9+); null when the
+  /// firmware does not report it.
+  final bool? clientRepeat;
+
+  /// Path hash mode (v10+): each path hop is `pathHashMode + 1` bytes.
+  final int? pathHashMode;
 
   /// Whether the radio accepts [MeshCoreCommands.runCliCommand].
   bool get supportsCliCommands =>
@@ -1017,7 +1026,8 @@ class MeshCoreDeviceInfo {
 /// [7-18]   build date, NUL-padded (12 bytes)
 /// [19-58]  manufacturer name, NUL-padded (40 bytes)
 /// [59-78]  firmware version, NUL-padded (20 bytes)
-/// [79+]    repeat enabled (v9+), path hash mode (v10+), not read
+/// [79]     client repeat enabled (v9+)
+/// [80]     path hash mode (v10+)
 /// ```
 ParseResult<MeshCoreDeviceInfo> parseDeviceInfo(Uint8List payload) {
   if (payload.isEmpty) {
@@ -1043,6 +1053,10 @@ ParseResult<MeshCoreDeviceInfo> parseDeviceInfo(Uint8List payload) {
     if (reader.hasRemaining) manufacturer = reader.readCString(40);
     if (reader.hasRemaining) firmwareVersion = reader.readCString(20);
   }
+  bool? clientRepeat;
+  int? pathHashMode;
+  if (reader.hasRemaining) clientRepeat = reader.readByte() != 0;
+  if (reader.hasRemaining) pathHashMode = reader.readByte();
 
   return ParseResult.success(
     MeshCoreDeviceInfo(
@@ -1052,6 +1066,8 @@ ParseResult<MeshCoreDeviceInfo> parseDeviceInfo(Uint8List payload) {
       buildDate: buildDate,
       manufacturer: manufacturer,
       firmwareVersion: firmwareVersion,
+      clientRepeat: clientRepeat,
+      pathHashMode: pathHashMode,
     ),
   );
 }

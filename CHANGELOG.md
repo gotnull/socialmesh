@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MeshCore contacts now show when they were really last heard. Every contact counted as just heard each time the list loaded, so the map, the dashboard's online count and sorting treated week-old contacts as fresh. Contacts not heard for a day now get the stale badge on the map.
 - Setting or forcing a MeshCore contact's route, and sending a message with automatic routing, no longer unfavourites the contact, revokes its telemetry permissions or wipes its location. Each of those saves rewrote the contact without them.
 - MeshCore direct messages close to the 160-byte limit are no longer lost. The app dropped any frame over 172 bytes while the radio sends up to 176, and the radio had already handed the message over, so it never arrived.
+- Applying MeshCore radio settings no longer switches off client repeat. The app left the repeat setting out, which the radio reads as off and saves.
 
 ## [1.82.0] - 2026-11-24
 
