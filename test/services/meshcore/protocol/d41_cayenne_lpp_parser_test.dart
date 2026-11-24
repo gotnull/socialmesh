@@ -164,6 +164,29 @@ void main() {
       },
     );
 
+    test('skip sizes match the CayenneLPP library the firmware links', () {
+      // Each sized type is followed by a voltage reading; a wrong size
+      // would land the walker mid-value and lose the voltage.
+      const sizes = {
+        100: 4, // Generic Sensor
+        125: 2, // Concentration
+        128: 2, // Power
+        130: 4, // Distance
+        131: 4, // Energy
+        132: 2, // Direction
+        135: 3, // Colour
+      };
+      sizes.forEach((type, size) {
+        final r = parseCayenneLpp(
+          _b([1, type, ...List.filled(size, 0x11), 2, 116, 0x01, 0x95]),
+          fetchedAt: fetchedAt,
+        );
+        expect(r.readings, hasLength(1), reason: 'type $type');
+        expect(r.readings.single, isA<MeshCoreTelemetryVoltage>());
+        expect(r.unknownTypes[type], 1, reason: 'type $type');
+      });
+    });
+
     test('truncated unknown-but-sized type stops cleanly', () {
       // Illuminance type=101 needs 2 bytes; only 1 supplied.
       final r = parseCayenneLpp(_b([1, 101, 0xFF]), fetchedAt: fetchedAt);

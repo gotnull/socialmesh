@@ -157,17 +157,18 @@ class MeshCoreLppType {
 }
 
 /// Static type → byte-size table for unknown-but-known-size skip
-/// recovery. Numbers from the Cayenne LPP spec; not every supported
-/// type is wire-emitted by MeshCore firmware today, but knowing the
-/// size lets the parser jump past one rather than abandon the rest
-/// of the frame. Truly unknown types (not in this table) stop the
-/// parse cleanly.
+/// recovery, from the `LPP_*_SIZE` constants of the CayenneLPP library the
+/// firmware links. Not every type is wire-emitted by MeshCore firmware
+/// today, but knowing the size lets the parser jump past one rather than
+/// abandon the rest of the frame. Truly unknown types (not in this table)
+/// stop the parse cleanly.
 const Map<int, int> _lppKnownSizes = <int, int>{
   0: 1, // Digital Input
   1: 1, // Digital Output
   2: 2, // Analog Input
   3: 2, // Analog Output
-  101: 2, // Illuminance
+  100: 4, // Generic Sensor
+  101: 2, // Luminosity
   102: 1, // Presence
   103: 2, // Temperature (supported)
   104: 1, // Humidity (supported)
@@ -178,12 +179,14 @@ const Map<int, int> _lppKnownSizes = <int, int>{
   118: 4, // Frequency
   120: 1, // Percentage
   121: 2, // Altitude
-  125: 4, // Power
-  128: 4, // Energy
-  130: 2, // Direction
+  125: 2, // Concentration
+  128: 2, // Power
+  130: 4, // Distance
+  131: 4, // Energy
+  132: 2, // Direction
   133: 4, // Unix Time
   134: 6, // Gyrometer
-  135: 6, // Color
+  135: 3, // Colour
   136: 9, // GPS (supported)
   142: 1, // Switch
 };
