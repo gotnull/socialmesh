@@ -17,6 +17,13 @@ void main() {
       );
     }
 
+    test('never leaves half an emoji behind', () {
+      // 'ab' plus a 4-byte emoji is 6 bytes; at 5 the whole emoji goes.
+      final out = apply('ab📡', maxBytes: 5);
+      expect(out.text, 'ab');
+      expect(out.text.codeUnits.every((u) => u < 0xD800 || u > 0xDFFF), true);
+    });
+
     test('passes through ASCII input under the byte cap', () {
       final out = apply('mqtt.example.com', maxBytes: 62);
       expect(out.text, 'mqtt.example.com');

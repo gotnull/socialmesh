@@ -30,11 +30,12 @@ class Utf8ByteLengthFormatter extends TextInputFormatter {
     if (utf8.encode(text).length <= maxBytes) return newValue;
 
     while (text.isNotEmpty && utf8.encode(text).length > maxBytes) {
-      // Drop one user-perceived character (UTF-16 code unit pair when
-      // applicable) - `String.characters.skipLast(1).toString()` would
-      // need the `characters` package; `substring` on UTF-16 length is
-      // sufficient because we only need *some* truncation that fits.
-      text = text.substring(0, text.length - 1);
+      // Drop one code point. A surrogate pair goes as a whole: leaving
+      // its high half behind makes invalid text that breaks rendering.
+      final last = text.codeUnitAt(text.length - 1);
+      final isLowSurrogate = last >= 0xDC00 && last <= 0xDFFF;
+      final drop = isLowSurrogate && text.length >= 2 ? 2 : 1;
+      text = text.substring(0, text.length - drop);
     }
 
     final selection = TextSelection.collapsed(offset: text.length);
