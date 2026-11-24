@@ -27,6 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/meshcore_constants.dart';
 import 'package:socialmesh/models/meshcore_auto_route_settings.dart';
+import 'package:socialmesh/models/meshcore_contact.dart';
 import 'package:socialmesh/services/meshcore/meshcore_send_rate_limiter.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_frame.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_session.dart';
@@ -40,19 +41,37 @@ import 'package:socialmesh/services/meshcore/storage/meshcore_path_history_store
 // ---------------------------------------------------------------------------
 
 class _AddUpdateContactRecorder {
-  final List<({int pathLength, Uint8List pathBytes})> calls = [];
+  final List<
+    ({
+      int pathLength,
+      Uint8List pathBytes,
+      int flags,
+      DateTime lastAdvertAt,
+      double? latitude,
+      double? longitude,
+    })
+  >
+  calls = [];
   bool nextReturn = true;
 
   Future<bool> call({
     required Uint8List pubKey,
     required int advType,
     required String name,
+    required int flags,
     required int pathLength,
     required Uint8List pathBytes,
+    required DateTime lastAdvertAt,
+    double? latitude,
+    double? longitude,
   }) async {
     calls.add((
       pathLength: pathLength,
       pathBytes: Uint8List.fromList(pathBytes),
+      flags: flags,
+      lastAdvertAt: lastAdvertAt,
+      latitude: latitude,
+      longitude: longitude,
     ));
     return nextReturn;
   }
@@ -89,6 +108,20 @@ const _contactPubKey = <int>[
   0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, //
   0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, //
 ];
+
+// Favourite (flag bit 0), heard at a known time, with a position: an
+// auto-routed send must write all three back unchanged.
+final _bob = MeshCoreContact(
+  publicKey: Uint8List.fromList(_contactPubKey),
+  name: 'Bob',
+  type: 1,
+  pathLength: -1,
+  path: Uint8List(0),
+  flags: 1,
+  latitude: -37.8136,
+  longitude: 144.9631,
+  lastSeen: DateTime.utc(2026, 11, 20, 8, 30),
+);
 const _ts = 1715000000;
 const _text = 'hello';
 
@@ -166,9 +199,7 @@ void main() {
       confirmationRouter: router,
       settings: _settings,
       devicePubKey: Uint8List.fromList(_devicePubKey),
-      contactPubKey: Uint8List.fromList(_contactPubKey),
-      contactAdvType: 1,
-      contactName: 'Bob',
+      contact: _bob,
     );
   }
 
@@ -210,6 +241,13 @@ void main() {
       expect(outcome.tripTime?.inMilliseconds, 80);
       expect(addUpdateRecorder.calls, hasLength(1));
       expect(addUpdateRecorder.calls.single.pathLength, greaterThan(0));
+      // The firmware overwrites flags, advert time and position from the
+      // frame, so the write must carry the contact's own values.
+      final write = addUpdateRecorder.calls.single;
+      expect(write.flags, 1);
+      expect(write.lastAdvertAt, _bob.lastSeen);
+      expect(write.latitude, _bob.latitude);
+      expect(write.longitude, _bob.longitude);
       // History should reflect a success bump.
       final reloaded = await store.load(
         _hexPrefix(_devicePubKey, 8),

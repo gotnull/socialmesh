@@ -41,6 +41,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/logging.dart';
 import '../../../core/meshcore_constants.dart';
 import '../../../models/meshcore_auto_route_settings.dart';
+import '../../../models/meshcore_contact.dart';
 import '../meshcore_send_rate_limiter.dart';
 import '../protocol/meshcore_session.dart';
 import '../storage/meshcore_path_history_store.dart';
@@ -130,8 +131,12 @@ typedef MeshCoreAddUpdateContactCall = Future<bool> Function({
   required Uint8List pubKey,
   required int advType,
   required String name,
+  required int flags,
   required int pathLength,
   required Uint8List pathBytes,
+  required DateTime lastAdvertAt,
+  double? latitude,
+  double? longitude,
 });
 
 /// D48-A2: function signature for the `CMD_SEND_TXT_MSG 0x02`
@@ -154,9 +159,7 @@ class MeshCoreAutoRouteOrchestrator {
     required this.confirmationRouter,
     required this.settings,
     required this.devicePubKey,
-    required this.contactPubKey,
-    required this.contactAdvType,
-    required this.contactName,
+    required this.contact,
     DateTime Function()? clock,
   }) : _addUpdateContact = session.addUpdateContact,
        _sendTextMessage = _bindSendTextMessage(session),
@@ -173,9 +176,7 @@ class MeshCoreAutoRouteOrchestrator {
     required this.confirmationRouter,
     required this.settings,
     required this.devicePubKey,
-    required this.contactPubKey,
-    required this.contactAdvType,
-    required this.contactName,
+    required this.contact,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -207,16 +208,14 @@ class MeshCoreAutoRouteOrchestrator {
   /// firmware's `expected_ack_table` matches.
   final Uint8List devicePubKey;
 
-  /// 32-byte public key of the recipient.
-  final Uint8List contactPubKey;
+  /// The recipient. Every CMD_ADD_UPDATE_CONTACT the orchestrator writes
+  /// carries its flags, advert time and position, because the firmware
+  /// overwrites all of them from the frame.
+  final MeshCoreContact contact;
 
-  /// `MeshCoreContact.type` / `MeshCoreContactInfo.advType`; needed
-  /// by `CMD_ADD_UPDATE_CONTACT 0x09` per attempt.
-  final int contactAdvType;
-
-  /// Display name of the recipient. The wire frame echoes this back
-  /// as-is so we must pass the canonical 32-byte name string.
-  final String contactName;
+  Uint8List get contactPubKey => contact.publicKey;
+  int get contactAdvType => contact.type;
+  String get contactName => contact.name;
 
   final DateTime Function() _clock;
 
@@ -252,8 +251,12 @@ class MeshCoreAutoRouteOrchestrator {
         pubKey: contactPubKey,
         advType: contactAdvType,
         name: contactName,
+        flags: contact.flags,
         pathLength: pathLen,
         pathBytes: pathBytes,
+        lastAdvertAt: contact.lastSeen,
+        latitude: contact.latitude,
+        longitude: contact.longitude,
       );
       if (!wroteContact) {
         AppLogging.meshcore(

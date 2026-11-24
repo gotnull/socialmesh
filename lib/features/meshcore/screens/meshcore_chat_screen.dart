@@ -1133,9 +1133,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           confirmationRouter: confirmationRouter,
           settings: autoRouteSettings,
           devicePubKey: selfInfo.pubKey,
-          contactPubKey: widget.contact!.publicKey,
-          contactAdvType: widget.contact!.type,
-          contactName: widget.contact!.name,
+          contact: widget.contact!,
         );
         final outcome = await orchestrator.sendWithAutoRoute(
           text: wireBody,

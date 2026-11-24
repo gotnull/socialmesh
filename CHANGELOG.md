@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MeshCore map markers now match the Meshtastic map: a circle in the contact's own colour with its initials, a small badge for chat, repeater, room or sensor, and a "?" badge once a contact has not been heard for a day instead of fading out. Your own radio pulses, like your own node does on the Meshtastic map. The old markers were drawn off-centre, with the badge hanging outside the circle. Marker clustering is now one setting shared by both maps.
 - MeshCore names with accents or emoji now show correctly for contacts, channels and your own radio. They were read one byte at a time, so "Port Phillip 📡" came out as "Port Phillip ð¡".
 - MeshCore contacts now show when they were really last heard. Every contact counted as just heard each time the list loaded, so the map, the dashboard's online count and sorting treated week-old contacts as fresh. Contacts not heard for a day now get the stale badge on the map.
+- Setting or forcing a MeshCore contact's route, and sending a message with automatic routing, no longer unfavourites the contact, revokes its telemetry permissions or wipes its location. Each of those saves rewrote the contact without them.
 
 ## [1.82.0] - 2026-11-24
 
