@@ -8635,23 +8635,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get meshcoreTracePathSavePathHelper =>
-      'Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.';
-
-  @override
-  String get meshcoreTracePathSaveAsContactPath => 'Save as Contact Path';
-
-  @override
-  String meshcoreTracePathSaveAsContactPathSuccess(String contactName) {
-    return 'Saved path for $contactName';
-  }
-
-  @override
-  String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
-    return 'Could not save path for $contactName';
-  }
-
-  @override
   String meshcoreResetPathSuccess(String contactName) {
     return 'Path reset for $contactName';
   }
@@ -10893,6 +10876,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshcoreTracePathFailed => 'Could not run trace';
+
+  @override
+  String get meshcoreTracePathRepeatNote =>
+      'The trace follows the contact\'s route there and back. A chat contact answers only if it repeats packets.';
 
   @override
   String get meshcoreTracePathRunButton => 'Run trace';

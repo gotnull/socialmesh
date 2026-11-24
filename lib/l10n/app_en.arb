@@ -11542,32 +11542,6 @@
       }
     }
   },
-  "meshcoreTracePathSavePathHelper": "Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.",
-  "@meshcoreTracePathSavePathHelper": {
-    "description": "D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale."
-  },
-  "meshcoreTracePathSaveAsContactPath": "Save as Contact Path",
-  "@meshcoreTracePathSaveAsContactPath": {
-    "description": "D34c-A - button label on the trace result sheet that writes the trace's hop bytes back to the target contact via CMD_ADD_UPDATE_CONTACT (0x09)."
-  },
-  "meshcoreTracePathSaveAsContactPathSuccess": "Saved path for {contactName}",
-  "@meshcoreTracePathSaveAsContactPathSuccess": {
-    "description": "D34c-A - success snackbar after the trace path saves to the contact via 0x09. {contactName} is the contact's display name.",
-    "placeholders": {
-      "contactName": {
-        "type": "String"
-      }
-    }
-  },
-  "meshcoreTracePathSaveAsContactPathFailed": "Could not save path for {contactName}",
-  "@meshcoreTracePathSaveAsContactPathFailed": {
-    "description": "D34c-A - failure snackbar after the trace-path save flow. {contactName} is the contact's display name.",
-    "placeholders": {
-      "contactName": {
-        "type": "String"
-      }
-    }
-  },
   "meshcoreResetPathSuccess": "Path reset for {contactName}",
   "@meshcoreResetPathSuccess": {
     "description": "D29 - success snackbar after CMD_RESET_PATH (0x0D) ACK.",
@@ -14581,6 +14555,10 @@
   "meshcoreTracePathFailed": "Could not run trace",
   "@meshcoreTracePathFailed": {
     "description": "D28 - Error toast for trace send/parse failures."
+  },
+  "meshcoreTracePathRepeatNote": "The trace follows the contact's route there and back. A chat contact answers only if it repeats packets.",
+  "@meshcoreTracePathRepeatNote": {
+    "description": "Trace Path sheet: note under the contact picker and on the timeout banner. Every node on a trace must retransmit it; companions only do with client repeat on."
   },
   "meshcoreTracePathRunButton": "Run trace",
   "@meshcoreTracePathRunButton": {

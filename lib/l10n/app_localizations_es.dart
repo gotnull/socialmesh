@@ -8781,24 +8781,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get meshcoreTracePathSavePathHelper =>
-      'Las rutas guardadas pueden quedar desactualizadas cuando la malla se redirecciona. Restablezca la ruta para volver al modo automático.';
-
-  @override
-  String get meshcoreTracePathSaveAsContactPath =>
-      'Guardar como ruta de contacto';
-
-  @override
-  String meshcoreTracePathSaveAsContactPathSuccess(String contactName) {
-    return 'Ruta guardada para $contactName';
-  }
-
-  @override
-  String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
-    return 'No se pudo guardar la ruta para $contactName';
-  }
-
-  @override
   String meshcoreResetPathSuccess(String contactName) {
     return 'Ruta restablecida para $contactName';
   }
@@ -11081,6 +11063,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreTracePathFailed => 'No se pudo ejecutar el rastreo';
+
+  @override
+  String get meshcoreTracePathRepeatNote =>
+      'El trazado sigue la ruta del contacto de ida y vuelta. Un contacto de chat solo responde si repite paquetes.';
 
   @override
   String get meshcoreTracePathRunButton => 'Ejecutar rastreo';

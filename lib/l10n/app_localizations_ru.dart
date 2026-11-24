@@ -8743,24 +8743,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get meshcoreTracePathSavePathHelper =>
-      'Сохранённые маршруты могут устаревать при изменении топологии сети. Сбросьте маршрут для возврата к автоматическому режиму.';
-
-  @override
-  String get meshcoreTracePathSaveAsContactPath =>
-      'Сохранить как маршрут контакта';
-
-  @override
-  String meshcoreTracePathSaveAsContactPathSuccess(String contactName) {
-    return 'Маршрут для $contactName сохранён';
-  }
-
-  @override
-  String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
-    return 'Не удалось сохранить маршрут для $contactName';
-  }
-
-  @override
   String meshcoreResetPathSuccess(String contactName) {
     return 'Маршрут для $contactName сброшен';
   }
@@ -11033,6 +11015,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshcoreTracePathFailed => 'Не удалось выполнить трассировку';
+
+  @override
+  String get meshcoreTracePathRepeatNote =>
+      'Трассировка идёт по маршруту контакта туда и обратно. Чат-контакт отвечает, только если он ретранслирует пакеты.';
 
   @override
   String get meshcoreTracePathRunButton => 'Запустить трассировку';

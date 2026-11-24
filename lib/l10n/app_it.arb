@@ -13957,28 +13957,6 @@
   "@meshcoreTracePathRunButton": {
     "description": "D28"
   },
-  "@meshcoreTracePathSaveAsContactPath": {
-    "description": "D34c-A"
-  },
-  "@meshcoreTracePathSaveAsContactPathFailed": {
-    "description": "D34c-A",
-    "placeholders": {
-      "contactName": {
-        "type": "String"
-      }
-    }
-  },
-  "@meshcoreTracePathSaveAsContactPathSuccess": {
-    "description": "D34c-A",
-    "placeholders": {
-      "contactName": {
-        "type": "String"
-      }
-    }
-  },
-  "@meshcoreTracePathSavePathHelper": {
-    "description": "D34c-A"
-  },
   "@meshcoreTracePathTimeout": {
     "description": "D28"
   },
@@ -32099,11 +32077,8 @@
   "meshcoreTracePathHops": "{count, plural, =1{1 hop} other{{count} hop}}",
   "meshcoreTracePathPickContact": "Scegli un contatto da tracciare.",
   "meshcoreTracePathResultHeadline": "Traccia verso {name}",
+  "meshcoreTracePathRepeatNote": "La traccia segue il percorso del contatto all'andata e al ritorno. Un contatto chat risponde solo se ripete i pacchetti.",
   "meshcoreTracePathRunButton": "Esegui traccia",
-  "meshcoreTracePathSaveAsContactPath": "Salva come percorso del contatto",
-  "meshcoreTracePathSaveAsContactPathFailed": "Impossibile salvare il percorso per {contactName}",
-  "meshcoreTracePathSaveAsContactPathSuccess": "Percorso salvato per {contactName}",
-  "meshcoreTracePathSavePathHelper": "I percorsi salvati possono diventare obsoleti quando la mesh si reindirizza. Reimposta il percorso per tornare in automatico.",
   "meshcoreTracePathTimeout": "Tempo scaduto per la traccia",
   "meshcoreTracePathTitle": "Traccia percorso",
   "meshcoreTracePathTracing": "Tracciamento percorso verso {name}...",

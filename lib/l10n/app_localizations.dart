@@ -15092,30 +15092,6 @@ abstract class AppLocalizations {
   /// **'{seconds} s'**
   String meshcoreRadioStatsDurationSeconds(int seconds);
 
-  /// D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.'**
-  String get meshcoreTracePathSavePathHelper;
-
-  /// D34c-A - button label on the trace result sheet that writes the trace's hop bytes back to the target contact via CMD_ADD_UPDATE_CONTACT (0x09).
-  ///
-  /// In en, this message translates to:
-  /// **'Save as Contact Path'**
-  String get meshcoreTracePathSaveAsContactPath;
-
-  /// D34c-A - success snackbar after the trace path saves to the contact via 0x09. {contactName} is the contact's display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved path for {contactName}'**
-  String meshcoreTracePathSaveAsContactPathSuccess(String contactName);
-
-  /// D34c-A - failure snackbar after the trace-path save flow. {contactName} is the contact's display name.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not save path for {contactName}'**
-  String meshcoreTracePathSaveAsContactPathFailed(String contactName);
-
   /// D29 - success snackbar after CMD_RESET_PATH (0x0D) ACK.
   ///
   /// In en, this message translates to:
@@ -18959,6 +18935,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not run trace'**
   String get meshcoreTracePathFailed;
+
+  /// Trace Path sheet: note under the contact picker and on the timeout banner. Every node on a trace must retransmit it; companions only do with client repeat on.
+  ///
+  /// In en, this message translates to:
+  /// **'The trace follows the contact\'s route there and back. A chat contact answers only if it repeats packets.'**
+  String get meshcoreTracePathRepeatNote;
 
   /// D28 - Primary action label on the trace picker.
   ///

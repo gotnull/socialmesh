@@ -32,6 +32,7 @@ import '../../../core/widgets/chip_selector.dart';
 import '../../../providers/meshcore_battery_chemistry_provider.dart';
 import '../../../services/meshcore/diagnostics/meshcore_diagnostics_bundle_service.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
+import '../../../services/meshcore/routing/meshcore_trace_path.dart';
 import '../../../services/meshcore/storage/meshcore_battery_chemistry.dart';
 import '../../../services/meshcore/storage/meshcore_battery_chemistry_store.dart';
 import '../../../utils/encoding.dart';
@@ -1135,25 +1136,24 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
       _timedOut = false;
     });
     final session = ref.read(meshCoreSessionProvider);
-    if (session == null) {
+    final request = buildMeshCoreTraceRequest(
+      target: target,
+      contacts: ref.read(meshCoreContactsProvider).contacts,
+    );
+    if (session == null || request == null) {
       safeSetState(() {
         _failed = true;
         _running = null;
       });
       return;
     }
-    // Build path: single byte = first byte of target pubkey, matching
-    // the firmware's expectation that the path payload identifies the
-    // intermediate hops by their pubkey prefix. Empty path falls back
-    // to firmware-default routing; we always pass the target prefix
-    // here so the user gets a deterministic "trace to this contact"
-    // semantic.
-    final path = target.publicKey.isEmpty
-        ? Uint8List(0)
-        : Uint8List.fromList([target.publicKey[0]]);
     final tag = DateTime.now().millisecondsSinceEpoch & 0xFFFFFFFF;
     try {
-      final result = await session.sendTracePath(tag: tag, path: path);
+      final result = await session.sendTracePath(
+        tag: tag,
+        path: request.path,
+        flag: request.flags,
+      );
       if (!mounted) return;
       if (result == null) {
         safeSetState(() {
@@ -1249,6 +1249,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
               else if (_timedOut)
                 StatusBanner.warning(
                   title: l.meshcoreTracePathTimeout,
+                  subtitle: l.meshcoreTracePathRepeatNote,
                   icon: Icons.hourglass_empty_rounded,
                 )
               else
@@ -1256,6 +1257,30 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
             ],
           ),
         ),
+        if (_failed || _timedOut)
+          BottomActionBar(
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => safeSetState(() {
+                      _failed = false;
+                      _timedOut = false;
+                    }),
+                    child: Text(l.commonBack),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: PrimaryGradientButton(
+                    label: l.commonRetry,
+                    icon: Icons.refresh_rounded,
+                    onPressed: _runTrace,
+                  ),
+                ),
+              ],
+            ),
+          ),
         if (picking)
           // The sheet does not resize for the keyboard; lift the bar so
           // Run stays reachable while searching.
@@ -1286,6 +1311,15 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
           style: TextStyle(
             color: context.textSecondary,
             fontSize: 13,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing4),
+        Text(
+          l.meshcoreTracePathRepeatNote,
+          style: TextStyle(
+            color: context.textTertiary,
+            fontSize: 12,
             fontFamily: AppTheme.fontFamily,
           ),
         ),
@@ -1487,30 +1521,6 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
             ),
           ),
         const SizedBox(height: AppTheme.spacing16),
-        // D34c-A: only surface "Save as Contact Path" when the trace
-        // returned at least one hop AND we have a target contact in
-        // scope (the picker locks `_selected` before firing the trace).
-        // Saved paths can become stale as the mesh re-routes; the
-        // helper text reminds the user that this is a snapshot, not a
-        // permanent route.
-        if (target != null && result.hops.isNotEmpty) ...[
-          Text(
-            l.meshcoreTracePathSavePathHelper,
-            style: TextStyle(
-              color: context.textTertiary,
-              fontSize: 12,
-              fontFamily: AppTheme.fontFamily,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          FilledButton.icon(
-            key: const ValueKey('meshcore-trace-save-as-contact-path'),
-            onPressed: () => _saveAsContactPath(target, result),
-            icon: const Icon(Icons.save_rounded),
-            label: Text(l.meshcoreTracePathSaveAsContactPath),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-        ],
         OutlinedButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -1519,43 +1529,5 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
         ),
       ],
     );
-  }
-
-  /// D34c-A: write the freshly-traced hop bytes back to the target
-  /// contact's stored path via `CMD_ADD_UPDATE_CONTACT (0x09)`.
-  /// Routes through `meshCoreContactsProvider.setContactPathFromTrace`
-  /// so all metadata is preserved and the contact list refreshes
-  /// after the firmware ACK.
-  Future<void> _saveAsContactPath(
-    MeshCoreContact target,
-    MeshCoreTraceResult result,
-  ) async {
-    final l = context.l10n;
-    // The app's trace requests use 1-byte hashes (flag 0), so each hop's
-    // hash is a single byte.
-    final hopBytes = Uint8List.fromList(
-      result.hops.map((h) => h.pathByte).toList(growable: false),
-    );
-    final ok = await ref
-        .read(meshCoreContactsProvider.notifier)
-        .setContactPathFromTrace(
-          publicKeyHex: target.publicKeyHex,
-          hopBytes: hopBytes,
-        );
-    if (!mounted) return;
-    final name = target.displayName.isNotEmpty
-        ? target.displayName
-        : l.meshcoreContactUnknownName;
-    if (ok) {
-      showSuccessSnackBar(
-        context,
-        l.meshcoreTracePathSaveAsContactPathSuccess(name),
-      );
-    } else {
-      showErrorSnackBar(
-        context,
-        l.meshcoreTracePathSaveAsContactPathFailed(name),
-      );
-    }
   }
 }

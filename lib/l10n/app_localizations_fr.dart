@@ -8809,24 +8809,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get meshcoreTracePathSavePathHelper =>
-      'Les chemins enregistrés peuvent devenir obsolètes au fur et à mesure que le maillage recalcule ses itinéraires. Réinitialisez le chemin pour revenir en mode automatique.';
-
-  @override
-  String get meshcoreTracePathSaveAsContactPath =>
-      'Enregistrer comme chemin de contact';
-
-  @override
-  String meshcoreTracePathSaveAsContactPathSuccess(String contactName) {
-    return 'Chemin enregistré pour $contactName';
-  }
-
-  @override
-  String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
-    return 'Impossible d\'enregistrer le chemin pour $contactName';
-  }
-
-  @override
   String meshcoreResetPathSuccess(String contactName) {
     return 'Chemin réinitialisé pour $contactName';
   }
@@ -11114,6 +11096,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meshcoreTracePathFailed => 'Impossible d\'exécuter le tracé';
+
+  @override
+  String get meshcoreTracePathRepeatNote =>
+      'La trace suit la route du contact à l\'aller et au retour. Un contact de discussion ne répond que s\'il relaie les paquets.';
 
   @override
   String get meshcoreTracePathRunButton => 'Lancer le tracé';

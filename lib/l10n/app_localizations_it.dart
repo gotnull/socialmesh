@@ -8741,24 +8741,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get meshcoreTracePathSavePathHelper =>
-      'I percorsi salvati possono diventare obsoleti quando la mesh si reindirizza. Reimposta il percorso per tornare in automatico.';
-
-  @override
-  String get meshcoreTracePathSaveAsContactPath =>
-      'Salva come percorso del contatto';
-
-  @override
-  String meshcoreTracePathSaveAsContactPathSuccess(String contactName) {
-    return 'Percorso salvato per $contactName';
-  }
-
-  @override
-  String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
-    return 'Impossibile salvare il percorso per $contactName';
-  }
-
-  @override
   String meshcoreResetPathSuccess(String contactName) {
     return 'Percorso reimpostato per $contactName';
   }
@@ -11031,6 +11013,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshcoreTracePathFailed => 'Impossibile eseguire la traccia';
+
+  @override
+  String get meshcoreTracePathRepeatNote =>
+      'La traccia segue il percorso del contatto all\'andata e al ritorno. Un contatto chat risponde solo se ripete i pacchetti.';
 
   @override
   String get meshcoreTracePathRunButton => 'Esegui traccia';

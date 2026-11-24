@@ -8762,24 +8762,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get meshcoreTracePathSavePathHelper =>
-      'Збережені маршрути можуть застаріти при зміні топології меша. Скиньте маршрут, щоб повернутися до автоматичного.';
-
-  @override
-  String get meshcoreTracePathSaveAsContactPath =>
-      'Зберегти як маршрут контакту';
-
-  @override
-  String meshcoreTracePathSaveAsContactPathSuccess(String contactName) {
-    return 'Маршрут для $contactName збережено';
-  }
-
-  @override
-  String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
-    return 'Не вдалося зберегти маршрут для $contactName';
-  }
-
-  @override
   String meshcoreResetPathSuccess(String contactName) {
     return 'Маршрут для $contactName скинуто';
   }
@@ -11048,6 +11030,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreTracePathFailed => 'Не вдалося виконати трасування';
+
+  @override
+  String get meshcoreTracePathRepeatNote =>
+      'Трасування йде маршрутом контакту туди й назад. Чат-контакт відповідає, лише якщо він ретранслює пакети.';
 
   @override
   String get meshcoreTracePathRunButton => 'Запустити трасування';

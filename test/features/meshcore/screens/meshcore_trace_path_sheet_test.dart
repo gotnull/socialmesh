@@ -84,4 +84,31 @@ void main() {
     await tester.pump();
     expect(run().enabled, isTrue);
   });
+
+  testWidgets('a failed trace offers Retry and Back to the picker', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(_wrap());
+    await tester.pump();
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(MeshCoreTracePathSheet)),
+    );
+
+    // No session: the trace fails at once.
+    await tester.tap(find.text('TerryDev2'));
+    await tester.pump();
+    await tester.tap(find.text(l10n.meshcoreTracePathRunButton));
+    await tester.pump();
+
+    expect(find.text(l10n.meshcoreTracePathFailed), findsOneWidget);
+    expect(find.text(l10n.commonRetry), findsOneWidget);
+    await tester.tap(find.text(l10n.commonBack));
+    await tester.pump();
+    expect(find.text(l10n.meshcoreTracePathPickContact), findsOneWidget);
+    expect(find.text('TerryDev2'), findsOneWidget);
+  });
 }

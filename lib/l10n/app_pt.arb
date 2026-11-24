@@ -13957,28 +13957,6 @@
   "@meshcoreTracePathRunButton": {
     "description": "D28"
   },
-  "@meshcoreTracePathSaveAsContactPath": {
-    "description": "D34c-A"
-  },
-  "@meshcoreTracePathSaveAsContactPathFailed": {
-    "description": "D34c-A",
-    "placeholders": {
-      "contactName": {
-        "type": "String"
-      }
-    }
-  },
-  "@meshcoreTracePathSaveAsContactPathSuccess": {
-    "description": "D34c-A",
-    "placeholders": {
-      "contactName": {
-        "type": "String"
-      }
-    }
-  },
-  "@meshcoreTracePathSavePathHelper": {
-    "description": "D34c-A"
-  },
   "@meshcoreTracePathTimeout": {
     "description": "D28"
   },
@@ -32099,11 +32077,8 @@
   "meshcoreTracePathHops": "{count, plural, =1{1 salto} other{{count} saltos}}",
   "meshcoreTracePathPickContact": "Escolha um contato para rastrear.",
   "meshcoreTracePathResultHeadline": "Rastrear para {name}",
+  "meshcoreTracePathRepeatNote": "O rastreamento segue a rota do contato na ida e na volta. Um contato de chat só responde se repetir pacotes.",
   "meshcoreTracePathRunButton": "Executar rastreamento",
-  "meshcoreTracePathSaveAsContactPath": "Salvar como caminho do contato",
-  "meshcoreTracePathSaveAsContactPathFailed": "Não foi possível salvar o caminho para {contactName}",
-  "meshcoreTracePathSaveAsContactPathSuccess": "Caminho salvo para {contactName}",
-  "meshcoreTracePathSavePathHelper": "Os caminhos salvos podem ficar desatualizados conforme a mesh se reorganiza. Redefina o caminho para voltar ao automático.",
   "meshcoreTracePathTimeout": "Tempo esgotado no rastreamento",
   "meshcoreTracePathTitle": "Rastrear caminho",
   "meshcoreTracePathTracing": "Rastreando caminho para {name}...",

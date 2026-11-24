@@ -8758,23 +8758,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get meshcoreTracePathSavePathHelper =>
-      'Gespeicherte Pfade können veralten, wenn das Mesh Routen neu berechnet. Pfad zurücksetzen, um zur automatischen Auswahl zurückzukehren.';
-
-  @override
-  String get meshcoreTracePathSaveAsContactPath => 'Als Kontaktpfad speichern';
-
-  @override
-  String meshcoreTracePathSaveAsContactPathSuccess(String contactName) {
-    return 'Pfad für $contactName gespeichert';
-  }
-
-  @override
-  String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
-    return 'Pfad für $contactName konnte nicht gespeichert werden';
-  }
-
-  @override
   String meshcoreResetPathSuccess(String contactName) {
     return 'Pfad für $contactName zurückgesetzt';
   }
@@ -11057,6 +11040,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get meshcoreTracePathFailed =>
       'Verfolgung konnte nicht gestartet werden';
+
+  @override
+  String get meshcoreTracePathRepeatNote =>
+      'Der Trace folgt der Route des Kontakts hin und zurück. Ein Chat-Kontakt antwortet nur, wenn er Pakete weiterleitet.';
 
   @override
   String get meshcoreTracePathRunButton => 'Verfolgung starten';
