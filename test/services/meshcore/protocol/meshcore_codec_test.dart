@@ -369,10 +369,27 @@ void main() {
       final errors = <String>[];
       final decoder = MeshCoreDecoder(onError: errors.add, bufferedMode: false);
 
-      decoder.addData(Uint8List(200)); // > 172
+      decoder.addData(Uint8List(200)); // > 176
 
       expect(errors.length, 1);
       expect(errors[0], contains('exceeds max size'));
+    });
+
+    test('accepts a full-length 176-byte frame from the firmware', () {
+      // A contact DM at the 160-byte text limit: 16-byte header + text.
+      final frames = <MeshCoreFrame>[];
+      final errors = <String>[];
+      final decoder = MeshCoreDecoder(
+        onFrame: frames.add,
+        onError: errors.add,
+        bufferedMode: false,
+      );
+
+      decoder.addData(Uint8List.fromList([0x10, ...List.filled(175, 0x41)]));
+      decoder.addData(Uint8List(177));
+
+      expect(frames.single.payload.length, 175);
+      expect(errors.single, contains('exceeds max size'));
     });
 
     test('decodes multiple notifications as separate frames', () {

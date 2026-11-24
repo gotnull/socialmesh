@@ -13,6 +13,7 @@ import '../../core/meshcore_constants.dart';
 import '../../models/mesh_device.dart';
 import 'diagnostics/meshcore_ble_debug_log_store.dart';
 import 'mesh_transport.dart';
+import 'protocol/meshcore_frame.dart';
 
 /// Exception thrown when MeshCore UART service is not found.
 class MeshCoreServiceNotFoundException implements Exception {
@@ -276,7 +277,7 @@ class MeshCoreBleTransport implements MeshTransport {
     );
     final mtu = _device!.mtuNow;
     final maxNotification = mtu - 3;
-    final fragments = maxNotification < MeshCoreFramingConstants.maxFrameSize;
+    final fragments = maxNotification < meshCoreMaxRxFrameSize;
     AppLogging.ble(
       'MeshCore: MTU $mtu (notification payload $maxNotification)',
     );

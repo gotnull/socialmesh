@@ -28,8 +28,13 @@ import 'dart:typed_data';
 
 import '../../../utils/text_sanitizer.dart';
 
-/// Maximum frame size in bytes (command + payload).
+/// Maximum frame size in bytes (command + payload) the app sends.
 const int meshCoreMaxFrameSize = 172;
+
+/// Maximum frame size in bytes the firmware sends (`MAX_FRAME_SIZE` in
+/// BaseSerialInterface.h): a contact DM carries a 16-byte header and up to
+/// 160 bytes of text. Inbound frames are accepted up to this size.
+const int meshCoreMaxRxFrameSize = 176;
 
 /// Size of the public key in bytes.
 const int meshCorePubKeySize = 32;

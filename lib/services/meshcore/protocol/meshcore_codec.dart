@@ -109,9 +109,9 @@ class MeshCoreDecoder {
   /// Direct decode mode (BLE) - each notification is one frame.
   void _addDataDirect(Uint8List data) {
     // Validate size
-    if (data.length > meshCoreMaxFrameSize) {
+    if (data.length > meshCoreMaxRxFrameSize) {
       onError?.call(
-        'Frame exceeds max size (${data.length} > $meshCoreMaxFrameSize)',
+        'Frame exceeds max size (${data.length} > $meshCoreMaxRxFrameSize)',
       );
       AppLogging.meshcore(
         'event=codec.frame.oversize ${AppLogging.framePreview(data)}',
@@ -195,9 +195,9 @@ class MeshCoreDecoder {
   }
 
   void _emitFrame(Uint8List data) {
-    if (data.length > meshCoreMaxFrameSize) {
+    if (data.length > meshCoreMaxRxFrameSize) {
       onError?.call(
-        'Frame exceeds max size (${data.length} > $meshCoreMaxFrameSize)',
+        'Frame exceeds max size (${data.length} > $meshCoreMaxRxFrameSize)',
       );
       AppLogging.meshcore(
         'event=codec.frame.oversize ${AppLogging.framePreview(data)}',
