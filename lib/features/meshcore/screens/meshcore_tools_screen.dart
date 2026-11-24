@@ -563,8 +563,8 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                 InfoTableRow(
                   label: context.l10n.meshcoreLocationInfoLabel,
                   value:
-                      '${(info.latitude! / 1e7).toStringAsFixed(6)}, '
-                      '${(info.longitude! / 1e7).toStringAsFixed(6)}',
+                      '${(info.latitude! / kMeshCoreAdvertLatLonScale).toStringAsFixed(6)}, '
+                      '${(info.longitude! / kMeshCoreAdvertLatLonScale).toStringAsFixed(6)}',
                   icon: Icons.place_outlined,
                 ),
             ],

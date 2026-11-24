@@ -21,6 +21,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/meshcore_constants.dart';
 import 'package:socialmesh/features/meshcore/screens/meshcore_map_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
@@ -75,8 +76,8 @@ MeshCoreSelfInfo _selfInfo({double lat = 0.5, double lng = 0.7}) {
     txPowerDbm: 22,
     maxLoraTxPower: 22,
     pubKey: Uint8List.fromList(List.generate(32, (i) => 0xAA - i)),
-    latitude: (lat * 1e7).round(),
-    longitude: (lng * 1e7).round(),
+    latitude: (lat * kMeshCoreAdvertLatLonScale).round(),
+    longitude: (lng * kMeshCoreAdvertLatLonScale).round(),
     nodeName: 'self',
     rawPayload: Uint8List(0),
   );

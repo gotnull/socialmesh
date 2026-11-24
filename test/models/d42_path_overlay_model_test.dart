@@ -23,6 +23,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:socialmesh/core/meshcore_constants.dart';
 import 'package:socialmesh/models/meshcore_contact.dart';
 import 'package:socialmesh/models/meshcore_path_overlay.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_messages.dart';
@@ -65,8 +66,8 @@ MeshCoreSelfInfo _selfInfo({double? lat, double? lng}) {
     txPowerDbm: 22,
     maxLoraTxPower: 22,
     pubKey: Uint8List.fromList(List.generate(32, (i) => 0xAA - i)),
-    latitude: lat != null ? (lat * 1e7).round() : null,
-    longitude: lng != null ? (lng * 1e7).round() : null,
+    latitude: lat != null ? (lat * kMeshCoreAdvertLatLonScale).round() : null,
+    longitude: lng != null ? (lng * kMeshCoreAdvertLatLonScale).round() : null,
     nodeName: 'self',
     rawPayload: Uint8List(0),
   );

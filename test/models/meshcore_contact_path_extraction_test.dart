@@ -127,23 +127,36 @@ void main() {
     });
 
     test('present location passes through to model (degree scale)', () {
-      // Canonical parser keeps the firmware's int32 raw scale; the
-      // [MeshCoreContactInfo.latitudeDegrees] getter divides by 1e7.
-      // The adapter forwards the degrees-scaled float onto
-      // [MeshCoreContact.latitude]. We pin a representative pair so a
-      // future scale change surfaces as a test diff.
+      // The firmware sends degrees * 1e6 (MyMesh.cpp converts with
+      // 1000000.0); the adapter forwards degrees onto
+      // [MeshCoreContact.latitude]. A New Zealand pair, where a /1e7
+      // scale puts the node in central Africa.
       final pubKey = Uint8List.fromList(List.generate(32, (i) => 0x40 + i));
       final payload = _buildPayload(
         pubKey: pubKey,
         pathLen: 0,
         name: 'GeoNode',
-        gpsLat: 514_080_000, // raw int32; 51.408° via /1e7
-        gpsLon: -1_234_000,
+        gpsLat: -41_286_500,
+        gpsLon: 174_776_200,
       );
       final contact = parseContact(payload);
       expect(contact, isNotNull);
-      expect(contact!.latitude, closeTo(51.408, 1e-6));
-      expect(contact.longitude, closeTo(-0.1234, 1e-6));
+      expect(contact!.latitude, closeTo(-41.2865, 1e-6));
+      expect(contact.longitude, closeTo(174.7762, 1e-6));
+    });
+
+    test('a position on the equator keeps its zero latitude', () {
+      final pubKey = Uint8List.fromList(List.generate(32, (i) => 0x50 + i));
+      final payload = _buildPayload(
+        pubKey: pubKey,
+        pathLen: 0,
+        name: 'Equator',
+        gpsLat: 0,
+        gpsLon: 32_582_500,
+      );
+      final contact = parseContact(payload);
+      expect(contact!.latitude, 0);
+      expect(contact.longitude, closeTo(32.5825, 1e-6));
     });
 
     test('payload shorter than the canonical minimum returns null', () {

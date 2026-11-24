@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- MeshCore contacts now appear where they really are on the map. Positions were read at a tenth of their real coordinates, which moved a network in New Zealand to central Africa and piled every contact that had never shared a location off the West African coast, at latitude 0 and longitude 0, where nothing should have been drawn at all. Both are fixed. Your own position on the path overlay and the Tools screen had the same error.
+
 ## [1.82.0] - 2026-11-24
 
 ### Added

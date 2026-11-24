@@ -1114,17 +1114,10 @@ class MeshCoreContactInfo {
   /// Last modification timestamp.
   final int lastMod;
 
-  /// Latitude (raw int32, divide by 1e7 for degrees in this model;
-  /// the firmware actually encodes degrees * 1e6, so the
-  /// `latitudeDegrees` getter under-reports by 10x. D24.B does not
-  /// touch this scale to avoid widening scope into the map UI;
-  /// the next slice that owns coordinate display should fold the
-  /// `1e6` correction into both this getter and any cached
-  /// SharedPreferences entries.
+  /// Latitude as the firmware sends it: degrees * 1e6, int32.
   final int? latitude;
 
-  /// Longitude (raw int32, divide by 1e7 for degrees - see scale
-  /// caveat above on [latitude]).
+  /// Longitude as the firmware sends it: degrees * 1e6, int32.
   final int? longitude;
 
   /// Contact name.
@@ -1158,10 +1151,19 @@ class MeshCoreContactInfo {
       publicKey.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
 
   /// Latitude in degrees (or null).
-  double? get latitudeDegrees => latitude != null ? latitude! / 1e7 : null;
+  double? get latitudeDegrees =>
+      _hasPosition ? latitude! / kMeshCoreAdvertLatLonScale : null;
 
   /// Longitude in degrees (or null).
-  double? get longitudeDegrees => longitude != null ? longitude! / 1e7 : null;
+  double? get longitudeDegrees =>
+      _hasPosition ? longitude! / kMeshCoreAdvertLatLonScale : null;
+
+  // The firmware sends 0, 0 for a contact that never advertised a
+  // position; that is no location, not a point in the Gulf of Guinea.
+  bool get _hasPosition =>
+      latitude != null &&
+      longitude != null &&
+      (latitude != 0 || longitude != 0);
 
   @override
   String toString() =>

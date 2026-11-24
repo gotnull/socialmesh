@@ -25,6 +25,7 @@ import 'dart:typed_data';
 
 import 'package:latlong2/latlong.dart';
 
+import '../core/meshcore_constants.dart';
 import '../core/safe_lat_lng.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
 import '../services/meshcore/storage/meshcore_message_store.dart';
@@ -304,9 +305,10 @@ class MeshCorePathOverlay {
     final rawLat = info.latitude;
     final rawLng = info.longitude;
     if (rawLat == null || rawLng == null) return null;
-    // SELF_INFO encodes lat/lon as int32 in 1e7 scale (matches
-    // `MeshCoreContactInfo.latitudeDegrees` / `longitudeDegrees`).
-    return _meshcoreLatLng(rawLat / 1e7, rawLng / 1e7);
+    return _meshcoreLatLng(
+      rawLat / kMeshCoreAdvertLatLonScale,
+      rawLng / kMeshCoreAdvertLatLonScale,
+    );
   }
 
   // MeshCore-specific LatLng guard. Domain rule, NOT a global LatLng
