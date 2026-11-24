@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/logging.dart';
-import '../../../../core/meshcore_constants.dart';
 import '../../../../core/safety/lifecycle_mixin.dart';
 import '../../../../core/theme.dart';
 import '../../../../core/widgets/animations.dart';
@@ -79,9 +78,16 @@ class _MeshCoreQuickActionsContentState
     }
     setState(() => _busy = 'advert');
     try {
-      await session.sendCommand(MeshCoreCommands.sendSelfAdvert);
+      final ok = await session.sendSelfAdvert();
       if (!mounted) return;
-      showSuccessSnackBar(context, context.l10n.meshcoreAdvertisementSentTools);
+      if (ok) {
+        showSuccessSnackBar(
+          context,
+          context.l10n.meshcoreAdvertisementSentTools,
+        );
+      } else {
+        showErrorSnackBar(context, context.l10n.meshcoreFailedToSendAdTools);
+      }
     } catch (e) {
       AppLogging.meshcore(
         'event=dashboard.quick_action.failed action=advert reason=${e.runtimeType}',

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D46-A: `MeshCoreSession.shareSelfContact` / `exportContact` /
+// `MeshCoreSession.sendSelfAdvert` and D46-A `exportContact` /
 // `importContact` integration pins.
 //
 // Pinned invariants:
-//   - shareSelfContact wire payload is `[0x10][pubKey:32B]` (33 B);
-//     RESP_CODE_OK → true; RESP_CODE_ERR / timeout → false.
+//   - sendSelfAdvert wire payload is `[0x07][flood]`; RESP_CODE_OK ->
+//     true; RESP_CODE_ERR / timeout -> false.
 //   - exportContact wire payload is `[0x11][pubKey:32B]` (33 B);
 //     RESP_CODE_EXPORT_CONTACT (0x0B) + 135..147-byte frame → returns
 //     bytes; short / malformed frame → null; timeout → null.
@@ -14,7 +14,7 @@
 //     [135,147]; RESP_CODE_OK → true; RESP_CODE_ERR / timeout →
 //     false. Out-of-range frame throws ArgumentError BEFORE bytes
 //     hit the wire.
-//   - wrong-length pubkey on share/export throws ArgumentError
+//   - wrong-length pubkey on export throws ArgumentError
 //     before bytes hit the wire.
 
 import 'dart:async';
@@ -63,22 +63,19 @@ Uint8List _contactFrame(int len, {int seed = 0}) {
 }
 
 void main() {
-  group('D46-A: shareSelfContact', () {
-    test('wire payload is [0x10][pubKey:32B]; RESP_CODE_OK → true', () async {
+  group('sendSelfAdvert', () {
+    test('zero hop sends [0x07][0x00]; RESP_CODE_OK -> true', () async {
       final tx = _RecordingTransport();
       addTearDown(tx.dispose);
       final session = MeshCoreSession(tx);
       addTearDown(session.dispose);
 
-      final pk = _pubkey(0x10);
-      final fut = session.shareSelfContact(pk);
+      final fut = session.sendSelfAdvert();
       await Future<void>.delayed(Duration.zero);
 
-      expect(tx.sent, hasLength(1));
       final sent = MeshCoreFrame.fromBytes(tx.sent.single);
-      expect(sent.command, MeshCoreCommands.shareContact);
-      expect(sent.payload.length, 32);
-      expect(sent.payload, equals(pk));
+      expect(sent.command, MeshCoreCommands.sendSelfAdvert);
+      expect(sent.payload, [0]);
 
       tx.inject(
         MeshCoreFrame(
@@ -89,14 +86,31 @@ void main() {
       expect(await fut, isTrue);
     });
 
+    test('flood sends [0x07][0x01]', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      unawaited(
+        session.sendSelfAdvert(
+          flood: true,
+          timeout: const Duration(milliseconds: 50),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(MeshCoreFrame.fromBytes(tx.sent.single).payload, [1]);
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+    });
+
     test('RESP_CODE_ERR returns false', () async {
       final tx = _RecordingTransport();
       addTearDown(tx.dispose);
       final session = MeshCoreSession(tx);
       addTearDown(session.dispose);
 
-      final fut = session.shareSelfContact(
-        _pubkey(0x20),
+      final fut = session.sendSelfAdvert(
         timeout: const Duration(milliseconds: 200),
       );
       await Future<void>.delayed(Duration.zero);
@@ -115,24 +129,12 @@ void main() {
       final session = MeshCoreSession(tx);
       addTearDown(session.dispose);
 
-      final ok = await session.shareSelfContact(
-        _pubkey(0x30),
-        timeout: const Duration(milliseconds: 200),
-      );
-      expect(ok, isFalse);
-    });
-
-    test('wrong-length pubkey throws ArgumentError before send', () async {
-      final tx = _RecordingTransport();
-      addTearDown(tx.dispose);
-      final session = MeshCoreSession(tx);
-      addTearDown(session.dispose);
-
       expect(
-        () => session.shareSelfContact(Uint8List(16)),
-        throwsArgumentError,
+        await session.sendSelfAdvert(
+          timeout: const Duration(milliseconds: 200),
+        ),
+        isFalse,
       );
-      expect(tx.sent, isEmpty);
     });
   });
 

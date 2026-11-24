@@ -753,15 +753,7 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
       );
       return false;
     }
-    final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
-    if (selfInfo == null || selfInfo.pubKey.isEmpty) {
-      AppLogging.meshcore(
-        'event=contact.share.skipped reason=no_self_info',
-        error: true,
-      );
-      return false;
-    }
-    return session.shareSelfContact(selfInfo.pubKey);
+    return session.sendSelfAdvert();
   }
 
   /// D46-A: export [contact] from firmware and return the canonical

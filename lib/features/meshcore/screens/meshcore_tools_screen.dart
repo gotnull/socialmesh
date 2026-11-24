@@ -767,13 +767,15 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
     }
 
     try {
-      // Send self advertisement command
-      await session.sendCommand(MeshCoreCommands.sendSelfAdvert);
-      if (mounted) {
+      final ok = await session.sendSelfAdvert();
+      if (!mounted) return;
+      if (ok) {
         showSuccessSnackBar(
           context,
           context.l10n.meshcoreAdvertisementSentTools,
         );
+      } else {
+        showErrorSnackBar(context, context.l10n.meshcoreFailedToSendAdTools);
       }
     } catch (_) {
       if (mounted) {

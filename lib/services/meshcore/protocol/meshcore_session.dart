@@ -2745,39 +2745,27 @@ class MeshCoreSession {
     return ok;
   }
 
-  /// D46-A: broadcast OUR contact card to nearby peers via
-  /// `CMD_SHARE_CONTACT 0x10`. The firmware re-broadcasts its stored
-  /// self-advertisement zero-hop; receiving radios see this as a
-  /// normal advert (`pushCodeNewAdvert 0x8A`).
+  /// Broadcast our own advert via `CMD_SEND_SELF_ADVERT 0x07`, zero hop or
+  /// flooded. The firmware builds a fresh advert from its own name and
+  /// (per its location policy) position. `CMD_SHARE_CONTACT` cannot do
+  /// this: it looks the key up in the contact table, where the radio's own
+  /// key never is.
   ///
-  /// Wire payload: `[0x10][selfPubKey:32B]` (33 bytes total). Caller
-  /// passes the LOCAL device's pubkey (from `MeshCoreSelfInfo`);
-  /// firmware uses it to identify which contact card to broadcast.
-  ///
-  /// Returns `true` on `RESP_CODE_OK`, `false` on `RESP_CODE_ERR` or
-  /// timeout. The receive side is asynchronous - there's no per-peer
-  /// confirmation that an advert was heard.
-  Future<bool> shareSelfContact(
-    Uint8List selfPubKey, {
+  /// Returns `true` on `RESP_CODE_OK`, `false` on error or timeout.
+  Future<bool> sendSelfAdvert({
+    bool flood = false,
     Duration timeout = const Duration(seconds: 5),
   }) async {
-    if (selfPubKey.length != meshCorePubKeySize) {
-      throw ArgumentError.value(
-        selfPubKey.length,
-        'selfPubKey.length',
-        'must be exactly $meshCorePubKeySize bytes',
-      );
-    }
-    AppLogging.meshcore('event=contact.share.attempted');
+    AppLogging.meshcore('event=advert.self.attempted flood=$flood');
     final response = await sendAndWait(
-      MeshCoreCommands.shareContact,
-      payload: Uint8List.fromList(selfPubKey),
+      MeshCoreCommands.sendSelfAdvert,
+      payload: Uint8List.fromList([flood ? 1 : 0]),
       expectedResponse: MeshCoreResponses.ok,
       timeout: timeout,
     );
     final ok = response != null;
     AppLogging.meshcore(
-      'event=contact.share.${ok ? "succeeded" : "failed"}',
+      'event=advert.self.${ok ? "succeeded" : "failed"} flood=$flood',
       error: !ok,
     );
     return ok;
