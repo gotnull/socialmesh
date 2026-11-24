@@ -1226,7 +1226,7 @@
   "@arSettingsExplorer": {
     "description": "View mode button label"
   },
-  "arSettingsFavoritesOnly": "Favorites Only",
+  "arSettingsFavoritesOnly": "Favourites Only",
   "@arSettingsFavoritesOnly": {
     "description": "Node filter toggle label"
   },
@@ -5144,7 +5144,7 @@
   "@deviceConfigRoleClientBase": {
     "description": "Meshtastic device role: a mains-powered client with higher rebroadcast priority than battery-powered clients."
   },
-  "deviceConfigRoleClientBaseDesc": "Base station for favorited nodes. Routes their packets like a router, others as client.",
+  "deviceConfigRoleClientBaseDesc": "Base station for favourited nodes. Routes their packets like a router, others as client.",
   "@deviceConfigRoleClientBaseDesc": {
     "description": "Base station = fixed node that prioritizes routing for 'favorited' nodes. Routes like a router for favorites, like a client for others."
   },
@@ -5843,15 +5843,15 @@
   "@favoritesDelete": {
     "description": "UI text: favorites delete"
   },
-  "favoritesEmptyDescription": "Tap the star icon on any node to add it to your favorites for quick access.",
+  "favoritesEmptyDescription": "Tap the star icon on any node to add it to your favourites for quick access.",
   "@favoritesEmptyDescription": {
     "description": "Empty state message"
   },
-  "favoritesEmptyTitle": "No Favorites Yet",
+  "favoritesEmptyTitle": "No Favourites Yet",
   "@favoritesEmptyTitle": {
     "description": "Screen or section title"
   },
-  "favoritesErrorLoading": "Error loading favorites",
+  "favoritesErrorLoading": "Error loading favourites",
   "@favoritesErrorLoading": {
     "description": "Error message shown to the user"
   },
@@ -5867,7 +5867,7 @@
   "@favoritesRemoveConfirm": {
     "description": "Confirmation dialog text"
   },
-  "favoritesRemoveMessage": "Remove {name} from your favorites?",
+  "favoritesRemoveMessage": "Remove {name} from your favourites?",
   "@favoritesRemoveMessage": {
     "placeholders": {
       "name": {
@@ -5876,11 +5876,11 @@
     },
     "description": "UI text: favorites remove message Parameters: {name} = display name."
   },
-  "favoritesRemoveTitle": "Remove Favorite?",
+  "favoritesRemoveTitle": "Remove Favourite?",
   "@favoritesRemoveTitle": {
     "description": "Screen or section title"
   },
-  "favoritesRemoveTooltip": "Remove from favorites",
+  "favoritesRemoveTooltip": "Remove from favourites",
   "@favoritesRemoveTooltip": {
     "description": "Tooltip text"
   },
@@ -5896,7 +5896,7 @@
   "@favoritesSelectSecond": {
     "description": "UI text: favorites select second"
   },
-  "favoritesTitle": "Favorite Nodes",
+  "favoritesTitle": "Favourite Nodes",
   "@favoritesTitle": {
     "description": "Screen or section title"
   },
@@ -6293,7 +6293,7 @@
   "@fileTransferContactsFilterAll": {
     "description": "Filter chip label"
   },
-  "fileTransferContactsFilterFavorites": "Favorites",
+  "fileTransferContactsFilterFavorites": "Favourites",
   "@fileTransferContactsFilterFavorites": {
     "description": "Filter chip label"
   },
@@ -6353,7 +6353,7 @@
   "@fileTransferContactsSectionActive": {
     "description": "Section header"
   },
-  "fileTransferContactsSectionFavorites": "Favorites",
+  "fileTransferContactsSectionFavorites": "Favourites",
   "@fileTransferContactsSectionFavorites": {
     "description": "Section header"
   },
@@ -8684,7 +8684,7 @@
   "@mapFilterAll": {
     "description": "Text displayed in map view"
   },
-  "mapFilterFavorites": "Favorites",
+  "mapFilterFavorites": "Favourites",
   "@mapFilterFavorites": {
     "description": "Map node filter chip - shows only nodes the user marked as favorite"
   },
@@ -13697,15 +13697,15 @@
   "@meshcoreShareChannel": {
     "description": "Channel options action label"
   },
-  "meshcoreContactAddFavorite": "Add to favorites",
+  "meshcoreContactAddFavorite": "Add to favourites",
   "@meshcoreContactAddFavorite": {
     "description": "D-Q3 - contacts long-press action label when the contact is NOT a favorite"
   },
-  "meshcoreContactRemoveFavorite": "Remove from favorites",
+  "meshcoreContactRemoveFavorite": "Remove from favourites",
   "@meshcoreContactRemoveFavorite": {
     "description": "D-Q3 - contacts long-press action label when the contact IS a favorite"
   },
-  "meshcoreContactAddFavoriteSuccess": "{name} is now a favorite.",
+  "meshcoreContactAddFavoriteSuccess": "{name} is now a favourite.",
   "@meshcoreContactAddFavoriteSuccess": {
     "description": "D-Q3 - snackbar after a successful add-favorite",
     "placeholders": {
@@ -13714,7 +13714,7 @@
       }
     }
   },
-  "meshcoreContactRemoveFavoriteSuccess": "Removed {name} from favorites.",
+  "meshcoreContactRemoveFavoriteSuccess": "Removed {name} from favourites.",
   "@meshcoreContactRemoveFavoriteSuccess": {
     "description": "D-Q3 - snackbar after a successful remove-favorite",
     "placeholders": {
@@ -13723,7 +13723,7 @@
       }
     }
   },
-  "meshcoreContactToggleFavoriteFailed": "Could not update favorite status for {name}.",
+  "meshcoreContactToggleFavoriteFailed": "Could not update favourite status for {name}.",
   "@meshcoreContactToggleFavoriteFailed": {
     "description": "D-Q3 - snackbar after a failed favorite toggle",
     "placeholders": {
@@ -14805,7 +14805,7 @@
   "@messagingFilterAll": {
     "description": "Label for the All filter chip in the contacts list."
   },
-  "messagingFilterFavorites": "Favorites",
+  "messagingFilterFavorites": "Favourites",
   "@messagingFilterFavorites": {
     "description": "Label for the Favorites filter chip in the contacts list."
   },
@@ -15067,7 +15067,7 @@
   "@messagingSectionActive": {
     "description": "Section header for online contacts (heard within 2 hours)."
   },
-  "messagingSectionFavorites": "Favorites",
+  "messagingSectionFavorites": "Favourites",
   "@messagingSectionFavorites": {
     "description": "Section header for favorite contacts in the contact list."
   },
@@ -16281,11 +16281,11 @@
   "@navigationWorldMap": {
     "description": "Label for the World Map drawer item."
   },
-  "nodeAnalyticsAddFavoriteTooltip": "Add to favorites",
+  "nodeAnalyticsAddFavoriteTooltip": "Add to favourites",
   "@nodeAnalyticsAddFavoriteTooltip": {
     "description": "Tooltip in node management"
   },
-  "nodeAnalyticsAddedToFavorites": "Added to favorites",
+  "nodeAnalyticsAddedToFavorites": "Added to favourites",
   "@nodeAnalyticsAddedToFavorites": {
     "description": "Text displayed in node management"
   },
@@ -16487,11 +16487,11 @@
   "@nodeAnalyticsRefreshing": {
     "description": "Text displayed in node management"
   },
-  "nodeAnalyticsRemoveFavoriteTooltip": "Remove from favorites",
+  "nodeAnalyticsRemoveFavoriteTooltip": "Remove from favourites",
   "@nodeAnalyticsRemoveFavoriteTooltip": {
     "description": "Tooltip in node management"
   },
-  "nodeAnalyticsRemovedFromFavorites": "Removed from favorites",
+  "nodeAnalyticsRemovedFromFavorites": "Removed from favourites",
   "@nodeAnalyticsRemovedFromFavorites": {
     "description": "Text displayed in node management"
   },
@@ -16842,11 +16842,11 @@
   "@nodeComparisonYes": {
     "description": "Text displayed in node management"
   },
-  "nodeDetailAddToFavoritesTooltip": "Add to favorites",
+  "nodeDetailAddToFavoritesTooltip": "Add to favourites",
   "@nodeDetailAddToFavoritesTooltip": {
     "description": "Tooltip for adding to favorites."
   },
-  "nodeDetailAddedToFavorites": "{name} added to favorites",
+  "nodeDetailAddedToFavorites": "{name} added to favourites",
   "@nodeDetailAddedToFavorites": {
     "description": "Snackbar after adding a node to favorites.",
     "placeholders": {
@@ -16908,11 +16908,11 @@
       }
     }
   },
-  "nodeDetailFavoriteBadge": "Favorite",
+  "nodeDetailFavoriteBadge": "Favourite",
   "@nodeDetailFavoriteBadge": {
     "description": "Badge for favorite nodes."
   },
-  "nodeDetailFavoriteError": "Failed to update favorite: {error}",
+  "nodeDetailFavoriteError": "Failed to update favourite: {error}",
   "@nodeDetailFavoriteError": {
     "description": "Error snackbar when favorite toggle fails.",
     "placeholders": {
@@ -17257,7 +17257,7 @@
       }
     }
   },
-  "nodeDetailRemoveFromFavoritesTooltip": "Remove from favorites",
+  "nodeDetailRemoveFromFavoritesTooltip": "Remove from favourites",
   "@nodeDetailRemoveFromFavoritesTooltip": {
     "description": "Tooltip for removing from favorites."
   },
@@ -17274,7 +17274,7 @@
   "@nodeDetailRemoveTitle": {
     "description": "Confirmation dialog title for removing a node."
   },
-  "nodeDetailRemovedFromFavorites": "{name} removed from favorites",
+  "nodeDetailRemovedFromFavorites": "{name} removed from favourites",
   "@nodeDetailRemovedFromFavorites": {
     "description": "Snackbar after removing a node from favorites.",
     "placeholders": {
@@ -20812,11 +20812,11 @@
   "@quickActionAssignGroups": {
     "description": "Quick-action menu item that opens the assign-to-groups sheet for the node."
   },
-  "quickActionFavorite": "Add to favorites",
+  "quickActionFavorite": "Add to favourites",
   "@quickActionFavorite": {
     "description": "Quick-action menu item to favorite a node."
   },
-  "quickActionUnfavorite": "Remove from favorites",
+  "quickActionUnfavorite": "Remove from favourites",
   "@quickActionUnfavorite": {
     "description": "Quick-action menu item to unfavorite a node."
   },
@@ -20841,7 +20841,7 @@
       }
     }
   },
-  "quickActionFavoriteFailed": "Could not update favorite: {error}",
+  "quickActionFavoriteFailed": "Could not update favourite: {error}",
   "@quickActionFavoriteFailed": {
     "description": "Error snackbar when toggling favorite fails.",
     "placeholders": {
@@ -20897,7 +20897,7 @@
   "@nodesScreenFilterAll": {
     "description": "Filter chip label showing all nodes."
   },
-  "nodesScreenFilterFavorites": "Favorites",
+  "nodesScreenFilterFavorites": "Favourites",
   "@nodesScreenFilterFavorites": {
     "description": "Filter chip label for favorite nodes."
   },
@@ -20990,7 +20990,7 @@
   "@nodesScreenSectionDiscovering": {
     "description": "Section header for nodes currently being discovered."
   },
-  "nodesScreenSectionFavorites": "Favorites",
+  "nodesScreenSectionFavorites": "Favourites",
   "@nodesScreenSectionFavorites": {
     "description": "Section header for favorite nodes."
   },
@@ -22185,7 +22185,7 @@
   "@qrScannerMaxChannels": {
     "description": "Exception message for channel limit"
   },
-  "qrScannerNodeAddedToFavorites": "Node \"{name}\" added to favorites",
+  "qrScannerNodeAddedToFavorites": "Node \"{name}\" added to favourites",
   "@qrScannerNodeAddedToFavorites": {
     "description": "Success snackbar (interpolated)",
     "placeholders": {
@@ -22243,7 +22243,7 @@
   "@qrScannerUpdate": {
     "description": "Dialog update button"
   },
-  "qrScannerUpdateNamePrompt": "Update name to \"{name}\" and add to favorites?",
+  "qrScannerUpdateNamePrompt": "Update name to \"{name}\" and add to favourites?",
   "@qrScannerUpdateNamePrompt": {
     "description": "Dialog message for name update (interpolated)",
     "placeholders": {
@@ -27906,7 +27906,7 @@
   "@widgetBuilderIconCategoryEnvironment": {
     "description": "Icon category name"
   },
-  "widgetBuilderIconCategoryFavorites": "Favorites",
+  "widgetBuilderIconCategoryFavorites": "Favourites",
   "@widgetBuilderIconCategoryFavorites": {
     "description": "Icon category name"
   },
@@ -28724,11 +28724,11 @@
   "@widgetBuilderWizardStep4Title": {
     "description": "Wizard step 4 title"
   },
-  "worldMeshAddToFavorites": "Add to favorites",
+  "worldMeshAddToFavorites": "Add to favourites",
   "@worldMeshAddToFavorites": {
     "description": "UI text: world mesh add to favorites"
   },
-  "worldMeshAddedToFavorites": "Added to favorites",
+  "worldMeshAddedToFavorites": "Added to favourites",
   "@worldMeshAddedToFavorites": {
     "description": "UI text: world mesh added to favorites"
   },
@@ -28764,7 +28764,7 @@
   "@worldMeshExitMeasureMode": {
     "description": "UI text: world mesh exit measure mode"
   },
-  "worldMeshFavoritesTooltip": "Favorites",
+  "worldMeshFavoritesTooltip": "Favourites",
   "@worldMeshFavoritesTooltip": {
     "description": "Tooltip text"
   },
@@ -29099,11 +29099,11 @@
   "@worldMeshRefreshing": {
     "description": "UI text: world mesh refreshing"
   },
-  "worldMeshRemoveFromFavorites": "Remove from favorites",
+  "worldMeshRemoveFromFavorites": "Remove from favourites",
   "@worldMeshRemoveFromFavorites": {
     "description": "UI text: world mesh remove from favorites"
   },
-  "worldMeshRemovedFromFavorites": "Removed from favorites",
+  "worldMeshRemovedFromFavorites": "Removed from favourites",
   "@worldMeshRemovedFromFavorites": {
     "description": "UI text: world mesh removed from favorites"
   },
@@ -30490,7 +30490,7 @@
   "@premiumBenefitCustomPresets": {
     "description": "Text displayed in premium features"
   },
-  "premiumBenefitCustomPresetsDesc": "Save your favorites",
+  "premiumBenefitCustomPresetsDesc": "Save your favourites",
   "@premiumBenefitCustomPresetsDesc": {
     "description": "Description text in premium features"
   },
@@ -37936,7 +37936,7 @@
   "@dashboardAddAnotherWidget": {
     "description": "Label on the sticky tile shown below the widget list in dashboard edit mode that opens the add-widget picker."
   },
-  "dashboardAddToFavorites": "Add to favorites",
+  "dashboardAddToFavorites": "Add to favourites",
   "@dashboardAddToFavorites": {
     "description": "Text displayed in device dashboard"
   },
@@ -38064,7 +38064,7 @@
   "@dashboardRemoveConfirm": {
     "description": "Confirmation prompt in device dashboard"
   },
-  "dashboardRemoveFromFavorites": "Remove from favorites",
+  "dashboardRemoveFromFavorites": "Remove from favourites",
   "@dashboardRemoveFromFavorites": {
     "description": "Text displayed in device dashboard"
   },
@@ -38812,7 +38812,7 @@
   "@helpNodesInfoBubble": {
     "description": "Help bubble text for step nodes_info"
   },
-  "helpNodesFiltersBubble": "Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.",
+  "helpNodesFiltersBubble": "Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favourites, or nodes with GPS.",
   "@helpNodesFiltersBubble": {
     "description": "Help bubble text for step nodes_filters"
   },
@@ -38836,7 +38836,7 @@
   "@helpRoleRouterLateBubble": {
     "description": "Help bubble text for step role_router_late"
   },
-  "helpRoleClientBaseBubble": "**CLIENT BASE**: Base station for your favorited nodes. Routes their packets like a router, handles everything else like a client!",
+  "helpRoleClientBaseBubble": "**CLIENT BASE**: Base station for your favourited nodes. Routes their packets like a router, handles everything else like a client!",
   "@helpRoleClientBaseBubble": {
     "description": "Help bubble text for step role_client_base"
   },
@@ -38980,7 +38980,7 @@
   "@helpDashboardWidgetsBubble": {
     "description": "Help bubble text for step dashboard_widgets"
   },
-  "helpDashboardReorderBubble": "**Long-press and drag** to rearrange widgets. Put your favorites at the top! Tap **Edit** to add or remove them.",
+  "helpDashboardReorderBubble": "**Long-press and drag** to rearrange widgets. Put your favourites at the top! Tap **Edit** to add or remove them.",
   "@helpDashboardReorderBubble": {
     "description": "Help bubble text for step dashboard_reorder"
   },
@@ -39108,7 +39108,7 @@
   "@helpRoutesGpxBubble": {
     "description": "Help bubble text for step routes_gpx"
   },
-  "helpRoutesShareBubble": "Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favorite trails.",
+  "helpRoutesShareBubble": "Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favourite trails.",
   "@helpRoutesShareBubble": {
     "description": "Help bubble text for step routes_share"
   },

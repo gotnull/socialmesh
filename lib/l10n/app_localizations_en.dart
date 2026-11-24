@@ -886,7 +886,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get arSettingsExplorer => 'Explorer';
 
   @override
-  String get arSettingsFavoritesOnly => 'Favorites Only';
+  String get arSettingsFavoritesOnly => 'Favourites Only';
 
   @override
   String get arSettingsHorizon => 'Horizon';
@@ -3889,7 +3889,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceConfigRoleClientBaseDesc =>
-      'Base station for favorited nodes. Routes their packets like a router, others as client.';
+      'Base station for favourited nodes. Routes their packets like a router, others as client.';
 
   @override
   String get deviceConfigRoleClientDesc =>
@@ -4463,13 +4463,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get favoritesEmptyDescription =>
-      'Tap the star icon on any node to add it to your favorites for quick access.';
+      'Tap the star icon on any node to add it to your favourites for quick access.';
 
   @override
-  String get favoritesEmptyTitle => 'No Favorites Yet';
+  String get favoritesEmptyTitle => 'No Favourites Yet';
 
   @override
-  String get favoritesErrorLoading => 'Error loading favorites';
+  String get favoritesErrorLoading => 'Error loading favourites';
 
   @override
   String get favoritesNodeNotInMesh =>
@@ -4483,14 +4483,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String favoritesRemoveMessage(String name) {
-    return 'Remove $name from your favorites?';
+    return 'Remove $name from your favourites?';
   }
 
   @override
-  String get favoritesRemoveTitle => 'Remove Favorite?';
+  String get favoritesRemoveTitle => 'Remove Favourite?';
 
   @override
-  String get favoritesRemoveTooltip => 'Remove from favorites';
+  String get favoritesRemoveTooltip => 'Remove from favourites';
 
   @override
   String get favoritesRetry => 'Retry';
@@ -4502,7 +4502,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get favoritesSelectSecond => 'Select second node';
 
   @override
-  String get favoritesTitle => 'Favorite Nodes';
+  String get favoritesTitle => 'Favourite Nodes';
 
   @override
   String get feedbackBugReportsTitle => 'My Bug Reports';
@@ -4784,7 +4784,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileTransferContactsFilterAll => 'All';
 
   @override
-  String get fileTransferContactsFilterFavorites => 'Favorites';
+  String get fileTransferContactsFilterFavorites => 'Favourites';
 
   @override
   String get fileTransferContactsFilterHasFiles => 'Has Files';
@@ -4822,7 +4822,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileTransferContactsSectionActive => 'Active';
 
   @override
-  String get fileTransferContactsSectionFavorites => 'Favorites';
+  String get fileTransferContactsSectionFavorites => 'Favourites';
 
   @override
   String get fileTransferContactsSectionInactive => 'Inactive';
@@ -6469,7 +6469,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapFilterAll => 'All';
 
   @override
-  String get mapFilterFavorites => 'Favorites';
+  String get mapFilterFavorites => 'Favourites';
 
   @override
   String get mapFilterMessagedMe => 'Messaged Me';
@@ -10253,24 +10253,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreShareChannel => 'Share Channel';
 
   @override
-  String get meshcoreContactAddFavorite => 'Add to favorites';
+  String get meshcoreContactAddFavorite => 'Add to favourites';
 
   @override
-  String get meshcoreContactRemoveFavorite => 'Remove from favorites';
+  String get meshcoreContactRemoveFavorite => 'Remove from favourites';
 
   @override
   String meshcoreContactAddFavoriteSuccess(String name) {
-    return '$name is now a favorite.';
+    return '$name is now a favourite.';
   }
 
   @override
   String meshcoreContactRemoveFavoriteSuccess(String name) {
-    return 'Removed $name from favorites.';
+    return 'Removed $name from favourites.';
   }
 
   @override
   String meshcoreContactToggleFavoriteFailed(String name) {
-    return 'Could not update favorite status for $name.';
+    return 'Could not update favourite status for $name.';
   }
 
   @override
@@ -11075,7 +11075,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingFilterAll => 'All';
 
   @override
-  String get messagingFilterFavorites => 'Favorites';
+  String get messagingFilterFavorites => 'Favourites';
 
   @override
   String get messagingFilterMessaged => 'Messaged';
@@ -11250,7 +11250,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingSectionActive => 'Online';
 
   @override
-  String get messagingSectionFavorites => 'Favorites';
+  String get messagingSectionFavorites => 'Favourites';
 
   @override
   String get messagingSectionInactive => 'Offline';
@@ -12177,10 +12177,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navigationWorldMap => 'World Map';
 
   @override
-  String get nodeAnalyticsAddFavoriteTooltip => 'Add to favorites';
+  String get nodeAnalyticsAddFavoriteTooltip => 'Add to favourites';
 
   @override
-  String get nodeAnalyticsAddedToFavorites => 'Added to favorites';
+  String get nodeAnalyticsAddedToFavorites => 'Added to favourites';
 
   @override
   String get nodeAnalyticsAirTimeTx => 'Air Time TX';
@@ -12323,10 +12323,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodeAnalyticsRefreshing => 'Refreshing...';
 
   @override
-  String get nodeAnalyticsRemoveFavoriteTooltip => 'Remove from favorites';
+  String get nodeAnalyticsRemoveFavoriteTooltip => 'Remove from favourites';
 
   @override
-  String get nodeAnalyticsRemovedFromFavorites => 'Removed from favorites';
+  String get nodeAnalyticsRemovedFromFavorites => 'Removed from favourites';
 
   @override
   String get nodeAnalyticsRole => 'Role';
@@ -12561,11 +12561,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodeComparisonYes => 'Yes';
 
   @override
-  String get nodeDetailAddToFavoritesTooltip => 'Add to favorites';
+  String get nodeDetailAddToFavoritesTooltip => 'Add to favourites';
 
   @override
   String nodeDetailAddedToFavorites(String name) {
-    return '$name added to favorites';
+    return '$name added to favourites';
   }
 
   @override
@@ -12600,11 +12600,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get nodeDetailFavoriteBadge => 'Favorite';
+  String get nodeDetailFavoriteBadge => 'Favourite';
 
   @override
   String nodeDetailFavoriteError(String error) {
-    return 'Failed to update favorite: $error';
+    return 'Failed to update favourite: $error';
   }
 
   @override
@@ -12842,7 +12842,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get nodeDetailRemoveFromFavoritesTooltip => 'Remove from favorites';
+  String get nodeDetailRemoveFromFavoritesTooltip => 'Remove from favourites';
 
   @override
   String nodeDetailRemoveMessage(String name) {
@@ -12854,7 +12854,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodeDetailRemovedFromFavorites(String name) {
-    return '$name removed from favorites';
+    return '$name removed from favourites';
   }
 
   @override
@@ -15308,10 +15308,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickActionAssignGroups => 'Add to Groups';
 
   @override
-  String get quickActionFavorite => 'Add to favorites';
+  String get quickActionFavorite => 'Add to favourites';
 
   @override
-  String get quickActionUnfavorite => 'Remove from favorites';
+  String get quickActionUnfavorite => 'Remove from favourites';
 
   @override
   String get quickActionMute => 'Mute node';
@@ -15329,7 +15329,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String quickActionFavoriteFailed(String error) {
-    return 'Could not update favorite: $error';
+    return 'Could not update favourite: $error';
   }
 
   @override
@@ -15363,7 +15363,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodesScreenFilterAll => 'All';
 
   @override
-  String get nodesScreenFilterFavorites => 'Favorites';
+  String get nodesScreenFilterFavorites => 'Favourites';
 
   @override
   String get nodesScreenFilterInactive => 'Offline';
@@ -15431,7 +15431,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodesScreenSectionDiscovering => 'Discovering';
 
   @override
-  String get nodesScreenSectionFavorites => 'Favorites';
+  String get nodesScreenSectionFavorites => 'Favourites';
 
   @override
   String get nodesScreenSectionQuiet => 'Quiet';
@@ -16339,7 +16339,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String qrScannerNodeAddedToFavorites(String name) {
-    return 'Node \"$name\" added to favorites';
+    return 'Node \"$name\" added to favourites';
   }
 
   @override
@@ -16380,7 +16380,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String qrScannerUpdateNamePrompt(String name) {
-    return 'Update name to \"$name\" and add to favorites?';
+    return 'Update name to \"$name\" and add to favourites?';
   }
 
   @override
@@ -20617,7 +20617,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetBuilderIconCategoryEnvironment => 'Environment';
 
   @override
-  String get widgetBuilderIconCategoryFavorites => 'Favorites';
+  String get widgetBuilderIconCategoryFavorites => 'Favourites';
 
   @override
   String get widgetBuilderIconCategoryLocationMaps => 'Location & Maps';
@@ -21233,10 +21233,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetBuilderWizardStep4Title => 'Make it Yours';
 
   @override
-  String get worldMeshAddToFavorites => 'Add to favorites';
+  String get worldMeshAddToFavorites => 'Add to favourites';
 
   @override
-  String get worldMeshAddedToFavorites => 'Added to favorites';
+  String get worldMeshAddedToFavorites => 'Added to favourites';
 
   @override
   String get worldMeshBadgeActive => 'ACTIVE';
@@ -21263,7 +21263,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get worldMeshExitMeasureMode => 'Exit measure mode';
 
   @override
-  String get worldMeshFavoritesTooltip => 'Favorites';
+  String get worldMeshFavoritesTooltip => 'Favourites';
 
   @override
   String worldMeshFilterActiveCount(int count) {
@@ -21494,10 +21494,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get worldMeshRefreshing => 'Refreshing world mesh data...';
 
   @override
-  String get worldMeshRemoveFromFavorites => 'Remove from favorites';
+  String get worldMeshRemoveFromFavorites => 'Remove from favourites';
 
   @override
-  String get worldMeshRemovedFromFavorites => 'Removed from favorites';
+  String get worldMeshRemovedFromFavorites => 'Removed from favourites';
 
   @override
   String get worldMeshRetry => 'Retry';
@@ -22559,7 +22559,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumBenefitCustomPresets => 'Custom Presets';
 
   @override
-  String get premiumBenefitCustomPresetsDesc => 'Save your favorites';
+  String get premiumBenefitCustomPresetsDesc => 'Save your favourites';
 
   @override
   String get premiumBenefitCustomDashboards => 'Custom Dashboards';
@@ -28333,7 +28333,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardAddAnotherWidget => 'Add another widget';
 
   @override
-  String get dashboardAddToFavorites => 'Add to favorites';
+  String get dashboardAddToFavorites => 'Add to favourites';
 
   @override
   String get dashboardAddWidget => 'Add Widget';
@@ -28420,7 +28420,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardRemoveConfirm => 'Remove';
 
   @override
-  String get dashboardRemoveFromFavorites => 'Remove from favorites';
+  String get dashboardRemoveFromFavorites => 'Remove from favourites';
 
   @override
   String get dashboardRemoveWidget => 'Remove widget';
@@ -29020,7 +29020,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodesFiltersBubble =>
-      'Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.';
+      'Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favourites, or nodes with GPS.';
 
   @override
   String get helpNodesActionsBubble =>
@@ -29044,7 +29044,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpRoleClientBaseBubble =>
-      '**CLIENT BASE**: Base station for your favorited nodes. Routes their packets like a router, handles everything else like a client!';
+      '**CLIENT BASE**: Base station for your favourited nodes. Routes their packets like a router, handles everything else like a client!';
 
   @override
   String get helpRegionIntroBubble =>
@@ -29188,7 +29188,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpDashboardReorderBubble =>
-      '**Long-press and drag** to rearrange widgets. Put your favorites at the top! Tap **Edit** to add or remove them.';
+      '**Long-press and drag** to rearrange widgets. Put your favourites at the top! Tap **Edit** to add or remove them.';
 
   @override
   String get helpDashboardTapBubble =>
@@ -29316,7 +29316,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpRoutesShareBubble =>
-      'Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favorite trails.';
+      'Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favourite trails.';
 
   @override
   String get helpPositionIntroBubble =>

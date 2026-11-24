@@ -1629,7 +1629,7 @@ abstract class AppLocalizations {
   /// Node filter toggle label
   ///
   /// In en, this message translates to:
-  /// **'Favorites Only'**
+  /// **'Favourites Only'**
   String get arSettingsFavoritesOnly;
 
   /// HUD element toggle
@@ -6819,7 +6819,7 @@ abstract class AppLocalizations {
   /// Base station = fixed node that prioritizes routing for 'favorited' nodes. Routes like a router for favorites, like a client for others.
   ///
   /// In en, this message translates to:
-  /// **'Base station for favorited nodes. Routes their packets like a router, others as client.'**
+  /// **'Base station for favourited nodes. Routes their packets like a router, others as client.'**
   String get deviceConfigRoleClientBaseDesc;
 
   /// Mesh packets = radio data units relayed between Meshtastic nodes.
@@ -7839,19 +7839,19 @@ abstract class AppLocalizations {
   /// Empty state message
   ///
   /// In en, this message translates to:
-  /// **'Tap the star icon on any node to add it to your favorites for quick access.'**
+  /// **'Tap the star icon on any node to add it to your favourites for quick access.'**
   String get favoritesEmptyDescription;
 
   /// Screen or section title
   ///
   /// In en, this message translates to:
-  /// **'No Favorites Yet'**
+  /// **'No Favourites Yet'**
   String get favoritesEmptyTitle;
 
   /// Error message shown to the user
   ///
   /// In en, this message translates to:
-  /// **'Error loading favorites'**
+  /// **'Error loading favourites'**
   String get favoritesErrorLoading;
 
   /// UI text: favorites node not in mesh
@@ -7875,19 +7875,19 @@ abstract class AppLocalizations {
   /// UI text: favorites remove message Parameters: {name} = display name.
   ///
   /// In en, this message translates to:
-  /// **'Remove {name} from your favorites?'**
+  /// **'Remove {name} from your favourites?'**
   String favoritesRemoveMessage(String name);
 
   /// Screen or section title
   ///
   /// In en, this message translates to:
-  /// **'Remove Favorite?'**
+  /// **'Remove Favourite?'**
   String get favoritesRemoveTitle;
 
   /// Tooltip text
   ///
   /// In en, this message translates to:
-  /// **'Remove from favorites'**
+  /// **'Remove from favourites'**
   String get favoritesRemoveTooltip;
 
   /// UI text: favorites retry
@@ -7911,7 +7911,7 @@ abstract class AppLocalizations {
   /// Screen or section title
   ///
   /// In en, this message translates to:
-  /// **'Favorite Nodes'**
+  /// **'Favourite Nodes'**
   String get favoritesTitle;
 
   /// Screen title
@@ -8415,7 +8415,7 @@ abstract class AppLocalizations {
   /// Filter chip label
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get fileTransferContactsFilterFavorites;
 
   /// Filter chip label
@@ -8475,7 +8475,7 @@ abstract class AppLocalizations {
   /// Section header
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get fileTransferContactsSectionFavorites;
 
   /// Section header
@@ -11355,7 +11355,7 @@ abstract class AppLocalizations {
   /// Map node filter chip - shows only nodes the user marked as favorite
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get mapFilterFavorites;
 
   /// Map node filter chip - shows only nodes that have sent the user a direct message
@@ -17823,31 +17823,31 @@ abstract class AppLocalizations {
   /// D-Q3 - contacts long-press action label when the contact is NOT a favorite
   ///
   /// In en, this message translates to:
-  /// **'Add to favorites'**
+  /// **'Add to favourites'**
   String get meshcoreContactAddFavorite;
 
   /// D-Q3 - contacts long-press action label when the contact IS a favorite
   ///
   /// In en, this message translates to:
-  /// **'Remove from favorites'**
+  /// **'Remove from favourites'**
   String get meshcoreContactRemoveFavorite;
 
   /// D-Q3 - snackbar after a successful add-favorite
   ///
   /// In en, this message translates to:
-  /// **'{name} is now a favorite.'**
+  /// **'{name} is now a favourite.'**
   String meshcoreContactAddFavoriteSuccess(String name);
 
   /// D-Q3 - snackbar after a successful remove-favorite
   ///
   /// In en, this message translates to:
-  /// **'Removed {name} from favorites.'**
+  /// **'Removed {name} from favourites.'**
   String meshcoreContactRemoveFavoriteSuccess(String name);
 
   /// D-Q3 - snackbar after a failed favorite toggle
   ///
   /// In en, this message translates to:
-  /// **'Could not update favorite status for {name}.'**
+  /// **'Could not update favourite status for {name}.'**
   String meshcoreContactToggleFavoriteFailed(String name);
 
   /// D-Q8 - long-press action label to suppress notifications from this contact
@@ -19263,7 +19263,7 @@ abstract class AppLocalizations {
   /// Label for the Favorites filter chip in the contacts list.
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get messagingFilterFavorites;
 
   /// Label for the Messaged filter chip in the contacts list.
@@ -19551,7 +19551,7 @@ abstract class AppLocalizations {
   /// Section header for favorite contacts in the contact list.
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get messagingSectionFavorites;
 
   /// Section header for offline contacts (not heard within 2 hours).
@@ -21063,13 +21063,13 @@ abstract class AppLocalizations {
   /// Tooltip in node management
   ///
   /// In en, this message translates to:
-  /// **'Add to favorites'**
+  /// **'Add to favourites'**
   String get nodeAnalyticsAddFavoriteTooltip;
 
   /// Text displayed in node management
   ///
   /// In en, this message translates to:
-  /// **'Added to favorites'**
+  /// **'Added to favourites'**
   String get nodeAnalyticsAddedToFavorites;
 
   /// Text displayed in node management
@@ -21327,13 +21327,13 @@ abstract class AppLocalizations {
   /// Tooltip in node management
   ///
   /// In en, this message translates to:
-  /// **'Remove from favorites'**
+  /// **'Remove from favourites'**
   String get nodeAnalyticsRemoveFavoriteTooltip;
 
   /// Text displayed in node management
   ///
   /// In en, this message translates to:
-  /// **'Removed from favorites'**
+  /// **'Removed from favourites'**
   String get nodeAnalyticsRemovedFromFavorites;
 
   /// Label for the Meshtastic device role (Router, Client, etc.), not a person's role.
@@ -21735,13 +21735,13 @@ abstract class AppLocalizations {
   /// Tooltip for adding to favorites.
   ///
   /// In en, this message translates to:
-  /// **'Add to favorites'**
+  /// **'Add to favourites'**
   String get nodeDetailAddToFavoritesTooltip;
 
   /// Snackbar after adding a node to favorites.
   ///
   /// In en, this message translates to:
-  /// **'{name} added to favorites'**
+  /// **'{name} added to favourites'**
   String nodeDetailAddedToFavorites(String name);
 
   /// App bar title for the node detail screen.
@@ -21789,13 +21789,13 @@ abstract class AppLocalizations {
   /// Badge for favorite nodes.
   ///
   /// In en, this message translates to:
-  /// **'Favorite'**
+  /// **'Favourite'**
   String get nodeDetailFavoriteBadge;
 
   /// Error snackbar when favorite toggle fails.
   ///
   /// In en, this message translates to:
-  /// **'Failed to update favorite: {error}'**
+  /// **'Failed to update favourite: {error}'**
   String nodeDetailFavoriteError(String error);
 
   /// Error snackbar when fixed position fails.
@@ -22215,7 +22215,7 @@ abstract class AppLocalizations {
   /// Tooltip for removing from favorites.
   ///
   /// In en, this message translates to:
-  /// **'Remove from favorites'**
+  /// **'Remove from favourites'**
   String get nodeDetailRemoveFromFavoritesTooltip;
 
   /// Confirmation dialog body for removing a node.
@@ -22233,7 +22233,7 @@ abstract class AppLocalizations {
   /// Snackbar after removing a node from favorites.
   ///
   /// In en, this message translates to:
-  /// **'{name} removed from favorites'**
+  /// **'{name} removed from favourites'**
   String nodeDetailRemovedFromFavorites(String name);
 
   /// Snackbar after successfully removing a node.
@@ -26269,13 +26269,13 @@ abstract class AppLocalizations {
   /// Quick-action menu item to favorite a node.
   ///
   /// In en, this message translates to:
-  /// **'Add to favorites'**
+  /// **'Add to favourites'**
   String get quickActionFavorite;
 
   /// Quick-action menu item to unfavorite a node.
   ///
   /// In en, this message translates to:
-  /// **'Remove from favorites'**
+  /// **'Remove from favourites'**
   String get quickActionUnfavorite;
 
   /// Quick-action menu item to mute (ignore) a node.
@@ -26305,7 +26305,7 @@ abstract class AppLocalizations {
   /// Error snackbar when toggling favorite fails.
   ///
   /// In en, this message translates to:
-  /// **'Could not update favorite: {error}'**
+  /// **'Could not update favourite: {error}'**
   String quickActionFavoriteFailed(String error);
 
   /// Error snackbar when toggling mute fails.
@@ -26359,7 +26359,7 @@ abstract class AppLocalizations {
   /// Filter chip label for favorite nodes.
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get nodesScreenFilterFavorites;
 
   /// Filter chip label for offline nodes (not heard within 2 hours).
@@ -26491,7 +26491,7 @@ abstract class AppLocalizations {
   /// Section header for favorite nodes.
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get nodesScreenSectionFavorites;
 
   /// Section header for nodes that were heard 10-60 minutes ago (PresenceConfidence.stale). Rendered as 'Quiet' rather than 'Inactive' because the node was still recently on the air.
@@ -28135,7 +28135,7 @@ abstract class AppLocalizations {
   /// Success snackbar (interpolated)
   ///
   /// In en, this message translates to:
-  /// **'Node \"{name}\" added to favorites'**
+  /// **'Node \"{name}\" added to favourites'**
   String qrScannerNodeAddedToFavorites(String name);
 
   /// Dialog title for duplicate node
@@ -28207,7 +28207,7 @@ abstract class AppLocalizations {
   /// Dialog message for name update (interpolated)
   ///
   /// In en, this message translates to:
-  /// **'Update name to \"{name}\" and add to favorites?'**
+  /// **'Update name to \"{name}\" and add to favourites?'**
   String qrScannerUpdateNamePrompt(String name);
 
   /// Screen or section title
@@ -35731,7 +35731,7 @@ abstract class AppLocalizations {
   /// Icon category name
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get widgetBuilderIconCategoryFavorites;
 
   /// Icon category name
@@ -36892,13 +36892,13 @@ abstract class AppLocalizations {
   /// UI text: world mesh add to favorites
   ///
   /// In en, this message translates to:
-  /// **'Add to favorites'**
+  /// **'Add to favourites'**
   String get worldMeshAddToFavorites;
 
   /// UI text: world mesh added to favorites
   ///
   /// In en, this message translates to:
-  /// **'Added to favorites'**
+  /// **'Added to favourites'**
   String get worldMeshAddedToFavorites;
 
   /// UI text: world mesh badge active
@@ -36952,7 +36952,7 @@ abstract class AppLocalizations {
   /// Tooltip text
   ///
   /// In en, this message translates to:
-  /// **'Favorites'**
+  /// **'Favourites'**
   String get worldMeshFavoritesTooltip;
 
   /// Count of active filters on world mesh view
@@ -37378,13 +37378,13 @@ abstract class AppLocalizations {
   /// UI text: world mesh remove from favorites
   ///
   /// In en, this message translates to:
-  /// **'Remove from favorites'**
+  /// **'Remove from favourites'**
   String get worldMeshRemoveFromFavorites;
 
   /// UI text: world mesh removed from favorites
   ///
   /// In en, this message translates to:
-  /// **'Removed from favorites'**
+  /// **'Removed from favourites'**
   String get worldMeshRemovedFromFavorites;
 
   /// UI text: world mesh retry
@@ -39267,7 +39267,7 @@ abstract class AppLocalizations {
   /// Description text in premium features
   ///
   /// In en, this message translates to:
-  /// **'Save your favorites'**
+  /// **'Save your favourites'**
   String get premiumBenefitCustomPresetsDesc;
 
   /// Text displayed in premium features
@@ -49411,7 +49411,7 @@ abstract class AppLocalizations {
   /// Text displayed in device dashboard
   ///
   /// In en, this message translates to:
-  /// **'Add to favorites'**
+  /// **'Add to favourites'**
   String get dashboardAddToFavorites;
 
   /// Text displayed in device dashboard
@@ -49573,7 +49573,7 @@ abstract class AppLocalizations {
   /// Text displayed in device dashboard
   ///
   /// In en, this message translates to:
-  /// **'Remove from favorites'**
+  /// **'Remove from favourites'**
   String get dashboardRemoveFromFavorites;
 
   /// Text displayed in device dashboard
@@ -50641,7 +50641,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodes_filters
   ///
   /// In en, this message translates to:
-  /// **'Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favorites, or nodes with GPS.'**
+  /// **'Use the **filters** at the top to find specific nodes. You can show only **Online** nodes, favourites, or nodes with GPS.'**
   String get helpNodesFiltersBubble;
 
   /// Help bubble text for step nodes_actions
@@ -50677,7 +50677,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step role_client_base
   ///
   /// In en, this message translates to:
-  /// **'**CLIENT BASE**: Base station for your favorited nodes. Routes their packets like a router, handles everything else like a client!'**
+  /// **'**CLIENT BASE**: Base station for your favourited nodes. Routes their packets like a router, handles everything else like a client!'**
   String get helpRoleClientBaseBubble;
 
   /// Help bubble text for step region_intro
@@ -50893,7 +50893,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step dashboard_reorder
   ///
   /// In en, this message translates to:
-  /// **'**Long-press and drag** to rearrange widgets. Put your favorites at the top! Tap **Edit** to add or remove them.'**
+  /// **'**Long-press and drag** to rearrange widgets. Put your favourites at the top! Tap **Edit** to add or remove them.'**
   String get helpDashboardReorderBubble;
 
   /// Help bubble text for step dashboard_tap
@@ -51085,7 +51085,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step routes_share
   ///
   /// In en, this message translates to:
-  /// **'Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favorite trails.'**
+  /// **'Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favourite trails.'**
   String get helpRoutesShareBubble;
 
   /// Help bubble text for step position_intro
