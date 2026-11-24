@@ -10314,7 +10314,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreContactImportConfirmAction => 'Add contact';
 
   @override
-  String get meshcoreContactImportConfirmFormatFull => 'Full (path + location)';
+  String get meshcoreContactImportConfirmFormatFull =>
+      'Signed advert (name, type, location)';
 
   @override
   String get meshcoreContactImportConfirmFormatLegacy => 'Legacy (name only)';

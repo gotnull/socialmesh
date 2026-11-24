@@ -10445,7 +10445,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshcoreContactImportConfirmFormatFull =>
-      'Полный (маршрут + местоположение)';
+      'Подписанный анонс (имя, тип, местоположение)';
 
   @override
   String get meshcoreContactImportConfirmFormatLegacy =>

@@ -5361,7 +5361,7 @@
   "meshcoreContactImportParseFailed": "Не удалось распознать буфер как URL контакта",
   "meshcoreContactImportConfirmTitle": "Добавить контакт?",
   "meshcoreContactImportConfirmAction": "Добавить контакт",
-  "meshcoreContactImportConfirmFormatFull": "Полный (маршрут + местоположение)",
+  "meshcoreContactImportConfirmFormatFull": "Подписанный анонс (имя, тип, местоположение)",
   "meshcoreContactImportConfirmFormatLegacy": "Устаревший (только имя)",
   "meshcoreContactImported": "Контакт добавлен",
   "meshcoreContactImportFailed": "Не удалось добавить контакт",

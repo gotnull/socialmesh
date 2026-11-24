@@ -17946,10 +17946,10 @@ abstract class AppLocalizations {
   /// **'Add contact'**
   String get meshcoreContactImportConfirmAction;
 
-  /// D46-A - format label for a meshcore:// (canonical) import preview
+  /// Format label for a meshcore:// import preview: the link carries the contact's signed advert packet, so name, type and location (when shared) but no route
   ///
   /// In en, this message translates to:
-  /// **'Full (path + location)'**
+  /// **'Signed advert (name, type, location)'**
   String get meshcoreContactImportConfirmFormatFull;
 
   /// D46-A - format label for a legacy <pubkeyhex>:<name> import preview

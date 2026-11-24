@@ -10462,7 +10462,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreContactImportConfirmFormatFull =>
-      'Повний (шлях + локація)';
+      'Підписаний анонс (ім\'я, тип, локація)';
 
   @override
   String get meshcoreContactImportConfirmFormatLegacy =>

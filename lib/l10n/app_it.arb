@@ -31987,7 +31987,7 @@
   "meshcoreContactImportParseFailed": "Impossibile interpretare gli appunti come URL contatto",
   "meshcoreContactImportConfirmTitle": "Aggiungere contatto?",
   "meshcoreContactImportConfirmAction": "Aggiungi contatto",
-  "meshcoreContactImportConfirmFormatFull": "Completo (percorso + posizione)",
+  "meshcoreContactImportConfirmFormatFull": "Annuncio firmato (nome, tipo, posizione)",
   "meshcoreContactImportConfirmFormatLegacy": "Legacy (solo nome)",
   "meshcoreContactImported": "Contatto aggiunto",
   "meshcoreContactImportFailed": "Impossibile aggiungere il contatto",

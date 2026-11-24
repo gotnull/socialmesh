@@ -10561,7 +10561,7 @@
   "meshcoreContactBlockSuccess": "Benachrichtigungen für {name} stummgeschaltet.",
   "meshcoreContactExportFailed": "Kontakt konnte nicht exportiert werden",
   "meshcoreContactImportConfirmAction": "Kontakt hinzufügen",
-  "meshcoreContactImportConfirmFormatFull": "Vollständig (Pfad + Standort)",
+  "meshcoreContactImportConfirmFormatFull": "Signiertes Advert (Name, Typ, Standort)",
   "meshcoreContactImportConfirmFormatLegacy": "Legacy (nur Name)",
   "meshcoreContactImportConfirmTitle": "Kontakt hinzufügen?",
   "meshcoreContactImportFailed": "Kontakt konnte nicht hinzugefügt werden",

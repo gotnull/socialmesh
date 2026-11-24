@@ -13816,9 +13816,9 @@
   "@meshcoreContactImportConfirmAction": {
     "description": "D46-A - contact-import confirmation sheet primary button"
   },
-  "meshcoreContactImportConfirmFormatFull": "Full (path + location)",
+  "meshcoreContactImportConfirmFormatFull": "Signed advert (name, type, location)",
   "@meshcoreContactImportConfirmFormatFull": {
-    "description": "D46-A - format label for a meshcore:// (canonical) import preview"
+    "description": "Format label for a meshcore:// import preview: the link carries the contact's signed advert packet, so name, type and location (when shared) but no route"
   },
   "meshcoreContactImportConfirmFormatLegacy": "Legacy (name only)",
   "@meshcoreContactImportConfirmFormatLegacy": {

@@ -10561,7 +10561,7 @@
   "meshcoreContactBlockSuccess": "Notificaciones silenciadas para {name}.",
   "meshcoreContactExportFailed": "No se pudo exportar el contacto",
   "meshcoreContactImportConfirmAction": "Agregar contacto",
-  "meshcoreContactImportConfirmFormatFull": "Completo (ruta + ubicación)",
+  "meshcoreContactImportConfirmFormatFull": "Anuncio firmado (nombre, tipo, ubicación)",
   "meshcoreContactImportConfirmFormatLegacy": "Heredado (solo nombre)",
   "meshcoreContactImportConfirmTitle": "¿Agregar contacto?",
   "meshcoreContactImportFailed": "No se pudo agregar el contacto",

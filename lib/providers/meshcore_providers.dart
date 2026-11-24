@@ -774,9 +774,9 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     try {
       return MeshCoreContactUrl.encode(frame);
     } on ArgumentError {
-      // Session already validates the 135..147 byte range, but
-      // defence-in-depth: if a future firmware emits a longer frame,
-      // surface the failure rather than encode garbage.
+      // The session already checks the advert packet bounds; a longer
+      // frame from future firmware surfaces as a failure rather than
+      // encoding garbage.
       AppLogging.meshcore(
         'event=contact.export.encode_failed bytes=${frame.length}',
         error: true,

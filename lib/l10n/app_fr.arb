@@ -10563,7 +10563,7 @@
   "meshcoreContactBlockSuccess": "Notifications coupées pour {name}.",
   "meshcoreContactExportFailed": "Impossible d'exporter le contact",
   "meshcoreContactImportConfirmAction": "Ajouter le contact",
-  "meshcoreContactImportConfirmFormatFull": "Complet (chemin + position)",
+  "meshcoreContactImportConfirmFormatFull": "Annonce signée (nom, type, position)",
   "meshcoreContactImportConfirmFormatLegacy": "Hérité (nom seul)",
   "meshcoreContactImportConfirmTitle": "Ajouter le contact ?",
   "meshcoreContactImportFailed": "Impossible d'ajouter le contact",

@@ -10524,7 +10524,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meshcoreContactImportConfirmFormatFull =>
-      'Complet (chemin + position)';
+      'Annonce signée (nom, type, position)';
 
   @override
   String get meshcoreContactImportConfirmFormatLegacy => 'Hérité (nom seul)';

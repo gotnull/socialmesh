@@ -10493,7 +10493,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreContactImportConfirmFormatFull =>
-      'Completo (ruta + ubicación)';
+      'Anuncio firmado (nombre, tipo, ubicación)';
 
   @override
   String get meshcoreContactImportConfirmFormatLegacy =>

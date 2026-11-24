@@ -10564,7 +10564,7 @@
   "meshcoreContactBlockSuccess": "Сповіщення для {name} вимкнено.",
   "meshcoreContactExportFailed": "Не вдалося експортувати контакт",
   "meshcoreContactImportConfirmAction": "Додати контакт",
-  "meshcoreContactImportConfirmFormatFull": "Повний (шлях + локація)",
+  "meshcoreContactImportConfirmFormatFull": "Підписаний анонс (ім'я, тип, локація)",
   "meshcoreContactImportConfirmFormatLegacy": "Застарілий (тільки ім'я)",
   "meshcoreContactImportConfirmTitle": "Додати контакт?",
   "meshcoreContactImportFailed": "Не вдалося додати контакт",

@@ -10469,7 +10469,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshcoreContactImportConfirmFormatFull =>
-      'Vollständig (Pfad + Standort)';
+      'Signiertes Advert (Name, Typ, Standort)';
 
   @override
   String get meshcoreContactImportConfirmFormatLegacy => 'Legacy (nur Name)';

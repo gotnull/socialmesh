@@ -10440,7 +10440,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshcoreContactImportConfirmFormatFull =>
-      'Completo (rota + localização)';
+      'Anúncio assinado (nome, tipo, localização)';
 
   @override
   String get meshcoreContactImportConfirmFormatLegacy => 'Legado (apenas nome)';

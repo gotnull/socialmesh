@@ -31987,7 +31987,7 @@
   "meshcoreContactImportParseFailed": "Não foi possível interpretar a área de transferência como URL de contato",
   "meshcoreContactImportConfirmTitle": "Adicionar contato?",
   "meshcoreContactImportConfirmAction": "Adicionar contato",
-  "meshcoreContactImportConfirmFormatFull": "Completo (rota + localização)",
+  "meshcoreContactImportConfirmFormatFull": "Anúncio assinado (nome, tipo, localização)",
   "meshcoreContactImportConfirmFormatLegacy": "Legado (apenas nome)",
   "meshcoreContactImported": "Contato adicionado",
   "meshcoreContactImportFailed": "Não foi possível adicionar o contato",
