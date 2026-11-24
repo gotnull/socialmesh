@@ -545,6 +545,11 @@ class ConnectionCoordinator {
         'battery=${info?.batteryPercentage ?? "?"}%',
       );
 
+      // Radios without a real-time clock come back from a reboot with a
+      // stale time, and peers drop their adverts as replays. Set the
+      // clock on every connect, as meshcore-open does.
+      unawaited(_syncRadioClock(adapter, attemptId));
+
       return ConnectionResult.success(adapter, _currentDeviceInfo!);
     } catch (e) {
       _pendingMeshCoreTransport = null;
@@ -622,6 +627,25 @@ class ConnectionCoordinator {
   }
 
   /// Clean up MeshCore-specific resources on failure.
+  Future<void> _syncRadioClock(MeshCoreAdapter adapter, int attemptId) async {
+    final session = adapter.session;
+    if (session == null) return;
+    try {
+      final ok = await session.setDeviceTime();
+      AppLogging.meshcore(
+        'event=connect.clock_sync result=${ok ? "ok" : "failed"} '
+        'attempt=c$attemptId',
+        error: !ok,
+      );
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=connect.clock_sync result=error attempt=c$attemptId '
+        'reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
+
   Future<void> _cleanupMeshCore(MeshTransport transport) async {
     await transport.dispose();
     _activeAdapter = null;

@@ -819,6 +819,38 @@ void main() {
       await coordinator.dispose();
     });
 
+    test('a MeshCore connect sets the radio clock', () async {
+      // Radios without a real-time clock come back from a reboot with a
+      // stale time, and peers drop their adverts as replays.
+      final sessionTransport = _RecordingSessionTransport();
+      final session = MeshCoreSession(sessionTransport);
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (transport) =>
+            _ClockSyncAdapter(transport, session),
+        meshCoreTransportFactory: FakeMeshCoreBleTransport.new,
+      );
+
+      final result = await coordinator.connect(
+        device: DeviceInfo(
+          id: 'meshcore-clock-id',
+          name: 'MeshCore Clock',
+          type: TransportType.ble,
+        ),
+        advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(result.success, isTrue);
+      final setTime = sessionTransport.sent.where(
+        (f) => f.isNotEmpty && f[0] == MeshCoreCommands.setDeviceTime,
+      );
+      expect(setTime, hasLength(1));
+      expect(setTime.single.length, 5);
+
+      await session.dispose();
+      await coordinator.dispose();
+    });
+
     test('Connect after failed connect succeeds', () async {
       var shouldFail = true;
       final coordinator = ConnectionCoordinator(
@@ -1712,4 +1744,26 @@ class FakeMeshtasticAdapterWithDisposeHook implements MeshtasticAdapter {
   Future<void> dispose() async {
     _disposeCounter.increment();
   }
+}
+
+class _RecordingSessionTransport implements MeshCoreTransport {
+  final List<Uint8List> sent = [];
+
+  @override
+  Stream<Uint8List> get rawRxStream => const Stream<Uint8List>.empty();
+
+  @override
+  Future<void> sendRaw(Uint8List data) async => sent.add(data);
+
+  @override
+  bool get isConnected => true;
+}
+
+class _ClockSyncAdapter extends FakeMeshCoreAdapter {
+  _ClockSyncAdapter(super.transport, this._session);
+
+  final MeshCoreSession _session;
+
+  @override
+  MeshCoreSession? get session => _session;
 }

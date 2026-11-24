@@ -5,8 +5,8 @@
 // pins.
 //
 // Pinned invariants:
-//   - broadcastSelfContact: returns true on RESP_CODE_OK, false on
-//     no-session / empty self-info.
+//   - broadcastSelfContact: sends CMD_SEND_SELF_ADVERT zero hop; true on
+//     RESP_CODE_OK, false with no session.
 //   - exportContactUrl: returns canonical `meshcore://<hex>` URL on
 //     RESP_CODE_EXPORT_CONTACT, null on no-session / firmware error.
 //   - previewContactImport: returns a modern preview for valid
@@ -183,25 +183,8 @@ void main() {
       expect(ok, isFalse);
     });
 
-    test('no self-info: returns false', () async {
-      final tx = _RecordingTransport();
-      final session = MeshCoreSession(tx);
-      addTearDown(() async {
-        await session.dispose();
-        await tx.dispose();
-      });
-      final c = _container(session: session, selfInfo: null);
-      addTearDown(c.dispose);
-
-      final ok = await c
-          .read(meshCoreContactsProvider.notifier)
-          .broadcastSelfContact();
-      expect(ok, isFalse);
-      expect(tx.sent, isEmpty);
-    });
-
     test(
-      'happy path: drives CMD_SHARE_CONTACT (0x10) and returns true',
+      'happy path: sends CMD_SEND_SELF_ADVERT zero hop and returns true',
       () async {
         final tx = _RecordingTransport();
         final session = MeshCoreSession(tx);
@@ -222,10 +205,10 @@ void main() {
 
         final sent = tx.sent
             .map(MeshCoreFrame.fromBytes)
-            .where((f) => f.command == MeshCoreCommands.shareContact)
+            .where((f) => f.command == MeshCoreCommands.sendSelfAdvert)
             .toList();
         expect(sent, hasLength(1));
-        expect(sent.single.payload, equals(selfInfo.pubKey));
+        expect(sent.single.payload, [0]);
       },
     );
   });

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Applying MeshCore radio settings no longer switches off client repeat. The app left the repeat setting out, which the radio reads as off and saves.
 - Searching MeshCore Nodes or Messages with the keyboard open now shows the results. The list shrank to a sliver above the keyboard, so only the top edge of the first match was visible.
 - "Broadcast my contact" on MeshCore now works. It asked the radio to share its own entry from the contact list, which it never has, so it always failed; it now sends the radio's own advert. Send Advert on the Tools screen and the dashboard also report a failure instead of always saying it was sent.
+- SocialMesh now sets a MeshCore radio's clock each time it connects. A radio without a clock of its own came back from a restart with the wrong time, and other radios ignored its adverts as repeats, so it seemed to vanish from their maps and contact lists.
 
 ## [1.82.0] - 2026-11-24
 
