@@ -3859,16 +3859,24 @@ class MeshCoreAutoAddConfigState {
   /// load / write.
   final String? lastError;
 
+  /// True while the radio adds every new contact and ignores the type
+  /// filters (`manual_add_contacts` bit 0 clear). [loaded] then shows
+  /// every type on, which is what the radio does, and the next write
+  /// also switches the filters on.
+  final bool addsEveryContact;
+
   const MeshCoreAutoAddConfigState({
     this.loaded,
     this.isLoading = false,
     this.lastError,
+    this.addsEveryContact = false,
   });
 
   const MeshCoreAutoAddConfigState.initial()
     : loaded = null,
       isLoading = false,
-      lastError = null;
+      lastError = null,
+      addsEveryContact = false;
 
   MeshCoreAutoAddConfigState copyWith({
     MeshCoreAutoAddConfig? loaded,
@@ -3880,6 +3888,7 @@ class MeshCoreAutoAddConfigState {
       loaded: loaded ?? this.loaded,
       isLoading: isLoading ?? this.isLoading,
       lastError: clearError ? null : (lastError ?? this.lastError),
+      addsEveryContact: addsEveryContact,
     );
   }
 }
@@ -3893,9 +3902,18 @@ class MeshCoreAutoAddConfigState {
 /// policy toggles.
 class MeshCoreAutoAddConfigNotifier
     extends Notifier<MeshCoreAutoAddConfigState> {
+  // Set once this session has switched the filters on; SELF_INFO read at
+  // connect still reports the old manual_add_contacts value.
+  bool _filtersEnabled = false;
+
   @override
-  MeshCoreAutoAddConfigState build() =>
-      const MeshCoreAutoAddConfigState.initial();
+  MeshCoreAutoAddConfigState build() {
+    // A new session is a new (or reconnected) radio: drop the last one's
+    // config so its toggles never show on another radio.
+    ref.watch(meshCoreSessionProvider);
+    _filtersEnabled = false;
+    return const MeshCoreAutoAddConfigState.initial();
+  }
 
   /// Pull the firmware's current config and replace [loaded]. On
   /// failure leaves [loaded] alone and sets [lastError].
@@ -3913,7 +3931,22 @@ class MeshCoreAutoAddConfigNotifier
       state = state.copyWith(isLoading: false, lastError: 'load_failed');
       return;
     }
-    state = MeshCoreAutoAddConfigState(loaded: config, isLoading: false);
+    final addsEvery =
+        !_filtersEnabled &&
+        (ref.read(meshCoreSelfInfoProvider).selfInfo?.addsEveryContact ??
+            false);
+    state = MeshCoreAutoAddConfigState(
+      loaded: addsEvery
+          ? config.copyWith(
+              autoAddChat: true,
+              autoAddRepeater: true,
+              autoAddRoomServer: true,
+              autoAddSensor: true,
+            )
+          : config,
+      isLoading: false,
+      addsEveryContact: addsEvery,
+    );
   }
 
   /// Write [next] to the firmware. On success replaces [loaded] with
@@ -3927,7 +3960,12 @@ class MeshCoreAutoAddConfigNotifier
       return false;
     }
     state = state.copyWith(isLoading: true, clearError: true);
-    final ok = await session.setAutoAddConfig(next);
+    var ok = await session.setAutoAddConfig(next);
+    if (!ref.mounted) return false;
+    if (ok && state.addsEveryContact) {
+      ok = await session.enableAutoAddFilters();
+      if (ok) _filtersEnabled = true;
+    }
     if (!ref.mounted) return false;
     if (!ok) {
       state = state.copyWith(isLoading: false, lastError: 'set_failed');

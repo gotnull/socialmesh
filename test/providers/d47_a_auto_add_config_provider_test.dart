@@ -28,6 +28,7 @@ import 'package:socialmesh/core/meshcore_constants.dart';
 import 'package:socialmesh/models/meshcore_auto_add_config.dart';
 import 'package:socialmesh/providers/meshcore_providers.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_frame.dart';
+import 'package:socialmesh/services/meshcore/protocol/meshcore_messages.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_session.dart';
 
 class _RecordingTransport implements MeshCoreTransport {
@@ -80,9 +81,35 @@ class _RecordingTransport implements MeshCoreTransport {
   }
 }
 
-ProviderContainer _container({required MeshCoreSession? session}) {
+class _StubSelfInfoNotifier extends MeshCoreSelfInfoNotifier {
+  _StubSelfInfoNotifier(this._manualAdd);
+  final int _manualAdd;
+  @override
+  MeshCoreSelfInfoState build() => MeshCoreSelfInfoState.loaded(
+    MeshCoreSelfInfo(
+      advType: 1,
+      txPowerDbm: 22,
+      maxLoraTxPower: 22,
+      pubKey: Uint8List(32),
+      nodeName: 'WisMeshCore',
+      manualAddContacts: _manualAdd,
+      rawPayload: Uint8List(0),
+    ),
+  );
+}
+
+ProviderContainer _container({
+  required MeshCoreSession? session,
+  int? manualAdd,
+}) {
   return ProviderContainer(
-    overrides: [meshCoreSessionProvider.overrideWithValue(session)],
+    overrides: [
+      meshCoreSessionProvider.overrideWithValue(session),
+      if (manualAdd != null)
+        meshCoreSelfInfoProvider.overrideWith(
+          () => _StubSelfInfoNotifier(manualAdd),
+        ),
+    ],
   );
 }
 
@@ -329,6 +356,97 @@ void main() {
         autoAddLines.any((l) => RegExp(r'flags=0x[0-9a-f]{2}').hasMatch(l)),
         isTrue,
       );
+    });
+  });
+
+  group('radio that adds every contact (manual_add_contacts 0)', () {
+    test('refresh shows every type on, as the radio behaves', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+      final c = _container(session: session, manualAdd: 0);
+      addTearDown(c.dispose);
+
+      final fut = c.read(meshCoreAutoAddConfigProvider.notifier).refresh();
+      await Future<void>.delayed(Duration.zero);
+      tx.simulateConfigResponse(0x01); // filters all off, overwrite on
+      await fut;
+
+      final state = c.read(meshCoreAutoAddConfigProvider);
+      expect(state.addsEveryContact, isTrue);
+      expect(state.loaded!.autoAddChat, isTrue);
+      expect(state.loaded!.autoAddRepeater, isTrue);
+      expect(state.loaded!.autoAddRoomServer, isTrue);
+      expect(state.loaded!.autoAddSensor, isTrue);
+      expect(state.loaded!.overwriteOldest, isTrue);
+    });
+
+    test('the first write sets the filter byte, then switches the filters '
+        'on with a two-byte CMD_SET_OTHER_PARAMS', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+      final c = _container(session: session, manualAdd: 0);
+      addTearDown(c.dispose);
+      final notifier = c.read(meshCoreAutoAddConfigProvider.notifier);
+
+      final load = notifier.refresh();
+      await Future<void>.delayed(Duration.zero);
+      tx.simulateConfigResponse(0x00);
+      await load;
+      tx.sent.clear();
+
+      final next = c
+          .read(meshCoreAutoAddConfigProvider)
+          .loaded!
+          .copyWith(autoAddChat: false);
+      final write = notifier.update(next);
+      await Future<void>.delayed(Duration.zero);
+      tx.simulateOk();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      tx.simulateOk();
+      expect(await write, isTrue);
+
+      expect(tx.sent, hasLength(2));
+      final filter = MeshCoreFrame.fromBytes(tx.sent[0]);
+      expect(filter.command, MeshCoreCommands.setAutoAddConfig);
+      expect(filter.payload, equals([0x1C])); // repeater + room + sensor
+      final other = MeshCoreFrame.fromBytes(tx.sent[1]);
+      expect(other.command, MeshCoreCommands.setOtherParams);
+      expect(other.payload, equals([0x01]));
+
+      final state = c.read(meshCoreAutoAddConfigProvider);
+      expect(state.addsEveryContact, isFalse);
+      expect(state.loaded, next);
+
+      // Later writes in the session touch only the filter byte.
+      tx.sent.clear();
+      final again = notifier.update(next.copyWith(autoAddSensor: false));
+      await Future<void>.delayed(Duration.zero);
+      tx.simulateOk();
+      expect(await again, isTrue);
+      expect(tx.sent, hasLength(1));
+    });
+
+    test('a radio already filtering shows its config as stored', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+      final c = _container(session: session, manualAdd: 1);
+      addTearDown(c.dispose);
+
+      final fut = c.read(meshCoreAutoAddConfigProvider.notifier).refresh();
+      await Future<void>.delayed(Duration.zero);
+      tx.simulateConfigResponse(0x04); // repeater only
+      await fut;
+
+      final state = c.read(meshCoreAutoAddConfigProvider);
+      expect(state.addsEveryContact, isFalse);
+      expect(state.loaded!.autoAddChat, isFalse);
+      expect(state.loaded!.autoAddRepeater, isTrue);
     });
   });
 }

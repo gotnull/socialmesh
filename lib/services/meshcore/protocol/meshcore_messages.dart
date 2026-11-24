@@ -59,6 +59,17 @@ class MeshCoreSelfInfo {
   /// Node name (may be empty).
   final String nodeName;
 
+  /// `manual_add_contacts` (SELF_INFO offset 46). Bit 0 clear means the
+  /// radio adds every new contact it hears and ignores the auto-add type
+  /// filters; set means only the filtered types are added. Null on
+  /// payloads too short to carry it.
+  final int? manualAddContacts;
+
+  /// True when the radio adds every new contact regardless of the auto-add
+  /// filters; null when unknown.
+  bool? get addsEveryContact =>
+      manualAddContacts == null ? null : (manualAddContacts! & 0x01) == 0;
+
   /// Raw payload for access to any fields not parsed.
   final Uint8List rawPayload;
 
@@ -74,6 +85,7 @@ class MeshCoreSelfInfo {
     this.spreadingFactor,
     this.codingRate,
     required this.nodeName,
+    this.manualAddContacts,
     required this.rawPayload,
   });
 
@@ -920,6 +932,10 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
   // Pre-D16 the parser only extracted sf+cr and silently dropped freq+bw,
   // which forced the radio settings sheet to keep its own SharedPreferences
   // cache (D11). Now both fields are read directly from the firmware.
+  const manualAddOffset = 46;
+  final manualAddContacts = payload.length > manualAddOffset
+      ? payload[manualAddOffset]
+      : null;
   const freqOffset = 47;
   const bwOffset = 51;
   const sfOffset = 55;
@@ -969,6 +985,7 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
       spreadingFactor: sf,
       codingRate: cr,
       nodeName: nodeName,
+      manualAddContacts: manualAddContacts,
       rawPayload: payload,
     ),
   );

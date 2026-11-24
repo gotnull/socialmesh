@@ -2928,6 +2928,29 @@ class MeshCoreSession {
     return ok;
   }
 
+  /// Switches the radio from adding every new contact to adding only the
+  /// types allowed by the auto-add config, which the firmware ignores
+  /// until `manual_add_contacts` bit 0 is set. Sends the two-byte
+  /// `CMD_SET_OTHER_PARAMS` form so the radio's other preferences stay as
+  /// they are.
+  Future<bool> enableAutoAddFilters({
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    AppLogging.meshcore('event=auto_add_filters.enable.attempted');
+    final response = await sendAndWait(
+      MeshCoreCommands.setOtherParams,
+      payload: Uint8List.fromList([0x01]),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=auto_add_filters.enable.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
+  }
+
   /// D29 Part C: reset the firmware-side learned route for a contact
   /// (`CMD_RESET_PATH` 0x0D). After reset the radio's `out_path_len`
   /// for the contact is set to flood/unknown and re-discovered on the

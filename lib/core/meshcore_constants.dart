@@ -214,6 +214,12 @@ class MeshCoreCommands {
   /// Get telemetry request.
   static const int getTelemetryReq = 0x27;
 
+  /// Write `manual_add_contacts` and the other node preferences. A
+  /// two-byte frame `[0x26][manual_add]` sets only `manual_add_contacts`;
+  /// the firmware leaves telemetry, advert location policy and multi-acks
+  /// alone unless the frame carries them.
+  static const int setOtherParams = 0x26;
+
   /// Get custom variables.
   static const int getCustomVar = 0x28;
 

@@ -14,6 +14,7 @@ void main() {
       int txPower = 20,
       int maxLoraTxPower = 22,
       String nodeName = 'TestNode',
+      int manualAdd = 0,
     }) {
       final payload = <int>[
         advType,
@@ -25,7 +26,7 @@ void main() {
         0, // multi_acks
         0, // advert_loc_policy
         0, // telemetry modes
-        0, // manual_add_contacts
+        manualAdd, // manual_add_contacts
         0, 0, 0, 0, // freq (uint32 LE)
         0, 0, 0, 0, // bw (uint32 LE)
         12, // sf
@@ -54,6 +55,17 @@ void main() {
       expect(result.value!.advType, equals(0x01));
       expect(result.value!.txPowerDbm, equals(20));
       expect(result.value!.maxLoraTxPower, equals(22));
+    });
+
+    test('manual_add_contacts bit 0 decides whether the radio adds every '
+        'contact', () {
+      final addsEvery = parseSelfInfo(buildSelfInfoPayload()).value!;
+      expect(addsEvery.manualAddContacts, 0);
+      expect(addsEvery.addsEveryContact, isTrue);
+
+      final filtered = parseSelfInfo(buildSelfInfoPayload(manualAdd: 0x01))
+          .value!;
+      expect(filtered.addsEveryContact, isFalse);
     });
 
     test('parses minimal payload (just required fields)', () {
