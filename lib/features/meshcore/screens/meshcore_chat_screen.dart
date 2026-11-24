@@ -38,6 +38,8 @@ import '../../../services/meshcore/meshcore_send_rate_limiter.dart';
 import '../../../services/meshcore/routing/meshcore_auto_route_orchestrator.dart';
 import '../../../services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
+import '../../../services/meshcore/protocol/meshcore_text_frame_builders.dart';
+import '../../../services/protocol/text_message_payload_budget.dart';
 import '../../../services/meshcore/storage/meshcore_message_store.dart';
 import '../parsers/meshcore_message_frame_parser.dart';
 import '../../../providers/meshcore_chat_text_scale_provider.dart';
@@ -1956,7 +1958,57 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     }
   }
 
+  // The firmware's text limit for this chat: past it a DM is refused and a
+  // channel post is cut short on the air.
+  int _textByteLimit() {
+    if (widget.chatType == MeshCoreChatType.channel) {
+      final name = ref.watch(
+        meshCoreSelfInfoProvider.select((s) => s.selfInfo?.nodeName),
+      );
+      return meshCoreChannelTextByteLimit(name);
+    }
+    return meshCoreContactTextMaxBytes;
+  }
+
+  // Sizes the text as it goes on the air: a reply carries the chat-meta
+  // envelope and summary as well as the typed body.
+  TextMessagePayloadBudget _measureWireText(String draft, int byteLimit) {
+    final body = draft.trim();
+    final target = _replyingTo?.mmf == null
+        ? null
+        : MeshCoreMmf.parseString(_replyingTo!.mmf!);
+    int wireBytes;
+    if (target == null || body.isEmpty) {
+      wireBytes = utf8.encode(body).length;
+    } else {
+      try {
+        wireBytes = utf8
+            .encode(
+              ChatMetaEnvelopeCodec.encodeReply(
+                target: target,
+                body: body,
+                summary: _replySummaryFor(body),
+              ),
+            )
+            .length;
+      } on ArgumentError {
+        // The envelope refuses bodies past its own ceiling, which is
+        // already over the firmware limit.
+        wireBytes = byteLimit + 1;
+      }
+    }
+    return TextMessagePayloadBudget(
+      utf8Bytes: wireBytes,
+      maxUtf8Bytes: byteLimit,
+      encodedDataBytes: wireBytes,
+      maxEncodedDataBytes: byteLimit,
+      replyId: null,
+      isEmoji: false,
+    );
+  }
+
   Widget _buildMessageInput() {
+    final byteLimit = _textByteLimit();
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
@@ -1978,6 +2030,13 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               hintText: context.l10n.meshcoreTypeMessageHint,
               sendTooltip: context.l10n.meshcoreSendMessage,
               enabled: !_isSending,
+              maxLength: byteLimit,
+              budgetResolver: (text) => _measureWireText(text, byteLimit),
+              budgetLabelBuilder: (context, budget) =>
+                  context.l10n.messagingComposerByteCounter(
+                    budget.utf8Bytes,
+                    budget.maxUtf8Bytes,
+                  ),
               leading: GestureDetector(
                 onTap: _showChatInfo,
                 child: Container(

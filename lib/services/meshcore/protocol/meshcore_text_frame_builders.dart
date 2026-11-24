@@ -19,6 +19,28 @@ import 'dart:typed_data';
 import '../../../core/meshcore_constants.dart';
 import 'meshcore_frame.dart';
 
+/// Longest text the firmware sends in one message (`MAX_TEXT_LEN`).
+const int meshCoreMaxTextBytes = 160;
+
+/// Longest DM text, in UTF-8 bytes. The `CMD_SEND_TXT_MSG` frame spends 14
+/// of its [meshCoreMaxFrameSize] bytes on the command, txt_type, attempt,
+/// timestamp, 6-byte key prefix and trailing null. The 158 left is also
+/// what the firmware allows from attempt index 4 on, when it appends a
+/// terminator and the attempt number (`BaseChatMesh::composeMsgPacket`).
+const int meshCoreContactTextMaxBytes = meshCoreMaxFrameSize - 14;
+
+/// Longest channel text, in UTF-8 bytes. The firmware sends
+/// `"<sender name>: <text>"` within `MAX_TEXT_LEN` and silently cuts the
+/// text to fit (`BaseChatMesh::sendGroupMessage`); that bound is always
+/// tighter than the frame's. An unknown name is taken at the longest the
+/// firmware stores (31 bytes).
+int meshCoreChannelTextByteLimit(String? senderName) {
+  final nameBytes = senderName == null
+      ? meshCoreMaxNameSize - 1
+      : utf8.encode(senderName).length;
+  return meshCoreMaxTextBytes - nameBytes - 2;
+}
+
 // CMD_SEND_TXT_MSG (0x02) - contact-direct DM.
 // Layout: [txt_type=0][attempt=0][ts:4 LE][recipient_pubkey_prefix:6][text][\0]
 MeshCoreFrame meshCoreBuildSendContactTextFrame({

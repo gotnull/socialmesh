@@ -255,6 +255,48 @@ void main() {
     await tester.pump();
 
     expect(find.text('fresh meshcore message'), findsOneWidget);
+    // The send reads self info, whose provider schedules its load on a
+    // zero-length timer; let it run before the tree is torn down.
+    await tester.pump(const Duration(milliseconds: 100));
+  });
+
+  testWidgets('a DM draft is held to the 158 bytes a frame carries', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _wrap(MeshCoreChatScreen.contact(contact: _testContact())),
+    );
+    await _settle(tester);
+
+    final composer = tester.widget<ChatComposer>(find.byType(ChatComposer));
+    expect(composer.maxLength, 158);
+    expect(composer.budgetResolver!('a' * 158).fitsInPacket, isTrue);
+    expect(composer.budgetResolver!('a' * 159).fitsInPacket, isFalse);
+    // Bytes, not characters: 39 four-byte emoji fit, 40 do not.
+    expect(composer.budgetResolver!('📡' * 39).fitsInPacket, isTrue);
+    expect(composer.budgetResolver!('📡' * 40).fitsInPacket, isFalse);
+  });
+
+  testWidgets('a channel draft leaves room for the sender name', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _wrap(MeshCoreChatScreen.channel(channel: _testChannel())),
+    );
+    await _settle(tester);
+
+    // No self info loaded: the name is taken at its 31-byte maximum.
+    final composer = tester.widget<ChatComposer>(find.byType(ChatComposer));
+    expect(composer.maxLength, 127);
+    expect(composer.budgetResolver!('a' * 128).fitsInPacket, isFalse);
   });
 
   testWidgets('chat info sheet opens from the header action', (tester) async {
