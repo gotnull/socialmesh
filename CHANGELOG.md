@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MeshCore contacts can be added from meshcore-open's contact card links (`meshcore://contact/add?...`), pasted or scanned, with the contact's name and type.
 - MQTT settings and the node status message no longer cut an emoji in half when text reaches the byte limit; half an emoji is invalid text and could break how the screen draws it.
 - English text now spells "favourite" the Australian way throughout.
+- MeshCore message history is now stored in an encrypted database, like Meshtastic messages, instead of plain app settings. Existing history moves across on first launch, one conversation at a time, so nothing is lost if the app is closed partway through.
 - MeshCore contact cards say "1 hop" instead of "1 hops", with correct plural forms in every language.
 - Adding a MeshCore contact whose shared name is longer than the radio stores no longer fails; the name is shortened to fit.
 - MeshCore Trace Path now follows the contact's own route out and back, as meshcore-open does, so contacts more than one hop away can be traced. A failed or timed-out trace offers Retry and Back, and the sheet explains that a chat contact answers only if it repeats packets.

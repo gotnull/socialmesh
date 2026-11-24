@@ -4,9 +4,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../../core/logging.dart';
+import '../../storage/encrypted_database.dart';
 
 /// Message status for MeshCore messages.
 enum MeshCoreMessageStatus { pending, sent, delivered, failed }
@@ -187,25 +192,175 @@ class MeshCoreStoredMessage {
 
 /// Storage service for MeshCore messages.
 ///
-/// Messages are stored per-conversation (keyed by contact pubkey hex or channel index).
+/// Messages are stored per conversation (a contact's public key hex or a
+/// channel index) in the encrypted `meshcore_messages.db`, one row per
+/// message holding its [MeshCoreStoredMessage.toJson] body in conversation
+/// order. Every instance shares one database handle. The database is not
+/// radio-scoped yet: MeshCore scoping needs the connect path to move the
+/// scope (docs/engineering/RADIO_SCOPED_STORAGE.md).
+///
+/// Builds that kept messages in SharedPreferences are migrated on first
+/// open, one conversation at a time: copied in a transaction, then the
+/// preference key is removed. A key whose conversation already has rows is
+/// only removed, so a migration cut short never duplicates or loses data.
 class MeshCoreMessageStore {
+  static const String _dbName = 'meshcore_messages.db';
+  static const int _dbVersion = 1;
+  // SharedPreferences keys used before the database, read only to migrate.
   static const String _contactPrefix = 'meshcore_messages_contact_';
   static const String _channelPrefix = 'meshcore_messages_channel_';
   static const int _maxMessagesPerConversation = 500;
 
-  SharedPreferences? _prefs;
+  static _MessageBackend? _backend;
+  static Future<_MessageBackend>? _opening;
+  static _MessageBackend Function()? _testBackend;
 
   MeshCoreMessageStore();
 
-  Future<void> init() async {
-    _prefs ??= await SharedPreferences.getInstance();
+  /// Points every store at a fresh database at [path] opened with
+  /// [factory] (the ffi factory in tests), closing the previous one.
+  @visibleForTesting
+  static Future<void> debugUseDatabaseAt(
+    String path, {
+    required DatabaseFactory factory,
+  }) async {
+    await _replaceBackend(
+      () => _SqliteBackend.pending(
+        factory.openDatabase(
+          path,
+          options: OpenDatabaseOptions(
+            version: _dbVersion,
+            onCreate: _SqliteBackend.createTables,
+            singleInstance: false,
+          ),
+        ),
+      ),
+    );
   }
 
-  SharedPreferences get _preferences {
-    if (_prefs == null) {
-      throw StateError('MeshCoreMessageStore not initialized');
+  /// Points every store at a fresh in-memory backend. Widget tests run
+  /// under fake async, where a real database never answers.
+  @visibleForTesting
+  static Future<void> debugUseInMemory() => _replaceBackend(_MemoryBackend.new);
+
+  static Future<void> _replaceBackend(_MessageBackend Function() make) async {
+    final previous = _backend;
+    _backend = null;
+    _opening = null;
+    _testBackend = make;
+    await previous?.close();
+  }
+
+  Future<void> init() async {
+    await _store();
+  }
+
+  static Future<_MessageBackend> _store() async {
+    final ready = _backend;
+    if (ready != null) return ready;
+    final pending = _opening ??= _open();
+    try {
+      return _backend = await pending;
+    } catch (_) {
+      // Let the next call try again rather than caching the failure.
+      if (identical(_opening, pending)) _opening = null;
+      rethrow;
     }
-    return _prefs!;
+  }
+
+  static Future<_MessageBackend> _open() async {
+    final make = _testBackend;
+    final _MessageBackend backend;
+    if (make != null) {
+      backend = make();
+    } else {
+      final dir = await getApplicationDocumentsDirectory();
+      backend = _SqliteBackend(
+        await openEncryptedDatabase(
+          p.join(dir.path, _dbName),
+          version: _dbVersion,
+          onCreate: _SqliteBackend.createTables,
+        ),
+      );
+    }
+    await _migrateFromPreferences(backend);
+    return backend;
+  }
+
+  static Future<void> _migrateFromPreferences(_MessageBackend backend) async {
+    final SharedPreferences prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+    } catch (e) {
+      AppLogging.storage(
+        'event=meshcore.store.migrate.skipped reason=${e.runtimeType}',
+      );
+      return;
+    }
+    final keys = prefs
+        .getKeys()
+        .where(
+          (k) => k.startsWith(_contactPrefix) || k.startsWith(_channelPrefix),
+        )
+        .toList();
+    var moved = 0;
+    for (final key in keys) {
+      final partition = key.startsWith(_contactPrefix)
+          ? _contactPartition(key.substring(_contactPrefix.length))
+          : 'h:${key.substring(_channelPrefix.length)}';
+      try {
+        final existing = await backend.load(partition);
+        final raw = prefs.getString(key);
+        if (existing.isEmpty && raw != null) {
+          final entries = jsonDecode(raw) as List<dynamic>;
+          await backend.replace(partition, [
+            for (final entry in entries) jsonEncode(entry),
+          ]);
+          moved++;
+        }
+        await prefs.remove(key);
+      } catch (e) {
+        // The preference key stays, so the next launch tries again.
+        AppLogging.storage(
+          'event=meshcore.store.migrate.failed reason=${e.runtimeType}',
+        );
+      }
+    }
+    if (keys.isNotEmpty) {
+      AppLogging.storage(
+        'event=meshcore.store.migrated conversations=$moved keys=${keys.length}',
+      );
+    }
+  }
+
+  static String _contactPartition(String contactKeyHex) => 'c:$contactKeyHex';
+
+  static String _channelPartition(int channelIndex) => 'h:$channelIndex';
+
+  Future<void> _savePartition(
+    String partition,
+    List<MeshCoreStoredMessage> messages,
+  ) async {
+    final backend = await _store();
+    await backend.replace(partition, [
+      for (final m in _trimMessages(messages)) jsonEncode(m.toJson()),
+    ]);
+  }
+
+  // Stored bodies in conversation order; a body that is not valid JSON is
+  // returned as null so the caller skips it like any malformed record.
+  Future<List<Object?>> _loadPartition(String partition) async {
+    final backend = await _store();
+    return [
+      for (final body in await backend.load(partition))
+        () {
+          try {
+            return jsonDecode(body);
+          } on FormatException {
+            return null;
+          }
+        }(),
+    ];
   }
 
   /// Save messages for a contact conversation.
@@ -213,14 +368,7 @@ class MeshCoreMessageStore {
     String contactKeyHex,
     List<MeshCoreStoredMessage> messages,
   ) async {
-    await init();
-    final key = '$_contactPrefix$contactKeyHex';
-    final trimmed = _trimMessages(messages);
-    final jsonList = trimmed.map((m) => m.toJson()).toList();
-    await _preferences.setString(key, jsonEncode(jsonList));
-    AppLogging.storage(
-      'Saved ${trimmed.length} messages for contact $contactKeyHex',
-    );
+    await _savePartition(_contactPartition(contactKeyHex), messages);
   }
 
   /// Load messages for a contact conversation.
@@ -240,13 +388,8 @@ class MeshCoreMessageStore {
   Future<List<MeshCoreStoredMessage>> loadContactMessages(
     String contactKeyHex,
   ) async {
-    await init();
-    final key = '$_contactPrefix$contactKeyHex';
-    final jsonString = _preferences.getString(key);
-    if (jsonString == null) return [];
-
     try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      final jsonList = await _loadPartition(_contactPartition(contactKeyHex));
       final out = <MeshCoreStoredMessage>[];
       for (final entry in jsonList) {
         if (entry is! Map<String, dynamic>) {
@@ -282,14 +425,7 @@ class MeshCoreMessageStore {
     int channelIndex,
     List<MeshCoreStoredMessage> messages,
   ) async {
-    await init();
-    final key = '$_channelPrefix$channelIndex';
-    final trimmed = _trimMessages(messages);
-    final jsonList = trimmed.map((m) => m.toJson()).toList();
-    await _preferences.setString(key, jsonEncode(jsonList));
-    AppLogging.storage(
-      'Saved ${trimmed.length} messages for channel $channelIndex',
-    );
+    await _savePartition(_channelPartition(channelIndex), messages);
   }
 
   /// Load messages for a channel conversation.
@@ -303,13 +439,8 @@ class MeshCoreMessageStore {
   Future<List<MeshCoreStoredMessage>> loadChannelMessages(
     int channelIndex,
   ) async {
-    await init();
-    final key = '$_channelPrefix$channelIndex';
-    final jsonString = _preferences.getString(key);
-    if (jsonString == null) return [];
-
     try {
-      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      final jsonList = await _loadPartition(_channelPartition(channelIndex));
       final out = <MeshCoreStoredMessage>[];
       for (final entry in jsonList) {
         if (entry is! Map<String, dynamic>) {
@@ -601,35 +732,29 @@ class MeshCoreMessageStore {
 
   /// Clear messages for a contact.
   Future<void> clearContactMessages(String contactKeyHex) async {
-    await init();
-    await _preferences.remove('$_contactPrefix$contactKeyHex');
+    final backend = await _store();
+    await backend.remove(_contactPartition(contactKeyHex));
   }
 
   /// Clear messages for a channel.
   Future<void> clearChannelMessages(int channelIndex) async {
-    await init();
-    await _preferences.remove('$_channelPrefix$channelIndex');
+    final backend = await _store();
+    await backend.remove(_channelPartition(channelIndex));
   }
 
   /// Full public key hex of every contact with stored messages.
   Future<List<String>> contactKeys() async {
-    await init();
+    final backend = await _store();
     return [
-      for (final key in _preferences.getKeys())
-        if (key.startsWith(_contactPrefix))
-          key.substring(_contactPrefix.length),
+      for (final partition in await backend.partitions())
+        if (partition.startsWith('c:')) partition.substring(2),
     ];
   }
 
   /// Clear all MeshCore messages.
   Future<void> clearAll() async {
-    await init();
-    final keys = _preferences.getKeys();
-    for (final key in keys) {
-      if (key.startsWith(_contactPrefix) || key.startsWith(_channelPrefix)) {
-        await _preferences.remove(key);
-      }
-    }
+    final backend = await _store();
+    await backend.removeAll();
     AppLogging.storage('Cleared all MeshCore messages');
   }
 
@@ -646,4 +771,122 @@ class MeshCoreMessageStore {
     return sorted.take(_maxMessagesPerConversation).toList()
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
   }
+}
+
+// Where conversations are kept: each is an ordered list of JSON bodies.
+abstract class _MessageBackend {
+  Future<List<String>> load(String partition);
+  Future<void> replace(String partition, List<String> bodies);
+  Future<void> remove(String partition);
+  Future<List<String>> partitions();
+  Future<void> removeAll();
+  Future<void> close();
+}
+
+class _SqliteBackend implements _MessageBackend {
+  _SqliteBackend(Database db) : _db = Future.value(db);
+  _SqliteBackend.pending(this._db);
+
+  static const String _table = 'meshcore_messages';
+  final Future<Database> _db;
+
+  static Future<void> createTables(Database db, int version) async {
+    await db.execute(
+      'CREATE TABLE $_table ('
+      'partition TEXT NOT NULL, '
+      'seq INTEGER NOT NULL, '
+      'body TEXT NOT NULL, '
+      'PRIMARY KEY (partition, seq))',
+    );
+  }
+
+  @override
+  Future<List<String>> load(String partition) async {
+    final rows = await (await _db).query(
+      _table,
+      columns: ['body'],
+      where: 'partition = ?',
+      whereArgs: [partition],
+      orderBy: 'seq',
+    );
+    return [for (final row in rows) row['body'] as String];
+  }
+
+  @override
+  Future<void> replace(String partition, List<String> bodies) async {
+    await (await _db).transaction((txn) async {
+      await txn.delete(_table, where: 'partition = ?', whereArgs: [partition]);
+      final batch = txn.batch();
+      for (var i = 0; i < bodies.length; i++) {
+        batch.insert(_table, {
+          'partition': partition,
+          'seq': i,
+          'body': bodies[i],
+        });
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
+  @override
+  Future<void> remove(String partition) async {
+    await (await _db).delete(
+      _table,
+      where: 'partition = ?',
+      whereArgs: [partition],
+    );
+  }
+
+  @override
+  Future<List<String>> partitions() async {
+    final rows = await (await _db).rawQuery(
+      'SELECT DISTINCT partition FROM $_table',
+    );
+    return [for (final row in rows) row['partition'] as String];
+  }
+
+  @override
+  Future<void> removeAll() async {
+    await (await _db).delete(_table);
+  }
+
+  @override
+  Future<void> close() async {
+    try {
+      await (await _db).close();
+    } catch (e) {
+      AppLogging.storage(
+        'event=meshcore.store.close.failed reason=${e.runtimeType}',
+      );
+    }
+  }
+}
+
+class _MemoryBackend implements _MessageBackend {
+  final Map<String, List<String>> _data = {};
+
+  @override
+  Future<List<String>> load(String partition) async =>
+      List.of(_data[partition] ?? const []);
+
+  @override
+  Future<void> replace(String partition, List<String> bodies) async {
+    if (bodies.isEmpty) {
+      _data.remove(partition);
+    } else {
+      _data[partition] = List.of(bodies);
+    }
+  }
+
+  @override
+  Future<void> remove(String partition) async => _data.remove(partition);
+
+  @override
+  Future<List<String>> partitions() async => _data.keys.toList();
+
+  @override
+  Future<void> removeAll() async => _data.clear();
+
+  @override
+  Future<void> close() async => _data.clear();
 }

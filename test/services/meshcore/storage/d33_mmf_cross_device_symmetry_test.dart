@@ -266,6 +266,8 @@ void main() {
           },
         ]),
       });
+      // A separate device: its store opens and migrates its own data.
+      await MeshCoreMessageStore.debugUseInMemory();
       final simStore = MeshCoreMessageStore();
       final simRecords = await simStore.loadContactMessages(iphonePubkeyHex);
       expect(simRecords.first.mmf, originalMmf);
