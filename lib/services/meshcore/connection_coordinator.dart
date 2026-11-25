@@ -265,6 +265,7 @@ class ConnectionCoordinator {
       nodeNum,
       deviceId: device.id,
       label: info.displayName,
+      protocol: MeshProtocolType.meshcore,
     );
     await MeshCoreMessageStore.adoptUnscopedData();
     await MeshCoreContactStore().adoptUnscopedUnreadCounts();

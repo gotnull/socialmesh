@@ -29,6 +29,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/mesh_device.dart';
 import 'logging.dart';
 
 /// A database file that holds radio-observed data and therefore moves with
@@ -131,6 +132,7 @@ class RadioScopeInfo {
     this.isConnected = false,
     this.isStored = true,
     this.sharesWith,
+    this.protocol = MeshProtocolType.meshtastic,
   });
 
   final String key;
@@ -153,6 +155,10 @@ class RadioScopeInfo {
   /// Scope whose data this radio reads and writes instead of its own, or
   /// null when it uses its own. See [RadioScope.shareScope].
   final String? sharesWith;
+
+  /// Protocol of the radio this scope belongs to. Sharing and moving data
+  /// happen only between radios of the same protocol.
+  final MeshProtocolType protocol;
 
   /// Node number this scope belongs to, or null for a provisional scope.
   int? get nodeNum => nodeNumForRadioScopeKey(key);
@@ -195,6 +201,11 @@ class RadioScope {
   // identity (label, key, device ids) while its traffic lands in the shared
   // dataset, so the grouping can be undone without moving anything.
   static const String _prefsAliasesKey = 'radio_scope_aliases';
+  // Protocol per node scope, recorded each time the radio identifies. A
+  // scope with no entry predates the record and is a Meshtastic radio's,
+  // except a MeshCore radio last connected on a build without it; its
+  // entry is written on its next connect.
+  static const String _prefsProtocolsKey = 'radio_scope_protocols';
   static const String _prefsMigratedKey = 'radio_scope_migrated';
   static const String _tcpDeviceIdPrefix = 'tcp:';
   // Separates key from value in the flat StringList-backed maps below.
@@ -386,18 +397,23 @@ class RadioScope {
   /// radio. Callers should pass it whenever they have it, including on a
   /// repeat call for the same node number once the key has arrived.
   ///
+  /// [protocol] is the protocol the radio speaks; it is recorded against
+  /// the node scope so sharing stays within one protocol.
+  ///
   /// Returns true when the scope changed.
   Future<bool> useNodeNum(
     int nodeNum, {
     String? deviceId,
     String? label,
     List<int>? ownPublicKey,
+    MeshProtocolType protocol = MeshProtocolType.meshtastic,
   }) => _serialised(
     () => _useNodeNum(
       nodeNum,
       deviceId: deviceId,
       label: label,
       ownPublicKey: ownPublicKey,
+      protocol: protocol,
     ),
   );
 
@@ -406,9 +422,11 @@ class RadioScope {
     String? deviceId,
     String? label,
     List<int>? ownPublicKey,
+    required MeshProtocolType protocol,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final identity = radioScopeKeyForNodeNum(nodeNum);
+    await _rememberMapping(prefs, _prefsProtocolsKey, identity, protocol.name);
     final publicKeyHex = _publicKeyHex(ownPublicKey);
     final previousScopeForDevice = deviceId != null
         ? _readMap(prefs, _prefsDeviceMapKey)[deviceId]
@@ -539,6 +557,7 @@ class RadioScope {
     final prefs = await SharedPreferences.getInstance();
     final labels = _readMap(prefs, _prefsLabelsKey);
     final aliases = _readMap(prefs, _prefsAliasesKey);
+    final protocols = _readMap(prefs, _prefsProtocolsKey);
     final root = await _scopeRoot(create: false);
     final stored = <String, Directory>{};
     if (await root.exists()) {
@@ -559,6 +578,7 @@ class RadioScope {
           isConnected: key == _lastIdentity,
           isStored: dir != null,
           sharesWith: aliases[key],
+          protocol: _protocolFrom(protocols, key),
         ),
       );
     }
@@ -600,6 +620,8 @@ class RadioScope {
       await _writeMap(prefs, _prefsDeviceMapKey, devices);
       final keys = _readMap(prefs, _prefsPublicKeysKey)..remove(key);
       await _writeMap(prefs, _prefsPublicKeysKey, keys);
+      final protocols = _readMap(prefs, _prefsProtocolsKey)..remove(key);
+      await _writeMap(prefs, _prefsProtocolsKey, protocols);
     }
     AppLogging.storage('RADIO SCOPE: deleted scope $key');
     return true;
@@ -616,7 +638,8 @@ class RadioScope {
   /// the radio to it. Both scopes must be node scopes. Sharing into a scope
   /// that itself shares another follows the chain, so every arrangement
   /// ends on a scope that owns its data. Returns false when the request is
-  /// not applicable.
+  /// not applicable, including when the two radios speak different
+  /// protocols.
   Future<bool> shareScope({required String key, required String into}) =>
       _serialised(() => _shareScope(key: key, into: into));
 
@@ -627,6 +650,7 @@ class RadioScope {
     final prefs = await SharedPreferences.getInstance();
     final canonical = _resolveAlias(prefs, into);
     if (canonical == key) return false;
+    if (!_sameProtocol(prefs, key, canonical)) return false;
 
     final aliases = _readMap(prefs, _prefsAliasesKey);
     aliases[key] = canonical;
@@ -680,7 +704,8 @@ class RadioScope {
   /// on. Whatever [into] stored itself is set aside under its own entry,
   /// never deleted. Refused (false) when either is not a node scope, when
   /// [from] is the radio connected now, shares another radio's data or has
-  /// no directory, or when [into] shares a third radio.
+  /// no directory, when [into] shares a third radio, or when the two radios
+  /// speak different protocols.
   Future<bool> moveScope({required String from, required String into}) =>
       _serialised(() => _moveScope(from: from, into: into));
 
@@ -696,6 +721,7 @@ class RadioScope {
     if (aliases.containsKey(from)) return false;
     final intoShares = aliases[into];
     if (intoShares != null && intoShares != from) return false;
+    if (!_sameProtocol(prefs, from, into)) return false;
     if (!await (await _directoryFor(from, create: false)).exists()) {
       return false;
     }
@@ -730,6 +756,8 @@ class RadioScope {
     await _writeMap(prefs, _prefsDeviceMapKey, devices);
     final keys = _readMap(prefs, _prefsPublicKeysKey)..remove(from);
     await _writeMap(prefs, _prefsPublicKeysKey, keys);
+    final protocols = _readMap(prefs, _prefsProtocolsKey)..remove(from);
+    await _writeMap(prefs, _prefsProtocolsKey, protocols);
     AppLogging.storage('RADIO SCOPE: moved the data of $from to $into');
 
     if (touchesOpenStores) {
@@ -1117,6 +1145,16 @@ class RadioScope {
       map.entries.map((e) => '${e.key}$_mapSeparator${e.value}').toList(),
     );
   }
+
+  bool _sameProtocol(SharedPreferences prefs, String a, String b) {
+    final protocols = _readMap(prefs, _prefsProtocolsKey);
+    return _protocolFrom(protocols, a) == _protocolFrom(protocols, b);
+  }
+
+  MeshProtocolType _protocolFrom(Map<String, String> protocols, String key) =>
+      protocols[key] == MeshProtocolType.meshcore.name
+      ? MeshProtocolType.meshcore
+      : MeshProtocolType.meshtastic;
 
   Future<void> _rememberMapping(
     SharedPreferences prefs,

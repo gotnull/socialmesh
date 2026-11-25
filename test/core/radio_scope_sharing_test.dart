@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/radio_scope.dart';
+import 'package:socialmesh/models/mesh_device.dart';
 
 void main() {
   late Directory root;
@@ -205,6 +206,46 @@ void main() {
           into: kLegacyRadioScopeKey,
         ),
         isFalse,
+      );
+    });
+
+    test('a radio shares only with radios of its own protocol', () async {
+      await RadioScope.instance.useNodeNum(home);
+      await writeScopedFile('messages.db', 'home');
+      await RadioScope.instance.useNodeNum(
+        mobile,
+        protocol: MeshProtocolType.meshcore,
+      );
+      await writeScopedFile('meshcore_messages.db', 'mobile');
+      await RadioScope.instance.useNodeNum(third);
+      await writeScopedFile('messages.db', 'third');
+
+      final scopes = await RadioScope.instance.list();
+      MeshProtocolType protocolOf(String key) =>
+          scopes.firstWhere((s) => s.key == key).protocol;
+      expect(protocolOf('node-a6960864'), MeshProtocolType.meshtastic);
+      expect(protocolOf('node-6944378a'), MeshProtocolType.meshcore);
+
+      expect(
+        await RadioScope.instance.shareScope(
+          key: 'node-6944378a',
+          into: 'node-a6960864',
+        ),
+        isFalse,
+      );
+      expect(
+        await RadioScope.instance.shareScope(
+          key: 'node-a6960864',
+          into: 'node-6944378a',
+        ),
+        isFalse,
+      );
+      expect(
+        await RadioScope.instance.shareScope(
+          key: 'node-00001111',
+          into: 'node-a6960864',
+        ),
+        isTrue,
       );
     });
 

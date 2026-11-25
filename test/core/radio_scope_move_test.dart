@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/radio_scope.dart';
+import 'package:socialmesh/models/mesh_device.dart';
 
 // Handing a lost or replaced radio's data to a new radio: the data moves
 // whole, the old radio is forgotten, and nothing the new radio stored of
@@ -165,5 +166,20 @@ void main() {
       await RadioScope.instance.moveScope(from: oldKey, into: newKey),
       isFalse,
     );
+  });
+
+  test('refuses to move data to a radio of the other protocol', () async {
+    await RadioScope.instance.useNodeNum(oldRadio);
+    await writeHistory(64);
+    await RadioScope.instance.useNodeNum(
+      newRadio,
+      protocol: MeshProtocolType.meshcore,
+    );
+
+    expect(
+      await RadioScope.instance.moveScope(from: oldKey, into: newKey),
+      isFalse,
+    );
+    expect(await scopedFile(oldKey, 'messages.db').length(), 64);
   });
 }

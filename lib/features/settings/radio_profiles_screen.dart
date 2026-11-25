@@ -107,24 +107,28 @@ class RadioProfilesScreen extends ConsumerWidget {
     final stored = scopes.where((s) => !inUse(s)).toList();
     final byKey = {for (final s in scopes) s.key: s};
 
-    // A radio can share the data of any other identified radio that owns
-    // its own data; a radio that is itself sharing is offered through the
-    // scope it shares, never directly.
+    // A radio can share the data of any other identified radio of the same
+    // protocol that owns its own data; a radio that is itself sharing is
+    // offered through the scope it shares, never directly.
     List<RadioScopeInfo> targetsFor(RadioScopeInfo scope) => scopes
         .where(
           (s) =>
-              s.key != scope.key && s.nodeNum != null && s.sharesWith == null,
+              s.key != scope.key &&
+              s.nodeNum != null &&
+              s.protocol == scope.protocol &&
+              s.sharesWith == null,
         )
         .toList();
 
-    // A radio's data can go to any other identified radio that is not
-    // sharing a third radio; RadioScope.moveScope applies the same rule and
-    // sets the receiving radio's own data aside.
+    // A radio's data can go to any other identified radio of the same
+    // protocol that is not sharing a third radio; RadioScope.moveScope
+    // applies the same rule and sets the receiving radio's own data aside.
     List<RadioScopeInfo> moveTargetsFor(RadioScopeInfo scope) => scopes
         .where(
           (s) =>
               s.key != scope.key &&
               s.nodeNum != null &&
+              s.protocol == scope.protocol &&
               (s.sharesWith == null || s.sharesWith == scope.key),
         )
         .toList();
