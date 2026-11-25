@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.84.0] - 2026-11-25
 
 ### Added
 
 - MQTT settings can find the root topics in use near you. The search button on the Root Topic field listens to your broker for a minute and lists your region, state and city topics with the nodes heard on each, plus the other active topics nearby. Picking one fills in the field; nothing is sent to the radio until you save. It also checks a typed topic against the firmware's rules. The Root Topic field now accepts the firmware's full 31 characters instead of 30.
 - Node cards in the Nodes list show the node's hardware model, such as Heltec V4, once the node has announced it.
-- Radiation readings (µR/h) from a node's environment sensor now show in Environment Metrics, with their own filter and chart, on the dashboard Environment widget, on World Mesh node cards and in the environment CSV export. A node with only a radiation sensor now records history too.
+- Radiation readings (microroentgen per hour) from a node's environment sensor now show in Environment Metrics, with their own filter and chart, on the dashboard Environment widget, on World Mesh node cards and in the environment CSV export. A node with only a radiation sensor now records history too.
 
 ### Fixed
 
