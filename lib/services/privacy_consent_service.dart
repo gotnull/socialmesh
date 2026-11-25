@@ -186,6 +186,14 @@ class PrivacyConsentService {
         enabled,
       );
       AppLogging.privacy('setCrashlyticsCollectionEnabled($enabled)');
+      if (!enabled) {
+        // Crashlytics keeps reports from crashes that happen while
+        // collection is off and sends them once it is switched on. A
+        // crash from a period the user did not consent to must never
+        // upload, so drop the backlog whenever collection is off.
+        await FirebaseCrashlytics.instance.deleteUnsentReports();
+        AppLogging.privacy('deleteUnsentReports()');
+      }
     } catch (e) {
       AppLogging.privacy('crashlytics consent apply failed: $e');
     }

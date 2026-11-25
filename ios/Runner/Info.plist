@@ -109,6 +109,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>FirebaseAutomaticScreenReportingEnabled</key>
 	<false/>
+	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+	<false/>
+	<key>FirebaseCrashlyticsCollectionEnabled</key>
+	<false/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSApplicationCategoryType</key>
