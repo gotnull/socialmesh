@@ -56,9 +56,19 @@ class _CapturingTransport implements DeviceTransport {
   @override
   Future<void> dispose() async {}
 
-  pb.MeshPacket get lastPacket => pb.ToRadio.fromBuffer(sentBytes.last).packet;
-  admin.AdminMessage get lastAdminMessage =>
-      admin.AdminMessage.fromBuffer(lastPacket.decoded.payload);
+  // The last packet that saved a module config. Background admin requests
+  // can be sent after the save under load, so the very last packet sent is
+  // not necessarily the save.
+  pb.MeshPacket get lastConfigSavePacket => sentBytes
+      .map((bytes) => pb.ToRadio.fromBuffer(bytes).packet)
+      .lastWhere(
+        (packet) =>
+            packet.decoded.portnum == pn.PortNum.ADMIN_APP &&
+            admin.AdminMessage.fromBuffer(packet.decoded.payload)
+                .hasSetModuleConfig(),
+      );
+  admin.AdminMessage get lastConfigSave =>
+      admin.AdminMessage.fromBuffer(lastConfigSavePacket.decoded.payload);
 }
 
 const _myNodeNum = 0xAABBCCDD;
@@ -115,9 +125,9 @@ void main() {
     await protocol.setStatusMessageConfig('Out walking');
     await Future<void>.delayed(Duration.zero);
 
-    expect(transport.lastPacket.to, _myNodeNum);
+    expect(transport.lastConfigSavePacket.to, _myNodeNum);
     expect(
-      transport.lastAdminMessage.setModuleConfig.statusmessage.nodeStatus,
+      transport.lastConfigSave.setModuleConfig.statusmessage.nodeStatus,
       'Out walking',
     );
     expect(protocol.currentStatusMessageConfig?.nodeStatus, 'Out walking');
@@ -134,7 +144,7 @@ void main() {
     await protocol.setStatusMessageConfig('');
 
     expect(
-      transport.lastAdminMessage.setModuleConfig.statusmessage.nodeStatus,
+      transport.lastConfigSave.setModuleConfig.statusmessage.nodeStatus,
       '',
     );
     expect(protocol.nodes[_myNodeNum]?.nodeStatus, isNull);
@@ -203,8 +213,8 @@ void main() {
           target: const AdminTarget.remote(remoteNodeNum),
         );
 
-        expect(transport.lastPacket.to, remoteNodeNum);
-        final sent = transport.lastAdminMessage;
+        expect(transport.lastConfigSavePacket.to, remoteNodeNum);
+        final sent = transport.lastConfigSave;
         expect(sent.setModuleConfig.statusmessage.nodeStatus, 'Back at base');
         expect(sent.sessionPasskey, [9, 8, 7]);
         expect(protocol.nodes[remoteNodeNum]?.nodeStatus, 'Back at base');
