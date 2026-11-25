@@ -48,6 +48,29 @@ class _RecordingTransport implements MeshCoreTransport {
   }
 }
 
+// Waits until [count] frames with [command] have gone out, so a test replies
+// to the frame the session actually sent rather than after a fixed sleep that
+// races the session's own timeouts on a loaded machine.
+Future<void> _untilSent(
+  _RecordingTransport tx,
+  int command, {
+  int count = 1,
+}) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 10));
+  while (tx.sent
+          .where(
+            (f) =>
+                f.isNotEmpty && MeshCoreFrame.fromBytes(f).command == command,
+          )
+          .length <
+      count) {
+    if (DateTime.now().isAfter(deadline)) {
+      fail('frame 0x${command.toRadixString(16)} x$count never sent');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+  }
+}
+
 final _pubKey = Uint8List.fromList(List<int>.generate(32, (i) => 0x10 + i));
 
 Uint8List _cliReplyFrame(Uint8List pubKey, String text) {
@@ -134,15 +157,15 @@ void main() {
         command: 'ver',
         prefixToken: '02|',
         timestampSeconds: 0,
-        timeout: const Duration(milliseconds: 100),
-        loginTimeout: const Duration(milliseconds: 100),
+        timeout: const Duration(milliseconds: 300),
+        loginTimeout: const Duration(seconds: 5),
         retryPrefixTokenBuilder: () => '99|',
       );
-      // Let the first CLI call time out, then respond to the login
-      // with success, then respond to the retry CLI with ok.
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      // Let the first CLI call time out, answer the login once it is on
+      // the wire, then answer the retried CLI command once it is sent.
+      await _untilSent(tx, MeshCoreCommands.sendLogin);
       tx.inject(_loginSuccessFrame(_pubKey, admin: true));
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await _untilSent(tx, MeshCoreCommands.sendTxtMsg, count: 2);
       tx.inject(_cliReplyFrame(_pubKey, '99|v1.7.0-retry'));
 
       final result = await fut;
@@ -163,10 +186,10 @@ void main() {
         prefixToken: '03|',
         timestampSeconds: 0,
         timeout: const Duration(milliseconds: 80),
-        loginTimeout: const Duration(milliseconds: 80),
+        loginTimeout: const Duration(seconds: 5),
         retryPrefixTokenBuilder: () => '98|',
       );
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await _untilSent(tx, MeshCoreCommands.sendLogin);
       tx.inject(_loginSuccessFrame(_pubKey, admin: true));
       // Do NOT inject a retry reply; let the second CLI call time
       // out on its own.
