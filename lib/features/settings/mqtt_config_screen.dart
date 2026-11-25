@@ -37,6 +37,14 @@ import '../../core/mqtt/mqtt_constants.dart' show BrokerPreset;
 import '../../core/mqtt/mqtt_preferences.dart';
 import '../../core/utils/utf8_byte_length_formatter.dart';
 import '../../core/widgets/remote_admin_target_banner.dart';
+import '../../core/safe_lat_lng.dart';
+import 'mqtt_topics/mqtt_root_topic.dart';
+import 'mqtt_topics/mqtt_topic_finder_sheet.dart';
+import 'mqtt_topics/mqtt_topic_sampler.dart';
+
+import 'package:geocoding/geocoding.dart' as geocoding;
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 /// Screen for configuring MQTT module settings
 class MqttConfigScreen extends ConsumerStatefulWidget {
@@ -193,6 +201,85 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
       _usernameController.text = match!.defaultUsername;
       _passwordController.text = match.defaultPassword;
     });
+  }
+
+  /// Opens Find Topics with the form's draft broker settings. A picked
+  /// topic only fills in the Root Topic field; Save sends it to the radio.
+  Future<void> _openTopicFinder() async {
+    HapticFeedback.selectionClick();
+    final l10n = context.l10n;
+    final settings = MqttBrokerSettings.fromForm(
+      address: _addressController.text,
+      tlsEnabled: _tlsEnabled,
+      username: _usernameController.text,
+      password: _passwordController.text,
+    );
+    final region = ref.read(deviceRegionProvider).value;
+    final hasRegion =
+        region != null &&
+        region != config_pbenum.Config_LoRaConfig_RegionCode.UNSET;
+    final regionName = hasRegion
+        ? region_metadata
+                  .regionMetadataFor(region)
+                  ?.regionSelectionName(l10n) ??
+              region.name
+        : '';
+    final nodeNum =
+        ref.read(remoteAdminTargetProvider) ?? ref.read(myNodeNumProvider);
+    final node = nodeNum == null ? null : ref.read(nodesProvider)[nodeNum];
+    final radioPosition = node != null && node.hasPosition
+        ? safeLatLng(node.latitude, node.longitude)
+        : null;
+    final picked = await AppBottomSheet.showScrollable<String>(
+      context: context,
+      initialChildSize: 0.9,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (controller) => MqttTopicFinderSheet(
+        scrollController: controller,
+        settings: settings,
+        regionTopic: hasRegion ? 'msh/${region.name}' : null,
+        regionName: regionName,
+        locate: () async => radioPosition ?? await _lastPhonePosition(),
+        geocode: _placeNames,
+      ),
+    );
+    if (!mounted || picked == null) return;
+    _rootController.text = picked;
+  }
+
+  /// The phone's last known position, only when location access was
+  /// already granted: Find Topics never asks for it.
+  static Future<LatLng?> _lastPhonePosition() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.always &&
+          permission != LocationPermission.whileInUse) {
+        return null;
+      }
+      final position = await Geolocator.getLastKnownPosition();
+      if (position == null) return null;
+      return safeLatLng(position.latitude, position.longitude);
+    } on Exception catch (e) {
+      AppLogging.mqttProxyWarning('TOPIC_FINDER: no phone position: $e');
+      return null;
+    }
+  }
+
+  /// State and city for [position] from the platform geocoder.
+  static Future<MqttPlaceNames?> _placeNames(LatLng position) async {
+    try {
+      final placemarks = await geocoding.Geocoding().placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      if (placemarks.isEmpty) return null;
+      final place = placemarks.first;
+      return (state: place.administrativeArea, city: place.locality);
+    } on Exception catch (e) {
+      AppLogging.mqttProxyWarning('TOPIC_FINDER: geocode failed: $e');
+      return null;
+    }
   }
 
   void _applyConfig(module_pb.ModuleConfig_MQTTConfig config) {
@@ -573,10 +660,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                           ),
                           SizedBox(height: AppTheme.spacing16),
                           TextField(
-                            // Topic-root firmware buffer is 30 bytes.
                             maxLength: 256,
                             inputFormatters: const [
-                              Utf8ByteLengthFormatter(30),
+                              Utf8ByteLengthFormatter(kMqttRootTopicByteCap),
                             ],
                             controller: _rootController,
                             autocorrect: false,
@@ -592,6 +678,14 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                                 color: context.textSecondary,
                               ),
                               hintText: context.l10n.mqttConfigTopicRootHint,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  Icons.travel_explore,
+                                  color: context.accentColor,
+                                ),
+                                tooltip: context.l10n.mqttTopicFinderTooltip,
+                                onPressed: _openTopicFinder,
+                              ),
                               hintStyle: TextStyle(color: SemanticColors.muted),
                               filled: true,
                               fillColor: context.background,

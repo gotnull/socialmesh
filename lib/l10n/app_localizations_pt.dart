@@ -39935,4 +39935,171 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get removeStaleNodesDisconnected =>
       'O rádio desconectou antes que o restante fosse removido.';
+
+  @override
+  String get mqttTopicFinderTooltip => 'Encontrar tópicos em uso perto de você';
+
+  @override
+  String get mqttTopicFinderTitle => 'Encontrar tópicos';
+
+  @override
+  String mqttTopicFinderConnecting(String host) {
+    return 'Conectando a $host...';
+  }
+
+  @override
+  String get mqttTopicFinderSubscribing => 'Inscrevendo...';
+
+  @override
+  String mqttTopicFinderListening(int seconds) {
+    return 'Ouvindo, faltam $seconds s';
+  }
+
+  @override
+  String mqttTopicFinderFinished(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Concluído: $count mensagens recebidas',
+      one: 'Concluído: 1 mensagem recebida',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mqttTopicFinderFailedConnect(String host) {
+    return 'Não foi possível conectar a $host.';
+  }
+
+  @override
+  String get mqttTopicFinderFailedFilters =>
+      'O broker não permite estes filtros de tópicos.';
+
+  @override
+  String get mqttTopicFinderFailedClosed => 'O broker fechou a conexão.';
+
+  @override
+  String mqttTopicFinderPrivacy(String host) {
+    return 'Ouve $host por um minuto e não publica nada. O broker vê seu endereço IP e um ID de cliente aleatório, não o seu nó. Para nomear seu estado e cidade, sua localização vai para o serviço de geocodificação do telefone (Apple ou Google), nunca para o broker. Escolher um tópico só preenche o campo Tópico raiz; nada chega ao rádio até você tocar em Salvar.';
+  }
+
+  @override
+  String get mqttTopicFinderNearYou => 'Perto de você';
+
+  @override
+  String get mqttTopicFinderNoLocation =>
+      'Ainda sem localização. Conecte um rádio com posição ou permita o acesso à localização para ver tópicos de estado e cidade.';
+
+  @override
+  String get mqttTopicFinderGeocodeFailed =>
+      'Não foi possível encontrar o nome do local da sua localização.';
+
+  @override
+  String get mqttTopicFinderCountsNote =>
+      'Os números são nós ouvidos durante a amostra. Tópicos ativos se preenchem em segundos; os calmos podem ficar em zero.';
+
+  @override
+  String get mqttTopicFinderLevelRegion => 'Região';
+
+  @override
+  String get mqttTopicFinderLevelState => 'Estado ou província';
+
+  @override
+  String get mqttTopicFinderLevelCity => 'Cidade';
+
+  @override
+  String get mqttTopicFinderActiveTopics => 'Tópicos ativos';
+
+  @override
+  String get mqttTopicFinderNothingHeard =>
+      'Nada foi ouvido durante a amostra.';
+
+  @override
+  String get mqttTopicFinderOnlyLadder =>
+      'Só os tópicos acima estiveram ativos durante a amostra.';
+
+  @override
+  String get mqttTopicFinderNothingYet => 'Nada ouvido ainda.';
+
+  @override
+  String get mqttTopicFinderCustomTopic => 'Tópico personalizado';
+
+  @override
+  String get mqttTopicFinderCustomRules =>
+      'Até 31 caracteres ASCII, sem barra no início ou no fim, sem + nem #.';
+
+  @override
+  String get mqttTopicFinderUseTopic => 'Usar este tópico';
+
+  @override
+  String mqttTopicFinderNodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nós',
+      one: '1 nó',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mqttTopicFinderNodeCountAtLeast(int count) {
+    return '$count+ nós';
+  }
+
+  @override
+  String mqttTopicFinderNearest(String distance) {
+    return 'mais próximo a $distance';
+  }
+
+  @override
+  String get mqttTopicFinderNoRegion =>
+      'Defina primeiro a região LoRa do rádio. Os tópicos ficam sob a raiz da própria região, como msh/ANZ.';
+
+  @override
+  String get mqttTopicFinderOffline =>
+      'Encontrar tópicos precisa de conexão com a internet. Fica disponível quando você estiver online.';
+
+  @override
+  String get mqttTopicFinderStop => 'Parar';
+
+  @override
+  String get mqttRootTopicProblemEmpty => 'Digite um tópico.';
+
+  @override
+  String get mqttRootTopicProblemWhitespace =>
+      'Tópicos não podem conter espaços nem caracteres de controle.';
+
+  @override
+  String get mqttRootTopicProblemNonAscii =>
+      'Tópicos devem usar caracteres ASCII.';
+
+  @override
+  String get mqttRootTopicProblemWildcard =>
+      'Tópicos não podem conter + nem #.';
+
+  @override
+  String get mqttRootTopicProblemLeadingSlash =>
+      'Tópicos não podem começar com uma barra.';
+
+  @override
+  String get mqttRootTopicProblemTrailingSlash =>
+      'Tópicos não podem terminar com uma barra.';
+
+  @override
+  String get mqttRootTopicProblemEmptySegment =>
+      'Tópicos não podem conter duas barras seguidas.';
+
+  @override
+  String get mqttRootTopicProblemEndsWithVersion =>
+      'Tópicos não podem terminar em /2.';
+
+  @override
+  String get mqttRootTopicProblemTooLong =>
+      'Tópicos são limitados a 31 caracteres.';
+
+  @override
+  String mqttTopicFinderRungTitle(String level, String place) {
+    return '$level: $place';
+  }
 }

@@ -52098,5 +52098,213 @@
   "removeStaleNodesDisconnected": "The radio disconnected before the rest were removed.",
   "@removeStaleNodesDisconnected": {
     "description": "Result after removing stale nodes when the radio disconnected part way"
+  },
+  "mqttTopicFinderTooltip": "Find topics in use near you",
+  "@mqttTopicFinderTooltip": {
+    "description": "Tooltip on the Root Topic field's button that opens Find Topics"
+  },
+  "mqttTopicFinderTitle": "Find Topics",
+  "@mqttTopicFinderTitle": {
+    "description": "Title of the Find Topics sheet"
+  },
+  "mqttTopicFinderConnecting": "Connecting to {host}...",
+  "@mqttTopicFinderConnecting": {
+    "description": "Status while connecting to the broker",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "mqttTopicFinderSubscribing": "Subscribing...",
+  "@mqttTopicFinderSubscribing": {
+    "description": "Status while subscribing to topic filters"
+  },
+  "mqttTopicFinderListening": "Listening, {seconds} s left",
+  "@mqttTopicFinderListening": {
+    "description": "Status while sampling, with seconds left",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "mqttTopicFinderFinished": "{count, plural, =1{Finished: 1 message heard} other{Finished: {count} messages heard}}",
+  "@mqttTopicFinderFinished": {
+    "description": "Status after the sample, with messages heard",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqttTopicFinderFailedConnect": "Could not connect to {host}.",
+  "@mqttTopicFinderFailedConnect": {
+    "description": "Error: broker connection failed",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "mqttTopicFinderFailedFilters": "The broker does not allow these topic filters.",
+  "@mqttTopicFinderFailedFilters": {
+    "description": "Error: broker refused the topic filters"
+  },
+  "mqttTopicFinderFailedClosed": "The broker closed the connection.",
+  "@mqttTopicFinderFailedClosed": {
+    "description": "Error: broker closed the connection before anything was heard"
+  },
+  "mqttTopicFinderPrivacy": "Listens to {host} for one minute and publishes nothing. The broker sees your IP address and a random client ID, not your node. To name your state and city, your location goes to your phone's geocoding service (Apple or Google), never to the broker. Picking a topic only fills in the Root Topic field; nothing reaches the radio until you tap Save.",
+  "@mqttTopicFinderPrivacy": {
+    "description": "Footnote explaining what the sample sends and to whom",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "mqttTopicFinderNearYou": "Near you",
+  "@mqttTopicFinderNearYou": {
+    "description": "Section title for the region/state/city suggestions"
+  },
+  "mqttTopicFinderNoLocation": "No location yet. Connect a radio with a position fix, or allow location access, to see state and city topics.",
+  "@mqttTopicFinderNoLocation": {
+    "description": "Shown when no position is available for state and city suggestions"
+  },
+  "mqttTopicFinderGeocodeFailed": "Could not look up the place name for your location.",
+  "@mqttTopicFinderGeocodeFailed": {
+    "description": "Shown when the place-name lookup failed"
+  },
+  "mqttTopicFinderCountsNote": "Counts are nodes heard during the sample. Busy topics fill in within seconds; quiet ones may stay at zero.",
+  "@mqttTopicFinderCountsNote": {
+    "description": "Footnote under the suggestions explaining the node counts"
+  },
+  "mqttTopicFinderLevelRegion": "Region",
+  "@mqttTopicFinderLevelRegion": {
+    "description": "Level label for the region suggestion"
+  },
+  "mqttTopicFinderLevelState": "State or province",
+  "@mqttTopicFinderLevelState": {
+    "description": "Level label for the state suggestion"
+  },
+  "mqttTopicFinderLevelCity": "City",
+  "@mqttTopicFinderLevelCity": {
+    "description": "Level label for the city suggestion"
+  },
+  "mqttTopicFinderActiveTopics": "Active topics",
+  "@mqttTopicFinderActiveTopics": {
+    "description": "Section title for other topics heard during the sample"
+  },
+  "mqttTopicFinderNothingHeard": "Nothing was heard during the sample.",
+  "@mqttTopicFinderNothingHeard": {
+    "description": "Active topics empty after a sample that heard nothing"
+  },
+  "mqttTopicFinderOnlyLadder": "Only the topics above were active during the sample.",
+  "@mqttTopicFinderOnlyLadder": {
+    "description": "Active topics empty because only the suggestions were active"
+  },
+  "mqttTopicFinderNothingYet": "Nothing heard yet.",
+  "@mqttTopicFinderNothingYet": {
+    "description": "Active topics empty while the sample is still running"
+  },
+  "mqttTopicFinderCustomTopic": "Custom topic",
+  "@mqttTopicFinderCustomTopic": {
+    "description": "Section title and field label for typing a topic"
+  },
+  "mqttTopicFinderCustomRules": "Up to 31 ASCII characters, no leading or trailing slash, no + or #.",
+  "@mqttTopicFinderCustomRules": {
+    "description": "Footnote with the root topic rules"
+  },
+  "mqttTopicFinderUseTopic": "Use this topic",
+  "@mqttTopicFinderUseTopic": {
+    "description": "Button that fills the Root Topic field with the typed topic"
+  },
+  "mqttTopicFinderNodeCount": "{count, plural, =1{1 node} other{{count} nodes}}",
+  "@mqttTopicFinderNodeCount": {
+    "description": "Nodes heard on a topic",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqttTopicFinderNodeCountAtLeast": "{count}+ nodes",
+  "@mqttTopicFinderNodeCountAtLeast": {
+    "description": "Nodes heard on a topic whose stream was capped, so the count is a floor",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqttTopicFinderNearest": "nearest {distance}",
+  "@mqttTopicFinderNearest": {
+    "description": "Distance to the closest map-reported node on a topic",
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "mqttTopicFinderNoRegion": "Set the radio's LoRa region first. Topics are found under the region's own root, such as msh/ANZ.",
+  "@mqttTopicFinderNoRegion": {
+    "description": "Shown when the radio has no LoRa region set"
+  },
+  "mqttTopicFinderOffline": "Finding topics needs an internet connection. It is available when you are online.",
+  "@mqttTopicFinderOffline": {
+    "description": "Shown when the phone is offline"
+  },
+  "mqttTopicFinderStop": "Stop",
+  "@mqttTopicFinderStop": {
+    "description": "Button that ends the sample early"
+  },
+  "mqttRootTopicProblemEmpty": "Enter a topic.",
+  "@mqttRootTopicProblemEmpty": {
+    "description": "Root topic rule"
+  },
+  "mqttRootTopicProblemWhitespace": "Topics cannot contain spaces or control characters.",
+  "@mqttRootTopicProblemWhitespace": {
+    "description": "Root topic rule"
+  },
+  "mqttRootTopicProblemNonAscii": "Topics must use ASCII characters.",
+  "@mqttRootTopicProblemNonAscii": {
+    "description": "Root topic rule"
+  },
+  "mqttRootTopicProblemWildcard": "Topics cannot contain + or #.",
+  "@mqttRootTopicProblemWildcard": {
+    "description": "Root topic rule"
+  },
+  "mqttRootTopicProblemLeadingSlash": "Topics cannot start with a slash.",
+  "@mqttRootTopicProblemLeadingSlash": {
+    "description": "Root topic rule"
+  },
+  "mqttRootTopicProblemTrailingSlash": "Topics cannot end with a slash.",
+  "@mqttRootTopicProblemTrailingSlash": {
+    "description": "Root topic rule"
+  },
+  "mqttRootTopicProblemEmptySegment": "Topics cannot contain two slashes in a row.",
+  "@mqttRootTopicProblemEmptySegment": {
+    "description": "Root topic rule"
+  },
+  "mqttRootTopicProblemEndsWithVersion": "Topics cannot end with /2.",
+  "@mqttRootTopicProblemEndsWithVersion": {
+    "description": "Root topic rule"
+  },
+  "mqttRootTopicProblemTooLong": "Topics are limited to 31 characters.",
+  "@mqttRootTopicProblemTooLong": {
+    "description": "Root topic rule"
+  },
+  "mqttTopicFinderRungTitle": "{level}: {place}",
+  "@mqttTopicFinderRungTitle": {
+    "description": "A suggested topic's level and place, such as 'City: Coburg'",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "place": {
+        "type": "String"
+      }
+    }
   }
 }

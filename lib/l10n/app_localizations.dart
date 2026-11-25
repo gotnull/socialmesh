@@ -68446,6 +68446,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The radio disconnected before the rest were removed.'**
   String get removeStaleNodesDisconnected;
+
+  /// Tooltip on the Root Topic field's button that opens Find Topics
+  ///
+  /// In en, this message translates to:
+  /// **'Find topics in use near you'**
+  String get mqttTopicFinderTooltip;
+
+  /// Title of the Find Topics sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Find Topics'**
+  String get mqttTopicFinderTitle;
+
+  /// Status while connecting to the broker
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to {host}...'**
+  String mqttTopicFinderConnecting(String host);
+
+  /// Status while subscribing to topic filters
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribing...'**
+  String get mqttTopicFinderSubscribing;
+
+  /// Status while sampling, with seconds left
+  ///
+  /// In en, this message translates to:
+  /// **'Listening, {seconds} s left'**
+  String mqttTopicFinderListening(int seconds);
+
+  /// Status after the sample, with messages heard
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Finished: 1 message heard} other{Finished: {count} messages heard}}'**
+  String mqttTopicFinderFinished(int count);
+
+  /// Error: broker connection failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to {host}.'**
+  String mqttTopicFinderFailedConnect(String host);
+
+  /// Error: broker refused the topic filters
+  ///
+  /// In en, this message translates to:
+  /// **'The broker does not allow these topic filters.'**
+  String get mqttTopicFinderFailedFilters;
+
+  /// Error: broker closed the connection before anything was heard
+  ///
+  /// In en, this message translates to:
+  /// **'The broker closed the connection.'**
+  String get mqttTopicFinderFailedClosed;
+
+  /// Footnote explaining what the sample sends and to whom
+  ///
+  /// In en, this message translates to:
+  /// **'Listens to {host} for one minute and publishes nothing. The broker sees your IP address and a random client ID, not your node. To name your state and city, your location goes to your phone\'s geocoding service (Apple or Google), never to the broker. Picking a topic only fills in the Root Topic field; nothing reaches the radio until you tap Save.'**
+  String mqttTopicFinderPrivacy(String host);
+
+  /// Section title for the region/state/city suggestions
+  ///
+  /// In en, this message translates to:
+  /// **'Near you'**
+  String get mqttTopicFinderNearYou;
+
+  /// Shown when no position is available for state and city suggestions
+  ///
+  /// In en, this message translates to:
+  /// **'No location yet. Connect a radio with a position fix, or allow location access, to see state and city topics.'**
+  String get mqttTopicFinderNoLocation;
+
+  /// Shown when the place-name lookup failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not look up the place name for your location.'**
+  String get mqttTopicFinderGeocodeFailed;
+
+  /// Footnote under the suggestions explaining the node counts
+  ///
+  /// In en, this message translates to:
+  /// **'Counts are nodes heard during the sample. Busy topics fill in within seconds; quiet ones may stay at zero.'**
+  String get mqttTopicFinderCountsNote;
+
+  /// Level label for the region suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get mqttTopicFinderLevelRegion;
+
+  /// Level label for the state suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'State or province'**
+  String get mqttTopicFinderLevelState;
+
+  /// Level label for the city suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get mqttTopicFinderLevelCity;
+
+  /// Section title for other topics heard during the sample
+  ///
+  /// In en, this message translates to:
+  /// **'Active topics'**
+  String get mqttTopicFinderActiveTopics;
+
+  /// Active topics empty after a sample that heard nothing
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was heard during the sample.'**
+  String get mqttTopicFinderNothingHeard;
+
+  /// Active topics empty because only the suggestions were active
+  ///
+  /// In en, this message translates to:
+  /// **'Only the topics above were active during the sample.'**
+  String get mqttTopicFinderOnlyLadder;
+
+  /// Active topics empty while the sample is still running
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing heard yet.'**
+  String get mqttTopicFinderNothingYet;
+
+  /// Section title and field label for typing a topic
+  ///
+  /// In en, this message translates to:
+  /// **'Custom topic'**
+  String get mqttTopicFinderCustomTopic;
+
+  /// Footnote with the root topic rules
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 31 ASCII characters, no leading or trailing slash, no + or #.'**
+  String get mqttTopicFinderCustomRules;
+
+  /// Button that fills the Root Topic field with the typed topic
+  ///
+  /// In en, this message translates to:
+  /// **'Use this topic'**
+  String get mqttTopicFinderUseTopic;
+
+  /// Nodes heard on a topic
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 node} other{{count} nodes}}'**
+  String mqttTopicFinderNodeCount(int count);
+
+  /// Nodes heard on a topic whose stream was capped, so the count is a floor
+  ///
+  /// In en, this message translates to:
+  /// **'{count}+ nodes'**
+  String mqttTopicFinderNodeCountAtLeast(int count);
+
+  /// Distance to the closest map-reported node on a topic
+  ///
+  /// In en, this message translates to:
+  /// **'nearest {distance}'**
+  String mqttTopicFinderNearest(String distance);
+
+  /// Shown when the radio has no LoRa region set
+  ///
+  /// In en, this message translates to:
+  /// **'Set the radio\'s LoRa region first. Topics are found under the region\'s own root, such as msh/ANZ.'**
+  String get mqttTopicFinderNoRegion;
+
+  /// Shown when the phone is offline
+  ///
+  /// In en, this message translates to:
+  /// **'Finding topics needs an internet connection. It is available when you are online.'**
+  String get mqttTopicFinderOffline;
+
+  /// Button that ends the sample early
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get mqttTopicFinderStop;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a topic.'**
+  String get mqttRootTopicProblemEmpty;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Topics cannot contain spaces or control characters.'**
+  String get mqttRootTopicProblemWhitespace;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Topics must use ASCII characters.'**
+  String get mqttRootTopicProblemNonAscii;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Topics cannot contain + or #.'**
+  String get mqttRootTopicProblemWildcard;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Topics cannot start with a slash.'**
+  String get mqttRootTopicProblemLeadingSlash;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Topics cannot end with a slash.'**
+  String get mqttRootTopicProblemTrailingSlash;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Topics cannot contain two slashes in a row.'**
+  String get mqttRootTopicProblemEmptySegment;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Topics cannot end with /2.'**
+  String get mqttRootTopicProblemEndsWithVersion;
+
+  /// Root topic rule
+  ///
+  /// In en, this message translates to:
+  /// **'Topics are limited to 31 characters.'**
+  String get mqttRootTopicProblemTooLong;
+
+  /// A suggested topic's level and place, such as 'City: Coburg'
+  ///
+  /// In en, this message translates to:
+  /// **'{level}: {place}'**
+  String mqttTopicFinderRungTitle(String level, String place);
 }
 
 class _AppLocalizationsDelegate

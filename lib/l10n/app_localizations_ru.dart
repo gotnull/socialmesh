@@ -39998,4 +39998,176 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get removeStaleNodesDisconnected =>
       'Рация отключилась до того, как были удалены остальные.';
+
+  @override
+  String get mqttTopicFinderTooltip =>
+      'Найти топики, используемые рядом с вами';
+
+  @override
+  String get mqttTopicFinderTitle => 'Поиск топиков';
+
+  @override
+  String mqttTopicFinderConnecting(String host) {
+    return 'Подключение к $host...';
+  }
+
+  @override
+  String get mqttTopicFinderSubscribing => 'Подписка...';
+
+  @override
+  String mqttTopicFinderListening(int seconds) {
+    return 'Прослушивание, осталось $seconds с';
+  }
+
+  @override
+  String mqttTopicFinderFinished(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Готово: получено $count сообщения',
+      many: 'Готово: получено $count сообщений',
+      few: 'Готово: получено $count сообщения',
+      one: 'Готово: получено $count сообщение',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mqttTopicFinderFailedConnect(String host) {
+    return 'Не удалось подключиться к $host.';
+  }
+
+  @override
+  String get mqttTopicFinderFailedFilters =>
+      'Брокер не разрешает эти фильтры топиков.';
+
+  @override
+  String get mqttTopicFinderFailedClosed => 'Брокер закрыл соединение.';
+
+  @override
+  String mqttTopicFinderPrivacy(String host) {
+    return 'Минуту слушает $host и ничего не публикует. Брокер видит ваш IP-адрес и случайный ID клиента, но не ваш узел. Чтобы назвать регион и город, ваше местоположение отправляется в службу геокодирования телефона (Apple или Google), но никогда брокеру. Выбор топика только заполняет поле «Корневой топик»; на радиостанцию ничего не уходит, пока вы не нажмёте «Сохранить».';
+  }
+
+  @override
+  String get mqttTopicFinderNearYou => 'Рядом с вами';
+
+  @override
+  String get mqttTopicFinderNoLocation =>
+      'Местоположение пока неизвестно. Подключите радиостанцию с координатами или разрешите доступ к геопозиции, чтобы увидеть топики региона и города.';
+
+  @override
+  String get mqttTopicFinderGeocodeFailed =>
+      'Не удалось определить название места по вашим координатам.';
+
+  @override
+  String get mqttTopicFinderCountsNote =>
+      'Числа означают узлы, услышанные за время выборки. Активные топики заполняются за секунды; тихие могут остаться на нуле.';
+
+  @override
+  String get mqttTopicFinderLevelRegion => 'Регион';
+
+  @override
+  String get mqttTopicFinderLevelState => 'Область или штат';
+
+  @override
+  String get mqttTopicFinderLevelCity => 'Город';
+
+  @override
+  String get mqttTopicFinderActiveTopics => 'Активные топики';
+
+  @override
+  String get mqttTopicFinderNothingHeard =>
+      'За время выборки ничего не было услышано.';
+
+  @override
+  String get mqttTopicFinderOnlyLadder =>
+      'За время выборки были активны только топики выше.';
+
+  @override
+  String get mqttTopicFinderNothingYet => 'Пока ничего не услышано.';
+
+  @override
+  String get mqttTopicFinderCustomTopic => 'Свой топик';
+
+  @override
+  String get mqttTopicFinderCustomRules =>
+      'До 31 символа ASCII, без косой черты в начале или в конце, без + и #.';
+
+  @override
+  String get mqttTopicFinderUseTopic => 'Использовать этот топик';
+
+  @override
+  String mqttTopicFinderNodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count узла',
+      many: '$count узлов',
+      few: '$count узла',
+      one: '$count узел',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mqttTopicFinderNodeCountAtLeast(int count) {
+    return '$count+ узлов';
+  }
+
+  @override
+  String mqttTopicFinderNearest(String distance) {
+    return 'ближайший в $distance';
+  }
+
+  @override
+  String get mqttTopicFinderNoRegion =>
+      'Сначала задайте регион LoRa радиостанции. Топики находятся под собственным корнем региона, например msh/ANZ.';
+
+  @override
+  String get mqttTopicFinderOffline =>
+      'Для поиска топиков нужно подключение к интернету. Он доступен, когда вы в сети.';
+
+  @override
+  String get mqttTopicFinderStop => 'Остановить';
+
+  @override
+  String get mqttRootTopicProblemEmpty => 'Введите топик.';
+
+  @override
+  String get mqttRootTopicProblemWhitespace =>
+      'Топики не могут содержать пробелы или управляющие символы.';
+
+  @override
+  String get mqttRootTopicProblemNonAscii =>
+      'Топики должны состоять из символов ASCII.';
+
+  @override
+  String get mqttRootTopicProblemWildcard =>
+      'Топики не могут содержать + или #.';
+
+  @override
+  String get mqttRootTopicProblemLeadingSlash =>
+      'Топики не могут начинаться с косой черты.';
+
+  @override
+  String get mqttRootTopicProblemTrailingSlash =>
+      'Топики не могут заканчиваться косой чертой.';
+
+  @override
+  String get mqttRootTopicProblemEmptySegment =>
+      'Топики не могут содержать две косые черты подряд.';
+
+  @override
+  String get mqttRootTopicProblemEndsWithVersion =>
+      'Топики не могут заканчиваться на /2.';
+
+  @override
+  String get mqttRootTopicProblemTooLong =>
+      'Длина топика ограничена 31 символом.';
+
+  @override
+  String mqttTopicFinderRungTitle(String level, String place) {
+    return '$level: $place';
+  }
 }
