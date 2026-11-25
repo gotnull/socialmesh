@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Each radio's node list is now kept in its own encrypted database, one entry per node, instead of one long text value in the app's settings that was rewritten in full on every change. Saving a few nodes on a large mesh no longer rewrites them all, and the app no longer loads every node through its settings at launch. Existing node lists move across the first time each radio connects.
+- Shake to report a bug samples the phone's motion sensor about 15 times a second instead of 50 while the app is open, so it uses less battery. A firm shake still opens the report.
+
 ## [1.84.0] - 2026-11-25
 
 ### Added
@@ -24,7 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - While the Devices screen is still searching, it says it is looking for Meshtastic and MeshCore radios when MeshCore support is on, instead of Meshtastic devices only.
 - Connecting to a radio, or an MQTT feed, that reports thousands of nodes no longer freezes the app. NodeDex linked every recently heard node to every other, copying each node's links per pair, so a node database of 20,000 froze the app for minutes while its memory climbed; it now links the 64 most recently heard nodes in each window and keeps each node's 256 strongest links. Node names from a large node database are also saved in batches rather than one full rewrite per node. A first connect to a 20,000-node radio now finishes in about 15 seconds.
 - Counts of 1,000 or more show a thousands separator in your language, such as Nodes (20,004).
-- Each radio's node list is now kept in its own encrypted database, one entry per node, instead of one long text value in the app's settings that was rewritten in full on every change. Saving a few nodes on a large mesh no longer rewrites them all, and the app no longer loads every node through its settings at launch. Existing node lists move across the first time each radio connects.
 
 ## [1.83.1] - 2026-11-25
 
