@@ -40,7 +40,8 @@ enum _MetricFilter {
   gas('Gas', Icons.air),
   iaq('IAQ', Icons.eco),
   light('Light', Icons.light_mode),
-  wind('Wind', Icons.wind_power);
+  wind('Wind', Icons.wind_power),
+  radiation('Radiation', Icons.sensors);
 
   final String label;
   final IconData? icon;
@@ -130,6 +131,8 @@ class _EnvironmentMetricsLogScreenState
       _MetricFilter.iaq => logs.where((l) => l.iaq != null).toList(),
       _MetricFilter.light => logs.where((l) => l.lux != null).toList(),
       _MetricFilter.wind => logs.where((l) => l.windSpeed != null).toList(),
+      _MetricFilter.radiation =>
+        logs.where((l) => l.radiation != null).toList(),
     };
   }
 
@@ -165,6 +168,7 @@ class _EnvironmentMetricsLogScreenState
       _MetricFilter.iaq => logs.where((l) => l.iaq != null).length,
       _MetricFilter.light => logs.where((l) => l.lux != null).length,
       _MetricFilter.wind => logs.where((l) => l.windSpeed != null).length,
+      _MetricFilter.radiation => logs.where((l) => l.radiation != null).length,
     };
   }
 
@@ -207,6 +211,7 @@ class _EnvironmentMetricsLogScreenState
       _MetricFilter.iaq => l10n.telemetryEnvironmentLegendIaq,
       _MetricFilter.light => l10n.telemetryEnvironmentLegendLight,
       _MetricFilter.wind => l10n.telemetryEnvironmentLegendWind,
+      _MetricFilter.radiation => l10n.telemetryEnvironmentLegendRadiation,
     };
   }
 
@@ -220,6 +225,7 @@ class _EnvironmentMetricsLogScreenState
       _MetricFilter.iaq => AccentColors.lime,
       _MetricFilter.light => AppTheme.warningYellow,
       _MetricFilter.wind => AppTheme.primaryBlue,
+      _MetricFilter.radiation => AccentColors.orange,
     };
   }
 
@@ -380,6 +386,8 @@ class _EnvironmentMetricsLogScreenState
                             context.l10n.telemetryEnvironmentFilterLight,
                           _MetricFilter.wind =>
                             context.l10n.telemetryEnvironmentFilterWind,
+                          _MetricFilter.radiation =>
+                            context.l10n.telemetryEnvironmentFilterRadiation,
                         },
                         count: counts[filter],
                         isSelected: _activeFilter == filter,
@@ -679,6 +687,14 @@ class _EnvironmentMetricsCard extends StatelessWidget {
                       ),
                       color: AppTheme.primaryBlue,
                     ),
+                  if (log.radiation != null)
+                    _MetricChip(
+                      icon: Icons.sensors,
+                      label: context.l10n.telemetryEnvRadiationValue(
+                        log.radiation!.toStringAsFixed(1),
+                      ),
+                      color: AccentColors.orange,
+                    ),
                 ],
               ),
             ],
@@ -968,6 +984,10 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 56,
                       interval: interval,
+                      // The padded bounds are not on the interval grid, so
+                      // their extra labels land on top of the nearest tick.
+                      minIncluded: false,
+                      maxIncluded: false,
                       getTitlesWidget: (value, _) => Text(
                         _formatAxisValue(filter, value, units),
                         style: TextStyle(
@@ -1016,6 +1036,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
       _MetricFilter.iaq => log.iaq?.toDouble(),
       _MetricFilter.light => log.lux,
       _MetricFilter.wind => log.windSpeed,
+      _MetricFilter.radiation => log.radiation,
     };
   }
 
@@ -1029,6 +1050,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
       _MetricFilter.iaq => AccentColors.lime,
       _MetricFilter.light => AppTheme.warningYellow,
       _MetricFilter.wind => AppTheme.primaryBlue,
+      _MetricFilter.radiation => AccentColors.orange,
     };
   }
 
@@ -1049,6 +1071,9 @@ class _EnvironmentMetricsChart extends StatelessWidget {
       _MetricFilter.iaq => value.toStringAsFixed(0),
       _MetricFilter.light => _formatLargeNumber(value, unit: 'lx'),
       _MetricFilter.wind => '${value.toStringAsFixed(1)} m/s',
+      // Readings sit in a narrow band, so whole numbers repeat; with the
+      // unit the label wraps in the axis column. The legend names it.
+      _MetricFilter.radiation => value.toStringAsFixed(1),
       _MetricFilter.all => value.toStringAsFixed(0),
     };
   }
@@ -1066,6 +1091,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
       _MetricFilter.iaq => value.toStringAsFixed(0),
       _MetricFilter.light => _formatLargeNumber(value, unit: 'lx', decimals: 1),
       _MetricFilter.wind => '${value.toStringAsFixed(1)} m/s',
+      _MetricFilter.radiation => '${value.toStringAsFixed(1)} µR/h',
       _MetricFilter.all => value.toStringAsFixed(1),
     };
   }

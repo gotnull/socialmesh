@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Node cards in the Nodes list show the node's hardware model, such as Heltec V4, once the node has announced it.
+- Radiation readings (µR/h) from a node's environment sensor now show in Environment Metrics, with their own filter and chart, on the dashboard Environment widget, on World Mesh node cards and in the environment CSV export. A node with only a radiation sensor now records history too.
 
 ### Fixed
 

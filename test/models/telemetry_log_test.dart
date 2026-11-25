@@ -166,6 +166,25 @@ void main() {
       expect(log.barometricPressure, 1015.0);
       expect(log.iaq, 25);
     });
+
+    test('radiation survives a JSON round trip', () {
+      final log = EnvironmentMetricsLog(nodeNum: 7, radiation: 12.5);
+
+      final restored = EnvironmentMetricsLog.fromJson(log.toJson());
+
+      expect(log.toJson()['radiation'], 12.5);
+      expect(restored.radiation, 12.5);
+    });
+
+    test('rows stored before radiation existed read it as null', () {
+      final log = EnvironmentMetricsLog.fromJson({
+        'nodeNum': 7,
+        'timestamp': DateTime(2024, 1, 1).millisecondsSinceEpoch,
+        'temperature': 20.0,
+      });
+
+      expect(log.radiation, isNull);
+    });
   });
 
   group('PowerMetricsLog', () {

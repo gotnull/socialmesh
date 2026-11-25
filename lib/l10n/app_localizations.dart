@@ -33586,6 +33586,12 @@ abstract class AppLocalizations {
   /// **'{value} lux'**
   String telemetryEnvLuxValue(String value);
 
+  /// Metric label showing a radiation reading in microroentgen per hour
+  ///
+  /// In en, this message translates to:
+  /// **'{value} µR/h'**
+  String telemetryEnvRadiationValue(String value);
+
   /// Metric chip label showing barometric pressure in hectopascals
   ///
   /// In en, this message translates to:
@@ -33633,6 +33639,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Light'**
   String get telemetryEnvironmentFilterLight;
+
+  /// Filter chip label for radiation (µR/h) metrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Radiation'**
+  String get telemetryEnvironmentFilterRadiation;
 
   /// Filter chip label for barometric pressure metrics.
   ///
@@ -33687,6 +33699,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Light'**
   String get telemetryEnvironmentLegendLight;
+
+  /// Chart legend and reading label for the radiation (µR/h) series.
+  ///
+  /// In en, this message translates to:
+  /// **'Radiation'**
+  String get telemetryEnvironmentLegendRadiation;
 
   /// Chart legend label for wind speed series.
   ///

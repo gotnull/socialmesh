@@ -89,6 +89,7 @@ class EnvironmentMetricsLog extends TelemetryLogEntry {
   final double? rainfall24h;
   final int? soilMoisture;
   final double? soilTemperature;
+  final double? radiation; // microroentgen per hour (µR/h)
 
   EnvironmentMetricsLog({
     super.id,
@@ -111,6 +112,7 @@ class EnvironmentMetricsLog extends TelemetryLogEntry {
     this.rainfall24h,
     this.soilMoisture,
     this.soilTemperature,
+    this.radiation,
   }) : humidity = humidity ?? relativeHumidity,
        relativeHumidity = relativeHumidity ?? humidity,
        rainfall = rainfall ?? rainfall1h;
@@ -139,6 +141,7 @@ class EnvironmentMetricsLog extends TelemetryLogEntry {
       rainfall24h: (json['rainfall24h'] as num?)?.toDouble(),
       soilMoisture: json['soilMoisture'] as int?,
       soilTemperature: (json['soilTemperature'] as num?)?.toDouble(),
+      radiation: (json['radiation'] as num?)?.toDouble(),
     );
   }
 
@@ -163,6 +166,7 @@ class EnvironmentMetricsLog extends TelemetryLogEntry {
     'rainfall24h': _sanitizeDouble(rainfall24h),
     'soilMoisture': soilMoisture,
     'soilTemperature': _sanitizeDouble(soilTemperature),
+    'radiation': _sanitizeDouble(radiation),
   };
 }
 

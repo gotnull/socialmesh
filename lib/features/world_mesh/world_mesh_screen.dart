@@ -2189,7 +2189,8 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                       node.relativeHumidity != null ||
                       node.barometricPressure != null ||
                       node.windSpeed != null ||
-                      node.lux != null) ...[
+                      node.lux != null ||
+                      node.radiation != null) ...[
                     const SizedBox(height: AppTheme.spacing16),
                     _buildSectionHeader(
                       theme,
@@ -2227,6 +2228,14 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                           icon: Icons.light_mode,
                           value: '${node.lux!.toStringAsFixed(0)} lux',
                           color: AppTheme.warningYellow,
+                        ),
+                      if (node.radiation != null)
+                        _MetricChip(
+                          icon: Icons.sensors,
+                          value: context.l10n.telemetryEnvRadiationValue(
+                            node.radiation!.toStringAsFixed(1),
+                          ),
+                          color: AccentColors.lime,
                         ),
                     ]),
                     if (node.windSpeed != null || node.windDirection != null)

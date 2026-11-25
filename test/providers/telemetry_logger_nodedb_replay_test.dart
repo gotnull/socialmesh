@@ -391,4 +391,51 @@ void main() {
     expect(rows, hasLength(1));
     expect(rows.single.batteryLevel, 95);
   });
+
+  test('a radiation-only sensor logs environment history', () async {
+    SharedPreferences.setMockInitialValues({});
+    final storage = TelemetryDatabase(testDbPath: inMemoryDatabasePath);
+    await storage.init();
+    final protocol = _TestProtocolService();
+    final container = ProviderContainer(
+      overrides: [
+        telemetryStorageProvider.overrideWith((ref) async => storage),
+        protocolServiceProvider.overrideWithValue(protocol),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(protocol.nodeController.close);
+    final subscription = container.listen(telemetryLoggerProvider, (_, _) {});
+    addTearDown(subscription.close);
+    await container.read(telemetryStorageProvider.future);
+    await _settle();
+
+    final heardAt = DateTime.now();
+    protocol.emit(
+      MeshNode(nodeNum: 46, radiation: 11.5, metricsTimestamp: heardAt),
+    );
+    await _settle();
+    var rows = await storage.getEnvironmentMetrics(46);
+    expect(rows, hasLength(1));
+    expect(rows.single.radiation, 11.5);
+
+    // A changed reading is a new sample; an unchanged one stays deduped.
+    protocol.emit(
+      MeshNode(
+        nodeNum: 46,
+        radiation: 12.0,
+        metricsTimestamp: heardAt.add(const Duration(minutes: 5)),
+      ),
+    );
+    protocol.emit(
+      MeshNode(
+        nodeNum: 46,
+        radiation: 12.0,
+        metricsTimestamp: heardAt.add(const Duration(minutes: 10)),
+      ),
+    );
+    await _settle();
+    rows = await storage.getEnvironmentMetrics(46);
+    expect(rows, hasLength(2));
+  });
 }

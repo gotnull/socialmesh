@@ -19626,6 +19626,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String telemetryEnvRadiationValue(String value) {
+    return '$value µR/h';
+  }
+
+  @override
   String telemetryEnvPressureValue(String value) {
     return '$value hPa';
   }
@@ -19658,6 +19663,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get telemetryEnvironmentFilterLight => 'Luz';
 
   @override
+  String get telemetryEnvironmentFilterRadiation => 'Radiação';
+
+  @override
   String get telemetryEnvironmentFilterPressure => 'Pressão';
 
   @override
@@ -19683,6 +19691,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get telemetryEnvironmentLegendLight => 'Luz';
+
+  @override
+  String get telemetryEnvironmentLegendRadiation => 'Radiação';
 
   @override
   String get telemetryEnvironmentLegendWind => 'Vento';

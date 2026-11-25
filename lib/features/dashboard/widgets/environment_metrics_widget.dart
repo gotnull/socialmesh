@@ -166,6 +166,17 @@ class EnvironmentMetricsContent extends ConsumerWidget {
         ),
       );
     }
+    if (log.radiation != null) {
+      tiles.add(
+        _ReadingChip(
+          icon: Icons.sensors,
+          label: context.l10n.telemetryEnvironmentLegendRadiation,
+          value: context.l10n.telemetryEnvRadiationValue(
+            log.radiation!.toStringAsFixed(1),
+          ),
+        ),
+      );
+    }
     return tiles;
   }
 

@@ -488,6 +488,7 @@ class _EnvMetricsFingerprint {
   final double? rainfall24h;
   final int? soilMoisture;
   final double? soilTemperature;
+  final double? radiation;
 
   const _EnvMetricsFingerprint({
     this.temperature,
@@ -505,6 +506,7 @@ class _EnvMetricsFingerprint {
     this.rainfall24h,
     this.soilMoisture,
     this.soilTemperature,
+    this.radiation,
   });
 
   bool matches(MeshNode node) =>
@@ -522,7 +524,8 @@ class _EnvMetricsFingerprint {
       rainfall1h == node.rainfall1h &&
       rainfall24h == node.rainfall24h &&
       soilMoisture == node.soilMoisture &&
-      soilTemperature == node.soilTemperature;
+      soilTemperature == node.soilTemperature &&
+      radiation == node.radiation;
 }
 
 /// Fingerprint of the last logged power metrics for a given node.
@@ -799,12 +802,14 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         }
 
         // Log environment metrics only when values actually change.
-        // Gas resistance is part of the trigger: a gas-only sensor
-        // (BME680/688 without temp/humidity) would otherwise never log.
+        // Gas resistance and radiation are part of the trigger: a gas-only
+        // sensor (BME680/688 without temp/humidity) or a radiation-only
+        // sensor would otherwise never log.
         if (hasSample &&
             (node.temperature != null ||
                 node.humidity != null ||
-                node.gasResistance != null)) {
+                node.gasResistance != null ||
+                node.radiation != null)) {
           final cached = _lastEnv[id];
           if (cached == null || !cached.matches(node)) {
             _lastEnv[id] = _EnvMetricsFingerprint(
@@ -823,6 +828,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               rainfall24h: node.rainfall24h,
               soilMoisture: node.soilMoisture,
               soilTemperature: node.soilTemperature,
+              radiation: node.radiation,
             );
             await storage.addEnvironmentMetrics(
               EnvironmentMetricsLog(
@@ -843,6 +849,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 rainfall24h: node.rainfall24h,
                 soilMoisture: node.soilMoisture,
                 soilTemperature: node.soilTemperature,
+                radiation: node.radiation,
               ),
             );
             ref.invalidate(environmentMetricsLogsProvider);

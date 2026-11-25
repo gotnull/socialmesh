@@ -686,7 +686,7 @@ class TelemetryDatabase {
     buffer.writeln(
       'timestamp,temperature,relativeHumidity,barometricPressure,' // lint-allow: hardcoded-string
       'gasResistance,iaq,lux,uvLux,whiteLux,windDirection,windSpeed,' // lint-allow: hardcoded-string
-      'windGust,rainfall,soilMoisture,soilTemperature', // lint-allow: hardcoded-string
+      'windGust,rainfall,soilMoisture,soilTemperature,radiation', // lint-allow: hardcoded-string
     );
     for (final log in logs) {
       buffer.writeln(
@@ -696,7 +696,8 @@ class TelemetryDatabase {
         '${log.uvLux ?? ''},${log.whiteLux ?? ''},'
         '${log.windDirection ?? ''},${log.windSpeed ?? ''},'
         '${log.windGust ?? ''},${log.rainfall ?? ''},'
-        '${log.soilMoisture ?? ''},${log.soilTemperature ?? ''}',
+        '${log.soilMoisture ?? ''},${log.soilTemperature ?? ''},'
+        '${log.radiation ?? ''}',
       );
     }
     return buffer.toString();

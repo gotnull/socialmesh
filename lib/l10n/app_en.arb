@@ -26317,6 +26317,15 @@
       }
     }
   },
+  "telemetryEnvRadiationValue": "{value} µR/h",
+  "@telemetryEnvRadiationValue": {
+    "description": "Metric label showing a radiation reading in microroentgen per hour",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "telemetryEnvPressureValue": "{value} hPa",
   "@telemetryEnvPressureValue": {
     "description": "Metric chip label showing barometric pressure in hectopascals",
@@ -26369,6 +26378,10 @@
   "@telemetryEnvironmentFilterLight": {
     "description": "Filter chip label for light/lux metrics."
   },
+  "telemetryEnvironmentFilterRadiation": "Radiation",
+  "@telemetryEnvironmentFilterRadiation": {
+    "description": "Filter chip label for radiation (µR/h) metrics."
+  },
   "telemetryEnvironmentFilterPressure": "Pressure",
   "@telemetryEnvironmentFilterPressure": {
     "description": "Filter chip label for barometric pressure metrics."
@@ -26404,6 +26417,10 @@
   "telemetryEnvironmentLegendLight": "Light",
   "@telemetryEnvironmentLegendLight": {
     "description": "Chart legend label for ambient light (lux) series."
+  },
+  "telemetryEnvironmentLegendRadiation": "Radiation",
+  "@telemetryEnvironmentLegendRadiation": {
+    "description": "Chart legend and reading label for the radiation (µR/h) series."
   },
   "telemetryEnvironmentLegendWind": "Wind",
   "@telemetryEnvironmentLegendWind": {

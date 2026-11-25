@@ -421,6 +421,21 @@ void main() {
       expect(csv, contains('22.5'));
     });
 
+    test('radiation is stored, read back and exported', () async {
+      await db.addEnvironmentMetrics(
+        EnvironmentMetricsLog(nodeNum: 12345, radiation: 14.2),
+      );
+
+      final logs = await db.getEnvironmentMetrics(12345);
+      expect(logs.single.radiation, 14.2);
+
+      final lines = (await db.exportEnvironmentMetricsCsv(12345))
+          .trim()
+          .split('\n');
+      expect(lines.first.split(',').last, 'radiation');
+      expect(lines.last.split(',').last, '14.2');
+    });
+
     test('exportPositionLogsCsv generates valid CSV', () async {
       await db.addPositionLog(
         PositionLog(
