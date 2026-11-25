@@ -17458,6 +17458,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scannerScanningSubtitle => 'Procurando dispositivos Meshtastic...';
 
   @override
+  String get scannerScanningSubtitleWithMeshCore =>
+      'Procurando rádios Meshtastic e MeshCore...';
+
+  @override
   String get scannerScanningTitle => 'Buscando dispositivos próximos';
 
   @override

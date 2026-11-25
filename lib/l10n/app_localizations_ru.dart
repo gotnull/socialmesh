@@ -17475,6 +17475,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scannerScanningSubtitle => 'Поиск устройств Meshtastic...';
 
   @override
+  String get scannerScanningSubtitleWithMeshCore =>
+      'Поиск радиостанций Meshtastic и MeshCore...';
+
+  @override
   String get scannerScanningTitle => 'Сканирование ближайших устройств';
 
   @override

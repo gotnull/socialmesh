@@ -130,6 +130,16 @@ String scannerDeviceNotFoundSubtitle(
   TransportType.ble || null => l10n.scannerDeviceNotFoundSubtitle,
 };
 
+/// The search banner's subtitle while nothing is listed yet. It names
+/// MeshCore only when the scan also looks for MeshCore radios.
+@visibleForTesting
+String scannerLookingSubtitle(
+  AppLocalizations l10n, {
+  required bool meshCoreEnabled,
+}) => meshCoreEnabled
+    ? l10n.scannerScanningSubtitleWithMeshCore
+    : l10n.scannerScanningSubtitle;
+
 /// Whether the scanner shows its Bluetooth search banner. The rescan
 /// timer keeps searching between scan cycles, so while no radio is
 /// listed the banner stays up through the gap; hiding it there left the
@@ -2949,8 +2959,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       deviceCount: _devices.length,
                       hasCompletedScan: _hasCompletedScan,
                     )) {
-                      ScannerSearchSubtitle.looking =>
-                        context.l10n.scannerScanningSubtitle,
+                      ScannerSearchSubtitle.looking => scannerLookingSubtitle(
+                        context.l10n,
+                        meshCoreEnabled: AppFeatureFlags.isMeshCoreEnabled,
+                      ),
                       ScannerSearchSubtitle.nothingFoundYet =>
                         context.l10n.scannerNoRadiosFoundHint,
                       ScannerSearchSubtitle.devicesFound =>

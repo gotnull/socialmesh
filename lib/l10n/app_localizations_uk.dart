@@ -17495,6 +17495,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get scannerScanningSubtitle => 'Пошук пристроїв Meshtastic...';
 
   @override
+  String get scannerScanningSubtitleWithMeshCore =>
+      'Пошук радіостанцій Meshtastic і MeshCore...';
+
+  @override
   String get scannerScanningTitle => 'Сканування пристроїв поблизу';
 
   @override

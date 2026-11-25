@@ -17287,6 +17287,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scannerScanningSubtitle => 'Looking for Meshtastic devices...';
 
   @override
+  String get scannerScanningSubtitleWithMeshCore =>
+      'Looking for Meshtastic and MeshCore radios...';
+
+  @override
   String get scannerScanningTitle => 'Scanning for nearby devices';
 
   @override

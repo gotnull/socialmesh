@@ -8714,6 +8714,7 @@
   "scannerRetryScan": "Повторить сканирование",
   "scannerScanningAllDevices": "Сканирование всех устройств (режим разработчика)",
   "scannerScanningSubtitle": "Поиск устройств Meshtastic...",
+  "scannerScanningSubtitleWithMeshCore": "Поиск радиостанций Meshtastic и MeshCore...",
   "scannerScanningTitle": "Сканирование ближайших устройств",
   "scannerShowAllBleDevices": "Показать все BLE-устройства",
   "scannerTransportBluetooth": "Bluetooth",

@@ -23491,6 +23491,10 @@
   "@scannerScanningSubtitle": {
     "description": "Banner subtitle shown when the device list is empty during scan."
   },
+  "scannerScanningSubtitleWithMeshCore": "Looking for Meshtastic and MeshCore radios...",
+  "@scannerScanningSubtitleWithMeshCore": {
+    "description": "Banner subtitle while the scan list is empty and MeshCore radios are scanned for as well as Meshtastic ones."
+  },
   "scannerScanningTitle": "Scanning for nearby devices",
   "@scannerScanningTitle": {
     "description": "Banner title shown while actively scanning for BLE devices."

@@ -29806,6 +29806,12 @@ abstract class AppLocalizations {
   /// **'Looking for Meshtastic devices...'**
   String get scannerScanningSubtitle;
 
+  /// Banner subtitle while the scan list is empty and MeshCore radios are scanned for as well as Meshtastic ones.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for Meshtastic and MeshCore radios...'**
+  String get scannerScanningSubtitleWithMeshCore;
+
   /// Banner title shown while actively scanning for BLE devices.
   ///
   /// In en, this message translates to:

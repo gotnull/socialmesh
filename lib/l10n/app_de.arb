@@ -8363,6 +8363,7 @@
   "scannerRetryScan": "Scan wiederholen",
   "scannerScanningAllDevices": "Alle Geräte werden gescannt (Entwicklermodus)",
   "scannerScanningSubtitle": "Suche nach Meshtastic-Geräten...",
+  "scannerScanningSubtitleWithMeshCore": "Suche nach Meshtastic- und MeshCore-Funkgeräten...",
   "scannerScanningTitle": "Suche nach Geräten in der Nähe",
   "scannerShowAllBleDevices": "Alle BLE-Geräte anzeigen",
   "scannerTransportBluetooth": "Bluetooth",

@@ -8363,6 +8363,7 @@
   "scannerRetryScan": "Повторити сканування",
   "scannerScanningAllDevices": "Сканування всіх пристроїв (режим розробника)",
   "scannerScanningSubtitle": "Пошук пристроїв Meshtastic...",
+  "scannerScanningSubtitleWithMeshCore": "Пошук радіостанцій Meshtastic і MeshCore...",
   "scannerScanningTitle": "Сканування пристроїв поблизу",
   "scannerShowAllBleDevices": "Показати всі BLE-пристрої",
   "scannerTransportBluetooth": "Bluetooth",

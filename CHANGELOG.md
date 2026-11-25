@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Resend now works on a direct message that only a relay node acknowledged. Tapping it used to do nothing visible: the message went out again, but its bubble kept showing the relay's tick. It now shows the new attempt and its outcome. A message the recipient has already confirmed is never sent again.
 - After you disconnect from a MeshCore radio over Bluetooth, the Devices screen lists it as MeshCore straight away. It briefly showed a Meshtastic badge until the scan found the radio, and tapping it in that moment tried a Meshtastic connection.
+- While the Devices screen is still searching, it says it is looking for Meshtastic and MeshCore radios when MeshCore support is on, instead of Meshtastic devices only.
 
 ## [1.83.1] - 2026-11-25
 

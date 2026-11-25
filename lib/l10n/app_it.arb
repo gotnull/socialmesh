@@ -35287,6 +35287,7 @@
   "scannerRetryScan": "Riprova Scansione",
   "scannerScanningAllDevices": "Scansione di tutti i dispositivi (modalità dev)",
   "scannerScanningSubtitle": "Ricerca dispositivi Meshtastic...",
+  "scannerScanningSubtitleWithMeshCore": "Ricerca di radio Meshtastic e MeshCore...",
   "scannerScanningTitle": "Ricerca dispositivi nelle vicinanze",
   "scannerShowAllBleDevices": "Mostra tutti i dispositivi BLE",
   "scannerTransportBluetooth": "Bluetooth",

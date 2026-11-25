@@ -54,6 +54,24 @@ void main() {
     });
   });
 
+  group('scannerLookingSubtitle', () {
+    test('names MeshCore only when MeshCore radios are scanned for', () {
+      for (final locale in AppLocalizations.supportedLocales) {
+        final t = lookupAppLocalizations(locale);
+        expect(
+          scannerLookingSubtitle(t, meshCoreEnabled: true),
+          allOf(contains('Meshtastic'), contains('MeshCore')),
+          reason: '$locale',
+        );
+        expect(
+          scannerLookingSubtitle(t, meshCoreEnabled: false),
+          allOf(contains('Meshtastic'), isNot(contains('MeshCore'))),
+          reason: '$locale',
+        );
+      }
+    });
+  });
+
   group('scannerDeviceNotFoundSubtitle', () {
     final l10n = lookupAppLocalizations(const Locale('en'));
 
