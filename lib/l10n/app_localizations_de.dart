@@ -40076,4 +40076,172 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get removeStaleNodesDisconnected =>
       'Das Funkgerät hat die Verbindung getrennt, bevor die übrigen entfernt wurden.';
+
+  @override
+  String get mqttTopicFinderTooltip => 'Themen in deiner Nähe finden';
+
+  @override
+  String get mqttTopicFinderTitle => 'Themen finden';
+
+  @override
+  String mqttTopicFinderConnecting(String host) {
+    return 'Verbindung zu $host...';
+  }
+
+  @override
+  String get mqttTopicFinderSubscribing => 'Abonnieren...';
+
+  @override
+  String mqttTopicFinderListening(int seconds) {
+    return 'Lauschen, noch $seconds s';
+  }
+
+  @override
+  String mqttTopicFinderFinished(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Fertig: $count Nachrichten empfangen',
+      one: 'Fertig: 1 Nachricht empfangen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mqttTopicFinderFailedConnect(String host) {
+    return 'Keine Verbindung zu $host möglich.';
+  }
+
+  @override
+  String get mqttTopicFinderFailedFilters =>
+      'Der Broker erlaubt diese Themenfilter nicht.';
+
+  @override
+  String get mqttTopicFinderFailedClosed =>
+      'Der Broker hat die Verbindung geschlossen.';
+
+  @override
+  String mqttTopicFinderPrivacy(String host) {
+    return 'Lauscht eine Minute lang an $host und veröffentlicht nichts. Der Broker sieht deine IP-Adresse und eine zufällige Client-ID, nicht deinen Knoten. Um Bundesland und Stadt zu benennen, geht dein Standort an den Geokodierungsdienst deines Telefons (Apple oder Google), nie an den Broker. Ein gewähltes Thema füllt nur das Feld Root-Topic aus; erst mit Speichern erreicht etwas das Funkgerät.';
+  }
+
+  @override
+  String get mqttTopicFinderNearYou => 'In deiner Nähe';
+
+  @override
+  String get mqttTopicFinderNoLocation =>
+      'Noch kein Standort. Verbinde ein Funkgerät mit Positionsfix oder erlaube den Standortzugriff, um Themen für Bundesland und Stadt zu sehen.';
+
+  @override
+  String get mqttTopicFinderGeocodeFailed =>
+      'Der Ortsname für deinen Standort konnte nicht ermittelt werden.';
+
+  @override
+  String get mqttTopicFinderCountsNote =>
+      'Die Zahlen sind während der Probe gehörte Knoten. Aktive Themen füllen sich in Sekunden; ruhige bleiben eventuell bei null.';
+
+  @override
+  String get mqttTopicFinderLevelRegion => 'Region';
+
+  @override
+  String get mqttTopicFinderLevelState => 'Bundesland oder Provinz';
+
+  @override
+  String get mqttTopicFinderLevelCity => 'Stadt';
+
+  @override
+  String get mqttTopicFinderActiveTopics => 'Aktive Themen';
+
+  @override
+  String get mqttTopicFinderNothingHeard =>
+      'Während der Probe wurde nichts empfangen.';
+
+  @override
+  String get mqttTopicFinderOnlyLadder =>
+      'Nur die Themen oben waren während der Probe aktiv.';
+
+  @override
+  String get mqttTopicFinderNothingYet => 'Noch nichts empfangen.';
+
+  @override
+  String get mqttTopicFinderCustomTopic => 'Eigenes Thema';
+
+  @override
+  String get mqttTopicFinderCustomRules =>
+      'Bis zu 31 ASCII-Zeichen, kein Schrägstrich am Anfang oder Ende, kein + oder #.';
+
+  @override
+  String get mqttTopicFinderUseTopic => 'Dieses Thema verwenden';
+
+  @override
+  String mqttTopicFinderNodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Knoten',
+      one: '1 Knoten',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mqttTopicFinderNodeCountAtLeast(int count) {
+    return '$count+ Knoten';
+  }
+
+  @override
+  String mqttTopicFinderNearest(String distance) {
+    return 'nächster $distance';
+  }
+
+  @override
+  String get mqttTopicFinderNoRegion =>
+      'Stelle zuerst die LoRa-Region des Funkgeräts ein. Themen liegen unter dem eigenen Root der Region, etwa msh/ANZ.';
+
+  @override
+  String get mqttTopicFinderOffline =>
+      'Themen finden braucht eine Internetverbindung. Es ist verfügbar, sobald du online bist.';
+
+  @override
+  String get mqttTopicFinderStop => 'Stopp';
+
+  @override
+  String get mqttRootTopicProblemEmpty => 'Gib ein Thema ein.';
+
+  @override
+  String get mqttRootTopicProblemWhitespace =>
+      'Themen dürfen keine Leer- oder Steuerzeichen enthalten.';
+
+  @override
+  String get mqttRootTopicProblemNonAscii =>
+      'Themen müssen ASCII-Zeichen verwenden.';
+
+  @override
+  String get mqttRootTopicProblemWildcard =>
+      'Themen dürfen kein + oder # enthalten.';
+
+  @override
+  String get mqttRootTopicProblemLeadingSlash =>
+      'Themen dürfen nicht mit einem Schrägstrich beginnen.';
+
+  @override
+  String get mqttRootTopicProblemTrailingSlash =>
+      'Themen dürfen nicht mit einem Schrägstrich enden.';
+
+  @override
+  String get mqttRootTopicProblemEmptySegment =>
+      'Themen dürfen keine zwei Schrägstriche hintereinander enthalten.';
+
+  @override
+  String get mqttRootTopicProblemEndsWithVersion =>
+      'Themen dürfen nicht auf /2 enden.';
+
+  @override
+  String get mqttRootTopicProblemTooLong =>
+      'Themen sind auf 31 Zeichen begrenzt.';
+
+  @override
+  String mqttTopicFinderRungTitle(String level, String place) {
+    return '$level: $place';
+  }
 }
